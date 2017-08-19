@@ -24,17 +24,38 @@ namespace ignition
 {
   namespace physics
   {
+    namespace detail
+    {
+      /////////////////////////////////////////////////
+      /// \brief Helper function to set the query flag of previously unqueried
+      /// data entries. The template argument is to support both iterator&
+      /// and const_iterator& argument types. This helper functions lets us
+      /// avoid hard-to-spot typos on this frequently performed task.
+      template <typename IteratorType>
+      void SetToQueried(const IteratorType &it, std::size_t &numQueries)
+      {
+        if (!it->second.queried)
+        {
+          ++numQueries;
+          it->second.queried = true;
+        }
+      }
+    }
+
     /////////////////////////////////////////////////
     template <typename Data>
     Data &CompositeData::Get()
     {
       MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel, DataEntry())).first;
+            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
 
-      if(!it->second.data)
+      if (!it->second.data)
       {
+        ++numEntries;
         it->second.data = std::unique_ptr<Cloneable>(new MakeCloneable<Data>());
       }
+
+      detail::SetToQueried(it, numQueries);
 
       return static_cast<MakeCloneable<Data>&>(*it->second.data);
     }
@@ -44,10 +65,15 @@ namespace ignition
     Data& CompositeData::Create(Args&&... args)
     {
       MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel, DataEntry())).first;
+            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
+
+      if (!it->second.data)
+        ++numEntries;
 
       it->second.data = std::unique_ptr<Cloneable>(
             new MakeCloneable<Data>(std::forward<Args>(args)...));
+
+      detail::SetToQueried(it, numQueries);
 
       return static_cast<MakeCloneable<Data>&>(*it->second.data);
     }
@@ -57,43 +83,43 @@ namespace ignition
     Data& CompositeData::GetOrCreate(Args&&... args)
     {
       MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel, DataEntry())).first;
+            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
 
-      if(!it->second.data)
+      if (!it->second.data)
       {
+        ++numEntries;
         it->second.data = std::unique_ptr<Cloneable>(
               new MakeCloneable<Data>(std::forward<Args>(args)...));
       }
+
+      detail::SetToQueried(it, numQueries);
 
       return static_cast<MakeCloneable<Data>&>(*it->second.data);
     }
 
     /////////////////////////////////////////////////
     template <typename Data>
-    void CompositeData::Remove()
+    bool CompositeData::Remove()
     {
-      this->Extract<Data>(false);
-    }
+      MapOfData::iterator it = this->dataMap.find(Data::IgnPhysicsTypeLabel());
 
-    /////////////////////////////////////////////////
-    template <typename Data>
-    std::unique_ptr<Data> CompositeData::Extract(bool copyIfRequired)
-    {
-      MapOfData::iterator it = this->dataMap.find(Data::IgnPhysicsTypeLabel);
-      if(this->dataMap.end() == it)
-        return nullptr;
+      if (this->dataMap.end() == it || !it->second.data)
+        return true;
 
-      if(it->second.required)
+      // Do not remove it if it's required
+      if (it->second.required)
+        return false;
+
+      // Decrement the query count if it had been queried
+      if (it->second.queried)
       {
-        if(copyIfRequired)
-          return std::unique_ptr<Data>(
-                static_cast<Data*>(it->second.data->Clone().release()));
-
-        return nullptr;
+        --numQueries;
+        it->second.queried = false;
       }
 
-      return std::unique_ptr<Data>(
-            static_cast<MakeCloneable<Data>*>(it->second.data.release()));
+      --numEntries;
+      it->second.data.reset();
+      return true;
     }
 
     /////////////////////////////////////////////////
@@ -101,10 +127,12 @@ namespace ignition
     Data* CompositeData::Query()
     {
       MapOfData::const_iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel);
+          this->dataMap.find(Data::IgnPhysicsTypeLabel());
 
-      if(this->dataMap.end() == it)
+      if (this->dataMap.end() == it)
         return nullptr;
+
+      detail::SetToQueried(it, numQueries);
 
       return static_cast<MakeCloneable<Data>*>(it->second.data.get());
     }
@@ -114,12 +142,14 @@ namespace ignition
     const Data* CompositeData::Query() const
     {
       MapOfData::const_iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel);
+          this->dataMap.find(Data::IgnPhysicsTypeLabel());
 
       if(this->dataMap.end() == it)
         return nullptr;
 
-      return it->second.data.get();
+      detail::SetToQueried(it, numQueries);
+
+      return static_cast<MakeCloneable<Data>*>(it->second.data.get());
     }
 
     /////////////////////////////////////////////////
@@ -134,7 +164,7 @@ namespace ignition
     Data& CompositeData::MakeRequired(Args&&... args)
     {
       MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel, DataEntry())).first;
+            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
 
       it->second.required = true;
       if(!it->second.data)
@@ -143,6 +173,8 @@ namespace ignition
               new MakeCloneable<Data>(std::forward<Args>(args)...));
       }
 
+      detail::SetToQueried(it, numQueries);
+
       return static_cast<MakeCloneable<Data>&>(*it->second.data);
     }
 
@@ -150,7 +182,10 @@ namespace ignition
     template <typename Data>
     bool CompositeData::IsRequired() const
     {
-      MapOfData::iterator it = this->dataMap.find(Data::IgnPhysicsTypeLabel);
+      MapOfData::const_iterator it =
+          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+
+      detail::SetToQueried(it, numQueries);
 
       if(this->dataMap.end() == it)
         return false;

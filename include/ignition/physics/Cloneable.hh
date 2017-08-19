@@ -40,19 +40,24 @@ namespace ignition
 
       /// \brief Implement this function to allow your Cloneable type to be
       /// cloned safely.
-      public: virtual std::unique_ptr<Cloneable> Clone() = 0;
+      public: virtual std::unique_ptr<Cloneable> Clone() const = 0;
 
       /// \brief Implement this function to allow your Cloneable type to copy
       /// another Cloneable object. Assume that the fully-derived type of other
       /// is the same as the fully-derived type of this object (i.e. you may use
       /// static_cast instead of dynamic_cast).
       public: virtual void Copy(const Cloneable &other) = 0;
+
+      /// \brief Implement this function to allow your Cloneable type to move
+      /// data from another Cloneable object. Assume that the fully-derived
+      /// type of other is the same as the fully-derived type of this object.
+      public: virtual void Copy(Cloneable &&other) = 0;
     };
 
     /// \brief Assuming the type T follows the Rule of Five or the Rule of Zero,
     /// create a type that will implement the Copy and Clone functions for it.
     template <typename T>
-    class MakeCloneable : public T, public Cloneable
+    class MakeCloneable final : public T, public Cloneable
     {
       /// \brief Perfect-forwarding constructor
       public: template <typename... Args>
@@ -64,13 +69,24 @@ namespace ignition
       /// \brief Move constructor
       public: MakeCloneable(MakeCloneable &&other);
 
+      /// \brief Copy operator
+      public: MakeCloneable& operator=(const MakeCloneable &other);
+
+      /// \brief Move operator
+      public: MakeCloneable& operator=(MakeCloneable &&other);
+
       // Documentation inherited
-      public: std::unique_ptr<Cloneable> Clone() override final;
+      public: std::unique_ptr<Cloneable> Clone() const override final;
 
       // Documentation inherited
       public: void Copy(const Cloneable &other) override final;
+
+      // Documentation inherited
+      public: void Copy(Cloneable &&other) override final;
     };
   }
 }
+
+#include "ignition/physics/detail/Cloneable.hh"
 
 #endif
