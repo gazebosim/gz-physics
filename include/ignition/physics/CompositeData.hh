@@ -29,6 +29,13 @@ namespace ignition
 {
   namespace physics
   {
+    // Forward declarations
+    namespace detail
+    {
+      template <typename> class PrivateExpectData;
+      template <typename> class PrivateRequireData;
+    }
+
     /// \brief The CompositeData class allows arbitrary data structures to be
     /// composed together, copied, and moved with type erasure.
     class IGNITION_COMMON_VISIBLE CompositeData
@@ -105,17 +112,38 @@ namespace ignition
       /// \brief Returns true if the specified Data type is required by this
       /// CompositeData object. Otherwise, returns false.
       public: template <typename Data>
-      bool IsRequired() const;
+      bool Requires() const;
+
+      /// \brief When called from a generic CompositeData type, this always
+      /// returns false. More highly specified CompositeData types that use
+      /// ExpectData or RequireData may return true if the type of Data is
+      /// expected.
+      public: template <typename Data>
+      static constexpr bool Expects();
+
+      /// \brief When called from a generic CompositeData type, this always
+      /// returns false. Static (Always) requirements are determined at
+      /// compile-time and cannot be changed at runtime. Using the RequireData
+      /// class can make this return true for more highly specified
+      /// CompositeData types.
+      ///
+      /// NOTE: This should never be used to check whether Data is required on
+      /// a specific instance, because the requirements that are placed on an
+      /// instance can be changed at runtime. This should only be used to check
+      /// whether a certain data type is always required for a certain
+      /// specification of CompositeData.
+      public: template <typename Data>
+      static constexpr bool AlwaysRequires();
 
       /// \brief Returns the number of data entries currently contained in this
       /// CompositeData. Runs with O(1) complexity.
       std::size_t NumEntries() const;
 
       /// \brief Returns the number of entries in this CompositeData which have
-      /// not been queried (Get, Create, GetOrCreate, Query, Has, MakeRequired,
-      /// and IsRequired) since the data was created (not using the
-      /// aforementioned functions) or since the last call to ResetQueries(),
-      /// whichever is more recent. Runs with O(1) complexity.
+      /// not been queried (Get, Create, GetOrCreate, Query, Has, and
+      /// MakeRequired) since the data was created (not using the aforementioned
+      /// functions) or since the last call to ResetQueries(), whichever is more
+      /// recent. Runs with O(1) complexity.
       ///
       /// Unqueried data entries might be created by copy/move construction,
       /// copy/move assignment operation, or the Copy(~) function. Using the
@@ -242,12 +270,12 @@ namespace ignition
       /// \brief Total number of unique queries which have been performed since
       /// either construction or the last call to ResetQueries().
       private: mutable std::size_t numQueries;
+
+      template <typename> friend class detail::PrivateExpectData;
+      template <typename> friend class detail::PrivateRequireData;
     };
   }
 }
-
-#define IGN_PHYSICS_DATA_LABEL(label) \
-  public: static constexpr const char* IgnPhysicsTypeLabel() { return #label; }
 
 #include "ignition/physics/detail/CompositeData.hh"
 

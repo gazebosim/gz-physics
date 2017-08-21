@@ -4,6 +4,18 @@ include (CheckCXXSourceCompiles)
 include (${project_cmake_dir}/FindOS.cmake)
 include (FindPkgConfig)
 
+########################################
+# Find ignition math
+set(IGNITION-MATH_REQUIRED_MAJOR_VERSION 3)
+if (NOT DEFINED IGNITION-MATH_LIBRARY_DIRS AND NOT DEFINED IGNITION-MATH_INCLUDE_DIRS AND NOT DEFINED IGNITION-MATH_LIBRARIES)
+  find_package(ignition-math${IGNITION-MATH_REQUIRED_MAJOR_VERSION} QUIET)
+  if (NOT ignition-math${IGNITION-MATH_REQUIRED_MAJOR_VERSION}_FOUND)
+    message(STATUS "Looking for ignition-math${IGNITION-MATH_REQUIRED_MAJOR_VERSION}-config.cmake - not found")
+    BUILD_ERROR ("Missing: Ignition math${IGNITION-MATH_REQUIRED_MAJOR_VERSION} library.")
+  else()
+    message(STATUS "Looking for ignition-math${IGNITION-MATH_REQUIRED_MAJOR_VERSION}-config.cmake - found")
+  endif()
+endif()
 
 ########################################
 # Include man pages stuff

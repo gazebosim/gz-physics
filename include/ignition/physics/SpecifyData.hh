@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_SPECIFYDATA_HH_
 #define IGNITION_PHYSICS_SPECIFYDATA_HH_
 
+#include "ignition/physics/detail/PrivateSpecifyData.hh"
+
 namespace ignition
 {
   namespace physics
@@ -68,22 +70,151 @@ namespace ignition
     template <typename... Specifications>
     class SpecifyData
     {
-
+      public: virtual ~SpecifyData() = default;
     };
 
-    template <typename... DataTypes>
-    class RequireData
-    {
-
-    };
-
+    /// \brief ExpectData defines a type with the specification that it will
+    /// expect to be handling the data types listed in its template arguments
+    /// (DataTypes). All of the expected types will benefit from very low-cost
+    /// accessibility when being accessed from an object of type
+    /// ExpectData<DataTypes>.
+    ///
+    /// Note that there is no guarantee that any of the types listed in
+    /// DataTypes will exist in the underlying CompositeData, but it will still
+    /// provide very low-cost access for creating and querying even if it is not
+    /// yet present.
     template <typename... DataTypes>
     class ExpectData
     {
-
+      public: virtual ~ExpectData() = default;
     };
 
+    /// \brief RequireData defines a type with the specification that the
+    /// template arguments (DataTypes) provided to it are required to exist in
+    /// any CompositeData object that is instantiated with the RequireData type.
+    ///
+    /// Each data type that is listed in DataTypes will be instantiated upon the
+    /// construction of the RequireData<DataTypes> object, and none of them can
+    /// be removed from that object or from any reference to that object.
+    ///
+    /// Objects that are listed in DataTypes will also benefit from extremely
+    /// low-cost accessibility when they are accessed using an object of the
+    /// type RequireData<DataTypes>. This is similar to ExpectData<DataTypes>.
+    ///
+    /// RequireData<DataTypes> also offers a const-qualified Get<R>() function
+    /// for all types, R, which are listed in DataTypes.
+    template <typename... DataTypes>
+    class RequireData
+    {
+      public: virtual ~RequireData() = default;
+    };
+
+    /// \brief Implementation of ExpectData for a single data type.
+    template <typename Expected>
+    class ExpectData<Expected> : public virtual CompositeData
+    {
+      // This allows outside users to identify this expected data type at
+      // compile time, which can be useful for doing template metaprogramming.
+      public: using ExpectedData = Expected;
+
+      /// \brief Default constructor
+      public: ExpectData();
+
+      /// \brief Virtual destructor
+      public: virtual ~ExpectData() = default;
+
+      /// \brief Provides extremely low-cost access to expected data types and
+      /// normal access to unexpected data types.
+      public: template <typename Data>
+      Data& Get();
+
+      /// \brief Provides extremely low-cost access to creating expected data
+      /// types and normal access to unexpected data types.
+      public: template <typename Data, typename... Args>
+      Data& Create(Args&&... args);
+
+      /// \brief Provides extremely low-cost access to getting or creating
+      /// expected data types and normal access to unexpected data types.
+      public: template <typename Data, typename... Args>
+      Data& GetOrCreate(Args&&... args);
+
+      /// \brief Provides extremely low-cost access for removing expected data
+      /// types and normal access for unexpected data types.
+      public: template <typename Data>
+      bool Remove();
+
+      /// \brief Provides extremely low-cost access for querying expected data
+      /// types and normal access for unexpected data types.
+      public: template <typename Data>
+      Data* Query();
+
+      /// \brief Const-qualified version of Query<Data>
+      public: template <typename Data>
+      const Data* Query() const;
+
+      /// \brief Provides extremely low-cost access for checking the existence
+      /// of expected data types and normal access for unexpected data types.
+      public: template <typename Data>
+      bool Has() const;
+
+      /// \brief Provides extremely low-cost access for making expected data
+      /// types required and normal access for unexpected data types.
+      public: template <typename Data, typename... Args>
+      Data& MakeRequired(Args&&... args);
+
+      /// \brief Provides extremely low-cost access for checking whether
+      /// expected data types are required and normal access for unexpected data
+      /// types.
+      public: template <typename Data>
+      bool Requires() const;
+
+      /// \brief Returns true if the Data type is expected. Data types for which
+      /// this is true will be able to enjoy extremely low-cost access.
+      public: template <typename Data>
+      static constexpr bool Expects();
+
+      /// \brief Provides the implementation for delegating the functions
+      /// provided by the ExpectData class
+      protected: detail::PrivateExpectData<Expected> privateExpectData;
+    };
+
+    template <typename Required>
+    class RequireData<Required> : public virtual ExpectData<Required>
+    {
+      // This allows outside users to identify this Required data type at
+      // compile time, which can be useful for doing template metaprogramming.
+      public: using RequiredData = Required;
+
+      /// \brief Default constructor. Will initialize the Required data type
+      /// using its default constructor.
+      public: RequireData();
+
+      /// \brief Virtual destructor
+      public: virtual ~RequireData() = default;
+
+      // Do not shadow the ExpectData<Required> implementation
+      using ExpectData<Required>::Get;
+
+      /// \brief Provides extremely low-cost const-qualified reference access to
+      /// data types that are required.
+      ///
+      /// NOTE: For data types that are not required, this will throw a
+      /// compilation error, and you should use Query<Data>() const instead.
+      public: template <typename Data>
+      const Data& Get() const;
+
+      /// \brief Returns true if the Data type is always required by this more
+      /// highly specified CompositeData type.
+      public: template <typename Data>
+      static constexpr bool AlwaysRequires();
+
+      /// \brief Provides the implementation for delegating the functions
+      /// provided by the RequireData class
+      protected: detail::PrivateRequireData<Required> privateRequireData;
+    };
   }
 }
+
+#include "ignition/physics/detail/SpecifyData.hh"
 
 #endif

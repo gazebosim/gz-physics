@@ -18,97 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "ignition/physics/CompositeData.hh"
-
-/////////////////////////////////////////////////
-class StringData
-{
-  IGN_PHYSICS_DATA_LABEL(StringData)
-  public: std::string myString;
-
-  StringData(const std::string &_input = "default")
-    : myString(_input)
-  {
-    // Do nothing
-  }
-};
-
-/////////////////////////////////////////////////
-class DoubleData
-{
-  IGN_PHYSICS_DATA_LABEL(DoubleData)
-  public: double myDouble;
-
-  DoubleData(const double _input = 1.61803)
-    : myDouble(_input)
-  {
-    // Do nothing
-  }
-};
-
-/////////////////////////////////////////////////
-class IntData
-{
-  IGN_PHYSICS_DATA_LABEL(IntData)
-  public: int myInt;
-
-  IntData(const int _input = 55)
-    : myInt(_input)
-  {
-    // Do nothing
-  }
-};
-
-/////////////////////////////////////////////////
-class BoolData
-{
-  IGN_PHYSICS_DATA_LABEL(BoolData)
-  public: bool myBool;
-
-  BoolData(const bool _input = true)
-    : myBool(_input)
-  {
-    // Do nothing
-  }
-};
-
-/////////////////////////////////////////////////
-template <typename... DataTypes>
-struct AddSomeData
-{
-  // This class is just here for syntax reasons
-};
-
-template <typename DataType>
-struct AddSomeData<DataType>
-{
-  static void To(ignition::physics::CompositeData &data)
-  {
-    data.Create<DataType>();
-  }
-};
-
-template <typename DataType1, typename... OtherDataTypes>
-struct AddSomeData<DataType1, OtherDataTypes...>
-{
-  static void To(ignition::physics::CompositeData &data)
-  {
-    data.Create<DataType1>();
-    AddSomeData<OtherDataTypes...>::To(data);
-  }
-};
-
-/////////////////////////////////////////////////
-template <typename... DataTypes>
-ignition::physics::CompositeData CreateSomeData(bool resetQueries = false)
-{
-  ignition::physics::CompositeData data;
-  AddSomeData<DataTypes...>::To(data);
-
-  if(resetQueries)
-    data.ResetQueries();
-
-  return data;
-}
+#include "TestUtils.hh"
 
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, AddRemoveData)
@@ -162,12 +72,13 @@ TEST(CompositeData_TEST, Requirements)
 
   // If StringData was not already created, we should create a new one when it
   // gets marked as required, using the arguments passed in by MarkRequired
-  EXPECT_FALSE(requiredData.IsRequired<StringData>());
+  EXPECT_FALSE(requiredData.Requires<StringData>());
 
   requiredData.MakeRequired<StringData>("I am required");
+  EXPECT_EQ(1u, requiredData.NumEntries());
   EXPECT_EQ("I am required", requiredData.Get<StringData>().myString);
-  EXPECT_TRUE(requiredData.IsRequired<StringData>());
-  EXPECT_FALSE(requiredData.IsRequired<IntData>());
+  EXPECT_TRUE(requiredData.Requires<StringData>());
+  EXPECT_FALSE(requiredData.Requires<IntData>());
 
   // If someone asks to remove StringData, it should fail because StringData is
   // marked as required.

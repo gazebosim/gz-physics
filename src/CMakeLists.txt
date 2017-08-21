@@ -32,7 +32,9 @@ message(STATUS "Tests: ${gtest_sources}")
 message(STATUS "PLTN: ${PROJECT_LIBRARY_TARGET_NAME}")
 
 ign_add_library(${PROJECT_LIBRARY_TARGET_NAME} ${sources})
-target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME} ${IGNITION-COMMON_LIBRARIES})
+target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
+  ${IGNITION-COMMON_LIBRARIES}
+  ${IGNITION-MATH_LIBRARIES})
 
 if(NOT MSVC)
   target_compile_options(${PROJECT_LIBRARY_TARGET_NAME} PUBLIC "-std=c++11")
