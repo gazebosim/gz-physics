@@ -126,6 +126,7 @@ namespace ignition
       std::string annotation;
     };
 
+
     // ---------------- Interface -----------------
     class ForwardStep
     {

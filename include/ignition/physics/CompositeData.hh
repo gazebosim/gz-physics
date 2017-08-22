@@ -104,8 +104,8 @@ namespace ignition
       /// it.
       ///
       /// Warning: This cannot be undone. Once a Data type is marked as
-      /// required, it will continue to be required for the entire lifespan of
-      /// this CompositeData.
+      /// required, it will continue to be required for this object throughout
+      /// the rest of its lifespan.
       public: template <typename Data, typename... Args>
       Data& MakeRequired(Args&&... args);
 
