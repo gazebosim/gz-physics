@@ -129,7 +129,7 @@ TEST(CompositeData_TEST, Queries)
 
   EXPECT_EQ(3u, data.NumUnqueriedEntries());
   EXPECT_EQ(3u, data.NumEntries());
-  unqueried = data.UnqueriedDataEntries();
+  unqueried = data.UnqueriedEntries();
   EXPECT_NE(0u, unqueried.count("StringData"));
   EXPECT_NE(0u, unqueried.count("DoubleData"));
   EXPECT_NE(0u, unqueried.count("IntData"));
@@ -137,7 +137,7 @@ TEST(CompositeData_TEST, Queries)
   data.Remove<IntData>();
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
   EXPECT_EQ(2u, data.NumEntries());
-  unqueried = data.UnqueriedDataEntries();
+  unqueried = data.UnqueriedEntries();
   EXPECT_NE(0u, unqueried.count("StringData"));
   EXPECT_NE(0u, unqueried.count("DoubleData"));
   EXPECT_EQ(0u, unqueried.count("IntData"));
@@ -145,7 +145,7 @@ TEST(CompositeData_TEST, Queries)
   data.Has<StringData>();
   EXPECT_EQ(1u, data.NumUnqueriedEntries());
   EXPECT_EQ(2u, data.NumEntries());
-  unqueried = data.UnqueriedDataEntries();
+  unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count("StringData"));
   EXPECT_NE(0u, unqueried.count("DoubleData"));
 
@@ -155,7 +155,7 @@ TEST(CompositeData_TEST, Queries)
             ignition::physics::CompositeData::SOFT_MERGE);
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
   EXPECT_EQ(3u, data.NumEntries());
-  unqueried = data.UnqueriedDataEntries();
+  unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count("StringData"));
   EXPECT_NE(0u, unqueried.count("DoubleData"));
   EXPECT_NE(0u, unqueried.count("IntData"));
@@ -166,7 +166,7 @@ TEST(CompositeData_TEST, Queries)
             ignition::physics::CompositeData::HARD_MERGE);
   EXPECT_EQ(3u, data.NumUnqueriedEntries());
   EXPECT_EQ(4u, data.NumEntries());
-  unqueried = data.UnqueriedDataEntries();
+  unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count("StringData"));
   EXPECT_NE(0u, unqueried.count("DoubleData"));
   EXPECT_NE(0u, unqueried.count("IntData"));
@@ -176,7 +176,7 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(nullptr, data.Query<DoubleData>());
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
   EXPECT_EQ(4u, data.NumEntries());
-  unqueried = data.UnqueriedDataEntries();
+  unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count("StringData"));
   EXPECT_EQ(0u, unqueried.count("DoubleData"));
   EXPECT_NE(0u, unqueried.count("IntData"));
@@ -187,7 +187,7 @@ TEST(CompositeData_TEST, Queries)
               data).Query<IntData>());
   EXPECT_EQ(1u, data.NumUnqueriedEntries());
   EXPECT_EQ(4u, data.NumEntries());
-  unqueried = data.UnqueriedDataEntries();
+  unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count("StringData"));
   EXPECT_EQ(0u, unqueried.count("DoubleData"));
   EXPECT_EQ(0u, unqueried.count("IntData"));

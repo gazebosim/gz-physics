@@ -30,6 +30,9 @@ namespace ignition
     MakeCloneable<T>::MakeCloneable(Args&&... args)
       : T(std::forward<Args>(args)...),
         Cloneable()
+      // READ CAREFULLY: If you have arrived here by way of a compiler error,
+      // then you have not provided your data type with a default constructor.
+      // Check the compilation error to see which data type is the culprit.
     {
       // Do nothing
     }

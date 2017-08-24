@@ -260,7 +260,7 @@ namespace ignition
 
           status.exists = true;
           status.required = this->expectedIterator->second.required;
-          status.exists = this->expectedIterator->second.queried;
+          status.queried = this->expectedIterator->second.queried;
 
           if (CompositeData::QUERY_NORMAL == mode)
             SetToQueried(this->expectedIterator,

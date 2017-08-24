@@ -28,7 +28,7 @@ class StringData
   IGN_PHYSICS_DATA_LABEL(StringData)
   public: std::string myString;
 
-  inline StringData(const std::string &_input = "default")
+  public: inline StringData(const std::string &_input = "default")
     : myString(_input)
   {
     // Do nothing
@@ -41,7 +41,7 @@ class DoubleData
   IGN_PHYSICS_DATA_LABEL(DoubleData)
   public: double myDouble;
 
-  inline DoubleData(const double _input = 1.61803)
+  public: inline DoubleData(const double _input = 1.61803)
     : myDouble(_input)
   {
     // Do nothing
@@ -54,7 +54,7 @@ class IntData
   IGN_PHYSICS_DATA_LABEL(IntData)
   public: int myInt;
 
-  inline IntData(const int _input = 55)
+  public: inline IntData(const int _input = 55)
     : myInt(_input)
   {
     // Do nothing
@@ -67,7 +67,7 @@ class BoolData
   IGN_PHYSICS_DATA_LABEL(BoolData)
   public: bool myBool;
 
-  inline BoolData(const bool _input = true)
+  public: inline BoolData(const bool _input = true)
     : myBool(_input)
   {
     // Do nothing
@@ -80,8 +80,34 @@ class CharData
   IGN_PHYSICS_DATA_LABEL(CharData)
   public: char myChar;
 
-  inline CharData(const char _input = 'c')
+  public: inline CharData(const char _input = 'c')
     : myChar(_input)
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
+class FloatData
+{
+  IGN_PHYSICS_DATA_LABEL(FloatData)
+  public: float myFloat;
+
+  public: inline FloatData(const float _input = 9.5)
+    : myFloat(_input)
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
+class VectorDoubleData
+{
+  IGN_PHYSICS_DATA_LABEL(VectorDoubleData)
+  public: std::vector<double> myVector;
+
+  public: inline VectorDoubleData(const std::vector<double> &vec = {})
+    : myVector(vec)
   {
     // Do nothing
   }
@@ -91,14 +117,15 @@ class CharData
 // Single-requirement CompositeData
 using RequireString = ignition::physics::RequireData<StringData>;
 
-// CompositeData with three requirements and one optional expectation
+// CompositeData with three requirements and two optional expectations
 using RequireStringBoolChar = ignition::physics::SpecifyData<
           ignition::physics::RequireData<
                 StringData,
                 BoolData,
                 CharData>,
           ignition::physics::ExpectData<
-                IntData> >;
+                IntData,
+                FloatData> >;
 
 // CompositeData with two requirements and two optional expectations
 using RequireIntDouble = ignition::physics::SpecifyData<

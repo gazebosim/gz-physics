@@ -369,7 +369,7 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    std::set<std::string> CompositeData::UnqueriedDataEntries() const
+    std::set<std::string> CompositeData::UnqueriedEntries() const
     {
       if(NumUnqueriedEntries() == 0)
         return std::set<std::string>();

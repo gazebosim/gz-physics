@@ -226,7 +226,7 @@ namespace ignition
       /// CompositeData which have not been queried. This can be useful for
       /// reporting runtime warnings about any unsupported data types that have
       /// been given to you.
-      std::set<std::string> UnqueriedDataEntries() const;
+      std::set<std::string> UnqueriedEntries() const;
 
 
       /// \brief Options that determine the behavior of the Copy() function

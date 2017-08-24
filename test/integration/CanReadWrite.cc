@@ -52,6 +52,11 @@ class SomeClass
     std::cout << "Successfully read int: " << idata.myInt << std::endl;
   }
 
+  public: void Read(const FloatData& fdata)
+  {
+    std::cout << "Successfully read float: " << fdata.myFloat << std::endl;
+  }
+
   public: void Write(IntData& idata)
   {
 
