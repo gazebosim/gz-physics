@@ -20,19 +20,6 @@
 
 #include "ignition/physics/SpecifyData.hh"
 
-#define IGNITION_PHYSICS_CONST_GET_ERROR \
-  "Cannot use the const-qualified Get<Data>() function if " \
-  "the type Data is not required by your CompositeData " \
-  "specification at compile time. You should use the " \
-  "const-qualified Query<Data>() function instead!\n"
-
-// This preprocessor token should only be used by the unittest that is
-// responsible for checking that the specialized routines are being used to
-// access expected data.
-#ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-bool usedExpectedDataAccess;
-#endif
-
 namespace ignition
 {
   namespace physics
@@ -88,28 +75,47 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    Data* ExpectData<Expected>::Query()
+    Data* ExpectData<Expected>::Query(const QueryMode mode)
     {
       return this->template ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>());
+          .Query(this, type<Data>(), mode);
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    const Data* ExpectData<Expected>::Query() const
+    const Data* ExpectData<Expected>::Query(const QueryMode mode) const
     {
       return this->template ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>());
+          .Query(this, type<Data>(), mode);
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    bool ExpectData<Expected>::Has() const
+    bool ExpectData<Expected>::Has(const QueryMode mode) const
     {
       return this->template ExpectData<Expected>::privateExpectData
-          .Has(this, type<Data>());
+          .Has(this, type<Data>(), mode);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Expected>
+    template <typename Data>
+    CompositeData::DataStatus ExpectData<Expected>::StatusOf(
+        const QueryMode mode) const
+    {
+      return this->template ExpectData<Expected>::privateExpectData
+          .StatusOf(this, type<Data>(), mode);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Expected>
+    template <typename Data>
+    bool ExpectData<Expected>::Unquery() const
+    {
+      return this->template ExpectData<Expected>::privateExpectData
+          .Unquery(this, type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -153,6 +159,7 @@ namespace ignition
       // required for runtime checking.
       entry.data = std::unique_ptr<Cloneable>(new MakeCloneable<Required>());
       entry.required = true;
+      ++CompositeData::numEntries;
     }
 
     /////////////////////////////////////////////////
@@ -180,322 +187,6 @@ namespace ignition
     namespace detail
     {
       /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data>
-      Data& PrivateExpectData<Expected>::Get(
-          ExpectData<Expected>* data, type<Data>)
-      {
-        return data->CompositeData::Get<Data>();
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      Expected& PrivateExpectData<Expected>::Get(
-          ExpectData<Expected>* data, type<Expected>)
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        if (!this->expectedIterator->second.data)
-        {
-          ++data->CompositeData::numEntries;
-          this->expectedIterator->second.data =
-              std::unique_ptr<Cloneable>(new MakeCloneable<Expected>());
-        }
-
-        SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
-
-        return static_cast<MakeCloneable<Expected>&>(
-              *this->expectedIterator->second.data);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data, typename... Args>
-      Data& PrivateExpectData<Expected>::Create(
-          ExpectData<Expected>* data, type<Data>, Args&&... args)
-      {
-        return data->CompositeData::Create<Data>(std::forward<Args>(args)...);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename... Args>
-      Expected& PrivateExpectData<Expected>::Create(
-          ExpectData<Expected>* data, type<Expected>, Args&&... args)
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        if (!this->expectedIterator->second.data)
-          ++data->CompositeData::numEntries;
-
-        this->expectedIterator->second.data =
-            std::unique_ptr<Cloneable>(new MakeCloneable<Expected>(
-                                         std::forward<Args>(args)...));
-
-        SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
-
-        return static_cast<MakeCloneable<Expected>&>(
-              *this->expectedIterator->second.data);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data, typename... Args>
-      Data& PrivateExpectData<Expected>::GetOrCreate(
-          ExpectData<Expected>* data, type<Data>, Args&&... args)
-      {
-        return data->CompositeData::GetOrCreate<Data>(
-              std::forward<Args>(args)...);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename... Args>
-      Expected& PrivateExpectData<Expected>::GetOrCreate(
-          ExpectData<Expected>* data, type<Expected>, Args&&...args)
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        if (!this->expectedIterator->second.data)
-        {
-          ++data->CompositeData::numEntries;
-          this->expectedIterator->second.data = std::unique_ptr<Cloneable>(
-                new MakeCloneable<Expected>(std::forward<Args>(args)...));
-        }
-
-        SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
-
-        return static_cast<MakeCloneable<Expected>&>(
-              *this->expectedIterator->second.data);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data>
-      bool PrivateExpectData<Expected>::Remove(
-          ExpectData<Expected>* data, type<Data>)
-      {
-        return data->CompositeData::Remove<Data>();
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      bool PrivateExpectData<Expected>::Remove(
-          ExpectData<Expected>* data, type<Expected>)
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        if (!this->expectedIterator->second.data)
-          return false;
-
-        if (this->expectedIterator->second.required)
-          return false;
-
-        if (this->expectedIterator->second.queried)
-        {
-          --data->CompositeData::numQueries;
-          this->expectedIterator->second.queried = false;
-        }
-
-        --data->CompositeData::numEntries;
-        this->expectedIterator->second.data.reset();
-        return true;
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data>
-      Data* PrivateExpectData<Expected>::Query(
-          ExpectData<Expected>* data, type<Data>)
-      {
-        return data->CompositeData::Query<Data>();
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      Expected* PrivateExpectData<Expected>::Query(
-          ExpectData<Expected>* data, type<Expected>)
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
-
-        return static_cast<MakeCloneable<Expected>*>(
-              this->expectedIterator->second.data.get());
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data>
-      const Data* PrivateExpectData<Expected>::Query(
-          const ExpectData<Expected>* data, type<Data>) const
-      {
-        return data->CompositeData::Query<Data>();
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      const Expected* PrivateExpectData<Expected>::Query(
-          const ExpectData<Expected>* data, type<Expected>) const
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
-
-        return static_cast<const MakeCloneable<Expected>*>(
-              this->expectedIterator->second.data.get());
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data>
-      bool PrivateExpectData<Expected>::Has(
-          const ExpectData<Expected>* data, type<Data>) const
-      {
-        return (nullptr != this->Query(data, type<Data>()));
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data, typename... Args>
-      Data& PrivateExpectData<Expected>::MakeRequired(
-          ExpectData<Expected>* data, type<Data>, Args&&... args)
-      {
-        return data->CompositeData::MakeRequired<Data>(
-              std::forward<Args>(args)...);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename... Args>
-      Expected& PrivateExpectData<Expected>::MakeRequired(
-          ExpectData<Expected>* data, type<Expected>, Args&&... args)
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        this->expectedIterator->second.required = true;
-
-        if (!this->expectedIterator->second.data)
-        {
-          ++data->CompositeData::numEntries;
-          this->expectedIterator->second.data = std::unique_ptr<Cloneable>(
-                new MakeCloneable<Expected>(std::forward<Args>(args)...));
-        }
-
-        SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
-
-        return static_cast<MakeCloneable<Expected>&>(
-              *this->expectedIterator->second.data);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data>
-      bool PrivateExpectData<Expected>::Requires(
-          const ExpectData<Expected>* data, type<Data>) const
-      {
-        return data->CompositeData::Requires<Data>();
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      bool PrivateExpectData<Expected>::Requires(
-          const ExpectData<Expected>* /*data*/, type<Expected>) const
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        return this->expectedIterator->second.required;
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      template <typename Data>
-      constexpr bool PrivateExpectData<Expected>::Expects(type<Data>)
-      {
-        return false;
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      constexpr bool PrivateExpectData<Expected>::Expects(type<Expected>)
-      {
-        return true;
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Expected>
-      PrivateExpectData<Expected>::PrivateExpectData(
-          const CompositeData::MapOfData::iterator _it)
-        : expectedIterator(_it)
-      {
-        // Do nothing
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Required>
-      template <typename Data>
-      const Data& PrivateRequireData<Required>::Get(
-          const RequireData<Required>* data,
-          const CompositeData::MapOfData::iterator& it,
-          type<Data>) const
-      {
-        static_assert(std::is_same<Data, Required>::type,
-                      IGNITION_PHYSICS_CONST_GET_ERROR);
-
-        SetToQueried(it, data->CompositeData::numQueries);
-
-        return static_cast<const MakeCloneable<Required>&>(*it->second.data);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Required>
-      const Required& PrivateRequireData<Required>::Get(
-          const RequireData<Required>* data,
-          const CompositeData::MapOfData::iterator& it,
-          type<Required>) const
-      {
-        #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
-        usedExpectedDataAccess = true;
-        #endif
-
-        SetToQueried(it, data->CompositeData::numQueries);
-
-        return static_cast<const MakeCloneable<Required>&>(*it->second.data);
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Required>
-      template <typename Data>
-      constexpr bool PrivateRequireData<Required>::AlwaysRequires(type<Data>)
-      {
-        return false;
-      }
-
-      /////////////////////////////////////////////////
-      template <typename Required>
-      constexpr bool PrivateRequireData<Required>::AlwaysRequires(
-          type<Required>)
-      {
-        return true;
-      }
-
-      /////////////////////////////////////////////////
       /// \brief If DS1 is true, then DataSpec1 always requires Data, and so we
       /// will choose this version, because it is guaranteed to contain Data.
       template <typename Data, typename DataSpec1, typename DataSpec2, bool DS1>
@@ -512,6 +203,15 @@ namespace ignition
       /// and we will choose this version. If DataSpec2 also does not always
       /// require Data, then we produce an informative compilation error;
       /// otherwise, we will return the result of calling Get<Data>() on spec2.
+      ///
+      /// Note that this is template specialization which gets invoked when the
+      /// final argument of ConstGetSelectorImpl is false (i.e.
+      /// DataSpec1::AwaysRequires<Data>() return false). If the final argument
+      /// is true, then we use the default template definition.
+      ///
+      /// If it turns out that DataSpec2::AlwaysRequires<Data>() is also false,
+      /// then we produce an informative compilation error here, instructing
+      /// users to call the Query<Data>() function instead.
       template <typename Data, typename DataSpec1, typename DataSpec2>
       struct ConstGetSelectorImpl<Data, DataSpec1, DataSpec2, false>
       {
@@ -525,6 +225,12 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
+      /// \brief ConstGetSelector allows SpecifyData to perform a
+      /// const-qualified Get<Data>() operation if either DataSpec1 or DataSpec2
+      /// lists Data as a required data type. It uses template specialization to
+      /// choose between them, and only compiles Get<Data>() const using the one
+      /// for which it is possible. If it is not possible for either, then it
+      /// produces a very informative compilation error.
       template <typename Data, typename DataSpec1, typename DataSpec2>
       struct ConstGetSelector :
           public ConstGetSelectorImpl<
@@ -566,8 +272,12 @@ namespace ignition
 
       // These allow outside users to identify the specifications at compile
       // time, which can be useful for template metaprogramming.
-      public: using Specification1 = DataSpec1;
-      public: using Specification2 = DataSpec2;
+      public: using SubSpecification1 = DataSpec1;
+      public: using SubSpecification2 = DataSpec2;
+
+      // These allow us to use SFINAE to tunnel down into deeper specifications
+      public: using ExpectedData = void;
+      public: using RequiredData = void;
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
@@ -589,15 +299,35 @@ namespace ignition
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T*, Query, (), Expects, ())
+          T*, Query,
+          (const CompositeData::QueryMode mode =
+                CompositeData::QUERY_NORMAL),
+          Expects, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          const T*, Query, () const, Expects, ())
+          const T*, Query,
+          (const CompositeData::QueryMode mode =
+                CompositeData::QUERY_NORMAL) const,
+          Expects, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          bool, Has, () const, Expects, ())
+          bool, Has,
+          (const CompositeData::QueryMode mode =
+                CompositeData::QUERY_NORMAL) const,
+          Expects, (mode))
+
+      template <typename T>
+      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+          CompositeData::DataStatus, StatusOf,
+          (const CompositeData::QueryMode mode =
+                CompositeData::QUERY_NORMAL) const,
+          Expects, (mode))
+
+      template <typename T>
+      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+          bool, Unquery, () const, Expects, ())
 
       template <typename T, typename... Args>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(

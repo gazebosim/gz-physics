@@ -333,6 +333,15 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
+    CompositeData::DataStatus::DataStatus()
+      : exists(false),
+        queried(false),
+        required(false)
+    {
+      // Do nothing
+    }
+
+    /////////////////////////////////////////////////
     std::size_t CompositeData::NumEntries() const
     {
       IGN_ASSERT(numEntries <= dataMap.size(),

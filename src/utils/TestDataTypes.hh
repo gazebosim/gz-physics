@@ -20,6 +20,7 @@
 
 #include "ignition/physics/CompositeData.hh"
 #include "ignition/physics/CompositeDataMacros.hh"
+#include "ignition/physics/SpecifyData.hh"
 
 /////////////////////////////////////////////////
 class StringData
@@ -85,6 +86,28 @@ class CharData
     // Do nothing
   }
 };
+
+/////////////////////////////////////////////////
+// Single-requirement CompositeData
+using RequireString = ignition::physics::RequireData<StringData>;
+
+// CompositeData with three requirements and one optional expectation
+using RequireStringBoolChar = ignition::physics::SpecifyData<
+          ignition::physics::RequireData<
+                StringData,
+                BoolData,
+                CharData>,
+          ignition::physics::ExpectData<
+                IntData> >;
+
+// CompositeData with two requirements and two optional expectations
+using RequireIntDouble = ignition::physics::SpecifyData<
+          ignition::physics::RequireData<
+                DoubleData,
+                IntData>,
+          ignition::physics::ExpectData<
+                StringData,
+                CharData> >;
 
 /////////////////////////////////////////////////
 template <typename... DataTypes>

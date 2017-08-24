@@ -19,25 +19,14 @@
 
 #define IGNITION_UNITTEST_EXPECTDATA_ACCESS
 
-#include "TestUtils.hh"
+#include "utils/TestDataTypes.hh"
 #include "ignition/physics/SpecifyData.hh"
-
-/////////////////////////////////////////////////
-// Single-requirement CompositeData
-using RequireString = ignition::physics::RequireData<StringData>;
-
-// CompositeData with three requirements and one optional expectation
-using RequireStringBoolChar = ignition::physics::SpecifyData<
-          ignition::physics::RequireData<
-                StringData,
-                BoolData,
-                CharData>,
-          ignition::physics::ExpectData<
-                IntData> >;
+#include "ignition/physics/CanReadData.hh"
+#include "ignition/physics/CanWriteData.hh"
 
 
 /////////////////////////////////////////////////
-TEST(SpecifyData, ConstructionAndAccess)
+TEST(SpecifyData, RequirementsAccessConstruction)
 {
   // ------------------------------------------------------------------------
   // Test a CompositeData with a single requirement
@@ -228,6 +217,187 @@ TEST(SpecifyData, ConstructionAndAccess)
   EXPECT_FALSE(RequireStringBoolChar::Expects<DoubleData>());
   EXPECT_FALSE(sbcData.Requires<DoubleData>());
   EXPECT_FALSE(sbcData.AlwaysRequires<DoubleData>());
+}
+
+/////////////////////////////////////////////////
+TEST(SpecifyData, QueryCounting)
+{
+  const ignition::physics::CompositeData::QueryMode normal =
+      ignition::physics::CompositeData::QUERY_NORMAL;
+
+  const ignition::physics::CompositeData::QueryMode silent =
+      ignition::physics::CompositeData::QUERY_SILENT;
+
+
+  RequireStringBoolChar data;
+
+  EXPECT_EQ(3u, data.NumEntries());
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+
+  // Test a silent query on an existing expected type
+  usedExpectedDataAccess = false;
+  EXPECT_NE(nullptr, data.Query<StringData>(silent));
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+
+  // Test a normal query on an existing expected type
+  usedExpectedDataAccess = false;
+  EXPECT_NE(nullptr, data.Query<StringData>(normal));
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test a normal query on a non-existent expected type
+  usedExpectedDataAccess = false;
+  EXPECT_EQ(nullptr, data.Query<IntData>());
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test Create on an expected type
+  usedExpectedDataAccess = false;
+  EXPECT_EQ(248, data.Create<IntData>(248).myInt);
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test a normal query on a newly existing expected type
+  usedExpectedDataAccess = false;
+  EXPECT_EQ(nullptr, data.Query<DoubleData>(normal));
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test Create on a non-existent unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_NEAR(2.66, data.Create<DoubleData>(2.66).myDouble, 1e-8);
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(5u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test a normal query on a newly existing unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_NE(nullptr, data.Query<DoubleData>(normal));
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test unquery on an expected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Unquery<IntData>());
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+
+  // Test a redundant unquery on an expected type
+  usedExpectedDataAccess = false;
+  EXPECT_FALSE(data.Unquery<IntData>());
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+
+  // Test remove on a queried expected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Remove<IntData>());
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test unquery on an unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Unquery<DoubleData>());
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+
+  // Test a redundant unquery on an unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_FALSE(data.Unquery<DoubleData>());
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+
+  // Test remove on a queried unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Remove<DoubleData>());
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test GetOrCreate on an expected type
+  usedExpectedDataAccess = false;
+  EXPECT_EQ(299, data.GetOrCreate<IntData>(299).myInt);
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test GetOrCreate on an unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_NEAR(3.05, data.GetOrCreate<DoubleData>(3.05).myDouble, 1e-8);
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(5u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test Remove on an unqueried expected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Unquery<IntData>());
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Remove<IntData>());
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test Remove on an unqueried unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Unquery<DoubleData>());
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Remove<DoubleData>());
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test MakeRequired on a non-existent expected type
+  usedExpectedDataAccess = false;
+  EXPECT_EQ(331, data.MakeRequired<IntData>(331).myInt);
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test MakeRequired on a non-existent unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_NEAR(3.37, data.MakeRequired<DoubleData>(3.37).myDouble, 1e-8);
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(5u, data.NumEntries());
+  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+
+  // Test ResetQueries
+  data.ResetQueries();
+  EXPECT_EQ(5u, data.NumUnqueriedEntries());
+
+  // Test a silent Has on an expected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Has<IntData>(silent));
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(5u, data.NumUnqueriedEntries());
+
+  // Test a normal Has on an expected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Has<IntData>(normal));
+  EXPECT_TRUE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumUnqueriedEntries());
+
+  // Test a silent Has on an unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Has<DoubleData>(silent));
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(4u, data.NumUnqueriedEntries());
+
+  // Test a normal Has on an unexpected type
+  usedExpectedDataAccess = false;
+  EXPECT_TRUE(data.Has<DoubleData>(normal));
+  EXPECT_FALSE(usedExpectedDataAccess);
+  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+
+  // TODO(MXG): Test Get and StatusOf
+
 }
 
 /////////////////////////////////////////////////

@@ -84,20 +84,81 @@ namespace ignition
       public: template <typename Data>
       bool Remove();
 
+      /// \brief Use these flags in Query(), Has(), and Status() to change their
+      /// effects on the meta info of the data being queried.
+      enum QueryMode
+      {
+        QUERY_NORMAL = 0,
+        QUERY_SILENT
+      };
+
       /// \brief Query this CompositeData for an object of type T. If it
       /// contains an object of type T, it gets returned as a T*. Otherwise, a
       /// nullptr is returned.
+      ///
+      /// If _silent is set to true, then calling this function will not cause
+      /// the query flag to change.
       public: template <typename Data>
-      Data* Query();
+      Data* Query(const QueryMode mode = QUERY_NORMAL);
 
       /// \brief Const-qualified version of Query. This can be used to retrieve
       /// data from a `const CompositeData`.
+      ///
+      /// If _silent is set to true, then
       public: template <typename Data>
-      const Data* Query() const;
+      const Data* Query(const QueryMode mode = QUERY_NORMAL) const;
 
       /// \brief Returns true if this CompositeData has an object of type T.
+      ///
+      /// If silent is set to true, then calling this function will not cause
+      /// the query flag to change.
       public: template <typename Data>
-      bool Has() const;
+      bool Has(const QueryMode mode = QUERY_NORMAL) const;
+
+      /// \brief Struct that describes the status of data
+      struct DataStatus
+      {
+        /// \brief If the data exists in the CompositeData, this will be true,
+        /// otherwise it is false.
+        public: bool exists;
+
+        /// \brief If the data was marked as queried BEFORE calling StatusOf
+        /// (regardless of what QueryMode is used), this will be true, otherwise
+        /// it is false.
+        public: bool queried;
+
+        /// \brief If the data is marked as required, this will be true,
+        /// otherwise it is false.
+        public: bool required;
+
+        /// \brief Default constructor. Initializes everything to false.
+        DataStatus();
+      };
+
+      /// \brief Returns a DataStatus object that describes the status of the
+      /// requested data type.
+      ///
+      /// Note that using QUERY_NORMAL will mark the data as queried, but the
+      /// DataStatus that is returned will indicate the query status prior to
+      /// calling this function, so it might not reflect the current status.
+      /// Using QUERY_SILENT will guarantee that the returned status reflects
+      /// the current status. We use this behavior because otherwise
+      /// QUERY_NORMAL would cause information to get lost. With the behavior
+      /// the way it is, you can always ascertain both (1) what the query status
+      /// was before calling this function, and (2) what it is now that the
+      /// function has been called.
+      public: template <typename Data>
+      DataStatus StatusOf(const QueryMode mode = QUERY_NORMAL) const;
+
+      /// \brief Returns true if this CompositeData has an object of type T
+      /// which was marked as queried, and that object is now marked as
+      /// unqueried. If the object does not exist or it was already unqueried,
+      /// this returns false.
+      ///
+      /// This function is const-qualified because the query flags are declared
+      /// as mutable.
+      public: template <typename Data>
+      bool Unquery() const;
 
       /// \brief Marks the specified type of Data as required, creates one with
       /// the given arguments if it did not exist, and returns a reference to
@@ -265,11 +326,11 @@ namespace ignition
       /// \brief Total number of data entries currently in this CompositeData.
       /// Note that this may differ from the size of dataMap, because some
       /// entries in dataMap will be referring to nullptrs.
-      private: std::size_t numEntries;
+      protected: std::size_t numEntries;
 
       /// \brief Total number of unique queries which have been performed since
       /// either construction or the last call to ResetQueries().
-      private: mutable std::size_t numQueries;
+      protected: mutable std::size_t numQueries;
 
       template <typename> friend class detail::PrivateExpectData;
       template <typename> friend class detail::PrivateRequireData;

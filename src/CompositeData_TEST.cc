@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "ignition/physics/CompositeData.hh"
-#include "TestUtils.hh"
+#include "utils/TestDataTypes.hh"
 
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, AddRemoveData)

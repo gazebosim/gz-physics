@@ -113,10 +113,6 @@ namespace ignition
     template <typename Expected>
     class ExpectData<Expected> : public virtual CompositeData
     {
-      // This allows outside users to identify this expected data type at
-      // compile time, which can be useful for doing template metaprogramming.
-      public: using ExpectedData = Expected;
-
       /// \brief Default constructor
       public: ExpectData();
 
@@ -146,16 +142,26 @@ namespace ignition
       /// \brief Provides extremely low-cost access for querying expected data
       /// types and normal access for unexpected data types.
       public: template <typename Data>
-      Data* Query();
+      Data* Query(const QueryMode mode = QUERY_NORMAL);
 
       /// \brief Const-qualified version of Query<Data>
       public: template <typename Data>
-      const Data* Query() const;
+      const Data* Query(const QueryMode mode = QUERY_NORMAL) const;
 
       /// \brief Provides extremely low-cost access for checking the existence
       /// of expected data types and normal access for unexpected data types.
       public: template <typename Data>
-      bool Has() const;
+      bool Has(const QueryMode mode = QUERY_NORMAL) const;
+
+      /// \brief Provides extremely low-cost access to the status of expected
+      /// data types and normal access for unexpected data types.
+      public: template <typename Data>
+      DataStatus StatusOf(const QueryMode mode = QUERY_NORMAL) const;
+
+      /// \brief Provides extremely low-cost access for unquerying expected data
+      /// types and normal access for unexpected data types.
+      public: template <typename Data>
+      bool Unquery() const;
 
       /// \brief Provides extremely low-cost access for making expected data
       /// types required and normal access for unexpected data types.
@@ -176,6 +182,14 @@ namespace ignition
       /// \brief Provides the implementation for delegating the functions
       /// provided by the ExpectData class
       protected: detail::PrivateExpectData<Expected> privateExpectData;
+
+      // This allows outside users to identify this expected data type at
+      // compile time, which can be useful for doing template metaprogramming.
+      public: using ExpectedData = Expected;
+      public: using RequiredData = void;
+
+      public: using SubSpecification1 = void;
+      public: using SubSpecification2 = void;
     };
 
     template <typename Required>

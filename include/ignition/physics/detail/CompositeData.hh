@@ -46,7 +46,7 @@ namespace ignition
     template <typename Data>
     Data &CompositeData::Get()
     {
-      MapOfData::iterator it = this->dataMap.insert(
+      const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
 
       if (!it->second.data)
@@ -64,7 +64,7 @@ namespace ignition
     template <typename Data, typename... Args>
     Data& CompositeData::Create(Args&&... args)
     {
-      MapOfData::iterator it = this->dataMap.insert(
+      const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
 
       if (!it->second.data)
@@ -82,7 +82,7 @@ namespace ignition
     template <typename Data, typename... Args>
     Data& CompositeData::GetOrCreate(Args&&... args)
     {
-      MapOfData::iterator it = this->dataMap.insert(
+      const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
 
       if (!it->second.data)
@@ -101,7 +101,8 @@ namespace ignition
     template <typename Data>
     bool CompositeData::Remove()
     {
-      MapOfData::iterator it = this->dataMap.find(Data::IgnPhysicsTypeLabel());
+      const MapOfData::iterator it =
+          this->dataMap.find(Data::IgnPhysicsTypeLabel());
 
       if (this->dataMap.end() == it || !it->second.data)
         return true;
@@ -124,46 +125,103 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    Data* CompositeData::Query()
+    Data* CompositeData::Query(const QueryMode mode)
     {
-      MapOfData::const_iterator it =
+      const MapOfData::const_iterator it =
           this->dataMap.find(Data::IgnPhysicsTypeLabel());
 
       if (this->dataMap.end() == it)
         return nullptr;
 
-      detail::SetToQueried(it, this->numQueries);
+      if (!it->second.data)
+        return nullptr;
+
+      if (QUERY_NORMAL == mode)
+        detail::SetToQueried(it, this->numQueries);
 
       return static_cast<MakeCloneable<Data>*>(it->second.data.get());
     }
 
     /////////////////////////////////////////////////
     template <typename Data>
-    const Data* CompositeData::Query() const
+    const Data* CompositeData::Query(const QueryMode mode) const
     {
-      MapOfData::const_iterator it =
+      const MapOfData::const_iterator it =
           this->dataMap.find(Data::IgnPhysicsTypeLabel());
 
       if (this->dataMap.end() == it)
         return nullptr;
 
-      detail::SetToQueried(it, this->numQueries);
+      if (!it->second.data)
+        return nullptr;
+
+      if (QUERY_NORMAL == mode)
+        detail::SetToQueried(it, this->numQueries);
 
       return static_cast<const MakeCloneable<Data>*>(it->second.data.get());
     }
 
     /////////////////////////////////////////////////
     template <typename Data>
-    bool CompositeData::Has() const
+    bool CompositeData::Has(const QueryMode mode) const
     {
-      return (nullptr != this->Query<Data>());
+      return (nullptr != this->Query<Data>(mode));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Data>
+    CompositeData::DataStatus CompositeData::StatusOf(
+        const QueryMode mode) const
+    {
+      // status is initialized to everything being false
+      DataStatus status;
+
+      const MapOfData::const_iterator it =
+          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+
+      if (this->dataMap.end() == it)
+        return status;
+
+      if (!it->second.data)
+        return status;
+
+      status.exists = true;
+      status.required = it->second.required;
+      status.queried = it->second.queried;
+
+      if (QUERY_NORMAL == mode)
+        detail::SetToQueried(it, this->numQueries);
+
+      return status;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Data>
+    bool CompositeData::Unquery() const
+    {
+      const MapOfData::const_iterator it =
+          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+
+      if (this->dataMap.end() == it)
+        return false;
+
+      if (!it->second.data)
+        return false;
+
+      if (!it->second.queried)
+        return false;
+
+      --this->numQueries;
+      it->second.queried = false;
+
+      return true;
     }
 
     /////////////////////////////////////////////////
     template <typename Data, typename... Args>
     Data& CompositeData::MakeRequired(Args&&... args)
     {
-      MapOfData::iterator it = this->dataMap.insert(
+      const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
 
       it->second.required = true;
@@ -183,7 +241,7 @@ namespace ignition
     template <typename Data>
     bool CompositeData::Requires() const
     {
-      MapOfData::const_iterator it =
+      const MapOfData::const_iterator it =
           this->dataMap.find(Data::IgnPhysicsTypeLabel());
 
       if (this->dataMap.end() == it)

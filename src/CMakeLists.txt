@@ -19,10 +19,11 @@ foreach(test_file ${gtest_source_files})
 
 endforeach(test_file)
 
+
 # Collect the source file names
 foreach(source_file ${source_files})
 
-  get_filename_component(source ${source_files} NAME)
+  get_filename_component(source ${source_file} NAME)
   list(APPEND sources ${source})
 
 endforeach(source_file)
