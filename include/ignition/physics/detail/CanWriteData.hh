@@ -23,6 +23,19 @@ namespace ignition
           /// Write(~) function to accept the data type which the compiler is
           /// indicating.
           ///
+          /// If you see an error about "const" and "qualifiers", then make sure
+          /// that your class's Write(~) function is const-qualified, i.e. put
+          /// the keyword const at the end of its declaration in the function
+          /// definition:
+          ///
+          /// class YourClass
+          /// {
+          ///   public:
+          ///   /* ... */
+          ///     void Write(const Data &data) const;
+          ///   /* ... */
+          /// };
+          ///
           ///    ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
           yourClass->Write(data.template Get<Data>());
         }
@@ -34,8 +47,8 @@ namespace ignition
     {
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::WriteDataOperation,
-          Derived>::template Operate<const CompositeData>(
-            static_cast<Derived*>(this), CompositeData{},
+          const Derived>::template Operate<const CompositeData>(
+            static_cast<const Derived*>(this), CompositeData{},
             OperationMask{}, true);
     }
 
@@ -55,7 +68,8 @@ namespace ignition
 
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::WriteDataOperation,
-          Derived>::Operate(static_cast<Derived*>(this), _data, mask);
+          const Derived>::Operate(static_cast<const Derived*>(this),
+                                  _data, mask);
     }
 
     template <typename Derived, typename Specification>
@@ -64,8 +78,8 @@ namespace ignition
       CompositeData data;
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::WriteDataOperation,
-          Derived>::Operate(static_cast<Derived*>(this), data,
-                            OperationMask{}, true);
+          const Derived>::Operate(static_cast<const Derived*>(this), data,
+                                  OperationMask{}, true);
     }
 
     template <typename Derived, typename Specification>
@@ -84,7 +98,8 @@ namespace ignition
 
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::WriteDataOperation,
-          Derived>::Operate(static_cast<Derived*>(this), _data, mask);
+          const Derived>::Operate(static_cast<const Derived*>(this),
+                                  _data, mask);
     }
   }
 }

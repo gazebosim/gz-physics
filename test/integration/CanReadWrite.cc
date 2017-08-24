@@ -31,58 +31,86 @@ class SomeClass
       public ignition::physics::CanReadExpectedData<SomeClass, RequireStringBoolChar>,
       public ignition::physics::CanWriteExpectedData<SomeClass, RequireIntDouble>
 {
+  public: StringData sdata;
+  public: BoolData bdata;
+  public: CharData cdata;
+  public: IntData idata;
+  public: FloatData fdata;
 
-  public: void Read(const StringData& sdata)
+  public: void Read(const StringData& _sdata)
   {
-    std::cout << "Successfully read string: " << sdata.myString << std::endl;
+    sdata = _sdata;
   }
 
-  public: void Read(const BoolData& bdata)
+  public: void Read(const BoolData& _bdata)
   {
-    std::cout << "Sucessfully read bool: " << bdata.myBool << std::endl;
+    bdata = _bdata;
   }
 
-  public: void Read(const CharData& cdata)
+  public: void Read(const CharData& _cdata)
   {
-    std::cout << "Successfully read char: " << cdata.myChar << std::endl;
+    cdata = _cdata;
   }
 
-  public: void Read(const IntData& idata)
+  public: void Read(const IntData& _idata)
   {
-    std::cout << "Successfully read int: " << idata.myInt << std::endl;
+    idata = _idata;
   }
 
-  public: void Read(const FloatData& fdata)
+  public: void Read(const FloatData& _fdata)
   {
-    std::cout << "Successfully read float: " << fdata.myFloat << std::endl;
+    fdata = _fdata;
   }
 
-  public: void Write(IntData& idata)
+  public: void Write(IntData& _idata) const
   {
-
+    _idata.myInt = 67;
   }
 
-  public: void Write(DoubleData& ddata)
+  public: void Write(DoubleData& _ddata) const
   {
-
+    _ddata.myDouble = 7.2;
   }
 
-  public: void Write(StringData& sdata)
+  public: void Write(StringData& _sdata) const
   {
-
+    _sdata.myString = "seventy-seven";
   }
 
-  public: void Write(CharData& cdata)
+  public: void Write(CharData& _cdata) const
   {
-
+    _cdata.myChar = '8';
   }
 };
 
 TEST(SpecifyData, ReadData)
 {
-  SomeClass some;
-  some.ReadRequiredData(RequireStringBoolChar{});
-  some.ReadExpectedData(RequireStringBoolChar{});
+  ignition::physics::CompositeData input;
+  input.Get<StringData>().myString = "89";
+  input.Get<BoolData>().myBool = false;
+  input.Get<CharData>().myChar = 'd';
+  input.Get<IntData>().myInt = 92;
+  input.Get<FloatData>().myFloat = 93.5;
+  input.ResetQueries();
+
+  SomeClass something;
+  something.ReadRequiredData(input);
+  EXPECT_EQ("89", something.sdata.myString);
+  EXPECT_FALSE(something.bdata.myBool);
+  EXPECT_EQ('d', something.cdata.myChar);
+  EXPECT_EQ(55, something.idata.myInt);
+  EXPECT_NEAR(9.5, something.fdata.myFloat, 1e-8);
+
+  something.ReadExpectedData(input);
+  EXPECT_EQ(92, something.idata.myInt);
+  EXPECT_NEAR(93.5, something.fdata.myFloat, 1e-8);
+
+  ignition::physics::CompositeData output;
+  something.WriteExpectedData(output);
+  EXPECT_EQ(67, output.Get<IntData>().myInt);
+  EXPECT_NEAR(7.2, output.Get<DoubleData>().myDouble, 1e-8);
+  EXPECT_EQ("seventy-seven", output.Get<StringData>().myString);
+  EXPECT_EQ('8', output.Get<CharData>().myChar);
 }
 
 

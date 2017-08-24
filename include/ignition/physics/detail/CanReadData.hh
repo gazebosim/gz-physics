@@ -48,6 +48,16 @@ namespace ignition
           /// Read(~) function to accept the data type which the compiler is
           /// indicating.
           ///
+          /// The function signature should look like:
+          ///
+          /// class YourClass
+          /// {
+          ///   public:
+          ///   /* ... */
+          ///     void Read(Data &data);
+          ///   /* ... */
+          /// };
+          ///
           ///    ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
           yourClass->Read(*query);
         }
