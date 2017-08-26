@@ -25,6 +25,13 @@ message (STATUS "${PROJECT_NAME} version ${PROJECT_VERSION_FULL}")
 set (project_cmake_dir ${PROJECT_SOURCE_DIR}/cmake
   CACHE PATH "Location of CMake scripts")
 
+
+########################################
+# Build all possible plugins by default.
+# Users may override this by changing these variables.
+set(BUILD_IGNITION_PHYSICS_DART TRUE)
+
+
 include (${project_cmake_dir}/Utils.cmake)
 
 ########################################
@@ -259,12 +266,22 @@ else (build_errors)
   message (STATUS "Install path: ${CMAKE_INSTALL_PREFIX}")
 
 
+  #################################################
+  # Build the core library
   if (BUILD_IGNITION)
     set(TEST_TYPE "UNIT")
     add_subdirectory(src)
     add_subdirectory(include)
     add_subdirectory(test)
   endif (BUILD_IGNITION)
+
+
+  #################################################
+  # Build the plugins if their dependencies are available
+  # and the user has requested it.
+  if (BUILD_IGNITION_PHYSICS_DART AND HAVE_DART)
+    add_subdirectory(ignition-physics-dart)
+  endif()
 
   ########################################
   # Make the package config files

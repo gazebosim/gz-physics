@@ -18,7 +18,6 @@ macro (ign_build_tests)
       ${PROJECT_LIBRARY_TARGET_NAME}
       gtest gtest_main
       )
-    message(STATUS "PROJECT_LIBRARY_TARGET_NAME: ${PROJECT_LIBRARY_TARGET_NAME}")
 
     if (UNIX)
       target_link_libraries(${BINARY_NAME}
@@ -27,7 +26,6 @@ macro (ign_build_tests)
          pthread
          ${PROJECT_NAME_LOWER}
          ${IGNITION-COMMON_LIBRARIES})
-       message(STATUS "PROJECT_NAME_LOWER: ${PROJECT_NAME_LOWER}")
     elseif(WIN32)
       target_link_libraries(${BINARY_NAME}
          gtest.lib

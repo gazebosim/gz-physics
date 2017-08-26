@@ -41,3 +41,17 @@ if (NOT DEFINED IGNITION-COMMON_LIBRARY_DIRS AND NOT DEFINED IGNITION-COMMON_INC
     message(STATUS "Looking for ignition-common${IGNITION-COMMON_REQUIRED_MAJOR_VERSION}-config.cmake - found")
   endif()
 endif()
+
+#################################################
+# Find DART
+set(DART_MIN_REQUIRED_VERSION 6)
+find_package(DART ${DART_MIN_REQUIRED_VERSION} COMPONENTS utils utils-urdf)
+if (DART_FOUND)
+  message(STATUS "Looking for DART - found")
+  set(HAVE_DART TRUE)
+else()
+  message(STATUS "Looking for DART - not found")
+  BUILD_WARNING("DART ${DART_MIN_REQUIRED_VERSION} not found. For "
+    "ignition-physics-dart, please install libdart${DART_MIN_REQUIRED_VERSION}-dev.")
+  set(HAVE_DART FALSE)
+endif(DART_FOUND)

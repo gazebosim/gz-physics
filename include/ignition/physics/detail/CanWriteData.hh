@@ -45,11 +45,11 @@ namespace ignition
     template <typename Derived, typename Specification>
     CanWriteRequiredData<Derived, Specification>::CanWriteRequiredData()
     {
+      CompositeData dummy;
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::WriteDataOperation,
-          const Derived>::template Operate<const CompositeData>(
-            static_cast<const Derived*>(this), CompositeData{},
-            OperationMask{}, true);
+          const Derived>::Operate(static_cast<const Derived*>(this), dummy,
+                                  OperationMask{}, true);
     }
 
     template <typename Derived, typename Specification>
@@ -75,10 +75,10 @@ namespace ignition
     template <typename Derived, typename Specification>
     CanWriteExpectedData<Derived, Specification>::CanWriteExpectedData()
     {
-      CompositeData data;
+      CompositeData dummy;
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::WriteDataOperation,
-          const Derived>::Operate(static_cast<const Derived*>(this), data,
+          const Derived>::Operate(static_cast<const Derived*>(this), dummy,
                                   OperationMask{}, true);
     }
 

@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_FORWARDSTEP_HH_
 #define IGNITION_PHYSICS_FORWARDSTEP_HH_
 
+#include <ignition/common/PluginMacros.hh>
+
 #include "ignition/math.hh"
 
 #include "ignition/physics/SpecifyData.hh"
@@ -29,9 +31,21 @@ namespace ignition
   {
     struct WorldPose
     {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::WorldPose)
+
       ignition::math::Pose3d pose;
 
       std::size_t body;
+    };
+
+    struct TargetPose : WorldPose
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::TargetPose)
+    };
+
+    struct EndEffectorPose : WorldPose
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::EndEffectorPose)
     };
 
     // ---------------- Output Data Structures -----------------
@@ -127,24 +141,39 @@ namespace ignition
     };
 
 
-    // ---------------- Interface -----------------
+    // ---------------- ForwardStep Interface -----------------
     class ForwardStep
     {
-      using Input = ExpectData<
+      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep)
+
+      public: using Input = ExpectData<
               ApplyExternalForceTorques,
               ApplyGeneralizedForces,
               VelocityControlCommands,
               ServoControlCommands>;
 
-      using Output = SpecifyData<
+      public: using Output = SpecifyData<
           RequireData<WorldPoses>,
           ExpectData<Contacts> >;
 
-      using State = CompositeData;
+      public: using State = CompositeData;
 
       public: virtual void Step(Output &h, State &x, const Input &u) = 0;
 
       public: virtual ~ForwardStep() = default;
+    };
+
+
+    // ---------------- SetState Interface -----------------
+    class SetState
+    {
+      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::SetState)
+
+      public: using State = CompositeData;
+
+      public: virtual void SetStateTo(const State &x) = 0;
+
+      public: virtual ~SetState() = default;
     };
   }
 }

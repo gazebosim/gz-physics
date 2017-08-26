@@ -1,6 +1,3 @@
-include (${project_cmake_dir}/Utils.cmake)
-
-configure_file(utils/test_config.h.in ${PROJECT_BINARY_DIR}/utils/test_config.h)
 
 file(GLOB source_files "*.cc")
 list(SORT source_files)
@@ -21,7 +18,6 @@ foreach(test_file ${gtest_source_files})
 
 endforeach(test_file)
 
-
 # Collect the source file names
 foreach(source_file ${source_files})
 
@@ -30,15 +26,24 @@ foreach(source_file ${source_files})
 
 endforeach(source_file)
 
-ign_add_library(${PROJECT_LIBRARY_TARGET_NAME} ${sources})
-target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
+get_filename_component(lib_name ${CMAKE_CURRENT_LIST_DIR} NAME)
+ign_add_library(${lib_name} ${sources})
+target_link_libraries(${lib_name}
+  ignition-physics
   ${IGNITION-COMMON_LIBRARIES}
-  ${IGNITION-MATH_LIBRARIES})
+  ${DART_LIBRARIES}
+  ${DART-UTILS_LIBRARIES}
+  ${DART-UTILS-URDF_LIBRARIES})
 
-if(NOT MSVC)
-  target_compile_options(${PROJECT_LIBRARY_TARGET_NAME} PUBLIC "-std=c++11")
-endif()
+target_include_directories(${lib_name} PRIVATE
+  ignition-physics
+  ${DART_INCLUDE_DIRS}
+  ${IGNITION-COMMON_INCLUDE_DIRS})
 
-ign_install_library(${PROJECT_LIBRARY_TARGET_NAME} ${PROJECT_EXPORT_NAME})
+ign_install_library(${lib_name} ${lib_name})
 
+# This allows us to access utils/test_config.h
+include_directories(${PROJECT_BINARY_DIR})
+
+set(TEST_TYPE "PLUGIN")
 ign_build_tests(${gtest_sources})
