@@ -186,56 +186,105 @@ namespace ignition
 
     namespace detail
     {
-      /////////////////////////////////////////////////
-      /// \brief If DS1 is true, then DataSpec1 always requires Data, and so we
-      /// will choose this version, because it is guaranteed to contain Data.
-      template <typename Data, typename DataSpec1, typename DataSpec2, bool DS1>
-      struct ConstGetSelectorImpl
+      /// The following templates deal with finding leaf specifiers within a
+      /// specification tree. An example of a leaf specifier is ExpectData<T>
+      /// or RequireData<T>. Casting a complex specification to its relevant
+      /// leaf specifier allows us to utilize the extremely low-cost access
+      /// functions provided by the leaf specifier.
+
+      // Forward declaration
+      template <typename Data, typename Specification,
+                template<typename, typename> class Condition>
+      struct SelectSpecifierIfAvailable;
+
+      /// \brief Default definition for this template. This definition will be
+      /// invoked when S1 is true and some sub-specifications exist.
+      ///
+      /// The fact that S1 is true means that SubSpec1 met the conditions for
+      /// the type of specifier that we are looking for. Therefore, we will
+      /// branch into S1 and search for the exact leaf specifier that we want.
+      template <typename Data, typename Specification,
+                template<typename, typename> class Condition,
+                typename SubSpec1, typename SubSpec2, bool S1>
+      struct SelectSpecifierIfAvailableImpl
       {
-        static const Data& Select(const DataSpec1* spec1)
-        {
-          return spec1->template Get<Data>();
-        }
+        using Specifier = typename SelectSpecifierIfAvailable<
+                Data, SubSpec1, Condition>::Specifier;
       };
 
-      /////////////////////////////////////////////////
-      /// \brief If DS1 is false, then DataSpec1 does not always require Data,
-      /// and we will choose this version. If DataSpec2 also does not always
-      /// require Data, then we produce an informative compilation error;
-      /// otherwise, we will return the result of calling Get<Data>() on spec2.
+      /// \brief Specialized definition which is invoked when S1 is false and
+      /// some sub-specifications exist.
       ///
-      /// Note that this is template specialization which gets invoked when the
-      /// final argument of ConstGetSelectorImpl is false (i.e.
-      /// DataSpec1::AwaysRequires<Data>() return false). If the final argument
-      /// is true, then we use the default template definition.
-      ///
-      /// If it turns out that DataSpec2::AlwaysRequires<Data>() is also false,
-      /// then we produce an informative compilation error here, instructing
-      /// users to call the Query<Data>() function instead.
-      template <typename Data, typename DataSpec1, typename DataSpec2>
-      struct ConstGetSelectorImpl<Data, DataSpec1, DataSpec2, false>
+      /// The fact that S1 is false means that it would be futile to branch
+      /// into SubSpec1. Therefore, we will instead branch into SubSpec2 in the
+      /// hopes that it contains the specification that we want (even though it
+      /// might not actually contain what we want).
+      template <typename Data, typename Specification,
+                template<typename, typename> class Condition,
+                typename SubSpec1, typename SubSpec2>
+      struct SelectSpecifierIfAvailableImpl<
+          Data, Specification, Condition, SubSpec1, SubSpec2, false>
       {
-        static const Data& Select(const DataSpec2* spec2)
-        {
-          static_assert(DataSpec2::template AlwaysRequires<Data>(),
-                        IGNITION_PHYSICS_CONST_GET_ERROR);
-
-          return spec2->template Get<Data>();
-        }
+        using Specifier = typename SelectSpecifierIfAvailable<
+                Data, SubSpec2, Condition>::Specifier;
       };
 
-      /////////////////////////////////////////////////
-      /// \brief ConstGetSelector allows SpecifyData to perform a
-      /// const-qualified Get<Data>() operation if either DataSpec1 or DataSpec2
-      /// lists Data as a required data type. It uses template specialization to
-      /// choose between them, and only compiles Get<Data>() const using the one
-      /// for which it is possible. If it is not possible for either, then it
-      /// produces a very informative compilation error.
-      template <typename Data, typename DataSpec1, typename DataSpec2>
-      struct ConstGetSelector :
-          public ConstGetSelectorImpl<
-              Data, DataSpec1, DataSpec2,
-              DataSpec1::template AlwaysRequires<Data>()> { };
+      /// \brief Specialized definition which is never invoked. We need this
+      /// definition in order to eliminate ambiguity between template
+      /// specializations.
+      template <typename Data, typename Specification,
+                template<typename, typename> class Condition>
+      struct SelectSpecifierIfAvailableImpl<
+          Data, Specification, Condition, void, void, true>
+      {
+        using Specifier = Specification;
+      };
+
+      /// \brief Specialized definition which is invoked when we've reached a
+      /// leaf specification. Either this is the specification that we want, or
+      /// else the specification that we want does not exist in the original
+      /// specification.
+      template <typename Data, typename Specification,
+                template<typename, typename> class Condition>
+      struct SelectSpecifierIfAvailableImpl<
+          Data, Specification, Condition, void, void, false>
+      {
+        using Specifier = Specification;
+      };
+
+      /// \brief Find the leaf specifier within Specification which meets the
+      /// Condition for Data. If Specification is not able to satisfy the
+      /// Condition, then this will simply provide the last leaf specifier
+      /// within Specification, whatever that may be.
+      template <typename Data, typename Specification,
+                template<typename, typename> class Condition>
+      struct SelectSpecifierIfAvailable
+      {
+        using Specifier = typename SelectSpecifierIfAvailableImpl<
+            Data, Specification, Condition,
+            typename Specification::SubSpecification1,
+            typename Specification::SubSpecification2,
+            Condition<Data, typename Specification::SubSpecification1>::value>
+          ::Specifier;
+      };
+
+      /// \brief A version of SelectSpecifierIfAvailable that returns the leaf
+      /// specifier which expects Data.
+      template <typename Data, typename Specification>
+      struct SelectExpectorIfAvailable
+      {
+        using Expector = typename SelectSpecifierIfAvailable<
+                Data, Specification, IsExpected>::Specifier;
+      };
+
+      /// \brief A version of SelectSpecifierIfAvailable that returns the leaf
+      /// specifier which requires Data
+      template <typename Data, typename Specification>
+      struct SelectRequirerIfAvailable
+      {
+        using Requirer = typename SelectSpecifierIfAvailable<
+                Data, Specification, IsRequired>::Specifier;
+      };
     }
 
     /////////////////////////////////////////////////
@@ -252,17 +301,19 @@ namespace ignition
       public: virtual ~SpecifyData() = default;
     };
 
-    #define DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(\
-      ReturnType, Function, Suffix, Condition, Args)\
-      ReturnType Function Suffix\
-      {\
-        if (DataSpec2::template Condition<T>())\
-          return DataSpec2::template Function <T> Args ;\
-        \
-        return DataSpec1::template Function <T> Args ;\
+    /// \brief Create a function which casts this to the relevant leaf specifier
+    /// and then invokes the requested function on it.
+    #define DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH( \
+      ReturnType, Function, Suffix, CastTo, Args) \
+      ReturnType Function Suffix \
+      { \
+        using Expector = typename detail::SelectExpectorIfAvailable< \
+                T, Specification>::Expector; \
+        return static_cast<CastTo*>(this)->template Function <T> Args; \
       }
 
     /////////////////////////////////////////////////
+    /// \brief Create a fork in the binary specification tree
     template <typename DataSpec1, typename DataSpec2>
     class SpecifyData<DataSpec1, DataSpec2> :
         public virtual DataSpec1,
@@ -272,6 +323,7 @@ namespace ignition
 
       // These allow outside users to identify the specifications at compile
       // time, which can be useful for template metaprogramming.
+      public: using Specification = SpecifyData<DataSpec1, DataSpec2>;
       public: using SubSpecification1 = DataSpec1;
       public: using SubSpecification2 = DataSpec2;
 
@@ -281,62 +333,62 @@ namespace ignition
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T&, Get, (), Expects, ())
+          T&, Get, (), Expector, ())
 
       template <typename T, typename... Args>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T&, Create, (Args&&... args), Expects,
+          T&, Create, (Args&&... args), Expector,
           (std::forward<Args>(args)...))
 
       template <typename T, typename... Args>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T&, GetOrCreate, (Args&&... args), Expects,
+          T&, GetOrCreate, (Args&&... args), Expector,
           (std::forward<Args>(args)...))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          bool, Remove, (), Expects, ())
+          bool, Remove, (), Expector, ())
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           T*, Query,
           (const CompositeData::QueryMode mode =
                 CompositeData::QUERY_NORMAL),
-          Expects, (mode))
+          Expector, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           const T*, Query,
           (const CompositeData::QueryMode mode =
                 CompositeData::QUERY_NORMAL) const,
-          Expects, (mode))
+          const Expector, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           bool, Has,
           (const CompositeData::QueryMode mode =
                 CompositeData::QUERY_NORMAL) const,
-          Expects, (mode))
+          const Expector, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           CompositeData::DataStatus, StatusOf,
           (const CompositeData::QueryMode mode =
                 CompositeData::QUERY_NORMAL) const,
-          Expects, (mode))
+          const Expector, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          bool, Unquery, () const, Expects, ())
+          bool, Unquery, () const, const Expector, ())
 
       template <typename T, typename... Args>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T&, MakeRequired, (Args&&... args), Expects,
+          T&, MakeRequired, (Args&&... args), Expector,
           (std::forward<Args>(args)...))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          bool, Requires, () const, Expects, ())
+          bool, Requires, () const, const Expector, ())
 
       template <typename T>
       static constexpr bool Expects()
@@ -348,7 +400,12 @@ namespace ignition
       template <typename T>
       const T& Get() const
       {
-        return detail::ConstGetSelector<T, DataSpec1, DataSpec2>::Select(this);
+        static_assert(AlwaysRequires<T>(), IGNITION_PHYSICS_CONST_GET_ERROR);
+
+        using Requirer = typename detail::SelectRequirerIfAvailable<
+                T, Specification>::Requirer;
+
+        return static_cast<const Requirer*>(this)->Get<T>();
       }
 
       template <typename T>
@@ -360,6 +417,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// Use the SpecifyData fork to combine these expectations
     template <typename DataType1, typename... OtherDataTypes>
     class ExpectData<DataType1, OtherDataTypes...>
         : public virtual SpecifyData<ExpectData<DataType1>,
@@ -369,6 +427,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// Use the SpecifyData fork to combine these requirements
     template <typename DataType1, typename... OtherDataTypes>
     class RequireData<DataType1, OtherDataTypes...>
         : public virtual SpecifyData<RequireData<DataType1>,
@@ -450,6 +509,7 @@ namespace ignition
       };
     }
 
+    // Implementation. See ignition/physics/SpecifyData.hh for description.
     template <typename Specification, template<typename> class FindSpec>
     constexpr std::size_t CountUpperLimitOfSpecifiedData()
     {
@@ -460,12 +520,14 @@ namespace ignition
           FindSpec>::Count();
     }
 
+    // Implementation. See ignition/physics/SpecifyData.hh for description.
     template <typename Specification>
     constexpr std::size_t CountUpperLimitOfExpectedData()
     {
       return CountUpperLimitOfSpecifiedData<Specification, FindExpected>();
     }
 
+    // Implementation. See ignition/physics/SpecifyData.hh for description.
     template <typename Specification>
     constexpr std::size_t CountUpperLimitOfRequiredData()
     {
