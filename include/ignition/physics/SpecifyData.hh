@@ -185,6 +185,7 @@ namespace ignition
 
       // This allows outside users to identify this expected data type at
       // compile time, which can be useful for doing template metaprogramming.
+      public: using Specification = ExpectData<Expected>;
       public: using ExpectedData = Expected;
       public: using RequiredData = void;
 
@@ -197,6 +198,7 @@ namespace ignition
     {
       // This allows outside users to identify this Required data type at
       // compile time, which can be useful for doing template metaprogramming.
+      public: using Specification = RequireData<Required>;
       public: using RequiredData = Required;
 
       /// \brief Default constructor. Will initialize the Required data type
@@ -286,6 +288,28 @@ namespace ignition
     {
       using Data = void;
     };
+
+    /// \brief Provides a constexpr field named `value` whose value is true if
+    /// and only if Data is expected by Specification
+    template <typename Data, typename Specification>
+    struct IsExpected : std::integral_constant<
+        bool, Specification::template Expects<Data>() > { };
+
+    /// \brief This template specialization allows us to provide a false `value`
+    /// when given a void Specification.
+    template <typename Data>
+    struct IsExpected<Data, void> : std::false_type { };
+
+    /// \brief Provides a constexpr field named `value` whose value is true if
+    /// and only if Data is required by Specification
+    template <typename Data, typename Specification>
+    struct IsRequired : std::integral_constant<
+        bool, Specification::template AlwaysRequires<Data>() > { };
+
+    /// \brief This template specialization allows us to provide a false `value`
+    /// when given a void Specification.
+    template <typename Data>
+    struct IsRequired<Data, void> : std::false_type { };
   }
 }
 
