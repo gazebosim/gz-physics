@@ -44,8 +44,11 @@ namespace ignition
       if (onlyCompile)
         return;
 
+      History history;
+      history.reserve(CountUpperLimitOfSpecifiedData<Specification, SpecFinder>());
+
       SubOperate(type<typename SpecFinder<Specification>::Data>(),
-                 type<Specification>(), performer, data, mask);
+                 type<Specification>(), performer, data, mask, history);
     }
 
     /////////////////////////////////////////////////
@@ -54,7 +57,8 @@ namespace ignition
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         type<Data>, type<SubSpecification>,
         Performer *performer, CompositeType &data,
-        const OperationMask &mask)
+        const OperationMask &mask,
+        History &history)
     {
       // This gets called when SubSpecification is able to provide one of the
       // desired data type specifications.
@@ -62,9 +66,15 @@ namespace ignition
       if (mask.Satisfied(data.template StatusOf<Data>(
                            CompositeData::QUERY_SILENT)))
       {
-        // We have found a specified type that matches what we want, so we
-        // will call operate on it.
-        Operation<Data, Performer, CompositeType>::Operate(performer, data);
+        const bool inserted = history.insert(
+              Data::IgnPhysicsTypeLabel()).second;
+
+        if(inserted)
+        {
+          // We have found a specified type that matches what we want, so we
+          // will call operate on it.
+          Operation<Data, Performer, CompositeType>::Operate(performer, data);
+        }
       }
 
       // Here we call the version of this function that performs branching,
@@ -82,7 +92,7 @@ namespace ignition
       // doesn't affect performance, because it will simply compile to a
       // no-op.
       SubOperate(type<void>(), type<SubSpecification>(),
-                 performer, data, mask);
+                 performer, data, mask, history);
     }
 
     /////////////////////////////////////////////////
@@ -91,18 +101,18 @@ namespace ignition
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         type<void>, type<SubSpecification>,
         Performer *performer, CompositeType &data,
-        const OperationMask &mask)
+        const OperationMask &mask, History &history)
     {
       // SubSpecification did not specify a type that matches what we want,
       // so we will search it to see if it has its own sub-specifications.
 
       using Sub1 =  typename SubSpecification::SubSpecification1;
       SubOperate(type<typename SpecFinder<Sub1>::Data>(), type<Sub1>(),
-                 performer, data, mask);
+                 performer, data, mask, history);
 
       using Sub2 = typename SubSpecification::SubSpecification2;
       SubOperate(type<typename SpecFinder<Sub2>::Data>(), type<Sub2>(),
-                 performer, data, mask);
+                 performer, data, mask, history);
     }
 
     /////////////////////////////////////////////////
@@ -110,7 +120,7 @@ namespace ignition
     template <typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         type<void>, type<void>, Performer*,
-        CompositeType&, const OperationMask&)
+        CompositeType&, const OperationMask&, History&)
     {
       // We reached a leaf in the specification, so we are done with this
       // branch. Do nothing.

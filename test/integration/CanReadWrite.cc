@@ -25,41 +25,65 @@
 
 #include "utils/TestDataTypes.hh"
 
-
+template <typename ReadSpec>
 class SomeClass
-    : public ignition::physics::CanReadRequiredData<SomeClass, RequireStringBoolChar>,
-      public ignition::physics::CanReadExpectedData<SomeClass, RequireStringBoolChar>,
-      public ignition::physics::CanWriteExpectedData<SomeClass, RequireIntDouble>
+    : public ignition::physics::CanReadRequiredData<SomeClass<ReadSpec>, ReadSpec>,
+      public ignition::physics::CanReadExpectedData<SomeClass<ReadSpec>, ReadSpec>,
+      public ignition::physics::CanWriteExpectedData<SomeClass<ReadSpec>, RequireIntDouble>
 {
   public: StringData sdata;
+  public: std::size_t scount;
+
   public: BoolData bdata;
+  public: std::size_t bcount;
+
   public: CharData cdata;
+  public: std::size_t ccount;
+
   public: IntData idata;
+  public: std::size_t icount;
+
   public: FloatData fdata;
+  public: std::size_t fcount;
+
+  SomeClass()
+    : scount(0),
+      bcount(0),
+      ccount(0),
+      icount(0),
+      fcount(0)
+  {
+    // Do nothing
+  }
 
   public: void Read(const StringData& _sdata)
   {
     sdata = _sdata;
+    ++scount;
   }
 
   public: void Read(const BoolData& _bdata)
   {
     bdata = _bdata;
+    ++bcount;
   }
 
   public: void Read(const CharData& _cdata)
   {
     cdata = _cdata;
+    ++ccount;
   }
 
   public: void Read(const IntData& _idata)
   {
     idata = _idata;
+    ++icount;
   }
 
   public: void Read(const FloatData& _fdata)
   {
     fdata = _fdata;
+    ++fcount;
   }
 
   public: void Write(IntData& _idata) const
@@ -83,7 +107,7 @@ class SomeClass
   }
 };
 
-TEST(SpecifyData, ReadData)
+TEST(CanReadWrite, ReadWriteData)
 {
   ignition::physics::CompositeData input;
   input.Get<StringData>().myString = "89";
@@ -93,7 +117,7 @@ TEST(SpecifyData, ReadData)
   input.Get<FloatData>().myFloat = 93.5;
   input.ResetQueries();
 
-  SomeClass something;
+  SomeClass<RequireStringBoolChar> something;
   something.ReadRequiredData(input);
   EXPECT_EQ("89", something.sdata.myString);
   EXPECT_FALSE(something.bdata.myBool);
@@ -105,6 +129,12 @@ TEST(SpecifyData, ReadData)
   EXPECT_EQ(92, something.idata.myInt);
   EXPECT_NEAR(93.5, something.fdata.myFloat, 1e-8);
 
+  EXPECT_EQ(1u, something.scount);
+  EXPECT_EQ(1u, something.bcount);
+  EXPECT_EQ(1u, something.ccount);
+  EXPECT_EQ(1u, something.icount);
+  EXPECT_EQ(1u, something.fcount);
+
   ignition::physics::CompositeData output;
   something.WriteExpectedData(output);
   EXPECT_EQ(67, output.Get<IntData>().myInt);
@@ -113,6 +143,35 @@ TEST(SpecifyData, ReadData)
   EXPECT_EQ('8', output.Get<CharData>().myChar);
 }
 
+TEST(CanReadWrite, OnlyReadOnce)
+{
+  ignition::physics::CompositeData input;
+  input.Get<StringData>().myString = "89";
+  input.Get<BoolData>().myBool = false;
+  input.Get<CharData>().myChar = 'd';
+  input.Get<IntData>().myInt = 92;
+  input.Get<FloatData>().myFloat = 93.5;
+  input.ResetQueries();
+
+  SomeClass<RedundantSpec> redundant;
+  redundant.ReadRequiredData(input, ignition::physics::ReadOptions(false));
+  redundant.ReadRequiredData(input);
+  EXPECT_EQ("89", redundant.sdata.myString);
+  EXPECT_FALSE(redundant.bdata.myBool);
+  EXPECT_EQ('d', redundant.cdata.myChar);
+  EXPECT_EQ(55, redundant.idata.myInt);
+  EXPECT_NEAR(9.5, redundant.fdata.myFloat, 1e-8);
+
+  redundant.ReadExpectedData(input);
+  EXPECT_EQ(92, redundant.idata.myInt);
+  EXPECT_NEAR(93.5, redundant.fdata.myFloat, 1e-8);
+
+  EXPECT_EQ(1u, redundant.scount);
+  EXPECT_EQ(1u, redundant.bcount);
+  EXPECT_EQ(1u, redundant.ccount);
+  EXPECT_EQ(1u, redundant.icount);
+  EXPECT_EQ(1u, redundant.fcount);
+}
 
 /////////////////////////////////////////////////
 int main(int argc, char **argv)
