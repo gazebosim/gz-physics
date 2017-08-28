@@ -376,6 +376,101 @@ namespace ignition
     {
       public: virtual ~RequireData() = default;
     };
+
+    namespace detail
+    {
+      /// This will get called if the specification has both a Data specified
+      /// and also contains sub-specifications. In our current implementation,
+      /// this never happens, but we can provide this just in case we change the
+      /// implementation.
+      template <typename Data, typename SubSpec1, typename SubSpec2,
+                template<typename> class SpecFinder>
+      struct SpecificationDataCounterImpl
+      {
+        public: static constexpr std::size_t Count()
+        {
+          return 1
+              + SpecificationDataCounterImpl<
+                  typename SpecFinder<SubSpec1>::Data,
+                  typename SubSpec1::SubSpecification1,
+                  typename SubSpec1::SubSpecification2,
+                  SpecFinder>::Count()
+              + SpecificationDataCounterImpl<
+                  typename SpecFinder<SubSpec2>::Data,
+                  typename SubSpec2::SubSpecification1,
+                  typename SubSpec2::SubSpecification2,
+                  SpecFinder>::Count();
+        }
+      };
+
+      /// This will get called if the specification does not specify data but
+      /// does provide sub-specifications
+      template <typename SubSpec1, typename SubSpec2,
+                template <typename> class SpecFinder>
+      struct SpecificationDataCounterImpl<void, SubSpec1, SubSpec2, SpecFinder>
+      {
+        public: static constexpr std::size_t Count()
+        {
+          return 0
+              + SpecificationDataCounterImpl<
+                  typename SpecFinder<SubSpec1>::Data,
+                  typename SubSpec1::SubSpecification1,
+                  typename SubSpec1::SubSpecification2,
+                  SpecFinder>::Count()
+              + SpecificationDataCounterImpl<
+                  typename SpecFinder<SubSpec2>::Data,
+                  typename SubSpec2::SubSpecification1,
+                  typename SubSpec2::SubSpecification2,
+                  SpecFinder>::Count();
+        }
+      };
+
+      /// This will get called if the specification specifies data but does not
+      /// provide sub-specifications. We count the data once and terminate
+      /// this branch.
+      template <typename Data, template<typename> class SpecFinder>
+      struct SpecificationDataCounterImpl<Data, void, void, SpecFinder>
+      {
+        public: static constexpr std::size_t Count()
+        {
+          return 1;
+        }
+      };
+
+      /// This will get called if the specification does not specify data and
+      /// also does not provide sub-specifications. We count nothing and
+      /// terminate this branch.
+      template <template <typename> class SpecFinder>
+      struct SpecificationDataCounterImpl<void, void, void, SpecFinder>
+      {
+        public: static constexpr std::size_t Count()
+        {
+          return 0;
+        }
+      };
+    }
+
+    template <typename Specification, template<typename> class FindSpec>
+    constexpr std::size_t CountUpperLimitOfSpecifiedData()
+    {
+      return detail::SpecificationDataCounterImpl<
+          typename FindSpec<Specification>::Data,
+          typename Specification::SubSpecification1,
+          typename Specification::SubSpecification2,
+          FindSpec>::Count();
+    }
+
+    template <typename Specification>
+    constexpr std::size_t CountUpperLimitOfExpectedData()
+    {
+      return CountUpperLimitOfSpecifiedData<Specification, FindExpected>();
+    }
+
+    template <typename Specification>
+    constexpr std::size_t CountUpperLimitOfRequiredData()
+    {
+      return CountUpperLimitOfSpecifiedData<Specification, FindRequired>();
+    }
   }
 }
 

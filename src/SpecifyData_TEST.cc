@@ -555,6 +555,32 @@ TEST(SpecifyData, QueryCounting)
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
 }
 
+TEST(SpecifyData, CountData)
+{
+  EXPECT_EQ(1u, ignition::physics::CountUpperLimitOfRequiredData<
+            RequireString>());
+
+  EXPECT_EQ(1u, ignition::physics::CountUpperLimitOfExpectedData<
+            RequireString>());
+
+  EXPECT_EQ(3u, ignition::physics::CountUpperLimitOfRequiredData<
+            RequireStringBoolChar>());
+
+  EXPECT_EQ(5u, ignition::physics::CountUpperLimitOfExpectedData<
+            RequireStringBoolChar>());
+
+  // Note that there are only 3 unique requirements and 5 unique expectations
+  // in the redundant specification, but because of limitions in the abilities
+  // of constexpr, we only provide an upper limit of the count which will count
+  // repeated data specifications once for each repeat. In the future, if we can
+  // find a way to push these tests down to 3u and 5u, that would be ideal.
+  EXPECT_EQ(4u, ignition::physics::CountUpperLimitOfRequiredData<
+            RedundantSpec>());
+
+  EXPECT_EQ(6u, ignition::physics::CountUpperLimitOfExpectedData<
+            RedundantSpec>());
+}
+
 /////////////////////////////////////////////////
 int main(int argc, char **argv)
 {

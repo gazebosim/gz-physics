@@ -18,44 +18,14 @@
 #ifndef IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 #define IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 
+#include <unordered_set>
+
 #include "ignition/physics/SpecifyData.hh"
 
 namespace ignition
 {
   namespace physics
   {
-    /// \brief This allows us to specify that we are interested in expected
-    /// data while performing template metaprogramming.
-    template <typename Specification>
-    struct FindExpected
-    {
-      using Data = typename Specification::ExpectedData;
-    };
-
-    /// \brief This specialization handles the terminating case where we have
-    /// reached a leaf node in the specification tree.
-    template <>
-    struct FindExpected<void>
-    {
-      using Data = void;
-    };
-
-
-    /// \brief This allows us to specify that we are interested in required
-    /// data while performing template metaprogramming.
-    template <typename Specification>
-    struct FindRequired
-    {
-      using Data = typename Specification::RequiredData;
-    };
-
-    /// \brief This specialization handles the terminating case where we have
-    /// reached a leaf node in the specification tree.
-    template <>
-    struct FindRequired<void>
-    {
-      using Data = void;
-    };
 
     /// \brief This struct can be used to tweak the behavior of
     /// OperateOnSpecifiedData at run-time.
@@ -131,6 +101,11 @@ namespace ignition
               class Performer>
     class OperateOnSpecifiedData
     {
+      /// The data structure that will be used to ensure that the same data does
+      /// not get operated on twice, even if it is listed twice (redundantly) in
+      /// the specification.
+      using History = std::unordered_set<std::string>;
+
       /// \brief Operate is the recommended entry point for using
       /// OperateOnSpecifiedData. This can be given a performer, a
       /// CompositeType object, and an OperationMask to determine its
@@ -154,7 +129,8 @@ namespace ignition
       static void SubOperate(
           type<Data>, type<SubSpecification>,
           Performer *performer, CompositeType &data,
-          const OperationMask &mask);
+          const OperationMask &mask,
+          History &history);
 
       /// \brief When SubSpecification could not provide one of the desired
       /// data specifications, we will instead search it for
@@ -163,7 +139,8 @@ namespace ignition
       static void SubOperate(
           type<void>, type<SubSpecification>,
           Performer *performer, CompositeType &data,
-          const OperationMask &mask);
+          const OperationMask &mask,
+          History &history);
 
       /// \brief When SubSpecification does not have the desired data
       /// specifications, nor has any sub-specifications, we terminate here.
@@ -171,7 +148,8 @@ namespace ignition
       static void SubOperate(
           type<void>, type<void>,
           Performer*, CompositeType&,
-          const OperationMask&);
+          const OperationMask&,
+          History&);
     };
   }
 }

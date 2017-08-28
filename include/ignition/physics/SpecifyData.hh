@@ -226,6 +226,66 @@ namespace ignition
       /// provided by the RequireData class
       protected: detail::PrivateRequireData<Required> privateRequireData;
     };
+
+
+    // ----------------------- Utility Templates ----------------------------
+
+    /// \brief This provides an upper limit on the number of expected data types
+    /// in a CompositeData specification. This is an upper limit because when a
+    /// data type is specified multiple times within a specficiation, it will
+    /// be counted multiple times. As long as each data type is only specified
+    /// once, it will provide an exact count.
+    ///
+    /// This is a constexpr so it will be evaluated at compile-time and behaves
+    /// like a constant literal.
+    template <typename Specification>
+    constexpr std::size_t CountUpperLimitOfExpectedData();
+
+    /// \brief Same as CountUpperLimitOfExpectedData() except it will count
+    /// required data instead.
+    template <typename Specification>
+    constexpr std::size_t CountUpperLimitOfRequiredData();
+
+    /// \brief Same as CountUpperLimitOfExpectedData() except you can specify
+    /// what kind of data to count using SpecFinder. SpecFinder must accept a
+    /// data specification (or void) as a template argument and provide a type
+    /// called Data. See FindExpected and FindRequired below for examples.
+    template <typename Specification, template<typename> class SpecFinder>
+    constexpr std::size_t CountUpperLimitOfSpecifiedData();
+
+
+    /// \brief This allows us to specify that we are interested in expected
+    /// data while performing template metaprogramming.
+    template <typename Specification>
+    struct FindExpected
+    {
+      using Data = typename Specification::ExpectedData;
+    };
+
+    /// \brief This specialization handles the terminating case where we have
+    /// reached a leaf node in the specification tree.
+    template <>
+    struct FindExpected<void>
+    {
+      using Data = void;
+    };
+
+
+    /// \brief This allows us to specify that we are interested in required
+    /// data while performing template metaprogramming.
+    template <typename Specification>
+    struct FindRequired
+    {
+      using Data = typename Specification::RequiredData;
+    };
+
+    /// \brief This specialization handles the terminating case where we have
+    /// reached a leaf node in the specification tree.
+    template <>
+    struct FindRequired<void>
+    {
+      using Data = void;
+    };
   }
 }
 

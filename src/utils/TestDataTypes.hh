@@ -136,6 +136,11 @@ using RequireIntDouble = ignition::physics::SpecifyData<
                 StringData,
                 CharData> >;
 
+// A specification which is redundant, because StringData is specified as
+// required twice.
+using RedundantSpec =
+  ignition::physics::SpecifyData<RequireStringBoolChar, RequireString>;
+
 /////////////////////////////////////////////////
 template <typename... DataTypes>
 struct AddSomeData
