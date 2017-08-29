@@ -289,27 +289,28 @@ namespace ignition
       using Data = void;
     };
 
+
     /// \brief Provides a constexpr field named `value` whose value is true if
     /// and only if Data is expected by Specification
     template <typename Data, typename Specification>
-    struct IsExpected : std::integral_constant<
+    struct IsExpectedBy : std::integral_constant<
         bool, Specification::template Expects<Data>() > { };
 
     /// \brief This template specialization allows us to provide a false `value`
     /// when given a void Specification.
     template <typename Data>
-    struct IsExpected<Data, void> : std::false_type { };
+    struct IsExpectedBy<Data, void> : std::false_type { };
 
     /// \brief Provides a constexpr field named `value` whose value is true if
     /// and only if Data is required by Specification
     template <typename Data, typename Specification>
-    struct IsRequired : std::integral_constant<
+    struct IsRequiredBy : std::integral_constant<
         bool, Specification::template AlwaysRequires<Data>() > { };
 
     /// \brief This template specialization allows us to provide a false `value`
     /// when given a void Specification.
     template <typename Data>
-    struct IsRequired<Data, void> : std::false_type { };
+    struct IsRequiredBy<Data, void> : std::false_type { };
   }
 }
 
