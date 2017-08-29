@@ -274,7 +274,7 @@ namespace ignition
       struct SelectExpectorIfAvailable
       {
         using Expector = typename SelectSpecifierIfAvailable<
-                Data, Specification, IsExpected>::Specifier;
+                Data, Specification, IsExpectedBy>::Specifier;
       };
 
       /// \brief A version of SelectSpecifierIfAvailable that returns the leaf
@@ -283,7 +283,7 @@ namespace ignition
       struct SelectRequirerIfAvailable
       {
         using Requirer = typename SelectSpecifierIfAvailable<
-                Data, Specification, IsRequired>::Specifier;
+                Data, Specification, IsRequiredBy>::Specifier;
       };
     }
 
