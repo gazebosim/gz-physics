@@ -39,7 +39,7 @@ namespace ignition
     template <typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::Operate(
         Performer *performer, CompositeType &data,
-        const OperationMask &mask, const bool onlyCompile)
+        const DataStatusMask &mask, const bool onlyCompile)
     {
       if (onlyCompile)
         return;
@@ -57,7 +57,7 @@ namespace ignition
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         type<Data>, type<SubSpecification>,
         Performer *performer, CompositeType &data,
-        const OperationMask &mask,
+        const DataStatusMask &mask,
         History &history)
     {
       // This gets called when SubSpecification is able to provide one of the
@@ -101,7 +101,7 @@ namespace ignition
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         type<void>, type<SubSpecification>,
         Performer *performer, CompositeType &data,
-        const OperationMask &mask, History &history)
+        const DataStatusMask &mask, History &history)
     {
       // SubSpecification did not specify a type that matches what we want,
       // so we will search it to see if it has its own sub-specifications.
@@ -120,7 +120,7 @@ namespace ignition
     template <typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         type<void>, type<void>, Performer*,
-        CompositeType&, const OperationMask&, History&)
+        CompositeType&, const DataStatusMask&, History&)
     {
       // We reached a leaf in the specification, so we are done with this
       // branch. Do nothing.

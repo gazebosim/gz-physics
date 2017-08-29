@@ -15,16 +15,16 @@
  *
 */
 
-#include "ignition/physics/OperateOnSpecifiedData.hh"
+#include "ignition/physics/DataStatusMask.hh"
 
 namespace ignition
 {
   namespace physics
   {
     /////////////////////////////////////////////////
-    OperationMask::OperationMask(const Condition e,
-                                 const Condition q,
-                                 const Condition r)
+    DataStatusMask::DataStatusMask(const Condition e,
+                                   const Condition q,
+                                   const Condition r)
       : exist(e),
         queried(q),
         required(r)
@@ -33,17 +33,18 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    bool OperationMask::ConditionSatisfied(
-        const OperationMask::Condition condition,
+    bool DataStatusMask::ConditionSatisfied(
+        const DataStatusMask::Condition condition,
         const bool value)
     {
-      return ((OperationMask::MUST == condition && value)
-           || (OperationMask::MUST_NOT == condition && !value)
-           || (OperationMask::EITHER == condition));
+      return ((DataStatusMask::MUST == condition && value)
+           || (DataStatusMask::MUST_NOT == condition && !value)
+           || (DataStatusMask::EITHER == condition));
     }
 
     /////////////////////////////////////////////////
-    bool OperationMask::Satisfied(const CompositeData::DataStatus &status) const
+    bool DataStatusMask::Satisfied(
+        const CompositeData::DataStatus &status) const
     {
       return (ConditionSatisfied(this->exist, status.exists)
            && ConditionSatisfied(this->queried, status.queried)
