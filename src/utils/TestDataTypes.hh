@@ -20,6 +20,7 @@
 
 #include "ignition/physics/CompositeData.hh"
 #include "ignition/physics/CompositeDataMacros.hh"
+#include "ignition/physics/SpecifyData.hh"
 
 /////////////////////////////////////////////////
 class StringData
@@ -111,6 +112,34 @@ class VectorDoubleData
     // Do nothing
   }
 };
+
+/////////////////////////////////////////////////
+// Single-requirement CompositeData
+using RequireString = ignition::physics::RequireData<StringData>;
+
+// CompositeData with three requirements and two optional expectations
+using RequireStringBoolChar = ignition::physics::SpecifyData<
+          ignition::physics::RequireData<
+                StringData,
+                BoolData,
+                CharData>,
+          ignition::physics::ExpectData<
+                IntData,
+                FloatData> >;
+
+// CompositeData with two requirements and two optional expectations
+using RequireIntDouble = ignition::physics::SpecifyData<
+          ignition::physics::RequireData<
+                DoubleData,
+                IntData>,
+          ignition::physics::ExpectData<
+                StringData,
+                CharData> >;
+
+// A specification which is redundant, because StringData is specified as
+// required twice.
+using RedundantSpec =
+  ignition::physics::SpecifyData<RequireStringBoolChar, RequireString>;
 
 /////////////////////////////////////////////////
 template <typename... DataTypes>
