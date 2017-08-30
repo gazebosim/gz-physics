@@ -229,17 +229,6 @@ namespace ignition
                 Data, SubSpec2, Condition>::Specifier;
       };
 
-      /// \brief Specialized definition which is never invoked. We need this
-      /// definition in order to eliminate ambiguity between template
-      /// specializations.
-      template <typename Data, typename Specification,
-                template<typename, typename> class Condition>
-      struct SelectSpecifierIfAvailableImpl<
-          Data, Specification, Condition, void, void, true>
-      {
-        using Specifier = Specification;
-      };
-
       /// \brief Specialized definition which is invoked when we've reached a
       /// leaf specification. Either this is the specification that we want, or
       /// else the specification that we want does not exist in the original

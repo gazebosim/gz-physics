@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_DETAIL_COMPOSITEDATA_HH_
 
 #include "ignition/physics/CompositeData.hh"
+#include "ignition/physics/CompositeDataMacros.hh"
 
 namespace ignition
 {
@@ -41,6 +42,36 @@ namespace ignition
         }
       }
     }
+
+    /// \brief Struct which contains information about a data type within the
+    /// CompositeData.
+    struct CompositeData::DataEntry
+    {
+      /// \brief Default constructor
+      public: DataEntry();
+
+      /// \brief Constructor that accepts an rvalue reference and a
+      /// requirement setting
+      public: DataEntry(
+        std::unique_ptr<Cloneable> &&_data,
+        bool _required);
+
+      /// \brief Data that is being held at this entry. nullptr means the
+      /// CompositeData does not have data for this entry
+      public: std::unique_ptr<Cloneable> data;
+
+      /// \brief Flag for whether the type of data at this entry is considered
+      /// to be required. This can be made true during the lifetime of the
+      /// CompositeData, but it must never be changed from true to false.
+      public: bool required;
+
+      /// \brief Flag for whether this data entry has been queried since
+      /// either (1) it was created using Copy(~), =, or the CompositeData
+      /// constructor, or (2) the last time ResetQueries() was called,
+      /// whichever was more recent. Functions that can mark an entry as
+      /// queried include Get(), Create(), GetOrCreate(), Query(), and Has().
+      public: mutable bool queried;
+    };
 
     /////////////////////////////////////////////////
     template <typename Data>

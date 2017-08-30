@@ -18,7 +18,6 @@
 #ifndef IGNITION_PHYSICS_COMPOSITEDATAMACROS_HH_
 #define IGNITION_PHYSICS_COMPOSITEDATAMACROS_HH_
 
-#include <vector>
 #include <string>
 
 /// \brief Call this macro inside the class definition of any class or struct
@@ -26,25 +25,19 @@
 /// pass must avoid name collisions with all other data types, so you are
 /// advised to use the fully-qualified name of the class, e.g.
 ///
-///     IGN_PHYSICS_DATA_LABEL(libname::classname)
+///     namespace libname {
+///
+///       class ClassName
+///       {
+///         public:
+///           IGN_PHYSICS_DATA_LABEL(libname::ClassName)
+///         // ... rest of class definition...
+///       };
+///
+///     } // namespace libname
 ///
 #define IGN_PHYSICS_DATA_LABEL(label) \
   public: inline static constexpr const char* IgnPhysicsTypeLabel() { \
       return #label; }
-
-#define IGN_PHYSICS_VECTOR_DATA(ElementType) \
-  struct V_ ## ElementType : public std::vector<ElementType> \
-  { \
-    IGN_PHYSICS_DATA_LABEL(V_ ## ElementType) \
- \
-    std::string annotation; \
- \
-    template <typename... Args> \
-    V_ ## ElementType(Args&&... args) \
-      : std::vector<ElementType>(std::forward<Args>(args)...) \
-    {\
- \
-    }\
-  };
 
 #endif

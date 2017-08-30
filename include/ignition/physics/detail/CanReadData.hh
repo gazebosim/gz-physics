@@ -73,13 +73,13 @@ namespace ignition
       /// it will not be able to compile. Note that setting the last argument
       /// to false ensures that this function does not actually do anything
       /// besides compile. Instantiating a completely generic CompositeData type
-      /// and OperationMask is extremely low-cost, so we do not need to worry
+      /// and DataStatusMask is extremely low-cost, so we do not need to worry
       /// about overhead.
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::ReadDataOperation,
           Derived>::template Operate<const CompositeData>(
             static_cast<Derived*>(this), CompositeData{},
-            OperationMask{}, true);
+            DataStatusMask{}, true);
     }
 
     /////////////////////////////////////////////////
@@ -89,11 +89,11 @@ namespace ignition
         const CompositeType &_data,
         const ReadOptions &_options)
     {
-      OperationMask mask;
+      DataStatusMask mask;
       if(_options.onlyReadUnqueriedData)
-        mask.queried = OperationMask::MUST_NOT;
+        mask.queried = DataStatusMask::MUST_NOT;
 
-      mask.exist = OperationMask::MUST;
+      mask.exist = DataStatusMask::MUST;
 
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::ReadDataOperation,
@@ -109,13 +109,13 @@ namespace ignition
       /// it will not be able to compile. Note that setting the last argument
       /// to false ensures that this function does not actually do anything
       /// besides compile. Instantiating a completely generic CompositeData type
-      /// and OperationMask is extremely low-cost, so we do not need to worry
+      /// and DataStatusMask is extremely low-cost, so we do not need to worry
       /// about overhead.
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::ReadDataOperation,
           Derived>::template Operate<const CompositeData>(
             static_cast<Derived*>(this), CompositeData{},
-            OperationMask{}, true);
+            DataStatusMask{}, true);
     }
 
     /////////////////////////////////////////////////
@@ -124,11 +124,11 @@ namespace ignition
     void CanReadExpectedData<Derived, Specification>::ReadExpectedData(const CompositeType &_data,
         const ReadOptions &_options)
     {
-      OperationMask mask;
+      DataStatusMask mask;
       if(_options.onlyReadUnqueriedData)
-        mask.queried = OperationMask::MUST_NOT;
+        mask.queried = DataStatusMask::MUST_NOT;
 
-      mask.exist = OperationMask::MUST;
+      mask.exist = DataStatusMask::MUST;
 
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::ReadDataOperation,

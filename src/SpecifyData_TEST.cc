@@ -21,8 +21,6 @@
 
 #include "utils/TestDataTypes.hh"
 #include "ignition/physics/SpecifyData.hh"
-#include "ignition/physics/CanReadData.hh"
-#include "ignition/physics/CanWriteData.hh"
 
 
 /////////////////////////////////////////////////

@@ -49,7 +49,7 @@ namespace ignition
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::WriteDataOperation,
           const Derived>::Operate(static_cast<const Derived*>(this), dummy,
-                                  OperationMask{}, true);
+                                  DataStatusMask{}, true);
     }
 
     template <typename Derived, typename Specification>
@@ -58,13 +58,13 @@ namespace ignition
         CompositeType &_data,
         const WriteOptions &_options) const
     {
-      OperationMask mask;
+      DataStatusMask mask;
 
       if (_options.skipMissingData)
-        mask.exist = OperationMask::MUST;
+        mask.exist = DataStatusMask::MUST;
 
       if (_options.onlyWriteUnqueriedData)
-        mask.queried = OperationMask::MUST_NOT;
+        mask.queried = DataStatusMask::MUST_NOT;
 
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::WriteDataOperation,
@@ -79,7 +79,7 @@ namespace ignition
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::WriteDataOperation,
           const Derived>::Operate(static_cast<const Derived*>(this), dummy,
-                                  OperationMask{}, true);
+                                  DataStatusMask{}, true);
     }
 
     template <typename Derived, typename Specification>
@@ -88,13 +88,13 @@ namespace ignition
         CompositeType &_data,
         const WriteOptions &_options) const
     {
-      OperationMask mask;
+      DataStatusMask mask;
 
       if (_options.skipMissingData)
-        mask.exist = OperationMask::MUST;
+        mask.exist = DataStatusMask::MUST;
 
       if (_options.onlyWriteUnqueriedData)
-        mask.queried = OperationMask::MUST_NOT;
+        mask.queried = DataStatusMask::MUST_NOT;
 
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::WriteDataOperation,

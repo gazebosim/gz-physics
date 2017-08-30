@@ -18,9 +18,8 @@
 #ifndef IGNITION_PHYSICS_FORWARDSTEP_HH_
 #define IGNITION_PHYSICS_FORWARDSTEP_HH_
 
+#include <ignition/math.hh>
 #include <ignition/common/PluginMacros.hh>
-
-#include "ignition/math.hh"
 
 #include "ignition/physics/SpecifyData.hh"
 #include "ignition/physics/CompositeDataMacros.hh"
@@ -29,6 +28,12 @@ namespace ignition
 {
   namespace physics
   {
+    // ---------------- Output Data Structures -----------------
+    // In the long-term, these data structures should be defined in some kind of
+    // meta-file, and our build system should generate these definitions during
+    // compilation. These are being defined here in this header until we know
+    // more about how the ECS will work.
+
     struct WorldPose
     {
       IGN_PHYSICS_DATA_LABEL(ignition::physics::WorldPose)
@@ -48,7 +53,6 @@ namespace ignition
       IGN_PHYSICS_DATA_LABEL(ignition::physics::EndEffectorPose)
     };
 
-    // ---------------- Output Data Structures -----------------
     struct WorldPoses
     {
       IGN_PHYSICS_DATA_LABEL(ignition::physics::WorldPoses)
@@ -81,6 +85,9 @@ namespace ignition
     };
 
     // ---------------- Input Data Structures -----------------
+    // Same note as for Output Data Structures. Eventually, these should be
+    // defined in some kind of meta files.
+
     struct ForceTorque
     {
       std::size_t body;
