@@ -109,6 +109,33 @@ namespace ignition
           this->SetBodyMap();
         }
 
+        void Simulate()
+        {
+          Eigen::MatrixXd M = mRobot->getMassMatrix();
+
+          ::dart::math::LinearJacobian J = mEndEffector->getLinearJacobian(mOffset);
+          Eigen::MatrixXd pinv_J = J.transpose()*(J*J.transpose()
+                                      +0.0025*Eigen::Matrix3d::Identity()).inverse();
+
+          ::dart::math::LinearJacobian dJ = mEndEffector->getLinearJacobianDeriv(mOffset);
+          Eigen::MatrixXd pinv_dJ = dJ.transpose()*(dJ*dJ.transpose()
+                                      +0.0025*Eigen::Matrix3d::Identity()).inverse();
+
+
+          Eigen::Vector3d e = mTarget->getWorldTransform().translation()
+                              - mEndEffector->getWorldTransform()*mOffset;
+
+          Eigen::Vector3d de = - mEndEffector->getLinearVelocity(mOffset);
+
+          Eigen::VectorXd Cg = mRobot->getCoriolisAndGravityForces();
+
+          mForces = M*(pinv_J*mKp*de + pinv_dJ*mKp*e) + Cg + mKd*pinv_J*mKp*e;
+
+          mRobot->setForces(mForces);
+
+          this->world->step();
+        }
+
         void SetBodyMap()
         {
           for (std::size_t i=0; i < this->world->getNumSkeletons(); ++i)
@@ -188,33 +215,6 @@ namespace ignition
 
             state.states[skel] = skel->getConfiguration();
           }
-        }
-
-        void Simulate()
-        {
-          Eigen::MatrixXd M = mRobot->getMassMatrix();
-
-          ::dart::math::LinearJacobian J = mEndEffector->getLinearJacobian(mOffset);
-          Eigen::MatrixXd pinv_J = J.transpose()*(J*J.transpose()
-                                      +0.0025*Eigen::Matrix3d::Identity()).inverse();
-
-          ::dart::math::LinearJacobian dJ = mEndEffector->getLinearJacobianDeriv(mOffset);
-          Eigen::MatrixXd pinv_dJ = dJ.transpose()*(dJ*dJ.transpose()
-                                      +0.0025*Eigen::Matrix3d::Identity()).inverse();
-
-
-          Eigen::Vector3d e = mTarget->getWorldTransform().translation()
-                              - mEndEffector->getWorldTransform()*mOffset;
-
-          Eigen::Vector3d de = - mEndEffector->getLinearVelocity(mOffset);
-
-          Eigen::VectorXd Cg = mRobot->getCoriolisAndGravityForces();
-
-          mForces = M*(pinv_J*mKp*de + pinv_dJ*mKp*e) + Cg + mKd*pinv_J*mKp*e;
-
-          mRobot->setForces(mForces);
-
-          this->world->step();
         }
 
         void WriteEndEffectorPose(CompositeData &h)
