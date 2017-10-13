@@ -53,6 +53,16 @@ namespace ignition
       IGN_PHYSICS_DATA_LABEL(ignition::physics::EndEffectorPose)
     };
 
+    struct ChassisPose : WorldPose
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::ChassisPose)
+    };
+
+    struct FrontWheelPose : WorldPose
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::FrontWheelPose)
+    };
+
     struct WorldPoses
     {
       IGN_PHYSICS_DATA_LABEL(ignition::physics::WorldPoses)
@@ -147,6 +157,12 @@ namespace ignition
       std::string annotation;
     };
 
+    struct ApplySpeedSteer
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::ApplySpeedSteer)
+      double speed;
+      double steer;
+    };
 
     // ---------------- ForwardStep Interface -----------------
     class ForwardStep

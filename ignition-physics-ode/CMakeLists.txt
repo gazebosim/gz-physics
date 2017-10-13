@@ -28,16 +28,18 @@ endforeach(source_file)
 
 get_filename_component(lib_name ${CMAKE_CURRENT_LIST_DIR} NAME)
 ign_add_library(${lib_name} ${sources})
+
 target_link_libraries(${lib_name}
   ignition-physics
-  ${IGNITION-COMMON_LIBRARIES}
-  ${DART_LIBRARIES}
-  ${DART-UTILS_LIBRARIES}
-  ${DART-UTILS-URDF_LIBRARIES})
+  ${ODE_LIBRARY}
+  pthread
+  ${IGNITION-COMMON_LIBRARIES})
 
 target_include_directories(${lib_name} PRIVATE
-  ${DART_INCLUDE_DIRS}
+  ${ODE_INCLUDE_DIR}
   ${IGNITION-COMMON_INCLUDE_DIRS})
+
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 ign_install_library(${lib_name} ${lib_name})
 

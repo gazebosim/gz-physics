@@ -30,6 +30,7 @@ set (project_cmake_dir ${PROJECT_SOURCE_DIR}/cmake
 # Build all possible plugins by default.
 # Users may override this by changing these variables.
 set(BUILD_IGNITION_PHYSICS_DART TRUE)
+set(BUILD_IGNITION_PHYSICS_ODE TRUE)
 
 
 include (${project_cmake_dir}/Utils.cmake)
@@ -281,6 +282,17 @@ else (build_errors)
   # and the user has requested it.
   if (BUILD_IGNITION_PHYSICS_DART AND HAVE_DART)
     add_subdirectory(ignition-physics-dart)
+  endif()
+
+  #################################################
+  # Build the plugins if their dependencies are available
+  # and the user has requested it.
+
+  if (HAVE_ODE)
+    message(STATUS "FOUND ODE")
+  endif()
+  if (BUILD_IGNITION_PHYSICS_ODE AND HAVE_ODE)
+    add_subdirectory(ignition-physics-ode)
   endif()
 
   ########################################
