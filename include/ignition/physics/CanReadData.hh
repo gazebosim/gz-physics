@@ -25,7 +25,7 @@ namespace ignition
 {
   namespace physics
   {
-    struct IGNITION_COMMON_VISIBLE ReadOptions
+    struct  ReadOptions
     {
       /// \brief If a type has already been queried, do not perform the read
       /// operation on it.

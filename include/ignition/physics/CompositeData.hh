@@ -23,7 +23,6 @@
 #include <set>
 
 #include "ignition/physics/Cloneable.hh"
-#include "ignition/common/System.hh"
 
 namespace ignition
 {
@@ -38,7 +37,7 @@ namespace ignition
 
     /// \brief The CompositeData class allows arbitrary data structures to be
     /// composed together, copied, and moved with type erasure.
-    class IGNITION_COMMON_VISIBLE CompositeData
+    class  CompositeData
     {
       /// \brief Default constructor. Creates an empty CompositeData object.
       public: CompositeData();

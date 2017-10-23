@@ -26,7 +26,7 @@ namespace ignition
   {
     /// \brief A struct that defines options for writing data to a CompositeData
     /// object.
-    struct IGNITION_COMMON_VISIBLE WriteOptions
+    struct WriteOptions
     {
       /// \brief If a data type is not already part of the CompositeData, then
       /// skip it instead of writing to it when this is true. When this is
