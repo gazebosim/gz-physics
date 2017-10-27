@@ -118,7 +118,20 @@ namespace ignition
       public: FramedQuantity(const Q &_rawValue);
 
       /// \brief Get the value of this FramedQuantity relative to its parent
-      /// frame.
+      /// frame. To get the value of this FramedQuantity with respect to the
+      /// world frame, use the FrameSemantics::Resolve(~) function of your
+      /// physics engine like so:
+      ///
+      /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(fq)
+      ///
+      /// where Q is your quantity type, and fq is your FramedQuantity instance.
+      ///
+      /// To get the value of this FramedQuantity with respect to an arbitrary
+      /// reference frame, again use the Resolve function:
+      ///
+      /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(fq, F);
+      ///
+      /// where F is the FrameID of the desired reference frame.
       public: Q &RelativeToParent();
 
       /// \brief const-qualified version of RelativeToParent.
@@ -127,24 +140,23 @@ namespace ignition
       /// \brief Get the ID of this FramedQuantity's parent frame.
       ///
       /// To change the parent frame of this FramedQuantity, use the Reframe(~)
-      /// function of your physics engine like this:
+      /// function of your physics engine's FrameSemantics interface like this:
       ///
-      /// fq = Reframe(fq, A);
+      /// fq = engine->GetInterface<FrameSemantics>()->Reframe(fq, A);
       ///
       /// where A is the FrameID of the new frame. The Reframe function will
-      /// keep the value of your FramedQuantity consistent (with respect to the
-      /// World Frame).
+      /// keep the values of your FramedQuantity consistent (with respect to the
+      /// World Frame) as it reassigns the parent frame.
       ///
       /// Alternatively, to change the parent frame of this FramedQuantity while
-      /// making its value relative to the new frame equal to what its value was
-      /// relative to the old frame, you can simply use the assignment operator
-      /// to overwrite this FramedQuantity:
-      ///
-      /// fq = MyFramedQuantity(A, fq.RelativeToParent());
-      ///
-      /// where MyFramedQuantity is your FramedQuantity's type (e.g.
-      /// FramedPose3d, FramedPosition3d, FramedForce3f, etc...).
+      /// making its values relative to the new frame equal to what its values
+      /// were relative to the old frame, you can use the
+      /// MoveToNewParentFrame(~) function below.
       public: const FrameID &ParentFrame() const;
+
+      /// \brief This function will change the parent frame of your
+      /// FramedQuantity.
+      public: void MoveToNewParentFrame(const FrameID &_newParentFrame);
 
       /// \brief The underlying raw type of the quantity that is being expressed.
       public: using Quantity = Q;

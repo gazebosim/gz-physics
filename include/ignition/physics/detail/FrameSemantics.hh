@@ -345,7 +345,7 @@ namespace ignition
                           * R);
         }
       };
-      
+
       /////////////////////////////////////////////////
       /// \brief EuclideanSpace is used by points (i.e. positions or 
       /// translations).
@@ -382,66 +382,98 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      /// \brief LinearVelocitySpace is used by linear velocity vectors.
-      template <std::size_t Dim, typename S>
-      struct LinearVelocitySpace : public VectorSpace<Dim, S>
+      /// \brief This is an implementation for the Linear/Angular
+      /// Velocity/Acceleration Spaces. Those spaces only differ by which
+      /// kinematic property is being summed, so we use a pointer to a class
+      /// member as a template parameter to choose which property we sum.
+      template <std::size_t Dim, typename S,
+                math::Vector3<S> FrameData3<S>::*property>
+      struct KinematicDerivativeSpace : public VectorSpace<Dim, S>
       {
-        /// \brief Resolve the linear velocity to the world frame
+        /// \brief Resolve the property to the world frame
         public: static Quantity ResolveToWorldFrame(
-          const Quantity &_velocity,
+          const Quantity &_vec,
           const FrameDataType &_parentFrame)
         {
-          return _parentFrame.linearVelocity
-              + ResolveToWorldCoordinates(
-                _velocity, _parentFrame.transform.Rot());
+          // Get the property that we care about from the parent frame. This
+          // may be its (linear or angular) (velocity or acceleration).
+          const Quantity &parentProperty = _parentFrame.*property;
+          const Quantity vecInWorldCoordinates =
+              ResolveToWorldCoordinates(_vec, _parentFrame.transform.Rot());
+
+          return parentProperty + vecInWorldCoordinates;
         }
 
-        /// \brief Resolve the angular velocity to the target frame
+        /// \brief Resolve the property to the target frame
         public: static Quantity ResolveToTargetFrame(
-          const Quantity &_velocity,
+          const Quantity &_vec,
           const FrameDataType &_parentFrame,
           const FrameDataType &_targetFrame)
         {
-          return _parentFrame.linearVelocity
-              + ResolveToWorldCoordinates(
-                _velocity, _parentFrame.transform.Rot())
-              - _targetFrame.linearVelocity;
+          // First we find all the relevant vectors in world coordinates. The
+          // FrameData that gets passed to us is already expressed in world
+          // coordinates, so we don't need to do anything with those.
+          const Quantity &parentProperty = _parentFrame.*property;
+          const Quantity &targetProperty = _targetFrame.*property;
+
+          // The vector quantity that gets passed to us is in coordinates of the
+          // parent frame, we so we must convert it from the parent coordinates
+          // into world coordinates.
+          const Quantity vecInWorldCoordinates =
+              ResolveToWorldCoordinates(_vec, _parentFrame.transform.Rot());
+
+          // Now that all our vectors are in world coordinates, we can safely
+          // sum/difference them. Note that the result of this sum will also
+          // be in world coordinates.
+          const Quantity resultInWorldCoordinates =
+              parentProperty + vecInWorldCoordinates - targetProperty;
+
+          // The caller expects the result that we give back to be in the target
+          // coordinates, so we must rotate it from the world coordinates into
+          // the target coordinates before returning.
+          return ResolveFromWorldToTargetCoordinates(
+                resultInWorldCoordinates,
+                _targetFrame.transform.Rot());
         }
+
+        // Note: We inherit ResolveToWorldCoordinates and
+        // ResolveToTargetCoordinates from VectorSpace since they are the same
+        // as what we need for these kinematic derivatives.
       };
 
       /////////////////////////////////////////////////
-      /// \brief AngularVelocitySpace is used by angular velocity vectors
+      /// \brief LinearVelocitySpace is used by linear velocity vectors.
       template <std::size_t Dim, typename S>
-      struct AngularVelocitySpace : public VectorSpace<Dim, S>
-      {
-        /// \brief Resolve the angular velocity to the world frame
-        public: static Quantity ResolveToWorldFrame(
-          const Quantity &_angularVelocity,
-          const FrameDataType &_parentFrame)
-        {
-          return _parentFrame.angularVelocity
-              + ResolveToWorldCoordinates(
-                _angularVelocity, _parentFrame.transform.Rot());
-        }
+      struct LinearVelocitySpace
+          : public KinematicDerivativeSpace<Dim, S,
+              &FrameData3<S>::linearVelocity> { };
 
-        /// \brief Resolve the angular velocity to the target frame
-        public: static Quantity ResolveToTargetFrame(
-          const Quantity &_angularVelocity,
-          const FrameDataType &_parentFrame,
-          const FrameDataType &_targetFrame)
-        {
-          return _parentFrame.angularVelocity
-              + ResolveToWorldCoordinates(
-                _angularVelocity, _parentFrame.transform.Rot())
-              - _targetFrame.angularVelocity;
-        }
-      };
+      /////////////////////////////////////////////////
+      /// \brief AngularVelocitySpace is used by angular velocity vectors.
+      template <std::size_t Dim, typename S>
+      struct AngularVelocitySpace
+          : public KinematicDerivativeSpace<Dim, S,
+              &FrameData3<S>::angularVelocity> { };
 
+      /////////////////////////////////////////////////
+      /// \brief LinearAccelerationSpace is used by linear acceleration vectors.
+      template <std::size_t Dim, typename S>
+      struct LinearAccelerationSpace
+          : public KinematicDerivativeSpace<Dim, S,
+              &FrameData3<S>::linearAcceleration> { };
+
+      /////////////////////////////////////////////////
+      /// \brief AngularAccelerationSpace is used by angular acceleration
+      /// vectors.
+      template <std::size_t Dim, typename S>
+      struct AngularAccelerationSpace
+          : public KinematicDerivativeSpace<Dim, S,
+              &FrameData3<S>::angularAcceleration> { };
 
       /////////////////////////////////////////////////
       /// \brief VectorSpace is used by classical "free vectors", like Force and
-      /// Torque, which are not dependent on the origins of their frames of
-      /// reference.
+      /// Torque, which are not dependent on any of the properties of a frame,
+      /// besides the orientation.
       template <std::size_t Dim, typename S>
       struct VectorSpace : public SpaceTypes<Dim, S, math::Vector3<S>>
       {
@@ -465,7 +497,7 @@ namespace ignition
                 _targetFrame.transform.Rot());
         }
 
-        /// \brief Resolve the coordinates of the vector to the world frame
+        /// \brief Resolve the coordinates of the vector to the world frame.
         public: static Quantity ResolveToWorldCoordinates(
           const Quantity &_vec,
           const RotationType &_currentCoordinates)
@@ -473,7 +505,7 @@ namespace ignition
           return math::Matrix3<Scalar>(_currentCoordinates) * _vec;
         }
 
-        /// \brief Resolve the coordinates of the vector to the target frame
+        /// \brief Resolve the coordinates of the vector to the target frame.
         public: static Quantity ResolveToTargetCoordinates(
           const Quantity &_vec,
           const RotationType &_currentCoordinates,
@@ -483,6 +515,309 @@ namespace ignition
           const math::Matrix3<Scalar> R_target{_targetCoordinates};
 
           return R_target.Transposed() * (R_current * _vec);
+        }
+
+        /// \brief Resolve the coordinates of the vector from the world
+        /// coordinates to the target coordinates. This is a helper function for
+        /// some of the classes that use VectorSpace. It is not used directly by
+        /// Resolve(~) or Reframe(~).
+        public: static Quantity ResolveFromWorldToTargetCoordinates(
+          const Quantity &_vec,
+          const RotationType &_targetCoordinates)
+        {
+          const math::Matrix3<Scalar> R_target{_targetCoordinates};
+          return R_target.Transposed() * _vec;
+        }
+      };
+
+      /////////////////////////////////////////////////
+      /// \brief FrameSpace is used to compute RelativeFrameData. This space is
+      /// able to account for Coriolis and centrifugal effects in non-inertial
+      /// reference frames.
+      template <std::size_t Dim, typename S>
+      struct FrameSpace : public SpaceTypes<Dim, S, FrameData3<S>>
+      {
+        using VectorType = math::Vector3<S>;
+        using VectorSpaceType = VectorSpace<Dim, S>;
+
+        /// \brief Express the data of the frame with respect to the world
+        /// frame.
+        public: static Quantity ResolveToWorldFrame(
+          const Quantity &_relativeFrameData,
+          const FrameDataType &_parentFrame)
+        {
+          const RotationType &Rot = _parentFrame.transform.Rot();
+
+          Quantity resultFrameData;
+
+          // The transform of the input frame, with respect to the world frame.
+          resultFrameData.transform =
+              _parentFrame.transform * _relativeFrameData.transform;
+
+          // The position of our input frame, relative to its parent frame,
+          // expressed in world coordinates.
+          const VectorType &p_rel =
+              VectorSpaceType::ResolveToWorldCoordinates(
+                _relativeFrameData.transform.Pos(), Rot);
+
+          // The linear velocity of our input frame, relative to its parent
+          // frame, expressed in world coordinates.
+          const VectorType &v_rel =
+              VectorSpaceType::ResolveToWorldCoordinates(
+                _relativeFrameData.linearVelocity, Rot);
+
+          // The linear velocity of the parent frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &v_parent = _parentFrame.linearVelocity;
+
+          // The angular velocity of the parent frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &w_parent = _parentFrame.angularVelocity;
+
+          // The velocity of our input frame, relative to the world frame,
+          // expressed in world coordinates.
+          const VectorType &v = v_parent + v_rel + w_parent.Cross(p_rel);
+
+          // Copy the linear velocity into our result data.
+          resultFrameData.linearVelocity = v;
+
+          // The linear acceleration of our input frame, relative to its parent
+          // frame, expressed in world coordinates.
+          const VectorType &a_rel =
+              VectorSpaceType::ResolveToWorldCoordinates(
+                _relativeFrameData.transform.Pos(), Rot);
+
+          // The linear acceleration of the parent frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &a_parent = _parentFrame.linearAcceleration;
+
+          // The angular acceleration of the parent frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &alpha_parent = _parentFrame.angularAcceleration;
+
+          // The linear acceleration of the input frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &a =
+              a_parent + a_rel
+              + alpha_parent.Cross(p_rel)
+              + 2*w_parent.Cross(v_rel)
+              + w_parent.Cross(w_parent.Cross(p_rel));
+
+          // Copy the linear acceleration into our result data.
+          resultFrameData.linearAcceleration = a;
+
+          // The angular velocity of the input frame, relative to its parent
+          // frame, expressed in world coordinates.
+          const VectorType &w_rel =
+              VectorSpaceType::ResolveToWorldCoordinates(
+                _relativeFrameData.angularVelocity, Rot);
+
+          // The angular velocity of the input frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &w = w_parent + w_rel;
+
+          // Copy the angular velocity into our result data.
+          resultFrameData.angularVelocity = w;
+
+          // The angular acceleration of the input frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &alpha_rel =
+              VectorSpaceType::ResolveToWorldCoordinates(
+                _relativeFrameData.angularAcceleration, Rot);
+
+          // The angular acceleration of the input frame, relative to the world
+          // frame, expressed in world coordinates.
+          const VectorType &alpha =
+              alpha_parent + alpha_rel + w_parent.Cross(w_rel);
+
+          // Copy the angular acceleration into our result data.
+          resultFrameData.angularAcceleration = alpha;
+
+          return resultFrameData;
+        }
+
+        /// \brief Express the data of the frame with respect to the target
+        /// frame.
+        public: static Quantity ResolveToTargetFrame(
+          const Quantity &_relativeFrameData,
+          const FrameDataType &_parentFrame,
+          const FrameDataType &_targetFrame)
+        {
+          Quantity resultFrameData;
+
+          // First we compute the input frame data with respect to the world
+          // frame
+          const Quantity &frameDataWrtWorld =
+              ResolveToWorldFrame(_relativeFrameData, _parentFrame);
+
+          // The position of the input frame, relative to the target frame, in
+          // coordinates of the world frame.
+          const VectorType &p_rel =
+              frameDataWrtWorld.transform.Pos() - _targetFrame.transform.Pos();
+
+          // The linear velocity of the input frame, with respect to the world
+          // frame.
+          const VectorType &v = frameDataWrtWorld.linearVelocity;
+
+          // The linear velocity of the target frame, with respect to the world
+          // frame.
+          const VectorType &v_target = _targetFrame.linearVelocity;
+
+          // The angular velocity of the target frame, with respect to the world
+          // frame.
+          const VectorType &w_target = _targetFrame.angularVelocity;
+
+          // The linear velocity of the input frame, relative to the target
+          // frame, in coordinates of the world frame.
+          const VectorType &v_rel = v - v_target - w_target.Cross(p_rel);
+
+          // Convert the linear velocity into the target coordinates, and then
+          // copy it to the result data.
+          resultFrameData.linearVelocity =
+              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+                v_rel, _targetFrame.transform.Rot());
+
+          // The linear acceleration of the input frame, with respect to the
+          // world frame.
+          const VectorType &a = frameDataWrtWorld.linearAcceleration;
+
+          // The linear acceleration of the target frame, with respect to the
+          // world frame.
+          const VectorType &a_target = _targetFrame.linearAcceleration;
+
+          // The angular acceleration of the target frame, with respect to the
+          // world frame.
+          const VectorType &alpha_target = _targetFrame.angularAcceleration;
+
+          // The angular acceleration of the input frame, relative to the target
+          // frame, in coordinates of the world frame.
+          const VectorType &a_rel =
+              a - a_target
+              - alpha_target.Cross(p_rel)
+              - 2*w_target.Cross(v_rel)
+              - w_target.Cross(w_target.Cross(p_rel));
+
+          // Convert the linear acceleration into the target coordinates, and
+          // then copy it to the result data.
+          resultFrameData.linearAcceleration =
+              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+                a_rel, _targetFrame.transform.Rot());
+
+          // The angular velocity of the input frame, with respect to the world
+          // frame.
+          const VectorType &w = frameDataWrtWorld.angularVelocity;
+
+          // The angular velocity of the input frame, relative to the target
+          // frame, in coordinates of the world frame.
+          const VectorType &w_rel = w - w_target;
+
+          // Convert the angular velocity into the target coordinates, and then
+          // copy it to the result data.
+          resultFrameData.angularVelocity =
+              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+                w_rel, _targetFrame.transform.Rot());
+
+          // The angular acceleration of the input frame, with respect to the
+          // world frame.
+          const VectorType &alpha = frameDataWrtWorld.angularAcceleration;
+
+          // The angular acceleration of the input frame, relative to the target
+          // frame, in coordinates of the world frame.
+          const VectorType &alpha_rel =
+              alpha - alpha_target - w_target.Cross(w_rel);
+
+          // Convert the angular acceleration into the target coordinates, and
+          // then copy it to the result data.
+          resultFrameData.angularAcceleration =
+              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+                alpha_rel, _targetFrame.transform.Rot());
+
+          return resultFrameData;
+        }
+
+        /// \brief Resolve the coordinates of the specified property to the
+        /// world coordinates. Note that this does not work for the transform
+        /// property; it is only meant for linear/angular velocity/acceleration.
+        public: template <VectorType Quantity::*property>
+        static void ResolvePropertyToWorldCoordinates(
+          Quantity &_output, const FrameDataType &_input,
+          const RotationType &_currentCoordinates)
+        {
+          _output.*property =
+              VectorSpaceType::ResolveToWorldCoordinates(
+                _input.*property, _currentCoordinates);
+        }
+
+        /// \brief Resolve the coordinates of the specified property to the
+        /// target coordinates. Note that this does not work for the transform
+        /// property; it is only meant for linear/angular velocity/acceleration.
+        public: template <VectorType Quantity::*property>
+        static void ResolvePropertyToTargetCoordinates(
+          Quantity &_output, const FrameDataType &_input,
+          const RotationType &_currentCoordinates,
+          const RotationType &_targetCoordinates)
+        {
+          _output.*property =
+              VectorSpaceType::ResolveToTargetCoordinates(
+                _input.*property, _currentCoordinates, _targetCoordinates);
+        }
+
+        /// \brief Resolve the coordinates of the frame to the world frame.
+        public: static Quantity ResolveToWorldCoordinates(
+          const Quantity &_inputFrameData,
+          const RotationType &_currentCoordinates)
+        {
+          Quantity resultFrameData;
+
+          resultFrameData.transform =
+              SESpace<Dim, S>::ResolveToWorldCoordinates(
+                _inputFrameData.transform, _currentCoordinates);
+
+          ResolvePropertyToWorldCoordinates<&Quantity::linearVelocity>(
+                resultFrameData, _inputFrameData, _currentCoordinates);
+
+          ResolvePropertyToWorldCoordinates<&Quantity::linearAcceleration>(
+                resultFrameData, _inputFrameData, _currentCoordinates);
+
+          ResolvePropertyToWorldCoordinates<&Quantity::angularVelocity>(
+                resultFrameData, _inputFrameData, _currentCoordinates);
+
+          ResolvePropertyToWorldCoordinates<&Quantity::angularAcceleration>(
+                resultFrameData, _inputFrameData, _currentCoordinates);
+
+          return resultFrameData;
+        }
+
+        /// \brief Resolve the coordinates of the frame to the target frame.
+        public: static Quantity ResolveToTargetCoordinates(
+            const Quantity &_inputFrameData,
+            const RotationType &_currentCoordinates,
+            const RotationType &_targetCoordinates)
+        {
+          Quantity resultFrameData;
+
+          resultFrameData.transform =
+              SESpace<Dim, S>::ResolveToTargetCoordinates(
+                _inputFrameData.transform, _currentCoordinates,
+                _targetCoordinates);
+
+          ResolvePropertyToTargetCoordinates<&Quantity::linearVelocity>(
+                resultFrameData, _inputFrameData,
+                _currentCoordinates, _targetCoordinates);
+
+          ResolvePropertyToTargetCoordinates<&Quantity::linearAcceleration>(
+                resultFrameData, _inputFrameData,
+                _currentCoordinates, _targetCoordinates);
+
+          ResolvePropertyToTargetCoordinates<&Quantity::angularVelocity>(
+                resultFrameData, _inputFrameData,
+                _currentCoordinates, _targetCoordinates);
+
+          ResolvePropertyToTargetCoordinates<&Quantity::angularAcceleration>(
+                resultFrameData, _inputFrameData,
+                _currentCoordinates, _targetCoordinates);
+
+          return resultFrameData;
         }
       };
     }
