@@ -18,11 +18,13 @@
 #ifndef IGNITION_PHYSICS_ENGINEFEATURES_HH_
 #define IGNITION_PHYSICS_ENGINEFEATURES_HH_
 
+#include <ignition/physics/Export.hh>
+
 namespace ignition
 {
   namespace physics
   {
-    class Feature
+    class IGNITION_PHYSICS_VISIBLE Feature
     {
       // Placeholder class to be inherited by Feature types.
       public: virtual ~Feature() = default;

@@ -35,7 +35,7 @@ namespace ignition
     /// ignition-physics engines to provide users with easy ways to express
     /// kinematic quantities in terms of frames and compute their values in
     /// terms of arbitrary frames of reference.
-    class FrameSemantics : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
     {
       /// \brief Resolve is able to take a FramedQuantity (FQ) and compute its
       /// values in terms of other reference frames. The argument `relativeTo`
@@ -93,7 +93,7 @@ namespace ignition
           const std::size_t _id,
           const std::shared_ptr<const void> &_ref) const;
 
-      class Object : public virtual BasicObject
+      class IGNITION_PHYSICS_VISIBLE Object : public virtual BasicObject
       {
         /// \brief Get a FrameID for this object
         public: FrameID GetFrameID() const;
@@ -119,37 +119,45 @@ namespace ignition
 
         /// \brief Pointer to the implementation
         private: std::unique_ptr<Implementation> pimpl;
+
+        /// \brief Virtual destructor
+        public: virtual ~Object();
       };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Link objects.
-    class LinkFrameSemantics : public virtual FrameSemantics
+    class IGNITION_PHYSICS_VISIBLE LinkFrameSemantics
+        : public virtual FrameSemantics
     {
-      class Link : public virtual FrameSemantics::Object { };
+      public: class Link : public virtual FrameSemantics::Object { };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Joint objects.
-    class JointFrameSemantics : public virtual FrameSemantics
+    class IGNITION_PHYSICS_VISIBLE JointFrameSemantics
+        : public virtual FrameSemantics
     {
-      class Joint : public virtual FrameSemantics::Object { };
+      public: class Joint : public virtual FrameSemantics::Object { };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Model objects.
-    class ModelFrameSemantics : public virtual FrameSemantics
+    class IGNITION_PHYSICS_VISIBLE ModelFrameSemantics
+        : public virtual FrameSemantics
     {
-      class Model : public virtual FrameSemantics::Object { };
+      public: class Model : public virtual FrameSemantics::Object { };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to all objects.
-    class CompleteFrameSemantics
+    class IGNITION_PHYSICS_VISIBLE CompleteFrameSemantics
         : public virtual LinkFrameSemantics,
           public virtual JointFrameSemantics,
           public virtual ModelFrameSemantics { };
   }
 }
+
+#include <ignition/physics/detail/FrameSemantics.hh>
 
 #endif

@@ -394,7 +394,7 @@ namespace ignition
         using Requirer = typename detail::SelectRequirerIfAvailable<
                 T, Specification>::Requirer;
 
-        return static_cast<const Requirer*>(this)->Get<T>();
+        return static_cast<const Requirer*>(this)->template Get<T>();
       }
 
       template <typename T>

@@ -21,8 +21,8 @@
 #include <ignition/math.hh>
 #include <ignition/common/PluginMacros.hh>
 
-#include "ignition/physics/SpecifyData.hh"
-#include "ignition/physics/CompositeDataMacros.hh"
+#include <ignition/physics/SpecifyData.hh>
+#include <ignition/physics/CompositeDataMacros.hh>
 
 namespace ignition
 {
@@ -149,7 +149,7 @@ namespace ignition
 
 
     // ---------------- ForwardStep Interface -----------------
-    class ForwardStep
+    class IGNITION_PHYSICS_VISIBLE ForwardStep
     {
       public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep)
 

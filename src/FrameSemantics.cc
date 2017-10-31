@@ -88,5 +88,11 @@ namespace ignition
     {
       // Do nothing
     }
+
+    /////////////////////////////////////////////////
+    FrameSemantics::Object::~Object()
+    {
+      // This destructor definition must be in a source file for PIMPL to work
+    }
   }
 }

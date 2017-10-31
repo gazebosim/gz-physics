@@ -64,5 +64,11 @@ namespace ignition
     {
       // Do nothing
     }
+
+    /////////////////////////////////////////////////
+    BasicObject::~BasicObject()
+    {
+      // This destructor definition must be in a source file for PIMPL to work
+    }
   }
 }

@@ -33,7 +33,8 @@ class EngineLink
   public: EngineLink(
     const std::string &_name,
     const FrameData3d &_data)
-    : data(_data)
+    : name(_name),
+      data(_data)
   {
     // Do nothing
   }
@@ -46,13 +47,22 @@ class EngineLink
 class TestFrameSemantics final :
     public ignition::physics::CompleteFrameSemantics
 {
-  public: using Link = CompleteFrameSemantics::Link;
+  public: class Link : public virtual CompleteFrameSemantics::Link
+  {
+    public: Link(Feature *const _features,
+         const std::size_t _id,
+         const std::shared_ptr<const void> &_ref)
+      : BasicObject(_features, _id, _ref)
+    {
+      // Do nothing
+    }
+  };
 
   public: TestFrameSemantics()
   {
     // Initialize this with a nullptr object which will act as a stand-in for
     // the world frame (which must have an object ID of 0).
-    idToEngineLink.push_back(nullptr);
+    idToEngineLink.push_back(std::weak_ptr<EngineLink>());
   }
 
   /////////////////////////////////////////////////
@@ -60,11 +70,11 @@ class TestFrameSemantics final :
     const FrameID &_id) const override
   {
     const std::size_t id = _id.ID();
-    ASSERT_LT(id, idToEngineLink.size());
+//    ASSERT_LT(id, idToEngineLink.size());
 
     const std::weak_ptr<EngineLink> &weakLink = idToEngineLink[id];
     const std::shared_ptr<EngineLink> &link = weakLink.lock();
-    ASSERT_TRUE(link);
+//    ASSERT_NE(nullptr, link);
 
     return link->data;
   }
@@ -74,17 +84,24 @@ class TestFrameSemantics final :
     const std::string &_linkName,
     const FrameData3d &_frameData)
   {
-    std::shared_ptr<EngineLink> newEngineLink =
-        std::make_shared<EngineLink>(_linkName, _frameData);
+    LinkNameMap::iterator it; bool inserted;
+    std::tie(it, inserted) = this->nameToLink.insert(
+          std::make_pair(_linkName, nullptr));
 
-    Link *newProxyLink = new Link(this, newID, newEngineLink);
-    const std::size_t newID = idToData.size();
-    this->nameToLink.insert(
-          std::make_pair(newID, std::unique_ptr<Link>(newProxyLink)));
+    if (inserted)
+    {
+      std::shared_ptr<EngineLink> newEngineLink =
+          std::make_shared<EngineLink>(_linkName, _frameData);
 
-    this->idToEngineLink.push_back(newEngineLink);
-    this->activeEngineLinks.insert(std::make_pair(newID, newEngineLink));
-    return newProxyLink;
+      const std::size_t newID = idToEngineLink.size();
+      Link *newProxyLink = new Link(this, newID, newEngineLink);
+      it->second = std::unique_ptr<Link>(newProxyLink);
+
+      this->idToEngineLink.push_back(newEngineLink);
+      this->activeEngineLinks.insert(std::make_pair(newID, newEngineLink));
+    }
+
+    return it->second.get();
   }
 
   /////////////////////////////////////////////////
@@ -140,7 +157,7 @@ TEST(FrameSemantics_TEST, FrameID)
   FrameData3d link1;
   link1.transform.Pos() = ignition::math::Vector3d(0.1, 0.2, 0.3);
 
-  FrameID link1ID = fs.CreateLink("link1", link1);
+  FrameID link1ID = fs.CreateLink("link1", link1)->GetFrameID();
 
 
 }

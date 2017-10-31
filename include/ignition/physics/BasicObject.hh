@@ -21,6 +21,8 @@
 #include <memory>
 #include <limits>
 
+#include <ignition/physics/Export.hh>
+
 namespace ignition
 {
   namespace physics
@@ -38,7 +40,7 @@ namespace ignition
     ///
     /// Examples of proxy objects are the Link class, Joint class, and Model
     /// class.
-    class BasicObject
+    class IGNITION_PHYSICS_VISIBLE BasicObject
     {
       /// \brief Get the unique object ID of this Link
       public: std::size_t ObjectID() const;
@@ -71,6 +73,9 @@ namespace ignition
 
       /// \brief PIMPL pointer to the implementation
       protected: std::unique_ptr<Implementation> pimpl;
+
+      /// \brief Virtual destructor
+      public: virtual ~BasicObject();
     };
   }
 }

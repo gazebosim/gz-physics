@@ -109,7 +109,7 @@ namespace ignition
                 _sender->second.data->Clone(),
                 _mergeRequirements && _sender->second.required))).second;
 
-      IGN_ASSERT(!inserted, "Calling StandardDataCreate on a data entry that "
+      IGN_ASSERT(inserted, "Calling StandardDataCreate on a data entry that "
                  "already exists. This should not be possible! Please report "
                  "this bug!");
 
