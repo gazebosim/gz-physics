@@ -1,17 +1,6 @@
-set(TEST_TYPE "PERFORMANCE")
 
-file(GLOB test_files "*.cc")
-list(SORT test_files)
+ign_get_sources(tests)
 
-set(tests "")
-
-foreach(test_file ${test_files})
-
-  get_filename_component(test ${test_file} NAME)
-  list(APPEND tests ${test})
-
-endforeach(test_file)
-
-link_directories(${PROJECT_BINARY_DIR}/test)
-
-ign_build_tests(${tests})
+ign_build_tests(
+  TYPE PERFORMANCE
+  SOURCES ${tests})
