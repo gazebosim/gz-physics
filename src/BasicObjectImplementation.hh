@@ -29,14 +29,14 @@ namespace ignition
     class BasicObject::Implementation
     {
       public: Implementation(
-        Feature *const _features,
+        Feature::Engine *const _engine,
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref);
 
       /// \brief This is a pointer to the physics engine, and it can be used by
       /// the object features to find the engine interfaces that they need in
       /// order to function.
-      public: Feature *const features;
+      public: Feature::Engine *const engine;
 
       /// \brief This integer ID uniquely identifies the engine object that this
       /// proxy object is referring to. No two proxy objects may use the same ID

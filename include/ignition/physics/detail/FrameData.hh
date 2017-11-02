@@ -25,8 +25,8 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    FrameData3<Scalar>::FrameData3()
+    template <typename Scalar, std::size_t Dim>
+    FrameData<Scalar, Dim>::FrameData()
     {
       /// Technically we do not need to call this function in the constructor
       /// since the ignition::math types initialize their values to zero (or
@@ -36,15 +36,14 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    void FrameData3<Scalar>::SetToZero()
+    template <typename Scalar, std::size_t Dim>
+    void FrameData<Scalar, Dim>::SetToZero()
     {
-      this->transform.Set(math::Vector3<Scalar>(0.0, 0.0, 0.0),
-                          math::Quaternion<Scalar>(1.0, 0.0, 0.0, 0.0));
-      this->linearVelocity.Set();
-      this->angularVelocity.Set();
-      this->linearAcceleration.Set();
-      this->angularAcceleration.Set();
+      this->pose = Pose::Identity();
+      this->linearVelocity = Vector::Zero();
+      this->angularVelocity = Vector::Zero();
+      this->linearAcceleration = Vector::Zero();
+      this->angularAcceleration = Vector::Zero();
     }
   }
 }

@@ -45,14 +45,15 @@ class EngineLink
 
 /////////////////////////////////////////////////
 class TestFrameSemantics final :
-    public ignition::physics::CompleteFrameSemantics
+    public ignition::physics::CompleteFrameSemantics::Engine<double, 3>
 {
-  public: class Link : public virtual CompleteFrameSemantics::Link
+  public: class Link : public virtual ignition::physics::CompleteFrameSemantics::Link<double, 3>
   {
-    public: Link(Feature *const _features,
-         const std::size_t _id,
-         const std::shared_ptr<const void> &_ref)
-      : BasicObject(_features, _id, _ref)
+    public: Link(
+        ignition::physics::Feature::Engine *const _engine,
+        const std::size_t _id,
+        const std::shared_ptr<const void> &_ref)
+      : BasicObject(_engine, _id, _ref)
     {
       // Do nothing
     }
@@ -155,7 +156,7 @@ TEST(FrameSemantics_TEST, FrameID)
   TestFrameSemantics fs;
 
   FrameData3d link1;
-  link1.transform.Pos() = ignition::math::Vector3d(0.1, 0.2, 0.3);
+  link1.pose.translation() = ignition::physics::Vector3d(0.1, 0.2, 0.3);
 
   FrameID link1ID = fs.CreateLink("link1", link1)->GetFrameID();
 

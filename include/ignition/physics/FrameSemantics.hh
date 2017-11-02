@@ -20,7 +20,7 @@
 
 #include <memory>
 
-#include <ignition/physics/EngineFeatures.hh>
+#include <ignition/physics/Feature.hh>
 #include <ignition/physics/BasicObject.hh>
 #include <ignition/physics/FrameID.hh>
 #include <ignition/physics/FrameData.hh>
@@ -37,91 +37,109 @@ namespace ignition
     /// terms of arbitrary frames of reference.
     class IGNITION_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
     {
-      /// \brief Resolve is able to take a FramedQuantity (FQ) and compute its
-      /// values in terms of other reference frames. The argument `relativeTo`
-      /// indicates a frame that the quantity should be compared against (e.g.
-      /// the velocity of Frame A relative to Frame B where both A and B may be
-      /// moving). The argument `inCoordinatesOf` indicates the coordinate frame
-      /// that the values should be expressed in (this is usually just a change
-      /// in rotation).
-      public: template <typename FQ>
-      typename FQ::Quantity Resolve(
-        const FQ &_quantity,
-        const FrameID _relativeTo,
-        const FrameID _inCoordinatesOf) const;
+      // Forward declaration
+      public: template <typename, std::size_t> class Object;
 
-      /// \brief This overload causes the World Frame to be used as the default
-      /// frame when relativeTo is not specified. It also causes the frame
-      /// specified for relativeTo to be used as the frame for inCoordinatesOf.
-      ///
-      /// In other words:
-      ///
-      /// -- Get the value of v in terms of the World Frame
-      ///      Resolve(v)
-      ///
-      /// -- Get the value of v relative to frame A, in coordinates of frame A
-      ///      Resolve(v, A)
-      ///
-      /// -- Get the value of v relative to frame A, in coordinates of frame B
-      ///      Resolve(v, A, B)
-      ///
-      public: template <typename FQ>
-      typename FQ::Quantity Resolve(
-        const FQ &_quantity,
-        const FrameID _relativeTo = FrameID::World()) const;
+      /// \brief This class defines the engine interface that provides the
+      /// FrameSemantics feature.
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Engine : public virtual Feature::Engine
+      {
+        public: using FrameData = ignition::physics::FrameData<_Scalar, _Dim>;
 
-      /// \brief Create a new FramedQuantity which expresses the input quantity
-      /// in terms of a new parent frame. Note that the returned FramedQuantity
-      /// will behave as though it has a constant value within its new parent
-      /// frame.
-      public: template <typename FQ>
-      FQ Reframe(const FQ &_quantity,
-                 const FrameID _withRespectTo = FrameID::World()) const;
-
-      /// \brief Get the current 3D transformation of the specified frame with
-      /// respect to the WorldFrame.
-      public: virtual FrameData3d FrameDataRelativeToWorld(
+        /// \brief Get the current 3D transformation of the specified frame with
+        /// respect to the WorldFrame.
+        ///
+        /// Engine developers only need to provide an implementation for this
+        /// function in order to provide FrameSemantics.
+        public: virtual FrameData FrameDataRelativeToWorld(
           const FrameID &_id) const = 0;
 
-      /// \brief Classes that derive from FrameSemantics can use this function
-      /// to spawn a FrameID.
-      ///
-      /// Note that an _id of 0 is always interpreted as the World Frame, so you
-      /// should never spawn a FrameID with an _id of 0 unless you intend for it
-      /// to represent the world frame.
-      protected: FrameID SpawnFrameID(
-          const std::size_t _id,
-          const std::shared_ptr<const void> &_ref) const;
+        /// \brief Resolve is able to take a FramedQuantity (FQ) and compute its
+        /// values in terms of other reference frames. The argument `relativeTo`
+        /// indicates a frame that the quantity should be compared against (e.g.
+        /// the velocity of Frame A relative to Frame B where both A and B may
+        /// be moving). The argument `inCoordinatesOf` indicates the coordinate
+        /// frame that the values should be expressed in (this is usually just a
+        /// change in rotation).
+        public: template <typename FQ>
+        typename FQ::Quantity Resolve(
+          const FQ &_quantity,
+          const FrameID _relativeTo,
+          const FrameID _inCoordinatesOf) const;
 
-      class IGNITION_PHYSICS_VISIBLE Object : public virtual BasicObject
+        /// \brief This overload causes the World Frame to be used as the
+        /// default frame when relativeTo is not specified. It also causes the
+        /// frame specified for relativeTo to be used as the frame for
+        /// inCoordinatesOf.
+        ///
+        /// In other words:
+        ///
+        /// -- Get the value of v in terms of the World Frame
+        ///      Resolve(v)
+        ///
+        /// -- Get the value of v relative to frame A, in coordinates of frame A
+        ///      Resolve(v, A)
+        ///
+        /// -- Get the value of v relative to frame A, in coordinates of frame B
+        ///      Resolve(v, A, B)
+        ///
+        public: template <typename FQ>
+        typename FQ::Quantity Resolve(
+          const FQ &_quantity,
+          const FrameID _relativeTo = FrameID::World()) const;
+
+        /// \brief Create a new FramedQuantity which expresses the input
+        /// quantity in terms of a new parent frame. Note that the returned
+        /// FramedQuantity will behave as though it has a constant value within
+        /// its new parent frame.
+        public: template <typename FQ>
+        FQ Reframe(const FQ &_quantity,
+                   const FrameID _withRespectTo = FrameID::World()) const;
+
+        /// \brief Classes that derive from FrameSemantics can use this function
+        /// to spawn a FrameID.
+        ///
+        /// Note that an _id of 0 is always interpreted as the World Frame, so
+        /// you should never spawn a FrameID with an _id of 0 unless you intend
+        /// for it to represent the world frame.
+        protected: FrameID SpawnFrameID(
+            const std::size_t _id,
+            const std::shared_ptr<const void> &_ref) const;
+
+        template <typename, std::size_t> friend class FrameSemantics::Object;
+      };
+
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Object : public virtual BasicObject
       {
+        public: using FrameData = ignition::physics::FrameData<_Scalar, _Dim>;
+
         /// \brief Get a FrameID for this object
         public: FrameID GetFrameID() const;
 
         /// \brief Get the FrameData of this object with respect to another
         /// frame. The data will also be expressed in the coordinates of the
         /// _relativeTo frame.
-        public: FrameData3d FrameDataRelativeTo(
+        public: FrameData FrameDataRelativeTo(
           const FrameID &_relativeTo) const;
 
         /// \brief Get the FrameData of this object relative to another frame,
         /// expressed in the coordinates of a third frame.
-        public: FrameData3d FrameDataRelativeTo(
+        public: FrameData FrameDataRelativeTo(
           const FrameID &_relativeTo,
           const FrameID &_inCoordinatesOf) const;
 
-        /// \brief Have the constructor receive a pointer to the necessary
-        /// engine feature interface.
+        /// \brief The constructor will use its base class to find a reference
+        /// to the engine feature interface that it needs.
         public: Object();
 
-        // Declare the PIMPL class type
-        private: class Implementation;
-
-        /// \brief Pointer to the implementation
-        private: std::unique_ptr<Implementation> pimpl;
-
         /// \brief Virtual destructor
-        public: virtual ~Object();
+        public: virtual ~Object() = default;
+
+        /// \brief Pointer to the FrameSemantics::Engine interface that allows
+        /// this feature to work.
+        private: const FrameSemantics::Engine<_Scalar, _Dim> *const engine;
       };
     };
 
@@ -130,7 +148,11 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE LinkFrameSemantics
         : public virtual FrameSemantics
     {
-      public: class Link : public virtual FrameSemantics::Object { };
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Link : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
     };
 
     /////////////////////////////////////////////////
@@ -138,7 +160,11 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE JointFrameSemantics
         : public virtual FrameSemantics
     {
-      public: class Joint : public virtual FrameSemantics::Object { };
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Joint : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
     };
 
     /////////////////////////////////////////////////
@@ -146,7 +172,11 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE ModelFrameSemantics
         : public virtual FrameSemantics
     {
-      public: class Model : public virtual FrameSemantics::Object { };
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Model : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
     };
 
     /////////////////////////////////////////////////
@@ -154,7 +184,11 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE CompleteFrameSemantics
         : public virtual LinkFrameSemantics,
           public virtual JointFrameSemantics,
-          public virtual ModelFrameSemantics { };
+          public virtual ModelFrameSemantics
+    {
+      public: template <typename _Scalar, std::size_t _Dim>
+      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+    };
   }
 }
 

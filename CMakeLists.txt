@@ -33,9 +33,14 @@ set(IGN_MATH_VER 4)
 ign_find_package(ignition-math${IGN_MATH_VER} REQUIRED)
 
 #--------------------------------------
+# Find Eigen
+ign_find_package(Eigen3 REQUIRED)
+
+#--------------------------------------
 # Find ignition-common
 set(IGN_COMMON_VER 0)
 ign_find_package(ignition-common${IGN_COMMON_VER} REQUIRED)
+
 
 message(STATUS "-------------------------------------------\n")
 

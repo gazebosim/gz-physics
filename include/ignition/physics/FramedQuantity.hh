@@ -21,9 +21,6 @@
 #include <ignition/physics/FrameID.hh>
 #include <ignition/physics/FrameData.hh>
 
-#include <ignition/math/Vector2.hh>
-#include <ignition/math/Matrix3.hh>
-
 namespace ignition
 {
   namespace physics
@@ -105,9 +102,8 @@ namespace ignition
       public: using Space = CoordinateSpace;
 
       /// \brief The number of physical (spatial) dimensions that this quantity
-      /// exists in. Currently we only support Dim==3, but in the future we may
-      /// support Dim==2, so this field is for forward compatibility.
-      public: static constexpr std::size_t Dimension = Dim;
+      /// exists in. Only values of 2 or 3 are supported.
+      public: enum { Dimension = Dim };
 
       /// \brief This variable specifies the parent frame that this
       /// FramedQuantity belongs to.
@@ -121,15 +117,15 @@ namespace ignition
     {
       /////////////////////////////////////////////////
       // Forward delcarations of CoordinateSpaces
-      template <std::size_t, typename> struct SESpace;
-      template <std::size_t, typename, typename> struct SOSpace;
-      template <std::size_t, typename> struct EuclideanSpace;
-      template <std::size_t, typename> struct LinearVelocitySpace;
-      template <std::size_t, typename> struct AngularVelocitySpace;
-      template <std::size_t, typename> struct LinearAccelerationSpace;
-      template <std::size_t, typename> struct AngularAccelerationSpace;
-      template <std::size_t, typename> struct VectorSpace;
-      template <std::size_t, typename> struct FrameSpace;
+      template <typename, std::size_t> struct SESpace;
+      template <typename, std::size_t, typename> struct SOSpace;
+      template <typename, std::size_t> struct EuclideanSpace;
+      template <typename, std::size_t> struct LinearVelocitySpace;
+      template <typename, std::size_t> struct AngularVelocitySpace;
+      template <typename, std::size_t> struct LinearAccelerationSpace;
+      template <typename, std::size_t> struct AngularAccelerationSpace;
+      template <typename, std::size_t> struct VectorSpace;
+      template <typename, std::size_t> struct FrameSpace;
       // TODO: We can add more spaces to support other types like Moments of
       // Inertia, Jacobians, Spatial Velocities/Accelerations, Wrench+Point
       // pairs, and so on.
@@ -140,34 +136,33 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    using FramedPose3 = FramedQuantity<
-        math::Pose3<Scalar>, 3, detail::SESpace<3, Scalar>>;
-    using FramedPose3d = FramedPose3<double>;
-    using FramedPose3f = FramedPose3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedPose = FramedQuantity<
+        Pose<Scalar, Dim>, Dim, detail::SESpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPose)
 
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    using FramedRotationMatrix3 = FramedQuantity<
-        math::Matrix3<Scalar>, 3,
-        detail::SOSpace<3, Scalar, math::Matrix3<Scalar>>>;
-    using FramedRotationMatrix3d = FramedRotationMatrix3<double>;
-    using FramedRotationMatrix3f = FramedRotationMatrix3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedRotationMatrix = FramedQuantity<
+        Eigen::Matrix<Scalar, Dim, Dim>, Dim,
+        detail::SOSpace<Scalar, Dim, Eigen::Matrix<Scalar, Dim, Dim>>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedRotationMatrix)
 
     /////////////////////////////////////////////////
     template <typename Scalar>
     using FramedQuaternion = FramedQuantity<
-        math::Quaternion<Scalar>, 3,
-        detail::SOSpace<3, Scalar, math::Quaternion<Scalar>>>;
+        Eigen::Quaternion<Scalar>, 3, detail::SOSpace<Scalar, 3,
+        Eigen::Quaternion<Scalar>>>;
+    // Note: Eigen only supports quaternions for 3 dimensional space, so we do
+    // not have a dimensionality template argument.
     using FramedQuaterniond = FramedQuaternion<double>;
     using FramedQuaternionf = FramedQuaternion<float>;
 
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    using FramedPosition3 = FramedQuantity<
-        math::Vector3<Scalar>, 3, detail::EuclideanSpace<3, Scalar>>;
-    using FramedPosition3d = FramedPosition3<double>;
-    using FramedPosition3f = FramedPosition3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedPosition = FramedQuantity<
+        Vector<Scalar, Dim>, Dim, detail::EuclideanSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPosition)
 
     /////////////////////////////////////////////////
     /// Note: A FramedLinearVelocity can be thought of as the instantaneous
@@ -178,11 +173,10 @@ namespace ignition
     ///
     /// To find the instantenous velocity of a framed point which is not located
     /// at the origin of its parent frame, use RelativeFrameData.
-    template <typename Scalar>
-    using FramedLinearVelocity3 = FramedQuantity<
-        math::Vector3<Scalar>, 3, detail::LinearVelocitySpace<3, Scalar>>;
-    using FramedLinearVelocity3d = FramedLinearVelocity3<double>;
-    using FramedLinearVelocity3f = FramedLinearVelocity3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedLinearVelocity = FramedQuantity<
+        Vector<Scalar, Dim>, Dim, detail::LinearVelocitySpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedLinearVelocity)
 
     /////////////////////////////////////////////////
     /// Note: A FramedAngularVelocity can be thought of as the instantaneous
@@ -192,11 +186,10 @@ namespace ignition
     /// relative angular velocity of a frame which is a child of the parent
     /// frame, because it does not depend on relative position or any other
     /// factors.
-    template <typename Scalar>
-    using FramedAngularVelocity3 = FramedQuantity<
-        math::Vector3<Scalar>, 3, detail::AngularVelocitySpace<3, Scalar>>;
-    using FramedAngularVelocity3d = FramedAngularVelocity3<double>;
-    using FramedAngularVelocity3f = FramedAngularVelocity3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedAngularVelocity = FramedQuantity<
+        Vector<Scalar, Dim>, Dim, detail::AngularVelocitySpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedAngularVelocity)
 
     /////////////////////////////////////////////////
     /// Note: A FramedLinearAcceleration can be thought of as the instantaneous
@@ -212,11 +205,10 @@ namespace ignition
     /// not located at the origin of its parent frame and/or has non-zero
     /// velocity (and which therefore experiences centrifugal and Coriolis
     /// effects), use a RelativeFrameData object.
-    template <typename Scalar>
-    using FramedLinearAcceleration3 = FramedQuantity<
-        math::Vector3<Scalar>, 3, detail::LinearAccelerationSpace<3, Scalar>>;
-    using FramedLinearAcceleration3d = FramedLinearAcceleration3<double>;
-    using FramedLinaerAcceleration3f = FramedLinearAcceleration3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedLinearAcceleration = FramedQuantity<
+        Vector<Scalar, Dim>, Dim, detail::LinearAccelerationSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedLinearAcceleration)
 
     /////////////////////////////////////////////////
     /// Note: A FramedAngularAcceleration can be thought of as the instantaneous
@@ -230,32 +222,28 @@ namespace ignition
     /// To find the instantaneous angular acceleration of a framed body which
     /// has non-zero velocity (and therefore experiences Coriolis effects), use
     /// a RelativeFrameData object.
-    template <typename Scalar>
-    using FramedAngularAcceleration3 = FramedQuantity<
-        math::Vector3<Scalar>, 3, detail::AngularAccelerationSpace<3, Scalar>>;
-    using FramedAngularAcceleration3d = FramedAngularAcceleration3<double>;
-    using FramedAngularAcceleration3f = FramedAngularAcceleration3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedAngularAcceleration = FramedQuantity<
+        Vector<Scalar, Dim>, Dim, detail::AngularAccelerationSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedAngularAcceleration)
 
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    using FramedForce3 = FramedQuantity<
-        math::Vector3<Scalar>, 3, detail::VectorSpace<3, Scalar>>;
-    using FramedForce3d = FramedForce3<double>;
-    using FramedForce3f = FramedForce3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedForce = FramedQuantity<
+        Vector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedForce)
 
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    using FramedTorque3 = FramedQuantity<
-        math::Vector3<Scalar>, 3, detail::VectorSpace<3, Scalar>>;
-    using FramedTorque3d = FramedTorque3<double>;
-    using FramedTorque3f = FramedTorque3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using FramedTorque = FramedQuantity<
+        Vector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedTorque)
 
     /////////////////////////////////////////////////
-    template <typename Scalar>
-    using RelativeFrameData3 = FramedQuantity<
-        FrameData3<Scalar>, 3, detail::FrameSpace<3, Scalar>>;
-    using RelativeFrameData3d = RelativeFrameData3<double>;
-    using RelativeFrameData3f = RelativeFrameData3<float>;
+    template <typename Scalar, std::size_t Dim>
+    using RelativeFrameData = FramedQuantity<
+        FrameData<Scalar, Dim>, Dim, detail::FrameSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeFrameData)
   }
 }
 

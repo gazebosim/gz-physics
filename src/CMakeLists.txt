@@ -9,6 +9,10 @@ target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
     ignition-math${IGN_MATH_VER}
     ignition-common${IGN_COMMON_VER})
 
+target_include_directories(${PROJECT_LIBRARY_TARGET_NAME}
+  SYSTEM PUBLIC
+    ${EIGEN3_INCLUDE_DIRS})
+
 ign_install_library()
 
 ign_build_tests(

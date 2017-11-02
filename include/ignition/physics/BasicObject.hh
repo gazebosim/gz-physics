@@ -22,6 +22,7 @@
 #include <limits>
 
 #include <ignition/physics/Export.hh>
+#include <ignition/physics/Feature.hh>
 
 namespace ignition
 {
@@ -49,6 +50,15 @@ namespace ignition
       /// the engine that this object provides an abstraction for.
       protected: std::shared_ptr<const void> ObjectReference() const;
 
+      /// \brief Get a reference to the engine that this object belongs to.
+      /// Object features (a.k.a. classes that inherit the BasicObject type)
+      /// will use dynamic_cast on this reference to obtain a reference to the
+      /// engine feature that it needs in order to function.
+      protected: Feature::Engine *EngineReference();
+
+      /// \brief Const-qualified version of EngineReference
+      protected: const Feature::Engine *EngineReference() const;
+
       /// \brief Constructor for the BasicObject.
       ///
       /// Notes for developers:
@@ -64,7 +74,7 @@ namespace ignition
       /// working as intended. If _features is a nullptr, that would also
       /// indicate that the construction procedure is not working as intended.
       protected: BasicObject(
-        Feature *const _features = nullptr,
+        Feature::Engine *const _engine = nullptr,
         const std::size_t _id = std::numeric_limits<std::size_t>::max(),
         const std::shared_ptr<const void> &_ref = nullptr);
 

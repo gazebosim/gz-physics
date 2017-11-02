@@ -18,48 +18,79 @@
 #ifndef IGNITION_PHYSICS_FRAMEDATA_HH_
 #define IGNITION_PHYSICS_FRAMEDATA_HH_
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Vector3.hh>
+#include <Eigen/Geometry>
+
+#define DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS( Type , Dim ) \
+  using Type ## Dim ## d = Type<double, Dim>; \
+  using Type ## Dim ## f = Type<float, Dim>;
+
+/// \brief This macro defines the following types:
+/// Type2d // 2-dimensional version of Type with double precision
+/// Type2f // 2-dimensional version of Type with float precision
+/// Type3d // 3-dimensional version of Type with double precision
+/// Type3f // 3-dimensional version of Type with float precision
+#define IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS( Type ) \
+  DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 2) \
+  DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 3)
 
 namespace ignition
 {
   namespace physics
   {
-    /// \brief The FrameData3d struct fully describes the kinematic state of a
-    /// Frame with 3 dimensions and double precision.
+    /// \brief This is used by ignition-physics to represent rigid body
+    /// transforms in 2D or 3D simulations. The precision can be chosen as
+    /// float or scalar.
+    template <typename Scalar, std::size_t Dim>
+    using Pose = Eigen::Transform<Scalar, Dim, Eigen::Isometry>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Pose)
+
+    template <typename Scalar, std::size_t Dim>
+    using Vector = Eigen::Matrix<Scalar, Dim, 1>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Vector)
+
+    /// \brief The FrameData struct fully describes the kinematic state of a
+    /// Frame with "Dim" dimensions and "Scalar" precision. Dim is allowed to be
+    /// 2 or 3, and Scalar is allowed to be double or float. We provide the
+    /// following fully qualified types:
+    ///
+    /// FrameData2d  -- 2 dimensional frame with double precision
+    /// FrameData2f  -- 2 dimensional frame with float precision
+    /// FrameData3d  -- 3 dimensional frame with double precision
+    /// FrameData3f  -- 3 dimensional frame with float precision
     ///
     /// The frame of reference for this data is dependent on the context in
     /// which it is used. For FrameData which explicitly expresses its frame of
     /// reference, see RelativeFrameData3.
-    template <typename Scalar>
-    struct FrameData3
+    template <typename Scalar, std::size_t Dim>
+    struct FrameData
     {
+      using Pose = ignition::physics::Pose<Scalar, Dim>;
+      using Vector = ignition::physics::Vector<Scalar, Dim>;
+
       /// \brief Constructor. This will initialize the transform with identity
       /// and all velocity and acceleration vectors to zero.
-      public: FrameData3();
+      public: FrameData();
 
       /// \brief The current SE3 transformation of the frame.
-      public: math::Pose3<Scalar> transform;
+      public: Pose pose;
 
       /// \brief The current linear velocity of the frame.
-      public: math::Vector3<Scalar> linearVelocity;
+      public: Vector linearVelocity;
 
       /// \brief The current angular velocity of the frame.
-      public: math::Vector3<Scalar> angularVelocity;
+      public: Vector angularVelocity;
 
       /// \brief The current linear acceleration of the frame.
-      public: math::Vector3<Scalar> linearAcceleration;
+      public: Vector linearAcceleration;
 
       /// \brief The current angular acceleration of the frame.
-      public: math::Vector3<Scalar> angularAcceleration;
+      public: Vector angularAcceleration;
 
       /// \brief Set the transform to identity and all velocity and acceleration
       /// vectors to zero.
       public: void SetToZero();
     };
-
-    using FrameData3d = FrameData3<double>;
-    using FrameData3f = FrameData3<float>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FrameData)
   }
 }
 

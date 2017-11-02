@@ -17,7 +17,7 @@
 
 #include <ignition/common/Console.hh>
 
-#include <ignition/physics/EngineFeatures.hh>
+#include <ignition/physics/Feature.hh>
 
 #include "BasicObjectImplementation.hh"
 
@@ -27,14 +27,14 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     BasicObject::Implementation::Implementation(
-        Feature *const _features,
+        Feature::Engine * const _engine,
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref)
-      : features(_features),
+      : engine(_engine),
         id(_id),
         ref(_ref)
     {
-      if (!features)
+      if (!engine)
       {
         ignerr << "[BasicObject::BasicObject] Attempting to create a "
                << "BasicObject using the default constructor. This should not "
@@ -56,11 +56,23 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
+    Feature::Engine *BasicObject::EngineReference()
+    {
+      return pimpl->engine;
+    }
+
+    /////////////////////////////////////////////////
+    const Feature::Engine *BasicObject::EngineReference() const
+    {
+      return pimpl->engine;
+    }
+
+    /////////////////////////////////////////////////
     BasicObject::BasicObject(
-        Feature *const _features,
+        Feature::Engine *const _engine,
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref)
-      : pimpl(new Implementation(_features, _id, _ref))
+      : pimpl(new Implementation(_engine, _id, _ref))
     {
       // Do nothing
     }

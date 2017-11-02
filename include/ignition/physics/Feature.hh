@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_ENGINEFEATURES_HH_
-#define IGNITION_PHYSICS_ENGINEFEATURES_HH_
+#ifndef IGNITION_PHYSICS_FEATURE_HH_
+#define IGNITION_PHYSICS_FEATURE_HH_
 
 #include <ignition/physics/Export.hh>
 
@@ -24,12 +24,19 @@ namespace ignition
 {
   namespace physics
   {
+    /// \brief Placeholder class to be inherited by Feature types.
     class IGNITION_PHYSICS_VISIBLE Feature
     {
-      // Placeholder class to be inherited by Feature types.
       public: virtual ~Feature() = default;
+
+      /// \brief Placeholder class to be inherited by physics engine interfaces
+      /// that correspond to a Feature.
+      class IGNITION_PHYSICS_VISIBLE Engine
+      {
+        public: virtual ~Engine() = default;
+      };
     };
   }
 }
 
-#endif // IGNITION_PHYSICS_ENGINEFEATURES_HH_
+#endif

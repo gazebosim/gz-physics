@@ -65,13 +65,6 @@ namespace ignition
       return parentFrame;
     }
 
-    /////////////////////////////////////////////////
-    // This namespace-scope definition is required by the ISO standard until
-    // C++17. Once we migrate to C++17, this definition will be deprecated and
-    // should be removed.
-//    template <typename Q, std::size_t Dim, typename CoordinateSpace>
-//    constexpr std::size_t FramedQuantity<Q, Dim, CoordinateSpace>::Dimension = Dim;
-
     namespace detail
     {
       // Note that all the different CoordinateSpace types have a std::size_t
@@ -93,29 +86,29 @@ namespace ignition
       ///
       /// _Scalar should be the 1D primitive type which determines the numerical
       /// precision (i.e. double or float).
-      #define IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(_Dim, _Scalar, _Quantity) \
-        public: using Quantity = _Quantity; \
+      #define IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(...) \
+        public: using Quantity = __VA_ARGS__; \
         public: using Scalar = _Scalar; \
-        public: using FrameDataType = FrameData3<Scalar>; \
-        public: using RotationType = math::Quaternion<Scalar>; \
-        public: static constexpr std::size_t Dimension = _Dim;
+        public: using FrameDataType = FrameData<Scalar, _Dim>; \
+        public: using PoseType = Pose<Scalar, _Dim>; \
+        public: using RotationType = Eigen::Matrix<Scalar, _Dim, _Dim>; \
+        public: enum { Dimension = _Dim };
 
 
       /////////////////////////////////////////////////
-      /// \brief SESpace is used by SE(3) constructs (and perhaps in the future
-      /// SE(2) constructs as well) like homogeneous transformation matrices
-      /// (i.e. Pose3).
-      template <std::size_t Dim, typename S>
+      /// \brief SESpace is used by SE(2) and SE(3) constructs, e.g. homogeneous
+      /// transformation matrices.
+      template <typename _Scalar, std::size_t _Dim>
       struct SESpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Dim, S, math::Pose3<S>)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Pose<_Scalar, _Dim>)
 
         /// \brief Resolve the pose to the world frame
         public: static Quantity ResolveToWorldFrame(
           const Quantity &_pose,
           const FrameDataType &_parentFrame)
         {
-          return _parentFrame.transform * _pose;
+          return _parentFrame.pose * _pose;
         }
 
         /// \brief Resolve the pose to the target frame
@@ -124,8 +117,8 @@ namespace ignition
           const FrameDataType &_parentFrame,
           const FrameDataType &_targetFrame)
         {
-          return _targetFrame.transform.Inverse()
-                 * _parentFrame.transform
+          return _targetFrame.pose.Inverse()
+                 * _parentFrame.pose
                  * _pose;
         }
 
@@ -134,11 +127,9 @@ namespace ignition
           const Quantity &_pose,
           const RotationType &_currentCoordinates)
         {
-          const math::Pose3<Scalar> coordinates(
-                math::Vector3<Scalar>(0.0, 0.0, 0.0),
-                _currentCoordinates);
-
-          return coordinates * _pose;
+          // Premultiplying by a homogeneous transform with zero translation is
+          // the same as changing the coordinates of a pose.
+          return PoseType(_currentCoordinates) * _pose;
         }
 
         /// \brief Resolve the coordinates of the pose to the target frame
@@ -147,28 +138,18 @@ namespace ignition
           const RotationType &_currentCoordinates,
           const RotationType &_targetCoordinates)
         {
-          // Premultiplying by a homogeneous transform with zero translation is
-          // the same as changing the coordinates of a pose.
-
-          const math::Pose3<Scalar> current(
-                math::Vector3<Scalar>(0.0, 0.0, 0.0),
-                _currentCoordinates);
-
-          const math::Pose3<Scalar> target(
-                math::Vector3<Scalar>(0.0, 0.0, 0.0),
-                _targetCoordinates);
-
-          return target.Inverse() * current * _pose;
+          return PoseType(_targetCoordinates.transpose())
+                 * PoseType(_currentCoordinates) * _pose;
         }
       };
 
       /////////////////////////////////////////////////
       /// \brief SOSpace is used by SO(3) constructs (and perhaps in the future
       /// SO(2) constructs as well) like rotation matrices or quaternions.
-      template <std::size_t Dim, typename S, typename Q>
+      template <typename _Scalar, std::size_t _Dim, typename _Quantity>
       struct SOSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Dim, S, Q)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(_Quantity)
 
         /// \brief Resolve the rotation to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -176,7 +157,7 @@ namespace ignition
           const FrameDataType &_parentFrame)
         {
           return ResolveToWorldCoordinates(
-                _rotation, _parentFrame.transform.Rot());
+                _rotation, _parentFrame.pose.Rot());
         }
 
         /// \brief Resolve the rotation to the target frame
@@ -187,8 +168,8 @@ namespace ignition
         {
           return ResolveToTargetCoordinates(
                 _rotation,
-                _parentFrame.transform.Rot(),
-                _targetFrame.transform.Rot());
+                _parentFrame.pose.Rot(),
+                _targetFrame.pose.Rot());
         }
 
         /// \brief Resolve the coordinates of the rotation to the world frame
@@ -196,11 +177,7 @@ namespace ignition
           const Quantity &_rotation,
           const RotationType &_currentCoordinates)
         {
-          // This ensures that the rotation is being expressed as a quaternion,
-          // no matter whether it was provided as a quaternion or a matrix
-          const math::Quaternion<Scalar> R{_rotation};
-
-          return Quantity(_currentCoordinates * R);
+          return Quantity(_currentCoordinates * _rotation);
         }
 
         /// \brief Resolve the coordinates of the rotation to the target frame
@@ -209,29 +186,26 @@ namespace ignition
           const RotationType &_currentCoordinates,
           const RotationType &_targetCoordinates)
         {
-          const math::Quaternion<Scalar> R{_rotation};
-
-          return Quantity(_currentCoordinates
-                          * _targetCoordinates.Inverse()
-                          * R);
+          return Quantity(_targetCoordinates.transpose()
+                          * _currentCoordinates
+                          * _rotation);
         }
       };
 
       /////////////////////////////////////////////////
       /// \brief EuclideanSpace is used by points (i.e. positions or
       /// translations).
-      template <std::size_t Dim, typename S>
-      struct EuclideanSpace : public VectorSpace<Dim, S>
+      template <typename _Scalar, std::size_t _Dim>
+      struct EuclideanSpace : public VectorSpace<_Scalar, _Dim>
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Dim, S, math::Vector3<S>)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
 
         /// \brief Resolve the point to the world frame
         public: static Quantity ResolveToWorldFrame(
           const Quantity &_point,
           const FrameDataType &_parentFrame)
         {
-          return math::Matrix3<Scalar>(_parentFrame.transform.Rot()) * _point
-                  + _parentFrame.transform.Pos();
+          return _parentFrame.pose * _point;
         }
 
         /// \brief Resolve to the target frame
@@ -240,11 +214,7 @@ namespace ignition
           const FrameDataType &_parentFrame,
           const FrameDataType &_targetFrame)
         {
-          const math::Pose3<Scalar> T =
-              _targetFrame.transform.Inverse()
-              * _parentFrame.transform;
-
-          return math::Matrix3<Scalar>(T.Rot()) * _point + T.Pos();
+          return _targetFrame.pose.inverse() * _parentFrame.pose * _point;
         }
 
         // Note: We inherit ResolveToWorldCoordinates and
@@ -259,11 +229,11 @@ namespace ignition
       /// Velocity/Acceleration Spaces. Those spaces only differ by which
       /// kinematic property is being summed, so we use a pointer to a class
       /// member as a template parameter to choose which property we sum.
-      template <std::size_t Dim, typename S,
-                math::Vector3<S> FrameData3<S>::*property>
-      struct KinematicDerivativeSpace : public VectorSpace<Dim, S>
+      template <typename _Scalar, std::size_t _Dim,
+                Vector<_Scalar, _Dim> FrameData<_Scalar, _Dim>::*property>
+      struct KinematicDerivativeSpace : public VectorSpace<_Scalar, _Dim>
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Dim, S, math::Vector3<S>)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
 
         /// \brief Resolve the property to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -274,7 +244,7 @@ namespace ignition
           // may be its (linear or angular) (velocity or acceleration).
           const Quantity &parentProperty = _parentFrame.*property;
           const Quantity vecInWorldCoordinates =
-              ResolveToWorldCoordinates(_vec, _parentFrame.transform.Rot());
+              ResolveToWorldCoordinates(_vec, _parentFrame.pose.Rot());
 
           return parentProperty + vecInWorldCoordinates;
         }
@@ -295,7 +265,7 @@ namespace ignition
           // parent frame, we so we must convert it from the parent coordinates
           // into world coordinates.
           const Quantity vecInWorldCoordinates =
-              ResolveToWorldCoordinates(_vec, _parentFrame.transform.Rot());
+              ResolveToWorldCoordinates(_vec, _parentFrame.pose.Rot());
 
           // Now that all our vectors are in world coordinates, we can safely
           // sum/difference them. Note that the result of this sum will also
@@ -308,7 +278,7 @@ namespace ignition
           // the target coordinates before returning.
           return ResolveFromWorldToTargetCoordinates(
                 resultInWorldCoordinates,
-                _targetFrame.transform.Rot());
+                _targetFrame.pose.Rot());
         }
 
         // Note: We inherit ResolveToWorldCoordinates and
@@ -318,48 +288,48 @@ namespace ignition
 
       /////////////////////////////////////////////////
       /// \brief LinearVelocitySpace is used by linear velocity vectors.
-      template <std::size_t Dim, typename S>
+      template <typename _Scalar, std::size_t _Dim>
       struct LinearVelocitySpace
-          : public KinematicDerivativeSpace<Dim, S,
-              &FrameData3<S>::linearVelocity> { };
+          : public KinematicDerivativeSpace<_Scalar, _Dim,
+              &FrameData<_Scalar, _Dim>::linearVelocity> { };
 
       /////////////////////////////////////////////////
       /// \brief AngularVelocitySpace is used by angular velocity vectors.
-      template <std::size_t Dim, typename S>
+      template <typename _Scalar, std::size_t _Dim>
       struct AngularVelocitySpace
-          : public KinematicDerivativeSpace<Dim, S,
-              &FrameData3<S>::angularVelocity> { };
+          : public KinematicDerivativeSpace<_Scalar, _Dim,
+              &FrameData<_Scalar, _Dim>::angularVelocity> { };
 
       /////////////////////////////////////////////////
       /// \brief LinearAccelerationSpace is used by linear acceleration vectors.
-      template <std::size_t Dim, typename S>
+      template <typename _Scalar, std::size_t _Dim>
       struct LinearAccelerationSpace
-          : public KinematicDerivativeSpace<Dim, S,
-              &FrameData3<S>::linearAcceleration> { };
+          : public KinematicDerivativeSpace<_Scalar, _Dim,
+              &FrameData<_Scalar, _Dim>::linearAcceleration> { };
 
       /////////////////////////////////////////////////
       /// \brief AngularAccelerationSpace is used by angular acceleration
       /// vectors.
-      template <std::size_t Dim, typename S>
+      template <typename _Scalar, std::size_t _Dim>
       struct AngularAccelerationSpace
-          : public KinematicDerivativeSpace<Dim, S,
-              &FrameData3<S>::angularAcceleration> { };
+          : public KinematicDerivativeSpace<_Scalar, _Dim,
+              &FrameData<_Scalar, _Dim>::angularAcceleration> { };
 
       /////////////////////////////////////////////////
       /// \brief VectorSpace is used by classical "free vectors", like Force and
       /// Torque, which are not dependent on any of the properties of a frame,
       /// besides the orientation.
-      template <std::size_t Dim, typename S>
+      template <typename _Scalar, std::size_t _Dim>
       struct VectorSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Dim, S, math::Vector3<S>)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
 
         /// \brief Resolve the vector to the world frame
         public: static Quantity ResolveToWorldFrame(
           const Quantity &_vec,
           const FrameDataType &_parentFrame)
         {
-          return ResolveToWorldCoordinates(_parentFrame.transform.Rot(), _vec);
+          return ResolveToWorldCoordinates(_parentFrame.pose.Rot(), _vec);
         }
 
         /// \brief Resolve the vector to the target frame
@@ -370,8 +340,8 @@ namespace ignition
         {
           return ResolveToTargetCoordinates(
                 _vec,
-                _parentFrame.transform.Rot(),
-                _targetFrame.transform.Rot());
+                _parentFrame.pose.Rot(),
+                _targetFrame.pose.Rot());
         }
 
         /// \brief Resolve the coordinates of the vector to the world frame.
@@ -379,7 +349,7 @@ namespace ignition
           const Quantity &_vec,
           const RotationType &_currentCoordinates)
         {
-          return math::Matrix3<Scalar>(_currentCoordinates) * _vec;
+          return _currentCoordinates * _vec;
         }
 
         /// \brief Resolve the coordinates of the vector to the target frame.
@@ -388,10 +358,7 @@ namespace ignition
           const RotationType &_currentCoordinates,
           const RotationType &_targetCoordinates)
         {
-          const math::Matrix3<Scalar> R_current{_currentCoordinates};
-          const math::Matrix3<Scalar> R_target{_targetCoordinates};
-
-          return R_target.Transposed() * (R_current * _vec);
+          return _targetCoordinates.transpose() * _currentCoordinates * _vec;
         }
 
         /// \brief Resolve the coordinates of the vector from the world
@@ -402,8 +369,7 @@ namespace ignition
           const Quantity &_vec,
           const RotationType &_targetCoordinates)
         {
-          const math::Matrix3<Scalar> R_target{_targetCoordinates};
-          return R_target.Transposed() * _vec;
+          return _targetCoordinates.transpose() * _vec;
         }
       };
 
@@ -411,13 +377,13 @@ namespace ignition
       /// \brief FrameSpace is used to compute RelativeFrameData. This space is
       /// able to account for Coriolis and centrifugal effects in non-inertial
       /// reference frames.
-      template <std::size_t Dim, typename S>
+      template <typename _Scalar, std::size_t _Dim>
       struct FrameSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Dim, S, FrameData3<S>)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(FrameData<_Scalar, _Dim>)
 
-        using VectorType = math::Vector3<S>;
-        using VectorSpaceType = VectorSpace<Dim, S>;
+        using VectorType = Vector<_Scalar, _Dim>;
+        using VectorSpaceType = VectorSpace<_Scalar, _Dim>;
 
         /// \brief Express the data of the frame with respect to the world
         /// frame.
@@ -425,25 +391,26 @@ namespace ignition
           const Quantity &_relativeFrameData,
           const FrameDataType &_parentFrame)
         {
-          const RotationType &Rot = _parentFrame.transform.Rot();
-
           Quantity resultFrameData;
 
           // The transform of the input frame, with respect to the world frame.
-          resultFrameData.transform =
-              _parentFrame.transform * _relativeFrameData.transform;
+          resultFrameData.pose = _parentFrame.pose * _relativeFrameData.pose;
+
+          // The orientation of the parent frame with respect to the world
+          // frame.
+          const RotationType &R_parent = _parentFrame.pose.linear();
 
           // The position of our input frame, relative to its parent frame,
           // expressed in world coordinates.
           const VectorType &p_rel =
               VectorSpaceType::ResolveToWorldCoordinates(
-                _relativeFrameData.transform.Pos(), Rot);
+                _relativeFrameData.pose.translation(), R_parent);
 
           // The linear velocity of our input frame, relative to its parent
           // frame, expressed in world coordinates.
           const VectorType &v_rel =
               VectorSpaceType::ResolveToWorldCoordinates(
-                _relativeFrameData.linearVelocity, Rot);
+                _relativeFrameData.linearVelocity, R_parent);
 
           // The linear velocity of the parent frame, relative to the world
           // frame, expressed in world coordinates.
@@ -455,7 +422,7 @@ namespace ignition
 
           // The velocity of our input frame, relative to the world frame,
           // expressed in world coordinates.
-          const VectorType &v = v_parent + v_rel + w_parent.Cross(p_rel);
+          const VectorType &v = v_parent + v_rel + w_parent.cross(p_rel);
 
           // Copy the linear velocity into our result data.
           resultFrameData.linearVelocity = v;
@@ -464,7 +431,7 @@ namespace ignition
           // frame, expressed in world coordinates.
           const VectorType &a_rel =
               VectorSpaceType::ResolveToWorldCoordinates(
-                _relativeFrameData.transform.Pos(), Rot);
+                _relativeFrameData.angularAcceleration, R_parent);
 
           // The linear acceleration of the parent frame, relative to the world
           // frame, expressed in world coordinates.
@@ -478,9 +445,9 @@ namespace ignition
           // frame, expressed in world coordinates.
           const VectorType &a =
               a_parent + a_rel
-              + alpha_parent.Cross(p_rel)
-              + 2*w_parent.Cross(v_rel)
-              + w_parent.Cross(w_parent.Cross(p_rel));
+              + alpha_parent.cross(p_rel)
+              + 2*w_parent.cross(v_rel)
+              + w_parent.cross(w_parent.cross(p_rel));
 
           // Copy the linear acceleration into our result data.
           resultFrameData.linearAcceleration = a;
@@ -489,7 +456,7 @@ namespace ignition
           // frame, expressed in world coordinates.
           const VectorType &w_rel =
               VectorSpaceType::ResolveToWorldCoordinates(
-                _relativeFrameData.angularVelocity, Rot);
+                _relativeFrameData.angularVelocity, R_parent);
 
           // The angular velocity of the input frame, relative to the world
           // frame, expressed in world coordinates.
@@ -502,12 +469,12 @@ namespace ignition
           // frame, expressed in world coordinates.
           const VectorType &alpha_rel =
               VectorSpaceType::ResolveToWorldCoordinates(
-                _relativeFrameData.angularAcceleration, Rot);
+                _relativeFrameData.angularAcceleration, R_parent);
 
           // The angular acceleration of the input frame, relative to the world
           // frame, expressed in world coordinates.
           const VectorType &alpha =
-              alpha_parent + alpha_rel + w_parent.Cross(w_rel);
+              alpha_parent + alpha_rel + w_parent.cross(w_rel);
 
           // Copy the angular acceleration into our result data.
           resultFrameData.angularAcceleration = alpha;
@@ -532,7 +499,12 @@ namespace ignition
           // The position of the input frame, relative to the target frame, in
           // coordinates of the world frame.
           const VectorType &p_rel =
-              frameDataWrtWorld.transform.Pos() - _targetFrame.transform.Pos();
+              frameDataWrtWorld.pose.translation()
+              - _targetFrame.pose.translation();
+
+          // The orientation of the target frame, with respect to the world
+          // frame.
+          const RotationType &R_target = _targetFrame.pose.linear();
 
           // The linear velocity of the input frame, with respect to the world
           // frame.
@@ -548,13 +520,13 @@ namespace ignition
 
           // The linear velocity of the input frame, relative to the target
           // frame, in coordinates of the world frame.
-          const VectorType &v_rel = v - v_target - w_target.Cross(p_rel);
+          const VectorType &v_rel = v - v_target - w_target.cross(p_rel);
 
           // Convert the linear velocity into the target coordinates, and then
           // copy it to the result data.
           resultFrameData.linearVelocity =
               VectorSpaceType::ResolveFromWorldToTargetCoordinates(
-                v_rel, _targetFrame.transform.Rot());
+                v_rel, _targetFrame.pose.linear());
 
           // The linear acceleration of the input frame, with respect to the
           // world frame.
@@ -572,15 +544,15 @@ namespace ignition
           // frame, in coordinates of the world frame.
           const VectorType &a_rel =
               a - a_target
-              - alpha_target.Cross(p_rel)
-              - 2*w_target.Cross(v_rel)
-              - w_target.Cross(w_target.Cross(p_rel));
+              - alpha_target.cross(p_rel)
+              - 2*w_target.cross(v_rel)
+              - w_target.cross(w_target.cross(p_rel));
 
           // Convert the linear acceleration into the target coordinates, and
           // then copy it to the result data.
           resultFrameData.linearAcceleration =
               VectorSpaceType::ResolveFromWorldToTargetCoordinates(
-                a_rel, _targetFrame.transform.Rot());
+                a_rel, _targetFrame.pose.linear());
 
           // The angular velocity of the input frame, with respect to the world
           // frame.
@@ -594,7 +566,7 @@ namespace ignition
           // copy it to the result data.
           resultFrameData.angularVelocity =
               VectorSpaceType::ResolveFromWorldToTargetCoordinates(
-                w_rel, _targetFrame.transform.Rot());
+                w_rel, _targetFrame.pose.linear());
 
           // The angular acceleration of the input frame, with respect to the
           // world frame.
@@ -603,13 +575,13 @@ namespace ignition
           // The angular acceleration of the input frame, relative to the target
           // frame, in coordinates of the world frame.
           const VectorType &alpha_rel =
-              alpha - alpha_target - w_target.Cross(w_rel);
+              alpha - alpha_target - w_target.cross(w_rel);
 
           // Convert the angular acceleration into the target coordinates, and
           // then copy it to the result data.
           resultFrameData.angularAcceleration =
               VectorSpaceType::ResolveFromWorldToTargetCoordinates(
-                alpha_rel, _targetFrame.transform.Rot());
+                alpha_rel, R_target);
 
           return resultFrameData;
         }
@@ -648,9 +620,9 @@ namespace ignition
         {
           Quantity resultFrameData;
 
-          resultFrameData.transform =
-              SESpace<Dim, S>::ResolveToWorldCoordinates(
-                _inputFrameData.transform, _currentCoordinates);
+          resultFrameData.pose =
+              SESpace<_Scalar, _Dim>::ResolveToWorldCoordinates(
+                _inputFrameData.pose, _currentCoordinates);
 
           ResolvePropertyToWorldCoordinates<&Quantity::linearVelocity>(
                 resultFrameData, _inputFrameData, _currentCoordinates);
@@ -675,9 +647,9 @@ namespace ignition
         {
           Quantity resultFrameData;
 
-          resultFrameData.transform =
-              SESpace<Dim, S>::ResolveToTargetCoordinates(
-                _inputFrameData.transform, _currentCoordinates,
+          resultFrameData.pose =
+              SESpace<_Scalar, _Dim>::ResolveToTargetCoordinates(
+                _inputFrameData.pose, _currentCoordinates,
                 _targetCoordinates);
 
           ResolvePropertyToTargetCoordinates<&Quantity::linearVelocity>(
