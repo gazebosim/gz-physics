@@ -40,10 +40,10 @@ namespace ignition
     void FrameData<Scalar, Dim>::SetToZero()
     {
       this->pose = Pose::Identity();
-      this->linearVelocity = Vector::Zero();
-      this->angularVelocity = Vector::Zero();
-      this->linearAcceleration = Vector::Zero();
-      this->angularAcceleration = Vector::Zero();
+      this->linearVelocity = LinearVector::Zero();
+      this->angularVelocity = AngularVector::Zero();
+      this->linearAcceleration = LinearVector::Zero();
+      this->angularAcceleration = AngularVector::Zero();
     }
   }
 }

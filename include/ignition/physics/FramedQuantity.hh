@@ -113,6 +113,17 @@ namespace ignition
       private: Q value;
     };
 
+    template <typename Q, std::size_t Dim, typename CoordinateSpace>
+    std::ostream& operator <<(
+        std::ostream& stream,
+        const FramedQuantity<Q, Dim, CoordinateSpace> &_fq)
+    {
+      stream << "Parent Frame ID: " << _fq.ParentFrame().ID()
+             << "\nRelative To Parent:\n" << _fq.RelativeToParent();
+
+      return stream;
+    }
+
     namespace detail
     {
       /////////////////////////////////////////////////
@@ -161,7 +172,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using FramedPosition = FramedQuantity<
-        Vector<Scalar, Dim>, Dim, detail::EuclideanSpace<Scalar, Dim>>;
+        LinearVector<Scalar, Dim>, Dim, detail::EuclideanSpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPosition)
 
     /////////////////////////////////////////////////
@@ -175,7 +186,7 @@ namespace ignition
     /// at the origin of its parent frame, use RelativeFrameData.
     template <typename Scalar, std::size_t Dim>
     using FramedLinearVelocity = FramedQuantity<
-        Vector<Scalar, Dim>, Dim, detail::LinearVelocitySpace<Scalar, Dim>>;
+        LinearVector<Scalar, Dim>, Dim, detail::LinearVelocitySpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedLinearVelocity)
 
     /////////////////////////////////////////////////
@@ -188,7 +199,7 @@ namespace ignition
     /// factors.
     template <typename Scalar, std::size_t Dim>
     using FramedAngularVelocity = FramedQuantity<
-        Vector<Scalar, Dim>, Dim, detail::AngularVelocitySpace<Scalar, Dim>>;
+        AngularVector<Scalar, Dim>, Dim, detail::AngularVelocitySpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedAngularVelocity)
 
     /////////////////////////////////////////////////
@@ -207,7 +218,7 @@ namespace ignition
     /// effects), use a RelativeFrameData object.
     template <typename Scalar, std::size_t Dim>
     using FramedLinearAcceleration = FramedQuantity<
-        Vector<Scalar, Dim>, Dim, detail::LinearAccelerationSpace<Scalar, Dim>>;
+        LinearVector<Scalar, Dim>, Dim, detail::LinearAccelerationSpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedLinearAcceleration)
 
     /////////////////////////////////////////////////
@@ -224,19 +235,19 @@ namespace ignition
     /// a RelativeFrameData object.
     template <typename Scalar, std::size_t Dim>
     using FramedAngularAcceleration = FramedQuantity<
-        Vector<Scalar, Dim>, Dim, detail::AngularAccelerationSpace<Scalar, Dim>>;
+        AngularVector<Scalar, Dim>, Dim, detail::AngularAccelerationSpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedAngularAcceleration)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using FramedForce = FramedQuantity<
-        Vector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
+        LinearVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedForce)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using FramedTorque = FramedQuantity<
-        Vector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
+        AngularVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, 2*Dim-3>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedTorque)
 
     /////////////////////////////////////////////////

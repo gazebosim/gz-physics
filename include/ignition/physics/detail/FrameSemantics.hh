@@ -37,12 +37,12 @@ namespace ignition
       using FrameDataType = typename Space::FrameDataType;
       using RotationType = typename Space::RotationType;
 
-      const FrameID parentFrame = _quantity.ParentFrame();
+      const FrameID parentFrameID = _quantity.ParentFrame();
 
       Quantity q;
       RotationType currentCoordinates;
 
-      if (_quantity.ParentFrame() == _relativeTo)
+      if (parentFrameID == _relativeTo)
       {
         // The quantity is already expressed relative to the _relativeTo frame
 
@@ -59,6 +59,12 @@ namespace ignition
       }
       else
       {
+        // We should only ask for the FrameData if the parent frame is not the
+        // world frame.
+        const FrameDataType parentFrameData =
+            FrameID::World() == parentFrameID ?
+              FrameDataType() : this->FrameDataRelativeToWorld(parentFrameID);
+
         if (FrameID::World() == _relativeTo)
         {
           // Resolving quantities to the world frame requires fewer operations
@@ -66,7 +72,7 @@ namespace ignition
           // for that.
           q = Space::ResolveToWorldFrame(
                 _quantity.RelativeToParent(),
-                this->FrameDataRelativeToWorld(parentFrame));
+                parentFrameData);
 
           // The World Frame has all zero fields
           currentCoordinates = RotationType::Identity();
@@ -78,7 +84,7 @@ namespace ignition
 
           q = Space::ResolveToTargetFrame(
                 _quantity.RelativeToParent(),
-                this->FrameDataRelativeToWorld(parentFrame),
+                parentFrameData,
                 relativeToData);
 
           currentCoordinates = relativeToData.pose.linear();

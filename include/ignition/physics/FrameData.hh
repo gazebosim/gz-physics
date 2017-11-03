@@ -48,6 +48,14 @@ namespace ignition
     using Vector = Eigen::Matrix<Scalar, Dim, 1>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Vector)
 
+    template <typename Scalar, std::size_t Dim>
+    using LinearVector = Vector<Scalar, Dim>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(LinearVector)
+
+    template <typename Scalar, std::size_t Dim>
+    using AngularVector = Vector<Scalar, 2*Dim-3>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AngularVector)
+
     /// \brief The FrameData struct fully describes the kinematic state of a
     /// Frame with "Dim" dimensions and "Scalar" precision. Dim is allowed to be
     /// 2 or 3, and Scalar is allowed to be double or float. We provide the
@@ -65,7 +73,8 @@ namespace ignition
     struct FrameData
     {
       using Pose = ignition::physics::Pose<Scalar, Dim>;
-      using Vector = ignition::physics::Vector<Scalar, Dim>;
+      using LinearVector = ignition::physics::LinearVector<Scalar, Dim>;
+      using AngularVector = ignition::physics::AngularVector<Scalar, Dim>;
 
       /// \brief Constructor. This will initialize the transform with identity
       /// and all velocity and acceleration vectors to zero.
@@ -75,22 +84,36 @@ namespace ignition
       public: Pose pose;
 
       /// \brief The current linear velocity of the frame.
-      public: Vector linearVelocity;
+      public: LinearVector linearVelocity;
 
       /// \brief The current angular velocity of the frame.
-      public: Vector angularVelocity;
+      public: AngularVector angularVelocity;
 
       /// \brief The current linear acceleration of the frame.
-      public: Vector linearAcceleration;
+      public: LinearVector linearAcceleration;
 
       /// \brief The current angular acceleration of the frame.
-      public: Vector angularAcceleration;
+      public: AngularVector angularAcceleration;
 
       /// \brief Set the transform to identity and all velocity and acceleration
       /// vectors to zero.
       public: void SetToZero();
     };
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FrameData)
+
+    template <typename Scalar, std::size_t Dim>
+    std::ostream& operator <<(std::ostream& stream,
+                              const FrameData<Scalar, Dim> &_frame)
+    {
+      stream
+        << "Pose:\n" << _frame.pose.matrix()
+        << "\nLinear Velocity:      " << _frame.linearVelocity.transpose()
+        << "\nAngular Velocity:     " << _frame.angularVelocity.transpose()
+        << "\nLinear Acceleration:  " << _frame.linearAcceleration.transpose()
+        << "\nAngular Acceleration: " << _frame.angularAcceleration.transpose();
+
+      return stream;
+    }
   }
 }
 

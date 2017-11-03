@@ -230,10 +230,11 @@ namespace ignition
       /// kinematic property is being summed, so we use a pointer to a class
       /// member as a template parameter to choose which property we sum.
       template <typename _Scalar, std::size_t _Dim,
-                Vector<_Scalar, _Dim> FrameData<_Scalar, _Dim>::*property>
+                typename DerivativeType,
+                DerivativeType FrameData<_Scalar, _Dim>::*property>
       struct KinematicDerivativeSpace : public VectorSpace<_Scalar, _Dim>
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(DerivativeType)
 
         /// \brief Resolve the property to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -291,6 +292,7 @@ namespace ignition
       template <typename _Scalar, std::size_t _Dim>
       struct LinearVelocitySpace
           : public KinematicDerivativeSpace<_Scalar, _Dim,
+              LinearVector<_Scalar, _Dim>,
               &FrameData<_Scalar, _Dim>::linearVelocity> { };
 
       /////////////////////////////////////////////////
@@ -298,6 +300,7 @@ namespace ignition
       template <typename _Scalar, std::size_t _Dim>
       struct AngularVelocitySpace
           : public KinematicDerivativeSpace<_Scalar, _Dim,
+              AngularVector<_Scalar, _Dim>,
               &FrameData<_Scalar, _Dim>::angularVelocity> { };
 
       /////////////////////////////////////////////////
@@ -305,6 +308,7 @@ namespace ignition
       template <typename _Scalar, std::size_t _Dim>
       struct LinearAccelerationSpace
           : public KinematicDerivativeSpace<_Scalar, _Dim,
+              LinearVector<_Scalar, _Dim>,
               &FrameData<_Scalar, _Dim>::linearAcceleration> { };
 
       /////////////////////////////////////////////////
@@ -313,6 +317,7 @@ namespace ignition
       template <typename _Scalar, std::size_t _Dim>
       struct AngularAccelerationSpace
           : public KinematicDerivativeSpace<_Scalar, _Dim,
+              AngularVector<_Scalar, _Dim>,
               &FrameData<_Scalar, _Dim>::angularAcceleration> { };
 
       /////////////////////////////////////////////////
@@ -374,6 +379,152 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
+      /// \brief This is a partial template specialization for 1D "vector"
+      /// types. Examples include angular velocity, angular acceleration, and
+      /// torque in 2D simulations.
+      ///
+      /// These operations are no-ops, because the orientation of an "angular"
+      /// vector cannot be changed in a 2D simulation; it is always orthogonal
+      /// to the xy-plane.
+      template <typename _Scalar>
+      struct VectorSpace<_Scalar, 1>
+      {
+        // Dev note: Normally _Dim is provided as a template argument, but this
+        // is a partially specialized template. The macro assumes the existence
+        // of both "_Scalar" and "_Dim", so we define this enum as a workaround.
+        private: enum { _Dim = 2 };
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, 1>)
+
+        /// \brief Resolve the vector to the world frame
+        public: static Quantity ResolveToWorldFrame(
+          const Quantity &_vec, const FrameDataType &)
+        {
+          return _vec;
+        }
+
+        /// \brief Resolve the vector to the target frame
+        public: static Quantity ResolveToTargetFrame(
+          const Quantity &_vec, const FrameDataType &, const FrameDataType &)
+        {
+          return _vec;
+        }
+
+        /// \brief Resolve the coordinates of the vector to the world frame.
+        public: static Quantity ResolveToWorldCoordinates(
+          const Quantity &_vec, const RotationType &)
+        {
+          return _vec;
+        }
+
+        /// \brief Resolve the coordinates of the vector to the target frame.
+        public: static Quantity ResolveToTargetCoordinates(
+          const Quantity &_vec, const RotationType &, const RotationType &)
+        {
+          return _vec;
+        }
+
+        /// \brief Resolve the coordinates of the vector from the world
+        /// coordinates to the target coordinates. This is a helper function for
+        /// some of the classes that use VectorSpace. It is not used directly by
+        /// Resolve(~) or Reframe(~).
+        public: static Quantity ResolveFromWorldToTargetCoordinates(
+          const Quantity &_vec, const RotationType &)
+        {
+          return _vec;
+        }
+      };
+
+      /////////////////////////////////////////////////
+      /// \brief The Operator class allows us to generalize certain math
+      /// operations depending on whether we are working in 2D space or 3D
+      /// space. Currently, we only need this for the cross product.
+      template <typename _Scalar, std::size_t _Dim>
+      struct Operator
+      {
+        public: using LinearVectorType = LinearVector<_Scalar, _Dim>;
+        public: using AngularVectorType = AngularVector<_Scalar, _Dim>;
+
+        /// \brief A cross-product operator for 3D simulation.
+        ///
+        /// Since AngularVectorType and LinearVectorType are equivalent in 3D
+        /// simulation, this is suitable for cross products between:
+        /// linear x linear
+        /// angular x angular
+        /// angular x linear
+        /// linear x angular
+        public: static LinearVectorType Cross(
+          const AngularVectorType &_v1,
+          const LinearVectorType &_v2)
+        {
+          return _v1.cross(_v2);
+        }
+      };
+
+      /////////////////////////////////////////////////
+      /// \brief This is a partial template specialization for Operator which
+      /// allows us to customize operations for 2D space.
+      template <typename _Scalar>
+      struct Operator<_Scalar, 2>
+      {
+        public: using LinearVectorType = LinearVector<_Scalar, 2>;
+        public: using AngularVectorType = AngularVector<_Scalar, 2>;
+
+        /// \brief A 2D cross product operator for linear x linear vectors.
+        /// Note that this takes two 2D vectors and produces a 1D "vector".
+        public: static AngularVectorType Cross(
+          const LinearVectorType &_u,
+          const LinearVectorType &_v)
+        {
+          return AngularVectorType(_u[0]*_v[1] - _u[1]*_v[0]);
+        }
+
+        /// \brief A 2D cross product operator for angular x angular vectors.
+        /// Technically the AngularVectorType is a scalar, so calling this a
+        /// cross product may be a misnomer. However, defining this operator
+        /// allows us to generalize some mathematical expressions between 2D
+        /// and 3D.
+        ///
+        /// This always produces zero, because the "vectors" u and v can be
+        /// imagined as vectors which only have a z-component and no x or y
+        /// component. Cross-producting two such vectors will produce a zero
+        /// vector.
+        public: constexpr static AngularVectorType Cross(
+          const AngularVectorType &,
+          const AngularVectorType &)
+        {
+          return AngularVectorType(0.0);
+        }
+
+        /// \brief A 2D cross product operator for angular x linear vectors.
+        /// Technically the AngularVectorType is a scalar, so calling this a
+        /// cross product may be a misnomer. However, defining this operator
+        /// allows us to generalize some mathematical expressions between 2D
+        /// and 3D.
+        public: static LinearVectorType Cross(
+          const AngularVectorType &_u,
+          const LinearVectorType &_v)
+        {
+          return LinearVectorType(-_u[0]*_v[1], _u[0]*_v[0]);
+        }
+
+        /// \brief A 2D cross product operator for linear x angular vectors.
+        /// Technically the AngularVectorType is a scalar, so calling this a
+        /// cross product may be a misnomer. However, defining this operator
+        /// allows us to generalize some mathematical expressions between 2D
+        /// and 3D.
+        ///
+        /// Note that this will produce the opposite result as the
+        /// angular x linear version of the cross product operator.
+        public: static LinearVectorType Cross(
+          const LinearVectorType &_v,
+          const AngularVectorType &_u)
+        {
+          return LinearVectorType(_u[0]*_v[1], -_u[0]*_v[0]);
+        }
+
+      };
+
+      /////////////////////////////////////////////////
       /// \brief FrameSpace is used to compute RelativeFrameData. This space is
       /// able to account for Coriolis and centrifugal effects in non-inertial
       /// reference frames.
@@ -382,8 +533,11 @@ namespace ignition
       {
         IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(FrameData<_Scalar, _Dim>)
 
-        using VectorType = Vector<_Scalar, _Dim>;
-        using VectorSpaceType = VectorSpace<_Scalar, _Dim>;
+        using LinearVectorType = LinearVector<_Scalar, _Dim>;
+        using LinearVectorSpaceType = VectorSpace<_Scalar, _Dim>;
+        using AngularVectorType = AngularVector<_Scalar, _Dim>;
+        using AngularVectorSpaceType = VectorSpace<_Scalar, 2*_Dim-3>;
+        using Op = Operator<_Scalar, _Dim>;
 
         /// \brief Express the data of the frame with respect to the world
         /// frame.
@@ -402,79 +556,81 @@ namespace ignition
 
           // The position of our input frame, relative to its parent frame,
           // expressed in world coordinates.
-          const VectorType &p_rel =
-              VectorSpaceType::ResolveToWorldCoordinates(
+          const LinearVectorType &p_rel =
+              LinearVectorSpaceType::ResolveToWorldCoordinates(
                 _relativeFrameData.pose.translation(), R_parent);
 
           // The linear velocity of our input frame, relative to its parent
           // frame, expressed in world coordinates.
-          const VectorType &v_rel =
-              VectorSpaceType::ResolveToWorldCoordinates(
+          const LinearVectorType &v_rel =
+              LinearVectorSpaceType::ResolveToWorldCoordinates(
                 _relativeFrameData.linearVelocity, R_parent);
 
           // The linear velocity of the parent frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &v_parent = _parentFrame.linearVelocity;
+          const LinearVectorType &v_parent = _parentFrame.linearVelocity;
 
           // The angular velocity of the parent frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &w_parent = _parentFrame.angularVelocity;
+          const AngularVectorType &w_parent = _parentFrame.angularVelocity;
 
           // The velocity of our input frame, relative to the world frame,
           // expressed in world coordinates.
-          const VectorType &v = v_parent + v_rel + w_parent.cross(p_rel);
+          const LinearVectorType &v =
+              v_parent + v_rel + Op::Cross(w_parent, p_rel);
 
           // Copy the linear velocity into our result data.
           resultFrameData.linearVelocity = v;
 
           // The linear acceleration of our input frame, relative to its parent
           // frame, expressed in world coordinates.
-          const VectorType &a_rel =
-              VectorSpaceType::ResolveToWorldCoordinates(
-                _relativeFrameData.angularAcceleration, R_parent);
+          const LinearVectorType &a_rel =
+              LinearVectorSpaceType::ResolveToWorldCoordinates(
+                _relativeFrameData.linearAcceleration, R_parent);
 
           // The linear acceleration of the parent frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &a_parent = _parentFrame.linearAcceleration;
+          const LinearVectorType &a_parent = _parentFrame.linearAcceleration;
 
           // The angular acceleration of the parent frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &alpha_parent = _parentFrame.angularAcceleration;
+          const AngularVectorType &alpha_parent =
+              _parentFrame.angularAcceleration;
 
           // The linear acceleration of the input frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &a =
+          const LinearVectorType &a =
               a_parent + a_rel
-              + alpha_parent.cross(p_rel)
-              + 2*w_parent.cross(v_rel)
-              + w_parent.cross(w_parent.cross(p_rel));
+              + Op::Cross(alpha_parent, p_rel)
+              + 2*Op::Cross(w_parent, v_rel)
+              + Op::Cross(w_parent, Op::Cross(w_parent, p_rel));
 
           // Copy the linear acceleration into our result data.
           resultFrameData.linearAcceleration = a;
 
           // The angular velocity of the input frame, relative to its parent
           // frame, expressed in world coordinates.
-          const VectorType &w_rel =
-              VectorSpaceType::ResolveToWorldCoordinates(
+          const AngularVectorType &w_rel =
+              AngularVectorSpaceType::ResolveToWorldCoordinates(
                 _relativeFrameData.angularVelocity, R_parent);
 
           // The angular velocity of the input frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &w = w_parent + w_rel;
+          const AngularVectorType &w = w_parent + w_rel;
 
           // Copy the angular velocity into our result data.
           resultFrameData.angularVelocity = w;
 
           // The angular acceleration of the input frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &alpha_rel =
-              VectorSpaceType::ResolveToWorldCoordinates(
+          const AngularVectorType &alpha_rel =
+              AngularVectorSpaceType::ResolveToWorldCoordinates(
                 _relativeFrameData.angularAcceleration, R_parent);
 
           // The angular acceleration of the input frame, relative to the world
           // frame, expressed in world coordinates.
-          const VectorType &alpha =
-              alpha_parent + alpha_rel + w_parent.cross(w_rel);
+          const AngularVectorType &alpha =
+              alpha_parent + alpha_rel + Op::Cross(w_parent, w_rel);
 
           // Copy the angular acceleration into our result data.
           resultFrameData.angularAcceleration = alpha;
@@ -496,9 +652,13 @@ namespace ignition
           const Quantity &frameDataWrtWorld =
               ResolveToWorldFrame(_relativeFrameData, _parentFrame);
 
+          // The pose of the input frame, with respect to the target frame.
+          resultFrameData.pose =
+              _targetFrame.pose.inverse() * frameDataWrtWorld.pose;
+
           // The position of the input frame, relative to the target frame, in
           // coordinates of the world frame.
-          const VectorType &p_rel =
+          const LinearVectorType &p_rel =
               frameDataWrtWorld.pose.translation()
               - _targetFrame.pose.translation();
 
@@ -508,79 +668,82 @@ namespace ignition
 
           // The linear velocity of the input frame, with respect to the world
           // frame.
-          const VectorType &v = frameDataWrtWorld.linearVelocity;
+          const LinearVectorType &v = frameDataWrtWorld.linearVelocity;
 
           // The linear velocity of the target frame, with respect to the world
           // frame.
-          const VectorType &v_target = _targetFrame.linearVelocity;
+          const LinearVectorType &v_target = _targetFrame.linearVelocity;
 
           // The angular velocity of the target frame, with respect to the world
           // frame.
-          const VectorType &w_target = _targetFrame.angularVelocity;
+          const AngularVectorType &w_target = _targetFrame.angularVelocity;
 
           // The linear velocity of the input frame, relative to the target
           // frame, in coordinates of the world frame.
-          const VectorType &v_rel = v - v_target - w_target.cross(p_rel);
+          const LinearVectorType &v_rel =
+              v - v_target - Op::Cross(w_target, p_rel);
 
           // Convert the linear velocity into the target coordinates, and then
           // copy it to the result data.
           resultFrameData.linearVelocity =
-              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+              LinearVectorSpaceType::ResolveFromWorldToTargetCoordinates(
                 v_rel, _targetFrame.pose.linear());
 
           // The linear acceleration of the input frame, with respect to the
           // world frame.
-          const VectorType &a = frameDataWrtWorld.linearAcceleration;
+          const LinearVectorType &a = frameDataWrtWorld.linearAcceleration;
 
           // The linear acceleration of the target frame, with respect to the
           // world frame.
-          const VectorType &a_target = _targetFrame.linearAcceleration;
+          const LinearVectorType &a_target = _targetFrame.linearAcceleration;
 
           // The angular acceleration of the target frame, with respect to the
           // world frame.
-          const VectorType &alpha_target = _targetFrame.angularAcceleration;
+          const AngularVectorType &alpha_target =
+              _targetFrame.angularAcceleration;
 
           // The angular acceleration of the input frame, relative to the target
           // frame, in coordinates of the world frame.
-          const VectorType &a_rel =
+          const LinearVectorType &a_rel =
               a - a_target
-              - alpha_target.cross(p_rel)
-              - 2*w_target.cross(v_rel)
-              - w_target.cross(w_target.cross(p_rel));
+              - Op::Cross(alpha_target, p_rel)
+              - 2*Op::Cross(w_target, v_rel)
+              - Op::Cross(w_target, Op::Cross(w_target, p_rel));
 
           // Convert the linear acceleration into the target coordinates, and
           // then copy it to the result data.
           resultFrameData.linearAcceleration =
-              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+              LinearVectorSpaceType::ResolveFromWorldToTargetCoordinates(
                 a_rel, _targetFrame.pose.linear());
 
           // The angular velocity of the input frame, with respect to the world
           // frame.
-          const VectorType &w = frameDataWrtWorld.angularVelocity;
+          const AngularVectorType &w = frameDataWrtWorld.angularVelocity;
 
           // The angular velocity of the input frame, relative to the target
           // frame, in coordinates of the world frame.
-          const VectorType &w_rel = w - w_target;
+          const AngularVectorType &w_rel = w - w_target;
 
           // Convert the angular velocity into the target coordinates, and then
           // copy it to the result data.
           resultFrameData.angularVelocity =
-              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+              AngularVectorSpaceType::ResolveFromWorldToTargetCoordinates(
                 w_rel, _targetFrame.pose.linear());
 
           // The angular acceleration of the input frame, with respect to the
           // world frame.
-          const VectorType &alpha = frameDataWrtWorld.angularAcceleration;
+          const AngularVectorType &alpha =
+              frameDataWrtWorld.angularAcceleration;
 
           // The angular acceleration of the input frame, relative to the target
           // frame, in coordinates of the world frame.
-          const VectorType &alpha_rel =
-              alpha - alpha_target - w_target.cross(w_rel);
+          const AngularVectorType &alpha_rel =
+              alpha - alpha_target - Op::Cross(w_target, w_rel);
 
           // Convert the angular acceleration into the target coordinates, and
           // then copy it to the result data.
           resultFrameData.angularAcceleration =
-              VectorSpaceType::ResolveFromWorldToTargetCoordinates(
+              AngularVectorSpaceType::ResolveFromWorldToTargetCoordinates(
                 alpha_rel, R_target);
 
           return resultFrameData;
@@ -589,27 +752,31 @@ namespace ignition
         /// \brief Resolve the coordinates of the specified property to the
         /// world coordinates. Note that this does not work for the transform
         /// property; it is only meant for linear/angular velocity/acceleration.
-        public: template <VectorType Quantity::*property>
+        public: template <typename PropertyType,
+                          typename PropertySpace,
+                          PropertyType Quantity::*property>
         static void ResolvePropertyToWorldCoordinates(
           Quantity &_output, const FrameDataType &_input,
           const RotationType &_currentCoordinates)
         {
           _output.*property =
-              VectorSpaceType::ResolveToWorldCoordinates(
+              PropertySpace::ResolveToWorldCoordinates(
                 _input.*property, _currentCoordinates);
         }
 
         /// \brief Resolve the coordinates of the specified property to the
         /// target coordinates. Note that this does not work for the transform
         /// property; it is only meant for linear/angular velocity/acceleration.
-        public: template <VectorType Quantity::*property>
+        public: template <typename PropertyType,
+                          typename PropertySpace,
+                          PropertyType Quantity::*property>
         static void ResolvePropertyToTargetCoordinates(
           Quantity &_output, const FrameDataType &_input,
           const RotationType &_currentCoordinates,
           const RotationType &_targetCoordinates)
         {
           _output.*property =
-              VectorSpaceType::ResolveToTargetCoordinates(
+              PropertySpace::ResolveToTargetCoordinates(
                 _input.*property, _currentCoordinates, _targetCoordinates);
         }
 
@@ -624,16 +791,24 @@ namespace ignition
               SESpace<_Scalar, _Dim>::ResolveToWorldCoordinates(
                 _inputFrameData.pose, _currentCoordinates);
 
-          ResolvePropertyToWorldCoordinates<&Quantity::linearVelocity>(
+          ResolvePropertyToWorldCoordinates<
+              LinearVectorType, LinearVectorSpaceType,
+              &Quantity::linearVelocity>(
                 resultFrameData, _inputFrameData, _currentCoordinates);
 
-          ResolvePropertyToWorldCoordinates<&Quantity::linearAcceleration>(
+          ResolvePropertyToWorldCoordinates<
+              LinearVectorType, LinearVectorSpaceType,
+              &Quantity::linearAcceleration>(
                 resultFrameData, _inputFrameData, _currentCoordinates);
 
-          ResolvePropertyToWorldCoordinates<&Quantity::angularVelocity>(
+          ResolvePropertyToWorldCoordinates<
+              AngularVectorType, AngularVectorSpaceType,
+              &Quantity::angularVelocity>(
                 resultFrameData, _inputFrameData, _currentCoordinates);
 
-          ResolvePropertyToWorldCoordinates<&Quantity::angularAcceleration>(
+          ResolvePropertyToWorldCoordinates<
+              AngularVectorType, AngularVectorSpaceType,
+              &Quantity::angularAcceleration>(
                 resultFrameData, _inputFrameData, _currentCoordinates);
 
           return resultFrameData;
@@ -652,19 +827,27 @@ namespace ignition
                 _inputFrameData.pose, _currentCoordinates,
                 _targetCoordinates);
 
-          ResolvePropertyToTargetCoordinates<&Quantity::linearVelocity>(
+          ResolvePropertyToTargetCoordinates<
+              LinearVectorType, LinearVectorSpaceType,
+              &Quantity::linearVelocity>(
                 resultFrameData, _inputFrameData,
                 _currentCoordinates, _targetCoordinates);
 
-          ResolvePropertyToTargetCoordinates<&Quantity::linearAcceleration>(
+          ResolvePropertyToTargetCoordinates<
+              LinearVectorType, LinearVectorSpaceType,
+              &Quantity::linearAcceleration>(
                 resultFrameData, _inputFrameData,
                 _currentCoordinates, _targetCoordinates);
 
-          ResolvePropertyToTargetCoordinates<&Quantity::angularVelocity>(
+          ResolvePropertyToTargetCoordinates<
+              AngularVectorType, AngularVectorSpaceType,
+              &Quantity::angularVelocity>(
                 resultFrameData, _inputFrameData,
                 _currentCoordinates, _targetCoordinates);
 
-          ResolvePropertyToTargetCoordinates<&Quantity::angularAcceleration>(
+          ResolvePropertyToTargetCoordinates<
+              AngularVectorType, AngularVectorSpaceType,
+              &Quantity::angularAcceleration>(
                 resultFrameData, _inputFrameData,
                 _currentCoordinates, _targetCoordinates);
 

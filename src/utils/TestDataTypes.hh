@@ -180,5 +180,4 @@ ignition::physics::CompositeData CreateSomeData(bool resetQueries = false)
   return data;
 }
 
-
 #endif
