@@ -56,10 +56,28 @@ class EngineLink
 
 /////////////////////////////////////////////////
 template <typename Scalar, std::size_t Dim>
+class EngineJoint
+{
+  public: EngineJoint(
+    const std::string &_name,
+    const FrameData<Scalar, Dim> &_data)
+    : name(_name),
+      data(_data)
+  {
+    // Do nothing
+  }
+
+  public: std::string name;
+  public: FrameData<Scalar, Dim> data;
+};
+
+/////////////////////////////////////////////////
+template <typename Scalar, std::size_t Dim>
 class TestFrameSemantics final
     : public CompleteFrameSemantics::Engine<Scalar, Dim>
 {
   public: using EngineLink = ::EngineLink<Scalar, Dim>;
+  public: using EngineJoint = ::EngineLink<Scalar, Dim>;
   public: using FrameData = ::FrameData<Scalar, Dim>;
 
   /////////////////////////////////////////////////
@@ -77,11 +95,29 @@ class TestFrameSemantics final
   };
 
   /////////////////////////////////////////////////
+  public: class Joint
+    : public virtual CompleteFrameSemantics::Joint<Scalar, Dim>
+  {
+    public: Joint(
+        ignition::physics::Feature::Engine *const _engine,
+        const std::size_t _id,
+        const std::shared_ptr<const void> &_ref)
+      : Joint::BasicObject(_engine, _id, _ref)
+    {
+      // Do nothing
+    }
+  };
+
+  /////////////////////////////////////////////////
   public: TestFrameSemantics()
   {
     // Initialize this with a nullptr object which will act as a stand-in for
     // the world frame (which must have an object ID of 0).
     this->idToEngineLink.push_back(std::weak_ptr<EngineLink>());
+
+    // Set the "last" ID to 1 so that the first object which gets created is
+    // given an ID of 1.
+    nextID = 1;
   }
 
   /////////////////////////////////////////////////
@@ -110,11 +146,15 @@ class TestFrameSemantics final
       std::shared_ptr<EngineLink> newEngineLink =
           std::make_shared<EngineLink>(_linkName, _frameData);
 
-      const std::size_t newID = this->idToEngineLink.size();
+      if(this->idToEngineLink.size() < nextID+1)
+        this->idToEngineLink.resize(nextID+1);
+
+      const std::size_t newID = nextID;
+      ++nextID;
       Link *newProxyLink = new Link(this, newID, newEngineLink);
       it->second = std::unique_ptr<Link>(newProxyLink);
 
-      this->idToEngineLink.push_back(newEngineLink);
+      this->idToEngineLink[newID] = newEngineLink;
       this->activeEngineLinks.insert(std::make_pair(newID, newEngineLink));
     }
 
@@ -154,20 +194,76 @@ class TestFrameSemantics final
       activeEngineLinks.erase(link->GetFrameID().ID());
   }
 
+  /////////////////////////////////////////////////
+  public: Joint *CreateJoint(
+    const std::string &_jointName,
+    const FrameData &_frameData)
+  {
+    typename JointNameMap::iterator it; bool inserted;
+    std::tie(it, inserted) = this->nameToJoint.insert(
+          std::make_pair(_jointName, nullptr));
+
+    if (inserted)
+    {
+      EngineJoint *newEngineJoint = new EngineJoint(_jointName, _frameData);
+
+      const std::size_t newID = nextID;
+      ++nextID;
+      Joint *newProxyJoint = new Joint(this, newID, nullptr);
+      it->second = std::unique_ptr<Joint>(newProxyJoint);
+
+      this->idToEngineJoint.insert(
+            std::make_pair(newID,
+                           std::unique_ptr<EngineJoint>(newEngineJoint)));
+    }
+
+    return it->second.get();
+  }
+
+  /////////////////////////////////////////////////
+  public: Joint *GetJoint(const std::string &_jointName)
+  {
+    typename JointNameMap::iterator jointEntry =
+      this->nameToJoint.find(_jointName);
+    if (jointEntry == this->nameToJoint.end())
+      return nullptr;
+
+    return jointEntry->second.get();
+  }
+
+  public: const Joint *GetJoint(const std::string &_jointName) const
+  {
+    return const_cast<TestFrameSemantics*>(this)->GetJoint(_jointName);
+  }
+
   private: using LinkNameMap = std::map<std::string, std::unique_ptr<Link>>;
   /// \brief A map from a name to a proxy Link object. This allows us to do
   /// lookups based on the link name.
   private: LinkNameMap nameToLink;
 
+  private: using JointNameMap = std::map<std::string, std::unique_ptr<Joint>>;
+  /// \brief A map from a name to a proxy Joint object. This allows us to do
+  /// lookups based on the joint name.
+  private: JointNameMap nameToJoint;
+
   /// \brief A map from a unique object ID to the corresponding engine link (if
   /// it still exists).
   private: std::vector<std::weak_ptr<EngineLink>> idToEngineLink;
+
+  /// \brief A map from a unique object ID to the corresponding engine joint,
+  /// if it still exists.
+  ///
+  /// Note: We do reference-counting for Links but not for Joints. That way, we
+  /// can test both the reference-counted case and the uncounted case.
+  private: std::map<std::size_t, std::unique_ptr<EngineJoint>> idToEngineJoint;
 
   private: using ActiveEngineLinkMap =
       std::unordered_map<std::size_t, std::shared_ptr<EngineLink>>;
   /// \brief A map from a unique ID to the corresponding engine link. All engine
   /// links inside of this map are guaranteed to still exist.
   private: ActiveEngineLinkMap activeEngineLinks;
+
+  private: std::size_t nextID;
 
 };
 
@@ -229,9 +325,13 @@ struct Rotation<Scalar, 2>
       const Eigen::Matrix<Scalar, 2, 2> &_R2,
       const double _tolerance)
   {
-    const double scale = std::max(
-          Eigen::Rotation2D<Scalar>(_R1).angle(),
-          Eigen::Rotation2D<Scalar>(_R2).angle());
+    // Choose the largest of either 1.0 or the size of the larger angle.
+    const double scale =
+        std::max(
+          static_cast<Scalar>(1.0),
+          std::max(
+            Eigen::Rotation2D<Scalar>(_R1).angle(),
+            Eigen::Rotation2D<Scalar>(_R2).angle()));
 
     const Eigen::Rotation2D<Scalar> R(_R1.transpose() * _R2);
     if (std::abs(R.angle()/scale) > _tolerance)
@@ -272,7 +372,9 @@ bool Equal(const Vector<Scalar, Dim> &_vec1,
            const double _tolerance,
            const std::string &_label = "")
 {
-  const double scale = std::max(_vec1.norm(), _vec2.norm());
+  // Choose the largest of either 1.0 or the lenght of the longer vector.
+  const double scale = std::max(static_cast<Scalar>(1.0),
+                                std::max(_vec1.norm(), _vec2.norm()));
   const double diff = (_vec1 - _vec2).norm();
   if (diff/scale <= _tolerance)
     return true;
@@ -392,19 +494,19 @@ void TestRelativeFrames(const double _tolerance)
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames3d)
 {
-  TestRelativeFrames<double, 3>(1e-10);
+  TestRelativeFrames<double, 3>(1e-11);
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames2d)
 {
-  TestRelativeFrames<double, 2>(1e-12);
+  TestRelativeFrames<double, 2>(1e-14);
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames3f)
 {
-  TestRelativeFrames<float, 3>(1e-2);
+  TestRelativeFrames<float, 3>(1e-3);
 }
 
 /////////////////////////////////////////////////
@@ -414,11 +516,65 @@ TEST(FrameSemantics_TEST, RelativeFrames2f)
 }
 
 /////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FrameID)
+template <typename Scalar, std::size_t Dim>
+void TestFrameID(const double _tolerance)
 {
+  using Link = typename TestFrameSemantics<Scalar, Dim>::Link;
+  using Joint = typename TestFrameSemantics<Scalar, Dim>::Joint;
+  using FrameData = ::FrameData<Scalar, Dim>;
+
   // We test FrameID in this unit test, because the FrameSemantics interface is
   // needed in order to produce FrameIDs.
+  FrameID world = FrameID::World();
 
+  // The world FrameID is always considered to be "reference counted", because
+  // it must always be treated as a valid ID.
+  EXPECT_TRUE(world.IsReferenceCounted());
+
+  TestFrameSemantics<Scalar, Dim> fs;
+
+  FrameData dataA = RandomFrameData<Scalar, Dim>();
+  Link *linkA = fs.CreateLink("A", dataA);
+
+  EXPECT_TRUE(Equal(dataA, linkA->FrameDataRelativeTo(world), _tolerance));
+
+  FrameID A = linkA->GetFrameID();
+  EXPECT_TRUE(A.IsReferenceCounted());
+  EXPECT_EQ(A, fs.GetLink("A")->GetFrameID());
+  EXPECT_EQ(A, linkA->GetFrameID());
+
+  FrameData dataJ1 = RandomFrameData<Scalar, Dim>();
+  Joint *joint1 = fs.CreateJoint("J1", dataJ1);
+  EXPECT_TRUE(joint1);
+
+  FrameID J1 = joint1->GetFrameID();
+  EXPECT_FALSE(J1.IsReferenceCounted());
+  EXPECT_EQ(J1, fs.GetJoint("J1")->GetFrameID());
+  EXPECT_EQ(J1, joint1->GetFrameID());
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FrameID3d)
+{
+  TestFrameID<double, 3>(1e-16);
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FrameID2d)
+{
+  TestFrameID<double, 2>(1e-16);
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FrameID3f)
+{
+  TestFrameID<float, 3>(1e-16);
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FrameID2f)
+{
+  TestFrameID<float, 2>(1e-16);
 }
 
 int main(int argc, char **argv)
