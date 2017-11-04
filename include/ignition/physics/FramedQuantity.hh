@@ -247,7 +247,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using FramedTorque = FramedQuantity<
-        AngularVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, 2*Dim-3>>;
+        AngularVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedTorque)
 
     /////////////////////////////////////////////////

@@ -536,7 +536,7 @@ namespace ignition
         using LinearVectorType = LinearVector<_Scalar, _Dim>;
         using LinearVectorSpaceType = VectorSpace<_Scalar, _Dim>;
         using AngularVectorType = AngularVector<_Scalar, _Dim>;
-        using AngularVectorSpaceType = VectorSpace<_Scalar, 2*_Dim-3>;
+        using AngularVectorSpaceType = VectorSpace<_Scalar, (_Dim*(_Dim-1))/2>;
         using Op = Operator<_Scalar, _Dim>;
 
         /// \brief Express the data of the frame with respect to the world

@@ -53,7 +53,7 @@ namespace ignition
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(LinearVector)
 
     template <typename Scalar, std::size_t Dim>
-    using AngularVector = Vector<Scalar, 2*Dim-3>;
+    using AngularVector = Vector<Scalar, (Dim*(Dim-1))/2>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AngularVector)
 
     /// \brief The FrameData struct fully describes the kinematic state of a
