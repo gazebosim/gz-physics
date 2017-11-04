@@ -177,6 +177,13 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename _Scalar, std::size_t _Dim>
+    FrameSemantics::Object<_Scalar, _Dim>::operator FrameID() const
+    {
+      return this->GetFrameID();
+    }
+
+    /////////////////////////////////////////////////
+    template <typename _Scalar, std::size_t _Dim>
     FrameSemantics::Object<_Scalar, _Dim>::Object()
       : engine(dynamic_cast<FrameSemantics::Engine<_Scalar, _Dim> *const>(
                   this->BasicObject::EngineReference()))

@@ -126,10 +126,20 @@ class TestFrameSemantics final
   {
     const std::size_t id = _id.ID();
 
-    const std::weak_ptr<EngineLink> &weakLink = this->idToEngineLink[id];
-    const std::shared_ptr<EngineLink> &link = weakLink.lock();
+    if (id < this->idToEngineLink.size())
+    {
+      const std::weak_ptr<EngineLink> &weakLink = this->idToEngineLink[id];
+      const std::shared_ptr<EngineLink> &link = weakLink.lock();
 
-    return link->data;
+      if (link)
+        return link->data;
+    }
+
+    auto it = this->idToEngineJoint.find(id);
+    if (it != this->idToEngineJoint.end())
+      return it->second->data;
+
+    return FrameData();
   }
 
   /////////////////////////////////////////////////
@@ -522,6 +532,7 @@ void TestFrameID(const double _tolerance)
   using Link = typename TestFrameSemantics<Scalar, Dim>::Link;
   using Joint = typename TestFrameSemantics<Scalar, Dim>::Joint;
   using FrameData = ::FrameData<Scalar, Dim>;
+  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
 
   // We test FrameID in this unit test, because the FrameSemantics interface is
   // needed in order to produce FrameIDs.
@@ -539,6 +550,7 @@ void TestFrameID(const double _tolerance)
   EXPECT_TRUE(Equal(dataA, linkA->FrameDataRelativeTo(world), _tolerance));
 
   FrameID A = linkA->GetFrameID();
+  FrameID otherA = *linkA;
   EXPECT_TRUE(A.IsReferenceCounted());
   EXPECT_EQ(A, fs.GetLink("A")->GetFrameID());
   EXPECT_EQ(A, linkA->GetFrameID());
@@ -551,30 +563,45 @@ void TestFrameID(const double _tolerance)
   EXPECT_FALSE(J1.IsReferenceCounted());
   EXPECT_EQ(J1, fs.GetJoint("J1")->GetFrameID());
   EXPECT_EQ(J1, joint1->GetFrameID());
+
+  // Create relative frame data for J1 with respect to the world frame
+  RelativeFrameData O_T_J1(FrameID::World(), dataJ1);
+  // Create a version which is with respect to frame A
+  RelativeFrameData A_T_J1 = fs.Reframe(O_T_J1, A);
+
+  // When we dereference linkA, the implicit conversion operator should be able
+  // to automatically convert it to a FrameID that can be used by the Frame
+  // Semantics API.
+  EXPECT_TRUE(Equal(A_T_J1.RelativeToParent(),
+                    fs.Resolve(O_T_J1, *linkA), _tolerance));
+
+  RelativeFrameData J1_T_J1 = fs.Reframe(A_T_J1, *joint1);
+  EXPECT_TRUE(Equal(J1_T_J1.RelativeToParent(),
+                    fs.Resolve(O_T_J1, J1), _tolerance));
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID3d)
 {
-  TestFrameID<double, 3>(1e-16);
+  TestFrameID<double, 3>(1e-11);
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID2d)
 {
-  TestFrameID<double, 2>(1e-16);
+  TestFrameID<double, 2>(1e-12);
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID3f)
 {
-  TestFrameID<float, 3>(1e-16);
+  TestFrameID<float, 3>(1e-2);
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID2f)
 {
-  TestFrameID<float, 2>(1e-16);
+  TestFrameID<float, 2>(1e-4);
 }
 
 int main(int argc, char **argv)

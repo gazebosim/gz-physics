@@ -130,6 +130,10 @@ namespace ignition
           const FrameID &_relativeTo,
           const FrameID &_inCoordinatesOf) const;
 
+        /// \brief Implicit conversion to a FrameID is provided. This way, a
+        /// reference to the Object can be treated as a FrameID.
+        public: operator FrameID() const;
+
         /// \brief The constructor will use its base class to find a reference
         /// to the engine feature interface that it needs.
         public: Object();
