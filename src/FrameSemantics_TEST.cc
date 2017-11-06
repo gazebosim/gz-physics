@@ -451,7 +451,9 @@ void TestRelativeFrames(const double _tolerance)
   using FrameData = ::FrameData<Scalar, Dim>;
   using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
 
-  // Instantiate a class that provides Frame Semantics
+  // Instantiate a class that provides Frame Semantics. This object can be
+  // thought of as stand-in for a physics engine. Normally the functions
+  // Resolve(~) and Reframe(~) would be provided by the physics engine instance.
   TestFrameSemantics<Scalar, Dim> fs;
 
   // Note: The World Frame is often designated by the letter O
@@ -542,6 +544,9 @@ void TestFrameID(const double _tolerance)
   // it must always be treated as a valid ID.
   EXPECT_TRUE(world.IsReferenceCounted());
 
+  // Instantiate a class that provides Frame Semantics. This object can be
+  // thought of as stand-in for a physics engine. Normally the functions
+  // Resolve(~) and Reframe(~) would be provided by the physics engine instance.
   TestFrameSemantics<Scalar, Dim> fs;
 
   FrameData dataA = RandomFrameData<Scalar, Dim>();
@@ -550,10 +555,14 @@ void TestFrameID(const double _tolerance)
   EXPECT_TRUE(Equal(dataA, linkA->FrameDataRelativeTo(world), _tolerance));
 
   FrameID A = linkA->GetFrameID();
-  FrameID otherA = *linkA;
   EXPECT_TRUE(A.IsReferenceCounted());
   EXPECT_EQ(A, fs.GetLink("A")->GetFrameID());
   EXPECT_EQ(A, linkA->GetFrameID());
+
+  // This is the implicit conversion operator which can implicitly turn a
+  // FrameSemantics::Object reference into a FrameID.
+  FrameID otherA = *linkA;
+  EXPECT_EQ(otherA, A);
 
   FrameData dataJ1 = RandomFrameData<Scalar, Dim>();
   Joint *joint1 = fs.CreateJoint("J1", dataJ1);
