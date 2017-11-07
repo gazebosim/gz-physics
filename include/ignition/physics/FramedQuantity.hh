@@ -176,69 +176,6 @@ namespace ignition
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPosition)
 
     /////////////////////////////////////////////////
-    /// Note: A FramedLinearVelocity can be thought of as the instantaneous
-    /// velocity of a point which is incidental to the origin of the parent
-    /// frame. The function RelativeToParent() expresses the point's
-    /// instantaneous velocity relative to the current instantaneous velocity of
-    /// parent frame.
-    ///
-    /// To find the instantenous velocity of a framed point which is not located
-    /// at the origin of its parent frame, use RelativeFrameData.
-    template <typename Scalar, std::size_t Dim>
-    using FramedLinearVelocity = FramedQuantity<
-        LinearVector<Scalar, Dim>, Dim, detail::LinearVelocitySpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedLinearVelocity)
-
-    /////////////////////////////////////////////////
-    /// Note: A FramedAngularVelocity can be thought of as the instantaneous
-    /// angular velocity of a body expressed in terms of its parent frame.
-    /// Unlike FramedLinearVelocity, FramedLinearAcceleration, and
-    /// FramedAngularAcceleration, this is no different than computing the
-    /// relative angular velocity of a frame which is a child of the parent
-    /// frame, because it does not depend on relative position or any other
-    /// factors.
-    template <typename Scalar, std::size_t Dim>
-    using FramedAngularVelocity = FramedQuantity<
-        AngularVector<Scalar, Dim>, Dim, detail::AngularVelocitySpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedAngularVelocity)
-
-    /////////////////////////////////////////////////
-    /// Note: A FramedLinearAcceleration can be thought of as the instantaneous
-    /// linear acceleration of a point which is incidental to the origin of its
-    /// parent frame and has no velocity relative to its parent frame. The
-    /// function RelativeToParent() expresses the point's instantaneous linear
-    /// acceleration relative to the current instantaneous linear acceleration
-    /// of the parent frame. Since the hypothetical point is located at the
-    /// origin with zero instantaneous velocity, this will not be subject to
-    /// centrifugal or Coriolis effects.
-    ///
-    /// To find the instantaneous linear acceleration of a framed point which is
-    /// not located at the origin of its parent frame and/or has non-zero
-    /// velocity (and which therefore experiences centrifugal and Coriolis
-    /// effects), use a RelativeFrameData object.
-    template <typename Scalar, std::size_t Dim>
-    using FramedLinearAcceleration = FramedQuantity<
-        LinearVector<Scalar, Dim>, Dim, detail::LinearAccelerationSpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedLinearAcceleration)
-
-    /////////////////////////////////////////////////
-    /// Note: A FramedAngularAcceleration can be thought of as the instantaneous
-    /// angular acceleration of a body which is incidental to the origin of its
-    /// parent frame and has no velocity relative to its parent frame. The
-    /// function RelativeToParent() expresses the body's instantaneous angular
-    /// acceleration relative to the current instantaneous angular acceleration
-    /// of the parent frame. Since the hypothetical body has zero instantaneous
-    /// velocity, this will not be subject to Coriolis effects.
-    ///
-    /// To find the instantaneous angular acceleration of a framed body which
-    /// has non-zero velocity (and therefore experiences Coriolis effects), use
-    /// a RelativeFrameData object.
-    template <typename Scalar, std::size_t Dim>
-    using FramedAngularAcceleration = FramedQuantity<
-        AngularVector<Scalar, Dim>, Dim, detail::AngularAccelerationSpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedAngularAcceleration)
-
-    /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using FramedForce = FramedQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
