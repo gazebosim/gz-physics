@@ -26,7 +26,7 @@ namespace ignition
   {
     /// \brief This struct can be used to tweak the behavior of
     /// OperateOnSpecifiedData at run-time.
-    struct IGNITION_COMMON_VISIBLE DataStatusMask
+    struct IGNITION_PHYSICS_VISIBLE DataStatusMask
     {
       enum Condition
       {
