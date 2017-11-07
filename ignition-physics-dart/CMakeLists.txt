@@ -16,7 +16,16 @@ endif()
 ign_get_libsources_and_unittests(sources gtest_sources)
 
 get_filename_component(lib_name ${CMAKE_CURRENT_LIST_DIR} NAME)
+
 add_library(${lib_name} ${sources})
+
+if(GCC)
+  # This is to work around a known bug in GCC:
+  # https://svn.boost.org/trac10/ticket/9240
+  # If that bug gets resolved, then this can be removed.
+  target_compile_options(${lib_name} PRIVATE -fext-numeric-literals)
+endif()
+
 target_link_libraries(${lib_name}
   ignition-physics0
   ${IGNITION-COMMON_LIBRARIES}
