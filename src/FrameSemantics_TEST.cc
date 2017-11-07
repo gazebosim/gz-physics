@@ -318,6 +318,14 @@ struct Rotation
 
     return true;
   }
+
+  static AngularVector<Scalar, Dim> Apply(
+      const Eigen::Matrix<Scalar, Dim, Dim> &_R,
+      const AngularVector<Scalar, Dim> &_input)
+  {
+    // In 3D simulation, this is a normal multiplication
+    return _R * _input;
+  }
 };
 
 /////////////////////////////////////////////////
@@ -354,6 +362,15 @@ struct Rotation<Scalar, 2>
     }
 
     return true;
+  }
+
+  static AngularVector<Scalar, 2> Apply(
+      const Eigen::Matrix<Scalar, 2, 2> &,
+      const AngularVector<Scalar, 2> &_input)
+  {
+    // Angular vectors cannot be rotated in 2D simulations, so we just pass back
+    // the value that was given.
+    return _input;
   }
 };
 
@@ -538,7 +555,7 @@ void TestFrameID(const double _tolerance)
 
   // We test FrameID in this unit test, because the FrameSemantics interface is
   // needed in order to produce FrameIDs.
-  FrameID world = FrameID::World();
+  const FrameID world = FrameID::World();
 
   // The world FrameID is always considered to be "reference counted", because
   // it must always be treated as a valid ID.
@@ -549,34 +566,34 @@ void TestFrameID(const double _tolerance)
   // Resolve(~) and Reframe(~) would be provided by the physics engine instance.
   TestFrameSemantics<Scalar, Dim> fs;
 
-  FrameData dataA = RandomFrameData<Scalar, Dim>();
-  Link *linkA = fs.CreateLink("A", dataA);
+  const FrameData dataA = RandomFrameData<Scalar, Dim>();
+  const Link *linkA = fs.CreateLink("A", dataA);
 
   EXPECT_TRUE(Equal(dataA, linkA->FrameDataRelativeTo(world), _tolerance));
 
-  FrameID A = linkA->GetFrameID();
+  const FrameID A = linkA->GetFrameID();
   EXPECT_TRUE(A.IsReferenceCounted());
   EXPECT_EQ(A, fs.GetLink("A")->GetFrameID());
   EXPECT_EQ(A, linkA->GetFrameID());
 
   // This is the implicit conversion operator which can implicitly turn a
   // FrameSemantics::Object reference into a FrameID.
-  FrameID otherA = *linkA;
+  const FrameID otherA = *linkA;
   EXPECT_EQ(otherA, A);
 
-  FrameData dataJ1 = RandomFrameData<Scalar, Dim>();
-  Joint *joint1 = fs.CreateJoint("J1", dataJ1);
+  const FrameData dataJ1 = RandomFrameData<Scalar, Dim>();
+  const Joint *const joint1 = fs.CreateJoint("J1", dataJ1);
   EXPECT_TRUE(joint1);
 
-  FrameID J1 = joint1->GetFrameID();
+  const FrameID J1 = joint1->GetFrameID();
   EXPECT_FALSE(J1.IsReferenceCounted());
   EXPECT_EQ(J1, fs.GetJoint("J1")->GetFrameID());
   EXPECT_EQ(J1, joint1->GetFrameID());
 
   // Create relative frame data for J1 with respect to the world frame
-  RelativeFrameData O_T_J1(FrameID::World(), dataJ1);
+  const RelativeFrameData O_T_J1(FrameID::World(), dataJ1);
   // Create a version which is with respect to frame A
-  RelativeFrameData A_T_J1 = fs.Reframe(O_T_J1, A);
+  const RelativeFrameData A_T_J1 = fs.Reframe(O_T_J1, A);
 
   // When we dereference linkA, the implicit conversion operator should be able
   // to automatically convert it to a FrameID that can be used by the Frame
@@ -584,7 +601,7 @@ void TestFrameID(const double _tolerance)
   EXPECT_TRUE(Equal(A_T_J1.RelativeToParent(),
                     fs.Resolve(O_T_J1, *linkA), _tolerance));
 
-  RelativeFrameData J1_T_J1 = fs.Reframe(A_T_J1, *joint1);
+  const RelativeFrameData J1_T_J1 = fs.Reframe(A_T_J1, *joint1);
   EXPECT_TRUE(Equal(J1_T_J1.RelativeToParent(),
                     fs.Resolve(O_T_J1, J1), _tolerance));
 }
@@ -613,12 +630,304 @@ TEST(FrameSemantics_TEST, FrameID2f)
   TestFrameID<float, 2>(1e-4);
 }
 
+/////////////////////////////////////////////////
+template <typename Scalar, std::size_t Dim>
+void TestFramedQuantities(const double _tolerance)
+{
+  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
+  using LinearVector = ::LinearVector<Scalar, Dim>;
+  using AngularVector = ::AngularVector<Scalar, Dim>;
+  using Rotation = ::Rotation<Scalar, Dim>;
+  using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
+  using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
+  using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
+
+  const FrameID World = FrameID::World();
+
+  // Instantiate a class that provides Frame Semantics. This object can be
+  // thought of as stand-in for a physics engine. Normally the functions
+  // Resolve(~) and Reframe(~) would be provided by the physics engine instance.
+  TestFrameSemantics<Scalar, Dim> fs;
+
+  // Create a transform from the world to Frame A
+  const RelativeFrameData O_T_A(World, RandomFrameData<Scalar, Dim>());
+  // Instantiate Frame A
+  const FrameID A = *fs.CreateLink("A", fs.Resolve(O_T_A, World));
+
+  // Create a transform from Frame A to Frame B
+  const RelativeFrameData A_T_B(A, RandomFrameData<Scalar, Dim>());
+  // Instantiate Frame B using A_T_B. Note that CreateLink(~) expects to receive
+  // the link's transform with respect to the world, so we use Resolve(~) before
+  // passing along the FrameData
+  const FrameID B = *fs.CreateJoint("B", fs.Resolve(A_T_B, World));
+
+  // Create a transform from Frame B to Frame C
+  const RelativeFrameData B_T_C(B, RandomFrameData<Scalar, Dim>());
+  // Instantiate Frame C using B_T_C
+  const FrameID C = *fs.CreateLink("C", fs.Resolve(B_T_C, World));
+
+  // Create a transform from Frame A to Frame D
+  const RelativeFrameData A_T_D(A, RandomFrameData<Scalar, Dim>());
+  // Instantiate Frame D using A_T_D
+  const FrameID D = *fs.CreateJoint("D", fs.Resolve(A_T_D, World));
+
+  // Create point "1" in Frame C
+  const FramedPosition C_p1(C, RandomVector<LinearVector>(10.0));
+  EXPECT_TRUE(Equal(C_p1.RelativeToParent(), fs.Resolve(C_p1, C), _tolerance));
+
+  const LinearVector C_p1_inCoordsOfWorld =
+        O_T_A.RelativeToParent().pose.linear()
+      * A_T_B.RelativeToParent().pose.linear()
+      * B_T_C.RelativeToParent().pose.linear()
+      *  C_p1.RelativeToParent();
+  EXPECT_TRUE(Equal(C_p1_inCoordsOfWorld,
+                    fs.Resolve(C_p1, C, World), _tolerance));
+
+  const LinearVector C_p1_inCoordsOfD =
+      A_T_D.RelativeToParent().pose.linear().transpose()
+    * A_T_B.RelativeToParent().pose.linear()
+    * B_T_C.RelativeToParent().pose.linear()
+    *  C_p1.RelativeToParent();
+  EXPECT_TRUE(Equal(C_p1_inCoordsOfD, fs.Resolve(C_p1, C, D), _tolerance));
+
+  const LinearVector O_p1 =
+        O_T_A.RelativeToParent().pose
+      * A_T_B.RelativeToParent().pose
+      * B_T_C.RelativeToParent().pose
+      *  C_p1.RelativeToParent();
+  EXPECT_TRUE(Equal(O_p1, fs.Resolve(C_p1, World), _tolerance));
+
+  const LinearVector O_p1_inCoordsOfC =
+        B_T_C.RelativeToParent().pose.linear().transpose()
+      * A_T_B.RelativeToParent().pose.linear().transpose()
+      * O_T_A.RelativeToParent().pose.linear().transpose()
+      *  O_p1;
+  EXPECT_TRUE(Equal(O_p1_inCoordsOfC, fs.Resolve(C_p1, World, C), _tolerance));
+
+  const LinearVector O_p1_inCoordsOfD =
+        A_T_D.RelativeToParent().pose.linear().transpose()
+      * O_T_A.RelativeToParent().pose.linear().transpose()
+      *   O_p1;
+  EXPECT_TRUE(Equal(O_p1_inCoordsOfD, fs.Resolve(C_p1, World, D), _tolerance));
+
+  const LinearVector D_p1 =
+        A_T_D.RelativeToParent().pose.inverse()
+      * A_T_B.RelativeToParent().pose
+      * B_T_C.RelativeToParent().pose
+      *  C_p1.RelativeToParent();
+  EXPECT_TRUE(Equal(D_p1, fs.Resolve(C_p1, D), _tolerance));
+
+  const LinearVector D_p1_inCoordsOfWorld =
+        O_T_A.RelativeToParent().pose.linear()
+      * A_T_D.RelativeToParent().pose.linear()
+      *  D_p1;
+  EXPECT_TRUE(Equal(D_p1_inCoordsOfWorld,
+                    fs.Resolve(C_p1, D, World), _tolerance));
+
+  const LinearVector D_p1_inCoordsOfC =
+        B_T_C.RelativeToParent().pose.linear().transpose()
+      * A_T_B.RelativeToParent().pose.linear().transpose()
+      * A_T_D.RelativeToParent().pose.linear()
+      *  D_p1;
+  EXPECT_TRUE(Equal(D_p1_inCoordsOfC, fs.Resolve(C_p1, D, C), _tolerance));
+
+  // Create point "2" in Frame D
+  const FramedPosition D_p2(D, RandomVector<LinearVector>(10.0));
+  EXPECT_TRUE(Equal(D_p2.RelativeToParent(), fs.Resolve(D_p2, D), _tolerance));
+
+  const LinearVector O_p2 =
+        O_T_A.RelativeToParent().pose
+      * A_T_D.RelativeToParent().pose
+      *  D_p2.RelativeToParent();
+  EXPECT_TRUE(Equal(O_p2, fs.Resolve(D_p2, World), _tolerance));
+
+  const LinearVector C_p2 =
+        B_T_C.RelativeToParent().pose.inverse()
+      * A_T_B.RelativeToParent().pose.inverse()
+      * A_T_D.RelativeToParent().pose
+      *  D_p2.RelativeToParent();
+  EXPECT_TRUE(Equal(C_p2, fs.Resolve(D_p2, C), _tolerance));
+
+  // Create point "3" in the World Frame
+  const FramedPosition O_p3(World, RandomVector<LinearVector>(10.0));
+  EXPECT_TRUE(Equal(O_p3.RelativeToParent(),
+                    fs.Resolve(O_p3, World), _tolerance));
+
+  const LinearVector O_p3_inCoordsOfC =
+        B_T_C.RelativeToParent().pose.linear().transpose()
+      * A_T_B.RelativeToParent().pose.linear().transpose()
+      * O_T_A.RelativeToParent().pose.linear().transpose()
+      *  O_p3.RelativeToParent();
+  EXPECT_TRUE(Equal(O_p3_inCoordsOfC, fs.Resolve(O_p3, World, C), _tolerance));
+
+  const LinearVector C_p3 =
+        B_T_C.RelativeToParent().pose.inverse()
+      * A_T_B.RelativeToParent().pose.inverse()
+      * O_T_A.RelativeToParent().pose.inverse()
+      *  O_p3.RelativeToParent();
+  EXPECT_TRUE(Equal(C_p3, fs.Resolve(O_p3, C), _tolerance));
+
+  const LinearVector C_p3_inCoordsOfWorld =
+        O_T_A.RelativeToParent().pose.linear()
+      * A_T_B.RelativeToParent().pose.linear()
+      * B_T_C.RelativeToParent().pose.linear()
+      *  C_p3;
+  EXPECT_TRUE(Equal(C_p3_inCoordsOfWorld,
+                    fs.Resolve(O_p3, C, World), _tolerance));
+
+  // Create force "1" in Frame C
+  const FramedForce C_f1(C, RandomVector<LinearVector>(10.0));
+  EXPECT_TRUE(Equal(C_f1.RelativeToParent(), fs.Resolve(C_f1, C), _tolerance));
+
+  const LinearVector O_f1 =
+        O_T_A.RelativeToParent().pose.linear()
+      * A_T_B.RelativeToParent().pose.linear()
+      * B_T_C.RelativeToParent().pose.linear()
+      *  C_f1.RelativeToParent();
+  EXPECT_TRUE(Equal(O_f1, fs.Resolve(C_f1, World), _tolerance));
+
+  const LinearVector D_f1 =
+        A_T_D.RelativeToParent().pose.linear().transpose()
+      * A_T_B.RelativeToParent().pose.linear()
+      * B_T_C.RelativeToParent().pose.linear()
+      *  C_f1.RelativeToParent();
+  EXPECT_TRUE(Equal(D_f1, fs.Resolve(C_f1, D), _tolerance));
+
+  // Create force "2" in Frame D
+  const FramedForce D_f2(D, RandomVector<LinearVector>(10.0));
+  EXPECT_TRUE(Equal(D_f2.RelativeToParent(), fs.Resolve(D_f2, D), _tolerance));
+
+  const LinearVector O_f2 =
+        O_T_A.RelativeToParent().pose.linear()
+      * A_T_D.RelativeToParent().pose.linear()
+      *  D_f2.RelativeToParent();
+  EXPECT_TRUE(Equal(O_f2, fs.Resolve(D_f2, World), _tolerance));
+
+  const LinearVector C_f2 =
+        B_T_C.RelativeToParent().pose.linear().transpose()
+      * A_T_B.RelativeToParent().pose.linear().transpose()
+      * A_T_D.RelativeToParent().pose.linear()
+      *  D_f2.RelativeToParent();
+  EXPECT_TRUE(Equal(C_f2, fs.Resolve(D_f2, C), _tolerance));
+
+  // Create force "3" in the World Frame
+  const FramedForce O_f3(World, RandomVector<LinearVector>(10.0));
+  EXPECT_TRUE(Equal(O_f3.RelativeToParent(), fs.Resolve(O_f3, World), _tolerance));
+
+  const LinearVector C_f3 =
+        B_T_C.RelativeToParent().pose.linear().transpose()
+      * A_T_B.RelativeToParent().pose.linear().transpose()
+      * O_T_A.RelativeToParent().pose.linear().transpose()
+      *  O_f3.RelativeToParent();
+  EXPECT_TRUE(Equal(C_f3, fs.Resolve(O_f3, C), _tolerance));
+
+  // Create torque "1" in Frame C
+  const FramedTorque C_t1(C, RandomVector<AngularVector>(10.0));
+  EXPECT_TRUE(Equal(C_t1.RelativeToParent(), fs.Resolve(C_t1, C), _tolerance));
+
+  const AngularVector O_t1 =
+      Rotation::Apply(
+          O_T_A.RelativeToParent().pose.linear()
+        * A_T_B.RelativeToParent().pose.linear()
+        * B_T_C.RelativeToParent().pose.linear(),
+           C_t1.RelativeToParent());
+  EXPECT_TRUE(Equal(O_t1, fs.Resolve(C_t1, World), _tolerance));
+
+  const AngularVector O_t1_inCoordsOfC =
+      Rotation::Apply(
+          B_T_C.RelativeToParent().pose.linear().transpose()
+        * A_T_B.RelativeToParent().pose.linear().transpose()
+        * O_T_A.RelativeToParent().pose.linear().transpose(),
+           O_t1);
+  EXPECT_TRUE(Equal(O_t1_inCoordsOfC, fs.Resolve(C_t1, World, C), _tolerance));
+
+  const AngularVector D_t1 =
+      Rotation::Apply(
+          A_T_D.RelativeToParent().pose.linear().transpose()
+        * A_T_B.RelativeToParent().pose.linear()
+        * B_T_C.RelativeToParent().pose.linear(),
+           C_t1.RelativeToParent());
+  EXPECT_TRUE(Equal(D_t1, fs.Resolve(C_t1, D), _tolerance));
+
+  const AngularVector D_t1_inCoordsOfWorld =
+      Rotation::Apply(
+          O_T_A.RelativeToParent().pose.linear()
+        * A_T_D.RelativeToParent().pose.linear(),
+           D_t1);
+  EXPECT_TRUE(Equal(D_t1_inCoordsOfWorld,
+                    fs.Resolve(C_t1, D, World), _tolerance));
+
+  const AngularVector D_t1_inCoordsOfC =
+      Rotation::Apply(
+          B_T_C.RelativeToParent().pose.linear().transpose()
+        * A_T_B.RelativeToParent().pose.linear().transpose()
+        * A_T_D.RelativeToParent().pose.linear(),
+           D_t1);
+  EXPECT_TRUE(Equal(D_t1_inCoordsOfC, fs.Resolve(C_t1, D, C), _tolerance));
+
+  // Create torque "2" in Frame D
+  const FramedTorque D_t2(D, RandomVector<AngularVector>(10.0));
+  EXPECT_TRUE(Equal(D_f2.RelativeToParent(), fs.Resolve(D_f2, D), _tolerance));
+
+  const AngularVector O_t2 =
+      Rotation::Apply(
+          O_T_A.RelativeToParent().pose.linear()
+        * A_T_D.RelativeToParent().pose.linear(),
+           D_t2.RelativeToParent());
+  EXPECT_TRUE(Equal(O_t2, fs.Resolve(D_t2, World), _tolerance));
+
+  const AngularVector C_t2 =
+      Rotation::Apply(
+          B_T_C.RelativeToParent().pose.linear().transpose()
+        * A_T_B.RelativeToParent().pose.linear().transpose()
+        * A_T_D.RelativeToParent().pose.linear(),
+           D_t2.RelativeToParent());
+  EXPECT_TRUE(Equal(C_t2, fs.Resolve(D_t2, C), _tolerance));
+
+  // Create torque "3" in the World Frame
+  const FramedTorque O_t3(World, RandomVector<AngularVector>(10.0));
+  EXPECT_TRUE(Equal(O_t3.RelativeToParent(),
+                    fs.Resolve(O_t3, World), _tolerance));
+
+  const AngularVector C_t3 =
+      Rotation::Apply(
+          B_T_C.RelativeToParent().pose.linear().transpose()
+        * A_T_B.RelativeToParent().pose.linear().transpose()
+        * O_T_A.RelativeToParent().pose.linear().transpose(),
+           O_t3.RelativeToParent());
+  EXPECT_TRUE(Equal(C_t3, fs.Resolve(O_t3, C), _tolerance));
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FramedQuantities3d)
+{
+  TestFramedQuantities<double, 3>(1e-11);
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FramedQuantities2d)
+{
+  TestFramedQuantities<double, 2>(1e-11);
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FramedQuantities3f)
+{
+  TestFramedQuantities<float, 3>(1e-2);
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, FramedQuantities2f)
+{
+  TestFramedQuantities<float, 2>(1e-4);
+}
+
 int main(int argc, char **argv)
 {
   // This seed is arbitrary, but we always use the same seed value to ensure
   // that results are reproduceable between runs. You may change this number,
   // but understand that the values generated in these tests will be different
-  // each time that you change it. The acceptable tolerances might need to be
+  // each time that you change it. The expected tolerances might need to be
   // adjusted if the seed number is changed.
   ignition::math::Rand::Seed(416);
 

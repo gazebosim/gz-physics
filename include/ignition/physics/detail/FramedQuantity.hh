@@ -157,7 +157,7 @@ namespace ignition
           const FrameDataType &_parentFrame)
         {
           return ResolveToWorldCoordinates(
-                _rotation, _parentFrame.pose.Rot());
+                _rotation, _parentFrame.pose.linear());
         }
 
         /// \brief Resolve the rotation to the target frame
@@ -168,8 +168,8 @@ namespace ignition
         {
           return ResolveToTargetCoordinates(
                 _rotation,
-                _parentFrame.pose.Rot(),
-                _targetFrame.pose.Rot());
+                _parentFrame.pose.linear(),
+                _targetFrame.pose.linear());
         }
 
         /// \brief Resolve the coordinates of the rotation to the world frame
@@ -245,7 +245,7 @@ namespace ignition
           // may be its (linear or angular) (velocity or acceleration).
           const Quantity &parentProperty = _parentFrame.*property;
           const Quantity vecInWorldCoordinates =
-              ResolveToWorldCoordinates(_vec, _parentFrame.pose.Rot());
+              ResolveToWorldCoordinates(_vec, _parentFrame.pose.linear());
 
           return parentProperty + vecInWorldCoordinates;
         }
@@ -266,7 +266,7 @@ namespace ignition
           // parent frame, we so we must convert it from the parent coordinates
           // into world coordinates.
           const Quantity vecInWorldCoordinates =
-              ResolveToWorldCoordinates(_vec, _parentFrame.pose.Rot());
+              ResolveToWorldCoordinates(_vec, _parentFrame.pose.linear());
 
           // Now that all our vectors are in world coordinates, we can safely
           // sum/difference them. Note that the result of this sum will also
@@ -279,7 +279,7 @@ namespace ignition
           // the target coordinates before returning.
           return ResolveFromWorldToTargetCoordinates(
                 resultInWorldCoordinates,
-                _targetFrame.pose.Rot());
+                _targetFrame.pose.linear());
         }
 
         // Note: We inherit ResolveToWorldCoordinates and
@@ -334,7 +334,7 @@ namespace ignition
           const Quantity &_vec,
           const FrameDataType &_parentFrame)
         {
-          return ResolveToWorldCoordinates(_parentFrame.pose.Rot(), _vec);
+          return ResolveToWorldCoordinates(_vec, _parentFrame.pose.linear());
         }
 
         /// \brief Resolve the vector to the target frame
@@ -345,8 +345,8 @@ namespace ignition
         {
           return ResolveToTargetCoordinates(
                 _vec,
-                _parentFrame.pose.Rot(),
-                _targetFrame.pose.Rot());
+                _parentFrame.pose.linear(),
+                _targetFrame.pose.linear());
         }
 
         /// \brief Resolve the coordinates of the vector to the world frame.
