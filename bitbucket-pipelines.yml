@@ -22,6 +22,7 @@ pipelines:
           - cd build
           - cmake .. -DCMAKE_BUILD_TYPE=coverage
           - make
+          - export CTEST_OUTPUT_ON_FAILURE=1
           - make test
           - make coverage
           - bash <(curl -s https://codecov.io/bash)
