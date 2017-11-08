@@ -4,7 +4,7 @@ ign_add_library(${PROJECT_LIBRARY_TARGET_NAME} ${sources})
 
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
-    ignition-math${IGN_MATH_VER}
+    ${ignition-math${IGN_MATH_VER}_LIBRARIES}
     ignition-common${IGN_COMMON_VER})
 
 ign_install_library()
