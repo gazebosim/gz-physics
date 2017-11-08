@@ -345,8 +345,10 @@ namespace ignition
     std::size_t CompositeData::NumEntries() const
     {
       IGN_ASSERT(numEntries <= dataMap.size(),
-                 "The recorded number of entries is greater than the size of "
-                 "the dataMap, but that should be impossible!");
+                 "The recorded number of entries [" + std::to_string(numEntries)
+                 + "] is greater than the size of the dataMap ["
+                 + std::to_string(dataMap.size())
+                 + "], but that should be impossible!");
       return numEntries;
     }
 
@@ -354,8 +356,10 @@ namespace ignition
     std::size_t CompositeData::NumUnqueriedEntries() const
     {
       IGN_ASSERT(numEntries >= numQueries,
-                 "The recorded number of queries is greater than the recorded "
-                 "number of entries, but that should be impossible!");
+                 "The recorded number of queries [" + std::to_string(numQueries)
+                 + "] is greater than the recorded number of entries ["
+                 + std::to_string(numEntries)
+                 + "], but that should be impossible!");
       return numEntries - numQueries;
     }
 
