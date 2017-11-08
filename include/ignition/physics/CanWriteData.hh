@@ -92,7 +92,7 @@ namespace ignition
       /// required by the Specification.
       public: CanWriteRequiredData();
 
-      /// \brief Call this function to read all the types in _data that are
+      /// \brief Call this function to write all the types in _data that are
       /// listed as required in the Specification.
       public: template <typename CompositeType>
       void WriteRequiredData(
