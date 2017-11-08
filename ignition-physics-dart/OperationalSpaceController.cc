@@ -98,7 +98,7 @@ namespace ignition
             this->robot->getJoint(i)->setDampingCoefficient(0, 0.5);
           }
 
-          this->offset = Eigen::Vector3d(0.0, 0, 0);
+          this->offset = Eigen::Vector3d(0.0, 0.0, 0.0);
 
           Eigen::Isometry3d tf = endEffector->getWorldTransform();
           tf.pretranslate(offset);
@@ -261,7 +261,7 @@ namespace ignition
 
       void OperationalSpaceController::Write(WorldPoses &poses) const
       {
-        poses.entries.reserve(dataPtr->mapToBodies.size());
+        poses.entries.reserve(this->dataPtr->mapToBodies.size());
 
         std::vector<std::size_t> cleanup;
         for(const auto &entry : this->dataPtr->mapToBodies)
