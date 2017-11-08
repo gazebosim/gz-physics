@@ -30,7 +30,7 @@ namespace ignition
     static void RemoveQuery(
         const CompositeData::MapOfData::iterator &_it, std::size_t &_numQueries)
     {
-      if(_it->second.queried)
+      if (_it->second.queried)
       {
         --_numQueries;
         _it->second.queried = false;
@@ -43,7 +43,7 @@ namespace ignition
         const CompositeData::MapOfData::iterator &_receiver,
         std::size_t &_numEntries, std::size_t &_numQueries)
     {
-      if(!_receiver->second.required)
+      if (!_receiver->second.required)
       {
         // If the data isn't required, delete it
         _receiver->second.data.reset();
@@ -65,7 +65,7 @@ namespace ignition
     {
       RemoveQuery(_receiver, _numQueries);
       _receiver->second.data->Copy(*_sender->second.data);
-      if(_mergeRequirements && _sender->second.required)
+      if (_mergeRequirements && _sender->second.required)
         _receiver->second.required = true;
     }
 
@@ -127,7 +127,7 @@ namespace ignition
         std::size_t &_numEntries,
         std::size_t &_numQueries)
     {
-      if(_receiver->second.data)
+      if (_receiver->second.data)
         RemoveQuery(_receiver, _numQueries);
       else
         ++_numEntries;
@@ -371,14 +371,14 @@ namespace ignition
     /////////////////////////////////////////////////
     std::set<std::string> CompositeData::UnqueriedEntries() const
     {
-      if(NumUnqueriedEntries() == 0)
+      if (NumUnqueriedEntries() == 0)
         return std::set<std::string>();
 
       std::set<std::string> unqueried;
 
       for (const auto &entry : dataMap)
       {
-        if(entry.second.data && !entry.second.queried)
+        if (entry.second.data && !entry.second.queried)
           unqueried.insert(unqueried.end(), entry.first);
       }
 
