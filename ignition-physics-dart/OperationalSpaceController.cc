@@ -241,7 +241,8 @@ namespace ignition
       }
 
       void OperationalSpaceController::Step(
-          Output &h, ForwardStep::State &x, const Input &u)
+          ForwardStep::Output &h, ForwardStep::State &x,
+          const ForwardStep::Input &u)
       {
         this->dataPtr->UpdateTarget(u.Query<TargetPose>());
 

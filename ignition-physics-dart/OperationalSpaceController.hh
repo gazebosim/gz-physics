@@ -33,8 +33,8 @@ namespace ignition
       class PrivateOperationalSpaceController;
 
       class OperationalSpaceController
-          : public virtual ignition::physics::ForwardStep,
-            public virtual ignition::physics::SetState,
+          : public virtual ignition::physics::ForwardStep::Engine<void>,
+            public virtual ignition::physics::SetState::Engine<void>,
             public ignition::physics::CanWriteRequiredData<
                 OperationalSpaceController,
                 ignition::physics::ForwardStep::Output>
@@ -43,8 +43,8 @@ namespace ignition
 
         public: OperationalSpaceController();
 
-        public: void Step(Output &h, ForwardStep::State &x,
-                          const Input &u) override;
+        public: void Step(ForwardStep::Output &h, ForwardStep::State &x,
+                          const ForwardStep::Input &u) override;
 
         public: void SetStateTo(const SetState::State &x) override;
 

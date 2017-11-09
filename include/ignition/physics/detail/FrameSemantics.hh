@@ -25,9 +25,9 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
+    template <typename FeatureType>
     template <typename FQ>
-    typename FQ::Quantity FrameSemantics::Engine<_Scalar, _Dim>::Resolve(
+    typename FQ::Quantity FrameSemanticsBase::Engine<FeatureType>::Resolve(
         const FQ &_quantity,
         const FrameID _relativeTo,
         const FrameID _inCoordinatesOf) const
@@ -114,18 +114,18 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
+    template <typename FeatureType>
     template <typename FQ>
-    typename FQ::Quantity FrameSemantics::Engine<_Scalar, _Dim>::Resolve(
+    typename FQ::Quantity FrameSemanticsBase::Engine<FeatureType>::Resolve(
         const FQ &_quantity, const FrameID _relativeTo) const
     {
       return this->Resolve(_quantity, _relativeTo, _relativeTo);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
+    template <typename FeatureType>
     template <typename FQ>
-    FQ FrameSemantics::Engine<_Scalar, _Dim>::Reframe(
+    FQ FrameSemanticsBase::Engine<FeatureType>::Reframe(
         const FQ &_quantity, const FrameID _withRespectTo) const
     {
       return FQ(_withRespectTo,
@@ -133,8 +133,8 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameID FrameSemantics::Engine<_Scalar, _Dim>::SpawnFrameID(
+    template <typename FeatureType>
+    FrameID FrameSemanticsBase::Engine<FeatureType>::SpawnFrameID(
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref) const
     {
@@ -142,25 +142,25 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameID FrameSemantics::Object<_Scalar, _Dim>::GetFrameID() const
+    template <typename FeatureType>
+    FrameID FrameSemanticsBase::Object<FeatureType>::GetFrameID() const
     {
       return this->engine->SpawnFrameID(
-            this->BasicObject::ObjectID(),
-            this->BasicObject::ObjectReference());
+            this->BasicObject<FeatureType>::ObjectID(),
+            this->BasicObject<FeatureType>::ObjectReference());
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    auto FrameSemantics::Object<_Scalar, _Dim>::FrameDataRelativeTo(
+    template <typename FeatureType>
+    auto FrameSemanticsBase::Object<FeatureType>::FrameDataRelativeTo(
         const FrameID &_relativeTo) const -> FrameData
     {
       return this->FrameDataRelativeTo(_relativeTo, _relativeTo);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    auto FrameSemantics::Object<_Scalar, _Dim>::FrameDataRelativeTo(
+    template <typename FeatureType>
+    auto FrameSemanticsBase::Object<FeatureType>::FrameDataRelativeTo(
         const FrameID &_relativeTo,
         const FrameID &_inCoordinatesOf) const -> FrameData
     {
@@ -171,26 +171,26 @@ namespace ignition
       // The resulting FrameData will be equivalent to resolving this frame in
       // terms of the input frames.
       return this->engine->Resolve(
-            RelativeFrameData<_Scalar, _Dim>(this->GetFrameID()),
+            RelativeFrameData<Scalar, Dim>(this->GetFrameID()),
             _relativeTo, _inCoordinatesOf);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameSemantics::Object<_Scalar, _Dim>::operator FrameID() const
+    template <typename FeatureType>
+    FrameSemanticsBase::Object<FeatureType>::operator FrameID() const
     {
       return this->GetFrameID();
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameSemantics::Object<_Scalar, _Dim>::Object()
-      : engine(dynamic_cast<FrameSemantics::Engine<_Scalar, _Dim> *const>(
-                  this->BasicObject::EngineReference()))
+    template <typename FeatureType>
+    FrameSemanticsBase::Object<FeatureType>::Object()
+      : engine(dynamic_cast<FrameSemanticsBase::Engine<FeatureType> *const>(
+                  this->BasicObject<FeatureType>::EngineReference()))
     {
-      assert(engine && "[FrameSemantics::Object] Could not find a reference "
-                       "to the necessary engine feature. This should never "
-                       "happen! Please report this bug!\n");
+      IGN_ASSERT(engine, "[FrameSemantics::Object] Could not find a reference "
+                         "to the necessary engine feature. This should never "
+                         "happen! Please report this bug!\n");
     }
   }
 }

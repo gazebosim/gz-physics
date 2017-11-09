@@ -26,7 +26,7 @@
 
 #include <ignition/math/Rand.hh>
 
-using ignition::physics::CompleteFrameSemantics;
+using ignition::physics::FrameSemantics;
 using ignition::physics::FrameData;
 using ignition::physics::FrameID;
 using ignition::physics::RelativeFrameData;
@@ -36,6 +36,14 @@ using ignition::physics::LinearVector;
 using ignition::physics::AngularVector;
 
 using ignition::math::Rand;
+
+/////////////////////////////////////////////////
+template <typename _Scalar, std::size_t _Dim>
+struct FeatureType
+{
+  public: using Scalar = _Scalar;
+  public: enum { Dim = _Dim };
+};
 
 /////////////////////////////////////////////////
 template <typename Scalar, std::size_t Dim>
@@ -74,18 +82,21 @@ class EngineJoint
 /////////////////////////////////////////////////
 template <typename Scalar, std::size_t Dim>
 class TestFrameSemantics final
-    : public CompleteFrameSemantics::Engine<Scalar, Dim>
+    : public FrameSemantics::Engine<FeatureType<Scalar, Dim>>
 {
   public: using EngineLink = ::EngineLink<Scalar, Dim>;
   public: using EngineJoint = ::EngineLink<Scalar, Dim>;
   public: using FrameData = ::FrameData<Scalar, Dim>;
 
+  public: using EngineBase =
+      ignition::physics::Feature::Engine<FeatureType<Scalar, Dim>>;
+
   /////////////////////////////////////////////////
   public: class Link
-    : public virtual CompleteFrameSemantics::Link<Scalar, Dim>
+    : public virtual FrameSemantics::Link<FeatureType<Scalar, Dim>>
   {
     public: Link(
-        ignition::physics::Feature::Engine *const _engine,
+        EngineBase *const _engine,
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref)
       : Link::BasicObject(_engine, _id, _ref)
@@ -96,10 +107,10 @@ class TestFrameSemantics final
 
   /////////////////////////////////////////////////
   public: class Joint
-    : public virtual CompleteFrameSemantics::Joint<Scalar, Dim>
+    : public virtual FrameSemantics::Joint<FeatureType<Scalar, Dim>>
   {
     public: Joint(
-        ignition::physics::Feature::Engine *const _engine,
+        EngineBase *const _engine,
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref)
       : Joint::BasicObject(_engine, _id, _ref)

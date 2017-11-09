@@ -41,8 +41,11 @@ namespace ignition
     ///
     /// Examples of proxy objects are the Link class, Joint class, and Model
     /// class.
+    template <typename FeatureType>
     class IGNITION_PHYSICS_VISIBLE BasicObject
     {
+      public: using Engine = typename Feature::Engine<FeatureType>;
+
       /// \brief Get the unique object ID of this Link
       public: std::size_t ObjectID() const;
 
@@ -54,10 +57,10 @@ namespace ignition
       /// Object features (a.k.a. classes that inherit the BasicObject type)
       /// will use dynamic_cast on this reference to obtain a reference to the
       /// engine feature that it needs in order to function.
-      protected: Feature::Engine *EngineReference();
+      protected: Engine *EngineReference();
 
       /// \brief Const-qualified version of EngineReference
-      protected: const Feature::Engine *EngineReference() const;
+      protected: const Engine *EngineReference() const;
 
       /// \brief Constructor for the BasicObject.
       ///
@@ -74,7 +77,7 @@ namespace ignition
       /// working as intended. If _features is a nullptr, that would also
       /// indicate that the construction procedure is not working as intended.
       protected: BasicObject(
-        Feature::Engine *const _engine = nullptr,
+        Engine *const _engine = nullptr,
         const std::size_t _id = std::numeric_limits<std::size_t>::max(),
         const std::shared_ptr<const void> &_ref = nullptr);
 
@@ -85,9 +88,11 @@ namespace ignition
       protected: std::unique_ptr<Implementation> pimpl;
 
       /// \brief Virtual destructor
-      public: virtual ~BasicObject();
+      public: virtual ~BasicObject() = default;
     };
   }
 }
+
+#include <ignition/physics/detail/BasicObject.hh>
 
 #endif

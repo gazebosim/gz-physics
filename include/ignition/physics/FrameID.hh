@@ -25,7 +25,7 @@ namespace ignition
   namespace physics
   {
     // Forward declaration
-    class FrameSemantics;
+    class FrameSemanticsBase;
 
     /////////////////////////////////////////////////
     /// \brief Container for specifying Frame IDs. We do not want to use a
@@ -85,7 +85,7 @@ namespace ignition
         const std::shared_ptr<const void> &_ref);
 
       // Friendship declaration
-      friend class FrameSemantics;
+      friend class FrameSemanticsBase;
 
       /// \brief Unique identifying integer that indicates which frame this
       /// FrameID is referencing.

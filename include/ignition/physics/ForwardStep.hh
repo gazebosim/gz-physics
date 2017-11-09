@@ -24,6 +24,8 @@
 #include <ignition/physics/SpecifyData.hh>
 #include <ignition/physics/CompositeDataMacros.hh>
 
+#include <ignition/physics/Feature.hh>
+
 namespace ignition
 {
   namespace physics
@@ -149,10 +151,8 @@ namespace ignition
 
 
     // ---------------- ForwardStep Interface -----------------
-    class IGNITION_PHYSICS_VISIBLE ForwardStep
+    class IGNITION_PHYSICS_VISIBLE ForwardStep : public virtual Feature
     {
-      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep)
-
       public: using Input = ExpectData<
               ApplyExternalForceTorques,
               ApplyGeneralizedForces,
@@ -165,22 +165,28 @@ namespace ignition
 
       public: using State = CompositeData;
 
-      public: virtual void Step(Output &h, State &x, const Input &u) = 0;
+      template <typename FeatureType>
+      class Engine : public virtual Feature::Engine<FeatureType>
+      {
+        public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep)
 
-      public: virtual ~ForwardStep() = default;
+        public: virtual void Step(Output &h, State &x, const Input &u) = 0;
+      };
     };
 
 
     // ---------------- SetState Interface -----------------
-    class SetState
+    class IGNITION_PHYSICS_VISIBLE SetState : public virtual Feature
     {
-      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::SetState)
-
       public: using State = CompositeData;
 
-      public: virtual void SetStateTo(const State &x) = 0;
+      template <typename FeatureType>
+      class Engine : public virtual Feature::Engine<FeatureType>
+      {
+        public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::SetState)
 
-      public: virtual ~SetState() = default;
+        public: virtual void SetStateTo(const State &x) = 0;
+      };
     };
   }
 }

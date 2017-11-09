@@ -27,8 +27,8 @@
 
 
 using PhysicsPlugin = ignition::common::SpecializedPluginPtr<
-    ignition::physics::ForwardStep,
-    ignition::physics::SetState>;
+    ignition::physics::ForwardStep::Engine<void>,
+    ignition::physics::SetState::Engine<void>>;
 
 /////////////////////////////////////////////////
 TEST(OperationalSpaceController, Step)
@@ -47,8 +47,8 @@ TEST(OperationalSpaceController, Step)
 
   ASSERT_TRUE(plugin);
 
-  ignition::physics::ForwardStep *step =
-      plugin->GetInterface<ignition::physics::ForwardStep>();
+  ignition::physics::ForwardStep::Engine<void> *step =
+      plugin->GetInterface<ignition::physics::ForwardStep::Engine<void>>();
 
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;
@@ -133,8 +133,8 @@ TEST(OperationalSpaceController, Step)
   EXPECT_LT(err, 1e-3);
 
   // Go back to the bookmarked state and run through the steps again.
-  ignition::physics::SetState *setState =
-      plugin->GetInterface<ignition::physics::SetState>();
+  ignition::physics::SetState::Engine<void> *setState =
+      plugin->GetInterface<ignition::physics::SetState::Engine<void>>();
   ASSERT_TRUE(setState);
   setState->SetStateTo(bookmark);
 

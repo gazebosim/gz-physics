@@ -15,14 +15,33 @@
  *
 */
 
-#include <ignition/common/PluginMacros.hh>
+#ifndef IGNITION_PHYSICS_UPDATE_HH_
+#define IGNITION_PHYSICS_UPDATE_HH_
 
-#include "OperationalSpaceController.hh"
+#include <ignition/physics/Feature.hh>
+
+namespace ignition
+{
+  namespace physics
+  {
+    // Forward declaration of update feature types
+    class AutomaticUpdate;
+    class ManualUpdate;
 
 
-IGN_COMMON_BEGIN_ADDING_PLUGINS
-  IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::OperationalSpaceController,
-                        ignition::physics::ForwardStep::Engine<void>)
-  IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::OperationalSpaceController,
-                        ignition::physics::SetState::Engine<void>)
-IGN_COMMON_FINISH_ADDING_PLUGINS
+    class IGNITION_PHYSICS_VISIBLE AutomaticUpdate
+        : public virtual FeatureWithConflicts<ManualUpdate>
+    {
+
+    };
+
+
+    class IGNITION_PHYSICS_VISIBLE ManualUpdate
+        : public virtual FeatureWithConflicts<AutomaticUpdate>
+    {
+
+    };
+  }
+}
+
+#endif

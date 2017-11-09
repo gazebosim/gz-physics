@@ -35,17 +35,19 @@ namespace ignition
     /// ignition-physics engines to provide users with easy ways to express
     /// kinematic quantities in terms of frames and compute their values in
     /// terms of arbitrary frames of reference.
-    class IGNITION_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE FrameSemanticsBase : public virtual Feature
     {
       // Forward declaration
-      public: template <typename, std::size_t> class Object;
+      public: template <typename> class Object;
 
       /// \brief This class defines the engine interface that provides the
       /// FrameSemantics feature.
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual Feature::Engine
+      public: template <typename FeatureType>
+      class Engine : public virtual Feature::Engine<FeatureType>
       {
-        public: using FrameData = ignition::physics::FrameData<_Scalar, _Dim>;
+        public: using Scalar = typename FeatureType::Scalar;
+        public: enum { Dim = FeatureType::Dim };
+        public: using FrameData = ignition::physics::FrameData<Scalar, Dim>;
 
         /// \brief Get the current 3D transformation of the specified frame with
         /// respect to the WorldFrame.
@@ -107,13 +109,15 @@ namespace ignition
             const std::size_t _id,
             const std::shared_ptr<const void> &_ref) const;
 
-        template <typename, std::size_t> friend class FrameSemantics::Object;
+        template <typename, std::size_t> friend class FrameSemanticsBase::Object;
       };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Object : public virtual BasicObject
+      public: template <typename FeatureType>
+      class Object : public virtual BasicObject<FeatureType>
       {
-        public: using FrameData = ignition::physics::FrameData<_Scalar, _Dim>;
+        public: using Scalar = typename FeatureType::Scalar;
+        public: enum { Dim = FeatureType::Dim };
+        public: using FrameData = ignition::physics::FrameData<Scalar, Dim>;
 
         /// \brief Get a FrameID for this object
         public: FrameID GetFrameID() const;
@@ -143,55 +147,55 @@ namespace ignition
 
         /// \brief Pointer to the FrameSemantics::Engine interface that allows
         /// this feature to work.
-        private: const FrameSemantics::Engine<_Scalar, _Dim> *const engine;
+        private: const FrameSemanticsBase::Engine<FeatureType> *const engine;
       };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Link objects.
     class IGNITION_PHYSICS_VISIBLE LinkFrameSemantics
-        : public virtual FrameSemantics
+        : public virtual FrameSemanticsBase
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename FeatureType>
+      class Engine : public virtual FrameSemanticsBase::Engine<FeatureType> { };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Link : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
+      public: template <typename FeatureType>
+      class Link : public virtual FrameSemanticsBase::Object<FeatureType> { };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Joint objects.
     class IGNITION_PHYSICS_VISIBLE JointFrameSemantics
-        : public virtual FrameSemantics
+        : public virtual FrameSemanticsBase
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename FeatureType>
+      class Engine : public virtual FrameSemanticsBase::Engine<FeatureType> { };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Joint : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
+      public: template <typename FeatureType>
+      class Joint : public virtual FrameSemanticsBase::Object<FeatureType> { };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Model objects.
     class IGNITION_PHYSICS_VISIBLE ModelFrameSemantics
-        : public virtual FrameSemantics
+        : public virtual FrameSemanticsBase
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename FeatureType>
+      class Engine : public virtual FrameSemanticsBase::Engine<FeatureType> { };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Model : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
+      public: template <typename FeatureType>
+      class Model : public virtual FrameSemanticsBase::Object<FeatureType> { };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to all objects.
-    class IGNITION_PHYSICS_VISIBLE CompleteFrameSemantics
+    class IGNITION_PHYSICS_VISIBLE FrameSemantics
         : public virtual LinkFrameSemantics,
           public virtual JointFrameSemantics,
           public virtual ModelFrameSemantics
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename FeatureType>
+      class Engine : public virtual FrameSemanticsBase::Engine<FeatureType> { };
     };
   }
 }
