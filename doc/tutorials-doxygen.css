@@ -6,7 +6,81 @@ html, body{
   color: #444;
 }
 
-.project_title {
+.mdl-layout__header-row {
+  padding-left: 10px;
+}
+
+.mdl-layout-title {
+  font-weight: 300;
+  font-size: 1.8em;
+  padding-left: 20px;
+}
+
+
+#side-nav {
+  display:inline-block;
+  width: 200px;
+  overflow:hidden;
+  min-height: 100%;
+  height: 100%;
+  z-index:200;
+  background-color: #ffffff;
+  color: #424242;
+  padding-top: 10px;
+  padding-left: 10px;
+}
+
+#doc-content {
+  flex-grow: 1;
+  display: inline-block;
+  padding-left: 40px;
+  padding-right: 40px;
+  background-color: #ffffff;
+}
+
+.main-content {
+  display: flex;
+}
+
+#nav-tree-contents  ul {
+  padding-left: 5px;
+}
+
+a {
+  color: #1565c0;
+  font-weight: normal;
+}
+
+a:hover {
+  color: #f57c00;
+}
+
+#nav-tree-contents a {
+  color: #1565c0;
+  font-weight: normal;
+}
+
+#nav-tree-contents a:hover {
+  color: #f57c00;
+}
+
+.children_ul {
+  padding-left: 10px;
+}
+
+blockquote {
+  margin-left: 24px;
+  line-height: 24px;
+  margin-bottom: 24px;
+  font-size: 1em;
+  font-style: normal;
+}
+
+blockquote::before {
+  content: ""
+}
+blockquote::after {
+  content: ""
 }
 
 header h1 {
@@ -82,8 +156,10 @@ div.header
 
 div.headertitle
 {
-  padding-top: 40px;
+  padding-top: 0px;
 	padding-right: 0px;
+  font-weight: 300;
+  font-size: 1.5em;
 }
 div.title
 {
@@ -94,9 +170,13 @@ div.title
 }
 
 div.contents {
+  padding: 0px;
+  /* width: 100%;*/
+  /*
   padding-left: 20px;
   padding-right: 20px;
   padding-top: 0px;
+  */
 }
 
 ul {
@@ -266,10 +346,11 @@ table.mlabels {
 
 .fragment {
 	font-family: monospace, fixed;
-	font-size: 105%;
+	font-size: 90%;
   border: 1px solid #bdbdbd;
   padding: 10px;
   margin: 20px;
+  overflow-x: auto;
 }
 
 pre.fragment {
@@ -449,5 +530,3 @@ td.desc {
 .inherit {
         display: none;
 }
-
-

@@ -11,6 +11,8 @@ find_package(ignition-cmake0 REQUIRED)
 #============================================================================
 ign_configure_project(physics 0.1.0)
 
+# Configure documentation uploader
+configure_file("tools/upload_doc.sh.in" ${CMAKE_BINARY_DIR}/upload_doc.sh @ONLY)
 
 #============================================================================
 # Set project-specific options
@@ -35,7 +37,6 @@ set(IGN_COMMON_VER 0)
 ign_find_package(ignition-common${IGN_COMMON_VER} REQUIRED)
 
 message(STATUS "-------------------------------------------\n")
-
 
 #============================================================================
 # Configure the build
