@@ -1,36 +1,32 @@
+# TODO: When the Components branch of ign-cmake is ready, use that instead of
+# manually creating this component.
 
-file(GLOB source_files "*.cc")
-list(SORT source_files)
+set(ODE_VER 0)
+find_package(ODE ${ODE_VER})
+if(HAVE_ODE)
+  message(STATUS "ODE found")
+else()
+  message(STATUS "Looking for ODE - not found")
+  message(STATUS "ODE is required for ignition-physics-ode, "
+    "but could not be found. We will not build ignition-physics-ode.")
+  return()
+endif()
 
-file(GLOB gtest_source_files "*_TEST.cc")
-list(SORT gtest_source_files)
-
-set(sources "")
-set(gtest_sources "")
-
-# Remove tests from source files and collect them into the list of tests
-foreach(test_file ${gtest_source_files})
-
-  list(REMOVE_ITEM source_files ${test_file})
-
-  get_filename_component(test ${test_file} NAME)
-  list(APPEND gtest_sources ${test})
-
-endforeach(test_file)
-
-# Collect the source file names
-foreach(source_file ${source_files})
-
-  get_filename_component(source ${source_file} NAME)
-  list(APPEND sources ${source})
-
-endforeach(source_file)
+ign_get_libsources_and_unittests(sources gtest_sources)
 
 get_filename_component(lib_name ${CMAKE_CURRENT_LIST_DIR} NAME)
-ign_add_library(${lib_name} ${sources})
+
+add_library(${lib_name} ${sources})
+
+if(GCC)
+  # This is to work around a known bug in GCC:
+  # https://svn.boost.org/trac10/ticket/9240
+  # If that bug gets resolved, then this can be removed.
+  target_compile_options(${lib_name} PRIVATE -fext-numeric-literals)
+endif()
 
 target_link_libraries(${lib_name}
-  ignition-physics
+  ignition-physics0
   ${ODE_LIBRARY}
   pthread
   ${IGNITION-COMMON_LIBRARIES})
@@ -39,12 +35,11 @@ target_include_directories(${lib_name} PRIVATE
   ${ODE_INCLUDE_DIR}
   ${IGNITION-COMMON_INCLUDE_DIRS})
 
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
-
-ign_install_library(${lib_name} ${lib_name})
-
 # This allows us to access utils/test_config.h
 include_directories(${PROJECT_BINARY_DIR})
 
-set(TEST_TYPE "PLUGIN")
-ign_build_tests(${gtest_sources})
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+
+ign_build_tests(
+  TYPE PLUGIN
+  SOURCES ${gtest_sources})

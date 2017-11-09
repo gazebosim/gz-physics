@@ -4,8 +4,6 @@ include (CheckCXXSourceCompiles)
 include (${project_cmake_dir}/FindOS.cmake)
 include (FindPkgConfig)
 
-include (${project_cmake_dir}/FindODE.cmake)
-
 ########################################
 # Find ignition math
 set(IGNITION-MATH_REQUIRED_MAJOR_VERSION 3)

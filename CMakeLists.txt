@@ -20,6 +20,7 @@ ign_configure_project(physics 0.1.0)
 # Build all possible plugins by default.
 # Users may override this by changing these variables.
 option(BUILD_IGNITION_PHYSICS_DART "Build the DART example physics engine plugin" TRUE)
+option(BUILD_IGNITION_PHYSICS_ODE "Build the ODE example physics engine plugin" TRUE)
 
 
 #============================================================================
@@ -49,6 +50,9 @@ if(BUILD_IGNITION_PHYSICS_DART)
   add_subdirectory(ignition-physics-dart)
 endif()
 
+if(BUILD_IGNITION_PHYSICS_ODE)
+  add_subdirectory(ignition-physics-ode)
+endif()
 
 #============================================================================
 # Create package information
