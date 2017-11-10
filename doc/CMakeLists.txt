@@ -7,7 +7,7 @@ if (DOXYGEN_FOUND)
   configure_file(${CMAKE_SOURCE_DIR}/doc/tutorials.in
                  ${CMAKE_BINARY_DIR}/tutorials.dox @ONLY)
 
-  add_custom_target(doc
+  add_custom_target(doc ALL
     # Generate the API documentation
     ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/ignition.dox
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
