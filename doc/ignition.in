@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = Ignition Physics
+PROJECT_NAME           = "Ignition Physics"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -2081,7 +2081,7 @@ SKIP_FUNCTION_MACROS   = NO
 
 TAGFILES               = "@IGNITION-MATH_DOXYGEN_TAGFILE@ = @IGNITION-MATH_API_URL@" \
                          "@IGNITION-COMMON_DOXYGEN_TAGFILE@ = @IGNITION-COMMON_API_URL@" \
-                         "@CMAKE_SOURCE_DIR@/doc/cppreference.tag.xml = http://en.cppreference.com/w/cpp"
+                         "@CMAKE_SOURCE_DIR@/doc/cppreference.tag.xml = http://en.cppreference.com/w"
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to
