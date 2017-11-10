@@ -65,7 +65,7 @@ namespace ignition
         /// \brief Joint ID, joint[0] is the front wheel
         public: static dJointID joint[3];
         /// \brief Contact group ID
-        public: static dJointGroupID contactGroup;
+        public: static dJointGroupID contactgroup;
         /// \brief GeomID for the ground, which the buggy collides with
         public: static dGeomID ground;
         /// \brief Car space
@@ -102,7 +102,7 @@ namespace ignition
       dSpaceID self::space;
       dBodyID self::body[4];
       dJointID self::joint[3];
-      dJointGroupID self::contactGroup;
+      dJointGroupID self::contactgroup;
       dGeomID self::ground;
       dSpaceID self::carSpace;
       dGeomID self::box[1];
@@ -118,7 +118,7 @@ namespace ignition
         dInitODE2(0);
         self::world = dWorldCreate();
         space = dHashSpaceCreate(0);
-        contactGroup = dJointGroupCreate(0);
+        contactgroup = dJointGroupCreate(0);
         dWorldSetGravity(self::world, 0, 0, -0.5);
         ground = dCreatePlane(space, 0, 0, 1, 0);
 
@@ -217,7 +217,7 @@ namespace ignition
             contact[i].surface.slip2 = 0.1;
             contact[i].surface.soft_erp = 0.5;
             contact[i].surface.soft_cfm = 0.3;
-            dJointID c = dJointCreateContact(world, contactGroup, &contact[i]);
+            dJointID c = dJointCreateContact(world, contactgroup, &contact[i]);
             dJointAttach(c, dGeomGetBody(contact[i].geom.g1),
                 dGeomGetBody(contact[i].geom.g2));
           }
@@ -250,7 +250,7 @@ namespace ignition
         dWorldStep(world, 0.05);
 
         // remove all contact joints
-        dJointGroupEmpty(contactGroup);
+        dJointGroupEmpty(contactgroup);
       }
 
       void self::SetState(const SetState::State &x)
@@ -305,6 +305,14 @@ namespace ignition
 
       BuggyDemoController::~BuggyDemoController()
       {
+        dGeomDestroy(self::box[0]);
+        dGeomDestroy(self::sphere[0]);
+        dGeomDestroy(self::sphere[1]);
+        dGeomDestroy(self::sphere[2]);
+        dJointGroupDestroy(self::contactgroup);
+        dSpaceDestroy(self::space);
+        dWorldDestroy(self::world);
+        dCloseODE();
       }
 
       BuggyDemoController::BuggyDemoController()

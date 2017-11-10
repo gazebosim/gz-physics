@@ -89,7 +89,7 @@ TEST(BuggyDemoController, Step)
   EXPECT_NEAR(wheelPose.pose.Pos().X(), chPose.pose.Pos().X(), .35);
   // Expect front wheel position Y() is near 0, since steer = 0
   EXPECT_NEAR(wheelPose.pose.Pos().Y(), .0, 1e-3);
-  // Expect difference of front wheel and shassis position Z() is near
+  // Expect difference of front wheel and chassis position Z() is near
   // (0.5*height-wheelradius = 0.07), the error for this one is larger
   // due to the contact with ground.
   EXPECT_NEAR(wheelPose.pose.Pos().Z(), chPose.pose.Pos().Z()-0.07, .1);
