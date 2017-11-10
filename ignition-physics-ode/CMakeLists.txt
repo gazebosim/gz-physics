@@ -27,7 +27,7 @@ endif()
 
 target_link_libraries(${lib_name}
   ignition-physics0
-  ${ODE_LIBRARY}
+  ${ODE_LIBRARIES}
   pthread
   ${IGNITION-COMMON_LIBRARIES})
 
