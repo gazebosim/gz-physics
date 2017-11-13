@@ -15,7 +15,6 @@ pipelines:
           - apt-get update
           - apt-get -y install
             libignition-cmake-dev
-            # libignition-common-dev
             libignition-math4-dev
           # Build ignition common from source until CMakeRefactor and PluginPtrSemantics are merged
           - apt-get -y install
