@@ -5,7 +5,7 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial
+          - apt-get -y install cmake build-essential lcov curl mercurial software-properties-common
           - gcc -v
           - g++ -v
           # Ignition dependencies
@@ -29,6 +29,12 @@ pipelines:
           - cmake ..
           - make install
           - cd ../..
+          # DARTsim
+          - apt-add-repository ppa:dartsim
+          - apt-get update
+          - apt-get install
+            libdart6-dev
+            libdart6-utils-urdf-dev
           # Ignition physics
           - mkdir build
           - cd build
