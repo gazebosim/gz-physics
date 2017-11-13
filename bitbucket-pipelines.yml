@@ -15,8 +15,15 @@ pipelines:
           - apt-get update
           - apt-get -y install
             libignition-cmake-dev
-            libignition-common-dev
             libignition-math4-dev
+          # Build ignition common from source until CMakeRefactor and PluginPtrSemantics are merged
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b tmp_ign_physics
+          - cd ign-common
+          - mkdir build
+          - cd build
+          - cmake ..
+          - make install
+          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
