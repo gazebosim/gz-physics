@@ -30,7 +30,7 @@ pipelines:
           - make install
           - cd ../..
           # DARTsim
-          - apt-add-repository ppa:dartsim
+          - apt-add-repository -y ppa:dartsim
           - apt-get update
           - apt-get install
             libdart6-dev
