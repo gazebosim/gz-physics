@@ -18,7 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
 #define IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
 
-#include "ignition/physics/CompositeData.hh"
+#include <ignition/physics/CompositeData.hh>
+#include <ignition/physics/TemplateHelpers.hh>
 
 #define IGNITION_PHYSICS_CONST_GET_ERROR \
   "Cannot use the const-qualified Get<Data>() function if " \
@@ -37,9 +38,6 @@ namespace ignition
 {
   namespace physics
   {
-    // TODO(MXG): Consider putting this in a common header
-    template <class T> struct type { };
-
     // Forward declarations
     template <typename... DataTypes> class ExpectData;
     template <typename... DataTypes> class RequireData;

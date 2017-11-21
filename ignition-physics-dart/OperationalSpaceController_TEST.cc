@@ -49,6 +49,7 @@ TEST(OperationalSpaceController, Step)
 
   ignition::physics::ForwardStep::Engine<void> *step =
       plugin->GetInterface<ignition::physics::ForwardStep::Engine<void>>();
+  ASSERT_TRUE(step);
 
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;

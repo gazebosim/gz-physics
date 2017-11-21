@@ -151,18 +151,59 @@ TEST(FeatureList_TEST, Conflicts)
           FEATURE_AND_ITS_LISTS(Conflict1),
           FEATURE_AND_ITS_LISTS(Conflict2),
           FEATURE_AND_ITS_LISTS(Conflict3)>();
-
-  struct FT
-  {
-    using Scalar = double;
-    enum { Dim = 3 };
-  };
-
-//  using ShouldNotCompile = FeatureList<Conflict1List2>;
-//  ShouldNotCompile::Link<FT> link;
-////  Conflict1List2::Link<FT> link;
 }
 
+class RequiresFrameSemantics
+    : public virtual FeatureWithRequirements<FrameSemantics> { };
+
+class RequiresForwardStepAndSetState
+    : public virtual FeatureWithRequirements<ForwardStep, SetState> { };
+
+TEST(FeatureList_TEST, Requirements)
+{
+  // Note: we need an extra set of parentheses in this EXPECT_TRUE statements
+  // to prevent the comma of the template argument from being parsed as though
+  // it is separating two macro arguments.
+
+  // These tests are making sure that required features are getting added to the
+  // FeatureList where they're needed.
+
+  using List1 = FeatureList<RequiresFrameSemantics>;
+  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List1>::value) );
+  EXPECT_FALSE( (std::is_base_of<ForwardStep, List1>::value) );
+  EXPECT_FALSE( (std::is_base_of<SetState, List1>::value) );
+
+  using List2 = FeatureList<RequiresForwardStepAndSetState>;
+  EXPECT_TRUE( (std::is_base_of<ForwardStep, List2>::value) );
+  EXPECT_TRUE( (std::is_base_of<SetState, List2>::value) );
+
+  using List3 = FeatureList<RequiresFrameSemantics,
+                            RequiresForwardStepAndSetState>;
+  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List3>::value) );
+  EXPECT_TRUE( (std::is_base_of<ForwardStep, List3>::value) );
+  EXPECT_TRUE( (std::is_base_of<SetState, List3>::value) );
+
+  using List4 = FeatureList<
+      Conflict1, Conflict2, Conflict3,
+      RequiresFrameSemantics,
+      RequiresForwardStepAndSetState>;
+  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List4>::value) );
+  EXPECT_TRUE( (std::is_base_of<ForwardStep, List4>::value) );
+  EXPECT_TRUE( (std::is_base_of<SetState, List4>::value) );
+
+  using List5 = FeatureList<
+      RequiresFrameSemantics,
+      RequiresForwardStepAndSetState,
+      Conflict1, Conflict2, Conflict3>;
+  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List5>::value) );
+  EXPECT_TRUE( (std::is_base_of<ForwardStep, List5>::value) );
+  EXPECT_TRUE( (std::is_base_of<SetState, List5>::value) );
+
+  using List6 = FeatureList<Conflict1, Conflict2, Conflict3, List1>;
+  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List6>::value) );
+  EXPECT_FALSE( (std::is_base_of<ForwardStep, List6>::value) );
+  EXPECT_FALSE( (std::is_base_of<SetState, List6>::value) );
+}
 
 int main(int argc, char **argv)
 {

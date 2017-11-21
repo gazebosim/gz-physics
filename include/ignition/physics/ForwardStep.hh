@@ -168,7 +168,7 @@ namespace ignition
       template <typename FeatureType>
       class Engine : public virtual Feature::Engine<FeatureType>
       {
-        public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep)
+        public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep::Engine<void>)
 
         public: virtual void Step(Output &h, State &x, const Input &u) = 0;
       };
@@ -183,7 +183,7 @@ namespace ignition
       template <typename FeatureType>
       class Engine : public virtual Feature::Engine<FeatureType>
       {
-        public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::SetState)
+        public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::SetState::Engine<void>)
 
         public: virtual void SetStateTo(const State &x) = 0;
       };

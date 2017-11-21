@@ -109,7 +109,7 @@ namespace ignition
             const std::size_t _id,
             const std::shared_ptr<const void> &_ref) const;
 
-        template <typename, std::size_t> friend class FrameSemanticsBase::Object;
+        template <typename> friend class FrameSemanticsBase::Object;
       };
 
       public: template <typename FeatureType>

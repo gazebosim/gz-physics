@@ -21,34 +21,76 @@
 #include <type_traits>
 
 #include <ignition/physics/Feature.hh>
+#include <ignition/physics/TemplateHelpers.hh>
 
 namespace ignition
 {
   namespace physics
   {
+    /////////////////////////////////////////////////
     /// \brief This default definition of FeatureList will only get called when
-    /// the list of Features is empty. Therefore, we just provide placeholder
+    /// the list of Features is empty. Therefore, we just have it inherit the
+    /// completely generic Feature base class.
     template <typename... Features>
     struct FeatureList : public virtual Feature { };
 
+    namespace detail
+    {
+      /////////////////////////////////////////////////
+      /// \brief FeatureListHelper is used to help the FeatureList class to
+      /// pull in the RequiredFeatures of the Features that are given to it.
+      /// When a Feature has no RequiredFeatures, the RequiredFeatures field is
+      /// a void type. When that occurs, this default definition of
+      /// FeatureListHelper will be skipped for the next specialized definition.
+      template <typename F1, typename F2>
+      struct FeatureListHelper : public virtual FeatureList<F1, F2> { };
+
+      /////////////////////////////////////////////////
+      /// \brief This specialized definition of FeatureListHelper will be called
+      /// when the FeatureList class is given a Feature that does not have any
+      /// RequiredFeatures. This specialization will simply ignore the void type
+      /// so that it does not pollute the inheritance structure.
+      template <typename F2>
+      struct FeatureListHelper<void, F2> : public virtual F2 { };
+
+      template <bool same, typename ClassA, typename ClassB>
+      struct CombineIfDifferentImpl
+          : public virtual ClassA,
+            public virtual ClassB { };
+
+      template <typename ClassA, typename ClassB>
+      struct CombineIfDifferentImpl<true, ClassA, ClassB>
+          : public virtual ClassA { };
+
+
+      template <typename ClassA, typename ClassB>
+      struct CombineIfDifferent
+          : CombineIfDifferentImpl<
+              std::is_same<ClassA, ClassB>::value, ClassA, ClassB> { };
+    }
+
+    /////////////////////////////////////////////////
     /// \brief This specialization of FeatureList will be called when one or
     /// more features are provided as template arguments. We aggregate the APIs
     /// of the Engine, Link, Joint, and Model of all the features which are
     /// given.
-    template <typename _Feature, typename... RemainingFeatures>
-    struct FeatureList<_Feature, RemainingFeatures...>
-        : public virtual _Feature,
-          public virtual FeatureList<
-            typename _Feature::RequiredFeatures,
-            RemainingFeatures...>
+    template <typename _F1, typename... RemainingFeatures>
+    struct FeatureList<_F1, RemainingFeatures...>
+        : public virtual _F1,
+          public virtual detail::FeatureListHelper<
+                  typename _F1::RequiredFeatures,
+                  FeatureList<RemainingFeatures...> >
     {
-      static_assert(std::is_base_of<Feature, _Feature>::value,
+      static_assert(std::is_base_of<Feature, _F1>::value,
                     "FEATURELIST ERROR: YOU ARE ATTEMPTING TO ADD A CLASS "
                     "WHICH IS NOT A Feature TO A FeatureList! MAKE SURE THAT "
                     "YOUR CLASS VIRTUALLY INHERITS THE Feature BASE CLASS!");
 
-      public: using CurrentFeature = _Feature;
-      public: using NextFeature = FeatureList<RemainingFeatures...>;
+      public: using CurrentFeature = _F1;
+      public: using NextFeature =
+         detail::FeatureListHelper<
+            typename _F1::RequiredFeatures,
+            FeatureList<RemainingFeatures...>>;
 
       public: template <typename FeatureType>
       class Engine
@@ -56,76 +98,78 @@ namespace ignition
             public virtual NextFeature::template Engine<FeatureType> { };
 
       public: template <typename FeatureType>
-      class Link
-          : public virtual CurrentFeature::template Link<FeatureType>,
-            public virtual NextFeature::template Link<FeatureType> { };
+      class Link : public detail::CombineIfDifferent<
+          typename CurrentFeature::template Link<FeatureType>,
+          typename NextFeature::template Link<FeatureType>> { };
 
       public: template <typename FeatureType>
-      class Joint
-          : public virtual CurrentFeature::template Joint<FeatureType>,
-            public virtual NextFeature::template Joint<FeatureType> { };
+      class Joint : public detail::CombineIfDifferent<
+          typename CurrentFeature::template Joint<FeatureType>,
+          typename NextFeature::template Joint<FeatureType>> { };
 
       public: template <typename FeatureType>
-      class Model
-          : public virtual CurrentFeature::template Model<FeatureType>,
-            public virtual NextFeature::template Model<FeatureType> { };
+      class Model : public detail::CombineIfDifferent<
+          typename CurrentFeature::template Model<FeatureType>,
+          typename NextFeature::template Model<FeatureType>> { };
 
-      template <typename SomeFeatureList>
+      template <typename SomeFeatureList, bool AssertNoConflict = false>
       static constexpr bool ConflictsWith()
       {
-        return CurrentFeature::template ConflictsWith<SomeFeatureList>()
-               || NextFeature::template ConflictsWith<SomeFeatureList>();
+        return CurrentFeature::
+                template ConflictsWith<SomeFeatureList, AssertNoConflict>()
+            || NextFeature::
+                template ConflictsWith<SomeFeatureList, AssertNoConflict>();
       }
 
-      static_assert(!CurrentFeature::template ConflictsWith<NextFeature>(),
-        "FEATURELIST ERROR: YOUR FEATURE LIST CONTAINS CONFLICTING FEATURES!");
+    // Make sure the requested FeatureList does not contain any self-conflicts.
+    static_assert(!CurrentFeature::template ConflictsWith<NextFeature, true>(),
+    "FEATURELIST ERROR: YOUR LIST OF FEATURES CONTAINS CONFLICTING FEATURES!");
 
-      static_assert(!NextFeature::template ConflictsWith<CurrentFeature>(),
-        "FEATURELIST ERROR: YOUR FEATURE LIST CONTAINS CONFLICTING FEATURES!");
+    static_assert(!NextFeature::template ConflictsWith<CurrentFeature, true>(),
+    "FEATURELIST ERROR: YOUR LIST OF FEATURES CONTAINS CONFLICTING FEATURES!");
 
-      using RequiredFeatures = FeatureList<
-          typename CurrentFeature::RequiredFeatures,
-          typename NextFeature::RequiredFeatures>;
+
+      // Dev Note (MXG): Whenever a feature gets added to a FeatureList, all of
+      // its required features will also be added to the FeatureList. Therefore,
+      // the FeatureList itself will never have any required features, because
+      // any requirements of the individual features in the list will already
+      // have been added to the list.
+      using RequiredFeatures = void;
     };
 
-    template<>
-    struct FeatureList<void, void> : public virtual Feature { };
-
-    /// \brief This specialization of FeatureList will be called when a listed
-    /// feature does not have any required features. This will also be called
-    /// if someone puts "void" in their FeatureList for some reason.
-    ///
-    /// Effectively, this is gracefully filtering out any instances of "void"
-    /// within a feature list.
-    template <typename... RemainingFeatures>
-    struct FeatureList<void, RemainingFeatures...>
-        : public virtual FeatureList<RemainingFeatures...> { };
-
+    /////////////////////////////////////////////////
     /// \brief The default definition of FeatureWithConflicts only gets called
-    /// when the ConflictingFeatures list is empty. It should simply fallback on
-    /// the default behavior of a blank feature.
+    /// when the ConflictingFeatures list is empty. It should simply fall back
+    /// on the default behavior of a blank feature.
     template <typename... ConflictingFeatures>
     struct FeatureWithConflicts : public virtual Feature { };
 
+    /////////////////////////////////////////////////
     /// \brief This template specialization of FeatureWithConflicts will be
     /// called when one or more features are listed as conflicts.
     template <typename Conflict, typename... RemainingConflicts>
     struct FeatureWithConflicts<Conflict, RemainingConflicts...>
         : public virtual Feature
     {
-      public: template <typename SomeFeatureList>
+      public: template <typename SomeFeatureList,
+                        bool AssertNoConflict = false>
       static constexpr bool ConflictsWith()
       {
-        return std::is_base_of<Conflict, SomeFeatureList>()
+        static_assert(   !AssertNoConflict
+                      || !std::is_base_of<Conflict, SomeFeatureList>::value,
+                      "FEATURE CONFLICT DETECTED");
+
+        return std::is_base_of<Conflict, SomeFeatureList>::value
             || FeatureWithConflicts<RemainingConflicts...>
-                ::template ConflictsWith<SomeFeatureList>();
+                ::template ConflictsWith<SomeFeatureList, AssertNoConflict>();
       }
     };
 
+    /////////////////////////////////////////////////
     /// \brief The FeatureWithRequirements class simply wraps up its required
     /// features in a FeatureList and then sets the RequiredFeatures type.
     template <typename... Features>
-    struct FeatureWithRequirements
+    struct FeatureWithRequirements : public virtual Feature
     {
       public: using RequiredFeatures = FeatureList<Features...>;
     };
