@@ -17,6 +17,7 @@ pipelines:
             libignition-cmake-dev
             libignition-common-dev
             libignition-math4-dev
+            libeigen3-dev
           # Ignition physics
           - mkdir build
           - cd build
