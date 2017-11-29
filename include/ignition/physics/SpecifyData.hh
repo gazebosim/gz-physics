@@ -25,7 +25,7 @@ namespace ignition
   namespace physics
   {
     /// \brief The SpecifyData class allows you to form combinations of data
-    /// specifications. In other words, you can freely mix invokations to
+    /// specifications. In other words, you can freely mix invocations to
     /// RequireData and ExpectData. Example usage:
     ///
     ///     using namespace ignition::physics;
