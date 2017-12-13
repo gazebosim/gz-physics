@@ -31,7 +31,7 @@ target_link_libraries(${lib_name}
   pthread
   ${IGNITION-COMMON_LIBRARIES})
 
-target_include_directories(${lib_name} PRIVATE
+target_include_directories(${lib_name} SYSTEM PRIVATE
   ${ODE_INCLUDE_DIR}
   ${IGNITION-COMMON_INCLUDE_DIRS})
 
