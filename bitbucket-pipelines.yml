@@ -16,19 +16,7 @@ pipelines:
           - apt-get -y install
             libignition-cmake-dev
             libignition-math4-dev
-          # Build ignition common from source until CMakeRefactor and PluginPtrSemantics are merged
-          - apt-get -y install
-            libavdevice-dev
             libignition-common-dev
-          - apt-get -y remove
-            libignition-common-dev
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b tmp_ign_physics
-          - cd ign-common
-          - mkdir build
-          - cd build
-          - cmake ..
-          - make install
-          - cd ../..
           # DARTsim
           - apt-add-repository -y ppa:dartsim
           - apt-get update
