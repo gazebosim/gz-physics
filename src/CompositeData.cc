@@ -25,7 +25,7 @@ namespace ignition
   {
 
     /////////////////////////////////////////////////
-    /// \brief Mark an entry as unqueried and decerement the query counter if
+    /// \brief Mark an entry as unqueried and decrement the query counter if
     /// the entry was originally marked as queried
     static void RemoveQuery(
         const CompositeData::MapOfData::iterator &_it, std::size_t &_numQueries)
