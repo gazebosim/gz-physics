@@ -47,7 +47,7 @@ TEST(BuggyDemoController, Step)
   ASSERT_TRUE(plugin);
 
   ignition::physics::ForwardStep *step =
-      plugin->GetInterface<ignition::physics::ForwardStep>();
+      plugin->QueryInterface<ignition::physics::ForwardStep>();
 
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;
@@ -106,7 +106,7 @@ TEST(BuggyDemoController, Step)
 
   // Go back to the bookmarked state and run another 5000 steps
   ignition::physics::SetState *setState =
-    plugin->GetInterface<ignition::physics::SetState>();
+    plugin->QueryInterface<ignition::physics::SetState>();
   ASSERT_TRUE(setState);
   setState->SetStateTo(bookmark);
 
