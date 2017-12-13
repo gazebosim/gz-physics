@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 
+#============================================================================
+# Initialize the project
+#============================================================================
+project(ignition-physics0 VERSION 0.1.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -7,9 +11,9 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 find_package(ignition-cmake0 REQUIRED)
 
 #============================================================================
-# Set up the project
+# Configure the project
 #============================================================================
-ign_configure_project(physics 0.1.0)
+ign_configure_project()
 
 
 #============================================================================
