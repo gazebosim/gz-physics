@@ -33,6 +33,7 @@ pipelines:
           - apt-add-repository -y ppa:dartsim
           - apt-get update
           - apt-get -y install
+            dart6-data
             libdart6-dev
             libdart6-utils-urdf-dev
           # Ignition physics
