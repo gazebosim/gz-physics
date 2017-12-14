@@ -27,7 +27,6 @@ target_link_libraries(${lib_name}
   ${DART-UTILS-URDF_LIBRARIES})
 
 target_include_directories(${lib_name} PRIVATE
-  ignition-physics
   ${DART_INCLUDE_DIRS}
   ${IGNITION-COMMON_INCLUDE_DIRS})
 
