@@ -25,4 +25,8 @@ IGN_COMMON_BEGIN_ADDING_PLUGINS
                         ignition::physics::ForwardStep)
   IGN_COMMON_ADD_PLUGIN(ignition::physics::none::MinimalStaticScene,
                         ignition::physics::SetState)
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::none::MinimalFallingScene,
+                        ignition::physics::ForwardStep)
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::none::MinimalFallingScene,
+                        ignition::physics::SetState)
 IGN_COMMON_FINISH_ADDING_PLUGINS

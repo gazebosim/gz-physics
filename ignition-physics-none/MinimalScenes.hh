@@ -53,6 +53,31 @@ namespace ignition
 
         private: std::unique_ptr<PrivateMinimalStaticScene> dataPtr;
       };
+
+      /// \brief Minimal example of an ignition physics plugin
+      /// whose state is a vector of world poses that subtract 1.0
+      /// from the Z position during each ForwardStep call.
+      class PrivateMinimalFallingScene;
+      class MinimalFallingScene
+          : public virtual ignition::physics::ForwardStep,
+            public virtual ignition::physics::SetState,
+            public ignition::physics::CanWriteRequiredData<
+                MinimalFallingScene,
+                ignition::physics::ForwardStep::Output>
+      {
+        public: virtual ~MinimalFallingScene();
+
+        public: MinimalFallingScene();
+
+        public: void Step(Output &_h, ForwardStep::State &_x,
+                          const Input &_u) override;
+
+        public: void SetStateTo(const SetState::State &_x) override;
+
+        public: void Write(ignition::physics::WorldPoses &_poses) const;
+
+        private: std::unique_ptr<PrivateMinimalFallingScene> dataPtr;
+      };
     }
   }
 }
