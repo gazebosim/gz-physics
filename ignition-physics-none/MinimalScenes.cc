@@ -34,7 +34,7 @@ namespace ignition
         PrivateMinimalStaticScene()
           : lastId(0)
         {
-          poses.annotation = "MinimalStaticScene initialized";
+          this->poses.annotation = "MinimalStaticScene initialized";
 
           for (unsigned int i = 0; i < 10; ++i)
           {
@@ -43,14 +43,14 @@ namespace ignition
             pose.pose.Pos().X() = pose.body;
             pose.pose.Pos().Y() = pose.body * 4;
             pose.pose.Pos().Z() = pose.body * 9;
-            poses.entries.push_back(pose);
+            this->poses.entries.push_back(pose);
           }
         }
 
         void WriteState(ForwardStep::State &_x)
         {
           WorldPoses &state = _x.Get<WorldPoses>();
-          state = poses;
+          state = this->poses;
         }
       };
 
