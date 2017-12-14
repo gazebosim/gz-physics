@@ -49,6 +49,8 @@ message(STATUS "-------------------------------------------\n")
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS)
 
+add_subdirectory(ignition-physics-none)
+
 if(BUILD_IGNITION_PHYSICS_DART)
   add_subdirectory(ignition-physics-dart)
 endif()
