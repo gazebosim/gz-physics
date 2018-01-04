@@ -17,10 +17,15 @@
 
 #include <ignition/common/PluginMacros.hh>
 
+#include "DoublePendulum.hh"
 #include "OperationalSpaceController.hh"
 
 
 IGN_COMMON_BEGIN_ADDING_PLUGINS
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::DoublePendulum,
+                        ignition::physics::ForwardStep)
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::DoublePendulum,
+                        ignition::physics::SetState)
   IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::OperationalSpaceController,
                         ignition::physics::ForwardStep)
   IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::OperationalSpaceController,
