@@ -84,6 +84,7 @@ namespace ignition
           }
 
           this->SetBodyMap();
+          this->world->setGravity(Eigen::Vector3d(0, 0, -9.81));
         }
 
         void SetBodyMap()
