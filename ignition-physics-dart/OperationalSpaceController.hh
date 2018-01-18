@@ -21,7 +21,6 @@
 #include <memory>
 
 #include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/CanReadData.hh>
 #include <ignition/physics/CanWriteData.hh>
 
 namespace ignition
