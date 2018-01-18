@@ -35,7 +35,7 @@ ign_find_package(ignition-math${IGN_MATH_VER} REQUIRED)
 
 #--------------------------------------
 # Find ignition-common
-set(IGN_COMMON_VER 0)
+set(IGN_COMMON_VER 1)
 ign_find_package(ignition-common${IGN_COMMON_VER} REQUIRED)
 
 message(STATUS "-------------------------------------------\n")
