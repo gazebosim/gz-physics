@@ -37,7 +37,7 @@ pipelines:
             libdart6-dev
             libdart6-utils-urdf-dev
           # hack until they fix dart6-data
-          - gzip -d $(find /usr/share/doc/dart/data/urdf/KR5 | grep gz$)
+          - find /usr/share/doc/dart/data/urdf/KR5 | grep gz$ | while read f; do gz -d "$f"; done
           # Ignition physics
           - mkdir build
           - cd build
