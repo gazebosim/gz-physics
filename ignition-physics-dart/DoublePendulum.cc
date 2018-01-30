@@ -196,6 +196,7 @@ namespace ignition
 
       void DoublePendulum::Write(WorldPoses &poses) const
       {
+        poses.entries.clear();
         poses.entries.reserve(this->dataPtr->mapToBodies.size());
 
         std::vector<std::size_t> cleanup;
