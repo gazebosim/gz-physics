@@ -161,8 +161,27 @@ namespace ignition
           }
         }
 
+        void SetInputs(const GeneralizedParameters *_efforts)
+        {
+          if (_efforts != nullptr)
+          {
+            this->forces[_efforts->dofs[0]] = _efforts->forces[0];
+            this->forces[_efforts->dofs[1]] = _efforts->forces[1];
+          }
+        }
+
+        void SetTimeStep(const TimeStep *_timeStep)
+        {
+          if (_timeStep != nullptr)
+          {
+            this->world->setTimeStep(_timeStep->dt);
+          }
+        }
+
         void Simulate()
         {
+          this->robot->setForces(this->forces);
+
           this->world->step();
         }
       };
@@ -181,6 +200,9 @@ namespace ignition
       void DoublePendulum::Step(
           Output &h, ForwardStep::State &x, const Input &u)
       {
+        this->dataPtr->SetInputs(u.Query<GeneralizedParameters>());
+        this->dataPtr->SetTimeStep(u.Query<TimeStep>());
+
         this->dataPtr->Simulate();
 
         this->dataPtr->WriteState(x);

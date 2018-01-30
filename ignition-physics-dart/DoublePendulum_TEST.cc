@@ -17,6 +17,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ignition/math/PID.hh>
+
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/common/SpecializedPluginPtr.hh>
@@ -54,10 +56,49 @@ TEST(DoublePendulum, Step)
   ignition::physics::ForwardStep::Output output;
   ignition::physics::ForwardStep::Input input;
 
+  const std::chrono::duration<double> dt(std::chrono::milliseconds(1));
+  ignition::physics::TimeStep &timeStep =
+      input.Get<ignition::physics::TimeStep>();
+  timeStep.dt = dt.count();
+
+  ignition::physics::GeneralizedParameters &efforts =
+      input.Get<ignition::physics::GeneralizedParameters>();
+  efforts.dofs.push_back(0);
+  efforts.dofs.push_back(1);
+  efforts.forces.push_back(0.0);
+  efforts.forces.push_back(0.0);
+
   // No input on the first step, let's just see the output
   step->Step(output, state, input);
 
   EXPECT_TRUE(output.Has<ignition::physics::WorldPoses>());
+  auto poses0 = output.Get<ignition::physics::WorldPoses>();
+
+  double angle00 = poses0.entries[0].pose.Rot().Pitch();
+  double angle01 = poses0.entries[1].pose.Rot().Pitch();
+
+  ignition::math::PID pid0(100, 0, 10);
+  ignition::math::PID pid1(10, 0, 5);
+  const double target0 = 0.0;
+  const double target1 = 0.01*IGN_PI;
+  for (unsigned int i = 0; i < 2000; ++i)
+  {
+    auto poses = output.Get<ignition::physics::WorldPoses>();
+    double angle0 = poses.entries[0].pose.Rot().Pitch();
+    double angle1 = poses.entries[1].pose.Rot().Pitch();
+
+    efforts.forces[0] = pid0.Update(angle0 - target0, dt);
+    efforts.forces[1] = pid1.Update(angle1 - target1, dt);
+    if (i % 10 == 0)
+    {
+      std::cerr << "angles " << angle0 << " " << angle1
+                << ", forces " << efforts.forces[0]
+                << ", " << efforts.forces[1]
+                << std::endl;
+    }
+
+    step->Step(output, state, input);
+  }
 
   // Now that we have the first output, we'll set the input's target to the pose
   // that the output object reported for the end effector

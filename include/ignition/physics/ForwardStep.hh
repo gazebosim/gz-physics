@@ -88,6 +88,13 @@ namespace ignition
     // Same note as for Output Data Structures. Eventually, these should be
     // defined in some kind of meta files.
 
+    struct TimeStep
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::TimeStepping)
+
+      double dt;
+    };
+
     struct ForceTorque
     {
       std::size_t body;
@@ -101,6 +108,8 @@ namespace ignition
 
     struct GeneralizedParameters
     {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::GeneralizedParameters)
+
       std::vector<std::size_t> dofs;
       std::vector<double> forces;
       std::string annotation;
