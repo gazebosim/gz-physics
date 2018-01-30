@@ -26,6 +26,10 @@
 #include "DoublePendulum.hh"
 #include "MathConversions.hh"
 
+// Use this to get PROJECT_SOURCE_PATH for urdf location
+// not ideal to use this in a plugin
+#include "utils/test_config.h"
+
 namespace ignition
 {
   namespace physics
@@ -68,7 +72,7 @@ namespace ignition
         {
           ::dart::utils::DartLoader loader;
           this->robot = loader.parseSkeleton(
-                "/home/scpeters/ws/ignition/src/ign-physics/ignition-physics-dart/rrbot.xml");
+                PROJECT_SOURCE_PATH "/ignition-physics-dart/rrbot.xml");
           this->world->addSkeleton(this->robot);
 
           this->robot->getJoint(0)->setTransformFromParentBodyNode(
