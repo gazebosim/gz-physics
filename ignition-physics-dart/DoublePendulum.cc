@@ -207,10 +207,9 @@ namespace ignition
 
         this->dataPtr->WriteState(x);
 
-        this->Write(h.Get<ignition::physics::JointPositions>());
-
         h.ResetQueries();
         this->WriteRequiredData(h);
+        this->Write(h.Get<ignition::physics::JointPositions>());
       }
 
       void DoublePendulum::SetStateTo(const SetState::State &x)
