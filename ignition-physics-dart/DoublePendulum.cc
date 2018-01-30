@@ -207,6 +207,8 @@ namespace ignition
 
         this->dataPtr->WriteState(x);
 
+        this->Write(h.Get<ignition::physics::JointPositions>());
+
         h.ResetQueries();
         this->WriteRequiredData(h);
       }
@@ -214,6 +216,23 @@ namespace ignition
       void DoublePendulum::SetStateTo(const SetState::State &x)
       {
         this->dataPtr->SetState(x);
+      }
+
+      void DoublePendulum::Write(JointPositions &positions) const
+      {
+        auto configuration = this->dataPtr->robot->getConfiguration(
+                              ::dart::dynamics::Skeleton::CONFIG_POSITIONS);
+        positions.dofs = configuration.mIndices;
+        positions.positions.clear();
+        positions.positions.resize(this->dataPtr->robot->getNumDofs());
+
+        for (const auto &dof : positions.dofs)
+        {
+          if (dof < this->dataPtr->robot->getNumDofs())
+          {
+            positions.positions[dof] = configuration.mPositions[dof];
+          }
+        }
       }
 
       void DoublePendulum::Write(WorldPoses &poses) const

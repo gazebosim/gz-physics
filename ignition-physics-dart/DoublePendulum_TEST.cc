@@ -71,34 +71,45 @@ TEST(DoublePendulum, Step)
   // No input on the first step, let's just see the output
   step->Step(output, state, input);
 
-  EXPECT_TRUE(output.Has<ignition::physics::WorldPoses>());
-  auto poses0 = output.Get<ignition::physics::WorldPoses>();
+  EXPECT_TRUE(output.Has<ignition::physics::JointPositions>());
+  auto positions0 = output.Get<ignition::physics::JointPositions>();
 
-  double angle00 = poses0.entries[0].pose.Rot().Pitch();
-  double angle01 = poses0.entries[1].pose.Rot().Pitch();
+  // the double pendulum is initially fully inverted
+  // and angles are defined as zero in this state
+  double angle00 = positions0.positions[positions0.dofs[0]];
+  double angle01 = positions0.positions[positions0.dofs[1]];
+  EXPECT_NEAR(0.0, angle00, 1e-6);
+  EXPECT_NEAR(0.0, angle01, 1e-6);
 
+  // set target with joint1 still inverted, but joint2 pointed down
+  // this is also an equilibrium position
+  const double target10 = 0.0;
+  const double target11 = IGN_PI;
+
+  // PID gains tuned in gazebo
   ignition::math::PID pid0(100, 0, 10);
   ignition::math::PID pid1(10, 0, 5);
-  const double target0 = 0.0;
-  const double target1 = 0.01*IGN_PI;
-  for (unsigned int i = 0; i < 2000; ++i)
+  const std::chrono::duration<double> settleTime(std::chrono::seconds(4));
+  unsigned int settleSteps = settleTime / dt;
+  for (unsigned int i = 0; i < settleSteps; ++i)
   {
-    auto poses = output.Get<ignition::physics::WorldPoses>();
-    double angle0 = poses.entries[0].pose.Rot().Pitch();
-    double angle1 = poses.entries[1].pose.Rot().Pitch();
+    auto positions = output.Get<ignition::physics::JointPositions>();
+    double error0 = positions.positions[positions.dofs[0]] - target10;
+    double error1 = positions.positions[positions.dofs[1]] - target11;
 
-    efforts.forces[0] = pid0.Update(angle0 - target0, dt);
-    efforts.forces[1] = pid1.Update(angle1 - target1, dt);
-    if (i % 10 == 0)
-    {
-      std::cerr << "angles " << angle0 << " " << angle1
-                << ", forces " << efforts.forces[0]
-                << ", " << efforts.forces[1]
-                << std::endl;
-    }
+    efforts.forces[0] = pid0.Update(error0, dt);
+    efforts.forces[1] = pid1.Update(error1, dt);
 
     step->Step(output, state, input);
   }
+
+  // expect joints are near target positions
+  EXPECT_TRUE(output.Has<ignition::physics::JointPositions>());
+  auto positions1 = output.Get<ignition::physics::JointPositions>();
+  double angle10 = positions1.positions[positions1.dofs[0]];
+  double angle11 = positions1.positions[positions1.dofs[1]];
+  EXPECT_NEAR(target10, angle10, 1e-5);
+  EXPECT_NEAR(target11, angle11, 1e-3);
 
   // Now that we have the first output, we'll set the input's target to the pose
   // that the output object reported for the end effector

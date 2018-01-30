@@ -47,6 +47,8 @@ namespace ignition
 
         public: void SetStateTo(const SetState::State &x) override;
 
+        public: void Write(ignition::physics::JointPositions &positions) const;
+
         public: void Write(ignition::physics::WorldPoses &poses) const;
 
         private: std::unique_ptr<PrivateDoublePendulum> dataPtr;

@@ -76,6 +76,15 @@ namespace ignition
       std::size_t inCoordinatesOf;
     };
 
+    struct JointPositions
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::JointPositions)
+
+      std::vector<std::size_t> dofs;
+      std::vector<double> positions;
+      std::string annotation;
+    };
+
     struct Contacts
     {
       IGN_PHYSICS_DATA_LABEL(ignition::physics::Contacts)
@@ -170,7 +179,7 @@ namespace ignition
 
       public: using Output = SpecifyData<
           RequireData<WorldPoses>,
-          ExpectData<Contacts> >;
+          ExpectData<Contacts, JointPositions> >;
 
       public: using State = CompositeData;
 
