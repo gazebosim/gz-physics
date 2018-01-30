@@ -71,7 +71,7 @@ TEST(DoublePendulum, Step)
   // No input on the first step, let's just see the output
   step->Step(output, state, input);
 
-  EXPECT_TRUE(output.Has<ignition::physics::JointPositions>());
+  ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
   auto positions0 = output.Get<ignition::physics::JointPositions>();
 
   // the double pendulum is initially fully inverted
@@ -104,84 +104,50 @@ TEST(DoublePendulum, Step)
   }
 
   // expect joints are near target positions
-  EXPECT_TRUE(output.Has<ignition::physics::JointPositions>());
+  ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
   auto positions1 = output.Get<ignition::physics::JointPositions>();
   double angle10 = positions1.positions[positions1.dofs[0]];
   double angle11 = positions1.positions[positions1.dofs[1]];
   EXPECT_NEAR(target10, angle10, 1e-5);
   EXPECT_NEAR(target11, angle11, 1e-3);
 
-  // Now that we have the first output, we'll set the input's target to the pose
-  // that the output object reported for the end effector
-  ignition::physics::TargetPose &target =
-      input.Get<ignition::physics::TargetPose>();
-
-  static_cast<ignition::physics::WorldPose&>(target) =
-      output.Get<ignition::physics::EndEffectorPose>();
-
-  // We'll take another step, keeping the target the same
-  step->Step(output, state, input);
-
-  ignition::physics::EndEffectorPose &ee_pose =
-      output.Get<ignition::physics::EndEffectorPose>();
-
-  // The error between the target and the end effector should be pretty low
-  double err = target.pose.Pos().Distance(ee_pose.pose.Pos());
-  EXPECT_LT(err, 1e-3);
-
-  // Move the target down 5cm
-  const double dz = 0.05;
-  target.pose.Pos().Z() -= dz;
-
-  double last_err = err;
-  step->Step(output, state, input);
-  err = target.pose.Pos().Distance(ee_pose.pose.Pos());
-
-  // We expect a larger error because we have spontaneously moved the target
-  // location, and the end effector will need time to adjust
-  EXPECT_GT(err, last_err);
-  EXPECT_NEAR(dz, err, 1e-3);
-
-  const std::size_t Iterations = 1000;
-
-  last_err = err;
-  for (std::size_t i=0; i < Iterations; ++i)
-  {
-    step->Step(output, state, input);
-    err = target.pose.Pos().Distance(ee_pose.pose.Pos());
-
-    // Now we expect the error to converge towards zero
-    EXPECT_LE(err, last_err);
-    last_err = err;
-  }
-
-  EXPECT_LT(err, 1e-3);
-
+  // test recording the state and repeatability
   ignition::physics::ForwardStep::State bookmark = state;
-  std::vector<double> errorHistory;
+  std::vector<double> errorHistory0;
+  std::vector<double> errorHistory1;
 
-  const double dy = 0.05;
-  target.pose.Pos().Y() += dy;
-
+  // The states are reset, but the outputs haven't been recomputed.
+  // so reset the PID's, zero the inputs and take one more Step
+  // so the outputs will be computed.
+  const double target20 = 0.0;
+  const double target21 = -IGN_PI;
+  pid0.Reset();
+  pid1.Reset();
+  efforts.forces[0] = 0;
+  efforts.forces[1] = 0;
   step->Step(output, state, input);
-  err = target.pose.Pos().Distance(ee_pose.pose.Pos());
-  EXPECT_GT(err, last_err);
 
-  errorHistory.push_back(err);
-
-  last_err = err;
-  for (std::size_t i=0; i < Iterations; ++i)
+  for (unsigned int i = 0; i < settleSteps; ++i)
   {
+    auto positions = output.Get<ignition::physics::JointPositions>();
+    double error0 = positions.positions[positions.dofs[0]] - target20;
+    double error1 = positions.positions[positions.dofs[1]] - target21;
+    errorHistory0.push_back(error0);
+    errorHistory1.push_back(error1);
+
+    efforts.forces[0] = pid0.Update(error0, dt);
+    efforts.forces[1] = pid1.Update(error1, dt);
+
     step->Step(output, state, input);
-    err = target.pose.Pos().Distance(ee_pose.pose.Pos());
-
-    EXPECT_LE(err, last_err);
-    last_err = err;
-
-    errorHistory.push_back(err);
   }
 
-  EXPECT_LT(err, 1e-3);
+  // expect joints are near target positions again
+  ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
+  auto positions2 = output.Get<ignition::physics::JointPositions>();
+  double angle20 = positions2.positions[positions2.dofs[0]];
+  double angle21 = positions2.positions[positions2.dofs[1]];
+  EXPECT_NEAR(target20, angle20, 1e-4);
+  EXPECT_NEAR(target21, angle21, 1e-3);
 
   // Go back to the bookmarked state and run through the steps again.
   ignition::physics::SetState *setState =
@@ -189,20 +155,36 @@ TEST(DoublePendulum, Step)
   ASSERT_TRUE(setState);
   setState->SetStateTo(bookmark);
 
+  // The states are reset, but the outputs haven't been recomputed.
+  // so reset the PID's, zero the inputs and take one more Step
+  // so the outputs will be computed.
+  pid0.Reset();
+  pid1.Reset();
+  efforts.forces[0] = 0;
+  efforts.forces[1] = 0;
   step->Step(output, state, input);
-  err = target.pose.Pos().Distance(ee_pose.pose.Pos());
 
-  // The new error output should match the history perfectly, even though they
-  // use floating point values
-  EXPECT_DOUBLE_EQ(errorHistory[0], err);
-
-  for (std::size_t i=0; i < Iterations; ++i)
+  for (unsigned int i = 0; i < settleSteps; ++i)
   {
-    step->Step(output, state, input);
-    err = target.pose.Pos().Distance(ee_pose.pose.Pos());
+    auto positions = output.Get<ignition::physics::JointPositions>();
+    double error0 = positions.positions[positions.dofs[0]] - target20;
+    double error1 = positions.positions[positions.dofs[1]] - target21;
+    EXPECT_DOUBLE_EQ(error0, errorHistory0[i]);
+    EXPECT_DOUBLE_EQ(error1, errorHistory1[i]);
 
-    EXPECT_DOUBLE_EQ(errorHistory[i+1], err);
+    efforts.forces[0] = pid0.Update(error0, dt);
+    efforts.forces[1] = pid1.Update(error1, dt);
+
+    step->Step(output, state, input);
   }
+
+  // expect joints are near target positions again
+  ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
+  auto positions3 = output.Get<ignition::physics::JointPositions>();
+  double angle30 = positions3.positions[positions3.dofs[0]];
+  double angle31 = positions3.positions[positions3.dofs[1]];
+  EXPECT_DOUBLE_EQ(angle20, angle30);
+  EXPECT_DOUBLE_EQ(angle21, angle31);
 }
 
 
