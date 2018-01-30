@@ -54,10 +54,10 @@ namespace ignition
 
         public: ::dart::dynamics::SkeletonPtr robot;
 
-        public: ::dart::dynamics::Joint* joint1;
-        public: ::dart::dynamics::Joint* joint2;
+        public: ::dart::dynamics::Joint* joint1 = nullptr;
+        public: ::dart::dynamics::Joint* joint2 = nullptr;
 
-        public: Eigen::VectorXd forces;
+        public: Eigen::VectorXd forces = Eigen::VectorXd::Zero(2);
 
         public: using BodyMap =
             std::unordered_map<std::size_t, ::dart::dynamics::WeakBodyNodePtr>;
