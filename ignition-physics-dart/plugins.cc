@@ -23,6 +23,8 @@
 
 IGN_COMMON_BEGIN_ADDING_PLUGINS
   IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::DARTDoublePendulum,
+                        ignition::physics::DoublePendulum)
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::DARTDoublePendulum,
                         ignition::physics::ForwardStep)
   IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::DARTDoublePendulum,
                         ignition::physics::SetState)

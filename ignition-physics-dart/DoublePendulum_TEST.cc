@@ -44,8 +44,16 @@ TEST(DoublePendulum, Step)
   ignition::common::PluginLoader loader;
   loader.LoadLibrary(path);
 
-  PhysicsPlugin plugin = loader.Instantiate(
-        "ignition::physics::dart::DARTDoublePendulum");
+  auto pluginNames = loader.PluginsImplementing(
+                        "::ignition::physics::DoublePendulum");
+  ASSERT_FALSE(pluginNames.empty());
+  for (const std::string & name : pluginNames)
+  {
+    std::cerr << "DoublePendulum plugin: " << name << std::endl;
+  }
+  const std::string pluginName = *pluginNames.begin();
+  std::cerr << "         using plugin: " << pluginName << std::endl;
+  PhysicsPlugin plugin = loader.Instantiate(pluginName);
 
   ASSERT_TRUE(plugin);
 
