@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DART_DOUBLEPENDULUM_HH_
-#define IGNITION_PHYSICS_DART_DOUBLEPENDULUM_HH_
+#ifndef IGNITION_PHYSICS_DOUBLEPENDULUM_HH_
+#define IGNITION_PHYSICS_DOUBLEPENDULUM_HH_
 
 #include <memory>
 
@@ -27,33 +27,19 @@ namespace ignition
 {
   namespace physics
   {
-    namespace dart
+    class DoublePendulum
+        : public virtual ignition::physics::ForwardStep,
+          public virtual ignition::physics::SetState,
+          public ignition::physics::CanWriteRequiredData<
+              DoublePendulum,
+              ignition::physics::ForwardStep::Output>
     {
-      class PrivateDoublePendulum;
+      public: virtual void Write(JointPositions &positions) const = 0;
 
-      class DoublePendulum
-          : public virtual ignition::physics::ForwardStep,
-            public virtual ignition::physics::SetState,
-            public ignition::physics::CanWriteRequiredData<
-                DoublePendulum,
-                ignition::physics::ForwardStep::Output>
-      {
-        public: virtual ~DoublePendulum();
+      public: virtual void Write(WorldPoses &poses) const = 0;
 
-        public: DoublePendulum();
-
-        public: void Step(Output &h, ForwardStep::State &x,
-                          const Input &u) override;
-
-        public: void SetStateTo(const SetState::State &x) override;
-
-        public: void Write(ignition::physics::JointPositions &positions) const;
-
-        public: void Write(ignition::physics::WorldPoses &poses) const;
-
-        private: std::unique_ptr<PrivateDoublePendulum> dataPtr;
-      };
-    }
+      public: virtual ~DoublePendulum() = default;
+    };
   }
 }
 

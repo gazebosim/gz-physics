@@ -23,7 +23,7 @@
 
 #include "ignition/common/Console.hh"
 
-#include "DoublePendulum.hh"
+#include "DARTDoublePendulum.hh"
 #include "MathConversions.hh"
 
 // Use this to get PROJECT_SOURCE_PATH for urdf location
@@ -48,7 +48,7 @@ namespace ignition
       };
 
 
-      class PrivateDoublePendulum
+      class PrivateDARTDoublePendulum
       {
         public: ::dart::simulation::WorldPtr world;
 
@@ -66,7 +66,7 @@ namespace ignition
 
         public: std::size_t lastId;
 
-        PrivateDoublePendulum()
+        PrivateDARTDoublePendulum()
           : world(new ::dart::simulation::World),
             lastId(0)
         {
@@ -109,7 +109,7 @@ namespace ignition
           const DartState *state = x.Query<DartState>();
           if (!state)
           {
-            ignerr << "[ignition::physics::dart::DoublePendulum::"
+            ignerr << "[ignition::physics::dart::DARTDoublePendulum::"
                    << "SetState] The state provided does not contain a "
                    << "DartState, which this plugins needs in order to go to a "
                    << "specified state!\n";
@@ -186,18 +186,18 @@ namespace ignition
         }
       };
 
-      DoublePendulum::~DoublePendulum()
+      DARTDoublePendulum::~DARTDoublePendulum()
       {
         // Do nothing
       }
 
-      DoublePendulum::DoublePendulum()
-        : dataPtr(new PrivateDoublePendulum)
+      DARTDoublePendulum::DARTDoublePendulum()
+        : dataPtr(new PrivateDARTDoublePendulum)
       {
         // Do nothing
       }
 
-      void DoublePendulum::Step(
+      void DARTDoublePendulum::Step(
           Output &h, ForwardStep::State &x, const Input &u)
       {
         this->dataPtr->SetInputs(u.Query<GeneralizedParameters>());
@@ -212,12 +212,12 @@ namespace ignition
         this->Write(h.Get<ignition::physics::JointPositions>());
       }
 
-      void DoublePendulum::SetStateTo(const SetState::State &x)
+      void DARTDoublePendulum::SetStateTo(const SetState::State &x)
       {
         this->dataPtr->SetState(x);
       }
 
-      void DoublePendulum::Write(JointPositions &positions) const
+      void DARTDoublePendulum::Write(JointPositions &positions) const
       {
         auto configuration = this->dataPtr->robot->getConfiguration(
                               ::dart::dynamics::Skeleton::CONFIG_POSITIONS);
@@ -234,7 +234,7 @@ namespace ignition
         }
       }
 
-      void DoublePendulum::Write(WorldPoses &poses) const
+      void DARTDoublePendulum::Write(WorldPoses &poses) const
       {
         poses.entries.clear();
         poses.entries.reserve(this->dataPtr->mapToBodies.size());

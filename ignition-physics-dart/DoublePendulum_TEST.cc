@@ -45,7 +45,7 @@ TEST(DoublePendulum, Step)
   loader.LoadLibrary(path);
 
   PhysicsPlugin plugin = loader.Instantiate(
-        "ignition::physics::dart::DoublePendulum");
+        "ignition::physics::dart::DARTDoublePendulum");
 
   ASSERT_TRUE(plugin);
 
