@@ -21,8 +21,8 @@
 #include <memory>
 
 #include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/CanReadData.hh>
 #include <ignition/physics/CanWriteData.hh>
+#include <ignition/physics/Feature.hh>
 
 namespace ignition
 {
@@ -33,8 +33,8 @@ namespace ignition
       class PrivateOperationalSpaceController;
 
       class OperationalSpaceController
-          : public virtual ignition::physics::ForwardStep::Engine<void>,
-            public virtual ignition::physics::SetState::Engine<void>,
+          : public virtual ignition::physics::ForwardStep::Engine<FeaturePolicy3d>,
+            public virtual ignition::physics::SetState::Engine<FeaturePolicy3d>,
             public ignition::physics::CanWriteRequiredData<
                 OperationalSpaceController,
                 ignition::physics::ForwardStep::Output>

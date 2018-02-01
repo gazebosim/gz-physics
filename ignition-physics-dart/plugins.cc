@@ -15,14 +15,3 @@
  *
 */
 
-#include <ignition/common/PluginMacros.hh>
-
-#include "OperationalSpaceController.hh"
-
-
-IGN_COMMON_BEGIN_ADDING_PLUGINS
-  IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::OperationalSpaceController,
-                        ignition::physics::ForwardStep::Engine<void>)
-  IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::OperationalSpaceController,
-                        ignition::physics::SetState::Engine<void>)
-IGN_COMMON_FINISH_ADDING_PLUGINS

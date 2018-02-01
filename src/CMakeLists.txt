@@ -7,7 +7,7 @@ ign_set_project_public_cxx_standard(14)
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
     ${ignition-math${IGN_MATH_VER}_LIBRARIES}
-    ignition-common${IGN_COMMON_VER})
+    ${ignition-common${IGN_COMMON_VER}_LIBRARIES})
 
 target_include_directories(${PROJECT_LIBRARY_TARGET_NAME}
   SYSTEM PUBLIC

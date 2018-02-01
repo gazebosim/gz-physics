@@ -88,9 +88,11 @@ namespace ignition
     /// Note: If your feature also has requirements, you should instead have
     /// your feature class inherit
     ///
+    /// \code
     ///     FeatureList<
     ///         FeatureWithConflics<...conflicts...>,
     ///         FeatureWithRequirements<...requirements...>>
+    /// \endcode
     ///
     /// The FeatureList class be used to compose conflicts and requirements.
     template <typename... ConflictingFeatures>
@@ -104,9 +106,11 @@ namespace ignition
     /// Note: If your feature also has requirements, you should instead have
     /// your feature class inherit
     ///
+    /// \code
     ///     FeatureList<
     ///         FeatureWithConflics<...conflicts...>,
     ///         FeatureWithRequirements<...requirements...>>
+    /// \endcode
     ///
     /// The FeatureList class be used to compose conflicts and requirements.
     template <typename... RequiredFeatures>
@@ -142,10 +146,12 @@ namespace ignition
     /// explicitly define that field itself. Preferably, the child would define
     /// the field based on one of its parent's definitions, e.g.:
     ///
+    /// \code
     ///     struct Child : public Parent1, public Parent2
     ///     {
     ///       using AmbiguousField = typename Parent1::AmbiguousField;
     ///     };
+    /// \endcode
     ///
     /// This design pattern is known as "Policy-based design". For more
     /// information, see: https://en.wikipedia.org/wiki/Policy-based_design
@@ -160,7 +166,7 @@ namespace ignition
     using FeaturePolicy3f = FeaturePolicy<float, 3>;
     using FeaturePolicy2f = FeaturePolicy<float, 2>;
 
-//    template <typename... FeatureList>
+//    template <typename... Features>
 //    using Features3d = Features<double, 3, FeatureList...>;
 
 //    template <typename... FeatureList>

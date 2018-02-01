@@ -17,11 +17,14 @@
 
 #include <unordered_map>
 
-#include <dart/dart.hpp>
+#include <dart/dynamics/dynamics.hpp>
 #include <dart/utils/utils.hpp>
 #include <dart/utils/urdf/urdf.hpp>
 
-#include "ignition/common/Console.hh"
+#include <ignition/common/Console.hh>
+#include <ignition/common/RegisterPlugin.hh>
+
+#include <ignition/physics/Feature.hh>
 
 #include "OperationalSpaceController.hh"
 #include "MathConversions.hh"
@@ -286,6 +289,11 @@ namespace ignition
         for(const std::size_t id : cleanup)
           this->dataPtr->mapToBodies.erase(id);
       }
+
+      IGN_COMMON_ADD_PLUGIN(
+          OperationalSpaceController,
+          ForwardStep::Engine<FeaturePolicy3d>,
+          SetState::Engine<FeaturePolicy3d>)
     }
   }
 }

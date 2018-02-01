@@ -47,8 +47,8 @@ TEST(OperationalSpaceController, Step)
 
   ASSERT_TRUE(plugin);
 
-  ignition::physics::ForwardStep::Engine<void> *step =
-      plugin->GetInterface<ignition::physics::ForwardStep::Engine<void>>();
+  auto step = plugin->QueryInterface<ignition::physics::ForwardStep::Engine<
+          ignition::physics::FeaturePolicy3d>>();
   ASSERT_TRUE(step);
 
   ignition::physics::ForwardStep::State state;
@@ -134,8 +134,8 @@ TEST(OperationalSpaceController, Step)
   EXPECT_LT(err, 1e-3);
 
   // Go back to the bookmarked state and run through the steps again.
-  ignition::physics::SetState::Engine<void> *setState =
-      plugin->GetInterface<ignition::physics::SetState::Engine<void>>();
+  auto setState = plugin->QueryInterface<ignition::physics::SetState::Engine<
+      ignition::physics::FeaturePolicy3d>>();
   ASSERT_TRUE(setState);
   setState->SetStateTo(bookmark);
 
@@ -144,14 +144,14 @@ TEST(OperationalSpaceController, Step)
 
   // The new error output should match the history perfectly, even though they
   // use floating point values
-  EXPECT_EQ(errorHistory[0], err);
+  EXPECT_DOUBLE_EQ(errorHistory[0], err);
 
   for (std::size_t i=0; i < Iterations; ++i)
   {
     step->Step(output, state, input);
     err = target.pose.Pos().Distance(ee_pose.pose.Pos());
 
-    EXPECT_EQ(errorHistory[i+1], err);
+    EXPECT_DOUBLE_EQ(errorHistory[i+1], err);
   }
 }
 
