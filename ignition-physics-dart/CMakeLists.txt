@@ -13,6 +13,17 @@ else()
   return()
 endif()
 
+set(ODE_VER 0)
+find_package(ODE ${ODE_VER})
+if(ODE_FOUND)
+  message(STATUS "Looking for ODE - found")
+else()
+  message(STATUS "Looking for ODE - not found")
+  message(STATUS "ODE ${ODE_VER} is required for ignition-physics-dart, "
+    "but could not be found. We will not build ignition-physics-dart.")
+  return()
+endif()
+
 ign_get_libsources_and_unittests(sources gtest_sources)
 
 get_filename_component(lib_name ${CMAKE_CURRENT_LIST_DIR} NAME)
@@ -22,11 +33,14 @@ add_library(${lib_name} ${sources})
 target_link_libraries(${lib_name}
   ignition-physics0
   ${IGNITION-COMMON_LIBRARIES}
+  ${ODE_LIBRARIES}
+  pthread
   ${DART_LIBRARIES}
   ${DART-UTILS_LIBRARIES}
   ${DART-UTILS-URDF_LIBRARIES})
 
 target_include_directories(${lib_name} PRIVATE
+  ${ODE_INCLUDE_DIRS}
   ${DART_INCLUDE_DIRS}
   ${IGNITION-COMMON_INCLUDE_DIRS})
 

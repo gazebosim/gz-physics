@@ -1,0 +1,266 @@
+/*
+ * Copyright (C) 2017 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+#include <unordered_map>
+
+#include <dart/dart.hpp>
+#include <dart/utils/utils.hpp>
+#include <dart/utils/urdf/urdf.hpp>
+
+#include "ignition/common/Console.hh"
+
+#include "ODEDoublePendulum.hh"
+#include "MathConversions.hh"
+
+// Use this to get PROJECT_SOURCE_PATH for urdf location
+// not ideal to use this in a plugin
+#include "utils/test_config.h"
+
+namespace ignition
+{
+  namespace physics
+  {
+    namespace ode
+    {
+      struct DartState
+      {
+        IGN_PHYSICS_DATA_LABEL(ignition::physics::ode::DartState)
+
+        using StateMap =
+            std::unordered_map<::dart::dynamics::SkeletonPtr,
+                               ::dart::dynamics::Skeleton::Configuration>;
+
+        StateMap states;
+      };
+
+
+      class PrivateODEDoublePendulum
+      {
+        public: ::dart::simulation::WorldPtr world;
+
+        public: ::dart::dynamics::SkeletonPtr robot;
+
+        public: ::dart::dynamics::Joint* joint1 = nullptr;
+        public: ::dart::dynamics::Joint* joint2 = nullptr;
+
+        public: Eigen::VectorXd forces = Eigen::VectorXd::Zero(2);
+
+        public: using BodyMap =
+            std::unordered_map<std::size_t, ::dart::dynamics::WeakBodyNodePtr>;
+
+        public: BodyMap mapToBodies;
+
+        public: std::size_t lastId;
+
+        PrivateODEDoublePendulum()
+          : world(new ::dart::simulation::World),
+            lastId(0)
+        {
+          ::dart::utils::DartLoader loader;
+          this->robot = loader.parseSkeleton(
+                PROJECT_SOURCE_PATH "/ignition-physics-dart/rrbot.xml");
+          this->world->addSkeleton(this->robot);
+
+          this->robot->getJoint(0)->setTransformFromParentBodyNode(
+                Eigen::Isometry3d::Identity());
+
+          this->joint1 = this->robot->getJoint("joint1");
+          this->joint2 = this->robot->getJoint("joint2");
+
+          for (std::size_t i=0; i < robot->getNumJoints(); ++i)
+          {
+            this->robot->getJoint(i)->setPositionLimitEnforced(false);
+            this->robot->getJoint(i)->setDampingCoefficient(0, 0);
+          }
+
+          this->SetBodyMap();
+          this->world->setGravity(Eigen::Vector3d(0, 0, -9.81));
+        }
+
+        void SetBodyMap()
+        {
+          for (std::size_t i=0; i < this->world->getNumSkeletons(); ++i)
+          {
+            ::dart::dynamics::SkeletonPtr skel = this->world->getSkeleton(i);
+            for (std::size_t j=0; j < skel->getNumBodyNodes(); ++j)
+            {
+              ::dart::dynamics::BodyNode * const bn = skel->getBodyNode(j);
+              this->mapToBodies[lastId++] = bn;
+            }
+          }
+        }
+
+        void SetState(const SetState::State &x)
+        {
+          const DartState *state = x.Query<DartState>();
+          if (!state)
+          {
+            ignerr << "[ignition::physics::dart::ODEDoublePendulum::"
+                   << "SetState] The state provided does not contain a "
+                   << "DartState, which this plugins needs in order to go to a "
+                   << "specified state!\n";
+            return;
+          }
+
+          std::unordered_set<::dart::dynamics::SkeletonPtr> allSkels;
+          for (const auto &entry : state->states)
+          {
+            const ::dart::dynamics::SkeletonPtr &skel = entry.first;
+            const ::dart::dynamics::SkeletonPtr &worldSkel =
+                world->getSkeleton(skel->getName());
+            if (skel != worldSkel)
+            {
+              world->removeSkeleton(worldSkel);
+              world->addSkeleton(skel);
+            }
+
+            skel->setConfiguration(entry.second);
+
+            allSkels.insert(skel);
+          }
+
+          std::unordered_set<::dart::dynamics::SkeletonPtr> removeSkels;
+          for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
+          {
+            const ::dart::dynamics::SkeletonPtr &worldSkel =
+                this->world->getSkeleton(i);
+
+            if (allSkels.count(worldSkel) == 0)
+              removeSkels.insert(worldSkel);
+          }
+
+          for (const auto &skel : removeSkels)
+            this->world->removeSkeleton(skel);
+        }
+
+        void WriteState(ForwardStep::State &x)
+        {
+          DartState &state = x.Get<DartState>();
+          state.states.clear();
+
+          for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
+          {
+            const ::dart::dynamics::SkeletonPtr &skel =
+                this->world->getSkeleton(i);
+
+            state.states[skel] = skel->getConfiguration();
+          }
+        }
+
+        void SetInputs(const GeneralizedParameters *_efforts)
+        {
+          if (_efforts != nullptr)
+          {
+            this->forces[_efforts->dofs[0]] = _efforts->forces[0];
+            this->forces[_efforts->dofs[1]] = _efforts->forces[1];
+          }
+        }
+
+        void SetTimeStep(const TimeStep *_timeStep)
+        {
+          if (_timeStep != nullptr)
+          {
+            this->world->setTimeStep(_timeStep->dt);
+          }
+        }
+
+        void Simulate()
+        {
+          this->robot->setForces(this->forces);
+
+          this->world->step();
+        }
+      };
+
+      ODEDoublePendulum::~ODEDoublePendulum()
+      {
+        // Do nothing
+      }
+
+      ODEDoublePendulum::ODEDoublePendulum()
+        : dataPtr(new PrivateODEDoublePendulum)
+      {
+        // Do nothing
+      }
+
+      void ODEDoublePendulum::Step(
+          Output &h, ForwardStep::State &x, const Input &u)
+      {
+        this->dataPtr->SetInputs(u.Query<GeneralizedParameters>());
+        this->dataPtr->SetTimeStep(u.Query<TimeStep>());
+
+        this->dataPtr->Simulate();
+
+        this->dataPtr->WriteState(x);
+
+        h.ResetQueries();
+        this->WriteRequiredData(h);
+        this->Write(h.Get<ignition::physics::JointPositions>());
+      }
+
+      void ODEDoublePendulum::SetStateTo(const SetState::State &x)
+      {
+        this->dataPtr->SetState(x);
+      }
+
+      void ODEDoublePendulum::Write(JointPositions &positions) const
+      {
+        auto configuration = this->dataPtr->robot->getConfiguration(
+                              ::dart::dynamics::Skeleton::CONFIG_POSITIONS);
+        positions.dofs = configuration.mIndices;
+        positions.positions.clear();
+        positions.positions.resize(this->dataPtr->robot->getNumDofs());
+
+        for (const auto &dof : positions.dofs)
+        {
+          if (dof < this->dataPtr->robot->getNumDofs())
+          {
+            positions.positions[dof] = configuration.mPositions[dof];
+          }
+        }
+      }
+
+      void ODEDoublePendulum::Write(WorldPoses &poses) const
+      {
+        poses.entries.clear();
+        poses.entries.reserve(this->dataPtr->mapToBodies.size());
+
+        std::vector<std::size_t> cleanup;
+        for(const auto &entry : this->dataPtr->mapToBodies)
+        {
+          const std::size_t id = entry.first;
+          const ::dart::dynamics::BodyNodePtr bn = entry.second.lock();
+          if(!bn)
+          {
+            // Remove bodies that no longer exist
+            cleanup.push_back(id);
+            continue;
+          }
+
+          WorldPose wp;
+          //wp.pose = convert(bn->getWorldTransform());
+          wp.body = id;
+
+          poses.entries.push_back(wp);
+        }
+
+        for(const std::size_t id : cleanup)
+          this->dataPtr->mapToBodies.erase(id);
+      }
+    }
+  }
+}
