@@ -17,18 +17,12 @@
 
 #include <unordered_map>
 
-#include <dart/dart.hpp>
-#include <dart/utils/utils.hpp>
-#include <dart/utils/urdf/urdf.hpp>
+#include <ode/ode.h>
 
 #include "ignition/common/Console.hh"
 
 #include "ODEDoublePendulum.hh"
-#include "MathConversions.hh"
-
-// Use this to get PROJECT_SOURCE_PATH for urdf location
-// not ideal to use this in a plugin
-#include "utils/test_config.h"
+#include "ODEMathConversions.hh"
 
 namespace ignition
 {
@@ -36,13 +30,13 @@ namespace ignition
   {
     namespace ode
     {
-      struct DartState
+      struct ODEState
       {
-        IGN_PHYSICS_DATA_LABEL(ignition::physics::ode::DartState)
+        IGN_PHYSICS_DATA_LABEL(ignition::physics::ode::ODEState)
 
-        using StateMap =
-            std::unordered_map<::dart::dynamics::SkeletonPtr,
-                               ::dart::dynamics::Skeleton::Configuration>;
+        // using StateMap =
+        //     std::unordered_map<::dart::dynamics::SkeletonPtr,
+        //                        ::dart::dynamics::Skeleton::Configuration>;
 
         StateMap states;
       };
@@ -50,13 +44,17 @@ namespace ignition
 
       class PrivateODEDoublePendulum
       {
-        public: ::dart::simulation::WorldPtr world;
+        public: dWorldID world;
+        public: dSpaceID space;
 
-        public: ::dart::dynamics::SkeletonPtr robot;
+        public: dBodyID body1;
+        public: dBodyID body2;
 
-        public: ::dart::dynamics::Joint* joint1 = nullptr;
-        public: ::dart::dynamics::Joint* joint2 = nullptr;
+        public: dJointID joint1;
+        public: dJointID joint2;
 
+
+        public: double dt = 1e-3;
         public: Eigen::VectorXd forces = Eigen::VectorXd::Zero(2);
 
         public: using BodyMap =
@@ -67,28 +65,54 @@ namespace ignition
         public: std::size_t lastId;
 
         PrivateODEDoublePendulum()
-          : world(new ::dart::simulation::World),
-            lastId(0)
+          : lastId(0)
         {
-          ::dart::utils::DartLoader loader;
-          this->robot = loader.parseSkeleton(
-                PROJECT_SOURCE_PATH "/ignition-physics-dart/rrbot.xml");
-          this->world->addSkeleton(this->robot);
+          // based on demo_hinge.cpp and demo_dhinge.cpp
+          world = dWorldCreate();
 
-          this->robot->getJoint(0)->setTransformFromParentBodyNode(
-                Eigen::Isometry3d::Identity());
+          body1 = dBodyCreate(world);
+          body2 = dBodyCreate(world);
 
-          this->joint1 = this->robot->getJoint("joint1");
-          this->joint2 = this->robot->getJoint("joint2");
+          dBodySetPosition(body1, 0, 0.1, 1.95);
+          dBodySetPosition(body2, 0, 0.2, 2.85);
 
-          for (std::size_t i=0; i < robot->getNumJoints(); ++i)
+
+          dGeomID g;
+          dMass inertial;
           {
-            this->robot->getJoint(i)->setPositionLimitEnforced(false);
-            this->robot->getJoint(i)->setDampingCoefficient(0, 0);
+            const double mass = 1.0;
+            const double ixx = 1.0;
+            const double iyy = 1.0;
+            const double izz = 1.0;
+            const double cgz = 0.45;
+            dMassSetParameters(&inertial,
+              0, 0, cgz,
+              ixx, iyy, izz,
+              0, 0, 0);
           }
 
+          g = dCreateBox(space, 0.1, 0.1, 1.0);
+          dGeomSetBody(g, body1);
+          dBodySetMass(body1, &inertial);
+
+          g = dCreateBox(space, 0.1, 0.1, 1.0);
+          dGeomSetBody(g, body2);
+          dBodySetMass(body2, &inertial);
+
+          // joint1 connected to world
+          joint1 = dJointCreateHinge(world, 0);
+          dJointAttach(joint1, body1, 0);
+          dJointSetHingeAxis(joint1, 0, 1, 0);
+          dJointSetHingeAnchor(joint1, 0, 0.1, 1.95);
+
+          // joint2 connecting body1 and body2
+          joint1 = dJointCreateHinge(world, 0);
+          dJointAttach(joint2, body2, body1);
+          dJointSetHingeAxis(joint2, 0, 1, 0);
+          dJointSetHingeAnchor(joint2, 0, 0.2, 2.85);
+
           this->SetBodyMap();
-          this->world->setGravity(Eigen::Vector3d(0, 0, -9.81));
+          dWorldSetGravity(world, 0, 0, -9.81);
         }
 
         void SetBodyMap()
@@ -174,15 +198,15 @@ namespace ignition
         {
           if (_timeStep != nullptr)
           {
-            this->world->setTimeStep(_timeStep->dt);
+            this->dt = _timeStep->dt;
           }
         }
 
         void Simulate()
         {
-          this->robot->setForces(this->forces);
+          //this->robot->setForces(this->forces);
 
-          this->world->step();
+          dWorldStep(world, this->dt);
         }
       };
 
