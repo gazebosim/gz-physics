@@ -75,9 +75,6 @@ namespace ignition
                 PROJECT_SOURCE_PATH "/ignition-physics-dart/rrbot.xml");
           this->world->addSkeleton(this->robot);
 
-          this->robot->getJoint(0)->setTransformFromParentBodyNode(
-                Eigen::Isometry3d::Identity());
-
           this->joint1 = this->robot->getJoint("joint1");
           this->joint2 = this->robot->getJoint("joint2");
 
@@ -253,6 +250,7 @@ namespace ignition
 
           WorldPose wp;
           wp.pose = convert(bn->getWorldTransform());
+          wp.pose.Pos() = convert(bn->getCOM());
           wp.body = id;
 
           poses.entries.push_back(wp);
