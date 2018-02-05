@@ -36,6 +36,7 @@ namespace ignition
     {
       public: virtual void Write(JointPositions &positions) const = 0;
 
+      /// \brief Write poses for each link in inertial frame (at COM).
       public: virtual void Write(WorldPoses &poses) const = 0;
 
       public: virtual ~DoublePendulum() = default;

@@ -80,14 +80,30 @@ TEST(DoublePendulum, Step)
   step->Step(output, state, input);
 
   ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
-  auto positions0 = output.Get<ignition::physics::JointPositions>();
+  const auto positions0 = output.Get<ignition::physics::JointPositions>();
+
+  ASSERT_TRUE(output.Has<ignition::physics::WorldPoses>());
+  const auto poses0 = output.Get<ignition::physics::WorldPoses>();
 
   // the double pendulum is initially fully inverted
   // and angles are defined as zero in this state
-  double angle00 = positions0.positions[positions0.dofs[0]];
-  double angle01 = positions0.positions[positions0.dofs[1]];
+  const double angle00 = positions0.positions[positions0.dofs[0]];
+  const double angle01 = positions0.positions[positions0.dofs[1]];
   EXPECT_NEAR(0.0, angle00, 1e-6);
   EXPECT_NEAR(0.0, angle01, 1e-6);
+
+  ASSERT_EQ(2u, poses0.entries.size());
+  for (const auto & worldPose : poses0.entries)
+  {
+    if (worldPose.body == 0)
+    {
+      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
+    }
+    else if (worldPose.body == 1)
+    {
+      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.2, 3.3, 0, 0, 0));
+    }
+  }
 
   // set target with joint1 still inverted, but joint2 pointed down
   // this is also an equilibrium position
@@ -118,6 +134,22 @@ TEST(DoublePendulum, Step)
   double angle11 = positions1.positions[positions1.dofs[1]];
   EXPECT_NEAR(target10, angle10, 1e-5);
   EXPECT_NEAR(target11, angle11, 1e-3);
+
+  ASSERT_TRUE(output.Has<ignition::physics::WorldPoses>());
+  const auto poses1 = output.Get<ignition::physics::WorldPoses>();
+  ASSERT_EQ(2u, poses1.entries.size());
+  for (const auto & worldPose : poses1.entries)
+  {
+    if (worldPose.body == 0)
+    {
+      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
+    }
+    else if (worldPose.body == 1)
+    {
+      EXPECT_EQ(worldPose.pose,
+          ignition::math::Pose3d(0, 0.2, 2.4, 0, target11, 0));
+    }
+  }
 
   // test recording the state and repeatability
   ignition::physics::ForwardStep::State bookmark = state;
