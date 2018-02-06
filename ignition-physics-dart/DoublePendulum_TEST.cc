@@ -32,8 +32,7 @@ using PhysicsPlugin = ignition::common::SpecializedPluginPtr<
     ignition::physics::ForwardStep,
     ignition::physics::SetState>;
 
-void DoublePendulum_TEST(ignition::common::PluginLoader &_loader,
-                         const std::string &_pluginName);
+void DoublePendulum_TEST(ignition::physics::PhysicsPlugin _plugin);
 
 /////////////////////////////////////////////////
 TEST(DoublePendulum, Step)
@@ -53,20 +52,18 @@ TEST(DoublePendulum, Step)
   for (const std::string & name : pluginNames)
   {
     std::cerr << "DoublePendulum plugin: " << name << std::endl;
-    DoublePendulum_TEST(loader, name);
+    std::cerr << "       testing plugin: " << pluginName << std::endl;
+    PhysicsPlugin plugin = loader.Instantiate(pluginName);
+    DoublePendulum_TEST(plugin);
   }
 }
 
-void DoublePendulum_TEST(ignition::common::PluginLoader &_loader,
-                         const std::string &_pluginName)
+void DoublePendulum_TEST(ignition::physics::PhysicsPlugin _plugin)
 {
-  std::cerr << "         using plugin: " << _pluginName << std::endl;
-  PhysicsPlugin plugin = _loader.Instantiate(_pluginName);
-
-  ASSERT_TRUE(plugin);
+  ASSERT_TRUE(_plugin);
 
   ignition::physics::ForwardStep *step =
-      plugin->QueryInterface<ignition::physics::ForwardStep>();
+      _plugin->QueryInterface<ignition::physics::ForwardStep>();
 
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;
@@ -199,7 +196,7 @@ void DoublePendulum_TEST(ignition::common::PluginLoader &_loader,
 
   // Go back to the bookmarked state and run through the steps again.
   ignition::physics::SetState *setState =
-      plugin->QueryInterface<ignition::physics::SetState>();
+      _plugin->QueryInterface<ignition::physics::SetState>();
   ASSERT_TRUE(setState);
   setState->SetStateTo(bookmark);
 
