@@ -32,6 +32,9 @@ using PhysicsPlugin = ignition::common::SpecializedPluginPtr<
     ignition::physics::ForwardStep,
     ignition::physics::SetState>;
 
+void DoublePendulum_TEST(ignition::common::PluginLoader &_loader,
+                         const std::string &_pluginName);
+
 /////////////////////////////////////////////////
 TEST(DoublePendulum, Step)
 {
@@ -50,10 +53,15 @@ TEST(DoublePendulum, Step)
   for (const std::string & name : pluginNames)
   {
     std::cerr << "DoublePendulum plugin: " << name << std::endl;
+    DoublePendulum_TEST(loader, name);
   }
-  const std::string pluginName = *pluginNames.begin();
-  std::cerr << "         using plugin: " << pluginName << std::endl;
-  PhysicsPlugin plugin = loader.Instantiate(pluginName);
+}
+
+void DoublePendulum_TEST(ignition::common::PluginLoader &_loader,
+                         const std::string &_pluginName)
+{
+  std::cerr << "         using plugin: " << _pluginName << std::endl;
+  PhysicsPlugin plugin = _loader.Instantiate(_pluginName);
 
   ASSERT_TRUE(plugin);
 
