@@ -32,7 +32,7 @@ using PhysicsPlugin = ignition::common::SpecializedPluginPtr<
     ignition::physics::ForwardStep,
     ignition::physics::SetState>;
 
-void DoublePendulum_TEST(ignition::physics::PhysicsPlugin _plugin);
+void DoublePendulum_TEST(PhysicsPlugin _plugin);
 
 /////////////////////////////////////////////////
 TEST(DoublePendulum, Step)
@@ -52,13 +52,13 @@ TEST(DoublePendulum, Step)
   for (const std::string & name : pluginNames)
   {
     std::cerr << "DoublePendulum plugin: " << name << std::endl;
-    std::cerr << "       testing plugin: " << pluginName << std::endl;
-    PhysicsPlugin plugin = loader.Instantiate(pluginName);
+    std::cerr << "       testing plugin: " << name << std::endl;
+    PhysicsPlugin plugin = loader.Instantiate(name);
     DoublePendulum_TEST(plugin);
   }
 }
 
-void DoublePendulum_TEST(ignition::physics::PhysicsPlugin _plugin)
+void DoublePendulum_TEST(PhysicsPlugin _plugin)
 {
   ASSERT_TRUE(_plugin);
 
