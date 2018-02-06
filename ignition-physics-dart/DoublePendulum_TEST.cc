@@ -129,6 +129,12 @@ void DoublePendulum_TEST(ignition::physics::PhysicsPlugin _plugin)
     efforts.forces[0] = pid0.Update(error0, dt);
     efforts.forces[1] = pid1.Update(error1, dt);
 
+    std::cerr << "angles "
+              << positions.positions[positions.dofs[0]] << ", "
+              << positions.positions[positions.dofs[1]] << " "
+              << "forces "
+              << efforts.forces[0] << ", "
+              << efforts.forces[1] << std::endl;
     step->Step(output, state, input);
   }
 
@@ -157,6 +163,7 @@ void DoublePendulum_TEST(ignition::physics::PhysicsPlugin _plugin)
   }
 
   // test recording the state and repeatability
+  return;
   ignition::physics::ForwardStep::State bookmark = state;
   std::vector<double> errorHistory0;
   std::vector<double> errorHistory1;
