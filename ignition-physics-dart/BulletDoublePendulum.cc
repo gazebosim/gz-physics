@@ -17,19 +17,11 @@
 
 #include <unordered_map>
 
-#include <LinearMath/btPolarDecomposition.h>
-#include <dart/dart.hpp>
-#include <dart/utils/utils.hpp>
-#include <dart/utils/urdf/urdf.hpp>
+#include <btBulletDynamicsCommon.h>
 
 #include "ignition/common/Console.hh"
 
 #include "BulletDoublePendulum.hh"
-#include "MathConversions.hh"
-
-// Use this to get PROJECT_SOURCE_PATH for urdf location
-// not ideal to use this in a plugin
-#include "utils/test_config.h"
 
 namespace ignition
 {
@@ -37,129 +29,186 @@ namespace ignition
   {
     namespace bullet
     {
-      struct DartState
+      struct BulletState
       {
-        IGN_PHYSICS_DATA_LABEL(ignition::physics::dart::DartState)
+        IGN_PHYSICS_DATA_LABEL(ignition::physics::bullet::BulletState)
 
-        using StateMap =
-            std::unordered_map<::dart::dynamics::SkeletonPtr,
-                               ::dart::dynamics::Skeleton::Configuration>;
+        // using StateMap =
+        //     std::unordered_map<::dart::dynamics::SkeletonPtr,
+        //                        ::dart::dynamics::Skeleton::Configuration>;
 
-        StateMap states;
+        //StateMap states;
       };
 
 
       class PrivateBulletDoublePendulum
       {
-        public: ::dart::simulation::WorldPtr world;
+        // based on HelloWorld.cpp example
+        public: btDefaultCollisionConfiguration *collisionConfig = nullptr;
+        public: btCollisionDispatcher *dispatcher = nullptr;
+        public: btBroadphaseInterface *overlappingPairCache = nullptr;
+        public: btSequentialImpulseConstraintSolver *solver = nullptr;
+        public: btDiscreteDynamicsWorld *world = nullptr;
 
-        public: ::dart::dynamics::SkeletonPtr robot;
+        public: btCollisionShape *shape = nullptr;
+        public: btRigidBody *link1 = nullptr;
+        public: btRigidBody *link2 = nullptr;
 
-        public: ::dart::dynamics::Joint* joint1 = nullptr;
-        public: ::dart::dynamics::Joint* joint2 = nullptr;
+        public: btHingeAccumulatedAngleConstraint *joint1 = nullptr;
+        public: btHingeAccumulatedAngleConstraint *joint2 = nullptr;
 
-        public: Eigen::VectorXd forces = Eigen::VectorXd::Zero(2);
+        public: double dt = 1e-3;
+        public: double forces[2] = {0, 0};
 
         public: using BodyMap =
-            std::unordered_map<std::size_t, ::dart::dynamics::WeakBodyNodePtr>;
+            std::unordered_map<std::size_t, btRigidBody*>;
 
         public: BodyMap mapToBodies;
 
         public: std::size_t lastId;
 
         PrivateBulletDoublePendulum()
-          : world(new ::dart::simulation::World),
+          : collisionConfig(new btDefaultCollisionConfiguration),
+            dispatcher(new btCollisionDispatcher(collisionConfig)),
+            overlappingPairCache(new btDbvtBroadphase()),
+            solver(new btSequentialImpulseConstraintSolver),
+            world(new btDiscreteDynamicsWorld(dispatcher,
+                                              overlappingPairCache,
+                                              solver,
+                                              collisionConfig)),
             lastId(0)
         {
-          btMatrix3x3 I = btMatrix3x3::getIdentity();
-          btMatrix3x3 u, h;
-          polarDecompose(I, u, h);
+          this->shape = new btBoxShape(0.5*btVector3(0.1, 0.1, 1.0));
+          const double mass = 1.0;
+          const double ixx = 1.0;
+          const double iyy = 1.0;
+          const double izz = 1.0;
 
-          ::dart::utils::DartLoader loader;
-          this->robot = loader.parseSkeleton(
-                PROJECT_SOURCE_PATH "/ignition-physics-dart/rrbot.xml");
-          this->world->addSkeleton(this->robot);
+          btTransform startTransform1;
+          btTransform startTransform2;
+          startTransform1.setIdentity();
+          startTransform2.setIdentity();
+          startTransform1.setOrigin(btVector3(0, 0.1, 2.4));
+          startTransform2.setOrigin(btVector3(0, 0.2, 3.3));
+          btDefaultMotionState *motionState1 = new btDefaultMotionState(startTransform1);
+          btDefaultMotionState *motionState2 = new btDefaultMotionState(startTransform2);
+          this->link1 = new btRigidBody(
+              btRigidBody::btRigidBodyConstructionInfo(
+                  mass, motionState1, shape, btVector3(ixx, iyy, izz)));
+          this->link2 = new btRigidBody(
+              btRigidBody::btRigidBodyConstructionInfo(
+                  mass, motionState2, shape, btVector3(ixx, iyy, izz)));
+          this->world->addRigidBody(this->link1);
+          this->world->addRigidBody(this->link2);
 
-          this->joint1 = this->robot->getJoint("joint1");
-          this->joint2 = this->robot->getJoint("joint2");
+          // joint1 connected to world
+          this->joint1 = new btHingeAccumulatedAngleConstraint(
+                              *this->link1,
+                              btVector3(0, 0, -0.45),
+                              btVector3(0, 1, 0));
 
-          for (std::size_t i=0; i < robot->getNumJoints(); ++i)
-          {
-            this->robot->getJoint(i)->setPositionLimitEnforced(false);
-            this->robot->getJoint(i)->setDampingCoefficient(0, 0);
-          }
+          // joint2 connecting link1 and link2
+          this->joint2 = new btHingeAccumulatedAngleConstraint(
+                              *this->link2,
+                              *this->link1,
+                              btVector3(0, 0, -0.45),
+                              btVector3(0, 0.1, 0.45),
+                              btVector3(0, 1, 0),
+                              btVector3(0, 1, 0));
+
+          this->world->addConstraint(this->joint1);
+          this->world->addConstraint(this->joint2);
 
           this->SetBodyMap();
-          this->world->setGravity(Eigen::Vector3d(0, 0, -9.81));
+          this->world->setGravity(btVector3(0, 0, -9.81));
         }
 
         void SetBodyMap()
         {
-          for (std::size_t i=0; i < this->world->getNumSkeletons(); ++i)
-          {
-            ::dart::dynamics::SkeletonPtr skel = this->world->getSkeleton(i);
-            for (std::size_t j=0; j < skel->getNumBodyNodes(); ++j)
-            {
-              ::dart::dynamics::BodyNode * const bn = skel->getBodyNode(j);
-              this->mapToBodies[lastId++] = bn;
-            }
-          }
+          this->mapToBodies[lastId++] = this->link1;
+          this->mapToBodies[lastId++] = this->link2;
         }
 
         void SetState(const SetState::State &x)
         {
-          const DartState *state = x.Query<DartState>();
-          if (!state)
-          {
-            ignerr << "[ignition::physics::dart::BulletDoublePendulum::"
-                   << "SetState] The state provided does not contain a "
-                   << "DartState, which this plugins needs in order to go to a "
-                   << "specified state!\n";
-            return;
-          }
+          //const DartState *state = x.Query<DartState>();
+          //if (!state)
+          //{
+          //  ignerr << "[ignition::physics::dart::BulletDoublePendulum::"
+          //         << "SetState] The state provided does not contain a "
+          //         << "DartState, which this plugins needs in order to go to a "
+          //         << "specified state!\n";
+          //  return;
+          //}
 
-          std::unordered_set<::dart::dynamics::SkeletonPtr> allSkels;
-          for (const auto &entry : state->states)
-          {
-            const ::dart::dynamics::SkeletonPtr &skel = entry.first;
-            const ::dart::dynamics::SkeletonPtr &worldSkel =
-                world->getSkeleton(skel->getName());
-            if (skel != worldSkel)
-            {
-              world->removeSkeleton(worldSkel);
-              world->addSkeleton(skel);
-            }
+          //std::unordered_set<::dart::dynamics::SkeletonPtr> allSkels;
+          //for (const auto &entry : state->states)
+          //{
+          //  const ::dart::dynamics::SkeletonPtr &skel = entry.first;
+          //  const ::dart::dynamics::SkeletonPtr &worldSkel =
+          //      world->getSkeleton(skel->getName());
+          //  if (skel != worldSkel)
+          //  {
+          //    world->removeSkeleton(worldSkel);
+          //    world->addSkeleton(skel);
+          //  }
 
-            skel->setConfiguration(entry.second);
+          //  skel->setConfiguration(entry.second);
 
-            allSkels.insert(skel);
-          }
+          //  allSkels.insert(skel);
+          //}
 
-          std::unordered_set<::dart::dynamics::SkeletonPtr> removeSkels;
-          for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
-          {
-            const ::dart::dynamics::SkeletonPtr &worldSkel =
-                this->world->getSkeleton(i);
+          //std::unordered_set<::dart::dynamics::SkeletonPtr> removeSkels;
+          //for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
+          //{
+          //  const ::dart::dynamics::SkeletonPtr &worldSkel =
+          //      this->world->getSkeleton(i);
 
-            if (allSkels.count(worldSkel) == 0)
-              removeSkels.insert(worldSkel);
-          }
+          //  if (allSkels.count(worldSkel) == 0)
+          //    removeSkels.insert(worldSkel);
+          //}
 
-          for (const auto &skel : removeSkels)
-            this->world->removeSkeleton(skel);
+          //for (const auto &skel : removeSkels)
+          //  this->world->removeSkeleton(skel);
         }
 
         void WriteState(ForwardStep::State &x)
         {
-          DartState &state = x.Get<DartState>();
-          state.states.clear();
+          //DartState &state = x.Get<DartState>();
+          //state.states.clear();
 
-          for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
+          //for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
+          //{
+          //  const ::dart::dynamics::SkeletonPtr &skel =
+          //      this->world->getSkeleton(i);
+
+          //  state.states[skel] = skel->getConfiguration();
+          //}
+        }
+
+        void ApplyJointTorque(btHingeConstraint *_joint, const double _torque)
+        {
+          // copied from gazebo::physics::BulletHingeJoint::SetForceImpl
+          if (_joint)
           {
-            const ::dart::dynamics::SkeletonPtr &skel =
-                this->world->getSkeleton(i);
+            // z-axis of constraint frame
+            btVector3 hingeAxisLocalA =
+              _joint->getFrameOffsetA().getBasis().getColumn(2);
+            btVector3 hingeAxisLocalB =
+              _joint->getFrameOffsetB().getBasis().getColumn(2);
 
-            state.states[skel] = skel->getConfiguration();
+            btVector3 hingeAxisWorldA =
+              _joint->getRigidBodyA().getWorldTransform().getBasis() *
+              hingeAxisLocalA;
+            btVector3 hingeAxisWorldB =
+              _joint->getRigidBodyB().getWorldTransform().getBasis() *
+              hingeAxisLocalB;
+
+            btVector3 hingeTorqueA = _torque * hingeAxisWorldA;
+            btVector3 hingeTorqueB = _torque * hingeAxisWorldB;
+
+            _joint->getRigidBodyA().applyTorque(hingeTorqueA);
+            _joint->getRigidBodyB().applyTorque(-hingeTorqueB);
           }
         }
 
@@ -176,15 +225,16 @@ namespace ignition
         {
           if (_timeStep != nullptr)
           {
-            this->world->setTimeStep(_timeStep->dt);
+            this->dt = _timeStep->dt;
           }
         }
 
         void Simulate()
         {
-          this->robot->setForces(this->forces);
+          ApplyJointTorque(this->joint1, this->forces[0]);
+          ApplyJointTorque(this->joint2, this->forces[1]);
 
-          this->world->step();
+          this->world->stepSimulation(this->dt, 1, this->dt);
         }
       };
 
@@ -219,21 +269,14 @@ namespace ignition
         this->dataPtr->SetState(x);
       }
 
-      void BulletDoublePendulum::Write(JointPositions &positions) const
+      void BulletDoublePendulum::Write(JointPositions &_out) const
       {
-        auto configuration = this->dataPtr->robot->getConfiguration(
-                              ::dart::dynamics::Skeleton::CONFIG_POSITIONS);
-        positions.dofs = configuration.mIndices;
-        positions.positions.clear();
-        positions.positions.resize(this->dataPtr->robot->getNumDofs());
+        _out.dofs = {0, 1};
+        _out.positions.clear();
+        _out.positions.resize(2u);
 
-        for (const auto &dof : positions.dofs)
-        {
-          if (dof < this->dataPtr->robot->getNumDofs())
-          {
-            positions.positions[dof] = configuration.mPositions[dof];
-          }
-        }
+        _out.positions[0] = this->dataPtr->joint1->getAccumulatedHingeAngle();
+        _out.positions[1] = this->dataPtr->joint2->getAccumulatedHingeAngle();
       }
 
       void BulletDoublePendulum::Write(WorldPoses &poses) const
@@ -241,28 +284,27 @@ namespace ignition
         poses.entries.clear();
         poses.entries.reserve(this->dataPtr->mapToBodies.size());
 
-        std::vector<std::size_t> cleanup;
         for(const auto &entry : this->dataPtr->mapToBodies)
         {
           const std::size_t id = entry.first;
-          const ::dart::dynamics::BodyNodePtr bn = entry.second.lock();
-          if(!bn)
-          {
-            // Remove bodies that no longer exist
-            cleanup.push_back(id);
-            continue;
-          }
+          const btRigidBody *body = entry.second;
 
           WorldPose wp;
-          //wp.pose = convert(bn->getWorldTransform());
-          //wp.pose.Pos() = convert(bn->getCOM());
+          btTransform bt = body->getCenterOfMassTransform();
+          wp.pose = ignition::math::Pose3d(
+                      ignition::math::Vector3d(
+                        bt.getOrigin().getX(),
+                        bt.getOrigin().getY(),
+                        bt.getOrigin().getZ()),
+                      ignition::math::Quaterniond(
+                        bt.getRotation().getW(),
+                        bt.getRotation().getX(),
+                        bt.getRotation().getY(),
+                        bt.getRotation().getZ()));
           wp.body = id;
 
           poses.entries.push_back(wp);
         }
-
-        for(const std::size_t id : cleanup)
-          this->dataPtr->mapToBodies.erase(id);
       }
     }
   }
