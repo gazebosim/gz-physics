@@ -22,6 +22,7 @@
 #include "ignition/common/Console.hh"
 
 #include "BulletDoublePendulum.hh"
+#include "BulletMathConversions.hh"
 
 namespace ignition
 {
@@ -157,35 +158,18 @@ namespace ignition
             const btScalar angle = entry.second;
             hinge->setAccumulatedHingeAngle(angle);
           }
-          //std::unordered_set<::dart::dynamics::SkeletonPtr> allSkels;
-          //for (const auto &entry : state->states)
-          //{
-          //  const ::dart::dynamics::SkeletonPtr &skel = entry.first;
-          //  const ::dart::dynamics::SkeletonPtr &worldSkel =
-          //      world->getSkeleton(skel->getName());
-          //  if (skel != worldSkel)
-          //  {
-          //    world->removeSkeleton(worldSkel);
-          //    world->addSkeleton(skel);
-          //  }
 
-          //  skel->setConfiguration(entry.second);
-
-          //  allSkels.insert(skel);
-          //}
-
-          //std::unordered_set<::dart::dynamics::SkeletonPtr> removeSkels;
-          //for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
-          //{
-          //  const ::dart::dynamics::SkeletonPtr &worldSkel =
-          //      this->world->getSkeleton(i);
-
-          //  if (allSkels.count(worldSkel) == 0)
-          //    removeSkels.insert(worldSkel);
-          //}
-
-          //for (const auto &skel : removeSkels)
-          //  this->world->removeSkeleton(skel);
+          for (const auto &entry : state->linkStates)
+          {
+            btRigidBody *body = entry.first;
+            BulletState::LinkState linkState = entry.second;
+            body->setCenterOfMassTransform(convert(linkState.pose));
+            body->setLinearVelocity(convert(linkState.twist.linearVelocity));
+            body->setAngularVelocity(convert(linkState.twist.angularVelocity));
+            body->clearForces();
+            body->applyCentralForce(convert(wrench.force.vec));
+            body->applyTorque(convert(wrench.torque.vec));
+          }
         }
 
         void WriteState(ForwardStep::State &x)
@@ -197,14 +181,20 @@ namespace ignition
           state.jointStates[this->joint1] = this->joint1->getAccumulatedHingeAngle();
           state.jointStates[this->joint2] = this->joint2->getAccumulatedHingeAngle();
 
-          //state.linkStates
-          //for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
-          //{
-          //  const ::dart::dynamics::SkeletonPtr &skel =
-          //      this->world->getSkeleton(i);
-
-          //  state.states[skel] = skel->getConfiguration();
-          //}
+          BulletState::LinkState linkState1;
+          BulletState::LinkState linkState2;
+          linkState1.pose = convert(this->link1->getCenterOfMassTransform());
+          linkState2.pose = convert(this->link2->getCenterOfMassTransform());
+          linkState1.twist.linearVelocity = convert(this->link1->getLinearVelocity);
+          linkState2.twist.linearVelocity = convert(this->link2->getLinearVelocity);
+          linkState1.twist.angularVelocity = convert(this->link1->getAngularVelocity);
+          linkState2.twist.angularVelocity = convert(this->link2->getAngularVelocity);
+          linkState1.wrench.force.vec = convert(this->link1->getTotalForce());
+          linkState2.wrench.force.vec = convert(this->link2->getTotalForce());
+          linkState1.wrench.torque.vec = convert(this->link1->getTotalTorque());
+          linkState2.wrench.torque.vec = convert(this->link2->getTotalTorque());
+          state.linkStates[this->link1] = linkState1;
+          state.linkStates[this->link2] = linkState2;
         }
 
         void ApplyJointTorque(btHingeConstraint *_joint, const double _torque)
@@ -312,17 +302,8 @@ namespace ignition
 
           WorldPose wp;
           btTransform bt = body->getCenterOfMassTransform();
-          wp.pose = ignition::math::Pose3d(
-                      ignition::math::Vector3d(
-                        bt.getOrigin().getX(),
-                        bt.getOrigin().getY(),
-                        bt.getOrigin().getZ()),
-                      ignition::math::Quaterniond(
-                        bt.getRotation().getW(),
-                        bt.getRotation().getX(),
-                        bt.getRotation().getY(),
-                        bt.getRotation().getZ()));
-          wp.body = id;
+          wp.pose = convert(bt);
+          p.body = id;
 
           poses.entries.push_back(wp);
         }
