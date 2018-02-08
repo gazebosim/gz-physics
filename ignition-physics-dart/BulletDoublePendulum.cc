@@ -32,6 +32,8 @@ namespace ignition
       {
         IGN_PHYSICS_DATA_LABEL(ignition::physics::bullet::BulletState)
 
+        // TODO: consider using bullet's built-in serialization for state
+        // btSerializer and btBulletFile
         using JointStateMap =
             std::unordered_map<btHingeAccumulatedAngleConstraint*,
                                btScalar>;
@@ -53,6 +55,8 @@ namespace ignition
       class PrivateBulletDoublePendulum
       {
         // based on HelloWorld.cpp example
+        // TODO: clean up allocated memory in a destructor
+        // see example for how to teardown cleanly
         public: btDefaultCollisionConfiguration *collisionConfig = nullptr;
         public: btCollisionDispatcher *dispatcher = nullptr;
         public: btBroadphaseInterface *overlappingPairCache = nullptr;
@@ -63,6 +67,7 @@ namespace ignition
         public: btRigidBody *link1 = nullptr;
         public: btRigidBody *link2 = nullptr;
 
+        // TODO: consider using btMultibody for comparison
         public: btHingeAccumulatedAngleConstraint *joint1 = nullptr;
         public: btHingeAccumulatedAngleConstraint *joint2 = nullptr;
 
