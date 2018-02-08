@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Open Source Robotics Foundation
+ * Copyright (C) 2018 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,7 @@
 #define IGNITION_PHYSICS_BULLET_MATHCONVERSIONS_HH_
 
 #include <ignition/math.hh>
-#include <LinearMath/btQuaternion.h>
-#include <LinearMath/btTransform.h>
-#include <LinearMath/btVector3.h>
+#include "BulletIncludes.hh"
 
 namespace ignition
 {
@@ -54,7 +52,7 @@ namespace ignition
       inline btTransform convert(const ignition::math::Pose3d &pose)
       {
         btTransform tf;
-        tf.setOrigin(btVector(convert(pose.Pos())));
+        tf.setOrigin(btVector3(convert(pose.Pos())));
         tf.setRotation(btQuaternion(convert(pose.Rot())));
 
         return tf;

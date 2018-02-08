@@ -17,9 +17,7 @@
 
 #include <unordered_map>
 
-#include <btBulletDynamicsCommon.h>
-
-#include "ignition/common/Console.hh"
+#include <ignition/common/Console.hh>
 
 #include "BulletDoublePendulum.hh"
 #include "BulletMathConversions.hh"
@@ -112,6 +110,10 @@ namespace ignition
           this->world->addRigidBody(this->link1);
           this->world->addRigidBody(this->link2);
 
+          // make sure objects don't fall asleep
+          this->link1->setActivationState(DISABLE_DEACTIVATION);
+          this->link2->setActivationState(DISABLE_DEACTIVATION);
+
           // joint1 connected to world
           this->joint1 = new btHingeAccumulatedAngleConstraint(
                               *this->link1,
@@ -163,12 +165,12 @@ namespace ignition
           {
             btRigidBody *body = entry.first;
             BulletState::LinkState linkState = entry.second;
-            body->setCenterOfMassTransform(convert(linkState.pose));
+            body->setCenterOfMassTransform(convert(linkState.pose.pose));
             body->setLinearVelocity(convert(linkState.twist.linearVelocity));
             body->setAngularVelocity(convert(linkState.twist.angularVelocity));
             body->clearForces();
-            body->applyCentralForce(convert(wrench.force.vec));
-            body->applyTorque(convert(wrench.torque.vec));
+            body->applyCentralForce(convert(linkState.wrench.force.vec));
+            body->applyTorque(convert(linkState.wrench.torque.vec));
           }
         }
 
@@ -183,12 +185,12 @@ namespace ignition
 
           BulletState::LinkState linkState1;
           BulletState::LinkState linkState2;
-          linkState1.pose = convert(this->link1->getCenterOfMassTransform());
-          linkState2.pose = convert(this->link2->getCenterOfMassTransform());
-          linkState1.twist.linearVelocity = convert(this->link1->getLinearVelocity);
-          linkState2.twist.linearVelocity = convert(this->link2->getLinearVelocity);
-          linkState1.twist.angularVelocity = convert(this->link1->getAngularVelocity);
-          linkState2.twist.angularVelocity = convert(this->link2->getAngularVelocity);
+          linkState1.pose.pose = convert(this->link1->getCenterOfMassTransform());
+          linkState2.pose.pose = convert(this->link2->getCenterOfMassTransform());
+          linkState1.twist.linearVelocity = convert(this->link1->getLinearVelocity());
+          linkState2.twist.linearVelocity = convert(this->link2->getLinearVelocity());
+          linkState1.twist.angularVelocity = convert(this->link1->getAngularVelocity());
+          linkState2.twist.angularVelocity = convert(this->link2->getAngularVelocity());
           linkState1.wrench.force.vec = convert(this->link1->getTotalForce());
           linkState2.wrench.force.vec = convert(this->link2->getTotalForce());
           linkState1.wrench.torque.vec = convert(this->link1->getTotalTorque());
@@ -303,7 +305,7 @@ namespace ignition
           WorldPose wp;
           btTransform bt = body->getCenterOfMassTransform();
           wp.pose = convert(bt);
-          p.body = id;
+          wp.body = id;
 
           poses.entries.push_back(wp);
         }
