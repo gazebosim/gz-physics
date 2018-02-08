@@ -35,7 +35,7 @@ namespace ignition
 
         using JointStateMap =
             std::unordered_map<btHingeAccumulatedAngleConstraint*,
-                               double>;
+                               btScalar>;
         struct LinkState
         {
           ignition::physics::WorldPose pose;
@@ -141,16 +141,22 @@ namespace ignition
 
         void SetState(const SetState::State &x)
         {
-          //const BulletState *state = x.Query<BulletState>();
-          //if (!state)
-          //{
-          //  ignerr << "[ignition::physics::dart::BulletDoublePendulum::"
-          //         << "SetState] The state provided does not contain a "
-          //         << "BulletState, which this plugins needs in order to go to a "
-          //         << "specified state!\n";
-          //  return;
-          //}
+          const BulletState *state = x.Query<BulletState>();
+          if (!state)
+          {
+            ignerr << "[ignition::physics::dart::BulletDoublePendulum::"
+                   << "SetState] The state provided does not contain a "
+                   << "BulletState, which this plugins needs in order to go to a "
+                   << "specified state!\n";
+            return;
+          }
 
+          for (const auto &entry : state->jointStates)
+          {
+            btHingeAccumulatedAngleConstraint *hinge = entry.first;
+            const btScalar angle = entry.second;
+            hinge->setAccumulatedHingeAngle(angle);
+          }
           //std::unordered_set<::dart::dynamics::SkeletonPtr> allSkels;
           //for (const auto &entry : state->states)
           //{
@@ -184,9 +190,14 @@ namespace ignition
 
         void WriteState(ForwardStep::State &x)
         {
-          //BulletState &state = x.Get<BulletState>();
-          //state.states.clear();
+          BulletState &state = x.Get<BulletState>();
+          state.jointStates.clear();
+          state.linkStates.clear();
 
+          state.jointStates[this->joint1] = this->joint1->getAccumulatedHingeAngle();
+          state.jointStates[this->joint2] = this->joint2->getAccumulatedHingeAngle();
+
+          //state.linkStates
           //for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
           //{
           //  const ::dart::dynamics::SkeletonPtr &skel =
