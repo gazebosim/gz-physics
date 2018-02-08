@@ -76,6 +76,16 @@ namespace ignition
       std::size_t inCoordinatesOf;
     };
 
+    struct WorldTwist
+    {
+      IGN_PHYSICS_DATA_LABEL(ignition::physics::WorldTwist)
+
+      ignition::math::Vector3d linearVelocity;
+      ignition::math::Vector3d angularVelocity;
+
+      std::size_t body;
+    };
+
     struct JointPositions
     {
       IGN_PHYSICS_DATA_LABEL(ignition::physics::JointPositions)

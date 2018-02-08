@@ -33,11 +33,21 @@ namespace ignition
       {
         IGN_PHYSICS_DATA_LABEL(ignition::physics::bullet::BulletState)
 
-        // using StateMap =
-        //     std::unordered_map<::dart::dynamics::SkeletonPtr,
-        //                        ::dart::dynamics::Skeleton::Configuration>;
+        using JointStateMap =
+            std::unordered_map<btHingeAccumulatedAngleConstraint*,
+                               double>;
+        struct LinkState
+        {
+          ignition::physics::WorldPose pose;
+          ignition::physics::WorldTwist twist;
+          ignition::physics::ForceTorque wrench;
+        };
+        using LinkStateMap =
+            std::unordered_map<btRigidBody*,
+                               LinkState>;
 
-        //StateMap states;
+        JointStateMap jointStates;
+        LinkStateMap linkStates;
       };
 
 
@@ -131,12 +141,12 @@ namespace ignition
 
         void SetState(const SetState::State &x)
         {
-          //const DartState *state = x.Query<DartState>();
+          //const BulletState *state = x.Query<BulletState>();
           //if (!state)
           //{
           //  ignerr << "[ignition::physics::dart::BulletDoublePendulum::"
           //         << "SetState] The state provided does not contain a "
-          //         << "DartState, which this plugins needs in order to go to a "
+          //         << "BulletState, which this plugins needs in order to go to a "
           //         << "specified state!\n";
           //  return;
           //}
@@ -174,7 +184,7 @@ namespace ignition
 
         void WriteState(ForwardStep::State &x)
         {
-          //DartState &state = x.Get<DartState>();
+          //BulletState &state = x.Get<BulletState>();
           //state.states.clear();
 
           //for (std::size_t i=0; i < world->getNumSkeletons(); ++i)
