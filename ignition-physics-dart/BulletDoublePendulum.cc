@@ -30,8 +30,6 @@ namespace ignition
     {
       struct BulletState
       {
-        IGN_PHYSICS_DATA_LABEL(ignition::physics::bullet::BulletState)
-
         // TODO: consider using bullet's built-in serialization for state
         // btSerializer and btBulletFile
         using JointStateMap =
