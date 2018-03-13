@@ -30,7 +30,7 @@ namespace ignition
       : CompositeData(),
         privateExpectData(
           this->dataMap.insert(
-            std::make_pair(Expected::IgnPhysicsTypeLabel(),
+            std::make_pair(typeid(Expected).name(),
                            CompositeData::DataEntry())).first)
     {
       // Do nothing
@@ -394,7 +394,7 @@ namespace ignition
         using Requirer = typename detail::SelectRequirerIfAvailable<
                 T, Specification>::Requirer;
 
-        return static_cast<const Requirer*>(this)->Get<T>();
+        return static_cast<const Requirer*>(this)->template Get<T>();
       }
 
       template <typename T>
