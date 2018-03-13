@@ -130,24 +130,24 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(3u, data.NumUnqueriedEntries());
   EXPECT_EQ(3u, data.NumEntries());
   unqueried = data.UnqueriedEntries();
-  EXPECT_NE(0u, unqueried.count("StringData"));
-  EXPECT_NE(0u, unqueried.count("DoubleData"));
-  EXPECT_NE(0u, unqueried.count("IntData"));
+  EXPECT_NE(0u, unqueried.count(typeid(StringData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(IntData).name()));
 
   data.Remove<IntData>();
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
   EXPECT_EQ(2u, data.NumEntries());
   unqueried = data.UnqueriedEntries();
-  EXPECT_NE(0u, unqueried.count("StringData"));
-  EXPECT_NE(0u, unqueried.count("DoubleData"));
-  EXPECT_EQ(0u, unqueried.count("IntData"));
+  EXPECT_NE(0u, unqueried.count(typeid(StringData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
+  EXPECT_EQ(0u, unqueried.count(typeid(IntData).name()));
 
   data.Has<StringData>();
   EXPECT_EQ(1u, data.NumUnqueriedEntries());
   EXPECT_EQ(2u, data.NumEntries());
   unqueried = data.UnqueriedEntries();
-  EXPECT_EQ(0u, unqueried.count("StringData"));
-  EXPECT_NE(0u, unqueried.count("DoubleData"));
+  EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
 
   // Objects which already existed should retain their query state. Newly
   // created objects should be unqueried.
@@ -156,9 +156,9 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
   EXPECT_EQ(3u, data.NumEntries());
   unqueried = data.UnqueriedEntries();
-  EXPECT_EQ(0u, unqueried.count("StringData"));
-  EXPECT_NE(0u, unqueried.count("DoubleData"));
-  EXPECT_NE(0u, unqueried.count("IntData"));
+  EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(IntData).name()));
 
   // Objects which remain the same should retain their query state. Objects
   // which are copied over or created should be unqueried.
@@ -167,20 +167,20 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(3u, data.NumUnqueriedEntries());
   EXPECT_EQ(4u, data.NumEntries());
   unqueried = data.UnqueriedEntries();
-  EXPECT_EQ(0u, unqueried.count("StringData"));
-  EXPECT_NE(0u, unqueried.count("DoubleData"));
-  EXPECT_NE(0u, unqueried.count("IntData"));
-  EXPECT_NE(0u, unqueried.count("BoolData"));
+  EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(IntData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(BoolData).name()));
 
   // Check that querying will alter the query flag
   EXPECT_NE(nullptr, data.Query<DoubleData>());
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
   EXPECT_EQ(4u, data.NumEntries());
   unqueried = data.UnqueriedEntries();
-  EXPECT_EQ(0u, unqueried.count("StringData"));
-  EXPECT_EQ(0u, unqueried.count("DoubleData"));
-  EXPECT_NE(0u, unqueried.count("IntData"));
-  EXPECT_NE(0u, unqueried.count("BoolData"));
+  EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
+  EXPECT_EQ(0u, unqueried.count(typeid(DoubleData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(IntData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(BoolData).name()));
 
   // Make sure that the const-qualified version of query also works
   EXPECT_NE(nullptr, static_cast<const ignition::physics::CompositeData&>(
@@ -188,10 +188,10 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(1u, data.NumUnqueriedEntries());
   EXPECT_EQ(4u, data.NumEntries());
   unqueried = data.UnqueriedEntries();
-  EXPECT_EQ(0u, unqueried.count("StringData"));
-  EXPECT_EQ(0u, unqueried.count("DoubleData"));
-  EXPECT_EQ(0u, unqueried.count("IntData"));
-  EXPECT_NE(0u, unqueried.count("BoolData"));
+  EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
+  EXPECT_EQ(0u, unqueried.count(typeid(DoubleData).name()));
+  EXPECT_EQ(0u, unqueried.count(typeid(IntData).name()));
+  EXPECT_NE(0u, unqueried.count(typeid(BoolData).name()));
 }
 
 /////////////////////////////////////////////////
