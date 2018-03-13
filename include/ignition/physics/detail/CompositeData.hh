@@ -19,7 +19,6 @@
 #define IGNITION_PHYSICS_DETAIL_COMPOSITEDATA_HH_
 
 #include "ignition/physics/CompositeData.hh"
-#include "ignition/physics/CompositeDataMacros.hh"
 
 namespace ignition
 {
