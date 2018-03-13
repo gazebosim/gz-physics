@@ -30,7 +30,7 @@ namespace ignition
       : CompositeData(),
         privateExpectData(
           this->dataMap.insert(
-            std::make_pair(Expected::IgnPhysicsTypeLabel(),
+            std::make_pair(typeid(Expected).name(),
                            CompositeData::DataEntry())).first)
     {
       // Do nothing

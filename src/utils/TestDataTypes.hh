@@ -19,13 +19,11 @@
 #define IGNITION_PHYSICS_TESTUTILS_HH_
 
 #include "ignition/physics/CompositeData.hh"
-#include "ignition/physics/CompositeDataMacros.hh"
 #include "ignition/physics/SpecifyData.hh"
 
 /////////////////////////////////////////////////
 class StringData
 {
-  IGN_PHYSICS_DATA_LABEL(StringData)
   public: std::string myString;
 
   public: inline StringData(const std::string &_input = "default")
@@ -38,7 +36,6 @@ class StringData
 /////////////////////////////////////////////////
 class DoubleData
 {
-  IGN_PHYSICS_DATA_LABEL(DoubleData)
   public: double myDouble;
 
   public: inline DoubleData(const double _input = 1.61803)
@@ -51,7 +48,6 @@ class DoubleData
 /////////////////////////////////////////////////
 class IntData
 {
-  IGN_PHYSICS_DATA_LABEL(IntData)
   public: int myInt;
 
   public: inline IntData(const int _input = 55)
@@ -64,7 +60,6 @@ class IntData
 /////////////////////////////////////////////////
 class BoolData
 {
-  IGN_PHYSICS_DATA_LABEL(BoolData)
   public: bool myBool;
 
   public: inline BoolData(const bool _input = true)
@@ -77,7 +72,6 @@ class BoolData
 /////////////////////////////////////////////////
 class CharData
 {
-  IGN_PHYSICS_DATA_LABEL(CharData)
   public: char myChar;
 
   public: inline CharData(const char _input = 'c')
@@ -90,7 +84,6 @@ class CharData
 /////////////////////////////////////////////////
 class FloatData
 {
-  IGN_PHYSICS_DATA_LABEL(FloatData)
   public: float myFloat;
 
   public: inline FloatData(const float _input = 9.5)
@@ -103,7 +96,6 @@ class FloatData
 /////////////////////////////////////////////////
 class VectorDoubleData
 {
-  IGN_PHYSICS_DATA_LABEL(VectorDoubleData)
   public: std::vector<double> myVector;
 
   public: inline VectorDoubleData(const std::vector<double> &vec = {})

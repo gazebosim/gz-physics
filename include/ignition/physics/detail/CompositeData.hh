@@ -19,7 +19,6 @@
 #define IGNITION_PHYSICS_DETAIL_COMPOSITEDATA_HH_
 
 #include "ignition/physics/CompositeData.hh"
-#include "ignition/physics/CompositeDataMacros.hh"
 
 namespace ignition
 {
@@ -78,7 +77,7 @@ namespace ignition
     Data &CompositeData::Get()
     {
       const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
+            std::make_pair(typeid(Data).name(), DataEntry())).first;
 
       if (!it->second.data)
       {
@@ -96,7 +95,7 @@ namespace ignition
     Data& CompositeData::Create(Args&&... args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
+            std::make_pair(typeid(Data).name(), DataEntry())).first;
 
       if (!it->second.data)
         ++this->numEntries;
@@ -114,7 +113,7 @@ namespace ignition
     Data& CompositeData::GetOrCreate(Args&&... args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
+            std::make_pair(typeid(Data).name(), DataEntry())).first;
 
       if (!it->second.data)
       {
@@ -133,7 +132,7 @@ namespace ignition
     bool CompositeData::Remove()
     {
       const MapOfData::iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it || !it->second.data)
         return true;
@@ -159,7 +158,7 @@ namespace ignition
     Data* CompositeData::Query(const QueryMode mode)
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return nullptr;
@@ -178,7 +177,7 @@ namespace ignition
     const Data* CompositeData::Query(const QueryMode mode) const
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return nullptr;
@@ -208,7 +207,7 @@ namespace ignition
       DataStatus status;
 
       const MapOfData::const_iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return status;
@@ -231,7 +230,7 @@ namespace ignition
     bool CompositeData::Unquery() const
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return false;
@@ -253,7 +252,7 @@ namespace ignition
     Data& CompositeData::MakeRequired(Args&&... args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(Data::IgnPhysicsTypeLabel(), DataEntry())).first;
+            std::make_pair(typeid(Data).name(), DataEntry())).first;
 
       it->second.required = true;
       if (!it->second.data)
@@ -273,7 +272,7 @@ namespace ignition
     bool CompositeData::Requires() const
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(Data::IgnPhysicsTypeLabel());
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return false;
