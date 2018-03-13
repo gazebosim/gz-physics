@@ -33,7 +33,6 @@ namespace ignition
     {
       struct OdeState
       {
-        IGN_PHYSICS_DATA_LABEL(ignition::physics::ode::OdeState)
         using BodyPoseMap = std::unordered_map<dBodyID, ignition::math::Vector3d>;
         using BodyQuatMap = std::unordered_map<dBodyID, ignition::math::Quaterniond>;
         BodyPoseMap poseStates;
