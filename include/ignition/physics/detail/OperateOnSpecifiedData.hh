@@ -67,7 +67,7 @@ namespace ignition
                            CompositeData::QUERY_SILENT)))
       {
         const bool inserted = history.insert(
-              Data::IgnPhysicsTypeLabel()).second;
+              typeid(Data).name()).second;
 
         if(inserted)
         {

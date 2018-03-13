@@ -23,28 +23,25 @@
 
 #include "utils/TestDataTypes.hh"
 
-#define IGN_PHYSICS_CREATE_LABELED_DATA(Name) \
-  struct Name { IGN_PHYSICS_DATA_LABEL(Name) };
-
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData1)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData2)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData3)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData4)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData5)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData6)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData7)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData8)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData9)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData10)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData11)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData12)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData13)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData14)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData15)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData16)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData17)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData18)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData19)
+struct SomeData1 { };
+struct SomeData2 { };
+struct SomeData3 { };
+struct SomeData4 { };
+struct SomeData5 { };
+struct SomeData6 { };
+struct SomeData7 { };
+struct SomeData8 { };
+struct SomeData9 { };
+struct SomeData10 { };
+struct SomeData11 { };
+struct SomeData12 { };
+struct SomeData13 { };
+struct SomeData14 { };
+struct SomeData15 { };
+struct SomeData16 { };
+struct SomeData17 { };
+struct SomeData18 { };
+struct SomeData19 { };
 
 // Expect only 1 type
 using ExpectString = ignition::physics::ExpectData<StringData>;
