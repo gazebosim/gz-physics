@@ -26,7 +26,7 @@ namespace ignition
   {
     /// \brief A struct that defines options for writing data to a CompositeData
     /// object.
-    struct IGNITION_COMMON_VISIBLE WriteOptions
+    struct IGNITION_PHYSICS_VISIBLE WriteOptions
     {
       /// \brief If a data type is not already part of the CompositeData, then
       /// skip it instead of writing to it when this is true. When this is
@@ -92,7 +92,7 @@ namespace ignition
       /// required by the Specification.
       public: CanWriteRequiredData();
 
-      /// \brief Call this function to read all the types in _data that are
+      /// \brief Call this function to write all the types in _data that are
       /// listed as required in the Specification.
       public: template <typename CompositeType>
       void WriteRequiredData(

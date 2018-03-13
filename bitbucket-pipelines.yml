@@ -1,23 +1,49 @@
-# This is a sample build configuration for C++.
-# Check our guides at https://confluence.atlassian.com/x/VYk8Lw for more examples.
-# Only use spaces to indent your .yml configuration.
-# -----
-# You can specify a custom docker image from Docker Hub as your build environment.
-image: ubuntu:16.04
+image: ubuntu:xenial
 
 pipelines:
   default:
     - step:
         script:
+          - apt-get update
+          - apt-get -y install cmake build-essential lcov curl mercurial software-properties-common
+          - gcc -v
+          - g++ -v
+          # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" > /etc/apt/sources.list.d/gazebo-stable.list
           - apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
-            cmake pkg-config python ruby-ronn uuid-dev
-            libignition-math3-dev libignition-common-dev
+            libignition-cmake-dev
+            libignition-math4-dev
+          # Build ignition common from source until PluginPtrSemantics is merged
+          - apt-get -y install
+            libavdevice-dev
+            libignition-common-dev
+          - apt-get -y remove
+            libignition-common-dev
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b PluginPtrSemantics
+          - cd ign-common
           - mkdir build
           - cd build
           - cmake ..
+          - make install
+          - cd ../..
+          # DARTsim
+          - apt-add-repository -y ppa:dartsim
+          - apt-get update
+          - apt-get -y install
+            dart6-data
+            libdart6-dev
+            libdart6-utils-urdf-dev
+          # hack until they fix dart6-data
+          - find /usr/share/doc/dart/data/urdf/KR5 | grep gz$ | while read f; do gzip -d "$f"; done
+          # Ignition physics
+          - mkdir build
+          - cd build
+          - cmake .. -DCMAKE_BUILD_TYPE=coverage
           - make
+          - export CTEST_OUTPUT_ON_FAILURE=1
           - make test
+          - make coverage
+          - bash <(curl -s https://codecov.io/bash)
           - make install

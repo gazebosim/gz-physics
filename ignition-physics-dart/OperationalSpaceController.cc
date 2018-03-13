@@ -34,8 +34,6 @@ namespace ignition
     {
       struct DartState
       {
-        IGN_PHYSICS_DATA_LABEL(ignition::physics::dart::DartState)
-
         using StateMap =
             std::unordered_map<::dart::dynamics::SkeletonPtr,
                                ::dart::dynamics::Skeleton::Configuration>;
@@ -84,11 +82,11 @@ namespace ignition
 
           std::size_t dofs = mEndEffector->getNumDependentGenCoords();
           mKp.setZero();
-          for(std::size_t i=0; i<3; ++i)
+          for (std::size_t i=0; i < 3; ++i)
             mKp(i,i) = 50.0;
 
           mKd.setZero(dofs,dofs);
-          for(std::size_t i=0; i<dofs; ++i)
+          for (std::size_t i=0; i < dofs; ++i)
             mKd(i,i) = 5.0;
 
           for(std::size_t i=0; i<mRobot->getNumJoints(); ++i)
@@ -97,7 +95,7 @@ namespace ignition
             mRobot->getJoint(i)->setDampingCoefficient(0, 0.5);
           }
 
-          mOffset = Eigen::Vector3d(0.05,0,0);
+          mOffset = Eigen::Vector3d(0.0, 0.0, 0.0);
 
           Eigen::Isometry3d tf = mEndEffector->getWorldTransform();
           tf.pretranslate(mOffset);
@@ -257,7 +255,7 @@ namespace ignition
 
       void OperationalSpaceController::Write(WorldPoses &poses) const
       {
-        poses.entries.reserve(dataPtr->mapToBodies.size());
+        poses.entries.reserve(this->dataPtr->mapToBodies.size());
 
         std::vector<std::size_t> cleanup;
         for(const auto &entry : this->dataPtr->mapToBodies)

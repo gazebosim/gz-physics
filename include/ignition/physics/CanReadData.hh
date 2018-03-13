@@ -25,7 +25,7 @@ namespace ignition
 {
   namespace physics
   {
-    struct IGNITION_COMMON_VISIBLE ReadOptions
+    struct IGNITION_PHYSICS_VISIBLE ReadOptions
     {
       /// \brief If a type has already been queried, do not perform the read
       /// operation on it.
@@ -57,7 +57,7 @@ namespace ignition
     /// CanReadExpectedData while passing different Specifications to each, but
     /// you should be aware that ReadRequiredData will only handle the data
     /// required by the Specification that is given to CanReadRequiredData.
-    /// Likewise, CanReadExpectedData will only handle to the data expected by
+    /// Likewise, CanReadExpectedData will only handle the data expected by
     /// the Specification that is given to CanReadExpectedData.
     ///
     /// While you can technically inherit CanReadRequiredData multiple times
@@ -115,7 +115,7 @@ namespace ignition
     /// CanReadExpectedData while passing different Specifications to each, but
     /// you should be aware that ReadRequiredData will only handle the data
     /// required by the Specification that is given to CanReadRequiredData.
-    /// Likewise, CanReadExpectedData will only handle to the data expected by
+    /// Likewise, CanReadExpectedData will only handle the data expected by
     /// the Specification that is given to CanReadExpectedData.
     ///
     /// While you can technically inherit CanReadRequiredData multiple times
