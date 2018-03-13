@@ -38,8 +38,6 @@ namespace ignition
     {
       struct DartState
       {
-        IGN_PHYSICS_DATA_LABEL(ignition::physics::dart::DartState)
-
         using StateMap =
             std::unordered_map<::dart::dynamics::SkeletonPtr,
                                ::dart::dynamics::Skeleton::Configuration>;
