@@ -289,6 +289,7 @@ namespace ignition
       using Data = void;
     };
 
+
     /// \brief Provides a constexpr field named `value` whose value is true if
     /// and only if Data is expected by Specification
     template <typename Data, typename Specification>
