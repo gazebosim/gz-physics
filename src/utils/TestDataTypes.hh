@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_TESTUTILS_HH_
 #define IGNITION_PHYSICS_TESTUTILS_HH_
 
+#include <string>
+#include <vector>
 #include "ignition/physics/CompositeData.hh"
 #include "ignition/physics/SpecifyData.hh"
 
@@ -166,7 +168,7 @@ ignition::physics::CompositeData CreateSomeData(bool resetQueries = false)
   ignition::physics::CompositeData data;
   AddSomeData<DataTypes...>::To(data);
 
-  if(resetQueries)
+  if (resetQueries)
     data.ResetQueries();
 
   return data;
