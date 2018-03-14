@@ -40,8 +40,8 @@ TEST(DoublePendulum, Step)
   std::string projectPath = PROJECT_BINARY_PATH;
 
   ignition::common::SystemPaths sp;
-  sp.AddPluginPaths(projectPath + "/ignition-physics-dart");
-  std::string path = sp.FindSharedLibrary("ignition-physics-dart");
+  sp.AddPluginPaths(projectPath + "/ignition-physics-dart-bullet");
+  std::string path = sp.FindSharedLibrary("ignition-physics-dart-bullet");
 
   ignition::common::PluginLoader loader;
   loader.LoadLibrary(path);
