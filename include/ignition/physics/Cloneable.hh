@@ -33,25 +33,30 @@ namespace ignition
       public: virtual ~Cloneable() = default;
 
       /// \brief Do not copy this class directly, use Clone() or Copy() instead.
-      public: Cloneable(const Cloneable &doNotCopy) = delete;
+      /// \param[in] _doNotCopy Not used.
+      public: Cloneable(const Cloneable &_doNotCopy) = delete;
 
       /// \brief Do not copy this class directly, use Clone() or Copy() instead.
-      public: Cloneable& operator=(const Cloneable &doNotCopy) = delete;
+      /// \param[in] _doNotCopy Not used.
+      public: Cloneable& operator=(const Cloneable &_doNotCopy) = delete;
 
       /// \brief Implement this function to allow your Cloneable type to be
       /// cloned safely.
+      /// \return Return a pointer to a cloned version of this object.
       public: virtual std::unique_ptr<Cloneable> Clone() const = 0;
 
       /// \brief Implement this function to allow your Cloneable type to copy
       /// another Cloneable object. Assume that the fully-derived type of other
       /// is the same as the fully-derived type of this object (i.e. you may use
       /// static_cast instead of dynamic_cast).
-      public: virtual void Copy(const Cloneable &other) = 0;
+      /// \param[in] _other Instance to copy into this object.
+      public: virtual void Copy(const Cloneable &_other) = 0;
 
       /// \brief Implement this function to allow your Cloneable type to move
       /// data from another Cloneable object. Assume that the fully-derived
       /// type of other is the same as the fully-derived type of this object.
-      public: virtual void Copy(Cloneable &&other) = 0;
+      /// \param[in] _other Instance to move into this object.
+      public: virtual void Copy(Cloneable &&_other) = 0;
     };
 
     /// \brief Assuming the type T follows the Rule of Five or the Rule of Zero,
@@ -61,28 +66,28 @@ namespace ignition
     {
       /// \brief Perfect-forwarding constructor
       public: template <typename... Args>
-      MakeCloneable(Args&&... args);
+      MakeCloneable(Args&&... _args);
 
       /// \brief Copy constructor
-      public: MakeCloneable(const MakeCloneable &other);
+      public: MakeCloneable(const MakeCloneable &_other);
 
       /// \brief Move constructor
-      public: MakeCloneable(MakeCloneable &&other);
+      public: MakeCloneable(MakeCloneable &&_other);
 
       /// \brief Copy operator
-      public: MakeCloneable& operator=(const MakeCloneable &other);
+      public: MakeCloneable& operator=(const MakeCloneable &_other);
 
       /// \brief Move operator
-      public: MakeCloneable& operator=(MakeCloneable &&other);
+      public: MakeCloneable& operator=(MakeCloneable &&_other);
 
       // Documentation inherited
       public: std::unique_ptr<Cloneable> Clone() const override final;
 
       // Documentation inherited
-      public: void Copy(const Cloneable &other) override final;
+      public: void Copy(const Cloneable &_other) override final;
 
       // Documentation inherited
-      public: void Copy(Cloneable &&other) override final;
+      public: void Copy(Cloneable &&_other) override final;
     };
   }
 }
