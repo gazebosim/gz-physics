@@ -625,12 +625,12 @@ namespace ignition
 
       /// \brief Returns the number of data entries currently contained in this
       /// CompositeData. Runs with O(1) complexity.
-      std::size_t NumEntries() const;
+      public: std::size_t NumEntries() const;
 
       /// \brief Returns the number of entries in this CompositeData which have
       /// not been queried. See UnqueriedEntries() for more information about
       /// the "queried" flag.
-      std::size_t NumUnqueriedEntries() const;
+      public: std::size_t NumUnqueriedEntries() const;
 
       /// \brief Reset the query flags on all data entries. This will make it
       /// appear as though no entries have ever been queried. See
@@ -641,7 +641,7 @@ namespace ignition
       /// a pipeline, because sometimes the compiler inappropriately elides the
       /// copy/move constructor/operators and passes along the state of the
       /// queries, even though it should not.
-      void ResetQueries() const;
+      public: void ResetQueries() const;
 
       /// \brief Returns an ordered (alphabetical) set of the data entries in
       /// this CompositeData which have not been queried (Get, Create,
@@ -712,7 +712,7 @@ namespace ignition
       ///       // what to do with MyData3.
       ///     }
       ///
-      std::set<std::string> UnqueriedEntries() const;
+      public: std::set<std::string> UnqueriedEntries() const;
 
 
       /// \brief Options that determine the behavior of the Copy() function
