@@ -630,7 +630,7 @@ namespace ignition
       /// \brief Returns the number of entries in this CompositeData which have
       /// not been queried. See UnqueriedEntries() for more information about
       /// the "queried" flag.
-      public: std::size_t NumUnqueriedEntries() const;
+      public: std::size_t UnqueriedEntryCount() const;
 
       /// \brief Reset the query flags on all data entries. This will make it
       /// appear as though no entries have ever been queried. See

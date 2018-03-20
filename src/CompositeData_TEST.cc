@@ -127,7 +127,7 @@ TEST(CompositeData_TEST, Queries)
 
   std::set<std::string> unqueried;
 
-  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
   EXPECT_EQ(3u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_NE(0u, unqueried.count(typeid(StringData).name()));
@@ -135,7 +135,7 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(0u, unqueried.count(typeid(IntData).name()));
 
   data.Remove<IntData>();
-  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+  EXPECT_EQ(2u, data.UnqueriedEntryCount());
   EXPECT_EQ(2u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_NE(0u, unqueried.count(typeid(StringData).name()));
@@ -143,7 +143,7 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(0u, unqueried.count(typeid(IntData).name()));
 
   data.Has<StringData>();
-  EXPECT_EQ(1u, data.NumUnqueriedEntries());
+  EXPECT_EQ(1u, data.UnqueriedEntryCount());
   EXPECT_EQ(2u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
@@ -153,7 +153,7 @@ TEST(CompositeData_TEST, Queries)
   // created objects should be unqueried.
   data.Copy(CreateSomeData<StringData, DoubleData, IntData>(true),
             ignition::physics::CompositeData::SOFT_MERGE);
-  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+  EXPECT_EQ(2u, data.UnqueriedEntryCount());
   EXPECT_EQ(3u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
@@ -164,7 +164,7 @@ TEST(CompositeData_TEST, Queries)
   // which are copied over or created should be unqueried.
   data.Copy(CreateSomeData<IntData, BoolData>(true),
             ignition::physics::CompositeData::HARD_MERGE);
-  EXPECT_EQ(3u, data.NumUnqueriedEntries());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
   EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
@@ -174,7 +174,7 @@ TEST(CompositeData_TEST, Queries)
 
   // Check that querying will alter the query flag
   EXPECT_NE(nullptr, data.Query<DoubleData>());
-  EXPECT_EQ(2u, data.NumUnqueriedEntries());
+  EXPECT_EQ(2u, data.UnqueriedEntryCount());
   EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
@@ -185,7 +185,7 @@ TEST(CompositeData_TEST, Queries)
   // Make sure that the const-qualified version of query also works
   EXPECT_NE(nullptr, static_cast<const ignition::physics::CompositeData&>(
               data).Query<IntData>());
-  EXPECT_EQ(1u, data.NumUnqueriedEntries());
+  EXPECT_EQ(1u, data.UnqueriedEntryCount());
   EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));

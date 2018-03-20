@@ -351,7 +351,7 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    std::size_t CompositeData::NumUnqueriedEntries() const
+    std::size_t CompositeData::UnqueriedEntryCount() const
     {
       IGN_ASSERT(numEntries >= numQueries,
                  "The recorded number of queries is greater than the recorded "
@@ -371,7 +371,7 @@ namespace ignition
     /////////////////////////////////////////////////
     std::set<std::string> CompositeData::UnqueriedEntries() const
     {
-      if (NumUnqueriedEntries() == 0)
+      if (UnqueriedEntryCount() == 0)
         return std::set<std::string>();
 
       std::set<std::string> unqueried;
