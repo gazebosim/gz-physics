@@ -1,0 +1,2 @@
+ign_add_executable(VALGRIND_composite_data composite_data.cc)
+target_link_libraries(VALGRIND_composite_data ${PROJECT_LIBRARY_TARGET_NAME})
