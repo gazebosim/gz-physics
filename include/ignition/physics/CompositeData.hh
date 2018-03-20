@@ -77,7 +77,7 @@ namespace ignition
       ///       // constructor of MyData. The MyData object will be stored
       ///       // inside of the object called "composite", and we can grab a
       ///       // mutable reference to it.
-      ///       MyData& data = composite.Get<MyData>();
+      ///       MyData &data = composite.Get<MyData>();
       ///
       ///       // We can modify the MyData object inside of "composite" using
       ///       // the mutable reference that we grabbed.
@@ -90,7 +90,7 @@ namespace ignition
       ///     }
       ///
       public: template <typename Data>
-      Data& Get();
+      Data &Get();
 
       /// \brief Create a Data type object with the provided arguments. If a
       /// Data object is already present in this CompositeData, it will be
@@ -113,8 +113,8 @@ namespace ignition
       ///     {
       ///       IGN_PHYSICS_DATA_LABEL(MyData)
       ///
-      ///       MyData(const std::string& arg = "")
-      ///         : myString(arg)
+      ///       MyData(const std::string &_arg = "")
+      ///         : myString(_arg)
       ///       {
       ///         // Intentionally blank
       ///       }
@@ -128,7 +128,7 @@ namespace ignition
       ///
       ///       // Create an object of type MyData and store it in "composite".
       ///       // A reference to the newly created object is returned.
-      ///       MyData& data = composite.Create<MyData>("some argument");
+      ///       MyData &data = composite.Create<MyData>("some argument");
       ///
       ///       // This will print out "some argument", because the string in
       ///       // MyData was initialized with that argument.
@@ -154,7 +154,7 @@ namespace ignition
       ///     }
       ///
       public: template <typename Data, typename... Args>
-      Data& Create(Args&&... args);
+      Data &Create(Args &&..._args);
 
       /// \brief If a Data type object is available in this CompositeData,
       /// this will return a reference to it. Otherwise, it will create a new
@@ -174,8 +174,8 @@ namespace ignition
       ///     {
       ///       IGN_PHYSICS_DATA_LABEL(MyData)
       ///
-      ///       MyData(const std::string& arg = "")
-      ///         : myString(arg)
+      ///       MyData(const std::string &_arg = "")
+      ///         : myString(_arg)
       ///       {
       ///         // Intentionally blank
       ///       }
@@ -189,7 +189,7 @@ namespace ignition
       ///
       ///       // Create an object of type MyData and store it in "composite".
       ///       // A reference to the newly created object is returned.
-      ///       MyData& data = composite.GetOrCreate<MyData>("some argument");
+      ///       MyData &data = composite.GetOrCreate<MyData>("some argument");
       ///
       ///       // This will print out "some argument", because the string in
       ///       // MyData was initialized with that argument.
@@ -206,21 +206,23 @@ namespace ignition
       ///       // "composite", because the instance already exists. It will
       ///       // just return the instance as a reference and ignore the
       ///       // argument that has been passed in.
-      ///       MyData& altData = composite.GetOrCreate<MyData>("another argument");
+      ///       MyData &altData = composite.GetOrCreate<MyData>(
+      ///                           "another argument");
       ///
       ///       // The reference to "data" is still perfectly VALID, and in fact
       ///       // its underlying pointer is equal to the underlying pointer of
       ///       // "altData".
-      ///       assert( (&data) == (&altData) );
+      ///       assert((&data) == (&altData));
       ///
       ///       // This will print out "I modified this data" because there have
       ///       // not been any function calls that can alter the value of
       ///       // myString in the time since that modification was made.
-      ///       std::cout << composite.GetOrCreate<MyData>().myString << std::endl;
+      ///       std::cout << composite.GetOrCreate<MyData>().myString
+      ///                 << std::endl;
       ///     }
       ///
       public: template <typename Data, typename... Args>
-      Data& GetOrCreate(Args&&... args);
+      Data &GetOrCreate(Args &&..._args);
 
       /// \brief This will remove a Data type object from this CompositeData and
       /// delete it if one is present. Otherwise, it will do nothing. Data types
@@ -242,8 +244,8 @@ namespace ignition
       ///     {
       ///       IGN_PHYSICS_DATA_LABEL(MyData)
       ///
-      ///       MyData(const std::string& arg = "")
-      ///         : myString(arg)
+      ///       MyData(const std::string &_arg = "")
+      ///         : myString(_arg)
       ///       {
       ///         // Intentionally blank
       ///       }
@@ -257,17 +259,21 @@ namespace ignition
       ///
       ///       // Create an object of type MyData and store it in "composite".
       ///       // A reference to the newly created object is returned.
-      ///       MyData& data = composite.GetOrCreate<MyData>("some argument");
+      ///       MyData &data = composite.GetOrCreate<MyData>("some argument");
       ///
       ///       // Print out "some argument"
-      ///       std::cout << composite.GetOrCreate<MyData>("another argument").myString << std::endl;
+      ///       std::cout <<
+      ///         composite.GetOrCreate<MyData>("another argument").myString <<
+      ///         std::endl;
       ///
       ///       // Remove the MyData object. Note that "data" is now INVALID and
       ///       // must never be used again after this function call.
       ///       composite.Remove<MyData>();
       ///
       ///       // Print out "another argument"
-      ///       std::cout << composite.GetOrCreate<MyData>("another argument").myString << std::endl;
+      ///       std::cout <<
+      ///         composite.GetOrCreate<MyData>("another argument").myString <<
+      ///         std::endl;
       ///     }
       ///
       public: template <typename Data>
@@ -322,15 +328,18 @@ namespace ignition
       ///       int myValue;
       ///     };
       ///
-      ///     void SetValueIfAvailable(const int value, CompositeData& composite)
+      ///     void SetValueIfAvailable(const int _value,
+      ///                              CompositeData &_composite)
       ///     {
       ///       // This CANNOT compile because MyDataWithoutDefault does not
       ///       // provide a default constructor
-      ///       //MyDataWithoutDefault& data = composite.Get<MyDataWithoutDefault>();
+      ///       // MyDataWithoutDefault &data =
+      ///       //    composite.Get<MyDataWithoutDefault>();
       ///
       ///       // Get a pointer to a MyDataWithoutDefault instance if one is
       ///       // available, otherwise we get a nullptr.
-      ///       MyDataWithoutDefault* data = composite.Query<MyDataWithoutDefault>();
+      ///       MyDataWithoutDefault *data =
+      ///         composite.Query<MyDataWithoutDefault>();
       ///
       ///       if(data)
       ///         data->myValue = value;
@@ -355,7 +364,9 @@ namespace ignition
       ///       // MyDataWithoutDefault if an instance of it did not already
       ///       // exist, unlike Get which can only call the default
       ///       // constructor.
-      ///       std::cout << composite.GetOrCreate<MyDataWithoutDefault>(1).myValue << std::endl;
+      ///       std::cout <<
+      ///         composite.GetOrCreate<MyDataWithoutDefault>(1).myValue <<
+      ///         std::endl;
       ///
       ///       // This will set myValue to 5 because "composite" contains an
       ///       // instance of MyDataWithoutDefault.
@@ -363,11 +374,13 @@ namespace ignition
       ///
       ///       // This will print out "5" because that was the value set by
       ///       // SetValueIfAvailable.
-      ///       std::cout << composite.GetOrCreate<MyDataWithoutDefault>(3).myValue << std::endl;
+      ///       std::cout <<
+      ///         composite.GetOrCreate<MyDataWithoutDefault>(3).myValue <<
+      ///         std::endl;
       ///     }
       ///
       public: template <typename Data>
-      Data* Query(const QueryMode mode = QUERY_NORMAL);
+      Data *Query(const QueryMode _mode = QUERY_NORMAL);
 
       /// \brief Const-qualified version of Query. This can be used to retrieve
       /// data from a `const CompositeData`.
@@ -390,7 +403,7 @@ namespace ignition
       ///       std::string myString;
       ///     };
       ///
-      ///     void PrintStringIfAvailable(const CompositeData& composite)
+      ///     void PrintStringIfAvailable(const CompositeData &_composite)
       ///     {
       ///       // The following Get<T>() CANNOT compile because "composite" is
       ///       // a const-qualified reference, but Get<T>() is NOT a
@@ -399,13 +412,14 @@ namespace ignition
       ///       // type T if an instance of that type was not already available
       ///       // in the CompositeData object, and that would mean modifying
       ///       // the CompositeData object, which violates const-correctness.
-      ///       // This is similarly the case for Create<T>(~) and GetOrCreate<T>(~).
+      ///       // This is similarly the case for Create<T>(~) and
+      ///       // GetOrCreate<T>(~).
       ///       //
-      ///       //MyData& data = composite.Get<T>(); // error!
+      ///       // MyData &data = _composite.Get<T>(); // error!
       ///
       ///       // Instead, we use the const-qualified Query<T>() function which
       ///       // can return a const-qualified pointer to the data instance.
-      ///       const MyData* data = composite.Query<MyData>();
+      ///       const MyData *data = composite.Query<MyData>();
       ///
       ///       if(data)
       ///         std::cout << data->myString << std::endl;
@@ -430,7 +444,7 @@ namespace ignition
       ///     }
       ///
       public: template <typename Data>
-      const Data* Query(const QueryMode mode = QUERY_NORMAL) const;
+      const Data *Query(const QueryMode mode = QUERY_NORMAL) const;
 
       /// \brief Returns true if this CompositeData has an object of type Data,
       /// otherwise returns false. This is literally equivalent to
@@ -570,7 +584,7 @@ namespace ignition
       ///     {
       ///       IGN_PHYSICS_DATA_LABEL(MyData)
       ///
-      ///       MyData(const std::string& arg = "")
+      ///       MyData(const std::string &arg = "")
       ///         : myString(arg)
       ///       {
       ///         // Intentionally blank
@@ -595,7 +609,7 @@ namespace ignition
       ///     }
       ///
       public: template <typename Data, typename... Args>
-      Data& MakeRequired(Args&&... args);
+      Data &MakeRequired(Args &&..._args);
 
       /// \brief Returns true if the specified Data type is required by this
       /// CompositeData object. Otherwise, returns false.
@@ -684,20 +698,20 @@ namespace ignition
       ///       /* ... put some data here ... */
       ///     };
       ///
-      ///     void DoStuff(CompositeData& composite)
+      ///     void DoStuff(CompositeData &composite)
       ///     {
-      ///       MyData1& data1 = composite.Get<MyData1>();
+      ///       MyData1 &data1 = composite.Get<MyData1>();
       ///       /* ... do something with data1 ... */
       ///
-      ///       MyData2& data2 = composite.Get<MyData2>();
+      ///       MyData2 &data2 = composite.Get<MyData2>();
       ///       /* ... do something with data2 ... */
       ///
       ///
-      ///       const std::set<std::string>& unqueried = composite.UnqueriedEntries();
+      ///       const std::set<std::string> &unqueried = composite.UnqueriedEntries();
       ///       if(unqueried.size() > 0)
       ///       {
       ///         std::cout << "I don't know what to do with the following type(s) of data:\n";
-      ///         for(const std::string& label : unqueried)
+      ///         for(const std::string &label : unqueried)
       ///           std::cout << " -- " << label << "\n";
       ///         std::cout << std::endl;
       ///       }
@@ -759,12 +773,12 @@ namespace ignition
       /// If mergeRequirements is set to true, this object will also take on the
       /// requirements specified by _other. Any objects that are already marked
       /// as required in this CompositeData will remain required.
-      public: CompositeData& Copy(const CompositeData &_other,
+      public: CompositeData &Copy(const CompositeData &_other,
                                   const CopyOption _option = IDENTICAL,
                                   const bool _mergeRequirements = false);
 
       /// \brief A version of Copy() that takes advantage of move semantics.
-      public: CompositeData& Copy(CompositeData &&_other,
+      public: CompositeData &Copy(CompositeData &&_other,
                                   const CopyOption _option = IDENTICAL,
                                   const bool _mergeRequirements = false);
 
@@ -775,10 +789,10 @@ namespace ignition
       public: CompositeData(CompositeData &&_other);
 
       /// \brief Copy operator. Same as Copy(_other).
-      public: CompositeData& operator=(const CompositeData &_other);
+      public: CompositeData &operator=(const CompositeData &_other);
 
       /// \brief Move operator. Same as Copy(_other).
-      public: CompositeData& operator=(CompositeData &&_other);
+      public: CompositeData &operator=(CompositeData &&_other);
 
       /// \brief Struct which contains information about a data type within the
       /// CompositeData. See ignition/physics/detail/CompositeData.hh for the

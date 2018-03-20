@@ -32,12 +32,12 @@ namespace ignition
       /// and const_iterator& argument types. This helper functions lets us
       /// avoid hard-to-spot typos on this frequently performed task.
       template <typename IteratorType>
-      void SetToQueried(const IteratorType &it, std::size_t &numQueries)
+      void SetToQueried(const IteratorType &_it, std::size_t &_numQueries)
       {
-        if (!it->second.queried)
+        if (!_it->second.queried)
         {
-          ++numQueries;
-          it->second.queried = true;
+          ++_numQueries;
+          _it->second.queried = true;
         }
       }
     }
@@ -91,8 +91,8 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename Data, typename... Args>
-    Data& CompositeData::Create(Args&&... args)
+    template <typename Data, typename ...Args>
+    Data &CompositeData::Create(Args &&..._args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(typeid(Data).name(), DataEntry())).first;
@@ -101,7 +101,7 @@ namespace ignition
         ++this->numEntries;
 
       it->second.data = std::unique_ptr<Cloneable>(
-            new MakeCloneable<Data>(std::forward<Args>(args)...));
+            new MakeCloneable<Data>(std::forward<Args>(_args)...));
 
       detail::SetToQueried(it, this->numQueries);
 
@@ -109,8 +109,8 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename Data, typename... Args>
-    Data& CompositeData::GetOrCreate(Args&&... args)
+    template <typename Data, typename ...Args>
+    Data &CompositeData::GetOrCreate(Args &&..._args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(typeid(Data).name(), DataEntry())).first;
@@ -119,7 +119,7 @@ namespace ignition
       {
         ++this->numEntries;
         it->second.data = std::unique_ptr<Cloneable>(
-              new MakeCloneable<Data>(std::forward<Args>(args)...));
+              new MakeCloneable<Data>(std::forward<Args>(_args)...));
       }
 
       detail::SetToQueried(it, this->numQueries);
@@ -155,7 +155,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    Data* CompositeData::Query(const QueryMode mode)
+    Data* CompositeData::Query(const QueryMode _mode)
     {
       const MapOfData::const_iterator it =
           this->dataMap.find(typeid(Data).name());
@@ -166,7 +166,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == mode)
+      if (QUERY_NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<MakeCloneable<Data>*>(it->second.data.get());
@@ -174,7 +174,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    const Data* CompositeData::Query(const QueryMode mode) const
+    const Data *CompositeData::Query(const QueryMode _mode) const
     {
       const MapOfData::const_iterator it =
           this->dataMap.find(typeid(Data).name());
@@ -185,7 +185,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == mode)
+      if (QUERY_NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<const MakeCloneable<Data>*>(it->second.data.get());
@@ -193,15 +193,15 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    bool CompositeData::Has(const QueryMode mode) const
+    bool CompositeData::Has(const QueryMode _mode) const
     {
-      return (nullptr != this->Query<Data>(mode));
+      return (nullptr != this->Query<Data>(_mode));
     }
 
     /////////////////////////////////////////////////
     template <typename Data>
     CompositeData::DataStatus CompositeData::StatusOf(
-        const QueryMode mode) const
+        const QueryMode _mode) const
     {
       // status is initialized to everything being false
       DataStatus status;
@@ -219,7 +219,7 @@ namespace ignition
       status.required = it->second.required;
       status.queried = it->second.queried;
 
-      if (QUERY_NORMAL == mode)
+      if (QUERY_NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return status;
@@ -249,7 +249,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data, typename... Args>
-    Data& CompositeData::MakeRequired(Args&&... args)
+    Data& CompositeData::MakeRequired(Args &&..._args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(typeid(Data).name(), DataEntry())).first;
@@ -259,7 +259,7 @@ namespace ignition
       {
         ++this->numEntries;
         it->second.data = std::unique_ptr<Cloneable>(
-              new MakeCloneable<Data>(std::forward<Args>(args)...));
+              new MakeCloneable<Data>(std::forward<Args>(_args)...));
       }
 
       detail::SetToQueried(it, this->numQueries);

@@ -26,7 +26,7 @@ TEST(CompositeData_TEST, AddRemoveData)
   ignition::physics::CompositeData data;
   EXPECT_FALSE(data.Has<StringData>());
 
-  StringData& s = data.Get<StringData>();
+  StringData &s = data.Get<StringData>();
   EXPECT_TRUE(data.Has<StringData>());
 
   EXPECT_EQ("default", s.myString);
