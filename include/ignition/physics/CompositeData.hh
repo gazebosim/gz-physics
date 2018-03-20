@@ -64,8 +64,6 @@ namespace ignition
       ///     // Create a data structure called MyData
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       std::string myString;
       ///     };
       ///
@@ -111,8 +109,6 @@ namespace ignition
       ///     // Create a data structure called MyData
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       MyData(const std::string &_arg = "")
       ///         : myString(_arg)
       ///       {
@@ -172,8 +168,6 @@ namespace ignition
       ///     // Create a data structure called MyData
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       MyData(const std::string &_arg = "")
       ///         : myString(_arg)
       ///       {
@@ -242,8 +236,6 @@ namespace ignition
       ///     // Create a data structure called MyData
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       MyData(const std::string &_arg = "")
       ///         : myString(_arg)
       ///       {
@@ -312,8 +304,6 @@ namespace ignition
       ///
       ///     struct MyDataWithoutDefault
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyDataWithoutDefault)
-      ///
       ///       // This struct does not allow us to use the default constructor
       ///       MyDataWithoutDefault() = delete;
       ///
@@ -398,8 +388,6 @@ namespace ignition
       ///
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       std::string myString;
       ///     };
       ///
@@ -511,8 +499,6 @@ namespace ignition
       ///
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       std::string myString;
       ///     };
       ///
@@ -582,8 +568,6 @@ namespace ignition
       ///
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       MyData(const std::string &arg = "")
       ///         : myString(arg)
       ///       {
@@ -682,19 +666,16 @@ namespace ignition
       ///
       ///     struct MyData1
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData1)
       ///       /* ... put some data here ... */
       ///     };
       ///
       ///     struct MyData2
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData2)
       ///       /* ... put some data here ... */
       ///     };
       ///
       ///     struct MyData3
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData3)
       ///       /* ... put some data here ... */
       ///     };
       ///
