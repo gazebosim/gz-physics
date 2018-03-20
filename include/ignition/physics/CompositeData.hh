@@ -625,7 +625,7 @@ namespace ignition
 
       /// \brief Returns the number of data entries currently contained in this
       /// CompositeData. Runs with O(1) complexity.
-      public: std::size_t NumEntries() const;
+      public: std::size_t EntryCount() const;
 
       /// \brief Returns the number of entries in this CompositeData which have
       /// not been queried. See UnqueriedEntries() for more information about

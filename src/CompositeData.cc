@@ -342,7 +342,7 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    std::size_t CompositeData::NumEntries() const
+    std::size_t CompositeData::EntryCount() const
     {
       IGN_ASSERT(numEntries <= dataMap.size(),
                  "The recorded number of entries is greater than the size of "

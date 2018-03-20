@@ -51,7 +51,7 @@ TEST(CompositeData_TEST, CopyMoveData)
   ignition::physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
 
-  EXPECT_EQ(3u, data.NumEntries());
+  EXPECT_EQ(3u, data.EntryCount());
   EXPECT_TRUE(data.Has<StringData>());
   EXPECT_TRUE(data.Has<DoubleData>());
   EXPECT_TRUE(data.Has<IntData>());
@@ -59,7 +59,7 @@ TEST(CompositeData_TEST, CopyMoveData)
   ignition::physics::CompositeData emptyData;
   data = emptyData;
 
-  EXPECT_EQ(0u, data.NumEntries());
+  EXPECT_EQ(0u, data.EntryCount());
   EXPECT_FALSE(data.Has<StringData>());
   EXPECT_FALSE(data.Has<DoubleData>());
   EXPECT_FALSE(data.Has<IntData>());
@@ -75,7 +75,7 @@ TEST(CompositeData_TEST, Requirements)
   EXPECT_FALSE(requiredData.Requires<StringData>());
 
   requiredData.MakeRequired<StringData>("I am required");
-  EXPECT_EQ(1u, requiredData.NumEntries());
+  EXPECT_EQ(1u, requiredData.EntryCount());
   EXPECT_EQ("I am required", requiredData.Get<StringData>().myString);
   EXPECT_TRUE(requiredData.Requires<StringData>());
   EXPECT_FALSE(requiredData.Requires<IntData>());
@@ -128,7 +128,7 @@ TEST(CompositeData_TEST, Queries)
   std::set<std::string> unqueried;
 
   EXPECT_EQ(3u, data.NumUnqueriedEntries());
-  EXPECT_EQ(3u, data.NumEntries());
+  EXPECT_EQ(3u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_NE(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
@@ -136,7 +136,7 @@ TEST(CompositeData_TEST, Queries)
 
   data.Remove<IntData>();
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
-  EXPECT_EQ(2u, data.NumEntries());
+  EXPECT_EQ(2u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_NE(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
@@ -144,7 +144,7 @@ TEST(CompositeData_TEST, Queries)
 
   data.Has<StringData>();
   EXPECT_EQ(1u, data.NumUnqueriedEntries());
-  EXPECT_EQ(2u, data.NumEntries());
+  EXPECT_EQ(2u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
@@ -154,7 +154,7 @@ TEST(CompositeData_TEST, Queries)
   data.Copy(CreateSomeData<StringData, DoubleData, IntData>(true),
             ignition::physics::CompositeData::SOFT_MERGE);
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
-  EXPECT_EQ(3u, data.NumEntries());
+  EXPECT_EQ(3u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
@@ -165,7 +165,7 @@ TEST(CompositeData_TEST, Queries)
   data.Copy(CreateSomeData<IntData, BoolData>(true),
             ignition::physics::CompositeData::HARD_MERGE);
   EXPECT_EQ(3u, data.NumUnqueriedEntries());
-  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
@@ -175,7 +175,7 @@ TEST(CompositeData_TEST, Queries)
   // Check that querying will alter the query flag
   EXPECT_NE(nullptr, data.Query<DoubleData>());
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
-  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_EQ(0u, unqueried.count(typeid(DoubleData).name()));
@@ -186,7 +186,7 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(nullptr, static_cast<const ignition::physics::CompositeData&>(
               data).Query<IntData>());
   EXPECT_EQ(1u, data.NumUnqueriedEntries());
-  EXPECT_EQ(4u, data.NumEntries());
+  EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_EQ(0u, unqueried.count(typeid(DoubleData).name()));
