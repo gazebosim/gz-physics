@@ -12,3 +12,5 @@ ign_install_library()
 ign_build_tests(
   TYPE UNIT
   SOURCES ${gtest_sources})
+
+configure_file(utils/test_config.h.in ${PROJECT_BINARY_DIR}/utils/test_config.h)

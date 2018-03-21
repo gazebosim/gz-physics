@@ -20,7 +20,10 @@ ign_configure_project()
 # Set project-specific options
 #============================================================================
 
-# No project-specific options yet
+#---------------------------------------
+# Build all possible plugins by default.
+# Users may override this by changing these variables.
+option(BUILD_IGNITION_PHYSICS_DART_BULLET "Build the DART-BULLET example physics engine plugin" TRUE)
 
 
 #============================================================================
@@ -35,7 +38,7 @@ ign_find_package(ignition-math${IGN_MATH_VER} REQUIRED)
 
 #--------------------------------------
 # Find ignition-common
-set(IGN_COMMON_VER 1)
+set(IGN_COMMON_VER 2)
 ign_find_package(ignition-common${IGN_COMMON_VER} REQUIRED)
 
 message(STATUS "-------------------------------------------\n")
@@ -45,6 +48,10 @@ message(STATUS "-------------------------------------------\n")
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS)
+
+if(BUILD_IGNITION_PHYSICS_DART_BULLET)
+  add_subdirectory(ignition-physics-dart-bullet)
+endif()
 
 
 #============================================================================

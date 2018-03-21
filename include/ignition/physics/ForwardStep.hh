@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_FORWARDSTEP_HH_
 
 #include <ignition/math.hh>
+#include <ignition/common/PluginMacros.hh>
 
 #include "ignition/physics/SpecifyData.hh"
 
@@ -60,6 +61,13 @@ namespace ignition
       std::size_t inCoordinatesOf;
     };
 
+    struct JointPositions
+    {
+      std::vector<std::size_t> dofs;
+      std::vector<double> positions;
+      std::string annotation;
+    };
+
     struct Contacts
     {
       std::vector<Point> entries;
@@ -69,6 +77,11 @@ namespace ignition
     // ---------------- Input Data Structures -----------------
     // Same note as for Output Data Structures. Eventually, these should be
     // defined in some kind of meta files.
+
+    struct TimeStep
+    {
+      double dt;
+    };
 
     struct ForceTorque
     {
@@ -122,24 +135,39 @@ namespace ignition
     };
 
 
-    // ---------------- Interface -----------------
+    // ---------------- ForwardStep Interface -----------------
     class ForwardStep
     {
-      using Input = ExpectData<
+      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep)
+
+      public: using Input = ExpectData<
               ApplyExternalForceTorques,
               ApplyGeneralizedForces,
               VelocityControlCommands,
               ServoControlCommands>;
 
-      using Output = SpecifyData<
+      public: using Output = SpecifyData<
           RequireData<WorldPoses>,
-          ExpectData<Contacts> >;
+          ExpectData<Contacts, JointPositions> >;
 
-      using State = CompositeData;
+      public: using State = CompositeData;
 
       public: virtual void Step(Output &h, State &x, const Input &u) = 0;
 
       public: virtual ~ForwardStep() = default;
+    };
+
+
+    // ---------------- SetState Interface -----------------
+    class SetState
+    {
+      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::SetState)
+
+      public: using State = CompositeData;
+
+      public: virtual void SetStateTo(const State &x) = 0;
+
+      public: virtual ~SetState() = default;
     };
   }
 }
