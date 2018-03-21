@@ -28,6 +28,9 @@ pipelines:
           - cmake ..
           - make install
           - cd ../..
+          # Bullet
+          - apt-get -y install
+            libbullet-dev
           # DARTsim
           - apt-add-repository -y ppa:dartsim
           - apt-get update

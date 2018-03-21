@@ -61,6 +61,14 @@ namespace ignition
       std::size_t inCoordinatesOf;
     };
 
+    struct WorldTwist
+    {
+      ignition::math::Vector3d linearVelocity;
+      ignition::math::Vector3d angularVelocity;
+
+      std::size_t body;
+    };
+
     struct JointPositions
     {
       std::vector<std::size_t> dofs;

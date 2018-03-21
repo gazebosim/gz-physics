@@ -17,10 +17,17 @@
 
 #include <ignition/common/PluginMacros.hh>
 
+#include "BulletDoublePendulum.hh"
 #include "DARTDoublePendulum.hh"
 
 
 IGN_COMMON_BEGIN_ADDING_PLUGINS
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::bullet::BulletDoublePendulum,
+                        ignition::physics::DoublePendulum)
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::bullet::BulletDoublePendulum,
+                        ignition::physics::ForwardStep)
+  IGN_COMMON_ADD_PLUGIN(ignition::physics::bullet::BulletDoublePendulum,
+                        ignition::physics::SetState)
   IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::DARTDoublePendulum,
                         ignition::physics::DoublePendulum)
   IGN_COMMON_ADD_PLUGIN(ignition::physics::dart::DARTDoublePendulum,
