@@ -3,7 +3,7 @@
 # manually creating this component.
 
 set(DART_VER 6)
-find_package(DART ${DART_VER} COMPONENTS utils utils-urdf)
+find_package(DART ${DART_VER} CONFIG COMPONENTS utils utils-urdf)
 if(DART_FOUND)
   message(STATUS "Looking for DART - found")
 else()
