@@ -149,21 +149,9 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
 
-  // Objects which already existed should retain their query state. Newly
-  // created objects should be unqueried.
-  data.Copy(CreateSomeData<StringData, DoubleData, IntData>(true),
-            ignition::physics::CompositeData::SOFT_MERGE);
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
-  EXPECT_EQ(3u, data.EntryCount());
-  unqueried = data.UnqueriedEntries();
-  EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
-  EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
-  EXPECT_NE(0u, unqueried.count(typeid(IntData).name()));
-
   // Objects which remain the same should retain their query state. Objects
   // which are copied over or created should be unqueried.
-  data.Copy(CreateSomeData<IntData, BoolData>(true),
-            ignition::physics::CompositeData::HARD_MERGE);
+  data.Merge(CreateSomeData<IntData, BoolData>(true));
   EXPECT_EQ(3u, data.UnqueriedEntryCount());
   EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();

@@ -714,40 +714,6 @@ namespace ignition
       ///
       public: std::set<std::string> UnqueriedEntries() const;
 
-
-      /// \brief Options that determine the behavior of the Copy() function
-      enum CopyOption
-      {
-        /// \brief Make this CompositeData identical to the other. If this
-        /// CompositeData contains data types that the other does not, they will
-        /// be deleted, unless they are marked as required.
-        IDENTICAL = 0,
-
-        /// \brief Merge in the data from the other CompositeData, but do not
-        /// delete any data structures that are unique to this one. For any data
-        /// structures that are held by both CompositeData objects, the data
-        /// from the other CompositeData will overwrite the data from this one.
-        HARD_MERGE,
-
-        /// \brief Any data structure types in the other CompositeData object
-        /// that  are not already present in this one will be copied over. Any
-        /// data structures that were already present in this CompositeData
-        /// object will remain unchanged.
-        SOFT_MERGE,
-
-        /// \brief Any data structure types in this CompositeData object that
-        /// are not held by the other CompositeData object will be deleted. Any
-        /// data structures that are held by both will get copied over from the
-        /// other. Required data objects will not be deleted.
-        HARD_INTERSECT,
-
-        /// \brief Any data structure types in this CompositeData object that
-        /// are not held by the other CompositeData object will be deleted. All
-        /// other data will remain unchanged. Required data objects will not
-        /// be deleted.
-        SOFT_INTERSECT
-      };
-
       /// \brief Alter this CompositeData object based on the option that is
       /// provided. The other CompositeData will remain unchanged.
       ///
@@ -755,13 +721,17 @@ namespace ignition
       /// requirements specified by _other. Any objects that are already marked
       /// as required in this CompositeData will remain required.
       public: CompositeData &Copy(const CompositeData &_other,
-                                  const CopyOption _option = IDENTICAL,
                                   const bool _mergeRequirements = false);
 
       /// \brief A version of Copy() that takes advantage of move semantics.
       public: CompositeData &Copy(CompositeData &&_other,
-                                  const CopyOption _option = IDENTICAL,
                                   const bool _mergeRequirements = false);
+
+      public: CompositeData &Merge(const CompositeData &_other,
+                                   const bool _mergeRequirements = false);
+
+      public: CompositeData &Merge(CompositeData &&_other,
+                                   const bool _mergeRequirements = false);
 
       /// \brief Copy constructor. Same as Copy(_other).
       public: CompositeData(const CompositeData &_other);
