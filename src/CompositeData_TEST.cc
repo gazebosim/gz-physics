@@ -46,7 +46,7 @@ TEST(CompositeData_TEST, AddRemoveData)
 }
 
 /////////////////////////////////////////////////
-TEST(CompositeData_TEST, CopyMoveData)
+TEST(CompositeData_TEST, CopyMoveOperators)
 {
   ignition::physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
@@ -63,6 +63,167 @@ TEST(CompositeData_TEST, CopyMoveData)
   EXPECT_FALSE(data.Has<StringData>());
   EXPECT_FALSE(data.Has<DoubleData>());
   EXPECT_FALSE(data.Has<IntData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, CopyFunction)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Copy(otherData);
+
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<DoubleData>());
+  EXPECT_FALSE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, CopyFunctionWithRequirements)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<DoubleData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+  data.MakeRequired<DoubleData>();
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+  otherData.MakeRequired<BoolData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Copy(otherData);
+
+  EXPECT_TRUE(data.Has<DoubleData>());
+
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+
+  EXPECT_FALSE(data.Requires<BoolData>());
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  data.Copy(otherData, true);
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+  EXPECT_TRUE(data.Requires<BoolData>());
+
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<FloatData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, MergeFunction)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Merge(otherData);
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, MergeFunctionWithRequirements)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<DoubleData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+  data.MakeRequired<DoubleData>();
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+  otherData.MakeRequired<BoolData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Merge(otherData);
+
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+
+  EXPECT_FALSE(data.Requires<BoolData>());
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  data.Merge(otherData, true);
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+  EXPECT_TRUE(data.Requires<BoolData>());
+
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<FloatData>());
 }
 
 /////////////////////////////////////////////////
