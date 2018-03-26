@@ -369,6 +369,23 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
+    std::set<std::string> CompositeData::AllEntries() const
+    {
+      if (EntryCount() == 0)
+        return std::set<std::string>();
+
+      std::set<std::string> entries;
+
+      for (const auto &entry : dataMap)
+      {
+        if (entry.second.data)
+          entries.insert(entries.end(), entry.first);
+      }
+
+      return entries;
+    }
+
+    /////////////////////////////////////////////////
     std::set<std::string> CompositeData::UnqueriedEntries() const
     {
       if (UnqueriedEntryCount() == 0)

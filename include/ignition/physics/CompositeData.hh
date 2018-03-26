@@ -643,6 +643,55 @@ namespace ignition
       /// queries, even though it should not.
       public: void ResetQueries() const;
 
+      /// \brief Returns an ordered (alphabetical) set of all data entries in
+      /// this CompositeData.
+      /// Runs with O(1) complexity.
+      ///
+      /// Example usage:
+      ///
+      ///     #include <iostream>
+      ///     #include <ignition/physics/CompositeData.hh>
+      ///
+      ///     using namespace ignition::physics;
+      ///
+      ///     struct MyData1
+      ///     {
+      ///       /* ... put some data here ... */
+      ///     };
+      ///
+      ///     struct MyData2
+      ///     {
+      ///       /* ... put some data here ... */
+      ///     };
+      ///
+      ///     struct MyData3
+      ///     {
+      ///       /* ... put some data here ... */
+      ///     };
+      ///
+      ///     void PrintStuff(CompositeData &composite) const
+      ///     {
+      ///       std::cout << "Entry types:" << std::endl;
+      ///       for (const std::string &label : composite.AllEntries())
+      ///       {
+      ///         std::cout << "  " << label << std::endl;
+      ///       }
+      ///     }
+      ///
+      ///     int main()
+      ///     {
+      ///       CompositeData composite;
+      ///       composite.Create<MyData1>();
+      ///       composite.Create<MyData2>();
+      ///       composite.Create<MyData3>();
+      ///
+      ///       PrintStuff(composite);
+      ///
+      ///       // The function PrintStuff will print the names of each struct.
+      ///     }
+      ///
+      public: std::set<std::string> AllEntries() const;
+
       /// \brief Returns an ordered (alphabetical) set of the data entries in
       /// this CompositeData which have not been queried (Get, Create,
       /// GetOrCreate, Query, Has, and MakeRequired all perform querying) since
