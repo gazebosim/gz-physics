@@ -61,9 +61,8 @@ namespace ignition
         SenderType _sender,
         const bool _mergeRequirements,
         std::size_t &/*_numEntries*/,
-        std::size_t &_numQueries)
+        std::size_t &/*_numQueries*/)
     {
-      RemoveQuery(_receiver, _numQueries);
       _receiver->second.data->Copy(*_sender->second.data);
       if (_mergeRequirements && _sender->second.required)
         _receiver->second.required = true;
@@ -125,16 +124,14 @@ namespace ignition
         SenderType _sender,
         const bool _mergeRequirements,
         std::size_t &_numEntries,
-        std::size_t &_numQueries)
+        std::size_t &/*_numQueries*/)
     {
-      if (_receiver->second.data)
-        RemoveQuery(_receiver, _numQueries);
-      else
+      if (!_receiver->second.data)
         ++_numEntries;
 
-      _receiver->second = CompositeData::DataEntry(
-            std::unique_ptr<Cloneable>(_sender->second.data.release()),
-            _mergeRequirements && _sender->second.required);
+      _receiver->second.data.reset(_sender->second.data.release());
+      _receiver->second.required =
+          _mergeRequirements && _sender->second.required;
     }
 
     /////////////////////////////////////////////////

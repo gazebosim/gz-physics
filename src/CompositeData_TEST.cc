@@ -310,9 +310,9 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
   EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
 
-  // Objects which remain the same should retain their query state. Objects
-  // which are copied over or created should be unqueried.
-  data.Merge(CreateSomeData<IntData, BoolData>(true));
+  // Objects which are newly created should be unqueried. Objects which already
+  // existed will retain their previous query flags.
+  data.Merge(CreateSomeData<StringData, IntData, BoolData>(true));
   EXPECT_EQ(3u, data.UnqueriedEntryCount());
   EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
