@@ -46,7 +46,7 @@ TEST(CompositeData_TEST, AddRemoveData)
 }
 
 /////////////////////////////////////////////////
-TEST(CompositeData_TEST, CopyMoveData)
+TEST(CompositeData_TEST, CopyMoveOperators)
 {
   ignition::physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
@@ -63,6 +63,167 @@ TEST(CompositeData_TEST, CopyMoveData)
   EXPECT_FALSE(data.Has<StringData>());
   EXPECT_FALSE(data.Has<DoubleData>());
   EXPECT_FALSE(data.Has<IntData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, CopyFunction)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Copy(otherData);
+
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<DoubleData>());
+  EXPECT_FALSE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, CopyFunctionWithRequirements)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<DoubleData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+  data.MakeRequired<DoubleData>();
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+  otherData.MakeRequired<BoolData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Copy(otherData);
+
+  EXPECT_TRUE(data.Has<DoubleData>());
+
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+
+  EXPECT_FALSE(data.Requires<BoolData>());
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  data.Copy(otherData, true);
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+  EXPECT_TRUE(data.Requires<BoolData>());
+
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<FloatData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, MergeFunction)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Merge(otherData);
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, MergeFunctionWithRequirements)
+{
+  ignition::physics::CompositeData data =
+      CreateSomeData<StringData, DoubleData, IntData>();
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<DoubleData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+  data.MakeRequired<DoubleData>();
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  ignition::physics::CompositeData otherData =
+      CreateSomeData<BoolData, CharData, FloatData>();
+  otherData.MakeRequired<BoolData>();
+
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  data.Merge(otherData);
+
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+
+  EXPECT_FALSE(data.Requires<StringData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_TRUE(data.Has<FloatData>());
+
+  EXPECT_FALSE(data.Requires<BoolData>());
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<IntData>());
+
+
+  data.Merge(otherData, true);
+
+  EXPECT_TRUE(data.Requires<DoubleData>());
+  EXPECT_TRUE(data.Requires<BoolData>());
+
+  EXPECT_FALSE(data.Requires<CharData>());
+  EXPECT_FALSE(data.Requires<FloatData>());
 }
 
 /////////////////////////////////////////////////
@@ -166,27 +327,10 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(0u, all.count(typeid(StringData).name()));
   EXPECT_NE(0u, all.count(typeid(DoubleData).name()));
 
-  // Objects which already existed should retain their query state. Newly
-  // created objects should be unqueried.
-  data.Copy(CreateSomeData<StringData, DoubleData, IntData>(true),
-            ignition::physics::CompositeData::SOFT_MERGE);
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
-  EXPECT_EQ(3u, data.EntryCount());
-  unqueried = data.UnqueriedEntries();
-  EXPECT_EQ(2u, unqueried.size());
-  EXPECT_EQ(0u, unqueried.count(typeid(StringData).name()));
-  EXPECT_NE(0u, unqueried.count(typeid(DoubleData).name()));
-  EXPECT_NE(0u, unqueried.count(typeid(IntData).name()));
-  all = data.AllEntries();
-  EXPECT_EQ(3u, all.size());
-  EXPECT_NE(0u, all.count(typeid(StringData).name()));
-  EXPECT_NE(0u, all.count(typeid(DoubleData).name()));
-  EXPECT_NE(0u, all.count(typeid(IntData).name()));
 
-  // Objects which remain the same should retain their query state. Objects
-  // which are copied over or created should be unqueried.
-  data.Copy(CreateSomeData<IntData, BoolData>(true),
-            ignition::physics::CompositeData::HARD_MERGE);
+  // Objects which are newly created should be unqueried. Objects which already
+  // existed will retain their previous query flags.
+  data.Merge(CreateSomeData<StringData, IntData, BoolData>(true));
   EXPECT_EQ(3u, data.UnqueriedEntryCount());
   EXPECT_EQ(4u, data.EntryCount());
   unqueried = data.UnqueriedEntries();
@@ -201,6 +345,7 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(0u, all.count(typeid(DoubleData).name()));
   EXPECT_NE(0u, all.count(typeid(IntData).name()));
   EXPECT_NE(0u, all.count(typeid(BoolData).name()));
+
 
   // Check that querying will alter the query flag
   EXPECT_NE(nullptr, data.Query<DoubleData>());
@@ -218,6 +363,7 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(0u, all.count(typeid(DoubleData).name()));
   EXPECT_NE(0u, all.count(typeid(IntData).name()));
   EXPECT_NE(0u, all.count(typeid(BoolData).name()));
+
 
   // Make sure that the const-qualified version of query also works
   EXPECT_NE(nullptr, static_cast<const ignition::physics::CompositeData&>(

@@ -39,7 +39,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief Remove an entry from a map and adjust the counters
-    static void RemoveEntry(
+    static void RemoveEntryUnlessRequired(
         const CompositeData::MapOfData::iterator &_receiver,
         std::size_t &_numEntries, std::size_t &_numQueries)
     {
@@ -61,9 +61,8 @@ namespace ignition
         SenderType _sender,
         const bool _mergeRequirements,
         std::size_t &/*_numEntries*/,
-        std::size_t &_numQueries)
+        std::size_t &/*_numQueries*/)
     {
-      RemoveQuery(_receiver, _numQueries);
       _receiver->second.data->Copy(*_sender->second.data);
       if (_mergeRequirements && _sender->second.required)
         _receiver->second.required = true;
@@ -125,16 +124,14 @@ namespace ignition
         SenderType _sender,
         const bool _mergeRequirements,
         std::size_t &_numEntries,
-        std::size_t &_numQueries)
+        std::size_t &/*_numQueries*/)
     {
-      if (_receiver->second.data)
-        RemoveQuery(_receiver, _numQueries);
-      else
+      if (!_receiver->second.data)
         ++_numEntries;
 
-      _receiver->second = CompositeData::DataEntry(
-            std::unique_ptr<Cloneable>(_sender->second.data.release()),
-            _mergeRequirements && _sender->second.required);
+      _receiver->second.data.reset(_sender->second.data.release());
+      _receiver->second.required =
+          _mergeRequirements && _sender->second.required;
     }
 
     /////////////////////////////////////////////////
@@ -180,7 +177,7 @@ namespace ignition
         std::size_t &_numQueries,
         CompositeData::MapOfData &_toMap,
         FromMapType _fromMap,
-        const CompositeData::CopyOption _option,
+        const bool _mergeData,
         const bool _mergeRequirements,
         DataTransferFnc<SenderType> CopyDataFnc,
         DataTransferFnc<SenderType> CloneDataFnc,
@@ -189,32 +186,10 @@ namespace ignition
       CompositeData::MapOfData::iterator receiver = _toMap.begin();
       auto sender = _fromMap.begin();
 
-      const bool intersect =
-             CompositeData::HARD_INTERSECT == _option
-          || CompositeData::SOFT_INTERSECT == _option;
-
-      const bool merge =
-             CompositeData::HARD_MERGE
-          || CompositeData::SOFT_MERGE
-          || CompositeData::IDENTICAL;
-
-      const bool hardCopy =
-             CompositeData::HARD_MERGE == _option
-          || CompositeData::HARD_INTERSECT == _option
-          || CompositeData::IDENTICAL == _option;
-
-      const bool removeMissing =
-             CompositeData::HARD_INTERSECT == _option
-          || CompositeData::SOFT_INTERSECT == _option
-          || CompositeData::IDENTICAL == _option;
-
       while (_fromMap.end() != sender)
       {
         if (_toMap.end() == receiver)
         {
-          if (intersect)
-            break;
-
           // If we've reached the end of this CompositeData's map, then we
           // should just add each remaining entry from sender. We don't have to
           // worry about conflicts, because this CompositeData cannot already
@@ -231,47 +206,29 @@ namespace ignition
 
             if (receiver->second.data)
             {
-              if (hardCopy)
-              {
-                // If we already have an instance, we should copy instead of
-                // allocating a clone
-                CopyDataFnc(receiver, sender, _mergeRequirements,
-                            _numEntries, _numQueries);
-              }
-              else
-              {
-                // If this is a SOFT_MERGE or a SOFT_INTERSECT, then no data
-                // should be copied, but we should merge the requirements if
-                // requested.
-
-                if (_mergeRequirements && sender->second.required)
-                  receiver->second.required = true;
-              }
+              // If we already have an instance, we should copy instead of
+              // allocating a clone
+              CopyDataFnc(receiver, sender, _mergeRequirements,
+                          _numEntries, _numQueries);
             }
             else if (!receiver->second.data)
             {
-              if (merge)
-              {
-                IGN_ASSERT(!receiver->second.queried,
-                           "An entry which was supposed to be empty is marked "
-                           "as queried. This should be impossible!");
+              IGN_ASSERT(!receiver->second.queried,
+                         "An entry which was supposed to be empty is marked "
+                         "as queried. This should be impossible!");
 
-                // If we don't already have an instance, we should clone it.
-                CloneDataFnc(receiver, sender, _mergeRequirements,
-                             _numEntries, _numQueries);
-              }
-
-              // If this is a HARD_INTERSECT or a SOFT_INTERSECT, then no data
-              // should be copied and no requirements altered.
+              // If we don't already have an instance, we should clone it.
+              CloneDataFnc(receiver, sender, _mergeRequirements,
+                           _numEntries, _numQueries);
             }
           }
           else
           {
             // If the sender does not have an object at this entry...
 
-            if (removeMissing)
+            if (!_mergeData)
             {
-              RemoveEntry(receiver, _numEntries, _numQueries);
+              RemoveEntryUnlessRequired(receiver, _numEntries, _numQueries);
             }
 
             // Note that this data cannot be required by the sender if they do
@@ -286,9 +243,9 @@ namespace ignition
         {
           // If the receiver has some data that the sender does not...
 
-          if (removeMissing)
+          if (!_mergeData)
           {
-            RemoveEntry(receiver, _numEntries, _numQueries);
+            RemoveEntryUnlessRequired(receiver, _numEntries, _numQueries);
           }
 
           ++receiver;
@@ -299,26 +256,21 @@ namespace ignition
           {
             // If the receiver has a higher key value, then the receiving map
             // does not contain an entry that matches this entry of the sending
-            // map, and therefore the entry must be created if we are doing a
-            // merge.
-
-            if (merge)
-            {
-              CreateDataFnc(_toMap, sender, _mergeRequirements, _numEntries);
-            }
+            // map, and therefore the entry must be created.
+            CreateDataFnc(_toMap, sender, _mergeRequirements, _numEntries);
           }
 
           ++sender;
         }
       }
 
-      if (removeMissing)
+      if (!_mergeData)
       {
         // Remove any remaining data structures in the receiver which do not
         // correspond to any entries that were in the sender.
         while (_toMap.end() != receiver)
         {
-          RemoveEntry(receiver, _numEntries, _numQueries);
+          RemoveEntryUnlessRequired(receiver, _numEntries, _numQueries);
           ++receiver;
         }
       }
@@ -405,14 +357,13 @@ namespace ignition
     /////////////////////////////////////////////////
     CompositeData& CompositeData::Copy(
         const CompositeData &_other,
-        const CopyOption _option,
         const bool _mergeRequirements)
     {
       using SenderType = CompositeData::MapOfData::const_iterator;
       CopyMapData<SenderType, const CompositeData::MapOfData&>(
             numEntries, numQueries,
             this->dataMap, _other.dataMap,
-            _option, _mergeRequirements,
+            false, _mergeRequirements,
             &StandardDataCopy<SenderType>,
             &StandardDataClone<SenderType>,
             &StandardDataCreate<SenderType>);
@@ -423,14 +374,47 @@ namespace ignition
     /////////////////////////////////////////////////
     CompositeData& CompositeData::Copy(
         CompositeData &&_other,
-        const CopyOption _option,
         const bool _mergeRequirements)
     {
       using SenderType = CompositeData::MapOfData::iterator;
       CopyMapData<SenderType, CompositeData::MapOfData&&>(
             numEntries, numQueries,
             this->dataMap, std::move(_other.dataMap),
-            _option, _mergeRequirements,
+            false, _mergeRequirements,
+            &MoveData<SenderType>,
+            &MoveData<SenderType>,
+            &MoveDataCreate<SenderType>);
+
+      return *this;
+    }
+
+    /////////////////////////////////////////////////
+    CompositeData &CompositeData::Merge(
+        const CompositeData &_other,
+        const bool _mergeRequirements)
+    {
+      using SenderType = CompositeData::MapOfData::const_iterator;
+      CopyMapData<SenderType, const CompositeData::MapOfData&>(
+            numEntries, numQueries,
+            this->dataMap, _other.dataMap,
+            true, _mergeRequirements,
+            &StandardDataCopy<SenderType>,
+            &StandardDataClone<SenderType>,
+            &StandardDataCreate<SenderType>);
+
+      return *this;
+    }
+
+    /////////////////////////////////////////////////
+    CompositeData &CompositeData::Merge(
+        CompositeData &&_other,
+        const bool _mergeRequirements)
+    {
+      using SenderType = CompositeData::MapOfData::iterator;
+      CopyMapData<SenderType, CompositeData::MapOfData&&>(
+            numEntries, numQueries,
+            this->dataMap, std::move(_other.dataMap),
+            true, _mergeRequirements,
             &MoveData<SenderType>,
             &MoveData<SenderType>,
             &MoveDataCreate<SenderType>);
