@@ -737,10 +737,12 @@ namespace ignition
       ///       /* ... do something with data2 ... */
       ///
       ///
-      ///       const std::set<std::string> &unqueried = composite.UnqueriedEntries();
+      ///       const std::set<std::string> &unqueried =
+      ///                                     composite.UnqueriedEntries();
       ///       if(unqueried.size() > 0)
       ///       {
-      ///         std::cout << "I don't know what to do with the following type(s) of data:\n";
+      ///         std::cout << "I don't know what to do with "
+      ///                   << "the following type(s) of data:\n";
       ///         for(const std::string &label : unqueried)
       ///           std::cout << " -- " << label << "\n";
       ///         std::cout << std::endl;

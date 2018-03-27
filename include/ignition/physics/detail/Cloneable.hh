@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_CLONEABLE_HH_
 #define IGNITION_PHYSICS_DETAIL_CLONEABLE_HH_
 
+#include <memory>
+#include <utility>
 #include "ignition/physics/Cloneable.hh"
 
 namespace ignition
