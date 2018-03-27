@@ -714,22 +714,46 @@ namespace ignition
       ///
       public: std::set<std::string> UnqueriedEntries() const;
 
-      /// \brief Alter this CompositeData object based on the option that is
-      /// provided. The other CompositeData will remain unchanged.
+      /// \brief Make this CompositeData a copy of _other. However, any data
+      /// entries in this CompositeData which are marked as required will not be
+      /// removed.
       ///
-      /// If mergeRequirements is set to true, this object will also take on the
-      /// requirements specified by _other. Any objects that are already marked
-      /// as required in this CompositeData will remain required.
+      /// \param[in] _other Another CompositeData
+      /// \param[in] _mergeRequirements If true, this object will also take on
+      /// the requirements specified by _other. Any objects that are already
+      /// marked as required in this CompositeData will remain required. If
+      /// false, the requirements of this CompositeData object are unaffected.
+      /// \return A reference to this object
+      ///
+      /// \sa Copy(CompositeData &&, bool)
+      /// \sa Merge()
+      /// \sa operator=()
       public: CompositeData &Copy(const CompositeData &_other,
                                   const bool _mergeRequirements = false);
 
-      /// \brief A version of Copy() that takes advantage of move semantics.
+      /// \brief An alternative to Copy(const CompositeData &, bool) that takes
+      /// advantage of move semantics.
       public: CompositeData &Copy(CompositeData &&_other,
                                   const bool _mergeRequirements = false);
 
+      /// \brief Merge the data from _other into this CompositeData. If there
+      /// are any conflicting data entries, the entry from _other will take
+      /// precedence.
+      ///
+      /// \param[in] _other Another CompositeData
+      /// \param[in] _mergeRequirements If true, this object will also take on
+      /// the requirements specified by _other. Any objects that are already
+      /// marked as required in this CompositeData will remain required. If
+      /// false, the requirements of this CompositeData object are unaffected.
+      /// \return A reference to this object
+      ///
+      /// \sa Merge(CompositeData &&)
+      /// \sa Copy()
       public: CompositeData &Merge(const CompositeData &_other,
                                    const bool _mergeRequirements = false);
 
+      /// \brief An alternative to Merge(const CompositeData &, bool) that takes
+      /// advantage of move semantics.
       public: CompositeData &Merge(CompositeData &&_other,
                                    const bool _mergeRequirements = false);
 
