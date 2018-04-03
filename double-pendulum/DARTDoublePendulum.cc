@@ -70,7 +70,7 @@ namespace ignition
         {
           ::dart::utils::DartLoader loader;
           this->robot = loader.parseSkeleton(
-                PROJECT_SOURCE_PATH "/ignition-physics-dart-bullet/rrbot.xml");
+                PROJECT_SOURCE_PATH "/double-pendulum/rrbot.xml");
           this->world->addSkeleton(this->robot);
 
           this->joint1 = this->robot->getJoint("joint1");
