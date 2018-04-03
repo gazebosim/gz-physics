@@ -23,7 +23,7 @@ ign_configure_project()
 #---------------------------------------
 # Build all possible plugins by default.
 # Users may override this by changing these variables.
-option(BUILD_IGNITION_PHYSICS_DART_BULLET "Build the DART-BULLET example physics engine plugin" TRUE)
+option(BUILD_DOUBLE_PENDULUM "Build the double pendulum example" TRUE)
 
 
 #============================================================================
@@ -49,8 +49,8 @@ message(STATUS "-------------------------------------------\n")
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS)
 
-if(BUILD_IGNITION_PHYSICS_DART_BULLET)
-  add_subdirectory(ignition-physics-dart-bullet)
+if(BUILD_DOUBLE_PENDULUM)
+  add_subdirectory(double-pendulum)
 endif()
 
 
