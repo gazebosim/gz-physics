@@ -316,6 +316,9 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_EQ(0u, all.count(typeid(IntData).name()));
 
   data.Has<StringData>();
+  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+
+  data.Query<StringData>();
   EXPECT_EQ(1u, data.UnqueriedEntryCount());
   EXPECT_EQ(2u, data.EntryCount());
   unqueried = data.UnqueriedEntries();

@@ -436,13 +436,9 @@ namespace ignition
 
       /// \brief Returns true if this CompositeData has an object of type Data,
       /// otherwise returns false. This is literally equivalent to
-      /// (nullptr != Query<Data>(mode)).
-      ///
-      /// If "mode" is set to QUERY_SILENT, then calling this function will not
-      /// cause the "queried" flag to change (see UnqueriedEntries() for more
-      /// on the "queried" flag).
+      /// (nullptr != Query<Data>(QUERY_SILENT)).
       public: template <typename Data>
-      bool Has(const QueryMode mode = QUERY_NORMAL) const;
+      bool Has() const;
 
       /// \brief Struct that describes the status of data.
       struct DataStatus
@@ -466,21 +462,8 @@ namespace ignition
 
       /// \brief Returns a DataStatus object that describes the status of the
       /// requested data type.
-      ///
-      /// Note that using QUERY_NORMAL will mark the data as queried, but the
-      /// DataStatus that is returned will indicate the query status prior to
-      /// calling this function, so it might not reflect the current status.
-      /// Using QUERY_SILENT will guarantee that the returned status reflects
-      /// the current status. We use this behavior because otherwise
-      /// QUERY_NORMAL would cause information to get lost. With the behavior
-      /// the way it is, you can always ascertain both (1) what the query status
-      /// was before calling this function, and (2) what it is now that the
-      /// function has been called (see UnqueriedEntries() for more on the
-      /// "queried" flag).
-      ///
-      /// See Unquery<Data>() and MakeRequired<Data>() for example usage.
       public: template <typename Data>
-      DataStatus StatusOf(const QueryMode mode = QUERY_NORMAL) const;
+      DataStatus StatusOf() const;
 
       /// \brief Returns true if this CompositeData has a Data type object
       /// which was marked as queried, and that object is now marked as

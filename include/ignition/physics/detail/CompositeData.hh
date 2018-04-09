@@ -195,15 +195,14 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    bool CompositeData::Has(const QueryMode _mode) const
+    bool CompositeData::Has() const
     {
-      return (nullptr != this->Query<Data>(_mode));
+      return (nullptr != this->Query<Data>(QUERY_SILENT));
     }
 
     /////////////////////////////////////////////////
     template <typename Data>
-    CompositeData::DataStatus CompositeData::StatusOf(
-        const QueryMode _mode) const
+    CompositeData::DataStatus CompositeData::StatusOf() const
     {
       // status is initialized to everything being false
       DataStatus status;
@@ -220,9 +219,6 @@ namespace ignition
       status.exists = true;
       status.required = it->second.required;
       status.queried = it->second.queried;
-
-      if (QUERY_NORMAL == _mode)
-        detail::SetToQueried(it, this->numQueries);
 
       return status;
     }
