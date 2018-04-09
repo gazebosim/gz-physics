@@ -70,7 +70,7 @@ namespace ignition
       /// either (1) it was created using Copy(~), =, or the CompositeData
       /// constructor, or (2) the last time ResetQueries() was called,
       /// whichever was more recent. Functions that can mark an entry as
-      /// queried include Get(), Create(), GetOrCreate(), Query(), and Has().
+      /// queried include Get(), Create(), Insert(), Query(), and Has().
       public: mutable bool queried;
     };
 
@@ -94,26 +94,9 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data, typename ...Args>
-    Data &CompositeData::Create(Args &&..._args)
+    auto CompositeData::Insert(Args &&..._args) -> InsertResult<Data>
     {
-      const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(typeid(Data).name(), DataEntry())).first;
-
-      if (!it->second.data)
-        ++this->numEntries;
-
-      it->second.data = std::unique_ptr<Cloneable>(
-            new MakeCloneable<Data>(std::forward<Args>(_args)...));
-
-      detail::SetToQueried(it, this->numQueries);
-
-      return static_cast<MakeCloneable<Data>&>(*it->second.data);
-    }
-
-    /////////////////////////////////////////////////
-    template <typename Data, typename ...Args>
-    Data &CompositeData::GetOrCreate(Args &&..._args)
-    {
+      bool inserted = false;
       const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(typeid(Data).name(), DataEntry())).first;
 
@@ -122,11 +105,42 @@ namespace ignition
         ++this->numEntries;
         it->second.data = std::unique_ptr<Cloneable>(
               new MakeCloneable<Data>(std::forward<Args>(_args)...));
+        inserted = true;
       }
 
       detail::SetToQueried(it, this->numQueries);
 
-      return static_cast<MakeCloneable<Data>&>(*it->second.data);
+      return InsertResult<Data>{
+        static_cast<MakeCloneable<Data>&>(*it->second.data),
+        inserted};
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Data, typename... Args>
+    auto CompositeData::InsertOrAssign(Args &&..._args) -> InsertResult<Data>
+    {
+      bool inserted = false;
+      const MapOfData::iterator it = this->dataMap.insert(
+            std::make_pair(typeid(Data).name(), DataEntry())).first;
+
+      if (!it->second.data)
+      {
+        ++this->numEntries;
+        it->second.data = std::unique_ptr<Cloneable>(
+              new MakeCloneable<Data>(std::forward<Args>(_args)...));
+        inserted = true;
+      }
+      else
+      {
+        static_cast<MakeCloneable<Data>&>(*it->second.data) =
+            MakeCloneable<Data>(std::forward<Args>(_args)...);
+      }
+
+      detail::SetToQueried(it, this->numQueries);
+
+      return InsertResult<Data>{
+        static_cast<MakeCloneable<Data>&>(*it->second.data),
+        inserted};
     }
 
     /////////////////////////////////////////////////

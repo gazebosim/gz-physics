@@ -1487,8 +1487,8 @@ class ThreadLocal {
     GTEST_CHECK_POSIX_SUCCESS_(pthread_key_delete(key_));
   }
 
-  T* pointer() { return GetOrCreateValue(); }
-  const T* pointer() const { return GetOrCreateValue(); }
+  T* pointer() { return InsertValue(); }
+  const T* pointer() const { return InsertValue(); }
   const T& get() const { return *pointer(); }
   void set(const T& value) { *pointer() = value; }
 
@@ -1514,7 +1514,7 @@ class ThreadLocal {
     return key;
   }
 
-  T* GetOrCreateValue() const {
+  T* InsertValue() const {
     ThreadLocalValueHolderBase* const holder =
         static_cast<ThreadLocalValueHolderBase*>(pthread_getspecific(key_));
     if (holder != NULL) {

@@ -107,6 +107,23 @@ class VectorDoubleData
 };
 
 /////////////////////////////////////////////////
+class MultiData
+{
+  public: std::string myString;
+
+  public: int myInt;
+
+  public: inline MultiData(
+    const std::string &_sInput,
+    const int &_iInput)
+    : myString(_sInput),
+      myInt(_iInput)
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
 template <typename... DataTypes>
 struct AddSomeData
 {
@@ -118,7 +135,7 @@ struct AddSomeData<DataType>
 {
   static void To(ignition::physics::CompositeData &data)
   {
-    data.Create<DataType>();
+    data.InsertOrAssign<DataType>();
   }
 };
 
@@ -127,7 +144,7 @@ struct AddSomeData<DataType1, OtherDataTypes...>
 {
   static void To(ignition::physics::CompositeData &data)
   {
-    data.Create<DataType1>();
+    data.InsertOrAssign<DataType1>();
     AddSomeData<OtherDataTypes...>::To(data);
   }
 };

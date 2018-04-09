@@ -20,29 +20,96 @@
 #include "ignition/physics/CompositeData.hh"
 #include "utils/TestDataTypes.hh"
 
+using ignition::physics::CompositeData;
+
 /////////////////////////////////////////////////
-TEST(CompositeData_TEST, AddRemoveData)
+TEST(CompositeData_TEST, Get)
 {
-  ignition::physics::CompositeData data;
+  CompositeData data;
   EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.StatusOf<StringData>().queried);
 
   StringData &s = data.Get<StringData>();
   EXPECT_TRUE(data.Has<StringData>());
 
+
   EXPECT_EQ("default", s.myString);
   s.myString = "modified";
   EXPECT_EQ("modified", data.Get<StringData>().myString);
-  EXPECT_EQ("modified", data.GetOrCreate<StringData>().myString);
 
-  data.Create<StringData>("new string");
-  EXPECT_EQ("new string", data.Get<StringData>().myString);
-  // Note that the reference s is no longer valid after Create has been called,
-  // and it should no longer be used.
+  CompositeData other = data;
+  EXPECT_TRUE(other.Has<StringData>());
+  EXPECT_FALSE(other.StatusOf<StringData>().queried);
+  EXPECT_EQ("modified", other.Get<StringData>().myString);
+}
 
-  data.Remove<StringData>();
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, Insert)
+{
+  CompositeData data;
   EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.StatusOf<StringData>().queried);
 
-  EXPECT_EQ("remade", data.GetOrCreate<StringData>("remade").myString);
+  // After the first insertion attempt, the StringData entry should come into
+  // existence, constructed with the given argument.
+  CompositeData::InsertResult<StringData> result =
+      data.Insert<StringData>("inserted_data");
+  EXPECT_TRUE(result.inserted);
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.StatusOf<StringData>().queried);
+  EXPECT_EQ("inserted_data", result.data.myString);
+  // These pointers should match, because the references should refer to the
+  // exact same object.
+  EXPECT_EQ(&data.Get<StringData>(), &result.data);
+
+  // After the second insertion attempt, nothing should change. The insertion
+  // will have failed because an entry for StringData already existed.
+  CompositeData::InsertResult<StringData> secondResult =
+      data.Insert<StringData>("second_insert");
+  EXPECT_FALSE(secondResult.inserted);
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.StatusOf<StringData>().queried);
+  EXPECT_NE("second_insert", secondResult.data.myString);
+  EXPECT_EQ("inserted_data", secondResult.data.myString);
+  // These pointers should match, because the references should refer to the
+  // exact same object.
+  EXPECT_EQ(&data.Get<StringData>(), &secondResult.data);
+  EXPECT_EQ(&result.data, &secondResult.data);
+}
+
+/////////////////////////////////////////////////
+TEST(CompositeData_TEST, InsertOrAssign)
+{
+  CompositeData data;
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.StatusOf<StringData>().queried);
+
+  // After the first InsertOrAssign attempt, the StringData entry should come
+  // into existence, constructed with the given argument.
+  CompositeData::InsertResult<StringData> result =
+      data.InsertOrAssign<StringData>("inserted_data");
+  EXPECT_TRUE(result.inserted);
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.StatusOf<StringData>().queried);
+  EXPECT_EQ("inserted_data", result.data.myString);
+  // These pointers should match, because the references should refer to the
+  // exact same object.
+  EXPECT_EQ(&data.Get<StringData>(), &result.data);
+
+  // After the second InsertOrAssign attempt, the existing StringData entry
+  // should be assigned the new value while remaining the same physical object
+  // in memory.
+  CompositeData::InsertResult<StringData> secondResult =
+      data.InsertOrAssign<StringData>("assigned_data");
+  EXPECT_FALSE(secondResult.inserted);
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.StatusOf<StringData>().queried);
+  EXPECT_EQ("assigned_data", secondResult.data.myString);
+  // These pointers should match, because the references should refer to the
+  // exact same object. Also, the underlying object should still be the same
+  // one in physical memory, even though its value has changed.
+  EXPECT_EQ(&data.Get<StringData>(), &secondResult.data);
+  EXPECT_EQ(&result.data, &secondResult.data);
 }
 
 /////////////////////////////////////////////////
@@ -246,14 +313,14 @@ TEST(CompositeData_TEST, Requirements)
   EXPECT_FALSE(requiredData.Remove<StringData>());
   EXPECT_TRUE(requiredData.Has<StringData>());
 
-  requiredData.Create<IntData>(146);
+  requiredData.InsertOrAssign<IntData>(146);
   EXPECT_EQ(146, requiredData.Get<IntData>().myInt);
 
   // If IntData was already created, we should not create a new one
   requiredData.MakeRequired<IntData>(641);
   EXPECT_EQ(146, requiredData.Get<IntData>().myInt);
 
-  requiredData.Create<DoubleData>();
+  requiredData.InsertOrAssign<DoubleData>(DoubleData());
   EXPECT_TRUE(requiredData.Has<DoubleData>());
 
   // When we copy from a blank object, we should retain the required data and
