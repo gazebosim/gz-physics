@@ -61,8 +61,10 @@ namespace ignition
       public: virtual void Copy(Cloneable &&_other) = 0;
     };
 
-    /// \brief Assuming the type T follows the Rule of Five or the Rule of Zero,
-    /// create a type that will implement the Copy and Clone functions for it.
+    /// \brief Assuming the type T follows the Rule of Five or the Rule of Zero
+    /// (see http://en.cppreference.com/w/cpp/language/rule_of_three), this
+    /// class creates a type that will implement the Copy and Clone functions
+    /// for it.
     ///
     /// \warning In order to minimize overhead, this class does not do any type
     /// safety checks. It should only be used by a class like CompositeData
