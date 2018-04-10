@@ -56,6 +56,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -86,7 +87,13 @@ namespace ignition
       ///       // created by the first call of Get<MyData>().
       ///       std::cout << composite.Get<MyData>().myString << std::endl;
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to get
+      ///
+      /// \return a reference to to a Data-type object that is stored within
+      /// this CompositeData.
       public: template <typename Data>
       Data &Get();
 
@@ -336,6 +343,10 @@ namespace ignition
       ///     }
       /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to remove
+      ///
+      /// \return true iff the CompositeData no longer contains this Data type.
       public: template <typename Data>
       bool Remove();
 
@@ -365,6 +376,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -436,7 +448,18 @@ namespace ignition
       ///         << composite.Insert<MyDataWithoutDefault>(3).data.myValue
       ///         << std::endl;
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to query for
+      ///
+      /// \param[in] _mode
+      ///   Specify how this call should affect the query flag of the entry.
+      ///   The default behavior is strongly recommended, unless you know what
+      ///   you are doing. See QueryMode for more info.
+      ///
+      /// \return a pointer to the Data entry if this CompositeData has one.
+      /// Otherwise, this returns a nullptr.
       public: template <typename Data>
       Data *Query(const QueryMode _mode = QUERY_NORMAL);
 
@@ -449,6 +472,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -498,13 +522,29 @@ namespace ignition
       ///       // This will print "here is a string".
       ///       PrintStringIfAvailable(composite);
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to query for
+      ///
+      /// \param[in] _mode
+      ///   Specify how this call should affect the query flag of the entry.
+      ///   The default behavior is strongly recommended, unless you know what
+      ///   you are doing. See QueryMode for more info.
+      ///
+      /// \return a const-qualified pointer to the Data entry if this
+      /// CompositeData has one. Otherwise, this returns a nullptr.
       public: template <typename Data>
       const Data *Query(const QueryMode mode = QUERY_NORMAL) const;
 
       /// \brief Returns true if this CompositeData has an object of type Data,
       /// otherwise returns false. This is literally equivalent to
       /// (nullptr != Query<Data>(QUERY_SILENT)).
+      ///
+      /// \tparam Data
+      ///   The type of data entry to check for
+      ///
+      /// \return true if this CompositeData contains a Data-type entry.
       public: template <typename Data>
       bool Has() const;
 
@@ -530,6 +570,11 @@ namespace ignition
 
       /// \brief Returns a DataStatus object that describes the status of the
       /// requested data type.
+      ///
+      /// \tparam Data
+      ///   The type of data entry to check the status of
+      ///
+      /// \return a DataStatus for the requested entry.
       public: template <typename Data>
       DataStatus StatusOf() const;
 
@@ -543,6 +588,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -582,7 +628,13 @@ namespace ignition
       ///       // using Unquery<MyData>().
       ///       assert(!status.queried);
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry whose query flag should be cleared
+      ///
+      /// \return true if the query flag is changing from queried to unqueried,
+      /// otherwise false.
       public: template <typename Data>
       bool Unquery() const;
 
@@ -596,6 +648,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -626,7 +679,19 @@ namespace ignition
       ///       // be deleted as normal, because its lifecycle is still tied to
       ///       // the CompositeData object.
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry that should be marked as required
+      /// \tparam Args
+      ///   This will be inferred from _args; you should not typically set this
+      ///   explicitly.
+      ///
+      /// \param[in] _args
+      ///   The arguments to use for construction, if a Data-type entry did not
+      ///   already exist within this CompositeData.
+      ///
+      /// \return a reference to the Data-type entry
       public: template <typename Data, typename... Args>
       Data &MakeRequired(Args &&..._args);
 
@@ -634,6 +699,12 @@ namespace ignition
       /// CompositeData object. Otherwise, returns false.
       ///
       /// For more on required data, see MakeRequired<Data>().
+      ///
+      /// \tparam Data
+      ///   The type of data entry whose requirements are being checked
+      ///
+      /// \return true iff the specified Data type is required by this
+      /// CompositeData
       public: template <typename Data>
       bool Requires() const;
 
@@ -641,6 +712,12 @@ namespace ignition
       /// returns false. More highly specified CompositeData types that use
       /// ExpectData or RequireData may return true if the type of Data is
       /// expected.
+      ///
+      /// \tparam Data
+      ///   The type of data whose expectation is being checked
+      ///
+      /// \return When called on a basic CompositeData object, this is always
+      /// false.
       public: template <typename Data>
       static constexpr bool Expects();
 
@@ -650,40 +727,52 @@ namespace ignition
       /// class can make this return true for more highly specified
       /// CompositeData types.
       ///
-      /// NOTE: This should never be used to check whether Data is required on
-      /// a specific instance, because the requirements that are placed on an
+      /// \warning This should never be used to check whether Data is required
+      /// on a specific instance, because the requirements that are placed on an
       /// instance can be changed at runtime. This should only be used to check
       /// whether a certain data type is always required for a certain
       /// specification of CompositeData.
+      ///
+      /// \tparam Data
+      ///   The type of data whose requirement we are checking at compile time
+      ///
+      /// \return When called on a basic CompositeData object, this is always
+      /// false.
       public: template <typename Data>
       static constexpr bool AlwaysRequires();
 
-      /// \brief Returns the number of data entries currently contained in this
-      /// CompositeData. Runs with O(1) complexity.
+      /// \brief Check how many data entries are in this CompositeData. Runs
+      /// with O(1) complexity.
+      ///
+      /// \return the number of data entries currently contained in this
+      /// CompositeData.
       public: std::size_t EntryCount() const;
 
-      /// \brief Returns the number of entries in this CompositeData which have
-      /// not been queried. See UnqueriedEntries() for more information about
-      /// the "queried" flag.
+      /// \brief Check how many data entries in this CompositeData have not been
+      /// queried. See UnqueriedEntries() for more information about the
+      /// "queried" flag. Runs with O(1) complexity.
+      ///
+      /// \return the number of entries in this CompositeData which have
+      /// not been queried.
       public: std::size_t UnqueriedEntryCount() const;
 
       /// \brief Reset the query flags on all data entries. This will make it
       /// appear as though no entries have ever been queried. See
       /// UnqueriedEntries() for more information about the "queried" flag.
       ///
-      /// It is good practice to call this function before returning a
-      /// CompositeData from a function and handing it off to another segment of
-      /// a pipeline, because sometimes the compiler inappropriately elides the
-      /// copy/move constructor/operators and passes along the state of the
+      /// \attention It is good practice to call this function before returning
+      /// a CompositeData from a function and handing it off to another segment
+      /// of a pipeline, because sometimes the compiler inappropriately elides
+      /// the copy/move constructor/operators and passes along the state of the
       /// queries, even though it should not.
       public: void ResetQueries() const;
 
-      /// \brief Returns an ordered (alphabetical) set of all data entries in
-      /// this CompositeData.
-      /// Runs with O(1) complexity.
+      /// \brief Get an ordered set of all data entries in this CompositeData.
+      /// Runs with O(N) complexity.
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -724,10 +813,13 @@ namespace ignition
       ///
       ///       // The function PrintStuff will print the names of each struct.
       ///     }
+      /// \endcode
       ///
+      /// \return an ordered (alphabetical) set of all data entries in this
+      /// CompositeData.
       public: std::set<std::string> AllEntries() const;
 
-      /// \brief Returns an ordered (alphabetical) set of the data entries in
+      /// \brief Get an ordered (alphabetical) set of the data entries in
       /// this CompositeData which have not been queried (Get, Insert,
       /// InsertOrAssign, Query, and MakeRequired all perform querying) since
       /// the data was implicitly created (e.g. by a copy or move operation) or
@@ -744,6 +836,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -798,7 +891,10 @@ namespace ignition
       ///       // The function DoStuff will print out that it does not know
       ///       // what to do with MyData3.
       ///     }
+      /// \endcode
       ///
+      /// \return an ordered set of the names of unqueried data entries in this
+      /// CompositeData.
       public: std::set<std::string> UnqueriedEntries() const;
 
       /// \brief Make this CompositeData a copy of _other. However, any data
