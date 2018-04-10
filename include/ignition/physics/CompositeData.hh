@@ -954,10 +954,14 @@ namespace ignition
 
       /// \brief Struct which contains information about a data type within the
       /// CompositeData. See ignition/physics/detail/CompositeData.hh for the
-      /// definition.
+      /// definition. This class is public so that helper functions can use it
+      /// without being friends of the class.
       public: struct DataEntry;
 
+      // We make this typedef public so that helper functions can use it without
+      // being friends of the class.
       public: using MapOfData = std::map<std::string, DataEntry>;
+
       /// \brief Map from the label of a data object type to its entry
       protected: MapOfData dataMap;
 
