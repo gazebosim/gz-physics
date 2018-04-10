@@ -24,6 +24,8 @@ namespace ignition
 {
   namespace physics
   {
+    /// \brief This class allows us to effectively perform type erasure while
+    /// still being able to copy, move, and clone the values of objects.
     class Cloneable
     {
       /// \brief Default constructor
@@ -61,23 +63,41 @@ namespace ignition
 
     /// \brief Assuming the type T follows the Rule of Five or the Rule of Zero,
     /// create a type that will implement the Copy and Clone functions for it.
+    ///
+    /// \warning In order to minimize overhead, this class does not do any type
+    /// safety checks. It should only be used by a class like CompositeData
+    /// which takes responsibility for ensuring type safety.
     template <typename T>
     class MakeCloneable final : public T, public Cloneable
     {
       /// \brief Perfect-forwarding constructor
+      /// \param[in] _args
+      ///   Parameters which will be perfectly forwarded to the constructor of T
       public: template <typename... Args>
       MakeCloneable(Args&&... _args);
 
       /// \brief Copy constructor
+      /// \param[in] _other
+      ///   Another MakeCloneable<T> object which we will copy
       public: MakeCloneable(const MakeCloneable &_other);
 
       /// \brief Move constructor
+      /// \param[in] _other
+      ///   An rvalue-reference to a MakeCloneable<T> object which we will
+      ///   consume
       public: MakeCloneable(MakeCloneable &&_other);
 
       /// \brief Copy operator
-      public: MakeCloneable& operator=(const MakeCloneable &_other);
+      /// \param[in] _other
+      ///   Another MakeCloneable<T> object which we will copy
+      /// \return A reference to this object
+      public: MakeCloneable &operator=(const MakeCloneable &_other);
 
       /// \brief Move operator
+      /// \param[in] _other
+      ///   An rvalue-reference to a MakeCloneable<T> object which we will
+      ///   consume
+      /// \return A reference to this object
       public: MakeCloneable& operator=(MakeCloneable &&_other);
 
       // Documentation inherited
