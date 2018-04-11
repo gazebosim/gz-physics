@@ -28,6 +28,8 @@ TEST(CompositeData_TEST, Get)
   CompositeData data;
   EXPECT_FALSE(data.Has<StringData>());
   EXPECT_FALSE(data.StatusOf<StringData>().queried);
+  EXPECT_TRUE(data.AllEntries().empty());
+  EXPECT_TRUE(data.UnqueriedEntries().empty());
 
   StringData &s = data.Get<StringData>();
   EXPECT_TRUE(data.Has<StringData>());
