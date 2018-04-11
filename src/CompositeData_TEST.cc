@@ -296,6 +296,37 @@ TEST(CompositeData_TEST, MergeFunctionWithRequirements)
 }
 
 /////////////////////////////////////////////////
+TEST(CompositeData_TEST, Remove)
+{
+  ignition::physics::CompositeData data;
+
+  // try to remove data from an empty container
+  // it should return true because the container does not have it now
+  // (even though it never did)
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<DoubleData>());
+  EXPECT_FALSE(data.Has<IntData>());
+  EXPECT_TRUE(data.Remove<StringData>());
+  EXPECT_TRUE(data.Remove<DoubleData>());
+  EXPECT_TRUE(data.Remove<IntData>());
+
+  data = CreateSomeData<StringData, DoubleData, IntData>(true);
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+
+  EXPECT_NE(nullptr, data.Query<IntData>());
+
+  EXPECT_TRUE(data.Remove<StringData>());
+  EXPECT_TRUE(data.Remove<DoubleData>());
+  EXPECT_TRUE(data.Remove<IntData>());
+
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<DoubleData>());
+  EXPECT_FALSE(data.Has<IntData>());
+}
+
+/////////////////////////////////////////////////
 TEST(CompositeData_TEST, Requirements)
 {
   ignition::physics::CompositeData requiredData;
@@ -336,6 +367,14 @@ TEST(CompositeData_TEST, Requirements)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, Queries)
 {
+  // test queries on empty container
+  {
+    ignition::physics::CompositeData data;
+    EXPECT_EQ(nullptr, data.Query<StringData>());
+    EXPECT_EQ(nullptr, data.Query<DoubleData>());
+    EXPECT_EQ(nullptr, data.Query<IntData>());
+  }
+
   // Note that if we do not pass the `true` argument into CreateSomeData, then
   // the following tests fail because the compiler seems to be eliding the
   // copy/move operators and copy/move constructors, perhaps using return value
@@ -369,6 +408,11 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(0u, all.count(typeid(StringData).name()));
   EXPECT_NE(0u, all.count(typeid(DoubleData).name()));
   EXPECT_NE(0u, all.count(typeid(IntData).name()));
+
+  // Query a variable before removing it
+  EXPECT_NE(nullptr, data.Query<IntData>());
+  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.EntryCount());
 
   data.Remove<IntData>();
   EXPECT_EQ(2u, data.UnqueriedEntryCount());
