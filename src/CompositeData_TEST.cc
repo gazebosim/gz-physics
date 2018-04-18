@@ -23,6 +23,15 @@
 using ignition::physics::CompositeData;
 
 /////////////////////////////////////////////////
+TEST(CompositeData_TEST, DestructorCoverage)
+{
+  // getting full destructor coverage
+  CompositeData *p = new CompositeData;
+  EXPECT_TRUE(p != NULL);
+  delete p;
+}
+
+/////////////////////////////////////////////////
 TEST(CompositeData_TEST, Get)
 {
   CompositeData data;
