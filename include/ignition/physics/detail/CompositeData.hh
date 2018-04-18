@@ -185,7 +185,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == _mode)
+      if (QueryMode::NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<MakeCloneable<Data>*>(it->second.data.get());
@@ -204,7 +204,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == _mode)
+      if (QueryMode::NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<const MakeCloneable<Data>*>(it->second.data.get());
@@ -214,7 +214,7 @@ namespace ignition
     template <typename Data>
     bool CompositeData::Has() const
     {
-      return (nullptr != this->Query<Data>(QUERY_SILENT));
+      return (nullptr != this->Query<Data>(QueryMode::SILENT));
     }
 
     /////////////////////////////////////////////////
