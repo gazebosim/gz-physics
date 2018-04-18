@@ -549,7 +549,7 @@ namespace ignition
       bool Has() const;
 
       /// \brief Struct that describes the status of data.
-      struct DataStatus
+      struct IGNITION_PHYSICS_VISIBLE DataStatus
       {
         /// \brief If the data exists in the CompositeData, this will be true,
         /// otherwise it is false.
