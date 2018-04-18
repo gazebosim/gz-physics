@@ -26,24 +26,6 @@ namespace ignition
 {
   namespace physics
   {
-    namespace detail
-    {
-      /////////////////////////////////////////////////
-      /// \brief Helper function to set the query flag of previously unqueried
-      /// data entries. The template argument is to support both iterator&
-      /// and const_iterator& argument types. This helper functions lets us
-      /// avoid hard-to-spot typos on this frequently performed task.
-      template <typename IteratorType>
-      void SetToQueried(const IteratorType &_it, std::size_t &_numQueries)
-      {
-        if (!_it->second.queried)
-        {
-          ++_numQueries;
-          _it->second.queried = true;
-        }
-      }
-    }
-
     /// \brief Struct which contains information about a data type within the
     /// CompositeData.
     struct CompositeData::DataEntry
@@ -74,6 +56,60 @@ namespace ignition
       public: mutable bool queried;
     };
 
+    namespace detail
+    {
+      /////////////////////////////////////////////////
+      /// \brief Helper function to set the query flag of previously unqueried
+      /// data entries. The template argument is to support both iterator&
+      /// and const_iterator& argument types. This helper functions lets us
+      /// avoid hard-to-spot typos on this frequently performed task.
+      template <typename IteratorType>
+      void SetToQueried(const IteratorType &_it, std::size_t &_numQueries)
+      {
+        if (!_it->second.queried)
+        {
+          ++_numQueries;
+          _it->second.queried = true;
+        }
+      }
+
+      /////////////////////////////////////////////////
+      /// \internal Helper function used to implement CompositeData::Insert(...)
+      /// and CompositeData::InsertOrAssign(...).
+      template <typename Data, typename ...Args>
+      CompositeData::InsertResult<Data> InsertHelper(
+          const bool _assign,
+          std::size_t &_numEntries,
+          std::size_t &_numQueries,
+          CompositeData::MapOfData &_dataMap,
+          Args &&..._args)
+      {
+        bool inserted = false;
+        const CompositeData::MapOfData::iterator it = _dataMap.insert(
+              std::make_pair(typeid(Data).name(),
+                             CompositeData::DataEntry())).first;
+
+        if (!it->second.data)
+        {
+          ++_numEntries;
+          it->second.data = std::unique_ptr<Cloneable>(
+                new MakeCloneable<Data>(std::forward<Args>(_args)...));
+          inserted = true;
+        }
+        else if (_assign)
+        {
+          static_cast<MakeCloneable<Data>&>(*it->second.data) =
+              MakeCloneable<Data>(std::forward<Args>(_args)...);
+        }
+
+        detail::SetToQueried(it, _numQueries);
+
+        return CompositeData::InsertResult<Data>{
+          static_cast<MakeCloneable<Data>&>(*it->second.data),
+          inserted};
+      }
+    }
+
     /////////////////////////////////////////////////
     template <typename Data>
     Data &CompositeData::Get()
@@ -96,51 +132,18 @@ namespace ignition
     template <typename Data, typename ...Args>
     auto CompositeData::Insert(Args &&..._args) -> InsertResult<Data>
     {
-      bool inserted = false;
-      const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(typeid(Data).name(), DataEntry())).first;
-
-      if (!it->second.data)
-      {
-        ++this->numEntries;
-        it->second.data = std::unique_ptr<Cloneable>(
-              new MakeCloneable<Data>(std::forward<Args>(_args)...));
-        inserted = true;
-      }
-
-      detail::SetToQueried(it, this->numQueries);
-
-      return InsertResult<Data>{
-        static_cast<MakeCloneable<Data>&>(*it->second.data),
-        inserted};
+      return detail::InsertHelper<Data>(
+            false, this->numEntries, this->numQueries, this->dataMap,
+            std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
     template <typename Data, typename... Args>
     auto CompositeData::InsertOrAssign(Args &&..._args) -> InsertResult<Data>
     {
-      bool inserted = false;
-      const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(typeid(Data).name(), DataEntry())).first;
-
-      if (!it->second.data)
-      {
-        ++this->numEntries;
-        it->second.data = std::unique_ptr<Cloneable>(
-              new MakeCloneable<Data>(std::forward<Args>(_args)...));
-        inserted = true;
-      }
-      else
-      {
-        static_cast<MakeCloneable<Data>&>(*it->second.data) =
-            MakeCloneable<Data>(std::forward<Args>(_args)...);
-      }
-
-      detail::SetToQueried(it, this->numQueries);
-
-      return InsertResult<Data>{
-        static_cast<MakeCloneable<Data>&>(*it->second.data),
-        inserted};
+      return detail::InsertHelper<Data>(
+            true, this->numEntries, this->numQueries, this->dataMap,
+            std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -182,7 +185,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == _mode)
+      if (QueryMode::NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<MakeCloneable<Data>*>(it->second.data.get());
@@ -201,7 +204,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == _mode)
+      if (QueryMode::NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<const MakeCloneable<Data>*>(it->second.data.get());
@@ -211,7 +214,7 @@ namespace ignition
     template <typename Data>
     bool CompositeData::Has() const
     {
-      return (nullptr != this->Query<Data>(QUERY_SILENT));
+      return (nullptr != this->Query<Data>(QueryMode::SILENT));
     }
 
     /////////////////////////////////////////////////

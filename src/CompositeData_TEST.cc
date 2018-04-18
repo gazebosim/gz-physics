@@ -28,6 +28,8 @@ TEST(CompositeData_TEST, Get)
   CompositeData data;
   EXPECT_FALSE(data.Has<StringData>());
   EXPECT_FALSE(data.StatusOf<StringData>().queried);
+  EXPECT_TRUE(data.AllEntries().empty());
+  EXPECT_TRUE(data.UnqueriedEntries().empty());
 
   StringData &s = data.Get<StringData>();
   EXPECT_TRUE(data.Has<StringData>());
@@ -75,6 +77,8 @@ TEST(CompositeData_TEST, Insert)
   // exact same object.
   EXPECT_EQ(&data.Get<StringData>(), &secondResult.data);
   EXPECT_EQ(&result.data, &secondResult.data);
+
+  EXPECT_EQ(IntData().myInt, data.Insert<IntData>().data.myInt);
 }
 
 /////////////////////////////////////////////////
@@ -133,6 +137,17 @@ TEST(CompositeData_TEST, CopyMoveOperators)
 }
 
 /////////////////////////////////////////////////
+struct zzzzzzzzz
+{
+  // With the Itanium ABI the typeid(~).name() of this class will be 9zzzzzzzzz
+  // In MSVC the typeid(~).name() of this class will be "class zzzzzzzzz"
+
+  // These properties should effectively guarantee that this class is always the
+  // last entry in a CompositeData instance, which is a useful property for
+  // achieving complete implementation line coverage in the next unit test.
+};
+
+/////////////////////////////////////////////////
 TEST(CompositeData_TEST, CopyFunction)
 {
   ignition::physics::CompositeData data =
@@ -152,8 +167,34 @@ TEST(CompositeData_TEST, CopyFunction)
   EXPECT_FALSE(data.Has<IntData>());
 
   EXPECT_TRUE(data.Has<BoolData>());
+  EXPECT_EQ(otherData.Get<BoolData>().myBool, data.Get<BoolData>().myBool);
+
   EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_EQ(otherData.Get<CharData>().myChar, data.Get<CharData>().myChar);
+
   EXPECT_TRUE(data.Has<FloatData>());
+  EXPECT_NEAR(otherData.Get<FloatData>().myFloat,
+              data.Get<FloatData>().myFloat, 1e-8f);
+
+  // This next section is used for implementation line coverage, to ensure that
+  // StandardDataClone gets called in the implementation.
+  EXPECT_TRUE(data.Remove<CharData>());
+  EXPECT_FALSE(data.Has<CharData>());
+
+  data.Copy(otherData);
+
+  EXPECT_TRUE(data.Has<CharData>());
+  EXPECT_EQ(otherData.Get<CharData>().myChar, data.Get<CharData>().myChar);
+
+  // The next section is used for implementation line coverage to ensure that
+  // we can correctly insert data entries in the center of the data map.
+  ignition::physics::CompositeData zzzData = CreateSomeData<zzzzzzzzz>();
+  EXPECT_TRUE(zzzData.Has<zzzzzzzzz>());
+  zzzData.Copy(otherData);
+
+  EXPECT_TRUE(zzzData.Has<BoolData>());
+  EXPECT_TRUE(zzzData.Has<CharData>());
+  EXPECT_TRUE(zzzData.Has<FloatData>());
 }
 
 /////////////////////////////////////////////////
@@ -177,6 +218,11 @@ TEST(CompositeData_TEST, CopyFunctionWithRequirements)
   ignition::physics::CompositeData otherData =
       CreateSomeData<BoolData, CharData, FloatData>();
   otherData.MakeRequired<BoolData>();
+
+  // Inserting and then removing this data entry helps with our implementation
+  // line coverage
+  EXPECT_TRUE(otherData.Insert<StringData>().inserted);
+  EXPECT_TRUE(otherData.Remove<StringData>());
 
   EXPECT_TRUE(data.Has<StringData>());
   EXPECT_TRUE(data.Has<DoubleData>());
@@ -203,6 +249,9 @@ TEST(CompositeData_TEST, CopyFunctionWithRequirements)
   EXPECT_FALSE(data.Requires<CharData>());
   EXPECT_FALSE(data.Requires<IntData>());
 
+  // Removing this data entry here helps to complete line coverage
+  EXPECT_TRUE(data.Remove<BoolData>());
+  EXPECT_FALSE(data.Has<BoolData>());
 
   data.Copy(otherData, true);
 
@@ -211,6 +260,16 @@ TEST(CompositeData_TEST, CopyFunctionWithRequirements)
 
   EXPECT_FALSE(data.Requires<CharData>());
   EXPECT_FALSE(data.Requires<FloatData>());
+
+  // This next segment helps with line coverage in the implementation
+  otherData.MakeRequired<FloatData>();
+  EXPECT_TRUE(data.Remove<FloatData>());
+  EXPECT_FALSE(data.Has<FloatData>());
+  EXPECT_FALSE(data.Requires<FloatData>());
+  data.Copy(std::move(otherData), true);
+
+  EXPECT_TRUE(data.Has<FloatData>());
+  EXPECT_TRUE(data.Requires<FloatData>());
 }
 
 /////////////////////////////////////////////////
@@ -294,6 +353,41 @@ TEST(CompositeData_TEST, MergeFunctionWithRequirements)
 }
 
 /////////////////////////////////////////////////
+TEST(CompositeData_TEST, Remove)
+{
+  ignition::physics::CompositeData data;
+
+  // try to remove data from an empty container
+  // it should return true because the container does not have it now
+  // (even though it never did)
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<DoubleData>());
+  EXPECT_FALSE(data.Has<IntData>());
+  EXPECT_TRUE(data.Remove<StringData>());
+  EXPECT_TRUE(data.Remove<DoubleData>());
+  EXPECT_TRUE(data.Remove<IntData>());
+
+  data = CreateSomeData<StringData, DoubleData, IntData>(true);
+  EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_TRUE(data.Has<DoubleData>());
+  EXPECT_TRUE(data.Has<IntData>());
+  EXPECT_NE(nullptr, data.Query<StringData>());
+  EXPECT_TRUE(data.StatusOf<StringData>().exists);
+
+  EXPECT_NE(nullptr, data.Query<IntData>());
+
+  EXPECT_TRUE(data.Remove<StringData>());
+  EXPECT_TRUE(data.Remove<DoubleData>());
+  EXPECT_TRUE(data.Remove<IntData>());
+
+  EXPECT_FALSE(data.Has<StringData>());
+  EXPECT_FALSE(data.Has<DoubleData>());
+  EXPECT_FALSE(data.Has<IntData>());
+  EXPECT_EQ(nullptr, data.Query<StringData>());
+  EXPECT_FALSE(data.StatusOf<StringData>().exists);
+}
+
+/////////////////////////////////////////////////
 TEST(CompositeData_TEST, Requirements)
 {
   ignition::physics::CompositeData requiredData;
@@ -334,6 +428,14 @@ TEST(CompositeData_TEST, Requirements)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, Queries)
 {
+  // test queries on empty container
+  {
+    ignition::physics::CompositeData data;
+    EXPECT_EQ(nullptr, data.Query<StringData>());
+    EXPECT_EQ(nullptr, data.Query<DoubleData>());
+    EXPECT_EQ(nullptr, data.Query<IntData>());
+  }
+
   // Note that if we do not pass the `true` argument into CreateSomeData, then
   // the following tests fail because the compiler seems to be eliding the
   // copy/move operators and copy/move constructors, perhaps using return value
@@ -367,6 +469,11 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(0u, all.count(typeid(StringData).name()));
   EXPECT_NE(0u, all.count(typeid(DoubleData).name()));
   EXPECT_NE(0u, all.count(typeid(IntData).name()));
+
+  // Query a variable before removing it
+  EXPECT_NE(nullptr, data.Query<IntData>());
+  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.EntryCount());
 
   data.Remove<IntData>();
   EXPECT_EQ(2u, data.UnqueriedEntryCount());

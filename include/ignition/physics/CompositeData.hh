@@ -354,16 +354,16 @@ namespace ignition
       /// their effects on the meta info of the data being queried.
       ///
       /// See UnqueriedEntries() for more on the "queried" flag.
-      enum QueryMode
+      enum class QueryMode : int
       {
         /// \brief Performing the operation will cause an unqueried Data's
         /// status to flip to queried. Data that is already marked as queried
         /// will be unaffected.
-        QUERY_NORMAL = 0,
+        NORMAL = 0,
 
         /// \brief Performing the operation has no effect on whether data is
         /// marked as queried.
-        QUERY_SILENT
+        SILENT
       };
 
       /// \brief Query this CompositeData for a Data-type entry. If it contains
@@ -461,7 +461,7 @@ namespace ignition
       /// \return a pointer to the Data entry if this CompositeData has one.
       /// Otherwise, this returns a nullptr.
       public: template <typename Data>
-      Data *Query(const QueryMode _mode = QUERY_NORMAL);
+      Data *Query(const QueryMode _mode = QueryMode::NORMAL);
 
       /// \brief Const-qualified version of Query. This can be used to retrieve
       /// data from a `const CompositeData`.
@@ -535,7 +535,7 @@ namespace ignition
       /// \return a const-qualified pointer to the Data entry if this
       /// CompositeData has one. Otherwise, this returns a nullptr.
       public: template <typename Data>
-      const Data *Query(const QueryMode mode = QUERY_NORMAL) const;
+      const Data *Query(const QueryMode mode = QueryMode::NORMAL) const;
 
       /// \brief Returns true if this CompositeData has an object of type Data,
       /// otherwise returns false. This is literally equivalent to
@@ -954,10 +954,14 @@ namespace ignition
 
       /// \brief Struct which contains information about a data type within the
       /// CompositeData. See ignition/physics/detail/CompositeData.hh for the
-      /// definition.
+      /// definition. This class is public so that helper functions can use it
+      /// without being friends of the class.
       public: struct DataEntry;
 
+      // We make this typedef public so that helper functions can use it without
+      // being friends of the class.
       public: using MapOfData = std::map<std::string, DataEntry>;
+
       /// \brief Map from the label of a data object type to its entry
       protected: MapOfData dataMap;
 
