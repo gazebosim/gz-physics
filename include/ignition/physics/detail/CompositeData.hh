@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <utility>
+
 #include "ignition/physics/CompositeData.hh"
 
 namespace ignition
@@ -28,7 +29,7 @@ namespace ignition
   {
     /// \brief Struct which contains information about a data type within the
     /// CompositeData.
-    struct CompositeData::DataEntry
+    struct IGNITION_PHYSICS_VISIBLE CompositeData::DataEntry
     {
       /// \brief Default constructor
       public: DataEntry();
