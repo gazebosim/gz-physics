@@ -22,6 +22,8 @@
 #include <map>
 #include <set>
 
+#include <ignition/common/SuppressWarning.hh>
+
 #include "ignition/physics/Cloneable.hh"
 #include "ignition/physics/Export.hh"
 
@@ -962,8 +964,10 @@ namespace ignition
       // being friends of the class.
       public: using MapOfData = std::map<std::string, DataEntry>;
 
+      IGN_COMMON_WARN_IGNORE__DLL_INTERFACE_MISSING
       /// \brief Map from the label of a data object type to its entry
       protected: MapOfData dataMap;
+      IGN_COMMON_WARN_RESUME__DLL_INTERFACE_MISSING
 
       /// \brief Total number of data entries currently in this CompositeData.
       /// Note that this may differ from the size of dataMap, because some
