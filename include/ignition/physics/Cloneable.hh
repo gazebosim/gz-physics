@@ -76,7 +76,10 @@ namespace ignition
       /// \param[in] _args
       ///   Parameters which will be perfectly forwarded to the constructor of T
       public: template <typename... Args>
-      MakeCloneable(Args&&... _args);
+      //   This constructor is not marked as explicit because we want it to
+      //   allow implicit conversions by design
+      // cppcheck-suppress noExplicitConstructor
+      MakeCloneable(Args&&... _args); // NOLINT
 
       /// \brief Copy constructor
       /// \param[in] _other
