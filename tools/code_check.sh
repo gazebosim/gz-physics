@@ -65,7 +65,7 @@ SUPPRESS=/tmp/cpp_check.suppress
 echo "*:include/ignition/transport/TransportTypes.hh:63" > $SUPPRESS
 
 #cppcheck
-CPPCHECK_BASE="cppcheck -q --suppressions-list=$SUPPRESS"
+CPPCHECK_BASE="cppcheck -q --suppressions-list=$SUPPRESS --inline-suppr"
 if [ $CPPCHECK_LT_157 -eq 0 ]; then
   # use --language argument if 1.57 or greater (issue #907)
   CPPCHECK_BASE="$CPPCHECK_BASE --language=c++"
@@ -135,8 +135,8 @@ fi
 
 # cpplint
 if [ $xmlout -eq 1 ]; then
-  (echo $CPPLINT_FILES | xargs python tools/cpplint.py 2>&1) \
+  (echo $CPPLINT_FILES | xargs python tools/cpplint.py --extensions=cc,hh --quiet 2>&1) \
     | python tools/cpplint_to_cppcheckxml.py 2> $xmldir/cpplint.xml
 elif [ $QUICK_CHECK -eq 0 ]; then
-  echo $CPPLINT_FILES | xargs python tools/cpplint.py 2>&1
+  echo $CPPLINT_FILES | xargs python tools/cpplint.py  --extensions=cc,hh --quiet 2>&1
 fi

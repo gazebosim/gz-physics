@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Open Source Robotics Foundation
+ * Copyright (C) 2018 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 #include <string>
 #include <map>
 #include <set>
+
+#include <ignition/common/SuppressWarning.hh>
 
 #include "ignition/physics/Cloneable.hh"
 #include "ignition/physics/Export.hh"
@@ -56,6 +58,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -64,8 +67,6 @@ namespace ignition
       ///     // Create a data structure called MyData
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       std::string myString;
       ///     };
       ///
@@ -77,7 +78,7 @@ namespace ignition
       ///       // constructor of MyData. The MyData object will be stored
       ///       // inside of the object called "composite", and we can grab a
       ///       // mutable reference to it.
-      ///       MyData& data = composite.Get<MyData>();
+      ///       MyData &data = composite.Get<MyData>();
       ///
       ///       // We can modify the MyData object inside of "composite" using
       ///       // the mutable reference that we grabbed.
@@ -88,81 +89,51 @@ namespace ignition
       ///       // created by the first call of Get<MyData>().
       ///       std::cout << composite.Get<MyData>().myString << std::endl;
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to get
+      ///
+      /// \return a reference to to a Data-type object that is stored within
+      /// this CompositeData.
       public: template <typename Data>
-      Data& Get();
+      Data &Get();
 
-      /// \brief Create a Data type object with the provided arguments. If a
-      /// Data object is already present in this CompositeData, it will be
-      /// deleted and replaced with the newly constructed object. This returns
-      /// a reference to the newly constructed objected.
-      ///
-      /// Note that this will invalidate ALL previously obtained references to
-      /// this Data type from this CompositeData object. References to other
-      /// types of data from this CompositeData object will not be affected.
+      /// \brief This struct is the return type of the various Insert...<T>()
+      /// functions. It returns a reference to the data entry for the Data type,
+      /// and it indicates whether the insertion operation actually occurred.
+      public: template <typename Data>
+      struct InsertResult
+      {
+        /// \brief A reference to the Data entry within the CompositeData
+        /// object.
+        public: Data &data;
+
+        /// \brief True if the operation resulted in inserting a new data entry.
+        ///
+        /// For Insert<Data>(), false means that nothing was inserted.
+        ///
+        /// For InsertOrAssign<Data>(), false means that the Data entry which
+        /// used to be in the CompositeData has been assigned the new value.
+        public: const bool inserted;
+
+        // We explicitly delete the copy assignment operator, because we don't
+        // want someone to inadvertently assign a value to the data that's being
+        // referenced (users must do so explicitly by calling on the `data`
+        // member variable). Note that this operator is already implicitly
+        // deleted by having the const bool member variable, but we are also
+        // deleting it explicitly for clarity.
+        public: InsertResult &operator=(const InsertResult&) = delete;
+      };
+
+      /// \brief This will attempt to insert a new Data entry into the
+      /// CompositeData object, forwarding _args to the constructor of the
+      /// entry. If an entry already exists for this Data type, then nothing
+      /// will be inserted.
       ///
       /// Example usage:
       ///
-      ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
-      ///
-      ///     using namespace ignition::physics;
-      ///
-      ///     // Create a data structure called MyData
-      ///     struct MyData
-      ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
-      ///       MyData(const std::string& arg = "")
-      ///         : myString(arg)
-      ///       {
-      ///         // Intentionally blank
-      ///       }
-      ///
-      ///       std::string myString;
-      ///     };
-      ///
-      ///     int main()
-      ///     {
-      ///       CompositeData composite;
-      ///
-      ///       // Create an object of type MyData and store it in "composite".
-      ///       // A reference to the newly created object is returned.
-      ///       MyData& data = composite.Create<MyData>("some argument");
-      ///
-      ///       // This will print out "some argument", because the string in
-      ///       // MyData was initialized with that argument.
-      ///       std::cout << composite.Get<MyData>().myString << std::endl;
-      ///
-      ///       // Modify the object
-      ///       data.myString = "I modified this data";
-      ///
-      ///       // This will print out "I modified this data" because we used a
-      ///       // mutable reference to change the value of MyData::myString.
-      ///       std::cout << composite.Get<MyData>().myString << std::endl;
-      ///
-      ///       // Create a new object of type MyData, deleting the old one.
-      ///       // Note that the reference named "data" will be INVALIDATED and
-      ///       // MUST NOT be used again after this function call.
-      ///       composite.Create<MyData>();
-      ///
-      ///       // This will print out nothing but a newline, because the last
-      ///       // call to Create<MyData>() will have replaced the old modified
-      ///       // instance of MyData which was constructed without any
-      ///       // arguments.
-      ///       std::cout << composite.Get<MyData>().myString << std::endl;
-      ///     }
-      ///
-      public: template <typename Data, typename... Args>
-      Data& Create(Args&&... args);
-
-      /// \brief If a Data type object is available in this CompositeData,
-      /// this will return a reference to it. Otherwise, it will create a new
-      /// Data type object with the arguments provided, and return a reference
-      /// to the newly created object.
-      ///
-      /// Example usage:
-      ///
+      /// \code
       ///     #include <iostream>
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
@@ -172,10 +143,8 @@ namespace ignition
       ///     // Create a data structure called MyData
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
-      ///       MyData(const std::string& arg = "")
-      ///         : myString(arg)
+      ///       MyData(const std::string &_arg = "")
+      ///         : myString(_arg)
       ///       {
       ///         // Intentionally blank
       ///       }
@@ -189,7 +158,7 @@ namespace ignition
       ///
       ///       // Create an object of type MyData and store it in "composite".
       ///       // A reference to the newly created object is returned.
-      ///       MyData& data = composite.GetOrCreate<MyData>("some argument");
+      ///       MyData &data = composite.Insert<MyData>("some argument").data;
       ///
       ///       // This will print out "some argument", because the string in
       ///       // MyData was initialized with that argument.
@@ -206,32 +175,53 @@ namespace ignition
       ///       // "composite", because the instance already exists. It will
       ///       // just return the instance as a reference and ignore the
       ///       // argument that has been passed in.
-      ///       MyData& altData = composite.GetOrCreate<MyData>("another argument");
+      ///       MyData &altData = composite.Insert<MyData>(
+      ///                           "another argument").data;
       ///
-      ///       // The reference to "data" is still perfectly VALID, and in fact
+      ///       // The reference to "data" is still perfectly valid, and in fact
       ///       // its underlying pointer is equal to the underlying pointer of
       ///       // "altData".
-      ///       assert( (&data) == (&altData) );
+      ///       assert((&data) == (&altData));
       ///
       ///       // This will print out "I modified this data" because there have
       ///       // not been any function calls that can alter the value of
       ///       // myString in the time since that modification was made.
-      ///       std::cout << composite.GetOrCreate<MyData>().myString << std::endl;
+      ///       std::cout << composite.Insert<MyData>().data.myString
+      ///                 << std::endl;
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type name for the data entry
+      /// \tparam Args
+      ///   This will be inferred from _args; you should not typically set this
+      ///   explicitly.
+      ///
+      /// \param[in] _args
+      ///   The arguments to use for construction. These will get wrapped in a
+      ///   Data(...) constructor. If _args is left blank, the default
+      ///   constructor will be used.
+      ///
+      /// \return An InsertResult<Data> which contains a reference to the data
+      /// entry (either the one that is newly inserted or the one that already
+      /// existed). InsertResult::inserted will be true if the entry was
+      /// inserted by this function, or false if the entry already existed.
+      ///
+      /// \sa InsertOrAssign
       public: template <typename Data, typename... Args>
-      Data& GetOrCreate(Args&&... args);
+      InsertResult<Data> Insert(Args &&..._args);
 
-      /// \brief This will remove a Data type object from this CompositeData and
-      /// delete it if one is present. Otherwise, it will do nothing. Data types
-      /// that are marked as required will not (and cannot) be removed.
+      /// \brief Attempt to insert a Data-type entry. If a Data-type entry did
+      /// not already exist, it will be constructed by copying (or moving)
+      /// the given arguments. If a Data-type entry already existed, the
+      /// existing entry will be assigned the value of Data(_args...).
       ///
-      /// If the data was successfully removed or did not exist to begin with,
-      /// this returns true. If the data was marked as required and therefore
-      /// not removed, this returns false.
+      /// Any previously existing valid references to the Data entry will remain
+      /// valid, even after this function is called.
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -240,10 +230,8 @@ namespace ignition
       ///     // Create a data structure called MyData
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
-      ///       MyData(const std::string& arg = "")
-      ///         : myString(arg)
+      ///       MyData(const std::string &_arg = "")
+      ///         : myString(_arg)
       ///       {
       ///         // Intentionally blank
       ///       }
@@ -257,19 +245,110 @@ namespace ignition
       ///
       ///       // Create an object of type MyData and store it in "composite".
       ///       // A reference to the newly created object is returned.
-      ///       MyData& data = composite.GetOrCreate<MyData>("some argument");
+      ///       MyData &data = composite.InsertOrAssign<MyData>(
+      ///                         "some argument").data;
+      ///
+      ///       // This will print out "some argument", because the string in
+      ///       // MyData was initialized with that argument.
+      ///       std::cout << composite.Get<MyData>().myString << std::endl;
+      ///
+      ///       // Modify the object
+      ///       data.myString = "I modified this data";
+      ///
+      ///       // This will print out "I modified this data" because we used a
+      ///       // mutable reference to change the value of MyData::myString.
+      ///       std::cout << composite.Get<MyData>().myString << std::endl;
+      ///
+      ///       // Assign the MyData entry a new, default-constructed value.
+      ///       composite.InsertOrAssign<MyData>();
+      ///
+      ///       // This will print out nothing but a newline.
+      ///       std::cout << composite.Get<MyData>().myString << std::endl;
+      ///     }
+      /// \endcode
+      ///
+      /// \tparam Data
+      ///   The type name for the data entry
+      /// \tparam Args
+      ///   This will be inferred from _args; you should not typically set this
+      ///   explicitly.
+      ///
+      /// \param[in] _args
+      ///   The arguments to use for construction or assignment. These will get
+      ///   wrapped in a Data(...) constructor. If _args is left blank, the
+      ///   default constructor will be used.
+      ///
+      /// \return an InsertResult<Data> which contains a reference to the
+      /// Data-type entry of this CompositeData. InsertResult<Data>::inserted
+      /// will be true iff a Data-type entry did not already exist in this
+      /// CompositeData. If the value was instead assigned,
+      /// InsertResult<Data>::inserted will be false.
+      ///
+      /// \sa Insert
+      public: template <typename Data, typename... Args>
+      InsertResult<Data> InsertOrAssign(Args &&... _args);
+
+      /// \brief This will remove a Data-type object from this CompositeData and
+      /// delete it if one is present. Otherwise, it will do nothing. Data-types
+      /// that are marked as required will not (and cannot) be removed.
+      ///
+      /// If the data was successfully removed or did not exist to begin with,
+      /// this returns true. If the data was marked as required and therefore
+      /// not removed, this returns false.
+      ///
+      /// \warning Calling this function will permanently invalidate all
+      /// existing references to the Data-type entry of this CompositeData, i.e.
+      /// the references that get returned by Get<Data>(), Insert<Data>(~),
+      /// InsertOrAssign<Data>(~), or Query<Data>().
+      ///
+      /// Example usage:
+      ///
+      /// \code
+      ///     #include <iostream>
+      ///     #include <ignition/physics/CompositeData.hh>
+      ///
+      ///     using namespace ignition::physics;
+      ///
+      ///     // Create a data structure called MyData
+      ///     struct MyData
+      ///     {
+      ///       MyData(const std::string &_arg = "")
+      ///         : myString(_arg)
+      ///       {
+      ///         // Intentionally blank
+      ///       }
+      ///
+      ///       std::string myString;
+      ///     };
+      ///
+      ///     int main()
+      ///     {
+      ///       CompositeData composite;
+      ///
+      ///       // Create an object of type MyData and store it in "composite".
+      ///       // Append .data to get a reference to the new data.
+      ///       MyData &data = composite.Insert<MyData>("some argument").data;
       ///
       ///       // Print out "some argument"
-      ///       std::cout << composite.GetOrCreate<MyData>("another argument").myString << std::endl;
+      ///       std::cout
+      ///         << composite.Insert<MyData>("another argument").data.myString
+      ///         << std::endl;
       ///
       ///       // Remove the MyData object. Note that "data" is now INVALID and
       ///       // must never be used again after this function call.
       ///       composite.Remove<MyData>();
       ///
       ///       // Print out "another argument"
-      ///       std::cout << composite.GetOrCreate<MyData>("another argument").myString << std::endl;
+      ///       std::cout
+      ///         << composite.Insert<MyData>("another argument").data.myString
+      ///         << std::endl;
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to remove
+      ///
+      /// \return true iff the CompositeData no longer contains this Data type.
       public: template <typename Data>
       bool Remove();
 
@@ -277,28 +356,29 @@ namespace ignition
       /// their effects on the meta info of the data being queried.
       ///
       /// See UnqueriedEntries() for more on the "queried" flag.
-      enum QueryMode
+      enum class QueryMode : int
       {
         /// \brief Performing the operation will cause an unqueried Data's
         /// status to flip to queried. Data that is already marked as queried
         /// will be unaffected.
-        QUERY_NORMAL = 0,
+        NORMAL = 0,
 
         /// \brief Performing the operation has no effect on whether data is
         /// marked as queried.
-        QUERY_SILENT
+        SILENT
       };
 
-      /// \brief Query this CompositeData for a Data type object. If it contains
-      /// an instance of a Data type object, it gets returned as a Data*.
-      /// Otherwise, a nullptr is returned.
+      /// \brief Query this CompositeData for a Data-type entry. If it contains
+      /// a Data-type object, it gets returned as a Data*. Otherwise, a nullptr
+      /// is returned.
       ///
-      /// If "mode" is set to QUERY_SILENT, then calling this function will not
+      /// If _mode is set to QUERY_SILENT, then calling this function will not
       /// cause the "queried" flag to change (see UnqueriedEntries() for more
       /// on the "queried" flag).
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -306,8 +386,6 @@ namespace ignition
       ///
       ///     struct MyDataWithoutDefault
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyDataWithoutDefault)
-      ///
       ///       // This struct does not allow us to use the default constructor
       ///       MyDataWithoutDefault() = delete;
       ///
@@ -322,18 +400,21 @@ namespace ignition
       ///       int myValue;
       ///     };
       ///
-      ///     void SetValueIfAvailable(const int value, CompositeData& composite)
+      ///     void SetValueIfAvailable(const int _value,
+      ///                              CompositeData &_composite)
       ///     {
       ///       // This CANNOT compile because MyDataWithoutDefault does not
       ///       // provide a default constructor
-      ///       //MyDataWithoutDefault& data = composite.Get<MyDataWithoutDefault>();
+      ///       // MyDataWithoutDefault &data =
+      ///       //    composite.Get<MyDataWithoutDefault>();
       ///
       ///       // Get a pointer to a MyDataWithoutDefault instance if one is
       ///       // available, otherwise we get a nullptr.
-      ///       MyDataWithoutDefault* data = composite.Query<MyDataWithoutDefault>();
+      ///       MyDataWithoutDefault *data =
+      ///         _composite.Query<MyDataWithoutDefault>();
       ///
       ///       if(data)
-      ///         data->myValue = value;
+      ///         data->myValue = _value;
       ///     }
       ///
       ///     int main()
@@ -345,17 +426,19 @@ namespace ignition
       ///       SetValueIfAvailable(320, composite);
       ///
       ///       // We can create a MyDataWithoutDefault object by calling the
-      ///       // Create function and passing it an argument for the object's
+      ///       // Insert function and passing it an argument for the object's
       ///       // constructor.
-      ///       composite.Create<MyDataWithoutDefault>(123);
+      ///       composite.Insert<MyDataWithoutDefault>(123);
       ///
       ///       // This will print out "123" because the object will not be
-      ///       // re-created by GetOrCreate. We can call GetOrCreate because it
+      ///       // re-created by Insert. We can call Insert because it
       ///       // can use the argument we pass in to create an instance of
       ///       // MyDataWithoutDefault if an instance of it did not already
       ///       // exist, unlike Get which can only call the default
       ///       // constructor.
-      ///       std::cout << composite.GetOrCreate<MyDataWithoutDefault>(1).myValue << std::endl;
+      ///       std::cout
+      ///         << composite.Insert<MyDataWithoutDefault>(1).data.myValue
+      ///         << std::endl;
       ///
       ///       // This will set myValue to 5 because "composite" contains an
       ///       // instance of MyDataWithoutDefault.
@@ -363,11 +446,24 @@ namespace ignition
       ///
       ///       // This will print out "5" because that was the value set by
       ///       // SetValueIfAvailable.
-      ///       std::cout << composite.GetOrCreate<MyDataWithoutDefault>(3).myValue << std::endl;
+      ///       std::cout
+      ///         << composite.Insert<MyDataWithoutDefault>(3).data.myValue
+      ///         << std::endl;
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to query for
+      ///
+      /// \param[in] _mode
+      ///   Specify how this call should affect the query flag of the entry.
+      ///   The default behavior is strongly recommended, unless you know what
+      ///   you are doing. See QueryMode for more info.
+      ///
+      /// \return a pointer to the Data entry if this CompositeData has one.
+      /// Otherwise, this returns a nullptr.
       public: template <typename Data>
-      Data* Query(const QueryMode mode = QUERY_NORMAL);
+      Data *Query(const QueryMode _mode = QueryMode::NORMAL);
 
       /// \brief Const-qualified version of Query. This can be used to retrieve
       /// data from a `const CompositeData`.
@@ -378,6 +474,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -385,12 +482,10 @@ namespace ignition
       ///
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       std::string myString;
       ///     };
       ///
-      ///     void PrintStringIfAvailable(const CompositeData& composite)
+      ///     void PrintStringIfAvailable(const CompositeData &_composite)
       ///     {
       ///       // The following Get<T>() CANNOT compile because "composite" is
       ///       // a const-qualified reference, but Get<T>() is NOT a
@@ -399,13 +494,14 @@ namespace ignition
       ///       // type T if an instance of that type was not already available
       ///       // in the CompositeData object, and that would mean modifying
       ///       // the CompositeData object, which violates const-correctness.
-      ///       // This is similarly the case for Create<T>(~) and GetOrCreate<T>(~).
+      ///       // This is similarly the case for Insert<T>(~) and
+      ///       // InsertOrAssign<T>(~).
       ///       //
-      ///       //MyData& data = composite.Get<T>(); // error!
+      ///       // MyData &data = _composite.Get<T>(); // error!
       ///
       ///       // Instead, we use the const-qualified Query<T>() function which
       ///       // can return a const-qualified pointer to the data instance.
-      ///       const MyData* data = composite.Query<MyData>();
+      ///       const MyData *data = _composite.Query<MyData>();
       ///
       ///       if(data)
       ///         std::cout << data->myString << std::endl;
@@ -428,22 +524,34 @@ namespace ignition
       ///       // This will print "here is a string".
       ///       PrintStringIfAvailable(composite);
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry to query for
+      ///
+      /// \param[in] _mode
+      ///   Specify how this call should affect the query flag of the entry.
+      ///   The default behavior is strongly recommended, unless you know what
+      ///   you are doing. See QueryMode for more info.
+      ///
+      /// \return a const-qualified pointer to the Data entry if this
+      /// CompositeData has one. Otherwise, this returns a nullptr.
       public: template <typename Data>
-      const Data* Query(const QueryMode mode = QUERY_NORMAL) const;
+      const Data *Query(const QueryMode mode = QueryMode::NORMAL) const;
 
       /// \brief Returns true if this CompositeData has an object of type Data,
       /// otherwise returns false. This is literally equivalent to
-      /// (nullptr != Query<Data>(mode)).
+      /// (nullptr != Query<Data>(QUERY_SILENT)).
       ///
-      /// If "mode" is set to QUERY_SILENT, then calling this function will not
-      /// cause the "queried" flag to change (see UnqueriedEntries() for more
-      /// on the "queried" flag).
+      /// \tparam Data
+      ///   The type of data entry to check for
+      ///
+      /// \return true if this CompositeData contains a Data-type entry.
       public: template <typename Data>
-      bool Has(const QueryMode mode = QUERY_NORMAL) const;
+      bool Has() const;
 
       /// \brief Struct that describes the status of data.
-      struct DataStatus
+      struct IGNITION_PHYSICS_VISIBLE DataStatus
       {
         /// \brief If the data exists in the CompositeData, this will be true,
         /// otherwise it is false.
@@ -465,22 +573,14 @@ namespace ignition
       /// \brief Returns a DataStatus object that describes the status of the
       /// requested data type.
       ///
-      /// Note that using QUERY_NORMAL will mark the data as queried, but the
-      /// DataStatus that is returned will indicate the query status prior to
-      /// calling this function, so it might not reflect the current status.
-      /// Using QUERY_SILENT will guarantee that the returned status reflects
-      /// the current status. We use this behavior because otherwise
-      /// QUERY_NORMAL would cause information to get lost. With the behavior
-      /// the way it is, you can always ascertain both (1) what the query status
-      /// was before calling this function, and (2) what it is now that the
-      /// function has been called (see UnqueriedEntries() for more on the
-      /// "queried" flag).
+      /// \tparam Data
+      ///   The type of data entry to check the status of
       ///
-      /// See Unquery<Data>() and MakeRequired<Data>() for example usage.
+      /// \return a DataStatus for the requested entry.
       public: template <typename Data>
-      DataStatus StatusOf(const QueryMode mode = QUERY_NORMAL) const;
+      DataStatus StatusOf() const;
 
-      /// \brief Returns true if this CompositeData has a Data type object
+      /// \brief Returns true if this CompositeData has a Data-type object
       /// which was marked as queried, and that object is now marked as
       /// unqueried. If an object of that type does not exist or it was already
       /// unqueried, this returns false.
@@ -490,6 +590,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -497,8 +598,6 @@ namespace ignition
       ///
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
       ///       std::string myString;
       ///     };
       ///
@@ -514,7 +613,7 @@ namespace ignition
       ///       assert(!status.queried);
       ///       assert(!status.required);
       ///
-      ///       composite.Create<MyData>();
+      ///       composite.Insert<MyData>();
       ///       status = composite.StatusOf<MyData>();
       ///
       ///       // MyData should now be queried, because explicitly creating an
@@ -525,29 +624,19 @@ namespace ignition
       ///       // Turn off the "queried" flag for MyData.
       ///       composite.Unquery<MyData>();
       ///
-      ///       status = composite.StatusOf<MyData>(CompositeData::QUERY_SILENT);
+      ///       status = composite.StatusOf<MyData>();
+      ///       assert(status.exists);
       ///       // It should be unqueried because we turned off its query flag
       ///       // using Unquery<MyData>().
       ///       assert(!status.queried);
-      ///
-      ///       // Since we used QUERY_SILENT mode in our last call to
-      ///       // StatusOf<MyData>(), MyData will still be considered unqueried
-      ///       // in "composite" right now.
-      ///
-      ///       status = composite.StatusOf<MyData>(CompositeData::QUERY_NORMAL);
-      ///       // The queried flag held by "status" should still be false
-      ///       // because it reflects whether MyData was queried BEFORE the
-      ///       // function StatusOf<MyData>() was called.
-      ///       assert(!status.queried);
-      ///
-      ///       // Since we used QUERY_NORMAL mode in our last call to
-      ///       // StatusOf<MyData>(), MyData will now be considered queried
-      ///       // inside of "composite".
-      ///
-      ///       status = composite.StatusOf<MyData>();
-      ///       assert(status.queried);
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry whose query flag should be cleared
+      ///
+      /// \return true if the query flag is changing from queried to unqueried,
+      /// otherwise false.
       public: template <typename Data>
       bool Unquery() const;
 
@@ -561,6 +650,7 @@ namespace ignition
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -568,9 +658,7 @@ namespace ignition
       ///
       ///     struct MyData
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData)
-      ///
-      ///       MyData(const std::string& arg = "")
+      ///       MyData(const std::string &arg = "")
       ///         : myString(arg)
       ///       {
       ///         // Intentionally blank
@@ -593,14 +681,32 @@ namespace ignition
       ///       // be deleted as normal, because its lifecycle is still tied to
       ///       // the CompositeData object.
       ///     }
+      /// \endcode
       ///
+      /// \tparam Data
+      ///   The type of data entry that should be marked as required
+      /// \tparam Args
+      ///   This will be inferred from _args; you should not typically set this
+      ///   explicitly.
+      ///
+      /// \param[in] _args
+      ///   The arguments to use for construction, if a Data-type entry did not
+      ///   already exist within this CompositeData.
+      ///
+      /// \return a reference to the Data-type entry
       public: template <typename Data, typename... Args>
-      Data& MakeRequired(Args&&... args);
+      Data &MakeRequired(Args &&..._args);
 
       /// \brief Returns true if the specified Data type is required by this
       /// CompositeData object. Otherwise, returns false.
       ///
       /// For more on required data, see MakeRequired<Data>().
+      ///
+      /// \tparam Data
+      ///   The type of data entry whose requirements are being checked
+      ///
+      /// \return true iff the specified Data type is required by this
+      /// CompositeData
       public: template <typename Data>
       bool Requires() const;
 
@@ -608,6 +714,12 @@ namespace ignition
       /// returns false. More highly specified CompositeData types that use
       /// ExpectData or RequireData may return true if the type of Data is
       /// expected.
+      ///
+      /// \tparam Data
+      ///   The type of data whose expectation is being checked
+      ///
+      /// \return When called on a basic CompositeData object, this is always
+      /// false.
       public: template <typename Data>
       static constexpr bool Expects();
 
@@ -617,50 +729,52 @@ namespace ignition
       /// class can make this return true for more highly specified
       /// CompositeData types.
       ///
-      /// NOTE: This should never be used to check whether Data is required on
-      /// a specific instance, because the requirements that are placed on an
+      /// \warning This should never be used to check whether Data is required
+      /// on a specific instance, because the requirements that are placed on an
       /// instance can be changed at runtime. This should only be used to check
       /// whether a certain data type is always required for a certain
       /// specification of CompositeData.
+      ///
+      /// \tparam Data
+      ///   The type of data whose requirement we are checking at compile time
+      ///
+      /// \return When called on a basic CompositeData object, this is always
+      /// false.
       public: template <typename Data>
       static constexpr bool AlwaysRequires();
 
-      /// \brief Returns the number of data entries currently contained in this
-      /// CompositeData. Runs with O(1) complexity.
-      std::size_t NumEntries() const;
+      /// \brief Check how many data entries are in this CompositeData. Runs
+      /// with O(1) complexity.
+      ///
+      /// \return the number of data entries currently contained in this
+      /// CompositeData.
+      public: std::size_t EntryCount() const;
 
-      /// \brief Returns the number of entries in this CompositeData which have
-      /// not been queried. See UnqueriedEntries() for more information about
-      /// the "queried" flag.
-      std::size_t NumUnqueriedEntries() const;
+      /// \brief Check how many data entries in this CompositeData have not been
+      /// queried. See UnqueriedEntries() for more information about the
+      /// "queried" flag. Runs with O(1) complexity.
+      ///
+      /// \return the number of entries in this CompositeData which have
+      /// not been queried.
+      public: std::size_t UnqueriedEntryCount() const;
 
       /// \brief Reset the query flags on all data entries. This will make it
       /// appear as though no entries have ever been queried. See
       /// UnqueriedEntries() for more information about the "queried" flag.
       ///
-      /// It is good practice to call this function before returning a
-      /// CompositeData from a function and handing it off to another segment of
-      /// a pipeline, because sometimes the compiler inappropriately elides the
-      /// copy/move constructor/operators and passes along the state of the
+      /// \attention It is good practice to call this function before returning
+      /// a CompositeData from a function and handing it off to another segment
+      /// of a pipeline, because sometimes the compiler inappropriately elides
+      /// the copy/move constructor/operators and passes along the state of the
       /// queries, even though it should not.
-      void ResetQueries() const;
+      public: void ResetQueries() const;
 
-      /// \brief Returns an ordered (alphabetical) set of the data entries in
-      /// this CompositeData which have not been queried (Get, Create,
-      /// GetOrCreate, Query, Has, and MakeRequired all perform querying) since
-      /// the data was created (not using the aforementioned functions) or since
-      /// the last call to ResetQueries(), whichever is more recent. Runs with
-      /// O(1) complexity.
-      ///
-      /// Unqueried data entries might be created by copy/move construction,
-      /// copy/move assignment operation, or the Copy(~) function. Using the
-      /// copy/move operator or the Copy(~) function will reset the query flag
-      /// on any data that gets copied or moved over. This can be useful for
-      /// reporting runtime warnings about any unsupported data types that have
-      /// been given to you.
+      /// \brief Get an ordered set of all data entries in this CompositeData.
+      /// Runs with O(N) complexity.
       ///
       /// Example usage:
       ///
+      /// \code
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
@@ -668,36 +782,99 @@ namespace ignition
       ///
       ///     struct MyData1
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData1)
       ///       /* ... put some data here ... */
       ///     };
       ///
       ///     struct MyData2
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData2)
       ///       /* ... put some data here ... */
       ///     };
       ///
       ///     struct MyData3
       ///     {
-      ///       IGN_PHYSICS_DATA_LABEL(MyData3)
       ///       /* ... put some data here ... */
       ///     };
       ///
-      ///     void DoStuff(CompositeData& composite)
+      ///     void PrintStuff(const CompositeData &composite)
       ///     {
-      ///       MyData1& data1 = composite.Get<MyData1>();
+      ///       std::cout << "Entry types:" << std::endl;
+      ///       for (const std::string &label : composite.AllEntries())
+      ///       {
+      ///         std::cout << "  " << label << std::endl;
+      ///       }
+      ///     }
+      ///
+      ///     int main()
+      ///     {
+      ///       CompositeData composite;
+      ///       composite.Insert<MyData1>();
+      ///       composite.Insert<MyData2>();
+      ///       composite.Insert<MyData3>();
+      ///
+      ///       PrintStuff(composite);
+      ///
+      ///       // The function PrintStuff will print the names of each struct.
+      ///     }
+      /// \endcode
+      ///
+      /// \return an ordered (alphabetical) set of all data entries in this
+      /// CompositeData.
+      public: std::set<std::string> AllEntries() const;
+
+      /// \brief Get an ordered (alphabetical) set of the data entries in
+      /// this CompositeData which have not been queried (Get, Insert,
+      /// InsertOrAssign, Query, and MakeRequired all perform querying) since
+      /// the data was implicitly created (e.g. by a copy or move operation) or
+      /// since the last call to ResetQueries(), whichever is more recent. Runs
+      /// with O(N) complexity.
+      ///
+      /// Unqueried data entries might be created by copy/move construction,
+      /// copy/move assignment operation, or the Copy(~) function. Using the
+      /// copy/move operator or the Copy(~) function will reset the query flag
+      /// on any data that gets copied or moved over.
+      ///
+      /// \note This function can be useful for reporting runtime warnings about
+      /// any unsupported data types that have been given to you.
+      ///
+      /// Example usage:
+      ///
+      /// \code
+      ///     #include <iostream>
+      ///     #include <ignition/physics/CompositeData.hh>
+      ///
+      ///     using namespace ignition::physics;
+      ///
+      ///     struct MyData1
+      ///     {
+      ///       /* ... put some data here ... */
+      ///     };
+      ///
+      ///     struct MyData2
+      ///     {
+      ///       /* ... put some data here ... */
+      ///     };
+      ///
+      ///     struct MyData3
+      ///     {
+      ///       /* ... put some data here ... */
+      ///     };
+      ///
+      ///     void DoStuff(CompositeData &composite)
+      ///     {
+      ///       MyData1 &data1 = composite.Get<MyData1>();
       ///       /* ... do something with data1 ... */
       ///
-      ///       MyData2& data2 = composite.Get<MyData2>();
+      ///       MyData2 &data2 = composite.Get<MyData2>();
       ///       /* ... do something with data2 ... */
       ///
       ///
-      ///       const std::set<std::string>& unqueried = composite.UnqueriedEntries();
+      ///       const std::set<std::string> &unqueried =
+      ///                                     composite.UnqueriedEntries();
       ///       if(unqueried.size() > 0)
       ///       {
-      ///         std::cout << "I don't know what to do with the following type(s) of data:\n";
-      ///         for(const std::string& label : unqueried)
+      ///         std::cout << "I don't know what to do with "
+      ///                   << "the following type(s) of data:\n";
+      ///         for(const std::string &label : unqueried)
       ///           std::cout << " -- " << label << "\n";
       ///         std::cout << std::endl;
       ///       }
@@ -706,9 +883,9 @@ namespace ignition
       ///     int main()
       ///     {
       ///       CompositeData composite;
-      ///       composite.Create<MyData1>();
-      ///       composite.Create<MyData2>();
-      ///       composite.Create<MyData3>();
+      ///       composite.Insert<MyData1>();
+      ///       composite.Insert<MyData2>();
+      ///       composite.Insert<MyData3>();
       ///
       ///       composite.ResetQueries();
       ///       DoStuff(composite);
@@ -716,57 +893,54 @@ namespace ignition
       ///       // The function DoStuff will print out that it does not know
       ///       // what to do with MyData3.
       ///     }
+      /// \endcode
       ///
-      std::set<std::string> UnqueriedEntries() const;
+      /// \return an ordered set of the names of unqueried data entries in this
+      /// CompositeData.
+      public: std::set<std::string> UnqueriedEntries() const;
 
-
-      /// \brief Options that determine the behavior of the Copy() function
-      enum CopyOption
-      {
-        /// \brief Make this CompositeData identical to the other. If this
-        /// CompositeData contains data types that the other does not, they will
-        /// be deleted, unless they are marked as required.
-        IDENTICAL = 0,
-
-        /// \brief Merge in the data from the other CompositeData, but do not
-        /// delete any data structures that are unique to this one. For any data
-        /// structures that are held by both CompositeData objects, the data
-        /// from the other CompositeData will overwrite the data from this one.
-        HARD_MERGE,
-
-        /// \brief Any data structure types in the other CompositeData object
-        /// that  are not already present in this one will be copied over. Any
-        /// data structures that were already present in this CompositeData
-        /// object will remain unchanged.
-        SOFT_MERGE,
-
-        /// \brief Any data structure types in this CompositeData object that
-        /// are not held by the other CompositeData object will be deleted. Any
-        /// data structures that are held by both will get copied over from the
-        /// other. Required data objects will not be deleted.
-        HARD_INTERSECT,
-
-        /// \brief Any data structure types in this CompositeData object that
-        /// are not held by the other CompositeData object will be deleted. All
-        /// other data will remain unchanged. Required data objects will not
-        /// be deleted.
-        SOFT_INTERSECT
-      };
-
-      /// \brief Alter this CompositeData object based on the option that is
-      /// provided. The other CompositeData will remain unchanged.
+      /// \brief Make this CompositeData a copy of _other. However, any data
+      /// entries in this CompositeData which are marked as required will not be
+      /// removed.
       ///
-      /// If mergeRequirements is set to true, this object will also take on the
-      /// requirements specified by _other. Any objects that are already marked
-      /// as required in this CompositeData will remain required.
-      public: CompositeData& Copy(const CompositeData &_other,
-                                  const CopyOption _option = IDENTICAL,
+      /// \param[in] _other Another CompositeData
+      /// \param[in] _mergeRequirements If true, this object will also take on
+      /// the requirements specified by _other. Any objects that are already
+      /// marked as required in this CompositeData will remain required. If
+      /// false, the requirements of this CompositeData object are unaffected.
+      /// \return A reference to this object
+      ///
+      /// \sa Copy(CompositeData &&, bool)
+      /// \sa Merge()
+      /// \sa operator=()
+      public: CompositeData &Copy(const CompositeData &_other,
                                   const bool _mergeRequirements = false);
 
-      /// \brief A version of Copy() that takes advantage of move semantics.
-      public: CompositeData& Copy(CompositeData &&_other,
-                                  const CopyOption _option = IDENTICAL,
+      /// \brief An alternative to Copy(const CompositeData &, bool) that takes
+      /// advantage of move semantics.
+      public: CompositeData &Copy(CompositeData &&_other,
                                   const bool _mergeRequirements = false);
+
+      /// \brief Merge the data from _other into this CompositeData. If there
+      /// are any conflicting data entries, the entry from _other will take
+      /// precedence.
+      ///
+      /// \param[in] _other Another CompositeData
+      /// \param[in] _mergeRequirements If true, this object will also take on
+      /// the requirements specified by _other. Any objects that are already
+      /// marked as required in this CompositeData will remain required. If
+      /// false, the requirements of this CompositeData object are unaffected.
+      /// \return A reference to this object
+      ///
+      /// \sa Merge(CompositeData &&)
+      /// \sa Copy()
+      public: CompositeData &Merge(const CompositeData &_other,
+                                   const bool _mergeRequirements = false);
+
+      /// \brief An alternative to Merge(const CompositeData &, bool) that takes
+      /// advantage of move semantics.
+      public: CompositeData &Merge(CompositeData &&_other,
+                                   const bool _mergeRequirements = false);
 
       /// \brief Copy constructor. Same as Copy(_other).
       public: CompositeData(const CompositeData &_other);
@@ -775,19 +949,25 @@ namespace ignition
       public: CompositeData(CompositeData &&_other);
 
       /// \brief Copy operator. Same as Copy(_other).
-      public: CompositeData& operator=(const CompositeData &_other);
+      public: CompositeData &operator=(const CompositeData &_other);
 
       /// \brief Move operator. Same as Copy(_other).
-      public: CompositeData& operator=(CompositeData &&_other);
+      public: CompositeData &operator=(CompositeData &&_other);
 
       /// \brief Struct which contains information about a data type within the
       /// CompositeData. See ignition/physics/detail/CompositeData.hh for the
-      /// definition.
+      /// definition. This class is public so that helper functions can use it
+      /// without being friends of the class.
       public: struct DataEntry;
 
+      // We make this typedef public so that helper functions can use it without
+      // being friends of the class.
       public: using MapOfData = std::map<std::string, DataEntry>;
+
+      IGN_COMMON_WARN_IGNORE__DLL_INTERFACE_MISSING
       /// \brief Map from the label of a data object type to its entry
       protected: MapOfData dataMap;
+      IGN_COMMON_WARN_RESUME__DLL_INTERFACE_MISSING
 
       /// \brief Total number of data entries currently in this CompositeData.
       /// Note that this may differ from the size of dataMap, because some

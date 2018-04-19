@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Open Source Robotics Foundation
+ * Copyright (C) 2018 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,33 +18,20 @@
 #ifndef IGNITION_PHYSICS_DETAIL_COMPOSITEDATA_HH_
 #define IGNITION_PHYSICS_DETAIL_COMPOSITEDATA_HH_
 
+#include <memory>
+#include <utility>
+
+#include <ignition/common/SuppressWarning.hh>
+
 #include "ignition/physics/CompositeData.hh"
 
 namespace ignition
 {
   namespace physics
   {
-    namespace detail
-    {
-      /////////////////////////////////////////////////
-      /// \brief Helper function to set the query flag of previously unqueried
-      /// data entries. The template argument is to support both iterator&
-      /// and const_iterator& argument types. This helper functions lets us
-      /// avoid hard-to-spot typos on this frequently performed task.
-      template <typename IteratorType>
-      void SetToQueried(const IteratorType &it, std::size_t &numQueries)
-      {
-        if (!it->second.queried)
-        {
-          ++numQueries;
-          it->second.queried = true;
-        }
-      }
-    }
-
     /// \brief Struct which contains information about a data type within the
     /// CompositeData.
-    struct CompositeData::DataEntry
+    struct IGNITION_PHYSICS_VISIBLE CompositeData::DataEntry
     {
       /// \brief Default constructor
       public: DataEntry();
@@ -55,9 +42,11 @@ namespace ignition
         std::unique_ptr<Cloneable> &&_data,
         bool _required);
 
+      IGN_COMMON_WARN_IGNORE__DLL_INTERFACE_MISSING
       /// \brief Data that is being held at this entry. nullptr means the
       /// CompositeData does not have data for this entry
       public: std::unique_ptr<Cloneable> data;
+      IGN_COMMON_WARN_RESUME__DLL_INTERFACE_MISSING
 
       /// \brief Flag for whether the type of data at this entry is considered
       /// to be required. This can be made true during the lifetime of the
@@ -68,9 +57,63 @@ namespace ignition
       /// either (1) it was created using Copy(~), =, or the CompositeData
       /// constructor, or (2) the last time ResetQueries() was called,
       /// whichever was more recent. Functions that can mark an entry as
-      /// queried include Get(), Create(), GetOrCreate(), Query(), and Has().
+      /// queried include Get(), Create(), Insert(), Query(), and Has().
       public: mutable bool queried;
     };
+
+    namespace detail
+    {
+      /////////////////////////////////////////////////
+      /// \brief Helper function to set the query flag of previously unqueried
+      /// data entries. The template argument is to support both iterator&
+      /// and const_iterator& argument types. This helper functions lets us
+      /// avoid hard-to-spot typos on this frequently performed task.
+      template <typename IteratorType>
+      void SetToQueried(const IteratorType &_it, std::size_t &_numQueries)
+      {
+        if (!_it->second.queried)
+        {
+          ++_numQueries;
+          _it->second.queried = true;
+        }
+      }
+
+      /////////////////////////////////////////////////
+      /// \internal Helper function used to implement CompositeData::Insert(...)
+      /// and CompositeData::InsertOrAssign(...).
+      template <typename Data, typename ...Args>
+      CompositeData::InsertResult<Data> InsertHelper(
+          const bool _assign,
+          std::size_t &_numEntries,
+          std::size_t &_numQueries,
+          CompositeData::MapOfData &_dataMap,
+          Args &&..._args)
+      {
+        bool inserted = false;
+        const CompositeData::MapOfData::iterator it = _dataMap.insert(
+              std::make_pair(typeid(Data).name(),
+                             CompositeData::DataEntry())).first;
+
+        if (!it->second.data)
+        {
+          ++_numEntries;
+          it->second.data = std::unique_ptr<Cloneable>(
+                new MakeCloneable<Data>(std::forward<Args>(_args)...));
+          inserted = true;
+        }
+        else if (_assign)
+        {
+          static_cast<MakeCloneable<Data>&>(*it->second.data) =
+              MakeCloneable<Data>(std::forward<Args>(_args)...);
+        }
+
+        detail::SetToQueried(it, _numQueries);
+
+        return CompositeData::InsertResult<Data>{
+          static_cast<MakeCloneable<Data>&>(*it->second.data),
+          inserted};
+      }
+    }
 
     /////////////////////////////////////////////////
     template <typename Data>
@@ -91,40 +134,21 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename Data, typename... Args>
-    Data& CompositeData::Create(Args&&... args)
+    template <typename Data, typename ...Args>
+    auto CompositeData::Insert(Args &&..._args) -> InsertResult<Data>
     {
-      const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(typeid(Data).name(), DataEntry())).first;
-
-      if (!it->second.data)
-        ++this->numEntries;
-
-      it->second.data = std::unique_ptr<Cloneable>(
-            new MakeCloneable<Data>(std::forward<Args>(args)...));
-
-      detail::SetToQueried(it, this->numQueries);
-
-      return static_cast<MakeCloneable<Data>&>(*it->second.data);
+      return detail::InsertHelper<Data>(
+            false, this->numEntries, this->numQueries, this->dataMap,
+            std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
     template <typename Data, typename... Args>
-    Data& CompositeData::GetOrCreate(Args&&... args)
+    auto CompositeData::InsertOrAssign(Args &&..._args) -> InsertResult<Data>
     {
-      const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(typeid(Data).name(), DataEntry())).first;
-
-      if (!it->second.data)
-      {
-        ++this->numEntries;
-        it->second.data = std::unique_ptr<Cloneable>(
-              new MakeCloneable<Data>(std::forward<Args>(args)...));
-      }
-
-      detail::SetToQueried(it, this->numQueries);
-
-      return static_cast<MakeCloneable<Data>&>(*it->second.data);
+      return detail::InsertHelper<Data>(
+            true, this->numEntries, this->numQueries, this->dataMap,
+            std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -155,7 +179,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    Data* CompositeData::Query(const QueryMode mode)
+    Data* CompositeData::Query(const QueryMode _mode)
     {
       const MapOfData::const_iterator it =
           this->dataMap.find(typeid(Data).name());
@@ -166,7 +190,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == mode)
+      if (QueryMode::NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<MakeCloneable<Data>*>(it->second.data.get());
@@ -174,7 +198,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    const Data* CompositeData::Query(const QueryMode mode) const
+    const Data *CompositeData::Query(const QueryMode _mode) const
     {
       const MapOfData::const_iterator it =
           this->dataMap.find(typeid(Data).name());
@@ -185,7 +209,7 @@ namespace ignition
       if (!it->second.data)
         return nullptr;
 
-      if (QUERY_NORMAL == mode)
+      if (QueryMode::NORMAL == _mode)
         detail::SetToQueried(it, this->numQueries);
 
       return static_cast<const MakeCloneable<Data>*>(it->second.data.get());
@@ -193,15 +217,14 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    bool CompositeData::Has(const QueryMode mode) const
+    bool CompositeData::Has() const
     {
-      return (nullptr != this->Query<Data>(mode));
+      return (nullptr != this->Query<Data>(QueryMode::SILENT));
     }
 
     /////////////////////////////////////////////////
     template <typename Data>
-    CompositeData::DataStatus CompositeData::StatusOf(
-        const QueryMode mode) const
+    CompositeData::DataStatus CompositeData::StatusOf() const
     {
       // status is initialized to everything being false
       DataStatus status;
@@ -218,9 +241,6 @@ namespace ignition
       status.exists = true;
       status.required = it->second.required;
       status.queried = it->second.queried;
-
-      if (QUERY_NORMAL == mode)
-        detail::SetToQueried(it, this->numQueries);
 
       return status;
     }
@@ -249,7 +269,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data, typename... Args>
-    Data& CompositeData::MakeRequired(Args&&... args)
+    Data& CompositeData::MakeRequired(Args &&..._args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(typeid(Data).name(), DataEntry())).first;
@@ -259,7 +279,7 @@ namespace ignition
       {
         ++this->numEntries;
         it->second.data = std::unique_ptr<Cloneable>(
-              new MakeCloneable<Data>(std::forward<Args>(args)...));
+              new MakeCloneable<Data>(std::forward<Args>(_args)...));
       }
 
       detail::SetToQueried(it, this->numQueries);
