@@ -21,6 +21,8 @@
 #include <memory>
 #include <utility>
 
+#include <ignition/common/SuppressWarning.hh>
+
 #include "ignition/physics/CompositeData.hh"
 
 namespace ignition
@@ -40,9 +42,11 @@ namespace ignition
         std::unique_ptr<Cloneable> &&_data,
         bool _required);
 
+      IGN_COMMON_WARN_IGNORE__DLL_INTERFACE_MISSING
       /// \brief Data that is being held at this entry. nullptr means the
       /// CompositeData does not have data for this entry
       public: std::unique_ptr<Cloneable> data;
+      IGN_COMMON_WARN_RESUME__DLL_INTERFACE_MISSING
 
       /// \brief Flag for whether the type of data at this entry is considered
       /// to be required. This can be made true during the lifetime of the
