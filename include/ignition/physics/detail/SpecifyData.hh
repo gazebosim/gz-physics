@@ -57,10 +57,10 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    Data& ExpectData<Expected>::GetOrCreate(Args&&... args)
+    Data& ExpectData<Expected>::Insert(Args&&... args)
     {
       return this->template ExpectData<Expected>::privateExpectData
-          .GetOrCreate(this, type<Data>(), std::forward<Args>(args)...);
+          .Insert(this, type<Data>(), std::forward<Args>(args)...);
     }
 
     /////////////////////////////////////////////////
@@ -331,7 +331,7 @@ namespace ignition
 
       template <typename T, typename... Args>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T&, GetOrCreate, (Args&&... args), Expector,
+          T&, Insert, (Args&&... args), Expector,
           (std::forward<Args>(args)...))
 
       template <typename T>

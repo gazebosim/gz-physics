@@ -148,7 +148,7 @@ TEST(SpecifyData, RequirementsAccessConstruction)
   EXPECT_FALSE(RequireStringBoolChar::AlwaysRequires<IntData>());
 
   usedExpectedDataAccess = false;
-  EXPECT_EQ(351, sbcData.GetOrCreate<IntData>(351).myInt);
+  EXPECT_EQ(351, sbcData.Insert<IntData>(351).myInt);
   EXPECT_TRUE(usedExpectedDataAccess);
 
   usedExpectedDataAccess = false;
@@ -330,16 +330,16 @@ TEST(SpecifyData, QueryCounting)
   EXPECT_EQ(3u, data.NumEntries());
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
 
-  // Test GetOrCreate on an expected type
+  // Test Insert on an expected type
   usedExpectedDataAccess = false;
-  EXPECT_EQ(299, data.GetOrCreate<IntData>(299).myInt);
+  EXPECT_EQ(299, data.Insert<IntData>(299).myInt);
   EXPECT_TRUE(usedExpectedDataAccess);
   EXPECT_EQ(4u, data.NumEntries());
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
 
-  // Test GetOrCreate on an unexpected type
+  // Test Insert on an unexpected type
   usedExpectedDataAccess = false;
-  EXPECT_NEAR(3.05, data.GetOrCreate<DoubleData>(3.05).myDouble, 1e-8);
+  EXPECT_NEAR(3.05, data.Insert<DoubleData>(3.05).myDouble, 1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
   EXPECT_EQ(5u, data.NumEntries());
   EXPECT_EQ(2u, data.NumUnqueriedEntries());
