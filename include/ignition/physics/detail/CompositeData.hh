@@ -57,7 +57,7 @@ namespace ignition
       /// either (1) it was created using Copy(~), =, or the CompositeData
       /// constructor, or (2) the last time ResetQueries() was called,
       /// whichever was more recent. Functions that can mark an entry as
-      /// queried include Get(), Create(), Insert(), Query(), and Has().
+      /// queried include Get(), InsertOrAssign(), Insert(), Query(), and Has().
       public: mutable bool queried;
     };
 

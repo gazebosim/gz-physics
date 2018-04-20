@@ -81,15 +81,15 @@ namespace ignition
 
         /// \brief Delegate the function to the standard CompositeData method
         public: template <typename Data, typename... Args>
-        Data& Create(ExpectData<Expected>* data, type<Data>, Args&&... args)
+        Data& InsertOrAssign(ExpectData<Expected>* data, type<Data>, Args&&... args)
         {
-          return data->CompositeData::template Create<Data>(
+          return data->CompositeData::template InsertOrAssign<Data>(
                 std::forward<Args>(args)...);
         }
 
         /// \brief Use a low-cost accessor for this Expected data type
         public: template <typename... Args>
-        Expected& Create(ExpectData<Expected>* data,
+        Expected& InsertOrAssign(ExpectData<Expected>* data,
                          type<Expected>, Args&&... args)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS

@@ -127,7 +127,7 @@ namespace ignition
       /// \brief Provides extremely low-cost access to creating expected data
       /// types and normal access to unexpected data types.
       public: template <typename Data, typename... Args>
-      Data& Create(Args&&... args);
+      Data& InsertOrAssign(Args&&... args);
 
       /// \brief Provides extremely low-cost access to getting or creating
       /// expected data types and normal access to unexpected data types.
