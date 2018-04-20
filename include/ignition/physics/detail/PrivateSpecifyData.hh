@@ -190,7 +190,7 @@ namespace ignition
           if (!this->expectedIterator->second.data)
             return nullptr;
 
-          if (CompositeData::QUERY_NORMAL == mode)
+          if (CompositeData::QueryMode::NORMAL == mode)
             SetToQueried(this->expectedIterator,
                          data->CompositeData::numQueries);
 
@@ -218,7 +218,7 @@ namespace ignition
           if (!this->expectedIterator->second.data)
             return nullptr;
 
-          if(CompositeData::QUERY_NORMAL == mode)
+          if(CompositeData::QueryMode::NORMAL == mode)
             SetToQueried(this->expectedIterator,
                          data->CompositeData::numQueries);
 
@@ -262,7 +262,7 @@ namespace ignition
           status.required = this->expectedIterator->second.required;
           status.queried = this->expectedIterator->second.queried;
 
-          if (CompositeData::QUERY_NORMAL == mode)
+          if (CompositeData::QueryMode::NORMAL == mode)
             SetToQueried(this->expectedIterator,
                          data->CompositeData::numQueries);
 

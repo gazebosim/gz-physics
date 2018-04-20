@@ -142,21 +142,21 @@ namespace ignition
       /// \brief Provides extremely low-cost access for querying expected data
       /// types and normal access for unexpected data types.
       public: template <typename Data>
-      Data* Query(const QueryMode mode = QUERY_NORMAL);
+      Data* Query(const QueryMode mode = QueryMode::NORMAL);
 
       /// \brief Const-qualified version of Query<Data>
       public: template <typename Data>
-      const Data* Query(const QueryMode mode = QUERY_NORMAL) const;
+      const Data* Query(const QueryMode mode = QueryMode::NORMAL) const;
 
       /// \brief Provides extremely low-cost access for checking the existence
       /// of expected data types and normal access for unexpected data types.
       public: template <typename Data>
-      bool Has(const QueryMode mode = QUERY_NORMAL) const;
+      bool Has(const QueryMode mode = QueryMode::NORMAL) const;
 
       /// \brief Provides extremely low-cost access to the status of expected
       /// data types and normal access for unexpected data types.
       public: template <typename Data>
-      DataStatus StatusOf(const QueryMode mode = QUERY_NORMAL) const;
+      DataStatus StatusOf(const QueryMode mode = QueryMode::NORMAL) const;
 
       /// \brief Provides extremely low-cost access for unquerying expected data
       /// types and normal access for unexpected data types.

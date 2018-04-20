@@ -221,10 +221,10 @@ TEST(SpecifyData, RequirementsAccessConstruction)
 TEST(SpecifyData, QueryCounting)
 {
   const ignition::physics::CompositeData::QueryMode normal =
-      ignition::physics::CompositeData::QUERY_NORMAL;
+      ignition::physics::CompositeData::QueryMode::NORMAL;
 
   const ignition::physics::CompositeData::QueryMode silent =
-      ignition::physics::CompositeData::QUERY_SILENT;
+      ignition::physics::CompositeData::QueryMode::SILENT;
 
 
   RequireStringBoolChar data;

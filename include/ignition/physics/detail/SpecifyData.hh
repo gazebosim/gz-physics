@@ -342,28 +342,28 @@ namespace ignition
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           T*, Query,
           (const CompositeData::QueryMode mode =
-                CompositeData::QUERY_NORMAL),
+                CompositeData::QueryMode::NORMAL),
           Expector, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           const T*, Query,
           (const CompositeData::QueryMode mode =
-                CompositeData::QUERY_NORMAL) const,
+                CompositeData::QueryMode::NORMAL) const,
           const Expector, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           bool, Has,
           (const CompositeData::QueryMode mode =
-                CompositeData::QUERY_NORMAL) const,
+                CompositeData::QueryMode::NORMAL) const,
           const Expector, (mode))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           CompositeData::DataStatus, StatusOf,
           (const CompositeData::QueryMode mode =
-                CompositeData::QUERY_NORMAL) const,
+                CompositeData::QueryMode::NORMAL) const,
           const Expector, (mode))
 
       template <typename T>
