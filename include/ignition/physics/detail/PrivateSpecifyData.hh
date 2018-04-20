@@ -228,25 +228,22 @@ namespace ignition
 
         /// \brief Use this->Query to perform the the Has function
         public: template <typename Data>
-        bool Has(const ExpectData<Expected>* data, type<Data>,
-                 const CompositeData::QueryMode mode) const
+        bool Has(const ExpectData<Expected>* data, type<Data>) const
         {
-          return (nullptr != this->Query(data, type<Data>(), mode));
+          return (nullptr != this->Query(data, type<Data>(), CompositeData::QueryMode::SILENT));
         }
 
         /// \brief Delegate the function to the standard CompositeData method
         public: template <typename Data>
         CompositeData::DataStatus StatusOf(
-            const ExpectData<Expected>* data, type<Data>,
-            const CompositeData::QueryMode mode) const
+            const ExpectData<Expected>* data, type<Data>) const
         {
-          return data->CompositeData::template StatusOf<Data>(mode);
+          return data->CompositeData::template StatusOf<Data>();
         }
 
         /// \brief Use a low-cost accessor for this Expected data type
         public: CompositeData::DataStatus StatusOf(
-            const ExpectData<Expected>* data, type<Expected>,
-            const CompositeData::QueryMode mode) const
+            const ExpectData<Expected>*, type<Expected>) const
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
@@ -261,10 +258,6 @@ namespace ignition
           status.exists = true;
           status.required = this->expectedIterator->second.required;
           status.queried = this->expectedIterator->second.queried;
-
-          if (CompositeData::QueryMode::NORMAL == mode)
-            SetToQueried(this->expectedIterator,
-                         data->CompositeData::numQueries);
 
           return status;
         }

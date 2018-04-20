@@ -93,20 +93,19 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    bool ExpectData<Expected>::Has(const QueryMode mode) const
+    bool ExpectData<Expected>::Has() const
     {
       return this->template ExpectData<Expected>::privateExpectData
-          .Has(this, type<Data>(), mode);
+          .Has(this, type<Data>());
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    CompositeData::DataStatus ExpectData<Expected>::StatusOf(
-        const QueryMode mode) const
+    CompositeData::DataStatus ExpectData<Expected>::StatusOf() const
     {
       return this->template ExpectData<Expected>::privateExpectData
-          .StatusOf(this, type<Data>(), mode);
+          .StatusOf(this, type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -355,16 +354,14 @@ namespace ignition
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           bool, Has,
-          (const CompositeData::QueryMode mode =
-                CompositeData::QueryMode::NORMAL) const,
-          const Expector, (mode))
+          () const,
+          const Expector, ())
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
           CompositeData::DataStatus, StatusOf,
-          (const CompositeData::QueryMode mode =
-                CompositeData::QueryMode::NORMAL) const,
-          const Expector, (mode))
+          () const,
+          const Expector, ())
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
