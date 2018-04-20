@@ -48,7 +48,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    Data& ExpectData<Expected>::InsertOrAssign(Args&&... args)
+    auto ExpectData<Expected>::InsertOrAssign(Args&&... args) -> InsertResult<Data>
     {
       return this->template ExpectData<Expected>::privateExpectData
           .InsertOrAssign(this, type<Data>(), std::forward<Args>(args)...);
@@ -57,7 +57,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    Data& ExpectData<Expected>::Insert(Args&&... args)
+    auto ExpectData<Expected>::Insert(Args&&... args) -> InsertResult<Data>
     {
       return this->template ExpectData<Expected>::privateExpectData
           .Insert(this, type<Data>(), std::forward<Args>(args)...);
