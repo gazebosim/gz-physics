@@ -394,47 +394,45 @@ TEST(SpecifyData, QueryCounting)
   usedExpectedDataAccess = false;
   EXPECT_TRUE(data.Has<DoubleData>());
   EXPECT_FALSE(usedExpectedDataAccess);
-  EXPECT_EQ(4u, data.UnqueriedEntryCount());
+  EXPECT_EQ(5u, data.UnqueriedEntryCount());
 
   // Test Get on an existing unqueried expected type
   usedExpectedDataAccess = false;
   data.Get<StringData>().myString = "new_string";
   EXPECT_TRUE(usedExpectedDataAccess);
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(4u, data.UnqueriedEntryCount());
 
   // Test Get on an existing queried expected type
   usedExpectedDataAccess = false;
   EXPECT_EQ("new_string", data.Get<StringData>().myString);
   EXPECT_TRUE(usedExpectedDataAccess);
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(4u, data.UnqueriedEntryCount());
 
-  EXPECT_TRUE(data.Unquery<DoubleData>());
-  EXPECT_EQ(3u, data.UnqueriedEntryCount());
   // Test Get on an existing unqueried unexpected type
   usedExpectedDataAccess = false;
   EXPECT_NEAR(3.37, data.Get<DoubleData>().myDouble, 1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
 
   // Test Get on an existing queried unexpected type
   usedExpectedDataAccess = false;
   EXPECT_NEAR(3.37, data.Get<DoubleData>().myDouble, 1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
 
   // Test Get on a non-existent expected type
   usedExpectedDataAccess = false;
   EXPECT_NEAR(9.5, data.Get<FloatData>().myFloat, 1e-8);
   EXPECT_TRUE(usedExpectedDataAccess);
   EXPECT_EQ(6u, data.EntryCount());
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
 
   // Test Get on a non-existent unexpected type
   usedExpectedDataAccess = false;
   EXPECT_EQ(0u, data.Get<VectorDoubleData>().myVector.size());
   EXPECT_FALSE(usedExpectedDataAccess);
   EXPECT_EQ(7u, data.EntryCount());
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
 
   // Test StatusOf on an existing queried required type
   usedExpectedDataAccess = false;
@@ -444,10 +442,10 @@ TEST(SpecifyData, QueryCounting)
   EXPECT_TRUE(status.exists);
   EXPECT_TRUE(status.required);
   EXPECT_TRUE(status.queried);
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
 
   EXPECT_TRUE(data.Unquery<FloatData>());
-  EXPECT_EQ(3u, data.UnqueriedEntryCount());
+  EXPECT_EQ(4u, data.UnqueriedEntryCount());
   // Test StatusOf on an existing unqueried expected type
   usedExpectedDataAccess = false;
   status = data.StatusOf<FloatData>();
@@ -455,7 +453,7 @@ TEST(SpecifyData, QueryCounting)
   EXPECT_TRUE(status.exists);
   EXPECT_FALSE(status.required);
   EXPECT_FALSE(status.queried);
-  EXPECT_EQ(3u, data.UnqueriedEntryCount());
+  EXPECT_EQ(4u, data.UnqueriedEntryCount());
 
   // Test StatusOf on an existing unqueried unexpected type
   usedExpectedDataAccess = false;
@@ -463,14 +461,14 @@ TEST(SpecifyData, QueryCounting)
   EXPECT_FALSE(usedExpectedDataAccess);
   EXPECT_TRUE(status.exists);
   EXPECT_FALSE(status.required);
-  EXPECT_FALSE(status.queried);
-  EXPECT_EQ(3u, data.UnqueriedEntryCount());
+  EXPECT_TRUE(status.queried);
+  EXPECT_EQ(4u, data.UnqueriedEntryCount());
 
   usedExpectedDataAccess = false;
   EXPECT_TRUE(data.Remove<FloatData>());
   EXPECT_TRUE(usedExpectedDataAccess);
   EXPECT_EQ(6u, data.EntryCount());
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
   // Test StatusOf on a non-existent expected type
   usedExpectedDataAccess = false;
   status = data.StatusOf<FloatData>();
@@ -479,13 +477,13 @@ TEST(SpecifyData, QueryCounting)
   EXPECT_FALSE(status.required);
   EXPECT_FALSE(status.queried);
   EXPECT_EQ(6u, data.EntryCount());
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
 
   usedExpectedDataAccess = false;
   EXPECT_TRUE(data.Remove<VectorDoubleData>());
   EXPECT_FALSE(usedExpectedDataAccess);
   EXPECT_EQ(5u, data.EntryCount());
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
   // Test StatusOf on a non-existent unexpected type
   usedExpectedDataAccess = false;
   status = data.StatusOf<VectorDoubleData>();
@@ -494,7 +492,7 @@ TEST(SpecifyData, QueryCounting)
   EXPECT_FALSE(status.required);
   EXPECT_FALSE(status.queried);
   EXPECT_EQ(5u, data.EntryCount());
-  EXPECT_EQ(2u, data.UnqueriedEntryCount());
+  EXPECT_EQ(3u, data.UnqueriedEntryCount());
 }
 
 TEST(SpecifyData, CountData)
