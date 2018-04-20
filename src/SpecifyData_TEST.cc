@@ -202,7 +202,8 @@ TEST(SpecifyData, RequirementsAccessConstruction)
   EXPECT_FALSE(sbcData.Requires<DoubleData>());
   EXPECT_FALSE(usedExpectedDataAccess);
 
-  EXPECT_NEAR(2.45, sbcData.InsertOrAssign<DoubleData>(2.45).data.myDouble, 1e-8);
+  EXPECT_NEAR(2.45, sbcData.InsertOrAssign<DoubleData>(2.45).data.myDouble,
+              1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
 
   EXPECT_NEAR(2.45, sbcData.Get<DoubleData>().myDouble, 1e-8);

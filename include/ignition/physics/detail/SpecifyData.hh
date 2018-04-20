@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_DETAIL_SPECIFYDATA_HH_
 #define IGNITION_PHYSICS_DETAIL_SPECIFYDATA_HH_
 
+#include <memory>
+#include <utility>
+
 #include "ignition/physics/SpecifyData.hh"
 
 namespace ignition
@@ -48,7 +51,8 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    auto ExpectData<Expected>::InsertOrAssign(Args&&... args) -> InsertResult<Data>
+    auto ExpectData<Expected>::InsertOrAssign(Args&&... args)
+        -> InsertResult<Data>
     {
       return this->template ExpectData<Expected>::privateExpectData
           .InsertOrAssign(this, type<Data>(), std::forward<Args>(args)...);

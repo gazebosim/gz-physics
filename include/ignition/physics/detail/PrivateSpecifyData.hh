@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
 #define IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
 
+#include <memory>
+#include <utility>
+
 #include "ignition/physics/CompositeData.hh"
 
 #define IGNITION_PHYSICS_CONST_GET_ERROR \
@@ -228,7 +231,7 @@ namespace ignition
           if (!this->expectedIterator->second.data)
             return nullptr;
 
-          if(CompositeData::QueryMode::NORMAL == mode)
+          if (CompositeData::QueryMode::NORMAL == mode)
             SetToQueried(this->expectedIterator,
                          data->CompositeData::numQueries);
 
@@ -240,7 +243,8 @@ namespace ignition
         public: template <typename Data>
         bool Has(const ExpectData<Expected>* data, type<Data>) const
         {
-          return (nullptr != this->Query(data, type<Data>(), CompositeData::QueryMode::SILENT));
+          return (nullptr != this->Query(data, type<Data>(),
+                                         CompositeData::QueryMode::SILENT));
         }
 
         /// \brief Delegate the function to the standard CompositeData method
@@ -365,7 +369,7 @@ namespace ignition
         template <typename...> friend class ::ignition::physics::ExpectData;
 
         /// \brief Construct this with the iterator that it is meant to hold
-        private: PrivateExpectData(
+        private: explicit PrivateExpectData(
             const CompositeData::MapOfData::iterator _it)
           : expectedIterator(_it)
         {
