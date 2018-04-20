@@ -81,7 +81,8 @@ namespace ignition
 
         /// \brief Delegate the function to the standard CompositeData method
         public: template <typename Data, typename... Args>
-        Data& InsertOrAssign(ExpectData<Expected>* data, type<Data>, Args&&... args)
+        CompositeData::InsertResult<Data> InsertOrAssign(
+            ExpectData<Expected>* data, type<Data>, Args&&... args)
         {
           return data->CompositeData::template InsertOrAssign<Data>(
                 std::forward<Args>(args)...);
@@ -89,8 +90,8 @@ namespace ignition
 
         /// \brief Use a low-cost accessor for this Expected data type
         public: template <typename... Args>
-        Expected& InsertOrAssign(ExpectData<Expected>* data,
-                         type<Expected>, Args&&... args)
+        CompositeData::InsertResult<Expected> InsertOrAssign(
+            ExpectData<Expected>* data, type<Expected>, Args&&... args)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
@@ -98,6 +99,8 @@ namespace ignition
 
           if (!this->expectedIterator->second.data)
             ++data->CompositeData::numEntries;
+
+          const bool inserted = !this->expectedIterator->second.data;
 
           this->expectedIterator->second.data =
               std::unique_ptr<Cloneable>(new MakeCloneable<Expected>(
@@ -105,14 +108,16 @@ namespace ignition
 
           SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
 
-          return static_cast<MakeCloneable<Expected>&>(
-                *this->expectedIterator->second.data);
+          return CompositeData::InsertResult<Expected>{
+                static_cast<MakeCloneable<Expected>&>(
+                  *this->expectedIterator->second.data),
+                inserted};
         }
 
         /// \brief Delegate the function to the standard CompositeData method
         public: template <typename Data, typename... Args>
-        Data& Insert(ExpectData<Expected>* data,
-                          type<Data>, Args&&... args)
+        CompositeData::InsertResult<Data> Insert(
+            ExpectData<Expected>* data, type<Data>, Args&&... args)
         {
           return data->CompositeData::template Insert<Data>(
                 std::forward<Args>(args)...);
@@ -120,24 +125,29 @@ namespace ignition
 
         /// \brief Use a low-cost accessor for this Expected data type
         public: template <typename... Args>
-        Expected& Insert(ExpectData<Expected>* data,
-                              type<Expected>, Args&&... args)
+        CompositeData::InsertResult<Expected> Insert(
+            ExpectData<Expected>* data, type<Expected>, Args&&... args)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
+
+          bool inserted = false;
 
           if (!this->expectedIterator->second.data)
           {
             ++data->CompositeData::numEntries;
             this->expectedIterator->second.data = std::unique_ptr<Cloneable>(
                   new MakeCloneable<Expected>(std::forward<Args>(args)...));
+            inserted = true;
           }
 
           SetToQueried(this->expectedIterator, data->CompositeData::numQueries);
 
-          return static_cast<MakeCloneable<Expected>&>(
-                *this->expectedIterator->second.data);
+          return CompositeData::InsertResult<Expected>{
+                static_cast<MakeCloneable<Expected>&>(
+                  *this->expectedIterator->second.data),
+                inserted};
         }
 
         /// \brief Delegate the function to the standard CompositeData method

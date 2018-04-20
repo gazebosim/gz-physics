@@ -148,7 +148,7 @@ TEST(SpecifyData, RequirementsAccessConstruction)
   EXPECT_FALSE(RequireStringBoolChar::AlwaysRequires<IntData>());
 
   usedExpectedDataAccess = false;
-  EXPECT_EQ(351, sbcData.Insert<IntData>(351).myInt);
+  EXPECT_EQ(351, sbcData.Insert<IntData>(351).data.myInt);
   EXPECT_TRUE(usedExpectedDataAccess);
 
   usedExpectedDataAccess = false;
@@ -156,7 +156,7 @@ TEST(SpecifyData, RequirementsAccessConstruction)
   EXPECT_TRUE(usedExpectedDataAccess);
 
   usedExpectedDataAccess = false;
-  EXPECT_EQ(261, sbcData.InsertOrAssign<IntData>(261).myInt);
+  EXPECT_EQ(261, sbcData.InsertOrAssign<IntData>(261).data.myInt);
   EXPECT_TRUE(usedExpectedDataAccess);
 
   sbcData.Remove<IntData>();
@@ -202,7 +202,7 @@ TEST(SpecifyData, RequirementsAccessConstruction)
   EXPECT_FALSE(sbcData.Requires<DoubleData>());
   EXPECT_FALSE(usedExpectedDataAccess);
 
-  EXPECT_NEAR(2.45, sbcData.InsertOrAssign<DoubleData>(2.45).myDouble, 1e-8);
+  EXPECT_NEAR(2.45, sbcData.InsertOrAssign<DoubleData>(2.45).data.myDouble, 1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
 
   EXPECT_NEAR(2.45, sbcData.Get<DoubleData>().myDouble, 1e-8);
@@ -253,7 +253,7 @@ TEST(SpecifyData, QueryCounting)
 
   // Test Create on a non-existent expected type
   usedExpectedDataAccess = false;
-  EXPECT_EQ(248, data.InsertOrAssign<IntData>(248).myInt);
+  EXPECT_EQ(248, data.InsertOrAssign<IntData>(248).data.myInt);
   EXPECT_TRUE(usedExpectedDataAccess);
   EXPECT_EQ(4u, data.EntryCount());
   EXPECT_EQ(2u, data.UnqueriedEntryCount());
@@ -267,14 +267,14 @@ TEST(SpecifyData, QueryCounting)
 
   // Test Create on an existing expected type
   usedExpectedDataAccess = false;
-  EXPECT_EQ(272, data.InsertOrAssign<IntData>(272).myInt);
+  EXPECT_EQ(272, data.InsertOrAssign<IntData>(272).data.myInt);
   EXPECT_TRUE(usedExpectedDataAccess);
   EXPECT_EQ(4u, data.EntryCount());
   EXPECT_EQ(2u, data.UnqueriedEntryCount());
 
   // Test Create on a non-existent unexpected type
   usedExpectedDataAccess = false;
-  EXPECT_NEAR(2.66, data.InsertOrAssign<DoubleData>(2.66).myDouble, 1e-8);
+  EXPECT_NEAR(2.66, data.InsertOrAssign<DoubleData>(2.66).data.myDouble, 1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
   EXPECT_EQ(5u, data.EntryCount());
   EXPECT_EQ(2u, data.UnqueriedEntryCount());
@@ -287,7 +287,7 @@ TEST(SpecifyData, QueryCounting)
 
   // Test Create on an existing unexpected type
   usedExpectedDataAccess = false;
-  EXPECT_NEAR(2.92, data.InsertOrAssign<DoubleData>(2.92).myDouble, 1e-8);
+  EXPECT_NEAR(2.92, data.InsertOrAssign<DoubleData>(2.92).data.myDouble, 1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
   EXPECT_EQ(5u, data.EntryCount());
   EXPECT_EQ(2u, data.UnqueriedEntryCount());
@@ -332,14 +332,14 @@ TEST(SpecifyData, QueryCounting)
 
   // Test Insert on an expected type
   usedExpectedDataAccess = false;
-  EXPECT_EQ(299, data.Insert<IntData>(299).myInt);
+  EXPECT_EQ(299, data.Insert<IntData>(299).data.myInt);
   EXPECT_TRUE(usedExpectedDataAccess);
   EXPECT_EQ(4u, data.EntryCount());
   EXPECT_EQ(2u, data.UnqueriedEntryCount());
 
   // Test Insert on an unexpected type
   usedExpectedDataAccess = false;
-  EXPECT_NEAR(3.05, data.Insert<DoubleData>(3.05).myDouble, 1e-8);
+  EXPECT_NEAR(3.05, data.Insert<DoubleData>(3.05).data.myDouble, 1e-8);
   EXPECT_FALSE(usedExpectedDataAccess);
   EXPECT_EQ(5u, data.EntryCount());
   EXPECT_EQ(2u, data.UnqueriedEntryCount());

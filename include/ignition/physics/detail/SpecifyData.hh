@@ -325,13 +325,13 @@ namespace ignition
 
       template <typename T, typename... Args>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T&, Create, (Args&&... args), Expector,
-          (std::forward<Args>(args)...))
+          CompositeData::InsertResult<T>, InsertOrAssign, (Args&&... args),
+          Expector, (std::forward<Args>(args)...))
 
       template <typename T, typename... Args>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
-          T&, Insert, (Args&&... args), Expector,
-          (std::forward<Args>(args)...))
+          CompositeData::InsertResult<T>, Insert, (Args&&... args),
+          Expector, (std::forward<Args>(args)...))
 
       template <typename T>
       DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
