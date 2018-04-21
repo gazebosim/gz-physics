@@ -168,7 +168,7 @@ namespace ignition
           #endif
 
           if (!this->expectedIterator->second.data)
-            return false;
+            return true;
 
           if (this->expectedIterator->second.required)
             return false;
