@@ -44,7 +44,7 @@ namespace ignition
     template <typename Data>
     Data& ExpectData<Expected>::Get()
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Get(this, type<Data>());
     }
 
@@ -54,7 +54,7 @@ namespace ignition
     auto ExpectData<Expected>::InsertOrAssign(Args&&... args)
         -> InsertResult<Data>
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .InsertOrAssign(this, type<Data>(), std::forward<Args>(args)...);
     }
 
@@ -63,7 +63,7 @@ namespace ignition
     template <typename Data, typename... Args>
     auto ExpectData<Expected>::Insert(Args&&... args) -> InsertResult<Data>
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Insert(this, type<Data>(), std::forward<Args>(args)...);
     }
 
@@ -72,7 +72,7 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Remove()
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Remove(this, type<Data>());
     }
 
@@ -81,7 +81,7 @@ namespace ignition
     template <typename Data>
     Data* ExpectData<Expected>::Query(const QueryMode mode)
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Query(this, type<Data>(), mode);
     }
 
@@ -90,7 +90,7 @@ namespace ignition
     template <typename Data>
     const Data* ExpectData<Expected>::Query(const QueryMode mode) const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Query(this, type<Data>(), mode);
     }
 
@@ -99,7 +99,7 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Has() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Has(this, type<Data>());
     }
 
@@ -108,7 +108,7 @@ namespace ignition
     template <typename Data>
     CompositeData::DataStatus ExpectData<Expected>::StatusOf() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .StatusOf(this, type<Data>());
     }
 
@@ -117,7 +117,7 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Unquery() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Unquery(this, type<Data>());
     }
 
@@ -126,7 +126,7 @@ namespace ignition
     template <typename Data, typename... Args>
     Data& ExpectData<Expected>::MakeRequired(Args&&... args)
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .MakeRequired(
             this, type<Data>(), std::forward<Args>(args)...);
     }
@@ -136,7 +136,7 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Requires() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Requires(this, type<Data>());
     }
 
@@ -155,7 +155,7 @@ namespace ignition
         ExpectData<Required>()
     {
       CompositeData::DataEntry &entry =
-          this->template ExpectData<Required>::privateExpectData
+          this->ExpectData<Required>::privateExpectData
             .expectedIterator->second;
 
       // Create the required data in its designated map entry, and mark it as
@@ -171,10 +171,10 @@ namespace ignition
     const Data& RequireData<Required>::Get() const
     {
       const CompositeData::MapOfData::iterator &it =
-          this->template ExpectData<Required>::privateExpectData
+          this->ExpectData<Required>::privateExpectData
             .expectedIterator;
 
-      return this->template RequireData<Required>::privateRequireData.Get(
+      return this->RequireData<Required>::privateRequireData.Get(
             this, it, type<Data>());
     }
 
