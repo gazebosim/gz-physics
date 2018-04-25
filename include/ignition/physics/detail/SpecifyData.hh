@@ -192,7 +192,7 @@ namespace ignition
       /// The following templates deal with finding leaf specifiers within a
       /// specification tree. An example of a leaf specifier is ExpectData<T>
       /// or RequireData<T>. Casting a complex specification to its relevant
-      /// leaf specifier allows us to utilize the extremely low-cost access
+      /// leaf specifier allows us to utilize the extremely high-speed access
       /// functions provided by the leaf specifier.
 
       // Forward declaration

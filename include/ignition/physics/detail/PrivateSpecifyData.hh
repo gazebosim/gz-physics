@@ -62,7 +62,7 @@ namespace ignition
           return data->CompositeData::template Get<Data>();
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: Expected& Get(ExpectData<Expected>* data, type<Expected>)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
@@ -91,7 +91,7 @@ namespace ignition
                 std::forward<Args>(args)...);
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: template <typename... Args>
         CompositeData::InsertResult<Expected> InsertOrAssign(
             ExpectData<Expected>* data, type<Expected>, Args&&... args)
@@ -126,7 +126,7 @@ namespace ignition
                 std::forward<Args>(args)...);
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: template <typename... Args>
         CompositeData::InsertResult<Expected> Insert(
             ExpectData<Expected>* data, type<Expected>, Args&&... args)
@@ -160,7 +160,7 @@ namespace ignition
           return data->CompositeData::template Remove<Data>();
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: bool Remove(ExpectData<Expected>* data, type<Expected>)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
@@ -192,7 +192,7 @@ namespace ignition
           return data->CompositeData::template Query<Data>(mode);
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: Expected* Query(ExpectData<Expected>* data, type<Expected>,
                                 const CompositeData::QueryMode mode)
         {
@@ -219,7 +219,7 @@ namespace ignition
           return data->CompositeData::template Query<Data>(mode);
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: const Expected* Query(
             const ExpectData<Expected>* data, type<Expected>,
             const CompositeData::QueryMode mode) const
@@ -255,7 +255,7 @@ namespace ignition
           return data->CompositeData::template StatusOf<Data>();
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: CompositeData::DataStatus StatusOf(
             const ExpectData<Expected>*, type<Expected>) const
         {
@@ -283,7 +283,7 @@ namespace ignition
           return data->CompositeData::template Unquery<Data>();
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: bool Unquery(const ExpectData<Expected>* data,
                              type<Expected>) const
         {
@@ -312,7 +312,7 @@ namespace ignition
                 std::forward<Args>(args)...);
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: template <typename... Args>
         Expected& MakeRequired(ExpectData<Expected>* data,
                                type<Expected>, Args&&... args)
@@ -343,7 +343,7 @@ namespace ignition
           return data->CompositeData::template Requires<Data>();
         }
 
-        /// \brief Use a low-cost accessor for this Expected data type
+        /// \brief Use a high-speed accessor for this Expected data type
         public: bool Requires(const ExpectData<Expected>*, type<Expected>) const
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
@@ -398,7 +398,7 @@ namespace ignition
           return static_cast<const MakeCloneable<Required>&>(*it->second.data);
         }
 
-        /// \brief Use a low-cost accessor for this Required data type
+        /// \brief Use a high-speed accessor for this Required data type
         public: const Required& Get(
             const RequireData<Required>* data,
             const CompositeData::MapOfData::iterator& it,

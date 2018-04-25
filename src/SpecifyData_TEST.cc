@@ -55,7 +55,7 @@ TEST(SpecifyData, RequirementsAccessConstruction)
   // ------------------------------------------------------------------------
   // For each of the three required data types, make sure that they have been
   // constructed, that they are marked as required, that they have their default
-  // values, and that they are being accessed using the low-cost methods.
+  // values, and that they are being accessed using the high-speed methods.
   RequireStringBoolChar sbcData;
 
   usedExpectedDataAccess = false;
@@ -124,7 +124,7 @@ TEST(SpecifyData, RequirementsAccessConstruction)
   // ------------------------------------------------------------------------
   // For the expected (but optional) data type, make sure that it was not
   // constructed, that it is not required, and that we can operate on it using
-  // the low-cost methods.
+  // the high-speed methods.
   usedExpectedDataAccess = false;
   EXPECT_FALSE(sbcData.Has<IntData>());
   EXPECT_TRUE(usedExpectedDataAccess);
@@ -186,7 +186,7 @@ TEST(SpecifyData, RequirementsAccessConstruction)
 
   // ------------------------------------------------------------------------
   // For the unexpected data type, make sure that it was not constructed, that
-  // it is not required, and that we cannot query for it using the low-cost
+  // it is not required, and that we cannot query for it using the high-speed
   // methods
   usedExpectedDataAccess = false;
   EXPECT_FALSE(sbcData.Has<DoubleData>());

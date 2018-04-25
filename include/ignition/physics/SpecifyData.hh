@@ -44,7 +44,7 @@ namespace ignition
     /// structure. It is also optimized for ExternalForceInput,
     /// ProximitySensorInput, and ForceTorqueSensorInput data structures, but
     /// they are optional. Whether a data structure is specified as expected or
-    /// required, you will be able to get extremely low-cost access to it
+    /// required, you will be able to get extremely high-speed access to it
     /// through an object that has the type of MyInputSpecifications.
     ///
     /// Specifications can also be composed together. For example, if there is
@@ -75,14 +75,14 @@ namespace ignition
 
     /// \brief ExpectData defines a type with the specification that it will
     /// expect to be handling the data types listed in its template arguments
-    /// (DataTypes). All of the expected types will benefit from very low-cost
+    /// (DataTypes). All of the expected types will benefit from very high-speed
     /// accessibility when being accessed from an object of type
     /// ExpectData<DataTypes>.
     ///
     /// Note that there is no guarantee that any of the types listed in
     /// DataTypes will exist in the underlying CompositeData, but it will still
-    /// provide very low-cost access for creating and querying even if it is not
-    /// yet present.
+    /// provide very high-speed access for creating and querying even if it is
+    /// not yet present.
     template <typename... DataTypes>
     class ExpectData
     {
@@ -98,7 +98,7 @@ namespace ignition
     /// be removed from that object or from any reference to that object.
     ///
     /// Objects that are listed in DataTypes will also benefit from extremely
-    /// low-cost accessibility when they are accessed using an object of the
+    /// high-speed accessibility when they are accessed using an object of the
     /// type RequireData<DataTypes>. This is similar to ExpectData<DataTypes>.
     ///
     /// RequireData<DataTypes> also offers a const-qualified Get<R>() function
@@ -119,27 +119,27 @@ namespace ignition
       /// \brief Virtual destructor
       public: virtual ~ExpectData() = default;
 
-      /// \brief Provides extremely low-cost access to expected data types and
+      /// \brief Provides extremely high-speed access to expected data types and
       /// normal access to unexpected data types.
       public: template <typename Data>
       Data& Get();
 
-      /// \brief Provides extremely low-cost access to creating expected data
+      /// \brief Provides extremely high-speed access to creating expected data
       /// types and normal access to unexpected data types.
       public: template <typename Data, typename... Args>
       InsertResult<Data> InsertOrAssign(Args&&... args);
 
-      /// \brief Provides extremely low-cost access to getting or creating
+      /// \brief Provides extremely high-speed access to getting or creating
       /// expected data types and normal access to unexpected data types.
       public: template <typename Data, typename... Args>
       InsertResult<Data> Insert(Args&&... args);
 
-      /// \brief Provides extremely low-cost access for removing expected data
+      /// \brief Provides extremely high-speed access for removing expected data
       /// types and normal access for unexpected data types.
       public: template <typename Data>
       bool Remove();
 
-      /// \brief Provides extremely low-cost access for querying expected data
+      /// \brief Provides extremely high-speed access for querying expected data
       /// types and normal access for unexpected data types.
       public: template <typename Data>
       Data* Query(const QueryMode mode = QueryMode::NORMAL);
@@ -148,34 +148,34 @@ namespace ignition
       public: template <typename Data>
       const Data* Query(const QueryMode mode = QueryMode::NORMAL) const;
 
-      /// \brief Provides extremely low-cost access for checking the existence
+      /// \brief Provides extremely high-speed access for checking the existence
       /// of expected data types and normal access for unexpected data types.
       public: template <typename Data>
       bool Has() const;
 
-      /// \brief Provides extremely low-cost access to the status of expected
+      /// \brief Provides extremely high-speed access to the status of expected
       /// data types and normal access for unexpected data types.
       public: template <typename Data>
       DataStatus StatusOf() const;
 
-      /// \brief Provides extremely low-cost access for unquerying expected data
-      /// types and normal access for unexpected data types.
+      /// \brief Provides extremely high-speed access for unquerying expected
+      /// data types and normal access for unexpected data types.
       public: template <typename Data>
       bool Unquery() const;
 
-      /// \brief Provides extremely low-cost access for making expected data
+      /// \brief Provides extremely high-speed access for making expected data
       /// types required and normal access for unexpected data types.
       public: template <typename Data, typename... Args>
       Data& MakeRequired(Args&&... args);
 
-      /// \brief Provides extremely low-cost access for checking whether
+      /// \brief Provides extremely high-speed access for checking whether
       /// expected data types are required and normal access for unexpected data
       /// types.
       public: template <typename Data>
       bool Requires() const;
 
       /// \brief Returns true if the Data type is expected. Data types for which
-      /// this is true will be able to enjoy extremely low-cost access.
+      /// this is true will be able to enjoy extremely high-speed access.
       public: template <typename Data>
       static constexpr bool Expects();
 
@@ -211,8 +211,8 @@ namespace ignition
       // Do not shadow the ExpectData<Required> implementation
       using ExpectData<Required>::Get;
 
-      /// \brief Provides extremely low-cost const-qualified reference access to
-      /// data types that are required.
+      /// \brief Provides extremely high-speed const-qualified reference access
+      /// to data types that are required.
       ///
       /// NOTE: For data types that are not required, this will throw a
       /// compilation error, and you should use Query<Data>() const instead.
