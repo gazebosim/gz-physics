@@ -179,7 +179,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data>
-    Data* CompositeData::Query(const QueryMode _mode)
+    Data *CompositeData::Query(const QueryMode _mode)
     {
       const MapOfData::const_iterator it =
           this->dataMap.find(typeid(Data).name());
@@ -269,7 +269,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Data, typename... Args>
-    Data& CompositeData::MakeRequired(Args &&..._args)
+    Data &CompositeData::MakeRequired(Args &&..._args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
             std::make_pair(typeid(Data).name(), DataEntry())).first;

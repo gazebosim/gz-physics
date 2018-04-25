@@ -77,17 +77,17 @@ namespace ignition
       /// \brief Provides extremely high-speed access to expected data types and
       /// normal access to unexpected data types.
       public: template <typename Data>
-      Data& Get();
+      Data &Get();
 
       /// \brief Provides extremely high-speed access to creating expected data
       /// types and normal access to unexpected data types.
       public: template <typename Data, typename... Args>
-      InsertResult<Data> InsertOrAssign(Args&&... args);
+      InsertResult<Data> InsertOrAssign(Args&&... _args);
 
       /// \brief Provides extremely high-speed access to getting or creating
       /// expected data types and normal access to unexpected data types.
       public: template <typename Data, typename... Args>
-      InsertResult<Data> Insert(Args&&... args);
+      InsertResult<Data> Insert(Args&&... _args);
 
       /// \brief Provides extremely high-speed access for removing expected data
       /// types and normal access for unexpected data types.
@@ -97,11 +97,11 @@ namespace ignition
       /// \brief Provides extremely high-speed access for querying expected data
       /// types and normal access for unexpected data types.
       public: template <typename Data>
-      Data* Query(const QueryMode mode = QueryMode::NORMAL);
+      Data *Query(const QueryMode _mode = QueryMode::NORMAL);
 
       /// \brief Const-qualified version of Query<Data>
       public: template <typename Data>
-      const Data* Query(const QueryMode mode = QueryMode::NORMAL) const;
+      const Data *Query(const QueryMode _mode = QueryMode::NORMAL) const;
 
       /// \brief Provides extremely high-speed access for checking the existence
       /// of expected data types and normal access for unexpected data types.
@@ -121,7 +121,7 @@ namespace ignition
       /// \brief Provides extremely high-speed access for making expected data
       /// types required and normal access for unexpected data types.
       public: template <typename Data, typename... Args>
-      Data& MakeRequired(Args&&... args);
+      Data &MakeRequired(Args&&... _args);
 
       /// \brief Provides extremely high-speed access for checking whether
       /// expected data types are required and normal access for unexpected data
@@ -173,7 +173,7 @@ namespace ignition
       /// NOTE: For data types that are not required, this will throw a
       /// compilation error, and you should use Query<Data>() const instead.
       public: template <typename Data>
-      const Data& Get() const;
+      const Data &Get() const;
 
       /// \brief Returns true if the Data type is always required by this more
       /// highly specified CompositeData type.

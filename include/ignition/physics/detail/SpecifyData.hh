@@ -42,7 +42,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    Data& ExpectData<Expected>::Get()
+    Data &ExpectData<Expected>::Get()
     {
       return this->ExpectData<Expected>::privateExpectData
           .Get(this, type<Data>());
@@ -51,20 +51,20 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    auto ExpectData<Expected>::InsertOrAssign(Args&&... args)
+    auto ExpectData<Expected>::InsertOrAssign(Args&&... _args)
         -> InsertResult<Data>
     {
       return this->ExpectData<Expected>::privateExpectData
-          .InsertOrAssign(this, type<Data>(), std::forward<Args>(args)...);
+          .InsertOrAssign(this, type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    auto ExpectData<Expected>::Insert(Args&&... args) -> InsertResult<Data>
+    auto ExpectData<Expected>::Insert(Args&&... _args) -> InsertResult<Data>
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Insert(this, type<Data>(), std::forward<Args>(args)...);
+          .Insert(this, type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -79,19 +79,19 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    Data* ExpectData<Expected>::Query(const QueryMode mode)
+    Data *ExpectData<Expected>::Query(const QueryMode _mode)
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>(), mode);
+          .Query(this, type<Data>(), _mode);
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    const Data* ExpectData<Expected>::Query(const QueryMode mode) const
+    const Data *ExpectData<Expected>::Query(const QueryMode _mode) const
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>(), mode);
+          .Query(this, type<Data>(), _mode);
     }
 
     /////////////////////////////////////////////////
@@ -124,11 +124,11 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    Data& ExpectData<Expected>::MakeRequired(Args&&... args)
+    Data &ExpectData<Expected>::MakeRequired(Args&&... _args)
     {
       return this->ExpectData<Expected>::privateExpectData
           .MakeRequired(
-            this, type<Data>(), std::forward<Args>(args)...);
+            this, type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -168,7 +168,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Required>
     template <typename Data>
-    const Data& RequireData<Required>::Get() const
+    const Data &RequireData<Required>::Get() const
     {
       const CompositeData::MapOfData::iterator &it =
           this->ExpectData<Required>::privateExpectData
@@ -388,7 +388,7 @@ namespace ignition
       }
 
       template <typename T>
-      const T& Get() const
+      const T &Get() const
       {
         static_assert(AlwaysRequires<T>(), IGNITION_PHYSICS_CONST_GET_ERROR);
 
