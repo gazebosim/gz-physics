@@ -73,11 +73,15 @@ namespace ignition
       public: virtual ~SpecifyData() = default;
     };
 
-    /// \brief ExpectData defines a type with the specification that it will
-    /// expect to be handling the data types listed in its template arguments
-    /// (DataTypes). All of the expected types will benefit from very high-speed
-    /// accessibility when being accessed from an object of type
-    /// ExpectData<DataTypes>.
+    /// \brief ExpectData is an extension of CompositeData which indicates that
+    /// the composite expects to be operating on the data types listed in its
+    /// template arguments (DataTypes). All of the expected types will benefit
+    /// from very high-speed operations when being accessed from an object of
+    /// type ExpectData<DataTypes>. The ordinary CompositeData class needs to
+    /// perform a map lookup on the data type whenever one of its functions is
+    /// called, but an ExpectData<T> object does not need to perform any map
+    /// lookup when performing an operation on T (e.g. .Get<T>(), .Insert<T>(),
+    /// .Query<T>(), .Has<T>(), etc).
     ///
     /// Note that there is no guarantee that any of the types listed in
     /// DataTypes will exist in the underlying CompositeData, but it will still
@@ -89,11 +93,11 @@ namespace ignition
       public: virtual ~ExpectData() = default;
     };
 
-    /// \brief RequireData defines a type with the specification that the
-    /// template arguments (DataTypes) provided to it are required to exist in
-    /// any CompositeData object that is instantiated with the RequireData type.
+    /// \brief RequireData is an extension of ExpectData which indicates that
+    /// the composite requires the existence of any data types that are listed
+    /// in its template arguments (DataTypes).
     ///
-    /// Each data type that is listed in DataTypes will be instantiated upon the
+    /// Each data type that is listed in DataTypes will be instantiated upon
     /// construction of the RequireData<DataTypes> object, and none of them can
     /// be removed from that object or from any reference to that object.
     ///
