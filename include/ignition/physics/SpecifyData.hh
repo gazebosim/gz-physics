@@ -24,55 +24,6 @@ namespace ignition
 {
   namespace physics
   {
-    /// \brief The SpecifyData class allows you to form combinations of data
-    /// specifications. In other words, you can freely mix invocations to
-    /// RequireData and ExpectData. Example usage:
-    ///
-    ///     using namespace ignition::physics;
-    ///
-    ///     using MyInputSpecifications = SpecifyData<
-    ///         RequireData<
-    ///             DesiredPositionInput,
-    ///             DesiredVelocityInput>,
-    ///         ExpectData<
-    ///             ExternalForceInput,
-    ///             ProximitySensorInput,
-    ///             ForceTorqueSensorInput> >;
-    ///
-    /// This would define a CompositeData which is required to contain a
-    /// DesiredPositionInput data structure and a DesiredVelocityInput data
-    /// structure. It is also optimized for ExternalForceInput,
-    /// ProximitySensorInput, and ForceTorqueSensorInput data structures, but
-    /// they are optional. Whether a data structure is specified as expected or
-    /// required, you will be able to get extremely high-speed access to it
-    /// through an object that has the type of MyInputSpecifications.
-    ///
-    /// Specifications can also be composed together. For example, if there is
-    /// another specification like:
-    ///
-    ///     using ComplianceInputSpecifications = SpecifyData<
-    ///         RequireData<
-    ///             ProximitySensorInput,
-    ///             ComplianceParameters>,
-    ///         ExpectData<
-    ///             ForceTorqueSensorInput,
-    ///             CameraSensorInput> >;
-    ///
-    /// then you can combine these specifications:
-    ///
-    ///     using CombinedInputSpecifications = SpecifyData<
-    ///         MyInputSpecifications,
-    ///         ComplianceInputSpecifications>;
-    ///
-    /// Note that RequireData takes precedence over ExpectData, so
-    /// ProximitySensorInput will be promoted to Required when the two
-    /// specifications are combined.
-    template <typename... Specifications>
-    class SpecifyData
-    {
-      public: virtual ~SpecifyData() = default;
-    };
-
     /// \brief ExpectData is an extension of CompositeData which indicates that
     /// the composite expects to be operating on the data types listed in its
     /// template arguments (DataTypes). All of the expected types will benefit
@@ -197,6 +148,7 @@ namespace ignition
       public: using SubSpecification2 = void;
     };
 
+    /// \brief Implementation of RequireData for a single data type.
     template <typename Required>
     class RequireData<Required> : public virtual ExpectData<Required>
     {
@@ -231,6 +183,55 @@ namespace ignition
       /// \brief Provides the implementation for delegating the functions
       /// provided by the RequireData class
       protected: detail::PrivateRequireData<Required> privateRequireData;
+    };
+
+    /// \brief The SpecifyData class allows you to form combinations of data
+    /// specifications. In other words, you can freely mix invocations to
+    /// RequireData and ExpectData. Example usage:
+    ///
+    ///     using namespace ignition::physics;
+    ///
+    ///     using MyInputSpecifications = SpecifyData<
+    ///         RequireData<
+    ///             DesiredPositionInput,
+    ///             DesiredVelocityInput>,
+    ///         ExpectData<
+    ///             ExternalForceInput,
+    ///             ProximitySensorInput,
+    ///             ForceTorqueSensorInput> >;
+    ///
+    /// This would define a CompositeData which is required to contain a
+    /// DesiredPositionInput data structure and a DesiredVelocityInput data
+    /// structure. It is also optimized for ExternalForceInput,
+    /// ProximitySensorInput, and ForceTorqueSensorInput data structures, but
+    /// they are optional. Whether a data structure is specified as expected or
+    /// required, you will be able to get extremely high-speed access to it
+    /// through an object that has the type of MyInputSpecifications.
+    ///
+    /// Specifications can also be composed together. For example, if there is
+    /// another specification like:
+    ///
+    ///     using ComplianceInputSpecifications = SpecifyData<
+    ///         RequireData<
+    ///             ProximitySensorInput,
+    ///             ComplianceParameters>,
+    ///         ExpectData<
+    ///             ForceTorqueSensorInput,
+    ///             CameraSensorInput> >;
+    ///
+    /// then you can combine these specifications:
+    ///
+    ///     using CombinedInputSpecifications = SpecifyData<
+    ///         MyInputSpecifications,
+    ///         ComplianceInputSpecifications>;
+    ///
+    /// Note that RequireData takes precedence over ExpectData, so
+    /// ProximitySensorInput will be promoted to Required when the two
+    /// specifications are combined.
+    template <typename... Specifications>
+    class SpecifyData
+    {
+      public: virtual ~SpecifyData() = default;
     };
 
 
