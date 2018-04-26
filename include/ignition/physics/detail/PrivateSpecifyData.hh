@@ -162,7 +162,7 @@ namespace ignition
         }
 
         /// \brief Use a high-speed accessor for this Expected data type
-        public: bool Remove(ExpectData<Expected>* data, type<Expected>)
+        public: bool Remove(ExpectData<Expected> *_data, type<Expected>)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
@@ -176,11 +176,11 @@ namespace ignition
 
           if (this->expectedIterator->second.queried)
           {
-            --data->CompositeData::numQueries;
+            --_data->CompositeData::numQueries;
             this->expectedIterator->second.queried = false;
           }
 
-          --data->CompositeData::numEntries;
+          --_data->CompositeData::numEntries;
           this->expectedIterator->second.data.reset();
           return true;
         }
@@ -188,14 +188,14 @@ namespace ignition
         /// \brief Delegate the function to the standard CompositeData method
         public: template <typename Data>
         Data *Query(ExpectData<Expected> *_data, type<Data>,
-                    const CompositeData::QueryMode mode)
+                    const CompositeData::QueryMode _mode)
         {
-          return _data->CompositeData::template Query<Data>(mode);
+          return _data->CompositeData::template Query<Data>(_mode);
         }
 
         /// \brief Use a high-speed accessor for this Expected data type
         public: Expected *Query(ExpectData<Expected> *_data, type<Expected>,
-                                const CompositeData::QueryMode mode)
+                                const CompositeData::QueryMode _mode)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
@@ -204,9 +204,11 @@ namespace ignition
           if (!this->expectedIterator->second.data)
             return nullptr;
 
-          if (CompositeData::QueryMode::NORMAL == mode)
+          if (CompositeData::QueryMode::NORMAL == _mode)
+          {
             SetToQueried(this->expectedIterator,
-                         _data->CompositeData::numQueries);
+                               _data->CompositeData::numQueries);
+          }
 
           return static_cast<MakeCloneable<Expected>*>(
                 this->expectedIterator->second.data.get());
@@ -223,7 +225,7 @@ namespace ignition
         /// \brief Use a high-speed accessor for this Expected data type
         public: const Expected *Query(
             const ExpectData<Expected> *_data, type<Expected>,
-            const CompositeData::QueryMode mode) const
+            const CompositeData::QueryMode _mode) const
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
@@ -232,9 +234,11 @@ namespace ignition
           if (!this->expectedIterator->second.data)
             return nullptr;
 
-          if (CompositeData::QueryMode::NORMAL == mode)
+          if (CompositeData::QueryMode::NORMAL == _mode)
+          {
             SetToQueried(this->expectedIterator,
-                         _data->CompositeData::numQueries);
+                               _data->CompositeData::numQueries);
+          }
 
           return static_cast<const MakeCloneable<Expected>*>(
                 this->expectedIterator->second.data.get());
@@ -307,16 +311,16 @@ namespace ignition
         /// \brief Delegate the function to the standard CompositeData method
         public: template <typename Data, typename... Args>
         Data &MakeRequired(ExpectData<Expected> *_data,
-                           type<Data>, Args&&... args)
+                           type<Data>, Args &&..._args)
         {
           return _data->CompositeData::template MakeRequired<Data>(
-                std::forward<Args>(args)...);
+                std::forward<Args>(_args)...);
         }
 
         /// \brief Use a high-speed accessor for this Expected data type
         public: template <typename... Args>
         Expected &MakeRequired(ExpectData<Expected> *_data,
-                               type<Expected>, Args&&... args)
+                               type<Expected>, Args &&..._args)
         {
           #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
@@ -328,10 +332,11 @@ namespace ignition
           {
             ++_data->CompositeData::numEntries;
             this->expectedIterator->second.data = std::unique_ptr<Cloneable>(
-                  new MakeCloneable<Expected>(std::forward<Args>(args)...));
+                  new MakeCloneable<Expected>(std::forward<Args>(_args)...));
           }
 
-          SetToQueried(this->expectedIterator, _data->CompositeData::numQueries);
+          SetToQueried(this->expectedIterator,
+              _data->CompositeData::numQueries);
 
           return static_cast<MakeCloneable<Expected>&>(
                 *this->expectedIterator->second.data);
