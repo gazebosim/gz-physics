@@ -196,6 +196,7 @@ namespace ignition
     /// specifications. In other words, you can freely mix invocations to
     /// RequireData and ExpectData. Example usage:
     ///
+    /// \code
     ///     using namespace ignition::physics;
     ///
     ///     using MyInputSpecifications = SpecifyData<
@@ -206,6 +207,7 @@ namespace ignition
     ///             ExternalForceInput,
     ///             ProximitySensorInput,
     ///             ForceTorqueSensorInput> >;
+    /// \endcode
     ///
     /// This would define a CompositeData which is required to contain a
     /// DesiredPositionInput data structure and a DesiredVelocityInput data
@@ -218,6 +220,7 @@ namespace ignition
     /// Specifications can also be composed together. For example, if there is
     /// another specification like:
     ///
+    /// \code
     ///     using ComplianceInputSpecifications = SpecifyData<
     ///         RequireData<
     ///             ProximitySensorInput,
@@ -225,12 +228,15 @@ namespace ignition
     ///         ExpectData<
     ///             ForceTorqueSensorInput,
     ///             CameraSensorInput> >;
+    /// \endcode
     ///
     /// then you can combine these specifications:
     ///
+    /// \code
     ///     using CombinedInputSpecifications = SpecifyData<
     ///         MyInputSpecifications,
     ///         ComplianceInputSpecifications>;
+    /// \endcode
     ///
     /// Note that RequireData takes precedence over ExpectData, so
     /// ProximitySensorInput will be promoted to Required when the two
