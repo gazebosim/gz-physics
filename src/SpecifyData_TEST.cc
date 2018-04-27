@@ -21,7 +21,7 @@
 
 #include "utils/TestDataTypes.hh"
 #include "ignition/physics/SpecifyData.hh"
-
+#include "ignition/math/Vector3.hh"
 
 /////////////////////////////////////////////////
 TEST(SpecifyData, RequirementsAccessConstruction)
@@ -633,6 +633,29 @@ TEST(SpecifyData, CountData)
 
   EXPECT_EQ(6u, ignition::physics::CountUpperLimitOfExpectedData<
             RedundantSpec>());
+}
+
+/////////////////////////////////////////////////
+TEST(SpecifyData, OtherDataTypes)
+{
+  ignition::physics::RequireData<std::string> stringData;
+  EXPECT_TRUE(stringData.Has<std::string>());
+  EXPECT_EQ("", stringData.Get<std::string>());
+  stringData.Get<std::string>() = "my_new_string";
+  EXPECT_EQ("my_new_string", stringData.Get<std::string>());
+
+  ignition::physics::RequireData<ignition::math::Vector3d> vector3dData;
+  EXPECT_FALSE(vector3dData.Has<std::string>());
+  EXPECT_TRUE(vector3dData.Has<ignition::math::Vector3d>());
+  EXPECT_EQ(ignition::math::Vector3d(),
+            vector3dData.Get<ignition::math::Vector3d>());
+  // We can add a string to the vector3d composite data.
+  vector3dData.Get<std::string>() = "my_new_string";
+  EXPECT_EQ("my_new_string", vector3dData.Get<std::string>());
+  // We can also set the vector3d data
+  vector3dData.Get<ignition::math::Vector3d>().Set(1, 2, 3);
+  EXPECT_EQ(ignition::math::Vector3d(1, 2, 3),
+            vector3dData.Get<ignition::math::Vector3d>());
 }
 
 /////////////////////////////////////////////////
