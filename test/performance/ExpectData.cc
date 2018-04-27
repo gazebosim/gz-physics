@@ -15,11 +15,11 @@
  *
 */
 
+#include <gtest/gtest.h>
+
 #include <chrono>
 #include <iomanip>
 #include <cmath>
-
-#include <gtest/gtest.h>
 
 #include "utils/TestDataTypes.hh"
 
@@ -142,7 +142,7 @@ TEST(ExpectData, AccessTime)
 
   const std::size_t NumRuns = 100;
 
-  for(std::size_t i=0; i < NumRuns; ++i)
+  for (std::size_t i = 0; i < NumRuns; ++i)
   {
     avg_expect_1 += RunPerformanceTest(expect_1);
     avg_expect_3_leading += RunPerformanceTest(expect_3_leading);
@@ -194,7 +194,7 @@ TEST(ExpectData, AccessTime)
     avg_plain };
 
 
-  for(std::size_t i=0; i < labels.size(); ++i)
+  for (std::size_t i = 0; i < labels.size(); ++i)
   {
     std::cout << std::fixed;
     std::cout << std::setprecision(3);

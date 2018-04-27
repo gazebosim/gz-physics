@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Open Source Robotics Foundation
+ * Copyright (C) 2018 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ class StringData
 {
   public: std::string myString;
 
-  public: inline StringData(const std::string &_input = "default")
+  public: explicit StringData(const std::string &_input = "default")
     : myString(_input)
   {
     // Do nothing
@@ -40,7 +40,7 @@ class DoubleData
 {
   public: double myDouble;
 
-  public: inline DoubleData(const double _input = 1.61803)
+  public: explicit DoubleData(const double _input = 1.61803)
     : myDouble(_input)
   {
     // Do nothing
@@ -52,7 +52,7 @@ class IntData
 {
   public: int myInt;
 
-  public: inline IntData(const int _input = 55)
+  public: explicit IntData(const int _input = 55)
     : myInt(_input)
   {
     // Do nothing
@@ -64,7 +64,7 @@ class BoolData
 {
   public: bool myBool;
 
-  public: inline BoolData(const bool _input = true)
+  public: explicit BoolData(const bool _input = true)
     : myBool(_input)
   {
     // Do nothing
@@ -76,7 +76,7 @@ class CharData
 {
   public: char myChar;
 
-  public: inline CharData(const char _input = 'c')
+  public: explicit CharData(const char _input = 'c')
     : myChar(_input)
   {
     // Do nothing
@@ -88,7 +88,7 @@ class FloatData
 {
   public: float myFloat;
 
-  public: inline FloatData(const float _input = 9.5)
+  public: explicit FloatData(const float _input = 9.5)
     : myFloat(_input)
   {
     // Do nothing
@@ -100,8 +100,25 @@ class VectorDoubleData
 {
   public: std::vector<double> myVector;
 
-  public: inline VectorDoubleData(const std::vector<double> &vec = {})
+  public: explicit VectorDoubleData(const std::vector<double> &vec = {})
     : myVector(vec)
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
+class MultiData
+{
+  public: std::string myString;
+
+  public: int myInt;
+
+  public: explicit MultiData(
+    const std::string &_sInput,
+    const int &_iInput)
+    : myString(_sInput),
+      myInt(_iInput)
   {
     // Do nothing
   }
@@ -147,7 +164,7 @@ struct AddSomeData<DataType>
 {
   static void To(ignition::physics::CompositeData &data)
   {
-    data.Create<DataType>();
+    data.InsertOrAssign<DataType>();
   }
 };
 
@@ -156,7 +173,7 @@ struct AddSomeData<DataType1, OtherDataTypes...>
 {
   static void To(ignition::physics::CompositeData &data)
   {
-    data.Create<DataType1>();
+    data.InsertOrAssign<DataType1>();
     AddSomeData<OtherDataTypes...>::To(data);
   }
 };
