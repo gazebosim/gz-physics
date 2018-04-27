@@ -45,7 +45,7 @@ namespace ignition
     Data &ExpectData<Expected>::Get()
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Get(this, type<Data>());
+          .Get(this, detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -55,7 +55,8 @@ namespace ignition
         -> InsertResult<Data>
     {
       return this->ExpectData<Expected>::privateExpectData
-          .InsertOrAssign(this, type<Data>(), std::forward<Args>(_args)...);
+          .InsertOrAssign(this, detail::type<Data>(),
+                          std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -64,7 +65,7 @@ namespace ignition
     auto ExpectData<Expected>::Insert(Args&&... _args) -> InsertResult<Data>
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Insert(this, type<Data>(), std::forward<Args>(_args)...);
+          .Insert(this, detail::type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -73,7 +74,7 @@ namespace ignition
     bool ExpectData<Expected>::Remove()
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Remove(this, type<Data>());
+          .Remove(this, detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -82,7 +83,7 @@ namespace ignition
     Data *ExpectData<Expected>::Query(const QueryMode _mode)
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>(), _mode);
+          .Query(this, detail::type<Data>(), _mode);
     }
 
     /////////////////////////////////////////////////
@@ -91,7 +92,7 @@ namespace ignition
     const Data *ExpectData<Expected>::Query(const QueryMode _mode) const
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>(), _mode);
+          .Query(this, detail::type<Data>(), _mode);
     }
 
     /////////////////////////////////////////////////
@@ -100,7 +101,7 @@ namespace ignition
     bool ExpectData<Expected>::Has() const
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Has(this, type<Data>());
+          .Has(this, detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -109,7 +110,7 @@ namespace ignition
     CompositeData::DataStatus ExpectData<Expected>::StatusOf() const
     {
       return this->ExpectData<Expected>::privateExpectData
-          .StatusOf(this, type<Data>());
+          .StatusOf(this, detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -118,7 +119,7 @@ namespace ignition
     bool ExpectData<Expected>::Unquery() const
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Unquery(this, type<Data>());
+          .Unquery(this, detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -128,7 +129,7 @@ namespace ignition
     {
       return this->ExpectData<Expected>::privateExpectData
           .MakeRequired(
-            this, type<Data>(), std::forward<Args>(_args)...);
+            this, detail::type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -137,7 +138,7 @@ namespace ignition
     bool ExpectData<Expected>::Requires() const
     {
       return this->ExpectData<Expected>::privateExpectData
-          .Requires(this, type<Data>());
+          .Requires(this, detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -145,7 +146,7 @@ namespace ignition
     template <typename Data>
     constexpr bool ExpectData<Expected>::Expects()
     {
-      return detail::PrivateExpectData<Expected>::Expects(type<Data>());
+      return detail::PrivateExpectData<Expected>::Expects(detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -175,7 +176,7 @@ namespace ignition
             .expectedIterator;
 
       return this->RequireData<Required>::privateRequireData.Get(
-            this, it, type<Data>());
+            this, it, detail::type<Data>());
     }
 
     /////////////////////////////////////////////////
@@ -184,7 +185,7 @@ namespace ignition
     constexpr bool RequireData<Required>::AlwaysRequires()
     {
       return detail::PrivateRequireData<Required>::AlwaysRequires(
-            type<Data>());
+            detail::type<Data>());
     }
 
     namespace detail

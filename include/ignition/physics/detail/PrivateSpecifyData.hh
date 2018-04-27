@@ -40,15 +40,15 @@ namespace ignition
 {
   namespace physics
   {
-    // TODO(MXG): Consider putting this in a common header
-    template <class T> struct type { };
-
     // Forward declarations
     template <typename... DataTypes> class ExpectData;
     template <typename... DataTypes> class RequireData;
 
     namespace detail
     {
+      // TODO(MXG): Consider putting this in a common header
+      template <class T> struct type { };
+
       /// \brief This class implements the specialized functions for ExpectData.
       /// The implementations of these functions can be found in
       /// ignition/physics/detail/SpecifyData.hh
