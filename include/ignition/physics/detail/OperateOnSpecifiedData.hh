@@ -45,7 +45,8 @@ namespace ignition
         return;
 
       History history;
-      history.reserve(CountUpperLimitOfSpecifiedData<Specification, SpecFinder>());
+      history.reserve(CountUpperLimitOfSpecifiedData<
+                      Specification, SpecFinder>());
 
       SubOperate(detail::type<typename SpecFinder<Specification>::Data>(),
                  detail::type<Specification>(), performer, data, mask, history);
@@ -67,7 +68,7 @@ namespace ignition
       {
         const bool inserted = history.insert(typeid(Data).name()).second;
 
-        if(inserted)
+        if (inserted)
         {
           // We have found a specified type that matches what we want, so we
           // will call operate on it.

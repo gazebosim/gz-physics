@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 #define IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 
+#include <string>
 #include <unordered_set>
 
 #include "ignition/physics/SpecifyData.hh"
