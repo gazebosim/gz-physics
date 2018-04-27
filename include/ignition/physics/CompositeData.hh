@@ -958,6 +958,7 @@ namespace ignition
       /// CompositeData. See ignition/physics/detail/CompositeData.hh for the
       /// definition. This class is public so that helper functions can use it
       /// without being friends of the class.
+      /// \private
       public: struct DataEntry;
 
       // We make this typedef public so that helper functions can use it without

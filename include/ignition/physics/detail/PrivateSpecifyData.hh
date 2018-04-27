@@ -41,7 +41,9 @@ namespace ignition
   namespace physics
   {
     // Forward declarations
+    /// \private
     template <typename... DataTypes> class ExpectData;
+    /// \private
     template <typename... DataTypes> class RequireData;
 
     namespace detail

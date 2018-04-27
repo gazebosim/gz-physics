@@ -281,6 +281,7 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
+    /// \private
     template <typename DataSpec>
     class SpecifyData<DataSpec> : public virtual DataSpec
     {
@@ -307,6 +308,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief Create a fork in the binary specification tree
+    /// \private
     template <typename DataSpec1, typename DataSpec2>
     class SpecifyData<DataSpec1, DataSpec2> :
         public virtual DataSpec1,
@@ -409,6 +411,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// Use the SpecifyData fork to combine these expectations
+    /// \private
     template <typename DataType1, typename... OtherDataTypes>
     class ExpectData<DataType1, OtherDataTypes...>
         : public virtual SpecifyData<ExpectData<DataType1>,
@@ -419,6 +422,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// Use the SpecifyData fork to combine these requirements
+    /// \private
     template <typename DataType1, typename... OtherDataTypes>
     class RequireData<DataType1, OtherDataTypes...>
         : public virtual SpecifyData<RequireData<DataType1>,

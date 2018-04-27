@@ -26,45 +26,22 @@ namespace ignition
   {
     /// \brief ExpectData is an extension of CompositeData which indicates that
     /// the composite expects to be operating on the data types listed in its
-    /// template arguments (DataTypes). All of the expected types will benefit
-    /// from very high-speed operations when being accessed from an object of
-    /// type ExpectData<DataTypes>. The ordinary CompositeData class needs to
-    /// perform a map lookup on the data type whenever one of its functions is
-    /// called, but an ExpectData<T> object does not need to perform any map
-    /// lookup when performing an operation on T (e.g. .Get<T>(), .Insert<T>(),
-    /// .Query<T>(), .Has<T>(), etc).
+    /// template arguments. All of the expected types will benefit from very
+    /// high-speed operations when being accessed from an object of type
+    /// ExpectData<Expected>. The ordinary CompositeData class needs to perform
+    /// a map lookup on the data type whenever one of its functions is called,
+    /// but an ExpectData<T> object does not need to perform any map lookup when
+    /// performing an operation on T (e.g. .Get<T>(), .Insert<T>(), .Query<T>(),
+    /// .Has<T>(), etc).
     ///
-    /// Note that there is no guarantee that any of the types listed in
-    /// DataTypes will exist in the underlying CompositeData, but it will still
-    /// provide very high-speed access for creating and querying even if it is
-    /// not yet present.
-    template <typename... DataTypes>
-    class ExpectData
-    {
-      public: virtual ~ExpectData() = default;
-    };
-
-    /// \brief RequireData is an extension of ExpectData which indicates that
-    /// the composite requires the existence of any data types that are listed
-    /// in its template arguments (DataTypes).
+    /// Note that there is no guarantee that any of the types listed in its
+    /// template arguments will exist in the underlying CompositeData, but it
+    /// will still provide very high-speed access for creating and querying them
+    /// even if they are not yet present.
     ///
-    /// Each data type that is listed in DataTypes will be instantiated upon
-    /// construction of the RequireData<DataTypes> object, and none of them can
-    /// be removed from that object or from any reference to that object.
-    ///
-    /// Objects that are listed in DataTypes will also benefit from extremely
-    /// high-speed accessibility when they are accessed using an object of the
-    /// type RequireData<DataTypes>. This is similar to ExpectData<DataTypes>.
-    ///
-    /// RequireData<DataTypes> also offers a const-qualified Get<R>() function
-    /// for all types, R, which are listed in DataTypes.
-    template <typename... DataTypes>
-    class RequireData
-    {
-      public: virtual ~RequireData() = default;
-    };
-
-    /// \brief Implementation of ExpectData for a single data type.
+    /// This template specialization implements ExpectData for a single type,
+    /// but the ExpectData template can accept any number of types, e.g.
+    /// ExpectData<T, U, V, W>.
     template <typename Expected>
     class ExpectData<Expected> : public virtual CompositeData
     {
@@ -160,7 +137,24 @@ namespace ignition
       public: using SubSpecification2 = void;
     };
 
-    /// \brief Implementation of RequireData for a single data type.
+    /// \brief RequireData is an extension of ExpectData which indicates that
+    /// the composite requires the existence of any data types that are listed
+    /// in its template arguments.
+    ///
+    /// Each data type that is listed in the template arguments will be
+    /// instantiated upon construction of the RequireData<DataTypes> object, and
+    /// none of them can be removed from that object or from any reference to
+    /// that object.
+    ///
+    /// Objects that are listed in the template arguments will also benefit from
+    /// extremely high-speed accessibility when they are accessed using an
+    /// object of the type RequireData<T>. This is similar to ExpectData<T>.
+    ///
+    /// RequireData<R> also offers a const-qualified Get<R>() function.
+    ///
+    /// This template specialization implements RequireData for a single type,
+    /// but the RequireData template can accept any number of types, e.g.
+    /// RequireData<T, U, V, W>.
     template <typename Required>
     class RequireData<Required> : public virtual ExpectData<Required>
     {
@@ -241,11 +235,11 @@ namespace ignition
     /// Note that RequireData takes precedence over ExpectData, so
     /// ProximitySensorInput will be promoted to Required when the two
     /// specifications are combined.
+    ///
+    /// \sa ExpectData<Expected>
+    /// \sa RequireData<Required>
     template <typename... Specifications>
-    class SpecifyData
-    {
-      public: virtual ~SpecifyData() = default;
-    };
+    class SpecifyData;
 
 
     // ----------------------- Utility Templates ----------------------------
@@ -276,6 +270,8 @@ namespace ignition
 
     /// \brief This allows us to specify that we are interested in expected
     /// data while performing template metaprogramming.
+    ///
+    /// This is currently used by CountUpperLimitOfExpectedData()
     template <typename Specification>
     struct FindExpected
     {
@@ -284,6 +280,7 @@ namespace ignition
 
     /// \brief This specialization handles the terminating case where we have
     /// reached a leaf node in the specification tree.
+    /// \private
     template <>
     struct FindExpected<void>
     {
@@ -293,6 +290,8 @@ namespace ignition
 
     /// \brief This allows us to specify that we are interested in required
     /// data while performing template metaprogramming.
+    ///
+    /// This is currently used by CountUpperLimitOfRequiredData()
     template <typename Specification>
     struct FindRequired
     {
@@ -301,6 +300,7 @@ namespace ignition
 
     /// \brief This specialization handles the terminating case where we have
     /// reached a leaf node in the specification tree.
+    /// \private
     template <>
     struct FindRequired<void>
     {
@@ -315,6 +315,7 @@ namespace ignition
 
     /// \brief This template specialization allows us to provide a false `value`
     /// when given a void Specification.
+    /// \private
     template <typename Data>
     struct IsExpectedBy<Data, void> : std::false_type { };
 
@@ -326,6 +327,7 @@ namespace ignition
 
     /// \brief This template specialization allows us to provide a false `value`
     /// when given a void Specification.
+    /// \private
     template <typename Data>
     struct IsRequiredBy<Data, void> : std::false_type { };
   }
