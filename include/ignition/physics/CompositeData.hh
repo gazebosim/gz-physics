@@ -372,9 +372,9 @@ namespace ignition
       /// a Data-type object, it gets returned as a Data*. Otherwise, a nullptr
       /// is returned.
       ///
-      /// If _mode is set to QueryMode::SILENT, then calling this function will not
-      /// cause the "queried" flag to change (see UnqueriedEntries() for more
-      /// on the "queried" flag).
+      /// If _mode is set to QueryMode::SILENT, then calling this function will
+      /// not cause the "queried" flag to change (see UnqueriedEntries() for
+      /// more on the "queried" flag).
       ///
       /// Example usage:
       ///
@@ -468,9 +468,9 @@ namespace ignition
       /// \brief Const-qualified version of Query. This can be used to retrieve
       /// data from a `const CompositeData`.
       ///
-      /// If "mode" is set to QueryMode::SILENT, then calling this function will not
-      /// cause the "queried" flag to change (see UnqueriedEntries() for more
-      /// on the "queried" flag).
+      /// If "mode" is set to QueryMode::SILENT, then calling this function will
+      /// not cause the "queried" flag to change (see UnqueriedEntries() for
+      /// more on the "queried" flag).
       ///
       /// Example usage:
       ///

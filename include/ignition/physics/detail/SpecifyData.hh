@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_DETAIL_SPECIFYDATA_HH_
 #define IGNITION_PHYSICS_DETAIL_SPECIFYDATA_HH_
 
+#include <memory>
+#include <utility>
+
 #include "ignition/physics/SpecifyData.hh"
 
 namespace ignition
@@ -39,28 +42,29 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    Data& ExpectData<Expected>::Get()
+    Data &ExpectData<Expected>::Get()
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Get(this, type<Data>());
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    auto ExpectData<Expected>::InsertOrAssign(Args&&... args) -> InsertResult<Data>
+    auto ExpectData<Expected>::InsertOrAssign(Args&&... _args)
+        -> InsertResult<Data>
     {
-      return this->template ExpectData<Expected>::privateExpectData
-          .InsertOrAssign(this, type<Data>(), std::forward<Args>(args)...);
+      return this->ExpectData<Expected>::privateExpectData
+          .InsertOrAssign(this, type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    auto ExpectData<Expected>::Insert(Args&&... args) -> InsertResult<Data>
+    auto ExpectData<Expected>::Insert(Args&&... _args) -> InsertResult<Data>
     {
-      return this->template ExpectData<Expected>::privateExpectData
-          .Insert(this, type<Data>(), std::forward<Args>(args)...);
+      return this->ExpectData<Expected>::privateExpectData
+          .Insert(this, type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -68,26 +72,26 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Remove()
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Remove(this, type<Data>());
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    Data* ExpectData<Expected>::Query(const QueryMode mode)
+    Data *ExpectData<Expected>::Query(const QueryMode _mode)
     {
-      return this->template ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>(), mode);
+      return this->ExpectData<Expected>::privateExpectData
+          .Query(this, type<Data>(), _mode);
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data>
-    const Data* ExpectData<Expected>::Query(const QueryMode mode) const
+    const Data *ExpectData<Expected>::Query(const QueryMode _mode) const
     {
-      return this->template ExpectData<Expected>::privateExpectData
-          .Query(this, type<Data>(), mode);
+      return this->ExpectData<Expected>::privateExpectData
+          .Query(this, type<Data>(), _mode);
     }
 
     /////////////////////////////////////////////////
@@ -95,7 +99,7 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Has() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Has(this, type<Data>());
     }
 
@@ -104,7 +108,7 @@ namespace ignition
     template <typename Data>
     CompositeData::DataStatus ExpectData<Expected>::StatusOf() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .StatusOf(this, type<Data>());
     }
 
@@ -113,18 +117,18 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Unquery() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Unquery(this, type<Data>());
     }
 
     /////////////////////////////////////////////////
     template <typename Expected>
     template <typename Data, typename... Args>
-    Data& ExpectData<Expected>::MakeRequired(Args&&... args)
+    Data &ExpectData<Expected>::MakeRequired(Args&&... _args)
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .MakeRequired(
-            this, type<Data>(), std::forward<Args>(args)...);
+            this, type<Data>(), std::forward<Args>(_args)...);
     }
 
     /////////////////////////////////////////////////
@@ -132,7 +136,7 @@ namespace ignition
     template <typename Data>
     bool ExpectData<Expected>::Requires() const
     {
-      return this->template ExpectData<Expected>::privateExpectData
+      return this->ExpectData<Expected>::privateExpectData
           .Requires(this, type<Data>());
     }
 
@@ -151,7 +155,7 @@ namespace ignition
         ExpectData<Required>()
     {
       CompositeData::DataEntry &entry =
-          this->template ExpectData<Required>::privateExpectData
+          this->ExpectData<Required>::privateExpectData
             .expectedIterator->second;
 
       // Create the required data in its designated map entry, and mark it as
@@ -164,13 +168,13 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Required>
     template <typename Data>
-    const Data& RequireData<Required>::Get() const
+    const Data &RequireData<Required>::Get() const
     {
       const CompositeData::MapOfData::iterator &it =
-          this->template ExpectData<Required>::privateExpectData
+          this->ExpectData<Required>::privateExpectData
             .expectedIterator;
 
-      return this->template RequireData<Required>::privateRequireData.Get(
+      return this->RequireData<Required>::privateRequireData.Get(
             this, it, type<Data>());
     }
 
@@ -188,7 +192,7 @@ namespace ignition
       /// The following templates deal with finding leaf specifiers within a
       /// specification tree. An example of a leaf specifier is ExpectData<T>
       /// or RequireData<T>. Casting a complex specification to its relevant
-      /// leaf specifier allows us to utilize the extremely low-cost access
+      /// leaf specifier allows us to utilize the extremely high-speed access
       /// functions provided by the leaf specifier.
 
       // Forward declaration
@@ -384,7 +388,7 @@ namespace ignition
       }
 
       template <typename T>
-      const T& Get() const
+      const T &Get() const
       {
         static_assert(AlwaysRequires<T>(), IGNITION_PHYSICS_CONST_GET_ERROR);
 
