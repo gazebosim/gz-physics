@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_CLONEABLE_HH_
 #define IGNITION_PHYSICS_DETAIL_CLONEABLE_HH_
 
+#include <memory>
+#include <utility>
 #include "ignition/physics/Cloneable.hh"
 
 namespace ignition
@@ -32,7 +34,7 @@ namespace ignition
         Cloneable()
       // READ CAREFULLY: If you have arrived here by way of a compiler error,
       // then you have not provided your data type with a default constructor.
-      // Check the compilation error to see which data type is the culprit.
+      // Check the compilation error text to see which data type is the culprit.
     {
       // Do nothing
     }

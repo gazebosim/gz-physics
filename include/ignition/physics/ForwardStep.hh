@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_FORWARDSTEP_HH_
 #define IGNITION_PHYSICS_FORWARDSTEP_HH_
 
+#include <string>
+#include <vector>
+
 #include <ignition/math.hh>
 #include <ignition/common/PluginMacros.hh>
 

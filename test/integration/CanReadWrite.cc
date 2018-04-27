@@ -25,11 +25,15 @@
 
 #include "utils/TestDataTypes.hh"
 
+using ignition::physics::CanReadRequiredData;
+using ignition::physics::CanReadExpectedData;
+using ignition::physics::CanWriteExpectedData;
+
 template <typename ReadSpec>
 class SomeClass
-    : public ignition::physics::CanReadRequiredData<SomeClass<ReadSpec>, ReadSpec>,
-      public ignition::physics::CanReadExpectedData<SomeClass<ReadSpec>, ReadSpec>,
-      public ignition::physics::CanWriteExpectedData<SomeClass<ReadSpec>, RequireIntDouble>
+    : public CanReadRequiredData<SomeClass<ReadSpec>, ReadSpec>,
+      public CanReadExpectedData<SomeClass<ReadSpec>, ReadSpec>,
+      public CanWriteExpectedData<SomeClass<ReadSpec>, RequireIntDouble>
 {
   public: StringData sdata;
   public: std::size_t scount;
