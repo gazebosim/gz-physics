@@ -121,61 +121,73 @@ namespace ignition
 
       /// \brief Provides extremely low-cost access to expected data types and
       /// normal access to unexpected data types.
+      /// \sa CompositeData::Get()
       public: template <typename Data>
       Data& Get();
 
       /// \brief Provides extremely low-cost access to creating expected data
       /// types and normal access to unexpected data types.
+      /// \sa CompositeData::InsertOrAssign()
       public: template <typename Data, typename... Args>
       InsertResult<Data> InsertOrAssign(Args&&... args);
 
       /// \brief Provides extremely low-cost access to getting or creating
       /// expected data types and normal access to unexpected data types.
+      /// \sa CompositeData::Insert()
       public: template <typename Data, typename... Args>
       InsertResult<Data> Insert(Args&&... args);
 
       /// \brief Provides extremely low-cost access for removing expected data
       /// types and normal access for unexpected data types.
+      /// \sa CompositeData::Remove()
       public: template <typename Data>
       bool Remove();
 
       /// \brief Provides extremely low-cost access for querying expected data
       /// types and normal access for unexpected data types.
+      /// \sa CompositeData::Query()
       public: template <typename Data>
       Data* Query(const QueryMode mode = QueryMode::NORMAL);
 
       /// \brief Const-qualified version of Query<Data>
+      /// \sa CompositeData::Query()
       public: template <typename Data>
       const Data* Query(const QueryMode mode = QueryMode::NORMAL) const;
 
       /// \brief Provides extremely low-cost access for checking the existence
       /// of expected data types and normal access for unexpected data types.
+      /// \sa CompositeData::Has() const
       public: template <typename Data>
       bool Has() const;
 
       /// \brief Provides extremely low-cost access to the status of expected
       /// data types and normal access for unexpected data types.
+      /// \sa CompositeData::StatusOf() const
       public: template <typename Data>
       DataStatus StatusOf() const;
 
       /// \brief Provides extremely low-cost access for unquerying expected data
       /// types and normal access for unexpected data types.
+      /// \sa CompositeData::Unquery() const
       public: template <typename Data>
       bool Unquery() const;
 
       /// \brief Provides extremely low-cost access for making expected data
       /// types required and normal access for unexpected data types.
+      /// \sa CompositeData::MakeRequired()
       public: template <typename Data, typename... Args>
       Data& MakeRequired(Args&&... args);
 
       /// \brief Provides extremely low-cost access for checking whether
       /// expected data types are required and normal access for unexpected data
       /// types.
+      /// \sa CompositeData::Requires() const
       public: template <typename Data>
       bool Requires() const;
 
       /// \brief Returns true if the Data type is expected. Data types for which
       /// this is true will be able to enjoy extremely low-cost access.
+      /// \sa CompositeData::Expects()
       public: template <typename Data>
       static constexpr bool Expects();
 
@@ -216,6 +228,7 @@ namespace ignition
       ///
       /// NOTE: For data types that are not required, this will throw a
       /// compilation error, and you should use Query<Data>() const instead.
+      /// \sa CompositeData::Get()
       public: template <typename Data>
       const Data& Get() const;
 
