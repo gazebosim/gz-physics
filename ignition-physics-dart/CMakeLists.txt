@@ -30,9 +30,12 @@ target_include_directories(${lib_name} PRIVATE
   ${DART_INCLUDE_DIRS}
   ${IGNITION-COMMON_INCLUDE_DIRS})
 
-# This allows us to access utils/test_config.h
-include_directories(${PROJECT_BINARY_DIR})
-
 ign_build_tests(
   TYPE PLUGIN
-  SOURCES ${gtest_sources})
+  SOURCES ${gtest_sources}
+  TEST_LIST tests)
+
+foreach(test ${tests})
+  target_compile_definitions(${test} PRIVATE
+    "PROJECT_LIBRARY_PATH=\"$<TARGET_FILE_DIR:${lib_name}>\"")
+endforeach()
