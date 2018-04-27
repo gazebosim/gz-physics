@@ -110,7 +110,8 @@ namespace ignition
               std::unique_ptr<Cloneable>(new MakeCloneable<Expected>(
                                            std::forward<Args>(args)...));
 
-          SetToQueried(this->expectedIterator, _data->CompositeData::numQueries);
+          SetToQueried(this->expectedIterator,
+                       _data->CompositeData::numQueries);
 
           return CompositeData::InsertResult<Expected>{
                 static_cast<MakeCloneable<Expected>&>(
@@ -146,7 +147,8 @@ namespace ignition
             inserted = true;
           }
 
-          SetToQueried(this->expectedIterator, _data->CompositeData::numQueries);
+          SetToQueried(this->expectedIterator,
+                       _data->CompositeData::numQueries);
 
           return CompositeData::InsertResult<Expected>{
                 static_cast<MakeCloneable<Expected>&>(
