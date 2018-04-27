@@ -37,8 +37,6 @@ namespace ignition
     {
       struct DartState
       {
-        IGN_PHYSICS_DATA_LABEL(ignition::physics::dart::DartState)
-
         using StateMap =
             std::unordered_map<::dart::dynamics::SkeletonPtr,
                                ::dart::dynamics::Skeleton::Configuration>;
@@ -51,16 +49,16 @@ namespace ignition
       {
         public: ::dart::simulation::WorldPtr world;
 
-        public: ::dart::dynamics::SkeletonPtr robot;
+        public: ::dart::dynamics::SkeletonPtr mRobot;
 
-        public: ::dart::dynamics::BodyNode* endEffector;
+        public: ::dart::dynamics::BodyNode* mEndEffector;
 
-        public: ::dart::dynamics::SimpleFramePtr target;
+        public: ::dart::dynamics::SimpleFramePtr mTarget;
 
-        public: Eigen::Vector3d offset;
-        public: Eigen::Matrix3d Kp;
-        public: Eigen::MatrixXd Kd;
-        public: Eigen::VectorXd forces;
+        public: Eigen::Vector3d mOffset;
+        public: Eigen::Matrix3d mKp;
+        public: Eigen::MatrixXd mKd;
+        public: Eigen::VectorXd mForces;
 
         public: using BodyMap =
             std::unordered_map<std::size_t, ::dart::dynamics::WeakBodyNodePtr>;
@@ -76,42 +74,67 @@ namespace ignition
             lastId(0)
         {
           ::dart::utils::DartLoader loader;
-          this->robot = loader.parseSkeleton(
+          mRobot = loader.parseSkeleton(
                 "dart://sample/urdf/KR5/KR5 sixx R650.urdf");
-          this->world->addSkeleton(this->robot);
+          this->world->addSkeleton(mRobot);
 
-          this->robot->getJoint(0)->setTransformFromParentBodyNode(
+          mRobot->getJoint(0)->setTransformFromParentBodyNode(
                 Eigen::Isometry3d::Identity());
 
-          this->endEffector = this->robot->getBodyNode(
-                this->robot->getNumBodyNodes()-1);
+          mEndEffector = mRobot->getBodyNode(mRobot->getNumBodyNodes()-1);
 
-          std::size_t dofs = this->endEffector->getNumDependentGenCoords();
-          Kp.setZero();
+          std::size_t dofs = mEndEffector->getNumDependentGenCoords();
+          mKp.setZero();
           for (std::size_t i=0; i < 3; ++i)
-            Kp(i, i) = 50.0;
+            mKp(i,i) = 50.0;
 
-          Kd.setZero(dofs, dofs);
+          mKd.setZero(dofs,dofs);
           for (std::size_t i=0; i < dofs; ++i)
-            Kd(i, i) = 5.0;
+            mKd(i,i) = 5.0;
 
-          for (std::size_t i=0; i < robot->getNumJoints(); ++i)
+          for(std::size_t i=0; i<mRobot->getNumJoints(); ++i)
           {
-            this->robot->getJoint(i)->setPositionLimitEnforced(false);
-            this->robot->getJoint(i)->setDampingCoefficient(0, 0.5);
+            mRobot->getJoint(i)->setPositionLimitEnforced(false);
+            mRobot->getJoint(i)->setDampingCoefficient(0, 0.5);
           }
 
-          this->offset = Eigen::Vector3d(0.0, 0.0, 0.0);
+          mOffset = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-          Eigen::Isometry3d tf = endEffector->getWorldTransform();
-          tf.pretranslate(offset);
-          this->target = std::make_shared<::dart::dynamics::SimpleFrame>(
+          Eigen::Isometry3d tf = mEndEffector->getWorldTransform();
+          tf.pretranslate(mOffset);
+          mTarget = std::make_shared<::dart::dynamics::SimpleFrame>(
                 ::dart::dynamics::Frame::World(), "target", tf);
 
-          this->offset = this->endEffector->getWorldTransform()
-              .rotation().transpose() * offset;
+          mOffset = mEndEffector->getWorldTransform().rotation().transpose() * mOffset;
 
           this->SetBodyMap();
+        }
+
+        void Simulate()
+        {
+          Eigen::MatrixXd M = mRobot->getMassMatrix();
+
+          ::dart::math::LinearJacobian J = mEndEffector->getLinearJacobian(mOffset);
+          Eigen::MatrixXd pinv_J = J.transpose()*(J*J.transpose()
+                                      +0.0025*Eigen::Matrix3d::Identity()).inverse();
+
+          ::dart::math::LinearJacobian dJ = mEndEffector->getLinearJacobianDeriv(mOffset);
+          Eigen::MatrixXd pinv_dJ = dJ.transpose()*(dJ*dJ.transpose()
+                                      +0.0025*Eigen::Matrix3d::Identity()).inverse();
+
+
+          Eigen::Vector3d e = mTarget->getWorldTransform().translation()
+                              - mEndEffector->getWorldTransform()*mOffset;
+
+          Eigen::Vector3d de = - mEndEffector->getLinearVelocity(mOffset);
+
+          Eigen::VectorXd Cg = mRobot->getCoriolisAndGravityForces();
+
+          mForces = M*(pinv_J*mKp*de + pinv_dJ*mKp*e) + Cg + mKd*pinv_J*mKp*e;
+
+          mRobot->setForces(mForces);
+
+          this->world->step();
         }
 
         void SetBodyMap()
@@ -122,7 +145,7 @@ namespace ignition
             for (std::size_t j=0; j < skel->getNumBodyNodes(); ++j)
             {
               ::dart::dynamics::BodyNode * const bn = skel->getBodyNode(j);
-              if (bn == this->endEffector)
+              if (bn == mEndEffector)
                 this->id_endEffector = lastId;
 
               this->mapToBodies[lastId++] = bn;
@@ -135,7 +158,7 @@ namespace ignition
           if (!_target)
             return;
 
-          this->target->setTransform(convert(_target->pose));
+          mTarget->setTransform(convert(_target->pose));
         }
 
         void SetState(const SetState::State &x)
@@ -195,39 +218,10 @@ namespace ignition
           }
         }
 
-        void Simulate()
-        {
-          Eigen::MatrixXd M = this->robot->getMassMatrix();
-
-          ::dart::math::LinearJacobian J =
-              this->endEffector->getLinearJacobian(this->offset);
-          Eigen::MatrixXd pinv_J = J.transpose()*(
-                J*J.transpose() + 0.0025*Eigen::Matrix3d::Identity()).inverse();
-
-          ::dart::math::LinearJacobian dJ =
-              this->endEffector->getLinearJacobianDeriv(this->offset);
-          Eigen::MatrixXd pinv_dJ = dJ.transpose()*(
-                dJ*dJ.transpose() + 0.0025*Eigen::Matrix3d::Identity())
-              .inverse();
-
-          Eigen::Vector3d e = this->target->getWorldTransform().translation()
-              - this->endEffector->getWorldTransform()*this->offset;
-
-          Eigen::Vector3d de = - endEffector->getLinearVelocity(this->offset);
-
-          Eigen::VectorXd Cg = robot->getCoriolisAndGravityForces();
-
-          this->forces = M*(pinv_J*Kp*de + pinv_dJ*Kp*e) + Cg + Kd*pinv_J*Kp*e;
-
-          this->robot->setForces(this->forces);
-
-          this->world->step();
-        }
-
         void WriteEndEffectorPose(CompositeData &h)
         {
           EndEffectorPose &pose = h.Get<EndEffectorPose>();
-          pose.pose = convert(this->endEffector->getWorldTransform());
+          pose.pose = convert(mEndEffector->getWorldTransform());
           pose.body = this->id_endEffector;
         }
       };

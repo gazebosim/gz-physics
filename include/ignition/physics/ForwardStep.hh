@@ -18,11 +18,13 @@
 #ifndef IGNITION_PHYSICS_FORWARDSTEP_HH_
 #define IGNITION_PHYSICS_FORWARDSTEP_HH_
 
+#include <string>
+#include <vector>
+
 #include <ignition/math.hh>
 #include <ignition/common/PluginMacros.hh>
 
 #include <ignition/physics/SpecifyData.hh>
-#include <ignition/physics/CompositeDataMacros.hh>
 
 #include <ignition/physics/Feature.hh>
 
@@ -38,27 +40,17 @@ namespace ignition
 
     struct WorldPose
     {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::WorldPose)
-
       ignition::math::Pose3d pose;
 
       std::size_t body;
     };
 
-    struct TargetPose : WorldPose
-    {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::TargetPose)
-    };
+    struct TargetPose : WorldPose { };
 
-    struct EndEffectorPose : WorldPose
-    {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::EndEffectorPose)
-    };
+    struct EndEffectorPose : WorldPose { };
 
     struct WorldPoses
     {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::WorldPoses)
-
       std::vector<WorldPose> entries;
       std::string annotation;
     };
@@ -80,8 +72,6 @@ namespace ignition
 
     struct Contacts
     {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::Contacts)
-
       std::vector<Point> entries;
       std::string annotation;
     };
@@ -117,32 +107,24 @@ namespace ignition
 
     struct ApplyExternalForceTorques
     {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::ApplyExternalForceTorques)
-
       std::vector<ForceTorque> entries;
       std::string annotation;
     };
 
     struct ApplyGeneralizedForces
     {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::ApplyJointGeneralizedForces)
-
       std::vector<GeneralizedParameters> forces;
       std::string annotation;
     };
 
     struct VelocityControlCommands
     {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::VelocityControlCommands)
-
       std::vector<GeneralizedParameters> commands;
       std::string annotation;
     };
 
     struct ServoControlCommands
     {
-      IGN_PHYSICS_DATA_LABEL(ignition::physics::ServoControlCommands)
-
       std::vector<GeneralizedParameters> commands;
       std::vector<PIDValues> gains;
 
@@ -153,6 +135,8 @@ namespace ignition
     // ---------------- ForwardStep Interface -----------------
     class IGNITION_PHYSICS_VISIBLE ForwardStep : public virtual Feature
     {
+      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::ForwardStep)
+
       public: using Input = ExpectData<
               ApplyExternalForceTorques,
               ApplyGeneralizedForces,
@@ -176,6 +160,8 @@ namespace ignition
     // ---------------- SetState Interface -----------------
     class IGNITION_PHYSICS_VISIBLE SetState : public virtual Feature
     {
+      public: IGN_COMMON_SPECIALIZE_INTERFACE(ignition::physics::SetState)
+
       public: using State = CompositeData;
 
       template <typename FeatureType>

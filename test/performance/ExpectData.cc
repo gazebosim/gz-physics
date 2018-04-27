@@ -15,36 +15,35 @@
  *
 */
 
+#include <gtest/gtest.h>
+
 #include <chrono>
 #include <iomanip>
 #include <cmath>
 
-#include <gtest/gtest.h>
-
 #include "utils/TestDataTypes.hh"
 
-#define IGN_PHYSICS_CREATE_LABELED_DATA(Name) \
-  struct Name { IGN_PHYSICS_DATA_LABEL(Name) };
+std::size_t gNumTests = 100000;
 
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData1)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData2)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData3)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData4)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData5)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData6)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData7)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData8)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData9)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData10)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData11)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData12)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData13)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData14)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData15)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData16)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData17)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData18)
-IGN_PHYSICS_CREATE_LABELED_DATA(SomeData19)
+struct SomeData1 { };
+struct SomeData2 { };
+struct SomeData3 { };
+struct SomeData4 { };
+struct SomeData5 { };
+struct SomeData6 { };
+struct SomeData7 { };
+struct SomeData8 { };
+struct SomeData9 { };
+struct SomeData10 { };
+struct SomeData11 { };
+struct SomeData12 { };
+struct SomeData13 { };
+struct SomeData14 { };
+struct SomeData15 { };
+struct SomeData16 { };
+struct SomeData17 { };
+struct SomeData18 { };
+struct SomeData19 { };
 
 // Expect only 1 type
 using ExpectString = ignition::physics::ExpectData<StringData>;
@@ -98,9 +97,8 @@ ignition::physics::CompositeData CreatePerformanceTestData()
 template <typename CompositeType>
 double RunPerformanceTest(CompositeType &data)
 {
-  const std::size_t NumTests = 100000;
   const auto start = std::chrono::high_resolution_clock::now();
-  for (std::size_t i=0; i < NumTests; ++i)
+  for (std::size_t i=0; i < gNumTests; ++i)
   {
     data.template Get<StringData>();
   }
@@ -109,10 +107,25 @@ double RunPerformanceTest(CompositeType &data)
   const auto time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         finish - start).count();
 
-  const double avg = static_cast<double>(time)/static_cast<double>(NumTests);
+  const double avg = static_cast<double>(time)/static_cast<double>(gNumTests);
 
   return avg;
 }
+
+// NaiveCompositionBase and NaiveComposition are used to produce a reference
+// performance result that can help put the CompositeData performance in
+// perspective.
+class NaiveCompositionBase
+{
+};
+
+template<typename T>
+class NaiveComposition : public NaiveCompositionBase
+{
+  public: const T &Get() const { return d; }
+  private: T d;
+};
+
 
 TEST(ExpectData, AccessTime)
 {
@@ -142,10 +155,20 @@ TEST(ExpectData, AccessTime)
   double avg_expect_20_leading = 0.0;
   double avg_expect_20_trailing = 0.0;
   double avg_plain = 0.0;
+  double avg_naive = 0.0;
 
   const std::size_t NumRuns = 100;
 
-  for(std::size_t i=0; i < NumRuns; ++i)
+  std::vector<NaiveCompositionBase*> basicComposition;
+  for (std::size_t j = 0; j < gNumTests; ++j)
+  {
+    if (j < gNumTests / 2)
+      basicComposition.push_back(new NaiveComposition<int>());
+    else
+      basicComposition.push_back(new NaiveComposition<std::string>());
+  }
+
+  for (std::size_t i = 0; i < NumRuns; ++i)
   {
     avg_expect_1 += RunPerformanceTest(expect_1);
     avg_expect_3_leading += RunPerformanceTest(expect_3_leading);
@@ -155,6 +178,20 @@ TEST(ExpectData, AccessTime)
     avg_expect_20_leading += RunPerformanceTest(expect_20_leading);
     avg_expect_20_trailing += RunPerformanceTest(expect_20_trailing);
     avg_plain += RunPerformanceTest(plain);
+
+    const auto start = std::chrono::high_resolution_clock::now();
+    for (std::size_t j = 0; j < gNumTests; ++j)
+    {
+      if (j < gNumTests / 2)
+        static_cast<NaiveComposition<int>*>(basicComposition[j])->Get();
+      else
+        static_cast<NaiveComposition<std::string>*>(basicComposition[j])->Get();
+    }
+    const auto finish = std::chrono::high_resolution_clock::now();
+    const auto time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        finish - start).count();
+
+    avg_naive += static_cast<double>(time)/static_cast<double>(gNumTests);
   }
 
   EXPECT_LT(avg_expect_1, avg_plain);
@@ -184,7 +221,8 @@ TEST(ExpectData, AccessTime)
     "10 expectations (trailing)",
     "20 expectations (leading)",
     "20 expectations (trailing)",
-    "No expectations" };
+    "No expectations",
+    "Naive composition: This is only a reference point" };
 
   std::vector<double> avgs = {
     avg_expect_1,
@@ -194,13 +232,13 @@ TEST(ExpectData, AccessTime)
     avg_expect_10_trailing,
     avg_expect_20_leading,
     avg_expect_20_trailing,
-    avg_plain };
+    avg_plain,
+    avg_naive };
 
-
-  for(std::size_t i=0; i < labels.size(); ++i)
+  for (std::size_t i = 0; i < labels.size(); ++i)
   {
     std::cout << std::fixed;
-    std::cout << std::setprecision(3);
+    std::cout << std::setprecision(6);
     std::cout << std::right;
 
     std::cout << " --- " << labels[i] << " result ---\n"
@@ -209,7 +247,6 @@ TEST(ExpectData, AccessTime)
               << " ns\n" << std::endl;
   }
 }
-
 
 int main(int argc, char **argv)
 {
