@@ -10,9 +10,3 @@ target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
 ign_build_tests(
   TYPE UNIT
   SOURCES ${gtest_sources})
-
-if(MSVC)
-  if(TARGET UNIT_SpecifyData_TEST)
-    target_compile_options(UNIT_SpecifyData_TEST PRIVATE /permissive-)
-  endif()
-endif()
