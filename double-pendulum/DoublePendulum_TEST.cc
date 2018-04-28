@@ -40,7 +40,7 @@ TEST(DoublePendulum, Step)
   std::string projectPath = PROJECT_BINARY_PATH;
 
   ignition::common::SystemPaths sp;
-  sp.AddPluginPaths(projectPath + "/double-pendulum");
+  sp.AddPluginPaths(projectPath + "/lib");
   std::string path = sp.FindSharedLibrary("double-pendulum");
 
   ignition::common::PluginLoader loader;
