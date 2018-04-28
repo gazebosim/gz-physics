@@ -5,23 +5,23 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial software-properties-common
+          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common
+          - sh tools/code_check.sh
           - gcc -v
           - g++ -v
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" > /etc/apt/sources.list.d/gazebo-stable.list
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease xenial main" > /etc/apt/sources.list.d/gazebo-prerelease.list
           - apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
-            libignition-cmake-dev
-            libignition-math4-dev
-          # Build ignition common from source until PluginPtrSemantics is merged
-          - apt-get -y install
-            libavdevice-dev
+            libignition-cmake1-dev
+            libignition-math5-dev
             libignition-common-dev
-          - apt-get -y remove
+          # Build ignition common from source until common2 prerelease is made
+          - apt-get remove -y
             libignition-common-dev
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b PluginPtrSemantics
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b default
           - cd ign-common
           - mkdir build
           - cd build

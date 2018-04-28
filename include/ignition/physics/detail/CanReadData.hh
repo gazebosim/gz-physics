@@ -90,7 +90,7 @@ namespace ignition
         const ReadOptions &_options)
     {
       DataStatusMask mask;
-      if(_options.onlyReadUnqueriedData)
+      if (_options.onlyReadUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
 
       mask.exist = DataStatusMask::MUST;
@@ -121,11 +121,12 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Derived, typename Specification>
     template <typename CompositeType>
-    void CanReadExpectedData<Derived, Specification>::ReadExpectedData(const CompositeType &_data,
+    void CanReadExpectedData<Derived, Specification>::ReadExpectedData(
+        const CompositeType &_data,
         const ReadOptions &_options)
     {
       DataStatusMask mask;
-      if(_options.onlyReadUnqueriedData)
+      if (_options.onlyReadUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
 
       mask.exist = DataStatusMask::MUST;
