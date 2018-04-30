@@ -26,6 +26,7 @@ namespace ignition
   {
     /// \brief This class allows us to effectively perform type erasure while
     /// still being able to copy, move, and clone the values of objects.
+    /// \private
     class Cloneable
     {
       /// \brief Default constructor
@@ -69,6 +70,7 @@ namespace ignition
     /// \warning In order to minimize overhead, this class does not do any type
     /// safety checks. It should only be used by a class like CompositeData
     /// which takes responsibility for ensuring type safety.
+    /// \private
     template <typename T>
     class MakeCloneable final : public T, public Cloneable
     {

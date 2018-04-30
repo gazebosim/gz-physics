@@ -372,9 +372,9 @@ namespace ignition
       /// a Data-type object, it gets returned as a Data*. Otherwise, a nullptr
       /// is returned.
       ///
-      /// If _mode is set to QUERY_SILENT, then calling this function will not
-      /// cause the "queried" flag to change (see UnqueriedEntries() for more
-      /// on the "queried" flag).
+      /// If _mode is set to QueryMode::SILENT, then calling this function will
+      /// not cause the "queried" flag to change (see UnqueriedEntries() for
+      /// more on the "queried" flag).
       ///
       /// Example usage:
       ///
@@ -468,9 +468,9 @@ namespace ignition
       /// \brief Const-qualified version of Query. This can be used to retrieve
       /// data from a `const CompositeData`.
       ///
-      /// If "mode" is set to QUERY_SILENT, then calling this function will not
-      /// cause the "queried" flag to change (see UnqueriedEntries() for more
-      /// on the "queried" flag).
+      /// If "mode" is set to QueryMode::SILENT, then calling this function will
+      /// not cause the "queried" flag to change (see UnqueriedEntries() for
+      /// more on the "queried" flag).
       ///
       /// Example usage:
       ///
@@ -541,7 +541,7 @@ namespace ignition
 
       /// \brief Returns true if this CompositeData has an object of type Data,
       /// otherwise returns false. This is literally equivalent to
-      /// (nullptr != Query<Data>(QUERY_SILENT)).
+      /// (nullptr != Query<Data>(QueryMode::SILENT)).
       ///
       /// \tparam Data
       ///   The type of data entry to check for
@@ -958,6 +958,7 @@ namespace ignition
       /// CompositeData. See ignition/physics/detail/CompositeData.hh for the
       /// definition. This class is public so that helper functions can use it
       /// without being friends of the class.
+      /// \private
       public: struct DataEntry;
 
       // We make this typedef public so that helper functions can use it without

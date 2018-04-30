@@ -5,7 +5,8 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial
+          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck
+          - sh tools/code_check.sh
           - gcc -v
           - g++ -v
           # Ignition dependencies
@@ -16,7 +17,17 @@ pipelines:
           - apt-get -y install
             libignition-cmake1-dev
             libignition-math5-dev
-            libignition-common2-dev
+            libignition-common-dev
+          # Build ignition common from source until common2 prerelease is made
+          - apt-get remove -y
+            libignition-common-dev
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b default
+          - cd ign-common
+          - mkdir build
+          - cd build
+          - cmake ..
+          - make install
+          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
