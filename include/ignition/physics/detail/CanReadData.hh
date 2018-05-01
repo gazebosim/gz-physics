@@ -34,9 +34,9 @@ namespace ignition
       struct ReadDataOperation
       {
         /// \brief Do the operation
-        public: static void Operate(Derived* yourClass, CompositeType &data)
+        public: static void Operate(Derived *_yourClass, CompositeType &_data)
         {
-          const Data * const query = data.template Query<Data>();
+          const Data * const query = _data.template Query<Data>();
           assert(query);
 
           /// READ CAREFULLY: If you have arrived here by way of a compiler
@@ -59,7 +59,7 @@ namespace ignition
           /// };
           ///
           ///    ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
-          yourClass->Read(*query);
+          _yourClass->Read(*query);
         }
       };
     }

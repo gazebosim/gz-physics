@@ -69,10 +69,10 @@ namespace ignition
       /// compiling if its conditions are not met.
       public: template <typename CompositeType>
       static void Operate(
-          Performer *performer,
-          CompositeType &data,
-          const DataStatusMask &mask,
-          const bool onlyCompile = false);
+          Performer *_performer,
+          CompositeType &_data,
+          const DataStatusMask &_mask,
+          const bool _onlyCompile = false);
 
       /// \brief When SubSpecification is able to provide one of the desired
       /// data specifications, this overload gets called.
@@ -80,18 +80,18 @@ namespace ignition
                         typename CompositeType>
       static void SubOperate(
           detail::type<Data>, detail::type<SubSpecification>,
-          Performer *performer, CompositeType &data,
-          const DataStatusMask &mask,
-          History &history);
+          Performer *_performer, CompositeType &_data,
+          const DataStatusMask &_mask,
+          History &_history);
 
       /// \brief When SubSpecification could not provide one of the desired data
       /// specifications, we will instead search it for sub-specifications.
       public: template <typename SubSpecification, typename CompositeType>
       static void SubOperate(
           detail::type<void>, detail::type<SubSpecification>,
-          Performer *performer, CompositeType &data,
-          const DataStatusMask &mask,
-          History &history);
+          Performer *_performer, CompositeType &_data,
+          const DataStatusMask &_mask,
+          History &_history);
 
       /// \brief When SubSpecification does not have the desired data
       /// specifications, nor has any sub-specifications, we terminate here.
