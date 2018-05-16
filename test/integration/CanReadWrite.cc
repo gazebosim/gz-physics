@@ -30,10 +30,7 @@ using ignition::physics::CanReadExpectedData;
 using ignition::physics::CanWriteExpectedData;
 
 template <typename ReadSpec>
-class SomeClass
-    : public CanReadRequiredData<SomeClass<ReadSpec>, ReadSpec>,
-      public CanReadExpectedData<SomeClass<ReadSpec>, ReadSpec>,
-      public CanWriteExpectedData<SomeClass<ReadSpec>, RequireIntDouble>
+class SomeClassBase
 {
   public: StringData sdata;
   public: std::size_t scount;
@@ -50,7 +47,7 @@ class SomeClass
   public: FloatData fdata;
   public: std::size_t fcount;
 
-  SomeClass()
+  SomeClassBase()
     : scount(0),
       bcount(0),
       ccount(0),
@@ -111,6 +108,21 @@ class SomeClass
   }
 };
 
+template <typename ReadSpec>
+class SomeClass
+    : public SomeClassBase<ReadSpec>,
+      public CanReadRequiredData<SomeClass<ReadSpec>, ReadSpec>,
+      public CanReadExpectedData<SomeClass<ReadSpec>, ReadSpec>,
+      public CanWriteExpectedData<SomeClass<ReadSpec>, RequireIntDouble>
+{
+  public: SomeClass()
+    : SomeClassBase<ReadSpec>()
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
 TEST(CanReadWrite, ReadWriteData)
 {
   ignition::physics::CompositeData input;
@@ -147,6 +159,7 @@ TEST(CanReadWrite, ReadWriteData)
   EXPECT_EQ('8', output.Get<CharData>().myChar);
 }
 
+/////////////////////////////////////////////////
 TEST(CanReadWrite, OnlyReadOnce)
 {
   ignition::physics::CompositeData input;
