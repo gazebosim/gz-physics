@@ -272,7 +272,7 @@ TEST(CanReadWrite, ReadExpected)
     // now add the expected data (Int, Float)
     // and reset queries
     data.Get<IntData>().myInt = 42;
-    data.Get<FloatData>().myFloat = 19.99;
+    data.Get<FloatData>().myFloat = 19.99f;
     data.ResetQueries();
 
     // read again with default ReadOptions
@@ -325,7 +325,7 @@ TEST(CanReadWrite, ReadRequired)
     // read from data structure that has both required and expected fields
     RequireStringBoolChar data;
     data.Get<IntData>().myInt = 42;
-    data.Get<FloatData>().myFloat = 19.99;
+    data.Get<FloatData>().myFloat = 19.99f;
 
     // (String, Bool, and Char): only those will be read
     something.ReadRequiredData(data);
