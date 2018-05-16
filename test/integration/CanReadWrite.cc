@@ -28,6 +28,7 @@
 using ignition::physics::CanReadRequiredData;
 using ignition::physics::CanReadExpectedData;
 using ignition::physics::CanWriteExpectedData;
+using ignition::physics::CanWriteRequiredData;
 
 template <typename ReadSpec>
 class SomeClassBase
@@ -193,7 +194,7 @@ TEST(CanReadWrite, OnlyReadOnce)
 template <typename ReadSpec>
 class SomeClassReadExpected
     : public SomeClassBase<ReadSpec>,
-      public CanReadExpectedData<SomeClass<ReadSpec>, ReadSpec>
+      public CanReadExpectedData<SomeClassReadExpected<ReadSpec>, ReadSpec>
 {
   public: SomeClassReadExpected()
     : SomeClassBase<ReadSpec>()
@@ -288,7 +289,7 @@ TEST(CanReadWrite, ReadExpected)
 template <typename ReadSpec>
 class SomeClassReadRequired
     : public SomeClassBase<ReadSpec>,
-      public CanReadRequiredData<SomeClass<ReadSpec>, ReadSpec>
+      public CanReadRequiredData<SomeClassReadRequired<ReadSpec>, ReadSpec>
 {
   public: SomeClassReadRequired()
     : SomeClassBase<ReadSpec>()
@@ -364,6 +365,260 @@ TEST(CanReadWrite, ReadRequired)
     EXPECT_EQ(2u, something.ccount);
     EXPECT_EQ(0u, something.icount);
     EXPECT_EQ(0u, something.fcount);
+  }
+}
+
+template <typename WriteSpec>
+class SomeClassWriteExpected
+    : public SomeClassBase<WriteSpec>,
+      public CanWriteExpectedData<SomeClassWriteExpected<WriteSpec>, WriteSpec>
+{
+  public: SomeClassWriteExpected()
+    : SomeClassBase<WriteSpec>()
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
+TEST(CanReadWrite, WriteExpected)
+{
+  SomeClassWriteExpected<RequireIntDouble> something;
+
+  {
+    ignition::physics::CompositeData output;
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_FALSE(output.Has<StringData>());
+    EXPECT_FALSE(output.Has<CharData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // Write with default options
+    something.WriteExpectedData(output);
+    EXPECT_TRUE(output.Has<DoubleData>());
+    EXPECT_TRUE(output.Has<IntData>());
+    EXPECT_TRUE(output.Has<StringData>());
+    EXPECT_TRUE(output.Has<CharData>());
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    EXPECT_EQ("seventy-seven", output.Get<StringData>().myString);
+    EXPECT_EQ('8', output.Get<CharData>().myChar);
+    EXPECT_EQ(4u, output.AllEntries().size());
+  }
+
+  {
+    ignition::physics::CompositeData output;
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_FALSE(output.Has<StringData>());
+    EXPECT_FALSE(output.Has<CharData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // Write with explicit default options
+    ignition::physics::WriteOptions opt;
+    opt.skipMissingData = false;
+    opt.onlyWriteUnqueriedData = true;
+    something.WriteExpectedData(output, opt);
+    EXPECT_TRUE(output.Has<DoubleData>());
+    EXPECT_TRUE(output.Has<IntData>());
+    EXPECT_TRUE(output.Has<StringData>());
+    EXPECT_TRUE(output.Has<CharData>());
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    EXPECT_EQ("seventy-seven", output.Get<StringData>().myString);
+    EXPECT_EQ('8', output.Get<CharData>().myChar);
+    EXPECT_EQ(4u, output.AllEntries().size());
+  }
+
+  {
+    ignition::physics::CompositeData output;
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_FALSE(output.Has<StringData>());
+    EXPECT_FALSE(output.Has<CharData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // skip missing data
+    // output is initially empty, so nothing should be written
+    ignition::physics::WriteOptions opt;
+    opt.skipMissingData = true;
+    opt.onlyWriteUnqueriedData = true;
+    something.WriteExpectedData(output, opt);
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_FALSE(output.Has<StringData>());
+    EXPECT_FALSE(output.Has<CharData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // create the expected data entries
+    output.Get<DoubleData>().myDouble = 1.23;
+    output.Get<IntData>().myInt = 123;
+    output.Get<StringData>().myString = "initial value";
+    output.Get<CharData>().myChar = 'i';
+    EXPECT_TRUE(output.Has<DoubleData>());
+    EXPECT_TRUE(output.Has<IntData>());
+    EXPECT_TRUE(output.Has<StringData>());
+    EXPECT_TRUE(output.Has<CharData>());
+    EXPECT_DOUBLE_EQ(1.23, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(123, output.Get<IntData>().myInt);
+    EXPECT_EQ("initial value", output.Get<StringData>().myString);
+    EXPECT_EQ('i', output.Get<CharData>().myChar);
+    EXPECT_EQ(4u, output.AllEntries().size());
+
+    // write again with same options
+    // but it shouldn't write because data are queried
+    something.WriteExpectedData(output, opt);
+    EXPECT_DOUBLE_EQ(1.23, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(123, output.Get<IntData>().myInt);
+    EXPECT_EQ("initial value", output.Get<StringData>().myString);
+    EXPECT_EQ('i', output.Get<CharData>().myChar);
+
+    // unquery and write again
+    output.ResetQueries();
+    something.WriteExpectedData(output, opt);
+    // required data are updated
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    EXPECT_EQ("seventy-seven", output.Get<StringData>().myString);
+    EXPECT_EQ('8', output.Get<CharData>().myChar);
+
+    // change value, which marks as queried
+    output.Get<DoubleData>().myDouble = 4.56;
+    output.Get<IntData>().myInt = 456;
+    output.Get<StringData>().myString = "queried again";
+    output.Get<CharData>().myChar = 'Q';
+
+    // write again with same options, and it won't change
+    something.WriteExpectedData(output, opt);
+    EXPECT_DOUBLE_EQ(4.56, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(456, output.Get<IntData>().myInt);
+    EXPECT_EQ("queried again", output.Get<StringData>().myString);
+    EXPECT_EQ('Q', output.Get<CharData>().myChar);
+
+    // change options to write all data regardless of query status
+    // write and expect change
+    opt.onlyWriteUnqueriedData = false;
+    something.WriteExpectedData(output, opt);
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    EXPECT_EQ("seventy-seven", output.Get<StringData>().myString);
+    EXPECT_EQ('8', output.Get<CharData>().myChar);
+  }
+}
+
+template <typename WriteSpec>
+class SomeClassWriteRequired
+    : public SomeClassBase<WriteSpec>,
+      public CanWriteRequiredData<SomeClassWriteRequired<WriteSpec>, WriteSpec>
+{
+  public: SomeClassWriteRequired()
+    : SomeClassBase<WriteSpec>()
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
+TEST(CanReadWrite, WriteRequired)
+{
+  SomeClassWriteRequired<RequireIntDouble> something;
+
+  {
+    ignition::physics::CompositeData output;
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // Write with default options
+    something.WriteRequiredData(output);
+    EXPECT_TRUE(output.Has<DoubleData>());
+    EXPECT_TRUE(output.Has<IntData>());
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    EXPECT_EQ(2u, output.AllEntries().size());
+  }
+
+  {
+    ignition::physics::CompositeData output;
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // Write with explicit default options
+    ignition::physics::WriteOptions opt;
+    opt.skipMissingData = false;
+    opt.onlyWriteUnqueriedData = true;
+    something.WriteRequiredData(output, opt);
+    EXPECT_TRUE(output.Has<DoubleData>());
+    EXPECT_TRUE(output.Has<IntData>());
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    EXPECT_EQ(2u, output.AllEntries().size());
+  }
+
+  {
+    ignition::physics::CompositeData output;
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // skip missing data
+    // output is initially empty, so nothing should be written
+    ignition::physics::WriteOptions opt;
+    opt.skipMissingData = true;
+    opt.onlyWriteUnqueriedData = true;
+    something.WriteRequiredData(output, opt);
+    EXPECT_FALSE(output.Has<DoubleData>());
+    EXPECT_FALSE(output.Has<IntData>());
+    EXPECT_EQ(0u, output.AllEntries().size());
+
+    // create the required data entries and an expected one too
+    output.Get<DoubleData>().myDouble = 1.23;
+    output.Get<IntData>().myInt = 123;
+    output.Get<StringData>().myString = "initial value";
+    EXPECT_TRUE(output.Has<DoubleData>());
+    EXPECT_TRUE(output.Has<IntData>());
+    EXPECT_TRUE(output.Has<StringData>());
+    EXPECT_DOUBLE_EQ(1.23, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(123, output.Get<IntData>().myInt);
+    EXPECT_EQ("initial value", output.Get<StringData>().myString);
+    EXPECT_EQ(3u, output.AllEntries().size());
+
+    // write again with same options
+    // but it shouldn't write because data are queried
+    something.WriteRequiredData(output, opt);
+    EXPECT_DOUBLE_EQ(1.23, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(123, output.Get<IntData>().myInt);
+    EXPECT_EQ("initial value", output.Get<StringData>().myString);
+
+    // unquery and write again
+    output.ResetQueries();
+    something.WriteRequiredData(output, opt);
+    // required data are updated
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    // expected data is not changed
+    EXPECT_EQ("initial value", output.Get<StringData>().myString);
+
+    // change value, which marks as queried
+    output.Get<DoubleData>().myDouble = 4.56;
+    output.Get<IntData>().myInt = 456;
+    output.Get<StringData>().myString = "queried again";
+
+    // write again with same options, and it won't change
+    something.WriteRequiredData(output, opt);
+    EXPECT_DOUBLE_EQ(4.56, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(456, output.Get<IntData>().myInt);
+    EXPECT_EQ("queried again", output.Get<StringData>().myString);
+
+    // change options to write all data regardless of query status
+    // write and expect change
+    opt.onlyWriteUnqueriedData = false;
+    something.WriteRequiredData(output, opt);
+    EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
+    EXPECT_EQ(67, output.Get<IntData>().myInt);
+    // expected data is not changed
+    EXPECT_EQ("queried again", output.Get<StringData>().myString);
   }
 }
 
