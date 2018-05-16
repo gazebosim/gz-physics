@@ -5,7 +5,7 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck
+          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common
           - sh tools/code_check.sh
           - gcc -v
           - g++ -v
@@ -17,20 +17,7 @@ pipelines:
           - apt-get -y install
             libignition-cmake1-dev
             libignition-math5-dev
-          # Build ignition common from source until PluginPtrSemantics is merged
-          - apt-get -y install
-            libavdevice-dev
-            libignition-common-dev
-          # Build ignition common from source until common2 prerelease is made
-          - apt-get remove -y
-            libignition-common-dev
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b default
-          - cd ign-common
-          - mkdir build
-          - cd build
-          - cmake ..
-          - make install
-          - cd ../..
+            libignition-common2-dev
           # DARTsim
           - apt-add-repository -y ppa:dartsim
           - apt-get update
