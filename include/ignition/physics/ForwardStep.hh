@@ -87,6 +87,7 @@ namespace ignition
 
     struct TimeStep
     {
+      // cppcheck-suppress unusedStructMember
       double dt;
     };
 
