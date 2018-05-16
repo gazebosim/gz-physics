@@ -190,6 +190,183 @@ TEST(CanReadWrite, OnlyReadOnce)
   EXPECT_EQ(1u, redundant.fcount);
 }
 
+template <typename ReadSpec>
+class SomeClassReadExpected
+    : public SomeClassBase<ReadSpec>,
+      public CanReadExpectedData<SomeClass<ReadSpec>, ReadSpec>
+{
+  public: SomeClassReadExpected()
+    : SomeClassBase<ReadSpec>()
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
+TEST(CanReadWrite, ReadExpected)
+{
+  SomeClassReadExpected<RequireStringBoolChar> something;
+  // expect no reads to have happened yet
+  EXPECT_EQ(0u, something.scount);
+  EXPECT_EQ(0u, something.bcount);
+  EXPECT_EQ(0u, something.ccount);
+  EXPECT_EQ(0u, something.icount);
+  EXPECT_EQ(0u, something.fcount);
+
+  {
+    ignition::physics::CompositeData empty;
+
+    // nothing happens if reading from empty CompositeData
+    something.ReadExpectedData(empty);
+    EXPECT_EQ(0u, something.scount);
+    EXPECT_EQ(0u, something.bcount);
+    EXPECT_EQ(0u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+  }
+
+  {
+    RequireStringBoolChar data;
+
+    // read from data structure that only has its required fields
+    // (String, Bool, and Char): only those will be read
+    something.ReadExpectedData(data);
+    EXPECT_EQ(1u, something.scount);
+    EXPECT_EQ(1u, something.bcount);
+    EXPECT_EQ(1u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+
+    // read again with default ReadOptions
+    // it should skip the required data since it's already been queried
+    // so nothing should happen
+    something.ReadExpectedData(data);
+    EXPECT_EQ(1u, something.scount);
+    EXPECT_EQ(1u, something.bcount);
+    EXPECT_EQ(1u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+
+    ignition::physics::ReadOptions opt;
+    opt.onlyReadUnqueriedData = true;
+    // repeat with explicit option to skip queried data
+    // again nothing happens
+    something.ReadExpectedData(data, opt);
+    EXPECT_EQ(1u, something.scount);
+    EXPECT_EQ(1u, something.bcount);
+    EXPECT_EQ(1u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+
+    opt.onlyReadUnqueriedData = false;
+    // now force to read all data
+    // data is read again
+    something.ReadExpectedData(data, opt);
+    EXPECT_EQ(2u, something.scount);
+    EXPECT_EQ(2u, something.bcount);
+    EXPECT_EQ(2u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+
+    // now add the expected data (Int, Float)
+    // and reset queries
+    data.Get<IntData>().myInt = 42;
+    data.Get<FloatData>().myFloat = 19.99;
+    data.ResetQueries();
+
+    // read again with default ReadOptions
+    // it should read both Required and Expected data
+    something.ReadExpectedData(data);
+    EXPECT_EQ(3u, something.scount);
+    EXPECT_EQ(3u, something.bcount);
+    EXPECT_EQ(3u, something.ccount);
+    EXPECT_EQ(1u, something.icount);
+    EXPECT_EQ(1u, something.fcount);
+  }
+}
+
+template <typename ReadSpec>
+class SomeClassReadRequired
+    : public SomeClassBase<ReadSpec>,
+      public CanReadRequiredData<SomeClass<ReadSpec>, ReadSpec>
+{
+  public: SomeClassReadRequired()
+    : SomeClassBase<ReadSpec>()
+  {
+    // Do nothing
+  }
+};
+
+/////////////////////////////////////////////////
+TEST(CanReadWrite, ReadRequired)
+{
+  SomeClassReadRequired<RequireStringBoolChar> something;
+  // expect no reads to have happened yet
+  EXPECT_EQ(0u, something.scount);
+  EXPECT_EQ(0u, something.bcount);
+  EXPECT_EQ(0u, something.ccount);
+  EXPECT_EQ(0u, something.icount);
+  EXPECT_EQ(0u, something.fcount);
+
+  {
+    ignition::physics::CompositeData empty;
+
+    // nothing happens if reading from empty CompositeData
+    something.ReadRequiredData(empty);
+    EXPECT_EQ(0u, something.scount);
+    EXPECT_EQ(0u, something.bcount);
+    EXPECT_EQ(0u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+  }
+
+  {
+    // read from data structure that has both required and expected fields
+    RequireStringBoolChar data;
+    data.Get<IntData>().myInt = 42;
+    data.Get<FloatData>().myFloat = 19.99;
+
+    // (String, Bool, and Char): only those will be read
+    something.ReadRequiredData(data);
+    EXPECT_EQ(1u, something.scount);
+    EXPECT_EQ(1u, something.bcount);
+    EXPECT_EQ(1u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+
+    // read again with default ReadOptions
+    // it should skip the required data since it's already been queried
+    // so nothing should happen
+    something.ReadRequiredData(data);
+    EXPECT_EQ(1u, something.scount);
+    EXPECT_EQ(1u, something.bcount);
+    EXPECT_EQ(1u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+
+    ignition::physics::ReadOptions opt;
+    opt.onlyReadUnqueriedData = true;
+    // repeat with explicit option to skip queried data
+    // again nothing happens
+    something.ReadRequiredData(data, opt);
+    EXPECT_EQ(1u, something.scount);
+    EXPECT_EQ(1u, something.bcount);
+    EXPECT_EQ(1u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+
+    opt.onlyReadUnqueriedData = false;
+    // now force to read all data
+    // data is read again
+    something.ReadRequiredData(data, opt);
+    EXPECT_EQ(2u, something.scount);
+    EXPECT_EQ(2u, something.bcount);
+    EXPECT_EQ(2u, something.ccount);
+    EXPECT_EQ(0u, something.icount);
+    EXPECT_EQ(0u, something.fcount);
+  }
+}
+
 /////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
