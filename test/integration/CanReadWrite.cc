@@ -127,11 +127,11 @@ TEST(CanReadWrite, ReadWriteData)
   EXPECT_FALSE(something.bdata.myBool);
   EXPECT_EQ('d', something.cdata.myChar);
   EXPECT_EQ(55, something.idata.myInt);
-  EXPECT_NEAR(9.5, something.fdata.myFloat, 1e-8);
+  EXPECT_FLOAT_EQ(9.5, something.fdata.myFloat);
 
   something.ReadExpectedData(input);
   EXPECT_EQ(92, something.idata.myInt);
-  EXPECT_NEAR(93.5, something.fdata.myFloat, 1e-8);
+  EXPECT_FLOAT_EQ(93.5, something.fdata.myFloat);
 
   EXPECT_EQ(1u, something.scount);
   EXPECT_EQ(1u, something.bcount);
@@ -142,7 +142,7 @@ TEST(CanReadWrite, ReadWriteData)
   ignition::physics::CompositeData output;
   something.WriteExpectedData(output);
   EXPECT_EQ(67, output.Get<IntData>().myInt);
-  EXPECT_NEAR(7.2, output.Get<DoubleData>().myDouble, 1e-8);
+  EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
   EXPECT_EQ("seventy-seven", output.Get<StringData>().myString);
   EXPECT_EQ('8', output.Get<CharData>().myChar);
 }
@@ -164,11 +164,11 @@ TEST(CanReadWrite, OnlyReadOnce)
   EXPECT_FALSE(redundant.bdata.myBool);
   EXPECT_EQ('d', redundant.cdata.myChar);
   EXPECT_EQ(55, redundant.idata.myInt);
-  EXPECT_NEAR(9.5, redundant.fdata.myFloat, 1e-8);
+  EXPECT_FLOAT_EQ(9.5, redundant.fdata.myFloat);
 
   redundant.ReadExpectedData(input);
   EXPECT_EQ(92, redundant.idata.myInt);
-  EXPECT_NEAR(93.5, redundant.fdata.myFloat, 1e-8);
+  EXPECT_FLOAT_EQ(93.5, redundant.fdata.myFloat);
 
   EXPECT_EQ(1u, redundant.scount);
   EXPECT_EQ(1u, redundant.bcount);
