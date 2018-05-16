@@ -71,6 +71,7 @@ namespace ignition
     ///
     /// \code
     ///     class MyClass : public CanReadRequiredData<
+    ///           MyClass,
     ///           SpecifyData<MySpecification1,
     ///                       MySpecification2,
     ///                       MySpecification3> >
@@ -134,6 +135,7 @@ namespace ignition
     ///
     /// \code
     ///     class MyClass : public CanReadExpectedData<
+    ///           MyClass,
     ///           SpecifyData<MySpecification1,
     ///                       MySpecification2,
     ///                       MySpecification3> >
