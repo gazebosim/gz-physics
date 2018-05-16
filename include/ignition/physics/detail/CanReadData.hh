@@ -34,9 +34,9 @@ namespace ignition
       struct ReadDataOperation
       {
         /// \brief Do the operation
-        public: static void Operate(Derived* yourClass, CompositeType &data)
+        public: static void Operate(Derived *_yourClass, CompositeType &_data)
         {
-          const Data * const query = data.template Query<Data>();
+          const Data * const query = _data.template Query<Data>();
           assert(query);
 
           /// READ CAREFULLY: If you have arrived here by way of a compiler
@@ -59,7 +59,7 @@ namespace ignition
           /// };
           ///
           ///    ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
-          yourClass->Read(*query);
+          _yourClass->Read(*query);
         }
       };
     }
@@ -90,7 +90,7 @@ namespace ignition
         const ReadOptions &_options)
     {
       DataStatusMask mask;
-      if(_options.onlyReadUnqueriedData)
+      if (_options.onlyReadUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
 
       mask.exist = DataStatusMask::MUST;
@@ -121,11 +121,12 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Derived, typename Specification>
     template <typename CompositeType>
-    void CanReadExpectedData<Derived, Specification>::ReadExpectedData(const CompositeType &_data,
+    void CanReadExpectedData<Derived, Specification>::ReadExpectedData(
+        const CompositeType &_data,
         const ReadOptions &_options)
     {
       DataStatusMask mask;
-      if(_options.onlyReadUnqueriedData)
+      if (_options.onlyReadUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
 
       mask.exist = DataStatusMask::MUST;

@@ -55,10 +55,12 @@ namespace ignition
     /// Note that this is a CRTP class, so you must pass the name of your class
     /// in as the first template argument when inheriting it, e.g.:
     ///
-    ///     class MyClass : public CanWriteRequiredData<MyClass, MySpecification>
-    ///     {
-    ///       // ... define my class ...
-    ///     };
+    /// \code
+    ///   class MyClass : public CanWriteRequiredData<MyClass, MySpecification>
+    ///   {
+    ///     // ... define my class ...
+    ///   };
+    /// \endcode
     ///
     /// You may also use CanWriteExpectedData if you want to further guarantee
     /// that your class is able to read all the expected data (recommended).
@@ -77,13 +79,16 @@ namespace ignition
     /// once and combine the Specifications using SpecifyData<Specification1,
     /// Specification2, ...>. For example:
     ///
+    /// \code
     ///     class MyClass : public CanWriteRequiredData<
+    ///           MyClass,
     ///           SpecifyData<MySpecification1,
     ///                       MySpecification2,
     ///                       MySpecification3> >
     ///     {
     ///       // ... define my class ...
     ///     };
+    /// \endcode
     template <typename Derived, typename Specification>
     class CanWriteRequiredData
     {
@@ -100,20 +105,22 @@ namespace ignition
           const WriteOptions &_options = WriteOptions()) const;
     };
 
-    /// CanWriteExpectedData provides compile-time static analysis to ensure that
-    /// the inheriting class provides a Write(~) function overload for each of
-    /// the data types that are listed as expected in the Specification. It also
-    /// provides a function that will invoke Write(~) on each of the expected
-    /// data types (you may indicate whether or not it should only invoke them
-    /// on unqueried data).
+    /// CanWriteExpectedData provides compile-time static analysis to ensure
+    /// that the inheriting class provides a Write(~) function overload for each
+    /// of the data types that are listed as expected in the Specification. It
+    /// also provides a function that will invoke Write(~) on each of the
+    /// expected data types (you may indicate whether or not it should only
+    /// invoke them on unqueried data).
     ///
     /// Note that this is a CRTP class, so you must pass the name of your class
     /// in as the first template argument when inheriting it, e.g.:
     ///
-    ///     class MyClass : public CanWriteExpectedData<MyClass, MySpecification>
-    ///     {
-    ///       // ... define my class ...
-    ///     };
+    /// \code
+    ///   class MyClass : public CanWriteExpectedData<MyClass, MySpecification>
+    ///   {
+    ///     // ... define my class ...
+    ///   };
+    /// \endcode
     ///
     /// You may instead use CanWriteRequiredData if you only want to guarantee
     /// that your class is able to read the required data.
@@ -128,17 +135,20 @@ namespace ignition
     /// While you can technically inherit CanWriteRequiredData multiple times
     /// and provide each base with a different Specification, this is strongly
     /// discouraged because then you will be left with multiple ambiguous
-    /// versions of WriteExpectedData(~). Instead, it is beter to inherit it once
-    /// and combine the Specifications using SpecifyData<Specification1,
+    /// versions of WriteExpectedData(~). Instead, it is beter to inherit it
+    /// once and combine the Specifications using SpecifyData<Specification1,
     /// Specification2, ...>. For example:
     ///
+    /// \code
     ///     class MyClass : public CanWriteExpectedData<
+    ///           MyClass,
     ///           SpecifyData<MySpecification1,
     ///                       MySpecification2,
     ///                       MySpecification3> >
     ///     {
     ///       // ... define my class ...
     ///     };
+    /// \endcode
     template <typename Derived, typename Specification>
     class CanWriteExpectedData
     {
@@ -150,8 +160,9 @@ namespace ignition
       /// Call this function to read all the types in _data that are listed as
       /// expected in the Specification. Setting _onlyWriteUnqueriedData to true
       /// will make it so that only data entries that have not been queried will
-      /// be passed to the Write(~) function. If _onlyWriteUnqueriedData is false,
-      /// then all data that the Specification lists as expected will be read.
+      /// be passed to the Write(~) function. If _onlyWriteUnqueriedData is
+      /// false, then all data that the Specification lists as expected will be
+      /// read.
       public: template <typename CompositeType>
       void WriteExpectedData(
           CompositeType &_data,

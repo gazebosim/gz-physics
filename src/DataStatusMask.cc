@@ -22,33 +22,33 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
-    DataStatusMask::DataStatusMask(const Condition e,
-                                   const Condition q,
-                                   const Condition r)
-      : exist(e),
-        queried(q),
-        required(r)
+    DataStatusMask::DataStatusMask(const Condition _e,
+                                   const Condition _q,
+                                   const Condition _r)
+      : exist(_e),
+        queried(_q),
+        required(_r)
     {
       // Do nothing
     }
 
     /////////////////////////////////////////////////
     bool DataStatusMask::ConditionSatisfied(
-        const DataStatusMask::Condition condition,
-        const bool value)
+        const DataStatusMask::Condition _condition,
+        const bool _value)
     {
-      return ((DataStatusMask::MUST == condition && value)
-           || (DataStatusMask::MUST_NOT == condition && !value)
-           || (DataStatusMask::EITHER == condition));
+      return ((DataStatusMask::MUST == _condition && _value)
+           || (DataStatusMask::MUST_NOT == _condition && !_value)
+           || (DataStatusMask::EITHER == _condition));
     }
 
     /////////////////////////////////////////////////
     bool DataStatusMask::Satisfied(
-        const CompositeData::DataStatus &status) const
+        const CompositeData::DataStatus &_status) const
     {
-      return (ConditionSatisfied(this->exist, status.exists)
-           && ConditionSatisfied(this->queried, status.queried)
-           && ConditionSatisfied(this->required, status.required));
+      return (ConditionSatisfied(this->exist, _status.exists)
+           && ConditionSatisfied(this->queried, _status.queried)
+           && ConditionSatisfied(this->required, _status.required));
     }
   }
 }

@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 #define IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 
+#include <string>
 #include <unordered_set>
 
 #include "ignition/physics/SpecifyData.hh"
@@ -68,35 +69,35 @@ namespace ignition
       /// compiling if its conditions are not met.
       public: template <typename CompositeType>
       static void Operate(
-          Performer *performer,
-          CompositeType &data,
-          const DataStatusMask &mask,
-          const bool onlyCompile = false);
+          Performer *_performer,
+          CompositeType &_data,
+          const DataStatusMask &_mask,
+          const bool _onlyCompile = false);
 
       /// \brief When SubSpecification is able to provide one of the desired
       /// data specifications, this overload gets called.
       public: template <typename Data, typename SubSpecification,
                         typename CompositeType>
       static void SubOperate(
-          type<Data>, type<SubSpecification>,
-          Performer *performer, CompositeType &data,
-          const DataStatusMask &mask,
-          History &history);
+          detail::type<Data>, detail::type<SubSpecification>,
+          Performer *_performer, CompositeType &_data,
+          const DataStatusMask &_mask,
+          History &_history);
 
       /// \brief When SubSpecification could not provide one of the desired data
       /// specifications, we will instead search it for sub-specifications.
       public: template <typename SubSpecification, typename CompositeType>
       static void SubOperate(
-          type<void>, type<SubSpecification>,
-          Performer *performer, CompositeType &data,
-          const DataStatusMask &mask,
-          History &history);
+          detail::type<void>, detail::type<SubSpecification>,
+          Performer *_performer, CompositeType &_data,
+          const DataStatusMask &_mask,
+          History &_history);
 
       /// \brief When SubSpecification does not have the desired data
       /// specifications, nor has any sub-specifications, we terminate here.
       public: template <typename CompositeType>
       static void SubOperate(
-          type<void>, type<void>,
+          detail::type<void>, detail::type<void>,
           Performer*, CompositeType&,
           const DataStatusMask&,
           History&);

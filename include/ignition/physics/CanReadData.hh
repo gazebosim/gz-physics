@@ -45,10 +45,12 @@ namespace ignition
     /// Note that this is a CRTP class, so you must pass the name of your class
     /// in as the first template argument when inheriting it, e.g.:
     ///
+    /// \code
     ///     class MyClass : public CanReadRequiredData<MyClass, MySpecification>
     ///     {
     ///       // ... define my class ...
     ///     };
+    /// \endcode
     ///
     /// You may also use CanReadExpectedData if you want to further guarantee
     /// that your class is able to read all the expected data (recommended).
@@ -67,13 +69,16 @@ namespace ignition
     /// and combine the Specifications using SpecifyData<Specification1,
     /// Specification2, ...>. For example:
     ///
+    /// \code
     ///     class MyClass : public CanReadRequiredData<
+    ///           MyClass,
     ///           SpecifyData<MySpecification1,
     ///                       MySpecification2,
     ///                       MySpecification3> >
     ///     {
     ///       // ... define my class ...
     ///     };
+    /// \endcode
     template <typename Derived, typename Specification>
     class CanReadRequiredData
     {
@@ -83,10 +88,11 @@ namespace ignition
       public: CanReadRequiredData();
 
       /// Call this function to read all the types in _data that are listed as
-      /// required in the Specification. Setting _onlyReadUnqueriedData to true
-      /// will make it so that only data entries that have not been queried will
-      /// be passed to the Read(~) function. If _onlyReadUnqueriedData is false,
-      /// then all data that the Specification lists as required will be read.
+      /// required in the Specification. Setting _options.onlyReadUnqueriedData
+      /// to true will make it so that only data entries that have not been
+      /// queried will be passed to the Read(~) function.
+      /// If _options.onlyReadUnqueriedData is false, then all data that the
+      /// Specification lists as required will be read.
       public: template <typename CompositeType>
       void ReadRequiredData(
           const CompositeType &_data,
@@ -103,10 +109,12 @@ namespace ignition
     /// Note that this is a CRTP class, so you must pass the name of your class
     /// in as the first template argument when inheriting it, e.g.:
     ///
+    /// \code
     ///     class MyClass : public CanReadExpectedData<MyClass, MySpecification>
     ///     {
     ///       // ... define my class ...
     ///     };
+    /// \endcode
     ///
     /// You may instead use CanReadRequiredData if you only want to guarantee
     /// that your class is able to read the required data.
@@ -125,13 +133,16 @@ namespace ignition
     /// and combine the Specifications using SpecifyData<Specification1,
     /// Specification2, ...>. For example:
     ///
+    /// \code
     ///     class MyClass : public CanReadExpectedData<
+    ///           MyClass,
     ///           SpecifyData<MySpecification1,
     ///                       MySpecification2,
     ///                       MySpecification3> >
     ///     {
     ///       // ... define my class ...
     ///     };
+    /// \endcode
     template <typename Derived, typename Specification>
     class CanReadExpectedData
     {
@@ -141,9 +152,10 @@ namespace ignition
       public: CanReadExpectedData();
 
       /// Call this function to read all the types in _data that are listed as
-      /// expected in the Specification. Setting _onlyReadUnqueriedData to true
-      /// will make it so that only data entries that have not been queried will
-      /// be passed to the Read(~) function. If _onlyReadUnqueriedData is false,
+      /// expected in the Specification. Setting _options.onlyReadUnqueriedData
+      /// to true will make it so that only data entries that have not been
+      /// queried will be passed to the Read(~) function. If
+      /// _options.onlyReadUnqueriedData is false,
       /// then all data that the Specification lists as expected will be read.
       public: template <typename CompositeType>
       void ReadExpectedData(
