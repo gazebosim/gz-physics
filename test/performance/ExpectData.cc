@@ -120,6 +120,7 @@ class NaiveCompositionBase
 };
 
 template<typename T>
+// cppcheck-suppress noConstructor
 class NaiveComposition : public NaiveCompositionBase
 {
   public: const T &Get() const { return d; }
