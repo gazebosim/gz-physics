@@ -52,8 +52,9 @@ namespace ignition
     /// each of the required data types (you may indicate whether or not it
     /// should only invoke them on unqueried data).
     ///
-    /// Note that this is a CRTP class, so you must pass the name of your class
-    /// in as the first template argument when inheriting it, e.g.:
+    /// Note that you must pass the name of your class in as the first template
+    /// argument when inheriting it (Curiously Recurring Template Pattern CRTP),
+    /// e.g.:
     ///
     /// \code
     ///   class MyClass : public CanWriteRequiredData<MyClass, MySpecification>
@@ -112,8 +113,9 @@ namespace ignition
     /// expected data types (you may indicate whether or not it should only
     /// invoke them on unqueried data).
     ///
-    /// Note that this is a CRTP class, so you must pass the name of your class
-    /// in as the first template argument when inheriting it, e.g.:
+    /// Note that you must pass the name of your class in as the first template
+    /// argument when inheriting it (Curiously Recurring Template Pattern CRTP),
+    /// e.g.:
     ///
     /// \code
     ///   class MyClass : public CanWriteExpectedData<MyClass, MySpecification>
