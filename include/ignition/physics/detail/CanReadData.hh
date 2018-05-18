@@ -71,7 +71,7 @@ namespace ignition
       /// Calling this function in the constructor guarantees that the derived
       /// class contains all the Read(~) functions that it claims to, otherwise
       /// it will not be able to compile. Note that setting the last argument
-      /// to false ensures that this function does not actually do anything
+      /// to true ensures that this function does not actually do anything
       /// besides compile. Instantiating a completely generic CompositeData type
       /// and DataStatusMask is extremely low-cost, so we do not need to worry
       /// about overhead.
@@ -107,7 +107,7 @@ namespace ignition
       /// Calling this function in the constructor guarantees that the derived
       /// class contains all the Read(~) functions that it claims to, otherwise
       /// it will not be able to compile. Note that setting the last argument
-      /// to false ensures that this function does not actually do anything
+      /// to true ensures that this function does not actually do anything
       /// besides compile. Instantiating a completely generic CompositeData type
       /// and DataStatusMask is extremely low-cost, so we do not need to worry
       /// about overhead.
