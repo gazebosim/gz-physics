@@ -132,12 +132,12 @@ namespace ignition
     ///
     /// Note that you are allowed to inherit both CanReadRequiredData and
     /// CanReadExpectedData while passing different Specifications to each, but
-    /// you should be aware that ReadRequiredData will only handle the data
+    /// you should be aware that ReadRequiredData will only read the data
     /// required by the Specification that is given to CanReadRequiredData.
-    /// Likewise, CanReadExpectedData will only handle the data expected by
+    /// Likewise, ReadExpectedData will only read the data expected by
     /// the Specification that is given to CanReadExpectedData.
     ///
-    /// While you can technically inherit CanReadRequiredData multiple times
+    /// While you can technically inherit CanReadExpectedData multiple times
     /// and provide each base with a different Specification, this is strongly
     /// discouraged because then you will be left with multiple ambiguous
     /// versions of ReadExpectedData(~). Instead, it is beter to inherit it once
