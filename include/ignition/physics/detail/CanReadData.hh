@@ -68,13 +68,13 @@ namespace ignition
     template <typename Derived, typename Specification>
     CanReadRequiredData<Derived, Specification>::CanReadRequiredData()
     {
-      /// Calling this function in the constructor guarantees that the derived
-      /// class contains all the Read(~) functions that it claims to, otherwise
-      /// it will not be able to compile. Note that setting the last argument
-      /// to true ensures that this function does not actually do anything
-      /// besides compile. Instantiating a completely generic CompositeData type
-      /// and DataStatusMask is extremely low-cost, so we do not need to worry
-      /// about overhead.
+      // Calling this function in the constructor guarantees that the derived
+      // class contains all the Read(~) functions that it claims to, otherwise
+      // it will not be able to compile. Note that setting the last argument
+      // to true ensures that this function does not actually do anything
+      // besides compile. Instantiating a completely generic CompositeData type
+      // and DataStatusMask is extremely low-cost, so we do not need to worry
+      // about overhead.
       OperateOnSpecifiedData<
           Specification, FindRequired, detail::ReadDataOperation,
           Derived>::template Operate<const CompositeData>(
@@ -104,13 +104,13 @@ namespace ignition
     template <typename Derived, typename Specification>
     CanReadExpectedData<Derived, Specification>::CanReadExpectedData()
     {
-      /// Calling this function in the constructor guarantees that the derived
-      /// class contains all the Read(~) functions that it claims to, otherwise
-      /// it will not be able to compile. Note that setting the last argument
-      /// to true ensures that this function does not actually do anything
-      /// besides compile. Instantiating a completely generic CompositeData type
-      /// and DataStatusMask is extremely low-cost, so we do not need to worry
-      /// about overhead.
+      // Calling this function in the constructor guarantees that the derived
+      // class contains all the Read(~) functions that it claims to, otherwise
+      // it will not be able to compile. Note that setting the last argument
+      // to true ensures that this function does not actually do anything
+      // besides compile. Instantiating a completely generic CompositeData type
+      // and DataStatusMask is extremely low-cost, so we do not need to worry
+      // about overhead.
       OperateOnSpecifiedData<
           Specification, FindExpected, detail::ReadDataOperation,
           Derived>::template Operate<const CompositeData>(
