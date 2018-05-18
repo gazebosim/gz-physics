@@ -26,6 +26,8 @@ namespace ignition
   {
     /// \brief A struct that defines options for writing data to a CompositeData
     /// object.
+    /// \sa CanWriteExpectedData::WriteExpectedData()
+    /// \sa CanWriteRequiredData::WriteRequiredData()
     struct IGNITION_PHYSICS_VISIBLE WriteOptions
     {
       /// \brief If a data type is not already part of the CompositeData, then
@@ -38,9 +40,11 @@ namespace ignition
       /// write operation on it.
       public: bool onlyWriteUnqueriedData;
 
-      /// \brief Default constructor: New instances will be
-      /// default-constructed for any data types that are missing, and we will
-      /// only hand over unqueried data types for writing.
+      /// \brief Default constructor.
+      /// \param[in] _skipMissing Whether to skip writing fields that aren't
+      /// already present in the output CompositeData object, default to false.
+      /// \param[in] _onlyUnqueried Whether only unqueried data will be read,
+      /// default to true.
       public: explicit WriteOptions(const bool _skipMissing = false,
                                     const bool _onlyUnqueried = true);
     };

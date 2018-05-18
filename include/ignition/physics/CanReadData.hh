@@ -25,13 +25,20 @@ namespace ignition
 {
   namespace physics
   {
+    /// \brief ReadOptions provides customization for the ReadRequiredData
+    /// and ReadExpectedData functions provided by CanReadRequiredData
+    /// and CanReadExpectedData.
+    /// \sa CanReadExpectedData::ReadExpectedData()
+    /// \sa CanReadRequiredData::ReadRequiredData()
     struct IGNITION_PHYSICS_VISIBLE ReadOptions
     {
       /// \brief If a type has already been queried, do not perform the read
       /// operation on it.
       public: bool onlyReadUnqueriedData;
 
-      /// \brief Default constructor: Only unqueried data will be read.
+      /// \brief Default constructor.
+      /// \param[in] _onlyUnqueried Whether only unqueried data will be read,
+      /// default to true.
       public: explicit ReadOptions(const bool _onlyUnqueried = true);
     };
 
