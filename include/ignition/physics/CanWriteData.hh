@@ -43,7 +43,7 @@ namespace ignition
       /// \brief Default constructor.
       /// \param[in] _skipMissing Whether to skip writing fields that aren't
       /// already present in the output CompositeData object, default to false.
-      /// \param[in] _onlyUnqueried Whether only unqueried data will be read,
+      /// \param[in] _onlyUnqueried Whether only unqueried data will be written,
       /// default to true.
       public: explicit WriteOptions(const bool _skipMissing = false,
                                     const bool _onlyUnqueried = true);
@@ -68,7 +68,7 @@ namespace ignition
     /// \endcode
     ///
     /// You may also use CanWriteExpectedData if you want to further guarantee
-    /// that your class is able to read all the expected data (recommended).
+    /// that your class is able to write all the expected data (recommended).
     ///
     /// Note that you are allowed to inherit both CanWriteRequiredData and
     /// CanWriteExpectedData while passing different Specifications to each, but
@@ -98,12 +98,14 @@ namespace ignition
     class CanWriteRequiredData
     {
       /// \brief The ability to compile this constructor ensures that an
-      /// inherited class has functions that can read each of the data types
+      /// inherited class has functions that can write each of the data types
       /// required by the Specification.
       public: CanWriteRequiredData();
 
       /// \brief Call this function to write all the types in _data that are
       /// listed as required in the Specification.
+      /// \param[out] _data CompositeData instance to write to.
+      /// \param[in] _options WriteOptions for customizing the write operation.
       public: template <typename CompositeType>
       void WriteRequiredData(
           CompositeType &_data,
@@ -129,7 +131,7 @@ namespace ignition
     /// \endcode
     ///
     /// You may instead use CanWriteRequiredData if you only want to guarantee
-    /// that your class is able to read the required data.
+    /// that your class is able to write the required data.
     ///
     /// Note that you are allowed to inherit both CanWriteRequiredData and
     /// CanWriteExpectedData while passing different Specifications to each, but
@@ -159,16 +161,18 @@ namespace ignition
     class CanWriteExpectedData
     {
       /// The ability to compile this constructor ensures that an inherited
-      /// class has functions that can read each of the data types expected by
+      /// class has functions that can write each of the data types expected by
       /// the Specification.
       public: CanWriteExpectedData();
 
-      /// Call this function to read all the types in _data that are listed as
+      /// Call this function to write all the types in _data that are listed as
       /// expected in the Specification. Setting _onlyWriteUnqueriedData to true
       /// will make it so that only data entries that have not been queried will
       /// be passed to the Write(~) function. If _onlyWriteUnqueriedData is
       /// false, then all data that the Specification lists as expected will be
-      /// read.
+      /// written.
+      /// \param[out] _data CompositeData instance to write to.
+      /// \param[in] _options WriteOptions for customizing the write operation.
       public: template <typename CompositeType>
       void WriteExpectedData(
           CompositeType &_data,

@@ -101,6 +101,8 @@ namespace ignition
       /// queried will be passed to the Read(~) function.
       /// If _options.onlyReadUnqueriedData is false, then all data that the
       /// Specification lists as required will be read.
+      /// \param[in] _data CompositeData instance to read from.
+      /// \param[in] _options ReadOptions for customizing the read operation.
       public: template <typename CompositeType>
       void ReadRequiredData(
           const CompositeType &_data,
@@ -166,6 +168,8 @@ namespace ignition
       /// queried will be passed to the Read(~) function. If
       /// _options.onlyReadUnqueriedData is false,
       /// then all data that the Specification lists as expected will be read.
+      /// \param[in] _data CompositeData instance to read from.
+      /// \param[in] _options ReadOptions for customizing the read operation.
       public: template <typename CompositeType>
       void ReadExpectedData(
           const CompositeType &_data,
