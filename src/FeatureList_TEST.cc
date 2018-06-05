@@ -170,41 +170,41 @@ TEST(FeatureList_TEST, Requirements)
   // FeatureList where they're needed.
 
   using List1 = FeatureList<RequiresFeatureA>;
-  EXPECT_TRUE( (std::is_base_of<FeatureA, List1>::value) );
-  EXPECT_FALSE( (std::is_base_of<FeatureB, List1>::value) );
-  EXPECT_FALSE( (std::is_base_of<FeatureC, List1>::value) );
+  EXPECT_TRUE( List1::HasFeature<FeatureA>() );
+  EXPECT_FALSE( List1::HasFeature<FeatureB>() );
+  EXPECT_FALSE( List1::HasFeature<FeatureC>() );
 
   using List2 = FeatureList<RequiresFeaturesBC>;
-  EXPECT_FALSE( (std::is_base_of<FeatureA, List2>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureB, List2>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureC, List2>::value) );
+  EXPECT_FALSE( List2::HasFeature<FeatureA>() );
+  EXPECT_TRUE( List2::HasFeature<FeatureB>() );
+  EXPECT_TRUE( List2::HasFeature<FeatureC>() );
 
   using List3 = FeatureList<RequiresFeatureA,
                             RequiresFeaturesBC>;
-  EXPECT_TRUE( (std::is_base_of<FeatureA, List3>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureB, List3>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureC, List3>::value) );
+  EXPECT_TRUE( List3::HasFeature<FeatureA>() );
+  EXPECT_TRUE( List3::HasFeature<FeatureB>() );
+  EXPECT_TRUE( List3::HasFeature<FeatureC>() );
 
   using List4 = FeatureList<
       Conflict1, Conflict2, Conflict3,
       RequiresFeatureA,
       RequiresFeaturesBC>;
-  EXPECT_TRUE( (std::is_base_of<FeatureA, List4>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureB, List4>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureC, List4>::value) );
+  EXPECT_TRUE( List4::HasFeature<FeatureA>() );
+  EXPECT_TRUE( List4::HasFeature<FeatureB>() );
+  EXPECT_TRUE( List4::HasFeature<FeatureC>() );
 
   using List5 = FeatureList<
       RequiresFeatureA,
       RequiresFeaturesBC,
       Conflict1, Conflict2, Conflict3>;
-  EXPECT_TRUE( (std::is_base_of<FeatureA, List5>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureB, List5>::value) );
-  EXPECT_TRUE( (std::is_base_of<FeatureC, List5>::value) );
+  EXPECT_TRUE( List5::HasFeature<FeatureA>() );
+  EXPECT_TRUE( List5::HasFeature<FeatureB>() );
+  EXPECT_TRUE( List5::HasFeature<FeatureC>() );
 
   using List6 = FeatureList<Conflict1, Conflict2, Conflict3, List1>;
-  EXPECT_TRUE( (std::is_base_of<FeatureA, List6>::value) );
-  EXPECT_FALSE( (std::is_base_of<FeatureB, List6>::value) );
-  EXPECT_FALSE( (std::is_base_of<FeatureC, List6>::value) );
+  EXPECT_TRUE( List6::HasFeature<FeatureA>() );
+  EXPECT_FALSE( List6::HasFeature<FeatureB>() );
+  EXPECT_FALSE( List6::HasFeature<FeatureC>() );
 }
 
 int main(int argc, char **argv)
