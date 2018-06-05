@@ -58,7 +58,8 @@ void ExpectConflicts()
   // Do nothing. This is where the variadic template function terminates.
 }
 
-template <bool _expectConflicts, typename LHS, typename RHS, typename... MoreRHS>
+template <bool _expectConflicts, typename LHS, typename RHS,
+          typename... MoreRHS>
 void ExpectConflicts()
 {
   if (_expectConflicts)
