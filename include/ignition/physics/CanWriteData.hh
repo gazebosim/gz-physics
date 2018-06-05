@@ -116,55 +116,9 @@ namespace ignition
           const WriteOptions &_options = WriteOptions()) const;
     };
 
-    /// CanWriteExpectedData provides compile-time static analysis to ensure
-    /// that the inheriting class provides a Write(~) function overload for each
-    /// of the data types that are listed as expected in the Specification. It
-    /// also provides a function that will invoke Write(~) on each of the
-    /// expected data types (you may indicate whether or not it should only
-    /// invoke them on unqueried data).
-    ///
-    /// Note that you must pass the name of your class in as the first template
-    /// argument when inheriting it (Curiously Recurring Template Pattern CRTP),
-    /// e.g.:
-    ///
-    /// \code
-    ///   class MyClass : public CanWriteExpectedData<MyClass, MySpecification>
-    ///   {
-    ///     // ... define my class ...
-    ///   };
-    /// \endcode
-    ///
-    /// You may instead use CanWriteRequiredData if you only want to guarantee
-    /// that your class is able to write the required data.
-    ///
-    /// Note that you are allowed to inherit both CanWriteRequiredData and
-    /// CanWriteExpectedData while passing different Specifications to each, but
-    /// you should be aware that WriteRequiredData will only handle the data
-    /// required by the Specification that is given to CanWriteRequiredData.
-    /// Likewise, CanWriteExpectedData will only handle to the data expected by
-    /// the Specification that is given to CanWriteExpectedData.
-    ///
-    /// While you can technically inherit CanWriteRequiredData multiple times
-    /// and provide each base with a different Specification, this is strongly
-    /// discouraged because then you will be left with multiple ambiguous
-    /// versions of WriteExpectedData(~). Instead, it is beter to inherit it
-    /// once and combine the Specifications using SpecifyData<Specification1,
-    /// Specification2, ...>. For example:
-    ///
-    /// \code
-    ///     class MyClass : public CanWriteExpectedData<
-    ///           MyClass,
-    ///           SpecifyData<MySpecification1,
-    ///                       MySpecification2,
-    ///                       MySpecification3> >
-    ///     {
-    ///       // ... define my class ...
-    ///     };
-    /// \endcode
-    ///
-    /// This class is designed to cause a compilation error if the inheriting
-    /// class does not provide all the necessary Write(~) functions. See the
-    /// page \ref WriteCompilationFail for more information.
+    /// This class is the same as CanWriteRequiredData, except it operates on
+    /// all "expected" data (which is a superset of "required" data) instead of
+    /// only the "required" data.
     template <typename Derived, typename Specification>
     class CanWriteExpectedData
     {

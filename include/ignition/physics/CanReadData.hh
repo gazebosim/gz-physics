@@ -115,55 +115,9 @@ namespace ignition
           const ReadOptions &_options = ReadOptions());
     };
 
-    /// CanReadExpectedData provides compile-time static analysis to ensure that
-    /// the inheriting class provides a Read(~) function overload for each of
-    /// the data types that are listed as expected in the Specification. It also
-    /// provides a function that will invoke Read(~) on each of the expected
-    /// data types (you may indicate whether or not it should only invoke them
-    /// on unqueried data).
-    ///
-    /// Note that you must pass the name of your class in as the first template
-    /// argument when inheriting it (Curiously Recurring Template Pattern CRTP),
-    /// e.g.:
-    ///
-    /// \code
-    ///     class MyClass : public CanReadExpectedData<MyClass, MySpecification>
-    ///     {
-    ///       // ... define my class ...
-    ///     };
-    /// \endcode
-    ///
-    /// You may instead use CanReadRequiredData if you only want to guarantee
-    /// that your class is able to read the required data.
-    ///
-    /// Note that you are allowed to inherit both CanReadRequiredData and
-    /// CanReadExpectedData while passing different Specifications to each, but
-    /// you should be aware that ReadRequiredData will only read the data
-    /// required by the Specification that is given to CanReadRequiredData.
-    /// Likewise, ReadExpectedData will only read the data expected by
-    /// the Specification that is given to CanReadExpectedData.
-    ///
-    /// While you can technically inherit CanReadExpectedData multiple times
-    /// and provide each base with a different Specification, this is strongly
-    /// discouraged because then you will be left with multiple ambiguous
-    /// versions of ReadExpectedData(~). Instead, it is beter to inherit it once
-    /// and combine the Specifications using SpecifyData<Specification1,
-    /// Specification2, ...>. For example:
-    ///
-    /// \code
-    ///     class MyClass : public CanReadExpectedData<
-    ///           MyClass,
-    ///           SpecifyData<MySpecification1,
-    ///                       MySpecification2,
-    ///                       MySpecification3> >
-    ///     {
-    ///       // ... define my class ...
-    ///     };
-    /// \endcode
-    ///
-    /// This class is designed to cause a compilation error if the inheriting
-    /// class does not provide all the necessary Read(~) functions. See the page
-    /// \ref ReadCompilationFail for more information.
+    /// This class is the same as CanReadRequiredData, except it operates on all
+    /// "expected" data (which is a superset of "required" data) instead of only
+    /// the "required" data.
     template <typename Derived, typename Specification>
     class CanReadExpectedData
     {
