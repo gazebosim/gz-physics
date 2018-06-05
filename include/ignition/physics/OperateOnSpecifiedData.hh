@@ -54,11 +54,6 @@ namespace ignition
               class Performer>
     class OperateOnSpecifiedData
     {
-      /// The data structure that will be used to ensure that the same data does
-      /// not get operated on twice, even if it is listed twice (redundantly) in
-      /// the specification.
-      using History = std::unordered_set<std::string>;
-
       /// \brief Operate is the recommended entry point for using
       /// OperateOnSpecifiedData. This can be given a performer, a CompositeType
       /// object, and a DataStatusMask to determine its behavior.
@@ -76,6 +71,11 @@ namespace ignition
 
 
       // -------------------- Private API -----------------------
+
+      /// The data structure that will be used to ensure that the same data does
+      /// not get operated on twice, even if it is listed twice (redundantly) in
+      /// the specification.
+      private: using History = std::unordered_set<std::string>;
 
       /// \brief When SubSpecification is able to provide one of the desired
       /// data specifications, this overload gets called.
