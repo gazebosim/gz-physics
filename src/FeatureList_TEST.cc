@@ -15,13 +15,15 @@
  *
 */
 
-#include <ignition/physics/Update.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/Feature.hh>
 
 #include <gtest/gtest.h>
 
 using namespace ignition::physics;
+
+class FeatureA : public virtual Feature { };
+class FeatureB : public virtual Feature { };
+class FeatureC : public virtual Feature { };
 
 class Conflict1 : public virtual Feature { };
 class Conflict2 : public virtual Feature { };
@@ -33,18 +35,16 @@ class OnlyConflictWith1
 class MultipleConflicts
     : public virtual FeatureWithConflicts<Conflict1, Conflict2, Conflict3> { };
 
-class NoConflicts : public virtual Feature { };
-
 #define CREATE_FEATURE_LISTS(x) \
-  using x ## List1 = FeatureList<x, FrameSemantics, ForwardStep, SetState>; \
-  using x ## List2 = FeatureList<FrameSemantics, x, ForwardStep, SetState>; \
-  using x ## List3 = FeatureList<FrameSemantics, ForwardStep, x, SetState>; \
-  using x ## List4 = FeatureList<FrameSemantics, ForwardStep, SetState, x>;
+  using x ## List1 = FeatureList<x, FeatureA, FeatureB, FeatureC>; \
+  using x ## List2 = FeatureList<FeatureA, x, FeatureB, FeatureC>; \
+  using x ## List3 = FeatureList<FeatureA, FeatureB, x, FeatureC>; \
+  using x ## List4 = FeatureList<FeatureA, FeatureB, FeatureC, x>;
 
 CREATE_FEATURE_LISTS(Conflict1)
 CREATE_FEATURE_LISTS(Conflict2)
 CREATE_FEATURE_LISTS(Conflict3)
-CREATE_FEATURE_LISTS(NoConflicts)
+CREATE_FEATURE_LISTS(FeatureA)
 CREATE_FEATURE_LISTS(OnlyConflictWith1)
 CREATE_FEATURE_LISTS(MultipleConflicts)
 
@@ -126,7 +126,7 @@ TEST(FeatureList_TEST, Conflicts)
         ::With<
           FEATURE_AND_ITS_LISTS(Conflict2),
           FEATURE_AND_ITS_LISTS(Conflict3),
-          FEATURE_AND_ITS_LISTS(NoConflicts),
+          FEATURE_AND_ITS_LISTS(FeatureA),
           FEATURE_AND_ITS_LISTS(MultipleConflicts)>();
 
   TestConflicts<true,
@@ -139,25 +139,25 @@ TEST(FeatureList_TEST, Conflicts)
   TestConflicts<false,
       FEATURE_AND_ITS_LISTS(MultipleConflicts)>
         ::With<
-          FEATURE_AND_ITS_LISTS(NoConflicts)>();
+          FEATURE_AND_ITS_LISTS(FeatureA)>();
 
   TestConflicts<false,
-      FEATURE_AND_ITS_LISTS(NoConflicts),
+      FEATURE_AND_ITS_LISTS(FeatureA),
       FEATURE_AND_ITS_LISTS(Conflict1),
       FEATURE_AND_ITS_LISTS(Conflict2),
       FEATURE_AND_ITS_LISTS(Conflict3)>
         ::With<
-          FEATURE_AND_ITS_LISTS(NoConflicts),
+          FEATURE_AND_ITS_LISTS(FeatureA),
           FEATURE_AND_ITS_LISTS(Conflict1),
           FEATURE_AND_ITS_LISTS(Conflict2),
           FEATURE_AND_ITS_LISTS(Conflict3)>();
 }
 
-class RequiresFrameSemantics
-    : public virtual FeatureWithRequirements<FrameSemantics> { };
+class RequiresFeatureA
+    : public virtual FeatureWithRequirements<FeatureA> { };
 
-class RequiresForwardStepAndSetState
-    : public virtual FeatureWithRequirements<ForwardStep, SetState> { };
+class RequiresFeaturesBC
+    : public virtual FeatureWithRequirements<FeatureB, FeatureC> { };
 
 TEST(FeatureList_TEST, Requirements)
 {
@@ -168,41 +168,42 @@ TEST(FeatureList_TEST, Requirements)
   // These tests are making sure that required features are getting added to the
   // FeatureList where they're needed.
 
-  using List1 = FeatureList<RequiresFrameSemantics>;
-  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List1>::value) );
-  EXPECT_FALSE( (std::is_base_of<ForwardStep, List1>::value) );
-  EXPECT_FALSE( (std::is_base_of<SetState, List1>::value) );
+  using List1 = FeatureList<RequiresFeatureA>;
+  EXPECT_TRUE( (std::is_base_of<FeatureA, List1>::value) );
+  EXPECT_FALSE( (std::is_base_of<FeatureB, List1>::value) );
+  EXPECT_FALSE( (std::is_base_of<FeatureC, List1>::value) );
 
-  using List2 = FeatureList<RequiresForwardStepAndSetState>;
-  EXPECT_TRUE( (std::is_base_of<ForwardStep, List2>::value) );
-  EXPECT_TRUE( (std::is_base_of<SetState, List2>::value) );
+  using List2 = FeatureList<RequiresFeaturesBC>;
+  EXPECT_FALSE( (std::is_base_of<FeatureA, List2>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureB, List2>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureC, List2>::value) );
 
-  using List3 = FeatureList<RequiresFrameSemantics,
-                            RequiresForwardStepAndSetState>;
-  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List3>::value) );
-  EXPECT_TRUE( (std::is_base_of<ForwardStep, List3>::value) );
-  EXPECT_TRUE( (std::is_base_of<SetState, List3>::value) );
+  using List3 = FeatureList<RequiresFeatureA,
+                            RequiresFeaturesBC>;
+  EXPECT_TRUE( (std::is_base_of<FeatureA, List3>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureB, List3>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureC, List3>::value) );
 
   using List4 = FeatureList<
       Conflict1, Conflict2, Conflict3,
-      RequiresFrameSemantics,
-      RequiresForwardStepAndSetState>;
-  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List4>::value) );
-  EXPECT_TRUE( (std::is_base_of<ForwardStep, List4>::value) );
-  EXPECT_TRUE( (std::is_base_of<SetState, List4>::value) );
+      RequiresFeatureA,
+      RequiresFeaturesBC>;
+  EXPECT_TRUE( (std::is_base_of<FeatureA, List4>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureB, List4>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureC, List4>::value) );
 
   using List5 = FeatureList<
-      RequiresFrameSemantics,
-      RequiresForwardStepAndSetState,
+      RequiresFeatureA,
+      RequiresFeaturesBC,
       Conflict1, Conflict2, Conflict3>;
-  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List5>::value) );
-  EXPECT_TRUE( (std::is_base_of<ForwardStep, List5>::value) );
-  EXPECT_TRUE( (std::is_base_of<SetState, List5>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureA, List5>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureB, List5>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureC, List5>::value) );
 
   using List6 = FeatureList<Conflict1, Conflict2, Conflict3, List1>;
-  EXPECT_TRUE( (std::is_base_of<FrameSemantics, List6>::value) );
-  EXPECT_FALSE( (std::is_base_of<ForwardStep, List6>::value) );
-  EXPECT_FALSE( (std::is_base_of<SetState, List6>::value) );
+  EXPECT_TRUE( (std::is_base_of<FeatureA, List6>::value) );
+  EXPECT_FALSE( (std::is_base_of<FeatureB, List6>::value) );
+  EXPECT_FALSE( (std::is_base_of<FeatureC, List6>::value) );
 }
 
 int main(int argc, char **argv)
