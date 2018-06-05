@@ -29,9 +29,15 @@ namespace ignition
       template <typename Data, typename Derived, typename CompositeType>
       struct WriteDataOperation
       {
-        /// \brief This is where the data writing operation gets performed.
+        /// \brief WriteDataOperation::Operate is where the data writing
+        /// operation gets performed.
+        /// \param[in,out] _yourClass
+        ///   The object which will perform the Write operation.
+        /// \param[in,out] _data
+        ///   The object which will be written to.
         public: static void Operate(Derived *yourClass, CompositeType &data)
         {
+          /// \par
           /// \page WriteCompilationFail Failure to compile WriteDataOperation
           /// READ CAREFULLY: If you have arrived here by way of a compiler
           /// error, then you have neglected to provide a Write(~) member
