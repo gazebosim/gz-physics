@@ -61,7 +61,9 @@ namespace ignition
     /// \endcode
     ///
     /// You may also use CanReadExpectedData if you want to further guarantee
-    /// that your class is able to read all the expected data (recommended).
+    /// that your class is able to read all the expected data. This is
+    /// recommended, because otherwise it might be easy to quietly overlook data
+    /// types that you assumed were being read, resulting in incorrect behavior.
     ///
     /// Note that you are allowed to inherit both CanReadRequiredData and
     /// CanReadExpectedData while passing different Specifications to each, but
