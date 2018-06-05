@@ -58,10 +58,22 @@ namespace ignition
       /// OperateOnSpecifiedData. This can be given a performer, a CompositeType
       /// object, and a DataStatusMask to determine its behavior.
       ///
+      /// For each type in Specification, the _performer will query _data for
+      /// the type, and then perform Operation on that data type. The _mask
+      /// information is used to tune the behavior to only perform the
+      /// operations on components of _data that meet the criteria.
+      ///
       /// Setting onlyCompile to true will short-circuit the entire operation.
       /// This can be useful for static analysis. The function will cost very
       /// nearly nothing during run-time, but it will prevent code from
       /// compiling if its conditions are not met.
+      ///
+      /// \param[in,out] _performer The object that will perform the operation.
+      /// \param[in,out] _data The object that will be operated on.
+      /// \param[in] _mask An object to tune which data components are operated
+      /// on.
+      /// \param[in] _onlyCompile Have this function compile to make sure that
+      /// it can compile, but do not perform any operations.
       public: template <typename CompositeType>
       static void Operate(
           Performer *_performer,
