@@ -27,7 +27,7 @@ namespace ignition
   {
     namespace detail
     {
-      /// \brief ReadDataOperation allows us to use CanOperateOnSpecifiedData to
+      /// \brief ReadDataOperation allows us to use OperateOnSpecifiedData to
       /// call a Read(~) member function on a class which inherits from either
       /// CanReadRequiredData or CanReadExpectedData (or both).
       template <typename Data, typename Derived, typename CompositeType>

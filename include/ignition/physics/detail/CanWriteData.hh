@@ -26,6 +26,9 @@ namespace ignition
   {
     namespace detail
     {
+      /// \brief WriteDataOperation allows us to use OperateOnSpecifiedData to
+      /// call a Write(~) member function on a class which inherits from either
+      /// CanWriteRequiredData or CanWriteExpectedData (or both).
       template <typename Data, typename Derived, typename CompositeType>
       struct WriteDataOperation
       {
