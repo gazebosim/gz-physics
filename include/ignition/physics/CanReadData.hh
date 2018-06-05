@@ -87,6 +87,10 @@ namespace ignition
     ///       // ... define my class ...
     ///     };
     /// \endcode
+    ///
+    /// This class is designed to cause a compilation error if the inheriting
+    /// class does not provide all the necessary Read(~) functions. See the page
+    /// \ref ReadCompilationFail for more information.
     template <typename Derived, typename Specification>
     class CanReadRequiredData
     {
@@ -154,6 +158,10 @@ namespace ignition
     ///       // ... define my class ...
     ///     };
     /// \endcode
+    ///
+    /// This class is designed to cause a compilation error if the inheriting
+    /// class does not provide all the necessary Read(~) functions. See the page
+    /// \ref ReadCompilationFail for more information.
     template <typename Derived, typename Specification>
     class CanReadExpectedData
     {

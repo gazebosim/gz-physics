@@ -29,8 +29,10 @@ namespace ignition
       template <typename Data, typename Derived, typename CompositeType>
       struct WriteDataOperation
       {
+        /// \brief This is where the data writing operation gets performed.
         public: static void Operate(Derived *yourClass, CompositeType &data)
         {
+          /// \page WriteCompilationFail Failure to compile WriteDataOperation
           /// READ CAREFULLY: If you have arrived here by way of a compiler
           /// error, then you have neglected to provide a Write(~) member
           /// function for one of the specified data types that you claimed your
@@ -45,13 +47,15 @@ namespace ignition
           /// the keyword const at the end of its declaration in the function
           /// definition:
           ///
-          /// class YourClass
-          /// {
-          ///   public:
-          ///   /* ... */
-          ///     void Write(const Data &data) const;
-          ///   /* ... */
-          /// };
+          /// \code
+          ///    class YourClass
+          ///    {
+          ///    public:
+          ///       // ...
+          ///       void Write(const Data &data) const;
+          ///       // ...
+          ///    };
+          /// \endcode
           ///
           ///    ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
           yourClass->Write(data.template Get<Data>());
@@ -77,9 +81,13 @@ namespace ignition
     {
       DataStatusMask mask;
 
+      // We've been asked to skip missing data, so we'll tell the data mask that
+      // each data type we write must already exist.
       if (_options.skipMissingData)
         mask.exist = DataStatusMask::MUST;
 
+      // We've been asked to only write unqueried data, so we'll tell the data
+      // mask that each data type we write must not be already queried.
       if (_options.onlyWriteUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
 

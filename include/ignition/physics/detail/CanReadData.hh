@@ -33,12 +33,13 @@ namespace ignition
       template <typename Data, typename Derived, typename CompositeType>
       struct ReadDataOperation
       {
-        /// \brief Do the operation
+        /// \brief This is where the data reading operation gets performed.
         public: static void Operate(Derived *_yourClass, CompositeType &_data)
         {
           const Data * const query = _data.template Query<Data>();
           assert(query);
 
+          /// \page ReadCompilationFail Failure to compile ReadDataOperation
           /// READ CAREFULLY: If you have arrived here by way of a compiler
           /// error, then you have neglected to provide a Read(~) member
           /// function for one of the specified data types that you claimed your
@@ -50,15 +51,17 @@ namespace ignition
           ///
           /// The function signature should look like:
           ///
-          /// class YourClass
-          /// {
-          ///   public:
-          ///   /* ... */
-          ///     void Read(Data &data);
-          ///   /* ... */
-          /// };
+          /// \code
+          ///    class YourClass
+          ///    {
+          ///    public:
+          ///      // ...
+          ///      void Read(Data &data);
+          ///      // ...
+          ///    };
+          /// \endcode
           ///
-          ///    ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
+          /// ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
           _yourClass->Read(*query);
         }
       };

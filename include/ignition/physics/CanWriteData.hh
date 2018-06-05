@@ -94,6 +94,10 @@ namespace ignition
     ///       // ... define my class ...
     ///     };
     /// \endcode
+    ///
+    /// This class is designed to cause a compilation error if the inheriting
+    /// class does not provide all the necessary Write(~) functions. See the
+    /// page \ref WriteCompilationFail for more information.
     template <typename Derived, typename Specification>
     class CanWriteRequiredData
     {
@@ -157,6 +161,10 @@ namespace ignition
     ///       // ... define my class ...
     ///     };
     /// \endcode
+    ///
+    /// This class is designed to cause a compilation error if the inheriting
+    /// class does not provide all the necessary Write(~) functions. See the
+    /// page \ref WriteCompilationFail for more information.
     template <typename Derived, typename Specification>
     class CanWriteExpectedData
     {
