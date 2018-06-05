@@ -76,7 +76,7 @@ namespace ignition
 
       /// \brief When SubSpecification is able to provide one of the desired
       /// data specifications, this overload gets called.
-      public: template <typename Data, typename SubSpecification,
+      private: template <typename Data, typename SubSpecification,
                         typename CompositeType>
       static void SubOperate(
           detail::type<Data>, detail::type<SubSpecification>,
@@ -86,7 +86,7 @@ namespace ignition
 
       /// \brief When SubSpecification could not provide one of the desired data
       /// specifications, we will instead search it for sub-specifications.
-      public: template <typename SubSpecification, typename CompositeType>
+      private: template <typename SubSpecification, typename CompositeType>
       static void SubOperate(
           detail::type<void>, detail::type<SubSpecification>,
           Performer *_performer, CompositeType &_data,
@@ -95,7 +95,7 @@ namespace ignition
 
       /// \brief When SubSpecification does not have the desired data
       /// specifications, nor has any sub-specifications, we terminate here.
-      public: template <typename CompositeType>
+      private: template <typename CompositeType>
       static void SubOperate(
           detail::type<void>, detail::type<void>,
           Performer*, CompositeType&,
