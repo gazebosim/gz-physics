@@ -74,6 +74,9 @@ namespace ignition
           const DataStatusMask &_mask,
           const bool _onlyCompile = false);
 
+
+      // -------------------- Private API -----------------------
+
       /// \brief When SubSpecification is able to provide one of the desired
       /// data specifications, this overload gets called.
       private: template <typename Data, typename SubSpecification,
