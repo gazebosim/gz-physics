@@ -18,4 +18,7 @@ if(UNIX)
   set_tests_properties(STATIC_ASSERT_FeatureList_conflict PROPERTIES
     PASS_REGULAR_EXPRESSION "FEATURE CONFLICT DETECTED")
 
+  set_tests_properties(STATIC_ASSERT_FeatureList_InvalidFeature PROPERTIES
+    PASS_REGULAR_EXPRESSION "NOT A Feature")
+
 endif()
