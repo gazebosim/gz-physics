@@ -242,8 +242,12 @@ namespace ignition
     constexpr bool FeatureList<FeaturesT...>::ConflictsWith()
     {
       // TODO: Replace this with a simple fold expression once we use C++17
-      return detail::ConflictingLists<
-          SomeFeatureList, AssertNoConflict, Features>::value;
+      return
+          detail::ConflictingLists<
+              SomeFeatureList, AssertNoConflict, Features>::value
+       || detail::ConflictingLists<
+              FeatureList<FeaturesT...>, AssertNoConflict,
+              typename FeatureList<SomeFeatureList>::Features>::value;
     }
 
     /////////////////////////////////////////////////

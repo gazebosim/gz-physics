@@ -125,6 +125,11 @@ namespace ignition
       /// \brief A static constexpr function which indicates whether any
       /// features in SomeFeatureList conflict with any features in
       /// SomeFeatureList.
+      ///
+      /// \tparam SomeFeatureList
+      ///   The list to compare against for conflicts.
+      /// \return true if any features in SomeFeatureList conflict with this
+      /// list or vice versa.
       public: template <typename SomeFeatureList,
                         bool AssertNoConflict = false>
       static constexpr bool ConflictsWith();

@@ -122,6 +122,8 @@ TEST(FeatureList_TEST, Conflicts)
         ::With<
           FEATURE_AND_ITS_LISTS(Conflict1)>();
 
+  EXPECT_TRUE(FeatureList<Conflict1>::ConflictsWith<OnlyConflictWith1>());
+
   // Note: OnlyConflictWith1 only conflicts with Conflict1. It does not conflict
   // with Conflict2 or Conflict3.
   TestConflicts<false, __LINE__,
