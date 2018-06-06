@@ -18,13 +18,22 @@
 #ifndef IGNITION_PHYSICS_FEATURE_HH_
 #define IGNITION_PHYSICS_FEATURE_HH_
 
-#include <ignition/physics/Export.hh>
 #include <cstddef>
+#include <tuple>
+
+#include <ignition/physics/Export.hh>
 
 namespace ignition
 {
   namespace physics
   {
+    // Forward declarations
+    namespace detail
+    {
+      template <typename...> class CombineLists;
+      template <bool, typename> class SelfConflict;
+    }
+
     /////////////////////////////////////////////////
     /// \brief Placeholder class to be inherited by Feature types.
     class IGNITION_PHYSICS_VISIBLE Feature
@@ -81,6 +90,52 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief Use a FeatureList to aggregate a list of Features.
+    ///
+    /// FeatureLists can be constructed in hierarchies, e.g. a FeatureList can
+    /// be passed into another FeatureList, and the set of all features in the
+    /// new list will be the sum.
+    ///
+    /// \code
+    /// // FeatureA, FeatureB, AdvancedA, and AdvancedB are all feature classes.
+    ///
+    /// using BasicList = FeatureList<FeatureA, FeatureB>;
+    /// using AdvancedList = FeatureList<BasicList, AdvancedA, AdvancedB>;
+    /// \endcode
+    template <typename... FeaturesT>
+    struct FeatureList
+    {
+      /// Features is a std::tuple containing all the feature classes that are
+      /// bundled in this list. This list is fully seralialized; any hierarchy
+      /// that was used to construct this FeatureList will be collapsed in this
+      /// member.
+      public: using Features =
+          typename detail::CombineLists<FeaturesT...>::Result;
+
+      /// \brief A static constexpr function which indicates whether a given
+      /// Feature, F, is contained in this list.
+      /// \tparam F
+      ///   The feature class to check for in this FeatureList
+      /// \return true if F is in this FeatureList; false otherwise.
+      public: template <typename F>
+      static constexpr bool HasFeature();
+
+      /// \brief A static constexpr function which indicates whether any
+      /// features in SomeFeatureList conflict with any features in
+      /// SomeFeatureList.
+      public: template <typename SomeFeatureList,
+                        bool AssertNoConflict = false>
+      static constexpr bool ConflictsWith();
+
+      /// \brief A list has no additional required features
+      public: using RequiredFeatures = void;
+
+      // Check that this FeatureList does not contain any self-conflicts.
+      static_assert(!detail::SelfConflict<true, Features>::value,
+          "FeatureList ERROR: YOUR LIST CONTAINS CONFLICTING FEATURES!");
+    };
+
+    /////////////////////////////////////////////////
     /// \brief If your feature is known to conflict with any other feature, then
     /// you should have your feature class inherit FeatureWithConflicts<...>,
     /// and pass it a list of the features that it conflicts with.
@@ -115,11 +170,6 @@ namespace ignition
     /// The FeatureList class be used to compose conflicts and requirements.
     template <typename... RequiredFeatures>
     struct FeatureWithRequirements;
-
-    /////////////////////////////////////////////////
-    /// \brief Use a FeatureList to aggregate a list of Features.
-    template <typename... Features>
-    struct FeatureList;
 
     /////////////////////////////////////////////////
     /// \brief FeaturePolicy is a "policy class" used to provide metadata to
