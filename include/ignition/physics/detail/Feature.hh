@@ -29,6 +29,7 @@ namespace ignition
   {
     namespace detail
     {
+      /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
       /// time that each object that is being passed as a "feature" matches the
       /// concept of a feature. This can be replaced by Concepts once C++ has
@@ -56,6 +57,7 @@ namespace ignition
       class VerifyFeatures<std::tuple<F...>>
           : public VerifyFeatures<F...> { };
 
+      /////////////////////////////////////////////////
       /// \private ExtractFeatures is used to wipe out any potential containers
       /// that might be packing a set of features (such as a tuple or a
       /// FeatureList) and return a raw tuple of the features. This allows us to
@@ -101,6 +103,7 @@ namespace ignition
         public: using Result = std::tuple<>;
       };
 
+      /////////////////////////////////////////////////
       /// \private CombineLists is used to take variadic lists of features,
       /// FeatureLists, or std::tuples of features, and collapse them into a
       /// serialized std::tuple of features.
@@ -131,6 +134,7 @@ namespace ignition
             typename CombineLists<Others...>::Result()));
       };
 
+      /////////////////////////////////////////////////
       /// \private Inspired by https://stackoverflow.com/a/26288164
       /// This class provides a static constexpr member named `value` which is
       /// true if T is one of the entries of Tuple, and false otherwise.
@@ -149,6 +153,7 @@ namespace ignition
                 std::tuple<Types...>
               >::value> { };
 
+      /////////////////////////////////////////////////
       /// \private This class implements FeatureList::ConflictsWith. Its
       /// implementation is conceptually similar to TupleContainsBase.
       template <typename SomeFeatureList, bool AssertNoConflict, typename Tuple>
@@ -169,6 +174,7 @@ namespace ignition
               std::tuple<Features...>
             >::value> { };
 
+      /////////////////////////////////////////////////
       /// \private Check whether any feature within a std::tuple of features
       /// conflicts with any other feature in that tuple.
       template <bool AssertNoConflict, typename Tuple>
@@ -189,6 +195,37 @@ namespace ignition
       template <bool AssertNoConflict, typename SingleFeature>
       struct SelfConflict<AssertNoConflict, std::tuple<SingleFeature>>
           : std::integral_constant<bool, false> {};
+
+      /////////////////////////////////////////////////
+      /// \private Extract the API out of a FeatureList
+      template <template<typename> class Extractor, typename... FeaturesT>
+      struct Extract<Extractor, FeatureList<FeaturesT...>>
+      {
+        public: template<typename P>
+        using type =
+          typename Extract<Extractor,
+              typename FeatureList<FeaturesT...>::Features>::template type<P>;
+      };
+
+      /// \private Recursively extract the API out of a std::tuple of features
+      template <template<typename> class Extractor,
+                typename F1, typename... Remaining>
+      struct Extract<Extractor, std::tuple<F1, Remaining...>>
+      {
+        public: template<typename P>
+        class type
+            : public virtual Extractor<F1>::template type<P>,
+              public virtual Extract<
+                  Extractor, std::tuple<Remaining...>>::template type<P> { };
+      };
+
+      /// \private Terminate the recursion
+      template <template<typename> class Extractor>
+      struct Extract<Extractor, std::tuple<>>
+      {
+        public: template <typename P>
+        class type { };
+      };
     }
 
     /////////////////////////////////////////////////
@@ -208,34 +245,6 @@ namespace ignition
       return detail::ConflictingLists<
           SomeFeatureList, AssertNoConflict, Features>::value;
     }
-
-    /////////////////////////////////////////////////
-    template <template<typename> class Extractor, typename... FeaturesT>
-    struct Extract<Extractor, FeatureList<FeaturesT...>>
-    {
-      public: template<typename P>
-      using type =
-        typename Extract<Extractor, typename FeatureList<FeaturesT...>::Features>::template type<P>;
-    };
-
-    /////////////////////////////////////////////////
-    template <template<typename> class Extractor, typename F1, typename... Remaining>
-    struct Extract<Extractor, std::tuple<F1, Remaining...>>
-    {
-      public: template<typename P>
-      class type
-          : public virtual Extractor<F1>::template type<P>,
-            public virtual Extract<Extractor, std::tuple<Remaining...>>::template type<P>
-      { };
-    };
-
-    /////////////////////////////////////////////////
-    template <template<typename> class Extractor>
-    struct Extract<Extractor, std::tuple<>>
-    {
-      public: template <typename P>
-      class type { };
-    };
 
     /////////////////////////////////////////////////
     /// \private The default definition of FeatureWithConflicts only gets called

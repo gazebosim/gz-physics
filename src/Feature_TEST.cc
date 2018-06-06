@@ -27,7 +27,7 @@ class EngineMockFeature : public virtual Feature
   public: template <typename P>
   class Engine
   {
-    public: bool MockAnEngine() const
+    public: bool MockAnEngineFunction() const
     {
       return true;
     }
@@ -40,7 +40,7 @@ class LinkMockFeature : public virtual Feature
   public: template <typename P>
   class Link
   {
-    public: bool MockALink() const
+    public: bool MockALinkFunction() const
     {
       return true;
     }
@@ -53,7 +53,7 @@ class SecondLinkMockFeature : public virtual Feature
   public: template <typename P>
   class Link
   {
-    public: bool MockAnotherLinkFeature() const
+    public: bool MockAnotherLinkFunction() const
     {
       return true;
     }
@@ -69,11 +69,11 @@ TEST(Feature_TEST, Mock)
       SecondLinkMockFeature>;
 
   Engine3d<MockList> engine3d;
-  EXPECT_TRUE(engine3d.MockAnEngine());
+  EXPECT_TRUE(engine3d.MockAnEngineFunction());
 
   Link3d<MockList> link3d;
-  EXPECT_TRUE(link3d.MockALink());
-  EXPECT_TRUE(link3d.MockAnotherLinkFeature());
+  EXPECT_TRUE(link3d.MockALinkFunction());
+  EXPECT_TRUE(link3d.MockAnotherLinkFunction());
 }
 
 int main(int argc, char *argv[])

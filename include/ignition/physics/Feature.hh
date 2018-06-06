@@ -22,18 +22,12 @@
 #include <tuple>
 
 #include <ignition/physics/Export.hh>
+#include <ignition/physics/detail/PreFeature.hh>
 
 namespace ignition
 {
   namespace physics
   {
-    // Forward declarations
-    namespace detail
-    {
-      template <typename...> class CombineLists;
-      template <bool, typename> struct SelfConflict;
-    }
-
     /////////////////////////////////////////////////
     /// \brief Placeholder class to be inherited by Feature types.
     class IGNITION_PHYSICS_VISIBLE Feature
@@ -193,29 +187,6 @@ namespace ignition
     using FeaturePolicy2d = FeaturePolicy<double, 2>;
     using FeaturePolicy3f = FeaturePolicy<float, 3>;
     using FeaturePolicy2f = FeaturePolicy<float, 2>;
-
-    template <template<typename> class Extractor, typename List>
-    struct Extract;
-
-    #define IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, P) \
-      template <typename List> \
-      using X ## P = X ## Template<FeaturePolicy ## P, List>;
-
-    #define IGN_PHYSICS_MAKE_EXTRACTION(X) \
-      template <typename T> \
-      struct X ## Extractor \
-      { \
-        public: template<typename P> \
-        using type = typename T::template X<P>; \
-      }; \
-      \
-      template <typename Policy, typename List> \
-      using X ## Template = \
-          typename Extract<X ## Extractor, List>::template type<Policy>; \
-      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3d) \
-      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2d) \
-      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3f) \
-      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2f)
 
     // This macro expands to create the templates:
     // - Engine3d<List>
