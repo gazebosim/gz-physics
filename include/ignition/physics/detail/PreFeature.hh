@@ -35,11 +35,11 @@ namespace ignition
 }
 
 // Macros for generating EngineTemplate, LinkTemplate, etc
-#define IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, P) \
+#define DETAIL_IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, P) \
   template <typename List> \
   using X ## P = X ## Template<FeaturePolicy ## P, List>;
 
-#define IGN_PHYSICS_MAKE_EXTRACTION(X) \
+#define DETAIL_IGN_PHYSICS_MAKE_EXTRACTION(X) \
   template <typename T> \
   struct X ## Extractor \
   { \
@@ -50,9 +50,9 @@ namespace ignition
   template <typename Policy, typename List> \
   using X ## Template = \
       typename detail::Extract<X ## Extractor, List>::template type<Policy>; \
-  IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3d) \
-  IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2d) \
-  IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3f) \
-  IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2f)
+  DETAIL_IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3d) \
+  DETAIL_IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2d) \
+  DETAIL_IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3f) \
+  DETAIL_IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2f)
 
 #endif // IGNITION_PHYSICS_DETAIL_PREFEATURE_HH_

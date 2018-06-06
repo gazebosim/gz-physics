@@ -43,6 +43,22 @@ namespace ignition
       };
 
       /// \brief Placeholder class in case a Feature does not define its own
+      /// World API
+      public: template <typename>
+      class World
+      {
+        public: virtual ~World() = default;
+      };
+
+      /// \brief Placeholder class in case a Feature does not define its own
+      /// Model API
+      public: template <typename>
+      class Model
+      {
+        public: virtual ~Model() = default;
+      };
+
+      /// \brief Placeholder class in case a Feature does not define its own
       /// Link API
       public: template <typename>
       class Link
@@ -56,14 +72,6 @@ namespace ignition
       class Joint
       {
         public: virtual ~Joint() = default;
-      };
-
-      /// \brief Placeholder class in case a Feature does not define its own
-      /// Model API
-      public: template <typename>
-      class Model
-      {
-        public: virtual ~Model() = default;
       };
 
       /// \brief By default, a blank feature will not conflict with any other
@@ -201,10 +209,11 @@ namespace ignition
     //
     // This is repeated for each of the built-in feature objects (e.g. Link,
     // Joint, Model).
-    IGN_PHYSICS_MAKE_EXTRACTION(Engine)
-    IGN_PHYSICS_MAKE_EXTRACTION(Link)
-    IGN_PHYSICS_MAKE_EXTRACTION(Joint)
-    IGN_PHYSICS_MAKE_EXTRACTION(Model)
+    DETAIL_IGN_PHYSICS_MAKE_EXTRACTION(Engine)
+    DETAIL_IGN_PHYSICS_MAKE_EXTRACTION(World)
+    DETAIL_IGN_PHYSICS_MAKE_EXTRACTION(Model)
+    DETAIL_IGN_PHYSICS_MAKE_EXTRACTION(Link)
+    DETAIL_IGN_PHYSICS_MAKE_EXTRACTION(Joint)
   }
 }
 
