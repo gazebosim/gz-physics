@@ -52,22 +52,24 @@ CREATE_FEATURE_LISTS(MultipleConflicts)
 #define FEATURE_AND_ITS_LISTS(x) \
   x , x ## List1, x ## List2, x ## List3, x ## List4
 
-template <bool _expectConflicts, typename LHS>
+template <bool _expectConflicts, int _line, typename LHS>
 void ExpectConflicts()
 {
   // Do nothing. This is where the variadic template function terminates.
 }
 
-template <bool _expectConflicts, typename LHS, typename RHS,
+template <bool _expectConflicts, int _line, typename LHS, typename RHS,
           typename... MoreRHS>
 void ExpectConflicts()
 {
-  if (_expectConflicts)
-    EXPECT_TRUE(LHS::template ConflictsWith<RHS>());
-  else
-    EXPECT_FALSE(LHS::template ConflictsWith<RHS>());
+  const bool conflict = LHS::template ConflictsWith<RHS>();
 
-  ExpectConflicts<_expectConflicts, LHS, MoreRHS...>();
+  if (_expectConflicts)
+    EXPECT_TRUE(conflict) << " originating from line " << _line;
+  else
+    EXPECT_FALSE(conflict) << " originating from line " << _line;
+
+  ExpectConflicts<_expectConflicts, _line, LHS, MoreRHS...>();
 }
 
 /// \brief This class allows us to specify a list of left-hand side types to
@@ -76,7 +78,7 @@ void ExpectConflicts()
 ///
 /// _expectConflicts should be set to true when conflicts are expected, and
 /// false when they are not expected.
-template <bool _expectConflicts, typename... MoreLHS>
+template <bool _expectConflicts, int _line, typename... MoreLHS>
 struct TestConflicts
 {
   public: template <typename... RHS>
@@ -88,14 +90,14 @@ struct TestConflicts
 
 /// \brief This is a specialization of TestConflicts which actually does the
 /// heavy lifting.
-template <bool _expectConflicts, typename LHS1, typename... MoreLHS>
-struct TestConflicts<_expectConflicts, LHS1, MoreLHS...>
+template <bool _expectConflicts, int _line, typename LHS1, typename... MoreLHS>
+struct TestConflicts<_expectConflicts, _line, LHS1, MoreLHS...>
 {
   public: template <typename... RHS>
   static void With()
   {
-    ExpectConflicts<_expectConflicts, LHS1, RHS...>();
-    TestConflicts<_expectConflicts, MoreLHS...>::template With<RHS...>();
+    ExpectConflicts<_expectConflicts, _line, LHS1, RHS...>();
+    TestConflicts<_expectConflicts, _line, MoreLHS...>::template With<RHS...>();
   }
 };
 
@@ -115,14 +117,14 @@ TEST(FeatureList_TEST, Conflicts)
   // this macro because any conflict properties of a feature should also be
   // present in any FeatureList that the feature is added to.
 
-  TestConflicts<true,
+  TestConflicts<true, __LINE__,
       FEATURE_AND_ITS_LISTS(OnlyConflictWith1)>
         ::With<
           FEATURE_AND_ITS_LISTS(Conflict1)>();
 
   // Note: OnlyConflictWith1 only conflicts with Conflict1. It does not conflict
   // with Conflict2 or Conflict3.
-  TestConflicts<false,
+  TestConflicts<false, __LINE__,
       FEATURE_AND_ITS_LISTS(OnlyConflictWith1)>
         ::With<
           FEATURE_AND_ITS_LISTS(Conflict2),
@@ -130,19 +132,19 @@ TEST(FeatureList_TEST, Conflicts)
           FEATURE_AND_ITS_LISTS(FeatureA),
           FEATURE_AND_ITS_LISTS(MultipleConflicts)>();
 
-  TestConflicts<true,
+  TestConflicts<true, __LINE__,
       FEATURE_AND_ITS_LISTS(MultipleConflicts)>
         ::With<
           FEATURE_AND_ITS_LISTS(Conflict1),
           FEATURE_AND_ITS_LISTS(Conflict2),
           FEATURE_AND_ITS_LISTS(Conflict3)>();
 
-  TestConflicts<false,
+  TestConflicts<false, __LINE__,
       FEATURE_AND_ITS_LISTS(MultipleConflicts)>
         ::With<
           FEATURE_AND_ITS_LISTS(FeatureA)>();
 
-  TestConflicts<false,
+  TestConflicts<false, __LINE__,
       FEATURE_AND_ITS_LISTS(FeatureA),
       FEATURE_AND_ITS_LISTS(Conflict1),
       FEATURE_AND_ITS_LISTS(Conflict2),
@@ -205,6 +207,18 @@ TEST(FeatureList_TEST, Requirements)
   EXPECT_TRUE( List6::HasFeature<FeatureA>() );
   EXPECT_FALSE( List6::HasFeature<FeatureB>() );
   EXPECT_FALSE( List6::HasFeature<FeatureC>() );
+}
+
+TEST(FeatureList_TEST, Hierarchy)
+{
+  using HierarchyLevel1 = FeatureList<FeatureA, FeatureB>;
+  using HierarchyLevel2a = FeatureList<HierarchyLevel1, FeatureC>;
+  using HierarchyLevel2b = FeatureList<Conflict1, Conflict2>;
+  using HierarchyLevel3 = FeatureList<HierarchyLevel2a, HierarchyLevel2b>;
+
+  // This test makes sure that a hierarchy of FeatureLists can compile.
+  // As long as the line below can compile, the test is passed.
+  HierarchyLevel3();
 }
 
 int main(int argc, char **argv)
