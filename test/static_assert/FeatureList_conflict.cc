@@ -16,20 +16,20 @@
 */
 
 #include <ignition/physics/Feature.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/ForwardStep.hh>
 
 using namespace ignition::physics;
 
+class FeatureA : public virtual Feature { };
+class FeatureB : public virtual Feature { };
+class FeatureC : public virtual Feature { };
 class Conflict : public virtual Feature { };
-
 class AnotherFeature : public virtual FeatureWithConflicts<Conflict> { };
 
 using SomeList = FeatureList<
-    FrameSemantics,
+    FeatureA,
     Conflict,
-    ForwardStep,
-    SetState,
+    FeatureB,
+    FeatureC,
     AnotherFeature>;
 
 int main()
