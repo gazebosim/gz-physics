@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_BASICOBJECT_HH_
 #define IGNITION_PHYSICS_DETAIL_BASICOBJECT_HH_
 
+#include <memory>
+
 #include <ignition/physics/BasicObject.hh>
 #include <ignition/common/Console.hh>
 

@@ -15,9 +15,9 @@
  *
 */
 
-#include <ignition/physics/Feature.hh>
-
 #include <gtest/gtest.h>
+
+#include <ignition/physics/Feature.hh>
 
 using namespace ignition::physics;
 
@@ -174,41 +174,41 @@ TEST(FeatureList_TEST, Requirements)
   // FeatureList where they're needed.
 
   using List1 = FeatureList<RequiresFeatureA>;
-  EXPECT_TRUE( List1::HasFeature<FeatureA>() );
-  EXPECT_FALSE( List1::HasFeature<FeatureB>() );
-  EXPECT_FALSE( List1::HasFeature<FeatureC>() );
+  EXPECT_TRUE(List1::HasFeature<FeatureA>());
+  EXPECT_FALSE(List1::HasFeature<FeatureB>());
+  EXPECT_FALSE(List1::HasFeature<FeatureC>());
 
   using List2 = FeatureList<RequiresFeaturesBC>;
-  EXPECT_FALSE( List2::HasFeature<FeatureA>() );
-  EXPECT_TRUE( List2::HasFeature<FeatureB>() );
-  EXPECT_TRUE( List2::HasFeature<FeatureC>() );
+  EXPECT_FALSE(List2::HasFeature<FeatureA>());
+  EXPECT_TRUE(List2::HasFeature<FeatureB>());
+  EXPECT_TRUE(List2::HasFeature<FeatureC>());
 
   using List3 = FeatureList<RequiresFeatureA,
                             RequiresFeaturesBC>;
-  EXPECT_TRUE( List3::HasFeature<FeatureA>() );
-  EXPECT_TRUE( List3::HasFeature<FeatureB>() );
-  EXPECT_TRUE( List3::HasFeature<FeatureC>() );
+  EXPECT_TRUE(List3::HasFeature<FeatureA>());
+  EXPECT_TRUE(List3::HasFeature<FeatureB>());
+  EXPECT_TRUE(List3::HasFeature<FeatureC>());
 
   using List4 = FeatureList<
       Conflict1, Conflict2, Conflict3,
       RequiresFeatureA,
       RequiresFeaturesBC>;
-  EXPECT_TRUE( List4::HasFeature<FeatureA>() );
-  EXPECT_TRUE( List4::HasFeature<FeatureB>() );
-  EXPECT_TRUE( List4::HasFeature<FeatureC>() );
+  EXPECT_TRUE(List4::HasFeature<FeatureA>());
+  EXPECT_TRUE(List4::HasFeature<FeatureB>());
+  EXPECT_TRUE(List4::HasFeature<FeatureC>());
 
   using List5 = FeatureList<
       RequiresFeatureA,
       RequiresFeaturesBC,
       Conflict1, Conflict2, Conflict3>;
-  EXPECT_TRUE( List5::HasFeature<FeatureA>() );
-  EXPECT_TRUE( List5::HasFeature<FeatureB>() );
-  EXPECT_TRUE( List5::HasFeature<FeatureC>() );
+  EXPECT_TRUE(List5::HasFeature<FeatureA>());
+  EXPECT_TRUE(List5::HasFeature<FeatureB>());
+  EXPECT_TRUE(List5::HasFeature<FeatureC>());
 
   using List6 = FeatureList<Conflict1, Conflict2, Conflict3, List1>;
-  EXPECT_TRUE( List6::HasFeature<FeatureA>() );
-  EXPECT_FALSE( List6::HasFeature<FeatureB>() );
-  EXPECT_FALSE( List6::HasFeature<FeatureC>() );
+  EXPECT_TRUE(List6::HasFeature<FeatureA>());
+  EXPECT_FALSE(List6::HasFeature<FeatureB>());
+  EXPECT_FALSE(List6::HasFeature<FeatureC>());
 }
 
 TEST(FeatureList_TEST, Hierarchy)

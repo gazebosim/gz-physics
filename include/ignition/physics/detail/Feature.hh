@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_DETAIL_FEATURE_HH_
 #define IGNITION_PHYSICS_DETAIL_FEATURE_HH_
 
+#include <tuple>
 #include <type_traits>
 
 #include <ignition/physics/Feature.hh>
@@ -241,7 +242,7 @@ namespace ignition
     template <typename SomeFeatureList, bool AssertNoConflict>
     constexpr bool FeatureList<FeaturesT...>::ConflictsWith()
     {
-      // TODO: Replace this with a simple fold expression once we use C++17
+      // TODO(MXG): Replace this with a simple fold expression once we use C++17
       return
           detail::ConflictingLists<
               SomeFeatureList, AssertNoConflict, Features>::value
@@ -276,8 +277,8 @@ namespace ignition
         constexpr bool conflict =
             FeatureList<SomeFeatureList>::template HasFeature<Conflict>();
 
-        static_assert( !AssertNoConflict || !conflict,
-                       "FEATURE CONFLICT DETECTED");
+        static_assert(!AssertNoConflict || !conflict,
+                      "FEATURE CONFLICT DETECTED");
 
         return conflict
             || FeatureWithConflicts<RemainingConflicts...>
