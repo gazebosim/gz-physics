@@ -4,8 +4,6 @@ include_directories (
   ${PROJECT_SOURCE_DIR}/test
 )
 
-configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
-
 # Build gtest
 add_library(gtest STATIC gtest/src/gtest-all.cc)
 add_library(gtest_main STATIC gtest/src/gtest_main.cc)
@@ -19,3 +17,4 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 add_subdirectory(integration)
 add_subdirectory(performance)
 add_subdirectory(regression)
+add_subdirectory(static_assert)
