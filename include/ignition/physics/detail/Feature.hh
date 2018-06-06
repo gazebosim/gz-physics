@@ -149,29 +149,43 @@ namespace ignition
                 std::tuple<Types...>
               >::value> { };
 
+      /// \private This class implements FeatureList::ConflictsWith. Its
+      /// implementation is conceptually similar to TupleContainsBase.
       template <typename SomeFeatureList, bool AssertNoConflict, typename Tuple>
       struct ConflictingLists;
 
+      /// \private Implementation of ConflictingLists. If the Tuple argument is
+      /// not a std::tuple, this class will be undefined.
       template <typename SomeFeatureList, bool AssertNoConflict,
                 typename... Features>
-      struct ConflictingLists<SomeFeatureList, AssertNoConflict, std::tuple<Features...>>
+      struct ConflictingLists<
+          SomeFeatureList, AssertNoConflict, std::tuple<Features...>>
           : std::integral_constant<bool,
               !std::is_same<
                 std::tuple<typename std::conditional<
-                  Features::template ConflictsWith<SomeFeatureList, AssertNoConflict>(),
+                  Features::template ConflictsWith<
+                    SomeFeatureList, AssertNoConflict>(),
                   Empty, Features>::type...>,
               std::tuple<Features...>
             >::value> { };
 
+      /// \private Check whether any feature within a std::tuple of features
+      /// conflicts with any other feature in that tuple.
       template <bool AssertNoConflict, typename Tuple>
       struct SelfConflict;
 
-      template <bool AssertNoConflict, typename Feature1, typename... OtherFeatures>
-      struct SelfConflict<AssertNoConflict, std::tuple<Feature1, OtherFeatures...>>
+      /// \private Recursive implementation of SelfConflict
+      template <bool AssertNoConflict, typename Feature1,
+                typename... OtherFeatures>
+      struct SelfConflict<
+            AssertNoConflict, std::tuple<Feature1, OtherFeatures...>>
           : std::integral_constant<bool,
-          FeatureList<Feature1>::template ConflictsWith<FeatureList<OtherFeatures...>, AssertNoConflict>()
-       || FeatureList<OtherFeatures...>::template ConflictsWith<Feature1, AssertNoConflict>()> {};
+          FeatureList<Feature1>::template ConflictsWith<
+            FeatureList<OtherFeatures...>, AssertNoConflict>()
+       || FeatureList<OtherFeatures...>::template ConflictsWith<
+            Feature1, AssertNoConflict>()> {};
 
+      /// \private Terminal implementation of SelfConflict
       template <bool AssertNoConflict, typename SingleFeature>
       struct SelfConflict<AssertNoConflict, std::tuple<SingleFeature>>
           : std::integral_constant<bool, false> {};
@@ -194,6 +208,34 @@ namespace ignition
       return detail::ConflictingLists<
           SomeFeatureList, AssertNoConflict, Features>::value;
     }
+
+    /////////////////////////////////////////////////
+    template <template<typename> class Extractor, typename... FeaturesT>
+    struct Extract<Extractor, FeatureList<FeaturesT...>>
+    {
+      public: template<typename P>
+      using type =
+        typename Extract<Extractor, typename FeatureList<FeaturesT...>::Features>::template type<P>;
+    };
+
+    /////////////////////////////////////////////////
+    template <template<typename> class Extractor, typename F1, typename... Remaining>
+    struct Extract<Extractor, std::tuple<F1, Remaining...>>
+    {
+      public: template<typename P>
+      class type
+          : public virtual Extractor<F1>::template type<P>,
+            public virtual Extract<Extractor, std::tuple<Remaining...>>::template type<P>
+      { };
+    };
+
+    /////////////////////////////////////////////////
+    template <template<typename> class Extractor>
+    struct Extract<Extractor, std::tuple<>>
+    {
+      public: template <typename P>
+      class type { };
+    };
 
     /////////////////////////////////////////////////
     /// \private The default definition of FeatureWithConflicts only gets called

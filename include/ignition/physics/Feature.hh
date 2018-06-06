@@ -31,7 +31,7 @@ namespace ignition
     namespace detail
     {
       template <typename...> class CombineLists;
-      template <bool, typename> class SelfConflict;
+      template <bool, typename> struct SelfConflict;
     }
 
     /////////////////////////////////////////////////
@@ -139,17 +139,6 @@ namespace ignition
     /// \brief If your feature is known to conflict with any other feature, then
     /// you should have your feature class inherit FeatureWithConflicts<...>,
     /// and pass it a list of the features that it conflicts with.
-    ///
-    /// Note: If your feature also has requirements, you should instead have
-    /// your feature class inherit
-    ///
-    /// \code
-    ///     FeatureList<
-    ///         FeatureWithConflics<...conflicts...>,
-    ///         FeatureWithRequirements<...requirements...>>
-    /// \endcode
-    ///
-    /// The FeatureList class be used to compose conflicts and requirements.
     template <typename... ConflictingFeatures>
     struct FeatureWithConflicts;
 
@@ -157,17 +146,6 @@ namespace ignition
     /// \brief If your feature is known to require any other features, then you
     /// should have your feature class inherit FeatureWithRequirements<...>,
     /// and pass it a list of the features that it requires.
-    ///
-    /// Note: If your feature also has requirements, you should instead have
-    /// your feature class inherit
-    ///
-    /// \code
-    ///     FeatureList<
-    ///         FeatureWithConflics<...conflicts...>,
-    ///         FeatureWithRequirements<...requirements...>>
-    /// \endcode
-    ///
-    /// The FeatureList class be used to compose conflicts and requirements.
     template <typename... RequiredFeatures>
     struct FeatureWithRequirements;
 
@@ -216,17 +194,46 @@ namespace ignition
     using FeaturePolicy3f = FeaturePolicy<float, 3>;
     using FeaturePolicy2f = FeaturePolicy<float, 2>;
 
-//    template <typename... Features>
-//    using Features3d = Features<double, 3, FeatureList...>;
+    template <template<typename> class Extractor, typename List>
+    struct Extract;
 
-//    template <typename... FeatureList>
-//    using Features2d = Features<double, 2, FeatureList...>;
+    #define IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, P) \
+      template <typename List> \
+      using X ## P = X ## Template<FeaturePolicy ## P, List>;
 
-//    template <typename... FeatureList>
-//    using Features3f = Features<float, 3, FeatureList...>;
+    #define IGN_PHYSICS_MAKE_EXTRACTION(X) \
+      template <typename T> \
+      struct X ## Extractor \
+      { \
+        public: template<typename P> \
+        using type = typename T::template X<P>; \
+      }; \
+      \
+      template <typename Policy, typename List> \
+      using X ## Template = \
+          typename Extract<X ## Extractor, List>::template type<Policy>; \
+      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3d) \
+      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2d) \
+      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 3f) \
+      IGN_PHYSICS_MAKE_EXTRACTION_WITH_POLICY(X, 2f)
 
-//    template <typename... FeatureList>
-//    using Features2f = Features<float, 2, FeatureList...>;
+    // This macro expands to create the templates:
+    // - Engine3d<List>
+    // - Engine2d<List>
+    // - Engine3f<List>
+    // - Engine2f<List>
+    // Each template accepts a FeatureList and results in an Engine object that
+    // combines the Engine APIs of every feature in List.
+    //
+    // The dimensionality [3|2] and precision [double|float] of the object is
+    // indicated by the suffix of the type name.
+    //
+    // This is repeated for each of the built-in feature objects (e.g. Link,
+    // Joint, Model).
+    IGN_PHYSICS_MAKE_EXTRACTION(Engine)
+    IGN_PHYSICS_MAKE_EXTRACTION(Link)
+    IGN_PHYSICS_MAKE_EXTRACTION(Joint)
+    IGN_PHYSICS_MAKE_EXTRACTION(Model)
   }
 }
 
