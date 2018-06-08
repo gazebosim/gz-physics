@@ -22,12 +22,12 @@ using namespace ignition::physics;
 class FeatureA : public virtual Feature { };
 class FeatureB : public virtual Feature { };
 class FeatureC : public virtual Feature { };
-class Conflict : public virtual Feature { };
-class AnotherFeature : public virtual FeatureWithConflicts<Conflict> { };
+class Conflicted : public virtual Feature { };
+class AnotherFeature : public virtual FeatureWithConflicts<Conflicted> { };
 
 using SomeList = FeatureList<
     FeatureA,
-    Conflict,
+    Conflicted,
     FeatureB,
     FeatureC,
     AnotherFeature>;

@@ -90,12 +90,12 @@ namespace ignition
     {
       DataStatusMask mask;
 
-      // We've been asked to skip missing data, so we'll tell the data mask that
+      // If we've been asked to skip missing data, we'll tell the data mask that
       // each data type we write must already exist.
       if (_options.skipMissingData)
         mask.exist = DataStatusMask::MUST;
 
-      // We've been asked to only write unqueried data, so we'll tell the data
+      // If we've been asked to only write unqueried data, we'll tell the data
       // mask that each data type we write must not be already queried.
       if (_options.onlyWriteUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
@@ -124,12 +124,12 @@ namespace ignition
     {
       DataStatusMask mask;
 
-      // We've been asked to skip missing data, so we'll tell the data mask that
+      // If we've been asked to skip missing data, we'll tell the data mask that
       // each data type we write must already exist.
       if (_options.skipMissingData)
         mask.exist = DataStatusMask::MUST;
 
-      // We've been asked to only write unqueried data, so we'll tell the data
+      // If we've been asked to only write unqueried data, we'll tell the data
       // mask that each data type we write must not be already queried.
       if (_options.onlyWriteUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
