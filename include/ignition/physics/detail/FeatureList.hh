@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Open Source Robotics Foundation
+ * Copyright (C) 2018 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FEATURE_HH_
-#define IGNITION_PHYSICS_DETAIL_FEATURE_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_FEATURELIST_HH_
+#define IGNITION_PHYSICS_DETAIL_FEATURELIST_HH_
 
 #include <tuple>
 #include <type_traits>
 
-#include <ignition/physics/Feature.hh>
+#include <ignition/common/SpecializedPluginPtr.hh>
+#include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FeaturePolicy.hh>
 #include <ignition/physics/TemplateHelpers.hh>
 
 namespace ignition
@@ -199,33 +201,102 @@ namespace ignition
 
       /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList
-      template <template<typename> class Extractor, typename... FeaturesT>
-      struct Extract<Extractor, FeatureList<FeaturesT...>>
+      template <template<typename> class, typename...>
+      struct Aggregate;
+
+      template <template<typename> class Selector, typename... FeaturesT>
+      struct Aggregate<Selector, FeatureList<FeaturesT...>>
       {
-        public: template<typename P>
+        public: template<typename... T>
         using type =
-          typename Extract<Extractor,
-              typename FeatureList<FeaturesT...>::Features>::template type<P>;
+          typename Aggregate<
+              Selector, typename FeatureList<FeaturesT...>::Features>
+                  ::template type<T...>;
       };
 
       /// \private Recursively extract the API out of a std::tuple of features
-      template <template<typename> class Extractor,
+      template <template<typename> class Selector,
                 typename F1, typename... Remaining>
-      struct Extract<Extractor, std::tuple<F1, Remaining...>>
+      struct Aggregate<Selector, std::tuple<F1, Remaining...>>
       {
-        public: template<typename P>
+        public: template<typename... T>
         class type
-            : public virtual Extractor<F1>::template type<P>,
-              public virtual Extract<
-                  Extractor, std::tuple<Remaining...>>::template type<P> { };
+            : public virtual Selector<F1>::template type<T...>,
+              public virtual Aggregate<
+                  Selector, std::tuple<Remaining...>>::template type<T...> { };
       };
 
       /// \private Terminate the recursion
       template <template<typename> class Extractor>
-      struct Extract<Extractor, std::tuple<>>
+      struct Aggregate<Extractor, std::tuple<>>
       {
-        public: template <typename P>
+        public: template <typename... P>
         class type { };
+      };
+
+      /////////////////////////////////////////////////
+      /// \private This class is used to determine what type of
+      /// SpecializedPluginPtr should be used by the entities provided by a
+      /// plugin.
+      template <typename Policy, typename InterfaceTuple>
+      struct DeterminePluginType;
+
+      /// \private Implementation of DeterminePluginType
+      template <typename Policy, typename... Interfaces>
+      struct DeterminePluginType<Policy, std::tuple<Interfaces...>>
+      {
+        using type = common::SpecializedPluginPtr<
+            typename Interfaces::template Implementation<Policy>...>;
+      };
+
+      /////////////////////////////////////////////////
+      /// \private This class is used to inspect what features are provided by
+      /// a plugin. It implements the API of RequestFeatures.
+      template <typename Policy, typename InterfaceTuple>
+      struct InspectFeatures;
+
+      /// \private Implementation of InspectFeatures.
+      template <typename PolicyT, typename Feature1, typename... Remaining>
+      struct InspectFeatures<PolicyT, std::tuple<Feature1, Remaining...>>
+      {
+        using Interface = typename Feature1::template Implementation<PolicyT>;
+
+        /// \brief Check that each feature is provided by the plugin.
+        template <typename PtrT>
+        static bool Verify(const PtrT &_pimpl)
+        {
+          // TODO(MXG): Replace with a fold expression when we migrate to C++17
+          return _pimpl->template HasInterface<Interface>()
+              && InspectFeatures<PolicyT, std::tuple<Remaining...>>::
+                      Verify(_pimpl);
+        }
+
+        template <typename PtrT>
+        static void MissingNames(const PtrT &_pimpl,
+                                 std::set<std::string> &_names)
+        {
+          if (!_pimpl->template HasInterface<Interface>())
+            _names.insert(typeid(Feature1).name());
+
+          InspectFeatures<PolicyT, std::tuple<Remaining...>>::MissingNames(
+                _pimpl, _names);
+        }
+      };
+
+      template <typename PolicyT>
+      struct InspectFeatures<PolicyT, std::tuple<>>
+      {
+        template <typename PtrT>
+        static bool Verify(const PtrT&)
+        {
+          return true;
+        }
+
+        template <typename PtrT>
+        static void MissingNames(const PtrT&, std::set<std::string>&)
+        {
+          // Do nothing
+        }
       };
     }
 
@@ -250,7 +321,6 @@ namespace ignition
               FeatureList<FeaturesT...>, AssertNoConflict,
               typename FeatureList<SomeFeatureList>::Features>::value;
     }
-
     /////////////////////////////////////////////////
     /// \private The default definition of FeatureWithConflicts only gets called
     /// when the ConflictingFeatures list is empty. It should simply fall back
@@ -281,8 +351,8 @@ namespace ignition
                       "FEATURE CONFLICT DETECTED");
 
         return conflict
-            || FeatureWithConflicts<RemainingConflicts...>
-                ::template ConflictsWith<SomeFeatureList, AssertNoConflict>();
+            || FeatureWithConflicts<RemainingConflicts...>::
+                  template ConflictsWith<SomeFeatureList, AssertNoConflict>();
       }
     };
 
@@ -294,6 +364,51 @@ namespace ignition
     {
       public: using RequiredFeatures = FeatureList<Features...>;
     };
+
+
+// Macros for generating EngineTemplate, LinkTemplate, etc
+#define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, P) \
+  template <typename List> \
+  using X ## P = X ## Template<FeaturePolicy ## P, List>;
+
+#define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(X) \
+  template <typename T> \
+  struct X ## Selector \
+  { \
+    public: template<typename PolicyT, typename PimplT> \
+    using type = typename T::template X<PolicyT, PimplT>; \
+  }; \
+  \
+  template <typename PolicyT, typename List> \
+  using X ## Template = \
+      typename detail::Aggregate<X ## Selector, List>:: \
+          template type< \
+            PolicyT, detail::DeterminePluginType< \
+                PolicyT, typename List::Features>>; \
+  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3d) \
+  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2d) \
+  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3f) \
+  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2f)
+
+
+    // This macro expands to create the templates:
+    // - Engine3d<List>
+    // - Engine2d<List>
+    // - Engine3f<List>
+    // - Engine2f<List>
+    // Each template accepts a FeatureList and results in an Engine object that
+    // combines the Engine APIs of every feature in List.
+    //
+    // The dimensionality [3|2] and precision [double|float] of the object is
+    // indicated by the suffix of the type name.
+    //
+    // This is repeated for each of the built-in feature objects (e.g. Link,
+    // Joint, Model).
+    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Engine)
+    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(World)
+    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Model)
+    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Link)
+    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Joint)
   }
 }
 

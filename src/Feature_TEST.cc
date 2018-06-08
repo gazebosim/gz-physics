@@ -17,15 +17,16 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/Feature.hh>
+#include <ignition/physics/RequestFeatures.hh>
+#include <ignition/physics/Entity.hh>
 
 using namespace ignition::physics;
 
 /////////////////////////////////////////////////
 class EngineMockFeature : public virtual Feature
 {
-  public: template <typename P>
-  class Engine
+  public: template <typename FeatureType, typename Pimpl>
+  class Engine : public virtual Feature::Engine<FeatureType, Pimpl>
   {
     public: bool MockAnEngineFunction() const
     {
@@ -37,8 +38,8 @@ class EngineMockFeature : public virtual Feature
 /////////////////////////////////////////////////
 class LinkMockFeature : public virtual Feature
 {
-  public: template <typename P>
-  class Link
+  public: template <typename FeatureType, typename Pimpl>
+  class Link : public virtual Feature::Link<FeatureType, Pimpl>
   {
     public: bool MockALinkFunction() const
     {
@@ -50,8 +51,8 @@ class LinkMockFeature : public virtual Feature
 /////////////////////////////////////////////////
 class SecondLinkMockFeature : public virtual Feature
 {
-  public: template <typename P>
-  class Link
+  public: template <typename FeatureType, typename Pimpl>
+  class Link : public virtual Feature::Link<FeatureType, Pimpl>
   {
     public: bool MockAnotherLinkFunction() const
     {
@@ -61,7 +62,7 @@ class SecondLinkMockFeature : public virtual Feature
 };
 
 /////////////////////////////////////////////////
-TEST(Feature_TEST, Mock)
+TEST(Feature_TEST, SimpleMock)
 {
   using MockList = FeatureList<
       EngineMockFeature,
@@ -74,6 +75,12 @@ TEST(Feature_TEST, Mock)
   Link3d<MockList> link3d;
   EXPECT_TRUE(link3d.MockALinkFunction());
   EXPECT_TRUE(link3d.MockAnotherLinkFunction());
+
+  std::set<std::string> missing =
+      RequestFeatures3d<MockList>::MissingFeatureNames(
+        ignition::common::PluginPtr());
+
+  EXPECT_EQ(3u, missing.size());
 }
 
 int main(int argc, char *argv[])

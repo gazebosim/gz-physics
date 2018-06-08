@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/Feature.hh>
+#include <ignition/physics/RequestFeatures.hh>
 
 using namespace ignition::physics;
 
