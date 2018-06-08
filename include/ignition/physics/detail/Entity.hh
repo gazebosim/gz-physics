@@ -20,32 +20,50 @@
 
 #include <memory>
 
+#include <ignition/common/SpecializedPluginPtr.hh>
 #include <ignition/physics/Entity.hh>
-#include <ignition/common/Console.hh>
 
 namespace ignition
 {
   namespace physics
   {
+    namespace detail
+    {
+      /////////////////////////////////////////////////
+      /// \private This class is used to determine what type of
+      /// SpecializedPluginPtr should be used by the entities provided by a
+      /// plugin.
+      template <typename Policy, typename Features>
+      struct DeterminePlugin;
+
+      /// \private Implementation of DeterminePluginType
+      template <typename Policy, typename... Features>
+      struct DeterminePlugin<Policy, std::tuple<Features...>>
+      {
+        using type = common::SpecializedPluginPtr<
+            typename Features::template Implementation<Policy>...>;
+      };
+    }
+
     /////////////////////////////////////////////////
-    template <typename FeatureType, typename PimplT>
-    std::size_t Entity<FeatureType, PimplT>::EntityID() const
+    template <typename Policy, typename Features>
+    std::size_t Entity<Policy, Features>::EntityID() const
     {
       return this->id;
     }
 
     /////////////////////////////////////////////////
-    template <typename FeatureType, typename PimplT>
+    template <typename Policy, typename Features>
     const std::shared_ptr<const void> &
-    Entity<FeatureType, PimplT>::EntityReference() const
+    Entity<Policy, Features>::EntityReference() const
     {
       return this->ref;
     }
 
     /////////////////////////////////////////////////
-    template <typename FeatureType, typename PimplT>
-    Entity<FeatureType, PimplT>::Entity(
-        const std::shared_ptr<PimplT> &_pimpl,
+    template <typename Policy, typename Features>
+    Entity<Policy, Features>::Entity(
+        const std::shared_ptr<Pimpl> &_pimpl,
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref)
       : pimpl(_pimpl),
@@ -53,6 +71,26 @@ namespace ignition
         ref(_ref)
     {
       // Do nothing
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Policy, typename Features>
+    template <typename FeatureT>
+    typename FeatureT::template Implementation<Policy>*
+    Entity<Policy, Features>::Interface()
+    {
+      return (*this->pimpl)->template QueryInterface<
+          typename FeatureT::template Implementation<Policy>>();
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Policy, typename Features>
+    template <typename FeatureT>
+    const typename FeatureT::template Implementation<Policy>*
+    Entity<Policy, Features>::Interface() const
+    {
+      return (*this->pimpl)->template QueryInterface<
+          typename FeatureT::template Implementation<Policy>>();
     }
   }
 }

@@ -32,6 +32,16 @@ namespace ignition
   {
     namespace detail
     {
+      /// \private A specialization of DeterminePlugin that can accept a
+      /// FeatureList
+      template <typename Policy, typename... FeaturesT>
+      struct DeterminePlugin<Policy, FeatureList<FeaturesT...>>
+      {
+        using type = typename DeterminePlugin<
+            Policy, typename FeatureList<FeaturesT...>::Features>::type;
+      };
+
+
       /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
       /// time that each object that is being passed as a "feature" matches the
@@ -235,21 +245,6 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      /// \private This class is used to determine what type of
-      /// SpecializedPluginPtr should be used by the entities provided by a
-      /// plugin.
-      template <typename Policy, typename InterfaceTuple>
-      struct DeterminePluginType;
-
-      /// \private Implementation of DeterminePluginType
-      template <typename Policy, typename... Interfaces>
-      struct DeterminePluginType<Policy, std::tuple<Interfaces...>>
-      {
-        using type = common::SpecializedPluginPtr<
-            typename Interfaces::template Implementation<Policy>...>;
-      };
-
-      /////////////////////////////////////////////////
       /// \private This class is used to inspect what features are provided by
       /// a plugin. It implements the API of RequestFeatures.
       template <typename Policy, typename InterfaceTuple>
@@ -369,22 +364,28 @@ namespace ignition
 // Macros for generating EngineTemplate, LinkTemplate, etc
 #define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, P) \
   template <typename List> \
-  using X ## P = X ## Template<FeaturePolicy ## P, List>;
+  using X ## P = X <FeaturePolicy ## P, List>;
 
 #define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(X) \
-  template <typename T> \
-  struct X ## Selector \
+  namespace detail { \
+    template <typename T> \
+    struct X ## Selector \
+    { \
+      public: template<typename PolicyT, typename FeaturesT> \
+      using type = typename T::template X<PolicyT, FeaturesT>; \
+    }; \
+  } \
+  template <typename PolicyT, typename FeaturesT> \
+  class X : public detail::Aggregate<detail :: X ## Selector, FeaturesT>:: \
+        template type<PolicyT, FeaturesT> \
   { \
-    public: template<typename PolicyT, typename PimplT> \
-    using type = typename T::template X<PolicyT, PimplT>; \
+    public: using Base = Entity<PolicyT, FeaturesT>; \
+    \
+    public: X (const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
+               const std::size_t _id, \
+               const std::shared_ptr<const void> &_ref) \
+      : Entity<PolicyT, FeaturesT>(_pimpl, _id, _ref) { } \
   }; \
-  \
-  template <typename PolicyT, typename List> \
-  using X ## Template = \
-      typename detail::Aggregate<X ## Selector, List>:: \
-          template type< \
-            PolicyT, detail::DeterminePluginType< \
-                PolicyT, typename List::Features>>; \
   DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3f) \
@@ -409,6 +410,21 @@ namespace ignition
     DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Model)
     DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Link)
     DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Joint)
+
+    namespace detail
+    {
+      template <typename T>
+      struct ImplementationSelector
+      {
+        public: template <typename PolicyT>
+        using type = typename T::template Implementation<PolicyT>;
+      };
+
+      template <typename PolicyT, typename List>
+      using AggregateImplementation =
+        typename Aggregate<ImplementationSelector, typename List::Features>::
+            template type<PolicyT>;
+    }
   }
 }
 

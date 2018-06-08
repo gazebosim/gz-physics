@@ -33,7 +33,7 @@ namespace ignition
     struct RequestFeatures
     {
       // Forward declaration of the Engine type that will be returned
-      class Engine;
+      using Engine = ignition::physics::Engine<FeaturePolicyT, FeatureListT>;
 
       // Tuple of features that are being requested
       using Features = typename FeatureListT::Features;

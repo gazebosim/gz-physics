@@ -35,8 +35,8 @@ namespace ignition
     {
       /// \brief Placeholder class for the Engine API. Every Engine feature
       /// MUST inherit this class.
-      public: template <typename Policy, typename PimplT>
-      class Engine : public virtual Entity<Policy, PimplT>
+      public: template <typename Policy, typename FeaturesT>
+      class Engine : public virtual Entity<Policy, FeaturesT>
       {
         /// \brief Virtual destructor
         public: virtual ~Engine() = default;
@@ -44,8 +44,8 @@ namespace ignition
 
       /// \brief Placeholder class in case a Feature does not define its own
       /// World API
-      public: template <typename Policy, typename PimplT>
-      class World : public virtual Entity<Policy, PimplT>
+      public: template <typename Policy, typename FeaturesT>
+      class World : public virtual Entity<Policy, FeaturesT>
       {
         /// \brief Virtual destructor
         public: virtual ~World() = default;
@@ -53,8 +53,8 @@ namespace ignition
 
       /// \brief Placeholder class in case a Feature does not define its own
       /// Model API
-      public: template <typename Policy, typename PimplT>
-      class Model : public virtual Entity<Policy, PimplT>
+      public: template <typename Policy, typename FeaturesT>
+      class Model : public virtual Entity<Policy, FeaturesT>
       {
         /// \brief Virtual destructor
         public: virtual ~Model() = default;
@@ -62,8 +62,8 @@ namespace ignition
 
       /// \brief Placeholder class in case a Feature does not define its own
       /// Link API
-      public: template <typename Policy, typename PimplT>
-      class Link : public virtual Entity<Policy, PimplT>
+      public: template <typename Policy, typename FeaturesT>
+      class Link : public virtual Entity<Policy, FeaturesT>
       {
         /// \brief Virtual destructor
         public: virtual ~Link() = default;
@@ -71,8 +71,8 @@ namespace ignition
 
       /// \brief Placeholder class in case a Feature does not define its own
       /// Joint API
-      public: template <typename Policy, typename PimplT>
-      class Joint : public virtual Entity<Policy, PimplT>
+      public: template <typename Policy, typename FeaturesT>
+      class Joint : public virtual Entity<Policy, FeaturesT>
       {
         /// \brief Virtual destructor
         public: virtual ~Joint() = default;

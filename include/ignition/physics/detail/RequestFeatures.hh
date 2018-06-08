@@ -50,7 +50,7 @@ namespace ignition
     From(const PtrT &_pimpl, const std::size_t _engineID)
       -> std::unique_ptr<Engine>
     {
-      using Pimpl = typename detail::DeterminePluginType<
+      using Pimpl = typename detail::DeterminePlugin<
           FeaturePolicyT, Features>::type;
 
       if (!detail::InspectFeatures<FeaturePolicyT, Features>::Verify(_pimpl))
@@ -58,7 +58,7 @@ namespace ignition
 
       std::shared_ptr<Pimpl> pimpl = std::make_shared<Pimpl>(_pimpl);
       Feature::Implementation<FeaturePolicyT> *implBase =
-          pimpl->template QueryInterface<
+          (*pimpl)->template QueryInterface<
               Feature::Implementation<FeaturePolicyT>>();
 
       const std::size_t entityID = implBase->InitiateEngine(_engineID);
@@ -68,23 +68,8 @@ namespace ignition
       const std::shared_ptr<const void> &engineRef =
           implBase->EngineRef(_engineID);
 
-      return std::make_unique<Engine>(pimpl, entityID, engineRef);
+      return std::unique_ptr<Engine>(new Engine(pimpl, entityID, engineRef));
     }
-
-    /// \private This class is used to initialize the Engine with its Entity
-    /// information, as provided by the pimpl.
-    template <typename FeaturePolicyT, typename FeatureListT>
-    class RequestFeatures<FeaturePolicyT, FeatureListT>::Engine
-        : public EngineTemplate<FeaturePolicyT, FeatureListT>
-    {
-      using Pimpl = typename detail::DeterminePluginType<
-          FeaturePolicyT, Features>::type;
-
-      private: Engine(const std::shared_ptr<Pimpl> &_pimpl,
-                      const std::size_t _entityID,
-                      const std::shared_ptr<const void> &_ref)
-        : Entity<FeaturePolicyT, Pimpl>(_pimpl, _entityID, _ref) { }
-    };
   }
 }
 
