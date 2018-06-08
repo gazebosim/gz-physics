@@ -69,10 +69,12 @@ TEST(Feature_TEST, SimpleMock)
       LinkMockFeature,
       SecondLinkMockFeature>;
 
-  Engine3d<MockList> engine3d;
+  // Note: We initialize these entities with garbage because in this case, it
+  // doesn't matter. These "features" don't actually use any plugin.
+  Engine3d<MockList> engine3d(nullptr, 0u, nullptr);
   EXPECT_TRUE(engine3d.MockAnEngineFunction());
 
-  Link3d<MockList> link3d;
+  Link3d<MockList> link3d(nullptr, 0u, nullptr);
   EXPECT_TRUE(link3d.MockALinkFunction());
   EXPECT_TRUE(link3d.MockAnotherLinkFunction());
 
