@@ -20,7 +20,7 @@ pipelines:
             libignition-common2-dev
             libeigen3-dev
           # Use the branch of ign-common that supports templates
-          - apt-get remove libignition-common2-dev
+          - apt-get -y remove libignition-common2-dev
           - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b BetterPluginRegistration_DllManagement
           - cd ign-common
           - mkdir build
