@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_FEATUREPOLICY_HH_
 #define IGNITION_PHYSICS_FEATUREPOLICY_HH_
 
+#include <cstddef>
+
 namespace ignition
 {
   namespace physics
