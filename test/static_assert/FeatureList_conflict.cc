@@ -15,7 +15,7 @@
  *
 */
 
-#include <ignition/physics/Feature.hh>
+#include <ignition/physics/FeatureList.hh>
 
 using namespace ignition::physics;
 
