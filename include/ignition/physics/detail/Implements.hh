@@ -39,7 +39,8 @@ namespace ignition
       {
         static void RegisterPlugin()
         {
-          Registrar<PluginT, FeaturePolicyT, typename FeatureListT::Features>::RegisterPlugin();
+          Registrar<PluginT, FeaturePolicyT, typename FeatureListT::Features>::
+              RegisterPlugin();
         }
       };
 
@@ -78,9 +79,9 @@ namespace ignition
             RegisterPlugin(); \
       } \
     }; \
- \
+  \
     static ExecuteWhenLoadingLibrary##UniqueID execute##UniqueID; \
-  } \
+  }  /* namespace */ \
   }
 
 #define DETAIL_IGN_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \

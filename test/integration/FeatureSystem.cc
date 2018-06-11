@@ -49,7 +49,7 @@ ignition::common::PluginPtr LoadMockPlugin(const std::string &_pluginName)
 /////////////////////////////////////////////////
 TEST(FeatureSystem, MockPlugin)
 {
-   mock::MockEngine3dPtr engine =
+  mock::MockEngine3dPtr engine =
       ignition::physics::RequestFeatures3d<mock::MockFeatureList>::From(
          LoadMockPlugin("mock::MockPhysicsPlugin3d"));
 

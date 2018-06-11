@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_DETAIL_ENTITY_HH_
 
 #include <memory>
+#include <tuple>
 
 #include <ignition/common/SpecializedPluginPtr.hh>
 #include <ignition/physics/Entity.hh>

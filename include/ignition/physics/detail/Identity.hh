@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_DETAIL_IDENTITY_HH_
 
 #include <cstddef>
+#include <memory>
 
 #include <ignition/physics/Export.hh>
 

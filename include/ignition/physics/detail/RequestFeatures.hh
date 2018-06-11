@@ -19,6 +19,8 @@
 #define IGNITION_PHYSICS_DETAIL_REQUESTFEATURES_HH_
 
 #include <memory>
+#include <set>
+#include <string>
 
 #include <ignition/physics/RequestFeatures.hh>
 

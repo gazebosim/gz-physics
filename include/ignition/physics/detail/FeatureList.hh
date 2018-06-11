@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_DETAIL_FEATURELIST_HH_
 #define IGNITION_PHYSICS_DETAIL_FEATURELIST_HH_
 
+#include <memory>
+#include <set>
+#include <string>
 #include <tuple>
 #include <type_traits>
 
@@ -381,8 +384,8 @@ namespace ignition
   { \
     public: using Base = Entity<PolicyT, FeaturesT>; \
     \
-    public: X (const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
-               const Identity &_identity) \
+    public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
+              const Identity &_identity) \
       : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
   }; \
   DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3d) \
