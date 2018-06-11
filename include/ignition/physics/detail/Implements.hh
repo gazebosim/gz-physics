@@ -59,27 +59,28 @@ namespace ignition
   }
 }
 
+// Dev Note (MXG): Using a namespace called detail_ignition_physics avoids
+// confusion with the ignition::physics namespace. This is important because
+// users might call this macro within their own namespace scope, which can
+// create unexpected and confusing namespace hierarchies.
 #define DETAIL_IGN_PHYSICS_ADD_PLUGIN_HELPER( \
   UniqueID, PluginType, FeaturePolicyT, FeatureListT) \
-  namespace ignition \
+  namespace detail_ignition_physics \
   { \
-    namespace physics \
+  namespace \
+  { \
+    struct ExecuteWhenLoadingLibrary##UniqueID \
     { \
-      namespace \
+      ExecuteWhenLoadingLibrary##UniqueID() \
       { \
-        struct ExecuteWhenLoadingLibrary##UniqueID \
-        { \
-          ExecuteWhenLoadingLibrary##UniqueID() \
-          { \
-            ::ignition::physics::detail::Registrar< \
-                PluginType, FeaturePolicyT, FeatureListT>:: \
-                RegisterPlugin(); \
-          } \
-        }; \
-  \
-        static ExecuteWhenLoadingLibrary##UniqueID execute##UniqueID; \
+        ::ignition::physics::detail::Registrar< \
+            PluginType, FeaturePolicyT, FeatureListT>:: \
+            RegisterPlugin(); \
       } \
-    } \
+    }; \
+ \
+    static ExecuteWhenLoadingLibrary##UniqueID execute##UniqueID; \
+  } \
   }
 
 #define DETAIL_IGN_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \
