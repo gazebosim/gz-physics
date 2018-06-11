@@ -38,6 +38,10 @@ set(IGN_MATH_VER ${ignition-math5_VERSION_MAJOR})
 ign_find_package(ignition-common2 REQUIRED)
 set(IGN_COMMON_VER ${ignition-common2_VERSION_MAJOR})
 
+#--------------------------------------
+# Find Eigen
+ign_find_package(EIGEN3 REQUIRED)
+
 message(STATUS "-------------------------------------------\n")
 
 
