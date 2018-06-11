@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_FEATURE_HH_
 
 #include <cstddef>
+#include <memory>
 #include <tuple>
 
 #include <ignition/physics/Export.hh>
@@ -31,7 +32,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This class defines the concept of a Feature. It should be
     /// inherited by classes that define some plugin feature.
-    class IGNITION_PHYSICS_VISIBLE Feature
+    class Feature
     {
       /// \brief Placeholder class for the Engine API. Every Engine feature
       /// MUST inherit this class.
@@ -79,7 +80,7 @@ namespace ignition
       };
 
       public: template <typename Policy>
-      class Implementation
+      class Implementation : public detail::Implementation
       {
         /// \brief Tell the physics plugin to initiate a physics engine.
         ///
@@ -90,20 +91,11 @@ namespace ignition
         /// only supports having one engine at a time, then it may only support
         /// engineID==0.
         ///
-        /// \return The Entity ID of the physics engine. For engineID==0 this
-        /// should also return 0. In the event of an error (or an invalid
-        /// engineID), this should return INVALID_ENTITY_ID.
-        public: virtual std::size_t InitiateEngine(
-            std::size_t engineID = 0) = 0;
-
-        /// \brief Ask for a reference-counting pointer to the specified engine.
-        ///
-        /// Note to physics engine implementers: return a nullptr if your
-        /// physics engine does not support reference-counting.
-        ///
-        /// \return A reference-counting pointer to the requested engine.
-        public: virtual std::shared_ptr<const void> EngineRef(
-            std::size_t engineID) = 0;
+        /// \return The Identity of the physics engine. For engineID==0 this
+        /// should also return an Identity whose id is 0. In the event of an
+        /// error (or an invalid engineID), the Identity id should be
+        /// INVALID_ENTITY_ID.
+        public: virtual Identity InitiateEngine(std::size_t engineID = 0) = 0;
 
         /// \brief Virtual destructor
         public: virtual ~Implementation() = default;

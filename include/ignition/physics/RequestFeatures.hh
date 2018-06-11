@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_REQUESTFEATURES_HH_
 #define IGNITION_PHYSICS_REQUESTFEATURES_HH_
 
+#include <memory>
 #include <set>
 #include <string>
 
@@ -87,7 +88,7 @@ namespace ignition
       static std::set<std::string> MissingFeatureNames(const PtrT &_pimpl);
     };
 
-#define IGN_PHYSICS_REQUEST_FEATURES_MACRO( X ) \
+#define IGN_PHYSICS_REQUEST_FEATURES_MACRO(X) \
   template <typename FeatureList> \
   using RequestFeatures ## X = \
       RequestFeatures<FeaturePolicy ## X, FeatureList>;

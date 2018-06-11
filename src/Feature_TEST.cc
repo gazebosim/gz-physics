@@ -69,12 +69,24 @@ TEST(Feature_TEST, SimpleMock)
       LinkMockFeature,
       SecondLinkMockFeature>;
 
+  class BogusImplementation : detail::Implementation
+  {
+    // Generate a bogus identity to side-step the constraints on creating
+    // entities.
+    public: Identity Generate() const
+    {
+      return this->Implementation::GenerateIdentity(0, nullptr);
+    }
+  };
+
+  BogusImplementation bogus;
+
   // Note: We initialize these entities with garbage because in this case, it
   // doesn't matter. These "features" don't actually use any plugin.
-  Engine3d<MockList> engine3d(nullptr, 0u, nullptr);
+  Engine3d<MockList> engine3d(nullptr, bogus.Generate());
   EXPECT_TRUE(engine3d.MockAnEngineFunction());
 
-  Link3d<MockList> link3d(nullptr, 0u, nullptr);
+  Link3d<MockList> link3d(nullptr, bogus.Generate());
   EXPECT_TRUE(link3d.MockALinkFunction());
   EXPECT_TRUE(link3d.MockAnotherLinkFunction());
 

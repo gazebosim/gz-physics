@@ -80,7 +80,7 @@ namespace mock
   CenterOfMass() const
   {
     return this->template Interface<MockLinkCenterOfMass>()->
-        GetLinkCenterOfMass(this->id);
+        GetLinkCenterOfMass(this->identity);
   }
 
   /////////////////////////////////////////////////
@@ -89,7 +89,7 @@ namespace mock
   CenterOfMass() const
   {
     return this->template Interface<MockModelCenterOfMass>()->
-        GetModelCenterOfMass(this->id);
+        GetModelCenterOfMass(this->identity);
   }
 }
 

@@ -64,11 +64,9 @@ namespace ignition
     template <typename Policy, typename Features>
     Entity<Policy, Features>::Entity(
         const std::shared_ptr<Pimpl> &_pimpl,
-        const std::size_t _id,
-        const std::shared_ptr<const void> &_ref)
+        const Identity &_identity)
       : pimpl(_pimpl),
-        id(_id),
-        ref(_ref)
+        identity(_identity)
     {
       // Do nothing
     }

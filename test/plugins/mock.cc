@@ -29,6 +29,8 @@ namespace mock
   class MockPhysicsPlugin
       : public ignition::physics::Implements<PolicyT, MockFeatureList>
   {
+    using Identity = ignition::physics::Identity;
+
     using NameToId = std::unordered_map<std::string, std::size_t>;
     using ParentToNameToId = std::unordered_map<std::size_t, NameToId>;
     using IdToName = std::unordered_map<std::size_t, std::string>;
@@ -65,7 +67,7 @@ namespace mock
       linkCenterOfMass[id] = com;
     }
 
-    std::size_t GetEntityByName(
+    Identity GetEntityByName(
         const std::size_t _parent,
         const std::string &_name,
         const ParentToNameToId &_map) const
@@ -73,9 +75,9 @@ namespace mock
       const NameToId &nameToId = _map.at(_parent);
       const NameToId::const_iterator it = nameToId.find(_name);
       if (it == nameToId.end())
-        return ignition::physics::INVALID_ENTITY_ID;
+        return this->GenerateInvalidId();
 
-      return it->second;
+      return this->GenerateIdentity(it->second);
     }
 
     bool SetEntityName(
@@ -108,7 +110,8 @@ namespace mock
       return true;
     }
 
-    public: std::size_t InitiateEngine(std::size_t /*_engineID*/) override
+    public: ignition::physics::Identity InitiateEngine(
+        std::size_t /*_engineID*/) override
     {
       engineNames[NextId()] = "Only one engine";
 
@@ -128,13 +131,7 @@ namespace mock
       AddLink("Link of second model", model2, Eigen::Vector3d(5.0, 0.0, 8.0));
       AddEntity("Another joint", model2, modelToJointNameToId, jointNames);
 
-      return 0;
-    }
-
-    public: std::shared_ptr<const void> EngineRef(
-        std::size_t /*engineID*/) override
-    {
-      return nullptr;
+      return this->GenerateIdentity(0);
     }
 
     public: std::string GetEngineName(std::size_t _id) const override
@@ -142,7 +139,7 @@ namespace mock
       return engineNames.at(_id);
     }
 
-    public: std::size_t GetWorldByName(
+    public: Identity GetWorldByName(
         std::size_t _engineId, const std::string &_name) const override
     {
       return this->GetEntityByName(_engineId, _name, engineToWorldNameToId);
@@ -153,7 +150,7 @@ namespace mock
       return worldNames.at(_id);
     }
 
-    public: std::size_t GetModelByName(
+    public: Identity GetModelByName(
         std::size_t _worldId, const std::string &_name) const override
     {
       return this->GetEntityByName(_worldId, _name, worldToModelNameToId);
@@ -164,7 +161,7 @@ namespace mock
       return modelNames.at(_id);
     }
 
-    public: std::size_t GetLinkByName(
+    public: Identity GetLinkByName(
         std::size_t _modelId, const std::string &_name) const override
     {
       return this->GetEntityByName(_modelId, _name, modelToLinkNameToId);
@@ -175,7 +172,7 @@ namespace mock
       return linkNames.at(_id);
     }
 
-    public: std::size_t GetJointByName(
+    public: Identity GetJointByName(
         std::size_t _modelId, const std::string &_name) const override
     {
       return this->GetEntityByName(_modelId, _name, modelToJointNameToId);

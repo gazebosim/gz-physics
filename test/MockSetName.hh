@@ -97,7 +97,7 @@ namespace mock
       const std::string &_desiredName)
   {
     return this->template Interface<MockSetName>()->SetEngineName(
-          this->id, _desiredName);
+          this->identity, _desiredName);
   }
 
   /////////////////////////////////////////////////
@@ -106,7 +106,7 @@ namespace mock
       const std::string &_desiredName)
   {
     return this->template Interface<MockSetName>()->SetWorldName(
-          this->id, _desiredName);
+          this->identity, _desiredName);
   }
 
   /////////////////////////////////////////////////
@@ -115,7 +115,7 @@ namespace mock
       const std::string &_desiredName)
   {
     return this->template Interface<MockSetName>()->SetModelName(
-          this->id, _desiredName);
+          this->identity, _desiredName);
   }
 
   /////////////////////////////////////////////////
@@ -124,7 +124,7 @@ namespace mock
       const std::string &_desiredName)
   {
     return this->template Interface<MockSetName>()->SetLinkName(
-          this->id, _desiredName);
+          this->identity, _desiredName);
   }
 
   /////////////////////////////////////////////////
@@ -133,7 +133,7 @@ namespace mock
       const std::string &_desiredName)
   {
     return this->template Interface<MockSetName>()->SetJointName(
-          this->id, _desiredName);
+          this->identity, _desiredName);
   }
 }
 

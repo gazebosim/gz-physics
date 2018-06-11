@@ -22,7 +22,7 @@
 #include <limits>
 
 #include <ignition/physics/Export.hh>
-#include <ignition/physics/Feature.hh>
+#include <ignition/physics/detail/Identity.hh>
 
 namespace ignition
 {
@@ -47,7 +47,7 @@ namespace ignition
     /// Examples of proxy objects are the Link class, Joint class, and Model
     /// class.
     template <typename Policy, typename Features>
-    class IGNITION_PHYSICS_VISIBLE Entity
+    class Entity
     {
       public: using Pimpl =
           typename detail::DeterminePlugin<Policy, Features>::type;
@@ -75,38 +75,32 @@ namespace ignition
       /// indicate that the construction procedure is not working as intended.
       protected: Entity(
         const std::shared_ptr<Pimpl> &_pimpl = nullptr,
-        const std::size_t _id = INVALID_ENTITY_ID,
-        const std::shared_ptr<const void> &_ref = nullptr);
+        const Identity &_identity = Identity());
 
-
+      /// \brief Get a pointer to the implementation of FeatureT.
+      ///
+      /// This is a convenience function so that entities don't have to query
+      /// for interfaces on their pimpl object.
+      ///
+      /// \return A pointer to the implementation of FeatureT, or a nullptr if
+      /// FeatureT is not available.
       protected: template <typename FeatureT>
       typename FeatureT::template Implementation<Policy> *Interface();
 
-      protected: template <typename FeatureT>
-      const typename FeatureT::template Implementation<Policy> *Interface() const;
+      /// \brief Same as Interface(), but const-qualified so that const entities
+      /// can request const-qualified interfaces from the implementation.
+      /// \return A pointer to a const-qualified implementation of F, or a
+      /// nullptr if F is not available.
+      protected: template <typename F>
+      const typename F::template Implementation<Policy> *Interface() const;
 
       /// \brief This is a pointer to the physics engine implementation, and it
       /// can be used by the object features to find the interfaces that they
       /// need in order to function.
       protected: std::shared_ptr<Pimpl> pimpl;
 
-      /// \brief This integer ID uniquely identifies the object that this entity
-      /// is referring to. No two entities may use the same ID unless they are
-      /// referring to the same instance of a physics engine object.
-      ///
-      /// The ID is not allowed to change at any point in the lifetime of the
-      /// engine object.
-      ///
-      /// Note that the ID of 0 is reserved for the "engine" object.
-      protected: const std::size_t id;
-
-      /// \brief This is an optional reference-counting field for the proxy
-      /// objects. Not all engines are required to support this field for all
-      /// types, so this may be left as a nullptr.
-      ///
-      /// This reference is not allowed to change at any point in the lifetime
-      /// of the engine object.
-      private: std::shared_ptr<const void> ref;
+      /// \brief This field contains information to identify the entity.
+      protected: Identity identity;
 
       /// \brief Virtual destructor
       public: virtual ~Entity() = default;

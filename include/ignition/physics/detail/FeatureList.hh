@@ -382,9 +382,8 @@ namespace ignition
     public: using Base = Entity<PolicyT, FeaturesT>; \
     \
     public: X (const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
-               const std::size_t _id, \
-               const std::shared_ptr<const void> &_ref) \
-      : Entity<PolicyT, FeaturesT>(_pimpl, _id, _ref) { } \
+               const Identity &_identity) \
+      : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
   }; \
   DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2d) \

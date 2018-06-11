@@ -18,12 +18,15 @@
 #ifndef IGNITION_PHYSICS_DETAIL_REQUESTFEATURES_HH_
 #define IGNITION_PHYSICS_DETAIL_REQUESTFEATURES_HH_
 
+#include <memory>
+
 #include <ignition/physics/RequestFeatures.hh>
 
 namespace ignition
 {
   namespace physics
   {
+    /////////////////////////////////////////////////
     template <typename FeaturePolicyT, typename FeatureListT>
     template <typename PtrT>
     bool RequestFeatures<FeaturePolicyT, FeatureListT>::
@@ -32,6 +35,7 @@ namespace ignition
       return detail::InspectFeatures<FeaturePolicyT, Features>::Verify(_pimpl);
     }
 
+    /////////////////////////////////////////////////
     template <typename FeaturePolicyT, typename FeatureListT>
     template <typename PtrT>
     std::set<std::string> RequestFeatures<FeaturePolicyT, FeatureListT>::
@@ -44,6 +48,7 @@ namespace ignition
       return names;
     }
 
+    /////////////////////////////////////////////////
     template <typename FeaturePolicyT, typename FeatureListT>
     template <typename PtrT>
     auto RequestFeatures<FeaturePolicyT, FeatureListT>::
@@ -61,14 +66,11 @@ namespace ignition
           (*pimpl)->template QueryInterface<
               Feature::Implementation<FeaturePolicyT>>();
 
-      const std::size_t entityID = implBase->InitiateEngine(_engineID);
-      if (INVALID_ENTITY_ID == entityID)
+      const Identity entityID = implBase->InitiateEngine(_engineID);
+      if (!entityID)
         return nullptr;
 
-      const std::shared_ptr<const void> &engineRef =
-          implBase->EngineRef(_engineID);
-
-      return std::unique_ptr<Engine>(new Engine(pimpl, entityID, engineRef));
+      return std::unique_ptr<Engine>(new Engine(pimpl, entityID));
     }
   }
 }

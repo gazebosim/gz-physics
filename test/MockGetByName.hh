@@ -28,6 +28,8 @@ namespace mock
   /// checking the names of those objects.
   struct MockGetByName : public ignition::physics::Feature
   {
+    using Identity = ignition::physics::Identity;
+
     template <typename PolicyT, typename FeaturesT>
     class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
     {
@@ -112,22 +114,22 @@ namespace mock
     {
       public: virtual std::string GetEngineName(std::size_t _id) const = 0;
 
-      public: virtual std::size_t GetWorldByName(
+      public: virtual Identity GetWorldByName(
           std::size_t _engineId, const std::string &_name) const = 0;
 
       public: virtual std::string GetWorldName(std::size_t _id) const = 0;
 
-      public: virtual std::size_t GetModelByName(
+      public: virtual Identity GetModelByName(
           std::size_t _worldId, const std::string &_name) const = 0;
 
       public: virtual std::string GetModelName(std::size_t _id) const = 0;
 
-      public: virtual std::size_t GetLinkByName(
+      public: virtual Identity GetLinkByName(
           std::size_t _modelId, const std::string &_name) const = 0;
 
       public: virtual std::string GetLinkName(std::size_t _id) const = 0;
 
-      public: virtual std::size_t GetJointByName(
+      public: virtual Identity GetJointByName(
           std::size_t _modelId, const std::string &_name) const = 0;
 
       public: virtual std::string GetJointName(std::size_t _id) const = 0;
@@ -141,7 +143,8 @@ namespace mock
   template <typename PolicyT, typename FeaturesT>
   std::string MockGetByName::Engine<PolicyT, FeaturesT>::Name() const
   {
-    return this->template Interface<MockGetByName>()->GetEngineName(this->id);
+    return this->template Interface<MockGetByName>()->GetEngineName(
+          this->identity);
   }
 
   /////////////////////////////////////////////////
@@ -149,14 +152,14 @@ namespace mock
   auto MockGetByName::Engine<PolicyT, FeaturesT>::GetWorld(
       const std::string &_name) -> std::unique_ptr<World>
   {
-    const std::size_t worldId =
+    const Identity worldId =
         this->template Interface<MockGetByName>()->GetWorldByName(
-          this->id, _name);
+          this->identity, _name);
 
-    if (worldId == ignition::physics::INVALID_ENTITY_ID)
+    if (!worldId)
       return nullptr;
 
-    return std::make_unique<World>(this->pimpl, worldId, nullptr);
+    return std::make_unique<World>(this->pimpl, worldId);
   }
 
   /////////////////////////////////////////////////
@@ -171,7 +174,8 @@ namespace mock
   template <typename PolicyT, typename FeaturesT>
   std::string MockGetByName::World<PolicyT, FeaturesT>::Name() const
   {
-    return this->template Interface<MockGetByName>()->GetWorldName(this->id);
+    return this->template Interface<MockGetByName>()->GetWorldName(
+          this->identity);
   }
 
   /////////////////////////////////////////////////
@@ -179,14 +183,14 @@ namespace mock
   auto MockGetByName::World<PolicyT, FeaturesT>::GetModel(
       const std::string &_name) -> std::unique_ptr<Model>
   {
-    const std::size_t modelId =
+    const Identity modelId =
         this->template Interface<MockGetByName>()->GetModelByName(
-          this->id, _name);
+          this->identity, _name);
 
-    if (modelId == ignition::physics::INVALID_ENTITY_ID)
+    if (!modelId)
       return nullptr;
 
-    return std::make_unique<Model>(this->pimpl, modelId, nullptr);
+    return std::make_unique<Model>(this->pimpl, modelId);
   }
 
   /////////////////////////////////////////////////
@@ -201,7 +205,8 @@ namespace mock
   template <typename PolicyT, typename FeaturesT>
   std::string MockGetByName::Model<PolicyT, FeaturesT>::Name() const
   {
-    return this->template Interface<MockGetByName>()->GetModelName(this->id);
+    return this->template Interface<MockGetByName>()->GetModelName(
+          this->identity);
   }
 
   /////////////////////////////////////////////////
@@ -209,14 +214,14 @@ namespace mock
   auto MockGetByName::Model<PolicyT, FeaturesT>::GetLink(
       const std::string &_name) -> std::unique_ptr<Link>
   {
-    const std::size_t linkId =
+    const Identity linkId =
         this->template Interface<MockGetByName>()->GetLinkByName(
-          this->id, _name);
+          this->identity, _name);
 
-    if (linkId == ignition::physics::INVALID_ENTITY_ID)
+    if (!linkId)
       return nullptr;
 
-    return std::make_unique<Link>(this->pimpl, linkId, nullptr);
+    return std::make_unique<Link>(this->pimpl, linkId);
   }
 
   /////////////////////////////////////////////////
@@ -232,11 +237,14 @@ namespace mock
   auto MockGetByName::Model<PolicyT, FeaturesT>::GetJoint(
       const std::string &_name) -> std::unique_ptr<Joint>
   {
-    const std::size_t jointId =
+    const Identity jointId =
         this->template Interface<MockGetByName>()->GetJointByName(
-          this->id, _name);
+          this->identity, _name);
 
-    return std::make_unique<Joint>(this->pimpl, jointId, nullptr);
+    if (!jointId)
+      return nullptr;
+
+    return std::make_unique<Joint>(this->pimpl, jointId);
   }
 
   /////////////////////////////////////////////////
@@ -251,16 +259,17 @@ namespace mock
   template <typename PolicyT, typename FeaturesT>
   std::string MockGetByName::Link<PolicyT, FeaturesT>::Name() const
   {
-    return this->template Interface<MockGetByName>()->GetLinkName(this->id);
+    return this->template Interface<MockGetByName>()->GetLinkName(
+          this->identity);
   }
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   std::string MockGetByName::Joint<PolicyT, FeaturesT>::Name() const
   {
-    return this->template Interface<MockGetByName>()->GetJointName(this->id);
+    return this->template Interface<MockGetByName>()->GetJointName(
+          this->identity);
   }
-
 }
 
 #endif
