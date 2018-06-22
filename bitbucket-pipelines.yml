@@ -9,15 +9,34 @@ pipelines:
           - sh tools/code_check.sh
           - gcc -v
           - g++ -v
+          # Use the branch of ign-cmake that has FindEIGEN.cmake
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b default
+          - cd ign-cmake
+          - mkdir build
+          - cd build
+          - cmake ..
+          - make
+          - make install
+          - cd ../..
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" > /etc/apt/sources.list.d/gazebo-stable.list
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease xenial main" > /etc/apt/sources.list.d/gazebo-prerelease.list
           - apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
-            libignition-cmake1-dev
             libignition-math5-dev
             libignition-common2-dev
+            libeigen3-dev
+          # Use the branch of ign-common that supports templates
+          - apt-get -y remove libignition-common2-dev
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b BetterPluginRegistration_DllManagement
+          - cd ign-common
+          - mkdir build
+          - cd build
+          - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          - make
+          - make install
+          - cd ../..
           # DARTsim
           - apt-add-repository -y ppa:dartsim
           - apt-get update
