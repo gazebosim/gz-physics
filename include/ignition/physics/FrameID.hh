@@ -18,7 +18,7 @@
 #ifndef IGNITION_PHYSICS_FRAMEID_HH_
 #define IGNITION_PHYSICS_FRAMEID_HH_
 
-#include <memory>
+#include <ignition/physics/detail/Identity.hh>
 
 namespace ignition
 {
@@ -55,6 +55,9 @@ namespace ignition
       /// \brief The numerical value of this FrameID's ID number.
       public: std::size_t ID() const;
 
+      /// \brief Returns true if this is the world frame.
+      public: bool IsWorld() const;
+
       /// \brief This will return true if this Frame is being reference-counted,
       /// and false otherwise.
       ///
@@ -80,20 +83,18 @@ namespace ignition
       ///
       /// For physics engine developers: You may generate FrameIDs by calling
       /// the FrameSemantics::SpawnFrameID(~,~) function.
-      private: FrameID(
-        const std::size_t _id,
-        const std::shared_ptr<const void> &_ref);
+      private: FrameID(const Identity &_identity);
+
+      private: enum WorldConstructorArg { ConstructWorld };
+
+      private: FrameID(WorldConstructorArg);
 
       // Friendship declaration
       friend class FrameSemantics;
 
-      /// \brief Unique identifying integer that indicates which frame this
-      /// FrameID is referencing.
-      private: std::size_t id;
+      private: const std::size_t id;
 
-      /// \brief Optional reference-counting smart pointer which will guarantee
-      /// that the referenced frame remains valid.
-      private: std::shared_ptr<const void> ref;
+      private: const std::shared_ptr<const void> ref;
     };
   }
 }

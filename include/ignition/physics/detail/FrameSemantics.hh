@@ -24,108 +24,121 @@ namespace ignition
 {
   namespace physics
   {
+    namespace detail
+    {
+      template <typename PolicyT, typename FQ>
+      static typename FQ::Quantity Resolve(
+          const FrameSemantics::Implementation<PolicyT> &_impl,
+          const FQ &_quantity,
+          const FrameID _relativeTo,
+          const FrameID _inCoordinatesOf)
+      {
+        using Quantity = typename FQ::Quantity;
+        using Space = typename FQ::Space;
+        using FrameDataType = typename Space::FrameDataType;
+        using RotationType = typename Space::RotationType;
+
+        const FrameID parentFrameID = _quantity.ParentFrame();
+
+        Quantity q;
+        RotationType currentCoordinates;
+
+        if (parentFrameID == _relativeTo)
+        {
+          // The quantity is already expressed relative to the _relativeTo frame
+
+          if (_relativeTo.ID() == _inCoordinatesOf.ID())
+          {
+            // The quantity is already expressed in coordinates of the
+            // _inCoordinatesOf frame
+            return _quantity.RelativeToParent();
+          }
+
+          q = _quantity.RelativeToParent();
+          currentCoordinates = _impl.FrameDataRelativeToWorld(
+                _relativeTo).pose.linear();
+        }
+        else
+        {
+          // We should only ask for the FrameData if the parent frame is not the
+          // world frame.
+          const FrameDataType parentFrameData = parentFrameID.IsWorld() ?
+                FrameDataType() : _impl.FrameDataRelativeToWorld(parentFrameID);
+
+          if (_relativeTo.IsWorld())
+          {
+            // Resolving quantities to the world frame requires fewer operations
+            // than resolving to an arbitrary frame, so we use a special function
+            // for that.
+            q = Space::ResolveToWorldFrame(
+                  _quantity.RelativeToParent(),
+                  parentFrameData);
+
+            // The World Frame has all zero fields
+            currentCoordinates = RotationType::Identity();
+          }
+          else
+          {
+            const FrameDataType relativeToData =
+                _impl.FrameDataRelativeToWorld(_relativeTo);
+
+            q = Space::ResolveToTargetFrame(
+                  _quantity.RelativeToParent(),
+                  parentFrameData,
+                  relativeToData);
+
+            currentCoordinates = relativeToData.pose.linear();
+          }
+        }
+
+        if (_relativeTo != _inCoordinatesOf)
+        {
+          if (_inCoordinatesOf.IsWorld())
+          {
+            // Resolving quantities to the world coordinates requires fewer
+            // operations than resolving to an arbitrary frame.
+            return Space::ResolveToWorldCoordinates(q, currentCoordinates);
+          }
+          else
+          {
+            const RotationType inCoordinatesOfRotation =
+                _impl.FrameDataRelativeToWorld(_inCoordinatesOf).pose.linear();
+
+            return Space::ResolveToTargetCoordinates(
+                  q, currentCoordinates, inCoordinatesOfRotation);
+          }
+        }
+
+        return q;
+      }
+    }
+
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
+    template <typename PolicyT, typename FeaturesT>
     template <typename FQ>
-    typename FQ::Quantity FrameSemantics::Engine<_Scalar, _Dim>::Resolve(
+    typename FQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
         const FQ &_quantity,
         const FrameID _relativeTo,
         const FrameID _inCoordinatesOf) const
     {
-      using Quantity = typename FQ::Quantity;
-      using Space = typename FQ::Space;
-      using FrameDataType = typename Space::FrameDataType;
-      using RotationType = typename Space::RotationType;
-
-      const FrameID parentFrameID = _quantity.ParentFrame();
-
-      Quantity q;
-      RotationType currentCoordinates;
-
-      if (parentFrameID == _relativeTo)
-      {
-        // The quantity is already expressed relative to the _relativeTo frame
-
-        if (_relativeTo.id == _inCoordinatesOf.id)
-        {
-          // The quantity is already expressed in coordinates of the
-          // _inCoordinatesOf frame
-          return _quantity.RelativeToParent();
-        }
-
-        q = _quantity.RelativeToParent();
-        currentCoordinates = this->FrameDataRelativeToWorld(
-              _relativeTo).pose.linear();
-      }
-      else
-      {
-        // We should only ask for the FrameData if the parent frame is not the
-        // world frame.
-        const FrameDataType parentFrameData =
-            FrameID::World() == parentFrameID ?
-              FrameDataType() : this->FrameDataRelativeToWorld(parentFrameID);
-
-        if (FrameID::World() == _relativeTo)
-        {
-          // Resolving quantities to the world frame requires fewer operations
-          // than resolving to an arbitrary frame, so we use a special function
-          // for that.
-          q = Space::ResolveToWorldFrame(
-                _quantity.RelativeToParent(),
-                parentFrameData);
-
-          // The World Frame has all zero fields
-          currentCoordinates = RotationType::Identity();
-        }
-        else
-        {
-          const FrameDataType relativeToData =
-              this->FrameDataRelativeToWorld(_relativeTo);
-
-          q = Space::ResolveToTargetFrame(
-                _quantity.RelativeToParent(),
-                parentFrameData,
-                relativeToData);
-
-          currentCoordinates = relativeToData.pose.linear();
-        }
-      }
-
-      if (_relativeTo != _inCoordinatesOf)
-      {
-        if (FrameID::World().id == _inCoordinatesOf.id)
-        {
-          // Resolving quantities to the world coordinates requires fewer
-          // operations than resolving to an arbitrary frame.
-          return Space::ResolveToWorldCoordinates(q, currentCoordinates);
-        }
-        else
-        {
-          const RotationType inCoordinatesOfRotation =
-              this->FrameDataRelativeToWorld(
-                _inCoordinatesOf).pose.linear();
-
-          return Space::ResolveToTargetCoordinates(
-                q, currentCoordinates, inCoordinatesOfRotation);
-        }
-      }
-
-      return q;
+      return detail::Resolve<PolicyT>(
+            *this->template Interface<FrameSemantics>(),
+            _quantity, _relativeTo, _inCoordinatesOf);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
+    template <typename PolicyT, typename FeaturesT>
     template <typename FQ>
-    typename FQ::Quantity FrameSemantics::Engine<_Scalar, _Dim>::Resolve(
+    typename FQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
         const FQ &_quantity, const FrameID _relativeTo) const
     {
       return this->Resolve(_quantity, _relativeTo, _relativeTo);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
+    template <typename PolicyT, typename FeaturesT>
     template <typename FQ>
-    FQ FrameSemantics::Engine<_Scalar, _Dim>::Reframe(
+    FQ FrameSemantics::Engine<PolicyT, FeaturesT>::Reframe(
         const FQ &_quantity, const FrameID _withRespectTo) const
     {
       return FQ(_withRespectTo,
@@ -133,8 +146,8 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameID FrameSemantics::Engine<_Scalar, _Dim>::SpawnFrameID(
+    template <typename PolicyT, typename FeaturesT>
+    FrameID FrameSemantics::Engine<PolicyT, FeaturesT>::SpawnFrameID(
         const std::size_t _id,
         const std::shared_ptr<const void> &_ref) const
     {
@@ -142,55 +155,47 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameID FrameSemantics::Object<_Scalar, _Dim>::GetFrameID() const
+    template <typename PolicyT, typename FeaturesT>
+    FrameID FrameSemantics::Frame<PolicyT, FeaturesT>::GetFrameID() const
     {
-      return this->engine->SpawnFrameID(
-            this->BasicObject::ObjectID(),
-            this->BasicObject::ObjectReference());
+      return FrameID(this->identity);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    auto FrameSemantics::Object<_Scalar, _Dim>::FrameDataRelativeTo(
+    template <typename PolicyT, typename FeaturesT>
+    auto FrameSemantics::Frame<PolicyT, FeaturesT>::FrameDataRelativeTo(
         const FrameID &_relativeTo) const -> FrameData
     {
       return this->FrameDataRelativeTo(_relativeTo, _relativeTo);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    auto FrameSemantics::Object<_Scalar, _Dim>::FrameDataRelativeTo(
+    template <typename PolicyT, typename FeaturesT>
+    auto FrameSemantics::Frame<PolicyT, FeaturesT>::FrameDataRelativeTo(
         const FrameID &_relativeTo,
         const FrameID &_inCoordinatesOf) const -> FrameData
     {
+      using RelativeFrameData =
+          ignition::physics::RelativeFrameData<
+            typename PolicyT::Scalar, PolicyT::Dim>;
+
       // Create a zeroed-out FrameData which is a child of this frame,
       // effectively making it an equivalent frame. Then, resolve the child in
       // terms of the input frames.
       //
       // The resulting FrameData will be equivalent to resolving this frame in
       // terms of the input frames.
-      return this->engine->Resolve(
-            RelativeFrameData<_Scalar, _Dim>(this->GetFrameID()),
+      return detail::Resolve<PolicyT>(
+            *this->template Interface<FrameSemantics>(),
+            RelativeFrameData(this->GetFrameID()),
             _relativeTo, _inCoordinatesOf);
     }
 
     /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameSemantics::Object<_Scalar, _Dim>::operator FrameID() const
+    template <typename PolicyT, typename FeaturesT>
+    FrameSemantics::Frame<PolicyT, FeaturesT>::operator FrameID() const
     {
       return this->GetFrameID();
-    }
-
-    /////////////////////////////////////////////////
-    template <typename _Scalar, std::size_t _Dim>
-    FrameSemantics::Object<_Scalar, _Dim>::Object()
-      : engine(dynamic_cast<FrameSemantics::Engine<_Scalar, _Dim> *const>(
-                  this->BasicObject::EngineReference()))
-    {
-      assert(engine && "[FrameSemantics::Object] Could not find a reference "
-                       "to the necessary engine feature. This should never "
-                       "happen! Please report this bug!\n");
     }
   }
 }

@@ -38,7 +38,7 @@ namespace ignition
     /////////////////////////////////////////////////
     const FrameID &FrameID::World()
     {
-      static const FrameID world(0, nullptr);
+      static const FrameID world(ConstructWorld);
       return world;
     }
 
@@ -46,6 +46,12 @@ namespace ignition
     std::size_t FrameID::ID() const
     {
       return id;
+    }
+
+    /////////////////////////////////////////////////
+    bool FrameID::IsWorld() const
+    {
+      return this->id == World().id;
     }
 
     /////////////////////////////////////////////////
@@ -67,11 +73,17 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    FrameID::FrameID(
-        const std::size_t _id,
-        const std::shared_ptr<const void> &_ref)
-      : id(_id),
-        ref(_ref)
+    FrameID::FrameID(const Identity &_identity)
+      : id(_identity.id),
+        ref(_identity.ref)
+    {
+      // Do nothing
+    }
+
+    /////////////////////////////////////////////////
+    FrameID::FrameID(WorldConstructorArg)
+      : id(0),
+        ref(nullptr)
     {
       // Do nothing
     }

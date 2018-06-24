@@ -21,7 +21,7 @@
 #include <memory>
 
 #include <ignition/physics/Feature.hh>
-#include <ignition/physics/BasicObject.hh>
+#include <ignition/physics/Entity.hh>
 #include <ignition/physics/FrameID.hh>
 #include <ignition/physics/FrameData.hh>
 #include <ignition/physics/FramedQuantity.hh>
@@ -38,22 +38,16 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
     {
       // Forward declaration
-      public: template <typename, std::size_t> class Object;
+      public: template <typename, typename> class Frame;
 
       /// \brief This class defines the engine interface that provides the
       /// FrameSemantics feature.
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual Feature::Engine
+      public: template <typename PolicyT, typename FeaturesT>
+      class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
       {
-        public: using FrameData = ignition::physics::FrameData<_Scalar, _Dim>;
-
-        /// \brief Get the current 3D transformation of the specified frame with
-        /// respect to the WorldFrame.
-        ///
-        /// Engine developers only need to provide an implementation for this
-        /// function in order to provide FrameSemantics.
-        public: virtual FrameData FrameDataRelativeToWorld(
-          const FrameID &_id) const = 0;
+        public: using FrameData =
+            ignition::physics::FrameData<
+              typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Resolve is able to take a FramedQuantity (FQ) and compute its
         /// values in terms of other reference frames. The argument `relativeTo`
@@ -107,13 +101,16 @@ namespace ignition
             const std::size_t _id,
             const std::shared_ptr<const void> &_ref) const;
 
-        template <typename, std::size_t> friend class FrameSemantics::Object;
+        template <typename, std::size_t> friend class FrameSemantics::Frame;
       };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Object : public virtual BasicObject
+      /// \brief Base class for the API of a Frame. This will be inherited by
+      /// any objects that are able to express Frame Semantics.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Frame : public virtual Entity<PolicyT, FeaturesT>
       {
-        public: using FrameData = ignition::physics::FrameData<_Scalar, _Dim>;
+        public: using FrameData =
+          ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Get a FrameID for this object
         public: FrameID GetFrameID() const;
@@ -134,16 +131,25 @@ namespace ignition
         /// reference to the Object can be treated as a FrameID.
         public: operator FrameID() const;
 
-        /// \brief The constructor will use its base class to find a reference
-        /// to the engine feature interface that it needs.
-        public: Object();
-
         /// \brief Virtual destructor
-        public: virtual ~Object() = default;
+        public: virtual ~Frame() = default;
+      };
 
-        /// \brief Pointer to the FrameSemantics::Engine interface that allows
-        /// this feature to work.
-        private: const FrameSemantics::Engine<_Scalar, _Dim> *const engine;
+      /// \brief This class is inherited by physics plugin classes that want to
+      /// provide this feature.
+      template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using FrameData =
+          ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+
+        /// \brief Get the current 3D transformation of the specified frame with
+        /// respect to the WorldFrame.
+        ///
+        /// Engine developers only need to provide an implementation for this
+        /// function in order to provide FrameSemantics.
+        public: virtual FrameData FrameDataRelativeToWorld(
+          const FrameID &_id) const = 0;
       };
     };
 
@@ -152,11 +158,12 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE LinkFrameSemantics
         : public virtual FrameSemantics
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename Policy, typename Features>
+      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Link : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
+      public: template <typename Policy, typename Features>
+      class Link : public virtual FrameSemantics::Frame<Policy, Features> { };
+
     };
 
     /////////////////////////////////////////////////
@@ -164,11 +171,11 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE JointFrameSemantics
         : public virtual FrameSemantics
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename Policy, typename Features>
+      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Joint : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
+      public: template <typename Policy, typename Features>
+      class Joint : public virtual FrameSemantics::Frame<Policy, Features>{ };
     };
 
     /////////////////////////////////////////////////
@@ -176,11 +183,11 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE ModelFrameSemantics
         : public virtual FrameSemantics
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename Policy, typename Features>
+      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
 
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Model : public virtual FrameSemantics::Object<_Scalar, _Dim> { };
+      public: template <typename Policy, typename Features>
+      class Model : public virtual FrameSemantics::Frame<Policy, Features>{ };
     };
 
     /////////////////////////////////////////////////
@@ -190,8 +197,8 @@ namespace ignition
           public virtual JointFrameSemantics,
           public virtual ModelFrameSemantics
     {
-      public: template <typename _Scalar, std::size_t _Dim>
-      class Engine : public virtual FrameSemantics::Engine<_Scalar, _Dim> { };
+      public: template <typename Policy, typename Features>
+      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
     };
   }
 }
