@@ -5,8 +5,7 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck
-          - sh tools/code_check.sh
+          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common
           - gcc -v
           - g++ -v
           # Use the branch of ign-cmake that has FindEIGEN.cmake
@@ -37,6 +36,13 @@ pipelines:
           - make
           - make install
           - cd ../..
+          # DARTsim
+          - apt-add-repository -y ppa:dartsim
+          - apt-get update
+          - apt-get -y install
+            dart6-data
+            libdart6-dev
+            libdart6-utils-urdf-dev
           # Ignition physics
           - mkdir build
           - cd build
@@ -46,4 +52,5 @@ pipelines:
           - make test
           - make coverage
           - bash <(curl -s https://codecov.io/bash)
+          - make codecheck
           - make install
