@@ -22,18 +22,18 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
-    #define DETAIL_IMPLEMENT_FRAMEID_COMPARE( op ) \
+    #define DETAIL_IMPLEMENT_FRAMEID_COMPARE(op) \
     bool FrameID::operator op (const FrameID &_other) const \
     { \
       return (this->id op _other.id); \
     }
 
-    DETAIL_IMPLEMENT_FRAMEID_COMPARE( == )
-    DETAIL_IMPLEMENT_FRAMEID_COMPARE( < )
-    DETAIL_IMPLEMENT_FRAMEID_COMPARE( > )
-    DETAIL_IMPLEMENT_FRAMEID_COMPARE( <= )
-    DETAIL_IMPLEMENT_FRAMEID_COMPARE( >= )
-    DETAIL_IMPLEMENT_FRAMEID_COMPARE( != )
+    DETAIL_IMPLEMENT_FRAMEID_COMPARE( == ) // NOLINT
+    DETAIL_IMPLEMENT_FRAMEID_COMPARE( < )  // NOLINT
+    DETAIL_IMPLEMENT_FRAMEID_COMPARE( > )  // NOLINT
+    DETAIL_IMPLEMENT_FRAMEID_COMPARE( <= ) // NOLINT
+    DETAIL_IMPLEMENT_FRAMEID_COMPARE( >= ) // NOLINT
+    DETAIL_IMPLEMENT_FRAMEID_COMPARE( != ) // NOLINT
 
     /////////////////////////////////////////////////
     const FrameID &FrameID::World()

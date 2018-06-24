@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_FRAMESEMANTICS_HH_
 #define IGNITION_PHYSICS_DETAIL_FRAMESEMANTICS_HH_
 
+#include <memory>
+
 #include <ignition/physics/FrameSemantics.hh>
 
 namespace ignition
@@ -68,8 +70,8 @@ namespace ignition
           if (_relativeTo.IsWorld())
           {
             // Resolving quantities to the world frame requires fewer operations
-            // than resolving to an arbitrary frame, so we use a special function
-            // for that.
+            // than resolving to an arbitrary frame, so we use a special
+            // function for that.
             q = Space::ResolveToWorldFrame(
                   _quantity.RelativeToParent(),
                   parentFrameData);

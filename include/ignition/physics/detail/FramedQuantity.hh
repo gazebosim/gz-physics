@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_FRAMEDQUANTITY_HH_
 #define IGNITION_PHYSICS_DETAIL_FRAMEDQUANTITY_HH_
 
+#include <utility>
+
 #include <ignition/physics/FramedQuantity.hh>
 
 namespace ignition
@@ -425,7 +427,6 @@ namespace ignition
         {
           return LinearVectorType(_u[0]*_v[1], -_u[0]*_v[0]);
         }
-
       };
 
       /////////////////////////////////////////////////

@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_FRAMEID_HH_
 #define IGNITION_PHYSICS_FRAMEID_HH_
 
+#include <memory>
+
 #include <ignition/physics/detail/Identity.hh>
 
 namespace ignition
@@ -83,11 +85,11 @@ namespace ignition
       ///
       /// For physics engine developers: You may generate FrameIDs by calling
       /// the FrameSemantics::SpawnFrameID(~,~) function.
-      private: FrameID(const Identity &_identity);
+      private: explicit FrameID(const Identity &_identity);
 
       private: enum WorldConstructorArg { ConstructWorld };
 
-      private: FrameID(WorldConstructorArg);
+      private: explicit FrameID(WorldConstructorArg);
 
       // Friendship declaration
       friend class FrameSemantics;

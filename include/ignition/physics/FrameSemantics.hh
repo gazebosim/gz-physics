@@ -163,7 +163,6 @@ namespace ignition
 
       public: template <typename Policy, typename Features>
       class Link : public virtual FrameSemantics::Frame<Policy, Features> { };
-
     };
 
     /////////////////////////////////////////////////

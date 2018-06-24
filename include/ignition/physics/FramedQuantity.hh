@@ -51,6 +51,7 @@ namespace ignition
       FramedQuantity(const FrameID &_parentID, Args&&... _args);
 
       /// \brief Implicit conversion constructor.
+      // cppcheck-suppress noExplicitConstructor
       public: FramedQuantity(const Q &_rawValue);
 
       /// \brief Get the value of this FramedQuantity relative to its parent
@@ -137,8 +138,8 @@ namespace ignition
       template <typename, std::size_t> struct AngularAccelerationSpace;
       template <typename, std::size_t> struct VectorSpace;
       template <typename, std::size_t> struct FrameSpace;
-      // TODO: We can add more spaces to support other types like Moments of
-      // Inertia, Jacobians, Spatial Velocities/Accelerations, Wrench+Point
+      // TODO(MXG): We can add more spaces to support other types like Moments
+      // of Inertia, Jacobians, Spatial Velocities/Accelerations, Wrench+Point
       // pairs, and so on.
       //
       // Users can also define Spaces for their own types (see the header
@@ -184,7 +185,8 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using FramedTorque = FramedQuantity<
-        AngularVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
+        AngularVector<Scalar, Dim>, Dim,
+        detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedTorque)
 
     /////////////////////////////////////////////////

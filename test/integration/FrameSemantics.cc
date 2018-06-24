@@ -17,13 +17,13 @@
 
 #include <gtest/gtest.h>
 
-#include "../MockFrameSemantics.hh"
-
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/PluginPtr.hh>
 #include <ignition/physics/RequestFeatures.hh>
 #include <ignition/math/Rand.hh>
+
+#include "../MockFrameSemantics.hh"
 
 
 using ignition::physics::FrameData;
