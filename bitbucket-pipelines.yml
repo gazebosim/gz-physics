@@ -6,7 +6,6 @@ pipelines:
         script:
           - apt-get update
           - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common
-          - sh tools/code_check.sh
           - gcc -v
           - g++ -v
           # Use the branch of ign-cmake that has FindEIGEN.cmake
@@ -53,4 +52,5 @@ pipelines:
           - make test
           - make coverage
           - bash <(curl -s https://codecov.io/bash)
+          - make codecheck
           - make install
