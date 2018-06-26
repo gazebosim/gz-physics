@@ -90,6 +90,9 @@ TEST(Feature_TEST, SimpleMock)
   EXPECT_TRUE(link3d.MockALinkFunction());
   EXPECT_TRUE(link3d.MockAnotherLinkFunction());
 
+  // An empty plugin will not provide any features. When we ask for the missing
+  // feature names, we should receive the name of every feature in the list, for
+  // a total of 3 feature names.
   std::set<std::string> missing =
       RequestFeatures3d<MockList>::MissingFeatureNames(
         ignition::common::PluginPtr());

@@ -62,6 +62,11 @@ TEST(FeatureSystem, MockPlugin)
   mock::MockModel3dPtr model1 = world->GetModel("First model");
   ASSERT_NE(nullptr, model1);
   EXPECT_EQ("First model", model1->Name());
+  // The Entity ID of the model objects that get returned should be consistent.
+  EXPECT_EQ(model1->EntityID(), world->GetModel("First model")->EntityID());
+  // Our mock plugin does not do reference counting, so we expect the reference
+  // to be a nullptr.
+  EXPECT_EQ(nullptr, model1->EntityReference());
 
   EXPECT_TRUE(model1->SetName("Changed model name"));
   EXPECT_EQ("Changed model name", model1->Name());
