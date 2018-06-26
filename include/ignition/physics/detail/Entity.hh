@@ -50,7 +50,7 @@ namespace ignition
     template <typename Policy, typename Features>
     std::size_t Entity<Policy, Features>::EntityID() const
     {
-      return this->id;
+      return this->identity.id;
     }
 
     /////////////////////////////////////////////////
@@ -58,7 +58,7 @@ namespace ignition
     const std::shared_ptr<const void> &
     Entity<Policy, Features>::EntityReference() const
     {
-      return this->ref;
+      return this->identity.ref;
     }
 
     /////////////////////////////////////////////////
