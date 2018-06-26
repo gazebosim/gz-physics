@@ -100,7 +100,7 @@ namespace ignition
       protected: std::shared_ptr<Pimpl> pimpl;
 
       /// \brief This field contains information to identify the entity.
-      protected: Identity identity;
+      protected: const Identity identity;
 
       /// \brief Virtual destructor
       public: virtual ~Entity() = default;
