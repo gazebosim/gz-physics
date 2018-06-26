@@ -97,7 +97,7 @@ namespace ignition
       /// \brief This is a pointer to the physics engine implementation, and it
       /// can be used by the object features to find the interfaces that they
       /// need in order to function.
-      protected: std::shared_ptr<Pimpl> pimpl;
+      protected: const std::shared_ptr<Pimpl> pimpl;
 
       /// \brief This field contains information to identify the entity.
       protected: const Identity identity;
