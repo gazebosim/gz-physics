@@ -52,7 +52,7 @@ namespace ignition
       public: using Pimpl =
           typename detail::DeterminePlugin<Policy, Features>::type;
 
-      /// \brief Get the unique entity ID of this Link.
+      /// \brief Get the unique ID value of this Entity.
       public: std::size_t EntityID() const;
 
       /// \brief Get a reference-counting std::shared_ptr to the object inside
@@ -69,10 +69,10 @@ namespace ignition
       /// feature classes.
       /// - Since all the features are virtually inherited, only the "final"
       /// inheriting class constructor needs to actually call this constructor.
-      /// - The default argument for the ID is the highest possible integer.
-      /// This should help to make it clear if the construction procedure is not
-      /// working as intended. If _pimpl is a nullptr, that would also
-      /// indicate that the construction procedure is not working as intended.
+      /// - The default argument for the identity will have an INVALID_ENTITY_ID
+      /// value (which is the result of default-constructing Identity). If the
+      /// Identity of an Entity is invalid, that implies that there is a bug in
+      /// the construction of that Entity.
       protected: Entity(
         const std::shared_ptr<Pimpl> &_pimpl = nullptr,
         const Identity &_identity = Identity());
