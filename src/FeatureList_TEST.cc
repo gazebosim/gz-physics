@@ -166,10 +166,6 @@ class RequiresFeaturesBC
 
 TEST(FeatureList_TEST, Requirements)
 {
-  // Note: we need an extra set of parentheses in this EXPECT_TRUE statements
-  // to prevent the comma of the template argument from being parsed as though
-  // it is separating two macro arguments.
-
   // These tests are making sure that required features are getting added to the
   // FeatureList where they're needed.
 
