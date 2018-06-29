@@ -68,6 +68,11 @@ namespace ignition
       ///
       /// \tparam SomeFeatureList
       ///   The list to compare against for conflicts.
+      /// \tparam AssertNoConflict
+      ///   Setting this to true will result in a static_assert if a conflict is
+      ///   found. That way, if a conflict exists, you will get a compilation
+      ///   error, and the compilation error will tell you which feature is
+      ///   conflicting.
       /// \return true if any features in SomeFeatureList conflict with this
       /// list or vice versa.
       public: template <typename SomeFeatureList,
