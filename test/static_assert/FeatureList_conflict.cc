@@ -34,5 +34,5 @@ using SomeList = FeatureList<
 
 int main()
 {
-  SomeList::Link<FeaturePolicy3d> link;
+  SomeList();
 }
