@@ -70,7 +70,7 @@ namespace mock
     };
 
     template <typename PolicyT, typename FeaturesT>
-    class Model : public virtual Feature::World<PolicyT, FeaturesT>
+    class Model : public virtual Feature::Model<PolicyT, FeaturesT>
     {
       public: using Link = ignition::physics::Link<PolicyT, FeaturesT>;
       public: using Joint = ignition::physics::Joint<PolicyT, FeaturesT>;
