@@ -51,7 +51,7 @@ namespace mock
     };
 
     template <typename PolicyT, typename FeaturesT>
-    class Link : public virtual Feature::Model<PolicyT, FeaturesT>
+    class Link : public virtual Feature::Link<PolicyT, FeaturesT>
     {
       /// \brief Set the name of this link.
       /// \return true if the name was set; false if the name was already taken.
@@ -59,7 +59,7 @@ namespace mock
     };
 
     template <typename PolicyT, typename FeaturesT>
-    class Joint : public virtual Feature::Model<PolicyT, FeaturesT>
+    class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
     {
       /// \brief Set the name of this joint.
       /// \return true if the name was set; false if the name was already taken.

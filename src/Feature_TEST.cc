@@ -62,6 +62,18 @@ class SecondLinkMockFeature : public virtual Feature
 };
 
 /////////////////////////////////////////////////
+TEST(Feature_TEST, ConflictsWith)
+{
+  class FeatureA : public virtual Feature { };
+  class FeatureB : public virtual Feature { };
+
+  EXPECT_FALSE(FeatureA::ConflictsWith<FeatureA>());
+  EXPECT_FALSE(FeatureA::ConflictsWith<FeatureB>());
+  EXPECT_FALSE(FeatureB::ConflictsWith<FeatureA>());
+  EXPECT_FALSE(FeatureB::ConflictsWith<FeatureB>());
+}
+
+/////////////////////////////////////////////////
 TEST(Feature_TEST, SimpleMock)
 {
   using MockList = FeatureList<

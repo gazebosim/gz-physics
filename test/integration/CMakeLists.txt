@@ -9,7 +9,7 @@ ign_build_tests(
 
 foreach(test ${list})
   target_compile_definitions(${test} PRIVATE
-    "DETAIL_IGN_MOCK_PLUGIN_PATH=\"$<TARGET_FILE_DIR:MockPhysics>\"")
+    "DETAIL_IGN_MOCK_PLUGIN_PATH=\"$<TARGET_FILE_DIR:MockEntities>\"")
 endforeach()
 
-add_dependencies(INTEGRATION_FeatureSystem MockPhysics)
+add_dependencies(INTEGRATION_FeatureSystem MockEntities)

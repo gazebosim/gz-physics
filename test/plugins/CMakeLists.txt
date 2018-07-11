@@ -1,7 +1,7 @@
-add_library(MockPhysics SHARED mock.cc)
+add_library(MockEntities SHARED MockEntities.cc)
 add_library(MockFrames SHARED frames.cc)
 
-foreach(plugin MockPhysics MockFrames)
+foreach(plugin MockEntities MockFrames)
   target_link_libraries(${plugin}
     PRIVATE
       ${PROJECT_LIBRARY_TARGET_NAME})

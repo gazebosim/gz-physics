@@ -26,7 +26,7 @@
 namespace mock
 {
   template <typename PolicyT>
-  class MockPhysicsPlugin
+  class EntitiesPlugin
       : public ignition::physics::Implements<PolicyT, MockFeatureList>
   {
     using Identity = ignition::physics::Identity;
@@ -40,12 +40,12 @@ namespace mock
     std::size_t AddEntity(
         const std::string &_name,
         const std::size_t _parentId,
-        ParentToNameToId &_nameToId,
+        ParentToNameToId &_parentToNameToId,
         IdToName &_idToName)
     {
       const std::size_t id = NextId();
       _idToName[id] = _name;
-      _nameToId[_parentId][_name] = id;
+      _parentToNameToId[_parentId][_name] = id;
       parentId[id] = _parentId;
       return id;
     }
@@ -86,7 +86,7 @@ namespace mock
         ParentToNameToId &_parentToNameMap,
         IdToName &_idToNameMap)
     {
-      const std::size_t parent = parentId[_id];
+      const std::size_t parent = parentId.at(_id);
       NameToId &nameMap = _parentToNameMap.at(parent);
 
       const auto result = nameMap.insert(std::make_pair(_desiredName, _id));
@@ -275,23 +275,23 @@ namespace mock
       return highestId++;
     }
 
-    std::size_t highestId;
+    std::size_t highestId = 0;
 
   };
 
-  class MockPhysicsPlugin3d
-      : public MockPhysicsPlugin<ignition::physics::FeaturePolicy3d> { };
+  class EntitiesPlugin3d
+      : public EntitiesPlugin<ignition::physics::FeaturePolicy3d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
-      MockPhysicsPlugin3d,
+      EntitiesPlugin3d,
       ignition::physics::FeaturePolicy3d,
       MockFeatureList)
 
-  class MockPhysicsPlugin2d
-    : public MockPhysicsPlugin<ignition::physics::FeaturePolicy2d> { };
+  class EntitiesPlugin2d
+    : public EntitiesPlugin<ignition::physics::FeaturePolicy2d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
-      MockPhysicsPlugin2d,
+      EntitiesPlugin2d,
       ignition::physics::FeaturePolicy2d,
       MockFeatureList)
 }

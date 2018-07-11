@@ -170,8 +170,9 @@ namespace ignition
               >::value> { };
 
       /////////////////////////////////////////////////
-      /// \private This class implements FeatureList::ConflictsWith. Its
-      /// implementation is conceptually similar to TupleContainsBase.
+      /// \private This class helps to implement the function
+      /// FeatureList::ConflictsWith(). Its implementation is conceptually
+      /// similar to TupleContainsBase.
       template <typename SomeFeatureList, bool AssertNoConflict, typename Tuple>
       struct ConflictingLists;
 
