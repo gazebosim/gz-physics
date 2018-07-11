@@ -33,7 +33,7 @@ ignition::common::PluginPtr LoadMockPlugin(const std::string &_pluginName)
 {
   ignition::common::SystemPaths sp;
   sp.AddPluginPaths(IGN_MOCK_PLUGIN_PATH);
-  const std::string path = sp.FindSharedLibrary("MockPhysics");
+  const std::string path = sp.FindSharedLibrary("MockEntities");
 
   ignition::common::PluginLoader pl;
   auto plugins = pl.LoadLibrary(path);
@@ -52,7 +52,7 @@ TEST(FeatureSystem, MockPluginInvalidFeatures)
   // mismatch between 2d and 3d
   mock::MockEngine3dPtr engine =
       ignition::physics::RequestFeatures3d<mock::MockFeatureList>::From(
-         LoadMockPlugin("mock::MockPhysicsPlugin2d"));
+         LoadMockPlugin("mock::EntitiesPlugin2d"));
   EXPECT_EQ(nullptr, engine);
 }
 
@@ -61,7 +61,7 @@ TEST(FeatureSystem, MockPlugin)
 {
   mock::MockEngine3dPtr engine =
       ignition::physics::RequestFeatures3d<mock::MockFeatureList>::From(
-         LoadMockPlugin("mock::MockPhysicsPlugin3d"));
+         LoadMockPlugin("mock::EntitiesPlugin3d"));
 
   EXPECT_EQ("Only one engine", engine->Name());
 
@@ -125,7 +125,7 @@ TEST(FeatureSystem, MockCenterOfMass3d)
 {
   mock::MockEngine3dPtr engine =
       ignition::physics::RequestFeatures3d<mock::MockFeatureList>::From(
-        LoadMockPlugin("mock::MockPhysicsPlugin3d"));
+        LoadMockPlugin("mock::EntitiesPlugin3d"));
 
   mock::MockWorld3dPtr world = engine->GetWorld("Some world");
   ASSERT_NE(nullptr, world);
@@ -175,7 +175,7 @@ TEST(FeatureSystem, MockCenterOfMass2d)
 {
   mock::MockEngine2dPtr engine =
       ignition::physics::RequestFeatures2d<mock::MockFeatureList>::From(
-        LoadMockPlugin("mock::MockPhysicsPlugin2d"));
+        LoadMockPlugin("mock::EntitiesPlugin2d"));
 
   mock::MockWorld2dPtr world = engine->GetWorld("Some world");
   ASSERT_NE(nullptr, world);

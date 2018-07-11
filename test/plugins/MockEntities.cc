@@ -26,7 +26,7 @@
 namespace mock
 {
   template <typename PolicyT>
-  class MockPhysicsPlugin
+  class EntitiesPlugin
       : public ignition::physics::Implements<PolicyT, MockFeatureList>
   {
     using Identity = ignition::physics::Identity;
@@ -279,19 +279,19 @@ namespace mock
 
   };
 
-  class MockPhysicsPlugin3d
-      : public MockPhysicsPlugin<ignition::physics::FeaturePolicy3d> { };
+  class EntitiesPlugin3d
+      : public EntitiesPlugin<ignition::physics::FeaturePolicy3d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
-      MockPhysicsPlugin3d,
+      EntitiesPlugin3d,
       ignition::physics::FeaturePolicy3d,
       MockFeatureList)
 
-  class MockPhysicsPlugin2d
-    : public MockPhysicsPlugin<ignition::physics::FeaturePolicy2d> { };
+  class EntitiesPlugin2d
+    : public EntitiesPlugin<ignition::physics::FeaturePolicy2d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
-      MockPhysicsPlugin2d,
+      EntitiesPlugin2d,
       ignition::physics::FeaturePolicy2d,
       MockFeatureList)
 }

@@ -1,7 +1,7 @@
-add_library(MockPhysics SHARED mock.cc)
+add_library(MockEntities SHARED MockEntities.cc)
 
-target_link_libraries(MockPhysics
+target_link_libraries(MockEntities
   PRIVATE
     ${PROJECT_LIBRARY_TARGET_NAME}
     Eigen3::Eigen)
-target_compile_options(MockPhysics PRIVATE -fkeep-inline-functions)
+target_compile_options(MockEntities PRIVATE -fkeep-inline-functions)
