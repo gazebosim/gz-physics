@@ -47,6 +47,16 @@ ignition::common::PluginPtr LoadMockPlugin(const std::string &_pluginName)
 }
 
 /////////////////////////////////////////////////
+TEST(FeatureSystem, MockPluginInvalidFeatures)
+{
+  // mismatch between 2d and 3d
+  mock::MockEngine3dPtr engine =
+      ignition::physics::RequestFeatures3d<mock::MockFeatureList>::From(
+         LoadMockPlugin("mock::MockPhysicsPlugin2d"));
+  EXPECT_EQ(nullptr, engine);
+}
+
+/////////////////////////////////////////////////
 TEST(FeatureSystem, MockPlugin)
 {
   mock::MockEngine3dPtr engine =
