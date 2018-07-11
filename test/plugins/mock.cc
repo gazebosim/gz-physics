@@ -275,7 +275,7 @@ namespace mock
       return highestId++;
     }
 
-    std::size_t highestId;
+    std::size_t highestId = 0;
 
   };
 
