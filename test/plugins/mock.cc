@@ -40,12 +40,12 @@ namespace mock
     std::size_t AddEntity(
         const std::string &_name,
         const std::size_t _parentId,
-        ParentToNameToId &_nameToId,
+        ParentToNameToId &_parentToNameToId,
         IdToName &_idToName)
     {
       const std::size_t id = NextId();
       _idToName[id] = _name;
-      _nameToId[_parentId][_name] = id;
+      _parentToNameToId[_parentId][_name] = id;
       parentId[id] = _parentId;
       return id;
     }
@@ -86,7 +86,7 @@ namespace mock
         ParentToNameToId &_parentToNameMap,
         IdToName &_idToNameMap)
     {
-      const std::size_t parent = parentId[_id];
+      const std::size_t parent = parentId.at(_id);
       NameToId &nameMap = _parentToNameMap.at(parent);
 
       const auto result = nameMap.insert(std::make_pair(_desiredName, _id));
