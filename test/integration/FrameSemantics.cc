@@ -180,7 +180,7 @@ bool Equal(const Vector<Scalar, Dim> &_vec1,
            const double _tolerance,
            const std::string &_label = "")
 {
-  // Choose the largest of either 1.0 or the lenght of the longer vector.
+  // Choose the largest of either 1.0 or the length of the longer vector.
   const double scale = std::max(static_cast<Scalar>(1.0),
                                 std::max(_vec1.norm(), _vec2.norm()));
   const double diff = (_vec1 - _vec2).norm();
