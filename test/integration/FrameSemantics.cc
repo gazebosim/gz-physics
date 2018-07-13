@@ -367,6 +367,17 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
   EXPECT_EQ(A, fs->GetLink("A")->GetFrameID());
   EXPECT_EQ(A, linkA->GetFrameID());
 
+  // improve coverage of FrameID operators
+  EXPECT_EQ(world, world);
+  EXPECT_GE(world, world);
+  EXPECT_LE(world, world);
+  EXPECT_NE(world, A);
+  EXPECT_LE(world, A);
+  EXPECT_LT(world, A);
+  EXPECT_NE(A, world);
+  EXPECT_GE(A, world);
+  EXPECT_GT(A, world);
+
   // This is the implicit conversion operator which can implicitly turn a
   // FrameSemantics::Object reference into a FrameID.
   const FrameID otherA = *linkA;
