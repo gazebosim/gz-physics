@@ -178,7 +178,7 @@ template <typename Scalar, int Dim>
 bool Equal(const Vector<Scalar, Dim> &_vec1,
            const Vector<Scalar, Dim> &_vec2,
            const double _tolerance,
-           const std::string &_label = "")
+           const std::string &_label = "vectors")
 {
   // Choose the largest of either 1.0 or the length of the longer vector.
   const double scale = std::max(static_cast<Scalar>(1.0),
@@ -187,9 +187,8 @@ bool Equal(const Vector<Scalar, Dim> &_vec1,
   if (diff/scale <= _tolerance)
     return true;
 
-  std::cout << "Scaled difference in vectors of " << _label << ": "
-            << diff/scale << " | Difference: " << diff
-            << " | Scale: " << scale
+  std::cout << "Scaled difference in " << _label << ": " << diff/scale
+            << " | Difference: " << diff << " | Scale: " << scale
             << " | (Tolerance: " << _tolerance << ")" << std::endl;
 
   return false;
@@ -236,7 +235,7 @@ bool Equal(const FrameData<Scalar, Dim> &_data1,
 
   if (!Equal(_data1.angularAcceleration,
              _data2.angularAcceleration,
-             _tolerance))
+             _tolerance, "angular acceleration"))
     return false;
 
   return true;
