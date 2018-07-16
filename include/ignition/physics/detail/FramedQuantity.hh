@@ -371,6 +371,8 @@ namespace ignition
 
         /// \brief A 2D cross product operator for linear x linear vectors.
         /// Note that this takes two 2D vectors and produces a 1D "vector".
+        ///
+        /// An example is torque = radius x force
         public: static AngularVectorType Cross(
           const LinearVectorType &_u,
           const LinearVectorType &_v)
@@ -400,6 +402,8 @@ namespace ignition
         /// cross product may be a misnomer. However, defining this operator
         /// allows us to generalize some mathematical expressions between 2D
         /// and 3D.
+        ///
+        /// An example is tangential_velocity = angular_velocity x radius
         public: static LinearVectorType Cross(
           const AngularVectorType &_u,
           const LinearVectorType &_v)
@@ -414,7 +418,9 @@ namespace ignition
         /// and 3D.
         ///
         /// Note that this will produce the opposite result as the
-        /// angular x linear version of the cross product operator.
+        /// angular x linear version of the cross product operator. This is to
+        /// maintain consistency for the cross product, because we need to
+        /// follow the rule a x b == -b x a.
         public: static LinearVectorType Cross(
           const LinearVectorType &_v,
           const AngularVectorType &_u)
