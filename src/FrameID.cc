@@ -66,7 +66,7 @@ namespace ignition
         return true;
       }
 
-      return this->ref;
+      return static_cast<bool>(this->ref);
     }
 
     /////////////////////////////////////////////////
