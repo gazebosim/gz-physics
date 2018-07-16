@@ -69,12 +69,6 @@ namespace ignition
 
     namespace detail
     {
-      // Note that all the different CoordinateSpace types have a std::size_t
-      // template parameter which is currently going unused. That parameter is a
-      // placeholder for forwards compatibility so that we can easily transition
-      // into supporting 2D simulation, if we decide to pursue that later.
-
-
       /////////////////////////////////////////////////
       /// \brief This macro provides some typedefs which are used (or will be
       /// used) by Resolve and Reframe. Each different CoordinateSpace type
