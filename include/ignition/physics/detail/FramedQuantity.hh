@@ -98,8 +98,8 @@ namespace ignition
 
 
       /////////////////////////////////////////////////
-      /// \brief SESpace is used by SE(2) and SE(3) constructs, e.g. homogeneous
-      /// transformation matrices.
+      /// \brief SESpace is used by SE(2) and SE(3) [Special Euclidean Group]
+      /// constructs, e.g. homogeneous transformation matrices.
       template <typename _Scalar, std::size_t _Dim>
       struct SESpace
       {
@@ -146,8 +146,8 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      /// \brief SOSpace is used by SO(3) constructs (and perhaps in the future
-      /// SO(2) constructs as well) like rotation matrices or quaternions.
+      /// \brief SOSpace is used by SO(2|3) [Special Orthogonal Group 2 and 3]
+      /// constructs like rotation matrices or quaternions.
       template <typename _Scalar, std::size_t _Dim, typename _Quantity>
       struct SOSpace
       {

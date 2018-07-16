@@ -25,9 +25,10 @@ namespace ignition
 {
   namespace physics
   {
-    /// \brief The FramedQuantity class is a wrapper for the native ign-math
-    /// classes. The purpose of this wrapper is to endow the native classes with
-    /// frame semantics, so that they can express the frame of reference of
+    /// \brief The FramedQuantity class is a wrapper for classes that represent
+    /// mathematical quantities (e.g. points, vectors, matrices, transforms).
+    /// The  purpose of this wrapper is to endow raw mathematical quantities
+    /// with frame semantics, so that they can express the frame of reference of
     /// their values.
     ///
     /// Note that the raw value of the quantity being held can only be retrieved
@@ -40,8 +41,8 @@ namespace ignition
     /// where v and w belong to different frames. That would be an ill-formed
     /// expression, since values that are being expressed in different reference
     /// frames are not directly compatible. Use the Resolve(~) or Reframe(~)
-    /// function in the FrameSemantics class of your physics engine plugin to
-    /// transform a FramedQuantity into a different reference frame.
+    /// function in the FrameSemantics interface of your physics engine plugin
+    /// to transform a FramedQuantity into a different reference frame.
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
     class FramedQuantity
     {
