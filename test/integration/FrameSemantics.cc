@@ -159,8 +159,8 @@ struct Rotation<Scalar, 2>
 template <typename Scalar, std::size_t Dim>
 FrameData<Scalar, Dim> RandomFrameData()
 {
-  using LinearVector = ::LinearVector<Scalar, Dim>;
-  using AngularVector = ::AngularVector<Scalar, Dim>;
+  using LinearVector = LinearVector<Scalar, Dim>;
+  using AngularVector = AngularVector<Scalar, Dim>;
 
   FrameData<Scalar, Dim> data;
   data.pose.translation() = RandomVector<LinearVector>(100.0);
@@ -253,8 +253,8 @@ void TestRelativeFrames(const double _tolerance, const std::string &_suffix)
       ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
-  using FrameData = ::FrameData<Scalar, Dim>;
-  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
+  using FrameData = FrameData<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
   // Note: The World Frame is often designated by the letter O
 
@@ -339,8 +339,8 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
       ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
-  using FrameData = ::FrameData<Scalar, Dim>;
-  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
+  using FrameData = FrameData<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
   using Link = ignition::physics::Link<PolicyT, mock::MockFrameSemanticsList>;
   using LinkPtr = std::unique_ptr<Link>;
@@ -443,10 +443,10 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
       ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
-  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
-  using LinearVector = ::LinearVector<Scalar, Dim>;
-  using AngularVector = ::AngularVector<Scalar, Dim>;
-  using Rotation = ::Rotation<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
+  using LinearVector = LinearVector<Scalar, Dim>;
+  using AngularVector = AngularVector<Scalar, Dim>;
+  using Rotation = Rotation<Scalar, Dim>;
   using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
   using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
   using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
