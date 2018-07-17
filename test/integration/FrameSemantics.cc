@@ -200,16 +200,15 @@ bool Equal(const Pose<Scalar, Dim> &_T1,
            const Pose<Scalar, Dim> &_T2,
            const double _tolerance)
 {
-  if (!Equal(Vector<Scalar, Dim>(_T1.translation()),
-             Vector<Scalar, Dim>(_T2.translation()),
-             _tolerance, "position"))
-    return false;
+  bool result = true;
+  result &= Equal(Vector<Scalar, Dim>(_T1.translation()),
+              Vector<Scalar, Dim>(_T2.translation()),
+              _tolerance, "position");
 
-  if (!Rotation<Scalar, Dim>::Equal(
-        _T1.linear(), _T2.linear(), _tolerance))
-    return false;
+  result &= Rotation<Scalar, Dim>::Equal(
+              _T1.linear(), _T2.linear(), _tolerance);
 
-  return true;
+  return result;
 }
 
 /////////////////////////////////////////////////
@@ -218,27 +217,23 @@ bool Equal(const FrameData<Scalar, Dim> &_data1,
            const FrameData<Scalar, Dim> &_data2,
            const double _tolerance)
 {
-  if (!Equal(_data1.pose, _data2.pose, _tolerance))
-    return false;
+  bool result = true;
+  result &= Equal(_data1.pose, _data2.pose, _tolerance);
 
-  if (!Equal(_data1.linearVelocity, _data2.linearVelocity,
-             _tolerance, "linear velocity"))
-    return false;
+  result &= Equal(_data1.linearVelocity, _data2.linearVelocity,
+              _tolerance, "linear velocity");
 
-  if (!Equal(_data1.angularVelocity, _data2.angularVelocity,
-             _tolerance, "angular velocity"))
-    return false;
+  result &= Equal(_data1.angularVelocity, _data2.angularVelocity,
+              _tolerance, "angular velocity");
 
-  if (!Equal(_data1.linearAcceleration, _data2.linearAcceleration,
-             _tolerance, "linear acceleration"))
-    return false;
+  result &= Equal(_data1.linearAcceleration, _data2.linearAcceleration,
+              _tolerance, "linear acceleration");
 
-  if (!Equal(_data1.angularAcceleration,
-             _data2.angularAcceleration,
-             _tolerance, "angular acceleration"))
-    return false;
+  result &= Equal(_data1.angularAcceleration,
+              _data2.angularAcceleration,
+              _tolerance, "angular acceleration");
 
-  return true;
+  return result;
 }
 
 /////////////////////////////////////////////////
