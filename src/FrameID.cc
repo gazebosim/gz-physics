@@ -57,7 +57,7 @@ namespace ignition
     /////////////////////////////////////////////////
     bool FrameID::IsReferenceCounted() const
     {
-      if (this->World().id == this->id)
+      if (this->IsWorld())
       {
         // The world frame does not require reference counting, so it provides
         // all the same safety guarantees as if it were being reference counted.
