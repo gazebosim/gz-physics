@@ -159,8 +159,8 @@ struct Rotation<Scalar, 2>
 template <typename Scalar, std::size_t Dim>
 FrameData<Scalar, Dim> RandomFrameData()
 {
-  using LinearVector = ::LinearVector<Scalar, Dim>;
-  using AngularVector = ::AngularVector<Scalar, Dim>;
+  using LinearVector = LinearVector<Scalar, Dim>;
+  using AngularVector = AngularVector<Scalar, Dim>;
 
   FrameData<Scalar, Dim> data;
   data.pose.translation() = RandomVector<LinearVector>(100.0);
@@ -200,16 +200,15 @@ bool Equal(const Pose<Scalar, Dim> &_T1,
            const Pose<Scalar, Dim> &_T2,
            const double _tolerance)
 {
-  if (!Equal(Vector<Scalar, Dim>(_T1.translation()),
-             Vector<Scalar, Dim>(_T2.translation()),
-             _tolerance, "position"))
-    return false;
+  bool result = true;
+  result &= Equal(Vector<Scalar, Dim>(_T1.translation()),
+              Vector<Scalar, Dim>(_T2.translation()),
+              _tolerance, "position");
 
-  if (!Rotation<Scalar, Dim>::Equal(
-        _T1.linear(), _T2.linear(), _tolerance))
-    return false;
+  result &= Rotation<Scalar, Dim>::Equal(
+              _T1.linear(), _T2.linear(), _tolerance);
 
-  return true;
+  return result;
 }
 
 /////////////////////////////////////////////////
@@ -218,27 +217,23 @@ bool Equal(const FrameData<Scalar, Dim> &_data1,
            const FrameData<Scalar, Dim> &_data2,
            const double _tolerance)
 {
-  if (!Equal(_data1.pose, _data2.pose, _tolerance))
-    return false;
+  bool result = true;
+  result &= Equal(_data1.pose, _data2.pose, _tolerance);
 
-  if (!Equal(_data1.linearVelocity, _data2.linearVelocity,
-             _tolerance, "linear velocity"))
-    return false;
+  result &= Equal(_data1.linearVelocity, _data2.linearVelocity,
+              _tolerance, "linear velocity");
 
-  if (!Equal(_data1.angularVelocity, _data2.angularVelocity,
-             _tolerance, "angular velocity"))
-    return false;
+  result &= Equal(_data1.angularVelocity, _data2.angularVelocity,
+              _tolerance, "angular velocity");
 
-  if (!Equal(_data1.linearAcceleration, _data2.linearAcceleration,
-             _tolerance, "linear acceleration"))
-    return false;
+  result &= Equal(_data1.linearAcceleration, _data2.linearAcceleration,
+              _tolerance, "linear acceleration");
 
-  if (!Equal(_data1.angularAcceleration,
-             _data2.angularAcceleration,
-             _tolerance, "angular acceleration"))
-    return false;
+  result &= Equal(_data1.angularAcceleration,
+              _data2.angularAcceleration,
+              _tolerance, "angular acceleration");
 
-  return true;
+  return result;
 }
 
 /////////////////////////////////////////////////
@@ -253,8 +248,8 @@ void TestRelativeFrames(const double _tolerance, const std::string &_suffix)
       ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
-  using FrameData = ::FrameData<Scalar, Dim>;
-  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
+  using FrameData = FrameData<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
   // Note: The World Frame is often designated by the letter O
 
@@ -339,8 +334,8 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
       ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
-  using FrameData = ::FrameData<Scalar, Dim>;
-  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
+  using FrameData = FrameData<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
   using Link = ignition::physics::Link<PolicyT, mock::MockFrameSemanticsList>;
   using LinkPtr = std::unique_ptr<Link>;
@@ -443,10 +438,10 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
       ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
-  using RelativeFrameData = ::RelativeFrameData<Scalar, Dim>;
-  using LinearVector = ::LinearVector<Scalar, Dim>;
-  using AngularVector = ::AngularVector<Scalar, Dim>;
-  using Rotation = ::Rotation<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
+  using LinearVector = LinearVector<Scalar, Dim>;
+  using AngularVector = AngularVector<Scalar, Dim>;
+  using Rotation = Rotation<Scalar, Dim>;
   using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
   using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
   using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
