@@ -34,9 +34,9 @@ ign_find_package(ignition-math5 REQUIRED)
 set(IGN_MATH_VER ${ignition-math5_VERSION_MAJOR})
 
 #--------------------------------------
-# Find ignition-common
-ign_find_package(ignition-common2 REQUIRED)
-set(IGN_COMMON_VER ${ignition-common2_VERSION_MAJOR})
+# Find ignition-plugin
+ign_find_package(ignition-plugin0 REQUIRED COMPONENTS all)
+set(IGN_PLUGIN_VER ${ignition-plugin0_VERSION_MAJOR})
 
 #--------------------------------------
 # Find Eigen

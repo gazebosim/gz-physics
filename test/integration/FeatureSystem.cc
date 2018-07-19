@@ -17,29 +17,21 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/PluginLoader.hh>
-#include <ignition/common/SystemPaths.hh>
+#include <ignition/plugin/Loader.hh>
 
 #include <ignition/physics/RequestFeatures.hh>
 #include "../MockFeatures.hh"
 
 using namespace ignition::physics;
 
-#define IGN_MOCK_PLUGIN_PATH \
-  DETAIL_IGN_MOCK_PLUGIN_PATH
-
 /////////////////////////////////////////////////
-ignition::common::PluginPtr LoadMockPlugin(const std::string &_pluginName)
+ignition::plugin::PluginPtr LoadMockPlugin(const std::string &_pluginName)
 {
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths(IGN_MOCK_PLUGIN_PATH);
-  const std::string path = sp.FindSharedLibrary("MockEntities");
-
-  ignition::common::PluginLoader pl;
-  auto plugins = pl.LoadLibrary(path);
+  ignition::plugin::Loader pl;
+  auto plugins = pl.LoadLibrary(MockEntities_LIB);
   EXPECT_EQ(2u, plugins.size());
 
-  ignition::common::PluginPtr plugin =
+  ignition::plugin::PluginPtr plugin =
       pl.Instantiate(_pluginName);
   EXPECT_TRUE(plugin);
 
