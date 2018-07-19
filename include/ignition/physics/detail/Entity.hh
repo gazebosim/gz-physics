@@ -21,7 +21,7 @@
 #include <memory>
 #include <tuple>
 
-#include <ignition/common/SpecializedPluginPtr.hh>
+#include <ignition/plugin/SpecializedPluginPtr.hh>
 #include <ignition/physics/Entity.hh>
 
 namespace ignition
@@ -41,7 +41,7 @@ namespace ignition
       template <typename Policy, typename... Features>
       struct DeterminePlugin<Policy, std::tuple<Features...>>
       {
-        using type = common::SpecializedPluginPtr<
+        using type = plugin::SpecializedPluginPtr<
             typename Features::template Implementation<Policy>...>;
       };
     }

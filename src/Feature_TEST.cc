@@ -107,7 +107,7 @@ TEST(Feature_TEST, SimpleMock)
   // a total of 3 feature names.
   std::set<std::string> missing =
       RequestFeatures3d<MockList>::MissingFeatureNames(
-        ignition::common::PluginPtr());
+        ignition::plugin::PluginPtr());
 
   EXPECT_EQ(3u, missing.size());
 }

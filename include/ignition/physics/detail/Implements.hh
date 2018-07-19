@@ -20,7 +20,7 @@
 
 #include <tuple>
 
-#include <ignition/common/RegisterPlugin.hh>
+#include <ignition/plugin/Register.hh>
 #include <ignition/physics/Feature.hh>
 
 namespace ignition
@@ -50,10 +50,10 @@ namespace ignition
       {
         static void RegisterPlugin()
         {
-          ignition::common::detail::Registrar<
+          ignition::plugin::detail::Registrar<
                 PluginT, Feature::Implementation<FeaturePolicyT>,
                 typename Features::template Implementation<FeaturePolicyT>...>::
-              RegisterPlugin();
+              Register();
         }
       };
     }
