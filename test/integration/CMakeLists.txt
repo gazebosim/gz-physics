@@ -10,8 +10,16 @@ ign_build_tests(
   TEST_LIST list)
 
 foreach(test ${list})
-  target_compile_definitions(INTEGRATION_FeatureSystem PRIVATE
-    "MockEntities_LIB=\"$<TARGET_FILE:MockEntities>\"")
-endforeach()
 
-add_dependencies(INTEGRATION_FeatureSystem MockEntities)
+  foreach(mock_plugin
+      MockEntities
+      MockFrames)
+
+    target_compile_definitions(${test} PRIVATE
+      "${mock_plugin}_LIB=\"$<TARGET_FILE:${mock_plugin}>\"")
+
+    add_dependencies(${test} ${mock_plugin})
+
+  endforeach()
+
+endforeach()

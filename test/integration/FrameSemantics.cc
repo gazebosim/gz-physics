@@ -17,9 +17,8 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/SystemPaths.hh>
-#include <ignition/common/PluginLoader.hh>
-#include <ignition/common/PluginPtr.hh>
+#include <ignition/plugin/Loader.hh>
+#include <ignition/plugin/PluginPtr.hh>
 #include <ignition/physics/RequestFeatures.hh>
 #include <ignition/math/Rand.hh>
 
@@ -36,22 +35,15 @@ using ignition::physics::AngularVector;
 
 using ignition::math::Rand;
 
-#define IGN_MOCK_PLUGIN_PATH \
-  DETAIL_IGN_MOCK_PLUGIN_PATH
-
 /////////////////////////////////////////////////
-ignition::common::PluginPtr LoadMockFrameSemanticsPlugin(
+ignition::plugin::PluginPtr LoadMockFrameSemanticsPlugin(
     const std::string &_suffix)
 {
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths(IGN_MOCK_PLUGIN_PATH);
-  const std::string path = sp.FindSharedLibrary("MockFrames");
-
-  ignition::common::PluginLoader pl;
-  auto plugins = pl.LoadLibrary(path);
+  ignition::plugin::Loader pl;
+  auto plugins = pl.LoadLibrary(MockFrames_LIB);
   EXPECT_EQ(4u, plugins.size());
 
-  ignition::common::PluginPtr plugin =
+  ignition::plugin::PluginPtr plugin =
       pl.Instantiate("mock::MockFrameSemanticsPlugin"+_suffix);
   EXPECT_FALSE(plugin.IsEmpty());
 
