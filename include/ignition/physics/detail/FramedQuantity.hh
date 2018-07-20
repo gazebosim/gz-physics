@@ -113,7 +113,7 @@ namespace ignition
           const FrameDataType &_parentFrame,
           const FrameDataType &_targetFrame)
         {
-          return _targetFrame.pose.Inverse()
+          return _targetFrame.pose.inverse()
                  * _parentFrame.pose
                  * _pose;
         }

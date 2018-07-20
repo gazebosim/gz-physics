@@ -431,9 +431,11 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
+  using Pose = Pose<Scalar, Dim>;
   using LinearVector = LinearVector<Scalar, Dim>;
   using AngularVector = AngularVector<Scalar, Dim>;
   using Rotation = Rotation<Scalar, Dim>;
+  using FramedPose = ignition::physics::FramedPose<Scalar, Dim>;
   using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
   using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
   using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
@@ -461,6 +463,35 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   const RelativeFrameData A_T_D(A, RandomFrameData<Scalar, Dim>());
   // Instantiate Frame D using A_T_D
   const FrameID D = *fs->CreateLink("D", fs->Resolve(A_T_D, World));
+
+  // Create FramedPose for B with respect to A
+  const FramedPose A_T_B_pose(A, A_T_B.RelativeToParent().pose);
+  EXPECT_TRUE(Equal(A_T_B_pose.RelativeToParent(),
+                    fs->Resolve(A_T_B_pose, A), _tolerance));
+
+  const Pose O_T_B_pose =
+        O_T_A.RelativeToParent().pose
+      * A_T_B_pose.RelativeToParent();
+  EXPECT_TRUE(Equal(O_T_B_pose,
+                    fs->Resolve(A_T_B_pose, World), _tolerance));
+
+  const Pose A_T_B_pose_inCoordsOfWorld =
+        O_T_A.RelativeToParent().pose.linear()
+      * A_T_B_pose.RelativeToParent();
+  EXPECT_TRUE(Equal(A_T_B_pose_inCoordsOfWorld,
+                    fs->Resolve(A_T_B_pose, A, World), _tolerance));
+
+  const Pose A_T_B_pose_inCoordsOfD =
+        A_T_D.RelativeToParent().pose.linear().inverse()
+      * A_T_B_pose.RelativeToParent();
+  EXPECT_TRUE(Equal(A_T_B_pose_inCoordsOfD,
+                    fs->Resolve(A_T_B_pose, A, D), _tolerance));
+
+  const Pose D_T_B_pose =
+        A_T_D.RelativeToParent().pose.inverse()
+      * A_T_B_pose.RelativeToParent();
+  EXPECT_TRUE(Equal(D_T_B_pose,
+                    fs->Resolve(A_T_B_pose, D), _tolerance));
 
   // Create point "1" in Frame C
   const FramedPosition C_p1(C, RandomVector<LinearVector>(10.0));
