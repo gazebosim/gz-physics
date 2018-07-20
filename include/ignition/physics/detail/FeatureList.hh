@@ -24,7 +24,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include <ignition/common/SpecializedPluginPtr.hh>
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FeaturePolicy.hh>
 #include <ignition/physics/TemplateHelpers.hh>
