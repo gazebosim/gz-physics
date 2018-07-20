@@ -8,15 +8,6 @@ pipelines:
           - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common
           - gcc -v
           - g++ -v
-          # Use the branch of ign-cmake that has FindEIGEN.cmake
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b default
-          - cd ign-cmake
-          - mkdir build
-          - cd build
-          - cmake ..
-          - make
-          - make install
-          - cd ../..
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" > /etc/apt/sources.list.d/gazebo-stable.list
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease xenial main" > /etc/apt/sources.list.d/gazebo-prerelease.list
@@ -26,7 +17,7 @@ pipelines:
             libignition-math5-dev
             libeigen3-dev
           # Use the branch of ign-cmake needed by ign-plugin WarningSuppression_CoreDirectory
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b WarningSuppression_CoreDirectory
           - cd ign-cmake
           - mkdir build
           - cd build
@@ -35,7 +26,7 @@ pipelines:
           - make install
           - cd ../..
           # Use ign-plugin
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-plugin -b
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-plugin -b NewRegistrationScheme
           - cd ign-plugin
           - mkdir build
           - cd build
