@@ -823,53 +823,63 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   // Instantiate Frame D as a Joint
   const FrameID D = *fs->CreateJoint("D", fs->Resolve(C_T_D, World));
 
-  // Get ABCD in world frame
-  const FrameData AA = O_T_A.RelativeToParent();
-  const FrameData BB = fs->Resolve(A_T_B, World);
-  const FrameData CC = fs->Resolve(B_T_C, World);
-  const FrameData DD = fs->Resolve(C_T_D, World);
+  // Get ABCD FrameData relative to world in coordinates of frame A
+  const FrameData A_A = fs->Resolve(O_T_A, World, A);
+  const FrameData B_A = fs->Resolve(A_T_B, World, A);
+  const FrameData C_A = fs->Resolve(B_T_C, World, A);
+  const FrameData D_A = fs->Resolve(C_T_D, World, A);
 
   // linear velocity:
   //  A==D==0: no relative linear velocity at pivot or wheel contact point
-  EXPECT_EQ(AA.linearVelocity, LinearVector::Zero());
-  EXPECT_TRUE(Equal(AA.linearVelocity, DD.linearVelocity, _tolerance));
+  EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
+  EXPECT_TRUE(Equal(A_A.linearVelocity, D_A.linearVelocity, _tolerance));
   //  B==C
-  EXPECT_TRUE(Equal(BB.linearVelocity, CC.linearVelocity, _tolerance));
+  EXPECT_TRUE(Equal(B_A.linearVelocity, C_A.linearVelocity, _tolerance));
+  EXPECT_NEAR(B_A.linearVelocity[0], 0.0, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[1], pivotLength*pivotRotationRate, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[2], 0.0, _tolerance);
 
   // angular velocity: A==B, C==D
-  EXPECT_TRUE(Equal(AA.angularVelocity, BB.angularVelocity, _tolerance));
-  EXPECT_TRUE(Equal(CC.angularVelocity, DD.angularVelocity, _tolerance));
+  EXPECT_TRUE(Equal(A_A.angularVelocity, B_A.angularVelocity, _tolerance));
+  EXPECT_NEAR(A_A.angularVelocity[0], 0.0, _tolerance);
+  EXPECT_NEAR(A_A.angularVelocity[1], 0.0, _tolerance);
+  EXPECT_NEAR(A_A.angularVelocity[2], pivotRotationRate, _tolerance);
+  EXPECT_TRUE(Equal(C_A.angularVelocity, D_A.angularVelocity, _tolerance));
+  EXPECT_NEAR(C_A.angularVelocity[0], -wheelRotationRate, _tolerance);
+  EXPECT_NEAR(C_A.angularVelocity[1], 0.0, _tolerance);
+  EXPECT_NEAR(C_A.angularVelocity[2], pivotRotationRate, _tolerance);
 
   // linear acceleration:
   //  A==0
-  EXPECT_EQ(AA.linearAcceleration, LinearVector::Zero());
+  EXPECT_EQ(A_A.linearAcceleration, LinearVector::Zero());
   //  B centripetal acceleration torward pivot
-  const Scalar accelX = pivotLength * std::pow(pivotRotationRate, 2);
-  EXPECT_NEAR(BB.linearAcceleration[0], -accelX * cosPivot, _tolerance);
-  EXPECT_NEAR(BB.linearAcceleration[1], -accelX * sinPivot, _tolerance);
-  EXPECT_NEAR(BB.linearAcceleration[2], 0.0, _tolerance);
+  const Scalar accelX = -pivotLength * std::pow(pivotRotationRate, 2);
+  EXPECT_NEAR(B_A.linearAcceleration[0], accelX, _tolerance);
+  EXPECT_NEAR(B_A.linearAcceleration[1], 0.0, _tolerance);
+  EXPECT_NEAR(B_A.linearAcceleration[2], 0.0, _tolerance);
   //  C == B
-  EXPECT_TRUE(Equal(BB.linearAcceleration, CC.linearAcceleration, _tolerance));
+  EXPECT_TRUE(Equal(B_A.linearAcceleration,
+                    C_A.linearAcceleration, _tolerance));
   //  D[0] == B[0]
   //  D[1] == B[1]
-  EXPECT_NEAR(DD.linearAcceleration[0], BB.linearAcceleration[0], _tolerance);
-  EXPECT_NEAR(DD.linearAcceleration[1], BB.linearAcceleration[1], _tolerance);
+  EXPECT_NEAR(D_A.linearAcceleration[0], B_A.linearAcceleration[0], _tolerance);
+  EXPECT_NEAR(D_A.linearAcceleration[1], B_A.linearAcceleration[1], _tolerance);
   //  D[2] centripetal acceleration toward wheel center
   const Scalar accelZ = wheelRadius * std::pow(wheelRotationRate, 2);
-  EXPECT_NEAR(DD.linearAcceleration[2], accelZ, _tolerance);
+  EXPECT_NEAR(D_A.linearAcceleration[2], accelZ, _tolerance);
 
   // angular acceleration
   //  A==B==0
-  EXPECT_EQ(AA.angularAcceleration, LinearVector::Zero());
-  EXPECT_EQ(BB.angularAcceleration, LinearVector::Zero());
+  EXPECT_EQ(A_A.angularAcceleration, LinearVector::Zero());
+  EXPECT_EQ(B_A.angularAcceleration, LinearVector::Zero());
   //  C==D
-  EXPECT_TRUE(Equal(CC.angularAcceleration,
-                    DD.angularAcceleration, _tolerance));
+  EXPECT_TRUE(Equal(C_A.angularAcceleration,
+                    D_A.angularAcceleration, _tolerance));
   //  based on cross product of angular velocity vectors
   const Scalar accelY = pivotRotationRate * (-wheelRotationRate);
-  EXPECT_NEAR(CC.angularAcceleration[0], accelY * (-sinPivot), _tolerance);
-  EXPECT_NEAR(CC.angularAcceleration[1], accelY *   cosPivot, _tolerance);
-  EXPECT_NEAR(CC.angularAcceleration[2], 0.0, _tolerance);
+  EXPECT_NEAR(C_A.angularAcceleration[0], 0.0, _tolerance);
+  EXPECT_NEAR(C_A.angularAcceleration[1], accelY, _tolerance);
+  EXPECT_NEAR(C_A.angularAcceleration[2], 0.0, _tolerance);
 }
 
 /////////////////////////////////////////////////
