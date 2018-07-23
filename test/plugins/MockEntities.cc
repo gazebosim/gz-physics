@@ -50,6 +50,7 @@ namespace mock
       return id;
     }
 
+
     void AddLink(
         const std::string &_name,
         const std::size_t _modelId,

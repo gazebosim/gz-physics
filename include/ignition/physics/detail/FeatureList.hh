@@ -229,8 +229,7 @@ namespace ignition
       /// \private If the class that Selector cares about is NOT available in
       /// the feature F,  then this overload will be chosenby SFINAE, and the
       /// Empty class will be aggregated into the API.
-      template <typename... Args>
-      Empty CheckForSelection();
+      Empty CheckForSelection(...);
 
       /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList

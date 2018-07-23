@@ -18,20 +18,19 @@
 #ifndef IGNITION_PHYSICS_REVOLUTEJOINT_HH_
 #define IGNITION_PHYSICS_REVOLUTEJOINT_HH_
 
-#include <Eigen/Geometry>
-
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FrameData.hh>
+#include <ignition/physics/CreateJointType.hh>
 
 namespace ignition
 {
   namespace physics
   {
+    IGN_PHYSICS_CREATE_JOINT_TYPE(RevoluteJoint)
+
     class IGNITION_PHYSICS_VISIBLE GetRevoluteJointProperties
         : public virtual Feature
     {
       /// \brief Provide the API for getting a revolute joint's axis
-      template <typename PolicyT, typename FeaturesT>
+      public: template <typename PolicyT, typename FeaturesT>
       class RevoluteJoint : public virtual Entity<PolicyT, FeaturesT>
       {
         public: using Axis =
@@ -46,12 +45,16 @@ namespace ignition
         /// This will typically have a value of +1.0 or -1.0.
         ///
         /// \return this joint's axis.
-        public: Axis GetAxis() const;
+        public: Axis GetAxis() const
+        {
+          return this->template Interface<GetRevoluteJointProperties>()
+              ->GetRevoluteJointAxis(this->identity);
+        }
       };
 
       /// \brief This class is inherited by physics plugin classes that want to
       /// provide this feature.
-      template <typename PolicyT>
+      public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: using Axis =
@@ -61,6 +64,9 @@ namespace ignition
         /// \return the axis of joint _id.
         public: virtual Axis GetRevoluteJointAxis(std::size_t _id) const = 0;
       };
+
+      public: using RequiredFeatures =
+          FeatureList<ignition::physics::RevoluteJoint>;
     };
 
     /// \brief Provide the API for setting a revolute joint's axis. Not all
@@ -70,7 +76,7 @@ namespace ignition
         : public virtual Feature
     {
       /// \brief Provide the API for setting a revolute joint's axis
-      template <typename PolicyT, typename FeaturesT>
+      public: template <typename PolicyT, typename FeaturesT>
       class RevoluteJoint : public virtual Entity<PolicyT, FeaturesT>
       {
         public: using Axis =
@@ -84,12 +90,16 @@ namespace ignition
         /// scalar, but its value must be accessed from the first element).
         /// It is recommended that you only pass a value of +1.0 or -1.0.
         /// Physics engines might not normalize the value before using it.
-        public: void SetAxis(const Axis &_axis);
+        public: void SetAxis(const Axis &_axis)
+        {
+          this->template Interface<SetRevoluteJointProperties>()
+              ->SetRevoluteJointAxis(this->identity, _axis);
+        }
       };
 
       /// \brief This class is inherited by physics plugin classes that want to
       /// provide this feature.
-      template <typename PolicyT>
+      public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: using Axis =
@@ -97,21 +107,11 @@ namespace ignition
 
         /// \brief Set the axis of the RevoluteJoint.
         public: virtual void SetRevoluteJointAxis(
-            std::size_t _id, const Axis &_axis) const = 0;
-      };
-    };
-
-    struct RevoluteJoint
-    {
-      template <typename T>
-      struct Selector
-      {
-        template <typename PolicyT, typename FeaturesT>
-        using type = typename T::template RevoluteJoint<PolicyT, FeaturesT>;
+            std::size_t _id, const Axis &_axis) = 0;
       };
 
-      template <typename PolicyT, typename FeaturesT>
-      using Using = typename detail::Aggregate<Selector, FeaturesT>::template type<PolicyT, FeaturesT>;
+      public: using RequiredFeatures =
+          FeatureList<ignition::physics::RevoluteJoint>;
     };
   }
 }

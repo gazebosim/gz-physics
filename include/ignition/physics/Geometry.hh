@@ -48,7 +48,7 @@ namespace ignition
     /// geometric type. Example usage:
     ///
     /// using AngularVector = FromPolicy<FeaturePolicy3d>::To<AngularVector>;
-    template<typename PolicyT>
+    template <typename PolicyT>
     struct FromPolicy
     {
       using Scalar = typename PolicyT::Scalar;
@@ -57,6 +57,22 @@ namespace ignition
       template<template <typename, std::size_t> class Type>
       using Use = Type<Scalar, Dim>;
     };
+
+    template<typename Scalar>
+    Eigen::Rotation2D<Scalar> Rotate(
+        const Scalar &_angle,
+        const AngularVector<Scalar, 2> &_axis)
+    {
+      return Eigen::Rotation2D<Scalar>(_angle*_axis[0]);
+    }
+
+    template <typename Scalar>
+    Eigen::AngleAxis<Scalar> Rotate(
+        const Scalar &_angle,
+        const AngularVector<Scalar, 3> &_axis)
+    {
+      return Eigen::AngleAxis<Scalar>(_angle, _axis);
+    }
   }
 }
 

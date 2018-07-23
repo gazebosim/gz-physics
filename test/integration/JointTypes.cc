@@ -24,6 +24,9 @@
 #include <ignition/physics/RequestFeatures.hh>
 
 #include <ignition/physics/RevoluteJoint.hh>
+#include <ignition/physics/FrameSemantics.hh>
+
+#include "../MockJoints.hh"
 
 using TestFeatures = ignition::physics::FeatureList<
     ignition::physics::RevoluteJoint
@@ -43,32 +46,24 @@ ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
   return plugin;
 }
 
-using Features = ignition::physics::FeatureList<
-  ignition::physics::SetRevoluteJointProperties,
-  ignition::physics::GetRevoluteJointProperties
->;
+/////////////////////////////////////////////////
+template <typename PolicyT>
+void TestRevoluteJointCast(const std::string &_suffix)
+{
+  auto engine =
+      ignition::physics::RequestFeatures<PolicyT, mock::MockJointList>::From(
+        LoadMockJointTypesPlugin(_suffix));
+
+  auto joint = engine->GetJoint(0);
+  auto revolute = joint->CastToRevoluteJoint();
+
+  std::cout << revolute->GetAxis() << std::endl;
+}
 
 /////////////////////////////////////////////////
 TEST(RevoluteJoint_TEST, Cast)
 {
-  ignition::physics::RevoluteJoint::Using<
-      ignition::physics::FeaturePolicy3d, Features> revolute;
-
-
-//  using Joint = ignition::physics::Joint3d<TestFeatures>;
-
-//  auto engine =
-//      ignition::physics::RequestFeatures3d<TestFeatures>::From(
-//        LoadMockJointTypesPlugin("TODO"));
-
-//  std::unique_ptr<Joint> joint = engine->GetJoint("RevoluteJoint");
-//  auto revolute = joint->CastTo<ignition::physics::RevoluteJoint>();
-
-//  Eigen::Vector3d axis = revolute->GetAxis();
-//  Eigen::Matrix3d R = Eigen::AngleAxisd(90.0*M_PI/180.0,
-//                                        Eigen::Vector3d(0.0, 1.0, 0.0));
-//  axis = R*axis;
-//  revolute->SetAxis(axis);
+  TestRevoluteJointCast<ignition::physics::FeaturePolicy3d>("3d");
 }
 
 
