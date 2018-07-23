@@ -82,9 +82,6 @@ namespace ignition
       /// \brief Private constructor. To obtain a FrameID, it must be given by
       /// the physics engine. Different physics engines may provide FrameIDs
       /// through different interfaces.
-      ///
-      /// For physics engine developers: You may generate FrameIDs by calling
-      /// the FrameSemantics::SpawnFrameID(~,~) function.
       private: explicit FrameID(const Identity &_identity);
 
       private: enum WorldConstructorArg { ConstructWorld };
