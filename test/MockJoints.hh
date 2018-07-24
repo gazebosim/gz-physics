@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_TEST_MOCKJOINTS_HH_
 
 #include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/Joint.hh>
 #include <ignition/physics/RevoluteJoint.hh>
 
 namespace mock
@@ -69,6 +70,11 @@ namespace mock
 
   using MockJointList = ignition::physics::FeatureList<
     MockGetJointByIndex,
+    ignition::physics::GetBasicJointState,
+    ignition::physics::SetBasicJointState,
+    ignition::physics::GetBasicJointProperties,
+    ignition::physics::SetJointTransformFromParentFeature,
+    ignition::physics::SetJointTransformToChildFeature,
     ignition::physics::SetRevoluteJointProperties,
     ignition::physics::GetRevoluteJointProperties,
     ignition::physics::JointFrameSemantics

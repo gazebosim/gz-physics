@@ -27,43 +27,131 @@
 #include <ignition/physics/FrameSemantics.hh>
 
 #include "../MockJoints.hh"
+#include "../Utils.hh"
 
-using TestFeatures = ignition::physics::FeatureList<
-    ignition::physics::RevoluteJoint
->;
+using namespace ignition::physics;
+using namespace ignition::physics::test;
 
 /////////////////////////////////////////////////
 ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
     const std::string &_suffix)
 {
   ignition::plugin::Loader pl;
-  auto plugins = pl.LoadLibrary("MockJointTypes_LIB"); // TODO: Replace with macro
+  auto plugins = pl.LoadLibrary(MockJoints_LIB); // TODO: Replace with macro
 
   ignition::plugin::PluginPtr plugin =
-      pl.Instantiate("mock::MockJointTypesPlugin"+_suffix);
+      pl.Instantiate("mock::JointPlugin"+_suffix);
   EXPECT_FALSE(plugin.IsEmpty());
 
   return plugin;
 }
 
 /////////////////////////////////////////////////
-template <typename PolicyT>
-void TestRevoluteJointCast(const std::string &_suffix)
+template <typename PolicyT, typename EngineType>
+void TestRevoluteJointFK(
+    const std::vector<typename PolicyT::Scalar> &_testJointPositions,
+    const EngineType &_engine,
+    const double _tolerance)
 {
-  auto engine =
-      ignition::physics::RequestFeatures<PolicyT, mock::MockJointList>::From(
-        LoadMockJointTypesPlugin(_suffix));
+  using LinearVector =
+      typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-  auto joint = engine->GetJoint(0);
-  auto revolute = joint->CastToRevoluteJoint();
+  using AngularVector =
+      typename FromPolicy<PolicyT>::template Use<AngularVector>;
 
-  std::cout << revolute->GetAxis() << std::endl;
+  using Pose =
+      typename FromPolicy<PolicyT>::template Use<Pose>;
+
+  using Scalar = typename PolicyT::Scalar;
+
+  // This is the initial transform of each parent->joint and joint->child in the
+  // test engine.
+  Pose T = Pose::Identity();
+  T.translation() = LinearVector::UnitY();
+  const Pose T_initial = T;
+  T = Pose::Identity();
+
+  for (std::size_t i=0; i < _testJointPositions.size(); ++i)
+  {
+    auto joint = _engine->GetJoint(i);
+
+    const Scalar q_desired = _testJointPositions[i];
+    joint->SetPosition(0, q_desired);
+    EXPECT_NEAR(q_desired, joint->GetPosition(0), _tolerance);
+  }
+
+  for (std::size_t i=0; i < _testJointPositions.size(); ++i)
+  {
+    auto joint = _engine->GetJoint(i)->CastToRevoluteJoint();
+
+    const Scalar q = joint->GetPosition(0);
+
+    const AngularVector &axis = joint->GetAxis();
+    const Pose R{Rotate(q, axis)};
+
+    T = T * T_initial * R;
+
+    const Pose pose = joint->FrameDataRelativeTo(FrameID::World()).pose;
+    EXPECT_TRUE(Equal(T, pose, _tolerance));
+
+    T = T * T_initial;
+  }
+
 }
 
 /////////////////////////////////////////////////
-TEST(RevoluteJoint_TEST, Cast)
+template <typename PolicyT>
+void TestRevoluteJoint(const double _tolerance, const std::string &_suffix)
 {
-  TestRevoluteJointCast<ignition::physics::FeaturePolicy3d>("3d");
+  using AngularVector =
+      typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+  using Scalar = typename PolicyT::Scalar;
+
+  auto engine = RequestFeatures<PolicyT, mock::MockJointList>::From(
+        LoadMockJointTypesPlugin(_suffix));
+
+  {
+    // Do a quick test of joint casting
+    auto joint = engine->GetJoint(0);
+    ASSERT_NE(nullptr, joint);
+    auto revolute = joint->CastToRevoluteJoint();
+    ASSERT_NE(nullptr, joint);
+
+    AngularVector testAxis = AngularVector::Zero();
+    testAxis[0] = 1.0;
+
+    EXPECT_TRUE(Equal(testAxis, revolute->GetAxis(), _tolerance, "axes"));
+  }
+
+  // Try various sets of joint position values
+  TestRevoluteJointFK<PolicyT>({0.0, 0.0, 0.0}, engine, _tolerance);
+  TestRevoluteJointFK<PolicyT>({0.1, -1.57, 2.56}, engine, _tolerance);
+  TestRevoluteJointFK<PolicyT>({-2.4, -7.0, -0.18}, engine, _tolerance);
+}
+
+/////////////////////////////////////////////////
+TEST(JointTypes_TEST, RevoluteJoint3d)
+{
+  TestRevoluteJoint<FeaturePolicy3d>(1e-16, "3d");
+}
+
+/////////////////////////////////////////////////
+TEST(JointTypes_TEST, RevoluteJoint2d)
+{
+  TestRevoluteJoint<FeaturePolicy2d>(1e-16, "2d");
+}
+
+/////////////////////////////////////////////////
+TEST(JointTypes_TEST, RevoluteJoint3f)
+{
+  TestRevoluteJoint<FeaturePolicy3f>(1e-16, "3f");
+}
+
+/////////////////////////////////////////////////
+TEST(JointTypes_TEST, RevoluteJoint2f)
+{
+  TestRevoluteJoint<FeaturePolicy2f>(1e-16, "2f");
 }
 
 

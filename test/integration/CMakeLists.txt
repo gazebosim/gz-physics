@@ -13,7 +13,8 @@ foreach(test ${list})
 
   foreach(mock_plugin
       MockEntities
-      MockFrames)
+      MockFrames
+      MockJoints)
 
     target_compile_definitions(${test} PRIVATE
       "${mock_plugin}_LIB=\"$<TARGET_FILE:${mock_plugin}>\"")

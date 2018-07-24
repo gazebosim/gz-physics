@@ -25,6 +25,107 @@ namespace ignition
 {
   namespace physics
   {
+    class IGNITION_PHYSICS_VISIBLE GetBasicJointState : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: double GetPosition(const std::size_t _dof) const
+        {
+          return this->template Interface<GetBasicJointState>()
+              ->GetJointPosition(this->identity, _dof);
+        }
+
+        public: double GetVelocity(const std::size_t _dof) const
+        {
+          return this->template Interface<GetBasicJointState>()
+              ->GetJointVelocity(this->identity, _dof);
+        }
+
+        public: double GetAcceleration(const std::size_t _dof) const
+        {
+          return this->template Interface<GetBasicJointState>()
+              ->GetJointAcceleration(this->identity, _dof);
+        }
+
+        public: double GetForce(const std::size_t _dof) const
+        {
+          return this->template Interface<GetBasicJointState>()
+              ->GetJointForce(this->identity, _dof);
+        }
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        public: virtual Scalar GetJointPosition(
+            std::size_t _id, std::size_t _dof) const = 0;
+
+        public: virtual Scalar GetJointVelocity(
+            std::size_t _id, std::size_t _dof) const = 0;
+
+        public: virtual Scalar GetJointAcceleration(
+            std::size_t _id, std::size_t _dof) const = 0;
+
+        public: virtual Scalar GetJointForce(
+            std::size_t _id, std::size_t _dof) const = 0;
+      };
+    };
+
+    class IGNITION_PHYSICS_VISIBLE SetBasicJointState : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        public: void SetPosition(const std::size_t _dof, const Scalar _value)
+        {
+          this->template Interface<SetBasicJointState>()
+              ->SetJointPosition(this->identity, _dof, _value);
+        }
+
+        public: void SetVelocity(const std::size_t _dof, const Scalar _value)
+        {
+          this->template Interface<SetBasicJointState>()
+              ->SetJointVelocity(this->identity, _dof, _value);
+        }
+
+        public: void SetAcceleration(
+            const std::size_t _dof, const Scalar _value)
+        {
+          this->template Interface<SetBasicJointState>()
+              ->SetJointAcceleration(this->identity, _dof, _value);
+        }
+
+        public: void SetForce(const std::size_t _dof, const Scalar _value)
+        {
+          this->template Interface<SetBasicJointState>()
+              ->SetJointForce(this->identity, _dof, _value);
+        }
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        public: virtual void SetJointPosition(
+            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+
+        public: virtual void SetJointVelocity(
+            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+
+        public: virtual void SetJointAcceleration(
+            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+
+        public: virtual void SetJointForce(
+            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
     class IGNITION_PHYSICS_VISIBLE GetBasicJointProperties
         : public virtual Feature
     {
@@ -69,7 +170,7 @@ namespace ignition
 
         public: void SetTransformFromParent(const Pose &_pose)
         {
-          this->template Interface<SetJointTransformFromParent>()
+          this->template Interface<SetJointTransformFromParentFeature>()
             ->SetJointTransformFromParent(this->identity, _pose);
         }
       };
@@ -94,7 +195,7 @@ namespace ignition
 
         public: void SetTransformToChild(const Pose &_pose)
         {
-          this->template Interface<SetJointTransformToChild>()
+          this->template Interface<SetJointTransformToChildFeature>()
             ->SetJointTransformToChild(this->identity, _pose);
         }
       };

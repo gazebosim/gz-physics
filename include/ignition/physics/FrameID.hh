@@ -51,6 +51,12 @@ namespace ignition
       public: bool operator >=(const FrameID &_other) const;
       public: bool operator !=(const FrameID &_other) const;
 
+      // Explicitly allow default copy constructors and assignment operators
+      public: FrameID(const FrameID&) = default;
+      public: FrameID(FrameID&&) = default;
+      public: FrameID &operator =(const FrameID&) = default;
+      public: FrameID &operator =(FrameID&&) = default;
+
       /// \brief Get a reference to the world Frame.
       public: static const FrameID &World();
 
@@ -91,9 +97,9 @@ namespace ignition
       // Friendship declaration
       friend class FrameSemantics;
 
-      private: const std::size_t id;
+      private: std::size_t id;
 
-      private: const std::shared_ptr<const void> ref;
+      private: std::shared_ptr<const void> ref;
     };
   }
 }

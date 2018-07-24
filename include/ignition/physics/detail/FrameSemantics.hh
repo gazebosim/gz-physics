@@ -190,6 +190,14 @@ namespace ignition
     {
       return this->GetFrameID();
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT>
+    FrameID FrameSemantics::Implementation<PolicyT>::GenerateFrameID(
+        const Identity &_identity) const
+    {
+      return FrameID(_identity);
+    }
   }
 }
 

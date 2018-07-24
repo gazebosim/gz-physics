@@ -213,25 +213,6 @@ namespace ignition
           : std::integral_constant<bool, false> {};
 
       /////////////////////////////////////////////////
-      /// \private If the class that Selector cares about is available in the
-      /// feature F, then this overload will be chosen.
-      ///
-      /// This works because the return type is considered during the SFINAE
-      /// stage of overload resolution, and if the selected class is not a
-      /// member of F, then the return type would emit an error while compiling.
-      /// Since SFINAE is active, that error tells the compiler to try a
-      /// different overload resolution, so it will choose the next one down
-      /// instead.
-      template <typename F, template<typename> class Selector,
-                typename... TypeArgs>
-      typename Selector<F>::template type<TypeArgs...> CheckForSelection();
-
-      /// \private If the class that Selector cares about is NOT available in
-      /// the feature F,  then this overload will be chosenby SFINAE, and the
-      /// Empty class will be aggregated into the API.
-      Empty CheckForSelection(...);
-
-      /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList
       template <template<typename> class, typename...>
       struct Aggregate;
@@ -253,8 +234,7 @@ namespace ignition
       {
         public: template<typename... T>
         class type
-//            : public virtual Selector<F1>::template type<T...>,
-            : public virtual decltype(CheckForSelection<F1, Selector, T...>()),
+            : public virtual Selector<F1>::template type<T...>,
               public virtual Aggregate<
                   Selector, std::tuple<Remaining...>>::template type<T...> { };
       };
