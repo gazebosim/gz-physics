@@ -29,7 +29,7 @@ namespace ignition
   namespace physics
   {
     // Forward declaration
-    namespace detail { template <typename, typename> class DeterminePlugin; }
+    namespace detail { template <typename, typename> struct DeterminePlugin; }
 
     /// \brief This constant-value should be used to indicate that an Entity ID
     /// is invalid (i.e. does not refer to a real entity).

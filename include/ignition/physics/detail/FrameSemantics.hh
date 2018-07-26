@@ -149,15 +149,6 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    FrameID FrameSemantics::Engine<PolicyT, FeaturesT>::SpawnFrameID(
-        const std::size_t _id,
-        const std::shared_ptr<const void> &_ref) const
-    {
-      return FrameID(_id, _ref);
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
     FrameID FrameSemantics::Frame<PolicyT, FeaturesT>::GetFrameID() const
     {
       return FrameID(this->identity);

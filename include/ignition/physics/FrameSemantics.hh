@@ -91,17 +91,7 @@ namespace ignition
         FQ Reframe(const FQ &_quantity,
                    const FrameID _withRespectTo = FrameID::World()) const;
 
-        /// \brief Classes that derive from FrameSemantics can use this function
-        /// to spawn a FrameID.
-        ///
-        /// Note that an _id of 0 is always interpreted as the World Frame, so
-        /// you should never spawn a FrameID with an _id of 0 unless you intend
-        /// for it to represent the world frame.
-        protected: FrameID SpawnFrameID(
-            const std::size_t _id,
-            const std::shared_ptr<const void> &_ref) const;
-
-        template <typename, std::size_t> friend class FrameSemantics::Frame;
+        template <typename, typename> friend class FrameSemantics::Frame;
       };
 
       /// \brief Base class for the API of a Frame. This will be inherited by
