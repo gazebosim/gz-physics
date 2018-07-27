@@ -829,6 +829,40 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   const FrameData C_A = fs->Resolve(B_T_C, World, A);
   const FrameData D_A = fs->Resolve(C_T_D, World, A);
 
+  // position:
+  //  xy: A = [0, 0]
+  EXPECT_NEAR(A_A.pose.translation()[0], 0.0, _tolerance);
+  EXPECT_NEAR(A_A.pose.translation()[1], 0.0, _tolerance);
+  //  xy: B = [pivotLength, 0]
+  EXPECT_NEAR(B_A.pose.translation()[0], pivotLength, _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[1], 0.0, _tolerance);
+  //  xy: B==C==D
+  EXPECT_NEAR(B_A.pose.translation()[0],
+              C_A.pose.translation()[0], _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[1],
+              C_A.pose.translation()[1], _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[0],
+              D_A.pose.translation()[0], _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[1],
+              D_A.pose.translation()[1], _tolerance);
+  //  z: A==B
+  EXPECT_NEAR(A_A.pose.translation()[2], pivotHeight, _tolerance);
+  EXPECT_NEAR(A_A.pose.translation()[2],
+              B_A.pose.translation()[2], _tolerance);
+  //  z: C == wheelRadius
+  EXPECT_NEAR(C_A.pose.translation()[2], wheelRadius, _tolerance);
+  //  z: D == 0.0
+  EXPECT_NEAR(D_A.pose.translation()[2], 0.0, _tolerance);
+
+  //  A==D==0: no relative linear velocity at pivot or wheel contact point
+  EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
+  EXPECT_TRUE(Equal(A_A.linearVelocity, D_A.linearVelocity, _tolerance));
+  //  B==C
+  EXPECT_TRUE(Equal(B_A.linearVelocity, C_A.linearVelocity, _tolerance));
+  EXPECT_NEAR(B_A.linearVelocity[0], 0.0, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[1], pivotLength*pivotRotationRate, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[2], 0.0, _tolerance);
+
   // linear velocity:
   //  A==D==0: no relative linear velocity at pivot or wheel contact point
   EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
@@ -860,10 +894,13 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   //  C == B
   EXPECT_TRUE(Equal(B_A.linearAcceleration,
                     C_A.linearAcceleration, _tolerance));
-  //  D[0] == B[0]
-  //  D[1] == B[1]
-  EXPECT_NEAR(D_A.linearAcceleration[0], B_A.linearAcceleration[0], _tolerance);
-  EXPECT_NEAR(D_A.linearAcceleration[1], B_A.linearAcceleration[1], _tolerance);
+  // See ipython notebook deriving the following nonintuitive condition:
+  //  D[0] == -B[0]
+  //  D[1] == -B[1]
+  EXPECT_NEAR(D_A.linearAcceleration[0],
+             -B_A.linearAcceleration[0], _tolerance);
+  EXPECT_NEAR(D_A.linearAcceleration[1],
+             -B_A.linearAcceleration[1], _tolerance);
   //  D[2] centripetal acceleration toward wheel center
   const Scalar accelZ = wheelRadius * std::pow(wheelRotationRate, 2);
   EXPECT_NEAR(D_A.linearAcceleration[2], accelZ, _tolerance);
