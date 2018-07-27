@@ -6,7 +6,7 @@
 :: Install dependencies
 ::call %win_lib% :download_unzip_install bullet dart
 call %win_lib% :download_unzip_install eigen3-3.3.4.zip
-call %win_lib% :install_ign_project ign-common default
+call %win_lib% :install_ign_project ign-plugin NewRegistrationScheme
 
 :: Set configuration variables
 @set build_type=Release
