@@ -20,6 +20,7 @@
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>
 #include <ignition/physics/RequestFeatures.hh>
+#include <ignition/math/Helpers.hh>
 #include <ignition/math/Rand.hh>
 
 #include "../MockFrameSemantics.hh"
@@ -743,6 +744,191 @@ TEST(FrameSemantics_TEST, FramedQuantities3f)
 TEST(FrameSemantics_TEST, FramedQuantities2f)
 {
   TestFramedQuantities<ignition::physics::FeaturePolicy2f>(1e-4, "2f");
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT>
+void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
+{
+  using Scalar = typename PolicyT::Scalar;
+  constexpr std::size_t Dim = PolicyT::Dim;
+  ASSERT_EQ(3u, Dim);
+
+  // Instantiate an engine that provides Frame Semantics.
+  auto fs =
+      ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
+        ::From(LoadMockFrameSemanticsPlugin(_suffix));
+
+  using FrameData = FrameData<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
+  // using Pose = Pose<Scalar, Dim>;
+  using LinearVector = LinearVector<Scalar, Dim>;
+  using AngularVector = AngularVector<Scalar, Dim>;
+  // using Rotation = Rotation<Scalar, Dim>;
+  // using FramedPose = ignition::physics::FramedPose<Scalar, Dim>;
+  // using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
+  // using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
+  // using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
+
+  const FrameID World = FrameID::World();
+
+  // Consider a pivot irrigation system with following points:
+  // A: pivot
+  // B: attachment of pipe to rolling support
+  // C: wheel center
+  // D: wheel-ground contact point
+  const Scalar pivotAngle = 30 * IGN_PI / 180;
+  const Scalar sinPivot = sin(pivotAngle);
+  const Scalar cosPivot = cos(pivotAngle);
+  const Scalar pivotHeight = 1;
+  const Scalar pivotLength = 5;
+  const Scalar pivotRotationRate = 0.1;
+  const Scalar wheelRadius = 0.25;
+  const Scalar wheelRotationRate = pivotRotationRate
+                                 * pivotLength / wheelRadius;
+
+  // Create a transform from the world to Frame A
+  const LinearVector axisZ = {0, 0, 1};
+  FrameData T_A;
+  T_A.pose.translation() = LinearVector(0, 0, pivotHeight);
+  T_A.pose.rotate(Eigen::AngleAxis<Scalar>(pivotAngle, axisZ));
+  T_A.angularVelocity = AngularVector(0, 0, pivotRotationRate);
+  const RelativeFrameData O_T_A(World, T_A);
+
+  // Instantiate Frame A as a Link
+  const FrameID A = *fs->CreateLink("A", fs->Resolve(O_T_A, World));
+
+  // Create a transform from Frame A to Frame B
+  FrameData T_B;
+  T_B.pose.translation() = LinearVector(pivotLength, 0, 0);
+  const RelativeFrameData A_T_B(A, T_B);
+
+  // Instantiate Frame B as a Joint
+  const FrameID B = *fs->CreateJoint("B", fs->Resolve(A_T_B, World));
+
+  // Create a transform from Frame B to Frame C
+  FrameData T_C;
+  T_C.pose.translation() = LinearVector(0, 0, wheelRadius - pivotHeight);
+  T_C.angularVelocity = AngularVector(-wheelRotationRate, 0, 0);
+  const RelativeFrameData B_T_C(B, T_C);
+
+  // Instantiate Frame C as a Link
+  const FrameID C = *fs->CreateLink("C", fs->Resolve(B_T_C, World));
+
+  // Create a transform from Frame C to Frame D
+  FrameData T_D;
+  T_D.pose.translation() = LinearVector(0, 0, -wheelRadius);
+  const RelativeFrameData C_T_D(C, T_D);
+
+  // Instantiate Frame D as a Joint
+  const FrameID D = *fs->CreateJoint("D", fs->Resolve(C_T_D, World));
+
+  // Get ABCD FrameData relative to world in coordinates of frame A
+  const FrameData A_A = fs->Resolve(O_T_A, World, A);
+  const FrameData B_A = fs->Resolve(A_T_B, World, A);
+  const FrameData C_A = fs->Resolve(B_T_C, World, A);
+  const FrameData D_A = fs->Resolve(C_T_D, World, A);
+
+  // position:
+  //  xy: A = [0, 0]
+  EXPECT_NEAR(A_A.pose.translation()[0], 0.0, _tolerance);
+  EXPECT_NEAR(A_A.pose.translation()[1], 0.0, _tolerance);
+  //  xy: B = [pivotLength, 0]
+  EXPECT_NEAR(B_A.pose.translation()[0], pivotLength, _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[1], 0.0, _tolerance);
+  //  xy: B==C==D
+  EXPECT_NEAR(B_A.pose.translation()[0],
+              C_A.pose.translation()[0], _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[1],
+              C_A.pose.translation()[1], _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[0],
+              D_A.pose.translation()[0], _tolerance);
+  EXPECT_NEAR(B_A.pose.translation()[1],
+              D_A.pose.translation()[1], _tolerance);
+  //  z: A==B
+  EXPECT_NEAR(A_A.pose.translation()[2], pivotHeight, _tolerance);
+  EXPECT_NEAR(A_A.pose.translation()[2],
+              B_A.pose.translation()[2], _tolerance);
+  //  z: C == wheelRadius
+  EXPECT_NEAR(C_A.pose.translation()[2], wheelRadius, _tolerance);
+  //  z: D == 0.0
+  EXPECT_NEAR(D_A.pose.translation()[2], 0.0, _tolerance);
+
+  //  A==D==0: no relative linear velocity at pivot or wheel contact point
+  EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
+  EXPECT_TRUE(Equal(A_A.linearVelocity, D_A.linearVelocity, _tolerance));
+  //  B==C
+  EXPECT_TRUE(Equal(B_A.linearVelocity, C_A.linearVelocity, _tolerance));
+  EXPECT_NEAR(B_A.linearVelocity[0], 0.0, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[1], pivotLength*pivotRotationRate, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[2], 0.0, _tolerance);
+
+  // linear velocity:
+  //  A==D==0: no relative linear velocity at pivot or wheel contact point
+  EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
+  EXPECT_TRUE(Equal(A_A.linearVelocity, D_A.linearVelocity, _tolerance));
+  //  B==C
+  EXPECT_TRUE(Equal(B_A.linearVelocity, C_A.linearVelocity, _tolerance));
+  EXPECT_NEAR(B_A.linearVelocity[0], 0.0, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[1], pivotLength*pivotRotationRate, _tolerance);
+  EXPECT_NEAR(B_A.linearVelocity[2], 0.0, _tolerance);
+
+  // angular velocity: A==B, C==D
+  EXPECT_TRUE(Equal(A_A.angularVelocity, B_A.angularVelocity, _tolerance));
+  EXPECT_NEAR(A_A.angularVelocity[0], 0.0, _tolerance);
+  EXPECT_NEAR(A_A.angularVelocity[1], 0.0, _tolerance);
+  EXPECT_NEAR(A_A.angularVelocity[2], pivotRotationRate, _tolerance);
+  EXPECT_TRUE(Equal(C_A.angularVelocity, D_A.angularVelocity, _tolerance));
+  EXPECT_NEAR(C_A.angularVelocity[0], -wheelRotationRate, _tolerance);
+  EXPECT_NEAR(C_A.angularVelocity[1], 0.0, _tolerance);
+  EXPECT_NEAR(C_A.angularVelocity[2], pivotRotationRate, _tolerance);
+
+  // linear acceleration:
+  //  A==0
+  EXPECT_EQ(A_A.linearAcceleration, LinearVector::Zero());
+  //  B centripetal acceleration torward pivot
+  const Scalar accelX = -pivotLength * std::pow(pivotRotationRate, 2);
+  EXPECT_NEAR(B_A.linearAcceleration[0], accelX, _tolerance);
+  EXPECT_NEAR(B_A.linearAcceleration[1], 0.0, _tolerance);
+  EXPECT_NEAR(B_A.linearAcceleration[2], 0.0, _tolerance);
+  //  C == B
+  EXPECT_TRUE(Equal(B_A.linearAcceleration,
+                    C_A.linearAcceleration, _tolerance));
+  // See ipython notebook deriving the following nonintuitive condition:
+  //  D[0] == -B[0]
+  //  D[1] == -B[1]
+  EXPECT_NEAR(D_A.linearAcceleration[0],
+             -B_A.linearAcceleration[0], _tolerance);
+  EXPECT_NEAR(D_A.linearAcceleration[1],
+             -B_A.linearAcceleration[1], _tolerance);
+  //  D[2] centripetal acceleration toward wheel center
+  const Scalar accelZ = wheelRadius * std::pow(wheelRotationRate, 2);
+  EXPECT_NEAR(D_A.linearAcceleration[2], accelZ, _tolerance);
+
+  // angular acceleration
+  //  A==B==0
+  EXPECT_EQ(A_A.angularAcceleration, LinearVector::Zero());
+  EXPECT_EQ(B_A.angularAcceleration, LinearVector::Zero());
+  //  C==D
+  EXPECT_TRUE(Equal(C_A.angularAcceleration,
+                    D_A.angularAcceleration, _tolerance));
+  //  based on cross product of angular velocity vectors
+  const Scalar accelY = pivotRotationRate * (-wheelRotationRate);
+  EXPECT_NEAR(C_A.angularAcceleration[0], 0.0, _tolerance);
+  EXPECT_NEAR(C_A.angularAcceleration[1], accelY, _tolerance);
+  EXPECT_NEAR(C_A.angularAcceleration[2], 0.0, _tolerance);
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeFrameData3d)
+{
+  TestRelativeFrameData<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeFrameData3f)
+{
+  TestRelativeFrameData<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 int main(int argc, char **argv)
