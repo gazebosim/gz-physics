@@ -24,7 +24,7 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_CREATE_JOINT_TYPE(FreeJoint);
+    IGN_PHYSICS_CREATE_JOINT_TYPE(FreeJoint)
 
     class IGNITION_PHYSICS_VISIBLE SetFreeJointTransformFeature
         : public virtual Feature
