@@ -24,14 +24,39 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_CREATE_JOINT_TYPE(FreeJoint)
+    IGN_PHYSICS_CREATE_JOINT_TYPE(FreeJoint);
 
-    class IGNITION_PHYSICS_VISIBLE GetFreeJointPose
-      : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE SetFreeJointTransformFeature
+        : public virtual Feature
     {
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeJoint : public virtual Entity<PolicyT, FeaturesT>
+      {
+        public: using Pose = typename FromPolicy<PolicyT>::template Use<Pose>;
 
+        /// \brief Set the transform from the joint's parent link to its child
+        /// link by changing the generalized positions of this joint.
+        /// \param[in] _pose
+        ///   The desired transformation matrix
+        public: void SetTransform(const Pose &_pose);
+      };
+
+      /// \private The implementation API for setting a free joint transform
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Pose = typename FromPolicy<PolicyT>::template Use<Pose>;
+
+        public: virtual void SetFreeJointTransform(
+            std::size_t _id, const Pose &_pose) = 0;
+      };
+
+      public: using RequiredFeatures =
+          FeatureList<ignition::physics::FreeJoint>;
     };
   }
 }
+
+#include <ignition/physics/detail/FreeJoint.hh>
 
 #endif
