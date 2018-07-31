@@ -90,6 +90,8 @@ namespace ignition
         public: template <typename FQ>
         FQ Reframe(const FQ &_quantity,
                    const FrameID _withRespectTo = FrameID::World()) const;
+
+        template <typename, typename> friend class FrameSemantics::Frame;
       };
 
       /// \brief Base class for the API of a Frame. This will be inherited by
