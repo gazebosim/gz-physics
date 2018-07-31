@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_CREATEJOINTTYPE_HH_
 #define IGNITION_PHYSICS_CREATEJOINTTYPE_HH_
 
+#include <memory>
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/Geometry.hh>
@@ -38,14 +39,14 @@
                                ::template type<PolicyT, FeaturesT>, \
       public virtual detail::Aggregate<detail::JointSelector, FeaturesT> \
                                ::template type<PolicyT, FeaturesT> \
-      { \
-        public: using Base = ::ignition::physics::Entity<PolicyT, FeaturesT>; \
-      \
-        public: Using(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
-                      const ::ignition::physics::Identity &_identity) \
-          : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
-      }; \
+    { \
+      public: using Base = ::ignition::physics::Entity<PolicyT, FeaturesT>; \
     \
+      public: Using(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
+                    const ::ignition::physics::Identity &_identity) \
+        : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
+    }; \
+  \
     template <typename PolicyT, typename FeaturesT> \
     class Joint : \
       public virtual ::ignition::physics::Feature::Joint<PolicyT, FeaturesT> \
@@ -79,9 +80,9 @@
     class Implementation \
       : public virtual ::ignition::physics::Feature::Implementation<PolicyT> \
     { \
-      public: virtual ::ignition::physics::Identity CastTo ## X ( \
+      public: virtual ::ignition::physics::Identity CastTo ## X( \
         std::size_t _id) = 0; \
-      public: virtual ::ignition::physics::Identity CastTo ## X ( \
+      public: virtual ::ignition::physics::Identity CastTo ## X( \
         std::size_t _id) const = 0; \
     }; \
   }; \

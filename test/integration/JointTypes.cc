@@ -37,7 +37,7 @@ ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
     const std::string &_suffix)
 {
   ignition::plugin::Loader pl;
-  auto plugins = pl.LoadLibrary(MockJoints_LIB); // TODO: Replace with macro
+  auto plugins = pl.LoadLibrary(MockJoints_LIB);
 
   ignition::plugin::PluginPtr plugin =
       pl.Instantiate("mock::JointPlugin"+_suffix);
@@ -96,7 +96,6 @@ void TestRevoluteJointFK(
 
     T = T * T_initial;
   }
-
 }
 
 /////////////////////////////////////////////////
@@ -105,8 +104,6 @@ void TestRevoluteJoint(const double _tolerance, const std::string &_suffix)
 {
   using AngularVector =
       typename FromPolicy<PolicyT>::template Use<AngularVector>;
-
-  using Scalar = typename PolicyT::Scalar;
 
   auto engine = RequestFeatures<PolicyT, mock::MockJointList>::From(
         LoadMockJointTypesPlugin(_suffix));
