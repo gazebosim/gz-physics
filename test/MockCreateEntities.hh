@@ -19,12 +19,80 @@
 #define IGNITION_PHYSICS_TEST_MOCKCREATEENTITY_HH_
 
 #include <memory>
+#include <string>
+
+#include <ignition/math/Box.hh>
+#include <ignition/math/Cylinder.hh>
+#include <ignition/math/Inertial.hh>
+#include <ignition/math/Pose3.hh>
+#include <ignition/math/Sphere.hh>
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FramedQuantity.hh>
+#include <ignition/physics/SpecifyData.hh>
 
 namespace mock
 {
+  struct Geometry
+  {
+    ignition::physics::ExpectData<
+      ignition::math::Boxd,
+      ignition::math::Cylinderd,
+      ignition::math::Sphered
+      > data;
+  };
+
+  struct RelativePose
+  {
+    ignition::math::Pose3d pose;
+    std::string relative_to;
+  };
+
+  struct NamedWithRelativePose
+  {
+    std::string name;
+    RelativePose pose;
+  };
+
+  struct Collision : NamedWithRelativePose
+  {
+    Geometry geometry;
+  };
+
+  enum MotionType
+  {
+    STATIC = 0,
+    KINEMATIC,
+    DYNAMIC
+  };
+
+  struct Link : NamedWithRelativePose
+  {
+    ignition::math::Inertiald inertial;
+    std::vector<Collision> collisions;
+    MotionType motion_type;
+  };
+
+  struct Joint : NamedWithRelativePose
+  {
+    std::string parent_link_name;
+    std::string child_link_name;
+  };
+
+  struct ModelFreeLink : NamedWithRelativePose
+  {
+    Link link;
+    MotionType motion_type;
+  };
+
+  struct Model : NamedWithRelativePose
+  {
+    std::vector<Joint> joints;
+    std::vector<Link> links;
+    std::vector<Model> models;
+    MotionType motion_type;
+  };
+
   /////////////////////////////////////////////////
   /// \brief A feature for creating and retrieving links from an engine. This
   /// is used by the mock Frame Semantics plugin so that we can test the
@@ -62,11 +130,28 @@ namespace mock
           const std::string &_jointName) const;
     };
 
+    template <typename PolicyT, typename FeaturesT>
+    class World : public virtual Feature::World<PolicyT, FeaturesT>
+    {
+      public: using Model = ignition::physics::Model<PolicyT, FeaturesT>;
+
+      /// \brief Create a link, giving it a name and data. The data is relative
+      /// to the world frame.
+      public: std::unique_ptr<Model> CreateModelFreeLink(
+          const ModelFreeLink &_model);
+    };
+
     template <typename PolicyT>
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: using FrameData =
         ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+
+      public: virtual Identity CreateModelFreeLink(
+          const ModelFreeLink &_model) = 0;
+
+      public: virtual Identity CreateModelFreeLink(
+          const ModelFreeLink &_model) const = 0;
 
       public: virtual Identity CreateLink(
           const std::string &_linkName,
