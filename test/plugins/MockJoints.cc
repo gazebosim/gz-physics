@@ -203,6 +203,16 @@ namespace mock
       return this->idToJointState.at(_id).force[_dof];
     }
 
+    Pose GetJointTransform(const std::size_t _id) const override
+    {
+      const auto &p = this->idToJointProperties.at(_id);
+      const auto &axis = this->idToRevoluteJointProperties.at(_id).axis;
+
+      const Pose R{Rotate(this->idToJointState.at(_id).position[0], axis)};
+
+      return p.parentLinkToJoint * R * p.jointToChildLink;
+    }
+
     void SetJointPosition(
         const std::size_t _id, const std::size_t _dof,
         const Scalar _value) override
@@ -229,6 +239,12 @@ namespace mock
         const Scalar _value) override
     {
       this->idToJointState.at(_id).force[_dof] = _value;
+    }
+
+    std::size_t GetJointDegreesOfFreedom(std::size_t /*_id*/) const override
+    {
+      // So far we only support revolute joints, which have 1 DOF
+      return 1u;
     }
 
     Pose GetJointTransformFromParent(std::size_t _id) const override

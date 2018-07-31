@@ -45,15 +45,11 @@ namespace ignition
         /// This will typically have a value of +1.0 or -1.0.
         ///
         /// \return this joint's axis.
-        public: Axis GetAxis() const
-        {
-          return this->template Interface<GetRevoluteJointProperties>()
-              ->GetRevoluteJointAxis(this->identity);
-        }
+        public: Axis GetAxis() const;
       };
 
-      /// \brief This class is inherited by physics plugin classes that want to
-      /// provide this feature.
+      /// \private The implementation API for getting basic revolute joint
+      /// properties
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
@@ -90,15 +86,11 @@ namespace ignition
         /// scalar, but its value must be accessed from the first element).
         /// It is recommended that you only pass a value of +1.0 or -1.0.
         /// Physics engines might not normalize the value before using it.
-        public: void SetAxis(const Axis &_axis)
-        {
-          this->template Interface<SetRevoluteJointProperties>()
-              ->SetRevoluteJointAxis(this->identity, _axis);
-        }
+        public: void SetAxis(const Axis &_axis);
       };
 
-      /// \brief This class is inherited by physics plugin classes that want to
-      /// provide this feature.
+      /// \private The implementation API for setting basic revolute joint
+      /// properties
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
@@ -115,5 +107,7 @@ namespace ignition
     };
   }
 }
+
+#include <ignition/physics/detail/RevoluteJoint.hh>
 
 #endif
