@@ -70,6 +70,10 @@ class SDFFeatures :
       const ::sdf::Joint &_sdfJoint,
       dart::dynamics::BodyNode * const _parent,
       dart::dynamics::BodyNode * const _child);
+
+  public: Eigen::Isometry3d ResolveSdfLinkPose(
+      const std::string &_frame,
+      const std::size_t _modelID) const;
 };
 
 }

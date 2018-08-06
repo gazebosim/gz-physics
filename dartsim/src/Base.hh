@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include <dart/dynamics/BodyNode.hpp>
+#include <dart/dynamics/SimpleFrame.hpp>
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
 
@@ -29,6 +30,12 @@
 namespace ignition {
 namespace physics {
 namespace dartsim {
+
+struct ModelInfo
+{
+  dart::dynamics::SkeletonPtr model;
+  dart::dynamics::SimpleFramePtr frame;
+};
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
@@ -47,7 +54,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::size_t entityCount = 0;
 
   public: std::unordered_map<std::size_t, dart::simulation::WorldPtr> worlds;
-  public: std::unordered_map<std::size_t, dart::dynamics::SkeletonPtr> models;
+  public: std::unordered_map<std::size_t, ModelInfo> models;
   public: std::unordered_map<std::size_t, dart::dynamics::BodyNodePtr> links;
   public: std::unordered_map<std::size_t, dart::dynamics::JointPtr> joints;
 };

@@ -180,7 +180,7 @@ Identity SDFFeatures::ConstructSdfModel(
   dart::dynamics::SkeletonPtr model =
       dart::dynamics::Skeleton::create(_sdfModel.Name());
   const std::size_t modelID = this->GetNextEntity();
-  models[modelID] = model;
+  models[modelID] = {model, nullptr};
 
   for (std::size_t i=0; i < _sdfModel.JointCount(); ++i)
   {
@@ -217,7 +217,7 @@ Identity SDFFeatures::ConstructSdfLink(
     const std::size_t _modelID,
     const ::sdf::Link &_sdfLink)
 {
-  const dart::dynamics::SkeletonPtr model = models.at(_modelID);
+  const dart::dynamics::SkeletonPtr model = models.at(_modelID).model;
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
@@ -245,13 +245,16 @@ Identity SDFFeatures::ConstructSdfLink(
   // potential (albeit unlikely) name collisions.
 
   // Note: When constructing a link from this function, we always instantiate
-  // it as a standalone free body within the model. If it should have any
-  // joint constraints, those will be added later.
+  // it as a standalone free body within the model. If it should have any joint
+  // constraints, those will be added later.
   const auto result = model->createJointAndBodyNodePair<
       dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
 
   dart::dynamics::FreeJoint * const joint = result.first;
-  const Eigen::Isometry3d tf = math::eigen3::convert(_sdfLink.Pose());
+  const Eigen::Isometry3d tf =
+      this->ResolveSdfLinkPose(_sdfLink.PoseFrame(), _modelID)
+      * math::eigen3::convert(_sdfLink.Pose());
+
   joint->setTransform(tf, dart::dynamics::Frame::World());
 
   dart::dynamics::BodyNode * const bn = result.second;
@@ -269,7 +272,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     const std::size_t _modelID,
     const ::sdf::Joint &_sdfJoint)
 {
-  const dart::dynamics::SkeletonPtr &model = models[_modelID];
+  const dart::dynamics::SkeletonPtr &model = models[_modelID].model;
   dart::dynamics::BodyNode * const parent =
       model->getBodyNode(_sdfJoint.ParentLinkName());
 
@@ -418,6 +421,20 @@ Identity SDFFeatures::ConstructSdfJoint(
   joints[jointID] = joint;
 
   return this->GenerateIdentity(jointID);
+}
+
+/////////////////////////////////////////////////
+Eigen::Isometry3d SDFFeatures::ResolveSdfLinkPose(
+    const std::string &_frame,
+    const std::size_t _modelID) const
+{
+  // TODO(MXG): Is this really what the "model pose" refers to?
+  if (_frame.empty())
+    return models.at(_modelID).model->getBodyNode(0)->getTransform();
+
+  // TODO(MXG): Figure out how to handle frame specifications
+
+  return Eigen::Isometry3d::Identity();
 }
 
 }
