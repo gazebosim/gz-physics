@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <ignition/physics/Implements.hh>
+#include <ignition/physics/Register.hh>
 
 #include "../MockJoints.hh"
 

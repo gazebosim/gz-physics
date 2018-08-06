@@ -1,7 +1,9 @@
 
 # TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
 ign_add_component(dartsim
-  SOURCES src/plugin.cc
+  SOURCES
+    src/plugin.cc
+    src/SDFFeatures.cc
   GET_TARGET_NAME dartsim_plugin)
 
 target_link_libraries(${dartsim_plugin}
@@ -11,4 +13,4 @@ target_link_libraries(${dartsim_plugin}
     ignition-math${IGN_MATH_VER}::eigen3)
 
 target_include_directories(${dartsim_plugin}
-  PUBLIC ${DART_INCLUDE_DIRS})
+  SYSTEM PUBLIC ${DART_INCLUDE_DIRS})

@@ -15,35 +15,21 @@
  *
 */
 
+#ifndef IGNITION_PHYSICS_REGISTERMORE_HH_
+#define IGNITION_PHYSICS_REGISTERMORE_HH_
+
+/// If your library already has a translation unit (.cpp file) containing
+/// \code
+///     #include <ignition/physics/Register.hh>
+/// \endcode
+///
+/// then any other translation units that want to register plugins should use
+/// \code
+///     #include <ignition/physics/RegisterMore.hh>
+/// \endcode
+///
+/// But at least one translation unit of your library must contain Register.hh.
+#define IGN_PLUGIN_REGISTER_MORE_TRANS_UNITS
 #include <ignition/physics/Register.hh>
 
-#include "Base.hh"
-#include "SDFFeatures.hh"
-
-namespace ignition {
-namespace physics {
-namespace dartsim {
-
-using DartsimFeatures = FeatureList<
-  SDFFeatureList
-  // TODO(MXG): Implement these other features
-/*  LinkFrameSemantics,
-  GetBasicJointState,
-  GetBasicJointProperties,
-  SetBasicJointState,
-  SetJointTransformFromParentFeature,
-  SetJointTransformToChildFeature, */
->;
-
-class Plugin :
-    public virtual Implements<FeaturePolicy3d, DartsimFeatures>,
-    public virtual SDFFeatures,
-    public virtual Base
-{
-};
-
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
-
-}
-}
-}
+#endif
