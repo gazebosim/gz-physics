@@ -50,8 +50,7 @@ class SDFFeatures :
       const dart::dynamics::SkeletonPtr &_model,
       const std::size_t _modelID,
       const ::sdf::Model &_sdfModel,
-      const std::string &_linkName,
-      const std::string &_jointName);
+      const std::string &_linkName);
 
   public: Identity ConstructSdfModel(
       const std::size_t _worldID,
@@ -71,9 +70,14 @@ class SDFFeatures :
       dart::dynamics::BodyNode * const _parent,
       dart::dynamics::BodyNode * const _child);
 
-  public: Eigen::Isometry3d ResolveSdfLinkPose(
+  public: Eigen::Isometry3d ResolveSdfLinkReferenceFrame(
       const std::string &_frame,
-      const std::size_t _modelID) const;
+      const dart::dynamics::ConstSkeletonPtr &_model) const;
+
+  public: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
+      const std::string &_frame,
+      const dart::dynamics::ConstSkeletonPtr &_model,
+      const dart::dynamics::BodyNode *_child) const;
 };
 
 }

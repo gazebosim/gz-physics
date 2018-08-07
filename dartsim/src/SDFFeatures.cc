@@ -61,21 +61,27 @@ static void CopyStandardJointAxisProperties(
 }
 
 /////////////////////////////////////////////////
+static Eigen::Isometry3d GetParentModelFrame(
+    const dart::dynamics::ConstSkeletonPtr &_model)
+{
+  // TODO(MXG): Is this really what the "model pose" refers to?
+  return _model->getBodyNode(0)->getWorldTransform();
+}
+
+/////////////////////////////////////////////////
 static Eigen::Vector3d ConvertJointAxis(
     const ::sdf::JointAxis *_sdfAxis,
-    const ::sdf::Joint &_sdfJoint,
-    const dart::dynamics::SkeletonPtr &/*_model*/,
-    const dart::dynamics::BodyNode * const /*_parent*/)
+    const dart::dynamics::SkeletonPtr &_model,
+    const Eigen::Isometry3d &_T_joint)
 {
-  Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
+  const Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
 
   if (_sdfAxis->UseParentModelFrame())
   {
-    // TODO(MXG): Account for "model frame" here using the _model argument
-    std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to use parent "
-              << "model frame for joint axis of [" << _sdfJoint.Name()
-              << "], but this is not supported yet. Parent link frame will "
-              << "be used instead.\n";
+    const Eigen::Quaterniond O_R_J{_T_joint.rotation()};
+    const Eigen::Quaterniond O_R_M{GetParentModelFrame(_model).rotation()};
+    const Eigen::Quaterniond J_R_M = O_R_J.inverse() * O_R_M;
+    return J_R_M * axis;
   }
 
   return axis;
@@ -87,12 +93,14 @@ static JointType *ConstructSingleAxisJoint(
     const dart::dynamics::SkeletonPtr &_model,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
-    dart::dynamics::BodyNode * const _child)
+    dart::dynamics::BodyNode * const _child,
+    const Eigen::Isometry3d &_T_joint)
 {
   typename JointType::Properties properties;
 
   const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(0);
-  properties.mAxis = ConvertJointAxis(sdfAxis, _sdfJoint, _model, _parent);
+  properties.mAxis = ConvertJointAxis(sdfAxis, _model, _T_joint);
+
   CopyStandardJointAxisProperties(0, properties, sdfAxis);
 
   return _child->moveTo<JointType>(_parent, properties);
@@ -103,15 +111,15 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
     const dart::dynamics::SkeletonPtr &_model,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
-    dart::dynamics::BodyNode * const _child)
+    dart::dynamics::BodyNode * const _child,
+    const Eigen::Isometry3d &_T_joint)
 {
   dart::dynamics::UniversalJoint::Properties properties;
 
-  for (const int index : {0, 1})
+  for (const std::size_t index : {0u, 1u})
   {
     const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(index);
-    properties.mAxis[index] =
-        ConvertJointAxis(sdfAxis, _sdfJoint, _model, _parent);
+    properties.mAxis[index] = ConvertJointAxis(sdfAxis, _model, _T_joint);
 
     CopyStandardJointAxisProperties(index, properties, sdfAxis);
   }
@@ -152,8 +160,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     const dart::dynamics::SkeletonPtr &_model,
     const std::size_t _modelID,
     const ::sdf::Model &_sdfModel,
-    const std::string &_linkName,
-    const std::string &_jointName)
+    const std::string &_linkName)
 {
   dart::dynamics::BodyNode * link = _model->getBodyNode(_linkName);
   if (link)
@@ -164,8 +171,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
   {
     std::cerr << "[dartsim::ConstructSdfModel] Error: Model ["
               << _sdfModel.Name() << "] contains a nullptr Link with the "
-              << "name [" << _linkName << "]. We will skip constructing "
-              << "the joint [" << _jointName << "].\n";
+              << "name [" << _linkName << "].\n";
     return nullptr;
   }
 
@@ -182,6 +188,14 @@ Identity SDFFeatures::ConstructSdfModel(
   const std::size_t modelID = this->GetNextEntity();
   models[modelID] = {model, nullptr};
 
+  // First, construct all links
+  for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
+  {
+    this->FindOrConstructLink(
+          model, modelID, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
+  }
+
+  // Next, join all links that have joints
   for (std::size_t i=0; i < _sdfModel.JointCount(); ++i)
   {
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
@@ -193,15 +207,11 @@ Identity SDFFeatures::ConstructSdfModel(
       continue;
     }
 
-    const std::string &jointName = sdfJoint->Name();
     dart::dynamics::BodyNode * const parent = this->FindOrConstructLink(
-          model, modelID, _sdfModel, sdfJoint->ParentLinkName(), jointName);
+          model, modelID, _sdfModel, sdfJoint->ParentLinkName());
 
     dart::dynamics::BodyNode * const child = this->FindOrConstructLink(
-          model, modelID, _sdfModel, sdfJoint->ChildLinkName(), jointName);
-
-    if (!parent || !child)
-      continue;
+          model, modelID, _sdfModel, sdfJoint->ChildLinkName());
 
     this->ConstructSdfJoint(model, *sdfJoint, parent, child);
   }
@@ -252,7 +262,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   dart::dynamics::FreeJoint * const joint = result.first;
   const Eigen::Isometry3d tf =
-      this->ResolveSdfLinkPose(_sdfLink.PoseFrame(), _modelID)
+      this->ResolveSdfLinkReferenceFrame(_sdfLink.PoseFrame(), model)
       * math::eigen3::convert(_sdfLink.Pose());
 
   joint->setTransform(tf, dart::dynamics::Frame::World());
@@ -279,30 +289,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   dart::dynamics::BodyNode * const child =
       model->getBodyNode(_sdfJoint.ChildLinkName());
 
-  if(!parent || !child)
-  {
-    std::stringstream msg;
-    msg << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint from "
-        << "link [" << _sdfJoint.ParentLinkName() << "] to link ["
-        << _sdfJoint.ChildLinkName() << "] in the model [" << model->getName()
-        << "], but ";
-
-    if(!parent)
-    {
-      msg << "the parent link ";
-      if(!child)
-        msg << " and ";
-    }
-
-    if(!child)
-      msg << "the child link ";
-
-    msg << "could not be found in that model!\n";
-    std::cerr << msg.str();
-
-    return this->GenerateInvalidId();
-  }
-
   return ConstructSdfJoint(model, _sdfJoint, parent, child);
 }
 
@@ -313,6 +299,30 @@ Identity SDFFeatures::ConstructSdfJoint(
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child)
 {
+  if(!_parent || !_child)
+  {
+    std::stringstream msg;
+    msg << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint from "
+        << "link [" << _sdfJoint.ParentLinkName() << "] to link ["
+        << _sdfJoint.ChildLinkName() << "] in the model [" << _model->getName()
+        << "], but ";
+
+    if(!_parent)
+    {
+      msg << "the parent link ";
+      if(!_child)
+        msg << " and ";
+    }
+
+    if(!_child)
+      msg << "the child link ";
+
+    msg << "could not be found in that model!\n";
+    std::cerr << msg.str();
+
+    return this->GenerateInvalidId();
+  }
+
   if (_parent->descendsFrom(_child))
   {
     // TODO(MXG): Add support for non-tree graph structures
@@ -323,8 +333,13 @@ Identity SDFFeatures::ConstructSdfJoint(
     return this->GenerateInvalidId();
   }
 
-  // Save the current transform of the child link so we remember it later
-  const Eigen::Isometry3d T_child_desired = _child->getTransform();
+  // Save the current transforms of the links so we remember it later
+  const Eigen::Isometry3d T_parent = _parent->getWorldTransform();
+  const Eigen::Isometry3d T_child = _child->getWorldTransform();
+
+  const Eigen::Isometry3d T_joint =
+    this->ResolveSdfJointReferenceFrame(_sdfJoint.PoseFrame(), _model, _child)
+    * math::eigen3::convert(_sdfJoint.Pose());
 
   const ::sdf::JointType type = _sdfJoint.Type();
   dart::dynamics::Joint *joint = nullptr;
@@ -352,12 +367,12 @@ Identity SDFFeatures::ConstructSdfJoint(
   else if(::sdf::JointType::PRISMATIC == type)
   {
     joint = ConstructSingleAxisJoint<dart::dynamics::PrismaticJoint>(
-          _model, _sdfJoint, _parent, _child);
+          _model, _sdfJoint, _parent, _child, T_joint);
   }
   else if (::sdf::JointType::REVOLUTE == type)
   {
     joint = ConstructSingleAxisJoint<dart::dynamics::RevoluteJoint>(
-          _model, _sdfJoint, _parent, _child);
+          _model, _sdfJoint, _parent, _child, T_joint);
   }
   // TODO(MXG): Consider adding dartsim support for a REVOLUTE2 joint type.
   // Alternatively, support the REVOLUTE2 joint type by wrapping two
@@ -365,7 +380,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   else if(::sdf::JointType::SCREW == type)
   {
     auto *screw = ConstructSingleAxisJoint<dart::dynamics::ScrewJoint>(
-          _model, _sdfJoint, _parent, _child);
+          _model, _sdfJoint, _parent, _child, T_joint);
 
     ::sdf::ElementPtr element = _sdfJoint.Element();
     if (element->HasElement("thread_pitch"))
@@ -377,7 +392,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else if(::sdf::JointType::UNIVERSAL == type)
   {
-    joint = ConstructUniversalJoint(_model, _sdfJoint, _parent, _child);
+    joint = ConstructUniversalJoint(
+          _model, _sdfJoint, _parent, _child, T_joint);
   }
   else
   {
@@ -388,34 +404,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   joint->setName(_sdfJoint.Name());
-
-  // Determine the transform from the parent link to the joint
-  Eigen::Isometry3d T_parentToJoint =
-      ignition::math::eigen3::convert(_sdfJoint.Pose());
-
-  if (_sdfJoint.PoseFrame() != "")
-  {
-    // TODO(MXG): Account for the reference frame of the pose. It would be
-    // good if SDF provided a way to identify which entity this is or at least
-    // what type of entity. For example "link://model_name/name_of_link"
-    std::cerr << "[dartsim::ConstructSdfJoint] Error: A reference frame has "
-              << "been specified for [" << _sdfJoint.Name() << "], but this "
-              << "is not supported yet.\n";
-    // TODO(MXG): Also, the sdf/Joint.hh documentation says that the default
-    // frame is the child frame rather than the parent frame. That makes very
-    // little sense to me, so for now we'll assume it actually meant to say
-    // "parent frame".
-  }
-
-  joint->setTransformFromParentBodyNode(T_parentToJoint);
-
-  // Alter the transform from the joint to the child link so that the child
-  // link returns to its original pose. This should be done after all other
-  // changes to joint properties are finished.
-  const Eigen::Isometry3d T_child_actual = _child->getTransform();
-  joint->setTransformFromChildBodyNode(
-        T_child_desired.inverse() * T_child_actual
-        * joint->getTransformFromChildBodyNode());
+  joint->setTransformFromParentBodyNode(T_parent.inverse() * T_joint);
+  joint->setTransformFromChildBodyNode(T_child.inverse() * T_joint);
 
   const std::size_t jointID = GetNextEntity();
   joints[jointID] = joint;
@@ -424,16 +414,38 @@ Identity SDFFeatures::ConstructSdfJoint(
 }
 
 /////////////////////////////////////////////////
-Eigen::Isometry3d SDFFeatures::ResolveSdfLinkPose(
+Eigen::Isometry3d SDFFeatures::ResolveSdfLinkReferenceFrame(
     const std::string &_frame,
-    const std::size_t _modelID) const
+    const dart::dynamics::ConstSkeletonPtr &_model) const
 {
-  // TODO(MXG): Is this really what the "model pose" refers to?
   if (_frame.empty())
-    return models.at(_modelID).model->getBodyNode(0)->getTransform();
+    return GetParentModelFrame(_model);
+
+  std::cerr << "[dartsim::ResolveSdfLinkReferenceFrame] Requested a reference "
+            << "frame of [" << _frame << "] but currently only the model frame "
+            << "is supported as a reference frame for link poses.\n";
 
   // TODO(MXG): Figure out how to handle frame specifications
+  return Eigen::Isometry3d::Identity();
+}
 
+/////////////////////////////////////////////////
+Eigen::Isometry3d SDFFeatures::ResolveSdfJointReferenceFrame(
+    const std::string &_frame,
+    const dart::dynamics::ConstSkeletonPtr &/*_model*/,
+    const dart::dynamics::BodyNode *_child) const
+{
+  if (_frame.empty())
+  {
+    // This means the joint pose is expressed relative to the child link pose
+    return _child->getWorldTransform();
+  }
+
+  std::cerr << "[dartsim::ResolveSdfJointReferenceFrame] Requested a reference "
+            << "frame of [" << _frame << "] but currently only the child link "
+            << "frame is supported as a reference frame for joint poses.\n";
+
+  // TODO(MXG): Figure out how to handle frame specifications
   return Eigen::Isometry3d::Identity();
 }
 
