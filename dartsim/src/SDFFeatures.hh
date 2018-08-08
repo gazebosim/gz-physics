@@ -46,12 +46,6 @@ class SDFFeatures :
       const std::size_t /*_engine*/,
       const ::sdf::World &_sdfWorld) override;
 
-  public: dart::dynamics::BodyNode *FindOrConstructLink(
-      const dart::dynamics::SkeletonPtr &_model,
-      const std::size_t _modelID,
-      const ::sdf::Model &_sdfModel,
-      const std::string &_linkName);
-
   public: Identity ConstructSdfModel(
       const std::size_t _worldID,
       const ::sdf::Model &_sdfModel) override;
@@ -64,19 +58,23 @@ class SDFFeatures :
       const std::size_t _modelID,
       const ::sdf::Joint &_sdfJoint) override;
 
-  public: Identity ConstructSdfJoint(
+  public: dart::dynamics::BodyNode *FindOrConstructLink(
       const dart::dynamics::SkeletonPtr &_model,
+      const std::size_t _modelID,
+      const ::sdf::Model &_sdfModel,
+      const std::string &_linkName);
+
+  public: Identity ConstructSdfJoint(const ModelInfo &_modelInfo,
       const ::sdf::Joint &_sdfJoint,
       dart::dynamics::BodyNode * const _parent,
       dart::dynamics::BodyNode * const _child);
 
   public: Eigen::Isometry3d ResolveSdfLinkReferenceFrame(
       const std::string &_frame,
-      const dart::dynamics::ConstSkeletonPtr &_model) const;
+      const ModelInfo &_model) const;
 
   public: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
       const std::string &_frame,
-      const dart::dynamics::ConstSkeletonPtr &_model,
       const dart::dynamics::BodyNode *_child) const;
 };
 
