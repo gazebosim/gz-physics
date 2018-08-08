@@ -18,10 +18,12 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SDFFEATURES_HH_
 #define IGNITION_PHYSICS_DARTSIM_SDFFEATURES_HH_
 
-#include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
+#include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructJoint.hh>
+#include <ignition/physics/sdf/ConstructLink.hh>
+#include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructVisual.hh>
+#include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <ignition/physics/Implements.hh>
 
@@ -35,7 +37,9 @@ using SDFFeatureList = FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
   sdf::ConstructSdfLink,
-  sdf::ConstructSdfJoint
+  sdf::ConstructSdfJoint,
+  sdf::ConstructSdfCollision,
+  sdf::ConstructSdfVisual
 >;
 
 class SDFFeatures :
@@ -57,6 +61,14 @@ class SDFFeatures :
   public: Identity ConstructSdfJoint(
       const std::size_t _modelID,
       const ::sdf::Joint &_sdfJoint) override;
+
+  public: Identity ConstructSdfCollision(
+      const std::size_t _linkID,
+      const ::sdf::Collision &_collision) override;
+
+  public: Identity ConstructSdfVisual(
+      const std::size_t _linkID,
+      const ::sdf::Visual &_visual) override;
 
   public: dart::dynamics::BodyNode *FindOrConstructLink(
       const dart::dynamics::SkeletonPtr &_model,

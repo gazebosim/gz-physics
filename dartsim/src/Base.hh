@@ -37,6 +37,12 @@ struct ModelInfo
   dart::dynamics::SimpleFramePtr frame;
 };
 
+struct ShapeInfo
+{
+  dart::dynamics::ShapeNodePtr node;
+  Eigen::Isometry3d tf_offset;
+};
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
@@ -57,6 +63,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, ModelInfo> models;
   public: std::unordered_map<std::size_t, dart::dynamics::BodyNodePtr> links;
   public: std::unordered_map<std::size_t, dart::dynamics::JointPtr> joints;
+  public: std::unordered_map<std::size_t, ShapeInfo> shapes;
 };
 
 }

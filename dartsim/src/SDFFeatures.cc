@@ -15,23 +15,38 @@
  *
 */
 
+#include <cmath>
+
 #include <ignition/math/eigen3/Conversions.hh>
 
-#include <dart/dynamics/BallJoint.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/dynamics/BallJoint.hpp>
+#include <dart/dynamics/BoxShape.hpp>
+#include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+#include <dart/dynamics/MeshShape.hpp>
+#include <dart/dynamics/PlaneShape.hpp>
 #include <dart/dynamics/PrismaticJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 #include <dart/dynamics/ScrewJoint.hpp>
+#include <dart/dynamics/SphereShape.hpp>
 #include <dart/dynamics/UniversalJoint.hpp>
 #include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
-#include <sdf/World.hh>
-#include <sdf/Model.hh>
+#include <sdf/Box.hh>
+#include <sdf/Collision.hh>
+#include <sdf/Cylinder.hh>
+#include <sdf/Geometry.hh>
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
+#include <sdf/Material.hh>
+#include <sdf/Mesh.hh>
+#include <sdf/Model.hh>
+#include <sdf/Sphere.hh>
+#include <sdf/Visual.hh>
+#include <sdf/World.hh>
 
 #include "SDFFeatures.hh"
 
@@ -125,6 +140,90 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
   }
 
   return _child->moveTo<dart::dynamics::UniversalJoint>(_parent, properties);
+}
+
+/////////////////////////////////////////////////
+struct ShapeAndTransform
+{
+  dart::dynamics::ShapePtr shape;
+  Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
+};
+
+/////////////////////////////////////////////////
+static ShapeAndTransform ConstructBox(
+    const ::sdf::Box &_box)
+{
+  return {std::make_shared<dart::dynamics::BoxShape>(
+        math::eigen3::convert(_box.Size()))};
+}
+
+/////////////////////////////////////////////////
+static ShapeAndTransform ConstructCylinder(
+    const ::sdf::Cylinder &_cylinder)
+{
+  return {std::make_shared<dart::dynamics::CylinderShape>(
+        _cylinder.Radius(), _cylinder.Length())};
+}
+
+/////////////////////////////////////////////////
+static ShapeAndTransform ConstructSphere(
+    const ::sdf::Sphere &_sphere)
+{
+  return {std::make_shared<dart::dynamics::SphereShape>(_sphere.Radius())};
+}
+
+/////////////////////////////////////////////////
+static ShapeAndTransform ConstructPlane(
+    const ::sdf::Plane &_plane)
+{
+  // TODO(MXG): We can consider using dart::dynamics::PlaneShape here, but that
+  // would be an infinite plane, whereas we're supposed to produce a plane with
+  // limited reach.
+  //
+  // So instead, we'll construct a very thin box with the requested length and
+  // width, and transform it to point in the direction of the normal vector.
+  const Eigen::Vector3d z = Eigen::Vector3d::UnitZ();
+  const Eigen::Vector3d axis = z.cross(math::eigen3::convert(_plane.Normal()));
+  const double norm = axis.norm();
+  const double angle = std::asin(norm/(_plane.Normal().Length()));
+  Eigen::Isometry3d R;
+
+  // We check that the angle isn't too close to zero, because otherwise
+  // axis/norm would be undefined.
+  if (angle > 1e-12)
+    R.rotate(Eigen::AngleAxisd(angle, axis/norm));
+
+  return {std::make_shared<dart::dynamics::BoxShape>(
+          Eigen::Vector3d(_plane.Size()[0], _plane.Size()[1], 1e-4)), R};
+}
+
+/////////////////////////////////////////////////
+static ShapeAndTransform ConstructMesh(
+    const ::sdf::Mesh &_mesh)
+{
+  // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
+  // a local file name, or do we need to resolve the URI?
+  std::cerr << "[dartsim::ConstructMesh] Mesh construction from an SDF has not "
+            << "been implemented yet for dartsim.\n";
+  return {nullptr};
+}
+
+/////////////////////////////////////////////////
+static ShapeAndTransform ConstructGeometry(
+    const ::sdf::Geometry &_geometry)
+{
+  if (_geometry.BoxShape())
+    return ConstructBox(*_geometry.BoxShape());
+  else if (_geometry.CylinderShape())
+    return ConstructCylinder(*_geometry.CylinderShape());
+  else if (_geometry.SphereShape())
+    return ConstructSphere(*_geometry.SphereShape());
+  else if (_geometry.PlaneShape())
+    return ConstructPlane(*_geometry.PlaneShape());
+  else if(_geometry.MeshShape())
+    return ConstructMesh(*_geometry.MeshShape());
+
+  return {nullptr};
 }
 }
 
@@ -278,6 +377,20 @@ Identity SDFFeatures::ConstructSdfLink(
     modelFrame->setTransform(tf_frame);
   }
 
+  for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
+  {
+    const auto collision = _sdfLink.CollisionByIndex(i);
+    if (collision)
+      this->ConstructSdfCollision(linkID, *collision);
+  }
+
+  for (std::size_t i = 0; i < _sdfLink.VisualCount(); ++i)
+  {
+    const auto visual = _sdfLink.VisualByIndex(i);
+    if (visual)
+      this->ConstructSdfVisual(linkID, *visual);
+  }
+
   return this->GenerateIdentity(linkID);
 }
 
@@ -294,6 +407,101 @@ Identity SDFFeatures::ConstructSdfJoint(
       modelInfo.model->getBodyNode(_sdfJoint.ChildLinkName());
 
   return ConstructSdfJoint(modelInfo, _sdfJoint, parent, child);
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfCollision(
+    const std::size_t _linkID,
+    const ::sdf::Collision &_collision)
+{
+  if (!_collision.Geom())
+  {
+    std::cerr << "[dartsim::ConstructSdfCollision] Error: the geometry element "
+              << "of collision [" << _collision.Name() << "] was a nullptr\n";
+    return this->GenerateInvalidId();
+  }
+
+  const ShapeAndTransform st = ConstructGeometry(*_collision.Geom());
+  const dart::dynamics::ShapePtr shape = st.shape;
+  const Eigen::Isometry3d tf_shape = st.tf;
+
+  if (!shape)
+  {
+    // The geometry element was empty, or the shape type is not supported
+    return this->GenerateInvalidId();
+  }
+
+  dart::dynamics::BodyNode * const bn = this->links.at(_linkID);
+
+  // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
+  // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
+  // Collision name for uniqueness sake.
+  const std::string internalName =
+      bn->getName() + "_collision_" + _collision.Name();
+
+  dart::dynamics::ShapeNode * const node =
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
+        shape, internalName);
+
+  node->setRelativeTransform(
+        math::eigen3::convert(_collision.Pose()) * tf_shape);
+
+  const std::size_t collisionID = this->GetNextEntity();
+  shapes[collisionID] = {node, tf_shape};
+
+  return this->GenerateIdentity(collisionID);
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfVisual(
+    const std::size_t _linkID,
+    const ::sdf::Visual &_visual)
+{
+  if (!_visual.Geom())
+  {
+    std::cerr << "[dartsim::ConstructSdfVisual] Error: the geometry element "
+              << "of visual [" << _visual.Name() << "] was a nullptr\n";
+    return this->GenerateInvalidId();
+  }
+
+  const ShapeAndTransform st = ConstructGeometry(*_visual.Geom());
+  const dart::dynamics::ShapePtr shape = st.shape;
+  const Eigen::Isometry3d tf_shape = st.tf;
+
+  if (!shape)
+  {
+    // The geometry element was empty, or the shape type is not supported
+    return this->GenerateInvalidId();
+  }
+
+  dart::dynamics::BodyNode * const bn = this->links.at(_linkID);
+
+  // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
+  // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
+  // Collision name for uniqueness sake.
+  const std::string internalName = bn->getName() + "_visual_" + _visual.Name();
+
+  dart::dynamics::ShapeNode * const node =
+      bn->createShapeNodeWith<dart::dynamics::VisualAspect>(
+        shape, internalName);
+
+  node->setRelativeTransform(
+        math::eigen3::convert(_visual.Pose()) * tf_shape);
+
+  // TODO(MXG): Are there any other visual parameters that we can do anything
+  // with? Do these visual parameters even matter, since dartsim is only
+  // intended for the physics?
+  if (_visual.Material())
+  {
+    const ignition::math::Color &color = _visual.Material()->Ambient();
+    node->getVisualAspect()->setColor(
+          Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
+  }
+
+  const std::size_t visualID = this->GetNextEntity();
+  shapes[visualID] = {node, tf_shape};
+
+  return this->GenerateIdentity(visualID);
 }
 
 /////////////////////////////////////////////////
