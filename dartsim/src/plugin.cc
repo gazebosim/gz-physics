@@ -19,13 +19,15 @@
 
 #include "Base.hh"
 #include "SDFFeatures.hh"
+#include "JointFeatures.hh"
 
 namespace ignition {
 namespace physics {
 namespace dartsim {
 
 using DartsimFeatures = FeatureList<
-  SDFFeatureList
+  SDFFeatureList,
+  JointFeatureList
   // TODO(MXG): Implement these other features
 /*  LinkFrameSemantics,
   GetBasicJointState,
@@ -38,6 +40,7 @@ using DartsimFeatures = FeatureList<
 class Plugin :
     public virtual Implements<FeaturePolicy3d, DartsimFeatures>,
     public virtual SDFFeatures,
+    public virtual JointFeatures,
     public virtual Base
 {
 };
