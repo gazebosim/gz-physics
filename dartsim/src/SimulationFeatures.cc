@@ -15,40 +15,24 @@
  *
 */
 
-#include <ignition/physics/Register.hh>
-
-#include "Base.hh"
-#include "SDFFeatures.hh"
-#include "JointFeatures.hh"
 #include "SimulationFeatures.hh"
 
 namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using DartsimFeatures = FeatureList<
-  SDFFeatureList,
-  JointFeatureList,
-  SimulationFeatureList
-  // TODO(MXG): Implement these other features
-/*  LinkFrameSemantics,
-  GetBasicJointState,
-  GetBasicJointProperties,
-  SetBasicJointState,
-  SetJointTransformFromParentFeature,
-  SetJointTransformToChildFeature, */
->;
-
-class Plugin :
-    public virtual Implements<FeaturePolicy3d, DartsimFeatures>,
-    public virtual SDFFeatures,
-    public virtual JointFeatures,
-    public virtual SimulationFeatures,
-    public virtual Base
+void SimulationFeatures::WorldForwardStep(
+    const std::size_t _worldID,
+    ForwardStep::Output &_h,
+    ForwardStep::State &_x,
+    const ForwardStep::Input &_u)
 {
-};
+  const dart::simulation::WorldPtr &world = this->worlds.at(_worldID);
 
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
+  // TODO(MXG): Parse input
+  world->step();
+  // TODO(MXG): Fill in output and state
+}
 
 }
 }

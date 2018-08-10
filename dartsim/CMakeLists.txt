@@ -4,6 +4,7 @@ ign_add_component(dartsim
   SOURCES
     src/plugin.cc
     src/SDFFeatures.cc
+    src/SimulationFeatures.cc
     src/JointFeatures.cc
   GET_TARGET_NAME dartsim_plugin)
 
