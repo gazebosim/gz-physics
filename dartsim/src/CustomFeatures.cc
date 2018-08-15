@@ -15,34 +15,19 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
-
-#include <ignition/physics/ForwardStep.hh>
-
-#include "Base.hh"
+#include "CustomFeatures.hh"
 
 namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using SimulationFeatureList = FeatureList<
-  ForwardStep
->;
-
-class SimulationFeatures :
-    public virtual Base,
-    public virtual Implements3d<SimulationFeatureList>
+/////////////////////////////////////////////////
+dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
+    const std::size_t _worldID)
 {
-  public: void WorldForwardStep(
-      const std::size_t _worldID,
-      ForwardStep::Output &_h,
-      ForwardStep::State &_x,
-      const ForwardStep::Input &_u);
-};
-
-}
-}
+  return this->worlds.at(_worldID);
 }
 
-#endif
+}
+}
+}

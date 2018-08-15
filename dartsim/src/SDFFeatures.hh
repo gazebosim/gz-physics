@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SDFFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SDFFEATURES_HH_
+#ifndef IGNITION_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
+#define IGNITION_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
 
 #include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructJoint.hh>

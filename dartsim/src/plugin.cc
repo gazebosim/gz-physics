@@ -18,8 +18,9 @@
 #include <ignition/physics/Register.hh>
 
 #include "Base.hh"
-#include "SDFFeatures.hh"
+#include "CustomFeatures.hh"
 #include "JointFeatures.hh"
+#include "SDFFeatures.hh"
 #include "SimulationFeatures.hh"
 
 namespace ignition {
@@ -27,8 +28,9 @@ namespace physics {
 namespace dartsim {
 
 using DartsimFeatures = FeatureList<
-  SDFFeatureList,
+  CustomFeatureList,
   JointFeatureList,
+  SDFFeatureList,
   SimulationFeatureList
   // TODO(MXG): Implement these other features
 /*  LinkFrameSemantics,
@@ -40,13 +42,12 @@ using DartsimFeatures = FeatureList<
 >;
 
 class Plugin :
-    public virtual Implements<FeaturePolicy3d, DartsimFeatures>,
-    public virtual SDFFeatures,
+    public virtual Implements3d<DartsimFeatures>,
+    public virtual Base,
+    public virtual CustomFeatures,
     public virtual JointFeatures,
-    public virtual SimulationFeatures,
-    public virtual Base
-{
-};
+    public virtual SDFFeatures,
+    public virtual SimulationFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
 

@@ -186,13 +186,14 @@ static ShapeAndTransform ConstructPlane(
   const Eigen::Vector3d axis = z.cross(math::eigen3::convert(_plane.Normal()));
   const double norm = axis.norm();
   const double angle = std::asin(norm/(_plane.Normal().Length()));
-  Eigen::Isometry3d R;
+  Eigen::Isometry3d R = Eigen::Isometry3d::Identity();
 
   // We check that the angle isn't too close to zero, because otherwise
   // axis/norm would be undefined.
   if (angle > 1e-12)
     R.rotate(Eigen::AngleAxisd(angle, axis/norm));
 
+  std::cout << " ----- Constructing SDF plane ----- " << std::endl;
   return {std::make_shared<dart::dynamics::BoxShape>(
           Eigen::Vector3d(_plane.Size()[0], _plane.Size()[1], 1e-4)), R};
 }
@@ -323,8 +324,6 @@ Identity SDFFeatures::ConstructSdfLink(
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
-  // TODO(MXG): Add visuals and collision shapes
-
   const ignition::math::Inertiald &sdfInertia = _sdfLink.Inertial();
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
 
@@ -338,8 +337,13 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setMoment(I_link);
 
-  bodyProperties.mInertia.setLocalCOM(
-        math::eigen3::convert(sdfInertia.Pose().Pos()));
+  std::cout << " ------------- Setting moment:\n" << I_link << "\n" << std::endl;
+
+  const Eigen::Vector3d localCom =
+      math::eigen3::convert(sdfInertia.Pose().Pos());
+  std::cout << " ------------- Setting local com: " << localCom.transpose() << std::endl;
+
+  bodyProperties.mInertia.setLocalCOM(localCom);
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
