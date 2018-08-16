@@ -56,6 +56,15 @@ namespace dartsim {
 
 namespace {
 /////////////////////////////////////////////////
+double infIfNeg(const double _value)
+{
+  if (_value < 0.0)
+    return std::numeric_limits<double>::infinity();
+
+  return _value;
+}
+
+/////////////////////////////////////////////////
 template <typename Properties>
 static void CopyStandardJointAxisProperties(
     const int _index, Properties &_properties,
@@ -68,10 +77,10 @@ static void CopyStandardJointAxisProperties(
   _properties.mSpringStiffnesses[_index] = _sdfAxis->SpringStiffness();
   _properties.mPositionLowerLimits[_index] = _sdfAxis->Lower();
   _properties.mPositionUpperLimits[_index] = _sdfAxis->Upper();
-  _properties.mForceLowerLimits[_index] = -_sdfAxis->Effort();
-  _properties.mForceUpperLimits[_index] =  _sdfAxis->Effort();
-  _properties.mVelocityLowerLimits[_index] = -_sdfAxis->MaxVelocity();
-  _properties.mVelocityUpperLimits[_index] =  _sdfAxis->MaxVelocity();
+  _properties.mForceLowerLimits[_index] = -infIfNeg(_sdfAxis->Effort());
+  _properties.mForceUpperLimits[_index] =  infIfNeg(_sdfAxis->Effort());
+  _properties.mVelocityLowerLimits[_index] = -infIfNeg(_sdfAxis->MaxVelocity());
+  _properties.mVelocityUpperLimits[_index] =  infIfNeg(_sdfAxis->MaxVelocity());
 
   // TODO(MXG): Can dartsim support "Stiffness" and "Dissipation"?
 }
@@ -193,7 +202,6 @@ static ShapeAndTransform ConstructPlane(
   if (angle > 1e-12)
     R.rotate(Eigen::AngleAxisd(angle, axis/norm));
 
-  std::cout << " ----- Constructing SDF plane ----- " << std::endl;
   return {std::make_shared<dart::dynamics::BoxShape>(
           Eigen::Vector3d(_plane.Size()[0], _plane.Size()[1], 1e-4)), R};
 }
@@ -337,11 +345,8 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setMoment(I_link);
 
-  std::cout << " ------------- Setting moment:\n" << I_link << "\n" << std::endl;
-
   const Eigen::Vector3d localCom =
       math::eigen3::convert(sdfInertia.Pose().Pos());
-  std::cout << " ------------- Setting local com: " << localCom.transpose() << std::endl;
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
@@ -643,8 +648,31 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   joint->setName(_sdfJoint.Name());
-  joint->setTransformFromParentBodyNode(T_parent.inverse() * T_joint);
-  joint->setTransformFromChildBodyNode(T_child.inverse() * T_joint);
+
+  // When initial positions are provided for joints, we need to correct the
+  // parent transform:
+  const Eigen::Isometry3d child_T_postjoint = T_child.inverse() * T_joint;
+  const Eigen::Isometry3d parent_T_prejoint_init = T_parent.inverse() * T_joint;
+  joint->setTransformFromParentBodyNode(parent_T_prejoint_init);
+  joint->setTransformFromChildBodyNode(child_T_postjoint);
+
+  // This is the transform inside the joint produced by whatever the current
+  // joint position happens to be.
+  const Eigen::Isometry3d prejoint_T_postjoint =
+      parent_T_prejoint_init.inverse()
+      * _child->getTransform(_parent)
+      * child_T_postjoint;
+
+  // This is the corrected transform needed to get the child link to its
+  // correct pose (as specified by the loaded SDF) for the current initial
+  // position
+  const Eigen::Isometry3d parent_T_prejoint_final =
+      _parent->getWorldTransform().inverse()
+      * T_child
+      * child_T_postjoint
+      * prejoint_T_postjoint.inverse();
+
+  joint->setTransformFromParentBodyNode(parent_T_prejoint_final);
 
   const std::size_t jointID = GetNextEntity();
   joints[jointID] = joint;
