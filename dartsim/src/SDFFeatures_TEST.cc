@@ -29,15 +29,9 @@
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
-#ifdef DARTSIM_GUI_OSG_AVAILABLE
-#include <dart/gui/osg/Viewer.hpp>
-#include <dart/gui/osg/WorldNode.hpp>
-#include <dart/gui/osg/InteractiveFrame.hpp>
-#endif
-
 #include <dart/dynamics/BodyNode.hpp>
-#include <dart/dynamics/WeldJoint.hpp>
-#include <dart/dynamics/CylinderShape.hpp>
+#include <dart/dynamics/DegreeOfFreedom.hpp>
+#include <dart/dynamics/RevoluteJoint.hpp>
 
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::GetBasicJointState,
@@ -73,6 +67,7 @@ World LoadWorld(const std::string &_world)
   return *world;
 }
 
+// Test that the dartsim plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckDartsimData)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/test.world");
@@ -82,25 +77,51 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
 
   ASSERT_EQ(2u, dartWorld->getNumSkeletons());
 
-  const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(0);
+  const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_EQ(3u, skeleton->getNumBodyNodes());
 
-
-  // TODO(MXG): Delete this temporary test code
-#ifdef DARTSIM_GUI_OSG_AVAILABLE
-
-  if(false)
+  auto verify = [](const dart::dynamics::DegreeOfFreedom * dof,
+                   double initialPos, double damping, double friction,
+                   double springRest, double stiffness, double lower,
+                   double upper, double maxForce, double maxVelocity)
   {
-    dart::gui::osg::Viewer viewer;
-    osg::ref_ptr<dart::gui::osg::WorldNode> worldNode =
-        new dart::gui::osg::WorldNode(dartWorld);
-    worldNode->setNumStepsPerCycle(200);
-    viewer.addWorldNode(worldNode);
+    EXPECT_DOUBLE_EQ(initialPos, dof->getPosition());
+    EXPECT_DOUBLE_EQ(initialPos, dof->getInitialPosition());
+    EXPECT_DOUBLE_EQ(damping, dof->getDampingCoefficient());
+    EXPECT_DOUBLE_EQ(friction, dof->getCoulombFriction());
+    EXPECT_DOUBLE_EQ(springRest, dof->getRestPosition());
+    EXPECT_DOUBLE_EQ(stiffness, dof->getSpringStiffness());
+    EXPECT_DOUBLE_EQ(lower, dof->getPositionLowerLimit());
+    EXPECT_DOUBLE_EQ(upper, dof->getPositionUpperLimit());
+    EXPECT_DOUBLE_EQ(-maxForce, dof->getForceLowerLimit());
+    EXPECT_DOUBLE_EQ( maxForce, dof->getForceUpperLimit());
+    EXPECT_DOUBLE_EQ(-maxVelocity, dof->getVelocityLowerLimit());
+    EXPECT_DOUBLE_EQ( maxVelocity, dof->getVelocityUpperLimit());
+  };
 
-    viewer.run();
+  // Test that things were parsed correctly. These values are either stated or
+  // implied in the test.world SDF file.
+  verify(skeleton->getJoint(1)->getDof(0),
+         1.5706796, 3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
+         std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity());
+
+  verify(skeleton->getJoint(2)->getDof(0),
+         -0.429462, 3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
+         std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity());
+
+  for (const auto * joint : {skeleton->getJoint(1), skeleton->getJoint(2)})
+  {
+    const auto * revolute =
+        dynamic_cast<const dart::dynamics::RevoluteJoint*>(joint);
+    ASSERT_NE(nullptr, revolute);
+
+    const Eigen::Vector3d &axis = revolute->getAxis();
+    EXPECT_DOUBLE_EQ(1.0, axis[0]);
+    EXPECT_DOUBLE_EQ(0.0, axis[1]);
+    EXPECT_DOUBLE_EQ(0.0, axis[2]);
   }
-
-#endif
 }
 
 int main(int argc, char *argv[])

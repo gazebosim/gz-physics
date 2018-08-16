@@ -33,9 +33,6 @@ ign_build_tests(
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
   TEST_LIST tests)
 
-
-find_package(DART 6 QUIET COMPONENTS gui-osg)
-
 foreach(test ${tests})
 
   target_compile_definitions(${test} PRIVATE
@@ -43,15 +40,5 @@ foreach(test ${tests})
 
   target_compile_definitions(${test} PRIVATE
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\"")
-
-
-  if(DART_gui-osg_FOUND)
-
-    target_compile_definitions(${test} PRIVATE
-      "DARTSIM_GUI_OSG_AVAILABLE")
-
-    target_link_libraries(${test} ${DART_gui-osg_LIBRARIES})
-
-  endif()
 
 endforeach()
