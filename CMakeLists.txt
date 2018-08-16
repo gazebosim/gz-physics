@@ -8,7 +8,7 @@ project(ignition-physics0 VERSION 0.1.0)
 #============================================================================
 # Find ignition-cmake
 #============================================================================
-find_package(ignition-cmake1 REQUIRED)
+find_package(ignition-cmake2 REQUIRED)
 
 #============================================================================
 # Configure the project
@@ -28,8 +28,8 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find ignition-math
-ign_find_package(ignition-math5 REQUIRED COMPONENTS eigen3)
-set(IGN_MATH_VER ${ignition-math5_VERSION_MAJOR})
+ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3)
+set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-plugin
@@ -43,7 +43,7 @@ ign_find_package(EIGEN3 REQUIRED)
 #--------------------------------------
 # Find SDFormat for the SDF features
 ign_find_package(SDFormat
-  VERSION 7
+  VERSION 8
   REQUIRED_BY sdf dartsim
   PKGCONFIG sdformat
   PKGCONFIG_VER_COMPARISON >=)
