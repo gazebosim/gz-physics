@@ -5,7 +5,7 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common
+          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common git
           - gcc -v
           - g++ -v
           # Ignition dependencies
