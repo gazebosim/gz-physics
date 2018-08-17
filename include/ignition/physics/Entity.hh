@@ -18,8 +18,9 @@
 #ifndef IGNITION_PHYSICS_ENTITY_HH_
 #define IGNITION_PHYSICS_ENTITY_HH_
 
-#include <memory>
 #include <limits>
+#include <memory>
+#include <optional>
 
 #include <ignition/physics/Export.hh>
 #include <ignition/physics/detail/Identity.hh>
@@ -104,6 +105,42 @@ namespace ignition
 
       /// \brief Virtual destructor
       public: virtual ~Entity() = default;
+    };
+
+    template <typename EntityT>
+    class EntityPtr
+    {
+      // All the automatic constructors and assignment operators are okay.
+      public: EntityPtr() = default;
+      public: EntityPtr(const EntityPtr&) = default;
+      public: EntityPtr(EntityPtr&&) = default;
+      public: EntityPtr &operator=(const EntityPtr&) = default;
+      public: EntityPtr &operator=(EntityPtr&&) = default;
+      public: ~EntityPtr() = default;
+
+      // Create an EntityPtr that points to an invalid Entity
+      public: EntityPtr(std::nullptr_t);
+      public: EntityPtr(std::nullopt_t);
+
+      // Assign this to point to an invalid Entity.
+      public: EntityPtr &operator=(std::nullptr_t);
+      public: EntityPtr &operator=(std::nullopt_t);
+
+      public: template <typename OtherEntityT>
+      EntityPtr(const EntityPtr<OtherEntityT> &_other);
+
+      public: template <typename OtherEntityT>
+      EntityPtr(EntityPtr<OtherEntityT> &&_other);
+
+      public: template <typename OtherEntityT>
+      EntityPtr &operator=(const EntityPtr<OtherEntityT> &_other);
+
+      public: template <typename OtherEntityT>
+      EntityPtr &operator=(EntityPtr<OtherEntityT> &&_other);
+
+      /// \brief If we are pointing to a valid entity, it will be stored here.
+      /// Otherwise, this is a nullopt.
+      private: std::optional<EntityT> entity;
     };
   }
 }
