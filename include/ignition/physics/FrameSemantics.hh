@@ -59,8 +59,8 @@ namespace ignition
         public: template <typename FQ>
         typename FQ::Quantity Resolve(
           const FQ &_quantity,
-          const FrameID _relativeTo,
-          const FrameID _inCoordinatesOf) const;
+          const FrameID &_relativeTo,
+          const FrameID &_inCoordinatesOf) const;
 
         /// \brief This overload causes the World Frame to be used as the
         /// default frame when relativeTo is not specified. It also causes the
@@ -81,7 +81,7 @@ namespace ignition
         public: template <typename FQ>
         typename FQ::Quantity Resolve(
           const FQ &_quantity,
-          const FrameID _relativeTo = FrameID::World()) const;
+          const FrameID &_relativeTo = FrameID::World()) const;
 
         /// \brief Create a new FramedQuantity which expresses the input
         /// quantity in terms of a new parent frame. Note that the returned
@@ -89,7 +89,7 @@ namespace ignition
         /// its new parent frame.
         public: template <typename FQ>
         FQ Reframe(const FQ &_quantity,
-                   const FrameID _withRespectTo = FrameID::World()) const;
+                   const FrameID &_withRespectTo = FrameID::World()) const;
 
         template <typename, typename> friend class FrameSemantics::Frame;
       };

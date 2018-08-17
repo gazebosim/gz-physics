@@ -32,15 +32,15 @@ namespace ignition
       static typename FQ::Quantity Resolve(
           const FrameSemantics::Implementation<PolicyT> &_impl,
           const FQ &_quantity,
-          const FrameID _relativeTo,
-          const FrameID _inCoordinatesOf)
+          const FrameID &_relativeTo,
+          const FrameID &_inCoordinatesOf)
       {
         using Quantity = typename FQ::Quantity;
         using Space = typename FQ::Space;
         using FrameDataType = typename Space::FrameDataType;
         using RotationType = typename Space::RotationType;
 
-        const FrameID parentFrameID = _quantity.ParentFrame();
+        const FrameID &parentFrameID = _quantity.ParentFrame();
 
         Quantity q;
         RotationType currentCoordinates;
@@ -120,8 +120,8 @@ namespace ignition
     template <typename FQ>
     typename FQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
         const FQ &_quantity,
-        const FrameID _relativeTo,
-        const FrameID _inCoordinatesOf) const
+        const FrameID &_relativeTo,
+        const FrameID &_inCoordinatesOf) const
     {
       return detail::Resolve<PolicyT>(
             *this->template Interface<FrameSemantics>(),
@@ -132,7 +132,7 @@ namespace ignition
     template <typename PolicyT, typename FeaturesT>
     template <typename FQ>
     typename FQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
-        const FQ &_quantity, const FrameID _relativeTo) const
+        const FQ &_quantity, const FrameID &_relativeTo) const
     {
       return this->Resolve(_quantity, _relativeTo, _relativeTo);
     }
@@ -141,7 +141,7 @@ namespace ignition
     template <typename PolicyT, typename FeaturesT>
     template <typename FQ>
     FQ FrameSemantics::Engine<PolicyT, FeaturesT>::Reframe(
-        const FQ &_quantity, const FrameID _withRespectTo) const
+        const FQ &_quantity, const FrameID &_withRespectTo) const
     {
       return FQ(_withRespectTo,
                 this->Resolve(_quantity, _withRespectTo, _withRespectTo));
