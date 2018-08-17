@@ -761,14 +761,8 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
 
   using FrameData = FrameData<Scalar, Dim>;
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
-  // using Pose = Pose<Scalar, Dim>;
   using LinearVector = LinearVector<Scalar, Dim>;
   using AngularVector = AngularVector<Scalar, Dim>;
-  // using Rotation = Rotation<Scalar, Dim>;
-  // using FramedPose = ignition::physics::FramedPose<Scalar, Dim>;
-  // using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
-  // using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
-  // using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
 
   const FrameID World = FrameID::World();
 
@@ -788,7 +782,7 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
                                  * pivotLength / wheelRadius;
 
   // Create a transform from the world to Frame Base. We do this to have better
-  // coverate of FramedQuantities
+  // coverage of FramedQuantities
   FrameData T_Base;
   const RelativeFrameData O_T_Base(World, T_Base);
   const FrameID Base = *fs->CreateLink("Base", fs->Resolve(O_T_Base, World));
