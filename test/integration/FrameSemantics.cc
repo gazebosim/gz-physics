@@ -863,16 +863,6 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   EXPECT_NEAR(B_A.linearVelocity[1], pivotLength*pivotRotationRate, _tolerance);
   EXPECT_NEAR(B_A.linearVelocity[2], 0.0, _tolerance);
 
-  // linear velocity:
-  //  A==D==0: no relative linear velocity at pivot or wheel contact point
-  EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
-  EXPECT_TRUE(Equal(A_A.linearVelocity, D_A.linearVelocity, _tolerance));
-  //  B==C
-  EXPECT_TRUE(Equal(B_A.linearVelocity, C_A.linearVelocity, _tolerance));
-  EXPECT_NEAR(B_A.linearVelocity[0], 0.0, _tolerance);
-  EXPECT_NEAR(B_A.linearVelocity[1], pivotLength*pivotRotationRate, _tolerance);
-  EXPECT_NEAR(B_A.linearVelocity[2], 0.0, _tolerance);
-
   // angular velocity: A==B, C==D
   EXPECT_TRUE(Equal(A_A.angularVelocity, B_A.angularVelocity, _tolerance));
   EXPECT_NEAR(A_A.angularVelocity[0], 0.0, _tolerance);
