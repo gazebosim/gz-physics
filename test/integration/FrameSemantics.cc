@@ -787,7 +787,7 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   const Scalar wheelRotationRate = pivotRotationRate
                                  * pivotLength / wheelRadius;
 
-  // Create a transform from the world to Frame Base. We do this to have better 
+  // Create a transform from the world to Frame Base. We do this to have better
   // coverate of FramedQuantities
   FrameData T_Base;
   const RelativeFrameData O_T_Base(World, T_Base);
@@ -958,9 +958,9 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(A_O.linearVelocity, D_O.linearVelocity, _tolerance));
   //  B==C
   EXPECT_TRUE(Equal(B_O.linearVelocity, C_O.linearVelocity, _tolerance));
-  EXPECT_NEAR(B_O.linearVelocity[0], 
+  EXPECT_NEAR(B_O.linearVelocity[0],
       -sinPivot * pivotLength * pivotRotationRate, _tolerance);
-  EXPECT_NEAR(B_O.linearVelocity[1], 
+  EXPECT_NEAR(B_O.linearVelocity[1],
       cosPivot * pivotLength * pivotRotationRate, _tolerance);
   EXPECT_NEAR(B_O.linearVelocity[2], 0.0, _tolerance);
 
