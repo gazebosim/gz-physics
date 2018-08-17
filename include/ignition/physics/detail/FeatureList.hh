@@ -150,25 +150,6 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      /// \private Inspired by https://stackoverflow.com/a/26288164
-      /// This class provides a static constexpr member named `value` which is
-      /// true if T is one of the entries of Tuple, and false otherwise.
-      template <typename T, typename Tuple>
-      struct TupleContainsBase;
-
-      /// \private This specialization implements TupleContainsBase. It only
-      /// works if Tuple is a std::tuple; any other type for the second template
-      /// argument will fail to compile.
-      template <typename T, typename... Types>
-      struct TupleContainsBase<T, std::tuple<Types...>>
-          : std::integral_constant<bool,
-              !std::is_same<
-                std::tuple<typename std::conditional<
-                  std::is_base_of<T, Types>::value, Empty, Types>::type...>,
-                std::tuple<Types...>
-              >::value> { };
-
-      /////////////////////////////////////////////////
       /// \private This class helps to implement the function
       /// FeatureList::ConflictsWith(). Its implementation is conceptually
       /// similar to TupleContainsBase.
@@ -372,17 +353,24 @@ namespace ignition
 #define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(X) \
   namespace detail { \
     template <typename T> \
+    /* Used to select the X-type API from a feature */ \
     struct X ## Selector \
     { \
       public: template<typename PolicyT, typename FeaturesT> \
       using type = typename T::template X<PolicyT, FeaturesT>; \
     }; \
+    /* Symbol used by X-types to identify other X-types */ \
+    struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public detail::Aggregate<detail :: X ## Selector, FeaturesT>:: \
         template type<PolicyT, FeaturesT> \
   { \
+    public: using Identifier = detail:: X ## Identifier; \
+    public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
+    \
+    public: X(const X&) = default;\
     \
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \

@@ -153,7 +153,7 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
   using Link = ignition::physics::Link<PolicyT, mock::MockFrameSemanticsList>;
-  using LinkPtr = std::unique_ptr<Link>;
+//  using LinkPtr = ;
 
   using Joint = ignition::physics::Joint<PolicyT, mock::MockFrameSemanticsList>;
   using ConstJointPtr = std::unique_ptr<const Joint>;
@@ -167,7 +167,7 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(world.IsReferenceCounted());
 
   const FrameData dataA = RandomFrameData<Scalar, Dim>();
-  const LinkPtr linkA = fs->CreateLink("A", dataA);
+  const ignition::physics::EntityPtr<ignition::physics::Link<PolicyT, mock::MockFrameSemanticsList>> linkA = fs->CreateLink("A", dataA);
 
   EXPECT_TRUE(Equal(dataA, linkA->FrameDataRelativeTo(world), _tolerance));
 

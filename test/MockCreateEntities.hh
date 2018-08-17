@@ -39,12 +39,12 @@ namespace mock
       public: using FrameData =
         ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
-      public: using Link = ignition::physics::Link<PolicyT, FeaturesT>;
+      public: using LinkPtr = ignition::physics::EntityPtr<ignition::physics::Link<PolicyT, FeaturesT>>;
       public: using Joint = ignition::physics::Joint<PolicyT, FeaturesT>;
 
       /// \brief Create a link, giving it a name and data. The data is relative
       /// to the world frame.
-      public: std::unique_ptr<Link> CreateLink(
+      public: LinkPtr CreateLink(
           const std::string &_linkName,
           const FrameData &_frameData);
 
@@ -55,7 +55,7 @@ namespace mock
           const FrameData &_frameData);
 
       /// \brief Retrieve a link that was created earlier.
-      public: std::unique_ptr<Link> GetLink(const std::string &_linkName) const;
+      public: LinkPtr GetLink(const std::string &_linkName) const;
 
       /// \brief Retrieve a joint that was created earlier.
       public: std::unique_ptr<Joint> GetJoint(
@@ -91,16 +91,12 @@ namespace mock
   template <typename PolicyT, typename FeaturesT>
   auto MockCreateEntities::Engine<PolicyT, FeaturesT>::CreateLink(
       const std::string &_linkName,
-      const FrameData &_frameData) -> std::unique_ptr<Link>
+      const FrameData &_frameData) -> LinkPtr
   {
-    const Identity linkId =
-        this->template Interface<MockCreateEntities>()
-          ->CreateLink(_linkName, _frameData);
-
-    if (!linkId)
-      return nullptr;
-
-    return std::make_unique<Link>(this->pimpl, linkId);
+    return LinkPtr(
+          this->pimpl,
+          this->template Interface<MockCreateEntities>()
+            ->CreateLink(_linkName, _frameData));
   }
 
   /////////////////////////////////////////////////
@@ -122,15 +118,19 @@ namespace mock
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockCreateEntities::Engine<PolicyT, FeaturesT>::GetLink(
-      const std::string &_linkName) const -> std::unique_ptr<Link>
+      const std::string &_linkName) const -> LinkPtr
   {
-    const Identity linkId =
-        this->template Interface<MockCreateEntities>()->GetLink(_linkName);
+//    const Identity linkId =
+//        this->template Interface<MockCreateEntities>()->GetLink(_linkName);
 
-    if (!linkId)
-      return nullptr;
+//    if (!linkId)
+//      return nullptr;
 
-    return std::make_unique<Link>(this->pimpl, linkId);
+//    return std::make_unique<LinkPtr>(this->pimpl, linkId);
+
+    return LinkPtr(
+          this->pimpl,
+          this->template Interface<MockCreateEntities>()->GetLink(_linkName));
   }
 
   /////////////////////////////////////////////////

@@ -62,7 +62,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJoint>;
+          FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
     /// \brief Provide the API for setting a revolute joint's axis. Not all
@@ -103,7 +103,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJoint>;
+          FeatureList<ignition::physics::RevoluteJointCast>;
     };
   }
 }

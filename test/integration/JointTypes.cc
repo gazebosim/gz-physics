@@ -47,10 +47,10 @@ ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
 }
 
 /////////////////////////////////////////////////
-template <typename PolicyT, typename EngineType>
+template <typename PolicyT, typename FeatureListT>
 void TestRevoluteJointFK(
     const std::vector<typename PolicyT::Scalar> &_testJointPositions,
-    const EngineType &_engine,
+    const std::unique_ptr<Engine<PolicyT, FeatureListT>> &_engine,
     const double _tolerance)
 {
   using LinearVector =
@@ -73,7 +73,8 @@ void TestRevoluteJointFK(
 
   for (std::size_t i=0; i < _testJointPositions.size(); ++i)
   {
-    auto joint = _engine->GetJoint(i);
+    std::unique_ptr<Joint<PolicyT, FeatureListT>> joint =
+        _engine->GetJoint(i);
 
     const Scalar q_desired = _testJointPositions[i];
     joint->SetPosition(0, q_desired);
@@ -82,7 +83,8 @@ void TestRevoluteJointFK(
 
   for (std::size_t i=0; i < _testJointPositions.size(); ++i)
   {
-    auto joint = _engine->GetJoint(i)->CastToRevoluteJoint();
+    std::unique_ptr<RevoluteJoint<PolicyT, FeatureListT>> joint =
+        _engine->GetJoint(i)->CastToRevoluteJoint();
 
     const Scalar q = joint->GetPosition(0);
 
@@ -122,9 +124,9 @@ void TestRevoluteJoint(const double _tolerance, const std::string &_suffix)
   }
 
   // Try various sets of joint position values
-  TestRevoluteJointFK<PolicyT>({0.0, 0.0, 0.0}, engine, _tolerance);
-  TestRevoluteJointFK<PolicyT>({0.1, -1.57, 2.56}, engine, _tolerance);
-  TestRevoluteJointFK<PolicyT>({-2.4, -7.0, -0.18}, engine, _tolerance);
+  TestRevoluteJointFK({0.0, 0.0, 0.0}, engine, _tolerance);
+  TestRevoluteJointFK({0.1, -1.57, 2.56}, engine, _tolerance);
+  TestRevoluteJointFK({-2.4, -7.0, -0.18}, engine, _tolerance);
 }
 
 /////////////////////////////////////////////////
