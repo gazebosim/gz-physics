@@ -22,7 +22,13 @@
 
 #define DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, P) \
   template <typename FeaturesT> \
-  using X ## P = X<FeaturePolicy ## P, FeaturesT>;
+  using X ## P = X<FeaturePolicy ## P, FeaturesT>; \
+  template <typename FeaturesT> \
+  using X ## P ## Ptr = \
+    ::ignition::physics::EntityPtr<X<FeaturePolicy ## P, FeaturesT>>; \
+  template <typename FeaturesT> \
+  using Const ## X ## P ## Ptr = \
+    ::ignition::physics::EntityPtr<const X<FeaturePolicy ## P, FeaturesT>>;
 
 #define DETAIL_IGN_PHYSICS_CREATE_JOINT_TYPE(X) \
   struct X ## Cast : public ::ignition::physics::Feature \
@@ -53,28 +59,21 @@
     class Joint : \
       public virtual ::ignition::physics::Feature::Joint<PolicyT, FeaturesT> \
     { \
-      public: std::unique_ptr<Using<PolicyT, FeaturesT>> CastTo ## X() \
+      public: using CastReturnType = \
+          ::ignition::physics::EntityPtr<Using<PolicyT, FeaturesT>>; \
+      public: using ConstCastReturnType = \
+          ::ignition::physics::EntityPtr<const Using<PolicyT, FeaturesT>>; \
+      public: CastReturnType CastTo ## X() \
       { \
-        const ::ignition::physics::Identity id = \
-            this->template Interface<X ## Cast>()->CastTo ## X(this->identity);\
-        \
-        if (!id) \
-          return nullptr; \
-        \
-        return std::make_unique<Using<PolicyT, FeaturesT>>(this->pimpl, id); \
+        return CastReturnType(this->pimpl, \
+          this->template Interface<X ## Cast>()->CastTo ## X(this->identity)); \
       } \
     \
-      public: std::unique_ptr<const Using<PolicyT, FeaturesT>> \
+      public: ConstCastReturnType \
       CastTo ## X() const \
       { \
-        const ::ignition::physics::Identity id = \
-            this->template Interface<X ## Cast>()->CastTo ## X(this->identity);\
-        \
-        if (!id) \
-          return nullptr; \
-        \
-        return std::make_unique<const Using<PolicyT, FeaturesT>>( \
-            this->pimpl, id); \
+        return ConstCastReturnType(this->pimpl, \
+          this->template Interface<X ## Cast>()->CastTo ## X(this->identity)); \
       } \
     }; \
     \
@@ -89,8 +88,13 @@
     }; \
   }; \
   \
-  template <typename FeaturePolicyT, typename FeaturesT> \
-  using X = X ## Cast::Using<FeaturePolicyT, FeaturesT>; \
+  template <typename PolicyT, typename FeaturesT> \
+  using X = X ## Cast::Using<PolicyT, FeaturesT>; \
+  template <typename PolicyT, typename FeaturesT> \
+  using X ## Ptr = ::ignition::physics::EntityPtr<X<PolicyT, FeaturesT>>; \
+  template <typename PolicyT, typename FeaturesT> \
+  using Const ## X ## Ptr = \
+      ::ignition::physics::EntityPtr<const X<PolicyT, FeaturesT>>; \
   DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, 3f) \

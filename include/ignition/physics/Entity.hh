@@ -113,7 +113,20 @@ namespace ignition
       ///
       /// We make this mutable so that we get logical const-correctness. We are
       /// not concerned with physical const-correctness here.
-      private: mutable std::optional<EntityT> entity;
+      ///
+      /// When passing the type into the std::optional, we remove the
+      /// const-qualifier because otherwise a ConstEntityPtr object cannot be
+      /// modified to point to a different entity, as the assignment operator
+      /// of std::optional gets deleted when it is given a const-qualified type.
+      /// The dereference operations * and -> will still use the original
+      /// const-qualifications of EntityT, so logical constness is still
+      /// preserved, because the user cannot access an const-unqualified
+      /// reference to EntityT.
+      private: mutable std::optional<std::remove_const_t<EntityT>> entity;
+
+
+      // Declare this friendship so we can cast between different Entity types.
+      template <typename> friend class EntityPtr;
     };
 
     /// \brief This is the base class of all "proxy objects". The "proxy

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_REQUESTFEATURES_HH_
-#define IGNITION_PHYSICS_REQUESTFEATURES_HH_
+#ifndef IGNITION_PHYSICS_REQUESTENGINE_HH_
+#define IGNITION_PHYSICS_REQUESTENGINE_HH_
 
 #include <memory>
 #include <set>
@@ -31,10 +31,10 @@ namespace ignition
     /// \brief This class provides utilities for inspecting what features are
     /// available in a plugin.
     template <typename FeaturePolicyT, typename FeatureListT>
-    struct RequestFeatures
+    struct RequestEngine
     {
       // Forward declaration of the Engine type that will be returned
-      using Engine = ignition::physics::Engine<FeaturePolicyT, FeatureListT>;
+      using EnginePtr = EnginePtr<FeaturePolicyT, FeatureListT>;
 
       // Tuple of features that are being requested
       using Features = typename FeatureListT::Features;
@@ -56,7 +56,7 @@ namespace ignition
       /// this will be a nullptr. MissingFeatureNames() can be used to inspect
       /// which features are missing.
       template <typename PtrT>
-      static std::unique_ptr<Engine> From(
+      static EnginePtr From(
           const PtrT &_pimpl,
           const std::size_t _engineID = 0);
 
@@ -90,8 +90,8 @@ namespace ignition
 
 #define IGN_PHYSICS_REQUEST_FEATURES_MACRO(X) \
   template <typename FeatureList> \
-  using RequestFeatures ## X = \
-      RequestFeatures<FeaturePolicy ## X, FeatureList>;
+  using RequestEngine ## X = \
+      RequestEngine<FeaturePolicy ## X, FeatureList>;
 
     IGN_PHYSICS_REQUEST_FEATURES_MACRO(3d)
     IGN_PHYSICS_REQUEST_FEATURES_MACRO(2d)
@@ -100,6 +100,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/RequestFeatures.hh>
+#include <ignition/physics/detail/RequestEngine.hh>
 
 #endif

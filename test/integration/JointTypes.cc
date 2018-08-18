@@ -21,7 +21,7 @@
 
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>
-#include <ignition/physics/RequestFeatures.hh>
+#include <ignition/physics/RequestEngine.hh>
 
 #include <ignition/physics/RevoluteJoint.hh>
 #include <ignition/physics/FrameSemantics.hh>
@@ -50,7 +50,7 @@ ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
 template <typename PolicyT, typename FeatureListT>
 void TestRevoluteJointFK(
     const std::vector<typename PolicyT::Scalar> &_testJointPositions,
-    const std::unique_ptr<Engine<PolicyT, FeatureListT>> &_engine,
+    const EnginePtr<PolicyT, FeatureListT> &_engine,
     const double _tolerance)
 {
   using LinearVector =
@@ -73,8 +73,7 @@ void TestRevoluteJointFK(
 
   for (std::size_t i=0; i < _testJointPositions.size(); ++i)
   {
-    std::unique_ptr<Joint<PolicyT, FeatureListT>> joint =
-        _engine->GetJoint(i);
+    JointPtr<PolicyT, FeatureListT> joint = _engine->GetJoint(i);
 
     const Scalar q_desired = _testJointPositions[i];
     joint->SetPosition(0, q_desired);
@@ -83,7 +82,7 @@ void TestRevoluteJointFK(
 
   for (std::size_t i=0; i < _testJointPositions.size(); ++i)
   {
-    std::unique_ptr<RevoluteJoint<PolicyT, FeatureListT>> joint =
+    RevoluteJointPtr<PolicyT, FeatureListT> joint =
         _engine->GetJoint(i)->CastToRevoluteJoint();
 
     const Scalar q = joint->GetPosition(0);
@@ -107,7 +106,7 @@ void TestRevoluteJoint(const double _tolerance, const std::string &_suffix)
   using AngularVector =
       typename FromPolicy<PolicyT>::template Use<AngularVector>;
 
-  auto engine = RequestFeatures<PolicyT, mock::MockJointList>::From(
+  auto engine = RequestEngine<PolicyT, mock::MockJointList>::From(
         LoadMockJointTypesPlugin(_suffix));
 
   {

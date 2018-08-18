@@ -39,8 +39,8 @@ namespace mock
       public: using FrameData =
         ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
-      public: using LinkPtr = ignition::physics::EntityPtr<ignition::physics::Link<PolicyT, FeaturesT>>;
-      public: using Joint = ignition::physics::Joint<PolicyT, FeaturesT>;
+      public: using LinkPtr = ignition::physics::LinkPtr<PolicyT, FeaturesT>;
+      public: using JointPtr = ignition::physics::JointPtr<PolicyT, FeaturesT>;
 
       /// \brief Create a link, giving it a name and data. The data is relative
       /// to the world frame.
@@ -50,16 +50,15 @@ namespace mock
 
       /// \brief Create a joint, giving it a name and data. The data is relative
       /// to the world frame.
-      public: std::unique_ptr<Joint> CreateJoint(
-          const std::string &_jointName,
-          const FrameData &_frameData);
+      public: JointPtr CreateJoint(
+            const std::string &_jointName,
+            const FrameData &_frameData);
 
       /// \brief Retrieve a link that was created earlier.
       public: LinkPtr GetLink(const std::string &_linkName) const;
 
       /// \brief Retrieve a joint that was created earlier.
-      public: std::unique_ptr<Joint> GetJoint(
-          const std::string &_jointName) const;
+      public: JointPtr GetJoint(const std::string &_jointName) const;
     };
 
     template <typename PolicyT>
@@ -93,26 +92,20 @@ namespace mock
       const std::string &_linkName,
       const FrameData &_frameData) -> LinkPtr
   {
-    return LinkPtr(
-          this->pimpl,
-          this->template Interface<MockCreateEntities>()
-            ->CreateLink(_linkName, _frameData));
+    return LinkPtr(this->pimpl,
+        this->template Interface<MockCreateEntities>()->
+                   CreateLink(_linkName, _frameData));
   }
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockCreateEntities::Engine<PolicyT, FeaturesT>::CreateJoint(
       const std::string &_jointName,
-      const FrameData &_frameData) -> std::unique_ptr<Joint>
+      const FrameData &_frameData) -> JointPtr
   {
-    const Identity jointId =
-        this->template Interface<MockCreateEntities>()
-          ->CreateJoint(_jointName, _frameData);
-
-    if (!jointId)
-      return nullptr;
-
-    return std::make_unique<Joint>(this->pimpl, jointId);
+    return JointPtr(this->pimpl,
+        this->template Interface<MockCreateEntities>()->
+                    CreateJoint(_jointName, _frameData));
   }
 
   /////////////////////////////////////////////////
@@ -120,31 +113,17 @@ namespace mock
   auto MockCreateEntities::Engine<PolicyT, FeaturesT>::GetLink(
       const std::string &_linkName) const -> LinkPtr
   {
-//    const Identity linkId =
-//        this->template Interface<MockCreateEntities>()->GetLink(_linkName);
-
-//    if (!linkId)
-//      return nullptr;
-
-//    return std::make_unique<LinkPtr>(this->pimpl, linkId);
-
-    return LinkPtr(
-          this->pimpl,
-          this->template Interface<MockCreateEntities>()->GetLink(_linkName));
+    return LinkPtr(this->pimpl,
+        this->template Interface<MockCreateEntities>()->GetLink(_linkName));
   }
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockCreateEntities::Engine<PolicyT, FeaturesT>::GetJoint(
-      const std::string &_jointName) const -> std::unique_ptr<Joint>
+      const std::string &_jointName) const -> JointPtr
   {
-    const Identity jointId =
-        this->template Interface<MockCreateEntities>()->GetJoint(_jointName);
-
-    if (!jointId)
-      return nullptr;
-
-    return std::make_unique<Joint>(this->pimpl, jointId);
+    return JointPtr(this->pimpl,
+        this->template Interface<MockCreateEntities>()->GetJoint(_jointName));
   }
 }
 

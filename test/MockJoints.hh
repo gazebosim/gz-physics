@@ -32,30 +32,22 @@ namespace mock
     class Engine :
         public virtual ignition::physics::Feature::Engine<PolicyT, FeaturesT>
     {
-      public: using Joint = ignition::physics::Joint<PolicyT, FeaturesT>;
+      public: using JointPtr = ignition::physics::JointPtr<PolicyT, FeaturesT>;
+      public: using ConstJointPtr =
+        ignition::physics::ConstJointPtr<PolicyT, FeaturesT>;
 
-      public: std::unique_ptr<Joint> GetJoint(const std::size_t _id)
+      public: JointPtr GetJoint(const std::size_t _id)
       {
-        const Identity jointId =
+        return JointPtr(this->pimpl,
             this->template Interface<MockGetJointByIndex>()
-                ->GetJointByIndex(_id);
-
-        if (!jointId)
-          return nullptr;
-
-        return std::make_unique<Joint>(this->pimpl, jointId);
+                              ->GetJointByIndex(_id));
       }
 
-      public: std::unique_ptr<Joint> GetJoint(const std::size_t _id) const
+      public: ConstJointPtr GetJoint(const std::size_t _id) const
       {
-        const Identity jointId =
+        return ConstJointPtr(this->pimpl,
             this->template Interface<MockGetJointByIndex>()
-                ->GetJointByIndex(_id);
-
-        if (!jointId)
-          return nullptr;
-
-        return std::make_unique<const Joint>(this->pimpl, jointId);
+                             ->GetJointByIndex(_id));
       }
     };
 

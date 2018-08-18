@@ -26,13 +26,13 @@ namespace ignition
       /////////////////////////////////////////////////
       Identity Implementation::GenerateIdentity(
           std::size_t _id,
-          const std::shared_ptr<const void> &_ref) const
+          const std::shared_ptr<const void> &_ref)
       {
         return Identity(_id, _ref);
       }
 
       /////////////////////////////////////////////////
-      Identity Implementation::GenerateInvalidId() const
+      Identity Implementation::GenerateInvalidId()
       {
         return Identity();
       }

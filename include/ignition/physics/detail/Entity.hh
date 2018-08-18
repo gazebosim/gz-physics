@@ -18,13 +18,13 @@
 #ifndef IGNITION_PHYSICS_DETAIL_ENTITY_HH_
 #define IGNITION_PHYSICS_DETAIL_ENTITY_HH_
 
-#include <cassert>
 #include <memory>
 #include <tuple>
 
 #include <ignition/plugin/SpecializedPluginPtr.hh>
 #include <ignition/physics/Entity.hh>
 #include <ignition/physics/TemplateHelpers.hh>
+#include <ignition/plugin/TemplateHelpers.hh>
 
 namespace ignition
 {
@@ -67,19 +67,20 @@ namespace ignition
               >::value> { };
 
       /////////////////////////////////////////////////
-      template <typename FromFeatureList, typename ToFeatureTuple>
+      template <typename ToFeatureTuple, typename FromFeatureList>
       struct HasAllFeaturesImpl;
 
       template <typename FromFeatureList,
                 typename ToFeature1, typename... RemainingFeatures>
       struct HasAllFeaturesImpl<
-          FromFeatureList, std::tuple<ToFeature1, RemainingFeatures...> >
+          std::tuple<ToFeature1, RemainingFeatures...>, FromFeatureList>
       {
         static constexpr bool innerValue =
             FromFeatureList::template HasFeature<ToFeature1>();
 
         static constexpr bool value = innerValue
-            && HasAllFeaturesImpl<FromFeatureList, RemainingFeatures...>::value;
+            && HasAllFeaturesImpl<std::tuple<RemainingFeatures...>,
+                                  FromFeatureList>::value;
 
         static_assert(
             innerValue,
@@ -89,21 +90,29 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
+      template <typename FromFeatureList>
+      struct HasAllFeaturesImpl<std::tuple<>, FromFeatureList>
+      {
+        static constexpr bool value = true;
+      };
+
+      /////////////////////////////////////////////////
       /// \brief The entity type "From" must contain all the features that are
       /// found within the enttiy type "To" in order for an upcast to be valid.
-      template <typename From, typename To>
+      template <typename To, typename From>
       struct HasAllFeatures
       {
         using ToFeatures = typename To::Features;
         using FromFeatures = typename From::Features;
 
         static constexpr bool value =
-            HasAllFeaturesImpl<FromFeatures,
-            typename ToFeatures::Features>::value;
+            HasAllFeaturesImpl<
+                typename ToFeatures::Features,
+                FromFeatures>::value;
       };
 
       /////////////////////////////////////////////////
-      template <typename From, typename To, bool downcastable>
+      template <typename To, typename From, bool downcastable>
       struct CheckForDowncastableMessage
       {
         static constexpr bool value =
@@ -118,8 +127,8 @@ namespace ignition
       // to do an implicit downcast (base type to more derived type) which is
       // not allowed. For that case, we will print a special message to help
       // them out.
-      template <typename From, typename To>
-      struct CheckForDowncastableMessage<From, To, true>
+      template <typename To, typename From>
+      struct CheckForDowncastableMessage<To, From, true>
       {
         static constexpr bool value =
             TupleContainsBase<typename To::Identifier,
@@ -134,7 +143,7 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      template <typename From, typename To>
+      template <typename To, typename From>
       struct UpcastCompatible
       {
         static_assert(
@@ -143,12 +152,17 @@ namespace ignition
             "e.g. FeaturePolicy3d, FeaturePolicy2d, FeaturePolicy3f). THE "
             "REQUESTED CONVERSION IS NOT ADMISSIBLE.");
 
-        static_assert(HasAllFeatures<From, To>::value);
+        static_assert(HasAllFeatures<To, From>::value);
 
-        static_assert(CheckForDowncastableMessage<From, To,
+        static_assert(CheckForDowncastableMessage<To, From,
                       TupleContainsBase<
                         typename From::Identifier,
                         typename To::UpcastIdentifiers>::value>::value);
+
+        static_assert(
+            ignition::plugin::ConstCompatible<To, From>::value,
+            "CANNOT CAST FROM A CONST-QUALIFIED ENTITY TO AN ENTITY WITHOUT A "
+            "CONST-QUALIFIER.");
       };
     }
 
@@ -191,7 +205,6 @@ namespace ignition
         const std::shared_ptr<Pimpl> &_pimpl,
         const Identity &_identity)
     {
-      assert(_pimpl);
       // EntityPtr should never accept invalid identities, otherwise users will
       // have to check for validity of their entities in two places instead of
       // one.
@@ -204,7 +217,7 @@ namespace ignition
     template <typename OtherEntityT>
     EntityPtr<EntityT>::EntityPtr(const EntityPtr<OtherEntityT> &_other)
     {
-      *this = EntityPtr<EntityT>(_other);
+      *this = _other;
     }
 
     /////////////////////////////////////////////////
@@ -214,7 +227,7 @@ namespace ignition
       -> EntityPtr&
     {
       // Verify that an upcast is okay for these types
-      detail::UpcastCompatible<OtherEntityT, EntityT>();
+      detail::UpcastCompatible<EntityT, OtherEntityT>();
 
       // If _other doesn't contain an entity clear our entity and return
       if (!_other.entity)
@@ -311,6 +324,64 @@ namespace ignition
     {
       return (*this->pimpl)->template QueryInterface<
           typename FeatureT::template Implementation<Policy>>();
+    }
+
+    /////////////////////////////////////////////////
+    // Operators to compare with nullptr and nullopt
+    template <typename EntityT>
+    bool operator==(std::nullptr_t, const EntityPtr<EntityT> &_ptr)
+    {
+      return !_ptr.Valid();
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    bool operator==(const EntityPtr<EntityT> &_ptr, std::nullptr_t)
+    {
+      return !_ptr.Valid();
+    }
+
+    /////////////////////////////////////////////////
+    // Operators to compare with nullptr and nullopt
+    template <typename EntityT>
+    bool operator!=(std::nullptr_t, const EntityPtr<EntityT> &_ptr)
+    {
+      return !(_ptr == nullptr);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    bool operator!=(const EntityPtr<EntityT> &_ptr, std::nullptr_t)
+    {
+      return !(_ptr == nullptr);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    bool operator==(std::nullopt_t, const EntityPtr<EntityT> &_ptr)
+    {
+      return !_ptr.Valid();
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    bool operator==(const EntityPtr<EntityT> &_ptr, std::nullopt_t)
+    {
+      return !_ptr.Valid();
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    bool operator!=(std::nullopt_t, const EntityPtr<EntityT> &_ptr)
+    {
+      return !(_ptr == nullptr);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    bool operator!=(const EntityPtr<EntityT> &_ptr, std::nullopt_t)
+    {
+      return !(_ptr == nullptr);
     }
   }
 }
