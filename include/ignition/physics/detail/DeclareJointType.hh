@@ -15,20 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_CREATEJOINTTYPE_HH_
-#define IGNITION_PHYSICS_CREATEJOINTTYPE_HH_
-
-#include <memory>
-
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/Geometry.hh>
-#include <ignition/physics/TemplateHelpers.hh>
+#ifndef IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
+#define IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
 
 #define DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, P) \
   template <typename FeaturesT> \
   using X ## P = X::Using<FeaturePolicy ## P, FeaturesT>;
 
-#define IGN_PHYSICS_CREATE_JOINT_TYPE(X) \
+
+#define DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(X) \
   struct X : public ::ignition::physics::Feature \
   { \
     IGN_PHYSICS_CREATE_SELECTOR(X) \
