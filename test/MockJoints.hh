@@ -21,6 +21,8 @@
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RevoluteJoint.hh>
+#include <ignition/physics/FreeJoint.hh>
+#include <ignition/physics/PrismaticJoint.hh>
 
 namespace mock
 {
@@ -69,6 +71,9 @@ namespace mock
     ignition::physics::SetJointTransformToChildFeature,
     ignition::physics::SetRevoluteJointProperties,
     ignition::physics::GetRevoluteJointProperties,
+    ignition::physics::GetPrismaticJointProperties,
+    ignition::physics::SetPrismaticJointProperties,
+    ignition::physics::SetFreeJointTransformFeature,
     ignition::physics::JointFrameSemantics
   >;
 

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_CREATEJOINTTYPE_HH_
-#define IGNITION_PHYSICS_DETAIL_CREATEJOINTTYPE_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
+#define IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
 
 #include <tuple>
 
@@ -30,7 +30,7 @@
   using Const ## X ## P ## Ptr = \
     ::ignition::physics::EntityPtr<const X<FeaturePolicy ## P, FeaturesT>>;
 
-#define DETAIL_IGN_PHYSICS_CREATE_JOINT_TYPE(X) \
+#define DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(X) \
   struct X ## Cast : public ::ignition::physics::Feature \
   { \
     IGN_PHYSICS_CREATE_SELECTOR(X) \

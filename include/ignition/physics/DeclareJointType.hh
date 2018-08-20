@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_CREATEJOINTTYPE_HH_
-#define IGNITION_PHYSICS_CREATEJOINTTYPE_HH_
+#ifndef IGNITION_PHYSICS_DECLAREJOINTTYPE_HH_
+#define IGNITION_PHYSICS_DECLAREJOINTTYPE_HH_
 
 #include <memory>
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/Geometry.hh>
 #include <ignition/physics/TemplateHelpers.hh>
-#include <ignition/physics/detail/CreateJointType.hh>
+#include <ignition/physics/detail/DeclareJointType.hh>
 
 /// \brief Given a joint type named CustomJointType, this macro creates the
 /// following classes:
@@ -41,8 +41,8 @@
 /// template <F> class CustomJointType3f
 /// template <F> class CustomJointType2f
 ///  - Similar to CustomJointType<P,F>, except P is replaced with the predefined
-///    FeaturePolicies.
-#define IGN_PHYSICS_CREATE_JOINT_TYPE( CustomJointType ) \
-  DETAIL_IGN_PHYSICS_CREATE_JOINT_TYPE( CustomJointType )
+///    Feature Policies.
+#define IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType ) \
+  DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType )
 
 #endif
