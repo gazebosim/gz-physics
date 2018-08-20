@@ -53,9 +53,8 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename FeaturePolicyT, typename FeatureListT>
     template <typename PtrT>
-    auto RequestEngine<FeaturePolicyT, FeatureListT>::
-    From(const PtrT &_pimpl, const std::size_t _engineID)
-      -> EnginePtr
+    auto RequestEngine<FeaturePolicyT, FeatureListT>::From(
+        const PtrT &_pimpl, const std::size_t _engineID) -> EnginePtrType
     {
       using Pimpl = typename detail::DeterminePlugin<
           FeaturePolicyT, Features>::type;
@@ -68,7 +67,7 @@ namespace ignition
           (*pimpl)->template QueryInterface<
               Feature::Implementation<FeaturePolicyT>>();
 
-      return EnginePtr(pimpl, implBase->InitiateEngine(_engineID));
+      return EnginePtrType(pimpl, implBase->InitiateEngine(_engineID));
     }
   }
 }
