@@ -18,13 +18,13 @@
 #ifndef IGNITION_PHYSICS_FREEJOINT_HH_
 #define IGNITION_PHYSICS_FREEJOINT_HH_
 
-#include <ignition/physics/CreateJointType.hh>
+#include <ignition/physics/DeclareJointType.hh>
 
 namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_CREATE_JOINT_TYPE(FreeJoint)
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(FreeJoint)
 
     class IGNITION_PHYSICS_VISIBLE SetFreeJointTransformFeature
         : public virtual Feature
