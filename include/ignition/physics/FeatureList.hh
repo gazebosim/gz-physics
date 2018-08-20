@@ -27,7 +27,7 @@ namespace ignition
     namespace detail
     {
       // Forward declarations
-      template <typename...> class CombineLists;
+      template <typename...> struct CombineLists;
       template <bool, typename> struct SelfConflict;
     }
 
