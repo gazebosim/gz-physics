@@ -33,18 +33,20 @@ namespace mock
     template <typename PolicyT, typename FeaturesT>
     class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
     {
-      public: using World = ignition::physics::World<PolicyT, FeaturesT>;
+      public: using WorldPtr = ignition::physics::WorldPtr<PolicyT, FeaturesT>;
+      public: using ConstWorldPtr =
+          ignition::physics::ConstWorldPtr<PolicyT, FeaturesT>;
 
       /// \brief Name of the engine
       std::string Name() const;
 
       /// \brief Get a pointer to the world of this engine with the matching
       /// name
-      std::unique_ptr<World> GetWorld(const std::string &_name);
+      WorldPtr GetWorld(const std::string &_name);
 
       /// \brief Get a const-qualified pointer to the world of this engine with
       /// the matching name
-      std::unique_ptr<const World> GetWorld(const std::string &_name) const;
+      ConstWorldPtr GetWorld(const std::string &_name) const;
 
       // Virtual destructor
       public: virtual ~Engine() = default;
@@ -53,17 +55,19 @@ namespace mock
     template <typename PolicyT, typename FeaturesT>
     class World : public virtual Feature::World<PolicyT, FeaturesT>
     {
-      public: using Model = ignition::physics::Model<PolicyT, FeaturesT>;
+      public: using ModelPtr = ignition::physics::ModelPtr<PolicyT, FeaturesT>;
+      public: using ConstModelPtr =
+          ignition::physics::ConstModelPtr<PolicyT, FeaturesT>;
 
       /// \brief Name of this world
       std::string Name() const;
 
       /// \brief Get a pointer to the model of this world with the matching name
-      std::unique_ptr<Model> GetModel(const std::string &_name);
+      ModelPtr GetModel(const std::string &_name);
 
       /// \brief Get a const-qualified pointer to the model of this world with
       /// the matching name.
-      std::unique_ptr<const Model> GetModel(const std::string &_name) const;
+      ConstModelPtr GetModel(const std::string &_name) const;
 
       // Virtual destructor
       public: virtual ~World() = default;
@@ -72,25 +76,30 @@ namespace mock
     template <typename PolicyT, typename FeaturesT>
     class Model : public virtual Feature::Model<PolicyT, FeaturesT>
     {
-      public: using Link = ignition::physics::Link<PolicyT, FeaturesT>;
-      public: using Joint = ignition::physics::Joint<PolicyT, FeaturesT>;
+      public: using LinkPtr = ignition::physics::LinkPtr<PolicyT, FeaturesT>;
+      public: using ConstLinkPtr =
+          ignition::physics::ConstLinkPtr<PolicyT, FeaturesT>;
+
+      public: using JointPtr = ignition::physics::JointPtr<PolicyT, FeaturesT>;
+      public: using ConstJointPtr =
+          ignition::physics::ConstJointPtr<PolicyT, FeaturesT>;
 
       /// \brief Name of this model
       std::string Name() const;
 
       /// \brief Get a pointer to the link of this model with the matching name
-      std::unique_ptr<Link> GetLink(const std::string &_name);
+      LinkPtr GetLink(const std::string &_name);
 
       /// \brief Get a const-qualified pointer to the link of this model with
       /// the matching name
-      std::unique_ptr<const Link> GetLink(const std::string &_name) const;
+      ConstLinkPtr GetLink(const std::string &_name) const;
 
       /// \brief Get a pointer to the joint of this model with the matching name
-      std::unique_ptr<Joint> GetJoint(const std::string &_name);
+      JointPtr GetJoint(const std::string &_name);
 
       /// \brief Get a const-qualified pointer to the joint of this model with
       /// the matching name
-      std::unique_ptr<const Joint> GetJoint(const std::string &_name) const;
+      ConstJointPtr GetJoint(const std::string &_name) const;
     };
 
     template <typename PolicyT, typename FeaturesT>
@@ -150,22 +159,17 @@ namespace mock
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::Engine<PolicyT, FeaturesT>::GetWorld(
-      const std::string &_name) -> std::unique_ptr<World>
+      const std::string &_name) -> WorldPtr
   {
-    const Identity worldId =
-        this->template Interface<MockGetByName>()->GetWorldByName(
-          this->identity, _name);
-
-    if (!worldId)
-      return nullptr;
-
-    return std::make_unique<World>(this->pimpl, worldId);
+    return WorldPtr(this->pimpl,
+          this->template Interface<MockGetByName>()->GetWorldByName(
+                      this->identity, _name));
   }
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::Engine<PolicyT, FeaturesT>::GetWorld(
-      const std::string &_name) const -> std::unique_ptr<const World>
+      const std::string &_name) const -> ConstWorldPtr
   {
     return const_cast<Engine*>(this)->GetWorld(_name);
   }
@@ -181,22 +185,17 @@ namespace mock
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::World<PolicyT, FeaturesT>::GetModel(
-      const std::string &_name) -> std::unique_ptr<Model>
+      const std::string &_name) -> ModelPtr
   {
-    const Identity modelId =
-        this->template Interface<MockGetByName>()->GetModelByName(
-          this->identity, _name);
-
-    if (!modelId)
-      return nullptr;
-
-    return std::make_unique<Model>(this->pimpl, modelId);
+    return ModelPtr(this->pimpl,
+          this->template Interface<MockGetByName>()->GetModelByName(
+                     this->identity, _name));
   }
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::World<PolicyT, FeaturesT>::GetModel(
-      const std::string &_name) const -> std::unique_ptr<const Model>
+      const std::string &_name) const -> ConstModelPtr
   {
     return const_cast<World*>(this)->GetModel(_name);
   }
@@ -212,22 +211,17 @@ namespace mock
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::Model<PolicyT, FeaturesT>::GetLink(
-      const std::string &_name) -> std::unique_ptr<Link>
+      const std::string &_name) -> LinkPtr
   {
-    const Identity linkId =
-        this->template Interface<MockGetByName>()->GetLinkByName(
-          this->identity, _name);
-
-    if (!linkId)
-      return nullptr;
-
-    return std::make_unique<Link>(this->pimpl, linkId);
+    return LinkPtr(this->pimpl,
+          this->template Interface<MockGetByName>()->GetLinkByName(
+                     this->identity, _name));
   }
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::Model<PolicyT, FeaturesT>::GetLink(
-      const std::string &_name) const -> std::unique_ptr<const Link>
+      const std::string &_name) const -> ConstLinkPtr
   {
     return const_cast<Model*>(this)->GetLink(_name);
   }
@@ -235,22 +229,17 @@ namespace mock
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::Model<PolicyT, FeaturesT>::GetJoint(
-      const std::string &_name) -> std::unique_ptr<Joint>
+      const std::string &_name) -> JointPtr
   {
-    const Identity jointId =
-        this->template Interface<MockGetByName>()->GetJointByName(
-          this->identity, _name);
-
-    if (!jointId)
-      return nullptr;
-
-    return std::make_unique<Joint>(this->pimpl, jointId);
+    return JointPtr(this->pimpl,
+          this->template Interface<MockGetByName>()->GetJointByName(
+                      this->identity, _name));
   }
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
   auto MockGetByName::Model<PolicyT, FeaturesT>::GetJoint(
-      const std::string &_name) const -> std::unique_ptr<const Joint>
+      const std::string &_name) const -> ConstJointPtr
   {
     return const_cast<Model*>(this)->GetJoint(_name);
   }

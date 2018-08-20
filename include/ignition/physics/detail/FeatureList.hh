@@ -119,54 +119,80 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
+      template <typename DiscardTuple, typename InputTuple>
+      struct FilterTuple;
+
+      /////////////////////////////////////////////////
+      template <typename DiscardTuple, typename... InputTypes>
+      struct FilterTuple<DiscardTuple, std::tuple<InputTypes...>>
+      {
+        using Result = decltype(std::tuple_cat(
+            std::conditional_t<
+              // If the input type is a base class of anything that should be
+              // discared ...
+              TupleContainsBase<InputTypes, DiscardTuple>::value,
+              // ... then we should leave it out of the final tuple ...
+              std::tuple<>,
+              // ... otherwise, include it.
+              std::tuple<InputTypes>
+            // Do this for each type in the InputTypes parameter pack.
+            >()...));
+      };
+
+      /////////////////////////////////////////////////
+      /// \private CombineListsImpl provides the implementation of CombineLists.
+      /// This helper implementation structure allows us to filter out repeated
+      /// features from the list.
+      template <typename PartialResultInput, typename... FeatureLists>
+      struct CombineListsImpl;
+
+      template <typename PartialResultInput>
+      struct CombineListsImpl<PartialResultInput>
+      {
+        using Result = std::tuple<>;
+      };
+
+      template <typename ParentResultInput, typename F1, typename... Others>
+      struct CombineListsImpl<ParentResultInput, F1, Others...>
+      {
+        // Add the features of the feature list F1, while filtering out any
+        // repeated features.
+        using InitialResult =
+            typename FilterTuple<
+              ParentResultInput,
+              typename ExtractFeatures<F1>::Result
+            >::Result;
+
+        // Add the features that are required by F1, while filtering out any
+        // repeated features.
+        using PartialResult = decltype(std::tuple_cat(
+            InitialResult(),
+            typename FilterTuple<
+              decltype(std::tuple_cat(ParentResultInput(), InitialResult())),
+              typename ExtractFeatures<typename F1::RequiredFeatures>::Result
+            >::Result()));
+
+        // Define the tuple that the child should use to filter its list
+        using ChildFilter =
+            decltype(std::tuple_cat(ParentResultInput(), PartialResult()));
+
+        // Construct the final result
+        using Result = decltype(std::tuple_cat(
+            PartialResult(),
+            typename CombineListsImpl<ChildFilter, Others...>::Result()));
+      };
+
       /// \private CombineLists is used to take variadic lists of features,
       /// FeatureLists, or std::tuples of features, and collapse them into a
       /// serialized std::tuple of features.
       ///
       /// This class works recursively.
       template <typename... FeatureLists>
-      class CombineLists;
-
-      /// \private This specialization is the terminal of the class recursion.
-      /// It gets called when only one type remains in the list.
-      template <typename F>
-      class CombineLists<F>
+      struct CombineLists
       {
-        public: using Result = decltype(std::tuple_cat(
-            typename ExtractFeatures<F>::Result(),
-            typename ExtractFeatures<typename F::RequiredFeatures>::Result()));
+        using Result =
+            typename CombineListsImpl<std::tuple<>, FeatureLists...>::Result;
       };
-
-      /// \private This specialization peels away each type in the variadic set,
-      /// ultimately collapsing the whole list into a single tuple of features.
-      template <typename F1, typename... Others>
-      class CombineLists<F1, Others...>
-      {
-        public: using Result =
-          decltype(std::tuple_cat(
-            typename ExtractFeatures<F1>::Result(),
-            typename ExtractFeatures<typename F1::RequiredFeatures>::Result(),
-            typename CombineLists<Others...>::Result()));
-      };
-
-      /////////////////////////////////////////////////
-      /// \private Inspired by https://stackoverflow.com/a/26288164
-      /// This class provides a static constexpr member named `value` which is
-      /// true if T is one of the entries of Tuple, and false otherwise.
-      template <typename T, typename Tuple>
-      struct TupleContainsBase;
-
-      /// \private This specialization implements TupleContainsBase. It only
-      /// works if Tuple is a std::tuple; any other type for the second template
-      /// argument will fail to compile.
-      template <typename T, typename... Types>
-      struct TupleContainsBase<T, std::tuple<Types...>>
-          : std::integral_constant<bool,
-              !std::is_same<
-                std::tuple<typename std::conditional<
-                  std::is_base_of<T, Types>::value, Empty, Types>::type...>,
-                std::tuple<Types...>
-              >::value> { };
 
       /////////////////////////////////////////////////
       /// \private This class helps to implement the function
@@ -249,7 +275,7 @@ namespace ignition
 
       /////////////////////////////////////////////////
       /// \private This class is used to inspect what features are provided by
-      /// a plugin. It implements the API of RequestFeatures.
+      /// a plugin. It implements the API of RequestEngine.
       template <typename Policy, typename InterfaceTuple>
       struct InspectFeatures;
 
@@ -264,7 +290,7 @@ namespace ignition
         static bool Verify(const PtrT &_pimpl)
         {
           // TODO(MXG): Replace with a fold expression when we migrate to C++17
-          return _pimpl->template HasInterface<Interface>()
+          return _pimpl && _pimpl->template HasInterface<Interface>()
               && InspectFeatures<PolicyT, std::tuple<Remaining...>>::
                       Verify(_pimpl);
         }
@@ -273,7 +299,7 @@ namespace ignition
         static void MissingNames(const PtrT &_pimpl,
                                  std::set<std::string> &_names)
         {
-          if (!_pimpl->template HasInterface<Interface>())
+          if (!_pimpl || !_pimpl->template HasInterface<Interface>())
             _names.insert(typeid(Feature1).name());
 
           InspectFeatures<PolicyT, std::tuple<Remaining...>>::MissingNames(
@@ -319,6 +345,7 @@ namespace ignition
               FeatureList<FeaturesT...>, AssertNoConflict,
               typename FeatureList<SomeFeatureList>::Features>::value;
     }
+
     /////////////////////////////////////////////////
     /// \private The default definition of FeatureWithConflicts only gets called
     /// when the ConflictingFeatures list is empty. It should simply fall back
@@ -365,33 +392,52 @@ namespace ignition
 
 
 // Macros for generating EngineTemplate, LinkTemplate, etc
-#define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, P) \
+#define DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, P) \
+  template <typename List>\
+  using X ## P = X <::ignition::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
-  using X ## P = X <FeaturePolicy ## P, List>;
+  using X ## P ## Ptr = X ## Ptr < \
+    ::ignition::physics::FeaturePolicy ## P, List>; \
+  template <typename List> \
+  using Const ## X ## P ## Ptr = X ## Ptr < \
+    ::ignition::physics::FeaturePolicy ## P, List>;
 
-#define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(X) \
+#define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
     template <typename T> \
+    /* Used to select the X-type API from a feature */ \
     struct X ## Selector \
     { \
       public: template<typename PolicyT, typename FeaturesT> \
       using type = typename T::template X<PolicyT, FeaturesT>; \
     }; \
+    /* Symbol used by X-types to identify other X-types */ \
+    struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
-  class X : public detail::Aggregate<detail :: X ## Selector, FeaturesT>:: \
-        template type<PolicyT, FeaturesT> \
+  class X : public ::ignition::physics::detail::Aggregate< \
+        detail :: X ## Selector, FeaturesT>::template type<PolicyT, FeaturesT> \
   { \
+    public: using Identifier = detail:: X ## Identifier; \
+    public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
+    \
+    public: X(const X&) = default;\
     \
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \
       : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
   }; \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3d) \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2d) \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3f) \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2f)
+  template <typename PolicyT, typename FeaturesT> \
+  using X ## Ptr = ::ignition::physics::EntityPtr< \
+    X <PolicyT, FeaturesT> >; \
+  template <typename PolicyT, typename FeaturesT> \
+  using Const ## X ## Ptr = ::ignition::physics::EntityPtr< \
+    const X <PolicyT, FeaturesT> >; \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2f)
 
 
     // This macro expands to create the templates:
@@ -407,11 +453,11 @@ namespace ignition
     //
     // This is repeated for each of the built-in feature objects (e.g. Link,
     // Joint, Model).
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Engine)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(World)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Model)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Link)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Joint)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Engine)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(World)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Model)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Link)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Joint)
 
     namespace detail
     {

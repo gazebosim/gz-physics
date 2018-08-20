@@ -40,11 +40,11 @@ namespace ignition
       {
         /// \brief An implementation class should call this function whenever it
         /// wants to generate an identity for an Entity.
-        protected: Identity GenerateIdentity(
+        protected: static Identity GenerateIdentity(
             std::size_t _id,
-            const std::shared_ptr<const void> &_ref = nullptr) const;
+            const std::shared_ptr<const void> &_ref = nullptr);
 
-        protected: Identity GenerateInvalidId() const;
+        protected: static Identity GenerateInvalidId();
       };
     }
 
@@ -55,10 +55,6 @@ namespace ignition
     /// plugin implementation, so users cannot create invalid Entities.
     class IGNITION_PHYSICS_VISIBLE Identity
     {
-      // Explicitly allow default copy constructors in public
-      public: Identity(const Identity&) = default;
-      public: Identity(Identity&&) = default;
-
       /// \brief Convert to true if this Identity refers to a valid entity (i.e.
       /// its id field is not INVALID_ENTITY_ID).
       public: operator bool() const;
@@ -74,7 +70,7 @@ namespace ignition
       /// engine object.
       ///
       /// Note that the ID of 0 is reserved for the "engine" object.
-      public: const std::size_t id;
+      public: std::size_t id;
 
       /// \brief This is an optional reference-counting field for the proxy
       /// objects. Not all engines are required to support this field for all
@@ -82,7 +78,7 @@ namespace ignition
       ///
       /// This reference is not allowed to change at any point in the lifetime
       /// of the engine object.
-      public: const std::shared_ptr<const void> ref;
+      public: std::shared_ptr<const void> ref;
 
       /// \brief This is used by Entity so that it can default-construct. This
       /// should never actually be called.

@@ -18,13 +18,13 @@
 #ifndef IGNITION_PHYSICS_PRISMATICJOINT_HH_
 #define IGNITION_PHYSICS_PRISMATICJOINT_HH_
 
-#include <ignition/physics/CreateJointType.hh>
+#include <ignition/physics/DeclareJointType.hh>
 
 namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_CREATE_JOINT_TYPE(PrismaticJoint)
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint)
 
     class IGNITION_PHYSICS_VISIBLE GetPrismaticJointProperties
         : public virtual Feature
@@ -58,7 +58,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::PrismaticJoint>;
+          FeatureList<ignition::physics::PrismaticJointCast>;
     };
 
     /// \brief Provide the API for setting a prismatic joint's axis. Not all
@@ -96,7 +96,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::PrismaticJoint>;
+          FeatureList<ignition::physics::PrismaticJointCast>;
     };
   }
 }

@@ -18,13 +18,13 @@
 #ifndef IGNITION_PHYSICS_REVOLUTEJOINT_HH_
 #define IGNITION_PHYSICS_REVOLUTEJOINT_HH_
 
-#include <ignition/physics/CreateJointType.hh>
+#include <ignition/physics/DeclareJointType.hh>
 
 namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_CREATE_JOINT_TYPE(RevoluteJoint)
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint)
 
     class IGNITION_PHYSICS_VISIBLE GetRevoluteJointProperties
         : public virtual Feature
@@ -62,7 +62,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJoint>;
+          FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
     /// \brief Provide the API for setting a revolute joint's axis. Not all
@@ -103,7 +103,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJoint>;
+          FeatureList<ignition::physics::RevoluteJointCast>;
     };
   }
 }

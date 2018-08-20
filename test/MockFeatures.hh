@@ -32,7 +32,8 @@ namespace mock
 
 #define IGN_PHYSICS_MOCK_MACRO_HELPER( Type, X ) \
   using Mock ## Type ## X = ignition::physics:: Type ## X <MockFeatureList>; \
-  using Mock ## Type ## X ## Ptr = std::unique_ptr< Mock ## Type ## X >;
+  using Mock ## Type ## X ## Ptr = \
+      ignition::physics::EntityPtr< Mock ## Type ## X >;
 
 #define IGN_PHYSICS_MOCK_MACRO(Type) \
   IGN_PHYSICS_MOCK_MACRO_HELPER(Type, 3d) \

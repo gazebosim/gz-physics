@@ -20,7 +20,7 @@
 #include <ignition/plugin/Loader.hh>
 
 #include <ignition/physics/Joint.hh>
-#include <ignition/physics/RequestFeatures.hh>
+#include <ignition/physics/RequestEngine.hh>
 
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
@@ -50,7 +50,7 @@ World LoadWorld(const std::string &_world)
       loader.Instantiate("ignition::physics::dartsim::Plugin");
 
   auto engine =
-      ignition::physics::RequestFeatures3d<TestFeatureList>::From(dartsim);
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   EXPECT_NE(nullptr, engine);
 
   sdf::Root root;

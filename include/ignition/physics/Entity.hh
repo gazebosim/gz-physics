@@ -18,8 +18,9 @@
 #ifndef IGNITION_PHYSICS_ENTITY_HH_
 #define IGNITION_PHYSICS_ENTITY_HH_
 
-#include <memory>
 #include <limits>
+#include <memory>
+#include <optional>
 
 #include <ignition/physics/Export.hh>
 #include <ignition/physics/detail/Identity.hh>
@@ -36,6 +37,98 @@ namespace ignition
     const std::size_t INVALID_ENTITY_ID =
         std::numeric_limits<std::size_t>::max();
 
+    template <typename EntityT>
+    class EntityPtr
+    {
+      // All the automatic constructors and assignment operators are okay.
+      public: EntityPtr() = default;
+      public: EntityPtr(const EntityPtr&) = default;
+      public: EntityPtr(EntityPtr&&) = default;
+      public: EntityPtr &operator=(const EntityPtr&) = default;
+      public: EntityPtr &operator=(EntityPtr&&) = default;
+      public: ~EntityPtr() = default;
+
+      /// \brief Create an EntityPtr that points to an invalid Entity
+      public: EntityPtr(std::nullptr_t);
+
+      /// \brief Create an EntityPtr that points to an invalid Entity
+      public: EntityPtr(std::nullopt_t);
+
+      /// \brief Assign this to point to an invalid Entity.
+      public: EntityPtr &operator=(std::nullptr_t);
+
+      /// \brief Assign this to point to an invalid Entity.
+      public: EntityPtr &operator=(std::nullopt_t);
+
+      /// \brief Create an EntityPtr that points to the Entity tied to _identity
+      /// \param[in] _pimpl
+      ///   Pointer to the implementation for this entity
+      /// \param[in] _identity
+      ///   The identity of the Entity that this should point to
+      public: template <typename Pimpl>
+      EntityPtr(const std::shared_ptr<Pimpl> &_pimpl,
+                const Identity &_identity);
+
+      /// \brief Create a new reference to another entity
+      /// \param[in] _other
+      ///   Another entity reference with a compatible type and compatible set
+      ///   of features
+      public: template <typename OtherEntityT>
+      EntityPtr(const EntityPtr<OtherEntityT> &_other);
+
+      /// \brief Assign this to point at another compatible Entity
+      /// \param[in] _other
+      ///   Another entity reference with a compatible type and compatible set
+      ///   of features.
+      public: template <typename OtherEntityT>
+      EntityPtr &operator=(const EntityPtr<OtherEntityT> &_other);
+
+      /// \brief Drill operator. Access members of the Entity being pointed to.
+      /// This does NOT check whether the Entity is valid before trying to use
+      /// it. If the validity of the Entity is in doubt, check Valid() or simply
+      /// operator bool() before attempting to use this operator.
+      /// \return The ability to call a member function on the underlying Entity
+      public: EntityT * operator->() const;
+
+      /// \brief Dereference operator. Access a reference to the Entity being
+      /// pointed to. This does NOT check whether the Entity is valid before
+      /// trying to provide it. If the validity of the Entity is in doubt, check
+      /// IsEmpty() or simply operator bool() before attempting to use this
+      /// operator.
+      /// \return A reference to the underlying entity
+      public: EntityT & operator*() const;
+
+      /// \brief Check whether this is pointing at a valid Entity.
+      /// \return True if this is pointing to a valid Entity, otherwise false.
+      public: bool Valid() const;
+
+      /// \brief Implicitly cast this EntityPtr to a boolean.
+      /// \return True if this is pointing to a valid Entity, otherwise false.
+      public: operator bool() const;
+
+      // TODO(MXG): Write comparison operators and a Hash() implementation.
+
+      /// \brief If we are pointing to a valid entity, it will be stored here.
+      /// Otherwise, this is a nullopt.
+      ///
+      /// We make this mutable so that we get logical const-correctness. We are
+      /// not concerned with physical const-correctness here.
+      ///
+      /// When passing the type into the std::optional, we remove the
+      /// const-qualifier because otherwise a ConstEntityPtr object cannot be
+      /// modified to point to a different entity, as the assignment operator
+      /// of std::optional gets deleted when it is given a const-qualified type.
+      /// The dereference operations * and -> will still use the original
+      /// const-qualifications of EntityT, so logical constness is still
+      /// preserved, because the user cannot access an const-unqualified
+      /// reference to EntityT.
+      private: mutable std::optional<std::remove_const_t<EntityT>> entity;
+
+
+      // Declare this friendship so we can cast between different Entity types.
+      template <typename> friend class EntityPtr;
+    };
+
     /// \brief This is the base class of all "proxy objects". The "proxy
     /// objects" are essentially interfaces into the actual objects which exist
     /// inside of the various physics engine implementations. The proxy objects
@@ -44,11 +137,13 @@ namespace ignition
     /// the implementation interface that it needs) necessary to interface with
     /// the object inside of the implementation that it refers to.
     ///
-    /// Examples of proxy objects are the Link class, Joint class, and Model
+    /// Examples of entities are the Link class, Joint class, and Model
     /// class.
-    template <typename Policy, typename Features>
+    template <typename PolicyT, typename FeaturesT>
     class Entity
     {
+      public: using Policy = PolicyT;
+      public: using Features = FeaturesT;
       public: using Pimpl =
           typename detail::DeterminePlugin<Policy, Features>::type;
 
@@ -97,13 +192,16 @@ namespace ignition
       /// \brief This is a pointer to the physics engine implementation, and it
       /// can be used by the object features to find the interfaces that they
       /// need in order to function.
-      protected: const std::shared_ptr<Pimpl> pimpl;
+      protected: std::shared_ptr<Pimpl> pimpl;
 
       /// \brief This field contains information to identify the entity.
-      protected: const Identity identity;
+      protected: Identity identity;
 
       /// \brief Virtual destructor
       public: virtual ~Entity() = default;
+
+      // Allow EntityPtr to cast between EntityTypes
+      template<typename> friend class EntityPtr;
     };
   }
 }

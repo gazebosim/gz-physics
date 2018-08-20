@@ -34,6 +34,9 @@ namespace mock
     using RevoluteAxis =
         typename FromPolicy<PolicyT>::template Use<AngularVector>;
 
+    using PrismaticAxis =
+        typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
     using Pose =
         typename FromPolicy<PolicyT>::template Use<Pose>;
 
@@ -126,14 +129,6 @@ namespace mock
       return this->GenerateIdentity(this->jointIdToEntity[_index]);
     }
 
-    Identity CastToRevoluteJoint(const std::size_t _id) override
-    {
-      if (idToRevoluteJointProperties.count(_id) > 0)
-        return this->GenerateIdentity(_id);
-
-      return this->GenerateInvalidId();
-    }
-
     Identity CastToRevoluteJoint(const std::size_t _id) const override
     {
       if (idToRevoluteJointProperties.count(_id) > 0)
@@ -151,6 +146,36 @@ namespace mock
     RevoluteAxis GetRevoluteJointAxis(std::size_t _id) const override
     {
       return idToRevoluteJointProperties.at(_id).axis;
+    }
+
+    Identity CastToPrismaticJoint(const std::size_t /*_id*/) const override
+    {
+      // TODO(MXG): Implement this
+      return this->GenerateInvalidId();
+    }
+
+    void SetPrismaticJointAxis(
+        std::size_t /*_id*/, const PrismaticAxis &/*_axis*/) override
+    {
+      // TODO(MXG): Implement this
+    }
+
+    PrismaticAxis GetPrismaticJointAxis(std::size_t /*_id*/) const override
+    {
+      // TODO(MXG): Implement this
+      return PrismaticAxis::UnitZ();
+    }
+
+    Identity CastToFreeJoint(const std::size_t /*_id*/) const override
+    {
+      // TODO(MXG): Implement this
+      return this->GenerateInvalidId();
+    }
+
+    void SetFreeJointTransform(
+        const std::size_t /*_id*/, const Pose &/*_pose*/) override
+    {
+      // TODO(MXG): Implement this
     }
 
     FrameData FrameDataRelativeToWorld(const FrameID &_id) const override
