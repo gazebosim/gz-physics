@@ -40,11 +40,11 @@ namespace ignition
       {
         /// \brief An implementation class should call this function whenever it
         /// wants to generate an identity for an Entity.
-        protected: static Identity GenerateIdentity(
+        protected: Identity GenerateIdentity(
             std::size_t _id,
-            const std::shared_ptr<const void> &_ref = nullptr);
+            const std::shared_ptr<const void> &_ref = nullptr) const;
 
-        protected: static Identity GenerateInvalidId();
+        protected: Identity GenerateInvalidId() const;
       };
     }
 

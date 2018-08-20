@@ -34,7 +34,7 @@ namespace ignition
     struct RequestEngine
     {
       // Forward declaration of the Engine type that will be returned
-      using EnginePtr = EnginePtr<FeaturePolicyT, FeatureListT>;
+      using EnginePtrType = EnginePtr<FeaturePolicyT, FeatureListT>;
 
       // Tuple of features that are being requested
       using Features = typename FeatureListT::Features;
@@ -56,7 +56,7 @@ namespace ignition
       /// this will be a nullptr. MissingFeatureNames() can be used to inspect
       /// which features are missing.
       template <typename PtrT>
-      static EnginePtr From(
+      static EnginePtrType From(
           const PtrT &_pimpl,
           const std::size_t _engineID = 0);
 
