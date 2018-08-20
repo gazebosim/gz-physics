@@ -82,8 +82,6 @@
       : public virtual ::ignition::physics::Feature::Implementation<PolicyT> \
     { \
       public: virtual ::ignition::physics::Identity CastTo ## X( \
-        std::size_t _id) = 0; \
-      public: virtual ::ignition::physics::Identity CastTo ## X( \
         std::size_t _id) const = 0; \
     }; \
   }; \

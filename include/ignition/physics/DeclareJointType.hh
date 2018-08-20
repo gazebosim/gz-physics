@@ -31,6 +31,8 @@
 /// class CustomJointTypeCast
 ///  - A Feature class that allows plain Joint objects to downcast themselves to
 ///    CustomJointType, as long as it is truly an instance of a CustomJointType.
+///    This class provides the function Joint::CastToCustomJointType() when
+///    added to a Joint's FeatureList.
 ///
 /// template<P, F> class CustomJointType
 ///  - An Entity class that includes the API of both the plain Joint class and
@@ -42,6 +44,15 @@
 /// template <F> class CustomJointType2f
 ///  - Similar to CustomJointType<P,F>, except P is replaced with the predefined
 ///    Feature Policies.
+///
+/// Physics engine plugin developers must implement the virtual function
+///
+/// \code
+/// ignition::physics::Identity CastToCustomJointType(std::size_t _id) const
+/// \endcode
+///
+/// if their physics engine plugin wants to be able to provide CustomJointType
+/// features.
 #define IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType ) \
   DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType )
 
