@@ -658,11 +658,11 @@ namespace ignition
         /// world coordinates. Note that this does not work for the transform
         /// property; it is only meant for linear/angular velocity/acceleration.
         public: template <typename PropertyType,
-                          typename PropertySpace,
-                          PropertyType Quantity::*property>
+                          typename PropertySpace>
         static void ResolvePropertyToWorldCoordinates(
           Quantity &_output, const FrameDataType &_input,
-          const RotationType &_currentCoordinates)
+          const RotationType &_currentCoordinates,
+          PropertyType Quantity::*property)
         {
           _output.*property =
               PropertySpace::ResolveToWorldCoordinates(
@@ -673,12 +673,12 @@ namespace ignition
         /// target coordinates. Note that this does not work for the transform
         /// property; it is only meant for linear/angular velocity/acceleration.
         public: template <typename PropertyType,
-                          typename PropertySpace,
-                          PropertyType Quantity::*property>
+                          typename PropertySpace>
         static void ResolvePropertyToTargetCoordinates(
           Quantity &_output, const FrameDataType &_input,
           const RotationType &_currentCoordinates,
-          const RotationType &_targetCoordinates)
+          const RotationType &_targetCoordinates,
+          PropertyType Quantity::*property)
         {
           _output.*property =
               PropertySpace::ResolveToTargetCoordinates(
@@ -697,24 +697,24 @@ namespace ignition
                 _inputFrameData.pose, _currentCoordinates);
 
           ResolvePropertyToWorldCoordinates<
-              LinearVectorType, LinearVectorSpaceType,
-              &Quantity::linearVelocity>(
-                resultFrameData, _inputFrameData, _currentCoordinates);
+              LinearVectorType, LinearVectorSpaceType>(
+                resultFrameData, _inputFrameData, _currentCoordinates,
+                &Quantity::linearVelocity);
 
           ResolvePropertyToWorldCoordinates<
-              LinearVectorType, LinearVectorSpaceType,
-              &Quantity::linearAcceleration>(
-                resultFrameData, _inputFrameData, _currentCoordinates);
+              LinearVectorType, LinearVectorSpaceType>(
+                resultFrameData, _inputFrameData, _currentCoordinates,
+                &Quantity::linearAcceleration);
 
           ResolvePropertyToWorldCoordinates<
-              AngularVectorType, AngularVectorSpaceType,
-              &Quantity::angularVelocity>(
-                resultFrameData, _inputFrameData, _currentCoordinates);
+              AngularVectorType, AngularVectorSpaceType>(
+                resultFrameData, _inputFrameData, _currentCoordinates,
+                &Quantity::angularVelocity);
 
           ResolvePropertyToWorldCoordinates<
-              AngularVectorType, AngularVectorSpaceType,
-              &Quantity::angularAcceleration>(
-                resultFrameData, _inputFrameData, _currentCoordinates);
+              AngularVectorType, AngularVectorSpaceType>(
+                resultFrameData, _inputFrameData, _currentCoordinates,
+                &Quantity::angularAcceleration);
 
           return resultFrameData;
         }
@@ -733,28 +733,28 @@ namespace ignition
                 _targetCoordinates);
 
           ResolvePropertyToTargetCoordinates<
-              LinearVectorType, LinearVectorSpaceType,
-              &Quantity::linearVelocity>(
+              LinearVectorType, LinearVectorSpaceType>(
                 resultFrameData, _inputFrameData,
-                _currentCoordinates, _targetCoordinates);
+                _currentCoordinates, _targetCoordinates,
+                &Quantity::linearVelocity);
 
           ResolvePropertyToTargetCoordinates<
-              LinearVectorType, LinearVectorSpaceType,
-              &Quantity::linearAcceleration>(
+              LinearVectorType, LinearVectorSpaceType>(
                 resultFrameData, _inputFrameData,
-                _currentCoordinates, _targetCoordinates);
+                _currentCoordinates, _targetCoordinates,
+                &Quantity::linearAcceleration);
 
           ResolvePropertyToTargetCoordinates<
-              AngularVectorType, AngularVectorSpaceType,
-              &Quantity::angularVelocity>(
+              AngularVectorType, AngularVectorSpaceType>(
                 resultFrameData, _inputFrameData,
-                _currentCoordinates, _targetCoordinates);
+                _currentCoordinates, _targetCoordinates,
+                &Quantity::angularVelocity);
 
           ResolvePropertyToTargetCoordinates<
-              AngularVectorType, AngularVectorSpaceType,
-              &Quantity::angularAcceleration>(
+              AngularVectorType, AngularVectorSpaceType>(
                 resultFrameData, _inputFrameData,
-                _currentCoordinates, _targetCoordinates);
+                _currentCoordinates, _targetCoordinates,
+                &Quantity::angularAcceleration);
 
           return resultFrameData;
         }
