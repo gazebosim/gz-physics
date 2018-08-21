@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
 #define IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
 
+#include <memory>
+#include <utility>
+
 #define DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, P) \
   template <typename FeaturesT> \
   using X ## P = X::Using<FeaturePolicy ## P, FeaturesT>;
