@@ -30,16 +30,35 @@
     \
     public: template <typename PolicyT, typename FeaturesT> \
     class Using : \
-      public virtual detail::Aggregate<Select ## X, FeaturesT> \
-                               ::template type<PolicyT, FeaturesT>, \
-      public virtual detail::Aggregate<detail::JointSelector, FeaturesT> \
-                               ::template type<PolicyT, FeaturesT> \
+      public virtual ::ignition::physics::detail::Aggregate< \
+        Select ## X, FeaturesT>:: \
+            template type<PolicyT, FeaturesT>, \
+      public virtual ::ignition::physics::detail::Aggregate< \
+        ::ignition::physics::detail::JointSelector, FeaturesT>:: \
+            template type<PolicyT, FeaturesT> \
     { \
       public: using Base = ::ignition::physics::Entity<PolicyT, FeaturesT>; \
     \
       public: Using(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
                     const ::ignition::physics::Identity &_identity) \
         : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
+      public: Using() = default; \
+      public: Using(const Using&) = default; \
+      public: Using(Using&&) = default; \
+      \
+      /* We customize these operators because of virtual inheritance */ \
+      public: Using &operator=(const Using &_other) \
+      { \
+        static_cast<::ignition::physics::Entity<PolicyT, FeaturesT>&>(*this) = \
+            _other; \
+        return *this; \
+      } \
+      public: Using &operator=(Using &&_other) \
+      { \
+        static_cast<::ignition::physics::Entity<PolicyT, FeaturesT>&>(*this) = \
+            std::move(_other); \
+        return *this; \
+      } \
     }; \
   \
     template <typename PolicyT, typename FeaturesT> \
