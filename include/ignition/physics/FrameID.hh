@@ -85,20 +85,27 @@ namespace ignition
       /// ensure that your physics engine of choice will behave as desired.
       public: bool IsReferenceCounted() const;
 
-      /// \brief Private constructor. To obtain a FrameID, it must be given by
-      /// the physics engine. Different physics engines may provide FrameIDs
-      /// through different interfaces.
+      /// \brief Private constructor. Object types that express frame semantics
+      /// will be able to produce a FrameID by passing their own identity into
+      /// this constructor. They can also implicitly cast themselves into a
+      /// FrameID object.
       private: explicit FrameID(const Identity &_identity);
 
+      /// \brief Special enum for constructing the singleton World FrameID
       private: enum WorldConstructorArg { ConstructWorld };
 
+      /// \brief Private constructor for creating the singleton World FrameID
       private: explicit FrameID(WorldConstructorArg);
 
       // Friendship declaration
       friend class FrameSemantics;
 
+      /// \brief Integer value of the entity that this FrameID is tied to
       private: std::size_t id;
 
+      /// \brief Reference counter for the entity that this FrameID is tied to.
+      /// Objects that don't support reference counting will leave this as a
+      /// nullptr.
       private: std::shared_ptr<const void> ref;
     };
   }
