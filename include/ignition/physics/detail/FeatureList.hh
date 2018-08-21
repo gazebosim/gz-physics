@@ -23,6 +23,7 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FeaturePolicy.hh>
@@ -281,7 +282,27 @@ namespace ignition
         class type
             : public virtual Selector<F1>::template type<T...>,
               public virtual Aggregate<
-                  Selector, std::tuple<Remaining...>>::template type<T...> { };
+                  Selector, std::tuple<Remaining...>>::template type<T...>
+        {
+          public: type() = default;
+          public: type(const type&) = default;
+          public: type(type&&) = default;
+
+          // These need special definitions due to virtual inheritance. The base
+          // Entity<P,F> class is the only class in the hierarchy that contains
+          // any data, so it is sufficient to call its assignment operators
+          // directly.
+          public: type &operator=(const type &_other)
+          {
+            static_cast<Entity<T...>&>(*this) = _other;
+            return *this;
+          }
+          public: type &operator=(type &&_other)
+          {
+            static_cast<Entity<T...>&>(*this) = std::move(_other);
+            return *this;
+          }
+        };
       };
 
       /// \private Terminate the recursion

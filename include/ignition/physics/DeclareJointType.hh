@@ -42,7 +42,7 @@
 /// template <F> class CustomJointType2f
 ///  - Similar to CustomJointType<P,F>, except P is replaced with the predefined
 ///    Feature Policies.
-#define IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType ) \
-  DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType )
+#define IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType) \
+  DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType)
 
 #endif
