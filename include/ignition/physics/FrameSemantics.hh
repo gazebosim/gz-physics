@@ -59,8 +59,8 @@ namespace ignition
         public: template <typename FQ>
         typename FQ::Quantity Resolve(
           const FQ &_quantity,
-          const FrameID _relativeTo,
-          const FrameID _inCoordinatesOf) const;
+          const FrameID &_relativeTo,
+          const FrameID &_inCoordinatesOf) const;
 
         /// \brief This overload causes the World Frame to be used as the
         /// default frame when relativeTo is not specified. It also causes the
@@ -81,7 +81,7 @@ namespace ignition
         public: template <typename FQ>
         typename FQ::Quantity Resolve(
           const FQ &_quantity,
-          const FrameID _relativeTo = FrameID::World()) const;
+          const FrameID &_relativeTo = FrameID::World()) const;
 
         /// \brief Create a new FramedQuantity which expresses the input
         /// quantity in terms of a new parent frame. Note that the returned
@@ -89,7 +89,7 @@ namespace ignition
         /// its new parent frame.
         public: template <typename FQ>
         FQ Reframe(const FQ &_quantity,
-                   const FrameID _withRespectTo = FrameID::World()) const;
+                   const FrameID &_withRespectTo = FrameID::World()) const;
 
         template <typename, typename> friend class FrameSemantics::Frame;
       };
@@ -162,10 +162,7 @@ namespace ignition
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
-
-      public: template <typename Policy, typename Features>
-      class Link : public virtual FrameSemantics::Frame<Policy, Features> { };
+      using Link = FrameSemantics::Frame<Policy, Features>;
     };
 
     /////////////////////////////////////////////////
@@ -174,10 +171,7 @@ namespace ignition
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
-
-      public: template <typename Policy, typename Features>
-      class Joint : public virtual FrameSemantics::Frame<Policy, Features>{ };
+      using Joint = FrameSemantics::Frame<Policy, Features>;
     };
 
     /////////////////////////////////////////////////
@@ -186,10 +180,7 @@ namespace ignition
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
-
-      public: template <typename Policy, typename Features>
-      class Model : public virtual FrameSemantics::Frame<Policy, Features>{ };
+      using Model = FrameSemantics::Frame<Policy, Features>;
     };
 
     /////////////////////////////////////////////////
@@ -199,8 +190,10 @@ namespace ignition
           public virtual JointFrameSemantics,
           public virtual ModelFrameSemantics
     {
+      // This alias is needed in order to disambiguate which Engine class to use
+      // from the base classes.
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
+      using Engine = FrameSemantics::Engine<Policy, Features>;
     };
   }
 }
