@@ -149,10 +149,7 @@ namespace ignition
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
-
-      public: template <typename Policy, typename Features>
-      class Link : public virtual FrameSemantics::Frame<Policy, Features> { };
+      using Link = FrameSemantics::Frame<Policy, Features>;
     };
 
     /////////////////////////////////////////////////
@@ -161,10 +158,7 @@ namespace ignition
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
-
-      public: template <typename Policy, typename Features>
-      class Joint : public virtual FrameSemantics::Frame<Policy, Features>{ };
+      using Joint = FrameSemantics::Frame<Policy, Features>;
     };
 
     /////////////////////////////////////////////////
@@ -173,10 +167,7 @@ namespace ignition
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
-
-      public: template <typename Policy, typename Features>
-      class Model : public virtual FrameSemantics::Frame<Policy, Features>{ };
+      using Model = FrameSemantics::Frame<Policy, Features>;
     };
 
     /////////////////////////////////////////////////
@@ -186,8 +177,10 @@ namespace ignition
           public virtual JointFrameSemantics,
           public virtual ModelFrameSemantics
     {
+      // This alias is needed in order to disambiguate which Engine class to use
+      // from the base classes.
       public: template <typename Policy, typename Features>
-      class Engine : public virtual FrameSemantics::Engine<Policy, Features>{ };
+      using Engine = FrameSemantics::Engine<Policy, Features>;
     };
   }
 }
