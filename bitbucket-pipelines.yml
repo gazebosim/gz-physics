@@ -18,7 +18,7 @@ pipelines:
             libignition-math5-dev
             libeigen3-dev
           # Use the branch of ign-cmake needed by ign-plugin WarningSuppression_CoreDirectory
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b WarningSuppression_CoreDirectory
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b gz11
           - cd ign-cmake
           - mkdir build
           - cd build
