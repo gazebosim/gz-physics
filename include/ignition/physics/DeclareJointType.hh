@@ -53,7 +53,7 @@
 ///
 /// if their physics engine plugin wants to be able to provide CustomJointType
 /// features.
-#define IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType ) \
-  DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE( CustomJointType )
+#define IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType) \
+  DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType)
 
 #endif

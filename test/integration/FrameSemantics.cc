@@ -152,9 +152,6 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
   using FrameData = FrameData<Scalar, Dim>;
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
-  using Link = ignition::physics::Link<PolicyT, mock::MockFrameSemanticsList>;
-//  using LinkPtr = ;
-
   using ConstJointPtr =
     ignition::physics::ConstJointPtr<PolicyT, mock::MockFrameSemanticsList>;
 
@@ -584,14 +581,8 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
 
   using FrameData = FrameData<Scalar, Dim>;
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
-  // using Pose = Pose<Scalar, Dim>;
   using LinearVector = LinearVector<Scalar, Dim>;
   using AngularVector = AngularVector<Scalar, Dim>;
-  // using Rotation = Rotation<Scalar, Dim>;
-  // using FramedPose = ignition::physics::FramedPose<Scalar, Dim>;
-  // using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
-  // using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
-  // using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
 
   const FrameID World = FrameID::World();
 
@@ -610,16 +601,22 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   const Scalar wheelRotationRate = pivotRotationRate
                                  * pivotLength / wheelRadius;
 
+  // Create a transform from the world to Frame Base. We do this to have better
+  // coverage of FramedQuantities
+  FrameData T_Base;
+  const RelativeFrameData O_T_Base(World, T_Base);
+  const FrameID Base = *fs->CreateLink("Base", fs->Resolve(O_T_Base, World));
+
   // Create a transform from the world to Frame A
   const LinearVector axisZ = {0, 0, 1};
   FrameData T_A;
   T_A.pose.translation() = LinearVector(0, 0, pivotHeight);
   T_A.pose.rotate(Eigen::AngleAxis<Scalar>(pivotAngle, axisZ));
   T_A.angularVelocity = AngularVector(0, 0, pivotRotationRate);
-  const RelativeFrameData O_T_A(World, T_A);
+  const RelativeFrameData Base_T_A(Base, T_A);
 
   // Instantiate Frame A as a Link
-  const FrameID A = *fs->CreateLink("A", fs->Resolve(O_T_A, World));
+  const FrameID A = *fs->CreateLink("A", fs->Resolve(Base_T_A, World));
 
   // Create a transform from Frame A to Frame B
   FrameData T_B;
@@ -647,10 +644,10 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   const FrameID D = *fs->CreateJoint("D", fs->Resolve(C_T_D, World));
 
   // Get ABCD FrameData relative to world in coordinates of frame A
-  const FrameData A_A = fs->Resolve(O_T_A, World, A);
-  const FrameData B_A = fs->Resolve(A_T_B, World, A);
-  const FrameData C_A = fs->Resolve(B_T_C, World, A);
-  const FrameData D_A = fs->Resolve(C_T_D, World, A);
+  const FrameData A_A = fs->Resolve(Base_T_A, Base, A);
+  const FrameData B_A = fs->Resolve(A_T_B, Base, A);
+  const FrameData C_A = fs->Resolve(B_T_C, Base, A);
+  const FrameData D_A = fs->Resolve(C_T_D, Base, A);
 
   // position:
   //  xy: A = [0, 0]
@@ -677,16 +674,6 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   //  z: D == 0.0
   EXPECT_NEAR(D_A.pose.translation()[2], 0.0, _tolerance);
 
-  //  A==D==0: no relative linear velocity at pivot or wheel contact point
-  EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
-  EXPECT_TRUE(Equal(A_A.linearVelocity, D_A.linearVelocity, _tolerance));
-  //  B==C
-  EXPECT_TRUE(Equal(B_A.linearVelocity, C_A.linearVelocity, _tolerance));
-  EXPECT_NEAR(B_A.linearVelocity[0], 0.0, _tolerance);
-  EXPECT_NEAR(B_A.linearVelocity[1], pivotLength*pivotRotationRate, _tolerance);
-  EXPECT_NEAR(B_A.linearVelocity[2], 0.0, _tolerance);
-
-  // linear velocity:
   //  A==D==0: no relative linear velocity at pivot or wheel contact point
   EXPECT_EQ(A_A.linearVelocity, LinearVector::Zero());
   EXPECT_TRUE(Equal(A_A.linearVelocity, D_A.linearVelocity, _tolerance));
@@ -740,6 +727,87 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   EXPECT_NEAR(C_A.angularAcceleration[0], 0.0, _tolerance);
   EXPECT_NEAR(C_A.angularAcceleration[1], accelY, _tolerance);
   EXPECT_NEAR(C_A.angularAcceleration[2], 0.0, _tolerance);
+
+  const FrameData A_O = fs->Resolve(Base_T_A, Base, World);
+  const FrameData B_O = fs->Resolve(A_T_B, Base, World);
+  const FrameData C_O = fs->Resolve(B_T_C, Base, World);
+  const FrameData D_O = fs->Resolve(C_T_D, Base, World);
+
+  EXPECT_NEAR(A_O.pose.translation()[0], 0.0, _tolerance);
+  EXPECT_NEAR(A_O.pose.translation()[1], 0.0, _tolerance);
+  //  xy: B = [pivotLength, 0]
+  EXPECT_NEAR(B_O.pose.translation()[0], pivotLength * cosPivot, _tolerance);
+  EXPECT_NEAR(B_O.pose.translation()[1], pivotLength * sinPivot, _tolerance);
+  //  xy: B==C==D
+  EXPECT_NEAR(B_O.pose.translation()[0],
+              C_O.pose.translation()[0], _tolerance);
+  EXPECT_NEAR(B_O.pose.translation()[1],
+              C_O.pose.translation()[1], _tolerance);
+  EXPECT_NEAR(B_O.pose.translation()[0],
+              D_O.pose.translation()[0], _tolerance);
+  EXPECT_NEAR(B_O.pose.translation()[1],
+              D_O.pose.translation()[1], _tolerance);
+  // //  z: A==B
+  EXPECT_NEAR(A_O.pose.translation()[2], pivotHeight, _tolerance);
+  EXPECT_NEAR(A_O.pose.translation()[2],
+              B_O.pose.translation()[2], _tolerance);
+  //  z: C == wheelRadius
+  EXPECT_NEAR(C_O.pose.translation()[2], wheelRadius, _tolerance);
+  //  z: D == 0.0
+  EXPECT_NEAR(D_O.pose.translation()[2], 0.0, _tolerance);
+
+  // linear velocity:
+  //  A==D==0: no relative linear velocity at pivot or wheel contact point
+  EXPECT_EQ(A_O.linearVelocity, LinearVector::Zero());
+  EXPECT_TRUE(Equal(A_O.linearVelocity, D_O.linearVelocity, _tolerance));
+  //  B==C
+  EXPECT_TRUE(Equal(B_O.linearVelocity, C_O.linearVelocity, _tolerance));
+  EXPECT_NEAR(B_O.linearVelocity[0],
+      -sinPivot * pivotLength * pivotRotationRate, _tolerance);
+  EXPECT_NEAR(B_O.linearVelocity[1],
+      cosPivot * pivotLength * pivotRotationRate, _tolerance);
+  EXPECT_NEAR(B_O.linearVelocity[2], 0.0, _tolerance);
+
+  // // angular velocity: A==B, C==D
+  EXPECT_TRUE(Equal(A_O.angularVelocity, B_O.angularVelocity, _tolerance));
+  EXPECT_NEAR(A_O.angularVelocity[0], 0.0, _tolerance);
+  EXPECT_NEAR(A_O.angularVelocity[1], 0.0, _tolerance);
+  EXPECT_NEAR(A_O.angularVelocity[2], pivotRotationRate, _tolerance);
+  EXPECT_TRUE(Equal(C_O.angularVelocity, D_O.angularVelocity, _tolerance));
+  EXPECT_NEAR(C_O.angularVelocity[0], -cosPivot*wheelRotationRate, _tolerance);
+  EXPECT_NEAR(C_O.angularVelocity[1], -sinPivot*wheelRotationRate, _tolerance);
+  EXPECT_NEAR(C_O.angularVelocity[2], pivotRotationRate, _tolerance);
+
+  // linear acceleration:
+  //  A==0
+  EXPECT_EQ(A_O.linearAcceleration, LinearVector::Zero());
+  //  B centripetal acceleration torward pivot
+  EXPECT_NEAR(B_O.linearAcceleration[0], cosPivot * accelX, _tolerance);
+  EXPECT_NEAR(B_O.linearAcceleration[1], sinPivot * accelX, _tolerance);
+  EXPECT_NEAR(B_O.linearAcceleration[2], 0.0, _tolerance);
+  //  C == B
+  EXPECT_TRUE(Equal(B_O.linearAcceleration,
+                    C_O.linearAcceleration, _tolerance));
+  // See ipython notebook deriving the following nonintuitive condition:
+  //  D[0] == -B[0]
+  //  D[1] == -B[1]
+  EXPECT_NEAR(D_O.linearAcceleration[0],
+             -B_O.linearAcceleration[0], _tolerance);
+  EXPECT_NEAR(D_O.linearAcceleration[1],
+             -B_O.linearAcceleration[1], _tolerance);
+  //  D[2] centripetal acceleration toward wheel center
+  EXPECT_NEAR(D_O.linearAcceleration[2], accelZ, _tolerance);
+
+  // angular acceleration
+  //  A==B==0
+  EXPECT_EQ(A_O.angularAcceleration, LinearVector::Zero());
+  EXPECT_EQ(B_O.angularAcceleration, LinearVector::Zero());
+  //  C==D
+  EXPECT_TRUE(Equal(C_O.angularAcceleration,
+                    D_O.angularAcceleration, _tolerance));
+  EXPECT_NEAR(C_O.angularAcceleration[0], -sinPivot * accelY, _tolerance);
+  EXPECT_NEAR(C_O.angularAcceleration[1], cosPivot * accelY, _tolerance);
+  EXPECT_NEAR(C_O.angularAcceleration[2], 0.0, _tolerance);
 }
 
 /////////////////////////////////////////////////
