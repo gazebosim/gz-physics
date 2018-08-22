@@ -20,6 +20,7 @@
 
 #include <memory>
 
+#include <ignition/physics/Export.hh>
 #include <ignition/physics/detail/Identity.hh>
 
 namespace ignition
@@ -41,7 +42,7 @@ namespace ignition
     /// be used to check whether the physics engine is performing reference
     /// counting. The behavior of a frame which has been removed from simulation
     /// but not deleted is undefined.
-    class FrameID final
+    class IGNITION_PHYSICS_VISIBLE FrameID final
     {
       // Comparison operators
       public: bool operator ==(const FrameID &_other) const;
