@@ -152,6 +152,7 @@ namespace ignition
     template <typename Scalar, std::size_t Dim>
     using FramedPose = FramedQuantity<
         Pose<Scalar, Dim>, Dim, detail::SESpace<Scalar, Dim>>;
+    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPose)
 
     /////////////////////////////////////////////////
@@ -159,6 +160,7 @@ namespace ignition
     using FramedRotationMatrix = FramedQuantity<
         Eigen::Matrix<Scalar, Dim, Dim>, Dim,
         detail::SOSpace<Scalar, Dim, Eigen::Matrix<Scalar, Dim, Dim>>>;
+    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedRotationMatrix)
 
     /////////////////////////////////////////////////
@@ -175,12 +177,14 @@ namespace ignition
     template <typename Scalar, std::size_t Dim>
     using FramedPosition = FramedQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::EuclideanSpace<Scalar, Dim>>;
+    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPosition)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using FramedForce = FramedQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
+    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedForce)
 
     /////////////////////////////////////////////////
@@ -188,12 +192,14 @@ namespace ignition
     using FramedTorque = FramedQuantity<
         AngularVector<Scalar, Dim>, Dim,
         detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
+    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedTorque)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeFrameData = FramedQuantity<
         FrameData<Scalar, Dim>, Dim, detail::FrameSpace<Scalar, Dim>>;
+    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeFrameData)
   }
 }

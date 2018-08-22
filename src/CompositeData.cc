@@ -422,6 +422,9 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
+    // We get a false positive here due to a cppcheck bug:
+    // https://trac.cppcheck.net/ticket/6675
+    // cppcheck-suppress uninitMemberVar
     CompositeData::CompositeData(const CompositeData &_other)
       : CompositeData()
     {
@@ -436,6 +439,14 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
+    //   We get a complaint from cppcheck that numEntries and numQueries are not
+    //   getting assigned by this function, but that concern is taken care of
+    //   within the Copy(~) function.
+    // cppcheck-suppress operatorEqVarError
+    //
+    //   This is an unnecessary warning from cppcheck, since *this is being
+    //   returned by Copy(~)
+    // cppcheck-suppress operatorEqRetRefThis
     CompositeData& CompositeData::operator=(const CompositeData &_other)
     {
       return this->Copy(_other);
