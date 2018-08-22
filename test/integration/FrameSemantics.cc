@@ -74,7 +74,7 @@ struct Rotation
       Vector<Scalar, Dim> axis = Vector<Scalar, Dim>::Zero();
       axis[i] = 1.0;
       _pose.rotate(Eigen::AngleAxis<Scalar>(
-                     static_cast<Scalar>(Rand::DblUniform(0, 2*M_PI)), axis));
+                     static_cast<Scalar>(Rand::DblUniform(0, 2*IGN_PI)), axis));
     }
   }
 
@@ -109,7 +109,7 @@ struct Rotation<Scalar, 2>
   /// \brief Randomize the orientation of a 2D pose
   static void Randomize(ignition::physics::Pose<Scalar, 2> &_pose)
   {
-    _pose.rotate(Eigen::Rotation2D<Scalar>(Rand::DblUniform(0, 2*M_PI)));
+    _pose.rotate(Eigen::Rotation2D<Scalar>(Rand::DblUniform(0, 2*IGN_PI)));
   }
 
   static bool Equal(
