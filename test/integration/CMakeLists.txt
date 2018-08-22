@@ -11,6 +11,6 @@ ign_build_tests(
 if (BUILD_TESTING)
   target_compile_definitions(INTEGRATION_FeatureSystem PRIVATE
     "MockEntities_LIB=\"$<TARGET_FILE:MockEntities>\"")
-endif()
 
-add_dependencies(INTEGRATION_FeatureSystem MockEntities)
+  add_dependencies(INTEGRATION_FeatureSystem MockEntities)
+endif()
