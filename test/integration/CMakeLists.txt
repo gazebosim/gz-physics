@@ -8,7 +8,9 @@ ign_build_tests(
     Eigen3::Eigen
     ignition-plugin${IGN_PLUGIN_VER}::loader)
 
-target_compile_definitions(INTEGRATION_FeatureSystem PRIVATE
-  "MockEntities_LIB=\"$<TARGET_FILE:MockEntities>\"")
+if (BUILD_TESTING)
+  target_compile_definitions(INTEGRATION_FeatureSystem PRIVATE
+    "MockEntities_LIB=\"$<TARGET_FILE:MockEntities>\"")
+endif
 
 add_dependencies(INTEGRATION_FeatureSystem MockEntities)
