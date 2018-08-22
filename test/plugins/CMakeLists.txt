@@ -5,5 +5,7 @@ foreach(plugin MockEntities MockFrames)
   target_link_libraries(${plugin}
     PRIVATE
       ${PROJECT_LIBRARY_TARGET_NAME})
-  target_compile_options(${plugin} PRIVATE -fkeep-inline-functions)
+  if (NOT MSVC)
+    target_compile_options(${plugin} PRIVATE -fkeep-inline-functions)
+  endif()
 endforeach()
