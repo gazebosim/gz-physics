@@ -43,6 +43,38 @@ struct ShapeInfo
   Eigen::Isometry3d tf_offset;
 };
 
+template <typename Value1, typename Key2>
+struct TwoWayMap
+{
+  std::unordered_map<std::size_t, Value1> idToObject;
+  std::unordered_map<Key2, std::size_t> objectToID;
+
+  Value1 &operator[](const std::size_t _id)
+  {
+    return idToObject[_id];
+  }
+
+  const Value1 &operator[](const std::size_t _id) const
+  {
+    return idToObject[_id];
+  }
+
+  Value1 &at(const std::size_t _id)
+  {
+    return idToObject.at(_id);
+  }
+
+  const Value1 &at(const std::size_t _id) const
+  {
+    return idToObject.at(_id);
+  }
+
+  std::size_t IdentityOf(const Key2 &_key) const
+  {
+    return objectToID[_key];
+  }
+};
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
@@ -59,8 +91,21 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: std::size_t entityCount = 0;
 
-  public: std::unordered_map<std::size_t, dart::simulation::WorldPtr> worlds;
-  public: std::unordered_map<std::size_t, ModelInfo> models;
+  public: inline std::tuple<std::size_t, dart::simulation::WorldPtr> AddWorld(
+      const std::string &_name)
+  {
+    const std::size_t id = GetNextEntity();
+    const dart::simulation::WorldPtr world =
+        std::make_shared<dart::simulation::World>(_name);
+
+    worlds.idToObject[id] = world;
+    worlds.objectToID[_name] = id;
+
+    return std::make_tuple(id, world);
+  }
+
+  public: TwoWayMap<dart::simulation::WorldPtr, std::string> worlds;
+  public: TwoWayMap<ModelInfo, dart::dynamics::SkeletonPtr> models;
   public: std::unordered_map<std::size_t, dart::dynamics::BodyNodePtr> links;
   public: std::unordered_map<std::size_t, dart::dynamics::JointPtr> joints;
   public: std::unordered_map<std::size_t, ShapeInfo> shapes;
