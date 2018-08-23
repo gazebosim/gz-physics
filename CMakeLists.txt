@@ -77,6 +77,5 @@ ign_create_packages()
 #============================================================================
 ign_create_docs(
   TAGFILES
-    "${IGNITION-COMMON_DOXYGEN_TAGFILE} = ${IGNITION-COMMON_API_URL}"
     "${IGNITION-MATH_DOXYGEN_TAGFILE} = ${IGNITION-MATH_API_URL}"
   )

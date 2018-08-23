@@ -44,7 +44,6 @@ namespace ignition
             Policy, typename FeatureList<FeaturesT...>::Features>::type;
       };
 
-
       /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
       /// time that each object that is being passed as a "feature" matches the
@@ -191,7 +190,7 @@ namespace ignition
       template <typename... FeatureLists>
       struct CombineLists
       {
-        using Result =
+        public: using Result =
             typename CombineListsImpl<std::tuple<>, FeatureLists...>::Result;
       };
 

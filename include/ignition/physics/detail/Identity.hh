@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <ignition/physics/Export.hh>
+#include <ignition/utilities/SuppressWarning.hh>
 
 namespace ignition
 {
