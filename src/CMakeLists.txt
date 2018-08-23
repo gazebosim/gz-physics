@@ -5,7 +5,6 @@ ign_create_core_library(SOURCES ${sources})
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
     ${ignition-math${IGN_MATH_VER}_LIBRARIES}
-#    ${ignition-common${IGN_COMMON_VER}_LIBRARIES}
     ignition-plugin${IGN_PLUGIN_VER}::register)
 
 ign_build_tests(
