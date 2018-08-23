@@ -14,26 +14,10 @@ pipelines:
           - apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
+            libignition-cmake1-dev
             libignition-math5-dev
+            libignition-plugin-dev
             libeigen3-dev
-          # Use the branch of ign-cmake needed by ign-plugin WarningSuppression_CoreDirectory
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b WarningSuppression_CoreDirectory
-          - cd ign-cmake
-          - mkdir build
-          - cd build
-          - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          - make
-          - make install
-          - cd ../..
-          # Use ign-plugin
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-plugin -b NewRegistrationScheme
-          - cd ign-plugin
-          - mkdir build
-          - cd build
-          - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          - make
-          - make install
-          - cd ../..
           # DARTsim
           - apt-add-repository -y ppa:dartsim
           - apt-get update
