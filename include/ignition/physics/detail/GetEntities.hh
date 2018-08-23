@@ -51,9 +51,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
-        const std::size_t _index) -> WorldPtr
+        const std::size_t _index) -> WorldPtrType
     {
-      return WorldPtr(this->pimpl,
+      return WorldPtrType(this->pimpl,
                       this->template Interface<GetEntities>()
                           ->GetWorld(this->identity, _index));
     }
@@ -61,9 +61,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
-        const std::size_t _index) const -> ConstWorldPtr
+        const std::size_t _index) const -> ConstWorldPtrType
     {
-      return ConstWorldPtr(this->pimpl,
+      return ConstWorldPtrType(this->pimpl,
                            this->template Interface<GetEntities>()
                               ->GetWorld(this->identity, _index));
     }
@@ -71,9 +71,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
-        const std::string &_name) -> WorldPtr
+        const std::string &_name) -> WorldPtrType
     {
-      return WorldPtr(this->pimpl,
+      return WorldPtrType(this->pimpl,
                       this->template Interface<GetEntities>()
                           ->GetWorld(this->identity, _name));
     }
@@ -81,9 +81,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
-        const std::string &_name) const -> ConstWorldPtr
+        const std::string &_name) const -> ConstWorldPtrType
     {
-      return ConstWorldPtr(this->pimpl,
+      return ConstWorldPtrType(this->pimpl,
                            this->template Interface<GetEntities>()
                               ->GetWorld(this->identity, _name));
     }
@@ -116,9 +116,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::World<PolicyT, FeaturesT>::GetModel(
-        const std::size_t _index) -> ModelPtr
+        const std::size_t _index) -> ModelPtrType
     {
-      return ModelPtr(this->pimpl,
+      return ModelPtrType(this->pimpl,
                       this->template Interface<GetEntities>()
                           ->GetModel(this->identity, _index));
     }
@@ -126,9 +126,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::World<PolicyT, FeaturesT>::GetModel(
-        const std::size_t _index) const -> ConstModelPtr
+        const std::size_t _index) const -> ConstModelPtrType
     {
-      return ConstModelPtr(this->pimpl,
+      return ConstModelPtrType(this->pimpl,
                            this->template Interface<GetEntities>()
                                ->GetModel(this->identity, _index));
     }
@@ -136,9 +136,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::World<PolicyT, FeaturesT>::GetModel(
-        const std::string &_name) -> ModelPtr
+        const std::string &_name) -> ModelPtrType
     {
-      return ModelPtr(this->pimpl,
+      return ModelPtrType(this->pimpl,
                       this->template Interface<GetEntities>()
                           ->GetModel(this->identity, _name));
     }
@@ -146,9 +146,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::World<PolicyT, FeaturesT>::GetModel(
-        const std::string &_name) const -> ConstModelPtr
+        const std::string &_name) const -> ConstModelPtrType
     {
-      return ConstModelPtr(this->pimpl,
+      return ConstModelPtrType(this->pimpl,
                            this->template Interface<GetEntities>()
                                ->GetModel(this->identity, _name));
     }
@@ -180,9 +180,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
-        const std::size_t _index) -> LinkPtr
+        const std::size_t _index) -> LinkPtrType
     {
-      return LinkPtr(this->pimpl,
+      return LinkPtrType(this->pimpl,
                      this->template Interface<GetEntities>()
                         ->GetLink(this->identity, _index));
     }
@@ -190,9 +190,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
-        const std::size_t _index) const -> ConstLinkPtr
+        const std::size_t _index) const -> ConstLinkPtrType
     {
-      return ConstLinkPtr(this->pimpl,
+      return ConstLinkPtrType(this->pimpl,
                           this->template Interface<GetEntities>()
                               ->GetLink(this->identity, _index));
     }
@@ -200,9 +200,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
-        const std::string &_name) -> LinkPtr
+        const std::string &_name) -> LinkPtrType
     {
-      return LinkPtr(this->pimpl,
+      return LinkPtrType(this->pimpl,
                      this->template Interface<GetEntities>()
                          ->GetLink(this->identity, _name));
     }
@@ -210,9 +210,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
-        const std::string &_name) const -> ConstLinkPtr
+        const std::string &_name) const -> ConstLinkPtrType
     {
-      return ConstLinkPtr(this->pimpl,
+      return ConstLinkPtrType(this->pimpl,
                           this->template Interface<GetEntities>()
                               ->GetLink(this->identity, _name));
     }
@@ -228,9 +228,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
-        const std::size_t _index) -> JointPtr
+        const std::size_t _index) -> JointPtrType
     {
-      return JointPtr(this->pimpl,
+      return JointPtrType(this->pimpl,
                      this->template Interface<GetEntities>()
                         ->GetJoint(this->identity, _index));
     }
@@ -238,9 +238,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
-        const std::size_t _index) const -> ConstJointPtr
+        const std::size_t _index) const -> ConstJointPtrType
     {
-      return ConstJointPtr(this->pimpl,
+      return ConstJointPtrType(this->pimpl,
                           this->template Interface<GetEntities>()
                               ->GetJoint(this->identity, _index));
     }
@@ -248,9 +248,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
-        const std::string &_name) -> JointPtr
+        const std::string &_name) -> JointPtrType
     {
-      return JointPtr(this->pimpl,
+      return JointPtrType(this->pimpl,
                      this->template Interface<GetEntities>()
                          ->GetJoint(this->identity, _name));
     }
@@ -258,9 +258,9 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
-        const std::string &_name) const -> ConstJointPtr
+        const std::string &_name) const -> ConstJointPtrType
     {
-      return ConstJointPtr(this->pimpl,
+      return ConstJointPtrType(this->pimpl,
                           this->template Interface<GetEntities>()
                               ->GetJoint(this->identity, _name));
     }
