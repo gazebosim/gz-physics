@@ -244,10 +244,8 @@ Identity SDFFeatures::ConstructSdfWorld(
   dart::simulation::WorldPtr world =
       std::make_shared<dart::simulation::World>();
 
-  const std::size_t worldID = this->GetNextEntity();
-  worlds[worldID] = world;
+  const std::size_t worldID = this->AddWorld(world, _sdfWorld.Name());
 
-  world->setName(_sdfWorld.Name());
   world->setGravity(ignition::math::eigen3::convert(_sdfWorld.Gravity()));
 
   // TODO(MXG): Add a Physics class to the SDFormat DOM and then parse that
@@ -281,9 +279,7 @@ Identity SDFFeatures::ConstructSdfModel(
         _sdfModel.Name()+"_frame",
         math::eigen3::convert(_sdfModel.Pose()));
 
-  const std::size_t modelID = this->GetNextEntity();
-  const ModelInfo modelInfo{model, modelFrame};
-  models[modelID] = modelInfo;
+  auto [modelID, modelInfo] = this->AddModel({model, modelFrame});
 
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
@@ -370,10 +366,8 @@ Identity SDFFeatures::ConstructSdfLink(
 
   dart::dynamics::BodyNode * const bn = result.second;
 
-  const std::size_t linkID = this->GetNextEntity();
-  links[linkID] = bn;
-  const std::size_t jointID = this->GetNextEntity();
-  joints[jointID] = joint;
+  const std::size_t linkID = this->AddLink(bn);
+  this->AddJoint(joint);
 
   if (modelInfo.model->getNumBodyNodes() == 1)
   {
@@ -455,10 +449,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   node->setRelativeTransform(
         math::eigen3::convert(_collision.Pose()) * tf_shape);
 
-  const std::size_t collisionID = this->GetNextEntity();
-  shapes[collisionID] = {node, tf_shape};
-
-  return this->GenerateIdentity(collisionID);
+  return this->GenerateIdentity(this->AddShape({node, tf_shape}));
 }
 
 /////////////////////////////////////////////////
@@ -507,10 +498,7 @@ Identity SDFFeatures::ConstructSdfVisual(
           Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
   }
 
-  const std::size_t visualID = this->GetNextEntity();
-  shapes[visualID] = {node, tf_shape};
-
-  return this->GenerateIdentity(visualID);
+  return this->GenerateIdentity(this->AddShape({node, tf_shape}));
 }
 
 /////////////////////////////////////////////////
@@ -674,8 +662,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   joint->setTransformFromParentBodyNode(parent_T_prejoint_final);
 
-  const std::size_t jointID = GetNextEntity();
-  joints[jointID] = joint;
+  const std::size_t jointID = this->AddJoint(joint);
 
   return this->GenerateIdentity(jointID);
 }
