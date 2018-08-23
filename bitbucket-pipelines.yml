@@ -17,16 +17,8 @@ pipelines:
           - apt-get -y install
             libignition-cmake1-dev
             libignition-math5-dev
+            libignition-plugin-dev
             libeigen3-dev
-          # Use ign-plugin
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-plugin -b NewRegistrationScheme
-          - cd ign-plugin
-          - mkdir build
-          - cd build
-          - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          - make
-          - make install
-          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build

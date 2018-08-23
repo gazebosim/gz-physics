@@ -4,4 +4,6 @@ target_link_libraries(MockEntities
   PRIVATE
     ${PROJECT_LIBRARY_TARGET_NAME}
     Eigen3::Eigen)
-target_compile_options(MockEntities PRIVATE -fkeep-inline-functions)
+if (NOT MSVC)
+  target_compile_options(MockEntities PRIVATE -fkeep-inline-functions)
+endif()
