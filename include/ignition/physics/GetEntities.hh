@@ -26,14 +26,14 @@ namespace ignition
 {
   namespace physics
   {
-    class IGNITION_PHYSICS_VISIBLE GetEntities
+    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
       {
         // typedefs for the type of World that this engine can return.
-        public: using WorldPtr = WorldPtr<PolicyT, FeaturesT>;
-        public: using ConstWorldPtr = ConstWorldPtr<PolicyT, FeaturesT>;
+        public: using WorldPtrType = WorldPtr<PolicyT, FeaturesT>;
+        public: using ConstWorldPtrType = ConstWorldPtr<PolicyT, FeaturesT>;
 
         /// \brief Get the name of this engine. The meaning of an engine name
         /// is plugin-defined.
@@ -51,28 +51,28 @@ namespace ignition
         ///   Index of the world within this engine
         /// \return A world reference. If _index is GetWorldCount() or higher,
         /// this will be a nullptr.
-        public: WorldPtr GetWorld(std::size_t _index);
+        public: WorldPtrType GetWorld(std::size_t _index);
 
         /// \sa GetWorld(std::size_t)
-        public: ConstWorldPtr GetWorld(std::size_t _index) const;
+        public: ConstWorldPtrType GetWorld(std::size_t _index) const;
 
         /// \brief Get a world that is being managed by this engine.
         /// \param[in] _name
         ///   Name of the world
         /// \return A world reference. If a world named _name does not exist in
         /// this engine, this will be a nullptr.
-        public: WorldPtr GetWorld(const std::string &_name);
+        public: WorldPtrType GetWorld(const std::string &_name);
 
         /// \sa GetWorld(const std::string &)
-        public: ConstWorldPtr GetWorld(const std::string &_name) const;
+        public: ConstWorldPtrType GetWorld(const std::string &_name) const;
       };
 
       public: template <typename PolicyT, typename FeaturesT>
       class World : public virtual Feature::World<PolicyT, FeaturesT>
       {
         // typedefs for the type of Model that this World can return
-        public: using ModelPtr = ModelPtr<PolicyT, FeaturesT>;
-        public: using ConstModelPtr = ConstModelPtr<PolicyT, FeaturesT>;
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
 
         /// \brief Get the name of this World.
         public: const std::string &GetName() const;
@@ -88,32 +88,32 @@ namespace ignition
         ///   Index of the model within this world.
         /// \return A model reference. If _index is GetModelCount() or higher,
         /// this will be a nullptr.
-        public: ModelPtr GetModel(std::size_t _index);
+        public: ModelPtrType GetModel(std::size_t _index);
 
         /// \sa GetModel(std::size_t)
-        public: ConstModelPtr GetModel(std::size_t _index) const;
+        public: ConstModelPtrType GetModel(std::size_t _index) const;
 
         /// \brief Get a Model that exists within this World.
         /// \param[in] _name
         ///   Name of the model within this world.
         /// \return A model reference. If a model named _name does not exist in
         /// this world, this will be a nullptr.
-        public: ModelPtr GetModel(const std::string &_name);
+        public: ModelPtrType GetModel(const std::string &_name);
 
         /// \sa GetModel(const std::string &)
-        public: ConstModelPtr GetModel(const std::string &_name) const;
+        public: ConstModelPtrType GetModel(const std::string &_name) const;
       };
 
       public: template <typename PolicyT, typename FeaturesT>
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
       {
         // typedefs for the type of Link that this Model can return
-        public: using LinkPtr = LinkPtr<PolicyT, FeaturesT>;
-        public: using ConstLinkPtr = ConstLinkPtr<PolicyT, FeaturesT>;
+        public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
+        public: using ConstLinkPtrType = ConstLinkPtr<PolicyT, FeaturesT>;
 
         // typedefs for the type of Joint that this Model can return
-        public: using JointPtr = JointPtr<PolicyT, FeaturesT>;
-        public: using ConstJointPtr = ConstJointPtr<PolicyT, FeaturesT>;
+        public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
+        public: using ConstJointPtrType = ConstJointPtr<PolicyT, FeaturesT>;
 
         /// \brief Get the name of this Model
         public: const std::string &GetName() const;
@@ -129,20 +129,20 @@ namespace ignition
         ///   Index of the Link within this Model.
         /// \return A Link reference. If _index is GetLinkCount() or higher,
         /// this will be a nullptr.
-        public: LinkPtr GetLink(std::size_t _index);
+        public: LinkPtrType GetLink(std::size_t _index);
 
         /// \sa GetLink(std::size_t)
-        public: ConstLinkPtr GetLink(std::size_t _index) const;
+        public: ConstLinkPtrType GetLink(std::size_t _index) const;
 
         /// \brief Get a Link that exists within this Model.
         /// \param[in] _name
         ///   Name of the Link within this Model.
         /// \return A Link reference. If a Link named _name does not exist in
         /// this Model, this will be a nullptr.
-        public: LinkPtr GetLink(const std::string &_name);
+        public: LinkPtrType GetLink(const std::string &_name);
 
         /// \sa GetLink(const std::string &)
-        public: ConstLinkPtr GetLink(const std::string &_name) const;
+        public: ConstLinkPtrType GetLink(const std::string &_name) const;
 
         /// \brief Get the number of Joints within this Model.
         public: std::size_t GetJointCount() const;
@@ -152,20 +152,20 @@ namespace ignition
         ///   Index of the Joint within this Model.
         /// \return A Joint reference. If _index is GetJointCount() or higher,
         /// this will be a nullptr.
-        public: JointPtr GetJoint(std::size_t _index);
+        public: JointPtrType GetJoint(std::size_t _index);
 
         /// \sa GetJoint(std::size_t)
-        public: ConstJointPtr GetJoint(std::size_t _index) const;
+        public: ConstJointPtrType GetJoint(std::size_t _index) const;
 
         /// \brief Get a Joint that exists within this Model.
         /// \param[in] _name
         ///   Name of the Joint within this Model.
         /// \return A Joint reference. If a Joint named _name does not exist in
         /// this Model, this will be a nullptr.
-        public: JointPtr GetJoint(const std::string &_name);
+        public: JointPtrType GetJoint(const std::string &_name);
 
         /// \sa GetJoint(const std::string &)
-        public: ConstJointPtr GetJoint(const std::string &_name) const;
+        public: ConstJointPtrType GetJoint(const std::string &_name) const;
       };
 
       public: template <typename PolicyT, typename FeaturesT>
