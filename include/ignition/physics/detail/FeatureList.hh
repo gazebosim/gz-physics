@@ -208,7 +208,7 @@ namespace ignition
       ///
       /// This class works recursively.
       template <typename... FeatureLists>
-      class CombineLists
+      struct CombineLists
       {
         public: using Result =
             typename CombineListsImpl<std::tuple<>, FeatureLists...>::Result;
