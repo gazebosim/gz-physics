@@ -22,6 +22,7 @@
 
 #include <ignition/physics/Export.hh>
 #include <ignition/physics/detail/Identity.hh>
+#include <ignition/utilities/SuppressWarning.hh>
 
 namespace ignition
 {
@@ -107,7 +108,9 @@ namespace ignition
       /// \brief Reference counter for the entity that this FrameID is tied to.
       /// Objects that don't support reference counting will leave this as a
       /// nullptr.
+      IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
       private: std::shared_ptr<const void> ref;
+      IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
     };
   }
 }
