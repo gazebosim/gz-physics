@@ -51,11 +51,75 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorld(
-    const std::size_t, const std::string &_worldName) const
+    const std::size_t, std::size_t _worldIndex) const
 {
-
+  const std::size_t id = this->worlds.indexInParentToID[_worldIndex];
+  return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
 }
 
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorld(
+    const std::size_t, const std::string &_worldName) const
+{
+  const std::size_t id = this->worlds.IdentityOf(_worldName);
+  return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetWorldName(
+    const std::size_t _worldID) const
+{
+  return this->worlds.at(_worldID)->getName();
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetWorldIndex(
+    const std::size_t _worldID) const
+{
+  return this->worlds.idToIndexInParent.at(_worldID);
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetModelCount(
+    const std::size_t _worldID) const
+{
+  return this->worlds.at(_worldID)->getNumSkeletons();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModel(
+    const std::size_t _worldID, const std::size_t _modelIndex) const
+{
+  const DartSkeletonPtr &model =
+      this->worlds.at(_worldID)->getSkeleton(_modelIndex);
+
+  return this->GenerateIdentity(this->models.IdentityOf(model), model);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModel(
+    const std::size_t _worldID, const std::string &_modelName) const
+{
+  const DartSkeletonPtr &model =
+      this->worlds.at(_worldID)->getSkeleton(_modelName);
+
+  return this->GenerateIdentity(this->models.IdentityOf(model), model);
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetModelName(
+    const std::size_t _modelID) const
+{
+  return this->models.at(_modelID).model->getName();
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetModelIndex(
+    const std::size_t _modelID) const
+{
+  // TODO(MXG): I guess we need to store this information somewhere? Or else do
+  // a N-complexity search through World.
+}
 
 }
 }

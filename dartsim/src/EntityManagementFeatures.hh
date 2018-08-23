@@ -40,9 +40,59 @@ class EntityManagementFeatures :
   public: std::size_t GetWorldCount(const std::size_t) const override;
 
   public: Identity GetWorld(
+      const std::size_t, std::size_t _worldIndex) const override;
+
+  public: Identity GetWorld(
       const std::size_t, const std::string &_worldName) const override;
 
+  const std::string &GetWorldName(const std::size_t _worldID) const override;
 
+  std::size_t GetWorldIndex(const std::size_t _worldID) const override;
+
+  public: std::size_t GetModelCount(
+      std::size_t _worldID) const override;
+
+  public: Identity GetModel(
+      std::size_t _worldID, std::size_t _modelIndex) const override;
+
+  public: Identity GetModel(
+      std::size_t _worldID, const std::string &_modelName) const override;
+
+  public: const std::string &GetModelName(
+      std::size_t _modelID) const override;
+
+  public: std::size_t GetModelIndex(
+      std::size_t _modelID) const override;
+
+  public: std::size_t GetLinkCount(
+      std::size_t _modelID) const override;
+
+  public: Identity GetLink(
+      std::size_t _modelID, std::size_t _linkIndex) const override;
+
+  public: Identity GetLink(
+      std::size_t _modelID, const std::string &_linkName) const override;
+
+  public: std::size_t GetJointCount(
+      std::size_t _modelID) const override;
+
+  public: Identity GetJoint(
+      std::size_t _modelID, std::size_t _jointIndex) const override;
+
+  public: Identity GetJoint(
+      std::size_t _modelID, const std::string &_jointName) const override;
+
+  public: const std::string &GetLinkName(
+      std::size_t _linkID) const override;
+
+  public: std::size_t GetLinkIndex(
+      std::size_t _linkID) const override;
+
+  public: const std::string &GetJointName(
+      std::size_t _jointID) const override;
+
+  public: std::size_t GetJointIndex(
+      std::size_t _jointID) const override;
 };
 
 }

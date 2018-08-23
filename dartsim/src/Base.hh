@@ -49,12 +49,11 @@ struct TwoWayMap
   std::unordered_map<std::size_t, Value1> idToObject;
   std::unordered_map<Key2, std::size_t> objectToID;
 
-  Value1 &operator[](const std::size_t _id)
-  {
-    return idToObject[_id];
-  }
+  // Currently these two fields are only used by World
+  std::vector<std::size_t> indexInParentToID;
+  std::unordered_map<std::size_t, std::size_t> idToIndexInParent;
 
-  const Value1 &operator[](const std::size_t _id) const
+  Value1 &operator[](const std::size_t _id)
   {
     return idToObject[_id];
   }
@@ -76,7 +75,7 @@ struct TwoWayMap
 
   std::size_t IdentityOf(const Key2 &_key) const
   {
-    return objectToID[_key];
+    return objectToID.at(_key);
   }
 };
 
@@ -111,6 +110,8 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     this->worlds.idToObject[id] = _world;
     this->worlds.objectToID[_name] = id;
+    this->worlds.idToIndexInParent[id] = this->worlds.indexInParentToID.size();
+    this->worlds.indexInParentToID.push_back(id);
 
     _world->setName(_name);
 
