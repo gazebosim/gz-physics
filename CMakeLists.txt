@@ -34,9 +34,13 @@ ign_find_package(ignition-math5 REQUIRED)
 set(IGN_MATH_VER ${ignition-math5_VERSION_MAJOR})
 
 #--------------------------------------
-# Find ignition-common
-ign_find_package(ignition-common2 REQUIRED)
-set(IGN_COMMON_VER ${ignition-common2_VERSION_MAJOR})
+# Find ignition-plugin
+ign_find_package(ignition-plugin0 REQUIRED COMPONENTS all)
+set(IGN_PLUGIN_VER ${ignition-plugin0_VERSION_MAJOR})
+
+#--------------------------------------
+# Find Eigen
+ign_find_package(EIGEN3 REQUIRED)
 
 message(STATUS "-------------------------------------------\n")
 
@@ -58,6 +62,5 @@ ign_create_packages()
 #============================================================================
 ign_create_docs(
   TAGFILES
-    "${IGNITION-COMMON_DOXYGEN_TAGFILE} = ${IGNITION-COMMON_API_URL}"
     "${IGNITION-MATH_DOXYGEN_TAGFILE} = ${IGNITION-MATH_API_URL}"
   )

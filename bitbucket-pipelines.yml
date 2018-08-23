@@ -17,7 +17,8 @@ pipelines:
           - apt-get -y install
             libignition-cmake1-dev
             libignition-math5-dev
-            libignition-common2-dev
+            libignition-plugin-dev
+            libeigen3-dev
           # Ignition physics
           - mkdir build
           - cd build
