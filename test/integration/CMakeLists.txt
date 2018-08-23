@@ -9,18 +9,20 @@ ign_build_tests(
     ignition-plugin${IGN_PLUGIN_VER}::loader
   TEST_LIST list)
 
-foreach(test ${list})
+if (BUILD_TESTING)
+  foreach(test ${list})
 
-  foreach(mock_plugin
-      MockEntities
-      MockFrames
-      MockJoints)
+    foreach(mock_plugin
+        MockEntities
+        MockFrames
+        MockJoints)
 
-    target_compile_definitions(${test} PRIVATE
-      "${mock_plugin}_LIB=\"$<TARGET_FILE:${mock_plugin}>\"")
+      target_compile_definitions(${test} PRIVATE
+        "${mock_plugin}_LIB=\"$<TARGET_FILE:${mock_plugin}>\"")
 
-    add_dependencies(${test} ${mock_plugin})
+      add_dependencies(${test} ${mock_plugin})
+
+    endforeach()
 
   endforeach()
-
-endforeach()
+endif()

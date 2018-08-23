@@ -596,7 +596,7 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   const Scalar cosPivot = cos(pivotAngle);
   const Scalar pivotHeight = 1;
   const Scalar pivotLength = 5;
-  const Scalar pivotRotationRate = 0.1;
+  const Scalar pivotRotationRate = 0.125;
   const Scalar wheelRadius = 0.25;
   const Scalar wheelRotationRate = pivotRotationRate
                                  * pivotLength / wheelRadius;
