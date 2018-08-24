@@ -30,7 +30,9 @@ namespace dartsim {
 
 using EntityManagementFeatureList = FeatureList<
   GetEntities,
-  ConstructEmptyWorldFeature
+  ConstructEmptyWorldFeature,
+  ConstructEmptyModelFeature,
+  ConstructEmptyLinkFeature
 >;
 
 class EntityManagementFeatures :
@@ -100,6 +102,12 @@ class EntityManagementFeatures :
 
   public: Identity ConstructEmptyWorld(
       std::size_t _engineID, const std::string &_name) override;
+
+  public: Identity ConstructEmptyModel(
+      std::size_t _worldID, const std::string &_name) override;
+
+  public: Identity ConstructEmptyLink(
+      std::size_t _modelID, const std::string &_name) override;
 };
 
 }

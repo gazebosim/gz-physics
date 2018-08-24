@@ -41,8 +41,15 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 
   auto world = engine->ConstructEmptyWorld("empty world");
   ASSERT_NE(nullptr, world);
-
   EXPECT_EQ("empty world", world->GetName());
+
+  auto model = world->ConstructEmptyModel("empty model");
+  ASSERT_NE(nullptr, model);
+  EXPECT_EQ("empty model", model->GetName());
+
+  auto link = model->ConstructEmptyLink("empty link");
+  ASSERT_NE(nullptr, link);
+  EXPECT_EQ("empty link", link->GetName());
 }
 
 int main(int argc, char *argv[])

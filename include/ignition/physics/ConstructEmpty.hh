@@ -58,7 +58,8 @@ class ConstructEmptyModelFeature : public virtual Feature
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
-    public: virtual Identity ConstructEmptyModel(std::size_t _worldID) = 0;
+    public: virtual Identity ConstructEmptyModel(
+        std::size_t _worldID, const std::string &_name) = 0;
   };
 };
 
@@ -76,7 +77,8 @@ class ConstructEmptyLinkFeature : public virtual Feature
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
-    public: virtual Identity ConstructEmptyLink(std::size_t _modelID) = 0;
+    public: virtual Identity ConstructEmptyLink(
+        std::size_t _modelID, const std::string &_name) = 0;
   };
 };
 

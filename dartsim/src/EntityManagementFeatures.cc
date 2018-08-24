@@ -19,6 +19,8 @@
 
 #include <dart/config.hpp>
 
+#include <dart/dynamics/FreeJoint.hpp>
+
 #include "EntityManagementFeatures.hh"
 
 namespace ignition {
@@ -214,6 +216,41 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   const auto &world = std::make_shared<dart::simulation::World>(_name);
 
   return this->GenerateIdentity(this->AddWorld(world, _name), world);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyModel(
+    const std::size_t _worldID, const std::string &_name)
+{
+  dart::dynamics::SkeletonPtr model = dart::dynamics::Skeleton::create(_name);
+
+  dart::dynamics::SimpleFramePtr modelFrame =
+      dart::dynamics::SimpleFrame::createShared(
+        dart::dynamics::Frame::World(),
+        _name + "_frame");
+
+  auto [modelID, ModelInfo] = this->AddModel({model, modelFrame}, _worldID);
+
+  return this->GenerateIdentity(modelID, model);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyLink(
+    const std::size_t _modelID, const std::string &_name)
+{
+  const DartSkeletonPtr &model = this->models.at(_modelID).model;
+
+  dart::dynamics::FreeJoint::Properties prop_fj;
+  prop_fj.mName = _name + "_FreeJoint";
+
+  DartBodyNode::Properties prop_bn;
+  prop_bn.mName = _name;
+
+  DartBodyNode *bn =
+      model->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
+        nullptr, prop_fj, prop_bn).second;
+
+  return this->GenerateIdentity(this->AddLink(bn));
 }
 
 }

@@ -162,7 +162,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     assert(indexInContainerToID.size() == world->getNumSkeletons());
 
-
     return std::forward_as_tuple(id, entry);
   }
 
