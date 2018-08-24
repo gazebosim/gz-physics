@@ -279,7 +279,7 @@ Identity SDFFeatures::ConstructSdfModel(
         _sdfModel.Name()+"_frame",
         math::eigen3::convert(_sdfModel.Pose()));
 
-  auto [modelID, modelInfo] = this->AddModel({model, modelFrame});
+  auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID);
 
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
@@ -312,9 +312,6 @@ Identity SDFFeatures::ConstructSdfModel(
 
     this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
   }
-
-  const dart::simulation::WorldPtr &world = worlds[_worldID];
-  world->addSkeleton(model);
 
   return this->GenerateIdentity(modelID, model);
 }

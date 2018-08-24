@@ -30,12 +30,11 @@ namespace dartsim {
 
 using DartsimFeatures = FeatureList<
   CustomFeatureList,
-//  EntityManagementFeatureList,
+  EntityManagementFeatureList,
   JointFeatureList,
   SDFFeatureList,
   SimulationFeatureList
-  // TODO(MXG): Implement these other features
-/*  LinkFrameSemantics, */
+  // TODO(MXG): Implement more features
 >;
 
 class Plugin :
@@ -43,7 +42,7 @@ class Plugin :
     public virtual Base,
     public virtual CustomFeatures,
     public virtual JointFeatures,
-//    public virtual EntityManagementFeatures,
+    public virtual EntityManagementFeatures,
     public virtual SDFFeatures,
     public virtual SimulationFeatures { };
 

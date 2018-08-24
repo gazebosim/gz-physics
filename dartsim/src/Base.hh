@@ -44,14 +44,30 @@ struct ShapeInfo
 };
 
 template <typename Value1, typename Key2 = Value1>
-struct TwoWayMap
+struct EntityStorage
 {
+  /// \brief Map from an entity ID to its corresponding object
   std::unordered_map<std::size_t, Value1> idToObject;
+
+  /// \brief Map from an object pointer (or other unique key) to its entity ID
   std::unordered_map<Key2, std::size_t> objectToID;
 
-  // Currently these two fields are only used by World
-  std::vector<std::size_t> indexInParentToID;
-  std::unordered_map<std::size_t, std::size_t> idToIndexInParent;
+  using IndexMap = std::unordered_map<std::size_t, std::vector<std::size_t>>;
+  /// \brief The key represents the parent ID. The value represents a vector of
+  /// the objects' IDs. The key of the vector is the object's index within its
+  /// container. This is used by World and Model objects, which don't know their
+  /// own indices within their containers.
+  ///
+  /// The container type for World is Engine.
+  /// The container type for Model is World.
+  ///
+  /// Links and Joints are contained in Models, but Links and Joints know their
+  /// own indices within their Models, so we do not need to use this field for
+  /// either of those types.
+  IndexMap indexInContainerToID;
+
+  /// \brief Map from an entity ID to its index within its container
+  std::unordered_map<std::size_t, std::size_t> idToIndexInContainer;
 
   Value1 &operator[](const std::size_t _id)
   {
@@ -92,6 +108,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
     this->GetNextEntity();
+
+    // Create a 0th entry in this map
+    this->worlds.indexInContainerToID.insert(
+          std::make_pair(0u, std::vector<std::size_t>()));
+
     // dartsim does not have multiple "engines"
     return this->GenerateIdentity(0);
   }
@@ -110,8 +131,12 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     this->worlds.idToObject[id] = _world;
     this->worlds.objectToID[_name] = id;
-    this->worlds.idToIndexInParent[id] = this->worlds.indexInParentToID.size();
-    this->worlds.indexInParentToID.push_back(id);
+
+    std::vector<std::size_t> &indexInContainerToID =
+        this->worlds.indexInContainerToID.at(0);
+
+    this->worlds.idToIndexInContainer[id] = indexInContainerToID.size();
+    indexInContainerToID.push_back(id);
 
     _world->setName(_name);
 
@@ -119,12 +144,24 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: inline std::tuple<std::size_t, ModelInfo&> AddModel(
-      const ModelInfo &_info)
+      const ModelInfo &_info, const std::size_t _worldID)
   {
     const std::size_t id = this->GetNextEntity();
     ModelInfo &entry = this->models.idToObject[id];
     entry = _info;
     this->models.objectToID[_info.model] = id;
+
+    const dart::simulation::WorldPtr &world = worlds[_worldID];
+
+    const std::size_t indexInWorld = world->getNumSkeletons();
+    this->models.idToIndexInContainer[id] = indexInWorld;
+    std::vector<std::size_t> &indexInContainerToID =
+        this->models.indexInContainerToID[_worldID];
+    indexInContainerToID.push_back(id);
+    world->addSkeleton(entry.model);
+
+    assert(indexInContainerToID.size() == world->getNumSkeletons());
+
 
     return std::forward_as_tuple(id, entry);
   }
@@ -157,11 +194,11 @@ class Base : public Implements3d<FeatureList<Feature>>
     return id;
   }
 
-  public: TwoWayMap<DartWorldPtr, std::string> worlds;
-  public: TwoWayMap<ModelInfo, DartSkeletonPtr> models;
-  public: TwoWayMap<DartBodyNodePtr, DartBodyNode*> links;
-  public: TwoWayMap<DartJointPtr, DartJoint*> joints;
-  public: TwoWayMap<ShapeInfo, DartShapeNode*> shapes;
+  public: EntityStorage<DartWorldPtr, std::string> worlds;
+  public: EntityStorage<ModelInfo, DartSkeletonPtr> models;
+  public: EntityStorage<DartBodyNodePtr, DartBodyNode*> links;
+  public: EntityStorage<DartJointPtr, DartJoint*> joints;
+  public: EntityStorage<ShapeInfo, DartShapeNode*> shapes;
 };
 
 }

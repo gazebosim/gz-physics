@@ -46,6 +46,7 @@ World LoadWorld(const std::string &_world)
 {
   ignition::plugin::Loader loader;
   loader.LoadLibrary(dartsim_plugin_LIB);
+
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
 

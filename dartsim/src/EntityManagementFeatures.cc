@@ -53,7 +53,8 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 Identity EntityManagementFeatures::GetWorld(
     const std::size_t, std::size_t _worldIndex) const
 {
-  const std::size_t id = this->worlds.indexInParentToID[_worldIndex];
+  const std::size_t id =
+      this->worlds.indexInContainerToID.begin()->second[_worldIndex];
   return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
 }
 
@@ -76,7 +77,7 @@ const std::string &EntityManagementFeatures::GetWorldName(
 std::size_t EntityManagementFeatures::GetWorldIndex(
     const std::size_t _worldID) const
 {
-  return this->worlds.idToIndexInParent.at(_worldID);
+  return this->worlds.idToIndexInContainer.at(_worldID);
 }
 
 /////////////////////////////////////////////////
@@ -117,8 +118,93 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
     const std::size_t _modelID) const
 {
-  // TODO(MXG): I guess we need to store this information somewhere? Or else do
-  // a N-complexity search through World.
+  return this->models.idToIndexInContainer.at(_modelID);
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetLinkCount(
+    const std::size_t _modelID) const
+{
+  return this->models.at(_modelID).model->getNumBodyNodes();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLink(
+    const std::size_t _modelID, const std::size_t _linkIndex) const
+{
+  DartBodyNode * const bn =
+      this->models.at(_modelID).model->getBodyNode(_linkIndex);
+
+  // TODO(MXG): Return a reference counter with this Identity
+  return this->GenerateIdentity(this->links.IdentityOf(bn));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLink(
+    const std::size_t _modelID, const std::string &_linkName) const
+{
+  DartBodyNode * const bn =
+      this->models.at(_modelID).model->getBodyNode(_linkName);
+
+  // TODO(MXG): Return a reference counter with this Identity
+  return this->GenerateIdentity(this->links.IdentityOf(bn));
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetJointCount(
+    const std::size_t _modelID) const
+{
+  return this->models.at(_modelID).model->getNumJoints();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetJoint(
+    const std::size_t _modelID, const std::size_t _jointIndex) const
+{
+  DartJoint * const joint =
+      this->models.at(_modelID).model->getJoint(_jointIndex);
+
+  // TODO(MXG): Return a reference counter with this Identity
+  return this->GenerateIdentity(this->joints.IdentityOf(joint));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetJoint(
+    const std::size_t _modelID, const std::string &_jointName) const
+{
+  DartJoint * const joint =
+      this->models.at(_modelID).model->getJoint(_jointName);
+
+  // TODO(MXG): Return a reference counter with this Identity
+  return this->GenerateIdentity(this->joints.IdentityOf(joint));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetLinkName(
+    const std::size_t _linkID) const
+{
+  return this->links.at(_linkID)->getName();
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetLinkIndex(
+    const std::size_t _linkID) const
+{
+  return this->links.at(_linkID)->getIndexInSkeleton();
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetJointName(
+    const std::size_t _jointID) const
+{
+  return this->joints.at(_jointID)->getName();
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetJointIndex(
+    const std::size_t _jointID) const
+{
+  return this->joints.at(_jointID)->getJointIndexInSkeleton();
 }
 
 }
