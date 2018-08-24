@@ -25,8 +25,9 @@ namespace ignition
 {
   namespace physics
   {
-    /// \brief The RelativeQuantity class is a wrapper for classes that represent
-    /// mathematical quantities (e.g. points, vectors, matrices, transforms).
+    /// \brief The RelativeQuantity class is a wrapper for classes that
+    /// represent mathematical quantities
+    /// (e.g. points, vectors, matrices, transforms).
     /// The  purpose of this wrapper is to endow raw mathematical quantities
     /// with frame semantics, so that they can express the frame of reference of
     /// their values.
@@ -62,7 +63,8 @@ namespace ignition
       ///
       /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(fq)
       ///
-      /// where Q is your quantity type, and fq is your RelativeQuantity instance.
+      /// where Q is your quantity type, and fq is your RelativeQuantity
+      /// instance.
       ///
       /// To get the value of this RelativeQuantity with respect to an arbitrary
       /// reference frame, again use the Resolve function:
@@ -77,18 +79,19 @@ namespace ignition
 
       /// \brief Get the ID of this RelativeQuantity's parent frame.
       ///
-      /// To change the parent frame of this RelativeQuantity, use the Reframe(~)
-      /// function of your physics engine's FrameSemantics interface like this:
+      /// To change the parent frame of this RelativeQuantity, use the
+      /// Reframe(~) function of your physics engine's FrameSemantics interface
+      /// like this:
       ///
       /// fq = engine->GetInterface<FrameSemantics>()->Reframe(fq, A);
       ///
       /// where A is the FrameID of the new frame. The Reframe function will
-      /// keep the values of your RelativeQuantity consistent (with respect to the
-      /// World Frame) as it reassigns the parent frame.
+      /// keep the values of your RelativeQuantity consistent (with respect to
+      /// the World Frame) as it reassigns the parent frame.
       ///
-      /// Alternatively, to change the parent frame of this RelativeQuantity while
-      /// making its values relative to the new frame equal to what its values
-      /// were relative to the old frame, you can use the
+      /// Alternatively, to change the parent frame of this RelativeQuantity
+      /// while making its values relative to the new frame equal to what its
+      /// values were relative to the old frame, you can use the
       /// MoveToNewParentFrame(~) function below.
       public: const FrameID &ParentFrame() const;
 

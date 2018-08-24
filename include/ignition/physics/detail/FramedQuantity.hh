@@ -39,7 +39,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
-    RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeQuantity(const Q &_rawValue)
+    RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeQuantity(
+        const Q &_rawValue)
       : parentFrame(FrameID::World()),
         value(_rawValue)
     {
@@ -62,7 +63,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
-    const FrameID &RelativeQuantity<Q, Dim, CoordinateSpace>::ParentFrame() const
+    const FrameID &RelativeQuantity<Q, Dim, CoordinateSpace>::ParentFrame()
+        const
     {
       return parentFrame;
     }
