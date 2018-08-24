@@ -31,9 +31,9 @@ class ConstructSdfJoint : public virtual Feature
   public: template <typename PolicyT, typename FeaturesT>
   class Model : public virtual Feature::Model<PolicyT, FeaturesT>
   {
-    public: using Joint = ignition::physics::Joint<PolicyT, FeaturesT>;
+    public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
 
-    public: std::unique_ptr<Joint> ConstructJoint(const ::sdf::Joint &_joint);
+    public: JointPtrType ConstructJoint(const ::sdf::Joint &_joint);
   };
 
   public: template <typename PolicyT>
@@ -47,15 +47,11 @@ class ConstructSdfJoint : public virtual Feature
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfJoint::Model<PolicyT, FeaturesT>::ConstructJoint(
-    const ::sdf::Joint &_joint) -> std::unique_ptr<Joint>
+    const ::sdf::Joint &_joint) -> JointPtrType
 {
-  const Identity jointID = this->template Interface<ConstructSdfJoint>()
-      ->ConstructSdfJoint(this->identity, _joint);
-
-  if (!jointID)
-    return nullptr;
-
-  return std::make_unique<Joint>(this->pimpl, jointID);
+  return JointPtrType(this->pimpl,
+        this->template Interface<ConstructSdfJoint>()
+              ->ConstructSdfJoint(this->identity, _joint));
 }
 
 }

@@ -49,10 +49,9 @@ template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfCollision::Link<PolicyT, FeaturesT>::ConstructCollision(
     const ::sdf::Collision &_collision) -> bool
 {
-  const Identity collisionID = this->template Interface<ConstructSdfCollision>()
-      ->ConstructSdfCollision(_collision);
-
-  return static_cast<bool>(collisionID);
+  return static_cast<bool>(
+        this->template Interface<ConstructSdfCollision>()
+            ->ConstructSdfCollision(_collision));
 }
 
 }

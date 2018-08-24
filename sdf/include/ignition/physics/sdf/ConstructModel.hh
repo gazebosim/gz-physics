@@ -31,9 +31,9 @@ class ConstructSdfModel : public virtual Feature
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
-    public: using Model = ignition::physics::Model<PolicyT, FeaturesT>;
+    public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
 
-    public: std::unique_ptr<Model> ConstructModel(const ::sdf::Model &_model);
+    public: ModelPtrType ConstructModel(const ::sdf::Model &_model);
   };
 
   public: template <typename PolicyT>
@@ -47,15 +47,11 @@ class ConstructSdfModel : public virtual Feature
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfModel::World<PolicyT, FeaturesT>::ConstructModel(
-    const ::sdf::Model &_model) -> std::unique_ptr<Model>
+    const ::sdf::Model &_model) -> ModelPtrType
 {
-  const Identity modelID = this->template Interface<ConstructSdfModel>()
-      ->ConstructSdfModel(this->identity, _model);
-
-  if (!modelID)
-    return nullptr;
-
-  return std::make_unique<Model>(this->pimpl, modelID);
+  return ModelPtrType(this->pimpl,
+        this->template Interface<ConstructSdfModel>()
+              ->ConstructSdfModel(this->identity, _model));
 }
 
 }

@@ -31,9 +31,9 @@ class ConstructSdfLink : public virtual Feature
   public: template <typename PolicyT, typename FeaturesT>
   class Model : public virtual Feature::Model<PolicyT, FeaturesT>
   {
-    public: using Link = ignition::physics::Link<PolicyT, FeaturesT>;
+    public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
 
-    public: std::unique_ptr<Link> ConstructLink(const ::sdf::Link &_link);
+    public: LinkPtrType ConstructLink(const ::sdf::Link &_link);
   };
 
   public: template <typename PolicyT>
@@ -47,15 +47,11 @@ class ConstructSdfLink : public virtual Feature
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfLink::Model<PolicyT, FeaturesT>::ConstructLink(
-    const ::sdf::Link &_link) -> std::unique_ptr<Link>
+    const ::sdf::Link &_link) -> LinkPtrType
 {
-  const Identity linkID = this->template Interface<ConstructSdfLink>()
-      ->ConstructSdfLink(this->identity, _link);
-
-  if (!linkID)
-    return nullptr;
-
-  return std::make_unique<Link>(this->pimpl, linkID);
+  return LinkPtrType(this->pimpl,
+        this->template Interface<ConstructSdfLink>()
+              ->ConstructSdfLink(this->identity, _link));
 }
 
 }
