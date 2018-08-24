@@ -15,6 +15,8 @@ pipelines:
           - apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
+            libignition-cmake2-dev
+            libignition-math6-dev
             libignition-plugin-dev
             libeigen3-dev
           # DARTsim
@@ -24,22 +26,6 @@ pipelines:
             dart6-data
             libdart6-dev
             libdart6-utils-urdf-dev
-          # Ignition cmake
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b gz11
-          - cd ign-cmake
-          - mkdir build
-          - cd build
-          - cmake .. -DBUILD_TESTING=false
-          - make install
-          - cd ../..
-          # Ignition math
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-math -b gz11
-          - cd ign-math
-          - mkdir build
-          - cd build
-          - cmake .. -DBUILD_TESTING=false
-          - make install
-          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
