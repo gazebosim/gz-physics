@@ -263,4 +263,6 @@ namespace ignition
   }
 }
 
+#include <ignition/physics/detail/GetEntities.hh>
+
 #endif
