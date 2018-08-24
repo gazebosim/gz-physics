@@ -24,7 +24,7 @@
 #include <ignition/physics/Entity.hh>
 #include <ignition/physics/FrameID.hh>
 #include <ignition/physics/FrameData.hh>
-#include <ignition/physics/FramedQuantity.hh>
+#include <ignition/physics/RelativeQuantity.hh>
 
 namespace ignition
 {
@@ -49,7 +49,7 @@ namespace ignition
             ignition::physics::FrameData<
               typename PolicyT::Scalar, PolicyT::Dim>;
 
-        /// \brief Resolve is able to take a FramedQuantity (FQ) and compute its
+        /// \brief Resolve is able to take a RelativeQuantity (FQ) and compute its
         /// values in terms of other reference frames. The argument `relativeTo`
         /// indicates a frame that the quantity should be compared against (e.g.
         /// the velocity of Frame A relative to Frame B where both A and B may
@@ -83,9 +83,9 @@ namespace ignition
           const FQ &_quantity,
           const FrameID &_relativeTo = FrameID::World()) const;
 
-        /// \brief Create a new FramedQuantity which expresses the input
+        /// \brief Create a new RelativeQuantity which expresses the input
         /// quantity in terms of a new parent frame. Note that the returned
-        /// FramedQuantity will behave as though it has a constant value within
+        /// RelativeQuantity will behave as though it has a constant value within
         /// its new parent frame.
         public: template <typename FQ>
         FQ Reframe(const FQ &_quantity,
