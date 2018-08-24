@@ -49,10 +49,9 @@ template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfVisual::Link<PolicyT, FeaturesT>::ConstructVisual(
     const ::sdf::Visual &_visual) -> bool
 {
-  const Identity visualID = this->template Interface<ConstructSdfVisual>()
-      ->ConstructSdfVisual(_visual);
-
-  return static_cast<bool>(visualID);
+  return static_cast<bool>(
+        this->template Interface<ConstructSdfVisual>()
+            ->ConstructSdfVisual(_visual));
 }
 
 }
