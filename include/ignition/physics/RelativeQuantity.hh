@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FRAMEDQUANTITY_HH_
-#define IGNITION_PHYSICS_FRAMEDQUANTITY_HH_
+#ifndef IGNITION_PHYSICS_RELATIVEQUANTITY_HH_
+#define IGNITION_PHYSICS_RELATIVEQUANTITY_HH_
 
 #include <ignition/physics/FrameID.hh>
 #include <ignition/physics/FrameData.hh>
