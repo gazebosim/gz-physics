@@ -153,50 +153,50 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedPose = RelativeQuantity<
+    using RelativePose = RelativeQuantity<
         Pose<Scalar, Dim>, Dim, detail::SESpace<Scalar, Dim>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPose)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePose)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedRotationMatrix = RelativeQuantity<
+    using RelativeRotationMatrix = RelativeQuantity<
         Eigen::Matrix<Scalar, Dim, Dim>, Dim,
         detail::SOSpace<Scalar, Dim, Eigen::Matrix<Scalar, Dim, Dim>>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedRotationMatrix)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeRotationMatrix)
 
     /////////////////////////////////////////////////
     template <typename Scalar>
-    using FramedQuaternion = RelativeQuantity<
+    using RelativeQuaternion = RelativeQuantity<
         Eigen::Quaternion<Scalar>, 3, detail::SOSpace<Scalar, 3,
         Eigen::Quaternion<Scalar>>>;
     // Note: Eigen only supports quaternions for 3 dimensional space, so we do
     // not have a dimensionality template argument.
-    using FramedQuaterniond = FramedQuaternion<double>;
-    using FramedQuaternionf = FramedQuaternion<float>;
+    using RelativeQuaterniond = RelativeQuaternion<double>;
+    using RelativeQuaternionf = RelativeQuaternion<float>;
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedPosition = RelativeQuantity<
+    using RelativePosition = RelativeQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::EuclideanSpace<Scalar, Dim>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPosition)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePosition)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedForce = RelativeQuantity<
+    using RelativeForce = RelativeQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedForce)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeForce)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedTorque = RelativeQuantity<
+    using RelativeTorque = RelativeQuantity<
         AngularVector<Scalar, Dim>, Dim,
         detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedTorque)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeTorque)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
