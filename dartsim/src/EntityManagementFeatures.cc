@@ -207,6 +207,15 @@ std::size_t EntityManagementFeatures::GetJointIndex(
   return this->joints.at(_jointID)->getJointIndexInSkeleton();
 }
 
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyWorld(
+    const std::size_t /*_engineID*/, const std::string &_name)
+{
+  const auto &world = std::make_shared<dart::simulation::World>(_name);
+
+  return this->GenerateIdentity(this->AddWorld(world, _name), world);
+}
+
 }
 }
 }

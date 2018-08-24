@@ -18,19 +18,71 @@
 #ifndef IGNITION_PHYSICS_CONSTRUCTEMPTY_HH_
 #define IGNITION_PHYSICS_CONSTRUCTEMPTY_HH_
 
-namespace ignition
-{
-  namespace physics
-  {
-    class ConstructEmptyWorld : public virtual Feature
-    {
-      public: template <typename PolicyT, typename FeaturesT>
-      class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
-      {
+#include <string>
 
-      };
-    };
-  }
+#include <ignition/physics/FeatureList.hh>
+
+namespace ignition {
+namespace physics {
+
+/////////////////////////////////////////////////
+class ConstructEmptyWorldFeature : public virtual Feature
+{
+  public: template <typename PolicyT, typename FeaturesT>
+  class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
+  {
+    public: using WorldPtrType = WorldPtr<PolicyT, FeaturesT>;
+
+    public: WorldPtrType ConstructEmptyWorld(const std::string &_name);
+  };
+
+  public: template <typename PolicyT>
+  class Implementation : public virtual Feature::Implementation<PolicyT>
+  {
+    public: virtual Identity ConstructEmptyWorld(
+        std::size_t _engineID, const std::string &_name) = 0;
+  };
+};
+
+/////////////////////////////////////////////////
+class ConstructEmptyModelFeature : public virtual Feature
+{
+  public: template <typename PolicyT, typename FeaturesT>
+  class World : public virtual Feature::World<PolicyT, FeaturesT>
+  {
+    public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+
+    public: ModelPtrType ConstructEmptyModel(const std::string &_name);
+  };
+
+  public: template <typename PolicyT>
+  class Implementation : public virtual Feature::Implementation<PolicyT>
+  {
+    public: virtual Identity ConstructEmptyModel(std::size_t _worldID) = 0;
+  };
+};
+
+/////////////////////////////////////////////////
+class ConstructEmptyLinkFeature : public virtual Feature
+{
+  public: template <typename PolicyT, typename FeaturesT>
+  class Model : public virtual Feature::Model<PolicyT, FeaturesT>
+  {
+    public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
+
+    public: LinkPtrType ConstructEmptyLink(const std::string &_name);
+  };
+
+  public: template <typename PolicyT>
+  class Implementation : public virtual Feature::Implementation<PolicyT>
+  {
+    public: virtual Identity ConstructEmptyLink(std::size_t _modelID) = 0;
+  };
+};
+
 }
+}
+
+#include <ignition/physics/detail/ConstructEmpty.hh>
 
 #endif

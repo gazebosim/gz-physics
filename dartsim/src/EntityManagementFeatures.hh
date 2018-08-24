@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
 #define IGNITION_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
 
+#include <ignition/physics/ConstructEmpty.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Implements.hh>
 
@@ -27,7 +28,10 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using EntityManagementFeatureList = FeatureList<GetEntities>;
+using EntityManagementFeatureList = FeatureList<
+  GetEntities,
+  ConstructEmptyWorldFeature
+>;
 
 class EntityManagementFeatures :
     public virtual Base,
@@ -93,6 +97,9 @@ class EntityManagementFeatures :
 
   public: std::size_t GetJointIndex(
       std::size_t _jointID) const override;
+
+  public: Identity ConstructEmptyWorld(
+      std::size_t _engineID, const std::string &_name) override;
 };
 
 }
