@@ -61,15 +61,15 @@ namespace ignition
       /// world frame, use the FrameSemantics::Resolve(~) function of your
       /// physics engine like so:
       ///
-      /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(rq)
+      /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(fq)
       ///
-      /// where Q is your quantity type, and rq is your RelativeQuantity
+      /// where Q is your quantity type, and fq is your RelativeQuantity
       /// instance.
       ///
       /// To get the value of this RelativeQuantity with respect to an arbitrary
       /// reference frame, again use the Resolve function:
       ///
-      /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(rq, F);
+      /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(fq, F);
       ///
       /// where F is the FrameID of the desired reference frame.
       public: Q &RelativeToParent();
@@ -83,7 +83,7 @@ namespace ignition
       /// Reframe(~) function of your physics engine's FrameSemantics interface
       /// like this:
       ///
-      /// rq = engine->GetInterface<FrameSemantics>()->Reframe(rq, A);
+      /// fq = engine->GetInterface<FrameSemantics>()->Reframe(fq, A);
       ///
       /// where A is the FrameID of the new frame. The Reframe function will
       /// keep the values of your RelativeQuantity consistent (with respect to
@@ -121,10 +121,10 @@ namespace ignition
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
     std::ostream& operator <<(
         std::ostream& stream,
-        const RelativeQuantity<Q, Dim, CoordinateSpace> &_rq)
+        const RelativeQuantity<Q, Dim, CoordinateSpace> &_fq)
     {
-      stream << "Parent Frame ID: " << _rq.ParentFrame().ID()
-             << "\nRelative To Parent:\n" << _rq.RelativeToParent();
+      stream << "Parent Frame ID: " << _fq.ParentFrame().ID()
+             << "\nRelative To Parent:\n" << _fq.RelativeToParent();
 
       return stream;
     }
