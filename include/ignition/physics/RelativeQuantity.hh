@@ -35,7 +35,7 @@ namespace ignition
     /// Note that the raw value of the quantity being held can only be retrieved
     /// through the member function RelativeToParent(). We choose to contain the
     /// quantity like this instead of inheriting it to avoid a situation where
-    /// a user might add two framed quantities like
+    /// a user might add two relative quantities like
     ///
     /// u = v + w
     ///
