@@ -49,16 +49,16 @@ namespace ignition
             ignition::physics::FrameData<
               typename PolicyT::Scalar, PolicyT::Dim>;
 
-        /// \brief Resolve can take a RelativeQuantity (FQ) and compute its
+        /// \brief Resolve can take a RelativeQuantity (RQ) and compute its
         /// values in terms of other reference frames. The argument `relativeTo`
         /// indicates a frame that the quantity should be compared against (e.g.
         /// the velocity of Frame A relative to Frame B where both A and B may
         /// be moving). The argument `inCoordinatesOf` indicates the coordinate
         /// frame that the values should be expressed in (this is usually just a
         /// change in rotation).
-        public: template <typename FQ>
-        typename FQ::Quantity Resolve(
-          const FQ &_quantity,
+        public: template <typename RQ>
+        typename RQ::Quantity Resolve(
+          const RQ &_quantity,
           const FrameID &_relativeTo,
           const FrameID &_inCoordinatesOf) const;
 
@@ -78,17 +78,17 @@ namespace ignition
         /// -- Get the value of v relative to frame A, in coordinates of frame B
         ///      Resolve(v, A, B)
         ///
-        public: template <typename FQ>
-        typename FQ::Quantity Resolve(
-          const FQ &_quantity,
+        public: template <typename RQ>
+        typename RQ::Quantity Resolve(
+          const RQ &_quantity,
           const FrameID &_relativeTo = FrameID::World()) const;
 
         /// \brief Create a new RelativeQuantity which expresses the input
         /// quantity in terms of a new parent frame. Note that the returned
         /// RelativeQuantity will behave as though it has a constant value
         /// within its new parent frame.
-        public: template <typename FQ>
-        FQ Reframe(const FQ &_quantity,
+        public: template <typename RQ>
+        RQ Reframe(const RQ &_quantity,
                    const FrameID &_withRespectTo = FrameID::World()) const;
 
         template <typename, typename> friend class FrameSemantics::Frame;
