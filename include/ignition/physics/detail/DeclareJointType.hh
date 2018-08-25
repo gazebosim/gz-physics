@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
 
 #include <memory>
+#include <tuple>
 #include <utility>
 
 #define DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, P) \
