@@ -18,9 +18,9 @@
 #ifndef IGNITION_PHYSICS_ENTITY_HH_
 #define IGNITION_PHYSICS_ENTITY_HH_
 
+#include <optional>
 #include <limits>
 #include <memory>
-#include <optional>
 
 #include <ignition/physics/Export.hh>
 #include <ignition/physics/detail/Identity.hh>
