@@ -243,7 +243,7 @@ TEST(FrameSemantics_TEST, FrameID2f)
 
 /////////////////////////////////////////////////
 template <typename PolicyT>
-void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
+void TestRelativeQuantities(const double _tolerance, const std::string &_suffix)
 {
   using Scalar = typename PolicyT::Scalar;
   constexpr std::size_t Dim = PolicyT::Dim;
@@ -258,10 +258,10 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   using LinearVector = LinearVector<Scalar, Dim>;
   using AngularVector = AngularVector<Scalar, Dim>;
   using Rotation = Rotation<Scalar, Dim>;
-  using FramedPose = ignition::physics::FramedPose<Scalar, Dim>;
-  using FramedPosition = ignition::physics::FramedPosition<Scalar, Dim>;
-  using FramedForce = ignition::physics::FramedForce<Scalar, Dim>;
-  using FramedTorque = ignition::physics::FramedTorque<Scalar, Dim>;
+  using RelativePose = ignition::physics::RelativePose<Scalar, Dim>;
+  using RelativePosition = ignition::physics::RelativePosition<Scalar, Dim>;
+  using RelativeForce = ignition::physics::RelativeForce<Scalar, Dim>;
+  using RelativeTorque = ignition::physics::RelativeTorque<Scalar, Dim>;
 
   const FrameID World = FrameID::World();
 
@@ -287,8 +287,8 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   // Instantiate Frame D using A_T_D
   const FrameID D = *fs->CreateLink("D", fs->Resolve(A_T_D, World));
 
-  // Create FramedPose for B with respect to A
-  const FramedPose A_T_B_pose(A, A_T_B.RelativeToParent().pose);
+  // Create RelativePose for B with respect to A
+  const RelativePose A_T_B_pose(A, A_T_B.RelativeToParent().pose);
   EXPECT_TRUE(Equal(A_T_B_pose.RelativeToParent(),
                     fs->Resolve(A_T_B_pose, A), _tolerance));
 
@@ -317,7 +317,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
                     fs->Resolve(A_T_B_pose, D), _tolerance));
 
   // Create point "1" in Frame C
-  const FramedPosition C_p1(C, RandomVector<LinearVector>(10.0));
+  const RelativePosition C_p1(C, RandomVector<LinearVector>(10.0));
   EXPECT_TRUE(Equal(C_p1.RelativeToParent(), fs->Resolve(C_p1, C), _tolerance));
 
   const LinearVector C_p1_inCoordsOfWorld =
@@ -377,7 +377,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(D_p1_inCoordsOfC, fs->Resolve(C_p1, D, C), _tolerance));
 
   // Create point "2" in Frame D
-  const FramedPosition D_p2(D, RandomVector<LinearVector>(10.0));
+  const RelativePosition D_p2(D, RandomVector<LinearVector>(10.0));
   EXPECT_TRUE(Equal(D_p2.RelativeToParent(), fs->Resolve(D_p2, D), _tolerance));
 
   const LinearVector O_p2 =
@@ -394,7 +394,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(C_p2, fs->Resolve(D_p2, C), _tolerance));
 
   // Create point "3" in the World Frame
-  const FramedPosition O_p3(World, RandomVector<LinearVector>(10.0));
+  const RelativePosition O_p3(World, RandomVector<LinearVector>(10.0));
   EXPECT_TRUE(Equal(O_p3.RelativeToParent(),
                     fs->Resolve(O_p3, World), _tolerance));
 
@@ -421,7 +421,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
                     fs->Resolve(O_p3, C, World), _tolerance));
 
   // Create force "1" in Frame C
-  const FramedForce C_f1(C, RandomVector<LinearVector>(10.0));
+  const RelativeForce C_f1(C, RandomVector<LinearVector>(10.0));
   EXPECT_TRUE(Equal(C_f1.RelativeToParent(), fs->Resolve(C_f1, C), _tolerance));
 
   const LinearVector O_f1 =
@@ -439,7 +439,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(D_f1, fs->Resolve(C_f1, D), _tolerance));
 
   // Create force "2" in Frame D
-  const FramedForce D_f2(D, RandomVector<LinearVector>(10.0));
+  const RelativeForce D_f2(D, RandomVector<LinearVector>(10.0));
   EXPECT_TRUE(Equal(D_f2.RelativeToParent(), fs->Resolve(D_f2, D), _tolerance));
 
   const LinearVector O_f2 =
@@ -456,7 +456,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(C_f2, fs->Resolve(D_f2, C), _tolerance));
 
   // Create force "3" in the World Frame
-  const FramedForce O_f3(World, RandomVector<LinearVector>(10.0));
+  const RelativeForce O_f3(World, RandomVector<LinearVector>(10.0));
   EXPECT_TRUE(Equal(O_f3.RelativeToParent(),
                     fs->Resolve(O_f3, World), _tolerance));
 
@@ -468,7 +468,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(C_f3, fs->Resolve(O_f3, C), _tolerance));
 
   // Create torque "1" in Frame C
-  const FramedTorque C_t1(C, RandomVector<AngularVector>(10.0));
+  const RelativeTorque C_t1(C, RandomVector<AngularVector>(10.0));
   EXPECT_TRUE(Equal(C_t1.RelativeToParent(), fs->Resolve(C_t1, C), _tolerance));
 
   const AngularVector O_t1 =
@@ -512,7 +512,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(D_t1_inCoordsOfC, fs->Resolve(C_t1, D, C), _tolerance));
 
   // Create torque "2" in Frame D
-  const FramedTorque D_t2(D, RandomVector<AngularVector>(10.0));
+  const RelativeTorque D_t2(D, RandomVector<AngularVector>(10.0));
   EXPECT_TRUE(Equal(D_f2.RelativeToParent(), fs->Resolve(D_f2, D), _tolerance));
 
   const AngularVector O_t2 =
@@ -531,7 +531,7 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(Equal(C_t2, fs->Resolve(D_t2, C), _tolerance));
 
   // Create torque "3" in the World Frame
-  const FramedTorque O_t3(World, RandomVector<AngularVector>(10.0));
+  const RelativeTorque O_t3(World, RandomVector<AngularVector>(10.0));
   EXPECT_TRUE(Equal(O_t3.RelativeToParent(),
                     fs->Resolve(O_t3, World), _tolerance));
 
@@ -545,27 +545,27 @@ void TestFramedQuantities(const double _tolerance, const std::string &_suffix)
 }
 
 /////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FramedQuantities3d)
+TEST(FrameSemantics_TEST, RelativeQuantities3d)
 {
-  TestFramedQuantities<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
 }
 
 /////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FramedQuantities2d)
+TEST(FrameSemantics_TEST, RelativeQuantities2d)
 {
-  TestFramedQuantities<ignition::physics::FeaturePolicy2d>(1e-11, "2d");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy2d>(1e-11, "2d");
 }
 
 /////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FramedQuantities3f)
+TEST(FrameSemantics_TEST, RelativeQuantities3f)
 {
-  TestFramedQuantities<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 /////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FramedQuantities2f)
+TEST(FrameSemantics_TEST, RelativeQuantities2f)
 {
-  TestFramedQuantities<ignition::physics::FeaturePolicy2f>(1e-4, "2f");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy2f>(1e-4, "2f");
 }
 
 /////////////////////////////////////////////////
@@ -604,7 +604,7 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
                                  * pivotLength / wheelRadius;
 
   // Create a transform from the world to Frame Base. We do this to have better
-  // coverage of FramedQuantities
+  // coverage of RelativeQuantities
   FrameData T_Base;
   const RelativeFrameData O_T_Base(World, T_Base);
   const FrameID Base = *fs->CreateLink("Base", fs->Resolve(O_T_Base, World));

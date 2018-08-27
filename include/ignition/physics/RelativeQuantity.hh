@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FRAMEDQUANTITY_HH_
-#define IGNITION_PHYSICS_FRAMEDQUANTITY_HH_
+#ifndef IGNITION_PHYSICS_RELATIVEQUANTITY_HH_
+#define IGNITION_PHYSICS_RELATIVEQUANTITY_HH_
 
 #include <ignition/physics/FrameID.hh>
 #include <ignition/physics/FrameData.hh>
@@ -25,8 +25,9 @@ namespace ignition
 {
   namespace physics
   {
-    /// \brief The FramedQuantity class is a wrapper for classes that represent
-    /// mathematical quantities (e.g. points, vectors, matrices, transforms).
+    /// \brief The RelativeQuantity class is a wrapper for classes that
+    /// represent mathematical quantities
+    /// (e.g. points, vectors, matrices, transforms).
     /// The  purpose of this wrapper is to endow raw mathematical quantities
     /// with frame semantics, so that they can express the frame of reference of
     /// their values.
@@ -34,7 +35,7 @@ namespace ignition
     /// Note that the raw value of the quantity being held can only be retrieved
     /// through the member function RelativeToParent(). We choose to contain the
     /// quantity like this instead of inheriting it to avoid a situation where
-    /// a user might add two framed quantities like
+    /// a user might add two relative quantities like
     ///
     /// u = v + w
     ///
@@ -42,29 +43,30 @@ namespace ignition
     /// expression, since values that are being expressed in different reference
     /// frames are not directly compatible. Use the Resolve(~) or Reframe(~)
     /// function in the FrameSemantics interface of your physics engine plugin
-    /// to transform a FramedQuantity into a different reference frame.
+    /// to transform a RelativeQuantity into a different reference frame.
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
-    class FramedQuantity
+    class RelativeQuantity
     {
       /// \brief This constructor will specify the parent frame and then forward
       /// the remaining arguments to the constructor of the underlying quantity.
       public: template <typename... Args>
-      FramedQuantity(const FrameID &_parentID, Args&&... _args);
+      RelativeQuantity(const FrameID &_parentID, Args&&... _args);
 
       /// \brief Implicit conversion constructor.
       // cppcheck-suppress noExplicitConstructor
-      public: FramedQuantity(const Q &_rawValue);
+      public: RelativeQuantity(const Q &_rawValue);
 
-      /// \brief Get the value of this FramedQuantity relative to its parent
-      /// frame. To get the value of this FramedQuantity with respect to the
+      /// \brief Get the value of this RelativeQuantity relative to its parent
+      /// frame. To get the value of this RelativeQuantity with respect to the
       /// world frame, use the FrameSemantics::Resolve(~) function of your
       /// physics engine like so:
       ///
       /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(fq)
       ///
-      /// where Q is your quantity type, and fq is your FramedQuantity instance.
+      /// where Q is your quantity type, and fq is your RelativeQuantity
+      /// instance.
       ///
-      /// To get the value of this FramedQuantity with respect to an arbitrary
+      /// To get the value of this RelativeQuantity with respect to an arbitrary
       /// reference frame, again use the Resolve function:
       ///
       /// Q quantity = engine->GetInterface<FrameSemantics>()->Resolve(fq, F);
@@ -75,25 +77,26 @@ namespace ignition
       /// \brief const-qualified version of RelativeToParent.
       public: const Q &RelativeToParent() const;
 
-      /// \brief Get the ID of this FramedQuantity's parent frame.
+      /// \brief Get the ID of this RelativeQuantity's parent frame.
       ///
-      /// To change the parent frame of this FramedQuantity, use the Reframe(~)
-      /// function of your physics engine's FrameSemantics interface like this:
+      /// To change the parent frame of this RelativeQuantity, use the
+      /// Reframe(~) function of your physics engine's FrameSemantics interface
+      /// like this:
       ///
       /// fq = engine->GetInterface<FrameSemantics>()->Reframe(fq, A);
       ///
       /// where A is the FrameID of the new frame. The Reframe function will
-      /// keep the values of your FramedQuantity consistent (with respect to the
-      /// World Frame) as it reassigns the parent frame.
+      /// keep the values of your RelativeQuantity consistent (with respect to
+      /// the World Frame) as it reassigns the parent frame.
       ///
-      /// Alternatively, to change the parent frame of this FramedQuantity while
-      /// making its values relative to the new frame equal to what its values
-      /// were relative to the old frame, you can use the
+      /// Alternatively, to change the parent frame of this RelativeQuantity
+      /// while making its values relative to the new frame equal to what its
+      /// values were relative to the old frame, you can use the
       /// MoveToNewParentFrame(~) function below.
       public: const FrameID &ParentFrame() const;
 
       /// \brief This function will change the parent frame of your
-      /// FramedQuantity.
+      /// RelativeQuantity.
       public: void MoveToNewParentFrame(const FrameID &_newParentFrame);
 
       /// \brief The underlying type of the quantity that is being expressed.
@@ -108,7 +111,7 @@ namespace ignition
       public: enum { Dimension = Dim };
 
       /// \brief This variable specifies the parent frame that this
-      /// FramedQuantity belongs to.
+      /// RelativeQuantity belongs to.
       private: FrameID parentFrame;
 
       /// \brief The raw quantity, expressed in terms of the parent frame.
@@ -118,7 +121,7 @@ namespace ignition
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
     std::ostream& operator <<(
         std::ostream& stream,
-        const FramedQuantity<Q, Dim, CoordinateSpace> &_fq)
+        const RelativeQuantity<Q, Dim, CoordinateSpace> &_fq)
     {
       stream << "Parent Frame ID: " << _fq.ParentFrame().ID()
              << "\nRelative To Parent:\n" << _fq.RelativeToParent();
@@ -150,60 +153,60 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedPose = FramedQuantity<
+    using RelativePose = RelativeQuantity<
         Pose<Scalar, Dim>, Dim, detail::SESpace<Scalar, Dim>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPose)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePose)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedRotationMatrix = FramedQuantity<
+    using RelativeRotationMatrix = RelativeQuantity<
         Eigen::Matrix<Scalar, Dim, Dim>, Dim,
         detail::SOSpace<Scalar, Dim, Eigen::Matrix<Scalar, Dim, Dim>>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedRotationMatrix)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeRotationMatrix)
 
     /////////////////////////////////////////////////
     template <typename Scalar>
-    using FramedQuaternion = FramedQuantity<
+    using RelativeQuaternion = RelativeQuantity<
         Eigen::Quaternion<Scalar>, 3, detail::SOSpace<Scalar, 3,
         Eigen::Quaternion<Scalar>>>;
     // Note: Eigen only supports quaternions for 3 dimensional space, so we do
     // not have a dimensionality template argument.
-    using FramedQuaterniond = FramedQuaternion<double>;
-    using FramedQuaternionf = FramedQuaternion<float>;
+    using RelativeQuaterniond = RelativeQuaternion<double>;
+    using RelativeQuaternionf = RelativeQuaternion<float>;
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedPosition = FramedQuantity<
+    using RelativePosition = RelativeQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::EuclideanSpace<Scalar, Dim>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedPosition)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePosition)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedForce = FramedQuantity<
+    using RelativeForce = RelativeQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedForce)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeForce)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using FramedTorque = FramedQuantity<
+    using RelativeTorque = RelativeQuantity<
         AngularVector<Scalar, Dim>, Dim,
         detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
     // cppcheck-suppress constStatement
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FramedTorque)
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeTorque)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
-    using RelativeFrameData = FramedQuantity<
+    using RelativeFrameData = RelativeQuantity<
         FrameData<Scalar, Dim>, Dim, detail::FrameSpace<Scalar, Dim>>;
     // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeFrameData)
   }
 }
 
-#include <ignition/physics/detail/FramedQuantity.hh>
+#include <ignition/physics/detail/RelativeQuantity.hh>
 
 #endif
