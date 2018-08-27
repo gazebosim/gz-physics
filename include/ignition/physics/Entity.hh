@@ -18,9 +18,9 @@
 #ifndef IGNITION_PHYSICS_ENTITY_HH_
 #define IGNITION_PHYSICS_ENTITY_HH_
 
+#include <optional>
 #include <limits>
 #include <memory>
-#include <optional>
 
 #include <ignition/physics/Export.hh>
 #include <ignition/physics/detail/Identity.hh>
@@ -49,9 +49,11 @@ namespace ignition
       public: ~EntityPtr() = default;
 
       /// \brief Create an EntityPtr that points to an invalid Entity
+      // cppcheck-suppress noExplicitConstructor
       public: EntityPtr(std::nullptr_t);
 
       /// \brief Create an EntityPtr that points to an invalid Entity
+      // cppcheck-suppress noExplicitConstructor
       public: EntityPtr(std::nullopt_t);
 
       /// \brief Assign this to point to an invalid Entity.
