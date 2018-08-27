@@ -21,7 +21,7 @@
 #include <memory>
 
 #include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FramedQuantity.hh>
+#include <ignition/physics/RelativeQuantity.hh>
 
 namespace mock
 {
