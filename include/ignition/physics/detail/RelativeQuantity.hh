@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FRAMEDQUANTITY_HH_
-#define IGNITION_PHYSICS_DETAIL_FRAMEDQUANTITY_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
+#define IGNITION_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
 
 #include <utility>
 
-#include <ignition/physics/FramedQuantity.hh>
+#include <ignition/physics/RelativeQuantity.hh>
 
 namespace ignition
 {
@@ -29,7 +29,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
     template <typename... Args>
-    FramedQuantity<Q, Dim, CoordinateSpace>::FramedQuantity(
+    RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeQuantity(
         const FrameID &_parentID, Args&&... _args)
       : parentFrame(_parentID),
         value(std::forward<Args>(_args)...)
@@ -39,7 +39,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
-    FramedQuantity<Q, Dim, CoordinateSpace>::FramedQuantity(const Q &_rawValue)
+    RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeQuantity(
+        const Q &_rawValue)
       : parentFrame(FrameID::World()),
         value(_rawValue)
     {
@@ -48,21 +49,22 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
-    Q &FramedQuantity<Q, Dim, CoordinateSpace>::RelativeToParent()
+    Q &RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeToParent()
     {
       return value;
     }
 
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
-    const Q &FramedQuantity<Q, Dim, CoordinateSpace>::RelativeToParent() const
+    const Q &RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeToParent() const
     {
       return value;
     }
 
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
-    const FrameID &FramedQuantity<Q, Dim, CoordinateSpace>::ParentFrame() const
+    const FrameID &RelativeQuantity<Q, Dim, CoordinateSpace>::ParentFrame()
+        const
     {
       return parentFrame;
     }

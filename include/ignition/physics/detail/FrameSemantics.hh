@@ -28,15 +28,15 @@ namespace ignition
   {
     namespace detail
     {
-      template <typename PolicyT, typename FQ>
-      static typename FQ::Quantity Resolve(
+      template <typename PolicyT, typename RQ>
+      static typename RQ::Quantity Resolve(
           const FrameSemantics::Implementation<PolicyT> &_impl,
-          const FQ &_quantity,
+          const RQ &_quantity,
           const FrameID &_relativeTo,
           const FrameID &_inCoordinatesOf)
       {
-        using Quantity = typename FQ::Quantity;
-        using Space = typename FQ::Space;
+        using Quantity = typename RQ::Quantity;
+        using Space = typename RQ::Space;
         using FrameDataType = typename Space::FrameDataType;
         using RotationType = typename Space::RotationType;
 
@@ -117,9 +117,9 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    template <typename FQ>
-    typename FQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
-        const FQ &_quantity,
+    template <typename RQ>
+    typename RQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
+        const RQ &_quantity,
         const FrameID &_relativeTo,
         const FrameID &_inCoordinatesOf) const
     {
@@ -130,20 +130,20 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    template <typename FQ>
-    typename FQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
-        const FQ &_quantity, const FrameID &_relativeTo) const
+    template <typename RQ>
+    typename RQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
+        const RQ &_quantity, const FrameID &_relativeTo) const
     {
       return this->Resolve(_quantity, _relativeTo, _relativeTo);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    template <typename FQ>
-    FQ FrameSemantics::Engine<PolicyT, FeaturesT>::Reframe(
-        const FQ &_quantity, const FrameID &_withRespectTo) const
+    template <typename RQ>
+    RQ FrameSemantics::Engine<PolicyT, FeaturesT>::Reframe(
+        const RQ &_quantity, const FrameID &_withRespectTo) const
     {
-      return FQ(_withRespectTo,
+      return RQ(_withRespectTo,
                 this->Resolve(_quantity, _withRespectTo, _withRespectTo));
     }
 
