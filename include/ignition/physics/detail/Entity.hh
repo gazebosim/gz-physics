@@ -281,6 +281,16 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
+    template <typename EntityT>
+    std::size_t EntityPtr<EntityT>::Hash() const
+    {
+      if (!(*this))
+        return std::hash<std::size_t>()(INVALID_ENTITY_ID);
+
+      return std::hash<std::size_t>()(this->entity->EntityID());
+    }
+
+    /////////////////////////////////////////////////
     template <typename Policy, typename Features>
     std::size_t Entity<Policy, Features>::EntityID() const
     {
@@ -325,6 +335,26 @@ namespace ignition
       return (*this->pimpl)->template QueryInterface<
           typename FeatureT::template Implementation<Policy>>();
     }
+
+    /////////////////////////////////////////////////
+    #define DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR(op) \
+      template <typename EntityT> \
+      template <typename OtherEntityT> \
+      bool EntityPtr<EntityT>::operator op (\
+        const EntityPtr<OtherEntityT> &_other) const \
+      { \
+        /* If either ptr is invalid, we always return false */ \
+        if (!(*this) || !_other) \
+          return false; \
+        return (this->entity->EntityID() op _other.entity->EntityID()); \
+      }
+
+    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( == ) // NOLINT
+    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( < ) // NOLINT
+    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( > ) // NOLINT
+    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( != ) // NOLINT
+    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( <= ) // NOLINT
+    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( >= ) // NOLINT
 
     /////////////////////////////////////////////////
     // Operators to compare with nullptr and nullopt
@@ -384,6 +414,23 @@ namespace ignition
       return !(_ptr == nullptr);
     }
   }
+}
+
+// Note that opening up namespace std is legal here because we are specializing
+// a templated structure from the STL, which is permitted (and even encouraged).
+namespace std
+{
+  /// \brief Template specialization that provides a hash function for EntityPtr
+  /// so that it can easily be used in STL objects like std::unordered_set and
+  /// std::unordered_map
+  template <typename EntityT>
+  struct hash<ignition::physics::EntityPtr<EntityT>>
+  {
+    size_t operator()(const ignition::physics::EntityPtr<EntityT> &ptr) const
+    {
+      return ptr.Hash();
+    }
+  };
 }
 
 #endif
