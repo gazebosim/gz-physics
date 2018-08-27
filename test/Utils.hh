@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_TEST_UTILS_HH_
 #define IGNITION_PHYSICS_TEST_UTILS_HH_
 
+#include <ignition/math/Helpers.hh>
 #include <ignition/math/Rand.hh>
 #include <ignition/physics/FrameData.hh>
 
@@ -50,7 +51,7 @@ namespace ignition
             Vector<Scalar, Dim> axis = Vector<Scalar, Dim>::Zero();
             axis[i] = 1.0;
             _pose.rotate(Eigen::AngleAxis<Scalar>(
-                static_cast<Scalar>(math::Rand::DblUniform(0, 2*M_PI)), axis));
+              static_cast<Scalar>(math::Rand::DblUniform(0, 2*IGN_PI)), axis));
           }
         }
 
@@ -86,7 +87,7 @@ namespace ignition
         static void Randomize(ignition::physics::Pose<Scalar, 2> &_pose)
         {
           _pose.rotate(Eigen::Rotation2D<Scalar>(
-                         math::Rand::DblUniform(0, 2*M_PI)));
+                         math::Rand::DblUniform(0, 2*IGN_PI)));
         }
 
         static bool Equal(
