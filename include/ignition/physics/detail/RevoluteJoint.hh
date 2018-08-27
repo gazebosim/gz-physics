@@ -41,6 +41,18 @@ namespace ignition
       this->template Interface<SetRevoluteJointProperties>()
           ->SetRevoluteJointAxis(this->identity, _axis);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto AttachRevoluteJointFeature::Link<PolicyT, FeaturesT>
+    ::AttachRevoluteJoint(
+        const BaseLinkPtr<PolicyT> &_parent,
+        const Axis &_axis) -> JointPtrType
+    {
+      return JointPtrType(this->pimpl,
+            this->template Interface<AttachRevoluteJointFeature>()
+              ->AttachRevoluteJoint(this->identity, _parent, _axis));
+    }
   }
 }
 

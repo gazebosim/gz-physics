@@ -61,8 +61,9 @@ namespace ignition
         public: virtual Axis GetRevoluteJointAxis(std::size_t _id) const = 0;
       };
 
-      public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJointCast>;
+      // TODO(MXG): Figure out why this bothers the SelfConflict check
+//      public: using RequiredFeatures =
+//          FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
     /// \brief Provide the API for setting a revolute joint's axis. Not all
@@ -104,6 +105,53 @@ namespace ignition
 
       public: using RequiredFeatures =
           FeatureList<ignition::physics::RevoluteJointCast>;
+    };
+
+    class IGNITION_PHYSICS_VISIBLE AttachRevoluteJointFeature
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Link : public virtual Feature::Link<PolicyT, FeaturesT>
+      {
+        public: using Axis =
+            typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+        public: using JointPtrType = RevoluteJointPtr<PolicyT, FeaturesT>;
+
+        /// \brief Attach this link to another link using a revolute joint.
+        /// \param[in] _parent
+        ///   The parent link for the joint. Pass in a nullptr to attach the
+        ///   link to the world.
+        /// \param[in] _axis
+        ///   The joint axis for the new joint. The rest of the joint properties
+        ///   will be left to the default values of the physics engine.
+        ///     TODO(MXG): Instead of _axis, consider passing in a struct
+        ///     containing all base joint properties plus the axis.
+        /// \return A reference to the newly constructed RevoluteJoint.
+        public: JointPtrType AttachRevoluteJoint(
+            const BaseLinkPtr<PolicyT> &_parent,
+            const Axis &_axis = Axis::UnitX());
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Axis =
+            typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+        /// \param[in] _childID
+        ///   The ID of the child link.
+        /// \param[in] _parent
+        ///   A reference to the parent link. If this evaluates to a nullptr,
+        ///   then the parent should be the world.
+        /// \param[in] _axis
+        ///   The desired axis of the new revolute joint
+        /// \returns the Identity of the newly created RevoluteJoint
+        public: virtual Identity AttachRevoluteJoint(
+            std::size_t _childID,
+            const BaseLinkPtr<PolicyT> &_parent,
+            const Axis &_axis) = 0;
+      };
     };
   }
 }

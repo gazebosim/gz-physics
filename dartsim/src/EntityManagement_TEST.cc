@@ -19,12 +19,17 @@
 
 #include <ignition/plugin/Loader.hh>
 
+#include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
+#include <ignition/physics/RevoluteJoint.hh>
 
 #include "EntityManagementFeatures.hh"
 
 using TestFeatureList = ignition::physics::FeatureList<
-  ignition::physics::dartsim::EntityManagementFeatureList
+  ignition::physics::dartsim::EntityManagementFeatureList,
+  ignition::physics::AttachRevoluteJointFeature,
+  ignition::physics::GetBasicJointState
+//  ignition::physics::GetRevoluteJointProperties
 >;
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
@@ -42,16 +47,23 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto world = engine->ConstructEmptyWorld("empty world");
   ASSERT_NE(nullptr, world);
   EXPECT_EQ("empty world", world->GetName());
+  EXPECT_EQ(engine, world->GetEngine());
 
   auto model = world->ConstructEmptyModel("empty model");
   ASSERT_NE(nullptr, model);
   EXPECT_EQ("empty model", model->GetName());
+  EXPECT_EQ(world, model->GetWorld());
+  EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
 
   auto link = model->ConstructEmptyLink("empty link");
   ASSERT_NE(nullptr, link);
   EXPECT_EQ("empty link", link->GetName());
   EXPECT_EQ(model, link->GetModel());
-  EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
+  EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
+
+  auto joint = link->AttachRevoluteJoint(nullptr);
+//  EXPECT_NEAR((Eigen::Vector3d::UnitX() - joint->GetAxis()).norm(), 0.0, 1e-6);
+  EXPECT_DOUBLE_EQ(0.0, joint->GetPosition(0));
 }
 
 int main(int argc, char *argv[])

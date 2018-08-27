@@ -17,6 +17,7 @@
 
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/Joint.hpp>
+#include <dart/dynamics/RevoluteJoint.hpp>
 
 #include "JointFeatures.hh"
 
@@ -116,6 +117,30 @@ void JointFeatures::SetJointTransformToChild(
     const std::size_t _id, const Pose3d &_pose)
 {
   this->joints.at(_id)->setTransformFromChildBodyNode(_pose.inverse());
+}
+
+/////////////////////////////////////////////////
+Identity JointFeatures::AttachRevoluteJoint(
+    const std::size_t _childID,
+    const BaseLink3dPtr &_parent,
+    const AngularVector3d &_axis)
+{
+  DartBodyNode *bn = this->links.at(_childID);
+  dart::dynamics::RevoluteJoint::Properties properties;
+  properties.mAxis = _axis;
+
+  if (!_parent)
+  {
+    // The parent was a nullptr, so we should attach this link directly to the
+    // world.
+    return this->GenerateIdentity(
+          this->AddJoint(
+            bn->moveTo<dart::dynamics::RevoluteJoint>(nullptr, properties)));
+  }
+
+  return this->GenerateIdentity(
+        this->AddJoint(bn->moveTo<dart::dynamics::RevoluteJoint>(
+                         this->links.at(_parent->EntityID()), properties)));
 }
 
 }

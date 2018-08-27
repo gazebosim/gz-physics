@@ -233,9 +233,14 @@ namespace ignition
        || FeatureList<OtherFeatures...>::template ConflictsWith<
             Feature1, AssertNoConflict>()> {};
 
-      /// \private Terminal implementation of SelfConflict
+      /// \private Terminal implementation of SelfConflict for 1 feature
       template <bool AssertNoConflict, typename SingleFeature>
       struct SelfConflict<AssertNoConflict, std::tuple<SingleFeature>>
+          : std::integral_constant<bool, false> {};
+
+      /// \private Terminal implementation of SelfConflict for 0 features
+      template <bool AssertNoConflict>
+      struct SelfConflict<AssertNoConflict, std::tuple<>>
           : std::integral_constant<bool, false> {};
 
       /////////////////////////////////////////////////
@@ -413,14 +418,19 @@ namespace ignition
 
 // Macros for generating EngineTemplate, LinkTemplate, etc
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, P) \
-  template <typename List>\
+  template <typename List> \
   using X ## P = X <::ignition::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
   using X ## P ## Ptr = X ## Ptr < \
     ::ignition::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
   using Const ## X ## P ## Ptr = X ## Ptr < \
-    ::ignition::physics::FeaturePolicy ## P, List>;
+    ::ignition::physics::FeaturePolicy ## P, List>; \
+  using Base ## X ## P ## Ptr = Base ## X ## Ptr < \
+    ::ignition::physics::FeaturePolicy ## P>; \
+  using ConstBase ## X ## P ## Ptr = ConstBase ## X ## Ptr <\
+    ::ignition::physics::FeaturePolicy ## P>;
+
 
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
@@ -436,7 +446,8 @@ namespace ignition
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public ::ignition::physics::detail::Aggregate< \
-        detail :: X ## Selector, FeaturesT>::template type<PolicyT, FeaturesT> \
+        detail :: X ## Selector, FeaturesT>::template type<PolicyT, FeaturesT>,\
+      public virtual Entity<PolicyT, FeaturesT> \
   { \
     public: using Identifier = detail:: X ## Identifier; \
     public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
@@ -454,6 +465,12 @@ namespace ignition
   template <typename PolicyT, typename FeaturesT> \
   using Const ## X ## Ptr = ::ignition::physics::EntityPtr< \
     const X <PolicyT, FeaturesT> >; \
+  template <typename PolicyT> \
+  using Base ## X ## Ptr = ::ignition::physics::EntityPtr< \
+    X <PolicyT, ::ignition::physics::FeatureList<>>>; \
+  template <typename PolicyT> \
+  using ConstBase ## X ## Ptr = ::ignition::physics::EntityPtr< \
+    const X <PolicyT, ::ignition::physics::FeatureList<>>>; \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \

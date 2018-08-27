@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_DARTSIM_SRC_JOINTFEATURES_HH_
 
 #include <ignition/physics/Joint.hh>
+#include <ignition/physics/RevoluteJoint.hh>
 
 #include "Base.hh"
 
@@ -31,7 +32,8 @@ using JointFeatureList = FeatureList<
   SetBasicJointState,
   GetBasicJointProperties,
   SetJointTransformFromParentFeature,
-  SetJointTransformToChildFeature
+  SetJointTransformToChildFeature,
+  AttachRevoluteJointFeature
 >;
 
 class JointFeatures :
@@ -82,6 +84,11 @@ class JointFeatures :
 
   public: void SetJointTransformToChild(
       const std::size_t _id, const Pose3d &_pose) override;
+
+  public: Identity AttachRevoluteJoint(
+      const std::size_t _childID,
+      const BaseLink3dPtr &_parent,
+      const AngularVector3d &_axis) override;
 };
 
 }
