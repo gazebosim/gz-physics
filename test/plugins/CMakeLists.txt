@@ -1,6 +1,8 @@
 add_library(MockEntities SHARED MockEntities.cc)
+add_library(MockFrames SHARED frames.cc)
 
-target_link_libraries(MockEntities
-  PRIVATE
-    ${PROJECT_LIBRARY_TARGET_NAME}
-    Eigen3::Eigen)
+foreach(plugin MockEntities MockFrames)
+  target_link_libraries(${plugin}
+    PRIVATE
+      ${PROJECT_LIBRARY_TARGET_NAME})
+endforeach()

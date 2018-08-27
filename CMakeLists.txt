@@ -20,8 +20,6 @@ ign_configure_project()
 # Set project-specific options
 #============================================================================
 
-# No project-specific options yet
-
 
 #============================================================================
 # Search for project-specific dependencies

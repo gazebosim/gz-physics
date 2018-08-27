@@ -6,11 +6,22 @@ ign_build_tests(
   SOURCES ${tests}
   LIB_DEPS
     Eigen3::Eigen
-    ignition-plugin${IGN_PLUGIN_VER}::loader)
+    ignition-plugin${IGN_PLUGIN_VER}::loader
+  TEST_LIST list)
 
 if (BUILD_TESTING)
-  target_compile_definitions(INTEGRATION_FeatureSystem PRIVATE
-    "MockEntities_LIB=\"$<TARGET_FILE:MockEntities>\"")
+  foreach(test ${list})
 
-  add_dependencies(INTEGRATION_FeatureSystem MockEntities)
+    foreach(mock_plugin
+        MockEntities
+        MockFrames)
+
+      target_compile_definitions(${test} PRIVATE
+        "${mock_plugin}_LIB=\"$<TARGET_FILE:${mock_plugin}>\"")
+
+      add_dependencies(${test} ${mock_plugin})
+
+    endforeach()
+
+  endforeach()
 endif()
