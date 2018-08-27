@@ -5,16 +5,24 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common g++-8
+          - apt-get -y install cmake build-essential curl git mercurial cppcheck software-properties-common g++-8
           - update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8 --slave /usr/bin/gcov gcov /usr/bin/gcov-8
           - gcc -v
           - g++ -v
+          - gcov -v
+          # lcov
+          - git clone https://github.com/linux-test-project/lcov.git
+          - cd lcov
+          - make install
+          - cd ..
           # Ignition dependencies
-          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" > /etc/apt/sources.list.d/gazebo-stable.list
-          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease xenial main" > /etc/apt/sources.list.d/gazebo-prerelease.list
-          - apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease bionic main" > /etc/apt/sources.list.d/gazebo-prerelease.list
+          - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
+            libignition-cmake2-dev
+            libignition-math6-dev
             libignition-plugin-dev
             libeigen3-dev
           # DARTsim
@@ -24,22 +32,6 @@ pipelines:
             dart6-data
             libdart6-dev
             libdart6-utils-urdf-dev
-          # Ignition cmake
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-cmake -b gz11
-          - cd ign-cmake
-          - mkdir build
-          - cd build
-          - cmake .. -DBUILD_TESTING=false
-          - make install
-          - cd ../..
-          # Ignition math
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-math -b gz11
-          - cd ign-math
-          - mkdir build
-          - cd build
-          - cmake .. -DBUILD_TESTING=false
-          - make install
-          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
@@ -48,6 +40,7 @@ pipelines:
           - export CTEST_OUTPUT_ON_FAILURE=1
           - make test
           - make coverage
-          - bash <(curl -s https://codecov.io/bash)
+          # Use a special version of codecov for handling gcc8 output.
+          - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/4678d212cce2078bbaaf5027af0c0dafaad6a095/codecov) -X gcovout
           - make codecheck
           - make install

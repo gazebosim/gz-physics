@@ -106,7 +106,78 @@ namespace ignition
       /// \return True if this is pointing to a valid Entity, otherwise false.
       public: operator bool() const;
 
-      // TODO(MXG): Write comparison operators and a Hash() implementation.
+      /// \brief Produces a hash for the Entity that this EntityPtr is referring
+      /// to. This function allows EntityPtr instances to be used as values in a
+      /// std::unordered_set or keys in a std::unordered_map. Using this
+      /// function directly should not normally be necessary.
+      /// \return A hash of the underlying Entity.
+      public: std::size_t Hash() const;
+
+      /// \brief Comparison operator
+      /// \param[in] _other
+      ///   Entity to compare to.
+      /// \remark Entities are uniquely identified by their underlying ID which
+      /// is assigned by the physics engine. This may produce unintuitive
+      /// results depending on how the physics engine organizes its Entities.
+      /// \returns True if the ID of this Entity is equal to the ID of _other,
+      /// otherwise returns false.
+      public: template <typename OtherEntityT>
+      bool operator ==(const EntityPtr<OtherEntityT> &_other) const;
+
+      /// \brief Comparison operator
+      /// \param[in] _other
+      ///   Entity to compare to.
+      /// \remark Entities are uniquely identified by their underlying ID which
+      /// is assigned by the physics engine. This may produce unintuitive
+      /// results depending on how the physics engine organizes its Entities.
+      /// \returns True if the ID of this Entity is less than the ID of _other,
+      /// otherwise returns false.
+      public: template <typename OtherEntityT>
+      bool operator <(const EntityPtr<OtherEntityT> &_other) const;
+
+      /// \brief Comparison operator
+      /// \param[in] _other
+      ///   Entity to compare to.
+      /// \remark Entities are uniquely identified by their underlying ID which
+      /// is assigned by the physics engine. This may produce unintuitive
+      /// results depending on how the physics engine organizes its Entities.
+      /// \returns True if the ID of this Entity is greater than the ID of
+      /// _other, otherwise returns false.
+      public: template <typename OtherEntityT>
+      bool operator >(const EntityPtr<OtherEntityT> &_other) const;
+
+      /// \brief Comparison operator
+      /// \param[in] _other
+      ///   Entity to compare to.
+      /// \remark Entities are uniquely identified by their underlying ID which
+      /// is assigned by the physics engine. This may produce unintuitive
+      /// results depending on how the physics engine organizes its Entities.
+      /// \returns True if the ID of this Entity is not equal to the ID of
+      /// _other, otherwise returns false.
+      public: template <typename OtherEntityT>
+      bool operator !=(const EntityPtr<OtherEntityT> &_other) const;
+
+      /// \brief Comparison operator
+      /// \param[in] _other
+      ///   Entity to compare to.
+      /// \remark Entities are uniquely identified by their underlying ID which
+      /// is assigned by the physics engine. This may produce unintuitive
+      /// results depending on how the physics engine organizes its Entities.
+      /// \returns True if the ID of this Entity is less than or equal to the ID
+      /// of _other, otherwise returns false.
+      public: template <typename OtherEntityT>
+      bool operator <=(const EntityPtr<OtherEntityT> &_other) const;
+
+      /// \brief Comparison operator
+      /// \param[in] _other
+      ///   Entity to compare to.
+      /// \remark Entities are uniquely identified by their underlying ID which
+      /// is assigned by the physics engine. This may produce unintuitive
+      /// results depending on how the physics engine organizes its Entities.
+      /// \returns True if the ID of this Entity is greater than or equal to the
+      /// ID of _other, otherwise returns false.
+      public: template <typename OtherEntityT>
+      bool operator >=(const EntityPtr<OtherEntityT> &_other) const;
 
       /// \brief If we are pointing to a valid entity, it will be stored here.
       /// Otherwise, this is a nullopt.
