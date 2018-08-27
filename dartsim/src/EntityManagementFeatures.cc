@@ -83,6 +83,13 @@ std::size_t EntityManagementFeatures::GetWorldIndex(
 }
 
 /////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetEngineOfWorld(
+    const std::size_t /*_worldID*/) const
+{
+  return this->GenerateIdentity(0);
+}
+
+/////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetModelCount(
     const std::size_t _worldID) const
 {
@@ -121,6 +128,14 @@ std::size_t EntityManagementFeatures::GetModelIndex(
     const std::size_t _modelID) const
 {
   return this->models.idToIndexInContainer.at(_modelID);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorldOfModel(
+    const std::size_t _modelID) const
+{
+  const std::size_t worldID = this->models.idToContainerID.at(_modelID);
+  return this->GenerateIdentity(worldID, this->worlds.at(worldID));
 }
 
 /////////////////////////////////////////////////
@@ -196,6 +211,14 @@ std::size_t EntityManagementFeatures::GetLinkIndex(
 }
 
 /////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModelOfLink(
+    const std::size_t _linkID) const
+{
+  const DartSkeletonPtr &skeleton = this->links.at(_linkID)->getSkeleton();
+  return this->GenerateIdentity(this->models.IdentityOf(skeleton), skeleton);
+}
+
+/////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetJointName(
     const std::size_t _jointID) const
 {
@@ -207,6 +230,14 @@ std::size_t EntityManagementFeatures::GetJointIndex(
     const std::size_t _jointID) const
 {
   return this->joints.at(_jointID)->getJointIndexInSkeleton();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModelOfJoint(
+    const std::size_t _jointID) const
+{
+  const DartSkeletonPtr &skeleton = this->links.at(_jointID)->getSkeleton();
+  return this->GenerateIdentity(this->models.IdentityOf(skeleton), skeleton);
 }
 
 /////////////////////////////////////////////////

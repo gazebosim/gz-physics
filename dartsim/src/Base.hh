@@ -69,6 +69,9 @@ struct EntityStorage
   /// \brief Map from an entity ID to its index within its container
   std::unordered_map<std::size_t, std::size_t> idToIndexInContainer;
 
+  /// \brief Map from an entity ID to the ID of its container
+  std::unordered_map<std::size_t, std::size_t> idToContainerID;
+
   Value1 &operator[](const std::size_t _id)
   {
     return idToObject[_id];
@@ -138,6 +141,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->worlds.idToIndexInContainer[id] = indexInContainerToID.size();
     indexInContainerToID.push_back(id);
 
+    this->worlds.idToContainerID[id] = 0;
+
     _world->setName(_name);
 
     return id;
@@ -159,6 +164,8 @@ class Base : public Implements3d<FeatureList<Feature>>
         this->models.indexInContainerToID[_worldID];
     indexInContainerToID.push_back(id);
     world->addSkeleton(entry.model);
+
+    this->models.idToContainerID[id] = _worldID;
 
     assert(indexInContainerToID.size() == world->getNumSkeletons());
 

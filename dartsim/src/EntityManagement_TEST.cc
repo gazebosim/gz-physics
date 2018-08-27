@@ -50,6 +50,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto link = model->ConstructEmptyLink("empty link");
   ASSERT_NE(nullptr, link);
   EXPECT_EQ("empty link", link->GetName());
+  EXPECT_EQ(model, link->GetModel());
+  EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
 }
 
 int main(int argc, char *argv[])
