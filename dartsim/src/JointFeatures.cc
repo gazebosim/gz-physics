@@ -17,6 +17,7 @@
 
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/Joint.hpp>
+#include <dart/dynamics/PrismaticJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 
 #include "JointFeatures.hh"
@@ -120,6 +121,36 @@ void JointFeatures::SetJointTransformToChild(
 }
 
 /////////////////////////////////////////////////
+Identity JointFeatures::CastToRevoluteJoint(
+    const std::size_t _jointID) const
+{
+  dart::dynamics::RevoluteJoint *revolute =
+      dynamic_cast<dart::dynamics::RevoluteJoint*>(
+        this->joints.at(_jointID).get());
+
+  if (revolute)
+    return this->GenerateIdentity(_jointID);
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+AngularVector3d JointFeatures::GetRevoluteJointAxis(
+    const std::size_t _jointID) const
+{
+  return static_cast<const dart::dynamics::RevoluteJoint*>(
+        this->joints.at(_jointID).get())->getAxis();
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetRevoluteJointAxis(
+    const std::size_t _jointID, const AngularVector3d &_axis)
+{
+  static_cast<dart::dynamics::RevoluteJoint*>(
+        this->joints.at(_jointID).get())->setAxis(_axis);
+}
+
+/////////////////////////////////////////////////
 Identity JointFeatures::AttachRevoluteJoint(
     const std::size_t _childID,
     const BaseLink3dPtr &_parent,
@@ -140,6 +171,58 @@ Identity JointFeatures::AttachRevoluteJoint(
 
   return this->GenerateIdentity(
         this->AddJoint(bn->moveTo<dart::dynamics::RevoluteJoint>(
+                         this->links.at(_parent->EntityID()), properties)));
+}
+
+/////////////////////////////////////////////////
+Identity JointFeatures::CastToPrismaticJoint(
+    const std::size_t _jointID) const
+{
+  dart::dynamics::PrismaticJoint *prismatic =
+      dynamic_cast<dart::dynamics::PrismaticJoint*>(
+        this->joints.at(_jointID).get());
+
+  if (prismatic)
+    return this->GenerateIdentity(_jointID);
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d JointFeatures::GetPrismaticJointAxis(
+    const std::size_t _jointID) const
+{
+  return static_cast<const dart::dynamics::PrismaticJoint*>(
+        this->joints.at(_jointID).get())->getAxis();
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetPrismaticJointAxis(
+    const std::size_t _jointID, const LinearVector3d &_axis)
+{
+  static_cast<dart::dynamics::PrismaticJoint*>(
+        this->joints.at(_jointID).get())->setAxis(_axis);
+}
+
+/////////////////////////////////////////////////
+Identity JointFeatures::AttachPrismaticJoint(
+    const std::size_t _childID,
+    const BaseLink3dPtr &_parent,
+    const LinearVector3d &_axis)
+{
+  DartBodyNode *bn = this->links.at(_childID);
+  dart::dynamics::PrismaticJoint::Properties properties;
+  properties.mAxis = _axis;
+
+  if (!_parent)
+  {
+    return this->GenerateIdentity(
+          this->AddJoint(
+            bn->moveTo<dart::dynamics::PrismaticJoint>(nullptr, properties)));
+  }
+
+  return this->GenerateIdentity(
+        this->AddJoint(bn->moveTo<dart::dynamics::PrismaticJoint>(
                          this->links.at(_parent->EntityID()), properties)));
 }
 

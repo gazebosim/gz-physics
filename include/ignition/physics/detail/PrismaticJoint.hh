@@ -41,6 +41,18 @@ namespace ignition
       this->template Interface<SetPrismaticJointProperties>()
           ->SetPrismaticJointAxis(this->identity, _axis);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto AttachPrismaticJointFeature::Link<PolicyT, FeaturesT>::
+    AttachPrismaticJoint(
+        const BaseLinkPtr<PolicyT> &_parent,
+        const Axis &_axis) -> JointPtrType
+    {
+      return JointPtrType(this->pimpl,
+            this->template Interface<AttachPrismaticJointFeature>()
+              ->AttachPrismaticJoint(this->identity, _parent, _axis));
+    }
   }
 }
 

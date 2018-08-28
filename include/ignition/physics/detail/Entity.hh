@@ -246,8 +246,20 @@ namespace ignition
         return *this;
       }
 
-      // If _other.entity has a valid identity, continue
-      this->entity = EntityT(_other.entity->pimpl, _other.entity->identity);
+      if (this->entity)
+      {
+        // Avoid reallocating the pimpl
+        *this->entity->pimpl = *_other.entity->pimpl;
+        this->entity->identity = _other.entity->identity;
+      }
+      else
+      {
+        std::shared_ptr<typename EntityT::Pimpl> newPimpl =
+            std::make_shared<typename EntityT::Pimpl>(
+              *_other.entity->pimpl);
+
+        this->entity = EntityT(std::move(newPimpl), _other.entity->identity);
+      }
 
       return *this;
     }

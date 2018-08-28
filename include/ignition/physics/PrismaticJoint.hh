@@ -27,7 +27,7 @@ namespace ignition
     IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint)
 
     class IGNITION_PHYSICS_VISIBLE GetPrismaticJointProperties
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<PrismaticJointCast>
     {
       /// \brief The API for getting basic prismatic joint properties
       public: template <typename PolicyT, typename FeaturesT>
@@ -56,16 +56,13 @@ namespace ignition
 
         public: virtual Axis GetPrismaticJointAxis(std::size_t _id) const = 0;
       };
-
-      public: using RequiredFeatures =
-          FeatureList<ignition::physics::PrismaticJointCast>;
     };
 
     /// \brief Provide the API for setting a prismatic joint's axis. Not all
     /// physics engines are able to change properties during run-time, so some
     /// might support getting the joint axis but not setting it.
     class IGNITION_PHYSICS_VISIBLE SetPrismaticJointProperties
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<PrismaticJointCast>
     {
       /// \brief The API for setting basic prismatic joint properties
       public: template <typename PolicyT, typename FeaturesT>
@@ -94,9 +91,56 @@ namespace ignition
         public: virtual void SetPrismaticJointAxis(
             std::size_t _id, const Axis &_axis) = 0;
       };
+    };
 
-      public: using RequiredFeatures =
-          FeatureList<ignition::physics::PrismaticJointCast>;
+    /// \brief Provide the API for attaching a Link to another Link (or directly
+    /// to the World) with a prismatic joint. After calling AttachPrismaticJoint
+    /// the Link's parent joint will be a prismatic joint.
+    class IGNITION_PHYSICS_VISIBLE AttachPrismaticJointFeature
+        : public virtual FeatureWithRequirements<PrismaticJointCast>
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Link : public virtual Feature::Link<PolicyT, FeaturesT>
+      {
+        public: using Axis =
+            typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
+        public: using JointPtrType = PrismaticJointPtr<PolicyT, FeaturesT>;
+
+        /// \brief Attach this link to another link using a prismatic joint.
+        /// \param[in] _parent
+        ///   The parent link for the joint. Pass in a nullptr to attach the
+        ///   link to the world.
+        /// \param[in] _axis
+        ///   The joint axis for the new joint. The rest of the joint properties
+        ///   will be left to the default values of the physics engine.
+        ///     TODO(MXG): Instead of _axis, consider passing in a struct
+        ///     containing all base joint properties plus the axis.
+        /// \return A reference to the newly constructed PrismaticJoint.
+        public: JointPtrType AttachPrismaticJoint(
+            const BaseLinkPtr<PolicyT> &_parent,
+            const Axis &_axis = Axis::UnitX());
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Axis =
+            typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
+        /// \param[in] _childID
+        ///   The ID of the child link.
+        /// \param[in] _parent
+        ///   A reference to the parent link. If this evaluates to a nullptr,
+        ///   then the parent should be the world.
+        /// \param[in] _axis
+        ///   The desired axis of the new revolute joint
+        /// \returns the Identity of the newly created PrismaticJoint
+        public: virtual Identity AttachPrismaticJoint(
+            std::size_t _childID,
+            const BaseLinkPtr<PolicyT> &_parent,
+            const Axis &_axis) = 0;
+      };
     };
   }
 }

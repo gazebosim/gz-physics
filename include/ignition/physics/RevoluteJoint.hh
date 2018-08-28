@@ -106,6 +106,9 @@ namespace ignition
           FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
+    /// \brief Provide the API for attaching a Link to another Link (or directly
+    /// to the World) with a revolute joint. After calling AttachRevoluteJoint,
+    /// the Link's parent joint will be a revolute joint.
     class IGNITION_PHYSICS_VISIBLE AttachRevoluteJointFeature
         : public virtual Feature
     {

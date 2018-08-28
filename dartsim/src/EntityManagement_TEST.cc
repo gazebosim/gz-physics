@@ -24,12 +24,11 @@
 #include <ignition/physics/RevoluteJoint.hh>
 
 #include "EntityManagementFeatures.hh"
+#include "JointFeatures.hh"
 
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::dartsim::EntityManagementFeatureList,
-  ignition::physics::AttachRevoluteJointFeature,
-  ignition::physics::GetBasicJointState
-//  ignition::physics::GetRevoluteJointProperties
+  ignition::physics::dartsim::JointFeatureList
 >;
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
@@ -62,8 +61,14 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
 
   auto joint = link->AttachRevoluteJoint(nullptr);
-//  EXPECT_NEAR((Eigen::Vector3d::UnitX() - joint->GetAxis()).norm(), 0.0, 1e-6);
+  EXPECT_NEAR((Eigen::Vector3d::UnitX() - joint->GetAxis()).norm(), 0.0, 1e-6);
   EXPECT_DOUBLE_EQ(0.0, joint->GetPosition(0));
+
+  joint->SetAxis(Eigen::Vector3d::UnitZ());
+  EXPECT_NEAR((Eigen::Vector3d::UnitZ() - joint->GetAxis()).norm(), 0.0, 1e-6);
+
+  auto child = model->ConstructEmptyLink("child link");
+  child->AttachPrismaticJoint(link);
 }
 
 int main(int argc, char *argv[])
