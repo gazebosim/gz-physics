@@ -219,28 +219,26 @@ namespace ignition
       /////////////////////////////////////////////////
       /// \private Check whether any feature within a std::tuple of features
       /// conflicts with any other feature in that tuple.
-      template <bool AssertNoConflict, typename Tuple>
+      template <bool AssertNoConflict, typename... FeatureLists>
       struct SelfConflict;
 
       /// \private Recursive implementation of SelfConflict
-      template <bool AssertNoConflict, typename Feature1,
-                typename... OtherFeatures>
+      template <bool AssertNoConflict, typename FeatureList1,
+                typename... OtherFeatureLists>
       struct SelfConflict<
-            AssertNoConflict, std::tuple<Feature1, OtherFeatures...>>
+            AssertNoConflict, FeatureList1, OtherFeatureLists...>
           : std::integral_constant<bool,
-          FeatureList<Feature1>::template ConflictsWith<
-            FeatureList<OtherFeatures...>, AssertNoConflict>()
-       || FeatureList<OtherFeatures...>::template ConflictsWith<
-            Feature1, AssertNoConflict>()> {};
+          FeatureList<FeatureList1>::template ConflictsWith<
+            FeatureList<OtherFeatureLists...>, AssertNoConflict>()> {};
 
       /// \private Terminal implementation of SelfConflict for 1 feature
-      template <bool AssertNoConflict, typename SingleFeature>
-      struct SelfConflict<AssertNoConflict, std::tuple<SingleFeature>>
+      template <bool AssertNoConflict, typename SingleFeatureList>
+      struct SelfConflict<AssertNoConflict, SingleFeatureList>
           : std::integral_constant<bool, false> {};
 
       /// \private Terminal implementation of SelfConflict for 0 features
       template <bool AssertNoConflict>
-      struct SelfConflict<AssertNoConflict, std::tuple<>>
+      struct SelfConflict<AssertNoConflict>
           : std::integral_constant<bool, false> {};
 
       /////////////////////////////////////////////////

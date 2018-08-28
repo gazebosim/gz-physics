@@ -61,9 +61,8 @@ namespace ignition
         public: virtual Axis GetRevoluteJointAxis(std::size_t _id) const = 0;
       };
 
-      // TODO(MXG): Figure out why this bothers the SelfConflict check
-//      public: using RequiredFeatures =
-//          FeatureList<ignition::physics::RevoluteJointCast>;
+      public: using RequiredFeatures =
+          FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
     /// \brief Provide the API for setting a revolute joint's axis. Not all

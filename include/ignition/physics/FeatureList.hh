@@ -28,7 +28,7 @@ namespace ignition
     {
       // Forward declarations
       template <typename...> struct CombineLists;
-      template <bool, typename> struct SelfConflict;
+      template <bool, typename...> struct SelfConflict;
     }
 
     /////////////////////////////////////////////////
@@ -83,7 +83,7 @@ namespace ignition
       public: using RequiredFeatures = void;
 
       // Check that this FeatureList does not contain any self-conflicts.
-      static_assert(!detail::SelfConflict<true, Features>::value,
+      static_assert(!detail::SelfConflict<true, FeaturesT...>::value,
           "FeatureList ERROR: YOUR LIST CONTAINS CONFLICTING FEATURES!");
     };
 
