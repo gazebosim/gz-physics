@@ -22,28 +22,34 @@
 
 #include "../MockJoints.hh"
 
-using namespace ignition::physics;
-
 namespace mock
 {
   template <typename PolicyT>
-  class JointPlugin : public Implements<PolicyT, MockJointList>
+  class JointPlugin
+      : public ignition::physics::Implements<PolicyT, MockJointList>
   {
     using Scalar = typename PolicyT::Scalar;
 
     using RevoluteAxis =
-        typename FromPolicy<PolicyT>::template Use<AngularVector>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::AngularVector>;
 
     using Pose =
-        typename FromPolicy<PolicyT>::template Use<Pose>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::Pose>;
 
     using FrameData =
-        typename FromPolicy<PolicyT>::template Use<FrameData>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::FrameData>;
 
     using LinearVector =
-        typename FromPolicy<PolicyT>::template Use<LinearVector>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::LinearVector>;
 
     using VectorX = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+
+    using FrameID = ignition::physics::FrameID;
+    using Identity = ignition::physics::Identity;
 
     struct JointState
     {
@@ -161,7 +167,8 @@ namespace mock
       const auto &p = idToJointProperties.at(_id.ID());
       const auto &axis = idToRevoluteJointProperties.at(_id.ID()).axis;
 
-      const Pose R{Rotate(idToJointState.at(_id.ID()).position[0], axis)};
+      const Pose R{ignition::physics::Rotate(
+              idToJointState.at(_id.ID()).position[0], axis)};
 
       Pose parentJointToParentLink = Pose::Identity();
       if (!p.parentJointID.IsWorld())
@@ -208,7 +215,8 @@ namespace mock
       const auto &p = this->idToJointProperties.at(_id);
       const auto &axis = this->idToRevoluteJointProperties.at(_id).axis;
 
-      const Pose R{Rotate(this->idToJointState.at(_id).position[0], axis)};
+      const Pose R{ignition::physics::Rotate(
+              this->idToJointState.at(_id).position[0], axis)};
 
       return p.parentLinkToJoint * R * p.jointToChildLink;
     }
