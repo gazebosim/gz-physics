@@ -35,7 +35,8 @@ namespace mock
         ::template Use<ignition::physics::AngularVector>;
 
     using PrismaticAxis =
-        typename FromPolicy<PolicyT>::template Use<LinearVector>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::LinearVector>;
 
     using Pose =
         typename ignition::physics::FromPolicy<PolicyT>
