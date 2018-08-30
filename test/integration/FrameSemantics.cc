@@ -20,6 +20,7 @@
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>
 #include <ignition/physics/RequestFeatures.hh>
+#include <ignition/math/Helpers.hh>
 
 #include "../Utils.hh"
 #include "../MockFrameSemantics.hh"
