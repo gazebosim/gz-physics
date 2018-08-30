@@ -19,15 +19,16 @@
 #define IGNITION_PHYSICS_REVOLUTEJOINT_HH_
 
 #include <ignition/physics/DeclareJointType.hh>
+#include <ignition/physics/Geometry.hh>
 
 namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint)
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint);
 
     class IGNITION_PHYSICS_VISIBLE GetRevoluteJointProperties
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       /// \brief The API for getting basic revolute joint properties
       public: template <typename PolicyT, typename FeaturesT>
@@ -60,16 +61,13 @@ namespace ignition
         /// \return the axis of joint _id.
         public: virtual Axis GetRevoluteJointAxis(std::size_t _id) const = 0;
       };
-
-      public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
     /// \brief Provide the API for setting a revolute joint's axis. Not all
     /// physics engines are able to change properties during run-time, so some
     /// might support getting the joint axis but not setting it.
     class IGNITION_PHYSICS_VISIBLE SetRevoluteJointProperties
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       /// \brief The API for setting basic revolute joint properties
       public: template <typename PolicyT, typename FeaturesT>
@@ -101,16 +99,13 @@ namespace ignition
         public: virtual void SetRevoluteJointAxis(
             std::size_t _id, const Axis &_axis) = 0;
       };
-
-      public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
     /// \brief Provide the API for attaching a Link to another Link (or directly
     /// to the World) with a revolute joint. After calling AttachRevoluteJoint,
     /// the Link's parent joint will be a revolute joint.
     class IGNITION_PHYSICS_VISIBLE AttachRevoluteJointFeature
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Link : public virtual Feature::Link<PolicyT, FeaturesT>
@@ -127,9 +122,10 @@ namespace ignition
         /// \param[in] _axis
         ///   The joint axis for the new joint. The rest of the joint properties
         ///   will be left to the default values of the physics engine.
-        ///     TODO(MXG): Instead of _axis, consider passing in a struct
-        ///     containing all base joint properties plus the axis.
         /// \return A reference to the newly constructed RevoluteJoint.
+        //
+        // TODO(MXG): Instead of _axis, consider passing in a struct containing
+        // all base joint properties plus the axis.
         public: JointPtrType AttachRevoluteJoint(
             const BaseLinkPtr<PolicyT> &_parent,
             const Axis &_axis = Axis::UnitX());

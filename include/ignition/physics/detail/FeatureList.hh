@@ -493,6 +493,7 @@ namespace ignition
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Model)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Link)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Joint)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Shape)
 
     namespace detail
     {

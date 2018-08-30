@@ -79,6 +79,15 @@ namespace ignition
         public: virtual ~Joint() = default;
       };
 
+      /// \brief Placeholder class in case a Feature does not define its own
+      /// Shape API
+      public: template <typename Policy, typename FeaturesT>
+      class Shape : public virtual Entity<Policy, FeaturesT>
+      {
+        /// \brief Virtual destructor
+        public: virtual ~Shape() = default;
+      };
+
       public: template <typename Policy>
       class Implementation : public detail::Implementation
       {
