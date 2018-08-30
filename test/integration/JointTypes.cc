@@ -124,8 +124,8 @@ void TestRevoluteJoint(const double _tolerance, const std::string &_suffix)
 
   // Try various sets of joint position values
   TestRevoluteJointFK<PolicyT>({0.0, 0.0, 0.0}, engine, _tolerance);
-  TestRevoluteJointFK<PolicyT>({0.1, -1.57, 2.56}, engine, _tolerance);
-  TestRevoluteJointFK<PolicyT>({-2.4, -7.0, -0.18}, engine, _tolerance);
+  TestRevoluteJointFK<PolicyT>({0.125, -1.5, 2.625}, engine, _tolerance);
+  TestRevoluteJointFK<PolicyT>({-2.5, -7.0, -0.375}, engine, _tolerance);
 }
 
 /////////////////////////////////////////////////
