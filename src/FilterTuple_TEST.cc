@@ -58,7 +58,7 @@ using SingleCombineListsPartial =
 
 using SingleCombineListsChildFilter =
   ignition::physics::detail::CombineListsImpl<
-      std::tuple<>, ClassA>::PartialResult;
+      std::tuple<>, ClassA>::ChildFilter;
 
 TEST(FilterTuple_TEST, CombineListsResult)
 {
