@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FREEJOINT_HH_
-#define IGNITION_PHYSICS_DETAIL_FREEJOINT_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_FIXEDJOINT_HH_
+#define IGNITION_PHYSICS_DETAIL_FIXEDJOINT_HH_
 
-#include <ignition/physics/FreeJoint.hh>
+#include <ignition/physics/FixedJoint.hh>
 
 namespace ignition
 {
@@ -26,11 +26,12 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetFreeJointRelativeTransformFeature::FreeJoint<PolicyT, FeaturesT>::
-    SetRelativeTransform(const PoseType &_pose)
+    auto AttachFixedJointFeature::Link<PolicyT, FeaturesT>::AttachFixedJoint(
+        const BaseLinkPtr<PolicyT> &_parent) -> JointPtrType
     {
-      this->template Interface<SetFreeJointRelativeTransformFeature>()->
-          SetFreeJointTransform(this->identity, _pose);
+      return JointPtrType(this->pimpl,
+            this->template Interface<AttachFixedJointFeature>()
+                ->AttachFixedJoint(this->identity, _parent));
     }
   }
 }

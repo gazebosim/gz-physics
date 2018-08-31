@@ -19,6 +19,8 @@
 #define IGNITION_PHYSICS_DARTSIM_SRC_JOINTFEATURES_HH_
 
 #include <ignition/physics/Joint.hh>
+#include <ignition/physics/FixedJoint.hh>
+#include <ignition/physics/FreeJoint.hh>
 #include <ignition/physics/PrismaticJoint.hh>
 #include <ignition/physics/RevoluteJoint.hh>
 
@@ -34,6 +36,10 @@ using JointFeatureList = FeatureList<
   GetBasicJointProperties,
   SetJointTransformFromParentFeature,
   SetJointTransformToChildFeature,
+
+  SetFreeJointRelativeTransformFeature,
+
+  AttachFixedJointFeature,
 
   SetRevoluteJointProperties,
   GetRevoluteJointProperties,
@@ -101,6 +107,23 @@ class JointFeatures :
       const std::size_t _id, const Pose3d &_pose) override;
 
 
+  // ----- Fixed Joint -----
+  public: Identity CastToFixedJoint(
+      const std::size_t _jointID) const override;
+
+  public: Identity AttachFixedJoint(
+      std::size_t _childID,
+      const BaseLink3dPtr &_parent) override;
+
+
+  // ----- Free Joint -----
+  public: Identity CastToFreeJoint(
+      const std::size_t _jointID) const override;
+
+  public: void SetFreeJointRelativeTransform(
+      const std::size_t _jointID, const Pose3d &_pose) override;
+
+
   // ----- Revolute Joint -----
   public: Identity CastToRevoluteJoint(
       const std::size_t _jointID) const override;
@@ -131,6 +154,7 @@ class JointFeatures :
       const std::size_t _childID,
       const BaseLink3dPtr &_parent,
       const LinearVector3d &_axis) override;
+
 };
 
 }

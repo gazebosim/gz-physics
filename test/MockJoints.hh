@@ -73,7 +73,7 @@ namespace mock
     ignition::physics::GetRevoluteJointProperties,
     ignition::physics::GetPrismaticJointProperties,
     ignition::physics::SetPrismaticJointProperties,
-    ignition::physics::SetFreeJointTransformFeature,
+    ignition::physics::SetFreeJointRelativeTransformFeature,
     ignition::physics::JointFrameSemantics
   >;
 
