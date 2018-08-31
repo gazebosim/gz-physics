@@ -26,7 +26,7 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE GetKinematicProperties
+    class IGNITION_PHYSICS_VISIBLE GetShapeKinematicProperties
         : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -55,7 +55,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetKinematicProperties
+    class IGNITION_PHYSICS_VISIBLE SetShapeKinematicProperties
         : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -85,7 +85,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE GetCollisionProperties
+    class IGNITION_PHYSICS_VISIBLE GetShapeCollisionProperties
         : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -127,7 +127,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetCollisionProperties
+    class IGNITION_PHYSICS_VISIBLE SetShapeCollisionProperties
         : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -142,7 +142,7 @@ namespace ignition
         ///   objects, and this argument determines the other object.
         /// \param[in] _value
         ///   The value to set the coefficient to.
-        public: Scalar SetFrictionCoefficient(
+        public: void SetFrictionCoefficient(
             const BaseShapePtr<PolicyT> &_other, Scalar _value);
 
         /// \brief Set the coefficient of restitution between this shape and
@@ -152,7 +152,7 @@ namespace ignition
         ///   objects, and this argument determines the other object.
         /// \param[in] _value
         ///   The value to set the coefficient to.
-        public: Scalar SetRestitutionCoefficient(
+        public: void SetRestitutionCoefficient(
             const BaseShapePtr<PolicyT> &_other, Scalar _value);
 
       };
@@ -162,14 +162,16 @@ namespace ignition
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        public: virtual void SetFrictionCoefficient(
+        public: virtual void SetShapeFrictionCoefficient(
             std::size_t _shape0, std::size_t _shape1, Scalar _value) = 0;
 
-        public: virtual void SetRestitutionCoefficient(
+        public: virtual void SetShapeRestitutionCoefficient(
             std::size_t _shape0, std::size_t _shape1, Scalar _value) = 0;
       };
     };
   }
 }
+
+#include <ignition/physics/detail/Shape.hh>
 
 #endif

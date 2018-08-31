@@ -25,10 +25,12 @@
 
 #include "EntityManagementFeatures.hh"
 #include "JointFeatures.hh"
+#include "ShapeFeatures.hh"
 
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::dartsim::EntityManagementFeatureList,
-  ignition::physics::dartsim::JointFeatureList
+  ignition::physics::dartsim::JointFeatureList,
+  ignition::physics::dartsim::ShapeFeatureList
 >;
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
@@ -69,6 +71,16 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 
   auto child = model->ConstructEmptyLink("child link");
   child->AttachPrismaticJoint(link);
+
+  const std::string boxName = "box";
+  const Eigen::Vector3d boxSize(0.1, 0.2, 0.3);
+  auto box = link->AttachBoxShape(boxName, boxSize);
+  EXPECT_EQ(boxName, box->GetName());
+  EXPECT_NEAR((boxSize - box->GetSize()).norm(), 0.0, 1e-6);
+
+  EXPECT_EQ(1u, link->GetShapeCount());
+  auto boxCopy = link->GetShape(0u);
+  EXPECT_EQ(box, boxCopy);
 }
 
 int main(int argc, char *argv[])

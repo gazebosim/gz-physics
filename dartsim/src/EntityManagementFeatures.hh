@@ -94,11 +94,25 @@ class EntityManagementFeatures :
 
   public: Identity GetModelOfLink(std::size_t _linkID) const override;
 
+  public: std::size_t GetShapeCount(std::size_t _linkID) const override;
+
+  public: Identity GetShape(
+      std::size_t _linkID, std::size_t _shapeIndex) const override;
+
+  public: Identity GetShape(
+      std::size_t _linkID, const std::string &_shapeName) const override;
+
   public: const std::string &GetJointName(std::size_t _jointID) const override;
 
   public: std::size_t GetJointIndex(std::size_t _jointID) const override;
 
   public: Identity GetModelOfJoint(std::size_t _jointID) const override;
+
+  public: const std::string &GetShapeName(std::size_t _shapeID) const override;
+
+  public: std::size_t GetShapeIndex(std::size_t _shapeID) const override;
+
+  public: Identity GetLinkOfShape(std::size_t _shapeID) const override;
 
   public: Identity ConstructEmptyWorld(
       std::size_t _engineID, const std::string &_name) override;

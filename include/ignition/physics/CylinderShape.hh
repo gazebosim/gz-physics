@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_SPHERESHAPE_HH_
-#define IGNITION_PHYSICS_SPHERESHAPE_HH_
+#ifndef IGNITION_PHYSICS_CYLINDERSHAPE_HH_
+#define IGNITION_PHYSICS_CYLINDERSHAPE_HH_
 
 #include <ignition/physics/DeclareShapeType.hh>
 #include <ignition/physics/Geometry.hh>
@@ -25,20 +25,24 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(SphereShape);
+    IGN_PHYSICS_DECLARE_SHAPE_TYPE(CylinderShape);
 
-    /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE GetSphereShapeProperties
-        : public virtual FeatureWithRequirements<SphereShapeCast>
+    class IGNITION_PHYSICS_VISIBLE GetCylinderShapeProperties
+        : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
-      class SphereShape : public virtual Entity<PolicyT, FeaturesT>
+      class CylinderShape : public virtual Entity<PolicyT, FeaturesT>
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        /// \brief Get the radius of this SphereShape
-        /// \return the radius of this SphereShape
+        /// \brief Get the radius of this CylinderShape
+        /// \return the radius of this CylinderShape
         public: Scalar GetRadius() const;
+
+        /// \brief Get the height (length along the local z-axis) of this
+        /// CylinderShape.
+        /// \return the height of this CylinderShape
+        public: Scalar GetHeight() const;
       };
 
       public: template <typename PolicyT>
@@ -46,24 +50,31 @@ namespace ignition
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        public: virtual Scalar GetSphereShapeRadius(
-            std::size_t _sphereID) const = 0;
+        public: virtual Scalar GetCylinderShapeRadius(
+            std::size_t _cylinderID) const = 0;
+
+        public: virtual Scalar GetCylinderShapeHeight(
+            std::size_t _cylinderID) const = 0;
       };
     };
 
-    /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetSphereShapeProperties
-        : public virtual FeatureWithRequirements<SphereShapeCast>
+    class IGNITION_PHYSICS_VISIBLE SetCylinderShapeProperties
+        : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
-      class SphereShape : public virtual Entity<PolicyT, FeaturesT>
+      class CylinderShape : public virtual Entity<PolicyT, FeaturesT>
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        /// \brief Set the radius of this SphereShape
-        /// \param[in] _value
-        ///   The desired radius of this SphereShape
+        /// \brief Set the radius of this CylinderShape
+        /// \param[in] _radius
+        ///   The desired radius of this CylinderShape
         public: void SetRadius(Scalar _radius);
+
+        /// \brief Set the height of this CylinderShape
+        /// \param[in] _height
+        ///   The desired height of this CylinderShape
+        public: void SetHeight(Scalar _height);
       };
 
       public: template <typename PolicyT>
@@ -71,14 +82,16 @@ namespace ignition
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        public: virtual void SetSphereShapeRadius(
-            std::size_t _sphereID, Scalar _radius) = 0;
+        public: virtual void SetCylinderShapeRadius(
+            std::size_t _cylinderID, Scalar _radius) = 0;
+
+        public: virtual void SetCylinderShapeHeight(
+            std::size_t _cylinderID, Scalar _height) = 0;
       };
     };
 
-    /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE AttachSphereShapeFeature
-        : public virtual FeatureWithRequirements<SphereShapeCast>
+    class IGNITION_PHYSICS_VISIBLE AttachCylinderShapeFeature
+        : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Link : public virtual Feature::Link<PolicyT, FeaturesT>
@@ -88,11 +101,12 @@ namespace ignition
         public: using PoseType =
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
-        public: using ShapePtrType = SphereShapePtr<PolicyT, FeaturesT>;
+        public: using ShapePtrType = CylinderShapePtr<PolicyT, FeaturesT>;
 
-        public: ShapePtrType AttachSphereShape(
-            const std::string &_name,
+        public: ShapePtrType AttachCylinderShape(
+            const std::string &_name = "cylinder",
             Scalar _radius = 1.0,
+            Scalar _height = 1.0,
             const PoseType &_pose = PoseType::Identity());
       };
 
@@ -104,16 +118,17 @@ namespace ignition
         public: using PoseType =
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
-        public: virtual Identity AttachSphereShape(
+        public: virtual Identity AttachCylinderShape(
             std::size_t _linkID,
             const std::string &_name,
             Scalar _radius,
+            Scalar _height,
             const PoseType &_pose) = 0;
       };
     };
   }
 }
 
-#include <ignition/physics/detail/SphereShape.hh>
+#include <ignition/physics/detail/CylinderShape.hh>
 
 #endif

@@ -384,12 +384,14 @@ Identity SDFFeatures::ConstructSdfLink(
       this->ConstructSdfCollision(linkID, *collision);
   }
 
-  for (std::size_t i = 0; i < _sdfLink.VisualCount(); ++i)
-  {
-    const auto visual = _sdfLink.VisualByIndex(i);
-    if (visual)
-      this->ConstructSdfVisual(linkID, *visual);
-  }
+  // ign-physics is currently ignoring visuals, so we won't parse them from the
+  // SDF
+//  for (std::size_t i = 0; i < _sdfLink.VisualCount(); ++i)
+//  {
+//    const auto visual = _sdfLink.VisualByIndex(i);
+//    if (visual)
+//      this->ConstructSdfVisual(linkID, *visual);
+//  }
 
   return this->GenerateIdentity(linkID);
 }
@@ -437,7 +439,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
   // Collision name for uniqueness sake.
   const std::string internalName =
-      bn->getName() + "_collision_" + _collision.Name();
+      bn->getName() + ":" + _collision.Name();
 
   dart::dynamics::ShapeNode * const node =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
@@ -446,7 +448,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   node->setRelativeTransform(
         math::eigen3::convert(_collision.Pose()) * tf_shape);
 
-  return this->GenerateIdentity(this->AddShape({node, tf_shape}));
+  return this->GenerateIdentity(
+        this->AddShape({node, _collision.Name(), tf_shape}));
 }
 
 /////////////////////////////////////////////////
@@ -476,7 +479,7 @@ Identity SDFFeatures::ConstructSdfVisual(
   // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
   // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
   // Collision name for uniqueness sake.
-  const std::string internalName = bn->getName() + "_visual_" + _visual.Name();
+  const std::string internalName = bn->getName() + ":visual:" + _visual.Name();
 
   dart::dynamics::ShapeNode * const node =
       bn->createShapeNodeWith<dart::dynamics::VisualAspect>(
@@ -495,7 +498,8 @@ Identity SDFFeatures::ConstructSdfVisual(
           Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
   }
 
-  return this->GenerateIdentity(this->AddShape({node, tf_shape}));
+  return this->GenerateIdentity(
+        this->AddShape({node, _visual.Name(), tf_shape}));
 }
 
 /////////////////////////////////////////////////

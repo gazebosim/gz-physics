@@ -40,7 +40,18 @@ struct ModelInfo
 struct ShapeInfo
 {
   dart::dynamics::ShapeNodePtr node;
-  Eigen::Isometry3d tf_offset;
+
+  /// \brief dartsim has more strict name uniqueness rules than Gazebo, so we
+  /// store the Gazebo-specified name of the Shape here.
+  std::string name;
+
+  /// \brief This is added because sometimes the relative transform of a shape
+  /// according to Gazebo specifications may be different than the relative
+  /// transform of a shape within the dartsim specifications. This is the offset
+  /// from the Gazebo specs to the dartsim specs, i.e. T_g * tf_offset = T_d
+  /// where T_g is the relative transform according to Gazebo and T_d is the
+  /// relative transform according to dartsim.
+  Eigen::Isometry3d tf_offset = Eigen::Isometry3d::Identity();
 };
 
 template <typename Value1, typename Key2 = Value1>

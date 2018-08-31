@@ -219,6 +219,32 @@ Identity EntityManagementFeatures::GetModelOfLink(
 }
 
 /////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeCount(
+    const std::size_t _linkID) const
+{
+  return this->links.at(_linkID)->getNumShapeNodes();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+    const std::size_t _linkID, const std::size_t _shapeIndex) const
+{
+  return this->GenerateIdentity(
+        this->shapes.IdentityOf(
+          this->links.at(_linkID)->getShapeNode(_shapeIndex)));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+    const std::size_t _linkID, const std::string &_shapeName) const
+{
+  DartBodyNode * const bn = this->links.at(_linkID);
+  return this->GenerateIdentity(
+        this->shapes.IdentityOf(
+          bn->getSkeleton()->getShapeNode(bn->getName() + ":" + _shapeName)));
+}
+
+/////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetJointName(
     const std::size_t _jointID) const
 {
@@ -238,6 +264,29 @@ Identity EntityManagementFeatures::GetModelOfJoint(
 {
   const DartSkeletonPtr &skeleton = this->links.at(_jointID)->getSkeleton();
   return this->GenerateIdentity(this->models.IdentityOf(skeleton), skeleton);
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetShapeName(
+    const std::size_t _shapeID) const
+{
+  return this->shapes.at(_shapeID).name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeIndex(
+    const std::size_t _shapeID) const
+{
+  return this->shapes.at(_shapeID).node->getIndexInBodyNode();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLinkOfShape(
+    const std::size_t _shapeID) const
+{
+  return this->GenerateIdentity(
+        this->links.IdentityOf(
+          this->shapes.at(_shapeID).node->getBodyNodePtr()));
 }
 
 /////////////////////////////////////////////////

@@ -340,6 +340,89 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    std::size_t GetEntities::Link<PolicyT, FeaturesT>::GetShapeCount() const
+    {
+      return this->template Interface<GetEntities>()
+          ->GetShapeCount(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Link<PolicyT, FeaturesT>::GetShape(
+        const std::size_t _index) -> ShapePtrType
+    {
+      return ShapePtrType(this->pimpl,
+            this->template Interface<GetEntities>()->GetShape(
+                            this->identity, _index));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Link<PolicyT, FeaturesT>::GetShape(
+        const std::size_t _index) const -> ConstShapePtrType
+    {
+      return ShapePtrType(this->pimpl,
+            this->template Interface<GetEntities>()->GetShape(
+                            this->identity, _index));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Link<PolicyT, FeaturesT>::GetShape(
+        const std::string &_name) -> ShapePtrType
+    {
+      return ShapePtrType(this->pimpl,
+            this->template Interface<GetEntities>()->GetShape(
+                            this->identity, _name));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Link<PolicyT, FeaturesT>::GetShape(
+        const std::string &_name) const -> ConstShapePtrType
+    {
+      return ConstShapePtrType(this->pimpl,
+            this->template Interface<GetEntities>()->GetShape(
+                            this->identity, _name));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    const std::string &GetEntities::Shape<PolicyT, FeaturesT>::GetName() const
+    {
+      return this->template Interface<GetEntities>()->GetShapeName(
+            this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    std::size_t GetEntities::Shape<PolicyT, FeaturesT>::GetIndex() const
+    {
+      return this->template Interface<GetEntities>()->GetShapeIndex(
+            this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Shape<PolicyT, FeaturesT>::GetLink() -> LinkPtrType
+    {
+      return LinkPtrType(this->pimpl,
+            this->template Interface<GetEntities>()->GetLinkOfShape(
+                           this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Shape<PolicyT, FeaturesT>::GetLink() const
+    -> ConstLinkPtrType
+    {
+      return ConstLinkPtrType(this->pimpl,
+            this->template Interface<GetEntities>()->GetLinkOfShape(
+                                this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     const std::string &GetEntities::Joint<PolicyT, FeaturesT>::GetName() const
     {
       return this->template Interface<GetEntities>()

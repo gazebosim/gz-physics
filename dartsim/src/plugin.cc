@@ -21,6 +21,7 @@
 #include "CustomFeatures.hh"
 #include "JointFeatures.hh"
 #include "SDFFeatures.hh"
+#include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
 #include "EntityManagementFeatures.hh"
 
@@ -33,6 +34,7 @@ using DartsimFeatures = FeatureList<
   EntityManagementFeatureList,
   JointFeatureList,
   SDFFeatureList,
+  ShapeFeatureList,
   SimulationFeatureList
   // TODO(MXG): Implement more features
 >;
@@ -44,6 +46,7 @@ class Plugin :
     public virtual JointFeatures,
     public virtual EntityManagementFeatures,
     public virtual SDFFeatures,
+    public virtual ShapeFeatures,
     public virtual SimulationFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)

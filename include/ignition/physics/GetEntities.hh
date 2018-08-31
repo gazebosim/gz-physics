@@ -197,6 +197,10 @@ namespace ignition
         public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
         public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
 
+        // typedefs for the type of Shape that this Link can return
+        public: using ShapePtrType = ShapePtr<PolicyT, FeaturesT>;
+        public: using ConstShapePtrType = ConstShapePtr<PolicyT, FeaturesT>;
+
         /// \brief Get the name of this Link
         public: const std::string &GetName() const;
 
@@ -210,7 +214,28 @@ namespace ignition
         /// \sa GetModel()
         public: ConstModelPtrType GetModel() const;
 
-        // TODO(MXG): Return collision and/or visual objects
+        /// \brief Get the number of Shapes within this Link.
+        public: std::size_t GetShapeCount() const;
+
+        /// \brief Get a Shape that exists within this Link.
+        /// \param[in] _index
+        ///   Index of the Shape within this Link
+        /// \return A Shape reference. If _index is GetShapeCount() or higher,
+        /// this will be a nullptr.
+        public: ShapePtrType GetShape(std::size_t _index);
+
+        /// \sa GetShape(std::size_t)
+        public: ConstShapePtrType GetShape(std::size_t _index) const;
+
+        /// \brief Get a Shape that exists within this Link.
+        /// \param[in] _name
+        ///   Name of the Shape within this Link
+        /// \return A Shape reference. If a Shape named _name does not exist in
+        /// this Shape, this will be a nullptr.
+        public: ShapePtrType GetShape(const std::string &_name);
+
+        /// \sa GetShape(const std::string&)
+        public: ConstShapePtrType GetShape(const std::string &_name) const;
       };
 
       public: template <typename PolicyT, typename FeaturesT>
@@ -232,6 +257,27 @@ namespace ignition
 
         /// \sa GetModel()
         public: ConstModelPtrType GetModel() const;
+      };
+
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      {
+        // typedefs for the type of Link that this Shape can return
+        public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
+        public: using ConstLinkPtrType = ConstLinkPtr<PolicyT, FeaturesT>;
+
+        /// \brief Get the name of this Shape.
+        public: const std::string &GetName() const;
+
+        /// \brief Get the index of this Shape within its Link.
+        public: std::size_t GetIndex() const;
+
+        /// \brief Get the Link that contains this Shape.
+        /// \return a Link reference to the Link that contains this Shape.
+        public: LinkPtrType GetLink();
+
+        /// \sa GetLink()
+        public: ConstLinkPtrType GetLink() const;
       };
 
       public: template <typename PolicyT>
@@ -306,6 +352,15 @@ namespace ignition
         public: virtual Identity GetModelOfLink(
             std::size_t _linkID) const = 0;
 
+        public: virtual std::size_t GetShapeCount(
+            std::size_t _linkID) const = 0;
+
+        public: virtual Identity GetShape(
+            std::size_t _linkID, std::size_t _shapeIndex) const = 0;
+
+        public: virtual Identity GetShape(
+            std::size_t _linkID, const std::string &_shapeName) const = 0;
+
         public: virtual const std::string &GetJointName(
             std::size_t _jointID) const = 0;
 
@@ -314,6 +369,15 @@ namespace ignition
 
         public: virtual Identity GetModelOfJoint(
             std::size_t _jointID) const = 0;
+
+        public: virtual const std::string &GetShapeName(
+            std::size_t _shapeID) const = 0;
+
+        public: virtual std::size_t GetShapeIndex(
+            std::size_t _shapeID) const = 0;
+
+        public: virtual Identity GetLinkOfShape(
+            std::size_t _shapeID) const = 0;
       };
     };
   }

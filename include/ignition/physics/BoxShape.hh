@@ -98,7 +98,10 @@ namespace ignition
         /// \param[in] _pose
         ///   The desired pose of the BoxShape relative to the Link frame.
         /// \returns a reference to the newly constructed BoxShape
+        // TODO(MXG): Create a struct that contains all the relevant properties,
+        // and pass that in here.
         public: ShapePtrType AttachBoxShape(
+            const std::string &_name = "box",
             const Dimensions &_size = Dimensions::Constant(1.0),
             const PoseType &_pose = PoseType::Identity());
       };
@@ -114,11 +117,14 @@ namespace ignition
 
         public: virtual Identity AttachBoxShape(
             std::size_t _linkID,
+            const std::string &_name,
             const Dimensions &_size,
             const PoseType &_pose) = 0;
       };
     };
   }
 }
+
+#include <ignition/physics/detail/BoxShape.hh>
 
 #endif
