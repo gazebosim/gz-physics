@@ -24,7 +24,7 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(FixedJoint);
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(FixedJoint)
 
     class IGNITION_PHYSICS_VISIBLE AttachFixedJointFeature
         : public virtual FeatureWithRequirements<FixedJointCast>

@@ -25,7 +25,7 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(SphereShape);
+    IGN_PHYSICS_DECLARE_SHAPE_TYPE(SphereShape)
 
     /////////////////////////////////////////////////
     class IGNITION_PHYSICS_VISIBLE GetSphereShapeProperties

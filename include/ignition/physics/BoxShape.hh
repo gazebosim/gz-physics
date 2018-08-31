@@ -25,7 +25,7 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(BoxShape);
+    IGN_PHYSICS_DECLARE_SHAPE_TYPE(BoxShape)
 
     class IGNITION_PHYSICS_VISIBLE GetBoxShapeProperties
       : public virtual FeatureWithRequirements<BoxShapeCast>

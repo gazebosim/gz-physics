@@ -25,7 +25,7 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint);
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint)
 
     class IGNITION_PHYSICS_VISIBLE GetRevoluteJointProperties
         : public virtual FeatureWithRequirements<RevoluteJointCast>

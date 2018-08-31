@@ -25,7 +25,7 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint);
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint)
 
     class IGNITION_PHYSICS_VISIBLE GetPrismaticJointProperties
         : public virtual FeatureWithRequirements<PrismaticJointCast>

@@ -25,7 +25,7 @@ namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(CylinderShape);
+    IGN_PHYSICS_DECLARE_SHAPE_TYPE(CylinderShape)
 
     class IGNITION_PHYSICS_VISIBLE GetCylinderShapeProperties
         : public virtual FeatureWithRequirements<CylinderShapeCast>
