@@ -19,12 +19,13 @@
 #define IGNITION_PHYSICS_PRISMATICJOINT_HH_
 
 #include <ignition/physics/DeclareJointType.hh>
+#include <ignition/physics/Geometry.hh>
 
 namespace ignition
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint)
+    IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint);
 
     class IGNITION_PHYSICS_VISIBLE GetPrismaticJointProperties
         : public virtual FeatureWithRequirements<PrismaticJointCast>
@@ -111,6 +112,8 @@ namespace ignition
         /// \param[in] _parent
         ///   The parent link for the joint. Pass in a nullptr to attach the
         ///   link to the world.
+        /// \param[in] _name
+        ///   The name for this joint.
         /// \param[in] _axis
         ///   The joint axis for the new joint. The rest of the joint properties
         ///   will be left to the default values of the physics engine.
@@ -119,6 +122,7 @@ namespace ignition
         /// \return A reference to the newly constructed PrismaticJoint.
         public: JointPtrType AttachPrismaticJoint(
             const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name = "prismatic",
             const Axis &_axis = Axis::UnitX());
       };
 
@@ -133,12 +137,15 @@ namespace ignition
         /// \param[in] _parent
         ///   A reference to the parent link. If this evaluates to a nullptr,
         ///   then the parent should be the world.
+        /// \param[in] _name
+        ///   The name for this joint.
         /// \param[in] _axis
         ///   The desired axis of the new revolute joint
         /// \returns the Identity of the newly created PrismaticJoint
         public: virtual Identity AttachPrismaticJoint(
             std::size_t _childID,
             const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name,
             const Axis &_axis) = 0;
       };
     };

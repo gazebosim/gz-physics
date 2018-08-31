@@ -113,7 +113,8 @@ class JointFeatures :
 
   public: Identity AttachFixedJoint(
       std::size_t _childID,
-      const BaseLink3dPtr &_parent) override;
+      const BaseLink3dPtr &_parent,
+      const std::string &_name) override;
 
 
   // ----- Free Joint -----
@@ -137,6 +138,7 @@ class JointFeatures :
   public: Identity AttachRevoluteJoint(
       const std::size_t _childID,
       const BaseLink3dPtr &_parent,
+      const std::string &_name,
       const AngularVector3d &_axis) override;
 
 
@@ -153,6 +155,7 @@ class JointFeatures :
   public: Identity AttachPrismaticJoint(
       const std::size_t _childID,
       const BaseLink3dPtr &_parent,
+      const std::string &_name,
       const LinearVector3d &_axis) override;
 
 };

@@ -47,11 +47,12 @@ namespace ignition
     auto AttachPrismaticJointFeature::Link<PolicyT, FeaturesT>::
     AttachPrismaticJoint(
         const BaseLinkPtr<PolicyT> &_parent,
+        const std::string &_name,
         const Axis &_axis) -> JointPtrType
     {
       return JointPtrType(this->pimpl,
             this->template Interface<AttachPrismaticJointFeature>()
-              ->AttachPrismaticJoint(this->identity, _parent, _axis));
+              ->AttachPrismaticJoint(this->identity, _parent, _name, _axis));
     }
   }
 }

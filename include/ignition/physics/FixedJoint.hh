@@ -38,13 +38,16 @@ namespace ignition
         /// \param[in] _parent
         ///   The parent link for the joint. Pass in a nullptr to attach the
         ///   link to the world.
+        /// \param[in] _name
+        ///   The name for this joint.
         /// \return A reference to the newly constructed FixedJoint. You can use
         /// the SetJointTransformFromParentFeature and
         /// SetJointTransformToChildFeature on this JointPtr to set the relative
         /// transform between the parent and child if your physics engine offers
         /// those features.
         public: JointPtrType AttachFixedJoint(
-            const BaseLinkPtr<PolicyT> &_parent);
+            const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name = "fixed");
       };
 
       public: template <typename PolicyT>
@@ -52,10 +55,13 @@ namespace ignition
       {
         public: virtual Identity AttachFixedJoint(
             std::size_t _childID,
-            const BaseLinkPtr<PolicyT> &_parent) = 0;
+            const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name) = 0;
       };
     };
   }
 }
+
+#include <ignition/physics/detail/FixedJoint.hh>
 
 #endif

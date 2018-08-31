@@ -139,10 +139,12 @@ Identity JointFeatures::CastToFixedJoint(
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachFixedJoint(
     const std::size_t _childID,
-    const BaseLink3dPtr &_parent)
+    const BaseLink3dPtr &_parent,
+    const std::string &_name)
 {
   DartBodyNode * const bn = this->links.at(_childID);
   dart::dynamics::WeldJoint::Properties properties;
+  properties.mName = _name;
 
   DartBodyNode * const parentBn = _parent?
         this->links.at(_parent->EntityID()) : nullptr;
@@ -208,10 +210,12 @@ void JointFeatures::SetRevoluteJointAxis(
 Identity JointFeatures::AttachRevoluteJoint(
     const std::size_t _childID,
     const BaseLink3dPtr &_parent,
+    const std::string &_name,
     const AngularVector3d &_axis)
 {
   DartBodyNode * const bn = this->links.at(_childID);
   dart::dynamics::RevoluteJoint::Properties properties;
+  properties.mName = _name;
   properties.mAxis = _axis;
 
   DartBodyNode * const parentBn = _parent?
@@ -256,10 +260,12 @@ void JointFeatures::SetPrismaticJointAxis(
 Identity JointFeatures::AttachPrismaticJoint(
     const std::size_t _childID,
     const BaseLink3dPtr &_parent,
+    const std::string &_name,
     const LinearVector3d &_axis)
 {
   DartBodyNode * const bn = this->links.at(_childID);
   dart::dynamics::PrismaticJoint::Properties properties;
+  properties.mName = _name;
   properties.mAxis = _axis;
 
   DartBodyNode * const parentBn = _parent?

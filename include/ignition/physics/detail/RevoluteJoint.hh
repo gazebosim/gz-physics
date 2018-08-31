@@ -47,11 +47,12 @@ namespace ignition
     auto AttachRevoluteJointFeature::Link<PolicyT, FeaturesT>
     ::AttachRevoluteJoint(
         const BaseLinkPtr<PolicyT> &_parent,
+        const std::string &_name,
         const Axis &_axis) -> JointPtrType
     {
       return JointPtrType(this->pimpl,
             this->template Interface<AttachRevoluteJointFeature>()
-              ->AttachRevoluteJoint(this->identity, _parent, _axis));
+              ->AttachRevoluteJoint(this->identity, _parent, _name, _axis));
     }
   }
 }

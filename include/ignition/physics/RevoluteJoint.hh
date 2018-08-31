@@ -119,15 +119,18 @@ namespace ignition
         /// \param[in] _parent
         ///   The parent link for the joint. Pass in a nullptr to attach the
         ///   link to the world.
+        /// \param[in] _name
+        ///   The name of this joint.
         /// \param[in] _axis
         ///   The joint axis for the new joint. The rest of the joint properties
         ///   will be left to the default values of the physics engine.
         /// \return A reference to the newly constructed RevoluteJoint.
         //
-        // TODO(MXG): Instead of _axis, consider passing in a struct containing
-        // all base joint properties plus the axis.
+        // TODO(MXG): Instead of _name and _axis, consider passing in a struct
+        // containing all base joint properties plus the axis.
         public: JointPtrType AttachRevoluteJoint(
             const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name = "revolute",
             const Axis &_axis = Axis::UnitX());
       };
 
@@ -142,12 +145,15 @@ namespace ignition
         /// \param[in] _parent
         ///   A reference to the parent link. If this evaluates to a nullptr,
         ///   then the parent should be the world.
+        /// \param[in] _name
+        ///   The name of this joint.
         /// \param[in] _axis
         ///   The desired axis of the new revolute joint
         /// \returns the Identity of the newly created RevoluteJoint
         public: virtual Identity AttachRevoluteJoint(
             std::size_t _childID,
             const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name,
             const Axis &_axis) = 0;
       };
     };

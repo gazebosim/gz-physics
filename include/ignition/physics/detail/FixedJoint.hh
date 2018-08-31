@@ -27,11 +27,12 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto AttachFixedJointFeature::Link<PolicyT, FeaturesT>::AttachFixedJoint(
-        const BaseLinkPtr<PolicyT> &_parent) -> JointPtrType
+        const BaseLinkPtr<PolicyT> &_parent,
+        const std::string &_name) -> JointPtrType
     {
       return JointPtrType(this->pimpl,
             this->template Interface<AttachFixedJointFeature>()
-                ->AttachFixedJoint(this->identity, _parent));
+                ->AttachFixedJoint(this->identity, _parent, _name));
     }
   }
 }
