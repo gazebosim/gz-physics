@@ -53,6 +53,12 @@ namespace ignition
       public: bool operator >=(const FrameID &_other) const;
       public: bool operator !=(const FrameID &_other) const;
 
+      // Explicitly allow default copy constructors and assignment operators
+      public: FrameID(const FrameID&) = default;
+      public: FrameID(FrameID&&) = default;
+      public: FrameID &operator =(const FrameID&) = default;
+      public: FrameID &operator =(FrameID&&) = default;
+
       /// \brief Get a reference to the world Frame.
       public: static const FrameID &World();
 
@@ -97,13 +103,13 @@ namespace ignition
       friend class FrameSemantics;
 
       /// \brief Integer value of the entity that this FrameID is tied to
-      private: const std::size_t id;
+      private: std::size_t id;
 
       /// \brief Reference counter for the entity that this FrameID is tied to.
       /// Objects that don't support reference counting will leave this as a
       /// nullptr.
       IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
-      private: const std::shared_ptr<const void> ref;
+      private: std::shared_ptr<const void> ref;
       IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
     };
   }

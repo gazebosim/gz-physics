@@ -23,6 +23,7 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FeaturePolicy.hh>
@@ -43,6 +44,25 @@ namespace ignition
             Policy, typename FeatureList<FeaturesT...>::Features>::type;
       };
 
+      /////////////////////////////////////////////////
+      /// \private Inspired by https://stackoverflow.com/a/26288164
+      /// This class provides a static constexpr member named `value` which is
+      /// true if Base is a base class of one of the entries of Tuple, and false
+      /// otherwise.
+      template <typename Base, typename Tuple>
+      struct TupleContainsBase;
+
+      /// \private This specialization implements TupleContainsBase. It only
+      /// works if Tuple is a std::tuple; any other type for the second template
+      /// argument will fail to compile.
+      template <typename Base, typename... Types>
+      struct TupleContainsBase<Base, std::tuple<Types...>>
+          : std::integral_constant<bool,
+              !std::is_same<
+                std::tuple<typename std::conditional<
+                  std::is_base_of<Base, Types>::value, Empty, Types>::type...>,
+                std::tuple<Types...>
+              >::value> { };
 
       /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
@@ -119,54 +139,80 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
+      template <typename DiscardTuple, typename InputTuple>
+      struct FilterTuple;
+
+      /////////////////////////////////////////////////
+      template <typename DiscardTuple, typename... InputTypes>
+      struct FilterTuple<DiscardTuple, std::tuple<InputTypes...>>
+      {
+        using Result = decltype(std::tuple_cat(
+            std::conditional_t<
+              // If the input type is a base class of anything that should be
+              // discared ...
+              TupleContainsBase<InputTypes, DiscardTuple>::value,
+              // ... then we should leave it out of the final tuple ...
+              std::tuple<>,
+              // ... otherwise, include it.
+              std::tuple<InputTypes>
+            // Do this for each type in the InputTypes parameter pack.
+            >()...));
+      };
+
+      /////////////////////////////////////////////////
+      /// \private CombineListsImpl provides the implementation of CombineLists.
+      /// This helper implementation structure allows us to filter out repeated
+      /// features from the list.
+      template <typename PartialResultInput, typename... FeatureLists>
+      struct CombineListsImpl;
+
+      template <typename PartialResultInput>
+      struct CombineListsImpl<PartialResultInput>
+      {
+        using Result = std::tuple<>;
+      };
+
+      template <typename ParentResultInput, typename F1, typename... Others>
+      struct CombineListsImpl<ParentResultInput, F1, Others...>
+      {
+        // Add the features of the feature list F1, while filtering out any
+        // repeated features.
+        using InitialResult =
+            typename FilterTuple<
+              ParentResultInput,
+              typename ExtractFeatures<F1>::Result
+            >::Result;
+
+        // Add the features that are required by F1, while filtering out any
+        // repeated features.
+        using PartialResult = decltype(std::tuple_cat(
+            InitialResult(),
+            typename FilterTuple<
+              decltype(std::tuple_cat(ParentResultInput(), InitialResult())),
+              typename ExtractFeatures<typename F1::RequiredFeatures>::Result
+            >::Result()));
+
+        // Define the tuple that the child should use to filter its list
+        using ChildFilter =
+            decltype(std::tuple_cat(ParentResultInput(), PartialResult()));
+
+        // Construct the final result
+        using Result = decltype(std::tuple_cat(
+            PartialResult(),
+            typename CombineListsImpl<ChildFilter, Others...>::Result()));
+      };
+
       /// \private CombineLists is used to take variadic lists of features,
       /// FeatureLists, or std::tuples of features, and collapse them into a
       /// serialized std::tuple of features.
       ///
       /// This class works recursively.
       template <typename... FeatureLists>
-      class CombineLists;
-
-      /// \private This specialization is the terminal of the class recursion.
-      /// It gets called when only one type remains in the list.
-      template <typename F>
-      class CombineLists<F>
-      {
-        public: using Result = decltype(std::tuple_cat(
-            typename ExtractFeatures<F>::Result(),
-            typename ExtractFeatures<typename F::RequiredFeatures>::Result()));
-      };
-
-      /// \private This specialization peels away each type in the variadic set,
-      /// ultimately collapsing the whole list into a single tuple of features.
-      template <typename F1, typename... Others>
-      class CombineLists<F1, Others...>
+      class CombineLists
       {
         public: using Result =
-          decltype(std::tuple_cat(
-            typename ExtractFeatures<F1>::Result(),
-            typename ExtractFeatures<typename F1::RequiredFeatures>::Result(),
-            typename CombineLists<Others...>::Result()));
+            typename CombineListsImpl<std::tuple<>, FeatureLists...>::Result;
       };
-
-      /////////////////////////////////////////////////
-      /// \private Inspired by https://stackoverflow.com/a/26288164
-      /// This class provides a static constexpr member named `value` which is
-      /// true if T is one of the entries of Tuple, and false otherwise.
-      template <typename T, typename Tuple>
-      struct TupleContainsBase;
-
-      /// \private This specialization implements TupleContainsBase. It only
-      /// works if Tuple is a std::tuple; any other type for the second template
-      /// argument will fail to compile.
-      template <typename T, typename... Types>
-      struct TupleContainsBase<T, std::tuple<Types...>>
-          : std::integral_constant<bool,
-              !std::is_same<
-                std::tuple<typename std::conditional<
-                  std::is_base_of<T, Types>::value, Empty, Types>::type...>,
-                std::tuple<Types...>
-              >::value> { };
 
       /////////////////////////////////////////////////
       /// \private This class helps to implement the function
@@ -236,12 +282,32 @@ namespace ignition
         class type
             : public virtual Selector<F1>::template type<T...>,
               public virtual Aggregate<
-                  Selector, std::tuple<Remaining...>>::template type<T...> { };
+                  Selector, std::tuple<Remaining...>>::template type<T...>
+        {
+          public: type() = default;
+          public: type(const type&) = default;
+          public: type(type&&) = default;
+
+          // These need special definitions due to virtual inheritance. The base
+          // Entity<P,F> class is the only class in the hierarchy that contains
+          // any data, so it is sufficient to call its assignment operators
+          // directly.
+          public: type &operator=(const type &_other)
+          {
+            static_cast<Entity<T...>&>(*this) = _other;
+            return *this;
+          }
+          public: type &operator=(type &&_other)
+          {
+            static_cast<Entity<T...>&>(*this) = std::move(_other);
+            return *this;
+          }
+        };
       };
 
       /// \private Terminate the recursion
-      template <template<typename> class Extractor>
-      struct Aggregate<Extractor, std::tuple<>>
+      template <template<typename> class Selector>
+      struct Aggregate<Selector, std::tuple<>>
       {
         public: template <typename... P>
         class type { };
@@ -319,6 +385,7 @@ namespace ignition
               FeatureList<FeaturesT...>, AssertNoConflict,
               typename FeatureList<SomeFeatureList>::Features>::value;
     }
+
     /////////////////////////////////////////////////
     /// \private The default definition of FeatureWithConflicts only gets called
     /// when the ConflictingFeatures list is empty. It should simply fall back

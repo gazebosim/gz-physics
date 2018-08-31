@@ -29,6 +29,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
     template <typename... Args>
+    // cppcheck-suppress uninitMemberVar
     RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeQuantity(
         const FrameID &_parentID, Args&&... _args)
       : parentFrame(_parentID),
@@ -39,6 +40,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Q, std::size_t Dim, typename CoordinateSpace>
+    // cppcheck-suppress uninitMemberVar
     RelativeQuantity<Q, Dim, CoordinateSpace>::RelativeQuantity(
         const Q &_rawValue)
       : parentFrame(FrameID::World()),

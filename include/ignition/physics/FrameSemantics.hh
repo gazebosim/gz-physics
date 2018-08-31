@@ -140,6 +140,19 @@ namespace ignition
         /// function in order to provide FrameSemantics.
         public: virtual FrameData FrameDataRelativeToWorld(
           const FrameID &_id) const = 0;
+
+        /// \brief Physics engines can use this function to generate a FrameID
+        /// using an existing Identity.
+        ///
+        /// This function is part of a design that ensures that FrameID objects
+        /// can only be instantiated by "authoritative" sources, like a physics
+        /// engine.
+        ///
+        /// \param[in] _identity
+        ///   The underlying identity of the frame object.
+        /// \return A FrameID object that corresponds to _identity.
+        protected: virtual FrameID GenerateFrameID(
+            const Identity &_identity) const;
       };
     };
 

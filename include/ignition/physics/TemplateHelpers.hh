@@ -28,7 +28,49 @@ namespace ignition
     /// \brief This can be used to turn a type into a function argument, which
     /// is useful for template metaprogramming.
     template <class... T> struct type { };
+
+    /// TODO(MXG): Remove this and use std::void_t instead when migrating to
+    /// C++17
+    template <typename...>
+    using void_t = void;
   }
 }
+
+/// \brief Use this macro to create an API "selector" for a custom class.
+///
+/// Features may define APIs for class types that are not anticipated ahead of
+/// time by the ign-physics library. When aggregating the API for that class
+/// from a set of features, the Aggregator must be given a Selector that can
+/// ignore features that don't mention the class (or else a compilation failure
+/// would occur).
+///
+/// This macro creates a class that uses SFINAE (https://en.wikipedia.org/wiki/Substitution_failure_is_not_an_error)
+/// to ignore features that don't define an API for the class of interest (X).
+/// When using this macro, pass in the name of the class that you want the
+/// selector to look for. If the class name is X, then this will create a
+/// selector named SelectX. E.g. IGN_PHYSICS_CREATE_SELECTOR(RevoluteJoint) will
+/// create a class named SelectRevoluteJoint which can be passed to an
+/// Aggregator to extract the RevoluteJoint API from a list of features.
+#define IGN_PHYSICS_CREATE_SELECTOR(X) \
+  template<typename Feature> \
+  struct Select ## X \
+  { \
+    template<typename F, typename PolicyT, typename FeaturesT, \
+             typename = ::ignition::physics::void_t<>> \
+    struct Implementation \
+    { \
+      using type = Empty; \
+    }; \
+    \
+    template<typename F, typename PolicyT, typename FeaturesT> \
+    struct Implementation<F, PolicyT, FeaturesT, \
+                          void_t<typename F::template X <PolicyT, FeaturesT>>>\
+    { \
+      using type = typename F::template X <PolicyT, FeaturesT>; \
+    }; \
+    \
+    template <typename PolicyT, typename FeaturesT> \
+    using type = typename Implementation<Feature, PolicyT, FeaturesT>::type; \
+  };
 
 #endif
