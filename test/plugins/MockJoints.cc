@@ -34,6 +34,10 @@ namespace mock
         typename ignition::physics::FromPolicy<PolicyT>
         ::template Use<ignition::physics::AngularVector>;
 
+    using PrismaticAxis =
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::LinearVector>;
+
     using Pose =
         typename ignition::physics::FromPolicy<PolicyT>
         ::template Use<ignition::physics::Pose>;
@@ -157,6 +161,48 @@ namespace mock
     RevoluteAxis GetRevoluteJointAxis(std::size_t _id) const override
     {
       return idToRevoluteJointProperties.at(_id).axis;
+    }
+
+    Identity CastToPrismaticJoint(const std::size_t /*_id*/) override
+    {
+      // TODO(MXG): Implement this
+      return this->GenerateInvalidId();
+    }
+
+    Identity CastToPrismaticJoint(const std::size_t /*_id*/) const override
+    {
+      // TODO(MXG): Implement this
+      return this->GenerateInvalidId();
+    }
+
+    void SetPrismaticJointAxis(
+        std::size_t /*_id*/, const PrismaticAxis &/*_axis*/) override
+    {
+      // TODO(MXG): Implement this
+    }
+
+    PrismaticAxis GetPrismaticJointAxis(std::size_t /*_id*/) const override
+    {
+      // TODO(MXG): Implement this
+      return PrismaticAxis::UnitZ();
+    }
+
+    Identity CastToFreeJoint(const std::size_t /*_id*/) override
+    {
+      // TODO(MXG): Implement this
+      return this->GenerateInvalidId();
+    }
+
+    Identity CastToFreeJoint(const std::size_t /*_id*/) const override
+    {
+      // TODO(MXG): Implement this
+      return this->GenerateInvalidId();
+    }
+
+    void SetFreeJointTransform(
+        const std::size_t /*_id*/, const Pose &/*_pose*/) override
+    {
+      // TODO(MXG): Implement this
     }
 
     FrameData FrameDataRelativeToWorld(const FrameID &_id) const override

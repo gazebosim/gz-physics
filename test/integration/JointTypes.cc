@@ -128,6 +128,37 @@ void TestRevoluteJoint(const double _tolerance, const std::string &_suffix)
 }
 
 /////////////////////////////////////////////////
+template <typename PolicyT>
+void TestJointTypeCasts(const std::string &_suffix)
+{
+  using Pose = typename FromPolicy<PolicyT>::template Use<Pose>;
+
+  auto engine = RequestFeatures<PolicyT, mock::MockJointList>::From(
+        LoadMockJointTypesPlugin(_suffix));
+
+  auto joint = engine->GetJoint(0);
+
+  // For now, we just have this test to see that these different joint types can
+  // compile, and that their APIs are available. We can add ASSERT_ and EXPECT_
+  // statements later, once the mock::JointPlugin is more developed.
+  if (joint)
+  {
+    auto free = joint->CastToFreeJoint();
+    if (free)
+    {
+      free->SetTransform(Pose::Identity());
+    }
+
+    auto prismatic = joint->CastToPrismaticJoint();
+    if (prismatic)
+    {
+      auto axis = prismatic->GetAxis();
+      prismatic->SetAxis(axis);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
 TEST(JointTypes_TEST, RevoluteJoint3d)
 {
   TestRevoluteJoint<FeaturePolicy3d>(1e-16, "3d");

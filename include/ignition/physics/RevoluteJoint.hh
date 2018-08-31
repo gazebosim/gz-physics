@@ -29,7 +29,7 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE GetRevoluteJointProperties
         : public virtual Feature
     {
-      /// \brief Provide the API for getting a revolute joint's axis
+      /// \brief The API for getting basic revolute joint properties
       public: template <typename PolicyT, typename FeaturesT>
       class RevoluteJoint : public virtual Entity<PolicyT, FeaturesT>
       {
@@ -71,7 +71,7 @@ namespace ignition
     class IGNITION_PHYSICS_VISIBLE SetRevoluteJointProperties
         : public virtual Feature
     {
-      /// \brief Provide the API for setting a revolute joint's axis
+      /// \brief The API for setting basic revolute joint properties
       public: template <typename PolicyT, typename FeaturesT>
       class RevoluteJoint : public virtual Entity<PolicyT, FeaturesT>
       {
