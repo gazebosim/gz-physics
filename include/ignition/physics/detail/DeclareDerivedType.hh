@@ -33,7 +33,7 @@
     ::ignition::physics::EntityPtr<const Derived<FeaturePolicy##P, FeaturesT>>;
 
 #define DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Base, Derived) \
-  struct Derived ## Cast : public ::ignition::physics::Feature \
+  struct Derived ## Cast : public virtual ::ignition::physics::Feature \
   { \
     IGN_PHYSICS_CREATE_SELECTOR(Derived) \
     class Derived ## Identifier { }; \
