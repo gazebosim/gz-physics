@@ -33,7 +33,7 @@
     ::ignition::physics::EntityPtr<const X<FeaturePolicy ## P, FeaturesT>>;
 
 #define DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(X) \
-  struct X ## Cast : public ::ignition::physics::Feature \
+  struct X ## Cast : public virtual ::ignition::physics::Feature \
   { \
     IGN_PHYSICS_CREATE_SELECTOR(X) \
     class X ## Identifier { }; \
