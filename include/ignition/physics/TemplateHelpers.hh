@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_TEMPLATEHELPERS_HH_
 #define IGNITION_PHYSICS_TEMPLATEHELPERS_HH_
 
+#include <type_traits>
+
 namespace ignition
 {
   namespace physics
@@ -33,6 +35,31 @@ namespace ignition
     /// C++17
     template <typename...>
     using void_t = void;
+
+    /////////////////////////////////////////////////
+    /// \brief Contains a static constexpr field named `value` which will be
+    /// true if the type `From` has a const-quality less than or equal to the
+    /// type `To`.
+    ///
+    /// The following expressions will return true:
+    ///
+    /// \code
+    ///     ConstCompatible<T, T>::value
+    ///     ConstCompatible<const T, T>::value
+    /// \endcode
+    ///
+    /// The following expression will return false:
+    ///
+    /// \code
+    ///     ConstCompatible<T, const T>::value
+    /// \endcode
+    ///
+    template <typename To, typename From>
+    struct ConstCompatible : std::true_type { };
+
+    template <typename To, typename From>
+    struct ConstCompatible<To, const From>
+        : std::integral_constant<bool, std::is_const<To>::value> { };
   }
 }
 
