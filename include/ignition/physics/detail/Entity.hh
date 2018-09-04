@@ -24,7 +24,6 @@
 #include <ignition/plugin/SpecializedPluginPtr.hh>
 #include <ignition/physics/Entity.hh>
 #include <ignition/physics/TemplateHelpers.hh>
-#include <ignition/plugin/TemplateHelpers.hh>
 
 namespace ignition
 {
@@ -160,7 +159,7 @@ namespace ignition
                         typename To::UpcastIdentifiers>::value>::value);
 
         static_assert(
-            ignition::plugin::ConstCompatible<To, From>::value,
+            ignition::physics::ConstCompatible<To, From>::value,
             "CANNOT CAST FROM A CONST-QUALIFIED ENTITY TO AN ENTITY WITHOUT A "
             "CONST-QUALIFIER.");
       };
