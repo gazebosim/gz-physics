@@ -51,7 +51,7 @@ auto ConstructSdfCollision::Link<PolicyT, FeaturesT>::ConstructCollision(
 {
   return static_cast<bool>(
         this->template Interface<ConstructSdfCollision>()
-            ->ConstructSdfCollision(_collision));
+            ->ConstructSdfCollision(this->identity, _collision));
 }
 
 }

@@ -51,7 +51,7 @@ auto ConstructSdfVisual::Link<PolicyT, FeaturesT>::ConstructVisual(
 {
   return static_cast<bool>(
         this->template Interface<ConstructSdfVisual>()
-            ->ConstructSdfVisual(_visual));
+            ->ConstructSdfVisual(this->identity, _visual));
 }
 
 }
