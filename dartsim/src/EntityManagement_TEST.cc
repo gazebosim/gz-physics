@@ -25,11 +25,13 @@
 
 #include "EntityManagementFeatures.hh"
 #include "JointFeatures.hh"
+#include "KinematicsFeatures.hh"
 #include "ShapeFeatures.hh"
 
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::dartsim::EntityManagementFeatureList,
   ignition::physics::dartsim::JointFeatureList,
+  ignition::physics::dartsim::KinematicsFeatureList,
   ignition::physics::dartsim::ShapeFeatureList
 >;
 
@@ -81,6 +83,57 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ(1u, link->GetShapeCount());
   auto boxCopy = link->GetShape(0u);
   EXPECT_EQ(box, boxCopy);
+
+
+  auto prismatic = child->AttachPrismaticJoint(
+        link, "prismatic", Eigen::Vector3d::UnitZ());
+  const double zPos = 2.5;
+  const double zVel = 9.1;
+  const double zAcc = 10.2;
+  prismatic->SetPosition(0, zPos);
+  prismatic->SetVelocity(0, zVel);
+  prismatic->SetAcceleration(0, zAcc);
+
+  const ignition::physics::FrameData3d childData =
+      child->FrameDataRelativeToWorld();
+
+  const Eigen::Vector3d childPosition = childData.pose.translation();
+  EXPECT_DOUBLE_EQ(0.0, childPosition.x());
+  EXPECT_DOUBLE_EQ(0.0, childPosition.y());
+  EXPECT_DOUBLE_EQ(zPos, childPosition.z());
+
+  const Eigen::Vector3d childVelocity = childData.linearVelocity;
+  EXPECT_DOUBLE_EQ(0.0, childVelocity.x());
+  EXPECT_DOUBLE_EQ(0.0, childVelocity.y());
+  EXPECT_DOUBLE_EQ(zVel, childVelocity.z());
+
+  const Eigen::Vector3d childAcceleration = childData.linearAcceleration;
+  EXPECT_DOUBLE_EQ(0.0, childAcceleration.x());
+  EXPECT_DOUBLE_EQ(0.0, childAcceleration.y());
+  EXPECT_DOUBLE_EQ(zAcc, childAcceleration.z());
+
+  const double yPos = 11.5;
+  Eigen::Isometry3d childSpherePose = Eigen::Isometry3d::Identity();
+  childSpherePose.translate(Eigen::Vector3d(0.0, yPos, 0.0));
+  auto sphere = child->AttachSphereShape("child sphere", 1.0, childSpherePose);
+
+  const ignition::physics::FrameData3d sphereData =
+      sphere->FrameDataRelativeToWorld();
+
+  const Eigen::Vector3d spherePosition = sphereData.pose.translation();
+  EXPECT_DOUBLE_EQ(0.0, spherePosition.x());
+  EXPECT_DOUBLE_EQ(yPos, spherePosition.y());
+  EXPECT_DOUBLE_EQ(zPos, spherePosition.z());
+
+  const Eigen::Vector3d sphereVelocity = sphereData.linearVelocity;
+  EXPECT_DOUBLE_EQ(0.0, sphereVelocity.x());
+  EXPECT_DOUBLE_EQ(0.0, sphereVelocity.y());
+  EXPECT_DOUBLE_EQ(zVel, sphereVelocity.z());
+
+  const Eigen::Vector3d sphereAcceleration = sphereData.linearAcceleration;
+  EXPECT_DOUBLE_EQ(0.0, sphereAcceleration.x());
+  EXPECT_DOUBLE_EQ(0.0, sphereAcceleration.y());
+  EXPECT_DOUBLE_EQ(zAcc, sphereAcceleration.z());
 }
 
 int main(int argc, char *argv[])

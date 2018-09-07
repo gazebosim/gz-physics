@@ -188,6 +188,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     this->links.idToObject[id] = _bn;
     this->links.objectToID[_bn] = id;
+    this->frames[id] = _bn;
 
     return id;
   }
@@ -207,6 +208,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     this->shapes.idToObject[id] = _info;
     this->shapes.objectToID[_info.node] = id;
+    this->frames[id] = _info.node.get();
 
     return id;
   }
@@ -216,6 +218,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<DartBodyNodePtr, DartBodyNode*> links;
   public: EntityStorage<DartJointPtr, DartJoint*> joints;
   public: EntityStorage<ShapeInfo, DartShapeNode*> shapes;
+  public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
 };
 
 }

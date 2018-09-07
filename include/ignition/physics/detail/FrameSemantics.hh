@@ -156,6 +156,15 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    auto FrameSemantics::Frame<PolicyT, FeaturesT>::
+    FrameDataRelativeToWorld() const -> FrameData
+    {
+      return this->template Interface<FrameSemantics>()
+                 ->FrameDataRelativeToWorld(FrameID(this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     auto FrameSemantics::Frame<PolicyT, FeaturesT>::FrameDataRelativeTo(
         const FrameID &_relativeTo) const -> FrameData
     {

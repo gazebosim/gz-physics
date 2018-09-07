@@ -105,6 +105,9 @@ namespace ignition
         /// \brief Get a FrameID for this object
         public: FrameID GetFrameID() const;
 
+        /// \brief Get the FrameData of this object with respect to the world.
+        public: FrameData FrameDataRelativeToWorld() const;
+
         /// \brief Get the FrameData of this object with respect to another
         /// frame. The data will also be expressed in the coordinates of the
         /// _relativeTo frame.
@@ -172,6 +175,14 @@ namespace ignition
     {
       public: template <typename Policy, typename Features>
       using Joint = FrameSemantics::Frame<Policy, Features>;
+    };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE ShapeFrameSemantics
+        : public virtual FrameSemantics
+    {
+      public: template <typename Policy, typename Features>
+      using Shape = FrameSemantics::Frame<Policy, Features>;
     };
 
     /////////////////////////////////////////////////
