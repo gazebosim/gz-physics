@@ -134,6 +134,14 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_DOUBLE_EQ(0.0, sphereAcceleration.x());
   EXPECT_DOUBLE_EQ(0.0, sphereAcceleration.y());
   EXPECT_DOUBLE_EQ(zAcc, sphereAcceleration.z());
+
+  const ignition::physics::FrameData3d relativeSphereData =
+      sphere->FrameDataRelativeTo(*child);
+  const Eigen::Vector3d relativeSpherePosition =
+      relativeSphereData.pose.translation();
+  EXPECT_DOUBLE_EQ(0.0, relativeSpherePosition.x());
+  EXPECT_DOUBLE_EQ(yPos, relativeSpherePosition.y());
+  EXPECT_DOUBLE_EQ(0.0, relativeSpherePosition.z());
 }
 
 int main(int argc, char *argv[])
