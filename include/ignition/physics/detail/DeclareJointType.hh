@@ -19,17 +19,24 @@
 #define IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
 
 #include <memory>
+#include <tuple>
 #include <utility>
 
-#define DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, P) \
+#define DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, P) \
   template <typename FeaturesT> \
-  using X ## P = X::Using<FeaturePolicy ## P, FeaturesT>;
-
+  using X ## P = X<FeaturePolicy ## P, FeaturesT>; \
+  template <typename FeaturesT> \
+  using X ## P ## Ptr = \
+    ::ignition::physics::EntityPtr<X<FeaturePolicy ## P, FeaturesT>>; \
+  template <typename FeaturesT> \
+  using Const ## X ## P ## Ptr = \
+    ::ignition::physics::EntityPtr<const X<FeaturePolicy ## P, FeaturesT>>;
 
 #define DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(X) \
-  struct X : public ::ignition::physics::Feature \
+  struct X ## Cast : public virtual ::ignition::physics::Feature \
   { \
     IGN_PHYSICS_CREATE_SELECTOR(X) \
+    class X ## Identifier { }; \
     \
     public: template <typename PolicyT, typename FeaturesT> \
     class Using : \
@@ -40,6 +47,11 @@
         ::ignition::physics::detail::JointSelector, FeaturesT>:: \
             template type<PolicyT, FeaturesT> \
     { \
+      public: using Identifier = X ## Identifier; \
+      public: using UpcastIdentifiers = std::tuple< \
+          X ## Identifier, \
+          /* Allow this joint type to be upcast to plain Joint types */ \
+          ::ignition::physics::detail::JointIdentifier>; \
       public: using Base = ::ignition::physics::Entity<PolicyT, FeaturesT>; \
     \
       public: Using(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
@@ -68,28 +80,21 @@
     class Joint : \
       public virtual ::ignition::physics::Feature::Joint<PolicyT, FeaturesT> \
     { \
-      public: std::unique_ptr<Using<PolicyT, FeaturesT>> CastTo ## X() \
+      public: using CastReturnType = \
+          ::ignition::physics::EntityPtr<Using<PolicyT, FeaturesT>>; \
+      public: using ConstCastReturnType = \
+          ::ignition::physics::EntityPtr<const Using<PolicyT, FeaturesT>>; \
+      public: CastReturnType CastTo ## X() \
       { \
-        const ::ignition::physics::Identity id = \
-            this->template Interface<X>()->CastTo ## X(this->identity); \
-        \
-        if (!id) \
-          return nullptr; \
-        \
-        return std::make_unique<Using<PolicyT, FeaturesT>>(this->pimpl, id); \
+        return CastReturnType(this->pimpl, \
+          this->template Interface<X ## Cast>()->CastTo ## X(this->identity)); \
       } \
     \
-      public: std::unique_ptr<const Using<PolicyT, FeaturesT>> \
+      public: ConstCastReturnType \
       CastTo ## X() const \
       { \
-        const ::ignition::physics::Identity id = \
-            this->template Interface<X>()->CastTo ## X(this->identity); \
-        \
-        if (!id) \
-          return nullptr; \
-        \
-        return std::make_unique<const Using<PolicyT, FeaturesT>>( \
-            this->pimpl, id); \
+        return ConstCastReturnType(this->pimpl, \
+          this->template Interface<X ## Cast>()->CastTo ## X(this->identity)); \
       } \
     }; \
     \
@@ -98,14 +103,20 @@
       : public virtual ::ignition::physics::Feature::Implementation<PolicyT> \
     { \
       public: virtual ::ignition::physics::Identity CastTo ## X( \
-        std::size_t _id) = 0; \
-      public: virtual ::ignition::physics::Identity CastTo ## X( \
         std::size_t _id) const = 0; \
     }; \
   }; \
-  DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, 3d) \
-  DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, 2d) \
-  DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, 3f) \
-  DETAIL_IGN_PHYSICS_PREBAKE_JOINT_POLICY(X, 2f)
+  \
+  template <typename PolicyT, typename FeaturesT> \
+  using X = X ## Cast::Using<PolicyT, FeaturesT>; \
+  template <typename PolicyT, typename FeaturesT> \
+  using X ## Ptr = ::ignition::physics::EntityPtr<X<PolicyT, FeaturesT>>; \
+  template <typename PolicyT, typename FeaturesT> \
+  using Const ## X ## Ptr = \
+      ::ignition::physics::EntityPtr<const X<PolicyT, FeaturesT>>; \
+  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 3d) \
+  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 2d) \
+  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 3f) \
+  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 2f)
 
 #endif

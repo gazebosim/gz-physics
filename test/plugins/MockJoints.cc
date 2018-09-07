@@ -136,14 +136,6 @@ namespace mock
       return this->GenerateIdentity(this->jointIdToEntity[_index]);
     }
 
-    Identity CastToRevoluteJoint(const std::size_t _id) override
-    {
-      if (idToRevoluteJointProperties.count(_id) > 0)
-        return this->GenerateIdentity(_id);
-
-      return this->GenerateInvalidId();
-    }
-
     Identity CastToRevoluteJoint(const std::size_t _id) const override
     {
       if (idToRevoluteJointProperties.count(_id) > 0)
@@ -163,12 +155,6 @@ namespace mock
       return idToRevoluteJointProperties.at(_id).axis;
     }
 
-    Identity CastToPrismaticJoint(const std::size_t /*_id*/) override
-    {
-      // TODO(MXG): Implement this
-      return this->GenerateInvalidId();
-    }
-
     Identity CastToPrismaticJoint(const std::size_t /*_id*/) const override
     {
       // TODO(MXG): Implement this
@@ -185,12 +171,6 @@ namespace mock
     {
       // TODO(MXG): Implement this
       return PrismaticAxis::UnitZ();
-    }
-
-    Identity CastToFreeJoint(const std::size_t /*_id*/) override
-    {
-      // TODO(MXG): Implement this
-      return this->GenerateInvalidId();
     }
 
     Identity CastToFreeJoint(const std::size_t /*_id*/) const override

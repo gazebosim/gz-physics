@@ -52,7 +52,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::FreeJoint>;
+          FeatureList<ignition::physics::FreeJointCast>;
     };
   }
 }

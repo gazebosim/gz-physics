@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/RequestFeatures.hh>
+#include <ignition/physics/RequestEngine.hh>
 #include <ignition/physics/Entity.hh>
 
 using namespace ignition::physics;
@@ -25,8 +25,8 @@ using namespace ignition::physics;
 /////////////////////////////////////////////////
 class EngineMockFeature : public virtual Feature
 {
-  public: template <typename FeatureType, typename Pimpl>
-  class Engine : public virtual Feature::Engine<FeatureType, Pimpl>
+  public: template <typename Policy, typename Features>
+  class Engine : public virtual Feature::Engine<Policy, Features>
   {
     public: bool MockAnEngineFunction() const
     {
@@ -89,24 +89,27 @@ TEST(Feature_TEST, SimpleMock)
     {
       return this->Implementation::GenerateIdentity(0, nullptr);
     }
+
+    public: std::shared_ptr<Entity<FeaturePolicy3d, MockList>::Pimpl> pimpl;
   };
 
   BogusImplementation bogus;
 
   // Note: We initialize these entities with garbage because in this case, it
   // doesn't matter. These "features" don't actually use any plugin.
-  Engine3d<MockList> engine3d(nullptr, bogus.Generate());
-  EXPECT_TRUE(engine3d.MockAnEngineFunction());
+  Engine3dPtr<MockList> engine3d =
+      Engine3dPtr<MockList>(bogus.pimpl, bogus.Generate());
+  EXPECT_TRUE(engine3d->MockAnEngineFunction());
 
-  Link3d<MockList> link3d(nullptr, bogus.Generate());
-  EXPECT_TRUE(link3d.MockALinkFunction());
-  EXPECT_TRUE(link3d.MockAnotherLinkFunction());
+  Link3dPtr<MockList> link3d(bogus.pimpl, bogus.Generate());
+  EXPECT_TRUE(link3d->MockALinkFunction());
+  EXPECT_TRUE(link3d->MockAnotherLinkFunction());
 
   // An empty plugin will not provide any features. When we ask for the missing
   // feature names, we should receive the name of every feature in the list, for
   // a total of 3 feature names.
   std::set<std::string> missing =
-      RequestFeatures3d<MockList>::MissingFeatureNames(
+      RequestEngine3d<MockList>::MissingFeatureNames(
         ignition::plugin::PluginPtr());
 
   EXPECT_EQ(3u, missing.size());

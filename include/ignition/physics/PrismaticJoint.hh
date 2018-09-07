@@ -58,7 +58,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::PrismaticJoint>;
+          FeatureList<ignition::physics::PrismaticJointCast>;
     };
 
     /// \brief Provide the API for setting a prismatic joint's axis. Not all
@@ -96,7 +96,7 @@ namespace ignition
       };
 
       public: using RequiredFeatures =
-          FeatureList<ignition::physics::PrismaticJoint>;
+          FeatureList<ignition::physics::PrismaticJointCast>;
     };
   }
 }

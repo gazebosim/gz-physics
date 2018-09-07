@@ -45,26 +45,6 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      /// \private Inspired by https://stackoverflow.com/a/26288164
-      /// This class provides a static constexpr member named `value` which is
-      /// true if Base is a base class of one of the entries of Tuple, and false
-      /// otherwise.
-      template <typename Base, typename Tuple>
-      struct TupleContainsBase;
-
-      /// \private This specialization implements TupleContainsBase. It only
-      /// works if Tuple is a std::tuple; any other type for the second template
-      /// argument will fail to compile.
-      template <typename Base, typename... Types>
-      struct TupleContainsBase<Base, std::tuple<Types...>>
-          : std::integral_constant<bool,
-              !std::is_same<
-                std::tuple<typename std::conditional<
-                  std::is_base_of<Base, Types>::value, Empty, Types>::type...>,
-                std::tuple<Types...>
-              >::value> { };
-
-      /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
       /// time that each object that is being passed as a "feature" matches the
       /// concept of a feature. This can be replaced by Concepts once C++ has
@@ -315,7 +295,7 @@ namespace ignition
 
       /////////////////////////////////////////////////
       /// \private This class is used to inspect what features are provided by
-      /// a plugin. It implements the API of RequestFeatures.
+      /// a plugin. It implements the API of RequestEngine.
       template <typename Policy, typename InterfaceTuple>
       struct InspectFeatures;
 
@@ -330,7 +310,7 @@ namespace ignition
         static bool Verify(const PtrT &_pimpl)
         {
           // TODO(MXG): Replace with a fold expression when we migrate to C++17
-          return _pimpl->template HasInterface<Interface>()
+          return _pimpl && _pimpl->template HasInterface<Interface>()
               && InspectFeatures<PolicyT, std::tuple<Remaining...>>::
                       Verify(_pimpl);
         }
@@ -339,7 +319,7 @@ namespace ignition
         static void MissingNames(const PtrT &_pimpl,
                                  std::set<std::string> &_names)
         {
-          if (!_pimpl->template HasInterface<Interface>())
+          if (!_pimpl || !_pimpl->template HasInterface<Interface>())
             _names.insert(typeid(Feature1).name());
 
           InspectFeatures<PolicyT, std::tuple<Remaining...>>::MissingNames(
@@ -432,33 +412,52 @@ namespace ignition
 
 
 // Macros for generating EngineTemplate, LinkTemplate, etc
-#define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, P) \
+#define DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, P) \
+  template <typename List>\
+  using X ## P = X <::ignition::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
-  using X ## P = X <FeaturePolicy ## P, List>;
+  using X ## P ## Ptr = X ## Ptr < \
+    ::ignition::physics::FeaturePolicy ## P, List>; \
+  template <typename List> \
+  using Const ## X ## P ## Ptr = X ## Ptr < \
+    ::ignition::physics::FeaturePolicy ## P, List>;
 
-#define DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(X) \
+#define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
     template <typename T> \
+    /* Used to select the X-type API from a feature */ \
     struct X ## Selector \
     { \
       public: template<typename PolicyT, typename FeaturesT> \
       using type = typename T::template X<PolicyT, FeaturesT>; \
     }; \
+    /* Symbol used by X-types to identify other X-types */ \
+    struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
-  class X : public detail::Aggregate<detail :: X ## Selector, FeaturesT>:: \
-        template type<PolicyT, FeaturesT> \
+  class X : public ::ignition::physics::detail::Aggregate< \
+        detail :: X ## Selector, FeaturesT>::template type<PolicyT, FeaturesT> \
   { \
+    public: using Identifier = detail:: X ## Identifier; \
+    public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
+    \
+    public: X(const X&) = default;\
     \
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \
       : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
   }; \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3d) \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2d) \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 3f) \
-  DETAIL_IGN_PHYSICS_MAKE_AGGREGATE_WITH_POLICY(X, 2f)
+  template <typename PolicyT, typename FeaturesT> \
+  using X ## Ptr = ::ignition::physics::EntityPtr< \
+    X <PolicyT, FeaturesT> >; \
+  template <typename PolicyT, typename FeaturesT> \
+  using Const ## X ## Ptr = ::ignition::physics::EntityPtr< \
+    const X <PolicyT, FeaturesT> >; \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
+  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2f)
 
 
     // This macro expands to create the templates:
@@ -474,11 +473,11 @@ namespace ignition
     //
     // This is repeated for each of the built-in feature objects (e.g. Link,
     // Joint, Model).
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Engine)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(World)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Model)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Link)
-    DETAIL_IGN_PHYSICS_MAKE_AGGREGATE(Joint)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Engine)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(World)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Model)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Link)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Joint)
 
     namespace detail
     {

@@ -31,7 +31,6 @@ namespace ignition
         return Identity(_id, _ref);
       }
 
-      /////////////////////////////////////////////////
       Identity Implementation::GenerateInvalidId() const
       {
         return Identity();

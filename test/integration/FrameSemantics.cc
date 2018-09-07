@@ -19,7 +19,7 @@
 
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>
-#include <ignition/physics/RequestFeatures.hh>
+#include <ignition/physics/RequestEngine.hh>
 #include <ignition/math/Helpers.hh>
 
 #include "../Utils.hh"
@@ -61,7 +61,7 @@ void TestRelativeFrames(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
+      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using FrameData = FrameData<Scalar, Dim>;
@@ -147,17 +147,14 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
+      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using FrameData = FrameData<Scalar, Dim>;
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
-  using Link = ignition::physics::Link<PolicyT, mock::MockFrameSemanticsList>;
-  using LinkPtr = std::unique_ptr<Link>;
-
-  using Joint = ignition::physics::Joint<PolicyT, mock::MockFrameSemanticsList>;
-  using ConstJointPtr = std::unique_ptr<const Joint>;
+  using ConstJointPtr =
+    ignition::physics::ConstJointPtr<PolicyT, mock::MockFrameSemanticsList>;
 
   // We test FrameID in this unit test, because the FrameSemantics interface is
   // needed in order to produce FrameIDs.
@@ -168,7 +165,8 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(world.IsReferenceCounted());
 
   const FrameData dataA = RandomFrameData<Scalar, Dim>();
-  const LinkPtr linkA = fs->CreateLink("A", dataA);
+  const ignition::physics::LinkPtr<PolicyT, mock::MockFrameSemanticsList> linkA
+      = fs->CreateLink("A", dataA);
 
   EXPECT_TRUE(Equal(dataA, linkA->FrameDataRelativeTo(world), _tolerance));
 
@@ -251,7 +249,7 @@ void TestRelativeQuantities(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
+      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
@@ -579,7 +577,7 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestFeatures<PolicyT, mock::MockFrameSemanticsList>
+      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using FrameData = FrameData<Scalar, Dim>;
