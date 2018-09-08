@@ -40,7 +40,7 @@ pipelines:
           - cd build
           - cmake .. -DBUILD_TESTING=false
           - make install
-          - cd ..
+          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
