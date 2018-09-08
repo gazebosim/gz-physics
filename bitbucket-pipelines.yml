@@ -23,6 +23,7 @@ pipelines:
           - apt-get -y install
             libignition-cmake2-dev
             libignition-math6-dev
+            libignition-math6-eigen3-dev
             libignition-plugin-dev
             libeigen3-dev
           # DARTsim
@@ -32,6 +33,13 @@ pipelines:
             dart6-data
             libdart6-dev
             libdart6-utils-urdf-dev
+          # sdformat8
+          - hg clone https://bitbucket.org/osrf/sdformat -b gz11
+          - cd sdformat
+          - mkdir build
+          - cd build
+          - cmake .. -DBUILD_TESTING=false
+          - make install
           # Ignition physics
           - mkdir build
           - cd build
