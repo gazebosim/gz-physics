@@ -31,6 +31,7 @@
 
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/DegreeOfFreedom.hpp>
+#include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 
 using TestFeatureList = ignition::physics::FeatureList<
@@ -76,9 +77,10 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
-  ASSERT_EQ(2u, dartWorld->getNumSkeletons());
+  ASSERT_EQ(3u, dartWorld->getNumSkeletons());
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
+  ASSERT_NE(nullptr, skeleton);
   ASSERT_EQ(3u, skeleton->getNumBodyNodes());
 
   auto verify = [](const dart::dynamics::DegreeOfFreedom * dof,
@@ -123,6 +125,21 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
     EXPECT_DOUBLE_EQ(0.0, axis[1]);
     EXPECT_DOUBLE_EQ(0.0, axis[2]);
   }
+
+  const dart::dynamics::SkeletonPtr freeBody =
+      dartWorld->getSkeleton("free_body");
+  ASSERT_NE(nullptr, freeBody);
+  ASSERT_EQ(1u, freeBody->getNumBodyNodes());
+  const dart::dynamics::BodyNode *bn = freeBody->getBodyNode(0);
+  ASSERT_NE(nullptr, bn);
+
+  EXPECT_TRUE(dynamic_cast<const dart::dynamics::FreeJoint*>(
+                bn->getParentJoint()));
+
+  const Eigen::Vector3d translation = bn->getTransform().translation();
+  EXPECT_DOUBLE_EQ( 0.0, translation[0]);
+  EXPECT_DOUBLE_EQ(10.0, translation[1]);
+  EXPECT_DOUBLE_EQ(10.0, translation[2]);
 }
 
 int main(int argc, char *argv[])

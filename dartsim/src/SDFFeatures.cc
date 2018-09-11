@@ -359,7 +359,7 @@ Identity SDFFeatures::ConstructSdfLink(
       this->ResolveSdfLinkReferenceFrame(_sdfLink.PoseFrame(), modelInfo)
       * math::eigen3::convert(_sdfLink.Pose());
 
-  joint->setTransform(tf, modelInfo.frame.get());
+  joint->setTransform(tf);
 
   dart::dynamics::BodyNode * const bn = result.second;
 
