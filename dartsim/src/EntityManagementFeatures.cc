@@ -17,6 +17,8 @@
 
 #include "EntityManagementFeatures.hh"
 
+#include <dart/dynamics/FreeJoint.hpp>
+
 #include <string>
 
 #include <dart/config.hpp>
