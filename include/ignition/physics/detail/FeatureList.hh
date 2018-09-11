@@ -445,7 +445,8 @@ namespace ignition
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public ::ignition::physics::detail::Aggregate< \
-        detail :: X ## Selector, FeaturesT>::template type<PolicyT, FeaturesT>,\
+        detail :: X ## Selector, FeaturesT> \
+          ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
   { \
     public: using Identifier = detail:: X ## Identifier; \

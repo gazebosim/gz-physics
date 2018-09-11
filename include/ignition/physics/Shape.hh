@@ -154,7 +154,6 @@ namespace ignition
         ///   The value to set the coefficient to.
         public: void SetRestitutionCoefficient(
             const BaseShapePtr<PolicyT> &_other, Scalar _value);
-
       };
 
       public: template <typename PolicyT>

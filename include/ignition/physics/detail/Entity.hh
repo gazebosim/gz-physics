@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <tuple>
+#include <utility>
 
 #include <ignition/plugin/SpecializedPluginPtr.hh>
 #include <ignition/physics/Entity.hh>

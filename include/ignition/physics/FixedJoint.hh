@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_FIXEDJOINT_HH_
 #define IGNITION_PHYSICS_FIXEDJOINT_HH_
 
+#include <string>
+
 #include <ignition/physics/DeclareJointType.hh>
 
 namespace ignition

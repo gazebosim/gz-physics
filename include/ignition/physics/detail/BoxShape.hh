@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_BOXSHAPE_HH_
 #define IGNITION_PHYSICS_DETAIL_BOXSHAPE_HH_
 
+#include <string>
+
 #include <ignition/physics/BoxShape.hh>
 
 namespace ignition

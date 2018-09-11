@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_SPHERESHAPE_HH_
 #define IGNITION_PHYSICS_DETAIL_SPHERESHAPE_HH_
 
+#include <string>
+
 #include <ignition/physics/SphereShape.hh>
 
 namespace ignition

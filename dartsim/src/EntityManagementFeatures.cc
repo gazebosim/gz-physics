@@ -17,11 +17,10 @@
 
 #include "EntityManagementFeatures.hh"
 
+#include <dart/config.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
 #include <string>
-
-#include <dart/config.hpp>
 
 namespace ignition {
 namespace physics {
@@ -309,7 +308,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
         dart::dynamics::Frame::World(),
         _name + "_frame");
 
-  auto [modelID, ModelInfo] = this->AddModel({model, modelFrame}, _worldID);
+  auto [modelID, ModelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
 
   return this->GenerateIdentity(modelID, model);
 }

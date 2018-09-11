@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_PRISMATICJOINT_HH_
 #define IGNITION_PHYSICS_PRISMATICJOINT_HH_
 
+#include <string>
+
 #include <ignition/physics/DeclareJointType.hh>
 #include <ignition/physics/Geometry.hh>
 

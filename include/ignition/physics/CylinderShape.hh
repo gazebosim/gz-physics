@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_CYLINDERSHAPE_HH_
 #define IGNITION_PHYSICS_CYLINDERSHAPE_HH_
 
+#include <string>
+
 #include <ignition/physics/DeclareShapeType.hh>
 #include <ignition/physics/Geometry.hh>
 

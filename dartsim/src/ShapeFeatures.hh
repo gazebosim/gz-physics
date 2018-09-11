@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_SHAPEFEATURES_HH_
 #define IGNITION_PHYSICS_DARTSIM_SRC_SHAPEFEATURES_HH_
 
+#include <string>
+
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/BoxShape.hh>
 #include <ignition/physics/CylinderShape.hh>

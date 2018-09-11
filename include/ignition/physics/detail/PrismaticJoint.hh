@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_PRISMATICJOINT_HH_
 #define IGNITION_PHYSICS_DETAIL_PRISMATICJOINT_HH_
 
+#include <string>
+
 #include <ignition/physics/PrismaticJoint.hh>
 
 namespace ignition

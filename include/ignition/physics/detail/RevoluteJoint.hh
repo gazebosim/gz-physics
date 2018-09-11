@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_REVOLUTEJOINT_HH_
 #define IGNITION_PHYSICS_DETAIL_REVOLUTEJOINT_HH_
 
+#include <string>
+
 #include <ignition/physics/RevoluteJoint.hh>
 
 namespace ignition
