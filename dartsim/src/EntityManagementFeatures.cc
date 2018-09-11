@@ -15,13 +15,11 @@
  *
 */
 
+#include "EntityManagementFeatures.hh"
+
 #include <string>
 
 #include <dart/config.hpp>
-
-#include <dart/dynamics/FreeJoint.hpp>
-
-#include "EntityManagementFeatures.hh"
 
 namespace ignition {
 namespace physics {

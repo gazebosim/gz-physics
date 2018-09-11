@@ -18,9 +18,9 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_WORLD_HH_
 #define IGNITION_PHYSICS_DARTSIM_WORLD_HH_
 
-#include <ignition/physics/FeatureList.hh>
-
 #include <dart/simulation/World.hpp>
+
+#include <ignition/physics/FeatureList.hh>
 
 namespace ignition {
 namespace physics {

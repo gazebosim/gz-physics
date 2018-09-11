@@ -227,5 +227,12 @@
         </axis>
       </joint>
     </model>
+
+    <model name="free_body">
+      <pose>0.0  10.0  10.0  0.0  0.0  0.0</pose>
+      <link name="link">
+        <pose>0.0  0.0  0.0  0.0  0.0  0.0</pose>
+      </link>
+    </model>
   </world>
 </sdf>

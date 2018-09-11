@@ -42,22 +42,18 @@ namespace ignition
     /// float or scalar.
     template <typename Scalar, std::size_t Dim>
     using Pose = Eigen::Transform<Scalar, Dim, Eigen::Isometry>;
-    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Pose)
 
     template <typename Scalar, std::size_t Dim>
     using Vector = Eigen::Matrix<Scalar, Dim, 1>;
-    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Vector)
 
     template <typename Scalar, std::size_t Dim>
     using LinearVector = Vector<Scalar, Dim>;
-    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(LinearVector)
 
     template <typename Scalar, std::size_t Dim>
     using AngularVector = Vector<Scalar, (Dim*(Dim-1))/2>;
-    // cppcheck-suppress constStatement
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AngularVector)
 
     /////////////////////////////////////////////////

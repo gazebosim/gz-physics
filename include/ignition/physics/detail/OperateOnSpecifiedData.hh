@@ -36,6 +36,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
+    // cppcheck-suppress syntaxError
     template <typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::Operate(
         Performer *_performer, CompositeType &_data,

@@ -93,6 +93,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Derived, typename Specification>
+    // cppcheck-suppress syntaxError
     template <typename CompositeType>
     void CanReadRequiredData<Derived, Specification>::ReadRequiredData(
         const CompositeType &_data,

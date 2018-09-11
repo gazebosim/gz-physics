@@ -15,9 +15,7 @@
  *
 */
 
-#include <cmath>
-
-#include <ignition/math/eigen3/Conversions.hh>
+#include "SDFFeatures.hh"
 
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
@@ -34,6 +32,10 @@
 #include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
+#include <cmath>
+
+#include <ignition/math/eigen3/Conversions.hh>
+
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
 #include <sdf/Cylinder.hh>
@@ -47,8 +49,6 @@
 #include <sdf/Sphere.hh>
 #include <sdf/Visual.hh>
 #include <sdf/World.hh>
-
-#include "SDFFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -229,7 +229,7 @@ static ShapeAndTransform ConstructGeometry(
     return ConstructSphere(*_geometry.SphereShape());
   else if (_geometry.PlaneShape())
     return ConstructPlane(*_geometry.PlaneShape());
-  else if(_geometry.MeshShape())
+  else if (_geometry.MeshShape())
     return ConstructMesh(*_geometry.MeshShape());
 
   return {nullptr};
@@ -279,7 +279,7 @@ Identity SDFFeatures::ConstructSdfModel(
         _sdfModel.Name()+"_frame",
         math::eigen3::convert(_sdfModel.Pose()));
 
-  auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID);
+  auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
 
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
@@ -359,7 +359,7 @@ Identity SDFFeatures::ConstructSdfLink(
       this->ResolveSdfLinkReferenceFrame(_sdfLink.PoseFrame(), modelInfo)
       * math::eigen3::convert(_sdfLink.Pose());
 
-  joint->setTransform(tf, modelInfo.frame.get());
+  joint->setTransform(tf);
 
   dart::dynamics::BodyNode * const bn = result.second;
 
@@ -547,7 +547,7 @@ Identity SDFFeatures::ConstructSdfJoint(
         msg << " and ";
     }
 
-    if(!_child)
+    if (!_child)
       msg << "the child link ";
 
     msg << "could not be found in that model!\n";
