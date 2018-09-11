@@ -18,12 +18,16 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_BASE_HH_
 #define IGNITION_PHYSICS_DARTSIM_BASE_HH_
 
-#include <unordered_map>
-
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/SimpleFrame.hpp>
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
+
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <ignition/physics/Implements.hh>
 

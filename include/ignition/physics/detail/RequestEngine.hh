@@ -30,6 +30,7 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename FeaturePolicyT, typename FeatureListT>
+    // cppcheck-suppress syntaxError
     template <typename PtrT>
     bool RequestEngine<FeaturePolicyT, FeatureListT>::
     Verify(const PtrT &_pimpl)

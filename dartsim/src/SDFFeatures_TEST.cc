@@ -15,6 +15,11 @@
  *
 */
 
+#include <dart/dynamics/BodyNode.hpp>
+#include <dart/dynamics/DegreeOfFreedom.hpp>
+#include <dart/dynamics/FreeJoint.hpp>
+#include <dart/dynamics/RevoluteJoint.hpp>
+
 #include <gtest/gtest.h>
 
 #include <ignition/plugin/Loader.hh>
@@ -28,11 +33,6 @@
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
-
-#include <dart/dynamics/BodyNode.hpp>
-#include <dart/dynamics/DegreeOfFreedom.hpp>
-#include <dart/dynamics/FreeJoint.hpp>
-#include <dart/dynamics/RevoluteJoint.hpp>
 
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::GetBasicJointState,
@@ -97,9 +97,9 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
     EXPECT_DOUBLE_EQ(lower, dof->getPositionLowerLimit());
     EXPECT_DOUBLE_EQ(upper, dof->getPositionUpperLimit());
     EXPECT_DOUBLE_EQ(-maxForce, dof->getForceLowerLimit());
-    EXPECT_DOUBLE_EQ( maxForce, dof->getForceUpperLimit());
+    EXPECT_DOUBLE_EQ(maxForce, dof->getForceUpperLimit());
     EXPECT_DOUBLE_EQ(-maxVelocity, dof->getVelocityLowerLimit());
-    EXPECT_DOUBLE_EQ( maxVelocity, dof->getVelocityUpperLimit());
+    EXPECT_DOUBLE_EQ(maxVelocity, dof->getVelocityUpperLimit());
   };
 
   // Test that things were parsed correctly. These values are either stated or
@@ -137,7 +137,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
                 bn->getParentJoint()));
 
   const Eigen::Vector3d translation = bn->getTransform().translation();
-  EXPECT_DOUBLE_EQ( 0.0, translation[0]);
+  EXPECT_DOUBLE_EQ(0.0, translation[0]);
   EXPECT_DOUBLE_EQ(10.0, translation[1]);
   EXPECT_DOUBLE_EQ(10.0, translation[2]);
 }

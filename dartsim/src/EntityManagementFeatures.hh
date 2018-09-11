@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
 #define IGNITION_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
 
+#include <string>
+
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Implements.hh>
 

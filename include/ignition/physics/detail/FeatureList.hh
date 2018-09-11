@@ -346,6 +346,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename... FeaturesT>
+    // cppcheck-suppress syntaxError
     template <typename F>
     constexpr bool FeatureList<FeaturesT...>::HasFeature()
     {

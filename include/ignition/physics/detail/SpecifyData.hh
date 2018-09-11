@@ -41,6 +41,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Expected>
+    // cppcheck-suppress syntaxError
     template <typename Data>
     Data &ExpectData<Expected>::Get()
     {
@@ -413,7 +414,6 @@ namespace ignition
     /// Use the SpecifyData fork to combine these expectations
     /// \private
     template <typename DataType1, typename... OtherDataTypes>
-    // cppcheck-suppress syntaxError
     class ExpectData<DataType1, OtherDataTypes...>
         : public virtual SpecifyData<ExpectData<DataType1>,
                                      ExpectData<OtherDataTypes...>>
