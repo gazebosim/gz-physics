@@ -208,7 +208,7 @@ static ShapeAndTransform ConstructPlane(
 
 /////////////////////////////////////////////////
 static ShapeAndTransform ConstructMesh(
-    const ::sdf::Mesh &_mesh)
+    const ::sdf::Mesh &/*_mesh*/)
 {
   // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
   // a local file name, or do we need to resolve the URI?
