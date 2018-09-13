@@ -40,7 +40,6 @@ namespace ignition
     {
       ignition::math::Pose3d pose;
 
-      // cppcheck-suppress unusedStructMember
       std::size_t body;
     };
 
@@ -54,9 +53,7 @@ namespace ignition
     {
       ignition::math::Vector3d point;
 
-      // cppcheck-suppress unusedStructMember
       std::size_t relativeTo;
-      // cppcheck-suppress unusedStructMember
       std::size_t inCoordinatesOf;
     };
 
@@ -64,7 +61,6 @@ namespace ignition
     {
       ignition::math::Vector3d vec;
 
-      // cppcheck-suppress unusedStructMember
       std::size_t inCoordinatesOf;
     };
 
@@ -80,7 +76,6 @@ namespace ignition
 
     struct ForceTorque
     {
-      // cppcheck-suppress unusedStructMember
       std::size_t body;
       Point location;
 
@@ -99,11 +94,8 @@ namespace ignition
 
     struct PIDValues
     {
-      // cppcheck-suppress unusedStructMember
       double P;
-      // cppcheck-suppress unusedStructMember
       double I;
-      // cppcheck-suppress unusedStructMember
       double D;
     };
 
