@@ -178,9 +178,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     std::vector<std::size_t> &indexInContainerToID =
         this->models.indexInContainerToID[_worldID];
     indexInContainerToID.push_back(id);
-    world->addSkeleton(entry.model);
-
     this->models.idToContainerID[id] = _worldID;
+
+    this->AddSkeleton(entry.model);
 
     assert(indexInContainerToID.size() == world->getNumSkeletons());
 
@@ -194,6 +194,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
+    this->AddSkeleton(_bn->getSkeleton());
+
     return id;
   }
 
@@ -202,6 +204,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     this->joints.idToObject[id] = _joint;
     this->joints.objectToID[_joint] = id;
+
+    this->AddSkeleton(_joint->getSkeleton());
 
     return id;
   }
@@ -214,7 +218,26 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->shapes.objectToID[_info.node] = id;
     this->frames[id] = _info.node.get();
 
+    this->AddSkeleton(_info.node->getSkeleton());
+
     return id;
+  }
+
+  private: void AddSkeleton(const DartSkeletonPtr &_skel)
+  {
+    // If the skeleton is not added to the world, add it. Otherwise, remove and
+    // add it again.
+
+    // Find the world the skeleton belongs to by finding the model first
+    const std::size_t modelID = this->models.objectToID.at(_skel);
+    const std::size_t worldID = this->models.idToContainerID.at(modelID);
+    const DartWorldPtr &world = this->worlds.at(worldID);
+
+    if (world->hasSkeleton(_skel))
+    {
+      world->removeSkeleton(_skel);
+    }
+    world->addSkeleton(_skel);
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
