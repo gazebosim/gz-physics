@@ -40,7 +40,7 @@ class ConstructSdfJoint : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual Identity ConstructSdfJoint(
-        std::size_t _world, const ::sdf::Joint &_joint) = 0;
+        std::size_t _model, const ::sdf::Joint &_joint) = 0;
   };
 };
 
