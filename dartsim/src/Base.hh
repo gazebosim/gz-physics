@@ -178,9 +178,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     std::vector<std::size_t> &indexInContainerToID =
         this->models.indexInContainerToID[_worldID];
     indexInContainerToID.push_back(id);
-    this->models.idToContainerID[id] = _worldID;
+    world->addSkeleton(entry.model);
 
-    this->AddSkeleton(entry.model);
+    this->models.idToContainerID[id] = _worldID;
 
     assert(indexInContainerToID.size() == world->getNumSkeletons());
 
@@ -194,7 +194,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
-    this->AddSkeleton(_bn->getSkeleton());
+    this->UpdateSkeletonInWorld(_bn->getSkeleton());
 
     return id;
   }
@@ -205,7 +205,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints.idToObject[id] = _joint;
     this->joints.objectToID[_joint] = id;
 
-    this->AddSkeleton(_joint->getSkeleton());
+    this->UpdateSkeletonInWorld(_joint->getSkeleton());
 
     return id;
   }
@@ -218,12 +218,12 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->shapes.objectToID[_info.node] = id;
     this->frames[id] = _info.node.get();
 
-    this->AddSkeleton(_info.node->getSkeleton());
+    this->UpdateSkeletonInWorld(_info.node->getSkeleton());
 
     return id;
   }
 
-  private: void AddSkeleton(const DartSkeletonPtr &_skel)
+  private: void UpdateSkeletonInWorld(const DartSkeletonPtr &_skel)
   {
     // If the skeleton is not added to the world, add it. Otherwise, remove and
     // add it again.
@@ -236,8 +236,15 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (world->hasSkeleton(_skel))
     {
       world->removeSkeleton(_skel);
+      world->addSkeleton(_skel);
     }
-    world->addSkeleton(_skel);
+    else
+    {
+      std::cerr << "[ignition::physics::dartsim::Base] Given a "
+                << "skeleton to update, but skeleton was not found in world. "
+                << "This should not be possible! Please report this bug!\n";
+      assert(false);
+    }
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
