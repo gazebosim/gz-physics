@@ -83,7 +83,6 @@ namespace ignition
     }
 
     template <typename Derived, typename Specification>
-    // cppcheck-suppress syntaxError
     template <typename CompositeType>
     void CanWriteRequiredData<Derived, Specification>::WriteRequiredData(
         CompositeType &_data,

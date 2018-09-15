@@ -41,7 +41,6 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Expected>
-    // cppcheck-suppress syntaxError
     template <typename Data>
     Data &ExpectData<Expected>::Get()
     {
