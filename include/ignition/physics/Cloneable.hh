@@ -80,7 +80,6 @@ namespace ignition
       public: template <typename... Args>
       //   This constructor is not marked as explicit because we want it to
       //   allow implicit conversions by design
-      // cppcheck-suppress noExplicitConstructor
       MakeCloneable(Args&&... _args); // NOLINT
 
       /// \brief Copy constructor

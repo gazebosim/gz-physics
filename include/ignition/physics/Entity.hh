@@ -49,11 +49,9 @@ namespace ignition
       public: ~EntityPtr() = default;
 
       /// \brief Create an EntityPtr that points to an invalid Entity
-      // cppcheck-suppress noExplicitConstructor
       public: EntityPtr(std::nullptr_t);
 
       /// \brief Create an EntityPtr that points to an invalid Entity
-      // cppcheck-suppress noExplicitConstructor
       public: EntityPtr(std::nullopt_t);
 
       /// \brief Assign this to point to an invalid Entity.
