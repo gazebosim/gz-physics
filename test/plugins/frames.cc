@@ -21,7 +21,7 @@
 #include <vector>
 
 #include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/Implements.hh>
+#include <ignition/physics/Register.hh>
 
 namespace mock
 {

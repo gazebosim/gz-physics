@@ -28,6 +28,7 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename T>
+    // cppcheck-suppress syntaxError
     template <typename... Args>
     MakeCloneable<T>::MakeCloneable(Args&&... args)
       : T(std::forward<Args>(args)...),

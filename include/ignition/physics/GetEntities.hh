@@ -197,7 +197,7 @@ namespace ignition
             std::size_t _engineID) const = 0;
 
         public: virtual std::size_t GetEngineIndex(
-            std::size_t _engineIndex) const = 0;
+            std::size_t _engineID) const = 0;
 
         public: virtual std::size_t GetWorldCount(
             std::size_t _engineID) const = 0;

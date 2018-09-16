@@ -28,7 +28,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find ignition-math
-ign_find_package(ignition-math6 REQUIRED)
+ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3)
 set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 
 #--------------------------------------
@@ -40,13 +40,26 @@ set(IGN_PLUGIN_VER ${ignition-plugin0_VERSION_MAJOR})
 # Find Eigen
 ign_find_package(EIGEN3 REQUIRED)
 
+#--------------------------------------
+# Find SDFormat for the SDF features
+ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
+
+#--------------------------------------
+# Find dartsim for the dartsim plugin wrapper
+ign_find_package(DART VERSION 6
+  REQUIRED_BY dartsim
+  PKGCONFIG dart
+  PKGCONFIG_VER_COMPARISON >=)
+
+
 message(STATUS "-------------------------------------------\n")
 
 
 #============================================================================
 # Configure the build
 #============================================================================
-ign_configure_build(QUIT_IF_BUILD_ERRORS)
+ign_configure_build(QUIT_IF_BUILD_ERRORS
+  COMPONENTS sdf dartsim)
 
 
 #============================================================================

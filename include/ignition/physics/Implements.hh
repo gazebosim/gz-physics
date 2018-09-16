@@ -18,7 +18,6 @@
 #ifndef IGNITION_PHYSICS_IMPLEMENTS_HH_
 #define IGNITION_PHYSICS_IMPLEMENTS_HH_
 
-#include <ignition/physics/detail/Implements.hh>
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FeaturePolicy.hh>
 
@@ -48,8 +47,5 @@ namespace ignition
     using Implements2f = Implements<FeaturePolicy2f, FeatureListT>;
   }
 }
-
-#define IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT) \
-  DETAIL_IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT)
 
 #endif

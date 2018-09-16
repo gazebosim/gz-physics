@@ -23,7 +23,8 @@
 
 #include <ignition/math.hh>
 
-#include "ignition/physics/SpecifyData.hh"
+#include <ignition/physics/SpecifyData.hh>
+#include <ignition/physics/FeatureList.hh>
 
 namespace ignition
 {
@@ -39,7 +40,6 @@ namespace ignition
     {
       ignition::math::Pose3d pose;
 
-      // cppcheck-suppress unusedStructMember
       std::size_t body;
     };
 
@@ -53,9 +53,7 @@ namespace ignition
     {
       ignition::math::Vector3d point;
 
-      // cppcheck-suppress unusedStructMember
       std::size_t relativeTo;
-      // cppcheck-suppress unusedStructMember
       std::size_t inCoordinatesOf;
     };
 
@@ -63,7 +61,6 @@ namespace ignition
     {
       ignition::math::Vector3d vec;
 
-      // cppcheck-suppress unusedStructMember
       std::size_t inCoordinatesOf;
     };
 
@@ -79,7 +76,6 @@ namespace ignition
 
     struct ForceTorque
     {
-      // cppcheck-suppress unusedStructMember
       std::size_t body;
       Point location;
 
@@ -98,11 +94,8 @@ namespace ignition
 
     struct PIDValues
     {
-      // cppcheck-suppress unusedStructMember
       double P;
-      // cppcheck-suppress unusedStructMember
       double I;
-      // cppcheck-suppress unusedStructMember
       double D;
     };
 
@@ -132,25 +125,39 @@ namespace ignition
       std::string annotation;
     };
 
-
-    // ---------------- Interface -----------------
-    class ForwardStep
+    /////////////////////////////////////////////////
+    /// \brief ForwardStep is a feature that allows a simulation of a world to
+    /// take one step forward in time.
+    class ForwardStep : public virtual Feature
     {
-      using Input = ExpectData<
+      public: using Input = ExpectData<
               ApplyExternalForceTorques,
               ApplyGeneralizedForces,
               VelocityControlCommands,
               ServoControlCommands>;
 
-      using Output = SpecifyData<
+      public: using Output = SpecifyData<
           RequireData<WorldPoses>,
           ExpectData<Contacts> >;
 
-      using State = CompositeData;
+      public: using State = CompositeData;
 
-      public: virtual void Step(Output &h, State &x, const Input &u) = 0;
+      public: template <typename PolicyT, typename FeaturesT>
+      class World : public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        public: void Step(Output &_h, State &_x, const Input &_u)
+        {
+          this->template Interface<ForwardStep>()->
+              WorldForwardStep(this->identity, _h, _x, _u);
+        }
+      };
 
-      public: virtual ~ForwardStep() = default;
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void WorldForwardStep(
+            std::size_t _worldID, Output &_h, State &_x, const Input &_u) = 0;
+      };
     };
   }
 }

@@ -199,6 +199,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename EntityT>
+    // cppcheck-suppress syntaxError
     template <typename Pimpl>
     EntityPtr<EntityT>::EntityPtr(
         const std::shared_ptr<Pimpl> &_pimpl,
