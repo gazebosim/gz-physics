@@ -23,9 +23,9 @@ namespace dartsim {
 
 void SimulationFeatures::WorldForwardStep(
     const std::size_t _worldID,
-    ForwardStep::Output &_h,
-    ForwardStep::State &_x,
-    const ForwardStep::Input &_u)
+    ForwardStep::Output & /*_h*/,
+    ForwardStep::State & /*_x*/,
+    const ForwardStep::Input & /*_u*/)
 {
   const dart::simulation::WorldPtr &world = this->worlds.at(_worldID);
 
