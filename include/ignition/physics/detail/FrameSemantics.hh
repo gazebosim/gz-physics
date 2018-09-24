@@ -117,7 +117,6 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    // cppcheck-suppress syntaxError
     template <typename RQ>
     typename RQ::Quantity FrameSemantics::Engine<PolicyT, FeaturesT>::Resolve(
         const RQ &_quantity,

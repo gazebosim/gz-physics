@@ -517,7 +517,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
   if (!sdfLink)
   {
     std::cerr << "[dartsim::ConstructSdfModel] Error: Model ["
-              << _sdfModel.Name() << "] contains a nullptr Link with the "
+              << _sdfModel.Name() << "] does not contain a Link with the "
               << "name [" << _linkName << "].\n";
     return nullptr;
   }

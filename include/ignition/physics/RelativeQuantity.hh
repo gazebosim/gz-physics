@@ -53,7 +53,6 @@ namespace ignition
       RelativeQuantity(const FrameID &_parentID, Args&&... _args);
 
       /// \brief Implicit conversion constructor.
-      // cppcheck-suppress noExplicitConstructor
       public: RelativeQuantity(const Q &_rawValue);
 
       /// \brief Get the value of this RelativeQuantity relative to its parent
