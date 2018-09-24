@@ -15,9 +15,9 @@
  *
  */
 
-#include <iostream>
-
 #include <gtest/gtest.h>
+
+#include <iostream>
 
 #include <ignition/plugin/Loader.hh>
 #include <ignition/physics/RequestEngine.hh>
