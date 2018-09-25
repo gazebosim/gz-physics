@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics0 VERSION 0.1.0)
+project(ignition-physics1 VERSION 1.0.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -13,7 +13,7 @@ find_package(ignition-cmake2 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project()
+ign_configure_project(VERSION_SUFFIX pre1)
 
 
 #============================================================================
@@ -33,8 +33,8 @@ set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-plugin
-ign_find_package(ignition-plugin0 REQUIRED COMPONENTS all)
-set(IGN_PLUGIN_VER ${ignition-plugin0_VERSION_MAJOR})
+ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all)
+set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 #--------------------------------------
 # Find Eigen
