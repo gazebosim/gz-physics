@@ -29,7 +29,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 {
   FrameData3d data;
 
-  // The feature system should never send us the
+  // The feature system should never send us the world ID.
   if (_id.IsWorld())
   {
     std::cerr << "[ignition::physics::dartsim::KinematicFeatures] Given a "
