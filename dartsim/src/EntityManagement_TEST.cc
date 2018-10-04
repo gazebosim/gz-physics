@@ -72,7 +72,6 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR((Eigen::Vector3d::UnitZ() - joint->GetAxis()).norm(), 0.0, 1e-6);
 
   auto child = model->ConstructEmptyLink("child link");
-  child->AttachPrismaticJoint(link);
 
   const std::string boxName = "box";
   const Eigen::Vector3d boxSize(0.1, 0.2, 0.3);
