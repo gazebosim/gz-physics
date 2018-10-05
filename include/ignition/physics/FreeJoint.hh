@@ -31,7 +31,7 @@ namespace ignition
         : public virtual FeatureWithRequirements<FreeJointCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
-      class FreeJoint : public virtual Entity<PolicyT, FeaturesT>
+      class FreeJoint : public virtual Feature::Link<PolicyT, FeaturesT>
       {
         public: using PoseType =
             typename FromPolicy<PolicyT>::template Use<Pose>;
