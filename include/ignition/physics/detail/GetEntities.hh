@@ -445,6 +445,16 @@ namespace ignition
             this->template Interface<GetEntities>()
               ->GetModelOfJoint(this->identity));
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Joint<PolicyT, FeaturesT>::GetModel() const
+        -> ConstModelPtrType
+    {
+      return ConstModelPtrType(this->pimpl,
+            this->template Interface<GetEntities>()
+              ->GetModelOfJoint(this->identity));
+    }
   }
 }
 
