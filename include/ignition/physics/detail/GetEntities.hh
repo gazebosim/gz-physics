@@ -361,7 +361,7 @@ namespace ignition
     auto GetEntities::Link<PolicyT, FeaturesT>::GetShape(
         const std::size_t _index) const -> ConstShapePtrType
     {
-      return ShapePtrType(this->pimpl,
+      return ConstShapePtrType(this->pimpl,
             this->template Interface<GetEntities>()->GetShape(
                             this->identity, _index));
     }
