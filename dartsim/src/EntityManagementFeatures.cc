@@ -18,6 +18,8 @@
 #include "EntityManagementFeatures.hh"
 
 #include <dart/config.hpp>
+#include <dart/collision/fcl/FCLCollisionDetector.hpp>
+#include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
 #include <string>
@@ -293,6 +295,16 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const std::size_t /*_engineID*/, const std::string &_name)
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
+
+#if FCL_VERSION_AT_LEAST(0,4,0)
+  auto fcl = dynamic_cast<dart::collision::FCLCollisionDetector*>(
+        world->getConstraintSolver()->getCollisionDetector().get());
+  if (fcl)
+  {
+    fcl->setPrimitiveShapeType(
+          dart::collision::FCLCollisionDetector::PRIMITIVE);
+  }
+#endif
 
   return this->GenerateIdentity(this->AddWorld(world, _name), world);
 }

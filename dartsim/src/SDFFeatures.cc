@@ -241,10 +241,9 @@ Identity SDFFeatures::ConstructSdfWorld(
     const std::size_t /*_engine*/,
     const ::sdf::World &_sdfWorld)
 {
-  dart::simulation::WorldPtr world =
-      std::make_shared<dart::simulation::World>();
+  const Identity worldID = this->ConstructEmptyWorld(0, _sdfWorld.Name());
 
-  const std::size_t worldID = this->AddWorld(world, _sdfWorld.Name());
+  dart::simulation::WorldPtr world = this->worlds.at(worldID);
 
   world->setGravity(ignition::math::eigen3::convert(_sdfWorld.Gravity()));
 
