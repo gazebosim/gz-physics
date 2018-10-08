@@ -22,7 +22,6 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
-
 #include <string>
 
 namespace ignition {
