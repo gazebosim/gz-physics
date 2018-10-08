@@ -82,7 +82,7 @@ TEST(SimulationFeatures_TEST, Falling)
 
   auto link = world->GetModel(0)->GetLink(0);
   auto pos = link->FrameDataRelativeToWorld().pose.translation();
-  EXPECT_NEAR(pos.z(), 1.0, 1e-2);
+  EXPECT_NEAR(pos.z(), 1.0, 5e-2);
 }
 
 int main(int argc, char *argv[])
