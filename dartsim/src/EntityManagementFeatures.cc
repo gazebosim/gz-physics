@@ -18,7 +18,10 @@
 #include "EntityManagementFeatures.hh"
 
 #include <dart/config.hpp>
+#include <dart/collision/bullet/BulletCollisionDetector.hpp>
+#include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+
 
 #include <string>
 
@@ -293,6 +296,9 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const std::size_t /*_engineID*/, const std::string &_name)
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
+
+  world->getConstraintSolver()->setCollisionDetector(
+        dart::collision::BulletCollisionDetector::create());
 
   return this->GenerateIdentity(this->AddWorld(world, _name), world);
 }
