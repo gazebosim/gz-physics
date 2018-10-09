@@ -207,6 +207,20 @@ TEST(FeatureList_TEST, Requirements)
   EXPECT_FALSE(List6::HasFeature<FeatureC>());
 }
 
+TEST(FeatureList_TEST, ConflictsAndRequirements)
+{
+  // Test against an infinitely recursive template instantiation issue.
+  // We need to define a class unique to this test, otherwise the regression
+  // test might not catch the issue if a FeatureList with TestRequiresFeatureA
+  // gets instantiated beforehand.
+  class TestRequiresFeatureA
+      : public virtual FeatureWithRequirements<FeatureA> { };
+
+  // This is a regression test. We need to make sure that this FeatureList
+  // compiles.
+  ignition::physics::FeatureList<OnlyConflictWith1, TestRequiresFeatureA>();
+}
+
 TEST(FeatureList_TEST, Hierarchy)
 {
   using HierarchyLevel1 = FeatureList<FeatureA, FeatureB>;

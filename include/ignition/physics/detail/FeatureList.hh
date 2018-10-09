@@ -219,23 +219,26 @@ namespace ignition
       /////////////////////////////////////////////////
       /// \private Check whether any feature within a std::tuple of features
       /// conflicts with any other feature in that tuple.
-      template <bool AssertNoConflict, typename Tuple>
+      template <bool AssertNoConflict, typename... FeatureLists>
       struct SelfConflict;
 
       /// \private Recursive implementation of SelfConflict
-      template <bool AssertNoConflict, typename Feature1,
-                typename... OtherFeatures>
+      template <bool AssertNoConflict, typename FeatureList1,
+                typename... OtherFeatureLists>
       struct SelfConflict<
-            AssertNoConflict, std::tuple<Feature1, OtherFeatures...>>
+            AssertNoConflict, FeatureList1, OtherFeatureLists...>
           : std::integral_constant<bool,
-          FeatureList<Feature1>::template ConflictsWith<
-            FeatureList<OtherFeatures...>, AssertNoConflict>()
-       || FeatureList<OtherFeatures...>::template ConflictsWith<
-            Feature1, AssertNoConflict>()> {};
+          FeatureList<FeatureList1>::template ConflictsWith<
+            FeatureList<OtherFeatureLists...>, AssertNoConflict>()> {};
 
-      /// \private Terminal implementation of SelfConflict
-      template <bool AssertNoConflict, typename SingleFeature>
-      struct SelfConflict<AssertNoConflict, std::tuple<SingleFeature>>
+      /// \private Terminal implementation of SelfConflict for 1 feature
+      template <bool AssertNoConflict, typename SingleFeatureList>
+      struct SelfConflict<AssertNoConflict, SingleFeatureList>
+          : std::integral_constant<bool, false> {};
+
+      /// \private Terminal implementation of SelfConflict for 0 features
+      template <bool AssertNoConflict>
+      struct SelfConflict<AssertNoConflict>
           : std::integral_constant<bool, false> {};
 
       /////////////////////////////////////////////////
@@ -413,14 +416,19 @@ namespace ignition
 
 // Macros for generating EngineTemplate, LinkTemplate, etc
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, P) \
-  template <typename List>\
+  template <typename List> \
   using X ## P = X <::ignition::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
   using X ## P ## Ptr = X ## Ptr < \
     ::ignition::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
   using Const ## X ## P ## Ptr = X ## Ptr < \
-    ::ignition::physics::FeaturePolicy ## P, List>;
+    ::ignition::physics::FeaturePolicy ## P, List>; \
+  using Base ## X ## P ## Ptr = Base ## X ## Ptr < \
+    ::ignition::physics::FeaturePolicy ## P>; \
+  using ConstBase ## X ## P ## Ptr = ConstBase ## X ## Ptr <\
+    ::ignition::physics::FeaturePolicy ## P>;
+
 
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
@@ -436,7 +444,9 @@ namespace ignition
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public ::ignition::physics::detail::Aggregate< \
-        detail :: X ## Selector, FeaturesT>::template type<PolicyT, FeaturesT> \
+        detail :: X ## Selector, FeaturesT> \
+          ::template type<PolicyT, FeaturesT>, \
+      public virtual Entity<PolicyT, FeaturesT> \
   { \
     public: using Identifier = detail:: X ## Identifier; \
     public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
@@ -447,6 +457,9 @@ namespace ignition
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \
       : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
+    public: X(std::shared_ptr<typename Base::Pimpl> &&_pimpl, \
+              const Identity &_identity) \
+      : Entity<PolicyT, FeaturesT>(std::move(_pimpl), _identity) { } \
   }; \
   template <typename PolicyT, typename FeaturesT> \
   using X ## Ptr = ::ignition::physics::EntityPtr< \
@@ -454,6 +467,12 @@ namespace ignition
   template <typename PolicyT, typename FeaturesT> \
   using Const ## X ## Ptr = ::ignition::physics::EntityPtr< \
     const X <PolicyT, FeaturesT> >; \
+  template <typename PolicyT> \
+  using Base ## X ## Ptr = ::ignition::physics::EntityPtr< \
+    X <PolicyT, ::ignition::physics::FeatureList<>>>; \
+  template <typename PolicyT> \
+  using ConstBase ## X ## Ptr = ::ignition::physics::EntityPtr< \
+    const X <PolicyT, ::ignition::physics::FeatureList<>>>; \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
@@ -478,6 +497,7 @@ namespace ignition
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Model)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Link)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Joint)
+    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Shape)
 
     namespace detail
     {

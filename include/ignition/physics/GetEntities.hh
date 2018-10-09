@@ -70,6 +70,10 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class World : public virtual Feature::World<PolicyT, FeaturesT>
       {
+        // typedefs for the type of Engine that this World can return
+        public: using EnginePtrType = EnginePtr<PolicyT, FeaturesT>;
+        public: using ConstEnginePtrType = ConstEnginePtr<PolicyT, FeaturesT>;
+
         // typedefs for the type of Model that this World can return
         public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
         public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
@@ -79,6 +83,13 @@ namespace ignition
 
         /// \brief Get the index of this World within its engine.
         public: std::size_t GetIndex() const;
+
+        /// \brief Get the Engine that is managing this World
+        /// \return A reference to the Engine that is managing this World
+        public: EnginePtrType GetEngine();
+
+        /// \sa GetEngine()
+        public: ConstEnginePtrType GetEngine() const;
 
         /// \brief Get the number of Models inside this World.
         public: std::size_t GetModelCount() const;
@@ -107,6 +118,10 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
       {
+        // typedefs for the type of World that this Model can return
+        public: using WorldPtrType = WorldPtr<PolicyT, FeaturesT>;
+        public: using ConstWorldPtrType = ConstWorldPtr<PolicyT, FeaturesT>;
+
         // typedefs for the type of Link that this Model can return
         public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
         public: using ConstLinkPtrType = ConstLinkPtr<PolicyT, FeaturesT>;
@@ -120,6 +135,13 @@ namespace ignition
 
         /// \brief Get the index of this Model within its World
         public: std::size_t GetIndex() const;
+
+        /// \brief Get the World that contains this Model.
+        /// \return A reference to the World containing this Model.
+        public: WorldPtrType GetWorld();
+
+        /// \sa GetWorld()
+        public: ConstWorldPtrType GetWorld() const;
 
         /// \brief Get the number of Links within this Model.
         public: std::size_t GetLinkCount() const;
@@ -171,23 +193,91 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class Link : public virtual Feature::Link<PolicyT, FeaturesT>
       {
+        // typedefs for the type of Model that this Link can return
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
+
+        // typedefs for the type of Shape that this Link can return
+        public: using ShapePtrType = ShapePtr<PolicyT, FeaturesT>;
+        public: using ConstShapePtrType = ConstShapePtr<PolicyT, FeaturesT>;
+
         /// \brief Get the name of this Link
         public: const std::string &GetName() const;
 
         /// \brief Get the index of this Link within its Model.
         public: std::size_t GetIndex() const;
 
-        // TODO(MXG): Return collision and/or visual objects
+        /// \brief Get the model that contains this Link.
+        /// \return A Model reference to the Model that contains this Link.
+        public: ModelPtrType GetModel();
+
+        /// \sa GetModel()
+        public: ConstModelPtrType GetModel() const;
+
+        /// \brief Get the number of Shapes within this Link.
+        public: std::size_t GetShapeCount() const;
+
+        /// \brief Get a Shape that exists within this Link.
+        /// \param[in] _index
+        ///   Index of the Shape within this Link
+        /// \return A Shape reference. If _index is GetShapeCount() or higher,
+        /// this will be a nullptr.
+        public: ShapePtrType GetShape(std::size_t _index);
+
+        /// \sa GetShape(std::size_t)
+        public: ConstShapePtrType GetShape(std::size_t _index) const;
+
+        /// \brief Get a Shape that exists within this Link.
+        /// \param[in] _name
+        ///   Name of the Shape within this Link
+        /// \return A Shape reference. If a Shape named _name does not exist in
+        /// this Shape, this will be a nullptr.
+        public: ShapePtrType GetShape(const std::string &_name);
+
+        /// \sa GetShape(const std::string&)
+        public: ConstShapePtrType GetShape(const std::string &_name) const;
       };
 
       public: template <typename PolicyT, typename FeaturesT>
       class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
       {
+        // typedefs for the type of Model that this Link can return
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
+
         /// \brief Get the name of this Joint.
         public: const std::string &GetName() const;
 
         /// \brief Get the index of this Joint within its Model.
         public: std::size_t GetIndex() const;
+
+        /// \brief Get the model that contains this Link.
+        /// \return A Model reference to the Model that contains this Link.
+        public: ModelPtrType GetModel();
+
+        /// \sa GetModel()
+        public: ConstModelPtrType GetModel() const;
+      };
+
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      {
+        // typedefs for the type of Link that this Shape can return
+        public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
+        public: using ConstLinkPtrType = ConstLinkPtr<PolicyT, FeaturesT>;
+
+        /// \brief Get the name of this Shape.
+        public: const std::string &GetName() const;
+
+        /// \brief Get the index of this Shape within its Link.
+        public: std::size_t GetIndex() const;
+
+        /// \brief Get the Link that contains this Shape.
+        /// \return a Link reference to the Link that contains this Shape.
+        public: LinkPtrType GetLink();
+
+        /// \sa GetLink()
+        public: ConstLinkPtrType GetLink() const;
       };
 
       public: template <typename PolicyT>
@@ -214,6 +304,9 @@ namespace ignition
         public: virtual std::size_t GetWorldIndex(
             std::size_t _worldID) const = 0;
 
+        public: virtual Identity GetEngineOfWorld(
+            std::size_t _worldID) const = 0;
+
         public: virtual std::size_t GetModelCount(
             std::size_t _worldID) const = 0;
 
@@ -227,6 +320,9 @@ namespace ignition
             std::size_t _modelID) const = 0;
 
         public: virtual std::size_t GetModelIndex(
+            std::size_t _modelID) const = 0;
+
+        public: virtual Identity GetWorldOfModel(
             std::size_t _modelID) const = 0;
 
         public: virtual std::size_t GetLinkCount(
@@ -253,11 +349,35 @@ namespace ignition
         public: virtual std::size_t GetLinkIndex(
             std::size_t _linkID) const = 0;
 
+        public: virtual Identity GetModelOfLink(
+            std::size_t _linkID) const = 0;
+
+        public: virtual std::size_t GetShapeCount(
+            std::size_t _linkID) const = 0;
+
+        public: virtual Identity GetShape(
+            std::size_t _linkID, std::size_t _shapeIndex) const = 0;
+
+        public: virtual Identity GetShape(
+            std::size_t _linkID, const std::string &_shapeName) const = 0;
+
         public: virtual const std::string &GetJointName(
             std::size_t _jointID) const = 0;
 
         public: virtual std::size_t GetJointIndex(
             std::size_t _jointID) const = 0;
+
+        public: virtual Identity GetModelOfJoint(
+            std::size_t _jointID) const = 0;
+
+        public: virtual const std::string &GetShapeName(
+            std::size_t _shapeID) const = 0;
+
+        public: virtual std::size_t GetShapeIndex(
+            std::size_t _shapeID) const = 0;
+
+        public: virtual Identity GetLinkOfShape(
+            std::size_t _shapeID) const = 0;
       };
     };
   }

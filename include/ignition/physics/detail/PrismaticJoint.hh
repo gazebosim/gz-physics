@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DETAIL_PRISMATICJOINT_HH_
 #define IGNITION_PHYSICS_DETAIL_PRISMATICJOINT_HH_
 
+#include <string>
+
 #include <ignition/physics/PrismaticJoint.hh>
 
 namespace ignition
@@ -40,6 +42,19 @@ namespace ignition
     {
       this->template Interface<SetPrismaticJointProperties>()
           ->SetPrismaticJointAxis(this->identity, _axis);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto AttachPrismaticJointFeature::Link<PolicyT, FeaturesT>::
+    AttachPrismaticJoint(
+        const BaseLinkPtr<PolicyT> &_parent,
+        const std::string &_name,
+        const Axis &_axis) -> JointPtrType
+    {
+      return JointPtrType(this->pimpl,
+            this->template Interface<AttachPrismaticJointFeature>()
+              ->AttachPrismaticJoint(this->identity, _parent, _name, _axis));
     }
   }
 }

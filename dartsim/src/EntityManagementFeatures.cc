@@ -18,6 +18,9 @@
 #include "EntityManagementFeatures.hh"
 
 #include <dart/config.hpp>
+#include <dart/collision/bullet/BulletCollisionDetector.hpp>
+#include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/dynamics/FreeJoint.hpp>
 
 #include <string>
 
@@ -81,6 +84,13 @@ std::size_t EntityManagementFeatures::GetWorldIndex(
 }
 
 /////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetEngineOfWorld(
+    const std::size_t /*_worldID*/) const
+{
+  return this->GenerateIdentity(0);
+}
+
+/////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetModelCount(
     const std::size_t _worldID) const
 {
@@ -119,6 +129,14 @@ std::size_t EntityManagementFeatures::GetModelIndex(
     const std::size_t _modelID) const
 {
   return this->models.idToIndexInContainer.at(_modelID);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorldOfModel(
+    const std::size_t _modelID) const
+{
+  const std::size_t worldID = this->models.idToContainerID.at(_modelID);
+  return this->GenerateIdentity(worldID, this->worlds.at(worldID));
 }
 
 /////////////////////////////////////////////////
@@ -194,6 +212,40 @@ std::size_t EntityManagementFeatures::GetLinkIndex(
 }
 
 /////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModelOfLink(
+    const std::size_t _linkID) const
+{
+  const DartSkeletonPtr &skeleton = this->links.at(_linkID)->getSkeleton();
+  return this->GenerateIdentity(this->models.IdentityOf(skeleton), skeleton);
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeCount(
+    const std::size_t _linkID) const
+{
+  return this->links.at(_linkID)->getNumShapeNodes();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+    const std::size_t _linkID, const std::size_t _shapeIndex) const
+{
+  return this->GenerateIdentity(
+        this->shapes.IdentityOf(
+          this->links.at(_linkID)->getShapeNode(_shapeIndex)));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+    const std::size_t _linkID, const std::string &_shapeName) const
+{
+  DartBodyNode * const bn = this->links.at(_linkID);
+  return this->GenerateIdentity(
+        this->shapes.IdentityOf(
+          bn->getSkeleton()->getShapeNode(bn->getName() + ":" + _shapeName)));
+}
+
+/////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetJointName(
     const std::size_t _jointID) const
 {
@@ -205,6 +257,84 @@ std::size_t EntityManagementFeatures::GetJointIndex(
     const std::size_t _jointID) const
 {
   return this->joints.at(_jointID)->getJointIndexInSkeleton();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModelOfJoint(
+    const std::size_t _jointID) const
+{
+  const DartSkeletonPtr &skeleton = this->links.at(_jointID)->getSkeleton();
+  return this->GenerateIdentity(this->models.IdentityOf(skeleton), skeleton);
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetShapeName(
+    const std::size_t _shapeID) const
+{
+  return this->shapes.at(_shapeID).name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeIndex(
+    const std::size_t _shapeID) const
+{
+  return this->shapes.at(_shapeID).node->getIndexInBodyNode();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLinkOfShape(
+    const std::size_t _shapeID) const
+{
+  return this->GenerateIdentity(
+        this->links.IdentityOf(
+          this->shapes.at(_shapeID).node->getBodyNodePtr()));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyWorld(
+    const std::size_t /*_engineID*/, const std::string &_name)
+{
+  const auto &world = std::make_shared<dart::simulation::World>(_name);
+
+  world->getConstraintSolver()->setCollisionDetector(
+        dart::collision::BulletCollisionDetector::create());
+
+  return this->GenerateIdentity(this->AddWorld(world, _name), world);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyModel(
+    const std::size_t _worldID, const std::string &_name)
+{
+  dart::dynamics::SkeletonPtr model = dart::dynamics::Skeleton::create(_name);
+
+  dart::dynamics::SimpleFramePtr modelFrame =
+      dart::dynamics::SimpleFrame::createShared(
+        dart::dynamics::Frame::World(),
+        _name + "_frame");
+
+  auto [modelID, ModelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
+
+  return this->GenerateIdentity(modelID, model);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyLink(
+    const std::size_t _modelID, const std::string &_name)
+{
+  const DartSkeletonPtr &model = this->models.at(_modelID).model;
+
+  dart::dynamics::FreeJoint::Properties prop_fj;
+  prop_fj.mName = _name + "_FreeJoint";
+
+  DartBodyNode::Properties prop_bn;
+  prop_bn.mName = _name;
+
+  DartBodyNode *bn =
+      model->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
+        nullptr, prop_fj, prop_bn).second;
+
+  return this->GenerateIdentity(this->AddLink(bn));
 }
 
 }

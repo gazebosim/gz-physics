@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_REVOLUTEJOINT_HH_
-#define IGNITION_PHYSICS_DETAIL_REVOLUTEJOINT_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_BOXSHAPE_HH_
+#define IGNITION_PHYSICS_DETAIL_BOXSHAPE_HH_
 
 #include <string>
 
-#include <ignition/physics/RevoluteJoint.hh>
+#include <ignition/physics/BoxShape.hh>
 
 namespace ignition
 {
@@ -28,33 +28,32 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetRevoluteJointProperties::RevoluteJoint<PolicyT, FeaturesT>::
-    GetAxis() const -> Axis
+    auto GetBoxShapeProperties::BoxShape<PolicyT, FeaturesT>
+    ::GetSize() const -> Dimensions
     {
-      return this->template Interface<GetRevoluteJointProperties>()
-          ->GetRevoluteJointAxis(this->identity);
+      return this->template Interface<GetBoxShapeProperties>()
+                 ->GetBoxShapeSize(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetRevoluteJointProperties::RevoluteJoint<PolicyT, FeaturesT>::
-    SetAxis(const Axis &_axis)
+    void SetBoxShapeProperties::BoxShape<PolicyT, FeaturesT>
+    ::SetSize(const Dimensions &_size)
     {
-      this->template Interface<SetRevoluteJointProperties>()
-          ->SetRevoluteJointAxis(this->identity, _axis);
+      this->template Interface<SetBoxShapeProperties>()
+          ->SetBoxShapeSize(this->identity, _size);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto AttachRevoluteJointFeature::Link<PolicyT, FeaturesT>
-    ::AttachRevoluteJoint(
-        const BaseLinkPtr<PolicyT> &_parent,
+    auto AttachBoxShapeFeature::Link<PolicyT, FeaturesT>::AttachBoxShape(
         const std::string &_name,
-        const Axis &_axis) -> JointPtrType
+        const Dimensions &_size,
+        const PoseType &_pose) -> ShapePtrType
     {
-      return JointPtrType(this->pimpl,
-            this->template Interface<AttachRevoluteJointFeature>()
-              ->AttachRevoluteJoint(this->identity, _parent, _name, _axis));
+      return ShapePtrType(this->pimpl,
+            this->template Interface<AttachBoxShapeFeature>()
+                ->AttachBoxShape(this->identity, _name, _size, _pose));
     }
   }
 }

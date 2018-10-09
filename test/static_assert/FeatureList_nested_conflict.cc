@@ -15,24 +15,24 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FREEJOINT_HH_
-#define IGNITION_PHYSICS_DETAIL_FREEJOINT_HH_
+#include <ignition/physics/FeatureList.hh>
 
-#include <ignition/physics/FreeJoint.hh>
+using namespace ignition::physics;
 
-namespace ignition
+class FeatureA : public virtual Feature { };
+class FeatureB : public virtual Feature { };
+class FeatureC : public virtual Feature { };
+class Conflicted : public virtual Feature { };
+class AnotherFeature : public virtual FeatureWithConflicts<Conflicted> { };
+
+using SomeList = FeatureList<
+    FeatureA,
+    Conflicted,
+    AnotherFeature>;
+
+int main()
 {
-  namespace physics
-  {
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
-    void SetFreeJointRelativeTransformFeature::FreeJoint<PolicyT, FeaturesT>::
-    SetRelativeTransform(const PoseType &_pose)
-    {
-      this->template Interface<SetFreeJointRelativeTransformFeature>()->
-          SetFreeJointTransform(this->identity, _pose);
-    }
-  }
+  // This is different from FeatureList_conflict, because now the conflict is
+  // nested inside of another FeatureList.
+  FeatureList<FeatureB, SomeList, FeatureC>();
 }
-
-#endif

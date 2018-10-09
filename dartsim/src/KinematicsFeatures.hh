@@ -15,24 +15,31 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FREEJOINT_HH_
-#define IGNITION_PHYSICS_DETAIL_FREEJOINT_HH_
+#ifndef IGNITION_PHYSICS_DARTSIM_SRC_KINEMATICSFEATURES_HH_
+#define IGNITION_PHYSICS_DARTSIM_SRC_KINEMATICSFEATURES_HH_
 
-#include <ignition/physics/FreeJoint.hh>
+#include <ignition/physics/FrameSemantics.hh>
 
-namespace ignition
+#include "Base.hh"
+
+namespace ignition {
+namespace physics {
+namespace dartsim {
+
+using KinematicsFeatureList = FeatureList<
+  LinkFrameSemantics,
+  ShapeFrameSemantics
+>;
+
+class KinematicsFeatures :
+    public virtual Base,
+    public virtual Implements3d<KinematicsFeatureList>
 {
-  namespace physics
-  {
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
-    void SetFreeJointRelativeTransformFeature::FreeJoint<PolicyT, FeaturesT>::
-    SetRelativeTransform(const PoseType &_pose)
-    {
-      this->template Interface<SetFreeJointRelativeTransformFeature>()->
-          SetFreeJointTransform(this->identity, _pose);
-    }
-  }
+  public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const;
+};
+
+}
+}
 }
 
 #endif

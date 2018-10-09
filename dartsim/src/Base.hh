@@ -44,7 +44,18 @@ struct ModelInfo
 struct ShapeInfo
 {
   dart::dynamics::ShapeNodePtr node;
-  Eigen::Isometry3d tf_offset;
+
+  /// \brief dartsim has more strict name uniqueness rules than Gazebo, so we
+  /// store the Gazebo-specified name of the Shape here.
+  std::string name;
+
+  /// \brief This is added because sometimes the relative transform of a shape
+  /// according to Gazebo specifications may be different than the relative
+  /// transform of a shape within the dartsim specifications. This is the offset
+  /// from the Gazebo specs to the dartsim specs, i.e. T_g * tf_offset = T_d
+  /// where T_g is the relative transform according to Gazebo and T_d is the
+  /// relative transform according to dartsim.
+  Eigen::Isometry3d tf_offset = Eigen::Isometry3d::Identity();
 };
 
 template <typename Value1, typename Key2 = Value1>
@@ -72,6 +83,9 @@ struct EntityStorage
 
   /// \brief Map from an entity ID to its index within its container
   std::unordered_map<std::size_t, std::size_t> idToIndexInContainer;
+
+  /// \brief Map from an entity ID to the ID of its container
+  std::unordered_map<std::size_t, std::size_t> idToContainerID;
 
   Value1 &operator[](const std::size_t _id)
   {
@@ -142,6 +156,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->worlds.idToIndexInContainer[id] = indexInContainerToID.size();
     indexInContainerToID.push_back(id);
 
+    this->worlds.idToContainerID[id] = 0;
+
     _world->setName(_name);
 
     return id;
@@ -164,8 +180,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     indexInContainerToID.push_back(id);
     world->addSkeleton(entry.model);
 
-    assert(indexInContainerToID.size() == world->getNumSkeletons());
+    this->models.idToContainerID[id] = _worldID;
 
+    assert(indexInContainerToID.size() == world->getNumSkeletons());
 
     return std::forward_as_tuple(id, entry);
   }
@@ -175,6 +192,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     this->links.idToObject[id] = _bn;
     this->links.objectToID[_bn] = id;
+    this->frames[id] = _bn;
+
+    this->UpdateSkeletonInWorld(_bn->getSkeleton());
 
     return id;
   }
@@ -185,6 +205,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints.idToObject[id] = _joint;
     this->joints.objectToID[_joint] = id;
 
+    this->UpdateSkeletonInWorld(_joint->getSkeleton());
+
     return id;
   }
 
@@ -194,8 +216,35 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     this->shapes.idToObject[id] = _info;
     this->shapes.objectToID[_info.node] = id;
+    this->frames[id] = _info.node.get();
+
+    this->UpdateSkeletonInWorld(_info.node->getSkeleton());
 
     return id;
+  }
+
+  private: void UpdateSkeletonInWorld(const DartSkeletonPtr &_skel)
+  {
+    // If the skeleton is not added to the world, add it. Otherwise, remove and
+    // add it again.
+
+    // Find the world the skeleton belongs to by finding the model first
+    const std::size_t modelID = this->models.objectToID.at(_skel);
+    const std::size_t worldID = this->models.idToContainerID.at(modelID);
+    const DartWorldPtr &world = this->worlds.at(worldID);
+
+    if (world->hasSkeleton(_skel))
+    {
+      world->removeSkeleton(_skel);
+      world->addSkeleton(_skel);
+    }
+    else
+    {
+      std::cerr << "[ignition::physics::dartsim::Base] Given a "
+                << "skeleton to update, but skeleton was not found in world. "
+                << "This should not be possible! Please report this bug!\n";
+      assert(false);
+    }
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
@@ -203,6 +252,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<DartBodyNodePtr, DartBodyNode*> links;
   public: EntityStorage<DartJointPtr, DartJoint*> joints;
   public: EntityStorage<ShapeInfo, DartShapeNode*> shapes;
+  public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
 };
 
 }

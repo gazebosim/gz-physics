@@ -179,7 +179,7 @@ namespace mock
       return this->GenerateInvalidId();
     }
 
-    void SetFreeJointTransform(
+    void SetFreeJointRelativeTransform(
         const std::size_t /*_id*/, const Pose &/*_pose*/) override
     {
       // TODO(MXG): Implement this

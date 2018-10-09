@@ -18,12 +18,8 @@
 #ifndef IGNITION_PHYSICS_DECLAREJOINTTYPE_HH_
 #define IGNITION_PHYSICS_DECLAREJOINTTYPE_HH_
 
-#include <memory>
-
 #include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/Geometry.hh>
-#include <ignition/physics/TemplateHelpers.hh>
-#include <ignition/physics/detail/DeclareJointType.hh>
+#include <ignition/physics/detail/DeclareDerivedType.hh>
 
 /// \brief Given a joint type named CustomJointType, this macro creates the
 /// following classes:
@@ -54,6 +50,6 @@
 /// if their physics engine plugin wants to be able to provide CustomJointType
 /// features.
 #define IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType) \
-  DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType)
+  DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Joint, CustomJointType)
 
 #endif

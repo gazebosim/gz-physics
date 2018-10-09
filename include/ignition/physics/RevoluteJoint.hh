@@ -18,7 +18,10 @@
 #ifndef IGNITION_PHYSICS_REVOLUTEJOINT_HH_
 #define IGNITION_PHYSICS_REVOLUTEJOINT_HH_
 
+#include <string>
+
 #include <ignition/physics/DeclareJointType.hh>
+#include <ignition/physics/Geometry.hh>
 
 namespace ignition
 {
@@ -27,7 +30,7 @@ namespace ignition
     IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint)
 
     class IGNITION_PHYSICS_VISIBLE GetRevoluteJointProperties
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       /// \brief The API for getting basic revolute joint properties
       public: template <typename PolicyT, typename FeaturesT>
@@ -60,16 +63,13 @@ namespace ignition
         /// \return the axis of joint _id.
         public: virtual Axis GetRevoluteJointAxis(std::size_t _id) const = 0;
       };
-
-      public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJointCast>;
     };
 
     /// \brief Provide the API for setting a revolute joint's axis. Not all
     /// physics engines are able to change properties during run-time, so some
     /// might support getting the joint axis but not setting it.
     class IGNITION_PHYSICS_VISIBLE SetRevoluteJointProperties
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       /// \brief The API for setting basic revolute joint properties
       public: template <typename PolicyT, typename FeaturesT>
@@ -101,9 +101,63 @@ namespace ignition
         public: virtual void SetRevoluteJointAxis(
             std::size_t _id, const Axis &_axis) = 0;
       };
+    };
 
-      public: using RequiredFeatures =
-          FeatureList<ignition::physics::RevoluteJointCast>;
+    /// \brief Provide the API for attaching a Link to another Link (or directly
+    /// to the World) with a revolute joint. After calling AttachRevoluteJoint,
+    /// the Link's parent joint will be a revolute joint.
+    class IGNITION_PHYSICS_VISIBLE AttachRevoluteJointFeature
+        : public virtual FeatureWithRequirements<RevoluteJointCast>
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Link : public virtual Feature::Link<PolicyT, FeaturesT>
+      {
+        public: using Axis =
+            typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+        public: using JointPtrType = RevoluteJointPtr<PolicyT, FeaturesT>;
+
+        /// \brief Attach this link to another link using a revolute joint.
+        /// \param[in] _parent
+        ///   The parent link for the joint. Pass in a nullptr to attach the
+        ///   link to the world.
+        /// \param[in] _name
+        ///   The name of this joint.
+        /// \param[in] _axis
+        ///   The joint axis for the new joint. The rest of the joint properties
+        ///   will be left to the default values of the physics engine.
+        /// \return A reference to the newly constructed RevoluteJoint.
+        //
+        // TODO(MXG): Instead of _name and _axis, consider passing in a struct
+        // containing all base joint properties plus the axis.
+        public: JointPtrType AttachRevoluteJoint(
+            const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name = "revolute",
+            const Axis &_axis = Axis::UnitX());
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Axis =
+            typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+        /// \param[in] _childID
+        ///   The ID of the child link.
+        /// \param[in] _parent
+        ///   A reference to the parent link. If this evaluates to a nullptr,
+        ///   then the parent should be the world.
+        /// \param[in] _name
+        ///   The name of this joint.
+        /// \param[in] _axis
+        ///   The desired axis of the new revolute joint
+        /// \returns the Identity of the newly created RevoluteJoint
+        public: virtual Identity AttachRevoluteJoint(
+            std::size_t _childID,
+            const BaseLinkPtr<PolicyT> &_parent,
+            const std::string &_name,
+            const Axis &_axis) = 0;
+      };
     };
   }
 }

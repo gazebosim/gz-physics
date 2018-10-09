@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_REVOLUTEJOINT_HH_
-#define IGNITION_PHYSICS_DETAIL_REVOLUTEJOINT_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_SPHERESHAPE_HH_
+#define IGNITION_PHYSICS_DETAIL_SPHERESHAPE_HH_
 
 #include <string>
 
-#include <ignition/physics/RevoluteJoint.hh>
+#include <ignition/physics/SphereShape.hh>
 
 namespace ignition
 {
@@ -28,33 +28,33 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetRevoluteJointProperties::RevoluteJoint<PolicyT, FeaturesT>::
-    GetAxis() const -> Axis
+    auto GetSphereShapeProperties::SphereShape<PolicyT, FeaturesT>
+    ::GetRadius() const -> Scalar
     {
-      return this->template Interface<GetRevoluteJointProperties>()
-          ->GetRevoluteJointAxis(this->identity);
+      return this->template Interface<GetSphereShapeProperties>()
+          ->GetSphereShapeRadius(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetRevoluteJointProperties::RevoluteJoint<PolicyT, FeaturesT>::
-    SetAxis(const Axis &_axis)
+    void SetSphereShapeProperties::SphereShape<PolicyT, FeaturesT>::SetRadius(
+        Scalar _radius)
     {
-      this->template Interface<SetRevoluteJointProperties>()
-          ->SetRevoluteJointAxis(this->identity, _axis);
+      this->template Interface<GetSphereShapeProperties>()
+          ->SetSphereShapeRadius(this->identity, _radius);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto AttachRevoluteJointFeature::Link<PolicyT, FeaturesT>
-    ::AttachRevoluteJoint(
-        const BaseLinkPtr<PolicyT> &_parent,
+    auto AttachSphereShapeFeature::Link<PolicyT, FeaturesT>
+    ::AttachSphereShape(
         const std::string &_name,
-        const Axis &_axis) -> JointPtrType
+        Scalar _radius,
+        const PoseType &_pose) -> ShapePtrType
     {
-      return JointPtrType(this->pimpl,
-            this->template Interface<AttachRevoluteJointFeature>()
-              ->AttachRevoluteJoint(this->identity, _parent, _name, _axis));
+      return ShapePtrType(this->pimpl,
+            this->template Interface<AttachSphereShapeFeature>()
+                ->AttachSphereShape(this->identity, _name, _radius, _pose));
     }
   }
 }

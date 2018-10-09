@@ -15,48 +15,49 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
-#define IGNITION_PHYSICS_DETAIL_DECLAREJOINTTYPE_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_DECLAREDERIVEDTYPE_HH_
+#define IGNITION_PHYSICS_DETAIL_DECLAREDERIVEDTYPE_HH_
 
 #include <memory>
 #include <tuple>
 #include <utility>
 
-#define DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, P) \
+#define DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, P) \
   template <typename FeaturesT> \
-  using X ## P = X<FeaturePolicy ## P, FeaturesT>; \
+  using Derived ## P = Derived<FeaturePolicy ## P, FeaturesT>; \
   template <typename FeaturesT> \
-  using X ## P ## Ptr = \
-    ::ignition::physics::EntityPtr<X<FeaturePolicy ## P, FeaturesT>>; \
+  using Derived ## P ## Ptr = \
+    ::ignition::physics::EntityPtr<Derived<FeaturePolicy ## P, FeaturesT>>; \
   template <typename FeaturesT> \
-  using Const ## X ## P ## Ptr = \
-    ::ignition::physics::EntityPtr<const X<FeaturePolicy ## P, FeaturesT>>;
+  using Const ## Derived ## P ## Ptr = \
+    ::ignition::physics::EntityPtr<const Derived<FeaturePolicy##P, FeaturesT>>;
 
-#define DETAIL_IGN_PHYSICS_DECLARE_JOINT_TYPE(X) \
-  struct X ## Cast : public virtual ::ignition::physics::Feature \
+#define DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Base, Derived) \
+  struct Derived ## Cast : public virtual ::ignition::physics::Feature \
   { \
-    IGN_PHYSICS_CREATE_SELECTOR(X) \
-    class X ## Identifier { }; \
+    IGN_PHYSICS_CREATE_SELECTOR(Derived) \
+    class Derived ## Identifier { }; \
     \
     public: template <typename PolicyT, typename FeaturesT> \
     class Using : \
       public virtual ::ignition::physics::detail::Aggregate< \
-        Select ## X, FeaturesT>:: \
+        Select ## Derived, FeaturesT>:: \
             template type<PolicyT, FeaturesT>, \
       public virtual ::ignition::physics::detail::Aggregate< \
-        ::ignition::physics::detail::JointSelector, FeaturesT>:: \
+        ::ignition::physics::detail:: Base ## Selector, FeaturesT>:: \
             template type<PolicyT, FeaturesT> \
     { \
-      public: using Identifier = X ## Identifier; \
+      public: using Identifier = Derived ## Identifier; \
       public: using UpcastIdentifiers = std::tuple< \
-          X ## Identifier, \
-          /* Allow this joint type to be upcast to plain Joint types */ \
-          ::ignition::physics::detail::JointIdentifier>; \
-      public: using Base = ::ignition::physics::Entity<PolicyT, FeaturesT>; \
+          Derived ## Identifier, \
+          /* Allow this derived type to be upcast to plain base types */ \
+          ::ignition::physics::detail:: Base ## Identifier>; \
+      public: using EntityBase = \
+          ::ignition::physics::Entity<PolicyT, FeaturesT>; \
     \
-      public: Using(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
+      public: Using(const std::shared_ptr<typename EntityBase::Pimpl> &_pimpl, \
                     const ::ignition::physics::Identity &_identity) \
-        : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
+        : EntityBase(_pimpl, _identity) { } \
       public: Using() = default; \
       public: Using(const Using&) = default; \
       public: Using(Using&&) = default; \
@@ -64,37 +65,37 @@
       /* We customize these operators because of virtual inheritance */ \
       public: Using &operator=(const Using &_other) \
       { \
-        static_cast<::ignition::physics::Entity<PolicyT, FeaturesT>&>(*this) = \
-            _other; \
+        static_cast<EntityBase&>(*this) = _other; \
         return *this; \
       } \
       public: Using &operator=(Using &&_other) \
       { \
-        static_cast<::ignition::physics::Entity<PolicyT, FeaturesT>&>(*this) = \
-            std::move(_other); \
+        static_cast<EntityBase&>(*this) = std::move(_other); \
         return *this; \
       } \
     }; \
   \
     template <typename PolicyT, typename FeaturesT> \
-    class Joint : \
-      public virtual ::ignition::physics::Feature::Joint<PolicyT, FeaturesT> \
+    class Base : \
+      public virtual ::ignition::physics::Feature:: Base <PolicyT, FeaturesT> \
     { \
       public: using CastReturnType = \
           ::ignition::physics::EntityPtr<Using<PolicyT, FeaturesT>>; \
       public: using ConstCastReturnType = \
           ::ignition::physics::EntityPtr<const Using<PolicyT, FeaturesT>>; \
-      public: CastReturnType CastTo ## X() \
+      public: CastReturnType CastTo ## Derived() \
       { \
         return CastReturnType(this->pimpl, \
-          this->template Interface<X ## Cast>()->CastTo ## X(this->identity)); \
+          this->template Interface<Derived ## Cast>() \
+            ->CastTo ## Derived(this->identity)); \
       } \
     \
       public: ConstCastReturnType \
-      CastTo ## X() const \
+      CastTo ## Derived() const \
       { \
         return ConstCastReturnType(this->pimpl, \
-          this->template Interface<X ## Cast>()->CastTo ## X(this->identity)); \
+          this->template Interface<Derived ## Cast>() \
+            ->CastTo ## Derived(this->identity)); \
       } \
     }; \
     \
@@ -102,21 +103,22 @@
     class Implementation \
       : public virtual ::ignition::physics::Feature::Implementation<PolicyT> \
     { \
-      public: virtual ::ignition::physics::Identity CastTo ## X( \
+      public: virtual ::ignition::physics::Identity CastTo ## Derived( \
         std::size_t _id) const = 0; \
     }; \
   }; \
   \
   template <typename PolicyT, typename FeaturesT> \
-  using X = X ## Cast::Using<PolicyT, FeaturesT>; \
+  using Derived = Derived ## Cast::Using<PolicyT, FeaturesT>; \
   template <typename PolicyT, typename FeaturesT> \
-  using X ## Ptr = ::ignition::physics::EntityPtr<X<PolicyT, FeaturesT>>; \
+  using Derived ## Ptr = \
+      ::ignition::physics::EntityPtr<Derived<PolicyT, FeaturesT>>; \
   template <typename PolicyT, typename FeaturesT> \
-  using Const ## X ## Ptr = \
-      ::ignition::physics::EntityPtr<const X<PolicyT, FeaturesT>>; \
-  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 3d) \
-  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 2d) \
-  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 3f) \
-  DETAIL_IGN_PHYSICS_PREDEFINE_JOINT_POLICY(X, 2f)
+  using Const ## Derived ## Ptr = \
+      ::ignition::physics::EntityPtr<const Derived<PolicyT, FeaturesT>>; \
+  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3d) \
+  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 2d) \
+  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3f) \
+  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 2f)
 
 #endif
