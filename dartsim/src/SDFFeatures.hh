@@ -30,6 +30,7 @@
 #include <ignition/physics/Implements.hh>
 
 #include "Base.hh"
+#include "EntityManagementFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -45,7 +46,7 @@ using SDFFeatureList = FeatureList<
 >;
 
 class SDFFeatures :
-    public virtual Base,
+    public virtual EntityManagementFeatures,
     public virtual Implements3d<SDFFeatureList>
 {
   public: Identity ConstructSdfWorld(
