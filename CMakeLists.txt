@@ -48,6 +48,7 @@ ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
 # Find dartsim for the dartsim plugin wrapper
 ign_find_package(DART
   COMPONENTS collision-bullet
+  CONFIG
   VERSION 6
   REQUIRED_BY dartsim
   PKGCONFIG dart
