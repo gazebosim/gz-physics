@@ -457,6 +457,9 @@ namespace ignition
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \
       : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
+    public: X(std::shared_ptr<typename Base::Pimpl> &&_pimpl, \
+              const Identity &_identity) \
+      : Entity<PolicyT, FeaturesT>(std::move(_pimpl), _identity) { } \
   }; \
   template <typename PolicyT, typename FeaturesT> \
   using X ## Ptr = ::ignition::physics::EntityPtr< \

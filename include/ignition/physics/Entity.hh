@@ -227,21 +227,38 @@ namespace ignition
 
       /// \brief Constructor for the Entity.
       ///
-      /// Notes for developers:
-      /// - We provide a default constructor for this class so that the feature
-      /// entity classes (which get virtually inherited) do not each need to
-      /// call on the constructor of Entity. That would make it difficult
-      /// to implement and maintain all the constructors of the different object
-      /// feature classes.
-      /// - Since all the features are virtually inherited, only the "final"
-      /// inheriting class constructor needs to actually call this constructor.
-      /// - The default argument for the identity will have an INVALID_ENTITY_ID
-      /// value (which is the result of default-constructing Identity). If the
-      /// Identity of an Entity is invalid, that implies that there is a bug in
-      /// the construction of that Entity.
+      /// \param[in] _pimpl
+      ///   Pointer to the implementation plugin for this entity
+      /// \param[in] _identity
+      ///   The identity of this entity
+      ///
+      // Notes for developers:
+      // - We provide a default constructor for this class so that the feature
+      // entity classes (which get virtually inherited) do not each need to
+      // call on the constructor of Entity. That would make it difficult
+      // to implement and maintain all the constructors of the different object
+      // feature classes.
+      // - Since all the features are virtually inherited, only the "final"
+      // inheriting class constructor needs to actually call this constructor.
+      // - The default argument for the identity will have an INVALID_ENTITY_ID
+      // value (which is the result of default-constructing Identity). If the
+      // Identity of an Entity is invalid, that implies that there is a bug in
+      // the construction of that Entity.
       protected: Entity(
-        const std::shared_ptr<Pimpl> &_pimpl = nullptr,
-        const Identity &_identity = Identity());
+          const std::shared_ptr<Pimpl> &_pimpl = nullptr,
+          const Identity &_identity = Identity());
+
+      /// \brief Constructor that allows the pimpl to be moved instead of copied
+      ///
+      /// \param[in] _pimpl
+      ///   Pointer to the implementation plugin for this entity
+      /// \param[in] _identity
+      ///   The identity of this entity
+      ///
+      /// \sa Entity(const std::shared_ptr<Pimpl>&, const Identity&)
+      protected: Entity(
+          std::shared_ptr<Pimpl> &&_pimpl,
+          const Identity &_identity);
 
       /// \brief Get a pointer to the implementation of FeatureT.
       ///
