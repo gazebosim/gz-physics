@@ -51,9 +51,7 @@ void PrimeTheLoader(ignition::plugin::Loader &_loader)
 
 TEST(FindFeatures_TEST, ForwardStep)
 {
-
-  // Map from library name to the number of plugins it has that should satisfy
-  // the test
+  // List of plugin names that are known to provide this test feature.
   // TODO(MXG): Add more plugins to this list as they are implemented
   const std::set<std::string> knownAcceptablePlugins =
   {
