@@ -66,7 +66,7 @@ class SimulationFeatures_TEST
 {};
 
 INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
-    ::testing::ValuesIn(g_PhysicsPlugins));
+    ::testing::ValuesIn(g_PhysicsPlugins),);
 
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST_P(SimulationFeatures_TEST, Falling)
