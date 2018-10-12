@@ -15,9 +15,9 @@
  *
 */
 
-#include <map>
-
 #include <gtest/gtest.h>
+
+#include <map>
 
 #include <ignition/physics/FindFeatures.hh>
 #include <ignition/physics/ForwardStep.hh>
@@ -42,7 +42,8 @@ namespace test
 
 void PrimeTheLoader(ignition::plugin::Loader &_loader)
 {
-  for (const std::string &library : ignition::physics::test::g_PhysicsPluginLibraries)
+  for (const std::string &library
+       : ignition::physics::test::g_PhysicsPluginLibraries)
   {
     if (!library.empty())
       _loader.LoadLibrary(library);

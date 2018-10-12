@@ -81,13 +81,13 @@ class SimulationFeatures_TEST
 {};
 
 INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
-    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),);
+    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
 
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST_P(SimulationFeatures_TEST, Falling)
 {
   const std::string library = GetParam();
-  if(library.empty())
+  if (library.empty())
     return;
 
   std::cout << "Testing library " << library << std::endl;
