@@ -170,7 +170,7 @@ namespace ignition
         public: virtual void WorldForwardStep(
             std::size_t _worldID, Output &_h, State &_x, const Input &_u) = 0;
       };
-
+    };
 
     // ---------------- SetState Interface -----------------
     class SetState
