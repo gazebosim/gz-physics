@@ -90,7 +90,7 @@ TEST(FindFeatures_TEST, Unimplemented)
       ignition::physics::FindFeatures3d<TestFeatures>::From(loader);
 
   // No plugins should ever have implemented this spoofed feature list
-  EXPECT_EQ(0, foundPlugins.size());
+  EXPECT_EQ(0u, foundPlugins.size());
 }
 
 int main(int argc, char **argv)
