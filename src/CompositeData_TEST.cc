@@ -37,11 +37,16 @@ TEST(CompositeData_TEST, Get)
   CompositeData data;
   EXPECT_FALSE(data.Has<StringData>());
   EXPECT_FALSE(data.StatusOf<StringData>().queried);
+  EXPECT_FALSE(data.Unquery<StringData>());
   EXPECT_TRUE(data.AllEntries().empty());
   EXPECT_TRUE(data.UnqueriedEntries().empty());
 
   StringData &s = data.Get<StringData>();
   EXPECT_TRUE(data.Has<StringData>());
+  EXPECT_EQ(1u, data.AllEntries().size());
+  EXPECT_TRUE(data.UnqueriedEntries().empty());
+  EXPECT_TRUE(data.Unquery<StringData>());
+  EXPECT_EQ(1u, data.UnqueriedEntries().size());
 
 
   EXPECT_EQ("default", s.myString);
@@ -50,8 +55,11 @@ TEST(CompositeData_TEST, Get)
 
   CompositeData other = data;
   EXPECT_TRUE(other.Has<StringData>());
+  EXPECT_EQ(1u, other.UnqueriedEntries().size());
   EXPECT_FALSE(other.StatusOf<StringData>().queried);
   EXPECT_EQ("modified", other.Get<StringData>().myString);
+  EXPECT_TRUE(other.UnqueriedEntries().empty());
+  EXPECT_TRUE(other.StatusOf<StringData>().queried);
 }
 
 /////////////////////////////////////////////////
@@ -189,6 +197,7 @@ TEST(CompositeData_TEST, CopyFunction)
   // StandardDataClone gets called in the implementation.
   EXPECT_TRUE(data.Remove<CharData>());
   EXPECT_FALSE(data.Has<CharData>());
+  EXPECT_FALSE(data.Unquery<CharData>());
 
   data.Copy(otherData);
 
@@ -261,6 +270,7 @@ TEST(CompositeData_TEST, CopyFunctionWithRequirements)
   // Removing this data entry here helps to complete line coverage
   EXPECT_TRUE(data.Remove<BoolData>());
   EXPECT_FALSE(data.Has<BoolData>());
+  EXPECT_FALSE(data.Unquery<BoolData>());
 
   data.Copy(otherData, true);
 

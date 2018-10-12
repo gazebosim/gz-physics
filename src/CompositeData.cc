@@ -15,7 +15,7 @@
  *
 */
 
-#include <ignition/common/Util.hh>
+#include <cassert>
 
 #include "ignition/physics/CompositeData.hh"
 
@@ -79,10 +79,9 @@ namespace ignition
         std::size_t &_numEntries,
         std::size_t &/*_numQueries*/)
     {
-      IGN_ASSERT(!_receiver->second.data,
-                 "Calling StandardCloneData on a data entry that already "
-                 "exists. This should not be possible! Please report this "
-                 "bug!");
+      assert(!_receiver->second.data &&
+             "Calling StandardCloneData on a data entry that already exists. "
+             "This should not be possible! Please report this bug!");
 
       _receiver->second = CompositeData::DataEntry(
             _sender->second.data->Clone(),
@@ -108,9 +107,9 @@ namespace ignition
                 _sender->second.data->Clone(),
                 _mergeRequirements && _sender->second.required))).second;
 
-      IGN_ASSERT(inserted, "Calling StandardDataCreate on a data entry that "
-                 "already exists. This should not be possible! Please report "
-                 "this bug!");
+      assert(inserted &&
+             "Calling StandardDataCreate on a data entry that already exists. "
+             "This should not be possible! Please report this bug!");
 
       ++_numEntries;
     }
@@ -151,9 +150,9 @@ namespace ignition
                 std::unique_ptr<Cloneable>(_sender->second.data.release()),
                 _mergeRequirements && _sender->second.required))).second;
 
-      IGN_ASSERT(inserted, "Calling MoveDataCreate on a data entry that "
-                 "already exists. This should not be possible! Please report "
-                 "this bug!");
+      assert(inserted &&
+             "Calling MoveDataCreate on a data entry that already exists. This "
+             "should not be possible! Please report this bug!");
 
       ++_numEntries;
     }
@@ -213,9 +212,9 @@ namespace ignition
             }
             else if (!receiver->second.data)
             {
-              IGN_ASSERT(!receiver->second.queried,
-                         "An entry which was supposed to be empty is marked "
-                         "as queried. This should be impossible!");
+              assert(!receiver->second.queried &&
+                     "An entry which was supposed to be empty is marked as "
+                     "queried. This should be impossible!");
 
               // If we don't already have an instance, we should clone it.
               CloneDataFnc(receiver, sender, _mergeRequirements,
@@ -296,18 +295,18 @@ namespace ignition
     /////////////////////////////////////////////////
     std::size_t CompositeData::EntryCount() const
     {
-      IGN_ASSERT(numEntries <= dataMap.size(),
-                 "The recorded number of entries is greater than the size of "
-                 "the dataMap, but that should be impossible!");
+      assert(numEntries <= dataMap.size() &&
+             "The recorded number of entries is greater than the size of the "
+             "dataMap, but that should be impossible!");
       return numEntries;
     }
 
     /////////////////////////////////////////////////
     std::size_t CompositeData::UnqueriedEntryCount() const
     {
-      IGN_ASSERT(numEntries >= numQueries,
-                 "The recorded number of queries is greater than the recorded "
-                 "number of entries, but that should be impossible!");
+      assert(numEntries >= numQueries &&
+             "The recorded number of queries is greater than the recorded "
+             "number of entries, but that should be impossible!");
       return numEntries - numQueries;
     }
 
@@ -423,9 +422,6 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    // We get a false positive here due to a cppcheck bug:
-    // https://trac.cppcheck.net/ticket/6675
-    // cppcheck-suppress uninitMemberVar
     CompositeData::CompositeData(const CompositeData &_other)
       : CompositeData()
     {
@@ -440,14 +436,6 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    //   We get a complaint from cppcheck that numEntries and numQueries are not
-    //   getting assigned by this function, but that concern is taken care of
-    //   within the Copy(~) function.
-    // cppcheck-suppress operatorEqVarError
-    //
-    //   This is an unnecessary warning from cppcheck, since *this is being
-    //   returned by Copy(~)
-    // cppcheck-suppress operatorEqRetRefThis
     CompositeData& CompositeData::operator=(const CompositeData &_other)
     {
       return this->Copy(_other);
