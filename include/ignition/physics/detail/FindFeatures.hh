@@ -15,30 +15,32 @@
  *
 */
 
-#ifndef TEST_PHYSICSPLUGINLIST_HH_
-#define TEST_PHYSICSPLUGINLIST_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_FINDFEATURES_HH_
+#define IGNITION_PHYSICS_DETAIL_FINDFEATURES_HH_
 
+#include <set>
 #include <string>
-#include <vector>
 
-#ifndef dartsim_plugin_LIB
-#define dartsim_plugin_LIB ""
-#endif
-
-#ifndef bullet_plugin_LIB
-#define bullet_plugin_LIB ""
-#endif
+#include <ignition/physics/FindFeatures.hh>
 
 namespace ignition
 {
   namespace physics
   {
-    namespace test
+    template <typename FeaturePolicyT, typename FeatureListT>
+    template <typename LoaderT>
+    std::set<std::string> FindFeatures<FeaturePolicyT, FeatureListT>::From(
+        const LoaderT &_loader)
     {
-      const std::vector<std::string> g_PhysicsPluginLibraries = {
-        dartsim_plugin_LIB,
-        bullet_plugin_LIB
-      };
+      auto plugins = _loader.AllPlugins();
+      detail::InspectFeatures<FeaturePolicyT, Features>::EraseIfMissing(
+            _loader, plugins);
+
+      std::set<std::string> result;
+      for (const std::string &p : plugins)
+        result.insert(result.end(), p);
+
+      return result;
     }
   }
 }

@@ -42,3 +42,10 @@ foreach(test ${tests})
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\"")
 
 endforeach()
+
+if(TARGET UNIT_FindFeatures_TEST)
+
+  target_compile_definitions(UNIT_FindFeatures_TEST PRIVATE
+    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
+
+endif()
