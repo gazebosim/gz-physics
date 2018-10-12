@@ -38,10 +38,10 @@ using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::sdf::ConstructSdfWorld
 >;
 
-auto LoadWorld(const std::string &_world)
+auto LoadWorld(const std::string &_library, const std::string &_world)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLibrary(dartsim_plugin_LIB);
+  loader.LoadLibrary(_library);
 
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
@@ -61,7 +61,9 @@ auto LoadWorld(const std::string &_world)
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST(SimulationFeatures_TEST, Falling)
 {
-  auto world = LoadWorld(TEST_WORLD_DIR "/falling.world");
+  const std::string library = dartsim_plugin_LIB;
+  std::cerr << "Testing with " << library << std::endl;
+  auto world = LoadWorld(library, TEST_WORLD_DIR "/falling.world");
 
   ignition::physics::ForwardStep::Input input;
   ignition::physics::ForwardStep::State state;
