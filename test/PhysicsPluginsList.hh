@@ -37,7 +37,7 @@ namespace ignition
     {
       const std::vector<std::string> g_PhysicsPluginLibraries = {
         dartsim_plugin_LIB,
-        bullet_plugin_LIB
+        bullet_plugin_LIB,
       };
     }
   }
