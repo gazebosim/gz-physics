@@ -31,6 +31,8 @@
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
+#include <test/PhysicsPluginsList.hh>
+
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::LinkFrameSemantics,
   ignition::physics::ForwardStep,
@@ -58,10 +60,18 @@ auto LoadWorld(const std::string &_library, const std::string &_world)
   return world;
 }
 
+class SimulationFeatures_TEST
+  : public ::testing::Test,
+    public ::testing::WithParamInterface<std::string>
+{};
+
+INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
+    ::testing::ValuesIn(g_PhysicsPlugins));
+
 // Test that the dartsim plugin loaded all the relevant information correctly.
-TEST(SimulationFeatures_TEST, Falling)
+TEST_P(SimulationFeatures_TEST, Falling)
 {
-  const std::string library = dartsim_plugin_LIB;
+  const std::string library = GetParam();
   std::cerr << "Testing with " << library << std::endl;
   auto world = LoadWorld(library, TEST_WORLD_DIR "/falling.world");
 
