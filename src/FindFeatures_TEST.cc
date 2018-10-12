@@ -72,7 +72,9 @@ TEST(FindFeatures_TEST, ForwardStep)
   for (const std::string &acceptable : knownAcceptablePlugins)
   {
     if (allPlugins.count(acceptable) > 0)
-      EXPECT_EQ(1, foundPlugins.count(acceptable));
+    {
+      EXPECT_EQ(1u, foundPlugins.count(acceptable));
+    }
   }
 }
 
