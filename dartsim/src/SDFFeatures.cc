@@ -185,25 +185,9 @@ static ShapeAndTransform ConstructSphere(
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
-  // TODO(MXG): We can consider using dart::dynamics::PlaneShape here, but that
-  // would be an infinite plane, whereas we're supposed to produce a plane with
-  // limited reach.
-  //
-  // So instead, we'll construct a very thin box with the requested length and
-  // width, and transform it to point in the direction of the normal vector.
-  const Eigen::Vector3d z = Eigen::Vector3d::UnitZ();
-  const Eigen::Vector3d axis = z.cross(math::eigen3::convert(_plane.Normal()));
-  const double norm = axis.norm();
-  const double angle = std::asin(norm/(_plane.Normal().Length()));
-  Eigen::Isometry3d R = Eigen::Isometry3d::Identity();
 
-  // We check that the angle isn't too close to zero, because otherwise
-  // axis/norm would be undefined.
-  if (angle > 1e-12)
-    R.rotate(Eigen::AngleAxisd(angle, axis/norm));
-
-  return {std::make_shared<dart::dynamics::BoxShape>(
-          Eigen::Vector3d(_plane.Size()[0], _plane.Size()[1], 1e-4)), R};
+  return {std::make_shared<dart::dynamics::PlaneShape>(
+          math::eigen3::convert(_plane.Normal()), 0.0)};
 }
 
 /////////////////////////////////////////////////
