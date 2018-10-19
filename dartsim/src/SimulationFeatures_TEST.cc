@@ -19,6 +19,7 @@
 
 #include <iostream>
 
+#include <ignition/physics/FindFeatures.hh>
 #include <ignition/plugin/Loader.hh>
 #include <ignition/physics/RequestEngine.hh>
 
@@ -31,6 +32,8 @@
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
+#include <test/PhysicsPluginsList.hh>
+
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::LinkFrameSemantics,
   ignition::physics::ForwardStep,
@@ -38,43 +41,73 @@ using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::sdf::ConstructSdfWorld
 >;
 
-auto LoadWorld(const std::string &_world)
+using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
+
+std::unordered_set<TestWorldPtr> LoadWorlds(
+    const std::string &_library,
+    const std::string &_world)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLibrary(dartsim_plugin_LIB);
+  loader.LoadLibrary(_library);
 
-  ignition::plugin::PluginPtr dartsim =
-      loader.Instantiate("ignition::physics::dartsim::Plugin");
+  const std::set<std::string> pluginNames =
+      ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
 
-  auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
-  EXPECT_NE(nullptr, engine);
-
-  sdf::Root root;
-  const sdf::Errors &errors = root.Load(_world);
-  const sdf::World *sdfWorld = root.WorldByIndex(0);
-  auto world = engine->ConstructWorld(*sdfWorld);
-
-  return world;
-}
-
-// Test that the dartsim plugin loaded all the relevant information correctly.
-TEST(SimulationFeatures_TEST, Falling)
-{
-  auto world = LoadWorld(TEST_WORLD_DIR "/falling.world");
-
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
-
-  for (size_t i = 0; i < 1000; ++i)
+  std::unordered_set<TestWorldPtr> worlds;
+  for (const std::string &name : pluginNames)
   {
-    world->Step(output, state, input);
+    ignition::plugin::PluginPtr plugin = loader.Instantiate(name);
+
+    std::cout << " -- Plugin name: " << name << std::endl;
+
+    auto engine =
+        ignition::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    EXPECT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors &errors = root.Load(_world);
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    auto world = engine->ConstructWorld(*sdfWorld);
+
+    worlds.insert(world);
   }
 
-  auto link = world->GetModel(0)->GetLink(0);
-  auto pos = link->FrameDataRelativeToWorld().pose.translation();
-  EXPECT_NEAR(pos.z(), 1.0, 5e-2);
+  return worlds;
+}
+
+class SimulationFeatures_TEST
+  : public ::testing::Test,
+    public ::testing::WithParamInterface<std::string>
+{};
+
+INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
+    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+
+// Test that the dartsim plugin loaded all the relevant information correctly.
+TEST_P(SimulationFeatures_TEST, Falling)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  std::cout << "Testing library " << library << std::endl;
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/falling.world");
+
+  for (const auto &world : worlds)
+  {
+    ignition::physics::ForwardStep::Input input;
+    ignition::physics::ForwardStep::State state;
+    ignition::physics::ForwardStep::Output output;
+
+    for (size_t i = 0; i < 1000; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    auto link = world->GetModel(0)->GetLink(0);
+    auto pos = link->FrameDataRelativeToWorld().pose.translation();
+    EXPECT_NEAR(pos.z(), 1.0, 5e-2);
+  }
 }
 
 int main(int argc, char *argv[])
