@@ -185,7 +185,6 @@ static ShapeAndTransform ConstructSphere(
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
-
   return {std::make_shared<dart::dynamics::PlaneShape>(
           math::eigen3::convert(_plane.Normal()), 0.0)};
 }
