@@ -325,6 +325,12 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
+  bodyProperties.mRestitutionCoeff = 0.5;
+  // A value of 1.0 can make the objects very bouncy
+//  bodyProperties.mRestitutionCoeff = 1.0;
+  std::cout << "Setting restitution coefficient to "
+            << bodyProperties.mRestitutionCoeff << std::endl;
+
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
   // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any

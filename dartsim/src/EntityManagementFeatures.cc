@@ -20,6 +20,7 @@
 #include <dart/config.hpp>
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/constraint/PGSLCPSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
 #include <string>
