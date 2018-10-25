@@ -124,9 +124,13 @@ static JointType *ConstructSingleAxisJoint(
   typename JointType::Properties properties;
 
   const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(0);
-  properties.mAxis = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
 
-  CopyStandardJointAxisProperties(0, properties, sdfAxis);
+  // use the default properties if sdfAxis is not set 
+  if (sdfAxis)
+  {
+    properties.mAxis = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
+    CopyStandardJointAxisProperties(0, properties, sdfAxis);
+  }
 
   return _child->moveTo<JointType>(_parent, properties);
 }
@@ -144,9 +148,12 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
   for (const std::size_t index : {0u, 1u})
   {
     const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(index);
-    properties.mAxis[index] = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
-
-    CopyStandardJointAxisProperties(index, properties, sdfAxis);
+    // use the default properties if sdfAxis is not set 
+    if (sdfAxis)
+    {
+      properties.mAxis[index] = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
+      CopyStandardJointAxisProperties(index, properties, sdfAxis);
+    }
   }
 
   return _child->moveTo<dart::dynamics::UniversalJoint>(_parent, properties);
