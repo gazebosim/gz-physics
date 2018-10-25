@@ -614,12 +614,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     auto *screw = ConstructSingleAxisJoint<dart::dynamics::ScrewJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
 
-    ::sdf::ElementPtr element = _sdfJoint.Element();
-    if (element->HasElement("thread_pitch"))
-    {
-      screw->setPitch(element->GetElement("thread_pitch")->Get<double>());
-    }
-
+    screw->setPitch(_sdfJoint.ThreadPitch());
     joint = screw;
   }
   else if (::sdf::JointType::UNIVERSAL == type)
