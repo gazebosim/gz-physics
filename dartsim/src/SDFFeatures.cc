@@ -77,6 +77,7 @@ static void CopyStandardJointAxisProperties(
   _properties.mSpringStiffnesses[_index] = _sdfAxis->SpringStiffness();
   _properties.mPositionLowerLimits[_index] = _sdfAxis->Lower();
   _properties.mPositionUpperLimits[_index] = _sdfAxis->Upper();
+  _properties.mIsPositionLimitEnforced = true;
   _properties.mForceLowerLimits[_index] = -infIfNeg(_sdfAxis->Effort());
   _properties.mForceUpperLimits[_index] =  infIfNeg(_sdfAxis->Effort());
   _properties.mVelocityLowerLimits[_index] = -infIfNeg(_sdfAxis->MaxVelocity());
