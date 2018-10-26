@@ -77,7 +77,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
-  ASSERT_EQ(3u, dartWorld->getNumSkeletons());
+  ASSERT_EQ(4u, dartWorld->getNumSkeletons());
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
@@ -140,6 +140,46 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   EXPECT_DOUBLE_EQ(0.0, translation[0]);
   EXPECT_DOUBLE_EQ(10.0, translation[1]);
   EXPECT_DOUBLE_EQ(10.0, translation[2]);
+}
+
+// Test that joint limits are by running the simulation
+TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
+{
+
+  World world = LoadWorld(TEST_WORLD_DIR"/test.world");
+
+  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  const dart::dynamics::SkeletonPtr skeleton =
+      dartWorld->getSkeleton("joint_limit_test");
+  ASSERT_NE(nullptr, skeleton);
+  auto * const joint = dynamic_cast<dart::dynamics::RevoluteJoint *>(
+      skeleton->getJoint(1));
+
+  ASSERT_NE(nullptr, joint);
+  // the joint starts at 0. Apply force in either direction and check the limits
+  // are enforced
+  auto verify = [&dartWorld](dart::dynamics::DegreeOfFreedom * const dof,
+                             const double force, const double tol)
+  {
+    dartWorld->reset();
+    dof->setForce(force);
+    for (std::size_t i = 0; i < 1000; ++i)
+    {
+      dartWorld->step();
+    }
+    EXPECT_LE(dof->getPositionLowerLimit() - tol, dof->getPosition());
+    EXPECT_LE(dof->getForceLowerLimit() - tol, dof->getForce());
+    EXPECT_LE(dof->getVelocityLowerLimit() - tol, dof->getVelocity());
+
+    EXPECT_GE(dof->getPositionUpperLimit() + tol, dof->getPosition());
+    EXPECT_GE(dof->getForceUpperLimit() + tol, dof->getForce());
+    EXPECT_GE(dof->getVelocityUpperLimit() + tol, dof->getVelocity());
+  };
+
+  verify(joint->getDof(0), -1000, 1e-3);
+  verify(joint->getDof(0), 1000, 1e-3);
 }
 
 int main(int argc, char *argv[])
