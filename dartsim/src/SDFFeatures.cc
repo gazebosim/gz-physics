@@ -125,7 +125,7 @@ static JointType *ConstructSingleAxisJoint(
 
   const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(0);
 
-  // use the default properties if sdfAxis is not set 
+  // use the default properties if sdfAxis is not set
   if (sdfAxis)
   {
     properties.mAxis = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
@@ -148,7 +148,7 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
   for (const std::size_t index : {0u, 1u})
   {
     const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(index);
-    // use the default properties if sdfAxis is not set 
+    // use the default properties if sdfAxis is not set
     if (sdfAxis)
     {
       properties.mAxis[index] = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
@@ -506,9 +506,12 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
   const ::sdf::Link * const sdfLink = _sdfModel.LinkByName(_linkName);
   if (!sdfLink)
   {
-    std::cerr << "[dartsim::ConstructSdfModel] Error: Model ["
-              << _sdfModel.Name() << "] does not contain a Link with the "
-              << "name [" << _linkName << "].\n";
+    if (_linkName != "world")
+    {
+      std::cerr << "[dartsim::ConstructSdfModel] Error: Model ["
+                << _sdfModel.Name() << "] does not contain a Link with the "
+                << "name [" << _linkName << "].\n";
+    }
     return nullptr;
   }
 
@@ -522,42 +525,65 @@ Identity SDFFeatures::ConstructSdfJoint(
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child)
 {
-  if (!_parent || !_child)
+  // if there's no link named "world", we'll assume the joint is connected to
+  // the world
+  bool worldParent = (!_parent && _sdfJoint.ParentLinkName() == "world");
+  bool worldChild = (!_child && _sdfJoint.ChildLinkName() == "world");
+
+  if (worldChild)
   {
-    std::stringstream msg;
-    msg << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint from "
-        << "link [" << _sdfJoint.ParentLinkName() << "] to link ["
-        << _sdfJoint.ChildLinkName() << "] in the model ["
-        << _modelInfo.model->getName() << "], but ";
-
-    if (!_parent)
-    {
-      msg << "the parent link ";
-      if (!_child)
-        msg << " and ";
-    }
-
-    if (!_child)
-      msg << "the child link ";
-
-    msg << "could not be found in that model!\n";
-    std::cerr << msg.str();
+    std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint "
+              << "with the world as the child in model ["
+              << _modelInfo.model->getName() << "]. This is currently not "
+              << "supported\n";
 
     return this->GenerateInvalidId();
   }
 
-  if (_parent->descendsFrom(_child))
+  // If either parent or child is null, it's only an error if the link is not
+  // "world"
+  if ((!_parent && !worldParent) || !_child)
   {
-    // TODO(MXG): Add support for non-tree graph structures
-    std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to create a "
-              << "closed kinematic chain between links ["
-              << _parent->getName() << "] and [" << _child->getName()
-              << "], but that is not supported by the dartsim wrapper yet.\n";
-    return this->GenerateInvalidId();
+    {
+      std::stringstream msg;
+      msg << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint from "
+          << "link [" << _sdfJoint.ParentLinkName() << "] to link ["
+          << _sdfJoint.ChildLinkName() << "] in the model ["
+          << _modelInfo.model->getName() << "], but ";
+
+      if (!_parent && !worldParent)
+      {
+        msg << "the parent link ";
+        if (!_child)
+          msg << " and ";
+      }
+
+      if (!_child)
+        msg << "the child link ";
+
+      msg << "could not be found in that model!\n";
+      std::cerr << msg.str();
+
+      return this->GenerateInvalidId();
+    }
+  }
+
+  if (_parent)
+  {
+    if (_parent->descendsFrom(_child))
+    {
+      // TODO(MXG): Add support for non-tree graph structures
+      std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to create a "
+                << "closed kinematic chain between links ["
+                << _parent->getName() << "] and [" << _child->getName()
+                << "], but that is not supported by the dartsim wrapper yet.\n";
+      return this->GenerateInvalidId();
+    }
   }
 
   // Save the current transforms of the links so we remember it later
-  const Eigen::Isometry3d T_parent = _parent->getWorldTransform();
+  const Eigen::Isometry3d T_parent =
+      _parent ? _parent->getWorldTransform() : Eigen::Isometry3d::Identity();
   const Eigen::Isometry3d T_child = _child->getWorldTransform();
 
   const Eigen::Isometry3d T_joint =
@@ -632,16 +658,22 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // This is the transform inside the joint produced by whatever the current
   // joint position happens to be.
+  const Eigen::Isometry3d T_child_parent_postjoint =
+      _parent ? _child->getTransform(_parent) :_child->getTransform() ;
+
   const Eigen::Isometry3d prejoint_T_postjoint =
       parent_T_prejoint_init.inverse()
-      * _child->getTransform(_parent)
+      * T_child_parent_postjoint
       * child_T_postjoint;
 
   // This is the corrected transform needed to get the child link to its
   // correct pose (as specified by the loaded SDF) for the current initial
   // position
+  const Eigen::Isometry3d T_parent_postjoint =
+      _parent ? _parent->getWorldTransform() : Eigen::Isometry3d::Identity();
+
   const Eigen::Isometry3d parent_T_prejoint_final =
-      _parent->getWorldTransform().inverse()
+      T_parent_postjoint.inverse()
       * T_child
       * child_T_postjoint
       * prejoint_T_postjoint.inverse();
