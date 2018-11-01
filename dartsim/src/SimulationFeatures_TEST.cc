@@ -102,14 +102,6 @@ TEST_P(SimulationFeatures_TEST, Falling)
     for (size_t i = 0; i < 1000; ++i)
     {
       world->Step(output, state, input);
-      // for (size_t j = 0; j < world->GetModelCount(); ++j)
-      // {
-      //   auto model = world->GetModel(j);
-      //   auto link = model->GetLink(0);
-      //   auto pos =
-      //       link->FrameDataRelativeToWorld().pose.translation().transpose();
-      //   std::cout << model->GetName() << ": " << pos << std::endl;
-      // }
     }
 
     auto link = world->GetModel(0)->GetLink(0);
