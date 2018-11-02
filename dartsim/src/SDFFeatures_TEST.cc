@@ -15,13 +15,14 @@
  *
 */
 
-#include <tuple>
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/DegreeOfFreedom.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 
 #include <gtest/gtest.h>
+
+#include <tuple>
 
 #include <ignition/plugin/Loader.hh>
 
@@ -159,7 +160,6 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
 // Test that joint limits are by running the simulation
 TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
-
   World world = LoadWorld(TEST_WORLD_DIR"/test.world");
 
   dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
@@ -251,20 +251,22 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
   child->SetName("child");
 
   {
-    auto [model, joint] =
+    const auto &[model, joint] =
         CreateTestModel(world, "test0", std::nullopt, std::nullopt);
     EXPECT_EQ(nullptr, joint);
   }
   {
-    auto [model, joint] = CreateTestModel(world, "test1", parent, child);
+    const auto &[model, joint] = CreateTestModel(world, "test1", parent, child);
     EXPECT_NE(nullptr, joint);
   }
   {
-    auto [model, joint] = CreateTestModel(world, "test2", std::nullopt, child);
+    const auto &[model, joint] =
+        CreateTestModel(world, "test2", std::nullopt, child);
     EXPECT_NE(nullptr, joint);
   }
   {
-    auto [model, joint] = CreateTestModel(world, "test3", parent, std::nullopt);
+    const auto &[model, joint] =
+        CreateTestModel(world, "test3", parent, std::nullopt);
     EXPECT_EQ(nullptr, joint);
   }
 }

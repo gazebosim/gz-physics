@@ -659,7 +659,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // This is the transform inside the joint produced by whatever the current
   // joint position happens to be.
   const Eigen::Isometry3d T_child_parent_postjoint =
-      _parent ? _child->getTransform(_parent) :_child->getTransform() ;
+      _parent ? _child->getTransform(_parent) : _child->getTransform();
 
   const Eigen::Isometry3d prejoint_T_postjoint =
       parent_T_prejoint_init.inverse()
