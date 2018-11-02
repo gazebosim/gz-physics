@@ -192,8 +192,8 @@ TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
     EXPECT_GE(dof->getVelocityUpperLimit() + tol, dof->getVelocity());
   };
 
-  verify(joint->getDof(0), -1000, 1e-3);
-  verify(joint->getDof(0), 1000, 1e-3);
+  verify(joint->getDof(0), -1000, 2e-3);
+  verify(joint->getDof(0), 1000, 2e-3);
 }
 
 // Create Model with parent and child links. If a link is not set, the joint
