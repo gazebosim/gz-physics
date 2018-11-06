@@ -80,6 +80,7 @@ class SDFFeatures :
       const std::string &_linkName);
 
   /// \brief Construct a joint between two input links.
+  /// \param[in] _modelInfo Contains the joint's parent model
   /// \param[in] _sdfJoint Contains joint parameters
   /// \param[in] _parent Pointer to parent link. If nullptr, the parent is
   /// assumed to be world
