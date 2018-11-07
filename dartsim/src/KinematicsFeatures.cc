@@ -17,6 +17,7 @@
 
 #include <dart/dynamics/Frame.hpp>
 
+#include <ignition/common/Console.hh>
 #include "KinematicsFeatures.hh"
 
 namespace ignition {
@@ -32,9 +33,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   // The feature system should never send us the world ID.
   if (_id.IsWorld())
   {
-    std::cerr << "[ignition::physics::dartsim::KinematicFeatures] Given a "
-              << "FrameID belonging to the world. This should not be possible! "
-              << "Please report this bug!\n";
+    ignerr << "Given a FrameID belonging to the world. This should not be "
+           << "possible! Please report this bug!\n";
     assert(false);
     return data;
   }
