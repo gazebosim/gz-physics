@@ -73,7 +73,7 @@ class SDFFeatures :
       const std::size_t _linkID,
       const ::sdf::Visual &_visual) override;
 
-  public: dart::dynamics::BodyNode *FindOrConstructLink(
+  private: dart::dynamics::BodyNode *FindOrConstructLink(
       const dart::dynamics::SkeletonPtr &_model,
       const std::size_t _modelID,
       const ::sdf::Model &_sdfModel,

@@ -525,7 +525,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child)
 {
-  // if a specified link is named "world" but cannot be found, we'll assume the 
+  // if a specified link is named "world" but cannot be found, we'll assume the
   // joint is connected to the world
   bool worldParent = (!_parent && _sdfJoint.ParentLinkName() == "world");
   bool worldChild = (!_child && _sdfJoint.ChildLinkName() == "world");
