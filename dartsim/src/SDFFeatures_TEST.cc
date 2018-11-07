@@ -157,7 +157,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   EXPECT_DOUBLE_EQ(10.0, translation[2]);
 }
 
-// Test that joint limits are by running the simulation
+// Test that joint limits are working by running the simulation
 TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/test.world");
@@ -200,7 +200,8 @@ TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
 // will use the world as that link.
 auto CreateTestModel(WorldPtr _world, const std::string &_model,
                      const std::optional<sdf::Link> &_parentLink,
-                     const std::optional<sdf::Link> &_childLink) {
+                     const std::optional<sdf::Link> &_childLink)
+{
   sdf::Model sdfModel;
   sdfModel.SetName(_model);
   auto model = _world->ConstructModel(sdfModel);
