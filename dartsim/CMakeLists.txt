@@ -22,6 +22,7 @@ target_link_libraries(${dartsim_plugin}
   PUBLIC
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ignition-math${IGN_MATH_VER}::eigen3)
 
 ign_build_tests(
@@ -30,6 +31,7 @@ ign_build_tests(
   LIB_DEPS
     ${features}
     ignition-plugin${IGN_PLUGIN_VER}::loader
+    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
   TEST_LIST tests)
 

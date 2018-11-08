@@ -22,6 +22,7 @@ pipelines:
           - apt-get update
           - apt-get -y install
             libignition-cmake2-dev
+            libignition-common3-dev
             libignition-math6-dev
             libignition-math6-eigen3-dev
             libignition-plugin-dev

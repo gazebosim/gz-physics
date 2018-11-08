@@ -34,6 +34,7 @@
 
 #include <cmath>
 
+#include <ignition/common/Console.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
 #include <sdf/Box.hh>
@@ -203,8 +204,8 @@ static ShapeAndTransform ConstructMesh(
 {
   // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
   // a local file name, or do we need to resolve the URI?
-  std::cerr << "[dartsim::ConstructMesh] Mesh construction from an SDF has not "
-            << "been implemented yet for dartsim.\n";
+  ignerr << "Mesh construction from an SDF has not been implemented yet for "
+         << "dartsim.\n";
   return {nullptr};
 }
 
@@ -288,9 +289,8 @@ Identity SDFFeatures::ConstructSdfModel(
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
     if (!sdfJoint)
     {
-      std::cerr << "[dartsim::ConstructSdfModel] Error: The joint with "
-                << "index [" << i << "] in model [" << _sdfModel.Name()
-                << "] is a nullptr. It will be skipped.\n";
+      ignerr << "The joint with index [" << i << "] in model ["
+             << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
       continue;
     }
 
@@ -408,8 +408,8 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   if (!_collision.Geom())
   {
-    std::cerr << "[dartsim::ConstructSdfCollision] Error: the geometry element "
-              << "of collision [" << _collision.Name() << "] was a nullptr\n";
+    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+           << "was a nullptr\n";
     return this->GenerateInvalidId();
   }
 
@@ -449,8 +449,8 @@ Identity SDFFeatures::ConstructSdfVisual(
 {
   if (!_visual.Geom())
   {
-    std::cerr << "[dartsim::ConstructSdfVisual] Error: the geometry element "
-              << "of visual [" << _visual.Name() << "] was a nullptr\n";
+    ignerr << "The geometry element of visual [" << _visual.Name() << "] was a "
+           << "nullptr\n";
     return this->GenerateInvalidId();
   }
 
@@ -508,9 +508,8 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
   {
     if (_linkName != "world")
     {
-      std::cerr << "[dartsim::ConstructSdfModel] Error: Model ["
-                << _sdfModel.Name() << "] does not contain a Link with the "
-                << "name [" << _linkName << "].\n";
+      ignerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
+             << "with the name [" << _linkName << "].\n";
     }
     return nullptr;
   }
@@ -532,10 +531,9 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (worldChild)
   {
-    std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint "
-              << "with the world as the child in model ["
-              << _modelInfo.model->getName() << "]. This is currently not "
-              << "supported\n";
+    ignerr << "Asked to create a joint with the world as the child in model "
+           << "[" << _modelInfo.model->getName() << "]. This is currently not "
+           << "supported\n";
 
     return this->GenerateInvalidId();
   }
@@ -546,10 +544,9 @@ Identity SDFFeatures::ConstructSdfJoint(
   {
     {
       std::stringstream msg;
-      msg << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint from "
-          << "link [" << _sdfJoint.ParentLinkName() << "] to link ["
-          << _sdfJoint.ChildLinkName() << "] in the model ["
-          << _modelInfo.model->getName() << "], but ";
+      msg << "Asked to create a joint from link [" << _sdfJoint.ParentLinkName()
+          << "] to link [" << _sdfJoint.ChildLinkName() << "] in the model "
+          << "[" << _modelInfo.model->getName() << "], but ";
 
       if (!_parent && !worldParent)
       {
@@ -562,7 +559,7 @@ Identity SDFFeatures::ConstructSdfJoint(
         msg << "the child link ";
 
       msg << "could not be found in that model!\n";
-      std::cerr << msg.str();
+      ignerr << msg.str();
 
       return this->GenerateInvalidId();
     }
@@ -573,10 +570,9 @@ Identity SDFFeatures::ConstructSdfJoint(
     if (_parent->descendsFrom(_child))
     {
       // TODO(MXG): Add support for non-tree graph structures
-      std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to create a "
-                << "closed kinematic chain between links ["
-                << _parent->getName() << "] and [" << _child->getName()
-                << "], but that is not supported by the dartsim wrapper yet.\n";
+      ignerr << "Asked to create a closed kinematic chain between links "
+             << "[" << _parent->getName() << "] and [" << _child->getName()
+             << "], but that is not supported by the dartsim wrapper yet.\n";
       return this->GenerateInvalidId();
     }
   }
@@ -641,9 +637,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else
   {
-    std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to construct a "
-              << "joint of sdf::JointType [" << static_cast<int>(type)
-              << "], but that is not supported yet.\n";
+    ignerr << "Asked to construct a joint of sdf::JointType ["
+           << static_cast<int>(type) << "], but that is not supported yet.\n";
     return this->GenerateInvalidId();
   }
 
@@ -693,9 +688,9 @@ Eigen::Isometry3d SDFFeatures::ResolveSdfLinkReferenceFrame(
   if (_frame.empty())
     return GetParentModelFrame(_modelInfo);
 
-  std::cerr << "[dartsim::ResolveSdfLinkReferenceFrame] Requested a reference "
-            << "frame of [" << _frame << "] but currently only the model frame "
-            << "is supported as a reference frame for link poses.\n";
+  ignerr << "Requested a reference frame of [" << _frame << "] but currently "
+         << "only the model frame is supported as a reference frame for link "
+         << "poses.\n";
 
   // TODO(MXG): Implement this when frame specifications are nailed down
   return Eigen::Isometry3d::Identity();
@@ -712,9 +707,9 @@ Eigen::Isometry3d SDFFeatures::ResolveSdfJointReferenceFrame(
     return _child->getWorldTransform();
   }
 
-  std::cerr << "[dartsim::ResolveSdfJointReferenceFrame] Requested a reference "
-            << "frame of [" << _frame << "] but currently only the child link "
-            << "frame is supported as a reference frame for joint poses.\n";
+  ignerr << "Requested a reference frame of [" << _frame << "] but currently "
+         << "only the child link frame is supported as a reference frame for "
+         << "joint poses.\n";
 
   // TODO(MXG): Implement this when frame specifications are nailed down
   return Eigen::Isometry3d::Identity();
