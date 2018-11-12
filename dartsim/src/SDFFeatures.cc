@@ -74,7 +74,7 @@ double infIfNeg(const double _value)
 /// DART  : linear motion per single rotation.
 static double InvertThreadPitch(double _pitch)
 {
-  if(math::equal(std::abs(_pitch), 0.0))
+  if (math::equal(std::abs(_pitch), 0.0))
   {
     ignerr << "Zero thread pitch is not allowed.\n";
     assert(false);
