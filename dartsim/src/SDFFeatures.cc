@@ -36,6 +36,7 @@
 
 #include <ignition/common/Console.hh>
 #include <ignition/math/eigen3/Conversions.hh>
+#include <ignition/math/Helpers.hh>
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
@@ -63,6 +64,23 @@ double infIfNeg(const double _value)
     return std::numeric_limits<double>::infinity();
 
   return _value;
+}
+
+/// \brief Invert thread pitch to match the different definitions of
+/// thread pitch in Gazebo and DART.
+///
+/// [Definitions of thread pitch]
+/// Gazebo: NEGATIVE angular motion per linear motion.
+/// DART  : linear motion per single rotation.
+static double InvertThreadPitch(double _pitch)
+{
+  if(math::equal(std::abs(_pitch), 0.0))
+  {
+    ignerr << "Zero thread pitch is not allowed.\n";
+    assert(false);
+  }
+
+  return -2.0 * IGN_PI / _pitch;
 }
 
 /////////////////////////////////////////////////
@@ -627,7 +645,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     auto *screw = ConstructSingleAxisJoint<dart::dynamics::ScrewJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
 
-    screw->setPitch(_sdfJoint.ThreadPitch());
+    screw->setPitch(InvertThreadPitch(_sdfJoint.ThreadPitch()));
     joint = screw;
   }
   else if (::sdf::JointType::UNIVERSAL == type)

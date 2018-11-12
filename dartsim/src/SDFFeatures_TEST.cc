@@ -19,6 +19,7 @@
 #include <dart/dynamics/DegreeOfFreedom.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
+#include <dart/dynamics/ScrewJoint.hpp>
 
 #include <gtest/gtest.h>
 
@@ -92,7 +93,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
-  ASSERT_EQ(4u, dartWorld->getNumSkeletons());
+  ASSERT_EQ(5u, dartWorld->getNumSkeletons());
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
@@ -155,6 +156,15 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   EXPECT_DOUBLE_EQ(0.0, translation[0]);
   EXPECT_DOUBLE_EQ(10.0, translation[1]);
   EXPECT_DOUBLE_EQ(10.0, translation[2]);
+
+  const dart::dynamics::SkeletonPtr screwJointTest =
+      dartWorld->getSkeleton("screw_joint_test");
+  ASSERT_NE(nullptr, screwJointTest);
+  ASSERT_EQ(2u, screwJointTest->getNumBodyNodes());
+  const auto *screwJoint = dynamic_cast<const dart::dynamics::ScrewJoint*>(
+      screwJointTest->getJoint(1));
+  ASSERT_NE(nullptr, screwJoint);
+  EXPECT_DOUBLE_EQ(-IGN_PI, screwJoint->getPitch());
 }
 
 // Test that joint limits are working by running the simulation

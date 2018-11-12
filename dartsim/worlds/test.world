@@ -282,5 +282,14 @@
         </axis>
       </joint>
     </model>
+    <model name="screw_joint_test">
+      <link name="link0"/>
+      <link name="link1"/>
+      <joint name="j0" type="screw">
+        <parent>link0</parent>
+        <child>link1</child>
+        <thread_pitch>2</thread_pitch>
+      </joint>
+    </model>
   </world>
 </sdf>
