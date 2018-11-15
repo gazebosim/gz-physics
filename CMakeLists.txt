@@ -20,11 +20,6 @@ ign_configure_project(VERSION_SUFFIX pre1)
 # Set project-specific options
 #============================================================================
 
-#---------------------------------------
-# Build all possible plugins by default.
-# Users may override this by changing these variables.
-option(BUILD_DOUBLE_PENDULUM "Build the double pendulum example" TRUE)
-
 
 #============================================================================
 # Search for project-specific dependencies
@@ -78,10 +73,6 @@ message(STATUS "-------------------------------------------\n")
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
   COMPONENTS sdf dartsim)
-
-if(BUILD_DOUBLE_PENDULUM)
-  add_subdirectory(double-pendulum)
-endif()
 
 
 #============================================================================
