@@ -291,5 +291,26 @@
         <thread_pitch>2</thread_pitch>
       </joint>
     </model>
+    <!-- Remove joint types as they get supported -->
+    <model name="unsupported_joint_test">
+      <link name="link0"/>
+      <link name="link1"/>
+      <joint name="j0" type="revolute2">
+        <parent>link0</parent>
+        <child>link1</child>
+      </joint>
+      <link name="link2"/>
+      <link name="link3"/>
+      <joint name="j1" type="gearbox">
+        <parent>link2</parent>
+        <child>link3</child>
+      </joint>
+      <link name="link4"/>
+      <link name="link5"/>
+      <joint name="j2" type="continuous">
+        <parent>link4</parent>
+        <child>link5</child>
+      </joint>
+    </model>
   </world>
 </sdf>

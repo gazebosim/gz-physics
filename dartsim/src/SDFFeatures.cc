@@ -618,12 +618,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   // TODO(MXG): Consider adding dartsim support for a CONTINUOUS joint type.
   // Alternatively, support the CONTINUOUS joint type by wrapping the
   // RevoluteJoint joint type.
-  else if (::sdf::JointType::FIXED == type)
-  {
-    // A fixed joint does not have any properties besides the name and relative
-    // transforms to its parent and child, which will be taken care of below.
-    joint = _child->moveTo<dart::dynamics::WeldJoint>(_parent);
-  }
   // TODO(MXG): Consider adding dartsim support for a GEARBOX joint type. It's
   // unclear to me whether it would be possible to get the same effect by
   // wrapping a RevoluteJoint type.
@@ -655,9 +649,18 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else
   {
-    ignerr << "Asked to construct a joint of sdf::JointType ["
-           << static_cast<int>(type) << "], but that is not supported yet.\n";
-    return this->GenerateInvalidId();
+    // The joint type is either fixed or unsupported. If it's unsupported, print
+    // out an error message and fall back to a fixed joint
+    if (::sdf::JointType::FIXED != type)
+    {
+      ignerr << "Asked to construct a joint of sdf::JointType ["
+             << static_cast<int>(type) << "], but that is not supported yet. "
+             << "Creating a FIXED joint instead\n";
+    }
+
+    // A fixed joint does not have any properties besides the name and relative
+    // transforms to its parent and child, which will be taken care of below.
+    joint = _child->moveTo<dart::dynamics::WeldJoint>(_parent);
   }
 
   joint->setName(_sdfJoint.Name());

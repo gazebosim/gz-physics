@@ -20,6 +20,7 @@
 #include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 #include <dart/dynamics/ScrewJoint.hpp>
+#include <dart/dynamics/WeldJoint.hpp>
 
 #include <gtest/gtest.h>
 
@@ -93,7 +94,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
-  ASSERT_EQ(5u, dartWorld->getNumSkeletons());
+  ASSERT_EQ(6u, dartWorld->getNumSkeletons());
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
@@ -279,6 +280,28 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
     const auto &[model, joint] =
         CreateTestModel(world, "test3", parent, std::nullopt);
     EXPECT_EQ(nullptr, joint);
+  }
+}
+
+// Test that joint type falls back to fixed if the type is not supported
+TEST(SDFFeatures_TEST, FallbackToFixedJoint)
+{
+  World world = LoadWorld(TEST_WORLD_DIR"/test.world");
+
+  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  const dart::dynamics::SkeletonPtr skeleton =
+      dartWorld->getSkeleton("unsupported_joint_test");
+  ASSERT_NE(nullptr, skeleton);
+  ASSERT_EQ(6u, skeleton->getNumBodyNodes());
+
+  for (const auto &jointName : {"j0", "j1", "j2"})
+  {
+    const auto *joint = skeleton->getJoint(jointName);
+    const auto *fixedJoint =
+        dynamic_cast<const dart::dynamics::WeldJoint *>(joint);
+    EXPECT_NE(nullptr, fixedJoint) << " joint type is: " << joint->getType();
   }
 }
 
