@@ -249,8 +249,8 @@ namespace mock
           }
 
           ignition::physics::WorldPose wp;
-          wp.pose = convert(bn->getWorldTransform());
-          wp.pose.Pos() = convert(bn->getCOM());
+          wp.pose = ignition::math::eigen3::convert(bn->getWorldTransform());
+          wp.pose.Pos() = ignition::math::eigen3::convert(bn->getCOM());
           wp.body = id;
 
           _poses.entries.push_back(wp);
