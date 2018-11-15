@@ -34,7 +34,9 @@
 
 #include <cmath>
 
+#include <ignition/common/Console.hh>
 #include <ignition/math/eigen3/Conversions.hh>
+#include <ignition/math/Helpers.hh>
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
@@ -64,6 +66,23 @@ double infIfNeg(const double _value)
   return _value;
 }
 
+/// \brief Invert thread pitch to match the different definitions of
+/// thread pitch in Gazebo and DART.
+///
+/// [Definitions of thread pitch]
+/// Gazebo: NEGATIVE angular motion per linear motion.
+/// DART  : linear motion per single rotation.
+static double InvertThreadPitch(double _pitch)
+{
+  if (math::equal(std::abs(_pitch), 0.0))
+  {
+    ignerr << "Zero thread pitch is not allowed.\n";
+    assert(false);
+  }
+
+  return -2.0 * IGN_PI / _pitch;
+}
+
 /////////////////////////////////////////////////
 template <typename Properties>
 static void CopyStandardJointAxisProperties(
@@ -77,6 +96,7 @@ static void CopyStandardJointAxisProperties(
   _properties.mSpringStiffnesses[_index] = _sdfAxis->SpringStiffness();
   _properties.mPositionLowerLimits[_index] = _sdfAxis->Lower();
   _properties.mPositionUpperLimits[_index] = _sdfAxis->Upper();
+  _properties.mIsPositionLimitEnforced = true;
   _properties.mForceLowerLimits[_index] = -infIfNeg(_sdfAxis->Effort());
   _properties.mForceUpperLimits[_index] =  infIfNeg(_sdfAxis->Effort());
   _properties.mVelocityLowerLimits[_index] = -infIfNeg(_sdfAxis->MaxVelocity());
@@ -123,9 +143,13 @@ static JointType *ConstructSingleAxisJoint(
   typename JointType::Properties properties;
 
   const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(0);
-  properties.mAxis = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
 
-  CopyStandardJointAxisProperties(0, properties, sdfAxis);
+  // use the default properties if sdfAxis is not set
+  if (sdfAxis)
+  {
+    properties.mAxis = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
+    CopyStandardJointAxisProperties(0, properties, sdfAxis);
+  }
 
   return _child->moveTo<JointType>(_parent, properties);
 }
@@ -143,9 +167,12 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
   for (const std::size_t index : {0u, 1u})
   {
     const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(index);
-    properties.mAxis[index] = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
-
-    CopyStandardJointAxisProperties(index, properties, sdfAxis);
+    // use the default properties if sdfAxis is not set
+    if (sdfAxis)
+    {
+      properties.mAxis[index] = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
+      CopyStandardJointAxisProperties(index, properties, sdfAxis);
+    }
   }
 
   return _child->moveTo<dart::dynamics::UniversalJoint>(_parent, properties);
@@ -195,8 +222,8 @@ static ShapeAndTransform ConstructMesh(
 {
   // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
   // a local file name, or do we need to resolve the URI?
-  std::cerr << "[dartsim::ConstructMesh] Mesh construction from an SDF has not "
-            << "been implemented yet for dartsim.\n";
+  ignerr << "Mesh construction from an SDF has not been implemented yet for "
+         << "dartsim.\n";
   return {nullptr};
 }
 
@@ -280,9 +307,8 @@ Identity SDFFeatures::ConstructSdfModel(
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
     if (!sdfJoint)
     {
-      std::cerr << "[dartsim::ConstructSdfModel] Error: The joint with "
-                << "index [" << i << "] in model [" << _sdfModel.Name()
-                << "] is a nullptr. It will be skipped.\n";
+      ignerr << "The joint with index [" << i << "] in model ["
+             << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
       continue;
     }
 
@@ -400,8 +426,8 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   if (!_collision.Geom())
   {
-    std::cerr << "[dartsim::ConstructSdfCollision] Error: the geometry element "
-              << "of collision [" << _collision.Name() << "] was a nullptr\n";
+    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+           << "was a nullptr\n";
     return this->GenerateInvalidId();
   }
 
@@ -441,8 +467,8 @@ Identity SDFFeatures::ConstructSdfVisual(
 {
   if (!_visual.Geom())
   {
-    std::cerr << "[dartsim::ConstructSdfVisual] Error: the geometry element "
-              << "of visual [" << _visual.Name() << "] was a nullptr\n";
+    ignerr << "The geometry element of visual [" << _visual.Name() << "] was a "
+           << "nullptr\n";
     return this->GenerateInvalidId();
   }
 
@@ -498,9 +524,11 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
   const ::sdf::Link * const sdfLink = _sdfModel.LinkByName(_linkName);
   if (!sdfLink)
   {
-    std::cerr << "[dartsim::ConstructSdfModel] Error: Model ["
-              << _sdfModel.Name() << "] does not contain a Link with the "
-              << "name [" << _linkName << "].\n";
+    if (_linkName != "world")
+    {
+      ignerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
+             << "with the name [" << _linkName << "].\n";
+    }
     return nullptr;
   }
 
@@ -514,42 +542,62 @@ Identity SDFFeatures::ConstructSdfJoint(
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child)
 {
-  if (!_parent || !_child)
+  // if a specified link is named "world" but cannot be found, we'll assume the
+  // joint is connected to the world
+  bool worldParent = (!_parent && _sdfJoint.ParentLinkName() == "world");
+  bool worldChild = (!_child && _sdfJoint.ChildLinkName() == "world");
+
+  if (worldChild)
   {
-    std::stringstream msg;
-    msg << "[dartsim::ConstructSdfJoint] Error: Asked to create a joint from "
-        << "link [" << _sdfJoint.ParentLinkName() << "] to link ["
-        << _sdfJoint.ChildLinkName() << "] in the model ["
-        << _modelInfo.model->getName() << "], but ";
-
-    if (!_parent)
-    {
-      msg << "the parent link ";
-      if (!_child)
-        msg << " and ";
-    }
-
-    if (!_child)
-      msg << "the child link ";
-
-    msg << "could not be found in that model!\n";
-    std::cerr << msg.str();
+    ignerr << "Asked to create a joint with the world as the child in model "
+           << "[" << _modelInfo.model->getName() << "]. This is currently not "
+           << "supported\n";
 
     return this->GenerateInvalidId();
   }
 
-  if (_parent->descendsFrom(_child))
+  // If either parent or child is null, it's only an error if the link is not
+  // "world"
+  if ((!_parent && !worldParent) || !_child)
   {
-    // TODO(MXG): Add support for non-tree graph structures
-    std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to create a "
-              << "closed kinematic chain between links ["
-              << _parent->getName() << "] and [" << _child->getName()
-              << "], but that is not supported by the dartsim wrapper yet.\n";
-    return this->GenerateInvalidId();
+    {
+      std::stringstream msg;
+      msg << "Asked to create a joint from link [" << _sdfJoint.ParentLinkName()
+          << "] to link [" << _sdfJoint.ChildLinkName() << "] in the model "
+          << "[" << _modelInfo.model->getName() << "], but ";
+
+      if (!_parent && !worldParent)
+      {
+        msg << "the parent link ";
+        if (!_child)
+          msg << " and ";
+      }
+
+      if (!_child)
+        msg << "the child link ";
+
+      msg << "could not be found in that model!\n";
+      ignerr << msg.str();
+
+      return this->GenerateInvalidId();
+    }
+  }
+
+  if (_parent)
+  {
+    if (_parent->descendsFrom(_child))
+    {
+      // TODO(MXG): Add support for non-tree graph structures
+      ignerr << "Asked to create a closed kinematic chain between links "
+             << "[" << _parent->getName() << "] and [" << _child->getName()
+             << "], but that is not supported by the dartsim wrapper yet.\n";
+      return this->GenerateInvalidId();
+    }
   }
 
   // Save the current transforms of the links so we remember it later
-  const Eigen::Isometry3d T_parent = _parent->getWorldTransform();
+  const Eigen::Isometry3d T_parent =
+      _parent ? _parent->getWorldTransform() : Eigen::Isometry3d::Identity();
   const Eigen::Isometry3d T_child = _child->getWorldTransform();
 
   const Eigen::Isometry3d T_joint =
@@ -570,12 +618,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   // TODO(MXG): Consider adding dartsim support for a CONTINUOUS joint type.
   // Alternatively, support the CONTINUOUS joint type by wrapping the
   // RevoluteJoint joint type.
-  else if (::sdf::JointType::FIXED == type)
-  {
-    // A fixed joint does not have any properties besides the name and relative
-    // transforms to its parent and child, which will be taken care of below.
-    joint = _child->moveTo<dart::dynamics::WeldJoint>(_parent);
-  }
   // TODO(MXG): Consider adding dartsim support for a GEARBOX joint type. It's
   // unclear to me whether it would be possible to get the same effect by
   // wrapping a RevoluteJoint type.
@@ -597,12 +639,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     auto *screw = ConstructSingleAxisJoint<dart::dynamics::ScrewJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
 
-    ::sdf::ElementPtr element = _sdfJoint.Element();
-    if (element->HasElement("thread_pitch"))
-    {
-      screw->setPitch(element->GetElement("thread_pitch")->Get<double>());
-    }
-
+    screw->setPitch(InvertThreadPitch(_sdfJoint.ThreadPitch()));
     joint = screw;
   }
   else if (::sdf::JointType::UNIVERSAL == type)
@@ -612,10 +649,18 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else
   {
-    std::cerr << "[dartsim::ConstructSdfJoint] Error: Asked to construct a "
-              << "joint of sdf::JointType [" << static_cast<int>(type)
-              << "], but that is not supported yet.\n";
-    return this->GenerateInvalidId();
+    // The joint type is either fixed or unsupported. If it's unsupported, print
+    // out an error message and fall back to a fixed joint
+    if (::sdf::JointType::FIXED != type)
+    {
+      ignerr << "Asked to construct a joint of sdf::JointType ["
+             << static_cast<int>(type) << "], but that is not supported yet. "
+             << "Creating a FIXED joint instead\n";
+    }
+
+    // A fixed joint does not have any properties besides the name and relative
+    // transforms to its parent and child, which will be taken care of below.
+    joint = _child->moveTo<dart::dynamics::WeldJoint>(_parent);
   }
 
   joint->setName(_sdfJoint.Name());
@@ -629,16 +674,22 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // This is the transform inside the joint produced by whatever the current
   // joint position happens to be.
+  const Eigen::Isometry3d T_child_parent_postjoint =
+      _parent ? _child->getTransform(_parent) : _child->getTransform();
+
   const Eigen::Isometry3d prejoint_T_postjoint =
       parent_T_prejoint_init.inverse()
-      * _child->getTransform(_parent)
+      * T_child_parent_postjoint
       * child_T_postjoint;
 
   // This is the corrected transform needed to get the child link to its
   // correct pose (as specified by the loaded SDF) for the current initial
   // position
+  const Eigen::Isometry3d T_parent_postjoint =
+      _parent ? _parent->getWorldTransform() : Eigen::Isometry3d::Identity();
+
   const Eigen::Isometry3d parent_T_prejoint_final =
-      _parent->getWorldTransform().inverse()
+      T_parent_postjoint.inverse()
       * T_child
       * child_T_postjoint
       * prejoint_T_postjoint.inverse();
@@ -658,9 +709,9 @@ Eigen::Isometry3d SDFFeatures::ResolveSdfLinkReferenceFrame(
   if (_frame.empty())
     return GetParentModelFrame(_modelInfo);
 
-  std::cerr << "[dartsim::ResolveSdfLinkReferenceFrame] Requested a reference "
-            << "frame of [" << _frame << "] but currently only the model frame "
-            << "is supported as a reference frame for link poses.\n";
+  ignerr << "Requested a reference frame of [" << _frame << "] but currently "
+         << "only the model frame is supported as a reference frame for link "
+         << "poses.\n";
 
   // TODO(MXG): Implement this when frame specifications are nailed down
   return Eigen::Isometry3d::Identity();
@@ -677,9 +728,9 @@ Eigen::Isometry3d SDFFeatures::ResolveSdfJointReferenceFrame(
     return _child->getWorldTransform();
   }
 
-  std::cerr << "[dartsim::ResolveSdfJointReferenceFrame] Requested a reference "
-            << "frame of [" << _frame << "] but currently only the child link "
-            << "frame is supported as a reference frame for joint poses.\n";
+  ignerr << "Requested a reference frame of [" << _frame << "] but currently "
+         << "only the child link frame is supported as a reference frame for "
+         << "joint poses.\n";
 
   // TODO(MXG): Implement this when frame specifications are nailed down
   return Eigen::Isometry3d::Identity();

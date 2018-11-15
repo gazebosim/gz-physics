@@ -32,6 +32,11 @@ option(BUILD_DOUBLE_PENDULUM "Build the double pendulum example" TRUE)
 message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
+# Find ignition-common
+ign_find_package(ignition-common3 REQUIRED)
+set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
+
+#--------------------------------------
 # Find ignition-math
 ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3)
 set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
