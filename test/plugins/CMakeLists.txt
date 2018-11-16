@@ -13,5 +13,4 @@ foreach(plugin
       ${PROJECT_LIBRARY_TARGET_NAME})
 endforeach()
 
-target_link_libraries(MockDoublePendulum INTERFACE ${DART_LIBRARIES})
-target_include_directories(MockDoublePendulum SYSTEM INTERFACE ${DART_INCLUDE_DIRS})
+target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
