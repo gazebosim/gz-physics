@@ -173,14 +173,14 @@ namespace ignition
     };
 
     // ---------------- SetState Interface -----------------
-    //class SetState
-    //{
-    //  public: using State = CompositeData;
+    // class SetState
+    // {
+    //   public: using State = CompositeData;
 
-    //  public: virtual void SetStateTo(const State &x) = 0;
+    //   public: virtual void SetStateTo(const State &x) = 0;
 
-    //  public: virtual ~SetState() = default;
-    //};
+    //   public: virtual ~SetState() = default;
+    // };
   }
 }
 
