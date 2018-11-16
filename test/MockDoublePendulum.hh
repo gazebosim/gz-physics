@@ -24,6 +24,10 @@
 
 namespace mock
 {
+  using MockDoublePendulumList = ignition::physics::FeatureList<
+    ignition::physics::ForwardStep
+  >;
+
   class MockDoublePendulum
       : public ignition::physics::CanWriteRequiredData<
             MockDoublePendulum,
@@ -36,10 +40,6 @@ namespace mock
 
     public: virtual ~MockDoublePendulum() = default;
   };
-
-  using MockDoublePendulumList = ignition::physics::FeatureList<
-    ignition::physics::ForwardStep
-  >;
 }
 
 #endif

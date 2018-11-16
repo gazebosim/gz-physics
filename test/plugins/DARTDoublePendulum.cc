@@ -178,11 +178,12 @@ namespace mock
       }
     };
 
-    template <typename PolicyT>
     class DARTDoublePendulum
         : public virtual mock::MockDoublePendulum,
-          public ignition::physics::Implements<PolicyT, MockDoublePendulumList>
+          public ignition::physics::Implements3d<MockDoublePendulumList>
     {
+      using Identity = ignition::physics::Identity;
+
       public: DARTDoublePendulum()
         : dataPtr(new PrivateDARTDoublePendulum)
       {
@@ -194,8 +195,13 @@ namespace mock
         // Do nothing
       }
 
+      public: Identity InitiateEngine(std::size_t /*_engineID*/) override
+      {
+        return this->GenerateIdentity(0);
+      }
+
       public: void WorldForwardStep(
-          const std::size_t _worldId,
+          const std::size_t /*_worldId*/,
           ignition::physics::ForwardStep::Output &_h,
           ignition::physics::ForwardStep::State &_x,
           const ignition::physics::ForwardStep::Input &_u) override
@@ -263,10 +269,14 @@ namespace mock
       private: std::unique_ptr<PrivateDARTDoublePendulum> dataPtr;
     };
 
+    using FeaturePolicy3d = ignition::physics::FeaturePolicy3d;
+    IGN_PHYSICS_ADD_PLUGIN(
+        DARTDoublePendulum,
+        FeaturePolicy3d,
+        MockDoublePendulumList)
     //void DARTDoublePendulum::SetStateTo(const SetState::State &x)
     //{
     //  this->dataPtr->SetState(x);
     //}
-
   }
 }
