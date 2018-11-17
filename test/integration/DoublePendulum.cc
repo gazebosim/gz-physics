@@ -19,20 +19,19 @@
 
 #include <ignition/math/PID.hh>
 
-#include <ignition/common/PluginLoader.hh>
-#include <ignition/common/SystemPaths.hh>
-#include <ignition/common/SpecializedPluginPtr.hh>
+#include <ignition/plugin/PluginLoader.hh>
+#include <ignition/plugin/PluginPtr.hh>
+#include <ignition/plugin/RequestEngine.hh>
 
 #include <ignition/physics/ForwardStep.hh>
 
-#include <utils/test_config.h>
+#include "../MockDoublePendulum.hh"
+
+using namespace ignition::physics;
 
 
-using PhysicsPlugin = ignition::common::SpecializedPluginPtr<
-    ignition::physics::ForwardStep,
-    ignition::physics::SetState>;
-
-void DoublePendulum_TEST(PhysicsPlugin _plugin);
+void DoublePendulum_TEST(
+    const EnginePtr<PolicyT, FeatureListT> &_engine);
 
 /////////////////////////////////////////////////
 TEST(DoublePendulum, Step)
@@ -43,8 +42,8 @@ TEST(DoublePendulum, Step)
   sp.AddPluginPaths(projectPath + "/lib");
   std::string path = sp.FindSharedLibrary("double-pendulum");
 
-  ignition::common::PluginLoader loader;
-  loader.LoadLibrary(path);
+  ignition::plugin::Loader pl;
+  auto plugins = pl.LoadLibrary(MockDoublePendulum_LIB);
 
   auto pluginNames = loader.PluginsImplementing(
                         "::ignition::physics::DoublePendulum");
@@ -194,11 +193,11 @@ void DoublePendulum_TEST(PhysicsPlugin _plugin)
   EXPECT_NEAR(target20, angle20, 1e-4);
   EXPECT_NEAR(target21, angle21, 1e-3);
 
-  // Go back to the bookmarked state and run through the steps again.
-  ignition::physics::SetState *setState =
-      _plugin->QueryInterface<ignition::physics::SetState>();
-  ASSERT_TRUE(setState);
-  setState->SetStateTo(bookmark);
+  // // Go back to the bookmarked state and run through the steps again.
+  // ignition::physics::SetState *setState =
+  //     _plugin->QueryInterface<ignition::physics::SetState>();
+  // ASSERT_TRUE(setState);
+  // setState->SetStateTo(bookmark);
 
   // The states are reset, but the outputs haven't been recomputed.
   // so reset the PID's, zero the inputs and take one more Step
