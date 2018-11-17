@@ -13,6 +13,7 @@ if (BUILD_TESTING)
   foreach(test ${list})
 
     foreach(mock_plugin
+        MockDoublePendulum
         MockEntities
         MockFrames
         MockJoints)
