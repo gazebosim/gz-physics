@@ -14,3 +14,8 @@ target_include_directories(${PROJECT_LIBRARY_TARGET_NAME}
 ign_build_tests(
   TYPE UNIT
   SOURCES ${gtest_sources})
+
+if(TARGET UNIT_FindFeatures_TEST)
+  target_link_libraries(UNIT_FindFeatures_TEST
+    ignition-plugin${IGN_PLUGIN_VER}::loader)
+endif()

@@ -312,10 +312,33 @@ namespace ignition
         template <typename PtrT>
         static bool Verify(const PtrT &_pimpl)
         {
-          // TODO(MXG): Replace with a fold expression when we migrate to C++17
+          // TODO(MXG): Consider replacing with a fold expression
           return _pimpl && _pimpl->template HasInterface<Interface>()
               && InspectFeatures<PolicyT, std::tuple<Remaining...>>::
                       Verify(_pimpl);
+        }
+
+        template <typename LoaderT, typename ContainerT>
+        static void EraseIfMissing(
+            const LoaderT &_loader,
+            ContainerT &_plugins)
+        {
+          const auto acceptable =
+              _loader.template PluginsImplementing<Interface>();
+
+          std::set<std::string> unacceptable;
+          for (const std::string &p : _plugins)
+          {
+            const auto it = std::find(acceptable.begin(), acceptable.end(), p);
+            if (it == acceptable.end())
+              unacceptable.insert(unacceptable.end(), p);
+          }
+
+          for (const std::string &u : unacceptable)
+            _plugins.erase(u);
+
+          InspectFeatures<PolicyT, std::tuple<Remaining...>>::EraseIfMissing(
+                _loader, _plugins);
         }
 
         template <typename PtrT>
@@ -337,6 +360,12 @@ namespace ignition
         static bool Verify(const PtrT&)
         {
           return true;
+        }
+
+        template <typename LoaderT, typename ContainerT>
+        static void EraseIfMissing(const LoaderT &, ContainerT &)
+        {
+          // Do nothing
         }
 
         template <typename PtrT>
@@ -457,6 +486,9 @@ namespace ignition
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \
       : Entity<PolicyT, FeaturesT>(_pimpl, _identity) { } \
+    public: X(std::shared_ptr<typename Base::Pimpl> &&_pimpl, \
+              const Identity &_identity) \
+      : Entity<PolicyT, FeaturesT>(std::move(_pimpl), _identity) { } \
   }; \
   template <typename PolicyT, typename FeaturesT> \
   using X ## Ptr = ::ignition::physics::EntityPtr< \

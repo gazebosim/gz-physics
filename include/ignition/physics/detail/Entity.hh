@@ -331,6 +331,17 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Policy, typename Features>
+    Entity<Policy, Features>::Entity(
+        std::shared_ptr<Pimpl> &&_pimpl,
+        const Identity &_identity)
+      : pimpl(std::move(_pimpl)),
+        identity(_identity)
+    {
+      // Do nothing
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Policy, typename Features>
     template <typename FeatureT>
     typename FeatureT::template Implementation<Policy>*
     Entity<Policy, Features>::Interface()

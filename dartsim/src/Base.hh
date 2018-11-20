@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 
+#include <ignition/common/Console.hh>
 #include <ignition/physics/Implements.hh>
 
 namespace ignition {
@@ -240,9 +241,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     }
     else
     {
-      std::cerr << "[ignition::physics::dartsim::Base] Given a "
-                << "skeleton to update, but skeleton was not found in world. "
-                << "This should not be possible! Please report this bug!\n";
+      ignerr << "Given a skeleton to update, but skeleton was not found in "
+             << "world. This should not be possible! Please report this bug!\n";
       assert(false);
     }
   }

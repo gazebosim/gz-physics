@@ -30,6 +30,7 @@
 #include <ignition/physics/Implements.hh>
 
 #include "Base.hh"
+#include "EntityManagementFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -45,7 +46,7 @@ using SDFFeatureList = FeatureList<
 >;
 
 class SDFFeatures :
-    public virtual Base,
+    public virtual EntityManagementFeatures,
     public virtual Implements3d<SDFFeatureList>
 {
   public: Identity ConstructSdfWorld(
@@ -72,22 +73,29 @@ class SDFFeatures :
       const std::size_t _linkID,
       const ::sdf::Visual &_visual) override;
 
-  public: dart::dynamics::BodyNode *FindOrConstructLink(
+  private: dart::dynamics::BodyNode *FindOrConstructLink(
       const dart::dynamics::SkeletonPtr &_model,
       const std::size_t _modelID,
       const ::sdf::Model &_sdfModel,
       const std::string &_linkName);
 
-  public: Identity ConstructSdfJoint(const ModelInfo &_modelInfo,
+  /// \brief Construct a joint between two input links.
+  /// \param[in] _modelInfo Contains the joint's parent model
+  /// \param[in] _sdfJoint Contains joint parameters
+  /// \param[in] _parent Pointer to parent link. If nullptr, the parent is
+  /// assumed to be world
+  /// \param[in] _child Pointer to child link. If nullptr, the child is assumed
+  /// to be world
+  private: Identity ConstructSdfJoint(const ModelInfo &_modelInfo,
       const ::sdf::Joint &_sdfJoint,
       dart::dynamics::BodyNode * const _parent,
       dart::dynamics::BodyNode * const _child);
 
-  public: Eigen::Isometry3d ResolveSdfLinkReferenceFrame(
+  private: Eigen::Isometry3d ResolveSdfLinkReferenceFrame(
       const std::string &_frame,
       const ModelInfo &_model) const;
 
-  public: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
+  private: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
       const std::string &_frame,
       const dart::dynamics::BodyNode *_child) const;
 };

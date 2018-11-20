@@ -31,9 +31,9 @@ class ConstructSdfCollision : public virtual Feature
   public: template <typename PolicyT, typename FeaturesT>
   class Link : public virtual Feature::Link<PolicyT, FeaturesT>
   {
-    // TODO(MXG): Return a Shape type instead of a bool once we have shape
-    // features in the core ign-physics library.
-    public: bool ConstructCollision(const ::sdf::Collision &_collision);
+    public: using ShapePtrType = ShapePtr<PolicyT, FeaturesT>;
+
+    public: ShapePtrType ConstructCollision(const ::sdf::Collision &_collision);
   };
 
   public: template <typename PolicyT>
@@ -47,9 +47,9 @@ class ConstructSdfCollision : public virtual Feature
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfCollision::Link<PolicyT, FeaturesT>::ConstructCollision(
-    const ::sdf::Collision &_collision) -> bool
+    const ::sdf::Collision &_collision) -> ShapePtrType
 {
-  return static_cast<bool>(
+  return ShapePtrType(this->pimpl,
         this->template Interface<ConstructSdfCollision>()
             ->ConstructSdfCollision(this->identity, _collision));
 }

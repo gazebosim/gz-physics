@@ -361,7 +361,7 @@ namespace ignition
     auto GetEntities::Link<PolicyT, FeaturesT>::GetShape(
         const std::size_t _index) const -> ConstShapePtrType
     {
-      return ShapePtrType(this->pimpl,
+      return ConstShapePtrType(this->pimpl,
             this->template Interface<GetEntities>()->GetShape(
                             this->identity, _index));
     }
@@ -442,6 +442,16 @@ namespace ignition
     auto GetEntities::Joint<PolicyT, FeaturesT>::GetModel() -> ModelPtrType
     {
       return ModelPtrType(this->pimpl,
+            this->template Interface<GetEntities>()
+              ->GetModelOfJoint(this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetEntities::Joint<PolicyT, FeaturesT>::GetModel() const
+        -> ConstModelPtrType
+    {
+      return ConstModelPtrType(this->pimpl,
             this->template Interface<GetEntities>()
               ->GetModelOfJoint(this->identity));
     }
