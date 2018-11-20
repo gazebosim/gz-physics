@@ -27,6 +27,11 @@ ign_configure_project(VERSION_SUFFIX pre1)
 message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
+# Find ignition-common
+ign_find_package(ignition-common3 REQUIRED)
+set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
+
+#--------------------------------------
 # Find ignition-math
 ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3)
 set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
@@ -46,7 +51,10 @@ ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
-ign_find_package(DART VERSION 6
+ign_find_package(DART
+  COMPONENTS collision-bullet
+  CONFIG
+  VERSION 6
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)

@@ -32,7 +32,7 @@ namespace ignition
         : public virtual FeatureWithRequirements<FixedJointCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
-      class Link : public virtual Entity<PolicyT, FeaturesT>
+      class Link : public virtual Feature::Link<PolicyT, FeaturesT>
       {
         public: using JointPtrType = FixedJointPtr<PolicyT, FeaturesT>;
 

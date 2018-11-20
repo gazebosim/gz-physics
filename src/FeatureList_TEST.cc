@@ -209,10 +209,10 @@ TEST(FeatureList_TEST, Requirements)
 
 TEST(FeatureList_TEST, ConflictsAndRequirements)
 {
+  // Test against an infinitely recursive template instantiation issue.
   // We need to define a class unique to this test, otherwise the regression
-  // test might not catch the issue this is testing if a FeatureList with
-  // TestRequiresFeatureA gets instantiated beforehand (we're testing against
-  // an infinitely recursive template instantiation issue).
+  // test might not catch the issue if a FeatureList with TestRequiresFeatureA
+  // gets instantiated beforehand.
   class TestRequiresFeatureA
       : public virtual FeatureWithRequirements<FeatureA> { };
 
