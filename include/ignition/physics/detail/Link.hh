@@ -41,6 +41,24 @@ namespace ignition
       return this->template Interface<SetLinkState>()->SetLinkAngularVelocity(
             this->identity, _vel);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetLinkState::Link<PolicyT, FeaturesT>::SetForce(
+        const LinearVectorType &_force)
+    {
+      return this->template Interface<SetLinkState>()->SetLinkForce(
+          this->identity, _force);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetLinkState::Link<PolicyT, FeaturesT>::SetTorque(
+        const AngularVectorType &_torque)
+    {
+      return this->template Interface<SetLinkState>()->SetLinkTorque(
+            this->identity, _torque);
+    }
   }
 }
 

@@ -48,11 +48,11 @@ namespace ignition
 
         /// \brief Set the force applied on the link
         /// \param[in] _force The desired force
-        // public: void SetForce(const LinearVectorType &_force);
+        public: void SetForce(const LinearVectorType &_force);
 
         /// \brief Set the torque applied on the link
         /// \param[in] _torque The desired torque
-        // public: void SetTorque(const AngularVectorType &_torque);
+        public: void SetTorque(const AngularVectorType &_torque);
       };
 
       /// \private The implementation API for getting basic joint state
@@ -72,6 +72,14 @@ namespace ignition
         // see Link::SetAngularVelocity above
         public: virtual void SetLinkAngularVelocity(
             std::size_t _id, const AngularVectorType &_vel) = 0;
+
+        // see Link::SetForce above
+        public: virtual void SetLinkForce(
+            std::size_t _id, const LinearVectorType &_force) = 0;
+
+        // see Link::SetTorque above
+        public: virtual void SetLinkTorque(
+            std::size_t _id, const AngularVectorType &_torque) = 0;
       };
     };
   }
