@@ -37,11 +37,6 @@ ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3)
 set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 
 #--------------------------------------
-# Find ignition-common
-ign_find_package(ignition-common3 REQUIRED)
-set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
-
-#--------------------------------------
 # Find ignition-plugin
 ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
