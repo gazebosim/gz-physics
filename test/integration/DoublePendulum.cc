@@ -19,47 +19,44 @@
 
 #include <ignition/math/PID.hh>
 
-#include <ignition/plugin/PluginLoader.hh>
+#include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>
-#include <ignition/plugin/RequestEngine.hh>
 
+#include <ignition/physics/FindFeatures.hh>
 #include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/RequestEngine.hh>
 
 #include "../MockDoublePendulum.hh"
 
 using namespace ignition::physics;
 
 
-void DoublePendulum_TEST(
-    const EnginePtr<PolicyT, FeatureListT> &_engine);
+void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin);
 
 /////////////////////////////////////////////////
 TEST(DoublePendulum, Step)
 {
-  std::string projectPath = PROJECT_BINARY_PATH;
-
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths(projectPath + "/lib");
-  std::string path = sp.FindSharedLibrary("double-pendulum");
-
   ignition::plugin::Loader pl;
   auto plugins = pl.LoadLibrary(MockDoublePendulum_LIB);
 
-  auto pluginNames = loader.PluginsImplementing(
-                        "::ignition::physics::DoublePendulum");
+  auto pluginNames = FindFeatures3d<mock::MockDoublePendulumList>::From(pl);
   ASSERT_FALSE(pluginNames.empty());
   for (const std::string & name : pluginNames)
   {
     std::cerr << "DoublePendulum plugin: " << name << std::endl;
     std::cerr << "       testing plugin: " << name << std::endl;
-    PhysicsPlugin plugin = loader.Instantiate(name);
+    ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
+    EXPECT_FALSE(plugin.IsEmpty());
     DoublePendulum_TEST(plugin);
   }
 }
 
-void DoublePendulum_TEST(PhysicsPlugin _plugin)
+void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
 {
   ASSERT_TRUE(_plugin);
+
+  auto engine = RequestEngine3d<mock::MockDoublePendulumList>::From(_plugin);
+  ASSERT_NE(nullptr, engine);
 
   ignition::physics::ForwardStep *step =
       _plugin->QueryInterface<ignition::physics::ForwardStep>();
