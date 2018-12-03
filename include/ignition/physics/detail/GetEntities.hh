@@ -209,49 +209,49 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetEntities::Model<PolicyT, FeaturesT>::GetLinkCount() const
+    std::size_t ModelGetLink::Model<PolicyT, FeaturesT>::GetLinkCount() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<ModelGetLink>()
           ->GetLinkCount(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
+    auto ModelGetLink::Model<PolicyT, FeaturesT>::GetLink(
         const std::size_t _index) -> LinkPtrType
     {
       return LinkPtrType(this->pimpl,
-                     this->template Interface<GetEntities>()
+                     this->template Interface<ModelGetLink>()
                         ->GetLink(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
+    auto ModelGetLink::Model<PolicyT, FeaturesT>::GetLink(
         const std::size_t _index) const -> ConstLinkPtrType
     {
       return ConstLinkPtrType(this->pimpl,
-                          this->template Interface<GetEntities>()
+                          this->template Interface<ModelGetLink>()
                               ->GetLink(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
+    auto ModelGetLink::Model<PolicyT, FeaturesT>::GetLink(
         const std::string &_name) -> LinkPtrType
     {
       return LinkPtrType(this->pimpl,
-                     this->template Interface<GetEntities>()
+                     this->template Interface<ModelGetLink>()
                          ->GetLink(this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetLink(
+    auto ModelGetLink::Model<PolicyT, FeaturesT>::GetLink(
         const std::string &_name) const -> ConstLinkPtrType
     {
       return ConstLinkPtrType(this->pimpl,
-                          this->template Interface<GetEntities>()
+                          this->template Interface<ModelGetLink>()
                               ->GetLink(this->identity, _name));
     }
 
@@ -305,36 +305,36 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetEntities::Link<PolicyT, FeaturesT>::GetName() const
+    const std::string &ModelGetLink::Link<PolicyT, FeaturesT>::GetName() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<ModelGetLink>()
           ->GetLinkName(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetEntities::Link<PolicyT, FeaturesT>::GetIndex() const
+    std::size_t ModelGetLink::Link<PolicyT, FeaturesT>::GetIndex() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<ModelGetLink>()
           ->GetLinkIndex(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Link<PolicyT, FeaturesT>::GetModel() -> ModelPtrType
+    auto ModelGetLink::Link<PolicyT, FeaturesT>::GetModel() -> ModelPtrType
     {
       return ModelPtrType(this->pimpl,
-            this->template Interface<GetEntities>()
+            this->template Interface<ModelGetLink>()
               ->GetModelOfLink(this->identity));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Link<PolicyT, FeaturesT>::GetModel() const
+    auto ModelGetLink::Link<PolicyT, FeaturesT>::GetModel() const
         -> ConstModelPtrType
     {
       return ConstModelPtrType(this->pimpl,
-            this->template Interface<GetEntities>()
+            this->template Interface<ModelGetLink>()
               ->GetModelOfLink(this->identity));
     }
 
