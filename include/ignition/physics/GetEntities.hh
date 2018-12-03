@@ -26,6 +26,31 @@ namespace ignition
 {
   namespace physics
   {
+    class IGNITION_PHYSICS_VISIBLE GetEngine : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
+      {
+        /// \brief Get the name of this engine. The meaning of an engine name
+        /// is plugin-defined.
+        public: const std::string &GetName() const;
+
+        /// \brief Get the index of this engine. The meaning of an engine index
+        /// is plugin-defined.
+        public: std::size_t GetIndex() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual const std::string &GetEngineName(
+            std::size_t _engineID) const = 0;
+
+        public: virtual std::size_t GetEngineIndex(
+            std::size_t _engineID) const = 0;
+      };
+    };
+
     class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -34,14 +59,6 @@ namespace ignition
         // typedefs for the type of World that this engine can return.
         public: using WorldPtrType = WorldPtr<PolicyT, FeaturesT>;
         public: using ConstWorldPtrType = ConstWorldPtr<PolicyT, FeaturesT>;
-
-        /// \brief Get the name of this engine. The meaning of an engine name
-        /// is plugin-defined.
-        public: const std::string &GetName() const;
-
-        /// \brief Get the index of this engine. The meaning of an engine index
-        /// is plugin-defined.
-        public: std::size_t GetIndex() const;
 
         /// \brief Get the number of worlds inside this engine.
         public: std::size_t GetWorldCount() const;
@@ -283,12 +300,6 @@ namespace ignition
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
-        public: virtual const std::string &GetEngineName(
-            std::size_t _engineID) const = 0;
-
-        public: virtual std::size_t GetEngineIndex(
-            std::size_t _engineID) const = 0;
-
         public: virtual std::size_t GetWorldCount(
             std::size_t _engineID) const = 0;
 
@@ -382,6 +393,7 @@ namespace ignition
     };
 
     using GetEntitiesList = FeatureList<
+      GetEngine,
       GetEntities
     >;
   }
