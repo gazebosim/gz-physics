@@ -51,7 +51,7 @@ namespace ignition
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE EngineGetWorld : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
@@ -91,10 +91,6 @@ namespace ignition
         public: using EnginePtrType = EnginePtr<PolicyT, FeaturesT>;
         public: using ConstEnginePtrType = ConstEnginePtr<PolicyT, FeaturesT>;
 
-        // typedefs for the type of Model that this World can return
-        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
-        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
-
         /// \brief Get the name of this World.
         public: const std::string &GetName() const;
 
@@ -107,6 +103,39 @@ namespace ignition
 
         /// \sa GetEngine()
         public: ConstEnginePtrType GetEngine() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual std::size_t GetWorldCount(
+            std::size_t _engineID) const = 0;
+
+        public: virtual Identity GetWorld(
+            std::size_t _engineID, std::size_t _worldIndex) const = 0;
+
+        public: virtual Identity GetWorld(
+            std::size_t _engineID, const std::string &_worldName) const = 0;
+
+        public: virtual const std::string &GetWorldName(
+            std::size_t _worldID) const = 0;
+
+        public: virtual std::size_t GetWorldIndex(
+            std::size_t _worldID) const = 0;
+
+        public: virtual Identity GetEngineOfWorld(
+            std::size_t _worldID) const = 0;
+      };
+    };
+
+    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class World : public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        // typedefs for the type of Model that this World can return
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
 
         /// \brief Get the number of Models inside this World.
         public: std::size_t GetModelCount() const;
@@ -300,24 +329,6 @@ namespace ignition
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
-        public: virtual std::size_t GetWorldCount(
-            std::size_t _engineID) const = 0;
-
-        public: virtual Identity GetWorld(
-            std::size_t _engineID, std::size_t _worldIndex) const = 0;
-
-        public: virtual Identity GetWorld(
-            std::size_t _engineID, const std::string &_worldName) const = 0;
-
-        public: virtual const std::string &GetWorldName(
-            std::size_t _worldID) const = 0;
-
-        public: virtual std::size_t GetWorldIndex(
-            std::size_t _worldID) const = 0;
-
-        public: virtual Identity GetEngineOfWorld(
-            std::size_t _worldID) const = 0;
-
         public: virtual std::size_t GetModelCount(
             std::size_t _worldID) const = 0;
 
@@ -394,6 +405,7 @@ namespace ignition
 
     using GetEntitiesList = FeatureList<
       GetEngine,
+      EngineGetWorld,
       GetEntities
     >;
   }

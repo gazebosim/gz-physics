@@ -43,84 +43,84 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetEntities::Engine<PolicyT, FeaturesT>::GetWorldCount() const
+    std::size_t EngineGetWorld::Engine<PolicyT, FeaturesT>::GetWorldCount() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<EngineGetWorld>()
           ->GetWorldCount(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
+    auto EngineGetWorld::Engine<PolicyT, FeaturesT>::GetWorld(
         const std::size_t _index) -> WorldPtrType
     {
       return WorldPtrType(this->pimpl,
-                      this->template Interface<GetEntities>()
+                      this->template Interface<EngineGetWorld>()
                           ->GetWorld(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
+    auto EngineGetWorld::Engine<PolicyT, FeaturesT>::GetWorld(
         const std::size_t _index) const -> ConstWorldPtrType
     {
       return ConstWorldPtrType(this->pimpl,
-                           this->template Interface<GetEntities>()
+                           this->template Interface<EngineGetWorld>()
                               ->GetWorld(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
+    auto EngineGetWorld::Engine<PolicyT, FeaturesT>::GetWorld(
         const std::string &_name) -> WorldPtrType
     {
       return WorldPtrType(this->pimpl,
-                      this->template Interface<GetEntities>()
+                      this->template Interface<EngineGetWorld>()
                           ->GetWorld(this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Engine<PolicyT, FeaturesT>::GetWorld(
+    auto EngineGetWorld::Engine<PolicyT, FeaturesT>::GetWorld(
         const std::string &_name) const -> ConstWorldPtrType
     {
       return ConstWorldPtrType(this->pimpl,
-                           this->template Interface<GetEntities>()
+                           this->template Interface<EngineGetWorld>()
                               ->GetWorld(this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetEntities::World<PolicyT, FeaturesT>::GetName() const
+    const std::string &EngineGetWorld::World<PolicyT, FeaturesT>::GetName() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<EngineGetWorld>()
           ->GetWorldName(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetEntities::World<PolicyT, FeaturesT>::GetIndex() const
+    std::size_t EngineGetWorld::World<PolicyT, FeaturesT>::GetIndex() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<EngineGetWorld>()
           ->GetWorldIndex(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::World<PolicyT, FeaturesT>::GetEngine() -> EnginePtrType
+    auto EngineGetWorld::World<PolicyT, FeaturesT>::GetEngine() -> EnginePtrType
     {
       return EnginePtrType(this->pimpl,
-            this->template Interface<GetEntities>()
+            this->template Interface<EngineGetWorld>()
               ->GetEngineOfWorld(this->identity));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::World<PolicyT, FeaturesT>::GetEngine() const
+    auto EngineGetWorld::World<PolicyT, FeaturesT>::GetEngine() const
       -> ConstEnginePtrType
     {
       return ConstEnginePtrType(this->pimpl,
-            this->template Interface<GetEntities>()
+            this->template Interface<EngineGetWorld>()
               ->GetEngineOfWorld(this->identity));
     }
 
