@@ -380,6 +380,10 @@ namespace ignition
             std::size_t _shapeID) const = 0;
       };
     };
+
+    using GetEntitiesList = FeatureList<
+      GetEntities
+    >;
   }
 }
 

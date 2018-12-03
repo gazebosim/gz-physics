@@ -37,7 +37,7 @@
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::LinkFrameSemantics,
   ignition::physics::ForwardStep,
-  ignition::physics::GetEntities,
+  ignition::physics::GetEntitiesList,
   ignition::physics::sdf::ConstructSdfWorld
 >;
 
