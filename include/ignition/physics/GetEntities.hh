@@ -128,7 +128,7 @@ namespace ignition
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE WorldGetModel : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class World : public virtual Feature::World<PolicyT, FeaturesT>
@@ -168,14 +168,6 @@ namespace ignition
         public: using WorldPtrType = WorldPtr<PolicyT, FeaturesT>;
         public: using ConstWorldPtrType = ConstWorldPtr<PolicyT, FeaturesT>;
 
-        // typedefs for the type of Link that this Model can return
-        public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
-        public: using ConstLinkPtrType = ConstLinkPtr<PolicyT, FeaturesT>;
-
-        // typedefs for the type of Joint that this Model can return
-        public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
-        public: using ConstJointPtrType = ConstJointPtr<PolicyT, FeaturesT>;
-
         /// \brief Get the name of this Model
         public: const std::string &GetName() const;
 
@@ -188,6 +180,43 @@ namespace ignition
 
         /// \sa GetWorld()
         public: ConstWorldPtrType GetWorld() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual std::size_t GetModelCount(
+            std::size_t _worldID) const = 0;
+
+        public: virtual Identity GetModel(
+            std::size_t _worldID, std::size_t _modelIndex) const = 0;
+
+        public: virtual Identity GetModel(
+            std::size_t _worldID, const std::string &_modelName) const = 0;
+
+        public: virtual const std::string &GetModelName(
+            std::size_t _modelID) const = 0;
+
+        public: virtual std::size_t GetModelIndex(
+            std::size_t _modelID) const = 0;
+
+        public: virtual Identity GetWorldOfModel(
+            std::size_t _modelID) const = 0;
+      };
+    };
+
+    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Model : public virtual Feature::Model<PolicyT, FeaturesT>
+      {
+        // typedefs for the type of Link that this Model can return
+        public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
+        public: using ConstLinkPtrType = ConstLinkPtr<PolicyT, FeaturesT>;
+
+        // typedefs for the type of Joint that this Model can return
+        public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
+        public: using ConstJointPtrType = ConstJointPtr<PolicyT, FeaturesT>;
 
         /// \brief Get the number of Links within this Model.
         public: std::size_t GetLinkCount() const;
@@ -329,24 +358,6 @@ namespace ignition
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
-        public: virtual std::size_t GetModelCount(
-            std::size_t _worldID) const = 0;
-
-        public: virtual Identity GetModel(
-            std::size_t _worldID, std::size_t _modelIndex) const = 0;
-
-        public: virtual Identity GetModel(
-            std::size_t _worldID, const std::string &_modelName) const = 0;
-
-        public: virtual const std::string &GetModelName(
-            std::size_t _modelID) const = 0;
-
-        public: virtual std::size_t GetModelIndex(
-            std::size_t _modelID) const = 0;
-
-        public: virtual Identity GetWorldOfModel(
-            std::size_t _modelID) const = 0;
-
         public: virtual std::size_t GetLinkCount(
             std::size_t _modelID) const = 0;
 
@@ -406,6 +417,7 @@ namespace ignition
     using GetEntitiesList = FeatureList<
       GetEngine,
       EngineGetWorld,
+      WorldGetModel,
       GetEntities
     >;
   }
