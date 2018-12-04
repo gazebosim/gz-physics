@@ -282,7 +282,7 @@ namespace ignition
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE ModelGetJoint : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
@@ -316,6 +316,52 @@ namespace ignition
       };
 
       public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        // typedefs for the type of Model that this Link can return
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
+
+        /// \brief Get the name of this Joint.
+        public: const std::string &GetName() const;
+
+        /// \brief Get the index of this Joint within its Model.
+        public: std::size_t GetIndex() const;
+
+        /// \brief Get the model that contains this Link.
+        /// \return A Model reference to the Model that contains this Link.
+        public: ModelPtrType GetModel();
+
+        /// \sa GetModel()
+        public: ConstModelPtrType GetModel() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual std::size_t GetJointCount(
+            std::size_t _modelID) const = 0;
+
+        public: virtual Identity GetJoint(
+            std::size_t _modelID, std::size_t _jointIndex) const = 0;
+
+        public: virtual Identity GetJoint(
+            std::size_t _modelID, const std::string &_jointName) const = 0;
+
+        public: virtual const std::string &GetJointName(
+            std::size_t _jointID) const = 0;
+
+        public: virtual std::size_t GetJointIndex(
+            std::size_t _jointID) const = 0;
+
+        public: virtual Identity GetModelOfJoint(
+            std::size_t _jointID) const = 0;
+      };
+    };
+
+    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
       class Link : public virtual Feature::Link<PolicyT, FeaturesT>
       {
         // typedefs for the type of Shape that this Link can return
@@ -347,27 +393,6 @@ namespace ignition
       };
 
       public: template <typename PolicyT, typename FeaturesT>
-      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
-      {
-        // typedefs for the type of Model that this Link can return
-        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
-        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
-
-        /// \brief Get the name of this Joint.
-        public: const std::string &GetName() const;
-
-        /// \brief Get the index of this Joint within its Model.
-        public: std::size_t GetIndex() const;
-
-        /// \brief Get the model that contains this Link.
-        /// \return A Model reference to the Model that contains this Link.
-        public: ModelPtrType GetModel();
-
-        /// \sa GetModel()
-        public: ConstModelPtrType GetModel() const;
-      };
-
-      public: template <typename PolicyT, typename FeaturesT>
       class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
       {
         // typedefs for the type of Link that this Shape can return
@@ -391,15 +416,6 @@ namespace ignition
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
-        public: virtual std::size_t GetJointCount(
-            std::size_t _modelID) const = 0;
-
-        public: virtual Identity GetJoint(
-            std::size_t _modelID, std::size_t _jointIndex) const = 0;
-
-        public: virtual Identity GetJoint(
-            std::size_t _modelID, const std::string &_jointName) const = 0;
-
         public: virtual std::size_t GetShapeCount(
             std::size_t _linkID) const = 0;
 
@@ -408,15 +424,6 @@ namespace ignition
 
         public: virtual Identity GetShape(
             std::size_t _linkID, const std::string &_shapeName) const = 0;
-
-        public: virtual const std::string &GetJointName(
-            std::size_t _jointID) const = 0;
-
-        public: virtual std::size_t GetJointIndex(
-            std::size_t _jointID) const = 0;
-
-        public: virtual Identity GetModelOfJoint(
-            std::size_t _jointID) const = 0;
 
         public: virtual const std::string &GetShapeName(
             std::size_t _shapeID) const = 0;
@@ -434,6 +441,7 @@ namespace ignition
       EngineGetWorld,
       WorldGetModel,
       ModelGetLink,
+      ModelGetJoint,
       GetEntities
     >;
   }

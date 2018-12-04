@@ -257,49 +257,49 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetEntities::Model<PolicyT, FeaturesT>::GetJointCount() const
+    std::size_t ModelGetJoint::Model<PolicyT, FeaturesT>::GetJointCount() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<ModelGetJoint>()
           ->GetJointCount(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
+    auto ModelGetJoint::Model<PolicyT, FeaturesT>::GetJoint(
         const std::size_t _index) -> JointPtrType
     {
       return JointPtrType(this->pimpl,
-                     this->template Interface<GetEntities>()
+                     this->template Interface<ModelGetJoint>()
                         ->GetJoint(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
+    auto ModelGetJoint::Model<PolicyT, FeaturesT>::GetJoint(
         const std::size_t _index) const -> ConstJointPtrType
     {
       return ConstJointPtrType(this->pimpl,
-                          this->template Interface<GetEntities>()
+                          this->template Interface<ModelGetJoint>()
                               ->GetJoint(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
+    auto ModelGetJoint::Model<PolicyT, FeaturesT>::GetJoint(
         const std::string &_name) -> JointPtrType
     {
       return JointPtrType(this->pimpl,
-                     this->template Interface<GetEntities>()
+                     this->template Interface<ModelGetJoint>()
                          ->GetJoint(this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Model<PolicyT, FeaturesT>::GetJoint(
+    auto ModelGetJoint::Model<PolicyT, FeaturesT>::GetJoint(
         const std::string &_name) const -> ConstJointPtrType
     {
       return ConstJointPtrType(this->pimpl,
-                          this->template Interface<GetEntities>()
+                          this->template Interface<ModelGetJoint>()
                               ->GetJoint(this->identity, _name));
     }
 
@@ -423,36 +423,36 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetEntities::Joint<PolicyT, FeaturesT>::GetName() const
+    const std::string &ModelGetJoint::Joint<PolicyT, FeaturesT>::GetName() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<ModelGetJoint>()
           ->GetJointName(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetEntities::Joint<PolicyT, FeaturesT>::GetIndex() const
+    std::size_t ModelGetJoint::Joint<PolicyT, FeaturesT>::GetIndex() const
     {
-      return this->template Interface<GetEntities>()
+      return this->template Interface<ModelGetJoint>()
           ->GetJointIndex(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Joint<PolicyT, FeaturesT>::GetModel() -> ModelPtrType
+    auto ModelGetJoint::Joint<PolicyT, FeaturesT>::GetModel() -> ModelPtrType
     {
       return ModelPtrType(this->pimpl,
-            this->template Interface<GetEntities>()
+            this->template Interface<ModelGetJoint>()
               ->GetModelOfJoint(this->identity));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetEntities::Joint<PolicyT, FeaturesT>::GetModel() const
+    auto ModelGetJoint::Joint<PolicyT, FeaturesT>::GetModel() const
         -> ConstModelPtrType
     {
       return ConstModelPtrType(this->pimpl,
-            this->template Interface<GetEntities>()
+            this->template Interface<ModelGetJoint>()
               ->GetModelOfJoint(this->identity));
     }
   }
