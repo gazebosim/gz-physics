@@ -359,7 +359,7 @@ namespace ignition
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE GetEntities : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE LinkGetShape : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Link : public virtual Feature::Link<PolicyT, FeaturesT>
@@ -442,7 +442,7 @@ namespace ignition
       WorldGetModel,
       ModelGetLink,
       ModelGetJoint,
-      GetEntities
+      LinkGetShape
     >;
   }
 }
