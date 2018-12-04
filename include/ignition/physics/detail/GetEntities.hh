@@ -43,7 +43,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t EngineGetWorld::Engine<PolicyT, FeaturesT>::GetWorldCount() const
+    std::size_t EngineGetWorld::Engine<PolicyT, FeaturesT>::GetWorldCount()
+                const
     {
       return this->template Interface<EngineGetWorld>()
           ->GetWorldCount(this->identity);
@@ -91,7 +92,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &EngineGetWorld::World<PolicyT, FeaturesT>::GetName() const
+    const std::string &EngineGetWorld::World<PolicyT, FeaturesT>::GetName()
+                      const
     {
       return this->template Interface<EngineGetWorld>()
           ->GetWorldName(this->identity);
