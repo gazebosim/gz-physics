@@ -342,84 +342,84 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t LinkGetShape::Link<PolicyT, FeaturesT>::GetShapeCount() const
+    std::size_t GetShapeFromLink::Link<PolicyT, FeaturesT>::GetShapeCount() const
     {
-      return this->template Interface<LinkGetShape>()
+      return this->template Interface<GetShapeFromLink>()
           ->GetShapeCount(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto LinkGetShape::Link<PolicyT, FeaturesT>::GetShape(
+    auto GetShapeFromLink::Link<PolicyT, FeaturesT>::GetShape(
         const std::size_t _index) -> ShapePtrType
     {
       return ShapePtrType(this->pimpl,
-            this->template Interface<LinkGetShape>()->GetShape(
+            this->template Interface<GetShapeFromLink>()->GetShape(
                             this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto LinkGetShape::Link<PolicyT, FeaturesT>::GetShape(
+    auto GetShapeFromLink::Link<PolicyT, FeaturesT>::GetShape(
         const std::size_t _index) const -> ConstShapePtrType
     {
       return ConstShapePtrType(this->pimpl,
-            this->template Interface<LinkGetShape>()->GetShape(
+            this->template Interface<GetShapeFromLink>()->GetShape(
                             this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto LinkGetShape::Link<PolicyT, FeaturesT>::GetShape(
+    auto GetShapeFromLink::Link<PolicyT, FeaturesT>::GetShape(
         const std::string &_name) -> ShapePtrType
     {
       return ShapePtrType(this->pimpl,
-            this->template Interface<LinkGetShape>()->GetShape(
+            this->template Interface<GetShapeFromLink>()->GetShape(
                             this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto LinkGetShape::Link<PolicyT, FeaturesT>::GetShape(
+    auto GetShapeFromLink::Link<PolicyT, FeaturesT>::GetShape(
         const std::string &_name) const -> ConstShapePtrType
     {
       return ConstShapePtrType(this->pimpl,
-            this->template Interface<LinkGetShape>()->GetShape(
+            this->template Interface<GetShapeFromLink>()->GetShape(
                             this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &LinkGetShape::Shape<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetShapeFromLink::Shape<PolicyT, FeaturesT>::GetName() const
     {
-      return this->template Interface<LinkGetShape>()->GetShapeName(
+      return this->template Interface<GetShapeFromLink>()->GetShapeName(
             this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t LinkGetShape::Shape<PolicyT, FeaturesT>::GetIndex() const
+    std::size_t GetShapeFromLink::Shape<PolicyT, FeaturesT>::GetIndex() const
     {
-      return this->template Interface<LinkGetShape>()->GetShapeIndex(
+      return this->template Interface<GetShapeFromLink>()->GetShapeIndex(
             this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto LinkGetShape::Shape<PolicyT, FeaturesT>::GetLink() -> LinkPtrType
+    auto GetShapeFromLink::Shape<PolicyT, FeaturesT>::GetLink() -> LinkPtrType
     {
       return LinkPtrType(this->pimpl,
-            this->template Interface<LinkGetShape>()->GetLinkOfShape(
+            this->template Interface<GetShapeFromLink>()->GetLinkOfShape(
                            this->identity));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto LinkGetShape::Shape<PolicyT, FeaturesT>::GetLink() const
+    auto GetShapeFromLink::Shape<PolicyT, FeaturesT>::GetLink() const
     -> ConstLinkPtrType
     {
       return ConstLinkPtrType(this->pimpl,
-            this->template Interface<LinkGetShape>()->GetLinkOfShape(
+            this->template Interface<GetShapeFromLink>()->GetLinkOfShape(
                                 this->identity));
     }
 
