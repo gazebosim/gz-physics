@@ -31,7 +31,7 @@ namespace physics {
 namespace dartsim {
 
 using EntityManagementFeatureList = FeatureList<
-  GetEntitiesList,
+  GetEntities,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,
   ConstructEmptyLinkFeature

@@ -436,7 +436,7 @@ namespace ignition
       };
     };
 
-    using GetEntitiesList = FeatureList<
+    using GetEntities = FeatureList<
       GetEngine,
       EngineGetWorld,
       WorldGetModel,
