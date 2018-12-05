@@ -51,7 +51,7 @@ namespace ignition
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE EngineGetWorld : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE GetWorldFromEngine : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
@@ -438,7 +438,7 @@ namespace ignition
 
     using GetEntities = FeatureList<
       GetEngine,
-      EngineGetWorld,
+      GetWorldFromEngine,
       WorldGetModel,
       ModelGetLink,
       ModelGetJoint,
