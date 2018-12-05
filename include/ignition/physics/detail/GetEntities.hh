@@ -27,7 +27,8 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetEngineInfo::Engine<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetEngineInfo::Engine<PolicyT, FeaturesT>::GetName()
+        const
     {
       return this->template Interface<GetEngine>()
           ->GetEngineName(this->identity);
@@ -44,7 +45,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     std::size_t GetWorldFromEngine::Engine<PolicyT, FeaturesT>::GetWorldCount()
-                const
+        const
     {
       return this->template Interface<GetWorldFromEngine>()
           ->GetWorldCount(this->identity);
@@ -93,7 +94,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     const std::string &GetWorldFromEngine::World<PolicyT, FeaturesT>::GetName()
-                      const
+        const
     {
       return this->template Interface<GetWorldFromEngine>()
           ->GetWorldName(this->identity);
@@ -109,7 +110,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetWorldFromEngine::World<PolicyT, FeaturesT>::GetEngine() -> EnginePtrType
+    auto GetWorldFromEngine::World<PolicyT, FeaturesT>::GetEngine()
+        -> EnginePtrType
     {
       return EnginePtrType(this->pimpl,
             this->template Interface<GetWorldFromEngine>()
@@ -128,7 +130,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetModelFromWorld::World<PolicyT, FeaturesT>::GetModelCount() const
+    std::size_t GetModelFromWorld::World<PolicyT, FeaturesT>::GetModelCount()
+        const
     {
       return this->template Interface<GetModelFromWorld>()
           ->GetModelCount(this->identity);
@@ -176,7 +179,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetModelFromWorld::Model<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetModelFromWorld::Model<PolicyT, FeaturesT>::GetName()
+        const
     {
       return this->template Interface<GetModelFromWorld>()
           ->GetModelName(this->identity);
@@ -192,7 +196,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetModelFromWorld::Model<PolicyT, FeaturesT>::GetWorld() -> WorldPtrType
+    auto GetModelFromWorld::Model<PolicyT, FeaturesT>::GetWorld()
+        -> WorldPtrType
     {
       return WorldPtrType(this->pimpl,
             this->template Interface<GetModelFromWorld>()
@@ -211,7 +216,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetLinkFromModel::Model<PolicyT, FeaturesT>::GetLinkCount() const
+    std::size_t GetLinkFromModel::Model<PolicyT, FeaturesT>::GetLinkCount()
+        const
     {
       return this->template Interface<GetLinkFromModel>()
           ->GetLinkCount(this->identity);
@@ -259,7 +265,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetJointFromModel::Model<PolicyT, FeaturesT>::GetJointCount() const
+    std::size_t GetJointFromModel::Model<PolicyT, FeaturesT>::GetJointCount()
+        const
     {
       return this->template Interface<GetJointFromModel>()
           ->GetJointCount(this->identity);
@@ -307,7 +314,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetLinkFromModel::Link<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetLinkFromModel::Link<PolicyT, FeaturesT>::GetName()
+        const
     {
       return this->template Interface<GetLinkFromModel>()
           ->GetLinkName(this->identity);
@@ -342,7 +350,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetShapeFromLink::Link<PolicyT, FeaturesT>::GetShapeCount() const
+    std::size_t GetShapeFromLink::Link<PolicyT, FeaturesT>::GetShapeCount()
+        const
     {
       return this->template Interface<GetShapeFromLink>()
           ->GetShapeCount(this->identity);
@@ -390,7 +399,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetShapeFromLink::Shape<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetShapeFromLink::Shape<PolicyT, FeaturesT>::GetName()
+        const
     {
       return this->template Interface<GetShapeFromLink>()->GetShapeName(
             this->identity);
@@ -425,7 +435,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetJointFromModel::Joint<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetJointFromModel::Joint<PolicyT, FeaturesT>::GetName()
+        const
     {
       return this->template Interface<GetJointFromModel>()
           ->GetJointName(this->identity);
@@ -441,7 +452,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetJointFromModel::Joint<PolicyT, FeaturesT>::GetModel() -> ModelPtrType
+    auto GetJointFromModel::Joint<PolicyT, FeaturesT>::GetModel()
+        -> ModelPtrType
     {
       return ModelPtrType(this->pimpl,
             this->template Interface<GetJointFromModel>()
