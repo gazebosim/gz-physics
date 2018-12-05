@@ -128,84 +128,84 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t WorldGetModel::World<PolicyT, FeaturesT>::GetModelCount() const
+    std::size_t GetModelFromWorld::World<PolicyT, FeaturesT>::GetModelCount() const
     {
-      return this->template Interface<WorldGetModel>()
+      return this->template Interface<GetModelFromWorld>()
           ->GetModelCount(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto WorldGetModel::World<PolicyT, FeaturesT>::GetModel(
+    auto GetModelFromWorld::World<PolicyT, FeaturesT>::GetModel(
         const std::size_t _index) -> ModelPtrType
     {
       return ModelPtrType(this->pimpl,
-                      this->template Interface<WorldGetModel>()
+                      this->template Interface<GetModelFromWorld>()
                           ->GetModel(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto WorldGetModel::World<PolicyT, FeaturesT>::GetModel(
+    auto GetModelFromWorld::World<PolicyT, FeaturesT>::GetModel(
         const std::size_t _index) const -> ConstModelPtrType
     {
       return ConstModelPtrType(this->pimpl,
-                           this->template Interface<WorldGetModel>()
+                           this->template Interface<GetModelFromWorld>()
                                ->GetModel(this->identity, _index));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto WorldGetModel::World<PolicyT, FeaturesT>::GetModel(
+    auto GetModelFromWorld::World<PolicyT, FeaturesT>::GetModel(
         const std::string &_name) -> ModelPtrType
     {
       return ModelPtrType(this->pimpl,
-                      this->template Interface<WorldGetModel>()
+                      this->template Interface<GetModelFromWorld>()
                           ->GetModel(this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto WorldGetModel::World<PolicyT, FeaturesT>::GetModel(
+    auto GetModelFromWorld::World<PolicyT, FeaturesT>::GetModel(
         const std::string &_name) const -> ConstModelPtrType
     {
       return ConstModelPtrType(this->pimpl,
-                           this->template Interface<WorldGetModel>()
+                           this->template Interface<GetModelFromWorld>()
                                ->GetModel(this->identity, _name));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &WorldGetModel::Model<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetModelFromWorld::Model<PolicyT, FeaturesT>::GetName() const
     {
-      return this->template Interface<WorldGetModel>()
+      return this->template Interface<GetModelFromWorld>()
           ->GetModelName(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t WorldGetModel::Model<PolicyT, FeaturesT>::GetIndex() const
+    std::size_t GetModelFromWorld::Model<PolicyT, FeaturesT>::GetIndex() const
     {
-      return this->template Interface<WorldGetModel>()
+      return this->template Interface<GetModelFromWorld>()
           ->GetModelIndex(this->identity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto WorldGetModel::Model<PolicyT, FeaturesT>::GetWorld() -> WorldPtrType
+    auto GetModelFromWorld::Model<PolicyT, FeaturesT>::GetWorld() -> WorldPtrType
     {
       return WorldPtrType(this->pimpl,
-            this->template Interface<WorldGetModel>()
+            this->template Interface<GetModelFromWorld>()
               ->GetWorldOfModel(this->identity));
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto WorldGetModel::Model<PolicyT, FeaturesT>::GetWorld() const
+    auto GetModelFromWorld::Model<PolicyT, FeaturesT>::GetWorld() const
       -> ConstWorldPtrType
     {
       return ConstWorldPtrType(this->pimpl,
-            this->template Interface<WorldGetModel>()
+            this->template Interface<GetModelFromWorld>()
               ->GetWorldOfModel(this->identity));
     }
 
