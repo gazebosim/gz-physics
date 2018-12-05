@@ -26,7 +26,7 @@ namespace ignition
 {
   namespace physics
   {
-    class IGNITION_PHYSICS_VISIBLE GetEngine : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE GetEngineInfo : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
@@ -437,7 +437,7 @@ namespace ignition
     };
 
     using GetEntities = FeatureList<
-      GetEngine,
+      GetEngineInfo,
       GetWorldFromEngine,
       GetModelFromWorld,
       GetLinkFromModel,

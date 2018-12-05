@@ -27,7 +27,7 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetEngine::Engine<PolicyT, FeaturesT>::GetName() const
+    const std::string &GetEngineInfo::Engine<PolicyT, FeaturesT>::GetName() const
     {
       return this->template Interface<GetEngine>()
           ->GetEngineName(this->identity);
@@ -35,7 +35,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t GetEngine::Engine<PolicyT, FeaturesT>::GetIndex() const
+    std::size_t GetEngineInfo::Engine<PolicyT, FeaturesT>::GetIndex() const
     {
       return this->template Interface<GetEngine>()
           ->GetEngineIndex(this->identity);
