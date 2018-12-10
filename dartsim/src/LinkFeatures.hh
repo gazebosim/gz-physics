@@ -29,6 +29,7 @@ namespace dartsim {
 using LinkFeatureList = FeatureList<
   // No GetLinkState because that functionality is implemented by the
   // LinkFrameSemantics feature
+  GetLinkForceTorque,
   SetLinkState
 >;
 
@@ -36,6 +37,11 @@ class LinkFeatures :
     public virtual Base,
     public virtual Implements3d<LinkFeatureList>
 {
+  // ----- Get Link Force/Torque -----
+  public: LinearVector3d GetLinkForce(std::size_t _id) override;
+
+  public: AngularVector3d GetLinkTorque(std::size_t _id) override;
+
   // ----- Set Link State -----
   public: void SetLinkLinearVelocity(
       std::size_t _id, const LinearVector3d &_vel) override;

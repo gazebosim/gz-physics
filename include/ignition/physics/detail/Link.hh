@@ -26,6 +26,24 @@ namespace ignition
   {
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    auto GetLinkForceTorque::Link<PolicyT, FeaturesT>::GetForce()
+        -> LinearVectorType
+    {
+      return this->template Interface<GetLinkForceTorque>()->GetLinkForce(
+          this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetLinkForceTorque::Link<PolicyT, FeaturesT>::GetTorque()
+        -> AngularVectorType
+    {
+      return this->template Interface<GetLinkForceTorque>()->GetLinkTorque(
+            this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void SetLinkState::Link<PolicyT, FeaturesT>::SetLinearVelocity(
         const LinearVectorType &_vel)
     {

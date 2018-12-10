@@ -26,9 +26,51 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
+    /// Note that getting link velocities and accelerations is done through the
+    /// frame semantics feature.
+    class IGNITION_PHYSICS_VISIBLE GetLinkForceTorque : public virtual Feature
+    {
+      /// \brief The Link API for getting force/torque on a link
+      public: template <typename PolicyT, typename FeaturesT>
+      class Link : public virtual Feature::Link<PolicyT, FeaturesT>
+      {
+        public: using LinearVectorType =
+                typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
+        public: using AngularVectorType =
+                typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+        /// \brief Get the force applied on the link
+        /// \return The applied force on the link
+        public: LinearVectorType GetForce();
+
+        /// \brief Get the torque applied on the link
+        /// \return The applied torque on the link
+        public: AngularVectorType GetTorque();
+      };
+
+      /// \private The implementation API for getting force/torque on a link
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using LinearVectorType =
+                typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
+        public: using AngularVectorType =
+                typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+        // see Link::GetForce above
+        public: virtual LinearVectorType GetLinkForce(std::size_t _id) = 0;
+
+        // see Link::GetTorque above
+        public: virtual AngularVectorType GetLinkTorque(std::size_t _id) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
     class IGNITION_PHYSICS_VISIBLE SetLinkState : public virtual Feature
     {
-      /// \brief The Link API for getting basic link state
+      /// \brief The Link API for setting link state
       public: template <typename PolicyT, typename FeaturesT>
       class Link : public virtual Feature::Link<PolicyT, FeaturesT>
       {

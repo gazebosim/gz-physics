@@ -37,6 +37,7 @@
 
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::SetLinkState,
+  ignition::physics::GetLinkForceTorque,
   ignition::physics::LinkFrameSemantics,
   ignition::physics::ForwardStep,
   ignition::physics::GetEntities,
@@ -189,9 +190,11 @@ TEST_P(LinkFeatures_TEST, LinkForceTorque)
 
     const Eigen::Vector3d cmdForce{1, -1, 10};
     link->SetForce(cmdForce);
+    EXPECT_PRED_FORMAT2(AssertVectorApprox(1e-4), cmdForce, link->GetForce());
 
     const Eigen::Vector3d cmdTorque{0, 0, 0.1 * IGN_PI};
     link->SetTorque(cmdTorque);
+    EXPECT_PRED_FORMAT2(AssertVectorApprox(1e-4), cmdTorque, link->GetTorque());
 
     ignition::physics::ForwardStep::Input input;
     ignition::physics::ForwardStep::State state;

@@ -25,6 +25,33 @@ namespace physics {
 namespace dartsim {
 
 /////////////////////////////////////////////////
+LinearVector3d LinkFeatures::GetLinkForce(std::size_t _id)
+{
+  // DART uses spatial forces which express the force in the last three
+  // components of the 6D vector
+  Eigen::Vector6d f = this->links.at(_id)->getExternalForceGlobal();
+  return f.tail<3>();
+}
+
+/////////////////////////////////////////////////
+AngularVector3d LinkFeatures::GetLinkTorque(std::size_t _id)
+{
+  // DART uses spatial forces which express the torque in the first three
+  // components of the 6D vector
+  Eigen::Vector6d f = this->links.at(_id)->getExternalForceGlobal();
+
+  Eigen::Isometry3d tfCom = Eigen::Isometry3d::Identity();
+  // We use the negative of the global COM location in order to transform the
+  // spatial vector to be with respect to the the body's center of mass.
+  tfCom.translation() = -this->links.at(_id)->getCOM(
+        dart::dynamics::Frame::World());
+
+  const Eigen::Vector6d fCom = dart::math::dAdInvT(tfCom, f);
+
+  return fCom.head<3>();
+}
+
+/////////////////////////////////////////////////
 void LinkFeatures::SetLinkLinearVelocity(
     std::size_t _id, const LinearVector3d &_vel)
 {
