@@ -32,7 +32,7 @@ namespace mesh
   -> Dimensions
   {
     return this->template Interface<GetMeshShapeProperties>()
-        ->GetMeshSize(this->identity);
+        ->GetMeshShapeSize(this->identity);
   }
 
   /////////////////////////////////////////////////
@@ -41,7 +41,7 @@ namespace mesh
   -> Dimensions
   {
     return this->template Interface<GetMeshShapeProperties>()
-        ->GetMeshScale(this->identity);
+        ->GetMeshShapeScale(this->identity);
   }
 
   /////////////////////////////////////////////////

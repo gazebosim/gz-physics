@@ -40,10 +40,9 @@ ign_build_tests(
 foreach(test ${tests})
 
   target_compile_definitions(${test} PRIVATE
-    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
-
-  target_compile_definitions(${test} PRIVATE
-    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\"")
+    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\""
+    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
+    "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 
 endforeach()
 

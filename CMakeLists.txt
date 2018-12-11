@@ -64,6 +64,7 @@ ign_find_package(DART
 
 message(STATUS "-------------------------------------------\n")
 
+set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 #============================================================================
 # Configure the build
