@@ -14,3 +14,5 @@ foreach(plugin
 endforeach()
 
 target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
+target_compile_definitions(MockDoublePendulum PRIVATE
+  "RRBOT_XML=\"${PROJECT_SOURCE_DIR}/test/data/rrbot.xml\"")

@@ -65,9 +65,7 @@ namespace mock
           lastId(0)
       {
         ::dart::utils::DartLoader loader;
-        this->robot = loader.parseSkeleton(
-              //PROJECT_SOURCE_PATH
-              "/double-pendulum/rrbot.xml");
+        this->robot = loader.parseSkeleton(RRBOT_XML);
         this->world->addSkeleton(this->robot);
 
         this->joint1 = this->robot->getJoint("joint1");
