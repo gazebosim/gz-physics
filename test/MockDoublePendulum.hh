@@ -20,12 +20,15 @@
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/CanWriteData.hh>
 
 namespace mock
 {
   using MockDoublePendulumList = ignition::physics::FeatureList<
-    ignition::physics::ForwardStep
+    ignition::physics::ForwardStep,
+    ignition::physics::GetEngineInfo,
+    ignition::physics::GetWorldFromEngine
   >;
 
   class MockDoublePendulum

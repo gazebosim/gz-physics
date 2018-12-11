@@ -58,8 +58,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   auto engine = RequestEngine3d<mock::MockDoublePendulumList>::From(_plugin);
   ASSERT_NE(nullptr, engine);
 
-  ignition::physics::ForwardStep *step =
-      _plugin->QueryInterface<ignition::physics::ForwardStep>();
+  auto world = engine->GetWorld(0);
 
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;
@@ -78,7 +77,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   efforts.forces.push_back(0.0);
 
   // No input on the first step, let's just see the output
-  step->Step(output, state, input);
+  world->Step(output, state, input);
 
   ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
   const auto positions0 = output.Get<ignition::physics::JointPositions>();
@@ -125,7 +124,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
     efforts.forces[0] = pid0.Update(error0, dt);
     efforts.forces[1] = pid1.Update(error1, dt);
 
-    step->Step(output, state, input);
+    world->Step(output, state, input);
   }
 
   // expect joints are near target positions
@@ -166,7 +165,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   pid1.Reset();
   efforts.forces[0] = 0;
   efforts.forces[1] = 0;
-  step->Step(output, state, input);
+  world->Step(output, state, input);
 
   for (unsigned int i = 0; i < settleSteps; ++i)
   {
@@ -179,7 +178,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
     efforts.forces[0] = pid0.Update(error0, dt);
     efforts.forces[1] = pid1.Update(error1, dt);
 
-    step->Step(output, state, input);
+    world->Step(output, state, input);
   }
 
   // expect joints are near target positions again
@@ -203,7 +202,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   pid1.Reset();
   efforts.forces[0] = 0;
   efforts.forces[1] = 0;
-  step->Step(output, state, input);
+  world->Step(output, state, input);
 
   for (unsigned int i = 0; i < settleSteps; ++i)
   {
@@ -216,7 +215,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
     efforts.forces[0] = pid0.Update(error0, dt);
     efforts.forces[1] = pid1.Update(error1, dt);
 
-    step->Step(output, state, input);
+    world->Step(output, state, input);
   }
 
   // expect joints are near target positions again

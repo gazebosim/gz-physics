@@ -200,6 +200,58 @@ namespace mock
         return this->GenerateIdentity(0);
       }
 
+      public: const std::string &GetEngineName(
+          std::size_t /*_engineID*/) const override
+      {
+        static const std::string name("DARTDoublePendulum engine");
+        return name;
+      }
+
+      public: std::size_t GetEngineIndex(
+          std::size_t /*_engineID*/) const override
+      {
+        return 0;
+      }
+
+      public: std::size_t GetWorldCount(
+          std::size_t /*_engineID*/) const override
+      {
+        return 1;
+      }
+
+      public: Identity GetWorld(
+          std::size_t /*_engineID*/,
+          std::size_t /*_worldIndex*/) const override
+      {
+        return this->GenerateIdentity(1);
+      }
+
+      public: Identity GetWorld(
+          std::size_t /*_engineID*/,
+          const std::string &/*_worldName*/) const
+      {
+        return this->GenerateIdentity(1);
+      }
+
+      public: const std::string &GetWorldName(
+          std::size_t /*_worldID*/) const override
+      {
+        static const std::string name("DARTDoublePendulum world");
+        return name;
+      }
+
+      public: std::size_t GetWorldIndex(
+          std::size_t /*_worldID*/) const override
+      {
+        return 0;
+      }
+
+      public: Identity GetEngineOfWorld(
+          std::size_t /*_worldID*/) const override
+      {
+        return this->GenerateIdentity(0);
+      }
+
       public: void WorldForwardStep(
           const std::size_t /*_worldId*/,
           ignition::physics::ForwardStep::Output &_h,
