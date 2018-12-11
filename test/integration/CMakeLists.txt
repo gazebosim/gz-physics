@@ -21,7 +21,7 @@ if (BUILD_TESTING)
         MockFrames
         MockJoints)
     if (DART_FOUND)
-      list(APPEND plugins MockDoublePendulum)
+      list(APPEND mock_plugins MockDoublePendulum)
     endif()
 
     foreach(mock_plugin IN LISTS mock_plugins)
