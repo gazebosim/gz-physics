@@ -1,18 +1,26 @@
-add_library(MockDoublePendulum SHARED DARTDoublePendulum.cc)
+if (DART_FOUND)
+  add_library(MockDoublePendulum SHARED DARTDoublePendulum.cc)
+endif()
 add_library(MockEntities SHARED MockEntities.cc)
 add_library(MockFrames SHARED frames.cc)
 add_library(MockJoints SHARED MockJoints.cc)
 
-foreach(plugin
-    MockDoublePendulum
+list(APPEND plugins
     MockEntities
     MockFrames
     MockJoints)
+if (DART_FOUND)
+  list(APPEND plugins MockDoublePendulum)
+endif()
+
+foreach(plugin IN LISTS plugins)
   target_link_libraries(${plugin}
     PRIVATE
       ${PROJECT_LIBRARY_TARGET_NAME})
 endforeach()
 
-target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
-target_compile_definitions(MockDoublePendulum PRIVATE
-  "RRBOT_XML=\"${PROJECT_SOURCE_DIR}/test/data/rrbot.xml\"")
+if (DART_FOUND)
+  target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
+  target_compile_definitions(MockDoublePendulum PRIVATE
+    "RRBOT_XML=\"${PROJECT_SOURCE_DIR}/test/data/rrbot.xml\"")
+endif()
