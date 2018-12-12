@@ -226,7 +226,7 @@ namespace mock
 
       public: Identity GetWorld(
           std::size_t /*_engineID*/,
-          const std::string &/*_worldName*/) const
+          const std::string &/*_worldName*/) const override
       {
         return this->GenerateIdentity(1);
       }
