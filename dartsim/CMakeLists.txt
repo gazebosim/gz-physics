@@ -5,6 +5,7 @@ ign_add_component(dartsim INTERFACE
     GET_TARGET_NAME features)
 
 target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
+target_link_libraries(${features} INTERFACE ${console_bridge_LIBRARIES})
 target_include_directories(${features} SYSTEM INTERFACE ${DART_INCLUDE_DIRS})
 
 install(

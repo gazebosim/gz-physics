@@ -21,6 +21,7 @@ endforeach()
 
 if (DART_FOUND)
   target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
+  target_link_libraries(MockDoublePendulum PUBLIC ${console_bridge_LIBRARIES})
   target_compile_definitions(MockDoublePendulum PRIVATE
     "RRBOT_XML=\"${PROJECT_SOURCE_DIR}/test/data/rrbot.xml\"")
 endif()
