@@ -69,7 +69,6 @@ namespace ignition
       ignition::math::Vector3d linearVelocity;
       ignition::math::Vector3d angularVelocity;
 
-      // cppcheck-suppress unusedStructMember
       std::size_t body;
     };
 
