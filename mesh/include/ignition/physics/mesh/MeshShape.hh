@@ -29,7 +29,7 @@ namespace physics
 {
 namespace mesh
 {
-  IGN_PHYSICS_DECLARE_SHAPE_TYPE(MeshShape);
+  IGN_PHYSICS_DECLARE_SHAPE_TYPE(MeshShape)
 
   /////////////////////////////////////////////////
   class GetMeshShapeProperties
