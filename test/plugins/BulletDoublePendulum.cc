@@ -176,7 +176,7 @@ namespace mock
         }
       }
 
-      void WriteState(ForwardStep::State &x)
+      void WriteState(ignition::physics::ForwardStep::State &x)
       {
         BulletState &state = x.Get<BulletState>();
         state.jointStates.clear();
@@ -227,7 +227,7 @@ namespace mock
         }
       }
 
-      void SetInputs(const GeneralizedParameters *_efforts)
+      void SetInputs(const ignition::physics::GeneralizedParameters *_efforts)
       {
         if (_efforts != nullptr)
         {
@@ -236,7 +236,7 @@ namespace mock
         }
       }
 
-      void SetTimeStep(const TimeStep *_timeStep)
+      void SetTimeStep(const ignition::physics::TimeStep *_timeStep)
       {
         if (_timeStep != nullptr)
         {
@@ -253,48 +253,114 @@ namespace mock
       }
     };
 
-      BulletDoublePendulum::~BulletDoublePendulum()
-      {
-        // Do nothing
-      }
+    class BulletDoublePendulum
+        : public virtual mock::MockDoublePendulum,
+          public ignition::physics::Implements3d<MockDoublePendulumList>
+    {
+      using Identity = ignition::physics::Identity;
 
-      BulletDoublePendulum::BulletDoublePendulum()
+      public: BulletDoublePendulum()
         : dataPtr(new PrivateBulletDoublePendulum)
       {
         // Do nothing
       }
 
-      void BulletDoublePendulum::Step(
-          Output &h, ForwardStep::State &x, const Input &u)
+      public: ~BulletDoublePendulum()
       {
-        this->dataPtr->SetInputs(u.Query<GeneralizedParameters>());
-        this->dataPtr->SetTimeStep(u.Query<TimeStep>());
+        // Do nothing
+      }
+
+      public: Identity InitiateEngine(std::size_t /*_engineID*/) override
+      {
+        return this->GenerateIdentity(0);
+      }
+
+      public: const std::string &GetEngineName(
+          std::size_t /*_engineID*/) const override
+      {
+        static const std::string name("BulletDoublePendulum engine");
+        return name;
+      }
+
+      public: std::size_t GetEngineIndex(
+          std::size_t /*_engineID*/) const override
+      {
+        return 0;
+      }
+
+      public: std::size_t GetWorldCount(
+          std::size_t /*_engineID*/) const override
+      {
+        return 1;
+      }
+
+      public: Identity GetWorld(
+          std::size_t /*_engineID*/,
+          std::size_t /*_worldIndex*/) const override
+      {
+        return this->GenerateIdentity(1);
+      }
+
+      public: Identity GetWorld(
+          std::size_t /*_engineID*/,
+          const std::string &/*_worldName*/) const override
+      {
+        return this->GenerateIdentity(1);
+      }
+
+      public: const std::string &GetWorldName(
+          std::size_t /*_worldID*/) const override
+      {
+        static const std::string name("BulletDoublePendulum world");
+        return name;
+      }
+
+      public: std::size_t GetWorldIndex(
+          std::size_t /*_worldID*/) const override
+      {
+        return 0;
+      }
+
+      public: Identity GetEngineOfWorld(
+          std::size_t /*_worldID*/) const override
+      {
+        return this->GenerateIdentity(0);
+      }
+
+      public: void WorldForwardStep(
+          const std::size_t /*_worldId*/,
+          ignition::physics::ForwardStep::Output &_h,
+          ignition::physics::ForwardStep::State &_x,
+          const ignition::physics::ForwardStep::Input &_u) override
+      {
+        this->dataPtr->SetInputs(_u.Query<ignition::physics::GeneralizedParameters>());
+        this->dataPtr->SetTimeStep(_u.Query<ignition::physics::TimeStep>());
 
         this->dataPtr->Simulate();
 
-        this->dataPtr->WriteState(x);
+        this->dataPtr->WriteState(_x);
 
-        h.ResetQueries();
-        this->WriteRequiredData(h);
-        this->Write(h.Get<ignition::physics::JointPositions>());
+        _h.ResetQueries();
+        this->WriteRequiredData(_h);
+        this->Write(_h.Get<ignition::physics::JointPositions>());
       }
 
-      void BulletDoublePendulum::SetStateTo(const SetState::State &x)
+      public: void SetStateTo(const SetState::State &x)
       {
         this->dataPtr->SetState(x);
       }
 
-      void BulletDoublePendulum::Write(JointPositions &_out) const
+      public: void Write(ignition::physics::JointPositions &_positions) const override
       {
-        _out.dofs = {0, 1};
-        _out.positions.clear();
-        _out.positions.resize(2u);
+        _positions.dofs = {0, 1};
+        _positions.positions.clear();
+        _positions.positions.resize(2u);
 
-        _out.positions[0] = this->dataPtr->joint1->getAccumulatedHingeAngle();
-        _out.positions[1] = this->dataPtr->joint2->getAccumulatedHingeAngle();
+        _positions.positions[0] = this->dataPtr->joint1->getAccumulatedHingeAngle();
+        _positions.positions[1] = this->dataPtr->joint2->getAccumulatedHingeAngle();
       }
 
-      void BulletDoublePendulum::Write(WorldPoses &poses) const
+      public: void Write(ignition::physics::WorldPoses &_poses) const override
       {
         poses.entries.clear();
         poses.entries.reserve(this->dataPtr->mapToBodies.size());
@@ -312,5 +378,14 @@ namespace mock
           poses.entries.push_back(wp);
         }
       }
-    }
+
+      private: std::unique_ptr<PrivateBulletDoublePendulum> dataPtr;
+    };
+
+    using FeaturePolicy3f = ignition::physics::FeaturePolicy3f;
+    IGN_PHYSICS_ADD_PLUGIN(
+        BulletDoublePendulum,
+        FeaturePolicy3f,
+        MockDoublePendulumList)
+  }
 }
