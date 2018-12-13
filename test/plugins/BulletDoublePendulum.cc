@@ -144,37 +144,37 @@ namespace mock
         this->mapToBodies[lastId++] = this->link2;
       }
 
-      void SetState(const SetState::State &x)
-      {
-        const BulletState *state = x.Query<BulletState>();
-        if (!state)
-        {
-          ignerr << "[ignition::physics::dart::BulletDoublePendulum::"
-                 << "SetState] The state provided does not contain a "
-                 << "BulletState, which this plugins needs in order to go to a "
-                 << "specified state!\n";
-          return;
-        }
+      //void SetState(const SetState::State &x)
+      //{
+      //  const BulletState *state = x.Query<BulletState>();
+      //  if (!state)
+      //  {
+      //    ignerr << "[mock::bullet::BulletDoublePendulum::"
+      //           << "SetState] The state provided does not contain a "
+      //           << "BulletState, which this plugins needs in order to go to a "
+      //           << "specified state!\n";
+      //    return;
+      //  }
 
-        for (const auto &entry : state->jointStates)
-        {
-          btHingeAccumulatedAngleConstraint *hinge = entry.first;
-          const btScalar angle = entry.second;
-          hinge->setAccumulatedHingeAngle(angle);
-        }
+      //  for (const auto &entry : state->jointStates)
+      //  {
+      //    btHingeAccumulatedAngleConstraint *hinge = entry.first;
+      //    const btScalar angle = entry.second;
+      //    hinge->setAccumulatedHingeAngle(angle);
+      //  }
 
-        for (const auto &entry : state->linkStates)
-        {
-          btRigidBody *body = entry.first;
-          BulletState::LinkState linkState = entry.second;
-          body->setCenterOfMassTransform(convert(linkState.pose.pose));
-          body->setLinearVelocity(convert(linkState.twist.linearVelocity));
-          body->setAngularVelocity(convert(linkState.twist.angularVelocity));
-          body->clearForces();
-          body->applyCentralForce(convert(linkState.wrench.force.vec));
-          body->applyTorque(convert(linkState.wrench.torque.vec));
-        }
-      }
+      //  for (const auto &entry : state->linkStates)
+      //  {
+      //    btRigidBody *body = entry.first;
+      //    BulletState::LinkState linkState = entry.second;
+      //    body->setCenterOfMassTransform(mock::bullet::convert(linkState.pose.pose));
+      //    body->setLinearVelocity(mock::bullet::convert(linkState.twist.linearVelocity));
+      //    body->setAngularVelocity(mock::bullet::convert(linkState.twist.angularVelocity));
+      //    body->clearForces();
+      //    body->applyCentralForce(mock::bullet::convert(linkState.wrench.force.vec));
+      //    body->applyTorque(mock::bullet::convert(linkState.wrench.torque.vec));
+      //  }
+      //}
 
       void WriteState(ignition::physics::ForwardStep::State &x)
       {
@@ -187,16 +187,16 @@ namespace mock
 
         BulletState::LinkState linkState1;
         BulletState::LinkState linkState2;
-        linkState1.pose.pose = convert(this->link1->getCenterOfMassTransform());
-        linkState2.pose.pose = convert(this->link2->getCenterOfMassTransform());
-        linkState1.twist.linearVelocity = convert(this->link1->getLinearVelocity());
-        linkState2.twist.linearVelocity = convert(this->link2->getLinearVelocity());
-        linkState1.twist.angularVelocity = convert(this->link1->getAngularVelocity());
-        linkState2.twist.angularVelocity = convert(this->link2->getAngularVelocity());
-        linkState1.wrench.force.vec = convert(this->link1->getTotalForce());
-        linkState2.wrench.force.vec = convert(this->link2->getTotalForce());
-        linkState1.wrench.torque.vec = convert(this->link1->getTotalTorque());
-        linkState2.wrench.torque.vec = convert(this->link2->getTotalTorque());
+        linkState1.pose.pose = mock::bullet::convert(this->link1->getCenterOfMassTransform());
+        linkState2.pose.pose = mock::bullet::convert(this->link2->getCenterOfMassTransform());
+        linkState1.twist.linearVelocity = mock::bullet::convert(this->link1->getLinearVelocity());
+        linkState2.twist.linearVelocity = mock::bullet::convert(this->link2->getLinearVelocity());
+        linkState1.twist.angularVelocity = mock::bullet::convert(this->link1->getAngularVelocity());
+        linkState2.twist.angularVelocity = mock::bullet::convert(this->link2->getAngularVelocity());
+        linkState1.wrench.force.vec = mock::bullet::convert(this->link1->getTotalForce());
+        linkState2.wrench.force.vec = mock::bullet::convert(this->link2->getTotalForce());
+        linkState1.wrench.torque.vec = mock::bullet::convert(this->link1->getTotalTorque());
+        linkState2.wrench.torque.vec = mock::bullet::convert(this->link2->getTotalTorque());
         state.linkStates[this->link1] = linkState1;
         state.linkStates[this->link2] = linkState2;
       }
@@ -345,10 +345,10 @@ namespace mock
         this->Write(_h.Get<ignition::physics::JointPositions>());
       }
 
-      public: void SetStateTo(const SetState::State &x)
-      {
-        this->dataPtr->SetState(x);
-      }
+      //public: void SetStateTo(const SetState::State &x)
+      //{
+      //  this->dataPtr->SetState(x);
+      //}
 
       public: void Write(ignition::physics::JointPositions &_positions) const override
       {
@@ -372,7 +372,7 @@ namespace mock
 
           WorldPose wp;
           btTransform bt = body->getCenterOfMassTransform();
-          wp.pose = convert(bt);
+          wp.pose = mock::bullet::convert(bt);
           wp.body = id;
 
           poses.entries.push_back(wp);
