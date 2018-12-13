@@ -21,10 +21,8 @@
 #include <ignition/math.hh>
 #include "BulletIncludes.hh"
 
-namespace ignition
+namespace mock
 {
-  namespace physics
-  {
     namespace bullet
     {
       // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -100,7 +98,6 @@ namespace ignition
         return pose;
       }
     }
-  }
 }
 
 #endif
