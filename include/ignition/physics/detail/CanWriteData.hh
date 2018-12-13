@@ -26,11 +26,22 @@ namespace ignition
   {
     namespace detail
     {
+      /// \brief WriteDataOperation allows us to use OperateOnSpecifiedData to
+      /// call a Write(~) member function on a class which inherits from either
+      /// CanWriteRequiredData or CanWriteExpectedData (or both).
       template <typename Data, typename Derived, typename CompositeType>
       struct WriteDataOperation
       {
+        /// \brief WriteDataOperation::Operate is where the data writing
+        /// operation gets performed.
+        /// \param[in,out] _yourClass
+        ///   The object which will perform the Write operation.
+        /// \param[in,out] _data
+        ///   The object which will be written to.
         public: static void Operate(Derived *yourClass, CompositeType &data)
         {
+          /// \par
+          /// \page WriteCompilationFail Failure to compile WriteDataOperation
           /// READ CAREFULLY: If you have arrived here by way of a compiler
           /// error, then you have neglected to provide a Write(~) member
           /// function for one of the specified data types that you claimed your
@@ -45,13 +56,15 @@ namespace ignition
           /// the keyword const at the end of its declaration in the function
           /// definition:
           ///
-          /// class YourClass
-          /// {
-          ///   public:
-          ///   /* ... */
-          ///     void Write(const Data &data) const;
-          ///   /* ... */
-          /// };
+          /// \code
+          ///    class YourClass
+          ///    {
+          ///    public:
+          ///       // ...
+          ///       void Write(const Data &data) const;
+          ///       // ...
+          ///    };
+          /// \endcode
           ///
           ///    ^^^ READ THE ABOVE EXPLANATION IF YOU CANNOT COMPILE ^^^
           yourClass->Write(data.template Get<Data>());
@@ -77,9 +90,13 @@ namespace ignition
     {
       DataStatusMask mask;
 
+      // If we've been asked to skip missing data, we'll tell the data mask that
+      // each data type we write must already exist.
       if (_options.skipMissingData)
         mask.exist = DataStatusMask::MUST;
 
+      // If we've been asked to only write unqueried data, we'll tell the data
+      // mask that each data type we write must not be already queried.
       if (_options.onlyWriteUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
 
@@ -107,9 +124,13 @@ namespace ignition
     {
       DataStatusMask mask;
 
+      // If we've been asked to skip missing data, we'll tell the data mask that
+      // each data type we write must already exist.
       if (_options.skipMissingData)
         mask.exist = DataStatusMask::MUST;
 
+      // If we've been asked to only write unqueried data, we'll tell the data
+      // mask that each data type we write must not be already queried.
       if (_options.onlyWriteUnqueriedData)
         mask.queried = DataStatusMask::MUST_NOT;
 
