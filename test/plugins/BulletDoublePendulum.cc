@@ -18,14 +18,13 @@
 #include <unordered_map>
 
 #include <ignition/common/Console.hh>
+#include <ignition/physics/Register.hh>
 
-#include "BulletDoublePendulum.hh"
+#include "../MockDoublePendulum.hh"
 #include "BulletMathConversions.hh"
 
-namespace ignition
+namespace mock
 {
-  namespace physics
-  {
     namespace bullet
     {
       struct BulletState
@@ -314,5 +313,4 @@ namespace ignition
         }
       }
     }
-  }
 }
