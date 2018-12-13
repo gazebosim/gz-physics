@@ -50,6 +50,10 @@ ign_find_package(EIGEN3 REQUIRED)
 ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
 
 #--------------------------------------
+# Find bullet for the double pendulum test
+ign_find_package(Bullet)
+
+#--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
 ign_find_package(DART
   COMPONENTS

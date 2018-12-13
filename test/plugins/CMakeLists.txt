@@ -1,5 +1,7 @@
-if (DART_FOUND)
-  add_library(MockDoublePendulum SHARED DARTDoublePendulum.cc)
+if (Bullet_FOUND AND DART_FOUND)
+  add_library(MockDoublePendulum SHARED
+    BulletDoublePendulum.cc
+    DARTDoublePendulum.cc)
 endif()
 add_library(MockEntities SHARED MockEntities.cc)
 add_library(MockFrames SHARED frames.cc)

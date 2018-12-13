@@ -27,8 +27,6 @@ pipelines:
             libignition-math6-eigen3-dev
             libignition-plugin-dev
             libeigen3-dev
-          # Bullet
-          - apt-get -y install
             libbullet-dev
           # DARTsim
           - apt-add-repository -y ppa:dartsim
