@@ -15,10 +15,11 @@
  *
 */
 
+#include <memory>
 #include <unordered_map>
 
 #include <ignition/common/Console.hh>
-#include <ignition/physics/Register.hh>
+#include <ignition/physics/RegisterMore.hh>
 
 #include "../MockDoublePendulum.hh"
 #include "BulletMathConversions.hh"
@@ -362,30 +363,30 @@ namespace mock
 
       public: void Write(ignition::physics::WorldPoses &_poses) const override
       {
-        poses.entries.clear();
-        poses.entries.reserve(this->dataPtr->mapToBodies.size());
+        _poses.entries.clear();
+        _poses.entries.reserve(this->dataPtr->mapToBodies.size());
 
         for(const auto &entry : this->dataPtr->mapToBodies)
         {
           const std::size_t id = entry.first;
           const btRigidBody *body = entry.second;
 
-          WorldPose wp;
+          ignition::physics::WorldPose wp;
           btTransform bt = body->getCenterOfMassTransform();
           wp.pose = mock::bullet::convert(bt);
           wp.body = id;
 
-          poses.entries.push_back(wp);
+          _poses.entries.push_back(wp);
         }
       }
 
       private: std::unique_ptr<PrivateBulletDoublePendulum> dataPtr;
     };
 
-    using FeaturePolicy3f = ignition::physics::FeaturePolicy3f;
+    using FeaturePolicy3d = ignition::physics::FeaturePolicy3d;
     IGN_PHYSICS_ADD_PLUGIN(
         BulletDoublePendulum,
-        FeaturePolicy3f,
+        FeaturePolicy3d,
         MockDoublePendulumList)
   }
 }
