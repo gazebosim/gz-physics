@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
 #define IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
 
+#include <string>
+
 #include <ignition/common/Mesh.hh>
 
 #include <ignition/physics/DeclareShapeType.hh>
@@ -126,4 +128,4 @@ namespace mesh
 
 #include <ignition/physics/mesh/detail/MeshShape.hh>
 
-#endif // IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
+#endif  // IGNITION_PHYSICS_MESH_MESHSHAPE_HH_

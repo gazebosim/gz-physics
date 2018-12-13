@@ -31,11 +31,10 @@ namespace dartsim {
 class CustomMeshShape : public dart::dynamics::MeshShape
 {
   public: CustomMeshShape(const ignition::common::Mesh &_input);
-
 };
 
 }
 }
 }
 
-#endif // IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
+#endif  // IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
