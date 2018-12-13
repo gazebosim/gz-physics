@@ -160,6 +160,10 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   // expect these values to be exact.
   for(std::size_t i = 0; i < 3; ++i)
     EXPECT_NEAR(originalMeshSize[i], meshShapeSize[i], 1e-6);
+
+  EXPECT_NEAR(meshShapeSize[0], 0.5106, 1e-4);
+  EXPECT_NEAR(meshShapeSize[1], 0.3831, 1e-4);
+  EXPECT_NEAR(meshShapeSize[2], 0.1956, 1e-4);
 }
 
 int main(int argc, char *argv[])
