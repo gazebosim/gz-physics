@@ -66,6 +66,7 @@ ign_find_package(console_bridge)
 
 message(STATUS "-------------------------------------------\n")
 
+set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 #============================================================================
 # Configure the build

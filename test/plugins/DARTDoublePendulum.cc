@@ -65,7 +65,7 @@ namespace mock
           lastId(0)
       {
         ::dart::utils::DartLoader loader;
-        this->robot = loader.parseSkeleton(RRBOT_XML);
+        this->robot = loader.parseSkeleton(IGNITION_PHYSICS_RESOURCE_DIR "/rrbot.xml");
         this->world->addSkeleton(this->robot);
 
         this->joint1 = this->robot->getJoint("joint1");
