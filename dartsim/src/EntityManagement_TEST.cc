@@ -158,7 +158,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   // Note: dartsim uses assimp for storing mesh data, and assimp by default uses
   // single floating point precision (instead of double precision), so we can't
   // expect these values to be exact.
-  for(std::size_t i = 0; i < 3; ++i)
+  for (std::size_t i = 0; i < 3; ++i)
     EXPECT_NEAR(originalMeshSize[i], meshShapeSize[i], 1e-6);
 
   EXPECT_NEAR(meshShapeSize[0], 0.5106, 1e-4);
