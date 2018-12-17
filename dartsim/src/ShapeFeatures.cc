@@ -226,7 +226,7 @@ Identity ShapeFeatures::AttachMeshShape(
   DartBodyNode *bn = this->links.at(_linkID);
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        mesh, _name + ":" + _name);
+        mesh, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
   return this->GenerateIdentity(this->AddShape({sn, _name}));
