@@ -26,7 +26,7 @@ namespace dartsim {
 
 namespace {
 /////////////////////////////////////////////////
-unsigned int checkNumVerticesPerFaces(
+unsigned int CheckNumVerticesPerFaces(
     const ignition::common::SubMesh &_inputSubmesh,
     const unsigned int _submeshIndex,
     const std::string &_path)
@@ -72,7 +72,7 @@ unsigned int checkNumVerticesPerFaces(
 }
 
 /////////////////////////////////////////////////
-unsigned int checkPrimitiveType(
+unsigned int GetPrimitiveType(
     const ignition::common::SubMesh &_inputSubmesh)
 {
   using namespace ignition::common;
@@ -150,11 +150,11 @@ CustomMeshShape::CustomMeshShape(const ignition::common::Mesh &_input)
     mesh->mNormals = new aiVector3D[numVertices];
 
     const unsigned int numVerticesPerFace =
-        checkNumVerticesPerFaces(*inputSubmesh, i, _input.Path());
+        CheckNumVerticesPerFaces(*inputSubmesh, i, _input.Path());
     if (0 == numVerticesPerFace)
       continue;
 
-    mesh->mPrimitiveTypes = checkPrimitiveType(*inputSubmesh);
+    mesh->mPrimitiveTypes = GetPrimitiveType(*inputSubmesh);
     if (0 == mesh->mPrimitiveTypes)
       continue;
 

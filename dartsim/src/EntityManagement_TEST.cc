@@ -148,8 +148,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   meshLink->AttachFixedJoint(child, "fixed");
 
   const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
-  auto& meshManager = *ignition::common::MeshManager::Instance();
-  auto* mesh = meshManager.Load(meshFilename);
+  auto &meshManager = *ignition::common::MeshManager::Instance();
+  auto *mesh = meshManager.Load(meshFilename);
 
   auto meshShape = meshLink->AttachMeshShape("chassis", *mesh);
   const auto originalMeshSize = mesh->Max() - mesh->Min();
