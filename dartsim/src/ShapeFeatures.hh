@@ -23,6 +23,7 @@
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/BoxShape.hh>
 #include <ignition/physics/CylinderShape.hh>
+#include <ignition/physics/mesh/MeshShape.hh>
 #include <ignition/physics/SphereShape.hh>
 
 #include "Base.hh"
@@ -44,7 +45,10 @@ using ShapeFeatureList = FeatureList<
   AttachCylinderShapeFeature,
   GetSphereShapeProperties,
 //  SetSphereShapeProperties,
-  AttachSphereShapeFeature
+  AttachSphereShapeFeature,
+  mesh::GetMeshShapeProperties,
+//  mesh::SetMeshShapeProperties,
+  mesh::AttachMeshShapeFeature
 >;
 
 class ShapeFeatures :
@@ -102,6 +106,23 @@ class ShapeFeatures :
       std::size_t _linkID,
       const std::string &_name,
       double _radius,
+      const Pose3d &_pose) override;
+
+
+  // ----- Mesh Features -----
+  public: Identity CastToMeshShape(
+      std::size_t _shapeID) const override;
+
+  public: LinearVector3d GetMeshShapeSize(
+      std::size_t _meshID) const override;
+
+  public: LinearVector3d GetMeshShapeScale(
+      std::size_t _meshID) const override;
+
+  public: Identity AttachMeshShape(
+      std::size_t _linkID,
+      const std::string &_name,
+      const ignition::common::Mesh &_mesh,
       const Pose3d &_pose) override;
 };
 
