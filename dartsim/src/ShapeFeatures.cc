@@ -17,9 +17,11 @@
 
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
+#include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 
+#include "CustomMeshShape.hh"
 #include "ShapeFeatures.hh"
 
 namespace ignition {
@@ -172,6 +174,59 @@ Identity ShapeFeatures::AttachSphereShape(
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
         sphere, bn->getName() + ":" + _name);
+
+  sn->setRelativeTransform(_pose);
+  return this->GenerateIdentity(this->AddShape({sn, _name}));
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToMeshShape(
+    const std::size_t _shapeID) const
+{
+  const dart::dynamics::ShapePtr &shape =
+      this->shapes.at(_shapeID).node->getShape();
+
+  if (dynamic_cast<dart::dynamics::MeshShape*>(shape.get()))
+    return this->GenerateIdentity(_shapeID);
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d ShapeFeatures::GetMeshShapeSize(
+    const std::size_t _meshID) const
+{
+  dart::dynamics::MeshShape *mesh =
+      static_cast<dart::dynamics::MeshShape*>(
+        this->shapes.at(_meshID).node->getShape().get());
+
+  return mesh->getBoundingBox().getMax() - mesh->getBoundingBox().getMin();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d ShapeFeatures::GetMeshShapeScale(
+    const std::size_t _meshID) const
+{
+  dart::dynamics::MeshShape *mesh =
+      static_cast<dart::dynamics::MeshShape*>(
+        this->shapes.at(_meshID).node->getShape().get());
+
+  return mesh->getScale();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachMeshShape(
+    const std::size_t _linkID,
+    const std::string &_name,
+    const ignition::common::Mesh &_mesh,
+    const Pose3d &_pose)
+{
+  auto mesh = std::make_shared<CustomMeshShape>(_mesh);
+
+  DartBodyNode *bn = this->links.at(_linkID);
+  dart::dynamics::ShapeNode *sn =
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
+        mesh, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
   return this->GenerateIdentity(this->AddShape({sn, _name}));
