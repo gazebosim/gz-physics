@@ -291,6 +291,40 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 }
 
 /////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelByIndex(std::size_t _worldID,
+                                                  std::size_t _modelIndex)
+{
+  if (_modelIndex < this->models.indexInContainerToID.at(_worldID).size())
+  {
+    this->RemoveModelImpl(
+        _worldID, this->models.indexInContainerToID.at(_worldID)[_modelIndex]);
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelByName(std::size_t _worldID,
+                                                 const std::string &_modelName)
+{
+  const DartSkeletonPtr &model =
+      this->worlds.at(_worldID)->getSkeleton(_modelName);
+  if (model != nullptr)
+  {
+    this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::RemoveModel(std::size_t _modelID)
+{
+  this->RemoveModelImpl(this->models.idToContainerID.at(_modelID),
+                             _modelID);
+}
+
+/////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const std::size_t /*_engineID*/, const std::string &_name)
 {

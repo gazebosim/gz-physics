@@ -166,6 +166,38 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(meshShapeSize[2], 0.1956, 1e-4);
 }
 
+TEST(EntityManagement_TEST, RemoveEntities)
+{
+  ignition::plugin::Loader loader;
+  loader.LoadLibrary(dartsim_plugin_LIB);
+
+  ignition::plugin::PluginPtr dartsim =
+      loader.Instantiate("ignition::physics::dartsim::Plugin");
+
+  auto engine =
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+  ASSERT_NE(nullptr, engine);
+
+  auto world = engine->ConstructEmptyWorld("empty world");
+  ASSERT_NE(nullptr, world);
+  auto model = world->ConstructEmptyModel("empty model");
+  ASSERT_NE(nullptr, model);
+
+  // TODO(adisu) The .Valid() tests fail at the moment
+  model->Remove();
+  EXPECT_FALSE(model.Valid());
+  EXPECT_EQ(nullptr, world->GetModel(0));
+  EXPECT_EQ(nullptr, world->GetModel("empty model"));
+  EXPECT_EQ(0ul, world->GetModelCount());
+
+  auto model2 = world->ConstructEmptyModel("model2");
+  ASSERT_NE(nullptr, model2);
+  EXPECT_EQ(0ul, model2->GetIndex());
+  world->RemoveModel(0);
+  EXPECT_FALSE(model2.Valid());
+  EXPECT_EQ(0ul, world->GetModelCount());
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

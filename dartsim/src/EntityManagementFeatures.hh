@@ -22,6 +22,7 @@
 
 #include <ignition/physics/ConstructEmpty.hh>
 #include <ignition/physics/GetEntities.hh>
+#include <ignition/physics/RemoveEntities.hh>
 #include <ignition/physics/Implements.hh>
 
 #include "Base.hh"
@@ -32,6 +33,7 @@ namespace dartsim {
 
 using EntityManagementFeatureList = FeatureList<
   GetEntities,
+  RemoveEntities,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,
   ConstructEmptyLinkFeature
@@ -41,6 +43,7 @@ class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
+  // ----- Get entities -----
   public: const std::string &GetEngineName(const std::size_t) const override;
 
   public: std::size_t GetEngineIndex(const std::size_t) const override;
@@ -116,6 +119,16 @@ class EntityManagementFeatures :
 
   public: Identity GetLinkOfShape(std::size_t _shapeID) const override;
 
+  // ----- Remove entities -----
+  public: bool RemoveModelByIndex(
+      std::size_t _worldID, std::size_t _modelIndex) override;
+
+  public: virtual bool RemoveModelByName(
+      std::size_t _worldID, const std::string &_modelName) override;
+
+  public: virtual void RemoveModel(std::size_t _modelID) override;
+
+  // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       std::size_t _engineID, const std::string &_name) override;
 
