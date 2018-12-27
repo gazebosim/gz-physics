@@ -218,15 +218,19 @@ static ShapeAndTransform ConstructPlane(
   const Eigen::Vector3d axis = z.cross(math::eigen3::convert(_plane.Normal()));
   const double norm = axis.norm();
   const double angle = std::asin(norm/(_plane.Normal().Length()));
-  Eigen::Isometry3d R = Eigen::Isometry3d::Identity();
+  Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
 
   // We check that the angle isn't too close to zero, because otherwise
   // axis/norm would be undefined.
   if (angle > 1e-12)
-    R.rotate(Eigen::AngleAxisd(angle, axis/norm));
+    tf.rotate(Eigen::AngleAxisd(angle, axis/norm));
+
+  // This number was taken from osrf/gazebo. Seems arbitrary.
+  const double planeDim = 2100;
+  tf.translate(Eigen::Vector3d(0.0, 0.0, -planeDim*0.5));
 
   return {std::make_shared<dart::dynamics::BoxShape>(
-          Eigen::Vector3d(_plane.Size()[0], _plane.Size()[1], 1e-4)), R};
+          Eigen::Vector3d(planeDim, planeDim, planeDim)), tf};
 }
 
 /////////////////////////////////////////////////
