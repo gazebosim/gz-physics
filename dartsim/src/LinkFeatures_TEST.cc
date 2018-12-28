@@ -51,7 +51,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_world)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLibrary(_library);
+  loader.LoadLib(_library);
 
   const std::set<std::string> pluginNames =
       ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);

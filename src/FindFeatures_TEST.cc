@@ -46,7 +46,7 @@ void PrimeTheLoader(ignition::plugin::Loader &_loader)
        : ignition::physics::test::g_PhysicsPluginLibraries)
   {
     if (!library.empty())
-      _loader.LoadLibrary(library);
+      _loader.LoadLib(library);
   }
 }
 

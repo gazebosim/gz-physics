@@ -37,7 +37,7 @@ ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
     const std::string &_suffix)
 {
   ignition::plugin::Loader pl;
-  auto plugins = pl.LoadLibrary(MockJoints_LIB);
+  auto plugins = pl.LoadLib(MockJoints_LIB);
 
   ignition::plugin::PluginPtr plugin =
       pl.Instantiate("mock::JointPlugin"+_suffix);

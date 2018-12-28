@@ -28,7 +28,7 @@ using namespace ignition::physics;
 ignition::plugin::PluginPtr LoadMockPlugin(const std::string &_pluginName)
 {
   ignition::plugin::Loader pl;
-  auto plugins = pl.LoadLibrary(MockEntities_LIB);
+  auto plugins = pl.LoadLib(MockEntities_LIB);
   EXPECT_EQ(2u, plugins.size());
 
   ignition::plugin::PluginPtr plugin =
