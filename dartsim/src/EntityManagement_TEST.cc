@@ -169,7 +169,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 TEST(EntityManagement_TEST, RemoveEntities)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLibrary(dartsim_plugin_LIB);
+  loader.LoadLib(dartsim_plugin_LIB);
 
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
