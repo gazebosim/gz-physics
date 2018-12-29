@@ -130,8 +130,8 @@ TEST_P(LinkFeatures_TEST, LinkVelocity)
     // Use small angular velocity so that the angles don't wrap...makes it easy
     // to compare rotations.
     // \todo(anyone): Setting a nonzero value in either the x or y axes of the
-    // angular velocity vector causes the link to move unexpectedly in the x or
-    // y direction.
+    // angular velocity vector causes the link to translate unexpectedly in the
+    // x or y direction.
     const Eigen::Vector3d cmdAngVelocity{0, 0, 0.1 * IGN_PI};
     link->SetAngularVelocity(cmdAngVelocity);
 
