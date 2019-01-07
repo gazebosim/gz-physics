@@ -63,43 +63,10 @@ void LinkFeatures::SetLinkLinearVelocity(
   dart::dynamics::FreeJoint *freeJoint =
       dynamic_cast<dart::dynamics::FreeJoint*>(joint);
 
-  // If the parent joint is a free joint, set the proper generalized velocity to
-  // fit the linear velocity of the link
+  // If the parent joint is a free joint, set its linear velocity
   if (freeJoint)
   {
-    Eigen::Vector3d genVel = _vel;
-    // If this link has parent link then subtract the effect of parent link's
-    // linear and angular velocities
-    if (dtBodyNode->getParentBodyNode())
-    {
-      // Local transformation from the parent link frame to this link frame
-      Eigen::Isometry3d T = freeJoint->getRelativeTransform();
-
-      // Parent link's linear and angular velocities
-      Eigen::Vector3d parentLinVel =
-          dtBodyNode->getParentBodyNode()->getLinearVelocity();
-      Eigen::Vector3d parentAngVel =
-          dtBodyNode->getParentBodyNode()->getAngularVelocity();
-
-      // The effect of the parent link's velocities
-      Eigen::Vector3d propagatedLinVel =
-          T.linear().transpose() *
-          (parentAngVel.cross(T.translation()) + parentLinVel);
-
-      // Subtract the effect
-      genVel -= propagatedLinVel;
-    }
-
-    // Rotation matrix from world frame to this link frame
-    Eigen::Matrix3d R = dtBodyNode->getTransform().linear();
-
-    // Change the reference frame to world
-    genVel = R * genVel;
-
-    // Set the generalized velocities
-    freeJoint->setVelocity(3, genVel[0]);
-    freeJoint->setVelocity(4, genVel[1]);
-    freeJoint->setVelocity(5, genVel[2]);
+    freeJoint->setLinearVelocity(_vel);
   }
   else
   {
@@ -120,41 +87,10 @@ void LinkFeatures::SetLinkAngularVelocity(
   dart::dynamics::FreeJoint *freeJoint =
       dynamic_cast<dart::dynamics::FreeJoint*>(joint);
 
-  // If the parent joint is free joint, set the proper generalized velocity to
-  // fit the linear velocity of the link
+  // If the parent joint is a free joint, set its angular velocity
   if (freeJoint)
   {
-    // Generalized velocities
-    Eigen::Vector3d genVel = _vel;
-
-    // If this link has parent link then subtract the effect of parent link's
-    // linear and angular velocities
-    if (dtBodyNode->getParentBodyNode())
-    {
-      // Local transformation from the parent link frame to this link frame
-      Eigen::Isometry3d T = freeJoint->getRelativeTransform();
-
-      // Parent link's linear and angular velocities
-      Eigen::Vector3d parentAngVel =
-          dtBodyNode->getParentBodyNode()->getAngularVelocity();
-
-      // The effect of the parent link's velocities
-      Eigen::Vector3d propagatedAngVel = T.linear().transpose() * parentAngVel;
-
-      // Subtract the effect
-      genVel -= propagatedAngVel;
-    }
-
-    // Rotation matrix from world frame to this link frame
-    Eigen::Matrix3d R = dtBodyNode->getTransform().linear();
-
-    // Change the reference frame to world
-    genVel = R * genVel;
-
-    // Set the generalized velocities
-    freeJoint->setVelocity(0, genVel[0]);
-    freeJoint->setVelocity(1, genVel[1]);
-    freeJoint->setVelocity(2, genVel[2]);
+    freeJoint->setAngularVelocity(_vel);
   }
   else
   {
