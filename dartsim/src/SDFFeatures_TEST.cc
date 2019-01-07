@@ -57,7 +57,7 @@ using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 auto LoadEngine()
 {
   ignition::plugin::Loader loader;
-  loader.LoadLibrary(dartsim_plugin_LIB);
+  loader.LoadLib(dartsim_plugin_LIB);
 
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
