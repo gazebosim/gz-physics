@@ -39,7 +39,7 @@ pipelines:
           - mkdir build
           - cd build
           - cmake .. -DCMAKE_BUILD_TYPE=coverage
-          - make
+          - make -j4
           - export CTEST_OUTPUT_ON_FAILURE=1
           - make test
           - make coverage
