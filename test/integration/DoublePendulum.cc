@@ -43,8 +43,7 @@ TEST(DoublePendulum, Step)
   ASSERT_FALSE(pluginNames.empty());
   for (const std::string & name : pluginNames)
   {
-    std::cerr << "DoublePendulum plugin: " << name << std::endl;
-    std::cerr << "       testing plugin: " << name << std::endl;
+    std::cout << "DoublePendulum: testing plugin: " << name << std::endl;
     ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
     EXPECT_FALSE(plugin.IsEmpty());
     DoublePendulum_TEST(plugin);
