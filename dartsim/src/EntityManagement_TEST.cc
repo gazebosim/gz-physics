@@ -19,6 +19,8 @@
 
 #include <ignition/plugin/Loader.hh>
 
+#include <ignition/common/MeshManager.hh>
+
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
 #include <ignition/physics/RevoluteJoint.hh>
@@ -38,7 +40,7 @@ using TestFeatureList = ignition::physics::FeatureList<
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLibrary(dartsim_plugin_LIB);
+  loader.LoadLib(dartsim_plugin_LIB);
 
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
@@ -141,6 +143,27 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_DOUBLE_EQ(0.0, relativeSpherePosition.x());
   EXPECT_DOUBLE_EQ(yPos, relativeSpherePosition.y());
   EXPECT_DOUBLE_EQ(0.0, relativeSpherePosition.z());
+
+  auto meshLink = model->ConstructEmptyLink("mesh_link");
+  meshLink->AttachFixedJoint(child, "fixed");
+
+  const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
+  auto &meshManager = *ignition::common::MeshManager::Instance();
+  auto *mesh = meshManager.Load(meshFilename);
+
+  auto meshShape = meshLink->AttachMeshShape("chassis", *mesh);
+  const auto originalMeshSize = mesh->Max() - mesh->Min();
+  const auto meshShapeSize = meshShape->GetSize();
+
+  // Note: dartsim uses assimp for storing mesh data, and assimp by default uses
+  // single floating point precision (instead of double precision), so we can't
+  // expect these values to be exact.
+  for (std::size_t i = 0; i < 3; ++i)
+    EXPECT_NEAR(originalMeshSize[i], meshShapeSize[i], 1e-6);
+
+  EXPECT_NEAR(meshShapeSize[0], 0.5106, 1e-4);
+  EXPECT_NEAR(meshShapeSize[1], 0.3831, 1e-4);
+  EXPECT_NEAR(meshShapeSize[2], 0.1956, 1e-4);
 }
 
 int main(int argc, char *argv[])

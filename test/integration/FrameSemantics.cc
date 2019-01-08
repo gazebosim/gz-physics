@@ -42,7 +42,7 @@ ignition::plugin::PluginPtr LoadMockFrameSemanticsPlugin(
     const std::string &_suffix)
 {
   ignition::plugin::Loader pl;
-  auto plugins = pl.LoadLibrary(MockFrames_LIB);
+  auto plugins = pl.LoadLib(MockFrames_LIB);
   EXPECT_EQ(4u, plugins.size());
 
   ignition::plugin::PluginPtr plugin =

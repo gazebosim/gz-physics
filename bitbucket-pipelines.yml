@@ -27,6 +27,7 @@ pipelines:
             libignition-math6-eigen3-dev
             libignition-plugin-dev
             libeigen3-dev
+            libsdformat8-dev
           # DARTsim
           - apt-add-repository -y ppa:dartsim
           - apt-get update
@@ -34,14 +35,6 @@ pipelines:
             dart6-data
             libdart6-dev
             libdart6-utils-urdf-dev
-          # sdformat8
-          - hg clone https://bitbucket.org/osrf/sdformat -b gz11
-          - cd sdformat
-          - mkdir build
-          - cd build
-          - cmake .. -DBUILD_TESTING=false
-          - make install
-          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
@@ -51,6 +44,6 @@ pipelines:
           - make test
           - make coverage
           # Use a special version of codecov for handling gcc8 output.
-          - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/4678d212cce2078bbaaf5027af0c0dafaad6a095/codecov) -X gcovout
+          - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/4678d212cce2078bbaaf5027af0c0dafaad6a095/codecov) -X gcovout -X gcov
           - make codecheck
           - make install
