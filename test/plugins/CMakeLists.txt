@@ -21,7 +21,9 @@ endforeach()
 
 if (DART_FOUND)
   target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
-  target_link_libraries(MockDoublePendulum PUBLIC ${console_bridge_LIBRARIES})
+  if(APPLE)
+    link_directories(/usr/local/lib)
+  endif()
   target_compile_definitions(MockDoublePendulum PRIVATE
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 endif()
