@@ -37,7 +37,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin);
 TEST(DoublePendulum, Step)
 {
   ignition::plugin::Loader pl;
-  auto plugins = pl.LoadLibrary(MockDoublePendulum_LIB);
+  auto plugins = pl.LoadLib(MockDoublePendulum_LIB);
 
   auto pluginNames = FindFeatures3d<mock::MockDoublePendulumList>::From(pl);
   ASSERT_FALSE(pluginNames.empty());
