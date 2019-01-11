@@ -43,13 +43,13 @@ namespace ignition
         /// wants to generate an identity for an Entity.
         protected: Identity GenerateIdentity(
             std::size_t _id,
-            const std::shared_ptr<const void> &_ref = nullptr) const;
+            const std::shared_ptr<void> &_ref = nullptr) const;
 
         protected: Identity GenerateInvalidId() const;
 
         /// \brief An implementation class can use this function to get the
         /// reference contained in the identity
-        protected: const std::shared_ptr<const void> &IdentityReference(
+        protected: const std::shared_ptr<void> &IdentityReference(
             const Identity &_identity) const;
       };
     }
@@ -85,7 +85,7 @@ namespace ignition
       /// This reference is not allowed to change at any point in the lifetime
       /// of the engine object.
       IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
-      public: std::shared_ptr<const void> ref;
+      public: const std::shared_ptr<void> ref;
       IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 
       /// \brief This is used by Entity so that it can default-construct. This
@@ -95,7 +95,7 @@ namespace ignition
       /// \brief This is called by Feature::Implementation
       private: Identity(
           std::size_t _id,
-          const std::shared_ptr<const void> &_ref);
+          const std::shared_ptr<void> &_ref);
 
       // These friends are the only classes allowed to create an identity
       template <typename, typename> friend class ::ignition::physics::Entity;

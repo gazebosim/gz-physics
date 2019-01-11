@@ -26,7 +26,7 @@ namespace ignition
       /////////////////////////////////////////////////
       Identity Implementation::GenerateIdentity(
           std::size_t _id,
-          const std::shared_ptr<const void> &_ref) const
+          const std::shared_ptr<void> &_ref) const
       {
         return Identity(_id, _ref);
       }
@@ -36,7 +36,7 @@ namespace ignition
         return Identity();
       }
 
-      const std::shared_ptr<const void> &Implementation::IdentityReference(
+      const std::shared_ptr<void> &Implementation::IdentityReference(
           const Identity &_identity) const
       {
         return _identity.ref;
@@ -66,7 +66,7 @@ namespace ignition
     /////////////////////////////////////////////////
     Identity::Identity(
         std::size_t _id,
-        const std::shared_ptr<const void> &_ref)
+        const std::shared_ptr<void> &_ref)
       : id(_id),
         ref(_ref)
     {
