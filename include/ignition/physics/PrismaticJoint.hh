@@ -57,7 +57,8 @@ namespace ignition
         public: using Axis =
             typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-        public: virtual Axis GetPrismaticJointAxis(std::size_t _id) const = 0;
+        public: virtual Axis GetPrismaticJointAxis(
+            const Identity &_jointID) const = 0;
       };
     };
 
@@ -92,7 +93,7 @@ namespace ignition
 
         /// \brief Set the axis of the PrismaticJoint.
         public: virtual void SetPrismaticJointAxis(
-            std::size_t _id, const Axis &_axis) = 0;
+            const Identity &_jointID, const Axis &_axis) = 0;
       };
     };
 
@@ -145,7 +146,7 @@ namespace ignition
         ///   The desired axis of the new revolute joint
         /// \returns the Identity of the newly created PrismaticJoint
         public: virtual Identity AttachPrismaticJoint(
-            std::size_t _childID,
+            const Identity &_childID,
             const BaseLinkPtr<PolicyT> &_parent,
             const std::string &_name,
             const Axis &_axis) = 0;

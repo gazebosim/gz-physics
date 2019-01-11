@@ -46,6 +46,11 @@ namespace ignition
             const std::shared_ptr<const void> &_ref = nullptr) const;
 
         protected: Identity GenerateInvalidId() const;
+
+        /// \brief An implementation class can use this function to get the
+        /// reference contained in the identity
+        protected: const std::shared_ptr<const void> &IdentityReference(
+            const Identity &_identity) const;
       };
     }
 

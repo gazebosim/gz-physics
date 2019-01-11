@@ -30,7 +30,7 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 Pose3d ShapeFeatures::GetShapeRelativeTransform(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
   const auto &shape = this->shapes.at(_shapeID);
   return shape.node->getRelativeTransform() * shape.tf_offset.inverse();
@@ -38,14 +38,14 @@ Pose3d ShapeFeatures::GetShapeRelativeTransform(
 
 /////////////////////////////////////////////////
 void ShapeFeatures::SetShapeRelativeTransform(
-    const std::size_t _shapeID, const Pose3d &_pose)
+    const Identity &_shapeID, const Pose3d &_pose)
 {
   const auto &shape = this->shapes.at(_shapeID);
   shape.node->setRelativeTransform(_pose * shape.tf_offset);
 }
 
 /////////////////////////////////////////////////
-Identity ShapeFeatures::CastToBoxShape(std::size_t _shapeID) const
+Identity ShapeFeatures::CastToBoxShape(const Identity &_shapeID) const
 {
   const dart::dynamics::ShapePtr &shape =
       this->shapes.at(_shapeID).node->getShape();
@@ -58,7 +58,7 @@ Identity ShapeFeatures::CastToBoxShape(std::size_t _shapeID) const
 
 /////////////////////////////////////////////////
 LinearVector3d ShapeFeatures::GetBoxShapeSize(
-    const std::size_t _boxID) const
+    const Identity &_boxID) const
 {
   dart::dynamics::BoxShape *box = static_cast<dart::dynamics::BoxShape*>(
         this->shapes.at(_boxID).node->getShape().get());
@@ -68,7 +68,7 @@ LinearVector3d ShapeFeatures::GetBoxShapeSize(
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachBoxShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const LinearVector3d &_size,
     const Pose3d &_pose)
@@ -85,7 +85,7 @@ Identity ShapeFeatures::AttachBoxShape(
 }
 
 /////////////////////////////////////////////////
-Identity ShapeFeatures::CastToCylinderShape(const std::size_t _shapeID) const
+Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
 {
   const dart::dynamics::ShapePtr &shape =
       this->shapes.at(_shapeID).node->getShape();
@@ -98,7 +98,7 @@ Identity ShapeFeatures::CastToCylinderShape(const std::size_t _shapeID) const
 
 /////////////////////////////////////////////////
 double ShapeFeatures::GetCylinderShapeRadius(
-    const std::size_t _cylinderID) const
+    const Identity &_cylinderID) const
 {
   dart::dynamics::CylinderShape *cylinder =
       static_cast<dart::dynamics::CylinderShape*>(
@@ -109,7 +109,7 @@ double ShapeFeatures::GetCylinderShapeRadius(
 
 /////////////////////////////////////////////////
 double ShapeFeatures::GetCylinderShapeHeight(
-    const std::size_t _cylinderID) const
+    const Identity &_cylinderID) const
 {
   dart::dynamics::CylinderShape *cylinder =
       static_cast<dart::dynamics::CylinderShape*>(
@@ -120,7 +120,7 @@ double ShapeFeatures::GetCylinderShapeHeight(
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachCylinderShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const double _radius,
     const double _height,
@@ -140,7 +140,7 @@ Identity ShapeFeatures::AttachCylinderShape(
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToSphereShape(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
   const dart::dynamics::ShapePtr &shape =
       this->shapes.at(_shapeID).node->getShape();
@@ -152,7 +152,7 @@ Identity ShapeFeatures::CastToSphereShape(
 }
 
 /////////////////////////////////////////////////
-double ShapeFeatures::GetSphereShapeRadius(const std::size_t _sphereID) const
+double ShapeFeatures::GetSphereShapeRadius(const Identity &_sphereID) const
 {
   dart::dynamics::SphereShape *sphere =
       static_cast<dart::dynamics::SphereShape*>(
@@ -163,7 +163,7 @@ double ShapeFeatures::GetSphereShapeRadius(const std::size_t _sphereID) const
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachSphereShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const double _radius,
     const Pose3d &_pose)
@@ -181,7 +181,7 @@ Identity ShapeFeatures::AttachSphereShape(
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToMeshShape(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
   const dart::dynamics::ShapePtr &shape =
       this->shapes.at(_shapeID).node->getShape();
@@ -194,7 +194,7 @@ Identity ShapeFeatures::CastToMeshShape(
 
 /////////////////////////////////////////////////
 LinearVector3d ShapeFeatures::GetMeshShapeSize(
-    const std::size_t _meshID) const
+    const Identity &_meshID) const
 {
   dart::dynamics::MeshShape *mesh =
       static_cast<dart::dynamics::MeshShape*>(
@@ -205,7 +205,7 @@ LinearVector3d ShapeFeatures::GetMeshShapeSize(
 
 /////////////////////////////////////////////////
 LinearVector3d ShapeFeatures::GetMeshShapeScale(
-    const std::size_t _meshID) const
+    const Identity &_meshID) const
 {
   dart::dynamics::MeshShape *mesh =
       static_cast<dart::dynamics::MeshShape*>(
@@ -216,7 +216,7 @@ LinearVector3d ShapeFeatures::GetMeshShapeScale(
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachMeshShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const ignition::common::Mesh &_mesh,
     const Pose3d &_pose)

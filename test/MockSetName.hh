@@ -26,6 +26,8 @@ namespace mock
 {
   struct MockSetName : public ignition::physics::Feature
   {
+    using Identity = ignition::physics::Identity;
+
     template <typename PolicyT, typename FeaturesT>
     class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
     {
@@ -72,19 +74,19 @@ namespace mock
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: virtual bool SetEngineName(
-          std::size_t _id, const std::string &_desiredName) = 0;
+          const Identity &_id, const std::string &_desiredName) = 0;
 
       public: virtual bool SetWorldName(
-          std::size_t _id, const std::string &_desiredName) = 0;
+          const Identity &_id, const std::string &_desiredName) = 0;
 
       public: virtual bool SetModelName(
-          std::size_t _id, const std::string &_desiredName) = 0;
+          const Identity &_id, const std::string &_desiredName) = 0;
 
       public: virtual bool SetLinkName(
-          std::size_t _id, const std::string &_desiredName) = 0;
+          const Identity &_id, const std::string &_desiredName) = 0;
 
       public: virtual bool SetJointName(
-          std::size_t _id, const std::string &_desiredName) = 0;
+          const Identity &_id, const std::string &_desiredName) = 0;
     };
   };
 

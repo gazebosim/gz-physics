@@ -30,7 +30,7 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetEngineName(
-    const std::size_t /*_engineID*/) const
+    const Identity &/*_engineID*/) const
 {
   static const std::string engineName = "dartsim-" DART_VERSION;
   return engineName;
@@ -38,7 +38,7 @@ const std::string &EntityManagementFeatures::GetEngineName(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetEngineIndex(
-    const std::size_t /*_engineID*/) const
+    const Identity &/*_engineID*/) const
 {
   // The dartsim plugin does not make a distinction between different engine
   // indexes.
@@ -47,14 +47,14 @@ std::size_t EntityManagementFeatures::GetEngineIndex(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetWorldCount(
-    const std::size_t /*_engineID*/) const
+    const Identity &/*_engineID*/) const
 {
   return worlds.size();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorld(
-    const std::size_t, std::size_t _worldIndex) const
+    const Identity &, std::size_t _worldIndex) const
 {
   const std::size_t id =
       this->worlds.indexInContainerToID.begin()->second[_worldIndex];
@@ -63,7 +63,7 @@ Identity EntityManagementFeatures::GetWorld(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorld(
-    const std::size_t, const std::string &_worldName) const
+    const Identity &, const std::string &_worldName) const
 {
   const std::size_t id = this->worlds.IdentityOf(_worldName);
   return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
@@ -71,35 +71,35 @@ Identity EntityManagementFeatures::GetWorld(
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetWorldName(
-    const std::size_t _worldID) const
+    const Identity &_worldID) const
 {
   return this->worlds.at(_worldID)->getName();
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetWorldIndex(
-    const std::size_t _worldID) const
+    const Identity &_worldID) const
 {
   return this->worlds.idToIndexInContainer.at(_worldID);
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetEngineOfWorld(
-    const std::size_t /*_worldID*/) const
+    const Identity &/*_worldID*/) const
 {
   return this->GenerateIdentity(0);
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetModelCount(
-    const std::size_t _worldID) const
+    const Identity &_worldID) const
 {
   return this->worlds.at(_worldID)->getNumSkeletons();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModel(
-    const std::size_t _worldID, const std::size_t _modelIndex) const
+    const Identity &_worldID, const std::size_t _modelIndex) const
 {
   const DartSkeletonPtr &model =
       this->worlds.at(_worldID)->getSkeleton(_modelIndex);
@@ -109,7 +109,7 @@ Identity EntityManagementFeatures::GetModel(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModel(
-    const std::size_t _worldID, const std::string &_modelName) const
+    const Identity &_worldID, const std::string &_modelName) const
 {
   const DartSkeletonPtr &model =
       this->worlds.at(_worldID)->getSkeleton(_modelName);
@@ -119,21 +119,21 @@ Identity EntityManagementFeatures::GetModel(
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetModelName(
-    const std::size_t _modelID) const
+    const Identity &_modelID) const
 {
   return this->models.at(_modelID).model->getName();
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetModelIndex(
-    const std::size_t _modelID) const
+    const Identity &_modelID) const
 {
   return this->models.idToIndexInContainer.at(_modelID);
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorldOfModel(
-    const std::size_t _modelID) const
+    const Identity &_modelID) const
 {
   const std::size_t worldID = this->models.idToContainerID.at(_modelID);
   return this->GenerateIdentity(worldID, this->worlds.at(worldID));
@@ -141,14 +141,14 @@ Identity EntityManagementFeatures::GetWorldOfModel(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkCount(
-    const std::size_t _modelID) const
+    const Identity &_modelID) const
 {
   return this->models.at(_modelID).model->getNumBodyNodes();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetLink(
-    const std::size_t _modelID, const std::size_t _linkIndex) const
+    const Identity &_modelID, const std::size_t _linkIndex) const
 {
   DartBodyNode * const bn =
       this->models.at(_modelID).model->getBodyNode(_linkIndex);
@@ -159,7 +159,7 @@ Identity EntityManagementFeatures::GetLink(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetLink(
-    const std::size_t _modelID, const std::string &_linkName) const
+    const Identity &_modelID, const std::string &_linkName) const
 {
   DartBodyNode * const bn =
       this->models.at(_modelID).model->getBodyNode(_linkName);
@@ -170,14 +170,14 @@ Identity EntityManagementFeatures::GetLink(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetJointCount(
-    const std::size_t _modelID) const
+    const Identity &_modelID) const
 {
   return this->models.at(_modelID).model->getNumJoints();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetJoint(
-    const std::size_t _modelID, const std::size_t _jointIndex) const
+    const Identity &_modelID, const std::size_t _jointIndex) const
 {
   DartJoint * const joint =
       this->models.at(_modelID).model->getJoint(_jointIndex);
@@ -188,7 +188,7 @@ Identity EntityManagementFeatures::GetJoint(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetJoint(
-    const std::size_t _modelID, const std::string &_jointName) const
+    const Identity &_modelID, const std::string &_jointName) const
 {
   DartJoint * const joint =
       this->models.at(_modelID).model->getJoint(_jointName);
@@ -199,21 +199,21 @@ Identity EntityManagementFeatures::GetJoint(
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetLinkName(
-    const std::size_t _linkID) const
+    const Identity &_linkID) const
 {
   return this->links.at(_linkID)->getName();
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkIndex(
-    const std::size_t _linkID) const
+    const Identity &_linkID) const
 {
   return this->links.at(_linkID)->getIndexInSkeleton();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModelOfLink(
-    const std::size_t _linkID) const
+    const Identity &_linkID) const
 {
   const DartSkeletonPtr &skeleton = this->links.at(_linkID)->getSkeleton();
   return this->GenerateIdentity(this->models.IdentityOf(skeleton), skeleton);
@@ -221,14 +221,14 @@ Identity EntityManagementFeatures::GetModelOfLink(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetShapeCount(
-    const std::size_t _linkID) const
+    const Identity &_linkID) const
 {
   return this->links.at(_linkID)->getNumShapeNodes();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetShape(
-    const std::size_t _linkID, const std::size_t _shapeIndex) const
+    const Identity &_linkID, const std::size_t _shapeIndex) const
 {
   return this->GenerateIdentity(
         this->shapes.IdentityOf(
@@ -237,7 +237,7 @@ Identity EntityManagementFeatures::GetShape(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetShape(
-    const std::size_t _linkID, const std::string &_shapeName) const
+    const Identity &_linkID, const std::string &_shapeName) const
 {
   DartBodyNode * const bn = this->links.at(_linkID);
   return this->GenerateIdentity(
@@ -247,21 +247,21 @@ Identity EntityManagementFeatures::GetShape(
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetJointName(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
   return this->joints.at(_jointID)->getName();
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetJointIndex(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
   return this->joints.at(_jointID)->getJointIndexInSkeleton();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModelOfJoint(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
   const DartSkeletonPtr &skeleton = this->links.at(_jointID)->getSkeleton();
   return this->GenerateIdentity(this->models.IdentityOf(skeleton), skeleton);
@@ -269,21 +269,21 @@ Identity EntityManagementFeatures::GetModelOfJoint(
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetShapeName(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
   return this->shapes.at(_shapeID).name;
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetShapeIndex(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
   return this->shapes.at(_shapeID).node->getIndexInBodyNode();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetLinkOfShape(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
   return this->GenerateIdentity(
         this->links.IdentityOf(
@@ -292,7 +292,7 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
-    const std::size_t /*_engineID*/, const std::string &_name)
+    const Identity &/*_engineID*/, const std::string &_name)
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
 
@@ -304,7 +304,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyModel(
-    const std::size_t _worldID, const std::string &_name)
+    const Identity &_worldID, const std::string &_name)
 {
   dart::dynamics::SkeletonPtr model = dart::dynamics::Skeleton::create(_name);
 
@@ -320,7 +320,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyLink(
-    const std::size_t _modelID, const std::string &_name)
+    const Identity &_modelID, const std::string &_name)
 {
   const DartSkeletonPtr &model = this->models.at(_modelID).model;
 

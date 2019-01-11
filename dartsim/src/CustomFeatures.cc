@@ -23,7 +23,7 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
-    const std::size_t _worldID)
+    const Identity &_worldID)
 {
   return this->worlds.at(_worldID);
 }

@@ -59,10 +59,10 @@ namespace mesh
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: virtual Dimensions GetMeshShapeSize(
-          std::size_t _meshID) const = 0;
+          const Identity &_meshID) const = 0;
 
       public: virtual Dimensions GetMeshShapeScale(
-          std::size_t _meshID) const = 0;
+          const Identity &_meshID) const = 0;
     };
   };
 
@@ -86,7 +86,7 @@ namespace mesh
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: void SetMeshShapeScale(
-          std::size_t _meshID,
+          const Identity &_meshID,
           const Dimensions &_dimensions) = 0;
     };
   };
@@ -116,7 +116,7 @@ namespace mesh
           typename FromPolicy<PolicyT>::template Use<Pose>;
 
       public: virtual Identity AttachMeshShape(
-          std::size_t _linkID,
+          const Identity &_linkID,
           const std::string &_name,
           const ignition::common::Mesh &_mesh,
           const PoseType &_pose = PoseType::Identity()) = 0;

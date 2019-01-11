@@ -37,7 +37,7 @@ class CustomFeatures :
     public virtual Implements3d<CustomFeatureList>
 {
   public: dart::simulation::WorldPtr GetDartsimWorld(
-      const std::size_t _worldID) override;
+      const Identity &_worldID) override;
 };
 
 }
