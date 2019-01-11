@@ -31,6 +31,7 @@ pipelines:
             libeigen3-dev
             libsdformat8-dev
           # DARTsim
+          # use Ubuntu bionic version for now, since 6.7.0 in PPA has some issues
           #- apt-add-repository -y ppa:dartsim
           #- apt-get update
           - apt-get -y install
