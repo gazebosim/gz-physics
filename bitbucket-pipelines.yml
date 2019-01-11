@@ -13,8 +13,9 @@ pipelines:
           # lcov
           - git clone https://github.com/linux-test-project/lcov.git
           - cd lcov
-          # see https://github.com/linux-test-project/lcov/issues/55
-          - git checkout 1e0df571
+          # lcov was broken briefly (see https://github.com/linux-test-project/lcov/issues/55 )
+          # checkout an explicit commit to avoid future regressions
+          - git checkout 04335632c371b5066e722298c9f8c6f11b210201
           - make install
           - cd ..
           # Ignition dependencies
