@@ -219,9 +219,10 @@ Identity ShapeFeatures::AttachMeshShape(
     const std::size_t _linkID,
     const std::string &_name,
     const ignition::common::Mesh &_mesh,
-    const Pose3d &_pose)
+    const Pose3d &_pose,
+    const LinearVector3d &_scale)
 {
-  auto mesh = std::make_shared<CustomMeshShape>(_mesh);
+  auto mesh = std::make_shared<CustomMeshShape>(_mesh, _scale);
 
   DartBodyNode *bn = this->links.at(_linkID);
   dart::dynamics::ShapeNode *sn =
