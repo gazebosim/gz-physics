@@ -93,8 +93,10 @@ unsigned int GetPrimitiveType(
 }
 
 /////////////////////////////////////////////////
-CustomMeshShape::CustomMeshShape(const ignition::common::Mesh &_input)
-  : dart::dynamics::MeshShape(Eigen::Vector3d::Ones(), nullptr)
+CustomMeshShape::CustomMeshShape(
+    const ignition::common::Mesh &_input,
+    const Eigen::Vector3d &_scale)
+  : dart::dynamics::MeshShape(_scale, nullptr)
 {
   // Create the root
   aiNode* node = new aiNode;
