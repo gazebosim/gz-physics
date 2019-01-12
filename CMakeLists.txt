@@ -67,7 +67,6 @@ ign_find_package(DART
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
-ign_find_package(console_bridge)
 
 
 message(STATUS "-------------------------------------------\n")

@@ -123,7 +123,8 @@ class ShapeFeatures :
       std::size_t _linkID,
       const std::string &_name,
       const ignition::common::Mesh &_mesh,
-      const Pose3d &_pose) override;
+      const Pose3d &_pose,
+      const LinearVector3d &_scale) override;
 };
 
 }

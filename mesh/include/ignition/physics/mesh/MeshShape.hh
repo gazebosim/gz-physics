@@ -101,12 +101,16 @@ namespace mesh
       public: using PoseType =
           typename FromPolicy<PolicyT>::template Use<Pose>;
 
+      public: using Dimensions =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       public: using ShapePtrType = MeshShapePtr<PolicyT, FeaturesT>;
 
       public: ShapePtrType AttachMeshShape(
           const std::string &_name,
           const ignition::common::Mesh &_mesh,
-          const PoseType &_pose = PoseType::Identity());
+          const PoseType &_pose = PoseType::Identity(),
+          const Dimensions &_scale = Dimensions::Ones());
     };
 
     public: template <typename PolicyT>
@@ -115,11 +119,15 @@ namespace mesh
       public: using PoseType =
           typename FromPolicy<PolicyT>::template Use<Pose>;
 
+      public: using Dimensions =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       public: virtual Identity AttachMeshShape(
           std::size_t _linkID,
           const std::string &_name,
           const ignition::common::Mesh &_mesh,
-          const PoseType &_pose = PoseType::Identity()) = 0;
+          const PoseType &_pose,
+          const Dimensions &_scale) = 0;
     };
   };
 }
