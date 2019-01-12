@@ -1,6 +1,10 @@
 
 ign_get_sources(tests)
 
+if (NOT DART_FOUND)
+  list(REMOVE_ITEM tests DoublePendulum.cc)
+endif()
+
 ign_build_tests(
   TYPE INTEGRATION
   SOURCES ${tests}
@@ -12,10 +16,15 @@ ign_build_tests(
 if (BUILD_TESTING)
   foreach(test ${list})
 
-    foreach(mock_plugin
+    list(APPEND mock_plugins
         MockEntities
         MockFrames
         MockJoints)
+    if (DART_FOUND)
+      list(APPEND mock_plugins MockDoublePendulum)
+    endif()
+
+    foreach(mock_plugin IN LISTS mock_plugins)
 
       target_compile_definitions(${test} PRIVATE
         "${mock_plugin}_LIB=\"$<TARGET_FILE:${mock_plugin}>\"")

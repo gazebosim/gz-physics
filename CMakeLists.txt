@@ -54,7 +54,10 @@ ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
 ign_find_package(DART
-  COMPONENTS collision-bullet
+  COMPONENTS
+    collision-bullet
+    utils
+    utils-urdf
   CONFIG
   VERSION 6
   REQUIRED_BY dartsim
@@ -84,5 +87,7 @@ ign_create_packages()
 #============================================================================
 ign_create_docs(
   TAGFILES
+    "${IGNITION-COMMON_DOXYGEN_TAGFILE} = ${IGNITION-COMMON_API_URL}"
     "${IGNITION-MATH_DOXYGEN_TAGFILE} = ${IGNITION-MATH_API_URL}"
+    "${IGNITION-PLUGIN_DOXYGEN_TAGFILE} = ${IGNITION-PLUGIN_API_URL}"
   )
