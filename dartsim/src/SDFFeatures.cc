@@ -248,10 +248,10 @@ static ShapeAndTransform ConstructGeometry(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
-    const std::size_t /*_engine*/,
+    const Identity &_engine,
     const ::sdf::World &_sdfWorld)
 {
-  const Identity worldID = this->ConstructEmptyWorld(0, _sdfWorld.Name());
+  const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
   const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
 
@@ -276,7 +276,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModel(
-    const std::size_t _worldID,
+    const Identity &_worldID,
     const ::sdf::Model &_sdfModel)
 {
   dart::dynamics::SkeletonPtr model =
@@ -293,11 +293,13 @@ Identity SDFFeatures::ConstructSdfModel(
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
 
+  auto modelIdentity = this->GenerateIdentity(modelID, model);
+
   // First, construct all links
   for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
   {
     this->FindOrConstructLink(
-          model, modelID, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
+          model, modelIdentity, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
   }
 
 
@@ -313,20 +315,20 @@ Identity SDFFeatures::ConstructSdfModel(
     }
 
     dart::dynamics::BodyNode * const parent = this->FindOrConstructLink(
-          model, modelID, _sdfModel, sdfJoint->ParentLinkName());
+          model, modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
 
     dart::dynamics::BodyNode * const child = this->FindOrConstructLink(
-          model, modelID, _sdfModel, sdfJoint->ChildLinkName());
+          model, modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
 
     this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
   }
 
-  return this->GenerateIdentity(modelID, model);
+  return modelIdentity;
 }
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfLink(
-    const std::size_t _modelID,
+    const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
   const ModelInfo &modelInfo = models.at(_modelID);
@@ -374,6 +376,8 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::size_t linkID = this->AddLink(bn);
   this->AddJoint(joint);
 
+  auto link = this->GenerateIdentity(linkID);
+
   if (modelInfo.model->getNumBodyNodes() == 1)
   {
     // We just added the first link, so this is now the canonical link. We
@@ -389,7 +393,7 @@ Identity SDFFeatures::ConstructSdfLink(
   {
     const auto collision = _sdfLink.CollisionByIndex(i);
     if (collision)
-      this->ConstructSdfCollision(linkID, *collision);
+      this->ConstructSdfCollision(link, *collision);
   }
 
   // ign-physics is currently ignoring visuals, so we won't parse them from the
@@ -401,12 +405,12 @@ Identity SDFFeatures::ConstructSdfLink(
 //      this->ConstructSdfVisual(linkID, *visual);
 //  }
 
-  return this->GenerateIdentity(linkID);
+  return link;
 }
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfJoint(
-    const std::size_t _modelID,
+    const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
   const ModelInfo &modelInfo = models[_modelID];
@@ -421,7 +425,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfCollision(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const ::sdf::Collision &_collision)
 {
   if (!_collision.Geom())
@@ -462,7 +466,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfVisual(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const ::sdf::Visual &_visual)
 {
   if (!_visual.Geom())
@@ -513,7 +517,7 @@ Identity SDFFeatures::ConstructSdfVisual(
 /////////////////////////////////////////////////
 dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     const dart::dynamics::SkeletonPtr &_model,
-    const std::size_t _modelID,
+    const Identity &_modelID,
     const ::sdf::Model &_sdfModel,
     const std::string &_linkName)
 {

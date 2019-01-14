@@ -97,14 +97,14 @@ namespace ignition
       {
         // World functions
         public: virtual bool RemoveModelByIndex(
-            std::size_t _worldID, std::size_t _modelIndex) = 0;
+            const Identity &_worldID, std::size_t _modelIndex) = 0;
 
         public: virtual bool RemoveModelByName(
-            std::size_t _worldID, const std::string &_modelName) = 0;
+            const Identity &_worldID, const std::string &_modelName) = 0;
 
         //Model functions
         public: virtual void RemoveModel(
-            std::size_t _modelID) = 0;
+            const Identity &_modelID) = 0;
       };
     };
 

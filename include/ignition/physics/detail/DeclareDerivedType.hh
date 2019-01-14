@@ -104,7 +104,7 @@
       : public virtual ::ignition::physics::Feature::Implementation<PolicyT> \
     { \
       public: virtual ::ignition::physics::Identity CastTo ## Derived( \
-        std::size_t _id) const = 0; \
+        const Identity &_id) const = 0; \
     }; \
   }; \
   \

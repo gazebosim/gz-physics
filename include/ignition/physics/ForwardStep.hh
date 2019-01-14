@@ -64,6 +64,13 @@ namespace ignition
       std::size_t inCoordinatesOf;
     };
 
+    struct JointPositions
+    {
+      std::vector<std::size_t> dofs;
+      std::vector<double> positions;
+      std::string annotation;
+    };
+
     struct Contacts
     {
       std::vector<Point> entries;
@@ -73,6 +80,11 @@ namespace ignition
     // ---------------- Input Data Structures -----------------
     // Same note as for Output Data Structures. Eventually, these should be
     // defined in some kind of meta files.
+
+    struct TimeStep
+    {
+      double dt;
+    };
 
     struct ForceTorque
     {
@@ -138,7 +150,7 @@ namespace ignition
 
       public: using Output = SpecifyData<
           RequireData<WorldPoses>,
-          ExpectData<Contacts> >;
+          ExpectData<Contacts, JointPositions> >;
 
       public: using State = CompositeData;
 
@@ -156,9 +168,22 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual void WorldForwardStep(
-            std::size_t _worldID, Output &_h, State &_x, const Input &_u) = 0;
+            const Identity &_worldID,
+            Output &_h,
+            State &_x,
+            const Input &_u) = 0;
       };
     };
+
+    // ---------------- SetState Interface -----------------
+    // class SetState
+    // {
+    //   public: using State = CompositeData;
+
+    //   public: virtual void SetStateTo(const State &x) = 0;
+
+    //   public: virtual ~SetState() = default;
+    // };
   }
 }
 

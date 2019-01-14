@@ -44,10 +44,10 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual const std::string &GetEngineName(
-            std::size_t _engineID) const = 0;
+            const Identity &_engineID) const = 0;
 
         public: virtual std::size_t GetEngineIndex(
-            std::size_t _engineID) const = 0;
+            const Identity &_engineID) const = 0;
       };
     };
 
@@ -109,22 +109,22 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual std::size_t GetWorldCount(
-            std::size_t _engineID) const = 0;
+            const Identity &_engineID) const = 0;
 
         public: virtual Identity GetWorld(
-            std::size_t _engineID, std::size_t _worldIndex) const = 0;
+            const Identity &_engineID, std::size_t _worldIndex) const = 0;
 
         public: virtual Identity GetWorld(
-            std::size_t _engineID, const std::string &_worldName) const = 0;
+            const Identity &_engineID, const std::string &_worldName) const = 0;
 
         public: virtual const std::string &GetWorldName(
-            std::size_t _worldID) const = 0;
+            const Identity &_worldID) const = 0;
 
         public: virtual std::size_t GetWorldIndex(
-            std::size_t _worldID) const = 0;
+            const Identity &_worldID) const = 0;
 
         public: virtual Identity GetEngineOfWorld(
-            std::size_t _worldID) const = 0;
+            const Identity &_worldID) const = 0;
       };
     };
 
@@ -186,22 +186,22 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual std::size_t GetModelCount(
-            std::size_t _worldID) const = 0;
+            const Identity &_worldID) const = 0;
 
         public: virtual Identity GetModel(
-            std::size_t _worldID, std::size_t _modelIndex) const = 0;
+            const Identity &_worldID, std::size_t _modelIndex) const = 0;
 
         public: virtual Identity GetModel(
-            std::size_t _worldID, const std::string &_modelName) const = 0;
+            const Identity &_worldID, const std::string &_modelName) const = 0;
 
         public: virtual const std::string &GetModelName(
-            std::size_t _modelID) const = 0;
+            const Identity &_modelID) const = 0;
 
         public: virtual std::size_t GetModelIndex(
-            std::size_t _modelID) const = 0;
+            const Identity &_modelID) const = 0;
 
         public: virtual Identity GetWorldOfModel(
-            std::size_t _modelID) const = 0;
+            const Identity &_modelID) const = 0;
       };
     };
 
@@ -263,22 +263,22 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual std::size_t GetLinkCount(
-            std::size_t _modelID) const = 0;
+            const Identity &_modelID) const = 0;
 
         public: virtual Identity GetLink(
-            std::size_t _modelID, std::size_t _linkIndex) const = 0;
+            const Identity &_modelID, std::size_t _linkIndex) const = 0;
 
         public: virtual Identity GetLink(
-            std::size_t _modelID, const std::string &_linkName) const = 0;
+            const Identity &_modelID, const std::string &_linkName) const = 0;
 
         public: virtual const std::string &GetLinkName(
-            std::size_t _linkID) const = 0;
+            const Identity &_linkID) const = 0;
 
         public: virtual std::size_t GetLinkIndex(
-            std::size_t _linkID) const = 0;
+            const Identity &_linkID) const = 0;
 
         public: virtual Identity GetModelOfLink(
-            std::size_t _linkID) const = 0;
+            const Identity &_linkID) const = 0;
       };
     };
 
@@ -340,22 +340,22 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual std::size_t GetJointCount(
-            std::size_t _modelID) const = 0;
+            const Identity &_modelID) const = 0;
 
         public: virtual Identity GetJoint(
-            std::size_t _modelID, std::size_t _jointIndex) const = 0;
+            const Identity &_modelID, std::size_t _jointIndex) const = 0;
 
         public: virtual Identity GetJoint(
-            std::size_t _modelID, const std::string &_jointName) const = 0;
+            const Identity &_modelID, const std::string &_jointName) const = 0;
 
         public: virtual const std::string &GetJointName(
-            std::size_t _jointID) const = 0;
+            const Identity &_jointID) const = 0;
 
         public: virtual std::size_t GetJointIndex(
-            std::size_t _jointID) const = 0;
+            const Identity &_jointID) const = 0;
 
         public: virtual Identity GetModelOfJoint(
-            std::size_t _jointID) const = 0;
+            const Identity &_jointID) const = 0;
       };
     };
 
@@ -417,22 +417,22 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual std::size_t GetShapeCount(
-            std::size_t _linkID) const = 0;
+            const Identity &_linkID) const = 0;
 
         public: virtual Identity GetShape(
-            std::size_t _linkID, std::size_t _shapeIndex) const = 0;
+            const Identity &_linkID, std::size_t _shapeIndex) const = 0;
 
         public: virtual Identity GetShape(
-            std::size_t _linkID, const std::string &_shapeName) const = 0;
+            const Identity &_linkID, const std::string &_shapeName) const = 0;
 
         public: virtual const std::string &GetShapeName(
-            std::size_t _shapeID) const = 0;
+            const Identity &_shapeID) const = 0;
 
         public: virtual std::size_t GetShapeIndex(
-            std::size_t _shapeID) const = 0;
+            const Identity &_shapeID) const = 0;
 
         public: virtual Identity GetLinkOfShape(
-            std::size_t _shapeID) const = 0;
+            const Identity &_shapeID) const = 0;
       };
     };
 

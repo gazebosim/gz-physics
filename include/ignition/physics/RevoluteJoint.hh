@@ -60,8 +60,10 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<AngularVector>;
 
         /// \brief Get the axis of this RevoluteJoint.
-        /// \return the axis of joint _id.
-        public: virtual Axis GetRevoluteJointAxis(std::size_t _id) const = 0;
+        /// \param[in] _jointID Identity of joint
+        /// \return the axis of the joint.
+        public: virtual Axis GetRevoluteJointAxis(
+            const Identity &_jointID) const = 0;
       };
     };
 
@@ -99,7 +101,7 @@ namespace ignition
 
         /// \brief Set the axis of the RevoluteJoint.
         public: virtual void SetRevoluteJointAxis(
-            std::size_t _id, const Axis &_axis) = 0;
+            const Identity &_jointID, const Axis &_axis) = 0;
       };
     };
 
@@ -153,7 +155,7 @@ namespace ignition
         ///   The desired axis of the new revolute joint
         /// \returns the Identity of the newly created RevoluteJoint
         public: virtual Identity AttachRevoluteJoint(
-            std::size_t _childID,
+            const Identity &_childID,
             const BaseLinkPtr<PolicyT> &_parent,
             const std::string &_name,
             const Axis &_axis) = 0;

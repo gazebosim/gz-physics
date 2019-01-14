@@ -223,7 +223,7 @@ namespace ignition
 
       /// \brief Get a reference-counting std::shared_ptr to the object inside
       /// the implementation that this object provides an abstraction for.
-      public: const std::shared_ptr<const void> &EntityReference() const;
+      public: const std::shared_ptr<void> &EntityReference() const;
 
       /// \brief Constructor for the Entity.
       ///

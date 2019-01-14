@@ -121,27 +121,32 @@ namespace mock
     template <typename PolicyT>
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
-      public: virtual std::string GetEngineName(std::size_t _id) const = 0;
+      public: virtual std::string GetEngineName(
+          const Identity &_engineId) const = 0;
 
       public: virtual Identity GetWorldByName(
-          std::size_t _engineId, const std::string &_name) const = 0;
+          const Identity &_engineId, const std::string &_name) const = 0;
 
-      public: virtual std::string GetWorldName(std::size_t _id) const = 0;
+      public: virtual std::string GetWorldName(
+          const Identity &_worldId) const = 0;
 
       public: virtual Identity GetModelByName(
-          std::size_t _worldId, const std::string &_name) const = 0;
+          const Identity &_worldId, const std::string &_name) const = 0;
 
-      public: virtual std::string GetModelName(std::size_t _id) const = 0;
+      public: virtual std::string GetModelName(
+          const Identity &_modelId) const = 0;
 
       public: virtual Identity GetLinkByName(
-          std::size_t _modelId, const std::string &_name) const = 0;
+          const Identity &_modelId, const std::string &_name) const = 0;
 
-      public: virtual std::string GetLinkName(std::size_t _id) const = 0;
+      public: virtual std::string GetLinkName(
+          const Identity &_linkId) const = 0;
 
       public: virtual Identity GetJointByName(
-          std::size_t _modelId, const std::string &_name) const = 0;
+          const Identity &_modelId, const std::string &_name) const = 0;
 
-      public: virtual std::string GetJointName(std::size_t _id) const = 0;
+      public: virtual std::string GetJointName(
+          const Identity &_jointId) const = 0;
     };
   };
 

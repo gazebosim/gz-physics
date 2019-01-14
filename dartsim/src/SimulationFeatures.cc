@@ -22,7 +22,7 @@ namespace physics {
 namespace dartsim {
 
 void SimulationFeatures::WorldForwardStep(
-    const std::size_t _worldID,
+    const Identity &_worldID,
     ForwardStep::Output & /*_h*/,
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & /*_u*/)

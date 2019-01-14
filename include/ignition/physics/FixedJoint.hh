@@ -56,7 +56,7 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual Identity AttachFixedJoint(
-            std::size_t _childID,
+            const Identity &_childID,
             const BaseLinkPtr<PolicyT> &_parent,
             const std::string &_name) = 0;
       };

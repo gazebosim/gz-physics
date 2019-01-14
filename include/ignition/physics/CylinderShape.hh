@@ -53,10 +53,10 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual Scalar GetCylinderShapeRadius(
-            std::size_t _cylinderID) const = 0;
+            const Identity &_cylinderID) const = 0;
 
         public: virtual Scalar GetCylinderShapeHeight(
-            std::size_t _cylinderID) const = 0;
+            const Identity &_cylinderID) const = 0;
       };
     };
 
@@ -85,10 +85,10 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual void SetCylinderShapeRadius(
-            std::size_t _cylinderID, Scalar _radius) = 0;
+            const Identity &_cylinderID, Scalar _radius) = 0;
 
         public: virtual void SetCylinderShapeHeight(
-            std::size_t _cylinderID, Scalar _height) = 0;
+            const Identity &_cylinderID, Scalar _height) = 0;
       };
     };
 
@@ -121,7 +121,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual Identity AttachCylinderShape(
-            std::size_t _linkID,
+            const Identity &_linkID,
             const std::string &_name,
             Scalar _radius,
             Scalar _height,
