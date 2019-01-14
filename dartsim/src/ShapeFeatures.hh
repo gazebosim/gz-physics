@@ -24,6 +24,7 @@
 #include <ignition/physics/BoxShape.hh>
 #include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/mesh/MeshShape.hh>
+#include <ignition/physics/PlaneShape.hh>
 #include <ignition/physics/SphereShape.hh>
 
 #include "Base.hh"
@@ -48,7 +49,10 @@ using ShapeFeatureList = FeatureList<
   AttachSphereShapeFeature,
   mesh::GetMeshShapeProperties,
 //  mesh::SetMeshShapeProperties,
-  mesh::AttachMeshShapeFeature
+  mesh::AttachMeshShapeFeature,
+  GetPlaneShapeProperties,
+//  SetPlaneShapeProperties,
+  AttachPlaneShapeFeature
 >;
 
 class ShapeFeatures :

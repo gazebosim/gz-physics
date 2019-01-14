@@ -28,6 +28,7 @@
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
+#include <ignition/physics/mesh/MeshShape.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
@@ -38,7 +39,8 @@ using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::LinkFrameSemantics,
   ignition::physics::ForwardStep,
   ignition::physics::GetEntities,
-  ignition::physics::sdf::ConstructSdfWorld
+  ignition::physics::sdf::ConstructSdfWorld/*,
+  ignition::physics::*/
 >;
 
 using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
@@ -108,6 +110,17 @@ TEST_P(SimulationFeatures_TEST, Falling)
     auto pos = link->FrameDataRelativeToWorld().pose.translation();
     EXPECT_NEAR(pos.z(), 1.0, 5e-2);
   }
+}
+
+TEST_P(SimulationFeatures_TEST, CollisionBetweenMeshAndPlane)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  std::cout << "Testing library " << library << std::endl;
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/mesh_plane_falling.world");
+
 }
 
 int main(int argc, char *argv[])
