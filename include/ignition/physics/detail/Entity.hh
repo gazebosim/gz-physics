@@ -168,6 +168,25 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename EntityT>
+    EntityPtr<EntityT>::EntityPtr(const EntityPtr<EntityT> &_other)
+    {
+      *this = _other;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    auto EntityPtr<EntityT>::operator=(const EntityPtr<EntityT> &_other)
+    -> EntityPtr&
+    {
+      if (_other)
+      {
+        this->entity.emplace(_other.entity->pimpl, _other.entity->identity);
+      }
+      return *this;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
     EntityPtr<EntityT>::EntityPtr(std::nullptr_t)
       : entity(std::nullopt)
     {

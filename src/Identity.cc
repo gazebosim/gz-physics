@@ -36,7 +36,7 @@ namespace ignition
         return Identity();
       }
 
-      const std::shared_ptr<void> &Implementation::IdentityReference(
+      const std::shared_ptr<void> &Implementation::Reference(
           const Identity &_identity) const
       {
         return _identity.ref;

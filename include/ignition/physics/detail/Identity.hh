@@ -49,8 +49,17 @@ namespace ignition
 
         /// \brief An implementation class can use this function to get the
         /// reference contained in the identity
-        protected: const std::shared_ptr<void> &IdentityReference(
+        protected: const std::shared_ptr<void> &Reference(
             const Identity &_identity) const;
+
+        /// \brief An implementation class can use this function to get the
+        /// reference contained in the identity
+        ///
+        protected: template<typename T>
+            T *ReferenceInterface(const Identity &_identity) const
+            {
+              return static_cast<T *>(this->Reference(_identity).get());
+            }
       };
     }
 

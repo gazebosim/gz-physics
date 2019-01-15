@@ -42,9 +42,9 @@ namespace ignition
     {
       // All the automatic constructors and assignment operators are okay.
       public: EntityPtr() = default;
-      public: EntityPtr(const EntityPtr&) = default;
+      public: EntityPtr(const EntityPtr&);
       public: EntityPtr(EntityPtr&&) = default;
-      public: EntityPtr &operator=(const EntityPtr&) = default;
+      public: EntityPtr &operator=(const EntityPtr&);
       public: EntityPtr &operator=(EntityPtr&&) = default;
       public: ~EntityPtr() = default;
 
