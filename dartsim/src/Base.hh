@@ -118,6 +118,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 {
   public: using DartWorldPtr = dart::simulation::WorldPtr;
   public: using DartSkeletonPtr = dart::dynamics::SkeletonPtr;
+  public: using DartSkeleton = dart::dynamics::Skeleton;
   public: using DartBodyNode = dart::dynamics::BodyNode;
   public: using DartBodyNodePtr = dart::dynamics::BodyNodePtr;
   public: using DartJoint = dart::dynamics::Joint;
@@ -230,7 +231,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto &world = this->worlds.at(_worldID);
     const std::size_t modelIndex = this->models.idToIndexInContainer[_modelID];
 
-    world->removeSkeleton(this->models.at(_modelID).model);
+    auto skel = this->models.at(_modelID).model;
+    world->removeSkeleton(skel);
 
     // house keeping
     // The key in indexInContainerToID is the index of the vector so erasing the
@@ -252,6 +254,9 @@ class Base : public Implements3d<FeatureList<Feature>>
         this->models.indexInContainerToID[_worldID].begin() + modelIndex);
 
     this->models.idToContainerID.erase(_modelID);
+
+    this->models.idToObject.erase(_modelID);
+    this->models.objectToID.erase(skel);
 
     assert(this->models.indexInContainerToID[_worldID].size() ==
            world->getNumSkeletons());

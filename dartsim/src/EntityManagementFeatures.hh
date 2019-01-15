@@ -126,10 +126,12 @@ class EntityManagementFeatures :
   public: bool RemoveModelByIndex(
       const Identity &_worldID, std::size_t _modelIndex) override;
 
-  public: virtual bool RemoveModelByName(
+  public: bool RemoveModelByName(
       const Identity &_worldID, const std::string &_modelName) override;
 
-  public: virtual void RemoveModel(const Identity &_modelID) override;
+  public: void RemoveModel(const Identity &_modelID) override;
+
+  public: bool ModelRemoved(const Identity &_modelID) const override;
 
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(

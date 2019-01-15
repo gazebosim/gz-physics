@@ -104,6 +104,11 @@ Identity EntityManagementFeatures::GetModel(
   const DartSkeletonPtr &model =
       this->worlds.at(_worldID)->getSkeleton(_modelIndex);
 
+  if (model == nullptr)
+  {
+    return this->GenerateInvalidId();
+  }
+
   return this->GenerateIdentity(this->models.IdentityOf(model), model);
 }
 
@@ -114,6 +119,11 @@ Identity EntityManagementFeatures::GetModel(
   const DartSkeletonPtr &model =
       this->worlds.at(_worldID)->getSkeleton(_modelName);
 
+  if (model == nullptr)
+  {
+    return this->GenerateInvalidId();
+  }
+
   return this->GenerateIdentity(this->models.IdentityOf(model), model);
 }
 
@@ -121,7 +131,7 @@ Identity EntityManagementFeatures::GetModel(
 const std::string &EntityManagementFeatures::GetModelName(
     const Identity &_modelID) const
 {
-  return this->models.at(_modelID).model->getName();
+  return this->ReferenceInterface<DartSkeleton>(_modelID)->getName();
 }
 
 /////////////////////////////////////////////////
@@ -143,7 +153,7 @@ Identity EntityManagementFeatures::GetWorldOfModel(
 std::size_t EntityManagementFeatures::GetLinkCount(
     const Identity &_modelID) const
 {
-  return this->models.at(_modelID).model->getNumBodyNodes();
+  return this->ReferenceInterface<DartSkeleton>(_modelID)->getNumBodyNodes();
 }
 
 /////////////////////////////////////////////////
@@ -151,7 +161,7 @@ Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::size_t _linkIndex) const
 {
   DartBodyNode * const bn =
-      this->models.at(_modelID).model->getBodyNode(_linkIndex);
+    this->ReferenceInterface<DartSkeleton>(_modelID)->getBodyNode(_linkIndex);
 
   // TODO(MXG): Return a reference counter with this Identity
   return this->GenerateIdentity(this->links.IdentityOf(bn));
@@ -162,7 +172,7 @@ Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
   DartBodyNode * const bn =
-      this->models.at(_modelID).model->getBodyNode(_linkName);
+    this->ReferenceInterface<DartSkeleton>(_modelID)->getBodyNode(_linkName);
 
   // TODO(MXG): Return a reference counter with this Identity
   return this->GenerateIdentity(this->links.IdentityOf(bn));
@@ -322,6 +332,13 @@ void EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   this->RemoveModelImpl(this->models.idToContainerID.at(_modelID),
                              _modelID);
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
+{
+  return (this->models.idToObject.find(_modelID) ==
+          this->models.idToObject.end());
 }
 
 /////////////////////////////////////////////////

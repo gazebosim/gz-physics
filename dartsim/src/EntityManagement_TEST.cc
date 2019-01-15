@@ -183,18 +183,22 @@ TEST(EntityManagement_TEST, RemoveEntities)
   auto model = world->ConstructEmptyModel("empty model");
   ASSERT_NE(nullptr, model);
 
-  // TODO(adisu) The .Valid() tests fail at the moment
+  auto modelAlias = world->GetModel(0);
+
   model->Remove();
-  EXPECT_FALSE(model.Valid());
+  EXPECT_TRUE(model->Removed());
+  EXPECT_TRUE(modelAlias->Removed());
   EXPECT_EQ(nullptr, world->GetModel(0));
   EXPECT_EQ(nullptr, world->GetModel("empty model"));
   EXPECT_EQ(0ul, world->GetModelCount());
+
+  // Calling GetName shouldn't throw
+  EXPECT_EQ("empty model", model->GetName());
 
   auto model2 = world->ConstructEmptyModel("model2");
   ASSERT_NE(nullptr, model2);
   EXPECT_EQ(0ul, model2->GetIndex());
   world->RemoveModel(0);
-  EXPECT_FALSE(model2.Valid());
   EXPECT_EQ(0ul, world->GetModelCount());
 }
 
