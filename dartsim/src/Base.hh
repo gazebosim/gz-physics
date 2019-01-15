@@ -116,8 +116,10 @@ struct EntityStorage
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
+  public: using DartWorld = dart::simulation::World;
   public: using DartWorldPtr = dart::simulation::WorldPtr;
   public: using DartSkeletonPtr = dart::dynamics::SkeletonPtr;
+  public: using DartSkeleton = dart::dynamics::Skeleton;
   public: using DartBodyNode = dart::dynamics::BodyNode;
   public: using DartBodyNodePtr = dart::dynamics::BodyNodePtr;
   public: using DartJoint = dart::dynamics::Joint;

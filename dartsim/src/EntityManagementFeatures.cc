@@ -73,7 +73,7 @@ Identity EntityManagementFeatures::GetWorld(
 const std::string &EntityManagementFeatures::GetWorldName(
     const Identity &_worldID) const
 {
-  return this->worlds.at(_worldID)->getName();
+  return this->ReferenceInterface<DartWorld>(_worldID)->getName();
 }
 
 /////////////////////////////////////////////////
@@ -94,7 +94,7 @@ Identity EntityManagementFeatures::GetEngineOfWorld(
 std::size_t EntityManagementFeatures::GetModelCount(
     const Identity &_worldID) const
 {
-  return this->worlds.at(_worldID)->getNumSkeletons();
+  return this->ReferenceInterface<DartWorld>(_worldID)->getNumSkeletons();
 }
 
 /////////////////////////////////////////////////
