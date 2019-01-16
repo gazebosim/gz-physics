@@ -20,6 +20,7 @@
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/Geometry.hh>
+#include <ignition/physics/GetEntities.hh>
 
 namespace ignition
 {
@@ -28,7 +29,8 @@ namespace ignition
     /////////////////////////////////////////////////
     /// Note that getting link velocities and accelerations is done through the
     /// frame semantics feature.
-    class IGNITION_PHYSICS_VISIBLE GetLinkForceTorque : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE GetLinkForceTorque :
+      public virtual FeatureWithRequirements<GetEntities>
     {
       /// \brief The Link API for getting force/torque on a link
       public: template <typename PolicyT, typename FeaturesT>
