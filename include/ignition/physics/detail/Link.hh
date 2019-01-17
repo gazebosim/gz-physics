@@ -29,7 +29,7 @@ namespace ignition
     auto GetLinkForceTorque::Link<PolicyT, FeaturesT>::GetForce()
         -> LinearVectorType
     {
-      auto model = static_cast<Link<PolicyT, FeaturesT>*>(this)->GetModel();
+      auto model = dynamic_cast<ignition::physics::Link<PolicyT, FeaturesT>*>(this)->GetModel();
 
       return this->template Interface<GetLinkForceTorque>()->GetLinkForce(
           this->identity);
