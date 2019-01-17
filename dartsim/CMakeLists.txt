@@ -9,7 +9,7 @@ endif()
 # This component expresses custom features of the dartsim plugin, which can
 # expose native dartsim data types.
 ign_add_component(dartsim INTERFACE
-  COMPONENT_DEPS sdf mesh
+  DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
 target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
@@ -24,7 +24,7 @@ ign_get_libsources_and_unittests(sources test_sources)
 # TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
 ign_add_component(dartsim-plugin
   SOURCES ${sources}
-  COMPONENT_DEPS dartsim
+  DEPENDS_ON_COMPONENTS dartsim
   GET_TARGET_NAME dartsim_plugin)
 
 target_link_libraries(${dartsim_plugin}
