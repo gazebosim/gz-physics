@@ -6,7 +6,7 @@
       name="ignition::gazebo::systems::v0::Physics">
     </plugin>
     <model name="sphere">
-      <pose>0 0 2 0 0 0</pose>
+      <pose>0 0 2 0 0 3.141592653</pose>
       <link name="sphere_link">
         <pose>0.0 0.0 0.0 0 0 0</pose>
         <inertial>
