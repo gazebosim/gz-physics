@@ -272,7 +272,7 @@ namespace ignition
       {
         // Emplace to set the identity because assigment is not possible. Use
         // the entity's own pimpl temporarily for the construction and copy
-        // assign the pimple afterward
+        // assign the pimpl afterward
         this->entity.emplace(this->entity->pimpl, _other.entity->identity);
         // Avoid reallocating the pimpl
         *this->entity->pimpl = *_other.entity->pimpl;
