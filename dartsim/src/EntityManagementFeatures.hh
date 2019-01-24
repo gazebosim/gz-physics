@@ -56,7 +56,8 @@ class EntityManagementFeatures :
   public: Identity GetWorld(
       const Identity &, const std::string &_worldName) const override;
 
-  public: const std::string &GetWorldName(const Identity &_worldID) const override;
+  public: const std::string &GetWorldName(
+      const Identity &_worldID) const override;
 
   public: std::size_t GetWorldIndex(const Identity &_worldID) const override;
 
@@ -71,7 +72,8 @@ class EntityManagementFeatures :
   public: Identity GetModel(
       const Identity &_worldID, const std::string &_modelName) const override;
 
-  public: const std::string &GetModelName(const Identity &_modelID) const override;
+  public: const std::string &GetModelName(
+      const Identity &_modelID) const override;
 
   public: std::size_t GetModelIndex(const Identity &_modelID) const override;
 
