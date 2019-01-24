@@ -13,11 +13,16 @@ pipelines:
           # lcov
           - git clone https://github.com/linux-test-project/lcov.git
           - cd lcov
+          # lcov was broken briefly (see https://github.com/linux-test-project/lcov/issues/55 )
+          # checkout an explicit commit to avoid future regressions
+          - git checkout 04335632c371b5066e722298c9f8c6f11b210201
           - make install
           - cd ..
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease bionic main" > /etc/apt/sources.list.d/gazebo-prerelease.list
+          # use nightly repos until ign-cmake is fixed
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly bionic main" > /etc/apt/sources.list.d/gazebo-nightly.list
           - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install

@@ -212,8 +212,25 @@ static ShapeAndTransform ConstructSphere(
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
-  return {std::make_shared<dart::dynamics::PlaneShape>(
-          math::eigen3::convert(_plane.Normal()), 0.0)};
+  // TODO(anyone): We use BoxShape until PlaneShape is completely supported in
+  // DART. Please see: https://github.com/dartsim/dart/issues/114
+  const Eigen::Vector3d z = Eigen::Vector3d::UnitZ();
+  const Eigen::Vector3d axis = z.cross(math::eigen3::convert(_plane.Normal()));
+  const double norm = axis.norm();
+  const double angle = std::asin(norm/(_plane.Normal().Length()));
+  Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
+
+  // We check that the angle isn't too close to zero, because otherwise
+  // axis/norm would be undefined.
+  if (angle > 1e-12)
+    tf.rotate(Eigen::AngleAxisd(angle, axis/norm));
+
+  // This number was taken from osrf/gazebo. Seems arbitrary.
+  const double planeDim = 2100;
+  tf.translate(Eigen::Vector3d(0.0, 0.0, -planeDim*0.5));
+
+  return {std::make_shared<dart::dynamics::BoxShape>(
+          Eigen::Vector3d(planeDim, planeDim, planeDim)), tf};
 }
 
 /////////////////////////////////////////////////

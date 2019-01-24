@@ -21,6 +21,8 @@
 
 #include <ignition/common/MeshManager.hh>
 
+#include <ignition/math/eigen3/Conversions.hh>
+
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
 #include <ignition/physics/RevoluteJoint.hh>
@@ -164,6 +166,23 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(meshShapeSize[0], 0.5106, 1e-4);
   EXPECT_NEAR(meshShapeSize[1], 0.3831, 1e-4);
   EXPECT_NEAR(meshShapeSize[2], 0.1956, 1e-4);
+
+  const ignition::math::Pose3d pose(0, 0, 0.2, 0, 0, 0);
+  const ignition::math::Vector3d scale(0.5, 1.0, 0.25);
+  auto meshShapeScaled = meshLink->AttachMeshShape("small_chassis", *mesh,
+                          ignition::math::eigen3::convert(pose),
+                          ignition::math::eigen3::convert(scale));
+  const auto meshShapeScaledSize = meshShapeScaled->GetSize();
+
+  // Note: dartsim uses assimp for storing mesh data, and assimp by default uses
+  // single floating point precision (instead of double precision), so we can't
+  // expect these values to be exact.
+  for (std::size_t i = 0; i < 3; ++i)
+    EXPECT_NEAR(originalMeshSize[i] * scale[i], meshShapeScaledSize[i], 1e-6);
+
+  EXPECT_NEAR(meshShapeScaledSize[0], 0.2553, 1e-4);
+  EXPECT_NEAR(meshShapeScaledSize[1], 0.3831, 1e-4);
+  EXPECT_NEAR(meshShapeScaledSize[2], 0.0489, 1e-4);
 }
 
 TEST(EntityManagement_TEST, RemoveEntities)

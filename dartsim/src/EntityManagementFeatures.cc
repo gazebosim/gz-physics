@@ -346,7 +346,6 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
-
   world->getConstraintSolver()->setCollisionDetector(
         dart::collision::BulletCollisionDetector::create());
 
