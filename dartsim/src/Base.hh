@@ -23,6 +23,7 @@
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
 
+#include <memory>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -35,6 +36,16 @@
 namespace ignition {
 namespace physics {
 namespace dartsim {
+
+/// \brief The structs ModelInfo, LinkInfo, JointInfo, and ShapeInfo are used
+/// for two reasons:
+/// 1) Holding extra information such as the name or offset
+///    that will be different from the underlying engine
+/// 2) Wrap shared pointers to DART entities. Since these shared pointers (eg.
+///    dart::dynamics::BodyNodePtr) are different from std::shared_ptr, we
+///    cannot use them directly as parameters to GenerateIdentity. Instead we
+///    create a std::shared_ptr of the struct that wraps the corresponding DART
+///    shared pointer.
 
 struct ModelInfo
 {
@@ -139,7 +150,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using DartWorld = dart::simulation::World;
   public: using DartWorldPtr = dart::simulation::WorldPtr;
   public: using DartSkeletonPtr = dart::dynamics::SkeletonPtr;
-  public: using DartSkeleton = dart::dynamics::Skeleton;
   public: using DartBodyNode = dart::dynamics::BodyNode;
   public: using DartBodyNodePtr = dart::dynamics::BodyNodePtr;
   public: using DartJoint = dart::dynamics::Joint;
