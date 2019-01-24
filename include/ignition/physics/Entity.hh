@@ -40,13 +40,13 @@ namespace ignition
     template <typename EntityT>
     class EntityPtr
     {
-      // All the automatic constructors and assignment operators are okay.
       public: EntityPtr() = default;
-      public: EntityPtr(const EntityPtr&);
-      public: EntityPtr(EntityPtr&&) = default;
-      public: EntityPtr &operator=(const EntityPtr&);
-      public: EntityPtr &operator=(EntityPtr&&) = default;
+      public: EntityPtr(EntityPtr&&) noexcept = default;
+      public: EntityPtr &operator=(EntityPtr&&) noexcept = default;
       public: ~EntityPtr() = default;
+      // Special handling for copy construction and copy assignment
+      public: EntityPtr(const EntityPtr&);
+      public: EntityPtr &operator=(const EntityPtr&);
 
       /// \brief Create an EntityPtr that points to an invalid Entity
       public: EntityPtr(std::nullptr_t);
@@ -217,6 +217,9 @@ namespace ignition
       public: using Features = FeaturesT;
       public: using Pimpl =
           typename detail::DeterminePlugin<Policy, Features>::type;
+
+      /// \brief Get the Identity object of this Entity.
+      public: const Identity &FullIdentity() const;
 
       /// \brief Get the unique ID value of this Entity.
       public: std::size_t EntityID() const;

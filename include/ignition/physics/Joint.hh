@@ -83,23 +83,22 @@ namespace ignition
 
         // see Joint::GetPosition above
         public: virtual Scalar GetJointPosition(
-            const Identity &_jointID, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetVelocity above
         public: virtual Scalar GetJointVelocity(
-            const Identity &_jointID, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetAcceleration above
         public: virtual Scalar GetJointAcceleration(
-            const Identity &_jointID, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetForce above
         public: virtual Scalar GetJointForce(
-            const Identity &_jointID, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetTransform above
-        public: virtual Pose GetJointTransform(
-            const Identity &_jointID) const = 0;
+        public: virtual Pose GetJointTransform(const Identity &_id) const = 0;
       };
     };
 
@@ -162,19 +161,19 @@ namespace ignition
 
         // see Joint::SetPosition above
         public: virtual void SetJointPosition(
-            const Identity &_jointID, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetVelocity above
         public: virtual void SetJointVelocity(
-            const Identity &_jointID, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetAcceleration above
         public: virtual void SetJointAcceleration(
-            const Identity &_jointID, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetForce above
         public: virtual void SetJointForce(
-            const Identity &_jointID, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
 
@@ -229,13 +228,13 @@ namespace ignition
         public: using Pose = typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual std::size_t GetJointDegreesOfFreedom(
-            const Identity &_jointID) const = 0;
+            const Identity &_id) const = 0;
 
         public: virtual Pose GetJointTransformFromParent(
-            const Identity &_jointID) const = 0;
+            const Identity &_id) const = 0;
 
         public: virtual Pose GetJointTransformToChild(
-            const Identity &_jointID) const = 0;
+            const Identity &_id) const = 0;
       };
     };
 
@@ -274,7 +273,7 @@ namespace ignition
 
         // see Joint::SetTransformFromParent above
         public: virtual void SetJointTransformFromParent(
-            const Identity &_jointID, const Pose &_pose) = 0;
+            const Identity &_id, const Pose &_pose) = 0;
       };
     };
 
@@ -312,7 +311,7 @@ namespace ignition
 
         // see Joint::SetTransformToChild above
         public: virtual void SetJointTransformToChild(
-            const Identity &_jointID, const Pose &_pose) = 0;
+            const Identity &_id, const Pose &_pose) = 0;
       };
     };
   }

@@ -329,6 +329,13 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Policy, typename Features>
+    const Identity &Entity<Policy, Features>::FullIdentity() const
+    {
+      return this->identity;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Policy, typename Features>
     std::size_t Entity<Policy, Features>::EntityID() const
     {
       return this->identity.id;

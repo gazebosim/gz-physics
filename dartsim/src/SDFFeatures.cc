@@ -310,7 +310,8 @@ Identity SDFFeatures::ConstructSdfModel(
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
 
-  auto modelIdentity = this->GenerateIdentity(modelID, model);
+  auto modelIdentity =
+      this->GenerateIdentity(modelID, this->models.at(modelID));
 
   // First, construct all links
   for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
@@ -348,7 +349,7 @@ Identity SDFFeatures::ConstructSdfLink(
     const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
-  const ModelInfo &modelInfo = models.at(_modelID);
+  const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
@@ -393,7 +394,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::size_t linkID = this->AddLink(bn);
   this->AddJoint(joint);
 
-  auto link = this->GenerateIdentity(linkID);
+  auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
   if (modelInfo.model->getNumBodyNodes() == 1)
   {
@@ -410,7 +411,7 @@ Identity SDFFeatures::ConstructSdfLink(
   {
     const auto collision = _sdfLink.CollisionByIndex(i);
     if (collision)
-      this->ConstructSdfCollision(link, *collision);
+      this->ConstructSdfCollision(linkIdentity, *collision);
   }
 
   // ign-physics is currently ignoring visuals, so we won't parse them from the
@@ -422,7 +423,7 @@ Identity SDFFeatures::ConstructSdfLink(
 //      this->ConstructSdfVisual(linkID, *visual);
 //  }
 
-  return link;
+  return linkIdentity;
 }
 
 /////////////////////////////////////////////////
@@ -430,7 +431,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
-  const ModelInfo &modelInfo = models[_modelID];
+  const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode * const parent =
       modelInfo.model->getBodyNode(_sdfJoint.ParentLinkName());
 
@@ -462,7 +463,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     return this->GenerateInvalidId();
   }
 
-  dart::dynamics::BodyNode * const bn = this->links.at(_linkID);
+  dart::dynamics::BodyNode *const bn =
+      this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
 
   // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
   // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
@@ -477,8 +479,9 @@ Identity SDFFeatures::ConstructSdfCollision(
   node->setRelativeTransform(
         math::eigen3::convert(_collision.Pose()) * tf_shape);
 
-  return this->GenerateIdentity(
-        this->AddShape({node, _collision.Name(), tf_shape}));
+  const std::size_t shapeID =
+      this->AddShape({node, _collision.Name(), tf_shape});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 /////////////////////////////////////////////////
@@ -503,7 +506,8 @@ Identity SDFFeatures::ConstructSdfVisual(
     return this->GenerateInvalidId();
   }
 
-  dart::dynamics::BodyNode * const bn = this->links.at(_linkID);
+  dart::dynamics::BodyNode *const bn =
+      this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
 
   // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
   // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
@@ -527,8 +531,8 @@ Identity SDFFeatures::ConstructSdfVisual(
           Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
   }
 
-  return this->GenerateIdentity(
-        this->AddShape({node, _visual.Name(), tf_shape}));
+  const std::size_t shapeID = this->AddShape({node, _visual.Name(), tf_shape});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 /////////////////////////////////////////////////
@@ -553,7 +557,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     return nullptr;
   }
 
-  return this->links.at(this->ConstructSdfLink(_modelID, *sdfLink));
+  return this->links.at(this->ConstructSdfLink(_modelID, *sdfLink))->link.get();
 }
 
 /////////////////////////////////////////////////
@@ -719,7 +723,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   const std::size_t jointID = this->AddJoint(joint);
 
-  return this->GenerateIdentity(jointID);
+  return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
 /////////////////////////////////////////////////

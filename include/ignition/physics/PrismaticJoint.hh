@@ -58,7 +58,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
         public: virtual Axis GetPrismaticJointAxis(
-            const Identity &_jointID) const = 0;
+            const Identity &_id) const = 0;
       };
     };
 
@@ -93,7 +93,7 @@ namespace ignition
 
         /// \brief Set the axis of the PrismaticJoint.
         public: virtual void SetPrismaticJointAxis(
-            const Identity &_jointID, const Axis &_axis) = 0;
+            const Identity &_id, const Axis &_axis) = 0;
       };
     };
 

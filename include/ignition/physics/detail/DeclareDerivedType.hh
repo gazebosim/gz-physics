@@ -60,7 +60,7 @@
         : EntityBase(_pimpl, _identity) { } \
       public: Using() = default; \
       public: Using(const Using&) = default; \
-      public: Using(Using&&) = default; \
+      public: Using(Using&&) noexcept = default; \
       \
       /* We customize these operators because of virtual inheritance */ \
       public: Using &operator=(const Using &_other) \
@@ -68,7 +68,7 @@
         static_cast<EntityBase&>(*this) = _other; \
         return *this; \
       } \
-      public: Using &operator=(Using &&_other) \
+      public: Using &operator=(Using &&_other) noexcept \
       { \
         static_cast<EntityBase&>(*this) = std::move(_other); \
         return *this; \

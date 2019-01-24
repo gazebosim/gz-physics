@@ -27,7 +27,7 @@ void SimulationFeatures::WorldForwardStep(
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & /*_u*/)
 {
-  const dart::simulation::WorldPtr &world = this->worlds.at(_worldID);
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
 
   // TODO(MXG): Parse input
   world->step();

@@ -31,11 +31,13 @@ namespace ignition
         return Identity(_id, _ref);
       }
 
+      /////////////////////////////////////////////////
       Identity Implementation::GenerateInvalidId() const
       {
         return Identity();
       }
 
+      /////////////////////////////////////////////////
       const std::shared_ptr<void> &Implementation::Reference(
           const Identity &_identity) const
       {
