@@ -54,12 +54,14 @@ namespace ignition
 
         /// \brief An implementation class can use this function to get the
         /// reference contained in the identity
-        ///
+        /// \tparam T The stored pointer is cast to this type.
+        /// \return A raw pointer from the stored shared_ptr but cast to the
+        /// provided type T
         protected: template<typename T>
-            T *ReferenceInterface(const Identity &_identity) const
-            {
-              return static_cast<T *>(this->Reference(_identity).get());
-            }
+        T *ReferenceInterface(const Identity &_identity) const
+        {
+          return static_cast<T *>(this->Reference(_identity).get());
+        }
       };
     }
 

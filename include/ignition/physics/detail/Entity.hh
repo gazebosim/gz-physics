@@ -272,7 +272,7 @@ namespace ignition
       {
         // Emplace to set the identity because assigment is not possible. Use
         // the entity's own pimpl temporarily for the construction and copy
-        // assign the pimple afterward
+        // assign the pimpl afterward
         this->entity.emplace(this->entity->pimpl, _other.entity->identity);
         // Avoid reallocating the pimpl
         *this->entity->pimpl = *_other.entity->pimpl;
@@ -325,6 +325,13 @@ namespace ignition
         return std::hash<std::size_t>()(INVALID_ENTITY_ID);
 
       return std::hash<std::size_t>()(this->entity->EntityID());
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Policy, typename Features>
+    const Identity &Entity<Policy, Features>::FullIdentity() const
+    {
+      return this->identity;
     }
 
     /////////////////////////////////////////////////
