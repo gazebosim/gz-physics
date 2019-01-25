@@ -46,7 +46,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void RemoveModelFromWorld::Model<PolicyT, FeaturesT>::Remove()
+    bool RemoveModelFromWorld::Model<PolicyT, FeaturesT>::Remove()
     {
       return this->template Interface<RemoveModelFromWorld>()
               ->RemoveModel(this->identity);

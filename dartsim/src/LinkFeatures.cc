@@ -29,7 +29,7 @@ LinearVector3d LinkFeatures::GetLinkForce(std::size_t _id)
 {
   // DART uses spatial forces which express the force in the last three
   // components of the 6D vector
-  Eigen::Vector6d f = this->links.at(_id)->getExternalForceGlobal();
+  Eigen::Vector6d f = this->links.at(_id)->link->getExternalForceGlobal();
   return f.tail<3>();
 }
 
@@ -38,12 +38,12 @@ AngularVector3d LinkFeatures::GetLinkTorque(std::size_t _id)
 {
   // DART uses spatial forces which express the torque in the first three
   // components of the 6D vector
-  Eigen::Vector6d f = this->links.at(_id)->getExternalForceGlobal();
+  Eigen::Vector6d f = this->links.at(_id)->link->getExternalForceGlobal();
 
   Eigen::Isometry3d tfCom = Eigen::Isometry3d::Identity();
   // We use the negative of the global COM location in order to transform the
   // spatial vector to be with respect to the the body's center of mass.
-  tfCom.translation() = -this->links.at(_id)->getCOM(
+  tfCom.translation() = -this->links.at(_id)->link->getCOM(
         dart::dynamics::Frame::World());
 
   const Eigen::Vector6d fCom = dart::math::dAdInvT(tfCom, f);
@@ -55,7 +55,7 @@ AngularVector3d LinkFeatures::GetLinkTorque(std::size_t _id)
 void LinkFeatures::SetLinkLinearVelocity(
     std::size_t _id, const LinearVector3d &_vel)
 {
-  dart::dynamics::BodyNode *dtBodyNode = this->links.at(_id);
+  dart::dynamics::BodyNode *dtBodyNode = this->links.at(_id)->link;
   // DART body node always has a parent joint.
   dart::dynamics::Joint *joint = dtBodyNode->getParentJoint();
 
@@ -79,7 +79,7 @@ void LinkFeatures::SetLinkLinearVelocity(
 void LinkFeatures::SetLinkAngularVelocity(
     std::size_t _id, const AngularVector3d &_vel)
 {
-  dart::dynamics::BodyNode *dtBodyNode = this->links.at(_id);
+  dart::dynamics::BodyNode *dtBodyNode = this->links.at(_id)->link;
   // DART body node always has a parent joint.
   dart::dynamics::Joint *joint = dtBodyNode->getParentJoint();
 
@@ -103,14 +103,14 @@ void LinkFeatures::SetLinkAngularVelocity(
 void LinkFeatures::SetLinkForce(
     std::size_t _id, const LinearVector3d &_force)
 {
-  this->links.at(_id)->setExtForce(_force);
+  this->links.at(_id)->link->setExtForce(_force);
 }
 
 /////////////////////////////////////////////////
 void LinkFeatures::SetLinkTorque(
       std::size_t _id, const AngularVector3d &_torque)
 {
-  this->links.at(_id)->setExtTorque(_torque);
+  this->links.at(_id)->link->setExtTorque(_torque);
 }
 }
 }

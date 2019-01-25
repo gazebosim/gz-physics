@@ -270,7 +270,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto &world = this->worlds.at(_worldID);
     const std::size_t modelIndex = this->models.idToIndexInContainer[_modelID];
 
-    auto skel = this->models.at(_modelID).model;
+    auto skel = this->models.at(_modelID)->model;
     world->removeSkeleton(skel);
 
     // house keeping

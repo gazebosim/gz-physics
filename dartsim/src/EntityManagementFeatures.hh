@@ -131,7 +131,7 @@ class EntityManagementFeatures :
   public: bool RemoveModelByName(
       const Identity &_worldID, const std::string &_modelName) override;
 
-  public: void RemoveModel(const Identity &_modelID) override;
+  public: bool RemoveModel(const Identity &_modelID) override;
 
   public: bool ModelRemoved(const Identity &_modelID) const override;
 

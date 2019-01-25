@@ -48,7 +48,8 @@ namespace ignition
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
       {
         /// \brief Remove this model
-        public: void Remove();
+        /// \returns True if the model was found and removed
+        public: bool Remove();
 
         /// \brief Check if the entity is removed
         public: bool Removed() const;
@@ -65,7 +66,7 @@ namespace ignition
             const Identity &_worldID, const std::string &_modelName) = 0;
 
         // Model functions
-        public: virtual void RemoveModel(
+        public: virtual bool RemoveModel(
             const Identity &_modelID) = 0;
 
         public: virtual bool ModelRemoved(const Identity &_modelID) const = 0;

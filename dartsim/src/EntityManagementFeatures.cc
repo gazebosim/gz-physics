@@ -454,10 +454,12 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
                                                   std::size_t _modelIndex)
 {
-  if (_modelIndex < this->models.indexInContainerToID.at(_worldID).size())
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  const DartSkeletonPtr &model = world->getSkeleton(_modelIndex);
+
+  if (model != nullptr && this->models.HasEntity(model))
   {
-    this->RemoveModelImpl(
-        _worldID, this->models.indexInContainerToID.at(_worldID)[_modelIndex]);
+    this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
     return true;
   }
   return false;
@@ -467,9 +469,10 @@ bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
 bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
                                                  const std::string &_modelName)
 {
-  const DartSkeletonPtr &model =
-      this->worlds.at(_worldID)->getSkeleton(_modelName);
-  if (model != nullptr)
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  const DartSkeletonPtr &model = world->getSkeleton(_modelName);
+
+  if (model != nullptr && this->models.HasEntity(model))
   {
     this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
     return true;
@@ -478,17 +481,20 @@ bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
 }
 
 /////////////////////////////////////////////////
-void EntityManagementFeatures::RemoveModel(const Identity &_modelID)
+bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
-  this->RemoveModelImpl(this->models.idToContainerID.at(_modelID),
-                             _modelID);
+  if (this->models.HasEntity(_modelID))
+  {
+    this->RemoveModelImpl(this->models.idToContainerID.at(_modelID), _modelID);
+    return true;
+  }
+  return false;
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
-  return (this->models.idToObject.find(_modelID) ==
-          this->models.idToObject.end());
+  return !this->models.HasEntity(_modelID);
 }
 
 /////////////////////////////////////////////////
