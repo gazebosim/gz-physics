@@ -50,32 +50,32 @@ class SDFFeatures :
     public virtual Implements3d<SDFFeatureList>
 {
   public: Identity ConstructSdfWorld(
-      const std::size_t /*_engine*/,
+      const Identity &/*_engine*/,
       const ::sdf::World &_sdfWorld) override;
 
   public: Identity ConstructSdfModel(
-      const std::size_t _worldID,
+      const Identity &_worldID,
       const ::sdf::Model &_sdfModel) override;
 
   public: Identity ConstructSdfLink(
-      const std::size_t _modelID,
+      const Identity &_modelID,
       const ::sdf::Link &_sdfLink) override;
 
   public: Identity ConstructSdfJoint(
-      const std::size_t _modelID,
+      const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint) override;
 
   public: Identity ConstructSdfCollision(
-      const std::size_t _linkID,
+      const Identity &_linkID,
       const ::sdf::Collision &_collision) override;
 
   public: Identity ConstructSdfVisual(
-      const std::size_t _linkID,
+      const Identity &_linkID,
       const ::sdf::Visual &_visual) override;
 
   private: dart::dynamics::BodyNode *FindOrConstructLink(
       const dart::dynamics::SkeletonPtr &_model,
-      const std::size_t _modelID,
+      const Identity &_modelID,
       const ::sdf::Model &_sdfModel,
       const std::string &_linkName);
 

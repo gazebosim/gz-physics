@@ -40,7 +40,7 @@ class RetrieveWorld : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual dart::simulation::WorldPtr GetDartsimWorld(
-        std::size_t _worldID) = 0;
+        const Identity &_worldID) = 0;
   };
 };
 

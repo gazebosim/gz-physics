@@ -269,7 +269,7 @@ namespace ignition
         {
           public: type() = default;
           public: type(const type&) = default;
-          public: type(type&&) = default;
+          public: type(type&&) noexcept = default;
 
           // These need special definitions due to virtual inheritance. The base
           // Entity<P,F> class is the only class in the hierarchy that contains
@@ -280,7 +280,7 @@ namespace ignition
             static_cast<Entity<T...>&>(*this) = _other;
             return *this;
           }
-          public: type &operator=(type &&_other)
+          public: type &operator=(type &&_other) noexcept
           {
             static_cast<Entity<T...>&>(*this) = std::move(_other);
             return *this;
