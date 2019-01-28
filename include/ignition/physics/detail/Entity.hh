@@ -168,6 +168,25 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename EntityT>
+    EntityPtr<EntityT>::EntityPtr(const EntityPtr<EntityT> &_other)
+    {
+      *this = _other;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
+    auto EntityPtr<EntityT>::operator=(const EntityPtr<EntityT> &_other)
+    -> EntityPtr&
+    {
+      if (_other)
+      {
+        this->entity.emplace(_other.entity->pimpl, _other.entity->identity);
+      }
+      return *this;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename EntityT>
     EntityPtr<EntityT>::EntityPtr(std::nullptr_t)
       : entity(std::nullopt)
     {
@@ -210,7 +229,9 @@ namespace ignition
       // have to check for validity of their entities in two places instead of
       // one.
       if (_identity)
-        this->entity = EntityT(_pimpl, _identity);
+      {
+        this->entity.emplace(_pimpl, _identity);
+      }
     }
 
     /////////////////////////////////////////////////
@@ -249,9 +270,12 @@ namespace ignition
 
       if (this->entity)
       {
+        // Emplace to set the identity because assigment is not possible. Use
+        // the entity's own pimpl temporarily for the construction and copy
+        // assign the pimpl afterward
+        this->entity.emplace(this->entity->pimpl, _other.entity->identity);
         // Avoid reallocating the pimpl
         *this->entity->pimpl = *_other.entity->pimpl;
-        this->entity->identity = _other.entity->identity;
       }
       else
       {
@@ -259,7 +283,7 @@ namespace ignition
             std::make_shared<typename EntityT::Pimpl>(
               *_other.entity->pimpl);
 
-        this->entity = EntityT(std::move(newPimpl), _other.entity->identity);
+        this->entity.emplace(std::move(newPimpl), _other.entity->identity);
       }
 
       return *this;
@@ -305,6 +329,13 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Policy, typename Features>
+    const Identity &Entity<Policy, Features>::FullIdentity() const
+    {
+      return this->identity;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Policy, typename Features>
     std::size_t Entity<Policy, Features>::EntityID() const
     {
       return this->identity.id;
@@ -312,7 +343,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Policy, typename Features>
-    const std::shared_ptr<const void> &
+    const std::shared_ptr<void> &
     Entity<Policy, Features>::EntityReference() const
     {
       return this->identity.ref;

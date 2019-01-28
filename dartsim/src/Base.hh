@@ -23,6 +23,7 @@
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
 
+#include <memory>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -36,10 +37,30 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
+/// \brief The structs ModelInfo, LinkInfo, JointInfo, and ShapeInfo are used
+/// for two reasons:
+/// 1) Holding extra information such as the name or offset
+///    that will be different from the underlying engine
+/// 2) Wrap shared pointers to DART entities. Since these shared pointers (eg.
+///    dart::dynamics::BodyNodePtr) are different from std::shared_ptr, we
+///    cannot use them directly as parameters to GenerateIdentity. Instead we
+///    create a std::shared_ptr of the struct that wraps the corresponding DART
+///    shared pointer.
+
 struct ModelInfo
 {
   dart::dynamics::SkeletonPtr model;
   dart::dynamics::SimpleFramePtr frame;
+};
+
+struct LinkInfo
+{
+  dart::dynamics::BodyNodePtr link;
+};
+
+struct JointInfo
+{
+  dart::dynamics::JointPtr joint;
 };
 
 struct ShapeInfo
@@ -112,10 +133,21 @@ struct EntityStorage
   {
     return objectToID.at(_key);
   }
+
+  bool HasEntity(const Key2 &_key) const
+  {
+    return objectToID.find(_key) != objectToID.end();
+  }
+
+  bool HasEntity(const std::size_t _id) const
+  {
+    return idToObject.find(_id) != idToObject.end();
+  }
 };
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
+  public: using DartWorld = dart::simulation::World;
   public: using DartWorldPtr = dart::simulation::WorldPtr;
   public: using DartSkeletonPtr = dart::dynamics::SkeletonPtr;
   public: using DartBodyNode = dart::dynamics::BodyNode;
@@ -123,6 +155,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using DartJoint = dart::dynamics::Joint;
   public: using DartJointPtr = dart::dynamics::JointPtr;
   public: using DartShapeNode = dart::dynamics::ShapeNode;
+  public: using DartShapeNodePtr = std::shared_ptr<DartShapeNode>;
+  public: using ModelInfoPtr = std::shared_ptr<ModelInfo>;
+  public: using LinkInfoPtr = std::shared_ptr<LinkInfo>;
+  public: using JointInfoPtr = std::shared_ptr<JointInfo>;
+  public: using ShapeInfoPtr = std::shared_ptr<ShapeInfo>;
 
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
@@ -168,8 +205,8 @@ class Base : public Implements3d<FeatureList<Feature>>
       const ModelInfo &_info, const std::size_t _worldID)
   {
     const std::size_t id = this->GetNextEntity();
-    ModelInfo &entry = this->models.idToObject[id];
-    entry = _info;
+    this->models.idToObject[id] = std::make_shared<ModelInfo>(_info);
+    ModelInfo &entry = *this->models.idToObject[id];
     this->models.objectToID[_info.model] = id;
 
     const dart::simulation::WorldPtr &world = worlds[_worldID];
@@ -191,7 +228,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline std::size_t AddLink(DartBodyNode *_bn)
   {
     const std::size_t id = this->GetNextEntity();
-    this->links.idToObject[id] = _bn;
+    this->links.idToObject[id] = std::make_shared<LinkInfo>();
+    this->links.idToObject[id]->link = _bn;
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
@@ -203,7 +241,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline std::size_t AddJoint(DartJoint *_joint)
   {
     const std::size_t id = this->GetNextEntity();
-    this->joints.idToObject[id] = _joint;
+    this->joints.idToObject[id] = std::make_shared<JointInfo>();
+    this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;
 
     this->UpdateSkeletonInWorld(_joint->getSkeleton());
@@ -215,7 +254,7 @@ class Base : public Implements3d<FeatureList<Feature>>
       const ShapeInfo &_info)
   {
     const std::size_t id = this->GetNextEntity();
-    this->shapes.idToObject[id] = _info;
+    this->shapes.idToObject[id] = std::make_shared<ShapeInfo>(_info);
     this->shapes.objectToID[_info.node] = id;
     this->frames[id] = _info.node.get();
 
@@ -248,10 +287,10 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
-  public: EntityStorage<ModelInfo, DartSkeletonPtr> models;
-  public: EntityStorage<DartBodyNodePtr, DartBodyNode*> links;
-  public: EntityStorage<DartJointPtr, DartJoint*> joints;
-  public: EntityStorage<ShapeInfo, DartShapeNode*> shapes;
+  public: EntityStorage<ModelInfoPtr, DartSkeletonPtr> models;
+  public: EntityStorage<LinkInfoPtr, DartBodyNode*> links;
+  public: EntityStorage<JointInfoPtr, DartJoint*> joints;
+  public: EntityStorage<ShapeInfoPtr, DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
 };
 

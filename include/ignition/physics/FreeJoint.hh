@@ -51,7 +51,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual void SetFreeJointRelativeTransform(
-            std::size_t _id, const PoseType &_pose) = 0;
+            const Identity &_id, const PoseType &_pose) = 0;
       };
     };
   }
