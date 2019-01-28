@@ -30,7 +30,7 @@ LinearVector3d LinkFeatures::GetLinkExternalForceInWorld(
 {
   // DART uses spatial forces which express the force in the last three
   // components of the 6D vector
-  Eigen::Vector6d f = this->links.at(_id)->getExternalForceGlobal();
+  Eigen::Vector6d f = this->links.at(_id)->link->getExternalForceGlobal();
   return f.tail<3>();
 }
 
@@ -40,12 +40,12 @@ AngularVector3d LinkFeatures::GetLinkExternalTorqueInWorld(
 {
   // DART uses spatial forces which express the torque in the first three
   // components of the 6D vector
-  Eigen::Vector6d f = this->links.at(_id)->getExternalForceGlobal();
+  Eigen::Vector6d f = this->links.at(_id)->link->getExternalForceGlobal();
 
   Eigen::Isometry3d tfCom = Eigen::Isometry3d::Identity();
   // We use the negative of the global COM location in order to transform the
   // spatial vector to be with respect to the the body's center of mass.
-  tfCom.translation() = -this->links.at(_id)->getCOM(
+  tfCom.translation() = -this->links.at(_id)->link->getCOM(
         dart::dynamics::Frame::World());
 
   const Eigen::Vector6d fCom = dart::math::dAdInvT(tfCom, f);
@@ -57,14 +57,14 @@ AngularVector3d LinkFeatures::GetLinkExternalTorqueInWorld(
 void LinkFeatures::SetLinkExternalForceInWorld(
     const Identity &_id, const LinearVector3d &_force)
 {
-  this->links.at(_id)->setExtForce(_force);
+  this->links.at(_id)->link->setExtForce(_force);
 }
 
 /////////////////////////////////////////////////
 void LinkFeatures::SetLinkExternalTorqueInWorld(
       const Identity &_id, const AngularVector3d &_torque)
 {
-  this->links.at(_id)->setExtTorque(_torque);
+  this->links.at(_id)->link->setExtTorque(_torque);
 }
 }
 }
