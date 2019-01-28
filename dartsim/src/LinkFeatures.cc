@@ -26,7 +26,7 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 LinearVector3d LinkFeatures::GetLinkExternalForceInWorld(
-    std::size_t _id) const
+    const Identity &_id) const
 {
   // DART uses spatial forces which express the force in the last three
   // components of the 6D vector
@@ -36,7 +36,7 @@ LinearVector3d LinkFeatures::GetLinkExternalForceInWorld(
 
 /////////////////////////////////////////////////
 AngularVector3d LinkFeatures::GetLinkExternalTorqueInWorld(
-    std::size_t _id) const
+    const Identity &_id) const
 {
   // DART uses spatial forces which express the torque in the first three
   // components of the 6D vector
@@ -55,14 +55,14 @@ AngularVector3d LinkFeatures::GetLinkExternalTorqueInWorld(
 
 /////////////////////////////////////////////////
 void LinkFeatures::SetLinkExternalForceInWorld(
-    std::size_t _id, const LinearVector3d &_force)
+    const Identity &_id, const LinearVector3d &_force)
 {
   this->links.at(_id)->setExtForce(_force);
 }
 
 /////////////////////////////////////////////////
 void LinkFeatures::SetLinkExternalTorqueInWorld(
-      std::size_t _id, const AngularVector3d &_torque)
+      const Identity &_id, const AngularVector3d &_torque)
 {
   this->links.at(_id)->setExtTorque(_torque);
 }

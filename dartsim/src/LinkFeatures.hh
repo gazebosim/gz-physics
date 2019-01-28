@@ -37,17 +37,17 @@ class LinkFeatures :
 {
   // ----- Get Link Force/Torque -----
   public: LinearVector3d GetLinkExternalForceInWorld(
-      std::size_t _id) const override;
+      const Identity &_id) const override;
 
   public: AngularVector3d GetLinkExternalTorqueInWorld(
-      std::size_t _id) const override;
+      const Identity &_id) const override;
 
   // ----- Set Link Force/Torque -----
   public: void SetLinkExternalForceInWorld(
-      std::size_t _id, const LinearVector3d &_force) override;
+      const Identity &_id, const LinearVector3d &_force) override;
 
   public: void SetLinkExternalTorqueInWorld(
-      std::size_t _id, const AngularVector3d &_torque) override;
+      const Identity &_id, const AngularVector3d &_torque) override;
 };
 
 }

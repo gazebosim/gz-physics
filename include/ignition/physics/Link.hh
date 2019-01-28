@@ -74,11 +74,11 @@ namespace ignition
 
         // see Link::GetExternalForce above
         public: virtual LinearVectorType GetLinkExternalForceInWorld(
-            std::size_t _id) const = 0;
+            const Identity &_id) const = 0;
 
         // see Link::GetExternalTorque above
         public: virtual AngularVectorType GetLinkExternalTorqueInWorld(
-            std::size_t _id) const = 0;
+            const Identity &_id) const = 0;
       };
     };
 
@@ -131,11 +131,11 @@ namespace ignition
 
         // see Link::SetExternalForce above
         public: virtual void SetLinkExternalForceInWorld(
-            std::size_t _id, const LinearVectorType &_force) = 0;
+            const Identity &_id, const LinearVectorType &_force) = 0;
 
         // see Link::SetExternalTorque above
         public: virtual void SetLinkExternalTorqueInWorld(
-            std::size_t _id, const AngularVectorType &_torque) = 0;
+            const Identity &_id, const AngularVectorType &_torque) = 0;
       };
     };
   }
