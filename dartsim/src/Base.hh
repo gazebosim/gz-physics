@@ -150,6 +150,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using DartWorld = dart::simulation::World;
   public: using DartWorldPtr = dart::simulation::WorldPtr;
   public: using DartSkeletonPtr = dart::dynamics::SkeletonPtr;
+  public: using DartSkeleton = dart::dynamics::Skeleton;
   public: using DartBodyNode = dart::dynamics::BodyNode;
   public: using DartBodyNodePtr = dart::dynamics::BodyNodePtr;
   public: using DartJoint = dart::dynamics::Joint;
@@ -261,6 +262,43 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->UpdateSkeletonInWorld(_info.node->getSkeleton());
 
     return id;
+  }
+
+  public: void RemoveModelImpl(const std::size_t _worldID,
+                               const std::size_t _modelID)
+  {
+    const auto &world = this->worlds.at(_worldID);
+    const std::size_t modelIndex = this->models.idToIndexInContainer[_modelID];
+
+    auto skel = this->models.at(_modelID)->model;
+    world->removeSkeleton(skel);
+
+    // house keeping
+    // The key in indexInContainerToID is the index of the vector so erasing the
+    // element automatically decrements the index of the rest of the elements of
+    // the vector. The indices in idToIndexInContainer, however, are stored as
+    // numbers (as values in the map). We need to decrement all the indices
+    // greater than the index of the model we are removing.
+    for (auto it = this->models.indexInContainerToID[_worldID].begin() +
+                   modelIndex + 1;
+         it != this->models.indexInContainerToID[_worldID].end(); ++it)
+    {
+      // decrement the index (the value of the map)
+      --this->models.idToIndexInContainer[*it];
+    }
+
+    this->models.idToIndexInContainer.erase(_modelID);
+
+    this->models.indexInContainerToID[_worldID].erase(
+        this->models.indexInContainerToID[_worldID].begin() + modelIndex);
+
+    this->models.idToContainerID.erase(_modelID);
+
+    this->models.idToObject.erase(_modelID);
+    this->models.objectToID.erase(skel);
+
+    assert(this->models.indexInContainerToID[_worldID].size() ==
+           world->getNumSkeletons());
   }
 
   private: void UpdateSkeletonInWorld(const DartSkeletonPtr &_skel)

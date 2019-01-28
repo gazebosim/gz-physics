@@ -451,6 +451,53 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 }
 
 /////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
+                                                  std::size_t _modelIndex)
+{
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  const DartSkeletonPtr &model = world->getSkeleton(_modelIndex);
+
+  if (model != nullptr && this->models.HasEntity(model))
+  {
+    this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
+                                                 const std::string &_modelName)
+{
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  const DartSkeletonPtr &model = world->getSkeleton(_modelName);
+
+  if (model != nullptr && this->models.HasEntity(model))
+  {
+    this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
+{
+  if (this->models.HasEntity(_modelID))
+  {
+    this->RemoveModelImpl(this->models.idToContainerID.at(_modelID), _modelID);
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
+{
+  return !this->models.HasEntity(_modelID);
+}
+
+/////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
