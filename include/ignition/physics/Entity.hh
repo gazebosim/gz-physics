@@ -41,8 +41,8 @@ namespace ignition
     class EntityPtr
     {
       public: EntityPtr() = default;
-      public: EntityPtr(EntityPtr&&) noexcept = default;
-      public: EntityPtr &operator=(EntityPtr&&) noexcept = default;
+      public: EntityPtr(EntityPtr&&) = default;
+      public: EntityPtr &operator=(EntityPtr&&) = default;
       public: ~EntityPtr() = default;
       // Special handling for copy construction and copy assignment
       public: EntityPtr(const EntityPtr&);
