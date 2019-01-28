@@ -40,7 +40,7 @@ class ConstructEmptyWorldFeature : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual Identity ConstructEmptyWorld(
-        std::size_t _engineID, const std::string &_name) = 0;
+        const Identity &_engineID, const std::string &_name) = 0;
   };
 };
 
@@ -59,7 +59,7 @@ class ConstructEmptyModelFeature : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual Identity ConstructEmptyModel(
-        std::size_t _worldID, const std::string &_name) = 0;
+        const Identity &_worldID, const std::string &_name) = 0;
   };
 };
 
@@ -78,7 +78,7 @@ class ConstructEmptyLinkFeature : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual Identity ConstructEmptyLink(
-        std::size_t _modelID, const std::string &_name) = 0;
+        const Identity &_modelID, const std::string &_name) = 0;
   };
 };
 

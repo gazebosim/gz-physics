@@ -40,7 +40,7 @@ class ConstructSdfCollision : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual Identity ConstructSdfCollision(
-        std::size_t _linkID, const ::sdf::Collision &_collision) = 0;
+        const Identity &_linkID, const ::sdf::Collision &_collision) = 0;
   };
 };
 

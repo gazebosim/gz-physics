@@ -41,89 +41,94 @@ class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
-  public: const std::string &GetEngineName(const std::size_t) const override;
+  public: const std::string &GetEngineName(const Identity &) const override;
 
-  public: std::size_t GetEngineIndex(const std::size_t) const override;
+  public: std::size_t GetEngineIndex(const Identity &) const override;
 
-  public: std::size_t GetWorldCount(const std::size_t) const override;
-
-  public: Identity GetWorld(
-      const std::size_t, std::size_t _worldIndex) const override;
+  public: std::size_t GetWorldCount(const Identity &) const override;
 
   public: Identity GetWorld(
-      const std::size_t, const std::string &_worldName) const override;
+      const Identity &, std::size_t _worldIndex) const override;
 
-  public: const std::string &GetWorldName(std::size_t _worldID) const override;
+  public: Identity GetWorld(
+      const Identity &, const std::string &_worldName) const override;
 
-  public: std::size_t GetWorldIndex(std::size_t _worldID) const override;
+  public: const std::string &GetWorldName(
+      const Identity &_worldID) const override;
 
-  public: Identity GetEngineOfWorld(std::size_t _worldID) const override;
+  public: std::size_t GetWorldIndex(const Identity &_worldID) const override;
+
+  public: Identity GetEngineOfWorld(const Identity &_worldID) const override;
 
   public: std::size_t GetModelCount(
-      std::size_t _worldID) const override;
+      const Identity &_worldID) const override;
 
   public: Identity GetModel(
-      std::size_t _worldID, std::size_t _modelIndex) const override;
+      const Identity &_worldID, std::size_t _modelIndex) const override;
 
   public: Identity GetModel(
-      std::size_t _worldID, const std::string &_modelName) const override;
+      const Identity &_worldID, const std::string &_modelName) const override;
 
-  public: const std::string &GetModelName(std::size_t _modelID) const override;
+  public: const std::string &GetModelName(
+      const Identity &_modelID) const override;
 
-  public: std::size_t GetModelIndex(std::size_t _modelID) const override;
+  public: std::size_t GetModelIndex(const Identity &_modelID) const override;
 
-  public: Identity GetWorldOfModel(std::size_t _modelID) const override;
+  public: Identity GetWorldOfModel(const Identity &_modelID) const override;
 
-  public: std::size_t GetLinkCount(std::size_t _modelID) const override;
-
-  public: Identity GetLink(
-      std::size_t _modelID, std::size_t _linkIndex) const override;
+  public: std::size_t GetLinkCount(const Identity &_modelID) const override;
 
   public: Identity GetLink(
-      std::size_t _modelID, const std::string &_linkName) const override;
+      const Identity &_modelID, std::size_t _linkIndex) const override;
 
-  public: std::size_t GetJointCount(std::size_t _modelID) const override;
+  public: Identity GetLink(
+      const Identity &_modelID, const std::string &_linkName) const override;
+
+  public: std::size_t GetJointCount(const Identity &_modelID) const override;
 
   public: Identity GetJoint(
-      std::size_t _modelID, std::size_t _jointIndex) const override;
+      const Identity &_modelID, std::size_t _jointIndex) const override;
 
   public: Identity GetJoint(
-      std::size_t _modelID, const std::string &_jointName) const override;
+      const Identity &_modelID, const std::string &_jointName) const override;
 
-  public: const std::string &GetLinkName(std::size_t _linkID) const override;
+  public: const std::string &GetLinkName(
+      const Identity &_linkID) const override;
 
-  public: std::size_t GetLinkIndex(std::size_t _linkID) const override;
+  public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
 
-  public: Identity GetModelOfLink(std::size_t _linkID) const override;
+  public: Identity GetModelOfLink(const Identity &_linkID) const override;
 
-  public: std::size_t GetShapeCount(std::size_t _linkID) const override;
-
-  public: Identity GetShape(
-      std::size_t _linkID, std::size_t _shapeIndex) const override;
+  public: std::size_t GetShapeCount(const Identity &_linkID) const override;
 
   public: Identity GetShape(
-      std::size_t _linkID, const std::string &_shapeName) const override;
+      const Identity &_linkID, std::size_t _shapeIndex) const override;
 
-  public: const std::string &GetJointName(std::size_t _jointID) const override;
+  public: Identity GetShape(
+      const Identity &_linkID, const std::string &_shapeName) const override;
 
-  public: std::size_t GetJointIndex(std::size_t _jointID) const override;
+  public: const std::string &GetJointName(
+      const Identity &_jointID) const override;
 
-  public: Identity GetModelOfJoint(std::size_t _jointID) const override;
+  public: std::size_t GetJointIndex(const Identity &_jointID) const override;
 
-  public: const std::string &GetShapeName(std::size_t _shapeID) const override;
+  public: Identity GetModelOfJoint(const Identity &_jointID) const override;
 
-  public: std::size_t GetShapeIndex(std::size_t _shapeID) const override;
+  public: const std::string &GetShapeName(
+      const Identity &_shapeID) const override;
 
-  public: Identity GetLinkOfShape(std::size_t _shapeID) const override;
+  public: std::size_t GetShapeIndex(const Identity &_shapeID) const override;
+
+  public: Identity GetLinkOfShape(const Identity &_shapeID) const override;
 
   public: Identity ConstructEmptyWorld(
-      std::size_t _engineID, const std::string &_name) override;
+      const Identity &_engineID, const std::string &_name) override;
 
   public: Identity ConstructEmptyModel(
-      std::size_t _worldID, const std::string &_name) override;
+      const Identity &_worldID, const std::string &_name) override;
 
   public: Identity ConstructEmptyLink(
-      std::size_t _modelID, const std::string &_name) override;
+      const Identity &_modelID, const std::string &_name) override;
 };
 
 }

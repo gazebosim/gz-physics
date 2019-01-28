@@ -136,7 +136,7 @@ namespace mock
       return this->GenerateIdentity(this->jointIdToEntity[_index]);
     }
 
-    Identity CastToRevoluteJoint(const std::size_t _id) const override
+    Identity CastToRevoluteJoint(const Identity & _id) const override
     {
       if (idToRevoluteJointProperties.count(_id) > 0)
         return this->GenerateIdentity(_id);
@@ -145,42 +145,42 @@ namespace mock
     }
 
     void SetRevoluteJointAxis(
-        std::size_t _id, const RevoluteAxis &_axis) override
+        const Identity &_id, const RevoluteAxis &_axis) override
     {
       idToRevoluteJointProperties.at(_id).axis = _axis;
     }
 
-    RevoluteAxis GetRevoluteJointAxis(std::size_t _id) const override
+    RevoluteAxis GetRevoluteJointAxis(const Identity &_id) const override
     {
       return idToRevoluteJointProperties.at(_id).axis;
     }
 
-    Identity CastToPrismaticJoint(const std::size_t /*_id*/) const override
+    Identity CastToPrismaticJoint(const Identity &/*_id*/) const override
     {
       // TODO(MXG): Implement this
       return this->GenerateInvalidId();
     }
 
     void SetPrismaticJointAxis(
-        std::size_t /*_id*/, const PrismaticAxis &/*_axis*/) override
+        const Identity &/*_id*/, const PrismaticAxis &/*_axis*/) override
     {
       // TODO(MXG): Implement this
     }
 
-    PrismaticAxis GetPrismaticJointAxis(std::size_t /*_id*/) const override
+    PrismaticAxis GetPrismaticJointAxis(const Identity &/*_id*/) const override
     {
       // TODO(MXG): Implement this
       return PrismaticAxis::UnitZ();
     }
 
-    Identity CastToFreeJoint(const std::size_t /*_id*/) const override
+    Identity CastToFreeJoint(const Identity &/*_id*/) const override
     {
       // TODO(MXG): Implement this
       return this->GenerateInvalidId();
     }
 
     void SetFreeJointRelativeTransform(
-        const std::size_t /*_id*/, const Pose &/*_pose*/) override
+        const Identity &/*_id*/, const Pose &/*_pose*/) override
     {
       // TODO(MXG): Implement this
     }
@@ -213,30 +213,30 @@ namespace mock
     }
 
     Scalar GetJointPosition(
-        const std::size_t _id, const std::size_t _dof) const override
+        const Identity &_id, std::size_t _dof) const override
     {
       return this->idToJointState.at(_id).position[_dof];
     }
 
     Scalar GetJointVelocity(
-        const std::size_t _id, const std::size_t _dof) const override
+        const Identity &_id, std::size_t _dof) const override
     {
       return this->idToJointState.at(_id).velocity[_dof];
     }
 
     Scalar GetJointAcceleration(
-        const std::size_t _id, const std::size_t _dof) const override
+        const Identity &_id, std::size_t _dof) const override
     {
       return this->idToJointState.at(_id).acceleration[_dof];
     }
 
     Scalar GetJointForce(
-        const std::size_t _id, const std::size_t _dof) const override
+        const Identity & _id, std::size_t _dof) const override
     {
       return this->idToJointState.at(_id).force[_dof];
     }
 
-    Pose GetJointTransform(const std::size_t _id) const override
+    Pose GetJointTransform(const Identity & _id) const override
     {
       const auto &p = this->idToJointProperties.at(_id);
       const auto &axis = this->idToRevoluteJointProperties.at(_id).axis;
@@ -248,57 +248,57 @@ namespace mock
     }
 
     void SetJointPosition(
-        const std::size_t _id, const std::size_t _dof,
+        const Identity &_id, std::size_t _dof,
         const Scalar _value) override
     {
       this->idToJointState.at(_id).position[_dof] = _value;
     }
 
     void SetJointVelocity(
-        const std::size_t _id, const std::size_t _dof,
+        const Identity &_id, std::size_t _dof,
         const Scalar _value) override
     {
       this->idToJointState.at(_id).velocity[_dof] = _value;
     }
 
     void SetJointAcceleration(
-        const std::size_t _id, const std::size_t _dof,
+        const Identity &_id, std::size_t _dof,
         const Scalar _value) override
     {
       this->idToJointState.at(_id).acceleration[_dof] = _value;
     }
 
     void SetJointForce(
-        const std::size_t _id, const std::size_t _dof,
+        const Identity &_id, std::size_t _dof,
         const Scalar _value) override
     {
       this->idToJointState.at(_id).force[_dof] = _value;
     }
 
-    std::size_t GetJointDegreesOfFreedom(std::size_t /*_id*/) const override
+    std::size_t GetJointDegreesOfFreedom(const Identity &/*_id*/) const override
     {
       // So far we only support revolute joints, which have 1 DOF
       return 1u;
     }
 
-    Pose GetJointTransformFromParent(std::size_t _id) const override
+    Pose GetJointTransformFromParent(const Identity &_id) const override
     {
       return this->idToJointProperties.at(_id).parentLinkToJoint;
     }
 
-    Pose GetJointTransformToChild(std::size_t _id) const override
+    Pose GetJointTransformToChild(const Identity &_id) const override
     {
       return this->idToJointProperties.at(_id).jointToChildLink;
     }
 
     void SetJointTransformFromParent(
-        const std::size_t _id, const Pose &_pose) override
+        const Identity &_id, const Pose &_pose) override
     {
       this->idToJointProperties.at(_id).parentLinkToJoint = _pose;
     }
 
     void SetJointTransformToChild(
-        const std::size_t _id, const Pose &_pose) override
+        const Identity &_id, const Pose &_pose) override
     {
       this->idToJointProperties.at(_id).jointToChildLink = _pose;
     }
