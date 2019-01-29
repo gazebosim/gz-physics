@@ -505,6 +505,10 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   world->getConstraintSolver()->setCollisionDetector(
         dart::collision::BulletCollisionDetector::create());
 
+  // TODO(anyone) We need a machanism to configure maxNumContacts at runtime.
+  auto &collOpt = world->getConstraintSolver()->getCollisionOption();
+  collOpt.maxNumContacts = 10000;
+
   const std::size_t worldID = this->AddWorld(world, _name);
   return this->GenerateIdentity(worldID, this->worlds.at(worldID));
 }
