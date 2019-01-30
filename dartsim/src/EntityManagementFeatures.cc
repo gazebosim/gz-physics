@@ -22,11 +22,42 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
+#include <dart/collision/CollisionFilter.hpp>
+#include <dart/collision/CollisionObject.hpp>
+
 #include <string>
 
 namespace ignition {
 namespace physics {
 namespace dartsim {
+
+/////////////////////////////////////////////////
+/// This class helps to resolve an issue with excessive contacts being computed:
+/// https://bitbucket.org/ignitionrobotics/ign-physics/issues/11/
+///
+/// TODO(MXG): Delete this class when we switch to using dartsim-6.8:
+/// https://github.com/dartsim/dart/pull/1232
+class ImmobileContactFilter : public dart::collision::BodyNodeCollisionFilter
+{
+  public: bool ignoresCollision(
+      const dart::collision::CollisionObject *_object1,
+      const dart::collision::CollisionObject *_object2) const override
+  {
+    const auto &shapeNode1 = _object1->getShapeFrame()->asShapeNode();
+    const auto &shapeNode2 = _object2->getShapeFrame()->asShapeNode();
+
+    if (!shapeNode1 || !shapeNode2)
+      return false;
+
+    const auto &skeleton1 = shapeNode1->getSkeleton();
+    const auto &skeleton2 = shapeNode2->getSkeleton();
+
+    if (!skeleton1->isMobile() && !skeleton2->isMobile())
+      return true;
+
+    return BodyNodeCollisionFilter::ignoresCollision(_object1, _object2);
+  }
+};
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetEngineName(
@@ -297,6 +328,9 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   const auto &world = std::make_shared<dart::simulation::World>(_name);
   world->getConstraintSolver()->setCollisionDetector(
         dart::collision::BulletCollisionDetector::create());
+
+  world->getConstraintSolver()->getCollisionOption().collisionFilter =
+      std::make_shared<ImmobileContactFilter>();
 
   return this->GenerateIdentity(this->AddWorld(world, _name), world);
 }
