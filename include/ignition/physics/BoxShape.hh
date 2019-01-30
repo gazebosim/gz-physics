@@ -50,7 +50,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
         public: virtual Dimensions GetBoxShapeSize(
-            std::size_t _boxID) const = 0;
+            const Identity &_boxID) const = 0;
       };
     };
 
@@ -76,7 +76,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
         public: virtual void SetBoxShapeSize(
-            std::size_t _boxID, const Dimensions &_size) = 0;
+            const Identity &_boxID, const Dimensions &_size) = 0;
       };
     };
 
@@ -118,7 +118,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual Identity AttachBoxShape(
-            std::size_t _linkID,
+            const Identity &_linkID,
             const std::string &_name,
             const Dimensions &_size,
             const PoseType &_pose) = 0;

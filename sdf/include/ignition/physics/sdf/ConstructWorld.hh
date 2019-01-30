@@ -40,7 +40,7 @@ class ConstructSdfWorld : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual Identity ConstructSdfWorld(
-        std::size_t _engine, const ::sdf::World &_world) = 0;
+        const Identity &_engine, const ::sdf::World &_world) = 0;
   };
 };
 

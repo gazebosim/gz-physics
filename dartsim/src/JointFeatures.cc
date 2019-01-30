@@ -30,250 +30,262 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointPosition(
-    const std::size_t _id, const std::size_t _dof) const
+    const Identity &_id, const std::size_t _dof) const
 {
-  return this->joints.at(_id)->getPosition(_dof);
+  return this->ReferenceInterface<JointInfo>(_id)->joint->getPosition(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointVelocity(
-    const std::size_t _id, const std::size_t _dof) const
+    const Identity &_id, const std::size_t _dof) const
 {
-  return this->joints.at(_id)->getVelocity(_dof);
+  return this->ReferenceInterface<JointInfo>(_id)->joint->getVelocity(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointAcceleration(
-    const std::size_t _id, const std::size_t _dof) const
+    const Identity &_id, const std::size_t _dof) const
 {
-  return this->joints.at(_id)->getAcceleration(_dof);
+  return this->ReferenceInterface<JointInfo>(_id)->joint->getAcceleration(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
-    const std::size_t _id, const std::size_t _dof) const
+    const Identity &_id, const std::size_t _dof) const
 {
-  return this->joints.at(_id)->getForce(_dof);
+  return this->ReferenceInterface<JointInfo>(_id)->joint->getForce(_dof);
 }
 
 /////////////////////////////////////////////////
-Pose3d JointFeatures::GetJointTransform(const std::size_t _id) const
+Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 {
-  return this->joints.at(_id)->getRelativeTransform();
+  return this->ReferenceInterface<JointInfo>(_id)
+      ->joint->getRelativeTransform();
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointPosition(
-    const std::size_t _id, const std::size_t _dof, const double _value)
+    const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->joints.at(_id)->setPosition(_dof, _value);
+  this->ReferenceInterface<JointInfo>(_id)->joint->setPosition(_dof, _value);
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
-    const std::size_t _id, const std::size_t _dof, const double _value)
+    const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->joints.at(_id)->setVelocity(_dof, _value);
+  this->ReferenceInterface<JointInfo>(_id)->joint->setVelocity(_dof, _value);
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointAcceleration(
-    const std::size_t _id, const std::size_t _dof, const double _value)
+    const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->joints.at(_id)->setAcceleration(_dof, _value);
+  this->ReferenceInterface<JointInfo>(_id)->joint->setAcceleration(_dof,
+                                                                   _value);
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointForce(
-    const std::size_t _id, const std::size_t _dof, const double _value)
+    const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->joints.at(_id)->setForce(_dof, _value);
+  this->ReferenceInterface<JointInfo>(_id)->joint->setForce(_dof, _value);
 }
 
 /////////////////////////////////////////////////
-std::size_t JointFeatures::GetJointDegreesOfFreedom(const std::size_t _id) const
+std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
-  return this->joints.at(_id)->getNumDofs();
+  return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();
 }
 
 /////////////////////////////////////////////////
-Pose3d JointFeatures::GetJointTransformFromParent(const std::size_t _id) const
+Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
-  return this->joints.at(_id)->getTransformFromParentBodyNode();
+  return this->ReferenceInterface<JointInfo>(_id)
+      ->joint->getTransformFromParentBodyNode();
 }
 
 /////////////////////////////////////////////////
-Pose3d JointFeatures::GetJointTransformToChild(const std::size_t _id) const
+Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
-  return this->joints.at(_id)->getTransformFromChildBodyNode().inverse();
+  return this->ReferenceInterface<JointInfo>(_id)
+      ->joint->getTransformFromChildBodyNode().inverse();
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointTransformFromParent(
-    const std::size_t _id, const Pose3d &_pose)
+    const Identity &_id, const Pose3d &_pose)
 {
-  this->joints.at(_id)->setTransformFromParentBodyNode(_pose);
+  this->ReferenceInterface<JointInfo>(_id)
+      ->joint->setTransformFromParentBodyNode(_pose);
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointTransformToChild(
-    const std::size_t _id, const Pose3d &_pose)
+    const Identity &_id, const Pose3d &_pose)
 {
-  this->joints.at(_id)->setTransformFromChildBodyNode(_pose.inverse());
+  this->ReferenceInterface<JointInfo>(_id)
+      ->joint->setTransformFromChildBodyNode(_pose.inverse());
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::CastToFixedJoint(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
-  dart::dynamics::WeldJoint *weld =
-      dynamic_cast<dart::dynamics::WeldJoint*>(
-        this->joints.at(_jointID).get());
+  dart::dynamics::WeldJoint *const weld =
+      dynamic_cast<dart::dynamics::WeldJoint *>(
+          this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
 
   if (weld)
-    return this->GenerateIdentity(_jointID);
+    return this->GenerateIdentity(_jointID, this->Reference(_jointID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachFixedJoint(
-    const std::size_t _childID,
+    const Identity &_childID,
     const BaseLink3dPtr &_parent,
     const std::string &_name)
 {
-  DartBodyNode * const bn = this->links.at(_childID);
+  DartBodyNode *const bn =
+      this->ReferenceInterface<LinkInfo>(_childID)->link.get();
   dart::dynamics::WeldJoint::Properties properties;
   properties.mName = _name;
 
-  DartBodyNode * const parentBn = _parent?
-        this->links.at(_parent->EntityID()) : nullptr;
+  auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
+      _parent->FullIdentity())->link.get() : nullptr;
 
-  return this->GenerateIdentity(
-        this->AddJoint(bn->moveTo<dart::dynamics::WeldJoint>(
-                         parentBn, properties)));
+  const std::size_t jointID = this->AddJoint(
+      bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+  return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::CastToFreeJoint(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
-  dart::dynamics::FreeJoint * const freeJoint =
-      dynamic_cast<dart::dynamics::FreeJoint*>(
-        this->joints.at(_jointID).get());
+  auto *const freeJoint =
+      dynamic_cast<dart::dynamics::FreeJoint *>(
+          this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
 
   if (freeJoint)
-    return this->GenerateIdentity(_jointID);
+    return this->GenerateIdentity(_jointID, this->Reference(_jointID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetFreeJointRelativeTransform(
-    const std::size_t _jointID, const Pose3d &_pose)
+    const Identity &_jointID, const Pose3d &_pose)
 {
-  static_cast<dart::dynamics::FreeJoint*>(
-        this->joints.at(_jointID).get())->setRelativeTransform(_pose);
+  static_cast<dart::dynamics::FreeJoint *>(
+      this->ReferenceInterface<JointInfo>(_jointID)->joint.get())
+      ->setRelativeTransform(_pose);
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::CastToRevoluteJoint(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
-  dart::dynamics::RevoluteJoint *revolute =
-      dynamic_cast<dart::dynamics::RevoluteJoint*>(
-        this->joints.at(_jointID).get());
+  dart::dynamics::RevoluteJoint *const revolute =
+      dynamic_cast<dart::dynamics::RevoluteJoint *>(
+          this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
 
   if (revolute)
-    return this->GenerateIdentity(_jointID);
+    return this->GenerateIdentity(_jointID, this->Reference(_jointID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 AngularVector3d JointFeatures::GetRevoluteJointAxis(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
   return static_cast<const dart::dynamics::RevoluteJoint*>(
-        this->joints.at(_jointID).get())->getAxis();
+        this->ReferenceInterface<JointInfo>(_jointID)->joint.get())->getAxis();
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetRevoluteJointAxis(
-    const std::size_t _jointID, const AngularVector3d &_axis)
+    const Identity &_jointID, const AngularVector3d &_axis)
 {
-  static_cast<dart::dynamics::RevoluteJoint*>(
-        this->joints.at(_jointID).get())->setAxis(_axis);
+  static_cast<dart::dynamics::RevoluteJoint *>(
+      this->ReferenceInterface<JointInfo>(_jointID)->joint.get())
+      ->setAxis(_axis);
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachRevoluteJoint(
-    const std::size_t _childID,
+    const Identity &_childID,
     const BaseLink3dPtr &_parent,
     const std::string &_name,
     const AngularVector3d &_axis)
 {
-  DartBodyNode * const bn = this->links.at(_childID);
+  DartBodyNode *const bn =
+      this->ReferenceInterface<LinkInfo>(_childID)->link.get();
   dart::dynamics::RevoluteJoint::Properties properties;
   properties.mName = _name;
   properties.mAxis = _axis;
 
-  DartBodyNode * const parentBn = _parent?
-        this->links.at(_parent->EntityID()) : nullptr;
+  auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
+      _parent->FullIdentity())->link.get() : nullptr;
 
-  return this->GenerateIdentity(
-        this->AddJoint(bn->moveTo<dart::dynamics::RevoluteJoint>(
-                         parentBn, properties)));
+  const std::size_t jointID = this->AddJoint(
+      bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
+  return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::CastToPrismaticJoint(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
   dart::dynamics::PrismaticJoint *prismatic =
       dynamic_cast<dart::dynamics::PrismaticJoint*>(
-        this->joints.at(_jointID).get());
+        this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
 
   if (prismatic)
-    return this->GenerateIdentity(_jointID);
+    return this->GenerateIdentity(_jointID, this->Reference(_jointID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 LinearVector3d JointFeatures::GetPrismaticJointAxis(
-    const std::size_t _jointID) const
+    const Identity &_jointID) const
 {
   return static_cast<const dart::dynamics::PrismaticJoint*>(
-        this->joints.at(_jointID).get())->getAxis();
+        this->ReferenceInterface<JointInfo>(_jointID)->joint.get())->getAxis();
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetPrismaticJointAxis(
-    const std::size_t _jointID, const LinearVector3d &_axis)
+    const Identity &_jointID, const LinearVector3d &_axis)
 {
-  static_cast<dart::dynamics::PrismaticJoint*>(
-        this->joints.at(_jointID).get())->setAxis(_axis);
+  static_cast<dart::dynamics::PrismaticJoint *>(
+      this->ReferenceInterface<JointInfo>(_jointID)->joint.get())
+      ->setAxis(_axis);
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachPrismaticJoint(
-    const std::size_t _childID,
+    const Identity &_childID,
     const BaseLink3dPtr &_parent,
     const std::string &_name,
     const LinearVector3d &_axis)
 {
-  DartBodyNode * const bn = this->links.at(_childID);
+  DartBodyNode *const bn =
+      this->ReferenceInterface<LinkInfo>(_childID)->link.get();
   dart::dynamics::PrismaticJoint::Properties properties;
   properties.mName = _name;
   properties.mAxis = _axis;
 
-  DartBodyNode * const parentBn = _parent?
-        this->links.at(_parent->EntityID()) : nullptr;
+  auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
+      _parent->FullIdentity())->link.get() : nullptr;
 
-  return this->GenerateIdentity(
-        this->AddJoint(bn->moveTo<dart::dynamics::PrismaticJoint>(
-                         parentBn, properties)));
+  const std::size_t jointID = this->AddJoint(
+      bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));
+  return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
 }
