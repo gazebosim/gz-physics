@@ -26,8 +26,6 @@ namespace ignition
 {
 namespace physics
 {
-namespace mesh
-{
   /////////////////////////////////////////////////
   template <typename P, typename F>
   auto GetPlaneShapeProperties::PlaneShape<P, F>::GetNormal() const -> Normal
@@ -72,7 +70,6 @@ namespace mesh
     return this->template Interface<AttachPlaneShapeFeature>()
         ->AttachPlaneShape(this->identity, _name, _normal, _offset);
   }
-}
 }
 }
 

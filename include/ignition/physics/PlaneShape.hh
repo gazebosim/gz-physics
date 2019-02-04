@@ -27,30 +27,21 @@ namespace ignition
 {
 namespace physics
 {
-namespace mesh
-{
-  IGN_PHYSICS_DECLARE_SHAPE_TYPE(PlaneShape);
-
-  /////////////////////////////////////////////////
-  template <typename PolicyT>
-  struct PlaneTypes
-  {
-    public: using Normal =
-        typename FromPolicy<PolicyT>::template Use<AngularVector>;
-
-    public: using Point =
-        typename FromPolicy<PolicyT>::template Use<LinearVector>;
-  };
+  IGN_PHYSICS_DECLARE_SHAPE_TYPE(PlaneShape)
 
   /////////////////////////////////////////////////
   class GetPlaneShapeProperties
     : public virtual FeatureWithRequirements<PlaneShapeCast>
   {
     public: template <typename PolicyT, typename FeaturesT>
-    class PlaneShape
-        : public virtual Entity<PolicyT, FeaturesT>,
-          public PlaneTypes<PolicyT>
+    class PlaneShape : public virtual Entity<PolicyT, FeaturesT>
     {
+      public: using Normal =
+          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+      public: using Point =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       /// \brief Get the normal vector for this plane. For a 2D simulation, this
       /// will be a scalar quantity.
       /// \returns the normal vector for this plane.
@@ -63,10 +54,14 @@ namespace mesh
     };
 
     public: template <typename PolicyT>
-    class Implementation
-        : public virtual Feature::Implementation<PolicyT>,
-          public PlaneTypes<PolicyT>
+    class Implementation : public virtual Feature::Implementation<PolicyT>
     {
+      public: using Normal =
+          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+      public: using Point =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       // See PlaneShape::GetNormal()
       public: virtual Normal GetPlaneShapeNormal(
           std::size_t _planeID) const = 0;
@@ -82,10 +77,14 @@ namespace mesh
       : public virtual FeatureWithRequirements<PlaneShapeCast>
   {
     public: template <typename PolicyT, typename FeaturesT>
-    class PlaneShape
-        : public virtual Entity<PolicyT, FeaturesT>,
-          public PlaneTypes<PolicyT>
+    class PlaneShape : public virtual Entity<PolicyT, FeaturesT>
     {
+      public: using Normal =
+          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+      public: using Point =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       /// \brief Set the normal vector of this plane
       /// \param[in] _normal
       ///   The new normal vector for this plane
@@ -99,10 +98,14 @@ namespace mesh
     };
 
     public: template <typename PolicyT>
-    class Implementation
-        : public virtual Feature::Implementation<PolicyT>,
-          public PlaneTypes<PolicyT>
+    class Implementation : public virtual Feature::Implementation<PolicyT>
     {
+      public: using Normal =
+          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+      public: using Point =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       public: virtual void SetPlaneShapeNormal(
           std::size_t _planeID,
           const Normal &_normal) = 0;
@@ -118,10 +121,14 @@ namespace mesh
       : public virtual FeatureWithRequirements<PlaneShapeCast>
   {
     public: template <typename PolicyT, typename FeaturesT>
-    class Link
-        : public virtual Feature::Link<PolicyT, FeaturesT>,
-          public PlaneTypes<PolicyT>
+    class Link : public virtual Feature::Link<PolicyT, FeaturesT>
     {
+      public: using Normal =
+          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+      public: using Point =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       /// \brief Attach a PlaneShape to this link
       /// \param[in] _name
       ///   Name to give to the PlaneShape
@@ -137,10 +144,14 @@ namespace mesh
     };
 
     public: template <typename PolicyT>
-    class Implementation
-        : public virtual Feature::Implementation<PolicyT>,
-          public PlaneTypes<PolicyT>
+    class Implementation : public virtual Feature::Implementation<PolicyT>
     {
+      public: using Normal =
+          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+
+      public: using Point =
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
       public: virtual Identity AttachPlaneShape(
           std::size_t _linkID,
           const std::string &_name,
@@ -148,8 +159,6 @@ namespace mesh
           const Point &_offset) = 0;
     };
   };
-
-}
 }
 }
 
