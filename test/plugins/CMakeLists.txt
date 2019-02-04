@@ -1,4 +1,10 @@
 if (DART_FOUND)
+  if(APPLE)
+    # workaround for dart issue 1200 until a fix is released
+    # https://github.com/dartsim/dart/issues/1200
+    # https://github.com/dartsim/dart/pull/1209
+    link_directories(/usr/local/opt/console_bridge/lib)
+  endif()
   add_library(MockDoublePendulum SHARED DARTDoublePendulum.cc)
 endif()
 add_library(MockEntities SHARED MockEntities.cc)
@@ -21,7 +27,6 @@ endforeach()
 
 if (DART_FOUND)
   target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
-  target_link_libraries(MockDoublePendulum PUBLIC ${console_bridge_LIBRARIES})
   target_compile_definitions(MockDoublePendulum PRIVATE
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 endif()

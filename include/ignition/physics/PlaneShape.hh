@@ -64,11 +64,11 @@ namespace physics
 
       // See PlaneShape::GetNormal()
       public: virtual Normal GetPlaneShapeNormal(
-          std::size_t _planeID) const = 0;
+          const Identity &_planeID) const = 0;
 
       // See PlaneShape::GetPoint()
       public: virtual Point GetPlaneShapePoint(
-          std::size_t _planeID) const = 0;
+          const Identity &_planeID) const = 0;
     };
   };
 
@@ -107,12 +107,12 @@ namespace physics
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: virtual void SetPlaneShapeNormal(
-          std::size_t _planeID,
+          const Identity &_planeID,
           const Normal &_normal) = 0;
 
       public: virtual void SetPlaneShapePoint(
-          std::size_t _planeID,
-          const Point &_normal) = 0;
+          const Identity &_planeID,
+          const Point &_point) = 0;
     };
   };
 
@@ -140,7 +140,7 @@ namespace physics
       public: PlaneShapePtr<PolicyT, FeaturesT> AttachPlaneShape(
           const std::string &_name,
           const Normal &_normal,
-          const Point &_offset = Point::Zero());
+          const Point &_point = Point::Zero());
     };
 
     public: template <typename PolicyT>
@@ -153,10 +153,10 @@ namespace physics
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: virtual Identity AttachPlaneShape(
-          std::size_t _linkID,
+          const Identity &_linkID,
           const std::string &_name,
           const Normal &_normal,
-          const Point &_offset) = 0;
+          const Point &_point) = 0;
     };
   };
 }

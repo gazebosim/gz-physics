@@ -60,11 +60,12 @@ namespace mesh
   auto AttachMeshShapeFeature::Link<PolicyT, FeaturesT>::AttachMeshShape(
       const std::string &_name,
       const ignition::common::Mesh &_mesh,
-      const PoseType &_pose) -> ShapePtrType
+      const PoseType &_pose,
+      const Dimensions &_scale) -> ShapePtrType
   {
     return ShapePtrType(this->pimpl,
           this->template Interface<AttachMeshShapeFeature>()
-              ->AttachMeshShape(this->identity, _name, _mesh, _pose));
+              ->AttachMeshShape(this->identity, _name, _mesh, _pose, _scale));
   }
 }
 }

@@ -30,7 +30,9 @@ namespace dartsim {
 /// can be used by dartsim.
 class CustomMeshShape : public dart::dynamics::MeshShape
 {
-  public: CustomMeshShape(const ignition::common::Mesh &_input);
+  public: CustomMeshShape(
+      const ignition::common::Mesh &_input,
+      const Eigen::Vector3d &_scale);
 };
 
 }

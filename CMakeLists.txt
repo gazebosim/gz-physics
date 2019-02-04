@@ -13,7 +13,7 @@ find_package(ignition-cmake2 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project(VERSION_SUFFIX pre3)
+ign_configure_project(VERSION_SUFFIX pre5)
 
 
 #============================================================================
@@ -59,11 +59,10 @@ ign_find_package(DART
 #    utils
 #    utils-urdf
   CONFIG
-  VERSION 6
+  VERSION 6.7.2
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
-ign_find_package(console_bridge)
 
 
 message(STATUS "-------------------------------------------\n")

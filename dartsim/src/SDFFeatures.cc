@@ -212,8 +212,25 @@ static ShapeAndTransform ConstructSphere(
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
-  return {std::make_shared<dart::dynamics::PlaneShape>(
-          math::eigen3::convert(_plane.Normal()), 0.0)};
+  // TODO(anyone): We use BoxShape until PlaneShape is completely supported in
+  // DART. Please see: https://github.com/dartsim/dart/issues/114
+  const Eigen::Vector3d z = Eigen::Vector3d::UnitZ();
+  const Eigen::Vector3d axis = z.cross(math::eigen3::convert(_plane.Normal()));
+  const double norm = axis.norm();
+  const double angle = std::asin(norm/(_plane.Normal().Length()));
+  Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
+
+  // We check that the angle isn't too close to zero, because otherwise
+  // axis/norm would be undefined.
+  if (angle > 1e-12)
+    tf.rotate(Eigen::AngleAxisd(angle, axis/norm));
+
+  // This number was taken from osrf/gazebo. Seems arbitrary.
+  const double planeDim = 2100;
+  tf.translate(Eigen::Vector3d(0.0, 0.0, -planeDim*0.5));
+
+  return {std::make_shared<dart::dynamics::BoxShape>(
+          Eigen::Vector3d(planeDim, planeDim, planeDim)), tf};
 }
 
 /////////////////////////////////////////////////
@@ -248,10 +265,10 @@ static ShapeAndTransform ConstructGeometry(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
-    const std::size_t /*_engine*/,
+    const Identity &_engine,
     const ::sdf::World &_sdfWorld)
 {
-  const Identity worldID = this->ConstructEmptyWorld(0, _sdfWorld.Name());
+  const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
   const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
 
@@ -276,7 +293,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModel(
-    const std::size_t _worldID,
+    const Identity &_worldID,
     const ::sdf::Model &_sdfModel)
 {
   dart::dynamics::SkeletonPtr model =
@@ -293,11 +310,14 @@ Identity SDFFeatures::ConstructSdfModel(
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
 
+  auto modelIdentity =
+      this->GenerateIdentity(modelID, this->models.at(modelID));
+
   // First, construct all links
   for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
   {
     this->FindOrConstructLink(
-          model, modelID, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
+          model, modelIdentity, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
   }
 
 
@@ -313,23 +333,23 @@ Identity SDFFeatures::ConstructSdfModel(
     }
 
     dart::dynamics::BodyNode * const parent = this->FindOrConstructLink(
-          model, modelID, _sdfModel, sdfJoint->ParentLinkName());
+          model, modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
 
     dart::dynamics::BodyNode * const child = this->FindOrConstructLink(
-          model, modelID, _sdfModel, sdfJoint->ChildLinkName());
+          model, modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
 
     this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
   }
 
-  return this->GenerateIdentity(modelID, model);
+  return modelIdentity;
 }
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfLink(
-    const std::size_t _modelID,
+    const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
-  const ModelInfo &modelInfo = models.at(_modelID);
+  const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
@@ -374,6 +394,8 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::size_t linkID = this->AddLink(bn);
   this->AddJoint(joint);
 
+  auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
+
   if (modelInfo.model->getNumBodyNodes() == 1)
   {
     // We just added the first link, so this is now the canonical link. We
@@ -389,7 +411,7 @@ Identity SDFFeatures::ConstructSdfLink(
   {
     const auto collision = _sdfLink.CollisionByIndex(i);
     if (collision)
-      this->ConstructSdfCollision(linkID, *collision);
+      this->ConstructSdfCollision(linkIdentity, *collision);
   }
 
   // ign-physics is currently ignoring visuals, so we won't parse them from the
@@ -401,15 +423,15 @@ Identity SDFFeatures::ConstructSdfLink(
 //      this->ConstructSdfVisual(linkID, *visual);
 //  }
 
-  return this->GenerateIdentity(linkID);
+  return linkIdentity;
 }
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfJoint(
-    const std::size_t _modelID,
+    const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
-  const ModelInfo &modelInfo = models[_modelID];
+  const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode * const parent =
       modelInfo.model->getBodyNode(_sdfJoint.ParentLinkName());
 
@@ -421,7 +443,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfCollision(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const ::sdf::Collision &_collision)
 {
   if (!_collision.Geom())
@@ -441,7 +463,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     return this->GenerateInvalidId();
   }
 
-  dart::dynamics::BodyNode * const bn = this->links.at(_linkID);
+  dart::dynamics::BodyNode *const bn =
+      this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
 
   // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
   // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
@@ -456,13 +479,14 @@ Identity SDFFeatures::ConstructSdfCollision(
   node->setRelativeTransform(
         math::eigen3::convert(_collision.Pose()) * tf_shape);
 
-  return this->GenerateIdentity(
-        this->AddShape({node, _collision.Name(), tf_shape}));
+  const std::size_t shapeID =
+      this->AddShape({node, _collision.Name(), tf_shape});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfVisual(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const ::sdf::Visual &_visual)
 {
   if (!_visual.Geom())
@@ -482,7 +506,8 @@ Identity SDFFeatures::ConstructSdfVisual(
     return this->GenerateInvalidId();
   }
 
-  dart::dynamics::BodyNode * const bn = this->links.at(_linkID);
+  dart::dynamics::BodyNode *const bn =
+      this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
 
   // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
   // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
@@ -506,14 +531,14 @@ Identity SDFFeatures::ConstructSdfVisual(
           Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
   }
 
-  return this->GenerateIdentity(
-        this->AddShape({node, _visual.Name(), tf_shape}));
+  const std::size_t shapeID = this->AddShape({node, _visual.Name(), tf_shape});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 /////////////////////////////////////////////////
 dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     const dart::dynamics::SkeletonPtr &_model,
-    const std::size_t _modelID,
+    const Identity &_modelID,
     const ::sdf::Model &_sdfModel,
     const std::string &_linkName)
 {
@@ -532,7 +557,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     return nullptr;
   }
 
-  return this->links.at(this->ConstructSdfLink(_modelID, *sdfLink));
+  return this->links.at(this->ConstructSdfLink(_modelID, *sdfLink))->link.get();
 }
 
 /////////////////////////////////////////////////
@@ -698,7 +723,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   const std::size_t jointID = this->AddJoint(joint);
 
-  return this->GenerateIdentity(jointID);
+  return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
 /////////////////////////////////////////////////

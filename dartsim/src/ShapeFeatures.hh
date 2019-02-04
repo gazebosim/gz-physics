@@ -61,21 +61,21 @@ class ShapeFeatures :
 {
   // ----- Kinematic Properties -----
   public: Pose3d GetShapeRelativeTransform(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: void SetShapeRelativeTransform(
-      std::size_t _shapeID, const Pose3d &_pose) override;
+      const Identity &_shapeID, const Pose3d &_pose) override;
 
 
   // ----- Box Features -----
   public: Identity CastToBoxShape(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: LinearVector3d GetBoxShapeSize(
-      std::size_t _boxID) const override;
+      const Identity &_boxID) const override;
 
   public: Identity AttachBoxShape(
-      std::size_t _linkID,
+      const Identity &_linkID,
       const std::string &_name,
       const LinearVector3d &_size,
       const Pose3d &_pose) override;
@@ -83,16 +83,16 @@ class ShapeFeatures :
 
   // ----- Cylinder Features -----
   public: Identity CastToCylinderShape(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: double GetCylinderShapeRadius(
-      std::size_t _cylinderID) const override;
+      const Identity &_cylinderID) const override;
 
   public: double GetCylinderShapeHeight(
-      std::size_t _cylinderID) const override;
+      const Identity &_cylinderID) const override;
 
   public: Identity AttachCylinderShape(
-      std::size_t _linkID,
+      const Identity &_linkID,
       const std::string &_name,
       double _radius,
       double _height,
@@ -101,13 +101,13 @@ class ShapeFeatures :
 
   // ----- Sphere Features -----
   public: Identity CastToSphereShape(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: double GetSphereShapeRadius(
-      std::size_t _sphereID) const override;
+      const Identity &_sphereID) const override;
 
   public: Identity AttachSphereShape(
-      std::size_t _linkID,
+      const Identity &_linkID,
       const std::string &_name,
       double _radius,
       const Pose3d &_pose) override;
@@ -115,19 +115,37 @@ class ShapeFeatures :
 
   // ----- Mesh Features -----
   public: Identity CastToMeshShape(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: LinearVector3d GetMeshShapeSize(
-      std::size_t _meshID) const override;
+      const Identity &_meshID) const override;
 
   public: LinearVector3d GetMeshShapeScale(
-      std::size_t _meshID) const override;
+      const Identity &_meshID) const override;
 
   public: Identity AttachMeshShape(
-      std::size_t _linkID,
+      const Identity &_linkID,
       const std::string &_name,
       const ignition::common::Mesh &_mesh,
-      const Pose3d &_pose) override;
+      const Pose3d &_pose,
+      const LinearVector3d &_scale) override;
+
+
+  // ----- Plane Features -----
+  public: Identity CastToPlaneShape(
+      const Identity &_shapeID) const override;
+
+  public: AngularVector3d GetPlaneShapeNormal(
+      const Identity &_planeID) const override;
+
+  public: LinearVector3d GetPlaneShapePoint(
+      const Identity &_planeID) const override;
+
+  public: Identity AttachPlaneShape(
+      const Identity &_linkID,
+      const std::string &_name,
+      const AngularVector3d &_normal,
+      const LinearVector3d &_point) override;
 };
 
 }

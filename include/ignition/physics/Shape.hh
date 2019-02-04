@@ -50,7 +50,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual PoseType GetShapeRelativeTransform(
-            std::size_t _shapeID) const = 0;
+            const Identity &_shapeID) const = 0;
       };
     };
 
@@ -80,7 +80,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual void SetShapeRelativeTransform(
-            std::size_t _shapeID, const PoseType &_pose) = 0;
+            const Identity &_shapeID, const PoseType &_pose) = 0;
       };
     };
 
@@ -119,10 +119,10 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual Scalar GetFrictionCoefficient(
-            std::size_t _shape0, std::size_t _shape1) const = 0;
+            const Identity &_shape0, const Identity &_shape1) const = 0;
 
         public: virtual Scalar GetRestitutionCoefficient(
-            std::size_t _shape0, std::size_t _shape1) const = 0;
+            const Identity &_shape0, const Identity &_shape1) const = 0;
       };
     };
 
@@ -162,10 +162,14 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual void SetShapeFrictionCoefficient(
-            std::size_t _shape0, std::size_t _shape1, Scalar _value) = 0;
+            const Identity &_shape0,
+            const Identity &_shape1,
+            Scalar _value) = 0;
 
         public: virtual void SetShapeRestitutionCoefficient(
-            std::size_t _shape0, std::size_t _shape1, Scalar _value) = 0;
+            const Identity &_shape0,
+            const Identity &_shape1,
+            Scalar _value) = 0;
       };
     };
   }
