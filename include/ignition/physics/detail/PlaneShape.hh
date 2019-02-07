@@ -65,10 +65,11 @@ namespace physics
   PlaneShapePtr<P, F> AttachPlaneShapeFeature::Link<P, F>::AttachPlaneShape(
       const std::string &_name,
       const Normal &_normal,
-      const Point &_offset)
+      const Point &_point)
   {
-    return this->template Interface<AttachPlaneShapeFeature>()
-        ->AttachPlaneShape(this->identity, _name, _normal, _offset);
+    return PlaneShapePtr<P, F>(this->pimpl,
+          this->template Interface<AttachPlaneShapeFeature>()
+            ->AttachPlaneShape(this->identity, _name, _normal, _point));
   }
 }
 }
