@@ -56,8 +56,8 @@ ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
 ign_find_package(DART
   COMPONENTS
     collision-ode
-#    utils
-#    utils-urdf
+    utils
+    utils-urdf
   CONFIG
   VERSION 6.7.2
   REQUIRED_BY dartsim
