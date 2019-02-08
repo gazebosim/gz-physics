@@ -31,6 +31,7 @@
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/mesh/MeshShape.hh>
 #include <ignition/physics/PlaneShape.hh>
+#include <ignition/physics/FixedJoint.hh>
 
 #include <ignition/common/MeshManager.hh>
 
@@ -43,7 +44,8 @@ using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::ConstructEmptyLinkFeature,
   ignition::physics::mesh::AttachMeshShapeFeature,
   ignition::physics::AttachPlaneShapeFeature,
-  ignition::physics::SetFreeJointRelativeTransformFeature
+  ignition::physics::SetFreeJointRelativeTransformFeature,
+  ignition::physics::AttachFixedJointFeature
 >;
 
 using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
@@ -92,14 +94,23 @@ TestWorldPtr ConstructMeshPlaneWorld(
 {
   auto world = _engine->ConstructEmptyWorld("world");
 
+  Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
+  tf.translation()[2] = 2.0;
+
   auto model = world->ConstructEmptyModel("mesh");
   auto link = model->ConstructEmptyLink("link");
-  link->AttachMeshShape("shape", _mesh, ignition::physics::Pose3d::Identity());
+  // TODO(anyone): This test is somewhat awkward because we lift up the mesh
+  // from the center of the link instead of lifting up the link or the model.
+  // We're doing this because we don't currently have an API for moving models
+  // or links around. See the conversation here for more:
+  // https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/46/wip-add-link-features/diff#comment-87592809
+  link->AttachMeshShape("mesh", _mesh, tf);
 
   model = world->ConstructEmptyModel("plane");
   link = model->ConstructEmptyLink("link");
-  link->AttachPlaneShape("shape", ignition::physics::AngularVector3d::UnitZ(),
-                         5.0 * ignition::physics::LinearVector3d::UnitZ());
+
+  link->AttachPlaneShape("plane", ignition::physics::AngularVector3d::UnitZ());
+  link->AttachFixedJoint(nullptr);
 
   return world;
 }
@@ -124,20 +135,24 @@ TEST_P(Collisions_TEST, MeshAndPlane)
   {
     const auto link = world->GetModel(0)->GetLink(0);
 
-    std::cout << link->FrameDataRelativeToWorld()
-                 .pose.translation().transpose() << std::endl;
+    EXPECT_NEAR(
+          0.0, link->FrameDataRelativeToWorld().pose.translation()[2], 1e-6);
 
     ignition::physics::ForwardStep::Output output;
     ignition::physics::ForwardStep::State state;
     ignition::physics::ForwardStep::Input input;
-    for (std::size_t i = 0; i < 500; ++i)
+    for (std::size_t i = 0; i < 1000; ++i)
     {
-      // TODO(MXG): This is running suspiciously slow
       world->Step(output, state, input);
     }
 
-    std::cout << link->FrameDataRelativeToWorld()
-                 .pose.translation().transpose() << std::endl;
+    // Make sure the mesh was stopped by the plane. In 2000 time steps at the
+    // default step size of 0.001, a free falling body should drop approximately
+    // 19.6 meters. As long as the body is somewhere near 1.91, then it has been
+    // stopped by the plane (the exact value might vary because the body might
+    // be rocking side-to-side after falling).
+    EXPECT_NEAR(
+          -1.91, link->FrameDataRelativeToWorld().pose.translation()[2], 0.05);
   }
 }
 
