@@ -15,6 +15,11 @@
  *
 */
 
+#include <dart/collision/CollisionObject.hpp>
+#include <dart/collision/CollisionResult.hpp>
+
+#include <ignition/math/eigen3/Conversions.hh>
+
 #include "SimulationFeatures.hh"
 
 namespace ignition {
@@ -34,6 +39,42 @@ void SimulationFeatures::WorldForwardStep(
   // TODO(MXG): Fill in output and state
 }
 
+std::vector<SimulationFeatures::ContactInternal>
+SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
+{
+  std::vector<SimulationFeatures::ContactInternal> outContacts;
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  const auto colResult = world->getLastCollisionResult();
+
+  for (const auto &dtContact : colResult.getContacts())
+  {
+    dart::collision::CollisionObject *dtCollObj1 = dtContact.collisionObject1;
+    dart::collision::CollisionObject *dtCollObj2 = dtContact.collisionObject2;
+
+    const dart::dynamics::ShapeFrame *dtShapeFrame1 =
+      dtCollObj1->getShapeFrame();
+    const dart::dynamics::ShapeFrame *dtShapeFrame2 =
+      dtCollObj2->getShapeFrame();
+
+    dart::dynamics::ConstBodyNodePtr dtBodyNode1;
+    dart::dynamics::ConstBodyNodePtr dtBodyNode2;
+
+    if (this->shapes.HasEntity(dtShapeFrame1->asShapeNode()) &&
+        this->shapes.HasEntity(dtShapeFrame2->asShapeNode()))
+    {
+      std::size_t shape1ID =
+          this->shapes.IdentityOf(dtShapeFrame1->asShapeNode());
+      std::size_t shape2ID =
+          this->shapes.IdentityOf(dtShapeFrame2->asShapeNode());
+
+      outContacts.push_back(
+          {this->GenerateIdentity(shape1ID, this->shapes.at(shape1ID)),
+           this->GenerateIdentity(shape2ID, this->shapes.at(shape2ID)),
+           dtContact.point});
+    }
+  }
+  return outContacts;
+}
 }
 }
 }

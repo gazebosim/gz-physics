@@ -18,6 +18,9 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
+#include <set>
+
+#include <ignition/math/Vector3.hh>
 
 #include <ignition/physics/FindFeatures.hh>
 #include <ignition/plugin/Loader.hh>
@@ -26,6 +29,7 @@
 // Features
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/GetContacts.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
@@ -33,15 +37,18 @@
 #include <sdf/World.hh>
 
 #include <test/PhysicsPluginsList.hh>
+#include <test/Utils.hh>
 
 using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::LinkFrameSemantics,
   ignition::physics::ForwardStep,
+  ignition::physics::GetContactsFromLastStepFeature,
   ignition::physics::GetEntities,
   ignition::physics::sdf::ConstructSdfWorld
 >;
 
 using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
+using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
 
 std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
@@ -52,6 +59,8 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
 
   const std::set<std::string> pluginNames =
       ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
+
+  EXPECT_LT(0u, pluginNames.size());
 
   std::unordered_set<TestWorldPtr> worlds;
   for (const std::string &name : pluginNames)
@@ -66,6 +75,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
 
     sdf::Root root;
     const sdf::Errors &errors = root.Load(_world);
+    EXPECT_EQ(0u, errors.size());
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     auto world = engine->ConstructWorld(*sdfWorld);
 
@@ -79,9 +89,6 @@ class SimulationFeatures_TEST
   : public ::testing::Test,
     public ::testing::WithParamInterface<std::string>
 {};
-
-INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
-    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
 
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST_P(SimulationFeatures_TEST, Falling)
@@ -109,6 +116,78 @@ TEST_P(SimulationFeatures_TEST, Falling)
     EXPECT_NEAR(pos.z(), 1.0, 5e-2);
   }
 }
+
+TEST_P(SimulationFeatures_TEST, RetrieveContacts)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/contact.sdf");
+
+
+  for (const auto &world : worlds)
+  {
+    auto sphere = world->GetModel("sphere");
+    auto groundPlane = world->GetModel("ground_plane");
+    auto groundPlaneCollision = groundPlane->GetLink(0)->GetShape(0);
+
+    ignition::physics::ForwardStep::Input input;
+    ignition::physics::ForwardStep::State state;
+    ignition::physics::ForwardStep::Output output;
+
+    world->Step(output, state, input);
+
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(4u, contacts.size());
+
+    // Use a set because the order of collisions is not determined.
+    std::set<TestShapePtr> possibleCollisions = {
+        groundPlaneCollision,
+        sphere->GetLink(0)->GetShape(0),
+        sphere->GetLink(1)->GetShape(0),
+        sphere->GetLink(2)->GetShape(0),
+        sphere->GetLink(3)->GetShape(0),
+    };
+    std::map<TestShapePtr, Eigen::Vector3d> expectations
+    {
+      {sphere->GetLink(0)->GetShape(0), {0.0, 0.0, 0.0}},
+      {sphere->GetLink(1)->GetShape(0), {0.0, 1.0, 0.0}},
+      {sphere->GetLink(2)->GetShape(0), {1.0, 0.0, 0.0}},
+      {sphere->GetLink(3)->GetShape(0), {1.0, 1.0, 0.0}},
+    };
+
+    for (auto &contact : contacts)
+    {
+      ASSERT_TRUE(contact.collision1);
+      ASSERT_TRUE(contact.collision2);
+
+      EXPECT_TRUE(possibleCollisions.find(contact.collision1) !=
+                  possibleCollisions.end());
+      EXPECT_TRUE(possibleCollisions.find(contact.collision2) !=
+                  possibleCollisions.end());
+      EXPECT_NE(contact.collision1, contact.collision2);
+
+      Eigen::Vector3d expectedContactPos = Eigen::Vector3d::Zero();
+      // One of the two collisions is the ground plane and the other is the
+      // collision we're interested in.
+      try
+      {
+        expectedContactPos = expectations.at(contact.collision1);
+      }
+      catch (...)
+      {
+        expectedContactPos = expectations.at(contact.collision2);
+      }
+
+      EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+                                                 contact.point, 1e-6));
+    }
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
+    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
 
 int main(int argc, char *argv[])
 {
