@@ -74,4 +74,4 @@ namespace physics
 }
 }
 
-#endif // IGNITION_PHYSICS_DETAIL_PLANESHAPE_HH_
+#endif  // IGNITION_PHYSICS_DETAIL_PLANESHAPE_HH_

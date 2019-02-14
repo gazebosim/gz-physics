@@ -164,4 +164,4 @@ namespace physics
 
 #include <ignition/physics/detail/PlaneShape.hh>
 
-#endif // IGNITION_PHYSICS_PLANESHAPE_HH_
+#endif  // IGNITION_PHYSICS_PLANESHAPE_HH_
