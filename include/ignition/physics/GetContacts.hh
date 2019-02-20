@@ -66,7 +66,7 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
     public: virtual std::vector<ContactInternal> GetContactsFromLastStep(
         const Identity &_worldID) const = 0;
   };
-  };
+};
 }
 }
 

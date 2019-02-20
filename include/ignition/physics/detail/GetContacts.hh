@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_DETAIL_GETCONTACTS_HH_
 #define IGNITION_PHYSICS_DETAIL_GETCONTACTS_HH_
 
+#include <vector>
 #include <ignition/physics/GetContacts.hh>
 
 namespace ignition
