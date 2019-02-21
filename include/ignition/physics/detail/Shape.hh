@@ -64,6 +64,15 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    auto GetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
+    ::GetBoundingBox() const -> math::AxisAlignedBox
+    {
+      return this->template Interface<GetShapeCollisionProperties>()
+                 ->GetBoundingBox(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void SetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
     ::SetFrictionCoefficient(const BaseShapePtr<PolicyT> &_other, Scalar _value)
     {

@@ -20,6 +20,7 @@
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
+#include <ignition/math/eigen3/Conversions.hh>
 
 #include "CustomMeshShape.hh"
 #include "ShapeFeatures.hh"
@@ -27,6 +28,34 @@
 namespace ignition {
 namespace physics {
 namespace dartsim {
+
+/////////////////////////////////////////////////
+math::AxisAlignedBox ShapeFeatures::GetBoundingBox(
+    const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  dart::dynamics::Shape *shape = static_cast<dart::dynamics::Shape*>(
+        shapeInfo->node->getShape().get());
+
+  const dart::math::BoundingBox &box = shape->getBoundingBox();
+
+  return math::AxisAlignedBox(math::eigen3::convert(box.getMin()),
+      math::eigen3::convert(box.getMax()));
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetFrictionCoefficient(
+              const Identity &, const Identity &) const
+{
+  return 0.0;
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetRestitutionCoefficient(
+              const Identity &, const Identity &) const
+{
+  return 0.0;
+}
 
 /////////////////////////////////////////////////
 Pose3d ShapeFeatures::GetShapeRelativeTransform(

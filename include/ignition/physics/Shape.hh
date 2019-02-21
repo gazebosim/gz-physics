@@ -20,6 +20,7 @@
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/Geometry.hh>
+#include <ignition/math/AxisAlignedBox.hh>
 
 namespace ignition
 {
@@ -111,6 +112,8 @@ namespace ignition
         /// _other.
         public: Scalar GetRestitutionCoefficient(
             const BaseShapePtr<PolicyT> &_other) const;
+
+        public: math::AxisAlignedBox GetBoundingBox() const;
       };
 
       public: template <typename PolicyT>
@@ -123,6 +126,9 @@ namespace ignition
 
         public: virtual Scalar GetRestitutionCoefficient(
             const Identity &_shape0, const Identity &_shape1) const = 0;
+
+        public: virtual math::AxisAlignedBox GetBoundingBox(
+            const Identity &_shape0) const = 0;
       };
     };
 
