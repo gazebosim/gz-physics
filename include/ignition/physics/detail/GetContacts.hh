@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_DETAIL_GETCONTACTS_HH_
 #define IGNITION_PHYSICS_DETAIL_GETCONTACTS_HH_
 
+#include <utility>
 #include <vector>
 #include <ignition/physics/GetContacts.hh>
 
@@ -30,19 +31,29 @@ template <typename PolicyT, typename FeaturesT>
 auto GetContactsFromLastStepFeature::World<
     PolicyT, FeaturesT>::GetContactsFromLastStep() const -> std::vector<Contact>
 {
-  auto contactInternal =
+  auto contactsInternal =
       this->template Interface<GetContactsFromLastStepFeature>()
           ->GetContactsFromLastStep(this->identity);
   // contactInternal provides the identities of collision1 and collision2. Here,
   // we create a new vector and create ShapePtrs out of those identities. Seems
   // inefficient, but I don't know if there's a better way to handle this.
   std::vector<Contact> output;
-  output.reserve(contactInternal.size());
-  for (auto &contact : contactInternal)
+  output.reserve(contactsInternal.size());
+  for (auto &contact : contactsInternal)
   {
-    output.push_back({ShapePtrType(this->pimpl, contact.collision1),
-                      ShapePtrType(this->pimpl, contact.collision2),
-                      contact.point});
+    ContactPoint contactPoint{ShapePtrType(this->pimpl, contact.collision1),
+                              ShapePtrType(this->pimpl, contact.collision2),
+                              contact.point};
+
+    // Note: Using emplace_back and using Get on the resulting reference seems
+    // to be the only way to add contacts into the vector. Using push_back like
+    // the following does not work:
+    //   Contact contactOutput
+    //   contactOutput.template Get<ContactPoint>() = std::move(contactPoint);
+    //   output.push_back(contactOutput);
+    //
+    auto &contactOutput = output.emplace_back();
+    contactOutput.template Get<ContactPoint>() = std::move(contactPoint);
   }
   return output;
 }

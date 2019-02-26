@@ -39,12 +39,17 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
     public: using VectorType =
         typename FromPolicy<PolicyT>::template Use<Vector>;
 
-    public: struct Contact
+    public: struct ContactPoint
     {
+      /// \brief Collision shape of the first body
       ShapePtrType collision1;
+      /// \brief Collision shape of the second body
       ShapePtrType collision2;
+      /// \brief The point of contact expressed in the world frame
       VectorType point;
     };
+
+    public: using Contact = RequireData<ContactPoint>;
 
     /// \brief Get contacts generated in the previous simulation step
     public: std::vector<Contact> GetContactsFromLastStep() const;
@@ -58,8 +63,11 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
 
     public: struct ContactInternal
     {
+      /// \brief Identity of the first body
       Identity collision1;
+      /// \brief Identity of the second body
       Identity collision2;
+      /// \brief The point of contact expressed in the world frame
       VectorType point;
     };
 

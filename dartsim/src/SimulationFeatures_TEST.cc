@@ -49,6 +49,7 @@ using TestFeatureList = ignition::physics::FeatureList<
 
 using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
+using ContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
 
 std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
@@ -159,29 +160,30 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 
     for (auto &contact : contacts)
     {
-      ASSERT_TRUE(contact.collision1);
-      ASSERT_TRUE(contact.collision2);
+      const auto &contactPoint = contact.Get<ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
 
-      EXPECT_TRUE(possibleCollisions.find(contact.collision1) !=
+      EXPECT_TRUE(possibleCollisions.find(contactPoint.collision1) !=
                   possibleCollisions.end());
-      EXPECT_TRUE(possibleCollisions.find(contact.collision2) !=
+      EXPECT_TRUE(possibleCollisions.find(contactPoint.collision2) !=
                   possibleCollisions.end());
-      EXPECT_NE(contact.collision1, contact.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
 
       Eigen::Vector3d expectedContactPos = Eigen::Vector3d::Zero();
       // One of the two collisions is the ground plane and the other is the
       // collision we're interested in.
       try
       {
-        expectedContactPos = expectations.at(contact.collision1);
+        expectedContactPos = expectations.at(contactPoint.collision1);
       }
       catch (...)
       {
-        expectedContactPos = expectations.at(contact.collision2);
+        expectedContactPos = expectations.at(contactPoint.collision2);
       }
 
       EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
-                                                 contact.point, 1e-6));
+                                                 contactPoint.point, 1e-6));
     }
   }
 }
