@@ -69,6 +69,8 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
       Identity collision2;
       /// \brief The point of contact expressed in the world frame
       VectorType point;
+      /// \brief Extra data related to contact.
+      CompositeData extraData;
     };
 
     public: virtual std::vector<ContactInternal> GetContactsFromLastStep(
