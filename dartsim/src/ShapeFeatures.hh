@@ -129,7 +129,7 @@ class ShapeFeatures :
 
   // ----- Collision Features -----
   public: AlignedBox3d GetAxisAlignedBoundingBox(
-              const Identity &_shapeID) const;
+              const Identity &_shapeID) const override;
 };
 
 }
