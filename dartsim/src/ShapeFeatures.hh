@@ -127,7 +127,7 @@ class ShapeFeatures :
       const Pose3d &_pose,
       const LinearVector3d &_scale) override;
 
-  // ----- Collision Features -----
+  // ----- Boundingbox Features -----
   public: AlignedBox3d GetAxisAlignedBoundingBox(
               const Identity &_shapeID) const;
 };
