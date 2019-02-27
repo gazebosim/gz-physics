@@ -67,10 +67,12 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       std::size_t shape2ID =
           this->shapes.IdentityOf(dtShapeFrame2->asShapeNode());
 
+      // TODO(addisu) Add normal, depth and wrench to extraData.
+      CompositeData extraData;
       outContacts.push_back(
           {this->GenerateIdentity(shape1ID, this->shapes.at(shape1ID)),
            this->GenerateIdentity(shape2ID, this->shapes.at(shape2ID)),
-           dtContact.point});
+           dtContact.point, extraData});
     }
   }
   return outContacts;
