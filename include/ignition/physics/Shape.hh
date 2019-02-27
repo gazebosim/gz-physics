@@ -20,7 +20,6 @@
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/Geometry.hh>
-#include <ignition/math/AxisAlignedBox.hh>
 
 namespace ignition
 {
@@ -134,15 +133,21 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
       {
+        public: using AlignedBoxType =
+            typename FromPolicy<PolicyT>::template Use<AlignedBox>;
+
         /// \brief Get the axis aligned bounding box for the shape.
         /// \return Axis aligned bounding box for the shape.
-        public: math::AxisAlignedBox GetAxisAlignedBoundingBox() const;
+        public: AlignedBoxType GetAxisAlignedBoundingBox() const;
       };
 
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
-        public: virtual math::AxisAlignedBox GetAxisAlignedBoundingBox(
+        public: using AlignedBoxType =
+            typename FromPolicy<PolicyT>::template Use<AlignedBox>;
+
+        public: virtual AlignedBoxType GetAxisAlignedBoundingBox(
             const Identity &_shape0) const = 0;
       };
     };

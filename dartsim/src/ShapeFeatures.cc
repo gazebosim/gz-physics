@@ -30,7 +30,7 @@ namespace physics {
 namespace dartsim {
 
 /////////////////////////////////////////////////
-math::AxisAlignedBox ShapeFeatures::GetAxisAlignedBoundingBox(
+AlignedBox3d ShapeFeatures::GetAxisAlignedBoundingBox(
     const Identity &_shapeID) const
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
@@ -39,8 +39,7 @@ math::AxisAlignedBox ShapeFeatures::GetAxisAlignedBoundingBox(
 
   const dart::math::BoundingBox &box = shape->getBoundingBox();
 
-  return math::AxisAlignedBox(math::eigen3::convert(box.getMin()),
-      math::eigen3::convert(box.getMax()));
+  return AlignedBox3d(box.getMin(), box.getMax());
 }
 
 /////////////////////////////////////////////////

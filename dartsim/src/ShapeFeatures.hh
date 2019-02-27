@@ -128,7 +128,7 @@ class ShapeFeatures :
       const LinearVector3d &_scale) override;
 
   // ----- Collision Features -----
-  public: math::AxisAlignedBox GetAxisAlignedBoundingBox(
+  public: AlignedBox3d GetAxisAlignedBoundingBox(
               const Identity &_shapeID) const;
 };
 
