@@ -18,8 +18,6 @@
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/CollisionResult.hpp>
 
-#include <ignition/math/eigen3/Conversions.hh>
-
 #include "SimulationFeatures.hh"
 
 namespace ignition {

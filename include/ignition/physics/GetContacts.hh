@@ -22,6 +22,7 @@
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/Geometry.hh>
+#include <ignition/physics/SpecifyData.hh>
 
 namespace ignition
 {
