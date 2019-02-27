@@ -30,7 +30,7 @@ namespace physics {
 namespace dartsim {
 
 /////////////////////////////////////////////////
-math::AxisAlignedBox ShapeFeatures::GetBoundingBox(
+math::AxisAlignedBox ShapeFeatures::GetAxisAlignedBoundingBox(
     const Identity &_shapeID) const
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
@@ -41,20 +41,6 @@ math::AxisAlignedBox ShapeFeatures::GetBoundingBox(
 
   return math::AxisAlignedBox(math::eigen3::convert(box.getMin()),
       math::eigen3::convert(box.getMax()));
-}
-
-/////////////////////////////////////////////////
-double ShapeFeatures::GetFrictionCoefficient(
-              const Identity &, const Identity &) const
-{
-  return 0.0;
-}
-
-/////////////////////////////////////////////////
-double ShapeFeatures::GetRestitutionCoefficient(
-              const Identity &, const Identity &) const
-{
-  return 0.0;
 }
 
 /////////////////////////////////////////////////

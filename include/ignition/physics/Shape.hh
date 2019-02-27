@@ -112,8 +112,6 @@ namespace ignition
         /// _other.
         public: Scalar GetRestitutionCoefficient(
             const BaseShapePtr<PolicyT> &_other) const;
-
-        public: math::AxisAlignedBox GetBoundingBox() const;
       };
 
       public: template <typename PolicyT>
@@ -126,8 +124,25 @@ namespace ignition
 
         public: virtual Scalar GetRestitutionCoefficient(
             const Identity &_shape0, const Identity &_shape1) const = 0;
+      };
+    };
 
-        public: virtual math::AxisAlignedBox GetBoundingBox(
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE GetShapeBoundingBox
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      {
+        /// \brief Get the axis aligned bounding box for the shape.
+        /// \return Axis aligned bounding box for the shape.
+        public: math::AxisAlignedBox GetAxisAlignedBoundingBox() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual math::AxisAlignedBox GetAxisAlignedBoundingBox(
             const Identity &_shape0) const = 0;
       };
     };

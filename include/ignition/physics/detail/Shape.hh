@@ -64,11 +64,11 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
-    ::GetBoundingBox() const -> math::AxisAlignedBox
+    auto GetShapeBoundingBox::Shape<PolicyT, FeaturesT>
+    ::GetAxisAlignedBoundingBox() const -> math::AxisAlignedBox
     {
-      return this->template Interface<GetShapeCollisionProperties>()
-                 ->GetBoundingBox(this->identity);
+      return this->template Interface<GetShapeBoundingBox>()
+                 ->GetAxisAlignedBoundingBox(this->identity);
     }
 
     /////////////////////////////////////////////////

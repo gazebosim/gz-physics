@@ -35,7 +35,7 @@ namespace dartsim {
 using ShapeFeatureList = FeatureList<
   GetShapeKinematicProperties,
   SetShapeKinematicProperties,
-  GetShapeCollisionProperties,
+  GetShapeBoundingBox,
   GetBoxShapeProperties,
   // dartsim cannot yet update shape properties without reloading the model into
   // the world
@@ -128,12 +128,8 @@ class ShapeFeatures :
       const LinearVector3d &_scale) override;
 
   // ----- Collision Features -----
-  public: math::AxisAlignedBox GetBoundingBox(
+  public: math::AxisAlignedBox GetAxisAlignedBoundingBox(
               const Identity &_shapeID) const;
-  public: double GetFrictionCoefficient(
-              const Identity &_shape0, const Identity &_shape1) const;
-  public: double GetRestitutionCoefficient(
-              const Identity &_shape0, const Identity &_shape1) const;
 };
 
 }
