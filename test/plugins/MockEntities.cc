@@ -135,96 +135,98 @@ namespace mock
       return this->GenerateIdentity(0);
     }
 
-    public: std::string GetEngineName(std::size_t _id) const override
+    public: std::string GetEngineName(const Identity &_id) const override
     {
       return engineNames.at(_id);
     }
 
     public: Identity GetWorldByName(
-        std::size_t _engineId, const std::string &_name) const override
+        const Identity &_engineId, const std::string &_name) const override
     {
       return this->GetEntityByName(_engineId, _name, engineToWorldNameToId);
     }
 
-    public: std::string GetWorldName(std::size_t _id) const override
+    public: std::string GetWorldName(const Identity &_id) const override
     {
       return worldNames.at(_id);
     }
 
     public: Identity GetModelByName(
-        std::size_t _worldId, const std::string &_name) const override
+        const Identity &_worldId, const std::string &_name) const override
     {
       return this->GetEntityByName(_worldId, _name, worldToModelNameToId);
     }
 
-    public: std::string GetModelName(std::size_t _id) const override
+    public: std::string GetModelName(const Identity &_id) const override
     {
       return modelNames.at(_id);
     }
 
     public: Identity GetLinkByName(
-        std::size_t _modelId, const std::string &_name) const override
+        const Identity &_modelId, const std::string &_name) const override
     {
       return this->GetEntityByName(_modelId, _name, modelToLinkNameToId);
     }
 
-    public: std::string GetLinkName(std::size_t _id) const override
+    public: std::string GetLinkName(const Identity &_id) const override
     {
       return linkNames.at(_id);
     }
 
     public: Identity GetJointByName(
-        std::size_t _modelId, const std::string &_name) const override
+        const Identity &_modelId, const std::string &_name) const override
     {
       return this->GetEntityByName(_modelId, _name, modelToJointNameToId);
     }
 
-    public: std::string GetJointName(std::size_t _id) const override
+    public: std::string GetJointName(const Identity &_id) const override
     {
       return jointNames.at(_id);
     }
 
     public: bool SetEngineName(
-        std::size_t _id, const std::string &_desiredName) override
+        const Identity &_id, const std::string &_desiredName) override
     {
       engineNames[_id] = _desiredName;
       return true;
     }
 
     public: bool SetWorldName(
-        std::size_t _id, const std::string &_desiredName) override
+        const Identity &_id, const std::string &_desiredName) override
     {
       return this->SetEntityName(
             _id, _desiredName, engineToWorldNameToId, worldNames);
     }
 
     public: bool SetModelName(
-        std::size_t _id, const std::string &_desiredName) override
+        const Identity &_id, const std::string &_desiredName) override
     {
       return this->SetEntityName(
             _id, _desiredName, worldToModelNameToId, modelNames);
     }
 
     public: bool SetLinkName(
-        std::size_t _id, const std::string &_desiredName) override
+        const Identity &_id, const std::string &_desiredName) override
     {
       return this->SetEntityName(
             _id, _desiredName, modelToLinkNameToId, linkNames);
     }
 
     public: bool SetJointName(
-        std::size_t _id, const std::string &_desiredName) override
+        const Identity &_id, const std::string &_desiredName) override
     {
       return this->SetEntityName(
             _id, _desiredName, modelToJointNameToId, jointNames);
     }
 
-    public: Vector<PolicyT> GetLinkCenterOfMass(std::size_t _id) const override
+    public: Vector<PolicyT> GetLinkCenterOfMass(
+        const Identity &_id) const override
     {
       return linkCenterOfMass.at(_id);
     }
 
-    public: Vector<PolicyT> GetModelCenterOfMass(std::size_t _id) const override
+    public: Vector<PolicyT> GetModelCenterOfMass(
+        const Identity &_id) const override
     {
       // For this pretend physics plugin, we'll pretend that all links are of
       // equal mass.

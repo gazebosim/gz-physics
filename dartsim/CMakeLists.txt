@@ -1,8 +1,16 @@
 
+if(APPLE)
+  # workaround for dart issue 1200 until a fix is released
+  # https://github.com/dartsim/dart/issues/1200
+  # https://github.com/dartsim/dart/pull/1209
+  link_directories(/usr/local/opt/console_bridge/lib)
+endif()
+
 # This component expresses custom features of the dartsim plugin, which can
 # expose native dartsim data types.
 ign_add_component(dartsim INTERFACE
-    GET_TARGET_NAME features)
+  DEPENDS_ON_COMPONENTS sdf mesh
+  GET_TARGET_NAME features)
 
 target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
 target_include_directories(${features} SYSTEM INTERFACE ${DART_INCLUDE_DIRS})
@@ -16,6 +24,7 @@ ign_get_libsources_and_unittests(sources test_sources)
 # TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
 ign_add_component(dartsim-plugin
   SOURCES ${sources}
+  DEPENDS_ON_COMPONENTS dartsim
   GET_TARGET_NAME dartsim_plugin)
 
 target_link_libraries(${dartsim_plugin}

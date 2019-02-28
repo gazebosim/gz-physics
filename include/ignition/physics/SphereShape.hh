@@ -49,7 +49,7 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual Scalar GetSphereShapeRadius(
-            std::size_t _sphereID) const = 0;
+            const Identity &_sphereID) const = 0;
       };
     };
 
@@ -74,7 +74,7 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual void SetSphereShapeRadius(
-            std::size_t _sphereID, Scalar _radius) = 0;
+            const Identity &_sphereID, Scalar _radius) = 0;
       };
     };
 
@@ -107,7 +107,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual Identity AttachSphereShape(
-            std::size_t _linkID,
+            const Identity &_linkID,
             const std::string &_name,
             Scalar _radius,
             const PoseType &_pose) = 0;

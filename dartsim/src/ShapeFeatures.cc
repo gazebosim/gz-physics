@@ -30,97 +30,105 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 Pose3d ShapeFeatures::GetShapeRelativeTransform(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
-  const auto &shape = this->shapes.at(_shapeID);
-  return shape.node->getRelativeTransform() * shape.tf_offset.inverse();
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  return shapeInfo->node->getRelativeTransform() *
+         shapeInfo->tf_offset.inverse();
 }
 
 /////////////////////////////////////////////////
 void ShapeFeatures::SetShapeRelativeTransform(
-    const std::size_t _shapeID, const Pose3d &_pose)
+    const Identity &_shapeID, const Pose3d &_pose)
 {
-  const auto &shape = this->shapes.at(_shapeID);
-  shape.node->setRelativeTransform(_pose * shape.tf_offset);
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  shapeInfo->node->setRelativeTransform(_pose * shapeInfo->tf_offset);
 }
 
 /////////////////////////////////////////////////
-Identity ShapeFeatures::CastToBoxShape(std::size_t _shapeID) const
+Identity ShapeFeatures::CastToBoxShape(const Identity &_shapeID) const
 {
-  const dart::dynamics::ShapePtr &shape =
-      this->shapes.at(_shapeID).node->getShape();
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+
+  const dart::dynamics::ShapePtr &shape = shapeInfo->node->getShape();
 
   if (dynamic_cast<dart::dynamics::BoxShape*>(shape.get()))
-    return this->GenerateIdentity(_shapeID);
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 LinearVector3d ShapeFeatures::GetBoxShapeSize(
-    const std::size_t _boxID) const
+    const Identity &_boxID) const
 {
+  const auto *boxInfo = this->ReferenceInterface<ShapeInfo>(_boxID);
   dart::dynamics::BoxShape *box = static_cast<dart::dynamics::BoxShape*>(
-        this->shapes.at(_boxID).node->getShape().get());
+        boxInfo->node->getShape().get());
 
   return box->getSize();
 }
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachBoxShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const LinearVector3d &_size,
     const Pose3d &_pose)
 {
   auto box = std::make_shared<dart::dynamics::BoxShape>(_size);
 
-  DartBodyNode *bn = this->links.at(_linkID);
+  DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
         box, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
-  return this->GenerateIdentity(this->AddShape({sn, _name}));
+  const std::size_t shapeID = this->AddShape({sn, _name});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 /////////////////////////////////////////////////
-Identity ShapeFeatures::CastToCylinderShape(const std::size_t _shapeID) const
+Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
 {
-  const dart::dynamics::ShapePtr &shape =
-      this->shapes.at(_shapeID).node->getShape();
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
 
-  if (dynamic_cast<dart::dynamics::CylinderShape*>(shape.get()))
-    return this->GenerateIdentity(_shapeID);
+  const dart::dynamics::ShapePtr &shape = shapeInfo->node->getShape();
+
+  if (dynamic_cast<dart::dynamics::CylinderShape *>(shape.get()))
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 double ShapeFeatures::GetCylinderShapeRadius(
-    const std::size_t _cylinderID) const
+    const Identity &_cylinderID) const
 {
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_cylinderID);
+
   dart::dynamics::CylinderShape *cylinder =
-      static_cast<dart::dynamics::CylinderShape*>(
-        this->shapes.at(_cylinderID).node->getShape().get());
+      static_cast<dart::dynamics::CylinderShape *>(
+          shapeInfo->node->getShape().get());
 
   return cylinder->getRadius();
 }
 
 /////////////////////////////////////////////////
 double ShapeFeatures::GetCylinderShapeHeight(
-    const std::size_t _cylinderID) const
+    const Identity &_cylinderID) const
 {
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_cylinderID);
   dart::dynamics::CylinderShape *cylinder =
-      static_cast<dart::dynamics::CylinderShape*>(
-        this->shapes.at(_cylinderID).node->getShape().get());
+      static_cast<dart::dynamics::CylinderShape *>(
+          shapeInfo->node->getShape().get());
 
   return cylinder->getHeight();
 }
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachCylinderShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const double _radius,
     const double _height,
@@ -129,107 +137,122 @@ Identity ShapeFeatures::AttachCylinderShape(
   auto cylinder = std::make_shared<dart::dynamics::CylinderShape>(
         _radius, _height);
 
-  DartBodyNode *bn = this->links.at(_linkID);
+  auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
         cylinder, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
-  return this->GenerateIdentity(this->AddShape({sn, _name}));
+
+  const std::size_t shapeID = this->AddShape({sn, _name});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToSphereShape(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
-  const dart::dynamics::ShapePtr &shape =
-      this->shapes.at(_shapeID).node->getShape();
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
 
-  if (dynamic_cast<dart::dynamics::SphereShape*>(shape.get()))
-    return this->GenerateIdentity(_shapeID);
+  const dart::dynamics::ShapePtr &shape =
+      shapeInfo->node->getShape();
+
+  if (dynamic_cast<dart::dynamics::SphereShape *>(shape.get()))
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
-double ShapeFeatures::GetSphereShapeRadius(const std::size_t _sphereID) const
+double ShapeFeatures::GetSphereShapeRadius(const Identity &_sphereID) const
 {
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_sphereID);
+
   dart::dynamics::SphereShape *sphere =
       static_cast<dart::dynamics::SphereShape*>(
-        this->shapes.at(_sphereID).node->getShape().get());
+        shapeInfo->node->getShape().get());
 
   return sphere->getRadius();
 }
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachSphereShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const double _radius,
     const Pose3d &_pose)
 {
   auto sphere = std::make_shared<dart::dynamics::SphereShape>(_radius);
 
-  DartBodyNode *bn = this->links.at(_linkID);
+  DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
         sphere, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
-  return this->GenerateIdentity(this->AddShape({sn, _name}));
+  const std::size_t shapeID = this->AddShape({sn, _name});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToMeshShape(
-    const std::size_t _shapeID) const
+    const Identity &_shapeID) const
 {
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+
   const dart::dynamics::ShapePtr &shape =
-      this->shapes.at(_shapeID).node->getShape();
+      shapeInfo->node->getShape();
 
   if (dynamic_cast<dart::dynamics::MeshShape*>(shape.get()))
-    return this->GenerateIdentity(_shapeID);
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
 
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 LinearVector3d ShapeFeatures::GetMeshShapeSize(
-    const std::size_t _meshID) const
+    const Identity &_meshID) const
 {
-  dart::dynamics::MeshShape *mesh =
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_meshID);
+
+  const dart::dynamics::MeshShape *mesh =
       static_cast<dart::dynamics::MeshShape*>(
-        this->shapes.at(_meshID).node->getShape().get());
+        shapeInfo->node->getShape().get());
 
   return mesh->getBoundingBox().getMax() - mesh->getBoundingBox().getMin();
 }
 
 /////////////////////////////////////////////////
 LinearVector3d ShapeFeatures::GetMeshShapeScale(
-    const std::size_t _meshID) const
+    const Identity &_meshID) const
 {
-  dart::dynamics::MeshShape *mesh =
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_meshID);
+
+  const dart::dynamics::MeshShape *mesh =
       static_cast<dart::dynamics::MeshShape*>(
-        this->shapes.at(_meshID).node->getShape().get());
+        shapeInfo->node->getShape().get());
 
   return mesh->getScale();
 }
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::AttachMeshShape(
-    const std::size_t _linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const ignition::common::Mesh &_mesh,
-    const Pose3d &_pose)
+    const Pose3d &_pose,
+    const LinearVector3d &_scale)
 {
-  auto mesh = std::make_shared<CustomMeshShape>(_mesh);
+  auto mesh = std::make_shared<CustomMeshShape>(_mesh, _scale);
 
-  DartBodyNode *bn = this->links.at(_linkID);
+  DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
         mesh, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
-  return this->GenerateIdentity(this->AddShape({sn, _name}));
+  const std::size_t shapeID = this->AddShape({sn, _name});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
 }
