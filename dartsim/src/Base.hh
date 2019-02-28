@@ -150,6 +150,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using DartWorld = dart::simulation::World;
   public: using DartWorldPtr = dart::simulation::WorldPtr;
   public: using DartSkeletonPtr = dart::dynamics::SkeletonPtr;
+  public: using DartConstSkeletonPtr = dart::dynamics::ConstSkeletonPtr;
   public: using DartSkeleton = dart::dynamics::Skeleton;
   public: using DartBodyNode = dart::dynamics::BodyNode;
   public: using DartBodyNodePtr = dart::dynamics::BodyNodePtr;
@@ -325,11 +326,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
-  public: EntityStorage<ModelInfoPtr, DartSkeletonPtr> models;
-  public: EntityStorage<LinkInfoPtr, DartBodyNode*> links;
-  public: EntityStorage<JointInfoPtr, DartJoint*> joints;
-  public: EntityStorage<ShapeInfoPtr, DartShapeNode*> shapes;
-  public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
+  public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
+  public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
+  public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
+  public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
+  public: std::unordered_map<std::size_t, const dart::dynamics::Frame*> frames;
 };
 
 }
