@@ -37,8 +37,10 @@ AlignedBox3d ShapeFeatures::GetAxisAlignedBoundingBox(
         shapeInfo->node->getShape().get());
 
   const dart::math::BoundingBox &box = shape->getBoundingBox();
+  const auto tf = this->frames.at(_shapeID)->getWorldTransform();
 
-  return AlignedBox3d(box.getMin(), box.getMax());
+  // Return the aligned box in the world coordinate frame.
+  return AlignedBox3d(tf * box.getMin(), tf * box.getMax());
 }
 
 /////////////////////////////////////////////////

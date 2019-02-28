@@ -137,9 +137,9 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<AlignedBox>;
 
         /// \brief Get the axis aligned bounding box for the shape in the
-        /// shape's local coordinate frame.
-        /// \return Axis aligned bounding box for the shape in the shape's
-        /// local coordinate frame.
+        /// world coordinate frame.
+        /// \return Axis aligned bounding box for the shape in the world
+        /// coordinate frame.
         public: AlignedBoxType GetAxisAlignedBoundingBox() const;
       };
 
