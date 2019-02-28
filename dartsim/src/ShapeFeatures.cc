@@ -20,7 +20,6 @@
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
-#include <ignition/math/eigen3/Conversions.hh>
 
 #include "CustomMeshShape.hh"
 #include "ShapeFeatures.hh"
