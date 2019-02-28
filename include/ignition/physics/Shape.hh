@@ -136,8 +136,10 @@ namespace ignition
         public: using AlignedBoxType =
             typename FromPolicy<PolicyT>::template Use<AlignedBox>;
 
-        /// \brief Get the axis aligned bounding box for the shape.
-        /// \return Axis aligned bounding box for the shape.
+        /// \brief Get the axis aligned bounding box for the shape in the
+        /// shape's local coordinate frame.
+        /// \return Axis aligned bounding box for the shape in the shape's
+        /// local coordinate frame.
         public: AlignedBoxType GetAxisAlignedBoundingBox() const;
       };
 
