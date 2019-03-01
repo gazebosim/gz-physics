@@ -196,7 +196,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeAlignedBox = RelativeQuantity<
-        Eigen::AlignedBox<Scalar, Dim>, Dim, detail::AABBSpace<Scalar, Dim>>;
+        AlignedBox<Scalar, Dim>, Dim, detail::AABBSpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeAlignedBox)
 
     /////////////////////////////////////////////////

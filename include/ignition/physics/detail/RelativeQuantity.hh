@@ -439,8 +439,7 @@ namespace ignition
       template <typename _Scalar, std::size_t _Dim>
       struct AABBSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(
-            Eigen::AlignedBox<_Scalar, _Dim>)
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(AlignedBox<_Scalar, _Dim>)
 
         public: static Quantity ResolveToWorldFrame(
             const Quantity &_box,
