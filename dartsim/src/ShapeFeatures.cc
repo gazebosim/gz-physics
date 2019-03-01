@@ -32,12 +32,16 @@ namespace dartsim {
 AlignedBox3d ShapeFeatures::GetAxisAlignedBoundingBox(
     const Identity &_shapeID) const
 {
-  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  const auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
 
-  const dart::math::BoundingBox &box =
-      shapeInfo->node->getShape()->getBoundingBox();
+  const dart::math::BoundingBox &box = node->getShape()->getBoundingBox();
 
-  const auto tf = shapeInfo->node->getWorldTransform();
+  // The bounding box from DART is in the local coordinate frame. However, the
+  // rotation of the that coordinate frame is ignored. Therefore, to convert to
+  // the world frame, we only need the translation part of the shape's world
+  // transform
+  Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
+  tf.translation() = node->getWorldTransform().translation();
 
   // Return the aligned box in the world coordinate frame.
   return AlignedBox3d(tf * box.getMin(), tf * box.getMax());
