@@ -141,6 +141,7 @@ namespace ignition
       template <typename, std::size_t> struct AngularAccelerationSpace;
       template <typename, std::size_t> struct VectorSpace;
       template <typename, std::size_t> struct FrameSpace;
+      template <typename, std::size_t> struct AABBSpace;
       // TODO(MXG): We can add more spaces to support other types like Moments
       // of Inertia, Jacobians, Spatial Velocities/Accelerations, Wrench+Point
       // pairs, and so on.
@@ -191,6 +192,12 @@ namespace ignition
         AngularVector<Scalar, Dim>, Dim,
         detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeTorque)
+
+    /////////////////////////////////////////////////
+    template <typename Scalar, std::size_t Dim>
+    using RelativeAlignedBox = RelativeQuantity<
+        Eigen::AlignedBox<Scalar, Dim>, Dim, detail::AABBSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeAlignedBox)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
