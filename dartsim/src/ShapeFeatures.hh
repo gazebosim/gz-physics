@@ -128,7 +128,7 @@ class ShapeFeatures :
       const LinearVector3d &_scale) override;
 
   // ----- Boundingbox Features -----
-  public: AlignedBox3d GetAxisAlignedBoundingBox(
+  public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
               const Identity &_shapeID) const override;
 };
 

@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
 #define IGNITION_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
 
+#include <iostream>
 #include <utility>
 
 #include <ignition/physics/RelativeQuantity.hh>
@@ -429,6 +430,72 @@ namespace ignition
           const AngularVectorType &_u)
         {
           return LinearVectorType(_u[0]*_v[1], -_u[0]*_v[0]);
+        }
+      };
+
+      /////////////////////////////////////////////////
+      /// \brief AABBSpace is used to compute transformations for axis-aligned
+      /// bounding boxes.
+      template <typename _Scalar, std::size_t _Dim>
+      struct AABBSpace
+      {
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(
+            Eigen::AlignedBox<_Scalar, _Dim>)
+
+        public: static Quantity ResolveToWorldFrame(
+            const Quantity &_box,
+            const FrameDataType &_parentFrame)
+        {
+          Quantity result;
+          const auto &tf = _parentFrame.pose;
+          for (std::size_t i=0; i < pow(2, _Dim); ++i)
+          {
+            const auto c = static_cast<typename Quantity::CornerType>(i);
+            result.extend(tf * _box.corner(c));
+          }
+
+          return result;
+        }
+
+        public: static Quantity ResolveToTargetFrame(
+            const Quantity &_box,
+            const FrameDataType &_parentFrame,
+            const FrameDataType &_targetFrame)
+        {
+          Quantity result;
+          const auto tf = _targetFrame.pose.inverse() * _parentFrame.pose;
+          for (std::size_t i=0; i < pow(2, _Dim); ++i)
+          {
+            const auto c = static_cast<typename Quantity::CornerType>(i);
+            result.extend(tf * _box.corner(c));
+          }
+
+          return result;
+        }
+
+        public: static Quantity ResolveToWorldCoordinates(
+            const Quantity &_box,
+            const RotationType &/*_currentCoordinates*/)
+        {
+          // TODO(anyone): Replace with ignwarn when/if we add an ign console
+          // dependency to ign-physics
+          std::cerr << "[AABBSpace::ResolveToWorldCoordinates] Warning: "
+                    << "Axis-aligned bounding boxes cannot undergo coordinate "
+                    << "changes.\n";
+          return _box;
+        }
+
+        public: static Quantity ResolveToTargetCoordinates(
+            const Quantity &_box,
+            const RotationType &/*_currentCoordinates*/,
+            const RotationType &/*_targetCoordinates*/)
+        {
+          // TODO(anyone): Replace with ignwarn when/if we add an ign console
+          // dependency to ign-physics
+          std::cerr << "[AABBSpace::ResolveToTargetCoordinates] Warning: "
+                    << "Axis-aligned bounding boxes cannot undergo coordinate "
+                    << "changes.\n";
+          return _box;
         }
       };
 

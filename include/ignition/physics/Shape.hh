@@ -19,6 +19,8 @@
 #define IGNITION_PHYSICS_SHAPE_HH_
 
 #include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/RelativeQuantity.hh>
 #include <ignition/physics/Geometry.hh>
 
 namespace ignition
@@ -128,19 +130,26 @@ namespace ignition
 
     /////////////////////////////////////////////////
     class IGNITION_PHYSICS_VISIBLE GetShapeBoundingBox
-        : public virtual Feature
+        : public virtual FeatureWithRequirements<ShapeFrameSemantics>
     {
       public: template <typename PolicyT, typename FeaturesT>
-      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      class Shape
+          : public virtual ShapeFrameSemantics::Shape<PolicyT, FeaturesT>
       {
         public: using AlignedBoxType =
             typename FromPolicy<PolicyT>::template Use<AlignedBox>;
 
         /// \brief Get the axis aligned bounding box for the shape in the
-        /// world coordinate frame.
-        /// \return Axis aligned bounding box for the shape in the world
-        /// coordinate frame.
-        public: AlignedBoxType GetAxisAlignedBoundingBox() const;
+        /// requested frame.
+        /// \param[in] _referenceFrame
+        ///   The desired frame for the bounding box. By default, this will be
+        ///   the world frame.
+        ///   \note Axis-aligned bounding boxes will expand each time they are
+        ///   transformed into a new frame that has a different orientation.
+        /// \return Axis aligned bounding box for the shape, transformed into
+        /// the requested coordinate frame.
+        public: AlignedBoxType GetAxisAlignedBoundingBox(
+            const FrameID &_referenceFrame = FrameID::World()) const;
       };
 
       public: template <typename PolicyT>
@@ -149,8 +158,11 @@ namespace ignition
         public: using AlignedBoxType =
             typename FromPolicy<PolicyT>::template Use<AlignedBox>;
 
-        public: virtual AlignedBoxType GetAxisAlignedBoundingBox(
-            const Identity &_shape0) const = 0;
+        /// \brief Implementation function for querying the axis-aligned
+        /// bounding box of a shape.
+        /// \return The axis-aligned bounding box in the frame of the box.
+        public: virtual AlignedBoxType GetShapeAxisAlignedBoundingBox(
+            const Identity &_shape) const = 0;
       };
     };
 
