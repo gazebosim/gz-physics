@@ -18,7 +18,7 @@ list(APPEND plugins
     MockEntities
     MockFrames
     MockJoints)
-if (DART_FOUND)
+if (TARGET MockDoublePendulum)
   list(APPEND plugins MockDoublePendulum)
 endif()
 
@@ -28,8 +28,12 @@ foreach(plugin IN LISTS plugins)
       ${PROJECT_LIBRARY_TARGET_NAME})
 endforeach()
 
-if (DART_FOUND)
-  target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
+if (TARGET MockDoublePendulum)
+  target_include_directories(MockDoublePendulum PUBLIC ${BULLET_INCLUDE_DIRS})
+  target_link_libraries(MockDoublePendulum
+      PUBLIC
+        ${BULLET_LIBRARIES}
+        ${DART_LIBRARIES})
   target_compile_definitions(MockDoublePendulum PRIVATE
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 endif()
