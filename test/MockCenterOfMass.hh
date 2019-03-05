@@ -34,6 +34,8 @@ namespace mock
   /////////////////////////////////////////////////
   struct MockLinkCenterOfMass : public ignition::physics::Feature
   {
+    using Identity = ignition::physics::Identity;
+
     template <typename PolicyT, typename FeaturesT>
     class Link : public virtual Feature::Link<PolicyT, FeaturesT>
     {
@@ -45,13 +47,15 @@ namespace mock
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: virtual Vector<PolicyT> GetLinkCenterOfMass(
-          std::size_t _id) const = 0;
+          const Identity &_id) const = 0;
     };
   };
 
   /////////////////////////////////////////////////
   struct MockModelCenterOfMass : public ignition::physics::Feature
   {
+    using Identity = ignition::physics::Identity;
+
     template <typename PolicyT, typename FeaturesT>
     class Model : public virtual Feature::Model<PolicyT, FeaturesT>
     {
@@ -63,7 +67,7 @@ namespace mock
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: virtual Vector<PolicyT> GetModelCenterOfMass(
-          std::size_t _id) const = 0;
+          const Identity &_id) const = 0;
     };
   };
 

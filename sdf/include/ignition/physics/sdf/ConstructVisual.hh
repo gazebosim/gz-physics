@@ -40,7 +40,7 @@ class ConstructSdfVisual : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual Identity ConstructSdfVisual(
-        std::size_t _linkID, const ::sdf::Visual &_visual) = 0;
+        const Identity &_linkID, const ::sdf::Visual &_visual) = 0;
   };
 };
 

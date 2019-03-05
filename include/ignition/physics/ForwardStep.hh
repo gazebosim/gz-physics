@@ -176,7 +176,10 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual void WorldForwardStep(
-            std::size_t _worldID, Output &_h, State &_x, const Input &_u) = 0;
+            const Identity &_worldID,
+            Output &_h,
+            State &_x,
+            const Input &_u) = 0;
       };
     };
 

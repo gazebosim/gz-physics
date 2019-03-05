@@ -57,7 +57,7 @@ namespace mock
     class Implementation :
         public virtual ignition::physics::Feature::Implementation<PolicyT>
     {
-      public: virtual Identity GetJointByIndex(std::size_t _id) const = 0;
+      public: virtual Identity GetJointByIndex(std::size_t _index) const = 0;
     };
   };
 
