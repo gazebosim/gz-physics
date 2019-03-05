@@ -165,9 +165,9 @@ TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
               ignition::math::eigen3::convert(sphereAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(d, 1, 2 + d),
               ignition::math::eigen3::convert(sphereAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-50, -50, -1),
+    EXPECT_EQ(ignition::math::Vector3d(-50*d, -50*d, -1),
               ignition::math::eigen3::convert(groundAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(50, 50, 0),
+    EXPECT_EQ(ignition::math::Vector3d(50*d, 50*d, 0),
               ignition::math::eigen3::convert(groundAABB).Max());
   }
 }

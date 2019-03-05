@@ -40,7 +40,7 @@
     </model>
     <model name="box">
       <static>true</static>
-      <pose>0 0 -0.5 0 0 0</pose>
+      <pose>0 0 -0.5 0 0 0.78539816339</pose>
       <link name="box_link">
         <inertial>
           <inertia>
