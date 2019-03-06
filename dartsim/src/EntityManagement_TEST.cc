@@ -221,6 +221,64 @@ TEST(EntityManagement_TEST, RemoveEntities)
   EXPECT_EQ(0ul, world->GetModelCount());
 }
 
+TEST(EntityManagement_TEST, RemoveChildEntityReferences)
+{
+  ignition::plugin::Loader loader;
+  loader.LoadLib(dartsim_plugin_LIB);
+
+  ignition::plugin::PluginPtr dartsim =
+      loader.Instantiate("ignition::physics::dartsim::Plugin");
+
+  auto engine =
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+  ASSERT_NE(nullptr, engine);
+
+  std::weak_ptr<void> linkRef;
+  std::weak_ptr<void> jointRef;
+  std::weak_ptr<void> shapeRef;
+
+  auto world = engine->ConstructEmptyWorld("empty world");
+  ASSERT_NE(nullptr, world);
+  auto model = world->ConstructEmptyModel("empty model");
+  ASSERT_NE(nullptr, model);
+
+  // Create empty link, joint and shape and get weak references to the
+  // underlying physics entity.
+  {
+    auto link = model->ConstructEmptyLink("empty link");
+    ASSERT_NE(nullptr, link);
+    linkRef = link->EntityReference();
+
+    auto joint = link->AttachFixedJoint(nullptr);
+    ASSERT_NE(nullptr, joint);
+    jointRef = joint->EntityReference();
+
+    auto shape = link->AttachSphereShape("sphere shape");
+    ASSERT_NE(nullptr, shape);
+    shapeRef = shape->EntityReference();
+
+    // Before the model is removed, the use counts should be greater than 0.
+    EXPECT_GT(linkRef.use_count(), 0u);
+    EXPECT_GT(jointRef.use_count(), 0u);
+    EXPECT_GT(shapeRef.use_count(), 0u);
+
+    // Remove the model
+    model->Remove();
+
+    // The child entites of a model are still "valid" even the the model is
+    // removed
+    EXPECT_NO_THROW(link->GetName());
+    EXPECT_NO_THROW(joint->GetName());
+    EXPECT_NO_THROW(shape->GetName());
+  }
+
+  // After the model is removed, we expect that all strong references to the
+  // child links, joints and shapes would also be removed.
+  EXPECT_EQ(0u, linkRef.use_count());
+  EXPECT_EQ(0u, jointRef.use_count());
+  EXPECT_EQ(0u, shapeRef.use_count());
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

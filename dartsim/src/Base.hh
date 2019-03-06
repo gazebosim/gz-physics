@@ -272,6 +272,19 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t modelIndex = this->models.idToIndexInContainer[_modelID];
 
     auto skel = this->models.at(_modelID)->model;
+    // Remove child elements of this skeleton
+    for (const auto &bn : skel->getBodyNodes())
+    {
+      for (const auto &shape : bn->getShapeNodes())
+      {
+        this->RemoveShapeReference(shape);
+      }
+      this->RemoveLinkReference(bn);
+    }
+    for (const auto &joint : skel->getJoints())
+    {
+      this->RemoveJointReference(joint);
+    }
     world->removeSkeleton(skel);
 
     // house keeping
@@ -300,6 +313,35 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     assert(this->models.indexInContainerToID[_worldID].size() ==
            world->getNumSkeletons());
+  }
+
+  // Currently we only support removing models (skeletons).  When removing a
+  // skeleton, all its children are automatically removed by DART if there are
+  // no strong references to them. Thus, in the following functions,
+  // RemoveLinkReference, RemoveJointReference, and RemoveShapeReference, we
+  // only remove the references to the child elements.
+  // TODO(addisu) If we add support for removing entities other than models, we
+  // will need to revisit these functions
+  private: void RemoveLinkReference(const DartBodyNode *_bn)
+  {
+    auto linkID = this->links.objectToID.at(_bn);
+    this->links.idToObject.erase(linkID);
+    this->links.objectToID.erase(_bn);
+    this->frames.erase(linkID);
+  }
+
+  private: void RemoveJointReference(const DartJoint *_joint)
+  {
+    auto jointID = this->joints.objectToID.at(_joint);
+    this->joints.idToObject.erase(jointID);
+    this->joints.objectToID.erase(_joint);
+  }
+  private: void RemoveShapeReference(const DartShapeNode *_shape)
+  {
+    auto shapeID = this->shapes.objectToID.at(_shape);
+    this->shapes.idToObject.erase(shapeID);
+    this->shapes.objectToID.erase(_shape);
+    this->frames.erase(shapeID);
   }
 
   private: void UpdateSkeletonInWorld(const DartSkeletonPtr &_skel)
