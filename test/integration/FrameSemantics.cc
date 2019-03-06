@@ -33,6 +33,7 @@ using ignition::physics::Pose;
 using ignition::physics::Vector;
 using ignition::physics::LinearVector;
 using ignition::physics::AngularVector;
+using ignition::physics::AlignedBox;
 
 using ignition::math::Rand;
 using namespace ignition::physics::test;
@@ -136,6 +137,112 @@ TEST(FrameSemantics_TEST, RelativeFrames3f)
 TEST(FrameSemantics_TEST, RelativeFrames2f)
 {
   TestRelativeFrames<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT>
+void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
+{
+  using Scalar = typename PolicyT::Scalar;
+  constexpr std::size_t Dim = PolicyT::Dim;
+
+  // Instantiate an engine that provides Frame Semantics.
+  auto fs =
+      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
+        ::From(LoadMockFrameSemanticsPlugin(_suffix));
+
+  using FrameData = FrameData<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
+  using AlignedBox = AlignedBox<Scalar, Dim>;
+  using RelativeAlignedBox = ignition::physics::RelativeAlignedBox<Scalar, Dim>;
+
+  // The World Frame is designated by the letter O
+  const FrameID World = FrameID::World();
+
+  // Create Frame A, translated along X and rotated about Z
+  FrameData T_A;
+  const Scalar dx_A = 1.5;
+  // const Scalar yaw_A = IGN_PI / 6;
+  T_A.pose.translation()[0] = dx_A;
+  const RelativeFrameData O_T_A(World, T_A);
+  const FrameID A = *fs->CreateLink("A", fs->Resolve(O_T_A, World));
+
+  // Create Frame B, translated along Y and rotated about Z
+  FrameData T_B;
+  const Scalar dy_B = 0.5;
+  // const Scalar yaw_B = IGN_PI / 3;
+  T_B.pose.translation()[1] = dy_B;
+  const RelativeFrameData A_T_B(A, T_B);
+  const FrameID B = fs->CreateLink("B", fs->Resolve(A_T_B, World));
+
+  // Create AlignedBox in World frame
+  AlignedBox box1;
+  box1.min()[0] = -1;
+  box1.min()[1] = -2;
+  box1.max()[0] = 1;
+  box1.max()[1] = 2;
+  const RelativeAlignedBox O_box1(FrameID::World(), box1);
+  EXPECT_TRUE(Equal(O_box1.RelativeToParent(),
+              fs->Resolve(O_box1, FrameID::World()), _tolerance));
+  // RelativeFrameData B_T_B = RelativeFrameData(B);
+  // EXPECT_TRUE(Equal(T_B, fs->Resolve(B_T_B, FrameID::World()), _tolerance));
+
+  // // Create a frame relative to A which is equivalent to B
+  // const RelativeFrameData A_T_B =
+  //     RelativeFrameData(A, fs->GetLink("B")->FrameDataRelativeTo(A));
+
+  // // When A_T_B is expressed with respect to the world, it should be equivalent
+  // // to Frame B
+  // EXPECT_TRUE(Equal(T_B, fs->Resolve(A_T_B, FrameID::World()), _tolerance));
+
+  // const RelativeFrameData O_T_B = RelativeFrameData(FrameID::World(), T_B);
+
+  // // When O_T_B is expressed with respect to A, it should be equivalent to
+  // // A_T_B
+  // EXPECT_TRUE(Equal(A_T_B.RelativeToParent(),
+  //                   fs->Resolve(O_T_B, A), _tolerance));
+
+  // // Define a new frame (C), relative to B
+  // const RelativeFrameData B_T_C =
+  //     RelativeFrameData(B, RandomFrameData<Scalar, Dim>());
+
+  // // Reframe C with respect to the world
+  // const RelativeFrameData O_T_C = fs->Reframe(B_T_C, FrameID::World());
+
+  // // Also, compute its raw transform with respect to the world
+  // const FrameData T_C = fs->Resolve(B_T_C, FrameID::World());
+
+  // EXPECT_TRUE(Equal(T_C, O_T_C.RelativeToParent(), _tolerance));
+
+  // const RelativeFrameData O_T_A = RelativeFrameData(FrameID::World(), T_A);
+  // EXPECT_TRUE(Equal(T_C.pose,
+  //                     O_T_A.RelativeToParent().pose
+  //                   * A_T_B.RelativeToParent().pose
+  //                   * B_T_C.RelativeToParent().pose, _tolerance));
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox3d)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox2d)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2d>(1e-14, "2d");
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox3f)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3f>(1e-3, "3f");
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox2f)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
