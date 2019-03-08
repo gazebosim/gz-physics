@@ -1,7 +1,5 @@
 \page installation Installation
 
-# Overview # {#overview}
-
 This tutorial describes how to install Ignition Physics on [Ubuntu Linux](#ubuntu_install) and [macOS](#macos_install) via either a binary distribution or from source. Support for Windows is coming soon.
 
 
