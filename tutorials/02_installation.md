@@ -1,10 +1,8 @@
 \page installation Installation
 
-This tutorial describes how to install Ignition Physics on [Ubuntu Linux](#ubuntu_install) and [macOS](#macos_install) via either a binary distribution or from source. Support for Windows is coming soon.
+This tutorial describes how to install Ignition Physics on Ubuntu Linux and macOS via either a binary distribution or from source. Support for Windows is coming soon.
 
-
-## Ubuntu ## {#ubuntu_install}
-
+## Ubuntu
 
 Ignition Physics uses several c++17 features which are not available in the
 version of gcc supplied with Ubuntu Xenial, so Ubuntu Bionic or later
@@ -29,7 +27,7 @@ Setup keys:
 wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 ```
 
-Install Ignition Physics
+**Install Ignition Physics binaries**
 
 ```{.sh}
 sudo apt-get update
@@ -67,7 +65,7 @@ make
 sudo make install
 ```
 
-## macOS ## {#macos_install}
+## macOS
 
 Ignition Physics and several of its dependencies can be installed on macOS
 with [Homebrew](http://brew.sh/) using the [osrf/simulation
