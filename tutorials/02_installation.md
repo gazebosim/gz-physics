@@ -29,8 +29,17 @@ sudo apt-get install libignition-physics-dev
 **Build from source**
 
 Run the following to install dependencies
-```
-sudo apt-get install libignition-cmake2-dev, libignition-common3-dev, libignition-common3-graphics-dev,  libignition-math6-dev, libignition-math6-eigen3-dev, libignition-plugin-dev, libdart6-dev, libdart6-collision-ode-dev, libdart6-utils-urdf-dev, libsdformat8-dev
+```{.sh}
+sudo apt-get install libignition-cmake2-dev \
+                     libignition-common3-dev \
+                     libignition-common3-graphics-dev \
+                     libignition-math6-dev \
+                     libignition-math6-eigen3-dev \
+                     libignition-plugin-dev \
+                     libdart6-dev \
+                     libdart6-collision-ode-dev \
+                     libdart6-utils-urdf-dev \
+                     libsdformat8-dev
 ```
 
 Clone the ign-physics repository from bitbucket
