@@ -76,7 +76,7 @@ brew install ignition-physics1
 Run the following to install dependencies
 ```
 brew tap osrf/simulation
-brew install ignition-physics1 --only-dependences
+brew install ignition-physics1 --only-dependencies
 ```
 
 Clone the ign-physics repository from bitbucket
