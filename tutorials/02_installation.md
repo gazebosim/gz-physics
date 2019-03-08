@@ -6,6 +6,16 @@ This tutorial describes how to install Ignition Physics on [Ubuntu Linux](#ubunt
 ## Ubuntu ## {#ubuntu_install}
 
 
+Ignition Physics uses several c++17 features which are not available in the
+version of gcc supplied with Ubuntu Xenial, so Ubuntu Bionic or later
+is required.
+
+If you don't already have the `lsb-release` package installed, please do so now:
+```{.sh}
+sudo apt-get update
+sudo apt-get install lsb-release
+```
+
 Setup your computer to accept software from
 [packages.osrfoundation.org](http://packages.osrfoundation.org):
 
@@ -61,8 +71,10 @@ sudo make install
 
 Ignition Physics and several of its dependencies can be installed on macOS
 with [Homebrew](http://brew.sh/) using the [osrf/simulation
-tap](https://github.com/osrf/homebrew-simulation). Ignition Physics has
-been tested on macOS Mojave (10.14) with AppleClang 10.0.
+tap](https://github.com/osrf/homebrew-simulation). Ignition Physics uses
+several c++17 features which are not available in macOS High Sierra (10.13)
+and earlier, so macOS Mojave (10.14) with XCode 10.1 are the minimum
+system requirements.
 
 **Install Binaries using Homebrew**
 
