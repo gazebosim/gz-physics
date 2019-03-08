@@ -21,7 +21,7 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 
 Install Ignition Physics
 
-```
+```{.sh}
 sudo apt-get update
 sudo apt-get install libignition-physics-dev
 ```
@@ -43,12 +43,12 @@ sudo apt-get install libignition-cmake2-dev \
 ```
 
 Clone the ign-physics repository from bitbucket
-```
+```{.sh}
 hg clone https://bitbucket.org/ignitionrobotics/ign-physics
 ```
 
 Then build using CMake
-```
+```{.sh}
 cd ign-physics
 mkdir build
 cd build
@@ -69,13 +69,13 @@ been tested on macOS Mojave (10.14) with AppleClang 10.0.
 Install homebrew, which should also prompt you to install the XCode
 command-line tools:
 
-```
+```{.sh}
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
 Run the following commands:
 
-```
+```{.sh}
 brew tap osrf/simulation
 brew install ignition-physics1
 ```
@@ -83,18 +83,18 @@ brew install ignition-physics1
 **Build from source using Homebrew**
 
 Run the following to install dependencies
-```
+```{.sh}
 brew tap osrf/simulation
 brew install ignition-physics1 --only-dependencies
 ```
 
 Clone the ign-physics repository from bitbucket
-```
+```{.sh}
 hg clone https://bitbucket.org/ignitionrobotics/ign-physics
 ```
 
 Then build using CMake
-```
+```{.sh}
 cd ign-physics
 mkdir build
 cd build
