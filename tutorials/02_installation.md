@@ -7,7 +7,7 @@ This tutorial describes how to install Ignition Physics on [Ubuntu Linux](#ubunt
 
 
 Setup your computer to accept software from
-*packages.osrfoundation.org*:
+[packages.osrfoundation.org](http://packages.osrfoundation.org):
 
 ```{.sh}
 sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
