@@ -155,6 +155,7 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
   using AlignedBox = AlignedBox<Scalar, Dim>;
   using RelativeAlignedBox = ignition::physics::RelativeAlignedBox<Scalar, Dim>;
+  using Vector = Vector<Scalar, Dim>;
 
   // The World Frame is designated by the letter O
   const FrameID World = FrameID::World();
@@ -173,10 +174,12 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   // const Scalar yaw_B = IGN_PI / 3;
   T_B.pose.translation()[1] = dy_B;
   const RelativeFrameData A_T_B(A, T_B);
-  const FrameID B = fs->CreateLink("B", fs->Resolve(A_T_B, World));
+  const FrameID B = *fs->CreateLink("B", fs->Resolve(A_T_B, World));
 
   // Create AlignedBox in World frame
   AlignedBox box1;
+  box1.min() = Vector::Zero();
+  box1.max() = Vector::Zero();
   box1.min()[0] = -1;
   box1.min()[1] = -2;
   box1.max()[0] = 1;
@@ -184,6 +187,18 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   const RelativeAlignedBox O_box1(FrameID::World(), box1);
   EXPECT_TRUE(Equal(O_box1.RelativeToParent(),
               fs->Resolve(O_box1, FrameID::World()), _tolerance));
+
+  // Create AlignedBox in World frame
+  AlignedBox box2;
+  box2.min() = Vector::Zero();
+  box2.max() = Vector::Zero();
+  box2.min()[0] = 0.5;
+  box2.min()[1] = -2;
+  box2.max()[0] = 2.5;
+  box2.max()[1] = 2;
+  const RelativeAlignedBox A_box1(A, box1);
+  EXPECT_TRUE(Equal(box2,
+              fs->Resolve(A_box1, FrameID::World()), _tolerance));
   // RelativeFrameData B_T_B = RelativeFrameData(B);
   // EXPECT_TRUE(Equal(T_B, fs->Resolve(B_T_B, FrameID::World()), _tolerance));
 
