@@ -176,7 +176,7 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   const RelativeFrameData A_T_B(A, T_B);
   const FrameID B = *fs->CreateLink("B", fs->Resolve(A_T_B, World));
 
-  // Create AlignedBox in World frame
+  // Create AlignedBoxes related to Frames O,A
   AlignedBox box1;
   box1.min() = Vector::Zero();
   box1.max() = Vector::Zero();
@@ -184,11 +184,7 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   box1.min()[1] = -2;
   box1.max()[0] = 1;
   box1.max()[1] = 2;
-  const RelativeAlignedBox O_box1(FrameID::World(), box1);
-  EXPECT_TRUE(Equal(O_box1.RelativeToParent(),
-              fs->Resolve(O_box1, FrameID::World()), _tolerance));
 
-  // Create AlignedBox in World frame
   AlignedBox box2;
   box2.min() = Vector::Zero();
   box2.max() = Vector::Zero();
@@ -196,44 +192,28 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   box2.min()[1] = -2;
   box2.max()[0] = 2.5;
   box2.max()[1] = 2;
+
+  // compare AlignedBoxes in O,A frames
+  const RelativeAlignedBox O_box2(FrameID::World(), box2);
+  EXPECT_TRUE(Equal(O_box2.RelativeToParent(),
+              fs->Resolve(O_box2, FrameID::World()), _tolerance));
+
   const RelativeAlignedBox A_box1(A, box1);
+  EXPECT_TRUE(Equal(A_box1.RelativeToParent(),
+              fs->Resolve(A_box1, A), _tolerance));
+
   EXPECT_TRUE(Equal(box2,
               fs->Resolve(A_box1, FrameID::World()), _tolerance));
-  // RelativeFrameData B_T_B = RelativeFrameData(B);
-  // EXPECT_TRUE(Equal(T_B, fs->Resolve(B_T_B, FrameID::World()), _tolerance));
 
-  // // Create a frame relative to A which is equivalent to B
-  // const RelativeFrameData A_T_B =
-  //     RelativeFrameData(A, fs->GetLink("B")->FrameDataRelativeTo(A));
+  EXPECT_TRUE(Equal(box1,
+              fs->Resolve(O_box2, A), _tolerance));
 
-  // // When A_T_B is expressed with respect to the world, it should be equivalent
-  // // to Frame B
-  // EXPECT_TRUE(Equal(T_B, fs->Resolve(A_T_B, FrameID::World()), _tolerance));
+  // get coverage with inCoordinatesOf, even though it's not implemented
+  EXPECT_TRUE(Equal(box2,
+              fs->Resolve(A_box1, FrameID::World(), B), _tolerance));
 
-  // const RelativeFrameData O_T_B = RelativeFrameData(FrameID::World(), T_B);
-
-  // // When O_T_B is expressed with respect to A, it should be equivalent to
-  // // A_T_B
-  // EXPECT_TRUE(Equal(A_T_B.RelativeToParent(),
-  //                   fs->Resolve(O_T_B, A), _tolerance));
-
-  // // Define a new frame (C), relative to B
-  // const RelativeFrameData B_T_C =
-  //     RelativeFrameData(B, RandomFrameData<Scalar, Dim>());
-
-  // // Reframe C with respect to the world
-  // const RelativeFrameData O_T_C = fs->Reframe(B_T_C, FrameID::World());
-
-  // // Also, compute its raw transform with respect to the world
-  // const FrameData T_C = fs->Resolve(B_T_C, FrameID::World());
-
-  // EXPECT_TRUE(Equal(T_C, O_T_C.RelativeToParent(), _tolerance));
-
-  // const RelativeFrameData O_T_A = RelativeFrameData(FrameID::World(), T_A);
-  // EXPECT_TRUE(Equal(T_C.pose,
-  //                     O_T_A.RelativeToParent().pose
-  //                   * A_T_B.RelativeToParent().pose
-  //                   * B_T_C.RelativeToParent().pose, _tolerance));
+  EXPECT_TRUE(Equal(box1,
+              fs->Resolve(O_box2, A, FrameID::World()), _tolerance));
 }
 
 /////////////////////////////////////////////////
