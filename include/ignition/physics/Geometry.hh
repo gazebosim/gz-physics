@@ -56,6 +56,10 @@ namespace ignition
     using AngularVector = Vector<Scalar, (Dim*(Dim-1))/2>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AngularVector)
 
+    template <typename Scalar, std::size_t Dim>
+    using AlignedBox = Eigen::AlignedBox<Scalar, Dim>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AlignedBox)
+
     /////////////////////////////////////////////////
     /// \brief This struct is used to conveniently convert from a policy to a
     /// geometric type. Example usage:

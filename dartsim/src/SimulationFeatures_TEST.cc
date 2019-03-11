@@ -21,6 +21,7 @@
 #include <set>
 
 #include <ignition/math/Vector3.hh>
+#include <ignition/math/eigen3/Conversions.hh>
 
 #include <ignition/physics/FindFeatures.hh>
 #include <ignition/plugin/Loader.hh>
@@ -31,6 +32,7 @@
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/GetContacts.hh>
 #include <ignition/physics/GetEntities.hh>
+#include <ignition/physics/Shape.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
@@ -44,6 +46,7 @@ using TestFeatureList = ignition::physics::FeatureList<
   ignition::physics::ForwardStep,
   ignition::physics::GetContactsFromLastStepFeature,
   ignition::physics::GetEntities,
+  ignition::physics::GetShapeBoundingBox,
   ignition::physics::sdf::ConstructSdfWorld
 >;
 
@@ -115,6 +118,57 @@ TEST_P(SimulationFeatures_TEST, Falling)
     auto link = world->GetModel(0)->GetLink(0);
     auto pos = link->FrameDataRelativeToWorld().pose.translation();
     EXPECT_NEAR(pos.z(), 1.0, 5e-2);
+  }
+}
+
+TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/falling.world");
+
+  for (const auto &world : worlds)
+  {
+    auto sphere = world->GetModel("sphere");
+    auto sphereCollision = sphere->GetLink(0)->GetShape(0);
+    auto ground = world->GetModel("box");
+    auto groundCollision = ground->GetLink(0)->GetShape(0);
+
+    // Test the bounding boxes in the local frames
+    auto sphereAABB =
+        sphereCollision->GetAxisAlignedBoundingBox(*sphereCollision);
+
+    auto groundAABB =
+        groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
+
+    EXPECT_EQ(ignition::math::Vector3d(-1, -1, -1),
+              ignition::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(1, 1, 1),
+              ignition::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.5),
+              ignition::math::eigen3::convert(groundAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(50, 50, 0.5),
+              ignition::math::eigen3::convert(groundAABB).Max());
+
+    // Test the bounding boxes in the world frames
+    sphereAABB = sphereCollision->GetAxisAlignedBoundingBox();
+    groundAABB = groundCollision->GetAxisAlignedBoundingBox();
+
+    // The sphere shape has a radius of 1.0, so its bounding box will have
+    // dimensions of 1.0 x 1.0 x 1.0. When that bounding box is transformed by
+    // a 45-degree rotation, the dimensions that are orthogonal to the axis of
+    // rotation will dilate from 1.0 to sqrt(2).
+    const double d = std::sqrt(2);
+    EXPECT_EQ(ignition::math::Vector3d(-d, -1, 2.0 - d),
+              ignition::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(d, 1, 2 + d),
+              ignition::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-50*d, -50*d, -1),
+              ignition::math::eigen3::convert(groundAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(50*d, 50*d, 0),
+              ignition::math::eigen3::convert(groundAABB).Max());
   }
 }
 
