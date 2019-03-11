@@ -160,10 +160,9 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   // The World Frame is designated by the letter O
   const FrameID World = FrameID::World();
 
-  // Create Frame A, translated along X and rotated about Z
+  // Create Frame A, translated along X
   FrameData T_A;
   const Scalar dx_A = 1.5;
-  // const Scalar yaw_A = IGN_PI / 6;
   T_A.pose.translation()[0] = dx_A;
   const RelativeFrameData O_T_A(World, T_A);
   const FrameID A = *fs->CreateLink("A", fs->Resolve(O_T_A, World));
@@ -171,49 +170,50 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   // Create Frame B, translated along Y and rotated about Z
   FrameData T_B;
   const Scalar dy_B = 0.5;
+  // todo: add helper function to rotate along Z for Dim == 2 or 3
   // const Scalar yaw_B = IGN_PI / 3;
   T_B.pose.translation()[1] = dy_B;
   const RelativeFrameData A_T_B(A, T_B);
   const FrameID B = *fs->CreateLink("B", fs->Resolve(A_T_B, World));
 
-  // Create AlignedBoxes related to Frames O,A
-  AlignedBox box1;
-  box1.min() = Vector::Zero();
-  box1.max() = Vector::Zero();
-  box1.min()[0] = -1;
-  box1.min()[1] = -2;
-  box1.max()[0] = 1;
-  box1.max()[1] = 2;
+  // Create centered and offset AlignedBoxes
+  AlignedBox box;
+  box.min() = Vector::Zero();
+  box.max() = Vector::Zero();
+  box.min()[0] = -1;
+  box.min()[1] = -2;
+  box.max()[0] = 1;
+  box.max()[1] = 2;
 
-  AlignedBox box2;
-  box2.min() = Vector::Zero();
-  box2.max() = Vector::Zero();
-  box2.min()[0] = 0.5;
-  box2.min()[1] = -2;
-  box2.max()[0] = 2.5;
-  box2.max()[1] = 2;
+  AlignedBox boxOA;
+  boxOA.min() = Vector::Zero();
+  boxOA.max() = Vector::Zero();
+  boxOA.min()[0] = box.min()[0] + dx_A;
+  boxOA.min()[1] = box.min()[1];
+  boxOA.max()[0] = box.max()[0] + dx_A;
+  boxOA.max()[1] = box.max()[1];
 
   // compare AlignedBoxes in O,A frames
-  const RelativeAlignedBox O_box2(FrameID::World(), box2);
-  EXPECT_TRUE(Equal(O_box2.RelativeToParent(),
-              fs->Resolve(O_box2, FrameID::World()), _tolerance));
+  const RelativeAlignedBox O_boxOA(FrameID::World(), boxOA);
+  EXPECT_TRUE(Equal(O_boxOA.RelativeToParent(),
+              fs->Resolve(O_boxOA, FrameID::World()), _tolerance));
 
-  const RelativeAlignedBox A_box1(A, box1);
-  EXPECT_TRUE(Equal(A_box1.RelativeToParent(),
-              fs->Resolve(A_box1, A), _tolerance));
+  const RelativeAlignedBox A_box(A, box);
+  EXPECT_TRUE(Equal(A_box.RelativeToParent(),
+              fs->Resolve(A_box, A), _tolerance));
 
-  EXPECT_TRUE(Equal(box2,
-              fs->Resolve(A_box1, FrameID::World()), _tolerance));
+  EXPECT_TRUE(Equal(boxOA,
+              fs->Resolve(A_box, FrameID::World()), _tolerance));
 
-  EXPECT_TRUE(Equal(box1,
-              fs->Resolve(O_box2, A), _tolerance));
+  EXPECT_TRUE(Equal(box,
+              fs->Resolve(O_boxOA, A), _tolerance));
 
-  // get coverage with inCoordinatesOf, even though it's not implemented
-  EXPECT_TRUE(Equal(box2,
-              fs->Resolve(A_box1, FrameID::World(), B), _tolerance));
+  // inCoordinatesOf coverage, even though it's not supported in AABBSpace
+  EXPECT_TRUE(Equal(boxOA,
+              fs->Resolve(A_box, FrameID::World(), B), _tolerance));
 
-  EXPECT_TRUE(Equal(box1,
-              fs->Resolve(O_box2, A, FrameID::World()), _tolerance));
+  EXPECT_TRUE(Equal(box,
+              fs->Resolve(O_boxOA, A, FrameID::World()), _tolerance));
 }
 
 /////////////////////////////////////////////////
