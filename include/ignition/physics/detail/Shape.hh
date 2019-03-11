@@ -64,6 +64,25 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    auto GetShapeBoundingBox::Shape<PolicyT, FeaturesT>
+    ::GetAxisAlignedBoundingBox(const FrameID &_referenceFrame) const
+    -> AlignedBoxType
+    {
+      using RelativeAlignedBox =
+          ignition::physics::RelativeAlignedBox<
+            typename PolicyT::Scalar, PolicyT::Dim>;
+
+      return detail::Resolve<PolicyT>(
+            *this->template Interface<FrameSemantics>(),
+            RelativeAlignedBox(
+              this->GetFrameID(),
+              this->template Interface<GetShapeBoundingBox>()
+                ->GetShapeAxisAlignedBoundingBox(this->identity)),
+            _referenceFrame, _referenceFrame);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void SetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
     ::SetFrictionCoefficient(const BaseShapePtr<PolicyT> &_other, Scalar _value)
     {

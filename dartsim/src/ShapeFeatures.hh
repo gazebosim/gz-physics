@@ -35,6 +35,7 @@ namespace dartsim {
 using ShapeFeatureList = FeatureList<
   GetShapeKinematicProperties,
   SetShapeKinematicProperties,
+  GetShapeBoundingBox,
   GetBoxShapeProperties,
   // dartsim cannot yet update shape properties without reloading the model into
   // the world
@@ -125,6 +126,10 @@ class ShapeFeatures :
       const ignition::common::Mesh &_mesh,
       const Pose3d &_pose,
       const LinearVector3d &_scale) override;
+
+  // ----- Boundingbox Features -----
+  public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
+              const Identity &_shapeID) const override;
 };
 
 }
