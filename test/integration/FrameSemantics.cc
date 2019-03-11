@@ -16,6 +16,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <cmath>
 
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>
@@ -155,6 +156,8 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
   using AlignedBox = AlignedBox<Scalar, Dim>;
   using RelativeAlignedBox = ignition::physics::RelativeAlignedBox<Scalar, Dim>;
+  using AngularVector = AngularVector<Scalar, Dim>;
+  using Pose = Pose<Scalar, Dim>;
   using Vector = Vector<Scalar, Dim>;
 
   // The World Frame is designated by the letter O
@@ -168,11 +171,16 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   const FrameID A = *fs->CreateLink("A", fs->Resolve(O_T_A, World));
 
   // Create Frame B, translated along Y and rotated about Z
-  FrameData T_B;
   const Scalar dy_B = 0.5;
-  // todo: add helper function to rotate along Z for Dim == 2 or 3
-  // const Scalar yaw_B = IGN_PI / 3;
+  const Scalar yaw_B = std::atan(0.5);
+  FrameData T_B;
+  {
+    AngularVector yawAxis = AngularVector::Zero();
+    yawAxis[yawAxis.rows()-1] = 1;
+    T_B.pose = Pose{ignition::physics::Rotate<Scalar>(yaw_B, yawAxis)};
+  }
   T_B.pose.translation()[1] = dy_B;
+
   const RelativeFrameData A_T_B(A, T_B);
   const FrameID B = *fs->CreateLink("B", fs->Resolve(A_T_B, World));
 
@@ -214,6 +222,42 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
 
   EXPECT_TRUE(Equal(box,
               fs->Resolve(O_boxOA, A, FrameID::World()), _tolerance));
+
+  // Compare AlignedBoxes in A,B frames
+  AlignedBox boxAB;
+  boxAB.min() = Vector::Zero();
+  boxAB.max() = Vector::Zero();
+  boxAB.min()[0] = box.min()[0] + dy_B*std::sin(yaw_B);
+  boxAB.min()[1] = box.min()[1] + dy_B*std::cos(yaw_B);
+  boxAB.max()[0] = box.max()[0] + dy_B*std::sin(yaw_B);
+  boxAB.max()[1] = box.max()[1] + dy_B*std::cos(yaw_B);
+
+  AlignedBox box_rotated;
+  box_rotated.min() = Vector::Zero();
+  box_rotated.max() = Vector::Zero();
+  box_rotated.min()[0] = -4 / std::sqrt(5);
+  box_rotated.min()[1] = -std::sqrt(5);
+  box_rotated.max()[0] = 4 / std::sqrt(5);
+  box_rotated.max()[1] = std::sqrt(5);
+
+  AlignedBox boxAB_rotated;
+  boxAB_rotated.min() = Vector::Zero();
+  boxAB_rotated.max() = Vector::Zero();
+  boxAB_rotated.min()[0] = box_rotated.min()[0];
+  boxAB_rotated.min()[1] = box_rotated.min()[1] + dy_B;
+  boxAB_rotated.max()[0] = box_rotated.max()[0];
+  boxAB_rotated.max()[1] = box_rotated.max()[1] + dy_B;
+
+  const RelativeAlignedBox A_boxAB(A, boxAB);
+  EXPECT_TRUE(Equal(A_boxAB.RelativeToParent(),
+              fs->Resolve(A_boxAB, A), _tolerance));
+
+  const RelativeAlignedBox B_box(B, box);
+  EXPECT_TRUE(Equal(B_box.RelativeToParent(),
+              fs->Resolve(B_box, B), _tolerance));
+
+  EXPECT_TRUE(Equal(boxAB_rotated,
+              fs->Resolve(B_box, A), _tolerance));
 }
 
 /////////////////////////////////////////////////
