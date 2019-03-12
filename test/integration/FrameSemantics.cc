@@ -217,6 +217,8 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
               fs->Resolve(O_boxOA, A), _tolerance));
 
   // inCoordinatesOf coverage, even though it's not supported in AABBSpace
+  std::cerr << " -- Ignore the following warnings; these functions are being "
+            << "called for the sake of test coverage:" << std::endl;
   EXPECT_TRUE(Equal(boxOA,
               fs->Resolve(A_box, FrameID::World(), B), _tolerance));
 
@@ -248,6 +250,14 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   boxAB_rotated.max()[0] = box_rotated.max()[0];
   boxAB_rotated.max()[1] = box_rotated.max()[1] + dy_B;
 
+  AlignedBox boxOB_rotated;
+  boxOB_rotated.min() = Vector::Zero();
+  boxOB_rotated.max() = Vector::Zero();
+  boxOB_rotated.min()[0] = boxAB_rotated.min()[0] + dx_A;
+  boxOB_rotated.min()[1] = boxAB_rotated.min()[1];
+  boxOB_rotated.max()[0] = boxAB_rotated.max()[0] + dx_A;
+  boxOB_rotated.max()[1] = boxAB_rotated.max()[1];
+
   const RelativeAlignedBox A_boxAB(A, boxAB);
   EXPECT_TRUE(Equal(A_boxAB.RelativeToParent(),
               fs->Resolve(A_boxAB, A), _tolerance));
@@ -258,6 +268,9 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
 
   EXPECT_TRUE(Equal(boxAB_rotated,
               fs->Resolve(B_box, A), _tolerance));
+
+  EXPECT_TRUE(Equal(boxOB_rotated,
+              fs->Resolve(B_box, FrameID::World()), _tolerance));
 }
 
 /////////////////////////////////////////////////
