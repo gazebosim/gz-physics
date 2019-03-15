@@ -79,6 +79,13 @@
               <size>0.2 0.2 2.2</size>
             </box>
           </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>10</mu>
+              </ode>
+            </friction>
+          </surface>
         </collision>
       </link>
       <!-- upper link, length 1, IC -90 degrees -->
@@ -132,6 +139,13 @@
               <length>0.3</length>
             </cylinder>
           </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.1</mu>
+              </ode>
+            </friction>
+          </surface>
         </collision>
         <collision name="col_lower_joint">
           <pose>0 0 1.0 0 1.5708 0</pose>
