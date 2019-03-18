@@ -466,6 +466,25 @@ Identity SDFFeatures::ConstructSdfCollision(
   dart::dynamics::BodyNode *const bn =
       this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
 
+  // Calling GetElement creates a new element with default values if the element
+  // doesn't exist, so the following is okay.
+  // TODO(addisu) We are using the coefficient specified in the <ode> tag.
+  // Either add parameters specific to DART or generic to all physics engines.
+  if (_collision.Element())
+  {
+    const auto &odeFriction = _collision.Element()
+                                  ->GetElement("surface")
+                                  ->GetElement("friction")
+                                  ->GetElement("ode");
+
+    // We are setting the friction coefficient of a collision element
+    // to be the coefficient for the whole link. If there are multiple collision
+    // elements, the value of the last one will be the coefficient for the link.
+    // TODO(addisu) Assign the coefficient to the shape node when support is
+    // added in DART.
+    bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+  }
+
   // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
   // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
   // Collision name for uniqueness sake.
