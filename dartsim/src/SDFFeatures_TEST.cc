@@ -131,7 +131,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
          std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity());
 
-  EXPECT_DOUBLE_EQ(10, skeleton->getBodyNode("base")->getFrictionCoeff());
+  EXPECT_DOUBLE_EQ(1.1, skeleton->getBodyNode("base")->getFrictionCoeff());
   // The last collision element overwrites the value set by previous collision
   // elements. We expect mu=1, the default value, instead of 0.1.
   EXPECT_DOUBLE_EQ(1, skeleton->getBodyNode("upper_link")->getFrictionCoeff());
