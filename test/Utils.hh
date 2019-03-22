@@ -167,6 +167,17 @@ namespace ignition
 
       /////////////////////////////////////////////////
       template <typename Scalar, int Dim>
+      bool Equal(const AlignedBox<Scalar, Dim> &_box1,
+                 const AlignedBox<Scalar, Dim> &_box2,
+                 const double _tolerance)
+      {
+        bool min = Equal(_box1.min(), _box2.min(), _tolerance, "box minimums");
+        bool max = Equal(_box1.max(), _box2.max(), _tolerance, "box maximums");
+        return min && max;
+      }
+
+      /////////////////////////////////////////////////
+      template <typename Scalar, int Dim>
       bool Equal(const Pose<Scalar, Dim> &_T1,
                  const Pose<Scalar, Dim> &_T2,
                  const double _tolerance)
