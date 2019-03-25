@@ -23,8 +23,6 @@
 
 #include <ignition/physics/ForwardStep.hh>
 
-#include <utils/test_config.h>
-
 
 using PhysicsPlugin = ignition::common::SpecializedPluginPtr<
     ignition::physics::ForwardStep,
@@ -33,10 +31,8 @@ using PhysicsPlugin = ignition::common::SpecializedPluginPtr<
 /////////////////////////////////////////////////
 TEST(OperationalSpaceController, Step)
 {
-  std::string projectPath = PROJECT_BINARY_PATH;
-
   ignition::common::SystemPaths sp;
-  sp.AddPluginPaths(projectPath + "/ignition-physics-dart");
+  sp.AddPluginPaths(PROJECT_LIBRARY_PATH);
   std::string path = sp.FindSharedLibrary("ignition-physics-dart");
 
   ignition::common::PluginLoader loader;

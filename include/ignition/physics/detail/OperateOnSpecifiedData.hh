@@ -38,42 +38,41 @@ namespace ignition
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::Operate(
-        Performer *performer, CompositeType &data,
-        const DataStatusMask &mask, const bool onlyCompile)
+        Performer *_performer, CompositeType &_data,
+        const DataStatusMask &_mask, const bool _onlyCompile)
     {
-      if (onlyCompile)
+      if (_onlyCompile)
         return;
 
       History history;
-      history.reserve(CountUpperLimitOfSpecifiedData<Specification, SpecFinder>());
+      history.reserve(CountUpperLimitOfSpecifiedData<
+                      Specification, SpecFinder>());
 
-      SubOperate(type<typename SpecFinder<Specification>::Data>(),
-                 type<Specification>(), performer, data, mask, history);
+      SubOperate(detail::type<typename SpecFinder<Specification>::Data>(),
+          detail::type<Specification>(), _performer, _data, _mask, history);
     }
 
     /////////////////////////////////////////////////
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename Data, typename SubSpecification, typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
-        type<Data>, type<SubSpecification>,
-        Performer *performer, CompositeType &data,
-        const DataStatusMask &mask,
-        History &history)
+        detail::type<Data>, detail::type<SubSpecification>,
+        Performer *_performer, CompositeType &_data,
+        const DataStatusMask &_mask,
+        History &_history)
     {
       // This gets called when SubSpecification is able to provide one of the
       // desired data type specifications.
 
-      if (mask.Satisfied(data.template StatusOf<Data>(
-                           CompositeData::QUERY_SILENT)))
+      if (_mask.Satisfied(_data.template StatusOf<Data>()))
       {
-        const bool inserted = history.insert(
-              typeid(Data).name()).second;
+        const bool inserted = _history.insert(typeid(Data).name()).second;
 
-        if(inserted)
+        if (inserted)
         {
           // We have found a specified type that matches what we want, so we
           // will call operate on it.
-          Operation<Data, Performer, CompositeType>::Operate(performer, data);
+          Operation<Data, Performer, CompositeType>::Operate(_performer, _data);
         }
       }
 
@@ -91,35 +90,35 @@ namespace ignition
       // which does not make all the same assumptions as ours. It also
       // doesn't affect performance, because it will simply compile to a
       // no-op.
-      SubOperate(type<void>(), type<SubSpecification>(),
-                 performer, data, mask, history);
+      SubOperate(detail::type<void>(), detail::type<SubSpecification>(),
+                 _performer, _data, _mask, _history);
     }
 
     /////////////////////////////////////////////////
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename SubSpecification, typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
-        type<void>, type<SubSpecification>,
-        Performer *performer, CompositeType &data,
-        const DataStatusMask &mask, History &history)
+        detail::type<void>, detail::type<SubSpecification>,
+        Performer *_performer, CompositeType &_data,
+        const DataStatusMask &_mask, History &_history)
     {
       // SubSpecification did not specify a type that matches what we want,
       // so we will search it to see if it has its own sub-specifications.
 
       using Sub1 =  typename SubSpecification::SubSpecification1;
-      SubOperate(type<typename SpecFinder<Sub1>::Data>(), type<Sub1>(),
-                 performer, data, mask, history);
+      SubOperate(detail::type<typename SpecFinder<Sub1>::Data>(),
+                 detail::type<Sub1>(), _performer, _data, _mask, _history);
 
       using Sub2 = typename SubSpecification::SubSpecification2;
-      SubOperate(type<typename SpecFinder<Sub2>::Data>(), type<Sub2>(),
-                 performer, data, mask, history);
+      SubOperate(detail::type<typename SpecFinder<Sub2>::Data>(),
+                 detail::type<Sub2>(), _performer, _data, _mask, _history);
     }
 
     /////////////////////////////////////////////////
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename CompositeType>
     IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
-        type<void>, type<void>, Performer*,
+        detail::type<void>, detail::type<void>, Performer*,
         CompositeType&, const DataStatusMask&, History&)
     {
       // We reached a leaf in the specification, so we are done with this

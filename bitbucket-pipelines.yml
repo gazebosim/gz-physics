@@ -5,29 +5,19 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get -y install cmake build-essential lcov curl mercurial software-properties-common
+          - apt-get -y install cmake build-essential lcov curl mercurial cppcheck software-properties-common
+          - sh tools/code_check.sh
           - gcc -v
           - g++ -v
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" > /etc/apt/sources.list.d/gazebo-stable.list
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease xenial main" > /etc/apt/sources.list.d/gazebo-prerelease.list
           - apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
-            libignition-cmake-dev
-            libignition-math4-dev
-          # Build ignition common from source until PluginPtrSemantics is merged
-          - apt-get -y install
-            libavdevice-dev
-            libignition-common-dev
-          - apt-get -y remove
-            libignition-common-dev
-          - hg clone https://bitbucket.org/ignitionrobotics/ign-common -b PluginPtrSemantics
-          - cd ign-common
-          - mkdir build
-          - cd build
-          - cmake ..
-          - make install
-          - cd ../..
+            libignition-cmake1-dev
+            libignition-math5-dev
+            libignition-common2-dev
           # DARTsim
           - apt-add-repository -y ppa:dartsim
           - apt-get update
@@ -35,8 +25,6 @@ pipelines:
             dart6-data
             libdart6-dev
             libdart6-utils-urdf-dev
-          # hack until they fix dart6-data
-          - find /usr/share/doc/dart/data/urdf/KR5 | grep gz$ | while read f; do gzip -d "$f"; done
           # Ignition physics
           - mkdir build
           - cd build

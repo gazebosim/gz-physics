@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 #define IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 
+#include <string>
 #include <unordered_set>
 
 #include "ignition/physics/SpecifyData.hh"
@@ -53,50 +54,68 @@ namespace ignition
               class Performer>
     class OperateOnSpecifiedData
     {
-      /// The data structure that will be used to ensure that the same data does
-      /// not get operated on twice, even if it is listed twice (redundantly) in
-      /// the specification.
-      using History = std::unordered_set<std::string>;
-
       /// \brief Operate is the recommended entry point for using
       /// OperateOnSpecifiedData. This can be given a performer, a CompositeType
       /// object, and a DataStatusMask to determine its behavior.
+      ///
+      /// For each type in Specification, the _performer will query _data for
+      /// the type, and then perform Operation on that data type. The _mask
+      /// information is used to tune the behavior to only perform the
+      /// operations on components of _data that meet the criteria.
       ///
       /// Setting onlyCompile to true will short-circuit the entire operation.
       /// This can be useful for static analysis. The function will cost very
       /// nearly nothing during run-time, but it will prevent code from
       /// compiling if its conditions are not met.
+      ///
+      /// \param[in,out] _performer
+      ///   The object that will perform the operation.
+      /// \param[in,out] _data
+      ///   The object that will be operated on.
+      /// \param[in] _mask
+      ///   An object to tune which data components are operated on.
+      /// \param[in] _onlyCompile
+      ///   Have this function compile to make sure that it can compile, but do
+      ///   not perform any operations.
       public: template <typename CompositeType>
       static void Operate(
-          Performer *performer,
-          CompositeType &data,
-          const DataStatusMask &mask,
-          const bool onlyCompile = false);
+          Performer *_performer,
+          CompositeType &_data,
+          const DataStatusMask &_mask,
+          const bool _onlyCompile = false);
+
+
+      // -------------------- Private API -----------------------
+
+      /// The data structure that will be used to ensure that the same data does
+      /// not get operated on twice, even if it is listed twice (redundantly) in
+      /// the specification.
+      private: using History = std::unordered_set<std::string>;
 
       /// \brief When SubSpecification is able to provide one of the desired
       /// data specifications, this overload gets called.
-      public: template <typename Data, typename SubSpecification,
+      private: template <typename Data, typename SubSpecification,
                         typename CompositeType>
       static void SubOperate(
-          type<Data>, type<SubSpecification>,
-          Performer *performer, CompositeType &data,
-          const DataStatusMask &mask,
-          History &history);
+          detail::type<Data>, detail::type<SubSpecification>,
+          Performer *_performer, CompositeType &_data,
+          const DataStatusMask &_mask,
+          History &_history);
 
       /// \brief When SubSpecification could not provide one of the desired data
       /// specifications, we will instead search it for sub-specifications.
-      public: template <typename SubSpecification, typename CompositeType>
+      private: template <typename SubSpecification, typename CompositeType>
       static void SubOperate(
-          type<void>, type<SubSpecification>,
-          Performer *performer, CompositeType &data,
-          const DataStatusMask &mask,
-          History &history);
+          detail::type<void>, detail::type<SubSpecification>,
+          Performer *_performer, CompositeType &_data,
+          const DataStatusMask &_mask,
+          History &_history);
 
       /// \brief When SubSpecification does not have the desired data
       /// specifications, nor has any sub-specifications, we terminate here.
-      public: template <typename CompositeType>
+      private: template <typename CompositeType>
       static void SubOperate(
-          type<void>, type<void>,
+          detail::type<void>, detail::type<void>,
           Performer*, CompositeType&,
           const DataStatusMask&,
           History&);
