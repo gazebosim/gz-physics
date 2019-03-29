@@ -52,11 +52,12 @@ namespace ignition
 
         /// \brief Add a force on the link applied at a specified position. This
         /// force is applied for one simulation step only.
-        /// \param[in] _force The desired force as a relative quantity (a
-        /// quantity that contains information about the frame in which it's
+        /// \param[in] _force The desired force as a Relative Force (a quantity
+        /// that contains information about the coordinates in which it is
         /// expressed)
         /// \param[in] _position The point of application of the force. This
-        /// parameter is also a relative quantity.
+        /// parameter is a Relative Position (a quantity that contains
+        /// information about the frame in which it is expressed).
         public: void AddExternalForce(
             const RelativeForceType &_force,
             const RelativePositionType &_position);
@@ -64,36 +65,38 @@ namespace ignition
         /// \brief Add a force on the link applied at a specified position. This
         /// force is applied for one simulation step only. This is a convenience
         /// form of AddExternalForce where the force and position are free
-        /// vectors and a common reference frame is specified as a third
-        /// parameter.
+        /// vectors and an additional parameter is used to specify the
+        /// coordinates in which the force is expressed.
         /// \param[in] _force The desired force
+        /// \param[in] _forceInCoordinatesOf The coordinate in which the force
+        /// is expressed
         /// \param[in] _position The point of application of the force expressed
         /// in the link-fixed frame.
-        /// \param[in] _referenceFrame The frame in which the force is
-        /// expressed.
         ///
         /// Note that in this version of AddExternalForce the position is
-        /// expressed in the link-fixed frame while the reference frame for the
+        /// expressed in the link-fixed frame while the coordinate frame for the
         /// force is a parameter that can be set. If you want to specify the
         /// reference frame for the position quanity, please use the
         /// AddExternalForce function that takes Relative quantities.
         public: void AddExternalForce(
             const LinearVectorType &_force,
-            const LinearVectorType &_position = LinearVectorType::Zero(),
-            const FrameID &_referenceFrame = FrameID::World());
+            const FrameID &_forceInCoordinatesOf = FrameID::World(),
+            const LinearVectorType &_position = LinearVectorType::Zero());
 
         /// \brief Set the torque applied on the link
-        /// \param[in] _torque The desired torque as a Relative Quantity
+        /// \param[in] _torque The desired torque as a Relative Torque (a
+        /// quantity that contains information about the coordinates in which it
+        /// is expressed)
         public: void AddExternalTorque(const RelativeTorqueType &_torque);
 
         /// \brief Add an external torque on the link. The torque is applied for
         /// one simulation step only.
         /// \param[in] _torque The desired torque
-        /// \param[in] _referenceFrame The frame in which the torque is
+        /// \param[in] _inCoordinatesOf The coordinates in which the torque is
         /// expressed
         public: void AddExternalTorque(
             const AngularVectorType &_torque,
-            const FrameID &_referenceFrame = FrameID::World());
+            const FrameID &_inCoordinatesOf = FrameID::World());
       };
 
       /// \private The implementation API for setting force/torque on a link

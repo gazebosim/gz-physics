@@ -43,15 +43,15 @@ void AddLinkExternalForceTorque::Link<PolicyT, FeaturesT>::AddExternalForce(
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 void AddLinkExternalForceTorque::Link<PolicyT, FeaturesT>::AddExternalForce(
-    const LinearVectorType &_force, const LinearVectorType &_position,
-    const FrameID &_referenceFrame)
+    const LinearVectorType &_force, const FrameID &_forceInCoordinatesOf,
+    const LinearVectorType &_position)
 {
   const auto &impl = *this->template Interface<FrameSemantics>();
-  // Special case for world frame
+  // Special case for world coordinates
   auto forceWorld = _force;
-  if (_referenceFrame != FrameID::World())
+  if (_forceInCoordinatesOf != FrameID::World())
   {
-    RelativeForceType forceInRef(_referenceFrame, _force);
+    RelativeForceType forceInRef(_forceInCoordinatesOf, _force);
     forceWorld =
         detail::Resolve(impl, forceInRef, FrameID::World(), FrameID::World());
   }
@@ -80,14 +80,14 @@ void AddLinkExternalForceTorque::Link<PolicyT, FeaturesT>::AddExternalTorque(
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 void AddLinkExternalForceTorque::Link<PolicyT, FeaturesT>::AddExternalTorque(
-    const AngularVectorType &_torque, const FrameID &_referenceFrame)
+    const AngularVectorType &_torque, const FrameID &_inCoordinatesOf)
 {
   const auto &impl = *this->template Interface<FrameSemantics>();
-  // Special case for world frame
+  // Special case for world coordinates
   auto torqueWorld = _torque;
-  if (_referenceFrame != FrameID::World())
+  if (_inCoordinatesOf != FrameID::World())
   {
-    RelativeTorqueType torqueInRef(_referenceFrame, _torque);
+    RelativeTorqueType torqueInRef(_inCoordinatesOf, _torque);
     torqueWorld =
         detail::Resolve(impl, torqueInRef, FrameID::World(), FrameID::World());
   }
