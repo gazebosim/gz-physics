@@ -1,9 +1,9 @@
 ## Ignition Physics 1.x
 
+### Ignition Physics 1.1.0 (2019-XX-XX)
+
 1. Feature for adding external forces and torques to a link
     * [Pull request 79](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/79)
-
-### Ignition Physics 1.1.0 (2019-XX-XX)
 
 1. Assign friction coefficients from collision elements
     * [Pull request 80](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/80)
