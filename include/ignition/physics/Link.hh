@@ -63,7 +63,7 @@ namespace ignition
             const RelativePositionType &_position);
 
         /// \brief Add a force on the link applied at a specified position. This
-        /// force is applied for one simulation step only. This is a convenience
+        /// force is applied for one simulation step only. This is a convenient
         /// form of AddExternalForce where the force and position are free
         /// vectors and an additional parameter is used to specify the
         /// coordinates in which the force is expressed.
