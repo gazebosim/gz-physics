@@ -141,13 +141,13 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
     const auto frameData = link->FrameDataRelativeToWorld();
 
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
-        frameData.linearVelocity);
+                        frameData.linearVelocity);
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
-        frameData.angularVelocity);
+                        frameData.angularVelocity);
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
-        frameData.linearAcceleration);
+                        frameData.linearAcceleration);
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
-        frameData.angularAcceleration);
+                        frameData.angularAcceleration);
   }
 
   // The moment of inertia of the sphere is a multiple of the identity matrix.
@@ -253,7 +253,8 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   world->Step(output, state, input);
   {
     const auto frameData = link->FrameDataRelativeToWorld();
-    EXPECT_PRED_FORMAT2(vectorPredicate, frameData.pose.linear() * cmdLocalForce,
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+                        frameData.pose.linear() * cmdLocalForce,
                         mass * (frameData.linearAcceleration));
 
     // The moment of inertia of the sphere is a multiple of the identity matrix.
