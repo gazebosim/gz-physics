@@ -1,6 +1,9 @@
 ## Ignition Physics 1.x
 
-### Ignition Math 1.1.0 (2019-XX-XX)
+### Ignition Physics 1.1.0 (2019-XX-XX)
+
+1. Feature for adding external forces and torques to a link
+    * [Pull request 79](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/79)
 
 1. Assign friction coefficients from collision elements
     * [Pull request 80](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/80)
@@ -18,12 +21,12 @@
 1. Remove workaround for console\_bridge linking on macOS
     * [Pull request 75](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/75)
 
-### Ignition Math 1.0.1 (2019-03-05)
+### Ignition Physics 1.0.1 (2019-03-05)
 
 1. Don't link core to ignition-common3, just the test plugin that uses it
     * [Pull request 74](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/74)
 
-### Ignition Math 1.0.0 (2019-03-01)
+### Ignition Physics 1.0.0 (2019-03-01)
 
 1. Initial release
 
