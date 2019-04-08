@@ -68,7 +68,7 @@ namespace ignition
         /// vectors and an additional parameter is used to specify the
         /// coordinates in which the force is expressed.
         /// \param[in] _force The desired force
-        /// \param[in] _forceInCoordinatesOf The coordinate in which the force
+        /// \param[in] _forceInCoordinatesOf The coordinates in which the force
         /// is expressed
         /// \param[in] _position The point of application of the force expressed
         /// in the link-fixed frame.
@@ -76,14 +76,15 @@ namespace ignition
         /// Note that in this version of AddExternalForce the position is
         /// expressed in the link-fixed frame while the coordinate frame for the
         /// force is a parameter that can be set. If you want to specify the
-        /// reference frame for the position quanity, please use the
+        /// reference frame for the position quantity, please use the
         /// AddExternalForce function that takes Relative quantities.
         public: void AddExternalForce(
             const LinearVectorType &_force,
             const FrameID &_forceInCoordinatesOf = FrameID::World(),
             const LinearVectorType &_position = LinearVectorType::Zero());
 
-        /// \brief Set the torque applied on the link
+        /// \brief Add an external torque on the link. The torque is applied for
+        /// one simulation step only.
         /// \param[in] _torque The desired torque as a Relative Torque (a
         /// quantity that contains information about the coordinates in which it
         /// is expressed)
