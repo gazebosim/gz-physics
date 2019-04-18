@@ -89,6 +89,7 @@ class NaiveComposition : public NaiveCompositionBase
 };
 
 template <class Q>
+// NOLINTNEXTLINE
 void BM_Expect(benchmark::State& _st)
 {
   size_t numTests = _st.range(0);
@@ -104,6 +105,7 @@ void BM_Expect(benchmark::State& _st)
   }
 }
 
+// NOLINTNEXTLINE
 void BM_Naive(benchmark::State& _st)
 {
   size_t numTests = _st.range(0);
@@ -129,14 +131,23 @@ void BM_Naive(benchmark::State& _st)
   }
 }
 
+// NOLINTNEXTLINE
 BENCHMARK(BM_Naive)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, ExpectString)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, Expect3Types_Leading)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, Expect3Types_Trailing)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, Expect10Types_Leading)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, Expect10Types_Trailing)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, Expect20Types_Leading)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, Expect20Types_Trailing)->Arg(gNumTests);
+// NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, ignition::physics::CompositeData)->Arg(gNumTests);
 
 BENCHMARK_MAIN()
