@@ -39,7 +39,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
 
-  const dart::dynamics::Frame *frame = this->frames.at(_id.ID());
+  const dart::dynamics::Frame *frame = SelectFrame(_id);
 
   data.pose = frame->getWorldTransform();
   data.linearVelocity = frame->getLinearVelocity();
@@ -48,6 +48,21 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   data.angularAcceleration = frame->getAngularAcceleration();
 
   return data;
+}
+
+/////////////////////////////////////////////////
+const dart::dynamics::Frame *KinematicsFeatures::SelectFrame(
+    const FrameID &_id) const
+{
+  const auto model_it = this->models.idToObject.find(_id.ID());
+  if (model_it != this->models.idToObject.end())
+  {
+    // This is a model FreeGroup frame, so we'll use the first root link as the
+    // frame
+    return model_it->second->model->getRootBodyNode();
+  }
+
+  return this->frames.at(_id.ID());
 }
 
 }
