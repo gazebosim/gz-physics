@@ -4,17 +4,20 @@ find_package(benchmark)
 if (NOT benchmark_FOUND)
   message(WARNING "Unable to find google benchmark (libbenchmark-dev). Disabling benchmarks.")
 else()
-  set(tests
-    ExpectData.cc
-  )
+  include(IgnBenchmark OPTIONAL RESULT_VARIABLE IgnBenchmark_FOUND)
 
-  ign_build_executables(
-    PREFIX "${TEST_TYPE}_"
-    SOURCES ${tests}
-    LIB_DEPS benchmark::benchmark
-    EXEC_LIST benchmark_list
-  )
+  if (IgnBenchmark_FOUND)
+    set(tests
+      ExpectData.cc
+    )
 
-  include(IgnBenchmark)
-  ign_add_run_benchmarks_target(TARGETS ${benchmark_list})
+    ign_build_executables(
+      PREFIX "${TEST_TYPE}_"
+      SOURCES ${tests}
+      LIB_DEPS benchmark::benchmark
+      EXEC_LIST benchmark_list
+    )
+
+    ign_add_run_benchmarks_target(TARGETS ${benchmark_list})
+  endif()
 endif()
