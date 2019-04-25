@@ -35,13 +35,13 @@ namespace dartsim {
 using DartsimFeatures = FeatureList<
   CustomFeatureList,
   EntityManagementFeatureList,
+  FreeGroupFeatureList,
   JointFeatureList,
   KinematicsFeatureList,
   LinkFeatureList,
   SDFFeatureList,
   ShapeFeatureList,
-  SimulationFeatureList,
-  FreeGroupFeatureList
+  SimulationFeatureList
   // TODO(MXG): Implement more features
 >;
 
@@ -50,13 +50,13 @@ class Plugin :
     public virtual Base,
     public virtual CustomFeatures,
     public virtual EntityManagementFeatures,
+    public virtual FreeGroupFeatures,
     public virtual JointFeatures,
     public virtual KinematicsFeatures,
     public virtual LinkFeatures,
     public virtual SDFFeatures,
     public virtual ShapeFeatures,
-    public virtual SimulationFeatures,
-    public virtual FreeGroupFeatures { };
+    public virtual SimulationFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
 
