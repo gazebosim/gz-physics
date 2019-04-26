@@ -44,6 +44,13 @@ namespace ignition
             Policy, typename FeatureList<FeaturesT...>::Features>::type;
       };
 
+      template <typename Policy, typename NamedFeatureList>
+      struct DeterminePlugin
+      {
+        using type = typename DeterminePlugin<
+            Policy, typename NamedFeatureList::Features>::type;
+      };
+
       /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
       /// time that each object that is being passed as a "feature" matches the
@@ -245,6 +252,16 @@ namespace ignition
       /// \private Extract the API out of a FeatureList
       template <template<typename> class, typename...>
       struct Aggregate;
+
+      template <template<typename> class Selector, typename NamedFeatureList>
+      struct Aggregate<Selector, NamedFeatureList>
+      {
+        public: template<typename... T>
+        using type =
+          typename Aggregate<
+              Selector, typename NamedFeatureList::Features>
+                  ::template type<T...>;
+      };
 
       template <template<typename> class Selector, typename... FeaturesT>
       struct Aggregate<Selector, FeatureList<FeaturesT...>>
