@@ -99,7 +99,7 @@ namespace ignition
     SetWorldLinearVelocity(const LinearVelocity &_linearVelocity)
     {
       this->template Interface<SetFreeGroupVelocity>()
-        ->SetFreeGroupLinearVelocity(this->identity, _linearVelocity);
+        ->SetFreeGroupWorldLinearVelocity(this->identity, _linearVelocity);
     }
 
     /////////////////////////////////////////////////
@@ -108,7 +108,7 @@ namespace ignition
     SetWorldAngularVelocity(const AngularVelocity &_angularVelocity)
     {
       this->template Interface<SetFreeGroupVelocity>()
-        ->SetFreeGroupAngularVelocity(this->identity, _angularVelocity);
+        ->SetFreeGroupWorldAngularVelocity(this->identity, _angularVelocity);
     }
   }
 }

@@ -63,7 +63,7 @@ namespace ignition
       };
 
       public: template <typename PolicyT, typename FeaturesT>
-      class FreeGroup : public virtual Feature::Link<PolicyT, FeaturesT>
+      class FreeGroup : public virtual Feature::FreeGroup<PolicyT, FeaturesT>
       {
         /// \brief The canonical link of this FreeGroup. Getting and setting
         /// properties (like poses and velocities) on the group will be done
@@ -118,7 +118,7 @@ namespace ignition
 
         public: virtual void SetFreeGroupWorldPose(
             const Identity &_groupID,
-            const PoseType &_pose);
+            const PoseType &_pose) = 0;
       };
     };
 
