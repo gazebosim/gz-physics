@@ -66,7 +66,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
     if (bn->getParentJoint()->getType()
         == dart::dynamics::FreeJoint::getStaticType())
     {
-      continue;
+      break;
     }
 
     bn = bn->getParentBodyNode();
