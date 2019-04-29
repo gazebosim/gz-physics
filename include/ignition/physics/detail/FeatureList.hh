@@ -461,19 +461,13 @@ namespace ignition
 
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
-    template <typename T> \
-    /* Used to select the X-type API from a feature */ \
-    struct X ## Selector \
-    { \
-      public: template<typename PolicyT, typename FeaturesT> \
-      using type = typename T::template X<PolicyT, FeaturesT>; \
-    }; \
+    IGN_PHYSICS_CREATE_SELECTOR(X) \
     /* Symbol used by X-types to identify other X-types */ \
     struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public ::ignition::physics::detail::Aggregate< \
-        detail :: X ## Selector, FeaturesT> \
+        detail::Select ## X, FeaturesT> \
           ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
   { \
