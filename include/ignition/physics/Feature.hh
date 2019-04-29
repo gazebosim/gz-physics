@@ -88,15 +88,6 @@ namespace ignition
         public: virtual ~Shape() = default;
       };
 
-      /// \brief Placeholder class in case a Feature does not define its own
-      /// FreeGroup API
-      public: template <typename Policy, typename FeaturesT>
-      class FreeGroup : public virtual Entity<Policy, FeaturesT>
-      {
-        /// \brief Virtual destructor
-        public: virtual ~FreeGroup() = default;
-      };
-
       public: template <typename Policy>
       class Implementation : public detail::Implementation
       {

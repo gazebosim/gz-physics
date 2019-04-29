@@ -63,7 +63,7 @@ namespace ignition
       };
 
       public: template <typename PolicyT, typename FeaturesT>
-      class FreeGroup : public virtual Feature::FreeGroup<PolicyT, FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
         /// \brief The canonical link of this FreeGroup. Getting and setting
         /// properties (like poses and velocities) on the group will be done
