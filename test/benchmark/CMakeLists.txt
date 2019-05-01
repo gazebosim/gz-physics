@@ -4,4 +4,4 @@ set(tests
   ExpectData.cc
 )
 
-ign_add_benchmarks(SOURCES ${benchmark_list})
+ign_add_benchmarks(SOURCES ${tests})
