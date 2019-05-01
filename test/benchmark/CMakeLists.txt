@@ -1,9 +1,7 @@
-include(IgnBenchmark OPTIONAL RESULT_VARIABLE IgnBenchmark_FOUND)
+include(IgnBenchmark)
 
-if (IgnBenchmark_FOUND)
-  set(tests
-    ExpectData.cc
-  )
+set(tests
+  ExpectData.cc
+)
 
-  ign_add_benchmarks(SOURCES ${benchmark_list})
-endif()
+ign_add_benchmarks(SOURCES ${benchmark_list})
