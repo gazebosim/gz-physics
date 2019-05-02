@@ -35,6 +35,12 @@ namespace ignition
     /// A FreeGroup can represent a single connected group of links that
     /// forms a tree with the root of the tree connected to the world with
     /// a FreeJoint, but it can also represent a group of other FreeGroups.
+    /// Each FreeGroup has 1 canonical link, whose frame is used for getting
+    /// and setting properties like pose and velocity.
+    /// If the FreeGroup is a single tree of connected links, the canonical
+    /// link should be the root of that tree.
+    /// If the FreeGroup contains multiple FreeGroups, the canonical link
+    /// should be selected from one of the component FreeGroups.
     class IGNITION_PHYSICS_VISIBLE FindFreeGroupFeature : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
