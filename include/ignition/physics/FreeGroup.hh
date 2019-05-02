@@ -98,7 +98,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetFreeGroupPose
+    class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldPose
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -123,7 +123,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetFreeGroupVelocity
+    class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldVelocity
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
       public: template <typename PolicyT, typename FeaturesT>

@@ -86,28 +86,28 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetFreeGroupPose::FreeGroup<PolicyT, FeaturesT>::SetWorldPose(
+    void SetFreeGroupWorldPose::FreeGroup<PolicyT, FeaturesT>::SetWorldPose(
         const PoseType &_pose)
     {
-      this->template Interface<SetFreeGroupPose>()
+      this->template Interface<SetFreeGroupWorldPose>()
         ->SetFreeGroupWorldPose(this->identity, _pose);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetFreeGroupVelocity::FreeGroup<PolicyT, FeaturesT>::
+    void SetFreeGroupWorldVelocity::FreeGroup<PolicyT, FeaturesT>::
     SetWorldLinearVelocity(const LinearVelocity &_linearVelocity)
     {
-      this->template Interface<SetFreeGroupVelocity>()
+      this->template Interface<SetFreeGroupWorldVelocity>()
         ->SetFreeGroupWorldLinearVelocity(this->identity, _linearVelocity);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetFreeGroupVelocity::FreeGroup<PolicyT, FeaturesT>::
+    void SetFreeGroupWorldVelocity::FreeGroup<PolicyT, FeaturesT>::
     SetWorldAngularVelocity(const AngularVelocity &_angularVelocity)
     {
-      this->template Interface<SetFreeGroupVelocity>()
+      this->template Interface<SetFreeGroupWorldVelocity>()
         ->SetFreeGroupWorldAngularVelocity(this->identity, _angularVelocity);
     }
   }
