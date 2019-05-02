@@ -29,6 +29,12 @@ namespace ignition
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(FreeGroup)
 
     /////////////////////////////////////////////////
+    /// \brief This feature provides an interface between the Model and Link
+    /// classes and the FreeGroup class, which represents a group of links
+    /// that are not connected to the world with any kinematic constraints.
+    /// A FreeGroup can represent a single connected group of links that
+    /// forms a tree with the root of the tree connected to the world with
+    /// a FreeJoint, but it can also represent a group of other FreeGroups.
     class IGNITION_PHYSICS_VISIBLE FindFreeGroupFeature : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -37,8 +43,8 @@ namespace ignition
         using FreeGroupPtrType = FreeGroupPtr<PolicyT, FeaturesT>;
         using ConstFreeGroupPtrType = ConstFreeGroupPtr<PolicyT, FeaturesT>;
 
-        /// \brief Find a FreeGroup that envelops the entire model.
-        /// \returns a FreeGroup that envelops all links in the model if such a
+        /// \brief Find a FreeGroup that includes all the links in this model.
+        /// \return a FreeGroup that envelops all links in the model if such a
         /// group is available. Otherwise a nullptr is returned.
         public: FreeGroupPtrType FindFreeGroup();
 
@@ -52,10 +58,10 @@ namespace ignition
         using FreeGroupPtrType = FreeGroupPtr<PolicyT, FeaturesT>;
         using ConstFreeGroupPtrType = ConstFreeGroupPtr<PolicyT, FeaturesT>;
 
-        /// \brief Find a FreeGroup that includes this Link.
-        /// \returns a FreeGroup that includes this link at a minimum. If this
-        /// link is constrained to the world in some way, then a nullptr is
-        /// returned.
+        /// \brief Find the smallest FreeGroup that includes this Link.
+        /// \return a FreeGroup that includes this link and any connected links.
+        /// If this link is constrained to the world in some way, then a nullptr
+        /// is returned.
         public: FreeGroupPtrType FindFreeGroup();
 
         /// \brief const version of FindFreeGroup()
