@@ -104,6 +104,12 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// While a physics engine with maximal coordinates can provide
+    /// Link::SetWorldPose and similar functions for setting velocity
+    /// regardless of the kinematic constraints on that link, this behavior
+    /// is not well defined and difficult to implement with generalized
+    /// coordinates. The FreeGroup::SetWorldPose function provides an
+    /// analog to both `Link::SetWorldPose` and `Model::SetWorldPose`.
     class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldPose
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
