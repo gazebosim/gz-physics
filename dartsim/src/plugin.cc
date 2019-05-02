@@ -21,6 +21,7 @@
 #include "CustomFeatures.hh"
 #include "JointFeatures.hh"
 #include "KinematicsFeatures.hh"
+#include "LinkFeatures.hh"
 #include "SDFFeatures.hh"
 #include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
@@ -35,6 +36,7 @@ using DartsimFeatures = FeatureList<
   EntityManagementFeatureList,
   JointFeatureList,
   KinematicsFeatureList,
+  LinkFeatureList,
   SDFFeatureList,
   ShapeFeatureList,
   SimulationFeatureList
@@ -48,6 +50,7 @@ class Plugin :
     public virtual EntityManagementFeatures,
     public virtual JointFeatures,
     public virtual KinematicsFeatures,
+    public virtual LinkFeatures,
     public virtual SDFFeatures,
     public virtual ShapeFeatures,
     public virtual SimulationFeatures { };

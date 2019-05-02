@@ -255,6 +255,15 @@ Identity ShapeFeatures::AttachMeshShape(
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
+/////////////////////////////////////////////////
+AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
+    const Identity &_shapeID) const
+{
+  const auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const dart::math::BoundingBox &box = node->getShape()->getBoundingBox();
+  return AlignedBox3d(box.getMin(), box.getMax());
+}
+
 }
 }
 }
