@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -331,6 +332,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, const dart::dynamics::Frame*> frames;
+
+  /// \brief ODE internally uses static/global variables without locking a mutex
+  /// which results in a race condition when creating
+  /// dart::collision::OdeCollisionDetector. This mutex is used to prevent that.
+  public: static std::mutex odeInitMutex;
 };
 
 }

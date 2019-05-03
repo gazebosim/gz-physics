@@ -31,6 +31,9 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
+// Initialize static mutex
+std::mutex Base::odeInitMutex;
+
 /////////////////////////////////////////////////
 /// This class helps to resolve an issue with excessive contacts being computed:
 /// https://bitbucket.org/ignitionrobotics/ign-physics/issues/11/
@@ -533,8 +536,11 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
-  world->getConstraintSolver()->setCollisionDetector(
+  {
+    std::lock_guard<std::mutex> lock(odeInitMutex);
+    world->getConstraintSolver()->setCollisionDetector(
         dart::collision::OdeCollisionDetector::create());
+  }
 
   // TODO(anyone) We need a machanism to configure maxNumContacts at runtime.
   auto &collOpt = world->getConstraintSolver()->getCollisionOption();
