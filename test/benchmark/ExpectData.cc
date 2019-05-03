@@ -150,4 +150,8 @@ BENCHMARK_TEMPLATE(BM_Expect, Expect20Types_Trailing)->Arg(gNumTests);
 // NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, ignition::physics::CompositeData)->Arg(gNumTests);
 
-BENCHMARK_MAIN()
+// OSX needs the semicolon, Ubuntu complains that there's an extra ';'
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+BENCHMARK_MAIN();
+#pragma GCC diagnostic pop
