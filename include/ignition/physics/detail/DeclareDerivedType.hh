@@ -44,7 +44,7 @@
         Select ## Derived, FeaturesT>:: \
             template type<PolicyT, FeaturesT>, \
       public virtual ::ignition::physics::detail::Aggregate< \
-        ::ignition::physics::detail:: Base ## Selector, FeaturesT>:: \
+        ::ignition::physics::detail:: Select ## Base, FeaturesT>:: \
             template type<PolicyT, FeaturesT> \
     { \
       public: using Identifier = Derived ## Identifier; \
