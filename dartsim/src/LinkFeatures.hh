@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2019 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_KINEMATICSFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_KINEMATICSFEATURES_HH_
+#ifndef IGNITION_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
+#define IGNITION_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
 
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/FreeGroup.hh>
+#include <ignition/physics/Link.hh>
 
 #include "Base.hh"
 
@@ -27,19 +26,22 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using KinematicsFeatureList = FeatureList<
-  LinkFrameSemantics,
-  ShapeFrameSemantics,
-  FreeGroupFrameSemantics
+using LinkFeatureList = FeatureList<
+  AddLinkExternalForceTorque
 >;
 
-class KinematicsFeatures :
+class LinkFeatures :
     public virtual Base,
-    public virtual Implements3d<KinematicsFeatureList>
+    public virtual Implements3d<LinkFeatureList>
 {
-  public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const;
+  // ----- Add Link Force/Torque -----
+  public: void AddLinkExternalForceInWorld(
+      const Identity &_id,
+      const LinearVectorType &_force,
+      const LinearVectorType &_position) override;
 
-  public: const dart::dynamics::Frame *SelectFrame(const FrameID &_id) const;
+  public: void AddLinkExternalTorqueInWorld(
+      const Identity &_id, const AngularVectorType &_torque) override;
 };
 
 }
