@@ -26,6 +26,7 @@
 #include <ignition/physics/Link.hh>
 #include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/BoxShape.hh>
+#include <ignition/physics/ForwardStep.hh>
 
 struct NamedFeatureList : ignition::physics::FeatureList<
   ignition::physics::CompleteFrameSemantics,
@@ -64,6 +65,34 @@ TEST(symbol_names, Length)
   /// than half the length of the Link defined by an aliased feature list.
   EXPECT_LT(std::string(typeid(NamedLink).name()).size(),
             std::string(typeid(AliasLink).name()).size()/2);
+}
+
+struct SingleNestedNamedList : ignition::physics::FeatureList<
+  NamedFeatureList,
+  AliasFeatureList
+> { };
+
+struct DoubleNestedNamedList : ignition::physics::FeatureList<
+  ignition::physics::ForwardStep,
+  SingleNestedNamedList
+> { };
+
+using DoubleNestedAliasList = ignition::physics::FeatureList<
+  ignition::physics::ForwardStep,
+  SingleNestedNamedList
+>;
+
+TEST(symbol_names, Nested)
+{
+  // Note: This function just needs to compile successfully for the test to pass
+
+  using SingleNestedLink = ignition::physics::Link3dPtr<SingleNestedNamedList>;
+  SingleNestedLink composite;
+
+  using DoubleNestedLink = ignition::physics::Link3dPtr<DoubleNestedNamedList>;
+  DoubleNestedLink nested;
+
+  ignition::physics::Link3dPtr<DoubleNestedAliasList> alias;
 }
 
 int main(int argc, char **argv)

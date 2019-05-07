@@ -88,7 +88,7 @@ namespace ignition
       /// This default implementation simply takes in a single feature and puts
       /// it into a tuple of size one. This allows us to use std::tuple_cat on
       /// it later to combine it with tuples that may contain multiple features.
-      template <typename F>
+      template <typename F, typename = void_t<> >
       class ExtractFeatures
           : public VerifyFeatures<F>
       {
@@ -109,11 +109,13 @@ namespace ignition
       /// the FeatureList that is currently holding a set of features, then
       /// verify those features, and finally repackage them as the raw feature
       /// tuple that is being held by the FeatureList.
-      template <typename... F>
-      class ExtractFeatures<FeatureList<F...>>
-          : public VerifyFeatures<typename FeatureList<F...>::Features>
+      template <typename SomeFeatureList>
+      class ExtractFeatures<
+              SomeFeatureList,
+              void_t<typename SomeFeatureList::Features>>
+          : public VerifyFeatures<typename SomeFeatureList::Features>
       {
-        public: using Result = typename FeatureList<F...>::Features;
+        public: using Result = typename SomeFeatureList::Features;
       };
 
       /// \private This specialization skips over any void entries. This allows
