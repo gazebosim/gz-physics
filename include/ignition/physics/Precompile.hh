@@ -31,6 +31,8 @@
 /// \endcode
 /// in a source file.
 #define IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Object, PolicySuffix) \
+  extern template class ::ignition::physics::Object < \
+      ::ignition::physics::FeaturePolicy ## PolicySuffix, CustomFeatures>; \
   extern template class ::ignition::physics::EntityPtr< \
       ::ignition::physics::Object< \
           ::ignition::physics::FeaturePolicy ## PolicySuffix, \
@@ -44,6 +46,9 @@
 /// #define IGN_PHYSICS_DEFINE_BASIC_OBJECTS(Prefix, CustomFeatures, PolicySuffix)
 /// \endcode
 #define IGN_PHYSICS_DECLARE_BASIC_OBJECTS(CustomFeatures, PolicySuffix) \
+  extern template struct ::ignition::physics::Entity< \
+      ::ignition::physics::FeaturePolicy ## PolicySuffix, \
+      CustomFeatures>::Pimpl; \
   IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Engine, PolicySuffix) \
   IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, World, PolicySuffix) \
   IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Model, PolicySuffix) \
@@ -57,6 +62,9 @@
 /// Put this in the source file where an object type should be compiled for the
 /// feature list.
 #define IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Object, PolicySuffix) \
+  template class ::ignition::physics::Object < \
+      ::ignition::physics::FeaturePolicy ## PolicySuffix, \
+      CustomFeatures>; \
   template class ::ignition::physics::EntityPtr< \
       ::ignition::physics::Object< \
           ::ignition::physics::FeaturePolicy ## PolicySuffix, \
@@ -64,6 +72,9 @@
 
 // Helper macro
 #define IGN_PHYSICS_DEFINE_BASIC_OBJECTS(CustomFeatures, PolicySuffix) \
+  template struct ::ignition::physics::Entity< \
+      ::ignition::physics::FeaturePolicy ## PolicySuffix, \
+      CustomFeatures>::Pimpl; \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Engine, PolicySuffix) \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, World, PolicySuffix) \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Model, PolicySuffix) \
@@ -71,6 +82,10 @@
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Joint, PolicySuffix) \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Shape, PolicySuffix)
 
-/// Put this in the source file where the basic objects should be compiled
+
+#define IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix, Object, CustomFeatures, \
+    PolicySuffix) \
+  struct Visibility Prefix ## Object : \
+    ::ignition::physics::Object < // TODO(MXG): Finish this
 
 #endif

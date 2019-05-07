@@ -24,51 +24,54 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-struct ComboFeatures : FeatureList<
-  CustomFeatureList,
-  EntityManagementFeatureList,
-  FreeGroupFeatureList,
-  JointFeatureList,
-  KinematicsFeatureList,
-  LinkFeatureList,
-  SDFFeatureList,
-  ShapeFeatureList,
-  SimulationFeatureList
-> { };
+//struct ComboFeatures : FeatureList<
+//  CustomFeatureList,
+//  EntityManagementFeatureList,
+//  FreeGroupFeatureList,
+//  JointFeatureList,
+//  KinematicsFeatureList,
+//  LinkFeatureList,
+//  SDFFeatureList,
+//  ShapeFeatureList,
+//  SimulationFeatureList
+//> { };
 
 }
 }
 }
 
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::CustomFeatureList, 3d)
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::CustomFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::EntityManagementFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::FreeGroupFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::JointFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::KinematicsFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::LinkFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::SDFFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::ShapeFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::SimulationFeatureList, 3d)
+
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::ComboFeatures, 3d)
 
 IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::EntityManagementFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::FreeGroupFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::JointFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::KinematicsFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::LinkFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::SDFFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::ShapeFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::SimulationFeatureList, 3d)
-
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::ComboFeatures, 3d)
+    ignition::physics::dartsim::DartsimFeatures, 3d)
 
 
 #endif

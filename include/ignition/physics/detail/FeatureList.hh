@@ -494,7 +494,7 @@ namespace ignition
     public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
     \
-    public: X(const X&) = default;\
+    public: X(const X&) = default; \
     \
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \
