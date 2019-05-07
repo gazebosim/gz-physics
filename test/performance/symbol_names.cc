@@ -18,32 +18,52 @@
 #include <gtest/gtest.h>
 
 #include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FeaturePolicy.hh>
 
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/RevoluteJoint.hh>
 #include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/Link.hh>
+#include <ignition/physics/CylinderShape.hh>
+#include <ignition/physics/BoxShape.hh>
 
-struct FeatureList : ignition::physics::FeatureList<
+struct NamedFeatureList : ignition::physics::FeatureList<
   ignition::physics::CompleteFrameSemantics,
   ignition::physics::GetRevoluteJointProperties,
   ignition::physics::SetRevoluteJointProperties,
   ignition::physics::GetCylinderShapeProperties,
-  ignition::physics::SetCylinderShapeProperties
-    > {};
+  ignition::physics::SetCylinderShapeProperties,
+  ignition::physics::GetCylinderShapeProperties,
+  ignition::physics::SetCylinderShapeProperties,
+  ignition::physics::AttachCylinderShapeFeature,
+  ignition::physics::GetBoxShapeProperties,
+  ignition::physics::SetBoxShapeProperties,
+  ignition::physics::AttachBoxShapeFeature
+> {};
 
-//using FeatureList = ignition::physics::FeatureList<
-//  ignition::physics::CompleteFrameSemantics,
-//  ignition::physics::GetRevoluteJointProperties,
-//  ignition::physics::SetRevoluteJointProperties,
-//  ignition::physics::GetCylinderShapeProperties,
-//  ignition::physics::SetCylinderShapeProperties
-//    >;
+using AliasFeatureList = ignition::physics::FeatureList<
+  ignition::physics::CompleteFrameSemantics,
+  ignition::physics::GetRevoluteJointProperties,
+  ignition::physics::SetRevoluteJointProperties,
+  ignition::physics::GetCylinderShapeProperties,
+  ignition::physics::SetCylinderShapeProperties,
+  ignition::physics::GetCylinderShapeProperties,
+  ignition::physics::SetCylinderShapeProperties,
+  ignition::physics::AttachCylinderShapeFeature,
+  ignition::physics::GetBoxShapeProperties,
+  ignition::physics::SetBoxShapeProperties,
+  ignition::physics::AttachBoxShapeFeature
+>;
 
 TEST(symbol_names, Length)
 {
-  using Link = ignition::physics::Link3d<FeatureList>;
-  std::cout << typeid(Link).name() << std::endl;
+  using AliasLink = ignition::physics::Link3dPtr<AliasFeatureList>;
+  using NamedLink = ignition::physics::Link3dPtr<NamedFeatureList>;
+
+  /// The length of the Link defined by a named feature list should be less
+  /// than half the length of the Link defined by an aliased feature list.
+  EXPECT_LT(std::string(typeid(NamedLink).name()).size(),
+            std::string(typeid(AliasLink).name()).size()/2);
 }
 
 int main(int argc, char **argv)
