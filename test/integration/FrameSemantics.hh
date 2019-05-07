@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2019 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  *
 */
 
+#ifndef IGNITION_PHYSICS_TEST_INTEGRATION_FRAMESEMANTICS_HH
+#define IGNITION_PHYSICS_TEST_INTEGRATION_FRAMESEMANTICS_HH
+
 #include <gtest/gtest.h>
 #include <cmath>
 
@@ -25,7 +28,6 @@
 
 #include "../Utils.hh"
 #include "../MockFrameSemantics.hh"
-
 
 using ignition::physics::FrameData;
 using ignition::physics::FrameID;
@@ -114,30 +116,6 @@ void TestRelativeFrames(const double _tolerance, const std::string &_suffix)
                       O_T_A.RelativeToParent().pose
                     * A_T_B.RelativeToParent().pose
                     * B_T_C.RelativeToParent().pose, _tolerance));
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeFrames3d)
-{
-  TestRelativeFrames<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeFrames2d)
-{
-  TestRelativeFrames<ignition::physics::FeaturePolicy2d>(1e-14, "2d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeFrames3f)
-{
-  TestRelativeFrames<ignition::physics::FeaturePolicy3f>(1e-3, "3f");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeFrames2f)
-{
-  TestRelativeFrames<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
@@ -274,30 +252,6 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
 }
 
 /////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeAlignedBox3d)
-{
-  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeAlignedBox2d)
-{
-  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2d>(1e-14, "2d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeAlignedBox3f)
-{
-  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3f>(1e-3, "3f");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeAlignedBox2f)
-{
-  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
-}
-
-/////////////////////////////////////////////////
 template <typename PolicyT>
 void TestFrameID(const double _tolerance, const std::string &_suffix)
 {
@@ -373,30 +327,6 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
   const RelativeFrameData J1_T_J1 = fs->Reframe(A_T_J1, *joint1);
   EXPECT_TRUE(Equal(J1_T_J1.RelativeToParent(),
                     fs->Resolve(O_T_J1, J1), _tolerance));
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FrameID3d)
-{
-  TestFrameID<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FrameID2d)
-{
-  TestFrameID<ignition::physics::FeaturePolicy2d>(1e-12, "2d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FrameID3f)
-{
-  TestFrameID<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, FrameID2f)
-{
-  TestFrameID<ignition::physics::FeaturePolicy2f>(1e-4, "2f");
 }
 
 /////////////////////////////////////////////////
@@ -703,30 +633,6 @@ void TestRelativeQuantities(const double _tolerance, const std::string &_suffix)
 }
 
 /////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeQuantities3d)
-{
-  TestRelativeQuantities<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeQuantities2d)
-{
-  TestRelativeQuantities<ignition::physics::FeaturePolicy2d>(1e-11, "2d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeQuantities3f)
-{
-  TestRelativeQuantities<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeQuantities2f)
-{
-  TestRelativeQuantities<ignition::physics::FeaturePolicy2f>(1e-4, "2f");
-}
-
-/////////////////////////////////////////////////
 template <typename PolicyT>
 void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
 {
@@ -970,27 +876,4 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   EXPECT_NEAR(C_O.angularAcceleration[2], 0.0, _tolerance);
 }
 
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeFrameData3d)
-{
-  TestRelativeFrameData<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
-}
-
-/////////////////////////////////////////////////
-TEST(FrameSemantics_TEST, RelativeFrameData3f)
-{
-  TestRelativeFrameData<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
-}
-
-int main(int argc, char **argv)
-{
-  // This seed is arbitrary, but we always use the same seed value to ensure
-  // that results are reproduceable between runs. You may change this number,
-  // but understand that the values generated in these tests will be different
-  // each time that you change it. The expected tolerances might need to be
-  // adjusted if the seed number is changed.
-  ignition::math::Rand::Seed(416);
-
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+#endif

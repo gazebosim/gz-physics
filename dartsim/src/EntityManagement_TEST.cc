@@ -32,12 +32,9 @@
 #include "KinematicsFeatures.hh"
 #include "ShapeFeatures.hh"
 
-using TestFeatureList = ignition::physics::FeatureList<
-  ignition::physics::dartsim::EntityManagementFeatureList,
-  ignition::physics::dartsim::JointFeatureList,
-  ignition::physics::dartsim::KinematicsFeatureList,
-  ignition::physics::dartsim::ShapeFeatureList
->;
+#include "precompiled/declarations.hh"
+
+using TestFeatureList = ignition::physics::dartsim::DartsimFeatures;
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {

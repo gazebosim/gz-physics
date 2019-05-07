@@ -38,15 +38,11 @@
 
 #include "test/Utils.hh"
 
+#include "precompiled/declarations.hh"
+
 using namespace ignition;
 
-using TestFeatureList = ignition::physics::FeatureList<
-  physics::AddLinkExternalForceTorque,
-  physics::ForwardStep,
-  physics::sdf::ConstructSdfWorld,
-  physics::sdf::ConstructSdfModel,
-  physics::sdf::ConstructSdfLink
->;
+using TestFeatureList = ignition::physics::dartsim::DartsimFeatures;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
 using TestWorldPtr = physics::World3dPtr<TestFeatureList>;

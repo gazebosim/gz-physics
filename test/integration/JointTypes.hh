@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2019 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  *
 */
+
+#ifndef IGNITION_PHYSICS_TEST_INGEGRATION_JOINTTYPES_HH
+#define IGNITION_PHYSICS_TEST_INGEGRATION_JOINTTYPES_HH
 
 #include <gtest/gtest.h>
 
@@ -159,33 +162,4 @@ void TestJointTypeCasts(const std::string &_suffix)
   }
 }
 
-/////////////////////////////////////////////////
-TEST(JointTypes_TEST, RevoluteJoint3d)
-{
-  TestRevoluteJoint<FeaturePolicy3d>(1e-16, "3d");
-}
-
-/////////////////////////////////////////////////
-TEST(JointTypes_TEST, RevoluteJoint2d)
-{
-  TestRevoluteJoint<FeaturePolicy2d>(1e-16, "2d");
-}
-
-/////////////////////////////////////////////////
-TEST(JointTypes_TEST, RevoluteJoint3f)
-{
-  TestRevoluteJoint<FeaturePolicy3f>(1e-16, "3f");
-}
-
-/////////////////////////////////////////////////
-TEST(JointTypes_TEST, RevoluteJoint2f)
-{
-  TestRevoluteJoint<FeaturePolicy2f>(1e-16, "2f");
-}
-
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+#endif

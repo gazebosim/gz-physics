@@ -8,6 +8,8 @@ ign_add_component(dartsim INTERFACE
 target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
 target_include_directories(${features} SYSTEM INTERFACE ${DART_INCLUDE_DIRS})
 
+message("DART_LIBRARIES:${DART_LIBRARIES}")
+
 install(
   DIRECTORY include/
   DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
@@ -20,13 +22,19 @@ ign_add_component(dartsim-plugin
   DEPENDS_ON_COMPONENTS dartsim
   GET_TARGET_NAME dartsim_plugin)
 
-target_link_libraries(${dartsim_plugin}
-  PUBLIC
-    ${features}
-    ${PROJECT_LIBRARY_TARGET_NAME}-sdf
-    ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    ignition-math${IGN_MATH_VER}::eigen3)
+set(dependencies
+  ${features}
+  ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+  ${PROJECT_LIBRARY_TARGET_NAME}-mesh
+  ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+  ignition-math${IGN_MATH_VER}::eigen3)
+
+file(GLOB precompiled_src "src/precompiled/*.cc")
+add_library(dartsim-precompiled-types SHARED src/precompiled/Link.cc)
+target_link_libraries(dartsim-precompiled-types PUBLIC ${dependencies})
+target_compile_options(dartsim-precompiled-types PUBLIC "-ftime-report")
+
+target_link_libraries(${dartsim_plugin} PUBLIC ${dependencies})
 
 ign_build_tests(
   TYPE UNIT
@@ -37,6 +45,7 @@ ign_build_tests(
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
+    dartsim-precompiled-types
   TEST_LIST tests)
 
 foreach(test ${tests})

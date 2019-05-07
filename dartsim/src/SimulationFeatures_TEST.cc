@@ -41,14 +41,9 @@
 #include <test/PhysicsPluginsList.hh>
 #include <test/Utils.hh>
 
-using TestFeatureList = ignition::physics::FeatureList<
-  ignition::physics::LinkFrameSemantics,
-  ignition::physics::ForwardStep,
-  ignition::physics::GetContactsFromLastStepFeature,
-  ignition::physics::GetEntities,
-  ignition::physics::GetShapeBoundingBox,
-  ignition::physics::sdf::ConstructSdfWorld
->;
+#include "precompiled/declarations.hh"
+
+using TestFeatureList = ignition::physics::dartsim::DartsimFeatures;
 
 using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
