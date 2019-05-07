@@ -33,6 +33,7 @@ file(GLOB precompiled_src "src/precompiled/*.cc")
 add_library(dartsim-precompiled-types SHARED src/precompiled/Link.cc)
 target_link_libraries(dartsim-precompiled-types PUBLIC ${dependencies})
 target_compile_options(dartsim-precompiled-types PUBLIC "-ftime-report")
+target_compile_definitions(dartsim-precompiled-types PRIVATE ignition_physics2_dartsim_precompile_EXPORTS)
 
 target_link_libraries(${dartsim_plugin} PUBLIC ${dependencies})
 

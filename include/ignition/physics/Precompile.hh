@@ -83,9 +83,32 @@
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Shape, PolicySuffix)
 
 
-#define IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix, Object, CustomFeatures, \
-    PolicySuffix) \
-  struct Visibility Prefix ## Object : \
-    ::ignition::physics::Object < // TODO(MXG): Finish this
+#define IGN_PHYSICS_NAME_OBJECT( \
+    Visibility, Name, Object, CustomFeatures, PolicySuffix) \
+  struct Visibility Name : \
+    ::ignition::physics::Object< \
+      ::ignition::physics::FeaturePolicy ## PolicySuffix, CustomFeatures> \
+  { \
+    using Base = ::ignition::physics::Object< \
+        ::ignition::physics::FeaturePolicy ## PolicySuffix, CustomFeatures>; \
+    using Base::Base; \
+  }; \
+  struct Visibility Name ## Ptr : \
+    ::ignition::physics::EntityPtr<Name> \
+  { \
+    using Base = ::ignition::physics::EntityPtr<Name>; \
+    using Base::Base; \
+  };
+
+#define IGN_PHYSICS_NAME_BASIC_OBJECTS( \
+  Visibility, Prefix, CustomFeatures, PolicySuffix) \
+  IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix ## Engine, Engine, CustomFeatures, PolicySuffix) \
+  IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix ## World, World, CustomFeatures, PolicySuffix) \
+  IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix ## Model, Model, CustomFeatures, PolicySuffix) \
+  IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix ## Link, Link, CustomFeatures, PolicySuffix) \
+  IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix ## Joint, Joint, CustomFeatures, PolicySuffix) \
+  IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix ## Shape, Shape, CustomFeatures, PolicySuffix)
+
+
 
 #endif

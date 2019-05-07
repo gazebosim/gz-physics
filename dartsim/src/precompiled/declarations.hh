@@ -18,7 +18,27 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_PRECOMPILED_DECLARATIONS_HH
 #define IGNITION_PHYSICS_DARTSIM_SRC_PRECOMPILED_DECLARATIONS_HH
 
+#ifdef IGNITION_PHYSICS_DARTSIM_PRECOMPILE_STATIC_DEFINE
+#  define IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE
+#  define IGNITION_PHYSICS_DARTSIM_PRECOMPILE_HIDDEN
+#else
+#  ifndef IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE
+#    ifdef ignition_physics2_dartsim_precompile_EXPORTS
+        /* We are building this library */
+#      define IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE __attribute__((visibility("default")))
+#    else
+        /* We are using this library */
+#      define IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE __attribute__((visibility("hidden")))
+#    endif
+#  endif
+
+#  ifndef IGNITION_PHYSICS_DARTSIM_PRECOMPILE_HIDDEN
+#    define IGNITION_PHYSICS_DARTSIM_PRECOMPILE_HIDDEN __attribute__((visibility("hidden")))
+#  endif
+#endif
+
 #include "../DartsimFeatures.hh"
+#include <ignition/physics/mesh/MeshShape.hh>
 
 namespace ignition {
 namespace physics {
@@ -36,6 +56,31 @@ namespace dartsim {
 //  SimulationFeatureList
 //> { };
 
+
+
+IGN_PHYSICS_NAME_BASIC_OBJECTS(
+    IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE,
+    Dartsim, DartsimFeatures, 3d)
+
+IGN_PHYSICS_NAME_OBJECT(
+    IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE,
+    DartsimRevoluteJoint, RevoluteJoint, DartsimFeatures, 3d)
+
+IGN_PHYSICS_NAME_OBJECT(
+    IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE,
+    DartsimPrismaticJoint, PrismaticJoint, DartsimFeatures, 3d)
+
+IGN_PHYSICS_NAME_OBJECT(
+    IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE,
+    DartsimSphereShape, SphereShape, DartsimFeatures, 3d)
+
+IGN_PHYSICS_NAME_OBJECT(
+    IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE,
+    DartsimMeshShape, mesh::MeshShape, DartsimFeatures, 3d)
+
+IGN_PHYSICS_NAME_OBJECT(
+    IGNITION_PHYSICS_DARTSIM_PRECOMPILE_VISIBLE,
+    DartsimBoxShape, BoxShape, DartsimFeatures, 3d)
 }
 }
 }
@@ -70,8 +115,8 @@ namespace dartsim {
 //IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
 //    ignition::physics::dartsim::ComboFeatures, 3d)
 
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::DartsimFeatures, 3d)
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::DartsimFeatures, 3d)
 
 
 #endif

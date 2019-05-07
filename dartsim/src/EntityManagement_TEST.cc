@@ -44,49 +44,55 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
 
-  auto engine =
+  ignition::physics::dartsim::DartsimEnginePtr engine =
       ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   ASSERT_NE(nullptr, engine);
 
-  auto world = engine->ConstructEmptyWorld("empty world");
+  ignition::physics::dartsim::DartsimWorldPtr world =
+      engine->ConstructEmptyWorld("empty world");
   ASSERT_NE(nullptr, world);
   EXPECT_EQ("empty world", world->GetName());
   EXPECT_EQ(engine, world->GetEngine());
 
-  auto model = world->ConstructEmptyModel("empty model");
+  ignition::physics::dartsim::DartsimModelPtr model =
+      world->ConstructEmptyModel("empty model");
   ASSERT_NE(nullptr, model);
   EXPECT_EQ("empty model", model->GetName());
   EXPECT_EQ(world, model->GetWorld());
   EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
 
-  auto link = model->ConstructEmptyLink("empty link");
+  ignition::physics::dartsim::DartsimLinkPtr link =
+      model->ConstructEmptyLink("empty link");
   ASSERT_NE(nullptr, link);
   EXPECT_EQ("empty link", link->GetName());
   EXPECT_EQ(model, link->GetModel());
   EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
 
-  auto joint = link->AttachRevoluteJoint(nullptr);
+  ignition::physics::dartsim::DartsimRevoluteJointPtr joint =
+      link->AttachRevoluteJoint(nullptr);
   EXPECT_NEAR((Eigen::Vector3d::UnitX() - joint->GetAxis()).norm(), 0.0, 1e-6);
   EXPECT_DOUBLE_EQ(0.0, joint->GetPosition(0));
 
   joint->SetAxis(Eigen::Vector3d::UnitZ());
   EXPECT_NEAR((Eigen::Vector3d::UnitZ() - joint->GetAxis()).norm(), 0.0, 1e-6);
 
-  auto child = model->ConstructEmptyLink("child link");
+  ignition::physics::dartsim::DartsimLinkPtr child =
+      model->ConstructEmptyLink("child link");
 
   const std::string boxName = "box";
   const Eigen::Vector3d boxSize(0.1, 0.2, 0.3);
-  auto box = link->AttachBoxShape(boxName, boxSize);
+  ignition::physics::dartsim::DartsimBoxShapePtr box =
+      link->AttachBoxShape(boxName, boxSize);
   EXPECT_EQ(boxName, box->GetName());
   EXPECT_NEAR((boxSize - box->GetSize()).norm(), 0.0, 1e-6);
 
   EXPECT_EQ(1u, link->GetShapeCount());
-  auto boxCopy = link->GetShape(0u);
+  ignition::physics::dartsim::DartsimShapePtr boxCopy = link->GetShape(0u);
   EXPECT_EQ(box, boxCopy);
 
 
-  auto prismatic = child->AttachPrismaticJoint(
-        link, "prismatic", Eigen::Vector3d::UnitZ());
+  ignition::physics::dartsim::DartsimPrismaticJointPtr prismatic =
+      child->AttachPrismaticJoint(link, "prismatic", Eigen::Vector3d::UnitZ());
   const double zPos = 2.5;
   const double zVel = 9.1;
   const double zAcc = 10.2;
@@ -115,7 +121,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   const double yPos = 11.5;
   Eigen::Isometry3d childSpherePose = Eigen::Isometry3d::Identity();
   childSpherePose.translate(Eigen::Vector3d(0.0, yPos, 0.0));
-  auto sphere = child->AttachSphereShape("child sphere", 1.0, childSpherePose);
+  ignition::physics::dartsim::DartsimSphereShapePtr sphere =
+      child->AttachSphereShape("child sphere", 1.0, childSpherePose);
 
   const ignition::physics::FrameData3d sphereData =
       sphere->FrameDataRelativeToWorld();
@@ -143,14 +150,16 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_DOUBLE_EQ(yPos, relativeSpherePosition.y());
   EXPECT_DOUBLE_EQ(0.0, relativeSpherePosition.z());
 
-  auto meshLink = model->ConstructEmptyLink("mesh_link");
+  ignition::physics::dartsim::DartsimLinkPtr meshLink =
+      model->ConstructEmptyLink("mesh_link");
   meshLink->AttachFixedJoint(child, "fixed");
 
   const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
   auto &meshManager = *ignition::common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 
-  auto meshShape = meshLink->AttachMeshShape("chassis", *mesh);
+  ignition::physics::dartsim::DartsimMeshShapePtr meshShape =
+      meshLink->AttachMeshShape("chassis", *mesh);
   const auto originalMeshSize = mesh->Max() - mesh->Min();
   const auto meshShapeSize = meshShape->GetSize();
 
@@ -166,7 +175,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 
   const ignition::math::Pose3d pose(0, 0, 0.2, 0, 0, 0);
   const ignition::math::Vector3d scale(0.5, 1.0, 0.25);
-  auto meshShapeScaled = meshLink->AttachMeshShape("small_chassis", *mesh,
+  ignition::physics::dartsim::DartsimMeshShapePtr meshShapeScaled =
+      meshLink->AttachMeshShape("small_chassis", *mesh,
                           ignition::math::eigen3::convert(pose),
                           ignition::math::eigen3::convert(scale));
   const auto meshShapeScaledSize = meshShapeScaled->GetSize();
@@ -190,16 +200,18 @@ TEST(EntityManagement_TEST, RemoveEntities)
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
 
-  auto engine =
+  ignition::physics::dartsim::DartsimEnginePtr engine =
       ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   ASSERT_NE(nullptr, engine);
 
-  auto world = engine->ConstructEmptyWorld("empty world");
+  ignition::physics::dartsim::DartsimWorldPtr world =
+      engine->ConstructEmptyWorld("empty world");
   ASSERT_NE(nullptr, world);
-  auto model = world->ConstructEmptyModel("empty model");
+  ignition::physics::dartsim::DartsimModelPtr model =
+      world->ConstructEmptyModel("empty model");
   ASSERT_NE(nullptr, model);
 
-  auto modelAlias = world->GetModel(0);
+  ignition::physics::dartsim::DartsimModelPtr modelAlias = world->GetModel(0);
 
   model->Remove();
   EXPECT_TRUE(model->Removed());
@@ -211,7 +223,8 @@ TEST(EntityManagement_TEST, RemoveEntities)
   // Calling GetName shouldn't throw
   EXPECT_EQ("empty model", model->GetName());
 
-  auto model2 = world->ConstructEmptyModel("model2");
+  ignition::physics::dartsim::DartsimModelPtr model2 =
+      world->ConstructEmptyModel("model2");
   ASSERT_NE(nullptr, model2);
   EXPECT_EQ(0ul, model2->GetIndex());
   world->RemoveModel(0);
