@@ -24,7 +24,7 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using ComboFeatures = FeatureList<
+struct ComboFeatures : FeatureList<
   CustomFeatureList,
   EntityManagementFeatureList,
   FreeGroupFeatureList,
@@ -32,8 +32,9 @@ using ComboFeatures = FeatureList<
   KinematicsFeatureList,
   LinkFeatureList,
   SDFFeatureList,
+  ShapeFeatureList,
   SimulationFeatureList
->;
+> { };
 
 }
 }

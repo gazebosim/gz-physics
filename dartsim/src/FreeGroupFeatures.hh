@@ -26,12 +26,12 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using FreeGroupFeatureList = FeatureList<
+struct FreeGroupFeatureList : FeatureList<
   FindFreeGroupFeature,
   SetFreeGroupWorldPose,
   SetFreeGroupWorldVelocity
   // Note: FreeGroupFrameSemantics is covered in KinematicsFeatures.hh
->;
+> { };
 
 class FreeGroupFeatures
     : public virtual Base,
