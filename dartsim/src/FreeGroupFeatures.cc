@@ -66,7 +66,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
     if (bn->getParentJoint()->getType()
         == dart::dynamics::FreeJoint::getStaticType())
     {
-      continue;
+      break;
     }
 
     bn = bn->getParentBodyNode();
@@ -139,6 +139,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   {
     static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
         ->setLinearVelocity(_linearVelocity);
+    return;
   }
 
   const Eigen::Vector3d delta_v =
@@ -163,6 +164,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   {
     static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
         ->setAngularVelocity(_angularVelocity);
+    return;
   }
 
   const Eigen::Vector3d delta_w =

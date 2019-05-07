@@ -28,8 +28,8 @@ namespace dartsim {
 
 using FreeGroupFeatureList = FeatureList<
   FindFreeGroupFeature,
-  SetFreeGroupPose,
-  SetFreeGroupVelocity
+  SetFreeGroupWorldPose,
+  SetFreeGroupWorldVelocity
   // Note: FreeGroupFrameSemantics is covered in KinematicsFeatures.hh
 >;
 
