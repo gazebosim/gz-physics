@@ -26,6 +26,7 @@
 #include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
 #include "EntityManagementFeatures.hh"
+#include "FreeGroupFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -34,6 +35,7 @@ namespace dartsim {
 using DartsimFeatures = FeatureList<
   CustomFeatureList,
   EntityManagementFeatureList,
+  FreeGroupFeatureList,
   JointFeatureList,
   KinematicsFeatureList,
   LinkFeatureList,
@@ -48,6 +50,7 @@ class Plugin :
     public virtual Base,
     public virtual CustomFeatures,
     public virtual EntityManagementFeatures,
+    public virtual FreeGroupFeatures,
     public virtual JointFeatures,
     public virtual KinematicsFeatures,
     public virtual LinkFeatures,
