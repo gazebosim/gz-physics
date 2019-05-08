@@ -20,6 +20,7 @@ pipelines:
           - cd ..
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease bionic main" > /etc/apt/sources.list.d/gazebo-prerelease.list
           - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
@@ -34,6 +35,7 @@ pipelines:
             libdart6-collision-ode-dev
             libdart6-dev
             libdart6-utils-urdf-dev
+            libbenchmark-dev
           # Ignition physics
           - mkdir build
           - cd build
