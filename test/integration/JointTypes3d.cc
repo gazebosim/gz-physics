@@ -23,6 +23,12 @@ TEST(JointTypes_TEST, RevoluteJoint3d)
   TestRevoluteJoint<FeaturePolicy3d>(1e-16, "3d");
 }
 
+/////////////////////////////////////////////////
+TEST(JointTypes_TEST, TypeCasts3d)
+{
+  TestJointTypeCasts<FeaturePolicy3d>("3d");
+}
+
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

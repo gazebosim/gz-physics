@@ -20,31 +20,31 @@
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames3f)
 {
-  TestRelativeFrames<ignition::physics::FeaturePolicy3f>(1e-11, "3f");
+  TestRelativeFrames<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeAlignedBox3f)
 {
-  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3f>(1e-11, "3f");
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3f>(1e-3, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID3f)
 {
-  TestFrameID<ignition::physics::FeaturePolicy3f>(1e-11, "3f");
+  TestFrameID<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeQuantities3f)
 {
-  TestRelativeQuantities<ignition::physics::FeaturePolicy3f>(1e-11, "3f");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrameData3f)
 {
-  TestRelativeFrameData<ignition::physics::FeaturePolicy3f>(1e-11, "3f");
+  TestRelativeFrameData<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 int main(int argc, char **argv)

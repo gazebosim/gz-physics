@@ -20,25 +20,25 @@
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames2f)
 {
-  TestRelativeFrames<ignition::physics::FeaturePolicy2f>(1e-11, "2f");
+  TestRelativeFrames<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeAlignedBox2f)
 {
-  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2f>(1e-11, "2f");
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID2f)
 {
-  TestFrameID<ignition::physics::FeaturePolicy2f>(1e-11, "2f");
+  TestFrameID<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeQuantities2f)
 {
-  TestRelativeQuantities<ignition::physics::FeaturePolicy2f>(1e-11, "2f");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy2f>(1e-4, "2f");
 }
 
 int main(int argc, char **argv)

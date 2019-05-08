@@ -20,19 +20,19 @@
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames2d)
 {
-  TestRelativeFrames<ignition::physics::FeaturePolicy2d>(1e-11, "2d");
+  TestRelativeFrames<ignition::physics::FeaturePolicy2d>(1e-13, "2d");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeAlignedBox2d)
 {
-  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2d>(1e-11, "2d");
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2d>(1e-14, "2d");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID2d)
 {
-  TestFrameID<ignition::physics::FeaturePolicy2d>(1e-11, "2d");
+  TestFrameID<ignition::physics::FeaturePolicy2d>(1e-12, "2d");
 }
 
 /////////////////////////////////////////////////

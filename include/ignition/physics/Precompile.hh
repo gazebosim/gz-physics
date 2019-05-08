@@ -82,10 +82,4 @@
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Joint, PolicySuffix) \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Shape, PolicySuffix)
 
-
-#define IGN_PHYSICS_NAME_OBJECT(Visibility, Prefix, Object, CustomFeatures, \
-    PolicySuffix) \
-  struct Visibility Prefix ## Object : \
-    ::ignition::physics::Object < // TODO(MXG): Finish this
-
 #endif

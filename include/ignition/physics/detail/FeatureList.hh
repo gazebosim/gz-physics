@@ -252,59 +252,45 @@ namespace ignition
 
       /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList
-      template <template<typename> class, typename...>
-      struct Aggregate;
-
-      template <template<typename> class Selector, typename NamedFeatureList>
-      struct Aggregate<Selector, NamedFeatureList>
+      template <template<typename> class Selector,
+                typename FeatureT, typename = void_t<>>
+      struct Aggregate
       {
         public: template<typename... T>
-        using type =
-          typename Aggregate<
-              Selector, typename NamedFeatureList::Features>
-                  ::template type<T...>;
+        struct type
+            : public virtual Selector<FeatureT>::template type<T...>,
+              public virtual Aggregate<Selector,
+                typename FeatureT::RequiredFeatures>::template type<T...>
+        { };
       };
 
-      template <template<typename> class Selector, typename... FeaturesT>
-      struct Aggregate<Selector, FeatureList<FeaturesT...>>
+      template <template<typename> class Selector>
+      struct Aggregate<Selector, void, void_t<>>
       {
         public: template<typename... T>
-        using type =
-          typename Aggregate<
-              Selector, typename FeatureList<FeaturesT...>::Features>
-                  ::template type<T...>;
+        struct type { };
+      };
+
+      template <template<typename> class Selector, typename FeatureListT>
+      struct Aggregate<Selector, FeatureListT,
+                        void_t<typename FeatureListT::FeatureTuple>>
+      {
+        public: template<typename... T>
+        class type
+          : public virtual Aggregate<Selector,
+              typename FeatureListT::FeatureTuple>::template type<T...> { };
       };
 
       /// \private Recursively extract the API out of a std::tuple of features
       template <template<typename> class Selector,
                 typename F1, typename... Remaining>
-      struct Aggregate<Selector, std::tuple<F1, Remaining...>>
+      struct Aggregate<Selector, std::tuple<F1, Remaining...>, void_t<>>
       {
         public: template<typename... T>
         class type
-            : public virtual Selector<F1>::template type<T...>,
+            : public virtual Aggregate<Selector, F1>::template type<T...>,
               public virtual Aggregate<
-                  Selector, std::tuple<Remaining...>>::template type<T...>
-        {
-          public: type() = default;
-          public: type(const type&) = default;
-          public: type(type&&) noexcept = default;
-
-          // These need special definitions due to virtual inheritance. The base
-          // Entity<P,F> class is the only class in the hierarchy that contains
-          // any data, so it is sufficient to call its assignment operators
-          // directly.
-          public: type &operator=(const type &_other)
-          {
-            static_cast<Entity<T...>&>(*this) = _other;
-            return *this;
-          }
-          public: type &operator=(type &&_other) noexcept
-          {
-            static_cast<Entity<T...>&>(*this) = std::move(_other);
-            return *this;
-          }
-        };
+                  Selector, std::tuple<Remaining...>>::template type<T...> { };
       };
 
       /// \private Terminate the recursion
@@ -313,6 +299,15 @@ namespace ignition
       {
         public: template <typename... P>
         class type { };
+      };
+
+      /////////////////////////////////////////////////
+      template <template<typename> class Selector, typename FeatureListT>
+      struct ExtractAPI
+      {
+        public: template<typename... T>
+        class type :
+            public Aggregate<Selector, FeatureListT>::template type<T...> { };
       };
 
       /////////////////////////////////////////////////
@@ -485,7 +480,7 @@ namespace ignition
     struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
-  class X : public ::ignition::physics::detail::Aggregate< \
+  class X : public ::ignition::physics::detail::ExtractAPI< \
         detail::Select ## X, FeaturesT> \
           ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
@@ -551,8 +546,8 @@ namespace ignition
       };
 
       template <typename PolicyT, typename List>
-      using AggregateImplementation =
-        typename Aggregate<ImplementationSelector, typename List::Features>::
+      using ExtractImplementation =
+        typename ExtractAPI<ImplementationSelector, typename List::Features>::
             template type<PolicyT>;
     }
   }

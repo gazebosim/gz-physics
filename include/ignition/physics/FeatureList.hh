@@ -54,6 +54,8 @@ namespace ignition
       public: using Features =
           typename detail::CombineLists<FeaturesT...>::Result;
 
+      public: using FeatureTuple = std::tuple<FeaturesT...>;
+
       /// \brief A static constexpr function which indicates whether a given
       /// Feature, F, is contained in this list.
       /// \tparam F
@@ -79,7 +81,8 @@ namespace ignition
                         bool AssertNoConflict = false>
       static constexpr bool ConflictsWith();
 
-      /// \brief A list has no additional required features
+      /// \brief All the features required by this FeatureList will be included
+      /// in CombineLists.
       public: using RequiredFeatures = void;
 
       // Check that this FeatureList does not contain any self-conflicts.

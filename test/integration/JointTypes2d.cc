@@ -23,6 +23,12 @@ TEST(JointTypes_TEST, RevoluteJoint2d)
   TestRevoluteJoint<FeaturePolicy2d>(1e-16, "2d");
 }
 
+/////////////////////////////////////////////////
+TEST(JointTypes_TEST, TypeCasts2d)
+{
+  TestJointTypeCasts<FeaturePolicy2d>("2d");
+}
+
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

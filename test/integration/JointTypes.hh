@@ -117,7 +117,7 @@ void TestRevoluteJoint(const double _tolerance, const std::string &_suffix)
     auto joint = engine->GetJoint(0);
     ASSERT_NE(nullptr, joint);
     auto revolute = joint->CastToRevoluteJoint();
-    ASSERT_NE(nullptr, joint);
+    ASSERT_NE(nullptr, revolute);
 
     AngularVector testAxis = AngularVector::Zero();
     testAxis[0] = 1.0;
@@ -150,7 +150,7 @@ void TestJointTypeCasts(const std::string &_suffix)
     auto free = joint->CastToFreeJoint();
     if (free)
     {
-      free->SetTransform(Pose::Identity());
+      free->SetRelativeTransform(Pose::Identity());
     }
 
     auto prismatic = joint->CastToPrismaticJoint();
