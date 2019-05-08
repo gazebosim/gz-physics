@@ -28,71 +28,106 @@
 #include <ignition/physics/BoxShape.hh>
 #include <ignition/physics/ForwardStep.hh>
 
-struct NamedFeatureList : ignition::physics::FeatureList<
-  ignition::physics::CompleteFrameSemantics,
-  ignition::physics::GetRevoluteJointProperties,
-  ignition::physics::SetRevoluteJointProperties,
-  ignition::physics::GetCylinderShapeProperties,
-  ignition::physics::SetCylinderShapeProperties,
-  ignition::physics::GetCylinderShapeProperties,
-  ignition::physics::SetCylinderShapeProperties,
-  ignition::physics::AttachCylinderShapeFeature,
-  ignition::physics::GetBoxShapeProperties,
-  ignition::physics::SetBoxShapeProperties,
-  ignition::physics::AttachBoxShapeFeature
-> {};
+//struct NamedFeatureList : ignition::physics::FeatureList<
+//  ignition::physics::CompleteFrameSemantics,
+//  ignition::physics::GetRevoluteJointProperties,
+//  ignition::physics::SetRevoluteJointProperties,
+//  ignition::physics::GetCylinderShapeProperties,
+//  ignition::physics::SetCylinderShapeProperties,
+//  ignition::physics::GetBoxShapeProperties,
+//  ignition::physics::SetBoxShapeProperties,
+//  ignition::physics::AttachCylinderShapeFeature,
+//  ignition::physics::GetBoxShapeProperties,
+//  ignition::physics::SetBoxShapeProperties,
+//  ignition::physics::AttachBoxShapeFeature
+//> {};
 
-using AliasFeatureList = ignition::physics::FeatureList<
-  ignition::physics::CompleteFrameSemantics,
-  ignition::physics::GetRevoluteJointProperties,
-  ignition::physics::SetRevoluteJointProperties,
-  ignition::physics::GetCylinderShapeProperties,
-  ignition::physics::SetCylinderShapeProperties,
-  ignition::physics::GetCylinderShapeProperties,
-  ignition::physics::SetCylinderShapeProperties,
-  ignition::physics::AttachCylinderShapeFeature,
-  ignition::physics::GetBoxShapeProperties,
-  ignition::physics::SetBoxShapeProperties,
-  ignition::physics::AttachBoxShapeFeature
->;
+//using AliasFeatureList = ignition::physics::FeatureList<
+//  ignition::physics::CompleteFrameSemantics,
+//  ignition::physics::GetRevoluteJointProperties,
+//  ignition::physics::SetRevoluteJointProperties,
+//  ignition::physics::GetCylinderShapeProperties,
+//  ignition::physics::SetCylinderShapeProperties,
+//  ignition::physics::GetCylinderShapeProperties,
+//  ignition::physics::SetCylinderShapeProperties,
+//  ignition::physics::AttachCylinderShapeFeature,
+//  ignition::physics::GetBoxShapeProperties,
+//  ignition::physics::SetBoxShapeProperties,
+//  ignition::physics::AttachBoxShapeFeature
+//>;
+
+
+
+//TEST(symbol_names, Length)
+//{
+//  using AliasLink = ignition::physics::Link3dPtr<AliasFeatureList>;
+//  using NamedLink = ignition::physics::Link3dPtr<NamedFeatureList>;
+
+//  /// The length of the Link defined by a named feature list should be less
+//  /// than half the length of the Link defined by an aliased feature list.
+//  EXPECT_LT(std::string(typeid(NamedLink).name()).size(),
+//            std::string(typeid(AliasLink).name()).size()/2);
+//}
+
+//struct SingleNestedNamedList : ignition::physics::FeatureList<
+//  NamedFeatureList,
+//  AliasFeatureList
+//> { };
+
+//struct DoubleNestedNamedList : ignition::physics::FeatureList<
+//  ignition::physics::ForwardStep,
+//  SingleNestedNamedList
+//> { };
+
+//using DoubleNestedAliasList = ignition::physics::FeatureList<
+//  ignition::physics::ForwardStep,
+//  SingleNestedNamedList
+//>;
+
+//TEST(symbol_names, Nested)
+//{
+//  // Note: This function just needs to compile successfully for the test to pass
+
+//  using SingleNestedLink = ignition::physics::Link3dPtr<SingleNestedNamedList>;
+//  SingleNestedLink composite;
+
+//  using DoubleNestedLink = ignition::physics::Link3dPtr<DoubleNestedNamedList>;
+//  DoubleNestedLink nested;
+
+//  ignition::physics::Link3dPtr<DoubleNestedAliasList> alias;
+//}
+
+struct FeatureSet1 : ignition::physics::FeatureList<
+    ignition::physics::CompleteFrameSemantics,
+    ignition::physics::GetRevoluteJointProperties,
+    ignition::physics::SetRevoluteJointProperties,
+    ignition::physics::GetCylinderShapeProperties,
+    ignition::physics::SetCylinderShapeProperties
+> { };
+
+struct FeatureSet2 : ignition::physics::FeatureList<
+    ignition::physics::GetBoxShapeProperties,
+    ignition::physics::SetBoxShapeProperties,
+    ignition::physics::AttachCylinderShapeFeature,
+    ignition::physics::GetBoxShapeProperties,
+    ignition::physics::SetBoxShapeProperties,
+    ignition::physics::AttachBoxShapeFeature
+> { };
+
+struct FeatureSets : ignition::physics::FeatureList<
+    FeatureSet1,
+    FeatureSet2
+> { };
 
 TEST(symbol_names, Length)
 {
-  using AliasLink = ignition::physics::Link3dPtr<AliasFeatureList>;
-  using NamedLink = ignition::physics::Link3dPtr<NamedFeatureList>;
+  ignition::physics::Link3dPtr<FeatureSets> link;
+//  link->AttachCylinderShape();
+//  link->FrameDataRelativeTo(ignition::physics::FrameID::World());
+  std::cout << typeid(ignition::physics::Link3dPtr<FeatureSets>).name() << std::endl;
 
-  /// The length of the Link defined by a named feature list should be less
-  /// than half the length of the Link defined by an aliased feature list.
-  EXPECT_LT(std::string(typeid(NamedLink).name()).size(),
-            std::string(typeid(AliasLink).name()).size()/2);
-}
-
-struct SingleNestedNamedList : ignition::physics::FeatureList<
-  NamedFeatureList,
-  AliasFeatureList
-> { };
-
-struct DoubleNestedNamedList : ignition::physics::FeatureList<
-  ignition::physics::ForwardStep,
-  SingleNestedNamedList
-> { };
-
-using DoubleNestedAliasList = ignition::physics::FeatureList<
-  ignition::physics::ForwardStep,
-  SingleNestedNamedList
->;
-
-TEST(symbol_names, Nested)
-{
-  // Note: This function just needs to compile successfully for the test to pass
-
-  using SingleNestedLink = ignition::physics::Link3dPtr<SingleNestedNamedList>;
-  SingleNestedLink composite;
-
-  using DoubleNestedLink = ignition::physics::Link3dPtr<DoubleNestedNamedList>;
-  DoubleNestedLink nested;
-
-  ignition::physics::Link3dPtr<DoubleNestedAliasList> alias;
+  ignition::plugin::PluginPtr plugin;
+  auto engine = ignition::physics::RequestEngine3d<FeatureSets>::From(plugin);
 }
 
 int main(int argc, char **argv)
