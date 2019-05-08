@@ -215,7 +215,6 @@ namespace ignition
     {
       public: using Policy = PolicyT;
       public: using Features = FeaturesT;
-//      public: using Pimpl = typename detail::DeterminePlugin<Policy, Features>::type;
       public: struct Pimpl :
           detail::DeterminePlugin<Policy, Features>::type
       {

@@ -251,6 +251,46 @@ namespace ignition
           : std::integral_constant<bool, false> {};
 
       /////////////////////////////////////////////////
+      template <typename T>
+      struct IterateTuple;
+
+      template <typename Current, typename... T>
+      struct IterateTuple<std::tuple<Current, T...>>
+      {
+        using CurrentTupleEntry = Current;
+        using NextTupleEntry = IterateTuple<std::tuple<T...>>;
+      };
+
+      template <typename Current>
+      struct IterateTuple<std::tuple<Current>>
+      {
+        using CurrentTupleEntry = Current;
+      };
+
+      template <>
+      struct IterateTuple<std::tuple<>>
+      {
+        using CurrentTupleEntry = void;
+      };
+
+      template <typename Iterable, typename = void_t<>>
+      struct GetNext
+      {
+        using n = void;
+      };
+
+      template <typename Iterable>
+      struct GetNext<Iterable, void_t<typename Iterable::NextTupleEntry>>
+      {
+        // This struct is intentionally named with only one letter, because its
+        // name will be repeated many times in the symbol names of aggregated
+        // types. Do not change this name to anything longer than 1 letter or
+        // else the compiled symbol names will be needlessly long, and that can
+        // be costly to memory and performance.
+        struct n : Iterable::NextTupleEntry { };
+      };
+
+      /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList
       template <template<typename> class Selector,
                 typename FeatureT, typename = void_t<>>
@@ -271,34 +311,13 @@ namespace ignition
         struct type { };
       };
 
-      template <template<typename> class Selector, typename FeatureListT>
-      struct Aggregate<Selector, FeatureListT,
-                        void_t<typename FeatureListT::FeatureTuple>>
+      template <template<typename> class Selector, typename Iterable>
+      struct Aggregate<Selector, Iterable, void_t<typename Iterable::CurrentTupleEntry>>
       {
-        public: template<typename... T>
-        class type
-          : public virtual Aggregate<Selector,
-              typename FeatureListT::FeatureTuple>::template type<T...> { };
-      };
-
-      /// \private Recursively extract the API out of a std::tuple of features
-      template <template<typename> class Selector,
-                typename F1, typename... Remaining>
-      struct Aggregate<Selector, std::tuple<F1, Remaining...>, void_t<>>
-      {
-        public: template<typename... T>
-        class type
-            : public virtual Aggregate<Selector, F1>::template type<T...>,
-              public virtual Aggregate<
-                  Selector, std::tuple<Remaining...>>::template type<T...> { };
-      };
-
-      /// \private Terminate the recursion
-      template <template<typename> class Selector>
-      struct Aggregate<Selector, std::tuple<>>
-      {
-        public: template <typename... P>
-        class type { };
+        public: template <typename... T>
+        struct type
+            : public virtual Aggregate<Selector, typename Iterable::CurrentTupleEntry>::template type<T...>,
+              public virtual Aggregate<Selector, typename GetNext<Iterable>::n>::template type<T...> { };
       };
 
       /////////////////////////////////////////////////
@@ -506,10 +525,10 @@ namespace ignition
     const X <PolicyT, FeaturesT> >; \
   template <typename PolicyT> \
   using Base ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    X <PolicyT, ::ignition::physics::FeatureList<>>>; \
+    X <PolicyT, ::ignition::physics::FeatureList<::ignition::physics::Feature>>>; \
   template <typename PolicyT> \
   using ConstBase ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    const X <PolicyT, ::ignition::physics::FeatureList<>>>; \
+    const X <PolicyT, ::ignition::physics::FeatureList<::ignition::physics::Feature>>>; \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
@@ -547,8 +566,7 @@ namespace ignition
 
       template <typename PolicyT, typename List>
       using ExtractImplementation =
-        typename ExtractAPI<ImplementationSelector, typename List::Features>::
-            template type<PolicyT>;
+        typename ExtractAPI<ImplementationSelector, List>::template type<PolicyT>;
     }
   }
 }

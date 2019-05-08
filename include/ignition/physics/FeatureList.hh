@@ -29,6 +29,7 @@ namespace ignition
       // Forward declarations
       template <typename...> struct CombineLists;
       template <bool, typename...> struct SelfConflict;
+      template <typename> struct IterateTuple;
     }
 
     /////////////////////////////////////////////////
@@ -45,7 +46,7 @@ namespace ignition
     /// using AdvancedList = FeatureList<BasicList, AdvancedA, AdvancedB>;
     /// \endcode
     template <typename... FeaturesT>
-    struct FeatureList
+    struct FeatureList : detail::IterateTuple<std::tuple<FeaturesT...>>
     {
       /// Features is a std::tuple containing all the feature classes that are
       /// bundled in this list. This list is fully seralialized; any hierarchy
