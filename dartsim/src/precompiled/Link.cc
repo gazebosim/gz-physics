@@ -15,7 +15,7 @@
  *
 */
 
-#include "declarations.hh"
+//#include "declarations.hh"
 
 
 //IGN_PHYSICS_DEFINE_BASIC_OBJECTS(
@@ -48,5 +48,5 @@
 //IGN_PHYSICS_DEFINE_BASIC_OBJECTS(
 //    ignition::physics::dartsim::ComboFeatures, 3d)
 
-IGN_PHYSICS_DEFINE_BASIC_OBJECTS(
-    ignition::physics::dartsim::DartsimFeatures, 3d)
+//IGN_PHYSICS_DEFINE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::DartsimFeatures, 3d)

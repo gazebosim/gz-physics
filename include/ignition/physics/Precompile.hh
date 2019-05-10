@@ -45,10 +45,17 @@
 /// \code
 /// #define IGN_PHYSICS_DEFINE_BASIC_OBJECTS(Prefix, CustomFeatures, PolicySuffix)
 /// \endcode
+//#define IGN_PHYSICS_DECLARE_BASIC_OBJECTS(CustomFeatures, PolicySuffix) \
+//  extern template struct ::ignition::physics::Entity< \
+//      ::ignition::physics::FeaturePolicy ## PolicySuffix, \
+//      CustomFeatures>::Pimpl; \
+//  IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Engine, PolicySuffix) \
+//  IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, World, PolicySuffix) \
+//  IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Model, PolicySuffix) \
+//  IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Link, PolicySuffix) \
+//  IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Joint, PolicySuffix) \
+//  IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Shape, PolicySuffix)
 #define IGN_PHYSICS_DECLARE_BASIC_OBJECTS(CustomFeatures, PolicySuffix) \
-  extern template struct ::ignition::physics::Entity< \
-      ::ignition::physics::FeaturePolicy ## PolicySuffix, \
-      CustomFeatures>::Pimpl; \
   IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Engine, PolicySuffix) \
   IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, World, PolicySuffix) \
   IGN_PHYSICS_DECLARE_OBJECT(CustomFeatures, Model, PolicySuffix) \
@@ -71,10 +78,17 @@
           CustomFeatures> >;
 
 // Helper macro
+//#define IGN_PHYSICS_DEFINE_BASIC_OBJECTS(CustomFeatures, PolicySuffix) \
+//  template struct ::ignition::physics::Entity< \
+//      ::ignition::physics::FeaturePolicy ## PolicySuffix, \
+//      CustomFeatures>::Pimpl; \
+//  IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Engine, PolicySuffix) \
+//  IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, World, PolicySuffix) \
+//  IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Model, PolicySuffix) \
+//  IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Link, PolicySuffix) \
+//  IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Joint, PolicySuffix) \
+//  IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Shape, PolicySuffix)
 #define IGN_PHYSICS_DEFINE_BASIC_OBJECTS(CustomFeatures, PolicySuffix) \
-  template struct ::ignition::physics::Entity< \
-      ::ignition::physics::FeaturePolicy ## PolicySuffix, \
-      CustomFeatures>::Pimpl; \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Engine, PolicySuffix) \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, World, PolicySuffix) \
   IGN_PHYSICS_DEFINE_OBJECT(CustomFeatures, Model, PolicySuffix) \

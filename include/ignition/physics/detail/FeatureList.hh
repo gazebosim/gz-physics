@@ -29,26 +29,107 @@
 #include <ignition/physics/FeaturePolicy.hh>
 #include <ignition/physics/TemplateHelpers.hh>
 
+#ifdef NOTHING
+#endif
+
 namespace ignition
 {
   namespace physics
   {
     namespace detail
     {
-      /// \private A specialization of DeterminePlugin that can accept a
-      /// FeatureList
-      template <typename Policy, typename... FeaturesT>
-      struct DeterminePlugin<Policy, FeatureList<FeaturesT...>>
+      /////////////////////////////////////////////////
+      template <typename T>
+      struct IterateTuple;
+
+      template <typename Current, typename... T>
+      struct IterateTuple<std::tuple<Current, T...>>
       {
-        using type = typename DeterminePlugin<
-            Policy, typename FeatureList<FeaturesT...>::Features>::type;
+        using CurrentTupleEntry = Current;
+        using NextTupleEntry = IterateTuple<std::tuple<T...>>;
       };
 
-      template <typename Policy, typename NamedFeatureList>
+      template <typename Current>
+      struct IterateTuple<std::tuple<Current>>
+      {
+        using CurrentTupleEntry = Current;
+      };
+
+      template <>
+      struct IterateTuple<std::tuple<>>
+      {
+        using CurrentTupleEntry = void;
+      };
+
+      template <typename Iterable, typename = void_t<>>
+      struct GetNext
+      {
+        using n = void;
+      };
+
+      template <typename Iterable>
+      struct GetNext<Iterable, void_t<typename Iterable::NextTupleEntry>>
+      {
+        // This struct is intentionally named with only one letter, because its
+        // name will be repeated many times in the symbol names of aggregated
+        // types. Do not change this name to anything longer than 1 letter or
+        // else the compiled symbol names will be needlessly long, and that can
+        // be costly to memory and performance.
+        struct n : Iterable::NextTupleEntry { };
+      };
+
+      template <typename Policy, typename Feature, typename = void_t<>>
+      struct ComposePlugin;
+
+      template <typename Policy, typename Feature, bool HasRequirements>
+      struct CheckRequirements
+      {
+        using type =
+            ::ignition::plugin::SpecializedPlugin<
+                typename Feature::template Implementation<Policy>>;
+      };
+
+      template <typename Policy, typename Feature>
+      struct CheckRequirements<Policy, Feature, true>
+      {
+        struct type :
+            ::ignition::plugin::SpecializedPlugin<typename Feature::template Implementation<Policy>>,
+            ComposePlugin<Policy, typename Feature::RequiredFeatures>::type { };
+      };
+
+      template <typename Policy, typename Feature, typename>
+      struct ComposePlugin
+      {
+        struct type : CheckRequirements<Policy, Feature,
+            !std::is_void_v<typename Feature::RequiredFeatures>>::type { };
+      };
+
+      template <typename Policy, typename Iterable>
+      struct ComposePlugin<Policy, Iterable, void_t<typename Iterable::CurrentTupleEntry>>
+      {
+        struct type :
+            ComposePlugin<Policy, typename Iterable::CurrentTupleEntry>::type,
+            ComposePlugin<Policy, typename GetNext<Iterable>::n> { };
+      };
+
+      template <typename Policy>
+      struct ComposePlugin<Policy, void, void_t<>>
+      {
+        struct type { };
+      };
+
+      /////////////////////////////////////////////////
+      /// \private This class is used to determine what type of
+      /// SpecializedPluginPtr should be used by the entities provided by a
+      /// plugin.
+      template <typename Policy, typename FeaturesT>
       struct DeterminePlugin
       {
-        using type = typename DeterminePlugin<
-            Policy, typename NamedFeatureList::Features>::type;
+        struct Specializer
+            : ::ignition::plugin::detail::SelectSpecializers<
+              typename ComposePlugin<Policy, FeaturesT>::type> { };
+
+        using type = ::ignition::plugin::TemplatePluginPtr<Specializer>;
       };
 
       /////////////////////////////////////////////////
@@ -251,46 +332,6 @@ namespace ignition
           : std::integral_constant<bool, false> {};
 
       /////////////////////////////////////////////////
-      template <typename T>
-      struct IterateTuple;
-
-      template <typename Current, typename... T>
-      struct IterateTuple<std::tuple<Current, T...>>
-      {
-        using CurrentTupleEntry = Current;
-        using NextTupleEntry = IterateTuple<std::tuple<T...>>;
-      };
-
-      template <typename Current>
-      struct IterateTuple<std::tuple<Current>>
-      {
-        using CurrentTupleEntry = Current;
-      };
-
-      template <>
-      struct IterateTuple<std::tuple<>>
-      {
-        using CurrentTupleEntry = void;
-      };
-
-      template <typename Iterable, typename = void_t<>>
-      struct GetNext
-      {
-        using n = void;
-      };
-
-      template <typename Iterable>
-      struct GetNext<Iterable, void_t<typename Iterable::NextTupleEntry>>
-      {
-        // This struct is intentionally named with only one letter, because its
-        // name will be repeated many times in the symbol names of aggregated
-        // types. Do not change this name to anything longer than 1 letter or
-        // else the compiled symbol names will be needlessly long, and that can
-        // be costly to memory and performance.
-        struct n : Iterable::NextTupleEntry { };
-      };
-
-      /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList
       template <template<typename> class Selector,
                 typename FeatureT, typename = void_t<>>
@@ -472,7 +513,7 @@ namespace ignition
     template <typename... Features>
     struct FeatureWithRequirements : public virtual Feature
     {
-      public: using RequiredFeatures = FeatureList<Features...>;
+      public: struct RequiredFeatures : FeatureList<Features...> { };
     };
 
 

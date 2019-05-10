@@ -97,26 +97,29 @@
 //  ignition::physics::Link3dPtr<DoubleNestedAliasList> alias;
 //}
 
-struct FeatureSet1 : ignition::physics::FeatureList<
-    ignition::physics::CompleteFrameSemantics,
-    ignition::physics::GetRevoluteJointProperties,
-    ignition::physics::SetRevoluteJointProperties,
+struct CylinderFeatures : ignition::physics::FeatureList<
     ignition::physics::GetCylinderShapeProperties,
-    ignition::physics::SetCylinderShapeProperties
+    ignition::physics::SetCylinderShapeProperties,
+    ignition::physics::AttachCylinderShapeFeature
 > { };
 
-struct FeatureSet2 : ignition::physics::FeatureList<
+struct JointFeatures : ignition::physics::FeatureList<
+    ignition::physics::GetRevoluteJointProperties,
+    ignition::physics::SetRevoluteJointProperties
+> { };
+
+struct BoxFeatures : ignition::physics::FeatureList <
     ignition::physics::GetBoxShapeProperties,
     ignition::physics::SetBoxShapeProperties,
-    ignition::physics::AttachCylinderShapeFeature,
     ignition::physics::GetBoxShapeProperties,
     ignition::physics::SetBoxShapeProperties,
     ignition::physics::AttachBoxShapeFeature
 > { };
 
 struct FeatureSets : ignition::physics::FeatureList<
-    FeatureSet1,
-    FeatureSet2
+    CylinderFeatures,
+    JointFeatures,
+    BoxFeatures
 > { };
 
 TEST(symbol_names, Length)

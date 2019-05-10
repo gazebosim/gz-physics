@@ -32,25 +32,29 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using ShapeFeatureList = FeatureList<
+struct ShapeFeatureList : FeatureList<
   GetShapeKinematicProperties,
   SetShapeKinematicProperties,
   GetShapeBoundingBox,
+
   GetBoxShapeProperties,
   // dartsim cannot yet update shape properties without reloading the model into
   // the world
 //  SetBoxShapeProperties,
   AttachBoxShapeFeature,
+
   GetCylinderShapeProperties,
 //  SetCylinderShapeProperties,
   AttachCylinderShapeFeature,
+
   GetSphereShapeProperties,
 //  SetSphereShapeProperties,
   AttachSphereShapeFeature,
+
   mesh::GetMeshShapeProperties,
 //  mesh::SetMeshShapeProperties,
   mesh::AttachMeshShapeFeature
->;
+> { };
 
 class ShapeFeatures :
     public virtual Base,

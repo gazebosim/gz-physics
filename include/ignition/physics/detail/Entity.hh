@@ -26,27 +26,15 @@
 #include <ignition/physics/Entity.hh>
 #include <ignition/physics/TemplateHelpers.hh>
 
+#ifdef NOTHING
+#endif
+
 namespace ignition
 {
   namespace physics
   {
     namespace detail
     {
-      /////////////////////////////////////////////////
-      /// \private This class is used to determine what type of
-      /// SpecializedPluginPtr should be used by the entities provided by a
-      /// plugin.
-      template <typename Policy, typename Features>
-      struct DeterminePlugin;
-
-      /// \private Implementation of DeterminePluginType
-      template <typename Policy, typename... Features>
-      struct DeterminePlugin<Policy, std::tuple<Features...>>
-      {
-        using type = plugin::SpecializedPluginPtr<
-            typename Features::template Implementation<Policy>...>;
-      };
-
       /////////////////////////////////////////////////
       /// \private Inspired by https://stackoverflow.com/a/26288164
       /// This class provides a static constexpr member named `value` which is

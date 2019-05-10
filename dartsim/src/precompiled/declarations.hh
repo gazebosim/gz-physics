@@ -70,8 +70,8 @@ namespace dartsim {
 //IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
 //    ignition::physics::dartsim::ComboFeatures, 3d)
 
-IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
-    ignition::physics::dartsim::DartsimFeatures, 3d)
+//IGN_PHYSICS_DECLARE_BASIC_OBJECTS(
+//    ignition::physics::dartsim::DartsimFeatures, 3d)
 
 
 #endif
