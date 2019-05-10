@@ -26,9 +26,6 @@
 #include <ignition/physics/Entity.hh>
 #include <ignition/physics/TemplateHelpers.hh>
 
-#ifdef NOTHING
-#endif
-
 namespace ignition
 {
   namespace physics

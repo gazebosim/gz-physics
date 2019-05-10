@@ -15,7 +15,7 @@
  *
 */
 
-//#include "declarations.hh"
+#include "declarations.hh"
 
 
 //IGN_PHYSICS_DEFINE_BASIC_OBJECTS(

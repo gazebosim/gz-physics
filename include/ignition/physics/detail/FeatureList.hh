@@ -29,9 +29,6 @@
 #include <ignition/physics/FeaturePolicy.hh>
 #include <ignition/physics/TemplateHelpers.hh>
 
-#ifdef NOTHING
-#endif
-
 namespace ignition
 {
   namespace physics
@@ -373,23 +370,16 @@ namespace ignition
       /////////////////////////////////////////////////
       /// \private This class is used to inspect what features are provided by
       /// a plugin. It implements the API of RequestEngine.
-      template <typename Policy, typename InterfaceTuple>
-      struct InspectFeatures;
-
-      /// \private Implementation of InspectFeatures.
-      template <typename PolicyT, typename Feature1, typename... Remaining>
-      struct InspectFeatures<PolicyT, std::tuple<Feature1, Remaining...>>
+      template <typename PolicyT, typename FeatureT, typename = void_t<> >
+      struct InspectFeatures
       {
-        using Interface = typename Feature1::template Implementation<PolicyT>;
+        using Interface = typename FeatureT::template Implementation<PolicyT>;
 
         /// \brief Check that each feature is provided by the plugin.
         template <typename PtrT>
         static bool Verify(const PtrT &_pimpl)
         {
-          // TODO(MXG): Consider replacing with a fold expression
-          return _pimpl && _pimpl->template HasInterface<Interface>()
-              && InspectFeatures<PolicyT, std::tuple<Remaining...>>::
-                      Verify(_pimpl);
+          return _pimpl && _pimpl->template HasInterface<Interface>();
         }
 
         template <typename LoaderT, typename ContainerT>
@@ -410,9 +400,6 @@ namespace ignition
 
           for (const std::string &u : unacceptable)
             _plugins.erase(u);
-
-          InspectFeatures<PolicyT, std::tuple<Remaining...>>::EraseIfMissing(
-                _loader, _plugins);
         }
 
         template <typename PtrT>
@@ -420,32 +407,66 @@ namespace ignition
                                  std::set<std::string> &_names)
         {
           if (!_pimpl || !_pimpl->template HasInterface<Interface>())
-            _names.insert(typeid(Feature1).name());
-
-          InspectFeatures<PolicyT, std::tuple<Remaining...>>::MissingNames(
-                _pimpl, _names);
+            _names.insert(typeid(FeatureT).name());
         }
       };
 
       template <typename PolicyT>
-      struct InspectFeatures<PolicyT, std::tuple<>>
+      struct InspectFeatures<PolicyT, void, void_t<> >
       {
         template <typename PtrT>
-        static bool Verify(const PtrT&)
+        static bool Verify(const PtrT &/*_pimpl*/)
         {
+          // This is just the terminal leaf of the inspection tree, so it must
+          // not falsify the verification.
           return true;
         }
 
         template <typename LoaderT, typename ContainerT>
-        static void EraseIfMissing(const LoaderT &, ContainerT &)
+        static void EraseIfMissing(
+            const LoaderT &/*_loader*/,
+            ContainerT &/*_plugins*/)
         {
-          // Do nothing
+          // Do nothing, this is a terminal leaf
         }
 
         template <typename PtrT>
-        static void MissingNames(const PtrT&, std::set<std::string>&)
+        static void MissingNames(const PtrT &/*_pimpl*/,
+                                 std::set<std::string> &/*_names*/)
         {
-          // Do nothing
+          // Do nothing, this is a terminal leaf
+        }
+      };
+
+      /// \private Implementation of InspectFeatures.
+      template <typename PolicyT, typename FeatureListT>
+      struct InspectFeatures<PolicyT, FeatureListT, void_t<typename FeatureListT::CurrentTupleEntry>>
+      {
+        using Branch1 = InspectFeatures<PolicyT, typename FeatureListT::CurrentTupleEntry>;
+        using Branch2 = InspectFeatures<PolicyT, typename GetNext<FeatureListT>::n>;
+
+        /// \brief Check that each feature is provided by the plugin.
+        template <typename PtrT>
+        static bool Verify(const PtrT &_pimpl)
+        {
+          return Branch1::Verify(_pimpl) && Branch2::Verify(_pimpl);
+        }
+
+        template <typename LoaderT, typename ContainerT>
+        static void EraseIfMissing(
+            const LoaderT &_loader,
+            ContainerT &_plugins)
+        {
+          Branch1::EraseIfMissing(_loader, _plugins);
+          Branch2::EraseIfMissing(_loader, _plugins);
+        }
+
+        template <typename PtrT>
+        static void MissingNames(const PtrT &_pimpl,
+                                 std::set<std::string> &_names)
+        {
+          Branch1::MissingNames(_pimpl, _names);
+          Branch2::MissingNames(_pimpl, _names);
         }
       };
     }

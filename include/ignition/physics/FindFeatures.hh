@@ -31,7 +31,7 @@ namespace ignition
     struct FindFeatures
     {
       // Tuple of features that are being requested
-      using Features = typename FeatureListT::Features;
+      using Features = FeatureListT;
 
       /// \brief Find a set of plugins that satisfy the requested list of
       /// features.

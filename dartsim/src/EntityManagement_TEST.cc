@@ -34,7 +34,12 @@
 
 #include "precompiled/declarations.hh"
 
-using TestFeatureList = ignition::physics::dartsim::DartsimFeatures;
+struct TestFeatureList : ignition::physics::FeatureList<
+    ignition::physics::dartsim::EntityManagementFeatureList,
+    ignition::physics::dartsim::JointFeatureList,
+    ignition::physics::dartsim::KinematicsFeatureList,
+    ignition::physics::dartsim::ShapeFeatureList
+> { };
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
