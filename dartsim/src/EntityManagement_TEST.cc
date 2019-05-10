@@ -32,8 +32,6 @@
 #include "KinematicsFeatures.hh"
 #include "ShapeFeatures.hh"
 
-#include "precompiled/declarations.hh"
-
 struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::dartsim::EntityManagementFeatureList,
     ignition::physics::dartsim::JointFeatureList,
