@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_FEATURELIST_HH_
 #define IGNITION_PHYSICS_FEATURELIST_HH_
 
+#include <tuple>
+
 #include <ignition/physics/Feature.hh>
 
 namespace ignition

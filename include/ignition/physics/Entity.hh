@@ -215,7 +215,8 @@ namespace ignition
     {
       public: using Policy = PolicyT;
       public: using Features = FeaturesT;
-      public: using Pimpl = typename detail::DeterminePlugin<Policy, Features>::type;
+      public: using Pimpl =
+          typename detail::DeterminePlugin<Policy, Features>::type;
 
       /// \brief Get the Identity object of this Entity.
       public: const Identity &FullIdentity() const;

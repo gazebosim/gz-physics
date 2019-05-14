@@ -90,7 +90,8 @@ namespace ignition
       struct CheckRequirements<Policy, Feature, true>
       {
         struct type :
-            ::ignition::plugin::SpecializedPlugin<typename Feature::template Implementation<Policy>>,
+            ::ignition::plugin::SpecializedPlugin<
+                typename Feature::template Implementation<Policy>>,
             ComposePlugin<Policy, typename Feature::RequiredFeatures>::type { };
       };
 
@@ -102,7 +103,8 @@ namespace ignition
       };
 
       template <typename Policy, typename Iterable>
-      struct ComposePlugin<Policy, Iterable, void_t<typename Iterable::CurrentTupleEntry>>
+      struct ComposePlugin<Policy, Iterable,
+          void_t<typename Iterable::CurrentTupleEntry>>
       {
         struct type :
             ComposePlugin<Policy, typename Iterable::CurrentTupleEntry>::type,
@@ -350,12 +352,15 @@ namespace ignition
       };
 
       template <template<typename> class Selector, typename Iterable>
-      struct Aggregate<Selector, Iterable, void_t<typename Iterable::CurrentTupleEntry>>
+      struct Aggregate<Selector, Iterable,
+            void_t<typename Iterable::CurrentTupleEntry>>
       {
         public: template <typename... T>
         struct type
-            : public virtual Aggregate<Selector, typename Iterable::CurrentTupleEntry>::template type<T...>,
-              public virtual Aggregate<Selector, typename GetNext<Iterable>::n>::template type<T...> { };
+            : public virtual Aggregate<Selector,
+                  typename Iterable::CurrentTupleEntry>::template type<T...>,
+              public virtual Aggregate<Selector,
+                  typename GetNext<Iterable>::n>::template type<T...> { };
       };
 
       /////////////////////////////////////////////////
@@ -440,10 +445,13 @@ namespace ignition
 
       /// \private Implementation of InspectFeatures.
       template <typename PolicyT, typename FeatureListT>
-      struct InspectFeatures<PolicyT, FeatureListT, void_t<typename FeatureListT::CurrentTupleEntry>>
+      struct InspectFeatures<PolicyT, FeatureListT,
+          void_t<typename FeatureListT::CurrentTupleEntry>>
       {
-        using Branch1 = InspectFeatures<PolicyT, typename FeatureListT::CurrentTupleEntry>;
-        using Branch2 = InspectFeatures<PolicyT, typename GetNext<FeatureListT>::n>;
+        using Branch1 = InspectFeatures<PolicyT,
+            typename FeatureListT::CurrentTupleEntry>;
+        using Branch2 = InspectFeatures<PolicyT,
+            typename GetNext<FeatureListT>::n>;
 
         /// \brief Check that each feature is provided by the plugin.
         template <typename PtrT>
@@ -587,10 +595,12 @@ namespace ignition
     const X <PolicyT, FeaturesT> >; \
   template <typename PolicyT> \
   using Base ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    X <PolicyT, ::ignition::physics::FeatureList<::ignition::physics::Feature>>>; \
+    X <PolicyT, ::ignition::physics::FeatureList< \
+        ::ignition::physics::Feature>>>; \
   template <typename PolicyT> \
   using ConstBase ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    const X <PolicyT, ::ignition::physics::FeatureList<::ignition::physics::Feature>>>; \
+    const X <PolicyT, ::ignition::physics::FeatureList< \
+        ::ignition::physics::Feature>>>; \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
@@ -628,7 +638,8 @@ namespace ignition
 
       template <typename PolicyT, typename List>
       using ExtractImplementation =
-        typename ExtractAPI<ImplementationSelector, List>::template type<PolicyT>;
+        typename ExtractAPI<ImplementationSelector, List>
+            ::template type<PolicyT>;
     }
   }
 }

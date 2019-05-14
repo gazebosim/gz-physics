@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <cmath>
+#include <string>
 
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>

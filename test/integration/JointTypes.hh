@@ -19,8 +19,8 @@
 #define IGNITION_PHYSICS_TEST_INGEGRATION_JOINTTYPES_HH
 
 #include <gtest/gtest.h>
-
-#include <Eigen/Geometry>
+#include <string>
+#include <vector>
 
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>

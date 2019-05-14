@@ -20,117 +20,86 @@
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FeaturePolicy.hh>
 
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/RevoluteJoint.hh>
-#include <ignition/physics/CylinderShape.hh>
-#include <ignition/physics/Link.hh>
-#include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/BoxShape.hh>
+#include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/Link.hh>
+#include <ignition/physics/RevoluteJoint.hh>
 
-//struct NamedFeatureList : ignition::physics::FeatureList<
-//  ignition::physics::CompleteFrameSemantics,
-//  ignition::physics::GetRevoluteJointProperties,
-//  ignition::physics::SetRevoluteJointProperties,
-//  ignition::physics::GetCylinderShapeProperties,
-//  ignition::physics::SetCylinderShapeProperties,
-//  ignition::physics::GetBoxShapeProperties,
-//  ignition::physics::SetBoxShapeProperties,
-//  ignition::physics::AttachCylinderShapeFeature,
-//  ignition::physics::GetBoxShapeProperties,
-//  ignition::physics::SetBoxShapeProperties,
-//  ignition::physics::AttachBoxShapeFeature
-//> {};
-
-//using AliasFeatureList = ignition::physics::FeatureList<
-//  ignition::physics::CompleteFrameSemantics,
-//  ignition::physics::GetRevoluteJointProperties,
-//  ignition::physics::SetRevoluteJointProperties,
-//  ignition::physics::GetCylinderShapeProperties,
-//  ignition::physics::SetCylinderShapeProperties,
-//  ignition::physics::GetCylinderShapeProperties,
-//  ignition::physics::SetCylinderShapeProperties,
-//  ignition::physics::AttachCylinderShapeFeature,
-//  ignition::physics::GetBoxShapeProperties,
-//  ignition::physics::SetBoxShapeProperties,
-//  ignition::physics::AttachBoxShapeFeature
-//>;
-
-
-
-//TEST(symbol_names, Length)
-//{
-//  using AliasLink = ignition::physics::Link3dPtr<AliasFeatureList>;
-//  using NamedLink = ignition::physics::Link3dPtr<NamedFeatureList>;
-
-//  /// The length of the Link defined by a named feature list should be less
-//  /// than half the length of the Link defined by an aliased feature list.
-//  EXPECT_LT(std::string(typeid(NamedLink).name()).size(),
-//            std::string(typeid(AliasLink).name()).size()/2);
-//}
-
-//struct SingleNestedNamedList : ignition::physics::FeatureList<
-//  NamedFeatureList,
-//  AliasFeatureList
-//> { };
-
-//struct DoubleNestedNamedList : ignition::physics::FeatureList<
-//  ignition::physics::ForwardStep,
-//  SingleNestedNamedList
-//> { };
-
-//using DoubleNestedAliasList = ignition::physics::FeatureList<
-//  ignition::physics::ForwardStep,
-//  SingleNestedNamedList
-//>;
-
-//TEST(symbol_names, Nested)
-//{
-//  // Note: This function just needs to compile successfully for the test to pass
-
-//  using SingleNestedLink = ignition::physics::Link3dPtr<SingleNestedNamedList>;
-//  SingleNestedLink composite;
-
-//  using DoubleNestedLink = ignition::physics::Link3dPtr<DoubleNestedNamedList>;
-//  DoubleNestedLink nested;
-
-//  ignition::physics::Link3dPtr<DoubleNestedAliasList> alias;
-//}
-
-struct CylinderFeatures : ignition::physics::FeatureList<
+/////////////////////////////////////////////////
+struct CylinderFeaturesClass : ignition::physics::FeatureList<
     ignition::physics::GetCylinderShapeProperties,
     ignition::physics::SetCylinderShapeProperties,
     ignition::physics::AttachCylinderShapeFeature
 > { };
 
-struct JointFeatures : ignition::physics::FeatureList<
+using CylinderFeaturesAlias = ignition::physics::FeatureList<
+    ignition::physics::GetCylinderShapeProperties,
+    ignition::physics::SetCylinderShapeProperties,
+    ignition::physics::AttachCylinderShapeFeature
+>;
+
+/////////////////////////////////////////////////
+struct JointFeaturesClass : ignition::physics::FeatureList<
     ignition::physics::GetRevoluteJointProperties,
     ignition::physics::SetRevoluteJointProperties
 > { };
 
-struct BoxFeatures : ignition::physics::FeatureList <
-    ignition::physics::GetBoxShapeProperties,
-    ignition::physics::SetBoxShapeProperties,
+using JointFeaturesAlias = ignition::physics::FeatureList<
+    ignition::physics::GetRevoluteJointProperties,
+    ignition::physics::SetRevoluteJointProperties
+>;
+
+/////////////////////////////////////////////////
+struct BoxFeaturesClass : ignition::physics::FeatureList<
     ignition::physics::GetBoxShapeProperties,
     ignition::physics::SetBoxShapeProperties,
     ignition::physics::AttachBoxShapeFeature
 > { };
 
-struct FeatureSets : ignition::physics::FeatureList<
-    CylinderFeatures,
-    JointFeatures,
-    BoxFeatures
+using BoxFeaturesAlias = ignition::physics::FeatureList<
+    ignition::physics::GetBoxShapeProperties,
+    ignition::physics::SetBoxShapeProperties,
+    ignition::physics::AttachBoxShapeFeature
+>;
+
+/////////////////////////////////////////////////
+struct FeatureSetClass : ignition::physics::FeatureList<
+    CylinderFeaturesClass,
+    JointFeaturesClass,
+    BoxFeaturesClass
 > { };
+
+using FeatureSetAlias = ignition::physics::FeatureList<
+    CylinderFeaturesAlias,
+    JointFeaturesAlias,
+    BoxFeaturesAlias
+>;
 
 TEST(symbol_names, Length)
 {
-  ignition::physics::Link3dPtr<FeatureSets> link;
-//  link->AttachCylinderShape();
-//  link->FrameDataRelativeTo(ignition::physics::FrameID::World());
-  std::cout << typeid(ignition::physics::Link3dPtr<FeatureSets>).name() << std::endl;
+  const std::string composite_featurelist_name =
+      typeid(ignition::physics::Link3dPtr<FeatureSetClass>).name();
 
-  ignition::plugin::PluginPtr plugin;
-  auto engine = ignition::physics::RequestEngine3d<FeatureSets>::From(plugin);
+  const std::string aliased_featurelist_name =
+      typeid(ignition::physics::Link3dPtr<FeatureSetAlias>).name();
+
+  // The size of the feature list that uses inheritance composition should be
+  // less than a third of the size of the feature list that uses aliasing.
+  EXPECT_LT(composite_featurelist_name.size(),
+            aliased_featurelist_name.size()/3);
+
+
+  // We instantiate these so we can observe the kinds of symbols that get
+  // created when these classes are instantiated. This isn't tested explicitly,
+  // but the symbols can be seen by running
+  // $ nm PERFORMANCE_symbol_names
+  auto engineClass = ignition::physics::RequestEngine3d<FeatureSetClass>::From(
+        ignition::plugin::PluginPtr());
+
+  auto engineAlias = ignition::physics::RequestEngine3d<FeatureSetAlias>::From(
+        ignition::plugin::PluginPtr());
 }
 
 int main(int argc, char **argv)
