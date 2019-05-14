@@ -215,12 +215,6 @@ namespace ignition
     {
       public: using Policy = PolicyT;
       public: using Features = FeaturesT;
-//      public: struct Pimpl :
-//          detail::DeterminePlugin<Policy, Features>::type
-//      {
-//        using Base = typename detail::DeterminePlugin<Policy, Features>::type;
-//        using Base::Base;
-//      };
       public: using Pimpl = typename detail::DeterminePlugin<Policy, Features>::type;
 
       /// \brief Get the Identity object of this Entity.

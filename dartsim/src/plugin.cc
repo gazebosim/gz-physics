@@ -17,11 +17,33 @@
 
 #include <ignition/physics/Register.hh>
 
-#include "DartsimFeatures.hh"
+#include "Base.hh"
+#include "CustomFeatures.hh"
+#include "JointFeatures.hh"
+#include "KinematicsFeatures.hh"
+#include "LinkFeatures.hh"
+#include "SDFFeatures.hh"
+#include "ShapeFeatures.hh"
+#include "SimulationFeatures.hh"
+#include "EntityManagementFeatures.hh"
+#include "FreeGroupFeatures.hh"
 
 namespace ignition {
 namespace physics {
 namespace dartsim {
+
+struct DartsimFeatures : FeatureList<
+  CustomFeatureList,
+  EntityManagementFeatureList,
+  FreeGroupFeatureList,
+  JointFeatureList,
+  KinematicsFeatureList,
+  LinkFeatureList,
+  SDFFeatureList,
+  ShapeFeatureList,
+  SimulationFeatureList
+  // TODO(MXG): Implement more features
+> { };
 
 class Plugin :
     public virtual Implements3d<DartsimFeatures>,
