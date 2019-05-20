@@ -30,12 +30,21 @@ pipelines:
             libignition-math6-eigen3-dev
             libignition-plugin-dev
             libeigen3-dev
-            libsdformat8-dev
             dart6-data
             libdart6-collision-ode-dev
             libdart6-dev
             libdart6-utils-urdf-dev
             libbenchmark-dev
+            #libsdformat8-dev
+          # sdformat
+          - hg clone https://bitbucket.org/osrf/sdformat -b install_side_by_side
+          - cd sdformat
+          - mkdir build
+          - cd build
+          - cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+          - make
+          - make install
+          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
