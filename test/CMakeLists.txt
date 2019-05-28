@@ -1,3 +1,7 @@
+if (NOT BUILD_TESTING)
+  return()
+endif()
+
 include_directories (
   ${PROJECT_SOURCE_DIR}/test/gtest/include
   ${PROJECT_SOURCE_DIR}/test/gtest
