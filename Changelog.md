@@ -1,6 +1,15 @@
 ## Ignition Physics 1.x
 
-### Ignition Physics 1.1.0 (2019-XX-XX)
+### Ignition Physics 1.x.x (20XX-XX-XX)
+
+### Ignition Physics 1.2.0 (20XX-XX-XX)
+
+1. Change DART dependency to look for 6.9.0 instead of 6.7.2
+
+### Ignition Physics 1.1.0 (2019-05-20)
+
+1. Simple port of existing PERFORMANCE test as BENCHMARK
+    * [Pull request 84](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/84)
 
 1. Add prototype of FreeGroup features
     * [Pull request 85](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/85)
