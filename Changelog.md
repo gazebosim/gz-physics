@@ -2,6 +2,9 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+1. Skip compilation of test plugins if `BUILD_TESTING` is false
+    * [Pull request 92](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/92)
+
 ### Ignition Physics 1.1.0 (2019-05-20)
 
 1. Simple port of existing PERFORMANCE test as BENCHMARK
