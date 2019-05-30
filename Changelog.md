@@ -5,7 +5,7 @@
 1. Skip compilation of test plugins if `BUILD_TESTING` is false
     * [Pull request 92](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/92)
 
-### Ignition Physics 1.2.0 (20XX-XX-XX)
+### Ignition Physics 1.2.0 (2019-05-29)
 
 1. Change DART dependency to look for 6.9.0 instead of 6.7.2
 
