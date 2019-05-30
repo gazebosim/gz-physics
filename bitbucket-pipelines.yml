@@ -38,7 +38,7 @@ pipelines:
           - cd ign-plugin
           - mkdir build
           - cd build
-          - cmake .. -DBUILD_TESTING=false
+          - cmake .. -DBUILD_TESTING=false -DCMAKE_INSTALL_PREFIX=/usr
           - make install
           - cd ../..
           # Ignition physics
