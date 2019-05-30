@@ -27,13 +27,20 @@ pipelines:
             libignition-common3-dev
             libignition-math6-dev
             libignition-math6-eigen3-dev
-            libignition-plugin-dev
             libeigen3-dev
             libsdformat8-dev
             dart6-data
             libdart6-collision-ode-dev
             libdart6-dev
             libdart6-utils-urdf-dev
+          # ign-plugin
+          - hg clone https://bitbucket.org/ignitionrobotics/ign-plugin -b improve_compile_times
+          - cd ign-plugin
+          - mkdir build
+          - cd build
+          - cmake .. -DBUILD_TESTING=false
+          - make install
+          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
