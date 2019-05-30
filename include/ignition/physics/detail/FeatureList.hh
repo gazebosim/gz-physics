@@ -368,8 +368,8 @@ namespace ignition
       struct ExtractAPI
       {
         public: template<typename... T>
-        class type :
-            public Aggregate<Selector, FeatureListT>::template type<T...> { };
+        class type : public virtual
+            Aggregate<Selector, FeatureListT>::template type<T...> { };
       };
 
       /////////////////////////////////////////////////
