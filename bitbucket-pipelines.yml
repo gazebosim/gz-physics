@@ -33,6 +33,7 @@ pipelines:
             libdart6-collision-ode-dev
             libdart6-dev
             libdart6-utils-urdf-dev
+            libbenchmark-dev
           # ign-plugin
           - hg clone https://bitbucket.org/ignitionrobotics/ign-plugin -b improve_compile_times
           - cd ign-plugin

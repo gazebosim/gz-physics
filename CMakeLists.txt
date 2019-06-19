@@ -8,7 +8,7 @@ project(ignition-physics2 VERSION 2.0.0)
 #============================================================================
 # Find ignition-cmake
 #============================================================================
-find_package(ignition-cmake2 REQUIRED)
+find_package(ignition-cmake2 2.1.0 REQUIRED)
 
 #============================================================================
 # Configure the project
