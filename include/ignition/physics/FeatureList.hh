@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_FEATURELIST_HH_
 #define IGNITION_PHYSICS_FEATURELIST_HH_
 
+#include <tuple>
+
 #include <ignition/physics/Feature.hh>
 
 namespace ignition
@@ -29,6 +31,7 @@ namespace ignition
       // Forward declarations
       template <typename...> struct CombineLists;
       template <bool, typename...> struct SelfConflict;
+      template <typename> struct IterateTuple;
     }
 
     /////////////////////////////////////////////////
@@ -45,7 +48,7 @@ namespace ignition
     /// using AdvancedList = FeatureList<BasicList, AdvancedA, AdvancedB>;
     /// \endcode
     template <typename... FeaturesT>
-    struct FeatureList
+    struct FeatureList : detail::IterateTuple<std::tuple<FeaturesT...>>
     {
       /// Features is a std::tuple containing all the feature classes that are
       /// bundled in this list. This list is fully seralialized; any hierarchy
@@ -53,6 +56,8 @@ namespace ignition
       /// member.
       public: using Features =
           typename detail::CombineLists<FeaturesT...>::Result;
+
+      public: using FeatureTuple = std::tuple<FeaturesT...>;
 
       /// \brief A static constexpr function which indicates whether a given
       /// Feature, F, is contained in this list.
@@ -79,7 +84,8 @@ namespace ignition
                         bool AssertNoConflict = false>
       static constexpr bool ConflictsWith();
 
-      /// \brief A list has no additional required features
+      /// \brief All the features required by this FeatureList will be included
+      /// in CombineLists.
       public: using RequiredFeatures = void;
 
       // Check that this FeatureList does not contain any self-conflicts.
