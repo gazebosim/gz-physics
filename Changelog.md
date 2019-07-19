@@ -1,5 +1,10 @@
 ## Ignition Physics 1.x
 
+### Ignition Physics 1.3.1 (2019-07-19)
+
+1. Set the time step from ForwardStep::Input in dartsim.
+    * [Pull request 95](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/95)
+
 ### Ignition Physics 1.3.0 (2019-07-18)
 
 1. Support for more friction pyramid parameters in dartsim.
