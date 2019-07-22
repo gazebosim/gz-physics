@@ -20,6 +20,8 @@
 
 #include "SimulationFeatures.hh"
 
+#include "ignition/common/Profiler.hh"
+
 namespace ignition {
 namespace physics {
 namespace dartsim {
@@ -30,6 +32,7 @@ void SimulationFeatures::WorldForwardStep(
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & /*_u*/)
 {
+  IGN_PROFILE("SimulationFeatures::WorldForwardStep");
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
 
   // TODO(MXG): Parse input

@@ -28,6 +28,13 @@ target_link_libraries(${dartsim_plugin}
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ignition-math${IGN_MATH_VER}::eigen3)
 
+if(ENABLE_PROFILER)
+  target_link_libraries(${dartsim_plugin}
+    PUBLIC
+    ignition-common${IGN_COMMON_VER}::profiler
+  )
+endif()
+
 ign_build_tests(
   TYPE UNIT
   SOURCES ${test_sources}
