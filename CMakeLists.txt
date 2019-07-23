@@ -36,15 +36,8 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 #--------------------------------------
 # Find ignition-common
 ign_find_package(ignition-common3
-  COMPONENTS graphics
+  COMPONENTS graphics profiler
   REQUIRED_BY mesh dartsim)
-
-if(ENABLE_PROFILER)
-  ign_find_package(ignition-common3
-    REQUIRED
-    COMPONENTS profiler)
-endif()
-
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
 #--------------------------------------
