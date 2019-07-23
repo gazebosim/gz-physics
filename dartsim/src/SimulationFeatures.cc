@@ -33,7 +33,20 @@ void SimulationFeatures::WorldForwardStep(
     const ForwardStep::Input & /*_u*/)
 {
   IGN_PROFILE("SimulationFeatures::WorldForwardStep");
-  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto *dtDur = _u.Query<std::chrono::steady_clock::duration>();
+  const double tol = 1e-6;
+
+  if (dtDur)
+  {
+    std::chrono::duration<double> dt = *dtDur;
+    if (std::fabs(dt.count() - world->getTimeStep()) > tol)
+    {
+      world->setTimeStep(dt.count());
+      igndbg << "Simulation timestep set to: " << world->getTimeStep()
+             << std::endl;
+    }
+  }
 
   // TODO(MXG): Parse input
   world->step();
