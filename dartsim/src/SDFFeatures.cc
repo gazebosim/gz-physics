@@ -466,6 +466,17 @@ Identity SDFFeatures::ConstructSdfCollision(
   dart::dynamics::BodyNode *const bn =
       this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
 
+  // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
+  // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
+  // Collision name for uniqueness sake.
+  const std::string internalName =
+      bn->getName() + ":" + _collision.Name();
+
+  dart::dynamics::ShapeNode * const node =
+      bn->createShapeNodeWith<
+        dart::dynamics::CollisionAspect, dart::dynamics::DynamicsAspect>(
+          shape, internalName);
+
   // Calling GetElement creates a new element with default values if the element
   // doesn't exist, so the following is okay.
   // TODO(addisu) We are using the coefficient specified in the <ode> tag.
@@ -477,23 +488,26 @@ Identity SDFFeatures::ConstructSdfCollision(
                                   ->GetElement("friction")
                                   ->GetElement("ode");
 
-    // We are setting the friction coefficient of a collision element
-    // to be the coefficient for the whole link. If there are multiple collision
-    // elements, the value of the last one will be the coefficient for the link.
-    // TODO(addisu) Assign the coefficient to the shape node when support is
-    // added in DART.
-    bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+    auto aspect = node->getDynamicsAspect();
+    aspect->setFrictionCoeff(odeFriction->Get<double>("mu"));
+    if (odeFriction->HasElement("mu2"))
+    {
+      aspect->setSecondaryFrictionCoeff(odeFriction->Get<double>("mu2"));
+    }
+    if (odeFriction->HasElement("slip1"))
+    {
+      aspect->setSlipCompliance(odeFriction->Get<double>("slip1"));
+    }
+    if (odeFriction->HasElement("slip2"))
+    {
+      aspect->setSecondarySlipCompliance(odeFriction->Get<double>("slip2"));
+    }
+    if (odeFriction->HasElement("fdir1"))
+    {
+      math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
+      aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
+    }
   }
-
-  // NOTE(MXG): Gazebo requires unique collision shape names per Link, but
-  // dartsim requires unique ShapeNode names per Skeleton, so we decorate the
-  // Collision name for uniqueness sake.
-  const std::string internalName =
-      bn->getName() + ":" + _collision.Name();
-
-  dart::dynamics::ShapeNode * const node =
-      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        shape, internalName);
 
   node->setRelativeTransform(
         math::eigen3::convert(_collision.Pose()) * tf_shape);
