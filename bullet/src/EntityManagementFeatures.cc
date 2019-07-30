@@ -19,10 +19,6 @@
 
 #include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
 #include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
-#include "BulletDynamics/MLCPSolvers/btDantzigSolver.h"
-#include "BulletDynamics/MLCPSolvers/btLemkeSolver.h"
-#include "BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h"
-#include "BulletDynamics/Featherstone/btMultiBodyMLCPConstraintSolver.h"
 #include "btBulletDynamicsCommon.h"
 
 #include <string>
