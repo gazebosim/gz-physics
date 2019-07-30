@@ -68,9 +68,9 @@ ign_find_package(DART
 # Find bullet for the bullet plugin wrapper
 include(FindPkgConfig)
 
-pkg_check_modules(BULLET bullet>=2.88 REQUIRED)
+pkg_check_modules(BULLET bullet>=2.87 REQUIRED)
 if (NOT BULLET_FOUND)
-    pkg_check_modules(BULLET bullet2.88>=2.88)
+    pkg_check_modules(BULLET bullet2.87>=2.87)
 endif()
 
 message(STATUS "-------------------------------------------\n")
