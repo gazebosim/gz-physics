@@ -9,10 +9,6 @@ target_link_libraries(${features} INTERFACE ${BULLET_LIBRARIES})
 target_include_directories(${features} SYSTEM INTERFACE ${BULLET_INCLUDE_DIRS})
 add_definitions(${BULLET_CFLAGS})
 
-install(
-  DIRECTORY include/
-  DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
-
 ign_get_libsources_and_unittests(sources test_sources)
 
 # TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
