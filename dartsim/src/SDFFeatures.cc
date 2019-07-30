@@ -568,6 +568,11 @@ Identity SDFFeatures::ConstructSdfVisual(
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
+void SDFFeatures::FinalizeSdfModels(
+    const Identity &_engine)
+{
+}
+
 /////////////////////////////////////////////////
 dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     const dart::dynamics::SkeletonPtr &_model,

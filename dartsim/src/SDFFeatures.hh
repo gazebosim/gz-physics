@@ -76,8 +76,7 @@ class SDFFeatures :
       const ::sdf::Visual &_visual) override;
 
   public: void FinalizeSdfModels(
-    const Identity &_engine) override
-    { };
+    const Identity &_engine) override;
 
   private: dart::dynamics::BodyNode *FindOrConstructLink(
       const dart::dynamics::SkeletonPtr &_model,
