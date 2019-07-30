@@ -63,6 +63,47 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   return this->AddWorld({world, _name, collisionConfiguration, dispatcher, broadphase, solver});
 }
 
+bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
+{
+  const auto &modelInfo = this->models.at(_modelID);
+
+  // Clean up collisions
+  for (const auto &collisionEntry : this->collisions)
+  {
+    const auto &collisionInfo = collisionEntry.second;
+    if (collisionInfo->model.id == _modelID.id)
+    {
+      delete collisionInfo->shape;
+      delete collisionInfo->collider;
+      this->collisions.erase(collisionEntry.first);
+    }
+  }
+
+  // Clean up joints
+  for (const auto &jointEntry : this->joints)
+  {
+    const auto &jointInfo = jointEntry.second;
+    if (jointInfo->model.id == _modelID.id)
+    {
+      this->joints.erase(jointEntry.first);
+    }
+  }
+
+  // Clean up links
+  for (const auto &linkEntry : this->links)
+  {
+    const auto &linkInfo = linkEntry.second;
+    if (linkInfo->model.id == _modelID.id)
+    {
+      this->links.erase(linkEntry.first);
+    }
+  }
+
+  // Clean up model
+  delete modelInfo->model;
+  this->models.erase(_modelID);
+}
+
 
 }
 }

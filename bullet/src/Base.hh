@@ -98,9 +98,11 @@ struct JointInfo
 struct CollisionInfo
 {
   btCollisionShape* shape;
+  btMultiBodyLinkCollider* collider;
   btTransform transform;
   bool isDynamic;
   Identity link;
+  Identity model;
 };
 
 class Base : public Implements3d<FeatureList<Feature>>

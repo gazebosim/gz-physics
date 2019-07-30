@@ -238,7 +238,9 @@ Identity SDFFeatures::ConstructSdfCollision(
 
   if (shape != nullptr)
   {
-    return this->AddCollision({shape, transform, isDynamic, _linkID});
+    const auto &modelID = this->links.at(_linkID)->model;
+    return this->AddCollision({shape, nullptr, transform, isDynamic, _linkID,
+                               modelID});
   }
 }
 
@@ -352,6 +354,7 @@ void SDFFeatures::FinalizeSdfModels(
           const auto &WorldInfo = this->worlds.at(modelInfo->world);
 
           btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(model, linkInfo->linkIndex);
+          collisionInfo->collider = col;
           col->setCollisionShape(collisionInfo->shape);
           col->setWorldTransform(collisionInfo->transform);
           bool isDynamic = 1;
