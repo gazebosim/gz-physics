@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics1 VERSION 1.3.1)
+project(ignition-physics2 VERSION 2.0.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -13,7 +13,7 @@ find_package(ignition-cmake2 2.1.0 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project()
+ign_configure_project(VERSION_SUFFIX pre0)
 
 
 #============================================================================
@@ -30,7 +30,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 # Find ignition-common
 ign_find_package(ignition-common3
   COMPONENTS graphics
-  REQUIRED_BY mesh dartsim)
+  REQUIRED_BY mesh dartsim bullet)
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
 #--------------------------------------
@@ -49,7 +49,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
+ign_find_package(sdformat8 REQUIRED_BY sdf dartsim bullet)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
@@ -59,11 +59,19 @@ ign_find_package(DART
     utils
     utils-urdf
   CONFIG
-  VERSION 6.10.0
+  VERSION 6.7.2
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
 
+#--------------------------------------
+# Find bullet for the bullet plugin wrapper
+include(FindPkgConfig)
+
+pkg_check_modules(BULLET bullet>=2.88 REQUIRED)
+if (NOT BULLET_FOUND)
+    pkg_check_modules(BULLET bullet2.88>=2.88)
+endif()
 
 message(STATUS "-------------------------------------------\n")
 
@@ -73,7 +81,7 @@ set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf mesh dartsim)
+  COMPONENTS sdf mesh dartsim bullet)
 
 
 #============================================================================

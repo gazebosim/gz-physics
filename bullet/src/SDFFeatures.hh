@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2019 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,26 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
+#ifndef IGNITION_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
+#define IGNITION_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
 
 #include <string>
 
-#include <ignition/physics/sdf/ConstructCollision.hh>
-#include <ignition/physics/sdf/ConstructJoint.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructVisual.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
+#include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructLink.hh>
+#include <ignition/physics/sdf/ConstructJoint.hh>
+#include <ignition/physics/sdf/ConstructCollision.hh>
+#include <ignition/physics/sdf/ConstructVisual.hh>
 #include <ignition/physics/sdf/FinalizeModels.hh>
 
 #include <ignition/physics/Implements.hh>
 
-#include "Base.hh"
 #include "EntityManagementFeatures.hh"
 
 namespace ignition {
 namespace physics {
-namespace dartsim {
+namespace bullet {
 
 using SDFFeatureList = FeatureList<
   sdf::ConstructSdfWorld,
@@ -73,42 +72,15 @@ class SDFFeatures :
 
   public: Identity ConstructSdfVisual(
       const Identity &_linkID,
-      const ::sdf::Visual &_visual) override;
+      const ::sdf::Visual &_visual) override
+      { return this->GenerateInvalidId(); };
 
   public: void FinalizeSdfModels(
-    const Identity &_engine) override
-    { };
-
-  private: dart::dynamics::BodyNode *FindOrConstructLink(
-      const dart::dynamics::SkeletonPtr &_model,
-      const Identity &_modelID,
-      const ::sdf::Model &_sdfModel,
-      const std::string &_linkName);
-
-  /// \brief Construct a joint between two input links.
-  /// \param[in] _modelInfo Contains the joint's parent model
-  /// \param[in] _sdfJoint Contains joint parameters
-  /// \param[in] _parent Pointer to parent link. If nullptr, the parent is
-  /// assumed to be world
-  /// \param[in] _child Pointer to child link. If nullptr, the child is assumed
-  /// to be world
-  private: Identity ConstructSdfJoint(const ModelInfo &_modelInfo,
-      const ::sdf::Joint &_sdfJoint,
-      dart::dynamics::BodyNode * const _parent,
-      dart::dynamics::BodyNode * const _child);
-
-  private: Eigen::Isometry3d ResolveSdfLinkReferenceFrame(
-      const std::string &_frame,
-      const ModelInfo &_model) const;
-
-  private: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
-      const std::string &_frame,
-      const dart::dynamics::BodyNode *_child) const;
+    const Identity &_engine) override;
 };
 
 }
 }
 }
-
 
 #endif
