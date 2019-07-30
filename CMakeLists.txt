@@ -59,7 +59,7 @@ ign_find_package(DART
     utils
     utils-urdf
   CONFIG
-  VERSION 6.7.2
+  VERSION 6.10.0
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
