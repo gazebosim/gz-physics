@@ -46,6 +46,18 @@ void JointFeatures::SetJointVelocity(
 }
 
 /////////////////////////////////////////////////
+void JointFeatures::SetJointForce(
+      const Identity &_id, const std::size_t _dof,
+      const double _value)
+{
+    const auto &jointInfo = this->joints.at(_id);
+    const auto &model = this->models.at(jointInfo->model)->model;
+    const auto jointIndex = jointInfo->childIndex;
+    const auto currentTorque = model->getJointTorqueMultiDof(jointIndex)[_dof];
+    model->addJointTorqueMultiDof(jointIndex, _dof, _value-currentTorque);
+}
+
+/////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(
     const Identity &_id) const
 {

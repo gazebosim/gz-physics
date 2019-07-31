@@ -79,8 +79,7 @@ class JointFeatures :
 
   public: void SetJointForce(
       const Identity &_id, const std::size_t _dof,
-      const double _value) override
-      { };
+      const double _value) override;
 
 
   // ----- Get Basic Joint Properties -----
