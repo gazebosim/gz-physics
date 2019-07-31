@@ -28,6 +28,12 @@ target_link_libraries(${dartsim_plugin}
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ignition-math${IGN_MATH_VER}::eigen3)
 
+# We need to link this, even when the profiler isn't used to get headers.
+target_link_libraries(${dartsim_plugin}
+  PRIVATE
+  ignition-common${IGN_COMMON_VER}::profiler
+)
+
 ign_build_tests(
   TYPE UNIT
   SOURCES ${test_sources}
