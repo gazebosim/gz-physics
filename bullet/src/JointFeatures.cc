@@ -21,6 +21,41 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
+/////////////////////////////////////////////////
+double JointFeatures::GetJointPosition(
+      const Identity &_id, const std::size_t _dof) const
+{
+    const auto &jointInfo = this->joints.at(_id);
+    const auto &modelInfo = this->models.at(jointInfo->model);
+    const auto pos = modelInfo->model->getJointPosMultiDof
+        (jointInfo->childIndex)[_dof];
+    return pos;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointVelocity(
+      const Identity &_id, const std::size_t _dof,
+      const double _value)
+{
+    const auto &jointInfo = this->joints.at(_id);
+    const auto &model = this->models.at(jointInfo->model)->model;
+    const auto jointIndex = jointInfo->childIndex;
+    auto currentVel = model->getJointVelMultiDof(jointIndex);
+    currentVel[_dof] = _value;
+    model->setJointVelMultiDof(jointIndex, currentVel);
+}
+
+/////////////////////////////////////////////////
+std::size_t JointFeatures::GetJointDegreesOfFreedom(
+    const Identity &_id) const
+{
+    const auto &jointInfo = this->joints.at(_id);
+    const auto &modelInfo = this->models.at(jointInfo->model);
+    const auto dof = modelInfo->model->getLink(
+        jointInfo->childIndex).m_dofCount;
+    return dof;
+}
+
 }
 }
 }

@@ -44,8 +44,7 @@ class JointFeatures :
 {
   // ----- Get Basic Joint State -----
   public: double GetJointPosition(
-      const Identity &_id, const std::size_t _dof) const override
-      { return 0; };
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointVelocity(
       const Identity &_id, const std::size_t _dof) const override
@@ -71,8 +70,7 @@ class JointFeatures :
 
   public: void SetJointVelocity(
       const Identity &_id, const std::size_t _dof,
-      const double _value) override
-      { };
+      const double _value) override;
 
   public: void SetJointAcceleration(
       const Identity &_id, const std::size_t _dof,
@@ -87,8 +85,7 @@ class JointFeatures :
 
   // ----- Get Basic Joint Properties -----
   public: std::size_t GetJointDegreesOfFreedom(
-      const Identity &_id) const override
-      { return 0; };
+      const Identity &_id) const override;
 
   public: Pose3d GetJointTransformFromParent(
       const Identity &_id) const override

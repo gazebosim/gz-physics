@@ -30,7 +30,7 @@ inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
 {
   return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
                      mat(1, 0), mat(1, 1), mat(1, 2),
-                     mat(2, 0), mat(2, 1), mat(2, 2)); 
+                     mat(2, 0), mat(2, 1), mat(2, 2));
 }
 
 inline btVector3 convertVec(Eigen::Vector3d vec)
@@ -68,7 +68,7 @@ Identity SDFFeatures::ConstructSdfModel(
   const btVector3 baseInertiaDiag(0, 0, 0);
   const bool fixedBase = isStatic;
   const bool canSleep = false; // To Do: experiment with it
-  
+
   // Set base transform
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
   const auto poseTranslation = poseIsometry.translation();
@@ -166,8 +166,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   const int parentIndex = worldParent ? -1 : parentLinkInfo->linkIndex;
   const int childIndex = childLinkInfo->linkIndex;
 
-  // To Do: Handle joints not to world
-
   // Get child link properties
   btVector3 jointAxis1 = btVector3(0, 0, 0);
   if (firstAxis != nullptr)
@@ -186,7 +184,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
 
-  return this->AddJoint({name, type, childIndex, parentIndex, jointAxis1, 
+  return this->AddJoint({name, type, childIndex, parentIndex, jointAxis1,
                          jointAxis2, poseIsometry, childID, parentID,
                          _modelID});
 }
@@ -263,7 +261,7 @@ void SDFFeatures::FinalizeSdfModels(
       // Find if has fixed world joint
       for (const auto &jointEntry : this->joints)
       {
-        if (jointEntry.second->model.id == modelEntry.first && 
+        if (jointEntry.second->model.id == modelEntry.first &&
             jointEntry.second->parentIndex == -1)
         {
           modelInfo->fixedBase = true;
@@ -271,10 +269,10 @@ void SDFFeatures::FinalizeSdfModels(
         }
       }
 
-      modelInfo->model = new btMultiBody(modelInfo->numLinks, 
-                                         modelInfo->baseMass, 
+      modelInfo->model = new btMultiBody(modelInfo->numLinks,
+                                         modelInfo->baseMass,
                                          modelInfo->baseInertiaDiag,
-                                         modelInfo->fixedBase, 
+                                         modelInfo->fixedBase,
                                          modelInfo->canSleep);
       const auto &model = modelInfo->model;
       model->setBaseWorldTransform(modelInfo->baseTransform);
@@ -307,9 +305,9 @@ void SDFFeatures::FinalizeSdfModels(
 
           // Set up link
           const int parentIndex = -1;
-          model->setupFixed(linkInfo->linkIndex, linkInfo->linkMass, 
+          model->setupFixed(linkInfo->linkIndex, linkInfo->linkMass,
                             linkInfo->linkInertiaDiag, parentIndex,
-                            rotParentToThis, parentComToCurrentPivot, 
+                            rotParentToThis, parentComToCurrentPivot,
                             currentPivotToCurrentCom);
         }
       }
@@ -321,24 +319,62 @@ void SDFFeatures::FinalizeSdfModels(
         if (jointInfo->model.id == modelEntry.first)
         {
           LinkInfoPtr childLinkInfo = this->links.at(jointInfo->childID);
+          LinkInfoPtr parentLinkInfo = jointInfo->parentIndex == -1 ?
+                            nullptr : this->links.at(jointInfo->parentID);
 
-          // Reconstruct link pose from saved info
-          const btVector3 parentComToCurrentCom = convertVec(
+          // Obtain translation and rotation in world frame
+          const btVector3 worldComToCurrentCom = convertVec(
             childLinkInfo->poseIsometry.translation());
-          const btVector3 parentComToCurrentPivot = convertVec(
-            jointInfo->poseIsometry.translation());
-          const btVector3 currentPivotToCurrentCom = parentComToCurrentCom - 
-            parentComToCurrentPivot;
-          btQuaternion rotParentToThis;
-          const btMatrix3x3 mat = convertMat(
+          btVector3 worldComToParentCom = btVector3(0, 0, 0);
+          if (parentLinkInfo != nullptr)
+          {
+            worldComToParentCom = convertVec(
+              parentLinkInfo->poseIsometry.translation());
+          }
+          const btMatrix3x3 matWorldToThis = convertMat(
             childLinkInfo->poseIsometry.linear());
-          mat.getRotation(rotParentToThis);
+          btMatrix3x3 matWorldToParent = btMatrix3x3().getIdentity();
+          if (parentLinkInfo != nullptr)
+          {
+            matWorldToParent = convertMat(
+              parentLinkInfo->poseIsometry.linear());
+          }
 
+          const btMatrix3x3 matParentToThis = matWorldToParent.inverse() *
+                                              matWorldToThis;
+
+          // Obtain translation from parent to child
+          btVector3 parentComToCurrentCom = worldComToCurrentCom -
+                                                worldComToParentCom;
+          parentComToCurrentCom = matWorldToParent.inverse() *
+                                    parentComToCurrentCom;
+
+          const btVector3 currentComToCurrentPivot = convertVec(
+            jointInfo->poseIsometry.translation());
+          const btVector3 parentComToCurrentPivot = parentComToCurrentCom +
+                  matParentToThis * currentComToCurrentPivot;
+          // Expressed in child frame
+          const btVector3 currentPivotToCurrentCom = -currentComToCurrentPivot;
+
+          // Obtain rotation that expresses vectors from parent frame in child
+          // frame, which is different from the rotation that rotates vectors
+          // from parent to child frame, hence the inverse().
+          btQuaternion rotParentToThis;
+          matParentToThis.inverse().getRotation(rotParentToThis);
+
+          // Set up joints
           if (::sdf::JointType::REVOLUTE == jointInfo->type)
           {
             model->setupRevolute(jointInfo->childIndex, childLinkInfo->linkMass,
               childLinkInfo->linkInertiaDiag, jointInfo->parentIndex,
               rotParentToThis, jointInfo->axis1, parentComToCurrentPivot,
+              currentPivotToCurrentCom, !model->hasSelfCollision());
+          }
+          else if (::sdf::JointType::BALL == jointInfo->type)
+          {
+            model->setupSpherical(jointInfo->childIndex,
+              childLinkInfo->linkMass, childLinkInfo->linkInertiaDiag,
+              jointInfo->parentIndex, rotParentToThis, parentComToCurrentPivot,
               currentPivotToCurrentCom, !model->hasSelfCollision());
           }
         }
