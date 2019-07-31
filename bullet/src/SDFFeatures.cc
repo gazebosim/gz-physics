@@ -203,8 +203,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   const auto &geom = _collision.Geom();
   btCollisionShape* shape = nullptr;
   bool isDynamic = true;
-  btTransform transform;
-  transform.setIdentity();
+  btTransform transform = btTransform().getIdentity();
 
   if (geom->BoxShape())
   {
@@ -234,11 +233,18 @@ Identity SDFFeatures::ConstructSdfCollision(
     isDynamic = false;
   }
 
+  // Get friction
+  const auto &odeFriction = _collision.Element()
+                                ->GetElement("surface")
+                                ->GetElement("friction")
+                                ->GetElement("ode");
+  const auto mu = odeFriction->Get<double>("mu");
+
   if (shape != nullptr)
   {
     const auto &modelID = this->links.at(_linkID)->model;
-    return this->AddCollision({shape, nullptr, transform, isDynamic, _linkID,
-                               modelID});
+    return this->AddCollision({shape, nullptr, transform, mu, isDynamic,
+                               _linkID, modelID});
   }
 }
 
@@ -393,6 +399,7 @@ void SDFFeatures::FinalizeSdfModels(
           collisionInfo->collider = col;
           col->setCollisionShape(collisionInfo->shape);
           col->setWorldTransform(collisionInfo->transform);
+          col->setFriction(collisionInfo->mu);
           bool isDynamic = 1;
           int collisionFilterGroup = isDynamic ? int(btBroadphaseProxy::DefaultFilter) : int(btBroadphaseProxy::StaticFilter);
           int collisionFilterMask = isDynamic ? int (btBroadphaseProxy::AllFilter) : int(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);

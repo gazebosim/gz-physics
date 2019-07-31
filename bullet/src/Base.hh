@@ -100,6 +100,7 @@ struct CollisionInfo
   btCollisionShape* shape;
   btMultiBodyLinkCollider* collider;
   btTransform transform;
+  btScalar mu;
   bool isDynamic;
   Identity link;
   Identity model;
