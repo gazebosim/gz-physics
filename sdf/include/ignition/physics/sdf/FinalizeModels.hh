@@ -31,6 +31,8 @@ class FinalizeSdfModels : public virtual Feature
   public: template <typename PolicyT, typename FeaturesT>
   class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
   {
+    /// \brief This function should be called after models have been
+    /// constructed.
     public: void FinalizeModels();
   };
 
