@@ -21,6 +21,20 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
+//////////////////////////////////////////
+void LinkFeatures::AddLinkExternalForceInWorld(
+      const Identity &_id,
+      const LinearVectorType &_force,
+      const LinearVectorType &_position)
+{
+    const auto &linkInfo = this->links.at(_id);
+    const auto &modelInfo = this->models.at(linkInfo->model);
+    const btVector3 appliedForce = btVector3(_force[0], _force[1], _force[2]);
+
+    // TODO: use _position to set where to apply force
+    modelInfo->model->addLinkForce(linkInfo->linkIndex, appliedForce);
+}
+
 }
 }
 }

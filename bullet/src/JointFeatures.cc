@@ -32,6 +32,17 @@ double JointFeatures::GetJointPosition(
     return pos;
 }
 
+////////////////////////////////////////////////
+double JointFeatures::GetJointVelocity(
+      const Identity &_id, const std::size_t _dof) const
+{
+    const auto &jointInfo = this->joints.at(_id);
+    const auto &modelInfo = this->models.at(jointInfo->model);
+    const auto vel = modelInfo->model->getJointVelMultiDof
+        (jointInfo->childIndex)[_dof];
+    return vel;
+}
+
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
       const Identity &_id, const std::size_t _dof,

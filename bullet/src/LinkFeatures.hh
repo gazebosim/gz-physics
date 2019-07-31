@@ -38,8 +38,7 @@ class LinkFeatures :
   public: void AddLinkExternalForceInWorld(
       const Identity &_id,
       const LinearVectorType &_force,
-      const LinearVectorType &_position) override
-      { };
+      const LinearVectorType &_position) override;
 
   public: void AddLinkExternalTorqueInWorld(
       const Identity &_id, const AngularVectorType &_torque) override

@@ -47,8 +47,7 @@ class JointFeatures :
       const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointVelocity(
-      const Identity &_id, const std::size_t _dof) const override
-      { return 0; };
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointAcceleration(
       const Identity &_id, const std::size_t _dof) const override
