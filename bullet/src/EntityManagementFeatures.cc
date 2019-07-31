@@ -54,7 +54,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   auto solver = new btMultiBodyConstraintSolver;
   auto world = new btMultiBodyDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 
-  world->getSolverInfo().m_globalCfm = 1e-3;
+  world->getSolverInfo().m_globalCfm = 0;
 
   return this->AddWorld({world, _name, collisionConfiguration, dispatcher, broadphase, solver});
 }
