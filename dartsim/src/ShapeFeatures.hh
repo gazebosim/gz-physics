@@ -35,6 +35,7 @@ namespace dartsim {
 using ShapeFeatureList = FeatureList<
   GetShapeKinematicProperties,
   SetShapeKinematicProperties,
+  SetShapeFrictionPyramidSlipCompliance,
   GetShapeBoundingBox,
   GetBoxShapeProperties,
   // dartsim cannot yet update shape properties without reloading the model into
@@ -130,6 +131,13 @@ class ShapeFeatures :
   // ----- Boundingbox Features -----
   public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
               const Identity &_shapeID) const override;
+
+  // ----- Friction Features -----
+  public: virtual bool SetShapeFrictionPyramidPrimarySlipCompliance(
+            const Identity &_shapeID, double _value) override;
+
+  public: virtual bool SetShapeFrictionPyramidSecondarySlipCompliance(
+            const Identity &_shapeID, double _value) override;
 };
 
 }
