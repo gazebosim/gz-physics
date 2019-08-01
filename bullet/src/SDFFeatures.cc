@@ -242,7 +242,7 @@ Identity SDFFeatures::ConstructSdfCollision(
                                 ->GetElement("surface")
                                 ->GetElement("friction")
                                 ->GetElement("ode");
-  const auto mu = odeFriction->Get<double>("mu");
+  const auto mu = odeFriction->Get<btScalar>("mu");
 
   if (shape != nullptr)
   {
