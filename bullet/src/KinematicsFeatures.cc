@@ -58,17 +58,21 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const auto modelIdentity = linkInfo->model;
   const auto &modelInfo = this->models.at(modelIdentity);
 
+  // Get pose
   const btVector3 pos = modelInfo->model->localPosToWorld(
       linkInfo->linkIndex, btVector3(0, 0, 0));
-  const btMatrix3x3 mat = 
+  const btMatrix3x3 mat =
       modelInfo->model->localFrameToWorld(linkInfo->linkIndex,
                           btMatrix3x3::getIdentity());
-  
+
   auto eigenMat = convert(mat);
   auto eigenVec = convert(pos);
 
   data.pose.linear() = eigenMat;
-  data.pose.translation() = eigenVec; 
+  data.pose.translation() = eigenVec;
+
+  // ToDo: Get frame velocity and acceleration
+
 
   return data;
 }

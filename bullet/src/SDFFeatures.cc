@@ -383,6 +383,12 @@ void SDFFeatures::FinalizeSdfModels(
               jointInfo->parentIndex, rotParentToThis, parentComToCurrentPivot,
               currentPivotToCurrentCom, !model->hasSelfCollision());
           }
+          else if (::sdf::JointType::FIXED == jointInfo->type)
+          {
+            model->setupFixed(jointInfo->childIndex, childLinkInfo->linkMass,
+              childLinkInfo->linkInertiaDiag, jointInfo->parentIndex,
+              rotParentToThis, parentComToCurrentPivot, currentPivotToCurrentCom, !model->hasSelfCollision());
+          }
         }
       }
 
