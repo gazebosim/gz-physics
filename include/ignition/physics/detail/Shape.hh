@@ -99,6 +99,26 @@ namespace ignition
       this->template Interface<SetShapeCollisionProperties>()
           ->SetShapeRestitutionCoefficient(this->identity, _other, _value);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool SetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::SetPrimarySlipCompliance(Scalar _value)
+    {
+      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+          ->SetShapeFrictionPyramidPrimarySlipCompliance(
+              this->identity, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool SetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::SetSecondarySlipCompliance(Scalar _value)
+    {
+      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+          ->SetShapeFrictionPyramidSecondarySlipCompliance(
+              this->identity, _value);
+    }
   }
 }
 

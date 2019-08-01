@@ -328,6 +328,44 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   return AlignedBox3d(box.getMin(), box.getMax());
 }
 
+/////////////////////////////////////////////////
+bool ShapeFeatures::SetShapeFrictionPyramidPrimarySlipCompliance(
+    const Identity &_shapeID, double _value)
+{
+  auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  auto aspect = node->getDynamicsAspect();
+  if (nullptr == aspect)
+  {
+    ignerr
+      << "Attempt to set FrictionPyramidPrimarySlipCompliance for a "
+      << "ShapeNode that doesn't have a DynamicAspect. "
+      << "The parameter has not been set."
+      << std::endl;
+    return false;
+  }
+  aspect->setSlipCompliance(_value);
+  return true;
+}
+
+/////////////////////////////////////////////////
+bool ShapeFeatures::SetShapeFrictionPyramidSecondarySlipCompliance(
+    const Identity &_shapeID, double _value)
+{
+  auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  auto aspect = node->getDynamicsAspect();
+  if (nullptr == aspect)
+  {
+    ignerr
+      << "Attempt to set FrictionPyramidSecondarySlipCompliance for a "
+      << "ShapeNode that doesn't have a DynamicAspect. "
+      << "The parameter has not been set."
+      << std::endl;
+    return false;
+  }
+  aspect->setSecondarySlipCompliance(_value);
+  return true;
+}
+
 }
 }
 }
