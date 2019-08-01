@@ -569,7 +569,7 @@ Identity SDFFeatures::ConstructSdfVisual(
 }
 
 void SDFFeatures::FinalizeSdfModels(
-    const Identity &_engine)
+    const Identity &/* _engine */)
 {
 }
 

@@ -25,7 +25,7 @@ namespace bullet {
 void LinkFeatures::AddLinkExternalForceInWorld(
       const Identity &_id,
       const LinearVectorType &_force,
-      const LinearVectorType &_position)
+      const LinearVectorType &/* _position */)
 {
     const auto &linkInfo = this->links.at(_id);
     const auto &modelInfo = this->models.at(linkInfo->model);
