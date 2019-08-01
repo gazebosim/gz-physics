@@ -41,7 +41,8 @@ class LinkFeatures :
       const LinearVectorType &_position) override;
 
   public: void AddLinkExternalTorqueInWorld(
-      const Identity &_id, const AngularVectorType &_torque) override
+      const Identity &/* _id */,
+      const AngularVectorType &/* _torque */) override
       { };
 };
 

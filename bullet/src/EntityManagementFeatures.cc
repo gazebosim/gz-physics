@@ -43,6 +43,13 @@ std::size_t EntityManagementFeatures::GetEngineIndex(
 }
 
 /////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetWorldName(
+    const Identity &_worldID) const
+{
+  return this->worlds.at(_worldID)->name;
+}
+
+/////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
@@ -98,8 +105,30 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   // Clean up model
   delete modelInfo->model;
   this->models.erase(_modelID);
+
+  return true;
 }
 
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetModelName(
+      const Identity &_modelID) const
+{
+  return this->models.at(_modelID)->name;
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetLinkName(
+      const Identity &_linkID) const
+{
+  return this->links.at(_linkID)->name;
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetJointName(
+    const Identity &_jointID) const
+{
+  return this->joints.at(_jointID)->name;
+}
 
 }
 }

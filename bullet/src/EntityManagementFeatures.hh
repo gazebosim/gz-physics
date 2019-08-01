@@ -50,126 +50,122 @@ class EntityManagementFeatures :
       { return 0; };
 
   public: Identity GetWorld(
-      const Identity &, std::size_t _worldIndex) const override
+      const Identity &, std::size_t /*_worldIndex*/) const override
       { return this->GenerateInvalidId(); };
 
   public: Identity GetWorld(
-      const Identity &, const std::string &_worldName) const override
+      const Identity &, const std::string &/*_worldName*/) const override
       { return this->GenerateInvalidId(); };
 
   public: const std::string &GetWorldName(
-      const Identity &_worldID) const override
-      { return ""; };
+      const Identity &_worldID) const override;
 
-  public: std::size_t GetWorldIndex(const Identity &_worldID) const override
+  public: std::size_t GetWorldIndex(const Identity &/*_worldID*/) const override
       { return 0; };
 
-  public: Identity GetEngineOfWorld(const Identity &_worldID) const override
+  public: Identity GetEngineOfWorld(const Identity &/*_worldID*/) const override
       { return this->GenerateInvalidId(); };
 
   public: std::size_t GetModelCount(
-      const Identity &_worldID) const override
+      const Identity &/*_worldID*/) const override
       { return 0; };
 
   public: Identity GetModel(
-      const Identity &_worldID, std::size_t _modelIndex) const override
-      { return this->GenerateInvalidId(); };
+      const Identity &/* _worldID */, std::size_t /*_modelIndex*/) const
+      override { return this->GenerateInvalidId(); };
 
   public: Identity GetModel(
-      const Identity &_worldID, const std::string &_modelName) const override
-      { return this->GenerateInvalidId(); };
+      const Identity &/* _worldID */, const std::string &/*_modelName*/) const
+      override { return this->GenerateInvalidId(); };
 
   public: const std::string &GetModelName(
-      const Identity &_modelID) const override
-      { return ""; };
+      const Identity &_modelID) const override;
 
-  public: std::size_t GetModelIndex(const Identity &_modelID) const override
+  public: std::size_t GetModelIndex(const Identity &/*_modelID*/) const override
       { return 0; };
 
-  public: Identity GetWorldOfModel(const Identity &_modelID) const override
+  public: Identity GetWorldOfModel(const Identity &/*_modelID*/) const override
       { return this->GenerateInvalidId(); };
 
-  public: std::size_t GetLinkCount(const Identity &_modelID) const override
+  public: std::size_t GetLinkCount(const Identity &/*_modelID*/) const override
       { return 0; };
 
   public: Identity GetLink(
-      const Identity &_modelID, std::size_t _linkIndex) const override
+      const Identity &/* _modelID */, std::size_t /*_linkIndex*/) const override
       { return this->GenerateInvalidId(); };
 
   public: Identity GetLink(
-      const Identity &_modelID, const std::string &_linkName) const override
-      { return this->GenerateInvalidId(); };
+      const Identity &/* _modelID */, const std::string &/*_linkName*/) const
+      override { return this->GenerateInvalidId(); };
 
-  public: std::size_t GetJointCount(const Identity &_modelID) const override
+  public: std::size_t GetJointCount(const Identity &/*_modelID*/) const override
       { return 0; };
 
   public: Identity GetJoint(
-      const Identity &_modelID, std::size_t _jointIndex) const override
-      { return this->GenerateInvalidId(); };
+      const Identity &/* _modelID */, std::size_t /*_jointIndex*/) const
+      override { return this->GenerateInvalidId(); };
 
   public: Identity GetJoint(
-      const Identity &_modelID, const std::string &_jointName) const override
-      { return this->GenerateInvalidId(); };
+      const Identity &/* _modelID */, const std::string &/*_jointName*/) const
+      override { return this->GenerateInvalidId(); };
 
   public: const std::string &GetLinkName(
-      const Identity &_linkID) const override
-      { return ""; };
+      const Identity &_linkID) const override;
 
-  public: std::size_t GetLinkIndex(const Identity &_linkID) const override
+  public: std::size_t GetLinkIndex(const Identity &/*_linkID*/) const override
       { return 0; };
 
-  public: Identity GetModelOfLink(const Identity &_linkID) const override
+  public: Identity GetModelOfLink(const Identity &/*_linkID*/) const override
       { return this->GenerateInvalidId(); };
 
-  public: std::size_t GetShapeCount(const Identity &_linkID) const override
+  public: std::size_t GetShapeCount(const Identity &/*_linkID*/) const override
       { return 0; };
 
   public: Identity GetShape(
-      const Identity &_linkID, std::size_t _shapeIndex) const override
+      const Identity &/*_linkID*/, std::size_t /*_shapeIndex*/) const override
       { return this->GenerateInvalidId(); };
 
   public: Identity GetShape(
-      const Identity &_linkID, const std::string &_shapeName) const override
+      const Identity &/*_linkID*/, const std::string &/*_shapeName*/) const override
       { return this->GenerateInvalidId(); };
 
   public: const std::string &GetJointName(
-      const Identity &_jointID) const override
-      { return ""; };
+      const Identity &_jointID) const override;
 
-  public: std::size_t GetJointIndex(const Identity &_jointID) const override
-      { return 0; };
+  public: std::size_t GetJointIndex(const Identity &/* _jointID */) const
+      override { return 0; };
 
-  public: Identity GetModelOfJoint(const Identity &_jointID) const override
-      { return this->GenerateInvalidId(); };
+  public: Identity GetModelOfJoint(const Identity &/* _jointID */) const
+      override { return this->GenerateInvalidId(); };
 
   public: const std::string &GetShapeName(
-      const Identity &_shapeID) const override
-      { return ""; };
+      const Identity &/* _shapeID */) const override
+      { static const std::string name = ""; return name; };
 
-  public: std::size_t GetShapeIndex(const Identity &_shapeID) const override
-      { return 0; };
+  public: std::size_t GetShapeIndex(const Identity &/* _shapeID */) const
+      override { return 0; };
 
-  public: Identity GetLinkOfShape(const Identity &_shapeID) const override
+  public: Identity GetLinkOfShape(const Identity &/* _shapeID */) const override
       { return this->GenerateInvalidId(); };
 
   // ----- Remove entities -----
   public: bool RemoveModelByIndex(
-      const Identity &_worldID, std::size_t _modelIndex) override
+      const Identity &/* _worldID */, std::size_t /* _modelIndex */) override
       { return true; };
 
   public: bool RemoveModelByName(
-      const Identity &_worldID, const std::string &_modelName) override
-      { return true; };
+      const Identity &/* _worldID */, const std::string &/* _modelName */)
+      override { return true; };
 
-  public: bool RemoveModel(const Identity &_modelID) override;
+  public: bool RemoveModel(const Identity &/* _modelID */) override;
 
-  public: bool ModelRemoved(const Identity &_modelID) const override
+  public: bool ModelRemoved(const Identity &/* _modelID */) const override
       { return true; };
 
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
-      const Identity &/*_engineID*/, const std::string &_name) override;
-  
+      const Identity &/*_engineID*/, const std::string &/* _name */) override;
+
 };
 
 }

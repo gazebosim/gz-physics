@@ -44,7 +44,7 @@ class SimulationFeatures :
       const ForwardStep::Input &_u) override;
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
-      const Identity &_worldID) const override
+      const Identity &/* _worldID */) const override
       { return std::vector<ContactInternal>(); };
 };
 

@@ -118,7 +118,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const std::string name = _sdfJoint.Name();
   const auto type = _sdfJoint.Type();
   const auto pose = _sdfJoint.Pose();
-  const auto threadPitch = _sdfJoint.ThreadPitch();
+  // const auto threadPitch = _sdfJoint.ThreadPitch();
   const auto parentLinkName = _sdfJoint.ParentLinkName();
   const auto childLinkName = _sdfJoint.ChildLinkName();
   const auto firstAxis = _sdfJoint.Axis(0);
@@ -128,7 +128,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   LinkInfoPtr parentLinkInfo;
   LinkInfoPtr childLinkInfo;
   std::size_t parentID;
-  std::size_t childID;
+  std::size_t childID = -1;
   for (const auto &entry : this->links)
   {
     const LinkInfoPtr &linkInfo = entry.second;
@@ -183,7 +183,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     jointAxis2 = btVector3(secondAxis->Xyz()[0],
                            secondAxis->Xyz()[1],
                            secondAxis->Xyz()[2]);
-    damping2 = secondAxis->Damping;
+    damping2 = secondAxis->Damping();
   }
 
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
@@ -250,6 +250,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     return this->AddCollision({shape, nullptr, transform, mu, isDynamic,
                                _linkID, modelID});
   }
+  return this->GenerateInvalidId();
 }
 
 void SDFFeatures::FinalizeSdfModels(

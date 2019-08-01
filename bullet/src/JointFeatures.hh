@@ -50,20 +50,20 @@ class JointFeatures :
       const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointAcceleration(
-      const Identity &_id, const std::size_t _dof) const override
+      const Identity &/* _id */, const std::size_t /* _dof */) const override
       { return 0; };
 
   public: double GetJointForce(
       const Identity &_id, const std::size_t _dof) const override;
 
-  public: Pose3d GetJointTransform(const Identity &_id) const override
+  public: Pose3d GetJointTransform(const Identity &/* _id */) const override
       { return Pose3d(); };
 
 
   // ----- Set Basic Joint State -----
   public: void SetJointPosition(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override
+      const Identity &/* _id */, const std::size_t /* _dof */,
+      const double /* _value */) override
       { };
 
   public: void SetJointVelocity(
@@ -71,8 +71,8 @@ class JointFeatures :
       const double _value) override;
 
   public: void SetJointAcceleration(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override
+      const Identity &/* _id */, const std::size_t /* _dof */,
+      const double /* _value */) override
       { };
 
   public: void SetJointForce(
@@ -85,11 +85,11 @@ class JointFeatures :
       const Identity &_id) const override;
 
   public: Pose3d GetJointTransformFromParent(
-      const Identity &_id) const override
+      const Identity &/* _id */) const override
       { return Pose3d(); };
 
   public: Pose3d GetJointTransformToChild(
-      const Identity &_id) const override
+      const Identity &/* _id */) const override
       { return Pose3d(); };
 
 };

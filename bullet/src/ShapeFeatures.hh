@@ -38,15 +38,15 @@ class ShapeFeatures :
     public virtual Implements3d<ShapeFeatureList>
 {
   public: Identity CastToMeshShape(
-      const Identity &_shapeID) const override
+      const Identity &/* _shapeID */) const override
       { return this->GenerateInvalidId(); };
 
   public: Identity AttachMeshShape(
-      const Identity &_linkID,
-      const std::string &_name,
-      const ignition::common::Mesh &_mesh,
-      const Pose3d &_pose,
-      const LinearVector3d &_scale) override
+      const Identity &/* _linkID */,
+      const std::string &/* _name */,
+      const ignition::common::Mesh &/* _mesh */,
+      const Pose3d &/* _pose */,
+      const LinearVector3d &/* _scale */) override
       { return this->GenerateInvalidId(); };
 };
 

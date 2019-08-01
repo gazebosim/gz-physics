@@ -71,8 +71,8 @@ class SDFFeatures :
       const ::sdf::Collision &_collision) override;
 
   public: Identity ConstructSdfVisual(
-      const Identity &_linkID,
-      const ::sdf::Visual &_visual) override
+      const Identity &/* _linkID */,
+      const ::sdf::Visual &/* _visual */) override
       { return this->GenerateInvalidId(); };
 
   public: void FinalizeSdfModels(
