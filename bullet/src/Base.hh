@@ -88,7 +88,9 @@ struct JointInfo
   int childIndex;
   int parentIndex;
   btVector3 axis1;
+  btScalar damping1;
   btVector3 axis2;
+  btScalar damping2;
   Eigen::Isometry3d poseIsometry;
   std::size_t childID;
   std::size_t parentID;

@@ -168,25 +168,29 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Get child link properties
   btVector3 jointAxis1 = btVector3(0, 0, 0);
+  btScalar damping1 = 0;
   if (firstAxis != nullptr)
   {
     jointAxis1 = btVector3(firstAxis->Xyz()[0],
                            firstAxis->Xyz()[1],
                            firstAxis->Xyz()[2]);
+    damping1 = firstAxis->Damping();
   }
   btVector3 jointAxis2 = btVector3(0, 0, 0);
+  btScalar damping2 = 0;
   if (secondAxis != nullptr)
   {
     jointAxis2 = btVector3(secondAxis->Xyz()[0],
                            secondAxis->Xyz()[1],
                            secondAxis->Xyz()[2]);
+    damping2 = secondAxis->Damping;
   }
 
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
 
   return this->AddJoint({name, type, childIndex, parentIndex, jointAxis1,
-                         jointAxis2, poseIsometry, childID, parentID,
-                         _modelID});
+                         damping1, jointAxis2, damping2, poseIsometry, childID,
+                         parentID, _modelID});
 }
 
 Identity SDFFeatures::ConstructSdfCollision(
@@ -288,6 +292,7 @@ void SDFFeatures::FinalizeSdfModels(
 
       model->setLinearDamping(0);
       model->setAngularDamping(0);
+      model->setMaxCoordinateVelocity(1000); // Set to a large value
 
       const auto &world = this->worlds.at(modelInfo->world)->world;
       world->addMultiBody(model);
@@ -367,6 +372,9 @@ void SDFFeatures::FinalizeSdfModels(
           // from parent to child frame, hence the inverse().
           btQuaternion rotParentToThis;
           matParentToThis.inverse().getRotation(rotParentToThis);
+
+          // TODO: Set joint damping
+          // Bullet currently does not support joint damping in multibody.
 
           // Set up joints
           if (::sdf::JointType::REVOLUTE == jointInfo->type)

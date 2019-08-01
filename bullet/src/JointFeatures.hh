@@ -54,8 +54,7 @@ class JointFeatures :
       { return 0; };
 
   public: double GetJointForce(
-      const Identity &_id, const std::size_t _dof) const override
-      { return 0; };
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: Pose3d GetJointTransform(const Identity &_id) const override
       { return Pose3d(); };

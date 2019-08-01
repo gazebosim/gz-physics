@@ -43,6 +43,17 @@ double JointFeatures::GetJointVelocity(
     return vel;
 }
 
+////////////////////////////////////////////////
+double JointFeatures::GetJointForce(
+      const Identity &_id, const std::size_t _dof) const
+{
+    const auto &jointInfo = this->joints.at(_id);
+    const auto &modelInfo = this->models.at(jointInfo->model);
+    const auto force = modelInfo->model->getJointTorqueMultiDof
+        (jointInfo->childIndex)[_dof];
+    return force;
+}
+
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
       const Identity &_id, const std::size_t _dof,
