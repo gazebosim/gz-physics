@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics1 VERSION 1.2.0)
+project(ignition-physics1 VERSION 1.3.1)
 
 #============================================================================
 # Find ignition-cmake
@@ -20,6 +20,13 @@ ign_configure_project()
 # Set project-specific options
 #============================================================================
 
+option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
+
+if(ENABLE_PROFILER)
+  add_definitions("-DIGN_PROFILER_ENABLE=1")
+else()
+  add_definitions("-DIGN_PROFILER_ENABLE=0")
+endif()
 
 #============================================================================
 # Search for project-specific dependencies
@@ -29,7 +36,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 #--------------------------------------
 # Find ignition-common
 ign_find_package(ignition-common3
-  COMPONENTS graphics
+  COMPONENTS graphics profiler
   REQUIRED_BY mesh dartsim)
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
@@ -59,7 +66,7 @@ ign_find_package(DART
     utils
     utils-urdf
   CONFIG
-  VERSION 6.9.0
+  VERSION 6.10.0
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
