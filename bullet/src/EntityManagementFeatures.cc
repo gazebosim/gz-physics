@@ -43,6 +43,13 @@ std::size_t EntityManagementFeatures::GetEngineIndex(
 }
 
 /////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetEngineOfWorld(
+    const Identity &/*_worldID*/) const
+{
+  return this->GenerateIdentity(0);
+}
+
+/////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetWorldName(
     const Identity &_worldID) const
 {
@@ -107,6 +114,12 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   this->models.erase(_modelID);
 
   return true;
+}
+
+bool EntityManagementFeatures::ModelRemoved(
+  const Identity &_modelID) const
+{
+  return this->models.find(_modelID) == this->models.end();
 }
 
 /////////////////////////////////////////////////

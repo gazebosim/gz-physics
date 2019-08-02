@@ -25,4 +25,30 @@ target_link_libraries(${bullet_plugin}
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ignition-math${IGN_MATH_VER}::eigen3)
 
-# TODO(Jay): build tests
+# Build tests
+ign_build_tests(
+  TYPE UNIT
+  SOURCES ${test_sources}
+  LIB_DEPS
+    ${features}
+    ignition-plugin${IGN_PLUGIN_VER}::loader
+    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+    ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+    ${PROJECT_LIBRARY_TARGET_NAME}-mesh
+  TEST_LIST tests)
+
+foreach(test ${tests})
+
+  target_compile_definitions(${test} PRIVATE
+    "bullet_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\""
+    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
+    "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
+
+endforeach()
+
+if(TARGET UNIT_FindFeatures_TEST)
+
+  target_compile_definitions(UNIT_FindFeatures_TEST PRIVATE
+    "bullet_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\"")
+
+endif()

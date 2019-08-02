@@ -63,8 +63,8 @@ class EntityManagementFeatures :
   public: std::size_t GetWorldIndex(const Identity &/*_worldID*/) const override
       { return 0; };
 
-  public: Identity GetEngineOfWorld(const Identity &/*_worldID*/) const override
-      { return this->GenerateInvalidId(); };
+  public: Identity GetEngineOfWorld(
+      const Identity &/*_worldID*/) const override;
 
   public: std::size_t GetModelCount(
       const Identity &/*_worldID*/) const override
@@ -157,10 +157,9 @@ class EntityManagementFeatures :
       const Identity &/* _worldID */, const std::string &/* _modelName */)
       override { return true; };
 
-  public: bool RemoveModel(const Identity &/* _modelID */) override;
+  public: bool RemoveModel(const Identity &_modelID) override;
 
-  public: bool ModelRemoved(const Identity &/* _modelID */) const override
-      { return true; };
+  public: bool ModelRemoved(const Identity &_modelID) const override;
 
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
