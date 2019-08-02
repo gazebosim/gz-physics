@@ -102,6 +102,26 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    auto GetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::GetPrimarySlipCompliance() const
+    -> Scalar
+    {
+      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+          ->GetShapeFrictionPyramidPrimarySlipCompliance(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::GetSecondarySlipCompliance() const
+    -> Scalar
+    {
+      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+          ->GetShapeFrictionPyramidSecondarySlipCompliance(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     bool SetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
     ::SetPrimarySlipCompliance(Scalar _value)
     {

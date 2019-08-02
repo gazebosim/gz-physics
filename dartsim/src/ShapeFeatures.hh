@@ -35,6 +35,7 @@ namespace dartsim {
 using ShapeFeatureList = FeatureList<
   GetShapeKinematicProperties,
   SetShapeKinematicProperties,
+  GetShapeFrictionPyramidSlipCompliance,
   SetShapeFrictionPyramidSlipCompliance,
   GetShapeBoundingBox,
   GetBoxShapeProperties,
@@ -133,6 +134,12 @@ class ShapeFeatures :
               const Identity &_shapeID) const override;
 
   // ----- Friction Features -----
+  public: virtual double GetShapeFrictionPyramidPrimarySlipCompliance(
+            const Identity &_shapeID) const override;
+
+  public: virtual double GetShapeFrictionPyramidSecondarySlipCompliance(
+            const Identity &_shapeID) const override;
+
   public: virtual bool SetShapeFrictionPyramidPrimarySlipCompliance(
             const Identity &_shapeID, double _value) override;
 
