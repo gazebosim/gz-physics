@@ -26,7 +26,6 @@
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructVisual.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/sdf/FinalizeModels.hh>
 
 #include <ignition/physics/Implements.hh>
 
@@ -43,8 +42,7 @@ using SDFFeatureList = FeatureList<
   sdf::ConstructSdfLink,
   sdf::ConstructSdfJoint,
   sdf::ConstructSdfCollision,
-  sdf::ConstructSdfVisual,
-  sdf::FinalizeSdfModels
+  sdf::ConstructSdfVisual
 >;
 
 class SDFFeatures :
@@ -74,9 +72,6 @@ class SDFFeatures :
   public: Identity ConstructSdfVisual(
       const Identity &_linkID,
       const ::sdf::Visual &_visual) override;
-
-  public: void FinalizeSdfModels(
-    const Identity &_engine) override;
 
   private: dart::dynamics::BodyNode *FindOrConstructLink(
       const dart::dynamics::SkeletonPtr &_model,

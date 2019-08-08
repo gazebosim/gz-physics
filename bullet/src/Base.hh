@@ -59,14 +59,6 @@ struct ModelInfo
 {
   btMultiBody* model;
   std::string name;
-  int numLinks;
-  btScalar baseMass;
-  btVector3 baseInertiaDiag;
-  bool fixedBase;
-  bool canSleep;
-  btTransform baseTransform;
-  bool selfCollide;
-  bool finalized;
   Identity world;
 };
 
@@ -87,23 +79,14 @@ struct JointInfo
   ::sdf::JointType type;
   int childIndex;
   int parentIndex;
-  btVector3 axis1;
-  btScalar damping1;
-  btVector3 axis2;
-  btScalar damping2;
-  Eigen::Isometry3d poseIsometry;
-  std::size_t childID;
-  std::size_t parentID;
   Identity model;
 };
 
 struct CollisionInfo
 {
+  std::string name;
   btCollisionShape* shape;
   btMultiBodyLinkCollider* collider;
-  btTransform transform;
-  btScalar mu;
-  bool isDynamic;
   Identity link;
   Identity model;
 };
