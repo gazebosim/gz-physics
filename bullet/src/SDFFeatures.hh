@@ -22,11 +22,7 @@
 
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructJoint.hh>
-#include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructVisual.hh>
-#include <ignition/physics/sdf/FinalizeModels.hh>
 
 #include <ignition/physics/Implements.hh>
 
@@ -39,11 +35,7 @@ namespace bullet {
 using SDFFeatureList = FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
-  sdf::ConstructSdfLink,
-  sdf::ConstructSdfJoint,
-  sdf::ConstructSdfCollision,
-  sdf::ConstructSdfVisual,
-  sdf::FinalizeSdfModels
+  sdf::ConstructSdfVisual
 >;
 
 class SDFFeatures :
@@ -58,25 +50,23 @@ class SDFFeatures :
       const Identity &_worldID,
       const ::sdf::Model &_sdfModel) override;
 
-  public: Identity ConstructSdfLink(
-      const Identity &_modelID,
-      const ::sdf::Link &_sdfLink) override;
-
-  public: Identity ConstructSdfJoint(
-      const Identity &_modelID,
-      const ::sdf::Joint &_sdfJoint) override;
-
-  public: Identity ConstructSdfCollision(
-      const Identity &_linkID,
-      const ::sdf::Collision &_collision) override;
-
   public: Identity ConstructSdfVisual(
       const Identity &/* _linkID */,
       const ::sdf::Visual &/* _visual */) override
       { return this->GenerateInvalidId(); };
 
-  public: void FinalizeSdfModels(
-    const Identity &_engine) override;
+  private: Identity BuildSdfLink(
+      const Identity &_modelID,
+      const ::sdf::Link &_sdfLink,
+      const int _linkIndex);
+
+  private: Identity BuildSdfJoint(
+      const Identity &_modelID,
+      const ::sdf::Joint &_sdfJoint);
+
+  private: Identity BuildSdfCollision(
+      const Identity &_linkID,
+      const ::sdf::Collision &_collision);
 };
 
 }

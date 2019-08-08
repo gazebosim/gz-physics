@@ -95,8 +95,8 @@ class EntityManagementFeatures :
       { return this->GenerateInvalidId(); };
 
   public: Identity GetLink(
-      const Identity &/* _modelID */, const std::string &/*_linkName*/) const
-      override { return this->GenerateInvalidId(); };
+      const Identity &_modelID,
+      const std::string &_linkName) const override;
 
   public: std::size_t GetJointCount(const Identity &/*_modelID*/) const override
       { return 0; };
@@ -106,8 +106,8 @@ class EntityManagementFeatures :
       override { return this->GenerateInvalidId(); };
 
   public: Identity GetJoint(
-      const Identity &/* _modelID */, const std::string &/*_jointName*/) const
-      override { return this->GenerateInvalidId(); };
+      const Identity &_modelID,
+      const std::string &_jointName) const override;
 
   public: const std::string &GetLinkName(
       const Identity &_linkID) const override;
@@ -126,8 +126,8 @@ class EntityManagementFeatures :
       { return this->GenerateInvalidId(); };
 
   public: Identity GetShape(
-      const Identity &/*_linkID*/, const std::string &/*_shapeName*/) const override
-      { return this->GenerateInvalidId(); };
+      const Identity &_linkID,
+      const std::string &_shapeName) const override;
 
   public: const std::string &GetJointName(
       const Identity &_jointID) const override;

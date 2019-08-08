@@ -62,11 +62,10 @@ Identity SDFFeatures::ConstructSdfModel(
   const bool isStatic = _sdfModel.Static();
   const bool selfCollide = _sdfModel.SelfCollide();
 
-  // Initially assume no link attached
-  const int numLinks = -1;
+  // Set multibody params
+  const int numLinks = _sdfModel.LinkCount();
   const btScalar baseMass = 0;
   const btVector3 baseInertiaDiag(0, 0, 0);
-  const bool fixedBase = isStatic;
   const bool canSleep = false; // To Do: experiment with it
 
   // Set base transform
@@ -77,16 +76,71 @@ Identity SDFFeatures::ConstructSdfModel(
   baseTransform.setOrigin(convertVec(poseTranslation));
   baseTransform.setBasis(convertMat(poseLinear));
 
-  // Add model params
-  btMultiBody* model = nullptr;
-  return this->AddModel({model, name, numLinks, baseMass, baseInertiaDiag,
-                         fixedBase, canSleep, baseTransform, selfCollide,
-                         false, _worldID});
+  // Check if floating base
+  bool fixedBase = isStatic;
+  const bool hasWorldLink = _sdfModel.LinkNameExists("world");
+  if (!hasWorldLink)
+  {
+    for (std::size_t i = 0; i < _sdfModel.JointCount(); ++i)
+    {
+      const auto &joint = _sdfModel.JointByIndex(i);
+      if (joint->ParentLinkName() == "world")
+      {
+        fixedBase = true;
+        break;
+      }
+    }
+  }
+
+  // Build model
+  btMultiBody* model = new btMultiBody(numLinks,
+                                       baseMass,
+                                       baseInertiaDiag,
+                                       fixedBase,
+                                       canSleep);
+
+  model->setBaseWorldTransform(baseTransform);
+
+  model->setHasSelfCollision(selfCollide);
+  model->setUseGyroTerm(true);
+
+  model->setLinearDamping(0);
+  model->setAngularDamping(0);
+  model->setMaxCoordinateVelocity(1000); // Set to a large value
+
+  const auto &world = this->worlds.at(_worldID)->world;
+  world->addMultiBody(model);
+  const auto modelIdentity = this->AddModel({model, name, _worldID});
+
+  // Build links
+  for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
+  {
+    this->BuildSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i), i);
+  }
+
+  // Buld joints
+  for (std::size_t i = 0; i < _sdfModel.JointCount(); ++i)
+  {
+    this->BuildSdfJoint(modelIdentity, *_sdfModel.JointByIndex(i));
+  }
+
+  // Finalize model
+  btAlignedObjectArray<btQuaternion> scratch_q;
+  btAlignedObjectArray<btVector3> scratch_m;
+  model->forwardKinematics(scratch_q, scratch_m);
+  btAlignedObjectArray<btQuaternion> world_to_local;
+  btAlignedObjectArray<btVector3> local_origin;
+  model->updateCollisionObjectWorldTransforms(world_to_local, local_origin);
+
+  model->finalizeMultiDof();
+
+  return modelIdentity;
 }
 
-Identity SDFFeatures::ConstructSdfLink(
+Identity SDFFeatures::BuildSdfLink(
   const Identity &_modelID,
-  const ::sdf::Link &_sdfLink)
+  const ::sdf::Link &_sdfLink,
+  const int _linkIndex)
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
@@ -98,19 +152,40 @@ Identity SDFFeatures::ConstructSdfLink(
   // Get link properties
   const btScalar linkMass = mass;
   const btVector3 linkInertiaDiag = convertVec(ignition::math::eigen3::convert(diagonalMoments));
-  int linkIndex = 0;
-  for (const auto &entry : this->links)
-  {
-    if (entry.second->model.id == _modelID.id)
-      linkIndex += 1;
-  }
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
 
-  return this->AddLink({name, linkIndex, linkMass, linkInertiaDiag,
-                        poseIsometry, _modelID});
+  // Add default fixed joints to links unless replaced by other joints
+  // Find translation
+  const btVector3 parentComToCurrentCom = convertVec(
+    poseIsometry.translation());
+  const btVector3 currentPivotToCurrentCom(0, 0, 0);
+  const btVector3 parentComToCurrentPivot = parentComToCurrentCom -
+    currentPivotToCurrentCom;
+  // Find rotation
+  btQuaternion rotParentToThis;
+  const btMatrix3x3 mat = convertMat(poseIsometry.linear());
+  mat.getRotation(rotParentToThis);
+
+  // Set up fixed joints
+  const int parentIndex = -1;
+  const auto &model = this->models.at(_modelID)->model;
+  model->setupFixed(_linkIndex, linkMass, linkInertiaDiag, parentIndex,
+                     rotParentToThis, parentComToCurrentPivot,
+                     currentPivotToCurrentCom);
+
+  const auto linkIdentity = this->AddLink({name, _linkIndex, linkMass,
+                                  linkInertiaDiag, poseIsometry, _modelID});
+
+  // Build collisions
+  for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
+  {
+    this->BuildSdfCollision(linkIdentity, *_sdfLink.CollisionByIndex(i));
+  }
+
+  return linkIdentity;
 }
 
-Identity SDFFeatures::ConstructSdfJoint(
+Identity SDFFeatures::BuildSdfJoint(
   const Identity &_modelID,
   const ::sdf::Joint &_sdfJoint)
 {
@@ -127,8 +202,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Find parent and child link
   LinkInfoPtr parentLinkInfo;
   LinkInfoPtr childLinkInfo;
-  std::size_t parentID;
-  std::size_t childID = -1;
   for (const auto &entry : this->links)
   {
     const LinkInfoPtr &linkInfo = entry.second;
@@ -137,12 +210,10 @@ Identity SDFFeatures::ConstructSdfJoint(
       if (linkInfo->name == parentLinkName)
       {
         parentLinkInfo = linkInfo;
-        parentID = entry.first;
       }
       if (linkInfo->name == childLinkName)
       {
         childLinkInfo = linkInfo;
-        childID = entry.first;
       }
     }
   }
@@ -168,32 +239,92 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Get child link properties
   btVector3 jointAxis1 = btVector3(0, 0, 0);
-  btScalar damping1 = 0;
   if (firstAxis != nullptr)
   {
     jointAxis1 = btVector3(firstAxis->Xyz()[0],
                            firstAxis->Xyz()[1],
                            firstAxis->Xyz()[2]);
-    damping1 = firstAxis->Damping();
   }
   btVector3 jointAxis2 = btVector3(0, 0, 0);
-  btScalar damping2 = 0;
   if (secondAxis != nullptr)
   {
     jointAxis2 = btVector3(secondAxis->Xyz()[0],
                            secondAxis->Xyz()[1],
                            secondAxis->Xyz()[2]);
-    damping2 = secondAxis->Damping();
   }
 
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
 
-  return this->AddJoint({name, type, childIndex, parentIndex, jointAxis1,
-                         damping1, jointAxis2, damping2, poseIsometry, childID,
-                         parentID, _modelID});
+  // Obtain translation and rotation in world frame
+  const btVector3 worldComToCurrentCom = convertVec(
+    childLinkInfo->poseIsometry.translation());
+  btVector3 worldComToParentCom = btVector3(0, 0, 0);
+  if (parentLinkInfo != nullptr)
+  {
+    worldComToParentCom = convertVec(
+      parentLinkInfo->poseIsometry.translation());
+  }
+  const btMatrix3x3 matWorldToThis = convertMat(
+    childLinkInfo->poseIsometry.linear());
+  btMatrix3x3 matWorldToParent = btMatrix3x3().getIdentity();
+  if (parentLinkInfo != nullptr)
+  {
+    matWorldToParent = convertMat(
+      parentLinkInfo->poseIsometry.linear());
+  }
+
+  const btMatrix3x3 matParentToThis = matWorldToParent.inverse() *
+                                      matWorldToThis;
+
+  // Obtain translation from parent to child
+  btVector3 parentComToCurrentCom = worldComToCurrentCom -
+                                    worldComToParentCom;
+  parentComToCurrentCom = matWorldToParent.inverse() *
+                          parentComToCurrentCom;
+
+  const btVector3 currentComToCurrentPivot = convertVec(
+    poseIsometry.translation());
+  const btVector3 parentComToCurrentPivot = parentComToCurrentCom +
+          matParentToThis * currentComToCurrentPivot;
+  // Expressed in child frame
+  const btVector3 currentPivotToCurrentCom = -currentComToCurrentPivot;
+
+  // Obtain rotation that expresses vectors from parent frame in child
+  // frame, which is different from the rotation that rotates vectors
+  // from parent to child frame, hence the inverse().
+  btQuaternion rotParentToThis;
+  matParentToThis.inverse().getRotation(rotParentToThis);
+
+  // TODO: Set joint damping
+  // Bullet currently does not support joint damping in multibody.
+
+  // Set up joints
+  const auto &model = this->models.at(_modelID)->model;
+  if (::sdf::JointType::REVOLUTE == type)
+  {
+    model->setupRevolute(childIndex, childLinkInfo->linkMass,
+      childLinkInfo->linkInertiaDiag, parentIndex,
+      rotParentToThis, jointAxis1, parentComToCurrentPivot,
+      currentPivotToCurrentCom, !model->hasSelfCollision());
+  }
+  else if (::sdf::JointType::BALL == type)
+  {
+    model->setupSpherical(childIndex,
+      childLinkInfo->linkMass, childLinkInfo->linkInertiaDiag,
+      parentIndex, rotParentToThis, parentComToCurrentPivot,
+      currentPivotToCurrentCom, !model->hasSelfCollision());
+  }
+  else if (::sdf::JointType::FIXED == type)
+  {
+    model->setupFixed(childIndex, childLinkInfo->linkMass,
+      childLinkInfo->linkInertiaDiag, parentIndex,
+      rotParentToThis, parentComToCurrentPivot, currentPivotToCurrentCom, !model->hasSelfCollision());
+  }
+
+  return this->AddJoint({name, type, childIndex, parentIndex, _modelID});
 }
 
-Identity SDFFeatures::ConstructSdfCollision(
+Identity SDFFeatures::BuildSdfCollision(
       const Identity &_linkID,
       const ::sdf::Collision &_collision)
 {
@@ -246,194 +377,29 @@ Identity SDFFeatures::ConstructSdfCollision(
 
   if (shape != nullptr)
   {
-    const auto &modelID = this->links.at(_linkID)->model;
-    return this->AddCollision({shape, nullptr, transform, mu, isDynamic,
-                               _linkID, modelID});
+    const auto &linkInfo = this->links.at(_linkID);
+    const auto &modelID = linkInfo->model;
+    const auto &modelInfo = this->models.at(modelID);
+    const auto &model = modelInfo->model;
+    const auto &world = this->worlds.at(modelInfo->world)->world;
+
+    btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(model,
+                                      linkInfo->linkIndex);
+    col->setCollisionShape(shape);
+    col->setWorldTransform(transform);
+    col->setFriction(mu);
+    int collisionFilterGroup = isDynamic ? int(btBroadphaseProxy::DefaultFilter)
+                                  : int(btBroadphaseProxy::StaticFilter);
+    int collisionFilterMask = isDynamic ? int (btBroadphaseProxy::AllFilter) :
+      int(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
+
+    world->addCollisionObject(col, collisionFilterGroup, collisionFilterMask);
+    model->getLink(linkInfo->linkIndex).m_collider = col;
+
+    return this->AddCollision({_collision.Name(), shape, col, _linkID,
+                               modelID});
   }
   return this->GenerateInvalidId();
-}
-
-void SDFFeatures::FinalizeSdfModels(
-  const Identity &/*_engine*/)
-{
-  for (const auto &modelEntry : this->models)
-  {
-    const auto &modelInfo = modelEntry.second;
-    if (!modelInfo->finalized)
-    {
-      int numLinks = 0;
-      for (const auto &linkEntry : this->links)
-      {
-        if (linkEntry.second->model.id == modelEntry.first)
-          numLinks += 1;
-      }
-      modelInfo->numLinks = numLinks;
-
-      // Find if has fixed world joint
-      for (const auto &jointEntry : this->joints)
-      {
-        if (jointEntry.second->model.id == modelEntry.first &&
-            jointEntry.second->parentIndex == -1)
-        {
-          modelInfo->fixedBase = true;
-          break;
-        }
-      }
-
-      modelInfo->model = new btMultiBody(modelInfo->numLinks,
-                                         modelInfo->baseMass,
-                                         modelInfo->baseInertiaDiag,
-                                         modelInfo->fixedBase,
-                                         modelInfo->canSleep);
-      const auto &model = modelInfo->model;
-      model->setBaseWorldTransform(modelInfo->baseTransform);
-
-      model->setHasSelfCollision(modelInfo->selfCollide);
-      model->setUseGyroTerm(true);
-
-      model->setLinearDamping(0);
-      model->setAngularDamping(0);
-      model->setMaxCoordinateVelocity(1000); // Set to a large value
-
-      const auto &world = this->worlds.at(modelInfo->world)->world;
-      world->addMultiBody(model);
-
-      // Add fixed joints to links unless replaced by joints
-      for (const auto &linkEntry : this->links)
-      {
-        const auto &linkInfo = linkEntry.second;
-        if (linkInfo->model.id == modelEntry.first)
-        {
-          // Find translation
-          const btVector3 parentComToCurrentCom = convertVec(
-            linkInfo->poseIsometry.translation());
-          const btVector3 currentPivotToCurrentCom(0, 0, 0);
-          const btVector3 parentComToCurrentPivot = parentComToCurrentCom -
-            currentPivotToCurrentCom;
-          // Find rotation
-          btQuaternion rotParentToThis;
-          const btMatrix3x3 mat = convertMat(linkInfo->poseIsometry.linear());
-          mat.getRotation(rotParentToThis);
-
-          // Set up link
-          const int parentIndex = -1;
-          model->setupFixed(linkInfo->linkIndex, linkInfo->linkMass,
-                            linkInfo->linkInertiaDiag, parentIndex,
-                            rotParentToThis, parentComToCurrentPivot,
-                            currentPivotToCurrentCom);
-        }
-      }
-
-      // Add joints
-      for (const auto &jointEntry : this->joints)
-      {
-        const auto &jointInfo = jointEntry.second;
-        if (jointInfo->model.id == modelEntry.first)
-        {
-          LinkInfoPtr childLinkInfo = this->links.at(jointInfo->childID);
-          LinkInfoPtr parentLinkInfo = jointInfo->parentIndex == -1 ?
-                            nullptr : this->links.at(jointInfo->parentID);
-
-          // Obtain translation and rotation in world frame
-          const btVector3 worldComToCurrentCom = convertVec(
-            childLinkInfo->poseIsometry.translation());
-          btVector3 worldComToParentCom = btVector3(0, 0, 0);
-          if (parentLinkInfo != nullptr)
-          {
-            worldComToParentCom = convertVec(
-              parentLinkInfo->poseIsometry.translation());
-          }
-          const btMatrix3x3 matWorldToThis = convertMat(
-            childLinkInfo->poseIsometry.linear());
-          btMatrix3x3 matWorldToParent = btMatrix3x3().getIdentity();
-          if (parentLinkInfo != nullptr)
-          {
-            matWorldToParent = convertMat(
-              parentLinkInfo->poseIsometry.linear());
-          }
-
-          const btMatrix3x3 matParentToThis = matWorldToParent.inverse() *
-                                              matWorldToThis;
-
-          // Obtain translation from parent to child
-          btVector3 parentComToCurrentCom = worldComToCurrentCom -
-                                                worldComToParentCom;
-          parentComToCurrentCom = matWorldToParent.inverse() *
-                                    parentComToCurrentCom;
-
-          const btVector3 currentComToCurrentPivot = convertVec(
-            jointInfo->poseIsometry.translation());
-          const btVector3 parentComToCurrentPivot = parentComToCurrentCom +
-                  matParentToThis * currentComToCurrentPivot;
-          // Expressed in child frame
-          const btVector3 currentPivotToCurrentCom = -currentComToCurrentPivot;
-
-          // Obtain rotation that expresses vectors from parent frame in child
-          // frame, which is different from the rotation that rotates vectors
-          // from parent to child frame, hence the inverse().
-          btQuaternion rotParentToThis;
-          matParentToThis.inverse().getRotation(rotParentToThis);
-
-          // TODO: Set joint damping
-          // Bullet currently does not support joint damping in multibody.
-
-          // Set up joints
-          if (::sdf::JointType::REVOLUTE == jointInfo->type)
-          {
-            model->setupRevolute(jointInfo->childIndex, childLinkInfo->linkMass,
-              childLinkInfo->linkInertiaDiag, jointInfo->parentIndex,
-              rotParentToThis, jointInfo->axis1, parentComToCurrentPivot,
-              currentPivotToCurrentCom, !model->hasSelfCollision());
-          }
-          else if (::sdf::JointType::BALL == jointInfo->type)
-          {
-            model->setupSpherical(jointInfo->childIndex,
-              childLinkInfo->linkMass, childLinkInfo->linkInertiaDiag,
-              jointInfo->parentIndex, rotParentToThis, parentComToCurrentPivot,
-              currentPivotToCurrentCom, !model->hasSelfCollision());
-          }
-          else if (::sdf::JointType::FIXED == jointInfo->type)
-          {
-            model->setupFixed(jointInfo->childIndex, childLinkInfo->linkMass,
-              childLinkInfo->linkInertiaDiag, jointInfo->parentIndex,
-              rotParentToThis, parentComToCurrentPivot, currentPivotToCurrentCom, !model->hasSelfCollision());
-          }
-        }
-      }
-
-      // Add collisions
-      for (const auto &collisionEntry : this->collisions)
-      {
-        const auto &collisionInfo = collisionEntry.second;
-        const auto &linkInfo = this->links.at(collisionInfo->link);
-        if (linkInfo->model.id == modelEntry.first)
-        {
-          const auto &WorldInfo = this->worlds.at(modelInfo->world);
-
-          btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(model, linkInfo->linkIndex);
-          collisionInfo->collider = col;
-          col->setCollisionShape(collisionInfo->shape);
-          col->setWorldTransform(collisionInfo->transform);
-          col->setFriction(collisionInfo->mu);
-          bool isDynamic = 1;
-          int collisionFilterGroup = isDynamic ? int(btBroadphaseProxy::DefaultFilter) : int(btBroadphaseProxy::StaticFilter);
-          int collisionFilterMask = isDynamic ? int (btBroadphaseProxy::AllFilter) : int(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
-
-          WorldInfo->world->addCollisionObject(col, collisionFilterGroup, collisionFilterMask);
-          model->getLink(linkInfo->linkIndex).m_collider = col;
-        }
-      }
-      btAlignedObjectArray<btQuaternion> scratch_q;
-		  btAlignedObjectArray<btVector3> scratch_m;
-		  model->forwardKinematics(scratch_q, scratch_m);
-		  btAlignedObjectArray<btQuaternion> world_to_local;
-		  btAlignedObjectArray<btVector3> local_origin;
-		  model->updateCollisionObjectWorldTransforms(world_to_local, local_origin);
-
-      model->finalizeMultiDof();
-      modelInfo->finalized = true;
-    }
-  }
 }
 
 }

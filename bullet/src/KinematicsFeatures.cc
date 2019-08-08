@@ -89,7 +89,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       jointVel = model->getJointVel(linkIndex);
     else
     {
-      ignerr << "Unregistered joint type for frame velocity computation.\n";
+      // ignerr << "Unregistered joint type for frame velocity computation.\n";
       return data;
     }
 

@@ -73,6 +73,47 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   return this->AddWorld({world, _name, collisionConfiguration, dispatcher, broadphase, solver});
 }
 
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLink(
+    const Identity &_modelID, const std::string &_linkName) const
+{
+  for (const auto &linkEntry : this->links)
+  {
+    const auto &linkInfo = linkEntry.second;
+    if (linkInfo->model.id == _modelID.id && linkInfo->name == _linkName)
+      return this->GenerateIdentity(linkEntry.first, linkInfo);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetJoint(
+    const Identity &_modelID, const std::string &_jointName) const
+{
+  for (const auto &jointEntry : this->joints)
+  {
+    const auto &jointInfo = jointEntry.second;
+    if (jointInfo->model.id == _modelID.id && jointInfo->name == _jointName)
+      return this->GenerateIdentity(jointEntry.first, jointInfo);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+    const Identity &_linkID, const std::string &_shapeName) const
+{
+  for (const auto &collisionEntry : this->collisions)
+  {
+    const auto &collisionInfo = collisionEntry.second;
+    if (collisionInfo->link.id == _linkID.id &&
+        collisionInfo->name == _shapeName)
+      return this->GenerateIdentity(collisionEntry.first, collisionInfo);
+  }
+  return this->GenerateInvalidId();
+}
+
+///////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   const auto &modelInfo = this->models.at(_modelID);
