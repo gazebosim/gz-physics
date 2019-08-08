@@ -20,6 +20,10 @@
 
 #include <string>
 
+#include <sdf/Collision.hh>
+#include <sdf/Link.hh>
+#include <sdf/Joint.hh>
+
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructVisual.hh>
