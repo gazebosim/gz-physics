@@ -368,12 +368,16 @@ Identity SDFFeatures::BuildSdfCollision(
     isDynamic = false;
   }
 
+  const auto &surfaceElement = _collision.Element()->GetElement("surface");
+
   // Get friction
-  const auto &odeFriction = _collision.Element()
-                                ->GetElement("surface")
-                                ->GetElement("friction")
-                                ->GetElement("ode");
+  const auto &odeFriction = surfaceElement->GetElement("friction")
+                              ->GetElement("ode");
   const auto mu = odeFriction->Get<btScalar>("mu");
+
+  // Get restitution
+  const auto restitution = surfaceElement->GetElement("bounce")
+                              ->Get<btScalar>("restitution_coefficient");
 
   if (shape != nullptr)
   {
@@ -388,6 +392,7 @@ Identity SDFFeatures::BuildSdfCollision(
     col->setCollisionShape(shape);
     col->setWorldTransform(transform);
     col->setFriction(mu);
+    col->setRestitution(restitution);
     int collisionFilterGroup = isDynamic ? int(btBroadphaseProxy::DefaultFilter)
                                   : int(btBroadphaseProxy::StaticFilter);
     int collisionFilterMask = isDynamic ? int (btBroadphaseProxy::AllFilter) :
