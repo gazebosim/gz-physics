@@ -73,12 +73,11 @@ ign_find_package(DART
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
-include(FindPkgConfig)
-
-pkg_check_modules(BULLET bullet>=2.87 REQUIRED)
-if (NOT BULLET_FOUND)
-    pkg_check_modules(BULLET bullet2.87>=2.87)
-endif()
+ign_find_package(IgnBullet
+  VERSION 2.87
+  REQUIRED_BY bullet
+  PKGCONFIG bullet
+  PKGCONFIG_VER_COMPARISON >=)
 
 message(STATUS "-------------------------------------------\n")
 

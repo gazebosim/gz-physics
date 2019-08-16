@@ -5,9 +5,7 @@ ign_add_component(bullet INTERFACE
   GET_TARGET_NAME features)
 
 link_directories(${BULLET_LIBRARY_DIRS})
-target_link_libraries(${features} INTERFACE ${BULLET_LIBRARIES})
-target_include_directories(${features} SYSTEM INTERFACE ${BULLET_INCLUDE_DIRS})
-add_definitions(${BULLET_CFLAGS})
+target_link_libraries(${features} INTERFACE IgnBullet)
 
 ign_get_libsources_and_unittests(sources test_sources)
 
