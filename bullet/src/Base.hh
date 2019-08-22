@@ -18,16 +18,20 @@
 #ifndef IGNITION_PHYSICS_BULLET_BASE_HH_
 #define IGNITION_PHYSICS_BULLET_BASE_HH_
 
-#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
-#include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
-#include "BulletDynamics/Featherstone/btMultiBody.h"
-#include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
-#include "btBulletDynamicsCommon.h"
-
-#include <assert.h>
-#include <string>
 
 #include <Eigen/Geometry>
+
+#include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+#include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
+#include <BulletDynamics/Featherstone/btMultiBody.h>
+#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
+#include <btBulletDynamicsCommon.h>
+
+#include <assert.h>
+#include <memory>
+#include <string>
+#include <unordered_map>
+
 #include <sdf/Joint.hh>
 
 #include <ignition/common/Console.hh>
@@ -45,6 +49,7 @@ namespace bullet {
 ///    GenerateIdentity.
 /// 3) Hold explicit copies of raw pointers that can be deallocated
 
+// todo(anyone): Handle cleaning these pointers
 struct WorldInfo
 {
   btMultiBodyDynamicsWorld* world;
@@ -53,7 +58,7 @@ struct WorldInfo
   btCollisionDispatcher* dispatcher;
   btBroadphaseInterface* broadphase;
   btMultiBodyConstraintSolver* solver;
-}; // To Do: Handle cleaning these pointers
+};
 
 struct ModelInfo
 {
@@ -165,3 +170,4 @@ class Base : public Implements3d<FeatureList<Feature>>
 }
 
 #endif
+

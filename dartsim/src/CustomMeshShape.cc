@@ -90,7 +90,7 @@ unsigned int GetPrimitiveType(
 
   return 0;
 }
-}
+}  // namespace
 
 /////////////////////////////////////////////////
 CustomMeshShape::CustomMeshShape(

@@ -15,13 +15,13 @@
  *
 */
 
-#include "EntityManagementFeatures.hh"
-
-#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
-#include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
-#include "btBulletDynamicsCommon.h"
+#include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+#include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
+#include <btBulletDynamicsCommon.h>
 
 #include <string>
+
+#include "EntityManagementFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -66,11 +66,13 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   btBroadphaseInterface* broadphase = new btDbvtBroadphase();
 
   auto solver = new btMultiBodyConstraintSolver;
-  auto world = new btMultiBodyDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+  auto world = new btMultiBodyDynamicsWorld(
+      dispatcher, broadphase, solver, collisionConfiguration);
 
   world->getSolverInfo().m_globalCfm = 0;
 
-  return this->AddWorld({world, _name, collisionConfiguration, dispatcher, broadphase, solver});
+  return this->AddWorld(
+      {world, _name, collisionConfiguration, dispatcher, broadphase, solver});
 }
 
 /////////////////////////////////////////////////

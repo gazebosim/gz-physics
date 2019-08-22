@@ -164,7 +164,6 @@ class EntityManagementFeatures :
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       const Identity &/*_engineID*/, const std::string &/* _name */) override;
-
 };
 
 }

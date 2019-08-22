@@ -91,7 +91,6 @@ class JointFeatures :
   public: Pose3d GetJointTransformToChild(
       const Identity &/* _id */) const override
       { return Pose3d(); };
-
 };
 
 }

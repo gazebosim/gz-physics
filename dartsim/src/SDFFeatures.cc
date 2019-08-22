@@ -261,7 +261,7 @@ static ShapeAndTransform ConstructGeometry(
 
   return {nullptr};
 }
-}
+}  // namespace
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(

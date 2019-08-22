@@ -66,7 +66,8 @@ Identity SDFFeatures::ConstructSdfModel(
   const int numLinks = _sdfModel.LinkCount();
   const btScalar baseMass = 0;
   const btVector3 baseInertiaDiag(0, 0, 0);
-  const bool canSleep = false; // To Do: experiment with it
+  // To Do: experiment with it
+  const bool canSleep = false;
 
   // Set base transform
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
@@ -106,7 +107,8 @@ Identity SDFFeatures::ConstructSdfModel(
 
   model->setLinearDamping(0);
   model->setAngularDamping(0);
-  model->setMaxCoordinateVelocity(1000); // Set to a large value
+  // Set to a large value
+  model->setMaxCoordinateVelocity(1000);
 
   const auto &world = this->worlds.at(_worldID)->world;
   world->addMultiBody(model);
@@ -151,7 +153,8 @@ Identity SDFFeatures::BuildSdfLink(
 
   // Get link properties
   const btScalar linkMass = mass;
-  const btVector3 linkInertiaDiag = convertVec(ignition::math::eigen3::convert(diagonalMoments));
+  const btVector3 linkInertiaDiag =
+      convertVec(ignition::math::eigen3::convert(diagonalMoments));
   const auto poseIsometry = ignition::math::eigen3::convert(pose);
 
   // Add default fixed joints to links unless replaced by other joints
@@ -295,7 +298,7 @@ Identity SDFFeatures::BuildSdfJoint(
   btQuaternion rotParentToThis;
   matParentToThis.inverse().getRotation(rotParentToThis);
 
-  // TODO: Set joint damping
+  // todo(anyone) Set joint damping
   // Bullet currently does not support joint damping in multibody.
 
   // Set up joints
@@ -318,7 +321,8 @@ Identity SDFFeatures::BuildSdfJoint(
   {
     model->setupFixed(childIndex, childLinkInfo->linkMass,
       childLinkInfo->linkInertiaDiag, parentIndex,
-      rotParentToThis, parentComToCurrentPivot, currentPivotToCurrentCom, !model->hasSelfCollision());
+      rotParentToThis, parentComToCurrentPivot, currentPivotToCurrentCom,
+      !model->hasSelfCollision());
   }
 
   return this->AddJoint({name, type, childIndex, parentIndex, _modelID});
@@ -393,10 +397,13 @@ Identity SDFFeatures::BuildSdfCollision(
     col->setWorldTransform(transform);
     col->setFriction(mu);
     col->setRestitution(restitution);
-    int collisionFilterGroup = isDynamic ? int(btBroadphaseProxy::DefaultFilter)
-                                  : int(btBroadphaseProxy::StaticFilter);
-    int collisionFilterMask = isDynamic ? int (btBroadphaseProxy::AllFilter) :
-      int(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
+    int collisionFilterGroup = isDynamic ?
+        static_cast<int>(btBroadphaseProxy::DefaultFilter) :
+        static_cast<int>(btBroadphaseProxy::StaticFilter);
+    int collisionFilterMask = isDynamic ?
+        static_cast<int>(btBroadphaseProxy::AllFilter) :
+        static_cast<int>(btBroadphaseProxy::AllFilter ^
+        btBroadphaseProxy::StaticFilter);
 
     world->addCollisionObject(col, collisionFilterGroup, collisionFilterMask);
     model->getLink(linkInfo->linkIndex).m_collider = col;
