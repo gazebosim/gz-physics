@@ -48,7 +48,7 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::ForwardStep,
   physics::GetBasicJointState,
   physics::GetEntities,
-  physics::SetJointCommandFeature,
+  physics::SetJointVelocityCommandFeature,
   physics::sdf::ConstructSdfWorld
 >;
 
@@ -72,6 +72,7 @@ class JointFeatureFixture : public ::testing::Test
 };
 
 // Test setting joint commands and verify that the joint type is set accordingly
+// and that the commanded velocity is acheived
 TEST_F(JointFeatureFixture, JointSetCommand)
 {
   sdf::Root root;
@@ -107,38 +108,6 @@ TEST_F(JointFeatureFixture, JointSetCommand)
   world->Step(output, state, input);
   // Setting a velocity command changes the actuator type to SERVO
   EXPECT_EQ(dart::dynamics::Joint::SERVO, dartJoint->getActuatorType());
-
-  joint->SetAccelerationCommand(0, 1);
-  world->Step(output, state, input);
-  // Setting an acceleration command changes the actuator type to ACCELERATION
-  EXPECT_EQ(dart::dynamics::Joint::ACCELERATION, dartJoint->getActuatorType());
-
-  joint->SetForceCommand(0, 1);
-  world->Step(output, state, input);
-  // Setting an acceleration command changes the actuator type to FORCE
-  EXPECT_EQ(dart::dynamics::Joint::FORCE, dartJoint->getActuatorType());
-}
-
-// Test setting joint velocity commands and verify that the commanded velocity
-// is acheived
-TEST_F(JointFeatureFixture, JointSetVelocityCommand)
-{
-  sdf::Root root;
-  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
-  ASSERT_TRUE(errors.empty()) << errors.front();
-
-  const std::string modelName{"double_pendulum_with_base"};
-  const std::string jointName{"upper_joint"};
-
-  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
-
-  auto model = world->GetModel(modelName);
-  auto joint = model->GetJoint(jointName);
-
-  // Test joint velocity command
-  physics::ForwardStep::Output output;
-  physics::ForwardStep::State state;
-  physics::ForwardStep::Input input;
 
   std::size_t numSteps = 10;
   for (std::size_t i = 0; i < numSteps; ++i)

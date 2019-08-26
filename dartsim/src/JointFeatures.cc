@@ -105,30 +105,6 @@ void JointFeatures::SetJointVelocityCommand(
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointAccelerationCommand(
-    const Identity &_id, const std::size_t _dof, const double _value)
-{
-  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
-  if (joint->getActuatorType() != dart::dynamics::Joint::ACCELERATION)
-  {
-    joint->setActuatorType(dart::dynamics::Joint::ACCELERATION);
-  }
-  joint->setCommand(_dof, _value);
-}
-
-/////////////////////////////////////////////////
-void JointFeatures::SetJointForceCommand(
-    const Identity &_id, const std::size_t _dof, const double _value)
-{
-  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
-  if (joint->getActuatorType() != dart::dynamics::Joint::FORCE)
-  {
-    joint->setActuatorType(dart::dynamics::Joint::FORCE);
-  }
-  joint->setCommand(_dof, _value);
-}
-
-/////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();

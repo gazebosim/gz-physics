@@ -51,7 +51,7 @@ using JointFeatureList = FeatureList<
   GetPrismaticJointProperties,
   AttachPrismaticJointFeature,
 
-  SetJointCommandFeature
+  SetJointVelocityCommandFeature
 >;
 
 class JointFeatures :
@@ -166,15 +166,6 @@ class JointFeatures :
   public: void SetJointVelocityCommand(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
-
-  public: void SetJointAccelerationCommand(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
-
-  public: void SetJointForceCommand(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
-
 };
 
 }

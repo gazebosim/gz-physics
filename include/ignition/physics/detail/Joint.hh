@@ -152,29 +152,11 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointCommandFeature::Joint<PolicyT, FeaturesT>::SetVelocityCommand(
-        const std::size_t _dof, const Scalar _value)
+    void SetJointVelocityCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetVelocityCommand(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointCommandFeature>()
+      this->template Interface<SetJointVelocityCommandFeature>()
           ->SetJointVelocityCommand(this->identity, _dof, _value);
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
-    void SetJointCommandFeature::Joint<PolicyT, FeaturesT>::
-    SetAccelerationCommand(const std::size_t _dof, const Scalar _value)
-    {
-      this->template Interface<SetJointCommandFeature>()
-          ->SetJointAccelerationCommand(this->identity, _dof, _value);
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
-    void SetJointCommandFeature::Joint<PolicyT, FeaturesT>::SetForceCommand(
-        const std::size_t _dof, const Scalar _value)
-    {
-      this->template Interface<SetJointCommandFeature>()
-          ->SetJointForceCommand(this->identity, _dof, _value);
     }
   }
 }
