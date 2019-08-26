@@ -104,18 +104,30 @@ TEST_F(JointFeatureFixture, JointSetCommand)
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
 
+  // Expect negative joint velocity after 1 step without joint command
+  world->Step(output, state, input);
+  EXPECT_LT(joint->GetVelocity(0), 0.0);
+
   joint->SetVelocityCommand(0, 1);
   world->Step(output, state, input);
   // Setting a velocity command changes the actuator type to SERVO
   EXPECT_EQ(dart::dynamics::Joint::SERVO, dartJoint->getActuatorType());
 
-  std::size_t numSteps = 10;
+  const std::size_t numSteps = 10;
   for (std::size_t i = 0; i < numSteps; ++i)
   {
+    // Call SetVelocityCommand before each step
     joint->SetVelocityCommand(0, 1);
     world->Step(output, state, input);
+    EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-6);
   }
-  EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    // expect joint to freeze in subsequent steps without SetVelocityCommand
+    world->Step(output, state, input);
+    EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-6);
+  }
 }
 
 /////////////////////////////////////////////////
