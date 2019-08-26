@@ -2,6 +2,8 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+### Ignition Physics 1.4.0 (20XX-XX-XX)
+
 1. Add SetJointVelocityCommand feature
     * [Pull request 100](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/100)
 
