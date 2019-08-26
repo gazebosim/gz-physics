@@ -314,6 +314,71 @@ namespace ignition
             const Identity &_id, const Pose &_pose) = 0;
       };
     };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE SetJointCommandFeature : public virtual Feature
+    {
+      /// \brief The Joint API for setting basic joint state
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the commanded value of generalized velocity of a specific
+        /// generalized coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The desired generalized velocity. Units depend on the underlying
+        ///   joint type.
+        public: void SetVelocityCommand(
+            const std::size_t _dof, const Scalar _value);
+
+
+        /// \brief Set the commanded value of the generalized acceleration of a
+        /// specific generalized coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The desired generalized acceleration. Units depend on the
+        ///   underlying joint type.
+        public: void SetAccelerationCommand(
+            const std::size_t _dof, const Scalar _value);
+
+        /// \brief Set the commanded value of the generalized force of a
+        /// specific generalized coordinate within this joint.
+        ///
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The desired generalized force. Units depend on the underlying
+        ///   joint type.
+        public: void SetForceCommand(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting basic joint state
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetVelocityCommand above
+        public: virtual void SetJointVelocityCommand(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+
+        // See Joint::SetAccelerationCommand above
+        public: virtual void SetJointAccelerationCommand(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+
+        // See Joint::SetForceCommand above
+        public: virtual void SetJointForceCommand(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
   }
 }
 
