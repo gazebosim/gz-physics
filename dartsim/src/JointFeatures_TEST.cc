@@ -54,7 +54,7 @@ using TestFeatureList = ignition::physics::FeatureList<
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
 
-class JointFeatureFixture : public ::testing::Test
+class JointFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
@@ -73,7 +73,7 @@ class JointFeatureFixture : public ::testing::Test
 
 // Test setting joint commands and verify that the joint type is set accordingly
 // and that the commanded velocity is acheived
-TEST_F(JointFeatureFixture, JointSetCommand)
+TEST_F(JointFeaturesFixture, JointSetCommand)
 {
   sdf::Root root;
   const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
