@@ -3,23 +3,30 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics1 VERSION 1.0.0)
+project(ignition-physics1 VERSION 1.4.0)
 
 #============================================================================
 # Find ignition-cmake
 #============================================================================
-find_package(ignition-cmake2 REQUIRED)
+find_package(ignition-cmake2 2.1.0 REQUIRED)
 
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project(VERSION_SUFFIX pre1)
+ign_configure_project()
 
 
 #============================================================================
 # Set project-specific options
 #============================================================================
 
+option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
+
+if(ENABLE_PROFILER)
+  add_definitions("-DIGN_PROFILER_ENABLE=1")
+else()
+  add_definitions("-DIGN_PROFILER_ENABLE=0")
+endif()
 
 #============================================================================
 # Search for project-specific dependencies
@@ -28,7 +35,9 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find ignition-common
-ign_find_package(ignition-common3 REQUIRED)
+ign_find_package(ignition-common3
+  COMPONENTS graphics profiler
+  REQUIRED_BY mesh dartsim)
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
 #--------------------------------------
@@ -52,9 +61,12 @@ ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
 ign_find_package(DART
-  COMPONENTS collision-bullet
+  COMPONENTS
+    collision-ode
+    utils
+    utils-urdf
   CONFIG
-  VERSION 6
+  VERSION 6.10.0
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
@@ -62,12 +74,13 @@ ign_find_package(DART
 
 message(STATUS "-------------------------------------------\n")
 
+set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 #============================================================================
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf dartsim)
+  COMPONENTS sdf mesh dartsim)
 
 
 #============================================================================
@@ -79,7 +92,14 @@ ign_create_packages()
 #============================================================================
 # Create documentation
 #============================================================================
+configure_file(${CMAKE_SOURCE_DIR}/api.md.in ${CMAKE_BINARY_DIR}/api.md)
+configure_file(${CMAKE_SOURCE_DIR}/tutorials.md.in ${CMAKE_BINARY_DIR}/tutorials.md)
+
 ign_create_docs(
+  API_MAINPAGE_MD "${CMAKE_BINARY_DIR}/api.md"
+  TUTORIALS_MAINPAGE_MD "${CMAKE_BINARY_DIR}/tutorials.md"
   TAGFILES
+    "${IGNITION-COMMON_DOXYGEN_TAGFILE} = ${IGNITION-COMMON_API_URL}"
+    "${IGNITION-PLUGIN_DOXYGEN_TAGFILE} = ${IGNITION-PLUGIN_API_URL}"
     "${IGNITION-MATH_DOXYGEN_TAGFILE} = ${IGNITION-MATH_API_URL}"
   )

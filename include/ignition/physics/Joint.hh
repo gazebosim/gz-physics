@@ -83,22 +83,22 @@ namespace ignition
 
         // see Joint::GetPosition above
         public: virtual Scalar GetJointPosition(
-            std::size_t _id, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetVelocity above
         public: virtual Scalar GetJointVelocity(
-            std::size_t _id, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetAcceleration above
         public: virtual Scalar GetJointAcceleration(
-            std::size_t _id, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetForce above
         public: virtual Scalar GetJointForce(
-            std::size_t _id, std::size_t _dof) const = 0;
+            const Identity &_id, std::size_t _dof) const = 0;
 
         // see Joint::GetTransform above
-        public: virtual Pose GetJointTransform(std::size_t _id) const = 0;
+        public: virtual Pose GetJointTransform(const Identity &_id) const = 0;
       };
     };
 
@@ -161,19 +161,19 @@ namespace ignition
 
         // see Joint::SetPosition above
         public: virtual void SetJointPosition(
-            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetVelocity above
         public: virtual void SetJointVelocity(
-            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetAcceleration above
         public: virtual void SetJointAcceleration(
-            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetForce above
         public: virtual void SetJointForce(
-            std::size_t _id, std::size_t _dof, Scalar _value) = 0;
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
 
@@ -228,13 +228,13 @@ namespace ignition
         public: using Pose = typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual std::size_t GetJointDegreesOfFreedom(
-            std::size_t _id) const = 0;
+            const Identity &_id) const = 0;
 
         public: virtual Pose GetJointTransformFromParent(
-            std::size_t _id) const = 0;
+            const Identity &_id) const = 0;
 
         public: virtual Pose GetJointTransformToChild(
-            std::size_t _id) const = 0;
+            const Identity &_id) const = 0;
       };
     };
 
@@ -273,7 +273,7 @@ namespace ignition
 
         // see Joint::SetTransformFromParent above
         public: virtual void SetJointTransformFromParent(
-            std::size_t _id, const Pose &_pose) = 0;
+            const Identity &_id, const Pose &_pose) = 0;
       };
     };
 
@@ -311,7 +311,45 @@ namespace ignition
 
         // see Joint::SetTransformToChild above
         public: virtual void SetJointTransformToChild(
-            std::size_t _id, const Pose &_pose) = 0;
+            const Identity &_id, const Pose &_pose) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE SetJointVelocityCommandFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting velocity commands (target velocity).
+      /// This is different from SetVelocity in that this does not modify the
+      /// internal state of the joint. Instead, the physics engine is expected
+      /// to compute the necessary joint torque for the commanded velocity and
+      /// apply it in the next simulation step.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the commanded value of generalized velocity of a specific
+        /// generalized coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The desired generalized velocity. Units depend on the underlying
+        ///   joint type.
+        public: void SetVelocityCommand(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting joint velocity commands
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetVelocityCommand above
+        public: virtual void SetJointVelocityCommand(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
   }

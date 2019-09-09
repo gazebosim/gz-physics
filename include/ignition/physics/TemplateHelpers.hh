@@ -79,25 +79,26 @@ namespace ignition
 /// create a class named SelectRevoluteJoint which can be passed to an
 /// Aggregator to extract the RevoluteJoint API from a list of features.
 #define IGN_PHYSICS_CREATE_SELECTOR(X) \
-  template<typename Feature> \
+  template<typename InFeature> \
   struct Select ## X \
   { \
     template<typename F, typename PolicyT, typename FeaturesT, \
              typename = ::ignition::physics::void_t<>> \
     struct Implementation \
     { \
-      using type = Empty; \
+      using type = ::ignition::physics::Empty; \
     }; \
     \
     template<typename F, typename PolicyT, typename FeaturesT> \
     struct Implementation<F, PolicyT, FeaturesT, \
-                          void_t<typename F::template X <PolicyT, FeaturesT>>>\
+                          ::ignition::physics::void_t< \
+                              typename F::template X <PolicyT, FeaturesT>>> \
     { \
       using type = typename F::template X <PolicyT, FeaturesT>; \
     }; \
     \
     template <typename PolicyT, typename FeaturesT> \
-    using type = typename Implementation<Feature, PolicyT, FeaturesT>::type; \
+    using type = typename Implementation<InFeature, PolicyT, FeaturesT>::type; \
   };
 
 #endif

@@ -19,6 +19,8 @@
 #define IGNITION_PHYSICS_SHAPE_HH_
 
 #include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/RelativeQuantity.hh>
 #include <ignition/physics/Geometry.hh>
 
 namespace ignition
@@ -50,7 +52,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual PoseType GetShapeRelativeTransform(
-            std::size_t _shapeID) const = 0;
+            const Identity &_shapeID) const = 0;
       };
     };
 
@@ -80,7 +82,7 @@ namespace ignition
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
         public: virtual void SetShapeRelativeTransform(
-            std::size_t _shapeID, const PoseType &_pose) = 0;
+            const Identity &_shapeID, const PoseType &_pose) = 0;
       };
     };
 
@@ -119,10 +121,48 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual Scalar GetFrictionCoefficient(
-            std::size_t _shape0, std::size_t _shape1) const = 0;
+            const Identity &_shape0, const Identity &_shape1) const = 0;
 
         public: virtual Scalar GetRestitutionCoefficient(
-            std::size_t _shape0, std::size_t _shape1) const = 0;
+            const Identity &_shape0, const Identity &_shape1) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE GetShapeBoundingBox
+        : public virtual FeatureWithRequirements<ShapeFrameSemantics>
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape
+          : public virtual ShapeFrameSemantics::Shape<PolicyT, FeaturesT>
+      {
+        public: using AlignedBoxType =
+            typename FromPolicy<PolicyT>::template Use<AlignedBox>;
+
+        /// \brief Get the axis aligned bounding box for the shape in the
+        /// requested frame.
+        /// \param[in] _referenceFrame
+        ///   The desired frame for the bounding box. By default, this will be
+        ///   the world frame.
+        ///   \note Axis-aligned bounding boxes will expand each time they are
+        ///   transformed into a new frame that has a different orientation.
+        /// \return Axis aligned bounding box for the shape, transformed into
+        /// the requested coordinate frame.
+        public: AlignedBoxType GetAxisAlignedBoundingBox(
+            const FrameID &_referenceFrame = FrameID::World()) const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using AlignedBoxType =
+            typename FromPolicy<PolicyT>::template Use<AlignedBox>;
+
+        /// \brief Implementation function for querying the axis-aligned
+        /// bounding box of a shape.
+        /// \return The axis-aligned bounding box in the frame of the box.
+        public: virtual AlignedBoxType GetShapeAxisAlignedBoundingBox(
+            const Identity &_shape) const = 0;
       };
     };
 
@@ -162,10 +202,14 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         public: virtual void SetShapeFrictionCoefficient(
-            std::size_t _shape0, std::size_t _shape1, Scalar _value) = 0;
+            const Identity &_shape0,
+            const Identity &_shape1,
+            Scalar _value) = 0;
 
         public: virtual void SetShapeRestitutionCoefficient(
-            std::size_t _shape0, std::size_t _shape1, Scalar _value) = 0;
+            const Identity &_shape0,
+            const Identity &_shape1,
+            Scalar _value) = 0;
       };
     };
   }

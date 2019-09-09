@@ -49,7 +49,9 @@ using JointFeatureList = FeatureList<
 
   SetPrismaticJointProperties,
   GetPrismaticJointProperties,
-  AttachPrismaticJointFeature
+  AttachPrismaticJointFeature,
+
+  SetJointVelocityCommandFeature
 >;
 
 class JointFeatures :
@@ -58,87 +60,87 @@ class JointFeatures :
 {
   // ----- Get Basic Joint State -----
   public: double GetJointPosition(
-      const std::size_t _id, const std::size_t _dof) const override;
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointVelocity(
-      const std::size_t _id, const std::size_t _dof) const override;
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointAcceleration(
-      const std::size_t _id, const std::size_t _dof) const override;
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointForce(
-      const std::size_t _id, const std::size_t _dof) const override;
+      const Identity &_id, const std::size_t _dof) const override;
 
-  public: Pose3d GetJointTransform(const std::size_t _id) const override;
+  public: Pose3d GetJointTransform(const Identity &_id) const override;
 
 
   // ----- Set Basic Joint State -----
   public: void SetJointPosition(
-      const std::size_t _id, const std::size_t _dof,
+      const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
   public: void SetJointVelocity(
-      const std::size_t _id, const std::size_t _dof,
+      const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
   public: void SetJointAcceleration(
-      const std::size_t _id, const std::size_t _dof,
+      const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
   public: void SetJointForce(
-      const std::size_t _id, const std::size_t _dof,
+      const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
 
   // ----- Get Basic Joint Properties -----
   public: std::size_t GetJointDegreesOfFreedom(
-      const std::size_t _id) const override;
+      const Identity &_id) const override;
 
   public: Pose3d GetJointTransformFromParent(
-      const std::size_t _id) const override;
+      const Identity &_id) const override;
 
   public: Pose3d GetJointTransformToChild(
-      const std::size_t _id) const override;
+      const Identity &_id) const override;
 
 
   // ----- Set Basic Joint Properties -----
   public: void SetJointTransformFromParent(
-      const std::size_t _id, const Pose3d &_pose) override;
+      const Identity &_id, const Pose3d &_pose) override;
 
   public: void SetJointTransformToChild(
-      const std::size_t _id, const Pose3d &_pose) override;
+      const Identity &_id, const Pose3d &_pose) override;
 
 
   // ----- Fixed Joint -----
   public: Identity CastToFixedJoint(
-      const std::size_t _jointID) const override;
+      const Identity &_jointID) const override;
 
   public: Identity AttachFixedJoint(
-      std::size_t _childID,
+      const Identity &_childID,
       const BaseLink3dPtr &_parent,
       const std::string &_name) override;
 
 
   // ----- Free Joint -----
   public: Identity CastToFreeJoint(
-      const std::size_t _jointID) const override;
+      const Identity &_jointID) const override;
 
   public: void SetFreeJointRelativeTransform(
-      const std::size_t _jointID, const Pose3d &_pose) override;
+      const Identity &_jointID, const Pose3d &_pose) override;
 
 
   // ----- Revolute Joint -----
   public: Identity CastToRevoluteJoint(
-      const std::size_t _jointID) const override;
+      const Identity &_jointID) const override;
 
   public: AngularVector3d GetRevoluteJointAxis(
-      const std::size_t _jointID) const override;
+      const Identity &_jointID) const override;
 
   public: void SetRevoluteJointAxis(
-      const std::size_t _jointID, const AngularVector3d &_axis) override;
+      const Identity &_jointID, const AngularVector3d &_axis) override;
 
   public: Identity AttachRevoluteJoint(
-      const std::size_t _childID,
+      const Identity &_childID,
       const BaseLink3dPtr &_parent,
       const std::string &_name,
       const AngularVector3d &_axis) override;
@@ -146,19 +148,24 @@ class JointFeatures :
 
   // ----- Prismatic Joint -----
   public: Identity CastToPrismaticJoint(
-      const std::size_t _jointID) const override;
+      const Identity &_jointID) const override;
 
   public: LinearVector3d GetPrismaticJointAxis(
-      const std::size_t _jointID) const override;
+      const Identity &_jointID) const override;
 
   public: void SetPrismaticJointAxis(
-      const std::size_t _jointID, const LinearVector3d &_axis) override;
+      const Identity &_jointID, const LinearVector3d &_axis) override;
 
   public: Identity AttachPrismaticJoint(
-      const std::size_t _childID,
+      const Identity &_childID,
       const BaseLink3dPtr &_parent,
       const std::string &_name,
       const LinearVector3d &_axis) override;
+
+  // ----- Joint Commands -----
+  public: void SetJointVelocityCommand(
+      const Identity &_id, const std::size_t _dof,
+      const double _value) override;
 };
 
 }

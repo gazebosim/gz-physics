@@ -19,6 +19,10 @@
 
 #include <ignition/plugin/Loader.hh>
 
+#include <ignition/common/MeshManager.hh>
+
+#include <ignition/math/eigen3/Conversions.hh>
+
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
 #include <ignition/physics/RevoluteJoint.hh>
@@ -38,7 +42,7 @@ using TestFeatureList = ignition::physics::FeatureList<
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLibrary(dartsim_plugin_LIB);
+  loader.LoadLib(dartsim_plugin_LIB);
 
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
@@ -141,6 +145,80 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_DOUBLE_EQ(0.0, relativeSpherePosition.x());
   EXPECT_DOUBLE_EQ(yPos, relativeSpherePosition.y());
   EXPECT_DOUBLE_EQ(0.0, relativeSpherePosition.z());
+
+  auto meshLink = model->ConstructEmptyLink("mesh_link");
+  meshLink->AttachFixedJoint(child, "fixed");
+
+  const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
+  auto &meshManager = *ignition::common::MeshManager::Instance();
+  auto *mesh = meshManager.Load(meshFilename);
+
+  auto meshShape = meshLink->AttachMeshShape("chassis", *mesh);
+  const auto originalMeshSize = mesh->Max() - mesh->Min();
+  const auto meshShapeSize = meshShape->GetSize();
+
+  // Note: dartsim uses assimp for storing mesh data, and assimp by default uses
+  // single floating point precision (instead of double precision), so we can't
+  // expect these values to be exact.
+  for (std::size_t i = 0; i < 3; ++i)
+    EXPECT_NEAR(originalMeshSize[i], meshShapeSize[i], 1e-6);
+
+  EXPECT_NEAR(meshShapeSize[0], 0.5106, 1e-4);
+  EXPECT_NEAR(meshShapeSize[1], 0.3831, 1e-4);
+  EXPECT_NEAR(meshShapeSize[2], 0.1956, 1e-4);
+
+  const ignition::math::Pose3d pose(0, 0, 0.2, 0, 0, 0);
+  const ignition::math::Vector3d scale(0.5, 1.0, 0.25);
+  auto meshShapeScaled = meshLink->AttachMeshShape("small_chassis", *mesh,
+                          ignition::math::eigen3::convert(pose),
+                          ignition::math::eigen3::convert(scale));
+  const auto meshShapeScaledSize = meshShapeScaled->GetSize();
+
+  // Note: dartsim uses assimp for storing mesh data, and assimp by default uses
+  // single floating point precision (instead of double precision), so we can't
+  // expect these values to be exact.
+  for (std::size_t i = 0; i < 3; ++i)
+    EXPECT_NEAR(originalMeshSize[i] * scale[i], meshShapeScaledSize[i], 1e-6);
+
+  EXPECT_NEAR(meshShapeScaledSize[0], 0.2553, 1e-4);
+  EXPECT_NEAR(meshShapeScaledSize[1], 0.3831, 1e-4);
+  EXPECT_NEAR(meshShapeScaledSize[2], 0.0489, 1e-4);
+}
+
+TEST(EntityManagement_TEST, RemoveEntities)
+{
+  ignition::plugin::Loader loader;
+  loader.LoadLib(dartsim_plugin_LIB);
+
+  ignition::plugin::PluginPtr dartsim =
+      loader.Instantiate("ignition::physics::dartsim::Plugin");
+
+  auto engine =
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+  ASSERT_NE(nullptr, engine);
+
+  auto world = engine->ConstructEmptyWorld("empty world");
+  ASSERT_NE(nullptr, world);
+  auto model = world->ConstructEmptyModel("empty model");
+  ASSERT_NE(nullptr, model);
+
+  auto modelAlias = world->GetModel(0);
+
+  model->Remove();
+  EXPECT_TRUE(model->Removed());
+  EXPECT_TRUE(modelAlias->Removed());
+  EXPECT_EQ(nullptr, world->GetModel(0));
+  EXPECT_EQ(nullptr, world->GetModel("empty model"));
+  EXPECT_EQ(0ul, world->GetModelCount());
+
+  // Calling GetName shouldn't throw
+  EXPECT_EQ("empty model", model->GetName());
+
+  auto model2 = world->ConstructEmptyModel("model2");
+  ASSERT_NE(nullptr, model2);
+  EXPECT_EQ(0ul, model2->GetIndex());
+  world->RemoveModel(0);
+  EXPECT_EQ(0ul, world->GetModelCount());
 }
 
 int main(int argc, char *argv[])

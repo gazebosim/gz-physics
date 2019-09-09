@@ -44,7 +44,7 @@
         Select ## Derived, FeaturesT>:: \
             template type<PolicyT, FeaturesT>, \
       public virtual ::ignition::physics::detail::Aggregate< \
-        ::ignition::physics::detail:: Base ## Selector, FeaturesT>:: \
+        ::ignition::physics::detail:: Select ## Base, FeaturesT>:: \
             template type<PolicyT, FeaturesT> \
     { \
       public: using Identifier = Derived ## Identifier; \
@@ -60,7 +60,7 @@
         : EntityBase(_pimpl, _identity) { } \
       public: Using() = default; \
       public: Using(const Using&) = default; \
-      public: Using(Using&&) = default; \
+      public: Using(Using&&) noexcept = default; \
       \
       /* We customize these operators because of virtual inheritance */ \
       public: Using &operator=(const Using &_other) \
@@ -68,7 +68,7 @@
         static_cast<EntityBase&>(*this) = _other; \
         return *this; \
       } \
-      public: Using &operator=(Using &&_other) \
+      public: Using &operator=(Using &&_other) noexcept \
       { \
         static_cast<EntityBase&>(*this) = std::move(_other); \
         return *this; \
@@ -104,7 +104,7 @@
       : public virtual ::ignition::physics::Feature::Implementation<PolicyT> \
     { \
       public: virtual ::ignition::physics::Identity CastTo ## Derived( \
-        std::size_t _id) const = 0; \
+        const Identity &_id) const = 0; \
     }; \
   }; \
   \

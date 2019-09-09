@@ -269,7 +269,7 @@ namespace ignition
         {
           public: type() = default;
           public: type(const type&) = default;
-          public: type(type&&) = default;
+          public: type(type&&) noexcept = default;
 
           // These need special definitions due to virtual inheritance. The base
           // Entity<P,F> class is the only class in the hierarchy that contains
@@ -280,7 +280,7 @@ namespace ignition
             static_cast<Entity<T...>&>(*this) = _other;
             return *this;
           }
-          public: type &operator=(type &&_other)
+          public: type &operator=(type &&_other) noexcept
           {
             static_cast<Entity<T...>&>(*this) = std::move(_other);
             return *this;
@@ -461,19 +461,13 @@ namespace ignition
 
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
-    template <typename T> \
-    /* Used to select the X-type API from a feature */ \
-    struct X ## Selector \
-    { \
-      public: template<typename PolicyT, typename FeaturesT> \
-      using type = typename T::template X<PolicyT, FeaturesT>; \
-    }; \
+    IGN_PHYSICS_CREATE_SELECTOR(X) \
     /* Symbol used by X-types to identify other X-types */ \
     struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public ::ignition::physics::detail::Aggregate< \
-        detail :: X ## Selector, FeaturesT> \
+        detail::Select ## X, FeaturesT> \
           ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
   { \

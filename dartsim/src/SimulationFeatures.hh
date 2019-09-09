@@ -18,7 +18,9 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
 #define IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
 
+#include <vector>
 #include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/GetContacts.hh>
 
 #include "Base.hh"
 
@@ -27,7 +29,8 @@ namespace physics {
 namespace dartsim {
 
 using SimulationFeatureList = FeatureList<
-  ForwardStep
+  ForwardStep,
+  GetContactsFromLastStepFeature
 >;
 
 class SimulationFeatures :
@@ -35,10 +38,13 @@ class SimulationFeatures :
     public virtual Implements3d<SimulationFeatureList>
 {
   public: void WorldForwardStep(
-      const std::size_t _worldID,
+      const Identity &_worldID,
       ForwardStep::Output &_h,
       ForwardStep::State &_x,
-      const ForwardStep::Input &_u);
+      const ForwardStep::Input &_u) override;
+
+  public: std::vector<ContactInternal> GetContactsFromLastStep(
+      const Identity &_worldID) const override;
 };
 
 }

@@ -23,6 +23,7 @@
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/BoxShape.hh>
 #include <ignition/physics/CylinderShape.hh>
+#include <ignition/physics/mesh/MeshShape.hh>
 #include <ignition/physics/SphereShape.hh>
 
 #include "Base.hh"
@@ -34,6 +35,7 @@ namespace dartsim {
 using ShapeFeatureList = FeatureList<
   GetShapeKinematicProperties,
   SetShapeKinematicProperties,
+  GetShapeBoundingBox,
   GetBoxShapeProperties,
   // dartsim cannot yet update shape properties without reloading the model into
   // the world
@@ -44,7 +46,10 @@ using ShapeFeatureList = FeatureList<
   AttachCylinderShapeFeature,
   GetSphereShapeProperties,
 //  SetSphereShapeProperties,
-  AttachSphereShapeFeature
+  AttachSphereShapeFeature,
+  mesh::GetMeshShapeProperties,
+//  mesh::SetMeshShapeProperties,
+  mesh::AttachMeshShapeFeature
 >;
 
 class ShapeFeatures :
@@ -53,21 +58,21 @@ class ShapeFeatures :
 {
   // ----- Kinematic Properties -----
   public: Pose3d GetShapeRelativeTransform(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: void SetShapeRelativeTransform(
-      std::size_t _shapeID, const Pose3d &_pose) override;
+      const Identity &_shapeID, const Pose3d &_pose) override;
 
 
   // ----- Box Features -----
   public: Identity CastToBoxShape(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: LinearVector3d GetBoxShapeSize(
-      std::size_t _boxID) const override;
+      const Identity &_boxID) const override;
 
   public: Identity AttachBoxShape(
-      std::size_t _linkID,
+      const Identity &_linkID,
       const std::string &_name,
       const LinearVector3d &_size,
       const Pose3d &_pose) override;
@@ -75,16 +80,16 @@ class ShapeFeatures :
 
   // ----- Cylinder Features -----
   public: Identity CastToCylinderShape(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: double GetCylinderShapeRadius(
-      std::size_t _cylinderID) const override;
+      const Identity &_cylinderID) const override;
 
   public: double GetCylinderShapeHeight(
-      std::size_t _cylinderID) const override;
+      const Identity &_cylinderID) const override;
 
   public: Identity AttachCylinderShape(
-      std::size_t _linkID,
+      const Identity &_linkID,
       const std::string &_name,
       double _radius,
       double _height,
@@ -93,16 +98,38 @@ class ShapeFeatures :
 
   // ----- Sphere Features -----
   public: Identity CastToSphereShape(
-      std::size_t _shapeID) const override;
+      const Identity &_shapeID) const override;
 
   public: double GetSphereShapeRadius(
-      std::size_t _sphereID) const override;
+      const Identity &_sphereID) const override;
 
   public: Identity AttachSphereShape(
-      std::size_t _linkID,
+      const Identity &_linkID,
       const std::string &_name,
       double _radius,
       const Pose3d &_pose) override;
+
+
+  // ----- Mesh Features -----
+  public: Identity CastToMeshShape(
+      const Identity &_shapeID) const override;
+
+  public: LinearVector3d GetMeshShapeSize(
+      const Identity &_meshID) const override;
+
+  public: LinearVector3d GetMeshShapeScale(
+      const Identity &_meshID) const override;
+
+  public: Identity AttachMeshShape(
+      const Identity &_linkID,
+      const std::string &_name,
+      const ignition::common::Mesh &_mesh,
+      const Pose3d &_pose,
+      const LinearVector3d &_scale) override;
+
+  // ----- Boundingbox Features -----
+  public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
+              const Identity &_shapeID) const override;
 };
 
 }
