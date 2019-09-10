@@ -15,7 +15,7 @@ Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/ico
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Ignition Physics, a component of [Ignition
-Robotics](https://ignitionrobotics.org), provides a physics abstraction layer
+Robotics](https://ignitionrobotics.org), provides physics abstraction layer
 libraries designed to rapidly develop robot applications.
 
 # Table of Contents
@@ -50,13 +50,13 @@ libraries designed to rapidly develop robot applications.
 
 # Features
 
-Ignition Math provides a wide range of functionality, including:
+Ignition Physics provides a wide range of functionality, including:
 
 * Type-templated pose, matrix, vector, and quaternion classes.
 * Shape representations along with operators to compute volume, density, size and other properties.
 * Classes for material properties, mass, inertial, temperature, [PID](https://en.wikipedia.org/wiki/PID_controller), kmeans, spherical coordinates, and filtering.
 * Optional Eigen component that converts between a few Eigen and Ignition
-Math types.
+Physics types.
 
 # Install
 
@@ -66,10 +66,10 @@ The [Source Install](#markdown-header-source-install) instructions should be use
 
 ## Binary Install
 
-On Ubuntu systems, `apt-get` can be used to install `ignition-math`:
+On Ubuntu systems, `apt-get` can be used to install `ignition-physics`:
 
 ```
-sudo apt install libignition-math<#>-dev
+sudo apt install libignition-physics<#>-dev
 ```
 
 Be sure to replace `<#>` with a number value, such as 1 or 2, depending on
@@ -82,7 +82,7 @@ necessary prerequisites followed by building from source.
 
 ### Prerequisites
 
-The optional Eigen component of Ignition Math requires:
+The optional Eigen component of Ignition Physics requires:
 
   * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page). Refer to the [Eigen Documentation](http://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation) for installation instructions. On Ubuntu systems, `apt-get` can be used to install Eigen:
 
@@ -95,16 +95,16 @@ The optional Eigen component of Ignition Math requires:
 1. Clone the repository
 
     ```
-    hg clone https://bitbucket.org/ignitionrobotics/ign-math
+    hg clone https://bitbucket.org/ignitionrobotics/ign-physics
     ```
 
 2. Configure and build
 
     ```
-    cd ign-math; mkdir build; cd build; cmake ..; make
+    cd ign-physics; mkdir build; cd build; cmake ..; make
     ```
 
-3. Optionally, install Ignition Math
+3. Optionally, install Ignition Physics
 
     ```
     sudo make install
@@ -112,11 +112,11 @@ The optional Eigen component of Ignition Math requires:
 
 # Usage
 
-Please refer to the [examples directory](https://bitbucket.org/ignitionrobotics/ign-math/raw/default/examples/?at=default).
+Please refer to the [examples directory](https://bitbucket.org/ignitionrobotics/ign-physics/raw/default/examples/?at=default).
 
 # Documentation
 
-API and tutorials can be found at [https://ignitionrobotics.org/libs/math](https://ignitionrobotics.org/libs/math).
+API and tutorials can be found at [https://ignitionrobotics.org/libs/physics](https://ignitionrobotics.org/libs/physics).
 
 You can also generate the documentation from a clone of this repository by following these steps.
 
@@ -129,13 +129,13 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    hg clone https://bitbucket.org/ignitionrobotics/ign-math
+    hg clone https://bitbucket.org/ignitionrobotics/ign-physics
     ```
 
 3. Configure and build the documentation.
 
     ```
-    cd ign-math; mkdir build; cd build; cmake ../; make doc
+    cd ign-physics; mkdir build; cd build; cmake ../; make doc
     ```
 
 4. View the documentation by running the following command from the build directory.
@@ -167,19 +167,24 @@ Follow these steps to run tests and static code analysis in your clone of this r
 Refer to the following table for information about important directories and files in this repository.
 
 ```
-ign-math
-├── examples                 Example programs.
-├── include/ignition/math    Header files.
-├── src                      Source files and unit tests.
-│   └── graph                Source files for the graph classes.
-├── eigen3                   Files for Eigen component.
+ign-physics
+├── dartsim                   Files for dartsim plugin component.
+├── include/ignition/physics  Header files.
+├── mesh                      Files for mesh component.
+├── resources                 Model and mesh resource files used by tests.
+├── sdf                       Files for sdf component.
+├── src                       Source files and unit tests.
+├── eigen3                    Files for Eigen component.
 ├── test
-│    ├── integration         Integration tests.
-│    ├── performance         Performance tests.
-│    └── regression          Regression tests.
-├── tutorials                Tutorials, written in markdown.
-├── Changelog.md             Changelog.
-└── CMakeLists.txt           CMake build script.
+│    ├── benchmark            Benchmark tests.
+│    ├── integration          Integration tests.
+│    ├── performance          Performance tests.
+│    ├── plugins              Plugins used in tests.
+│    ├── regression           Regression tests.
+│    └── static_assert        Tests involving compilation failures.
+├── tutorials                 Tutorials, written in markdown.
+├── Changelog.md              Changelog.
+└── CMakeLists.txt            CMake build script.
 ```
 # Contributing
 
@@ -197,4 +202,4 @@ This library uses [Semantic Versioning](https://semver.org/). Additionally, this
 
 # License
 
-This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://bitbucket.org/ignitionrobotics/ign-math/src/default/LICENSE) file.
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://bitbucket.org/ignitionrobotics/ign-physics/src/default/LICENSE) file.
