@@ -69,11 +69,8 @@ The [Source Install](#markdown-header-source-install) instructions should be use
 On Ubuntu systems, `apt-get` can be used to install `ignition-physics`:
 
 ```
-sudo apt install libignition-physics<#>-dev
+sudo apt install libignition-physics-dev
 ```
-
-Be sure to replace `<#>` with a number value, such as 1 or 2, depending on
-which version you need.
 
 ## Source Install
 
@@ -82,13 +79,41 @@ necessary prerequisites followed by building from source.
 
 ### Prerequisites
 
-The optional Eigen component of Ignition Physics requires:
+Install required dependencies:
 
-  * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page). Refer to the [Eigen Documentation](http://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation) for installation instructions. On Ubuntu systems, `apt-get` can be used to install Eigen:
+~~~
+sudo apt update
+sudo apt-get -y install lsb-release
+sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+sudo apt update
+sudo apt install -y \
+  cmake \
+  build-essential \
+  libignition-cmake2-dev \
+  libignition-common3-dev \
+  libignition-math6-dev \
+  libignition-math6-eigen3-dev \
+  libignition-plugin-dev \
+  libeigen3-dev \
+  libsdformat8-dev \
+  dart6-data \
+  libdart6-collision-ode-dev \
+  libdart6-dev \
+  libdart6-utils-urdf-dev \
+  libbenchmark-dev
+~~~
 
-    ```
-    sudo apt-get install libeigen3-dev
-    ```
+Use gcc-8:
+
+~~~
+sudo apt update
+sudo apt-get -y install g++-8
+sudo update-alternatives --install \
+  /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
+  --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
+  --slave /usr/bin/gcov gcov /usr/bin/gcov-8
+~~~
 
 ### Building from source
 
