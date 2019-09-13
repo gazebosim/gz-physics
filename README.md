@@ -15,10 +15,12 @@ Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/ico
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Ignition Physics, a component of [Ignition
-Robotics](https://ignitionrobotics.org), provides physics abstraction layer
-libraries designed to rapidly develop robot applications.
+Robotics](https://ignitionrobotics.org), provides an abstract physics interface
+designed to support simulation and rapid development of robot applications.
 
 # Table of Contents
+
+[Motivation](#markdown-header-motivation)
 
 [Features](#markdown-header-features)
 
@@ -48,15 +50,33 @@ libraries designed to rapidly develop robot applications.
 
 [License](#markdown-header-license)
 
+# Motivation
+
+Many physics simulation software libraries have been designed for different
+applications (gaming, robotics, science) and with different features
+(rigid or deformable contact, 2d or 3d).
+Ignition Physics is designed on the premise that there is not a single physics
+engine that is universally best for all simulation contexts.
+It should be possible to support a different set of features
+for each physics engine according to its capabilities.
+A physics engine can then be chosen for each application
+based on its context.
+
 # Features
 
-Ignition Physics provides a wide range of functionality, including:
+Ignition Physics provides the following functionality:
 
-* Type-templated pose, matrix, vector, and quaternion classes.
-* Shape representations along with operators to compute volume, density, size and other properties.
-* Classes for material properties, mass, inertial, temperature, [PID](https://en.wikipedia.org/wiki/PID_controller), kmeans, spherical coordinates, and filtering.
-* Optional Eigen component that converts between a few Eigen and Ignition
-Physics types.
+* Granular definition of physics engine features as optional API's.
+* Plugin interface for loading physics engines with requested features
+  at runtime.
+* Features for common aspects of rigid body dynamic simulation
+    - Construct model from SDFormat file.
+    - Collision shapes (such as box, sphere, cylinder, mesh, heightmap).
+    - Joint types (such as revolute, prismatic, fixed, ball, screw, universal).
+    - Step simulation, get/set state, apply inputs.
+* Reference implementation of physics plugin using
+  [dartsim](http://dartsim.github.io/).
+* CompositeData structures for efficiently using native types in API.
 
 # Install
 
@@ -219,7 +239,7 @@ Please see
 # Code of Conduct
 
 Please see
-[CODE_OF_CONDUCT.md](https://bitbucket.org/ignitionrobotics/ign-gazebo/src/406665896aa40bb42f14cf61d48b3d94f2fc5dd8/CODE_OF_CONDUCT.md?at=default&fileviewer=file-view-default).
+[CODE\_OF\_CONDUCT.md](https://bitbucket.org/ignitionrobotics/ign-gazebo/src/406665896aa40bb42f14cf61d48b3d94f2fc5dd8/CODE_OF_CONDUCT.md?at=default&fileviewer=file-view-default).
 
 # Versioning
 
