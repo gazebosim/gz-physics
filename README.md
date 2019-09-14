@@ -219,7 +219,6 @@ ign-physics
 ├── resources                 Model and mesh resource files used by tests.
 ├── sdf                       Files for sdf component.
 ├── src                       Source files and unit tests.
-├── eigen3                    Files for Eigen component.
 ├── test
 │    ├── benchmark            Benchmark tests.
 │    ├── integration          Integration tests.
