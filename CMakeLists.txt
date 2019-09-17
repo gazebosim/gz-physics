@@ -20,6 +20,13 @@ ign_configure_project(VERSION_SUFFIX pre0)
 # Set project-specific options
 #============================================================================
 
+option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
+
+if(ENABLE_PROFILER)
+  add_definitions("-DIGN_PROFILER_ENABLE=1")
+else()
+  add_definitions("-DIGN_PROFILER_ENABLE=0")
+endif()
 
 #============================================================================
 # Search for project-specific dependencies
@@ -29,7 +36,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 #--------------------------------------
 # Find ignition-common
 ign_find_package(ignition-common3
-  COMPONENTS graphics
+  COMPONENTS graphics profiler
   REQUIRED_BY mesh dartsim)
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
