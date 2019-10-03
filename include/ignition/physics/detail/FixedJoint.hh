@@ -36,6 +36,25 @@ namespace ignition
             this->template Interface<AttachFixedJointFeature>()
                 ->AttachFixedJoint(this->identity, _parent, _name));
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto AttachFixedJointDetachableFeature::Link<PolicyT, FeaturesT>::AttachFixedJointDetachable(
+        const BaseLinkPtr<PolicyT> &_parent,
+        const std::string &_name) -> JointPtrType
+    {
+      return JointPtrType(this->pimpl,
+            this->template Interface<AttachFixedJointDetachableFeature>()
+                ->AttachFixedJointDetachableFeature(this->identity, _parent, _name));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto AttachFixedJointDetachableFeature::Link<PolicyT, FeaturesT>::DetachFixedJointDetachable()
+    {
+      this->template Interface<AttachFixedJointDetachableFeature>()
+          ->Detach(this->identity);
+    }
   }
 }
 
