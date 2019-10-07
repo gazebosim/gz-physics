@@ -172,7 +172,7 @@ Identity JointFeatures::AttachFixedJoint(
   if (childsParentJoint && childsParentJoint->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO: use a WeldJointConstraint between the two bodies
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
     return this->GenerateInvalidId();
   }
 
@@ -255,7 +255,7 @@ Identity JointFeatures::AttachRevoluteJoint(
   if (childsParentJoint && childsParentJoint->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO: use a WeldJointConstraint with a dummy link
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
     return this->GenerateInvalidId();
   }
 
@@ -315,7 +315,7 @@ Identity JointFeatures::AttachPrismaticJoint(
   if (childsParentJoint && childsParentJoint->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO: use a WeldJointConstraint with a dummy link
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
     return this->GenerateInvalidId();
   }
 
