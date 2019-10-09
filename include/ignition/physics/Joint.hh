@@ -366,8 +366,7 @@ namespace ignition
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
-        public: virtual Identity DetachJoint(
-            const Identity &_jointID) = 0;
+        public: virtual void DetachJoint(const Identity &_jointID) = 0;
       };
     };
   }
