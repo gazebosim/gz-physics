@@ -643,7 +643,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   {
     auto childsParentJoint = _child->getParentJoint();
-    if (childsParentJoint && childsParentJoint->getType() != "FreeJoint")
+    if (childsParentJoint->getType() != "FreeJoint")
     {
       ignerr << "Asked to create a joint between links "
              << "[" << _parent->getName() << "] as parent and ["

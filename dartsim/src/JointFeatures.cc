@@ -168,8 +168,7 @@ Identity JointFeatures::AttachFixedJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
-  auto childsParentJoint = bn->getParentJoint();
-  if (childsParentJoint && childsParentJoint->getType() != "FreeJoint")
+  if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
     // TODO(scpeters): use a WeldJointConstraint between the two bodies
@@ -251,8 +250,7 @@ Identity JointFeatures::AttachRevoluteJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
-  auto childsParentJoint = bn->getParentJoint();
-  if (childsParentJoint && childsParentJoint->getType() != "FreeJoint")
+  if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
     // TODO(scpeters): use a WeldJointConstraint between the two bodies
@@ -311,8 +309,7 @@ Identity JointFeatures::AttachPrismaticJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
-  auto childsParentJoint = bn->getParentJoint();
-  if (childsParentJoint && childsParentJoint->getType() != "FreeJoint")
+  if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
     // TODO(scpeters): use a WeldJointConstraint between the two bodies
