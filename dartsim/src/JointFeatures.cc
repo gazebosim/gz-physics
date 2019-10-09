@@ -141,6 +141,17 @@ void JointFeatures::SetJointTransformToChild(
 }
 
 /////////////////////////////////////////////////
+void JointFeatures::DetachJoint(const Identity &_jointId)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_jointId)->joint;
+  if (joint->getType() == "FreeJoint")
+  {
+    // don't need to do anything, joint is already a FreeJoint
+    return;
+  }
+}
+
+/////////////////////////////////////////////////
 Identity JointFeatures::CastToFixedJoint(
     const Identity &_jointID) const
 {
