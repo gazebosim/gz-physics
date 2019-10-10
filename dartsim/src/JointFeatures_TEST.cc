@@ -31,6 +31,7 @@
 
 // Features
 #include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/FreeJoint.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RevoluteJoint.hh>
@@ -48,8 +49,10 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::dartsim::RetrieveWorld,
   physics::DetachJointFeature,
   physics::ForwardStep,
+  physics::FreeJointCast,
   physics::GetBasicJointState,
   physics::GetEntities,
+  physics::RevoluteJointCast,
   physics::SetJointVelocityCommandFeature,
   physics::sdf::ConstructSdfWorld
 >;
@@ -153,6 +156,12 @@ TEST_F(JointFeaturesFixture, JointDetach)
   auto upperJoint = model->GetJoint(upperJointName);
   auto lowerJoint = model->GetJoint(lowerJointName);
 
+  // test Cast*Joint functions
+  EXPECT_NE(nullptr, upperJoint->CastToRevoluteJoint());
+  EXPECT_NE(nullptr, lowerJoint->CastToRevoluteJoint());
+  EXPECT_EQ(nullptr, upperJoint->CastToFreeJoint());
+  EXPECT_EQ(nullptr, lowerJoint->CastToFreeJoint());
+
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
@@ -176,6 +185,8 @@ TEST_F(JointFeaturesFixture, JointDetach)
   // detach lower joint
   lowerJoint->Detach();
   EXPECT_EQ("FreeJoint", dartLowerLink->getParentJoint()->getType());
+  EXPECT_NE(nullptr, lowerJoint->CastToFreeJoint());
+  EXPECT_EQ(nullptr, lowerJoint->CastToRevoluteJoint());
 
   // expect poses to remain unchanged
   EXPECT_EQ(initialUpperLinkPose,
@@ -224,6 +235,8 @@ TEST_F(JointFeaturesFixture, JointDetach)
 
   upperJoint->Detach();
   EXPECT_EQ("FreeJoint", dartUpperLink->getParentJoint()->getType());
+  EXPECT_NE(nullptr, upperJoint->CastToFreeJoint());
+  EXPECT_EQ(nullptr, upperJoint->CastToRevoluteJoint());
 
   EXPECT_EQ(upperLinkPose,
       math::eigen3::convert(dartUpperLink->getWorldTransform()));
