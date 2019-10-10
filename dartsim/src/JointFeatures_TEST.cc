@@ -188,6 +188,12 @@ TEST_F(JointFeaturesFixture, JointDetach)
   EXPECT_NE(nullptr, lowerJoint->CastToFreeJoint());
   EXPECT_EQ(nullptr, lowerJoint->CastToRevoluteJoint());
 
+  // Detach() can be called again though it has no effect
+  lowerJoint->Detach();
+  EXPECT_EQ("FreeJoint", dartLowerLink->getParentJoint()->getType());
+  EXPECT_NE(nullptr, lowerJoint->CastToFreeJoint());
+  EXPECT_EQ(nullptr, lowerJoint->CastToRevoluteJoint());
+
   // expect poses to remain unchanged
   EXPECT_EQ(initialUpperLinkPose,
             math::eigen3::convert(dartUpperLink->getWorldTransform()));
