@@ -149,6 +149,18 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
     // don't need to do anything, joint is already a FreeJoint
     return;
   }
+
+  auto child = joint->getChildBodyNode();
+  auto transform = child->getWorldTransform();
+  auto spatialVelocity =
+      child->getSpatialVelocity(
+          dart::dynamics::Frame::World(),
+          dart::dynamics::Frame::World());
+  auto freeJoint = child->moveTo<dart::dynamics::FreeJoint>(nullptr);
+  freeJoint->setTransform(transform);
+  freeJoint->setSpatialVelocity(spatialVelocity,
+          dart::dynamics::Frame::World(),
+          dart::dynamics::Frame::World());
 }
 
 /////////////////////////////////////////////////
