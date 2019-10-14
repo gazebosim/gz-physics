@@ -18,8 +18,6 @@
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
-#include <dart/constraint/ConstraintSolver.hpp>
-#include <dart/constraint/WeldJointConstraint.hpp>
 
 #include <gtest/gtest.h>
 
