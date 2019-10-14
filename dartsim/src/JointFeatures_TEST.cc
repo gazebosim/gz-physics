@@ -304,7 +304,6 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
   const std::size_t numSteps = 100;
   for (std::size_t i = 0; i < numSteps; ++i)
   {
-    // step forward and expect lower link to fall
     world->Step(output, state, input);
 
     // Expect the model1 to stay at rest (since it's on the ground) and model2
@@ -322,7 +321,6 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
 
   for (std::size_t i = 0; i < numSteps; ++i)
   {
-    // step forward and expect lower link to fall
     world->Step(output, state, input);
 
     // Expect the model1 to remain at rest and model2
@@ -340,7 +338,6 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
 
   for (std::size_t i = 0; i < numSteps; ++i)
   {
-    // step forward and expect lower link to fall
     world->Step(output, state, input);
 
     // Expect the model1 to remain at rest and model2
