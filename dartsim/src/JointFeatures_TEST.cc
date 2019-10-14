@@ -190,6 +190,12 @@ TEST_F(JointFeaturesFixture, JointDetach)
   EXPECT_NE(nullptr, lowerJoint->CastToFreeJoint());
   EXPECT_EQ(nullptr, lowerJoint->CastToRevoluteJoint());
 
+  // Detach() can be called again though it has no effect
+  lowerJoint->Detach();
+  EXPECT_EQ("FreeJoint", dartLowerLink->getParentJoint()->getType());
+  EXPECT_NE(nullptr, lowerJoint->CastToFreeJoint());
+  EXPECT_EQ(nullptr, lowerJoint->CastToRevoluteJoint());
+
   // expect poses to remain unchanged
   EXPECT_EQ(initialUpperLinkPose,
             math::eigen3::convert(dartUpperLink->getWorldTransform()));
@@ -228,7 +234,7 @@ TEST_F(JointFeaturesFixture, JointDetach)
   math::Vector3d upperLinkAngularVelocity =
       math::eigen3::convert(dartUpperLink->getAngularVelocity());
   // sanity check on velocity values
-  EXPECT_LT(1e-4, upperLinkLinearVelocity.Z());
+  EXPECT_LT(1e-5, upperLinkLinearVelocity.Z());
   EXPECT_GT(-0.03, upperLinkAngularVelocity.X());
   EXPECT_NEAR(0.0, upperLinkLinearVelocity.X(), 1e-6);
   EXPECT_NEAR(0.0, upperLinkLinearVelocity.Y(), 1e-6);
