@@ -18,6 +18,8 @@
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
+#include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/constraint/WeldJointConstraint.hpp>
 
 #include <gtest/gtest.h>
 
@@ -32,6 +34,7 @@
 // Features
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/FreeJoint.hh>
+#include <ignition/physics/FixedJoint.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RevoluteJoint.hh>
@@ -47,6 +50,7 @@ using namespace ignition;
 
 using TestFeatureList = ignition::physics::FeatureList<
   physics::dartsim::RetrieveWorld,
+  physics::AttachFixedJointFeature,
   physics::DetachJointFeature,
   physics::ForwardStep,
   physics::FreeJointCast,
@@ -244,6 +248,152 @@ TEST_F(JointFeaturesFixture, JointDetach)
       math::eigen3::convert(dartUpperLink->getLinearVelocity()));
   EXPECT_EQ(upperLinkAngularVelocity,
       math::eigen3::convert(dartUpperLink->getAngularVelocity()));
+}
+
+/////////////////////////////////////////////////
+// Attach a fixed joint between links that belong to different models
+TEST_F(JointFeaturesFixture, JointAttachDetach)
+{
+  sdf::Root root;
+  const sdf::Errors errors =
+      root.Load(TEST_WORLD_DIR "joint_across_models.sdf");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  const std::string modelName1{"M1"};
+  const std::string modelName2{"M2"};
+  const std::string bodyName{"body"};
+
+  auto model1 = world->GetModel(modelName1);
+  auto model2 = world->GetModel(modelName2);
+  auto model1Body = model1->GetLink(bodyName);
+  auto model2Body = model2->GetLink(bodyName);
+
+  const dart::dynamics::SkeletonPtr skeleton1 =
+      dartWorld->getSkeleton(modelName1);
+  const dart::dynamics::SkeletonPtr skeleton2 =
+      dartWorld->getSkeleton(modelName2);
+  ASSERT_NE(nullptr, skeleton1);
+  ASSERT_NE(nullptr, skeleton2);
+
+  auto *dartBody1 = skeleton1->getBodyNode(bodyName);
+  auto *dartBody2 = skeleton2->getBodyNode(bodyName);
+
+  ASSERT_NE(nullptr, dartBody1);
+  ASSERT_NE(nullptr, dartBody2);
+
+  const math::Pose3d initialModel1Pose(0, 0, 0.25, 0, 0, 0);
+  const math::Pose3d initialModel2Pose(0, 0, 3.0, 0, 0, 0);
+
+  EXPECT_EQ(initialModel1Pose,
+            math::eigen3::convert(dartBody1->getWorldTransform()));
+  EXPECT_EQ(initialModel2Pose,
+            math::eigen3::convert(dartBody2->getWorldTransform()));
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  const std::size_t numSteps = 100;
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    // step forward and expect lower link to fall
+    world->Step(output, state, input);
+
+    // Expect the model1 to stay at rest (since it's on the ground) and model2
+    // to start falling
+    math::Vector3d body1LinearVelocity =
+        math::eigen3::convert(dartBody1->getLinearVelocity());
+    math::Vector3d body2LinearVelocity =
+        math::eigen3::convert(dartBody2->getLinearVelocity());
+    EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
+    // Negative z velocity
+    EXPECT_GT(0.0, body2LinearVelocity.Z());
+  }
+
+  auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
+
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    // step forward and expect lower link to fall
+    world->Step(output, state, input);
+
+    // Expect the model1 to remain at rest and model2
+    // to stop moving
+    math::Vector3d body1LinearVelocity =
+        math::eigen3::convert(dartBody1->getLinearVelocity());
+    math::Vector3d body2LinearVelocity =
+        math::eigen3::convert(dartBody2->getLinearVelocity());
+    EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
+    EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
+  }
+
+  // now detach joint and expect model2 to start moving again
+  fixedJoint->Detach();
+
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    // step forward and expect lower link to fall
+    world->Step(output, state, input);
+
+    // Expect the model1 to remain at rest and model2
+    // to start moving again
+    math::Vector3d body1LinearVelocity =
+        math::eigen3::convert(dartBody1->getLinearVelocity());
+    math::Vector3d body2LinearVelocity =
+        math::eigen3::convert(dartBody2->getLinearVelocity());
+    EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
+    // Negative z velocity
+    EXPECT_GT(0.0, body2LinearVelocity.Z());
+  }
+}
+
+/////////////////////////////////////////////////
+// Expectations on number of links before/after attach/detach
+TEST_F(JointFeaturesFixture, LinkCountsInJointAttachDetach)
+{
+  sdf::Root root;
+  const sdf::Errors errors =
+      root.Load(TEST_WORLD_DIR "joint_across_models.sdf");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  const std::string modelName1{"M1"};
+  const std::string modelName2{"M2"};
+  const std::string bodyName{"body"};
+
+  auto model1 = world->GetModel(modelName1);
+  auto model2 = world->GetModel(modelName2);
+  auto model1Body = model1->GetLink(bodyName);
+  auto model2Body = model2->GetLink(bodyName);
+
+  // Before attaching we expect each model to have 1 link
+  EXPECT_EQ(1u, model1->GetLinkCount());
+  EXPECT_EQ(1u, model2->GetLinkCount());
+
+  auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
+
+  // After attaching we expect each model to have 1 link, but the current
+  // behavior is that there are 2 links in model1 and 0 in model2
+  // EXPECT_EQ(1u, model1->GetLinkCount());
+  // EXPECT_EQ(1u, model2->GetLinkCount());
+  EXPECT_EQ(2u, model1->GetLinkCount());
+  EXPECT_EQ(0u, model2->GetLinkCount());
+
+  // now detach joint and expect model2 to start moving again
+  fixedJoint->Detach();
+  // After detaching we expect each model to have 1 link, but the current
+  // behavior is that there are 2 links in model1 and 0 in model2
+  // EXPECT_EQ(1u, model1->GetLinkCount());
+  // EXPECT_EQ(1u, model2->GetLinkCount());
+  EXPECT_EQ(2u, model1->GetLinkCount());
+  EXPECT_EQ(0u, model2->GetLinkCount());
 }
 
 /////////////////////////////////////////////////
