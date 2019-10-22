@@ -156,7 +156,34 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       child->getSpatialVelocity(
           dart::dynamics::Frame::World(),
           dart::dynamics::Frame::World());
-  auto freeJoint = child->moveTo<dart::dynamics::FreeJoint>(nullptr);
+
+  dart::dynamics::SkeletonPtr skeleton;
+  {
+    std::string oldName = child->getName();
+    std::size_t findSlash = oldName.find_first_of("/");
+    if (findSlash != std::string::npos &&
+        findSlash > 0 &&
+        findSlash < oldName.size()-1)
+    {
+      if (this->worlds.size() == 1)
+      {
+        std::string modelName = oldName.substr(0, findSlash);
+        auto dartWorld = this->worlds.idToObject.begin()->second;
+        skeleton = dartWorld->getSkeleton(modelName);
+        child->setName(oldName.substr(findSlash+1));
+      }
+    }
+  }
+
+  dart::dynamics::FreeJoint *freeJoint;
+  if (skeleton)
+  {
+    freeJoint = child->moveTo<dart::dynamics::FreeJoint>(skeleton, nullptr);
+  }
+  else
+  {
+    freeJoint = child->moveTo<dart::dynamics::FreeJoint>(nullptr);
+  }
   freeJoint->setTransform(transform);
   freeJoint->setSpatialVelocity(spatialVelocity,
           dart::dynamics::Frame::World(),
@@ -198,6 +225,13 @@ Identity JointFeatures::AttachFixedJoint(
     return this->GenerateInvalidId();
   }
 
+  {
+    auto skeleton = bn->getSkeleton();
+    if (skeleton)
+    {
+      bn->setName(skeleton->getName() + '/' + bn->getName());
+    }
+  }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
@@ -280,6 +314,13 @@ Identity JointFeatures::AttachRevoluteJoint(
     return this->GenerateInvalidId();
   }
 
+  {
+    auto skeleton = bn->getSkeleton();
+    if (skeleton)
+    {
+      bn->setName(skeleton->getName() + '/' + bn->getName());
+    }
+  }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
@@ -339,6 +380,13 @@ Identity JointFeatures::AttachPrismaticJoint(
     return this->GenerateInvalidId();
   }
 
+  {
+    auto skeleton = bn->getSkeleton();
+    if (skeleton)
+    {
+      bn->setName(skeleton->getName() + '/' + bn->getName());
+    }
+  }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));
   return this->GenerateIdentity(jointID, this->joints.at(jointID));

@@ -393,8 +393,8 @@ TEST_F(JointFeaturesFixture, LinkCountsInJointAttachDetach)
   // behavior is that there are 2 links in model1 and 0 in model2
   // EXPECT_EQ(1u, model1->GetLinkCount());
   // EXPECT_EQ(1u, model2->GetLinkCount());
-  EXPECT_EQ(2u, model1->GetLinkCount());
-  EXPECT_EQ(0u, model2->GetLinkCount());
+  EXPECT_EQ(1u, model1->GetLinkCount());
+  EXPECT_EQ(1u, model2->GetLinkCount());
 }
 
 /////////////////////////////////////////////////
