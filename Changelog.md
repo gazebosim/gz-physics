@@ -5,6 +5,11 @@
 1. Improve compile time by reducing length of symbol names
     * [Pull request 93](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/93)
 
+### Ignition Physics 1.4.0 (20XX-XX-XX)
+
+1. Add SetJointVelocityCommand feature
+    * [Pull request 100](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/100)
+
 1. Add `IGN_PROFILER_ENABLE` cmake option for enabling the ign-common profiler.
     * [Pull request 96](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/96)
 
