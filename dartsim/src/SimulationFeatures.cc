@@ -20,6 +20,8 @@
 
 #include "SimulationFeatures.hh"
 
+#include "ignition/common/Profiler.hh"
+
 namespace ignition {
 namespace physics {
 namespace dartsim {
@@ -28,9 +30,24 @@ void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
     ForwardStep::Output & /*_h*/,
     ForwardStep::State & /*_x*/,
-    const ForwardStep::Input & /*_u*/)
+    const ForwardStep::Input & _u)
 {
-  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  IGN_PROFILE("SimulationFeatures::WorldForwardStep");
+  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto *dtDur =
+      _u.Query<std::chrono::steady_clock::duration>();
+  const double tol = 1e-6;
+
+  if (dtDur)
+  {
+    std::chrono::duration<double> dt = *dtDur;
+    if (std::fabs(dt.count() - world->getTimeStep()) > tol)
+    {
+      world->setTimeStep(dt.count());
+      igndbg << "Simulation timestep set to: " << world->getTimeStep()
+             << std::endl;
+    }
+  }
 
   // TODO(MXG): Parse input
   world->step();
