@@ -58,6 +58,29 @@ namespace dartsim {
 
 namespace {
 /////////////////////////////////////////////////
+/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
+/// frame. If that fails, return the raw pose
+template <typename SDFDom>
+static Eigen::Isometry3d ResolveSdfPose(const SDFDom &_sdf)
+{
+  math::Pose3d pose;
+  ::sdf::Errors errors = _sdf.ResolvePose(pose);
+  if (!errors.empty())
+    pose = _sdf.Pose();
+
+  return math::eigen3::convert(pose);
+}
+
+/////////////////////////////////////////////////
+// TODO (addisu): Remove this function when sdf::Model::ResolvePose gets
+// implemented
+template <>
+Eigen::Isometry3d ResolveSdfPose<::sdf::Model>(const ::sdf::Model &_sdf)
+{
+  return math::eigen3::convert(_sdf.Pose());
+}
+
+/////////////////////////////////////////////////
 double infIfNeg(const double _value)
 {
   if (_value < 0.0)
@@ -120,13 +143,24 @@ static Eigen::Vector3d ConvertJointAxis(
 {
   const Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
 
-  if (_sdfAxis->UseParentModelFrame())
+  if (_sdfAxis->XyzExpressedIn().empty())
+    return axis;
+
+  if (_sdfAxis->XyzExpressedIn() == "__model__")
   {
     const Eigen::Quaterniond O_R_J{_T_joint.rotation()};
     const Eigen::Quaterniond O_R_M{GetParentModelFrame(_modelInfo).rotation()};
     const Eigen::Quaterniond J_R_M = O_R_J.inverse() * O_R_M;
     return J_R_M * axis;
   }
+
+  // xyz expressed in a frame other than the joint frame or the parent model
+  // frame is not supported
+  // TODO(addisu): Fix when support is added in libsdformat
+
+  ignerr << "XyzExpressedIn [" << _sdfAxis->XyzExpressedIn() << "] but "
+    << "currently only the joint frame or the parent model frame are "
+    << "supported.\n";
 
   return axis;
 }
@@ -303,7 +337,7 @@ Identity SDFFeatures::ConstructSdfModel(
       dart::dynamics::SimpleFrame::createShared(
         dart::dynamics::Frame::World(),
         _sdfModel.Name()+"_frame",
-        math::eigen3::convert(_sdfModel.Pose()));
+        ResolveSdfPose(_sdfModel));
 
   auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
 
@@ -356,6 +390,8 @@ Identity SDFFeatures::ConstructSdfLink(
   const ignition::math::Inertiald &sdfInertia = _sdfLink.Inertial();
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
 
+  // TODO(addisu) Resolve the pose of inertials when frame information is
+  // availabile for ignition::math::Inertial
   const Eigen::Matrix3d R_inertial{
         math::eigen3::convert(sdfInertia.Pose().Rot())};
 
@@ -384,8 +420,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   dart::dynamics::FreeJoint * const joint = result.first;
   const Eigen::Isometry3d tf =
-      this->ResolveSdfLinkReferenceFrame(_sdfLink.PoseFrame(), modelInfo)
-      * math::eigen3::convert(_sdfLink.Pose());
+      GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink);
 
   joint->setTransform(tf);
 
@@ -509,8 +544,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
   }
 
-  node->setRelativeTransform(
-        math::eigen3::convert(_collision.Pose()) * tf_shape);
+  node->setRelativeTransform(ResolveSdfPose(_collision) * tf_shape);
 
   const std::size_t shapeID =
       this->AddShape({node, _collision.Name(), tf_shape});
@@ -551,8 +585,7 @@ Identity SDFFeatures::ConstructSdfVisual(
       bn->createShapeNodeWith<dart::dynamics::VisualAspect>(
         shape, internalName);
 
-  node->setRelativeTransform(
-        math::eigen3::convert(_visual.Pose()) * tf_shape);
+  node->setRelativeTransform(ResolveSdfPose(_visual) * tf_shape);
 
   // TODO(MXG): Are there any other visual parameters that we can do anything
   // with? Do these visual parameters even matter, since dartsim is only
@@ -659,8 +692,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const Eigen::Isometry3d T_child = _child->getWorldTransform();
 
   const Eigen::Isometry3d T_joint =
-    this->ResolveSdfJointReferenceFrame(_sdfJoint.PoseFrame(), _child)
-    * math::eigen3::convert(_sdfJoint.Pose());
+      _child->getWorldTransform() * ResolveSdfPose(_sdfJoint);
 
   const ::sdf::JointType type = _sdfJoint.Type();
   dart::dynamics::Joint *joint = nullptr;
