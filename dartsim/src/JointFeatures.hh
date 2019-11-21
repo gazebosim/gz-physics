@@ -49,7 +49,9 @@ struct JointFeatureList : FeatureList<
 
   SetPrismaticJointProperties,
   GetPrismaticJointProperties,
-  AttachPrismaticJointFeature
+  AttachPrismaticJointFeature,
+
+  SetJointVelocityCommandFeature
 > { };
 
 class JointFeatures :
@@ -159,6 +161,11 @@ class JointFeatures :
       const BaseLink3dPtr &_parent,
       const std::string &_name,
       const LinearVector3d &_axis) override;
+
+  // ----- Joint Commands -----
+  public: void SetJointVelocityCommand(
+      const Identity &_id, const std::size_t _dof,
+      const double _value) override;
 };
 
 }

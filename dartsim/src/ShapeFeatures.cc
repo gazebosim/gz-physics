@@ -80,8 +80,9 @@ Identity ShapeFeatures::AttachBoxShape(
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
-      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        box, bn->getName() + ":" + _name);
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          box, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
   const std::size_t shapeID = this->AddShape({sn, _name});
@@ -139,8 +140,9 @@ Identity ShapeFeatures::AttachCylinderShape(
 
   auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
   dart::dynamics::ShapeNode *sn =
-      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        cylinder, bn->getName() + ":" + _name);
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          cylinder, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
 
@@ -186,8 +188,9 @@ Identity ShapeFeatures::AttachSphereShape(
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
-      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        sphere, bn->getName() + ":" + _name);
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          sphere, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
   const std::size_t shapeID = this->AddShape({sn, _name});
@@ -247,8 +250,9 @@ Identity ShapeFeatures::AttachMeshShape(
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
-      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        mesh, bn->getName() + ":" + _name);
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          mesh, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
   const std::size_t shapeID = this->AddShape({sn, _name});
