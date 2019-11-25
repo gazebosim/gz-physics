@@ -41,15 +41,15 @@
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
-using TestFeatureList = ignition::physics::FeatureList<
-  ignition::physics::GetBasicJointState,
-  ignition::physics::SetBasicJointState,
-  ignition::physics::dartsim::RetrieveWorld,
-  ignition::physics::sdf::ConstructSdfJoint,
-  ignition::physics::sdf::ConstructSdfLink,
-  ignition::physics::sdf::ConstructSdfModel,
-  ignition::physics::sdf::ConstructSdfWorld
->;
+struct TestFeatureList : ignition::physics::FeatureList<
+    ignition::physics::GetBasicJointState,
+    ignition::physics::SetBasicJointState,
+    ignition::physics::dartsim::RetrieveWorld,
+    ignition::physics::sdf::ConstructSdfJoint,
+    ignition::physics::sdf::ConstructSdfLink,
+    ignition::physics::sdf::ConstructSdfModel,
+    ignition::physics::sdf::ConstructSdfWorld
+> { };
 
 using World = ignition::physics::World3d<TestFeatureList>;
 using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;

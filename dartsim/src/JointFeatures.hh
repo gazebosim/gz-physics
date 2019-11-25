@@ -32,7 +32,7 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using JointFeatureList = FeatureList<
+struct JointFeatureList : FeatureList<
   GetBasicJointState,
   SetBasicJointState,
   GetBasicJointProperties,
@@ -52,7 +52,7 @@ using JointFeatureList = FeatureList<
   AttachPrismaticJointFeature,
 
   SetJointVelocityCommandFeature
->;
+> { };
 
 class JointFeatures :
     public virtual Base,

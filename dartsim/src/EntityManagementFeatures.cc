@@ -57,6 +57,8 @@ class ImmobileContactFilter : public dart::collision::BodyNodeCollisionFilter
 
     return BodyNodeCollisionFilter::ignoresCollision(_object1, _object2);
   }
+
+  virtual ~ImmobileContactFilter() = default;
 };
 
 /////////////////////////////////////////////////

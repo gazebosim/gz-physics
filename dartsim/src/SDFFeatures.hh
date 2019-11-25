@@ -36,14 +36,14 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using SDFFeatureList = FeatureList<
+struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfJoint,
   sdf::ConstructSdfCollision,
   sdf::ConstructSdfVisual
->;
+> { };
 
 class SDFFeatures :
     public virtual EntityManagementFeatures,

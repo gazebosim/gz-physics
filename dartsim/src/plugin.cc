@@ -32,7 +32,7 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using DartsimFeatures = FeatureList<
+struct DartsimFeatures : FeatureList<
   CustomFeatureList,
   EntityManagementFeatureList,
   FreeGroupFeatureList,
@@ -43,7 +43,7 @@ using DartsimFeatures = FeatureList<
   ShapeFeatureList,
   SimulationFeatureList
   // TODO(MXG): Implement more features
->;
+> { };
 
 class Plugin :
     public virtual Implements3d<DartsimFeatures>,

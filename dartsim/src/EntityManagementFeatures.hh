@@ -31,13 +31,13 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using EntityManagementFeatureList = FeatureList<
+struct EntityManagementFeatureList : FeatureList<
   GetEntities,
   RemoveEntities,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,
   ConstructEmptyLinkFeature
->;
+> { };
 
 class EntityManagementFeatures :
     public virtual Base,
