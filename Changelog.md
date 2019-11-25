@@ -1,3 +1,12 @@
+## Ignition Physics 2.x
+
+### Ignition Physics 2.x.x (20XX-XX-XX)
+
+### Ignition Physics 2.0.0 (20XX-XX-XX)
+
+1. Improve compile time by reducing length of symbol names
+    * [Pull request 93](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/93)
+
 ## Ignition Physics 1.x
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)

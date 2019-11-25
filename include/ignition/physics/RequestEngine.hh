@@ -37,7 +37,7 @@ namespace ignition
       using EnginePtrType = EnginePtr<FeaturePolicyT, FeatureListT>;
 
       // Tuple of features that are being requested
-      using Features = typename FeatureListT::Features;
+      using Features = FeatureListT;
 
       /// \brief Get an Engine from the given physics plugin.
       ///
