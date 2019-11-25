@@ -116,7 +116,7 @@ sudo apt install -y \
   libignition-math6-eigen3-dev \
   libignition-plugin-dev \
   libeigen3-dev \
-  libsdformat8-dev \
+  libsdformat9-dev \
   dart6-data \
   libdart6-collision-ode-dev \
   libdart6-dev \

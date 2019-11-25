@@ -47,7 +47,7 @@ set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-plugin
-ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all)
+ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all VERSION 1.1)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 #--------------------------------------
@@ -56,7 +56,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
+ign_find_package(sdformat9 REQUIRED_BY sdf dartsim)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper

@@ -6,6 +6,7 @@
 
 1. Improve compile time by reducing length of symbol names
     * [Pull request 93](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/93)
+    * [Pull request 88](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/88)
 
 ## Ignition Physics 1.x
 
