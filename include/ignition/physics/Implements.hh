@@ -32,7 +32,7 @@ namespace ignition
     /// Below are simpler templates that hardcode the dimensionality and
     /// precision.
     template <typename PolicyT, typename FeatureListT>
-    using Implements = detail::AggregateImplementation<PolicyT, FeatureListT>;
+    using Implements = detail::ExtractImplementation<PolicyT, FeatureListT>;
 
     template <typename FeatureListT>
     using Implements3d = Implements<FeaturePolicy3d, FeatureListT>;
