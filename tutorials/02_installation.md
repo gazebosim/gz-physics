@@ -47,7 +47,7 @@ sudo apt-get install libignition-cmake2-dev \
                      libdart6-dev \
                      libdart6-collision-ode-dev \
                      libdart6-utils-urdf-dev \
-                     libsdformat8-dev
+                     libsdformat9-dev
 ```
 
 Clone the ign-physics repository from bitbucket

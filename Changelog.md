@@ -4,6 +4,9 @@
 
 ### Ignition Physics 2.0.0 (20XX-XX-XX)
 
+1. Upgrade to libsdformat9
+    * [Pull request 108](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/108)
+
 1. Improve compile time by reducing length of symbol names
     * [Pull request 93](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/93)
     * [Pull request 88](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/88)
