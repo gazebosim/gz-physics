@@ -29,12 +29,22 @@ pipelines:
             libignition-math6-eigen3-dev
             libignition-plugin-dev
             libeigen3-dev
-            libsdformat9-dev
             dart6-data
             libdart6-collision-ode-dev
             libdart6-dev
             libdart6-utils-urdf-dev
             libbenchmark-dev
+          # libsdformat9-dev
+          # libsdformat (uncomment if a specific branch is needed)
+          - apt install -y
+            libtinyxml-dev
+          - hg clone http://bitbucket.org/osrf/sdformat -b spec2_prototype_9
+          - cd sdformat
+          - mkdir build
+          - cd build
+          - cmake ..
+          - make -j4 install
+          - cd ../..
           # Ignition physics
           - mkdir build
           - cd build
