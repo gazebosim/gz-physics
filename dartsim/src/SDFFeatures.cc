@@ -64,20 +64,11 @@ template <typename SDFDom>
 static Eigen::Isometry3d ResolveSdfPose(const SDFDom &_sdf)
 {
   math::Pose3d pose;
-  ::sdf::Errors errors = _sdf.ResolvePose(pose);
+  ::sdf::Errors errors = _sdf.SemanticPose().Resolve(pose);
   if (!errors.empty())
-    pose = _sdf.Pose();
+    pose = _sdf.RawPose();
 
   return math::eigen3::convert(pose);
-}
-
-/////////////////////////////////////////////////
-// TODO (addisu): Remove this function when sdf::Model::ResolvePose gets
-// implemented
-template <>
-Eigen::Isometry3d ResolveSdfPose<::sdf::Model>(const ::sdf::Model &_sdf)
-{
-  return math::eigen3::convert(_sdf.Pose());
 }
 
 /////////////////////////////////////////////////
