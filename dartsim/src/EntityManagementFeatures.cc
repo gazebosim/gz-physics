@@ -560,7 +560,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
         dart::dynamics::Frame::World(),
         _name + "_frame");
 
-  auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
+  auto [modelID, modelInfo] = this->AddModel({model, modelFrame, ""}, _worldID); // NOLINT
 
   return this->GenerateIdentity(modelID, this->models.at(modelID));
 }

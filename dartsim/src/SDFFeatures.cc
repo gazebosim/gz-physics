@@ -131,6 +131,14 @@ static Eigen::Vector3d ConvertJointAxis(
     const ModelInfo &_modelInfo,
     const Eigen::Isometry3d &_T_joint)
 {
+  math::Vector3d resolvedAxis;
+  ::sdf::Errors errors = _sdfAxis->ResolveXyz(resolvedAxis);
+  if (errors.empty())
+    return math::eigen3::convert(resolvedAxis);
+
+  // Error while Resolving xyz. Fallback sdformat 1.6 behavior but treat
+  // xyz_expressed_in = "__model__" as the old use_parent_model_frame
+
   const Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
 
   if (_sdfAxis->XyzExpressedIn().empty())
@@ -146,11 +154,9 @@ static Eigen::Vector3d ConvertJointAxis(
 
   // xyz expressed in a frame other than the joint frame or the parent model
   // frame is not supported
-  // TODO(addisu): Fix when support is added in libsdformat
-
-  ignerr << "XyzExpressedIn [" << _sdfAxis->XyzExpressedIn() << "] but "
-    << "currently only the joint frame or the parent model frame are "
-    << "supported.\n";
+  ignerr << "Error encountered in resolving the xyz with attribute "
+         << "xyz_expressed_in[" << _sdfAxis->XyzExpressedIn() << "]. Falling "
+         << "back to using the raw xyz vector expressed in the joint frame.\n";
 
   return axis;
 }
@@ -329,7 +335,9 @@ Identity SDFFeatures::ConstructSdfModel(
         _sdfModel.Name()+"_frame",
         ResolveSdfPose(_sdfModel.SemanticPose()));
 
-  auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
+  // Set canonical link name
+  auto [modelID, modelInfo] = this->AddModel( // NOLINT
+      {model, modelFrame, _sdfModel.CanonicalLinkName()}, _worldID);
 
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
@@ -421,7 +429,9 @@ Identity SDFFeatures::ConstructSdfLink(
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
-  if (modelInfo.model->getNumBodyNodes() == 1)
+  if (_sdfLink.Name() == modelInfo.canonicalLinkName ||
+      (modelInfo.canonicalLinkName.empty() &&
+       modelInfo.model->getNumBodyNodes() == 1))
   {
     // We just added the first link, so this is now the canonical link. We
     // should therefore move the "model frame" from the world onto this new
