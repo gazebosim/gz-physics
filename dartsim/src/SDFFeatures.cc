@@ -60,13 +60,12 @@ namespace {
 /////////////////////////////////////////////////
 /// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
 /// frame. If that fails, return the raw pose
-template <typename SDFDom>
-static Eigen::Isometry3d ResolveSdfPose(const SDFDom &_sdf)
+static Eigen::Isometry3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
 {
   math::Pose3d pose;
-  ::sdf::Errors errors = _sdf.SemanticPose().Resolve(pose);
+  ::sdf::Errors errors = _semPose.Resolve(pose);
   if (!errors.empty())
-    pose = _sdf.RawPose();
+    pose = _semPose.RawPose();
 
   return math::eigen3::convert(pose);
 }
@@ -328,7 +327,7 @@ Identity SDFFeatures::ConstructSdfModel(
       dart::dynamics::SimpleFrame::createShared(
         dart::dynamics::Frame::World(),
         _sdfModel.Name()+"_frame",
-        ResolveSdfPose(_sdfModel));
+        ResolveSdfPose(_sdfModel.SemanticPose()));
 
   auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
 
@@ -411,7 +410,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   dart::dynamics::FreeJoint * const joint = result.first;
   const Eigen::Isometry3d tf =
-      GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink);
+      GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink.SemanticPose());
 
   joint->setTransform(tf);
 
@@ -535,7 +534,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
   }
 
-  node->setRelativeTransform(ResolveSdfPose(_collision) * tf_shape);
+  node->setRelativeTransform(ResolveSdfPose(_collision.SemanticPose()) *
+                             tf_shape);
 
   const std::size_t shapeID =
       this->AddShape({node, _collision.Name(), tf_shape});
@@ -576,7 +576,7 @@ Identity SDFFeatures::ConstructSdfVisual(
       bn->createShapeNodeWith<dart::dynamics::VisualAspect>(
         shape, internalName);
 
-  node->setRelativeTransform(ResolveSdfPose(_visual) * tf_shape);
+  node->setRelativeTransform(ResolveSdfPose(_visual.SemanticPose()) * tf_shape);
 
   // TODO(MXG): Are there any other visual parameters that we can do anything
   // with? Do these visual parameters even matter, since dartsim is only
@@ -683,7 +683,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const Eigen::Isometry3d T_child = _child->getWorldTransform();
 
   const Eigen::Isometry3d T_joint =
-      _child->getWorldTransform() * ResolveSdfPose(_sdfJoint);
+      _child->getWorldTransform() * ResolveSdfPose(_sdfJoint.SemanticPose());
 
   const ::sdf::JointType type = _sdfJoint.Type();
   dart::dynamics::Joint *joint = nullptr;
