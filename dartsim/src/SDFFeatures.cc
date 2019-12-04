@@ -514,6 +514,7 @@ Identity SDFFeatures::ConstructSdfCollision(
                                   ->GetElement("friction")
                                   ->GetElement("ode");
 
+#if DART_VERSION_AT_LEAST(6, 10, 0)
     auto aspect = node->getDynamicsAspect();
     aspect->setFrictionCoeff(odeFriction->Get<double>("mu"));
     if (odeFriction->HasElement("mu2"))
@@ -533,6 +534,14 @@ Identity SDFFeatures::ConstructSdfCollision(
       math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
     }
+#else
+    // We are setting the friction coefficient of a collision element
+    // to be the coefficient for the whole link. If there are multiple collision
+    // elements, the value of the last one will be the coefficient for the link.
+    // TODO(addisu) Assign the coefficient to the shape node when support is
+    // added in DART.
+    bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+#endif
   }
 
   node->setRelativeTransform(ResolveSdfPose(_collision) * tf_shape);
