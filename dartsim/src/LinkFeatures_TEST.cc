@@ -118,7 +118,7 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   // Add a sphere
   sdf::Model modelSDF;
   modelSDF.SetName("sphere");
-  modelSDF.SetPose(math::Pose3d(0, 0, 2, 0, 0, IGN_PI));
+  modelSDF.SetRawPose(math::Pose3d(0, 0, 2, 0, 0, IGN_PI));
   auto model = world->ConstructModel(modelSDF);
 
   const double mass = 1.0;

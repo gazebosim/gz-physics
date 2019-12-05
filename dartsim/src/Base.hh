@@ -51,6 +51,7 @@ struct ModelInfo
 {
   dart::dynamics::SkeletonPtr model;
   dart::dynamics::SimpleFramePtr frame;
+  std::string canonicalLinkName;
 };
 
 struct LinkInfo

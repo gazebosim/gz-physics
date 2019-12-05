@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <world name="default">
+    <model name="link_relative_to">
+      <pose>0.0 0 2 0 0 0</pose>
+      <link name="L1">
+        <pose>0.5 0 0 0 0 3.14159265358979</pose>
+      </link>
+      <link name="L2">
+        <pose relative_to="L1">0.5 0 1 0 0 0</pose>
+      </link>
+    </model>
+    <model name="collision_relative_to">
+      <pose>1.0 0 0 0 0 0</pose>
+      <link name="L1">
+        <pose>0.0 0 1 0 0 0</pose>
+      </link>
+      <link name="L2">
+        <pose>0.0 0 2 0 0 0</pose>
+        <collision name="c1">
+          <pose relative_to="L1"/>
+          <geometry><sphere><radius>1</radius></sphere></geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="explicit_frames_with_links">
+      <pose>1.0 0 0 0 0 0</pose>
+      <frame name="F1">
+        <pose>0.0 0 1 0 0 0</pose>
+      </frame>
+      <link name="L1">
+        <pose relative_to="F1"/>
+      </link>
+
+      <frame name="F2" attached_to="L1">
+        <pose relative_to="__model__">0.0 0 0 0 0 0</pose>
+      </frame>
+      <link name="L2">
+        <pose relative_to="F2"/>
+      </link>
+    </model>
+    <model name="explicit_frames_with_collisions">
+      <pose>1.0 0 0 0 0 0</pose>
+      <frame name="F1">
+        <pose relative_to="L1">0 0 1 0 0 0</pose>
+      </frame>
+      <link name="L1">
+        <pose>0 0 2 0 0 0</pose>
+        <collision name="c1">
+          <pose relative_to="F1"/>
+          <geometry><sphere><radius>1</radius></sphere></geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>
+

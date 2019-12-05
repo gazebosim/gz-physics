@@ -20,6 +20,7 @@ pipelines:
           - cd ..
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease bionic main" > /etc/apt/sources.list.d/gazebo-prerelease.list
           - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
@@ -34,17 +35,17 @@ pipelines:
             libdart6-dev
             libdart6-utils-urdf-dev
             libbenchmark-dev
-          # libsdformat9-dev
+            libsdformat9-dev
           # libsdformat (uncomment if a specific branch is needed)
-          - apt install -y
-            libtinyxml-dev
-          - hg clone http://bitbucket.org/osrf/sdformat -b default
-          - cd sdformat
-          - mkdir build
-          - cd build
-          - cmake ..
-          - make -j4 install
-          - cd ../..
+          #- apt install -y
+          #  libtinyxml-dev
+          #- hg clone http://bitbucket.org/osrf/sdformat -b spec2_prototype_9
+          #- cd sdformat
+          #- mkdir build
+          #- cd build
+          #- cmake ..
+          #- make -j4 install
+          #- cd ../..
           # Ignition physics
           - mkdir build
           - cd build
