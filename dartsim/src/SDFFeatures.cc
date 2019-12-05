@@ -73,9 +73,9 @@ static Eigen::Isometry3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
       {
         ignerr << err.Message() << std::endl;
       }
-      ignerr << "There is no optimal fallback since the relative_to attribute "
-                "of the pose is not empty."
-                "Falling back to using the raw Pose.\n";
+      ignerr << "There is no optimal fallback since the relative_to attribute["
+             << _semPose.RelativeTo() << "] of the pose is not empty. "
+             << "Falling back to using the raw Pose.\n";
     }
     pose = _semPose.RawPose();
   }
@@ -172,9 +172,10 @@ static Eigen::Vector3d ConvertJointAxis(
   {
     ignerr << err.Message() << std::endl;
   }
-  ignerr << "There is no optimal fallback since the expressed_in attribute "
-         << "of the axis's xyz is neither empty nor '__model__'. Falling back "
-         << "to using the raw xyz vector expressed in the joint frame.\n";
+  ignerr << "There is no optimal fallback since the expressed_in attribute["
+         << _sdfAxis->XyzExpressedIn() << "] of the axis's xyz is neither empty"
+         << "nor '__model__'. Falling back to using the raw xyz vector "
+         << "expressed in the joint frame.\n";
 
   return axis;
 }
@@ -541,6 +542,7 @@ Identity SDFFeatures::ConstructSdfCollision(
                                   ->GetElement("friction")
                                   ->GetElement("ode");
 
+#if DART_VERSION_AT_LEAST(6, 10, 0)
     auto aspect = node->getDynamicsAspect();
     aspect->setFrictionCoeff(odeFriction->Get<double>("mu"));
     if (odeFriction->HasElement("mu2"))
@@ -560,6 +562,14 @@ Identity SDFFeatures::ConstructSdfCollision(
       math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
     }
+#else
+    // We are setting the friction coefficient of a collision element
+    // to be the coefficient for the whole link. If there are multiple collision
+    // elements, the value of the last one will be the coefficient for the link.
+    // TODO(addisu) Assign the coefficient to the shape node when support is
+    // added in DART.
+    bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+#endif
   }
 
   node->setRelativeTransform(ResolveSdfPose(_collision.SemanticPose()) *
