@@ -482,7 +482,7 @@ TEST(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
   ASSERT_NE(nullptr, link1);
 
   // Expect the world pose of M to be (1 1 2 0 0 0) taking into acount the chain
-  // of explicit frames relative to which it's pose is expressed
+  // of explicit frames relative to which its pose is expressed
   Eigen::Isometry3d expPose;
   expPose = Eigen::Translation3d(1, 1, 2);
 
