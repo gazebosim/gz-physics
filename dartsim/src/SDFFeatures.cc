@@ -173,8 +173,8 @@ static Eigen::Vector3d ConvertJointAxis(
     ignerr << err.Message() << std::endl;
   }
   ignerr << "There is no optimal fallback since the expressed_in attribute "
-         << "of the axis's xyz is neither empty nor '__model__'. Falling back to "
-         << "using the raw xyz vector expressed in the joint frame.\n";
+         << "of the axis's xyz is neither empty nor '__model__'. Falling back "
+         << "to using the raw xyz vector expressed in the joint frame.\n";
 
   return axis;
 }
