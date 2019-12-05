@@ -65,7 +65,20 @@ static Eigen::Isometry3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
   math::Pose3d pose;
   ::sdf::Errors errors = _semPose.Resolve(pose);
   if (!errors.empty())
+  {
+    if (!_semPose.RelativeTo().empty())
+    {
+      ignerr << "There was an error in SemanticPose::Resolve\n";
+      for (const auto &err : errors)
+      {
+        ignerr << err.Message() << std::endl;
+      }
+      ignerr << "There is no optimal fallback since the relative_to attribute "
+                "of the pose is not empty."
+                "Falling back to using the raw Pose.\n";
+    }
     pose = _semPose.RawPose();
+  }
 
   return math::eigen3::convert(pose);
 }
@@ -154,9 +167,14 @@ static Eigen::Vector3d ConvertJointAxis(
 
   // xyz expressed in a frame other than the joint frame or the parent model
   // frame is not supported
-  ignerr << "Error encountered in resolving the xyz with attribute "
-         << "xyz_expressed_in[" << _sdfAxis->XyzExpressedIn() << "]. Falling "
-         << "back to using the raw xyz vector expressed in the joint frame.\n";
+  ignerr << "There was an error in JointAxis::ResolveXyz\n";
+  for (const auto &err : errors)
+  {
+    ignerr << err.Message() << std::endl;
+  }
+  ignerr << "There is no optimal fallback since the expressed_in attribute "
+         << "of the axis's xyz is neither empty nor '__model__'. Falling back to "
+         << "using the raw xyz vector expressed in the joint frame.\n";
 
   return axis;
 }
