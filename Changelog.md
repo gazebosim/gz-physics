@@ -4,6 +4,12 @@
 
 ### Ignition Physics 2.0.0 (20XX-XX-XX)
 
+1. Support compiling against dart 6.9.
+    * [Pull request 110](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/110)
+
+1. Support sdformat 1.7 frame semantics.
+    * [Pull request 106](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/106)
+
 1. Upgrade to libsdformat9
     * [Pull request 108](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/108)
 
