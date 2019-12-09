@@ -38,6 +38,7 @@ sudo apt-get install libignition-physics2-dev
 
 Run the following to install dependencies
 ```{.sh}
+sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
 sudo apt-get build-dep -y ignition-physics2
 ```
 

@@ -106,7 +106,7 @@ sudo apt update
 sudo apt-get -y install lsb-release
 sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
-sudo apt update
+sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
 sudo apt-get build-dep -y ignition-physics2
 
 Use gcc-8:
