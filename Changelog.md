@@ -1,8 +1,6 @@
 ## Ignition Physics 2.x
 
-### Ignition Physics 2.x.x (20XX-XX-XX)
-
-### Ignition Physics 2.0.0 (20XX-XX-XX)
+### Ignition Physics 2.0.0 (2019-12-10)
 
 1. Support compiling against dart 6.9.
     * [Pull request 110](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/110)
@@ -81,4 +79,3 @@
 ### Ignition Physics 1.0.0 (2019-03-01)
 
 1. Initial release
-
