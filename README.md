@@ -86,10 +86,10 @@ The [Source Install](#markdown-header-source-install) instructions should be use
 
 ## Binary Install
 
-On Ubuntu systems, `apt-get` can be used to install `ignition-physics2`:
+On Ubuntu systems, `apt-get` can be used to install `ignition-physics3`:
 
 ```
-sudo apt install libignition-physics2-dev
+sudo apt install libignition-physics3-dev
 ```
 
 ## Source Install
@@ -107,7 +107,7 @@ sudo apt-get -y install lsb-release
 sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
 sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-sudo apt-get build-dep -y ignition-physics2
+sudo apt-get build-dep -y ignition-physics3
 
 Use gcc-8:
 
@@ -125,7 +125,7 @@ sudo update-alternatives --install \
 1. Clone the repository
 
     ```
-    hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics2
+    hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics3
     ```
 
 2. Configure and build
@@ -159,7 +159,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics2
+    hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics3
     ```
 
 3. Configure and build the documentation.
