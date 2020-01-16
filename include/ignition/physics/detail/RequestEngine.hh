@@ -56,8 +56,7 @@ namespace ignition
     auto RequestEngine<FeaturePolicyT, FeatureListT>::From(
         const PtrT &_pimpl, const std::size_t _engineID) -> EnginePtrType
     {
-      using Pimpl = typename detail::DeterminePlugin<
-          FeaturePolicyT, Features>::type;
+      using Pimpl = typename Engine<FeaturePolicyT, FeatureListT>::Pimpl;
 
       if (!detail::InspectFeatures<FeaturePolicyT, Features>::Verify(_pimpl))
         return nullptr;

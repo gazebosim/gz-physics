@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics1 VERSION 1.4.0)
+project(ignition-physics2 VERSION 2.0.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -47,7 +47,7 @@ set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-plugin
-ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all)
+ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all VERSION 1.1)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 #--------------------------------------
@@ -56,7 +56,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat8 REQUIRED_BY sdf dartsim)
+ign_find_package(sdformat9 REQUIRED_BY sdf dartsim)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
@@ -66,7 +66,7 @@ ign_find_package(DART
     utils
     utils-urdf
   CONFIG
-  VERSION 6.10.0
+  VERSION 6.9
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)

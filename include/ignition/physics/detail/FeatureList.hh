@@ -35,13 +35,100 @@ namespace ignition
   {
     namespace detail
     {
-      /// \private A specialization of DeterminePlugin that can accept a
-      /// FeatureList
-      template <typename Policy, typename... FeaturesT>
-      struct DeterminePlugin<Policy, FeatureList<FeaturesT...>>
+      /////////////////////////////////////////////////
+      template <typename T>
+      struct IterateTuple;
+
+      template <typename Current, typename... T>
+      struct IterateTuple<std::tuple<Current, T...>>
       {
-        using type = typename DeterminePlugin<
-            Policy, typename FeatureList<FeaturesT...>::Features>::type;
+        using CurrentTupleEntry = Current;
+        using NextTupleEntry = IterateTuple<std::tuple<T...>>;
+      };
+
+      template <typename Current>
+      struct IterateTuple<std::tuple<Current>>
+      {
+        using CurrentTupleEntry = Current;
+      };
+
+      template <>
+      struct IterateTuple<std::tuple<>>
+      {
+        using CurrentTupleEntry = void;
+      };
+
+      template <typename Iterable, typename = void_t<>>
+      struct GetNext
+      {
+        using n = void;
+      };
+
+      template <typename Iterable>
+      struct GetNext<Iterable, void_t<typename Iterable::NextTupleEntry>>
+      {
+        // This struct is intentionally named with only one letter, because its
+        // name will be repeated many times in the symbol names of aggregated
+        // types. Do not change this name to anything longer than 1 letter or
+        // else the compiled symbol names will be needlessly long, and that can
+        // be costly to memory and performance.
+        struct n : Iterable::NextTupleEntry { };
+      };
+
+      template <typename Policy, typename Feature, typename = void_t<>>
+      struct ComposePlugin;
+
+      template <typename Policy, typename Feature, bool HasRequirements>
+      struct CheckRequirements
+      {
+        using type =
+            ::ignition::plugin::SpecializedPlugin<
+                typename Feature::template Implementation<Policy>>;
+      };
+
+      template <typename Policy, typename Feature>
+      struct CheckRequirements<Policy, Feature, true>
+      {
+        struct type :
+            ::ignition::plugin::SpecializedPlugin<
+                typename Feature::template Implementation<Policy>>,
+            ComposePlugin<Policy, typename Feature::RequiredFeatures>::type { };
+      };
+
+      template <typename Policy, typename Feature, typename>
+      struct ComposePlugin
+      {
+        struct type : CheckRequirements<Policy, Feature,
+            !std::is_void_v<typename Feature::RequiredFeatures>>::type { };
+      };
+
+      template <typename Policy, typename Iterable>
+      struct ComposePlugin<Policy, Iterable,
+          void_t<typename Iterable::CurrentTupleEntry>>
+      {
+        struct type :
+            ComposePlugin<Policy, typename Iterable::CurrentTupleEntry>::type,
+            ComposePlugin<Policy, typename GetNext<Iterable>::n> { };
+      };
+
+      template <typename Policy>
+      struct ComposePlugin<Policy, void, void_t<>>
+      {
+        struct type { };
+      };
+
+      /////////////////////////////////////////////////
+      /// \private This class is used to determine what type of
+      /// SpecializedPluginPtr should be used by the entities provided by a
+      /// plugin.
+      template <typename Policy, typename FeaturesT>
+      struct DeterminePlugin
+      {
+        struct Specializer
+            : ::ignition::plugin::detail::SelectSpecializers<
+              typename ComposePlugin<Policy, FeaturesT>::type> { };
+
+        using type = ::ignition::plugin::TemplatePluginPtr<Specializer>;
       };
 
       /////////////////////////////////////////////////
@@ -81,7 +168,7 @@ namespace ignition
       /// This default implementation simply takes in a single feature and puts
       /// it into a tuple of size one. This allows us to use std::tuple_cat on
       /// it later to combine it with tuples that may contain multiple features.
-      template <typename F>
+      template <typename F, typename = void_t<> >
       class ExtractFeatures
           : public VerifyFeatures<F>
       {
@@ -102,11 +189,13 @@ namespace ignition
       /// the FeatureList that is currently holding a set of features, then
       /// verify those features, and finally repackage them as the raw feature
       /// tuple that is being held by the FeatureList.
-      template <typename... F>
-      class ExtractFeatures<FeatureList<F...>>
-          : public VerifyFeatures<typename FeatureList<F...>::Features>
+      template <typename SomeFeatureList>
+      class ExtractFeatures<
+              SomeFeatureList,
+              void_t<typename SomeFeatureList::Features>>
+          : public VerifyFeatures<typename SomeFeatureList::Features>
       {
-        public: using Result = typename FeatureList<F...>::Features;
+        public: using Result = typename SomeFeatureList::Features;
       };
 
       /// \private This specialization skips over any void entries. This allows
@@ -243,79 +332,59 @@ namespace ignition
 
       /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList
-      template <template<typename> class, typename...>
-      struct Aggregate;
-
-      template <template<typename> class Selector, typename... FeaturesT>
-      struct Aggregate<Selector, FeatureList<FeaturesT...>>
-      {
-        public: template<typename... T>
-        using type =
-          typename Aggregate<
-              Selector, typename FeatureList<FeaturesT...>::Features>
-                  ::template type<T...>;
-      };
-
-      /// \private Recursively extract the API out of a std::tuple of features
       template <template<typename> class Selector,
-                typename F1, typename... Remaining>
-      struct Aggregate<Selector, std::tuple<F1, Remaining...>>
+                typename FeatureT, typename = void_t<>>
+      struct Aggregate
       {
         public: template<typename... T>
-        class type
-            : public virtual Selector<F1>::template type<T...>,
-              public virtual Aggregate<
-                  Selector, std::tuple<Remaining...>>::template type<T...>
-        {
-          public: type() = default;
-          public: type(const type&) = default;
-          public: type(type&&) noexcept = default;
-
-          // These need special definitions due to virtual inheritance. The base
-          // Entity<P,F> class is the only class in the hierarchy that contains
-          // any data, so it is sufficient to call its assignment operators
-          // directly.
-          public: type &operator=(const type &_other)
-          {
-            static_cast<Entity<T...>&>(*this) = _other;
-            return *this;
-          }
-          public: type &operator=(type &&_other) noexcept
-          {
-            static_cast<Entity<T...>&>(*this) = std::move(_other);
-            return *this;
-          }
-        };
+        struct type
+            : public virtual Selector<FeatureT>::template type<T...>,
+              public virtual Aggregate<Selector,
+                typename FeatureT::RequiredFeatures>::template type<T...>
+        { };
       };
 
-      /// \private Terminate the recursion
       template <template<typename> class Selector>
-      struct Aggregate<Selector, std::tuple<>>
+      struct Aggregate<Selector, void, void_t<>>
       {
-        public: template <typename... P>
-        class type { };
+        public: template<typename... T>
+        struct type { };
+      };
+
+      template <template<typename> class Selector, typename Iterable>
+      struct Aggregate<Selector, Iterable,
+            void_t<typename Iterable::CurrentTupleEntry>>
+      {
+        public: template <typename... T>
+        struct type
+            : public virtual Aggregate<Selector,
+                  typename Iterable::CurrentTupleEntry>::template type<T...>,
+              public virtual Aggregate<Selector,
+                  typename GetNext<Iterable>::n>::template type<T...> { };
+      };
+
+      /////////////////////////////////////////////////
+      template <template<typename> class Selector, typename FeatureListT>
+      struct ExtractAPI
+      {
+        public: template<typename... T>
+        class type : public virtual
+            Aggregate<Selector, FeatureListT>::template type<T...> { };
       };
 
       /////////////////////////////////////////////////
       /// \private This class is used to inspect what features are provided by
       /// a plugin. It implements the API of RequestEngine.
-      template <typename Policy, typename InterfaceTuple>
-      struct InspectFeatures;
-
-      /// \private Implementation of InspectFeatures.
-      template <typename PolicyT, typename Feature1, typename... Remaining>
-      struct InspectFeatures<PolicyT, std::tuple<Feature1, Remaining...>>
+      template <typename PolicyT, typename FeatureT, typename = void_t<> >
+      struct InspectFeatures
       {
-        using Interface = typename Feature1::template Implementation<PolicyT>;
+        using Interface = typename FeatureT::template Implementation<PolicyT>;
 
         /// \brief Check that each feature is provided by the plugin.
         template <typename PtrT>
         static bool Verify(const PtrT &_pimpl)
         {
-          // TODO(MXG): Consider replacing with a fold expression
-          return _pimpl && _pimpl->template HasInterface<Interface>()
-              && InspectFeatures<PolicyT, std::tuple<Remaining...>>::
-                      Verify(_pimpl);
+          return _pimpl && _pimpl->template HasInterface<Interface>();
         }
 
         template <typename LoaderT, typename ContainerT>
@@ -336,9 +405,6 @@ namespace ignition
 
           for (const std::string &u : unacceptable)
             _plugins.erase(u);
-
-          InspectFeatures<PolicyT, std::tuple<Remaining...>>::EraseIfMissing(
-                _loader, _plugins);
         }
 
         template <typename PtrT>
@@ -346,32 +412,69 @@ namespace ignition
                                  std::set<std::string> &_names)
         {
           if (!_pimpl || !_pimpl->template HasInterface<Interface>())
-            _names.insert(typeid(Feature1).name());
-
-          InspectFeatures<PolicyT, std::tuple<Remaining...>>::MissingNames(
-                _pimpl, _names);
+            _names.insert(typeid(FeatureT).name());
         }
       };
 
       template <typename PolicyT>
-      struct InspectFeatures<PolicyT, std::tuple<>>
+      struct InspectFeatures<PolicyT, void, void_t<> >
       {
         template <typename PtrT>
-        static bool Verify(const PtrT&)
+        static bool Verify(const PtrT &/*_pimpl*/)
         {
+          // This is just the terminal leaf of the inspection tree, so it must
+          // not falsify the verification.
           return true;
         }
 
         template <typename LoaderT, typename ContainerT>
-        static void EraseIfMissing(const LoaderT &, ContainerT &)
+        static void EraseIfMissing(
+            const LoaderT &/*_loader*/,
+            ContainerT &/*_plugins*/)
         {
-          // Do nothing
+          // Do nothing, this is a terminal leaf
         }
 
         template <typename PtrT>
-        static void MissingNames(const PtrT&, std::set<std::string>&)
+        static void MissingNames(const PtrT &/*_pimpl*/,
+                                 std::set<std::string> &/*_names*/)
         {
-          // Do nothing
+          // Do nothing, this is a terminal leaf
+        }
+      };
+
+      /// \private Implementation of InspectFeatures.
+      template <typename PolicyT, typename FeatureListT>
+      struct InspectFeatures<PolicyT, FeatureListT,
+          void_t<typename FeatureListT::CurrentTupleEntry>>
+      {
+        using Branch1 = InspectFeatures<PolicyT,
+            typename FeatureListT::CurrentTupleEntry>;
+        using Branch2 = InspectFeatures<PolicyT,
+            typename GetNext<FeatureListT>::n>;
+
+        /// \brief Check that each feature is provided by the plugin.
+        template <typename PtrT>
+        static bool Verify(const PtrT &_pimpl)
+        {
+          return Branch1::Verify(_pimpl) && Branch2::Verify(_pimpl);
+        }
+
+        template <typename LoaderT, typename ContainerT>
+        static void EraseIfMissing(
+            const LoaderT &_loader,
+            ContainerT &_plugins)
+        {
+          Branch1::EraseIfMissing(_loader, _plugins);
+          Branch2::EraseIfMissing(_loader, _plugins);
+        }
+
+        template <typename PtrT>
+        static void MissingNames(const PtrT &_pimpl,
+                                 std::set<std::string> &_names)
+        {
+          Branch1::MissingNames(_pimpl, _names);
+          Branch2::MissingNames(_pimpl, _names);
         }
       };
     }
@@ -439,7 +542,7 @@ namespace ignition
     template <typename... Features>
     struct FeatureWithRequirements : public virtual Feature
     {
-      public: using RequiredFeatures = FeatureList<Features...>;
+      public: struct RequiredFeatures : FeatureList<Features...> { };
     };
 
 
@@ -466,7 +569,7 @@ namespace ignition
     struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
-  class X : public ::ignition::physics::detail::Aggregate< \
+  class X : public ::ignition::physics::detail::ExtractAPI< \
         detail::Select ## X, FeaturesT> \
           ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
@@ -475,7 +578,7 @@ namespace ignition
     public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
     \
-    public: X(const X&) = default;\
+    public: X(const X&) = default; \
     \
     public: X(const std::shared_ptr<typename Base::Pimpl> &_pimpl, \
               const Identity &_identity) \
@@ -492,10 +595,12 @@ namespace ignition
     const X <PolicyT, FeaturesT> >; \
   template <typename PolicyT> \
   using Base ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    X <PolicyT, ::ignition::physics::FeatureList<>>>; \
+    X <PolicyT, ::ignition::physics::FeatureList< \
+        ::ignition::physics::Feature>>>; \
   template <typename PolicyT> \
   using ConstBase ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    const X <PolicyT, ::ignition::physics::FeatureList<>>>; \
+    const X <PolicyT, ::ignition::physics::FeatureList< \
+        ::ignition::physics::Feature>>>; \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
@@ -532,9 +637,9 @@ namespace ignition
       };
 
       template <typename PolicyT, typename List>
-      using AggregateImplementation =
-        typename Aggregate<ImplementationSelector, typename List::Features>::
-            template type<PolicyT>;
+      using ExtractImplementation =
+        typename ExtractAPI<ImplementationSelector, List>
+            ::template type<PolicyT>;
     }
   }
 }

@@ -38,15 +38,15 @@
 
 #include "test/Utils.hh"
 
-using namespace ignition;
+struct TestFeatureList : ignition::physics::FeatureList<
+    ignition::physics::AddLinkExternalForceTorque,
+    ignition::physics::ForwardStep,
+    ignition::physics::sdf::ConstructSdfWorld,
+    ignition::physics::sdf::ConstructSdfModel,
+    ignition::physics::sdf::ConstructSdfLink
+> { };
 
-using TestFeatureList = ignition::physics::FeatureList<
-  physics::AddLinkExternalForceTorque,
-  physics::ForwardStep,
-  physics::sdf::ConstructSdfWorld,
-  physics::sdf::ConstructSdfModel,
-  physics::sdf::ConstructSdfLink
->;
+using namespace ignition;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
 using TestWorldPtr = physics::World3dPtr<TestFeatureList>;
@@ -118,7 +118,7 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   // Add a sphere
   sdf::Model modelSDF;
   modelSDF.SetName("sphere");
-  modelSDF.SetPose(math::Pose3d(0, 0, 2, 0, 0, IGN_PI));
+  modelSDF.SetRawPose(math::Pose3d(0, 0, 2, 0, 0, IGN_PI));
   auto model = world->ConstructModel(modelSDF);
 
   const double mass = 1.0;

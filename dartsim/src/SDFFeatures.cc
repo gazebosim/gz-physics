@@ -58,6 +58,32 @@ namespace dartsim {
 
 namespace {
 /////////////////////////////////////////////////
+/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
+/// frame. If that fails, return the raw pose
+static Eigen::Isometry3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
+{
+  math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose);
+  if (!errors.empty())
+  {
+    if (!_semPose.RelativeTo().empty())
+    {
+      ignerr << "There was an error in SemanticPose::Resolve\n";
+      for (const auto &err : errors)
+      {
+        ignerr << err.Message() << std::endl;
+      }
+      ignerr << "There is no optimal fallback since the relative_to attribute["
+             << _semPose.RelativeTo() << "] of the pose is not empty. "
+             << "Falling back to using the raw Pose.\n";
+    }
+    pose = _semPose.RawPose();
+  }
+
+  return math::eigen3::convert(pose);
+}
+
+/////////////////////////////////////////////////
 double infIfNeg(const double _value)
 {
   if (_value < 0.0)
@@ -118,15 +144,38 @@ static Eigen::Vector3d ConvertJointAxis(
     const ModelInfo &_modelInfo,
     const Eigen::Isometry3d &_T_joint)
 {
+  math::Vector3d resolvedAxis;
+  ::sdf::Errors errors = _sdfAxis->ResolveXyz(resolvedAxis);
+  if (errors.empty())
+    return math::eigen3::convert(resolvedAxis);
+
+  // Error while Resolving xyz. Fallback sdformat 1.6 behavior but treat
+  // xyz_expressed_in = "__model__" as the old use_parent_model_frame
+
   const Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
 
-  if (_sdfAxis->UseParentModelFrame())
+  if (_sdfAxis->XyzExpressedIn().empty())
+    return axis;
+
+  if (_sdfAxis->XyzExpressedIn() == "__model__")
   {
     const Eigen::Quaterniond O_R_J{_T_joint.rotation()};
     const Eigen::Quaterniond O_R_M{GetParentModelFrame(_modelInfo).rotation()};
     const Eigen::Quaterniond J_R_M = O_R_J.inverse() * O_R_M;
     return J_R_M * axis;
   }
+
+  // xyz expressed in a frame other than the joint frame or the parent model
+  // frame is not supported
+  ignerr << "There was an error in JointAxis::ResolveXyz\n";
+  for (const auto &err : errors)
+  {
+    ignerr << err.Message() << std::endl;
+  }
+  ignerr << "There is no optimal fallback since the expressed_in attribute["
+         << _sdfAxis->XyzExpressedIn() << "] of the axis's xyz is neither empty"
+         << "nor '__model__'. Falling back to using the raw xyz vector "
+         << "expressed in the joint frame.\n";
 
   return axis;
 }
@@ -303,9 +352,11 @@ Identity SDFFeatures::ConstructSdfModel(
       dart::dynamics::SimpleFrame::createShared(
         dart::dynamics::Frame::World(),
         _sdfModel.Name()+"_frame",
-        math::eigen3::convert(_sdfModel.Pose()));
+        ResolveSdfPose(_sdfModel.SemanticPose()));
 
-  auto [modelID, modelInfo] = this->AddModel({model, modelFrame}, _worldID); // NOLINT
+  // Set canonical link name
+  auto [modelID, modelInfo] = this->AddModel( // NOLINT
+      {model, modelFrame, _sdfModel.CanonicalLinkName()}, _worldID);
 
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
@@ -356,6 +407,8 @@ Identity SDFFeatures::ConstructSdfLink(
   const ignition::math::Inertiald &sdfInertia = _sdfLink.Inertial();
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
 
+  // TODO(addisu) Resolve the pose of inertials when frame information is
+  // availabile for ignition::math::Inertial
   const Eigen::Matrix3d R_inertial{
         math::eigen3::convert(sdfInertia.Pose().Rot())};
 
@@ -384,8 +437,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   dart::dynamics::FreeJoint * const joint = result.first;
   const Eigen::Isometry3d tf =
-      this->ResolveSdfLinkReferenceFrame(_sdfLink.PoseFrame(), modelInfo)
-      * math::eigen3::convert(_sdfLink.Pose());
+      GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink.SemanticPose());
 
   joint->setTransform(tf);
 
@@ -396,7 +448,9 @@ Identity SDFFeatures::ConstructSdfLink(
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
-  if (modelInfo.model->getNumBodyNodes() == 1)
+  if (_sdfLink.Name() == modelInfo.canonicalLinkName ||
+      (modelInfo.canonicalLinkName.empty() &&
+       modelInfo.model->getNumBodyNodes() == 1))
   {
     // We just added the first link, so this is now the canonical link. We
     // should therefore move the "model frame" from the world onto this new
@@ -488,6 +542,7 @@ Identity SDFFeatures::ConstructSdfCollision(
                                   ->GetElement("friction")
                                   ->GetElement("ode");
 
+#if DART_VERSION_AT_LEAST(6, 10, 0)
     auto aspect = node->getDynamicsAspect();
     aspect->setFrictionCoeff(odeFriction->Get<double>("mu"));
     if (odeFriction->HasElement("mu2"))
@@ -507,10 +562,18 @@ Identity SDFFeatures::ConstructSdfCollision(
       math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
     }
+#else
+    // We are setting the friction coefficient of a collision element
+    // to be the coefficient for the whole link. If there are multiple collision
+    // elements, the value of the last one will be the coefficient for the link.
+    // TODO(addisu) Assign the coefficient to the shape node when support is
+    // added in DART.
+    bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+#endif
   }
 
-  node->setRelativeTransform(
-        math::eigen3::convert(_collision.Pose()) * tf_shape);
+  node->setRelativeTransform(ResolveSdfPose(_collision.SemanticPose()) *
+                             tf_shape);
 
   const std::size_t shapeID =
       this->AddShape({node, _collision.Name(), tf_shape});
@@ -551,8 +614,7 @@ Identity SDFFeatures::ConstructSdfVisual(
       bn->createShapeNodeWith<dart::dynamics::VisualAspect>(
         shape, internalName);
 
-  node->setRelativeTransform(
-        math::eigen3::convert(_visual.Pose()) * tf_shape);
+  node->setRelativeTransform(ResolveSdfPose(_visual.SemanticPose()) * tf_shape);
 
   // TODO(MXG): Are there any other visual parameters that we can do anything
   // with? Do these visual parameters even matter, since dartsim is only
@@ -659,8 +721,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const Eigen::Isometry3d T_child = _child->getWorldTransform();
 
   const Eigen::Isometry3d T_joint =
-    this->ResolveSdfJointReferenceFrame(_sdfJoint.PoseFrame(), _child)
-    * math::eigen3::convert(_sdfJoint.Pose());
+      _child->getWorldTransform() * ResolveSdfPose(_sdfJoint.SemanticPose());
 
   const ::sdf::JointType type = _sdfJoint.Type();
   dart::dynamics::Joint *joint = nullptr;

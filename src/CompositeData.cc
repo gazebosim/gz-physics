@@ -107,6 +107,7 @@ namespace ignition
                 _sender->second.data->Clone(),
                 _mergeRequirements && _sender->second.required))).second;
 
+      (void)(inserted);
       assert(inserted &&
              "Calling StandardDataCreate on a data entry that already exists. "
              "This should not be possible! Please report this bug!");
@@ -150,6 +151,7 @@ namespace ignition
                 std::unique_ptr<Cloneable>(_sender->second.data.release()),
                 _mergeRequirements && _sender->second.required))).second;
 
+      (void)(inserted);
       assert(inserted &&
              "Calling MoveDataCreate on a data entry that already exists. This "
              "should not be possible! Please report this bug!");

@@ -27,11 +27,11 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using KinematicsFeatureList = FeatureList<
+struct KinematicsFeatureList : FeatureList<
   LinkFrameSemantics,
   ShapeFrameSemantics,
   FreeGroupFrameSemantics
->;
+> { };
 
 class KinematicsFeatures :
     public virtual Base,

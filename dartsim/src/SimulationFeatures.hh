@@ -28,10 +28,10 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using SimulationFeatureList = FeatureList<
+struct SimulationFeatureList : FeatureList<
   ForwardStep,
   GetContactsFromLastStepFeature
->;
+> { };
 
 class SimulationFeatures :
     public virtual Base,

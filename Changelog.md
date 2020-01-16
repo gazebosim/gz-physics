@@ -1,3 +1,20 @@
+## Ignition Physics 2.x
+
+### Ignition Physics 2.0.0 (2019-12-10)
+
+1. Support compiling against dart 6.9.
+    * [Pull request 110](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/110)
+
+1. Support sdformat 1.7 frame semantics.
+    * [Pull request 106](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/106)
+
+1. Upgrade to libsdformat9
+    * [Pull request 108](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/108)
+
+1. Improve compile time by reducing length of symbol names
+    * [Pull request 93](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/93)
+    * [Pull request 88](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/88)
+
 ## Ignition Physics 1.x
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
@@ -62,4 +79,3 @@
 ### Ignition Physics 1.0.0 (2019-03-01)
 
 1. Initial release
-

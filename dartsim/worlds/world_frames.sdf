@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <world name="default">
+    <frame name="F1">
+      <pose>1 0 0 0 0 0</pose>
+    </frame>
+    <frame name="F2" attached_to="F1">
+      <pose>0 1 0 0 0 0</pose>
+    </frame>
+    <model name="M">
+      <pose relative_to="F2">0.0 0 2 0 0 0</pose>
+      <link name="L1"></link>
+    </model>
+  </world>
+</sdf>
+

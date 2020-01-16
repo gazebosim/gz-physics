@@ -436,14 +436,14 @@ namespace ignition
       };
     };
 
-    using GetEntities = FeatureList<
+    struct GetEntities : FeatureList<
       GetEngineInfo,
       GetWorldFromEngine,
       GetModelFromWorld,
       GetLinkFromModel,
       GetJointFromModel,
       GetShapeFromLink
-    >;
+    > { };
   }
 }
 

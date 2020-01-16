@@ -26,9 +26,9 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-using LinkFeatureList = FeatureList<
+struct LinkFeatureList : FeatureList<
   AddLinkExternalForceTorque
->;
+> { };
 
 class LinkFeatures :
     public virtual Base,
