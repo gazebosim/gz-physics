@@ -31,28 +31,20 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 
 ```{.sh}
 sudo apt-get update
-sudo apt-get install libignition-physics-dev
+sudo apt-get install libignition-physics3-dev
 ```
 
 **Build from source**
 
 Run the following to install dependencies
 ```{.sh}
-sudo apt-get install libignition-cmake2-dev \
-                     libignition-common3-dev \
-                     libignition-common3-graphics-dev \
-                     libignition-math6-dev \
-                     libignition-math6-eigen3-dev \
-                     libignition-plugin-dev \
-                     libdart6-dev \
-                     libdart6-collision-ode-dev \
-                     libdart6-utils-urdf-dev \
-                     libsdformat9-dev
+sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
+sudo apt-get build-dep -y ignition-physics3
 ```
 
 Clone the ign-physics repository from bitbucket
 ```{.sh}
-hg clone https://bitbucket.org/ignitionrobotics/ign-physics
+hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics3
 ```
 
 Then build using CMake
@@ -87,7 +79,7 @@ Run the following commands:
 
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics1
+brew install ignition-physics3
 ```
 
 **Build from source using Homebrew**
@@ -95,12 +87,12 @@ brew install ignition-physics1
 Run the following to install dependencies
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics1 --only-dependencies
+brew install ignition-physics3 --only-dependencies
 ```
 
 Clone the ign-physics repository from bitbucket
 ```{.sh}
-hg clone https://bitbucket.org/ignitionrobotics/ign-physics
+hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics3
 ```
 
 Then build using CMake
