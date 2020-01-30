@@ -2,6 +2,9 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+1. Clean up internal resources when a model gets removed
+    * [Pull request 115](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/115)
+
 ### Ignition Physics 1.4.0 (20XX-XX-XX)
 
 1. Add SetJointVelocityCommand feature
