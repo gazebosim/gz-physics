@@ -143,6 +143,48 @@ struct EntityStorage
   {
     return idToObject.find(_id) != idToObject.end();
   }
+
+  bool RemoveEntity(const Key2 &_key)
+  {
+    auto entIter = this->objectToID.find(_key);
+    if (entIter!= this->objectToID.end())
+    {
+      std::size_t entId = entIter->second;
+
+      // Check if we are keeping track of the index of this entity in its
+      // container
+      auto contIter = this->idToContainerID.find(entId);
+      if (contIter != this->idToContainerID.end())
+      {
+        std::size_t contId = contIter->second;
+        std::size_t entIndex = this->idToIndexInContainer.at(entId);
+
+        // house keeping
+        // The key in indexInContainerToID is the index of the vector so erasing
+        // the element automatically decrements the index of the rest of the
+        // elements of the vector. The indices in idToIndexInContainer, however,
+        // are stored as numbers (as values in the map). We need to decrement
+        // all the indices greater than the index of the model we are removing.
+        for (auto indIter =
+                 this->indexInContainerToID[contId].begin() + entIndex + 1;
+             indIter != this->indexInContainerToID[contId].end(); ++indIter)
+        {
+          // decrement the index (the value of the map)
+          --this->idToIndexInContainer[*indIter];
+        }
+
+        this->idToIndexInContainer.erase(entId);
+        this->indexInContainerToID[contId].erase(
+            this->indexInContainerToID[contId].begin() + entIndex);
+        this->idToContainerID.erase(entId);
+      }
+
+      this->objectToID.erase(entIter);
+      this->idToObject.erase(entId);
+      return true;
+    }
+    return false;
+  }
 };
 
 class Base : public Implements3d<FeatureList<Feature>>
@@ -263,37 +305,22 @@ class Base : public Implements3d<FeatureList<Feature>>
                                const std::size_t _modelID)
   {
     const auto &world = this->worlds.at(_worldID);
-    const std::size_t modelIndex = this->models.idToIndexInContainer[_modelID];
-
     auto skel = this->models.at(_modelID)->model;
-    world->removeSkeleton(skel);
-
-    // house keeping
-    // The key in indexInContainerToID is the index of the vector so erasing the
-    // element automatically decrements the index of the rest of the elements of
-    // the vector. The indices in idToIndexInContainer, however, are stored as
-    // numbers (as values in the map). We need to decrement all the indices
-    // greater than the index of the model we are removing.
-    for (auto it = this->models.indexInContainerToID[_worldID].begin() +
-                   modelIndex + 1;
-         it != this->models.indexInContainerToID[_worldID].end(); ++it)
+    // Remove the contents of the skeleton from local entity storage containers
+    for (auto &jt : skel->getJoints())
     {
-      // decrement the index (the value of the map)
-      --this->models.idToIndexInContainer[*it];
+      this->joints.RemoveEntity(jt);
     }
-
-    this->models.idToIndexInContainer.erase(_modelID);
-
-    this->models.indexInContainerToID[_worldID].erase(
-        this->models.indexInContainerToID[_worldID].begin() + modelIndex);
-
-    this->models.idToContainerID.erase(_modelID);
-
-    this->models.idToObject.erase(_modelID);
-    this->models.objectToID.erase(skel);
-
-    assert(this->models.indexInContainerToID[_worldID].size() ==
-           world->getNumSkeletons());
+    for (auto &bn : skel->getBodyNodes())
+    {
+      for (auto &sn : bn->getShapeNodes())
+      {
+        this->shapes.RemoveEntity(sn);
+      }
+      this->links.RemoveEntity(bn);
+    }
+    this->models.RemoveEntity(skel);
+    world->removeSkeleton(skel);
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
