@@ -235,8 +235,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
-    this->UpdateSkeletonInWorld(_bn->getSkeleton());
-
     return id;
   }
 
@@ -246,8 +244,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints.idToObject[id] = std::make_shared<JointInfo>();
     this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;
-
-    this->UpdateSkeletonInWorld(_joint->getSkeleton());
 
     return id;
   }
@@ -259,8 +255,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->shapes.idToObject[id] = std::make_shared<ShapeInfo>(_info);
     this->shapes.objectToID[_info.node] = id;
     this->frames[id] = _info.node.get();
-
-    this->UpdateSkeletonInWorld(_info.node->getSkeleton());
 
     return id;
   }
@@ -300,29 +294,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     assert(this->models.indexInContainerToID[_worldID].size() ==
            world->getNumSkeletons());
-  }
-
-  private: void UpdateSkeletonInWorld(const DartSkeletonPtr &_skel)
-  {
-    // If the skeleton is not added to the world, add it. Otherwise, remove and
-    // add it again.
-
-    // Find the world the skeleton belongs to by finding the model first
-    const std::size_t modelID = this->models.objectToID.at(_skel);
-    const std::size_t worldID = this->models.idToContainerID.at(modelID);
-    const DartWorldPtr &world = this->worlds.at(worldID);
-
-    if (world->hasSkeleton(_skel))
-    {
-      world->removeSkeleton(_skel);
-      world->addSkeleton(_skel);
-    }
-    else
-    {
-      ignerr << "Given a skeleton to update, but skeleton was not found in "
-             << "world. This should not be possible! Please report this bug!\n";
-      assert(false);
-    }
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
