@@ -30,15 +30,8 @@ template <typename PolicyT, typename FeaturesT>
 void CollisionFilterMaskFeature::Shape<PolicyT, FeaturesT>
 ::CollisionFilterMask(const uint16_t _mask)
 {
-
-  //const auto &impl = *this->template Interface<CollisionFilterMaskFeature>();
   this->template Interface<CollisionFilterMaskFeature>()
     ->AddCollisionFilterMask(this->identity, _mask);
-  /*
-  return ShapePtrType(this->pimpl,
-        this->template Interface<CollisionFilterMaskFeature>()
-                     ->CollisionFilterMask(this->identity, _name));
-                     */
 }
 
 }
