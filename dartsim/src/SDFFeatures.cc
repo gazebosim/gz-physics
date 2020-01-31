@@ -535,6 +535,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   // doesn't exist, so the following is okay.
   // TODO(addisu) We are using the coefficient specified in the <ode> tag.
   // Either add parameters specific to DART or generic to all physics engines.
+  uint16_t collide_bitmask = 0xFF;
   if (_collision.Element())
   {
     const auto &odeFriction = _collision.Element()
@@ -570,6 +571,12 @@ Identity SDFFeatures::ConstructSdfCollision(
     // added in DART.
     bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
 #endif
+    // TODO(anyone) add category_bitmask as well
+    const auto bitmask_element = _collision.Element()
+                                     ->GetElement("surface")
+                                     ->GetElement("contact");
+    if (bitmask_element->HasElement("collide_bitmask"))
+      collide_bitmask = bitmask_element->Get<int>("collide_bitmask");
   }
 
   node->setRelativeTransform(ResolveSdfPose(_collision.SemanticPose()) *
@@ -577,7 +584,10 @@ Identity SDFFeatures::ConstructSdfCollision(
 
   const std::size_t shapeID =
       this->AddShape({node, _collision.Name(), tf_shape});
-  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
+  auto identity = this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
+
+  this->AddCollisionFilterMask(identity, collide_bitmask);
+  return identity;
 }
 
 /////////////////////////////////////////////////

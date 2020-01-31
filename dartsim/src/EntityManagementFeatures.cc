@@ -32,33 +32,26 @@ namespace physics {
 namespace dartsim {
 
 /////////////////////////////////////////////////
-/// This class helps to resolve an issue with excessive contacts being computed:
-/// https://bitbucket.org/ignitionrobotics/ign-physics/issues/11/
-///
-/// TODO(MXG): Delete this class when we switch to using dartsim-6.8:
-/// https://github.com/dartsim/dart/pull/1232
-class ImmobileContactFilter : public dart::collision::BodyNodeCollisionFilter
+/// This class filters collision based on a bitmask:
+/// each objects has a bitmask, if the bitwise and is 0 collision is filtered.
+class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 {
-  public: bool ignoresCollision(
-      const dart::collision::CollisionObject *_object1,
-      const dart::collision::CollisionObject *_object2) const override
+private:
+
+  std::unordered_map<const dart::dynamics::BodyNode*, uint16_t> bitmask_map;
+
+public:
+
+  void AddIgnoredCollision(const dart::dynamics::BodyNode* _bodyptr,
+      const uint16_t _mask)
   {
-    const auto &shapeNode1 = _object1->getShapeFrame()->asShapeNode();
-    const auto &shapeNode2 = _object2->getShapeFrame()->asShapeNode();
-
-    if (!shapeNode1 || !shapeNode2)
-      return false;
-
-    const auto &skeleton1 = shapeNode1->getSkeleton();
-    const auto &skeleton2 = shapeNode2->getSkeleton();
-
-    if (!skeleton1->isMobile() && !skeleton2->isMobile())
-      return true;
-
-    return BodyNodeCollisionFilter::ignoresCollision(_object1, _object2);
+    for (const auto& bitmask_pair : bitmask_map)
+      if ((bitmask_pair.second & _mask) == 0)
+        this->addBodyNodePairToBlackList(bitmask_pair.first, _bodyptr);
+    bitmask_map[_bodyptr] = _mask;
   }
 
-  virtual ~ImmobileContactFilter() = default;
+  virtual ~BitmaskContactFilter() = default;
 };
 
 /////////////////////////////////////////////////
@@ -543,7 +536,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   collOpt.maxNumContacts = 10000;
 
   world->getConstraintSolver()->getCollisionOption().collisionFilter =
-      std::make_shared<ImmobileContactFilter>();
+      std::make_shared<BitmaskContactFilter>();
 
   const std::size_t worldID = this->AddWorld(world, _name);
   return this->GenerateIdentity(worldID, this->worlds.at(worldID));
@@ -583,6 +576,26 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
 
   const std::size_t linkID = this->AddLink(bn);
   return this->GenerateIdentity(linkID, this->links.at(linkID));
+}
+
+void EntityManagementFeatures::AddCollisionFilterMask(
+    const Identity &_shapeID, const uint16_t _mask)
+{
+  // Get the body node pointer of current shape
+  const auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  const DartBodyNode *const new_bn = shapeInfo->node->getBodyNodePtr();
+  // Get the world, start by getting the body node's skeleton
+  const auto skel_ptr = new_bn->getSkeleton();
+  // Now find the skeleton's model
+  const std::size_t modelID = this->models.objectToID.at(skel_ptr);
+  // And the world containing the model
+  const std::size_t worldID = this->models.idToContainerID.at(modelID);
+  const DartWorldPtr world = this->worlds.at(worldID);
+  // We need to cast the base class pointer to the derived class
+  const auto filter_ptr = std::static_pointer_cast<BitmaskContactFilter>(
+      world->getConstraintSolver()->getCollisionOption()
+      .collisionFilter);
+  filter_ptr->AddIgnoredCollision(new_bn, _mask);
 }
 
 }
