@@ -36,11 +36,11 @@ namespace dartsim {
 /// each objects has a bitmask, if the bitwise and is 0 collision is filtered.
 class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 {
-private:
+ private:
 
   std::unordered_map<const dart::dynamics::BodyNode*, uint16_t> bitmask_map;
 
-public:
+ public:
 
   void AddIgnoredCollision(const dart::dynamics::BodyNode* _bodyptr,
       const uint16_t _mask)
