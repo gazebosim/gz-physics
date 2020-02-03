@@ -18,8 +18,6 @@
 #ifndef IGNITION_PHYSICS_COLLISIONFILTERMASK_HH_
 #define IGNITION_PHYSICS_COLLISIONFILTERMASK_HH_
 
-#include <string>
-
 #include <ignition/physics/FeatureList.hh>
 
 namespace ignition {

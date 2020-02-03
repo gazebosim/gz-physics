@@ -18,8 +18,6 @@
 #ifndef IGNITION_PHYSICS_DETAIL_COLLISIONFILTERMASK_HH_
 #define IGNITION_PHYSICS_DETAIL_COLLISIONFILTERMASK_HH_
 
-#include <string>
-
 #include <ignition/physics/CollisionFilterMask.hh>
 
 namespace ignition {
