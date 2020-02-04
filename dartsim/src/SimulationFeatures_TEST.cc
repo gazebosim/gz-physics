@@ -200,7 +200,6 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
     EXPECT_EQ(4u, contacts.size());
 
     // Now disable collisions for the colliding box as well
-    //auto engine = world->GetEngine();
     auto colliding_shape = colliding_box->GetLink(0)->GetShape(0);
     auto filtered_shape = filtered_box->GetLink(0)->GetShape(0);
     colliding_shape->SetCollisionFilterMask(0xF0);

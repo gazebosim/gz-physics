@@ -51,10 +51,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
     for (const auto& bitmask_pair : bitmask_map)
     {
       if ((bitmask_pair.second & _mask) == 0)
-      {
         this->addBodyNodePairToBlackList(bitmask_pair.first, _bodyptr);
-        ignwarn << "Adding pair to blacklist " << bitmask_pair.first << " and " << _bodyptr << std::endl;
-      }
     }
     bitmask_map[_bodyptr] = _mask;
   }
@@ -78,7 +75,6 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
         // Remove both directions
         this->removeBodyNodePairFromBlackList(bitmask_pair.first, _bodyptr);
         this->removeBodyNodePairFromBlackList(_bodyptr, bitmask_pair.first);
-        ignwarn << "Removing pair from blacklist " << bitmask_pair.first << " and " << _bodyptr << std::endl;
       }
     }
     bitmask_map.erase(bitmask_map.find(_bodyptr));
@@ -86,7 +82,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skel)
   {
-    for (std::size_t i=0; i<_skel->getNumBodyNodes(); ++i)
+    for (std::size_t i = 0; i < _skel->getNumBodyNodes(); ++i)
     {
       auto bn = _skel->getBodyNode(i);
       this->RemoveIgnoredCollision(bn);
@@ -97,8 +93,8 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 };
 /////////////////////////////////////////////////
 /// Utility functions
-static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(const EntityManagementFeatures* _emf,
-    std::size_t _worldID)
+static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
+    const EntityManagementFeatures* _emf, std::size_t _worldID)
 {
   const auto world = _emf->worlds.at(_worldID);
   // We need to cast the base class pointer to the derived class
