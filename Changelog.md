@@ -2,6 +2,9 @@
 
 ### Ignition Physics 2.0.0 (2019-12-10)
 
+1. Added support for collision bitmasks for collision filtering
+    * [Pull request 116](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/116)
+
 1. Support compiling against dart 6.9.
     * [Pull request 110](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/110)
 
