@@ -147,9 +147,13 @@ class EntityManagementFeatures :
   public: Identity ConstructEmptyLink(
       const Identity &_modelID, const std::string &_name) override;
 
-  // ----- Add collision filter masks -----
-  public: void AddCollisionFilterMask(
+  // ----- Manage collision filter masks -----
+  public: void SetCollisionFilterMask(
       const Identity &_shapeID, const uint16_t _mask) override;
+
+  public: uint16_t GetCollisionFilterMask(const Identity &_shapeID) const override;
+
+  public: void RemoveCollisionFilterMask(const Identity &_shapeID) override;
 };
 
 }

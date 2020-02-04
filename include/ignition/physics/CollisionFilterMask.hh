@@ -29,14 +29,24 @@ class CollisionFilterMaskFeature : public virtual Feature
   public: template <typename PolicyT, typename FeaturesT>
   class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
   {
-    public: void CollisionFilterMask(const uint16_t _mask);
+    public: void SetCollisionFilterMask(const uint16_t _mask);
+
+    public: uint16_t GetCollisionFilterMask() const;
+
+    public: void RemoveCollisionFilterMask();
   };
 
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
-    public: virtual void AddCollisionFilterMask(
+    public: virtual void SetCollisionFilterMask(
         const Identity &_shapeID, const uint16_t _mask) = 0;
+
+    public: virtual uint16_t GetCollisionFilterMask(
+        const Identity &_shapeID) const = 0;
+
+    public: virtual void RemoveCollisionFilterMask(
+        const Identity &_shapeID) = 0;
   };
 };
 

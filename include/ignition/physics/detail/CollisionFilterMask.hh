@@ -26,10 +26,26 @@ namespace physics {
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 void CollisionFilterMaskFeature::Shape<PolicyT, FeaturesT>
-::CollisionFilterMask(const uint16_t _mask)
+::SetCollisionFilterMask(const uint16_t _mask)
 {
   this->template Interface<CollisionFilterMaskFeature>()
-    ->AddCollisionFilterMask(this->identity, _mask);
+    ->SetCollisionFilterMask(this->identity, _mask);
+}
+
+template <typename PolicyT, typename FeaturesT>
+uint16_t CollisionFilterMaskFeature::Shape<PolicyT, FeaturesT>
+::GetCollisionFilterMask() const
+{
+  return this->template Interface<CollisionFilterMaskFeature>()
+    ->GetCollisionFilterMask(this->identity);
+}
+
+template <typename PolicyT, typename FeaturesT>
+void CollisionFilterMaskFeature::Shape<PolicyT, FeaturesT>
+::RemoveCollisionFilterMask()
+{
+  this->template Interface<CollisionFilterMaskFeature>()
+    ->RemoveCollisionFilterMask(this->identity);
 }
 
 }

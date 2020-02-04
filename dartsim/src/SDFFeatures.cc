@@ -586,7 +586,7 @@ Identity SDFFeatures::ConstructSdfCollision(
       this->AddShape({node, _collision.Name(), tf_shape});
   auto identity = this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 
-  this->AddCollisionFilterMask(identity, collide_bitmask);
+  this->SetCollisionFilterMask(identity, collide_bitmask);
   return identity;
 }
 
