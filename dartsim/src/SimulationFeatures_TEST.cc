@@ -203,7 +203,9 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
     //auto engine = world->GetEngine();
     auto colliding_shape = colliding_box->GetLink(0)->GetShape(0);
     auto filtered_shape = filtered_box->GetLink(0)->GetShape(0);
-    colliding_shape->SetCollisionFilterMask(0);
+    colliding_shape->SetCollisionFilterMask(0xF0);
+    // Also test the getter
+    EXPECT_EQ(0xF0, colliding_shape->GetCollisionFilterMask());
     // Step and make sure there is no collisions
     StepWorld(world);
     contacts = world->GetContactsFromLastStep();
