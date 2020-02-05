@@ -65,10 +65,10 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
   {
     // Remove previously filtered collisions
     this->RemoveIgnoredCollision(_shapePtr);
-    for (const auto& bitmask_pair : bitmaskMap)
+    for (const auto& bitmaskPair : bitmaskMap)
     {
-      if ((bitmask_pair.second & _mask) == 0)
-        this->shapeBlackList.addPair(bitmask_pair.first, _shapePtr);
+      if ((bitmaskPair.second & _mask) == 0)
+        this->shapeBlackList.addPair(bitmaskPair.first, _shapePtr);
     }
     bitmaskMap[_shapePtr] = _mask;
   }
@@ -85,10 +85,10 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
     if (bitmaskMap.find(_shapePtr) == bitmaskMap.end())
       return;
     const uint16_t mask = bitmaskMap.at(_shapePtr);
-    for (const auto& bitmask_pair : bitmaskMap)
+    for (const auto& bitmaskPair : bitmaskMap)
     {
-      if ((bitmask_pair.second & mask) == 0)
-        this->shapeBlackList.removePair(bitmask_pair.first, _shapePtr);
+      if ((bitmaskPair.second & mask) == 0)
+        this->shapeBlackList.removePair(bitmaskPair.first, _shapePtr);
     }
     bitmaskMap.erase(bitmaskMap.find(_shapePtr));
   }
