@@ -23,6 +23,7 @@
 #include <dart/dynamics/FreeJoint.hpp>
 
 #include <dart/collision/CollisionFilter.hpp>
+#include <dart/collision/detail/UnorderedPairs.hpp>
 #include <dart/collision/CollisionObject.hpp>
 
 #include <string>
@@ -37,62 +38,75 @@ namespace dartsim {
 /// evaluates to 0, then collisions between them are ignored.
 class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 {
-  private:
+  public: using DartCollisionConstPtr = const dart::collision::CollisionObject*;
+  public: using DartShape = dart::dynamics::ShapeNode;
 
-  std::unordered_map<const dart::dynamics::BodyNode*, uint16_t> bitmask_map;
+  private: std::unordered_map<const DartShape*, uint16_t> bitmaskMap;
+  private: dart::collision::detail::UnorderedPairs<DartShape> shapeBlackList;
 
-  public:
+  public: bool ignoresCollision(DartCollisionConstPtr object1,
+      DartCollisionConstPtr object2) const override
+  {
+    auto shapeNode1 = object1->getShapeFrame()->asShapeNode();
+    auto shapeNode2 = object2->getShapeFrame()->asShapeNode();
 
-  void SetIgnoredCollision(const dart::dynamics::BodyNode* _bodyptr,
+    if (dart::collision::BodyNodeCollisionFilter::ignoresCollision(
+          object1, object2))
+      return true;
+
+    if (shapeBlackList.contains(shapeNode1, shapeNode2))
+      return true;
+
+    return false;
+  }
+
+  public: void SetIgnoredCollision(const DartShape* _shapePtr,
       const uint16_t _mask)
   {
     // Remove previously filtered collisions
-    this->RemoveIgnoredCollision(_bodyptr);
-    for (const auto& bitmask_pair : bitmask_map)
+    this->RemoveIgnoredCollision(_shapePtr);
+    for (const auto& bitmask_pair : bitmaskMap)
     {
       if ((bitmask_pair.second & _mask) == 0)
-        this->addBodyNodePairToBlackList(bitmask_pair.first, _bodyptr);
+        this->shapeBlackList.addPair(bitmask_pair.first, _shapePtr);
     }
-    bitmask_map[_bodyptr] = _mask;
+    bitmaskMap[_shapePtr] = _mask;
   }
 
-  uint16_t GetIgnoredCollision(const dart::dynamics::BodyNode* _bodyptr) const
+  public: uint16_t GetIgnoredCollision(const DartShape* _shapePtr) const
   {
-    if (bitmask_map.find(_bodyptr) == bitmask_map.end())
+    if (bitmaskMap.find(_shapePtr) == bitmaskMap.end())
       return 0;
-    return bitmask_map.at(_bodyptr);
+    return bitmaskMap.at(_shapePtr);
   }
 
-  void RemoveIgnoredCollision(const dart::dynamics::BodyNode* _bodyptr)
+  public: void RemoveIgnoredCollision(const DartShape* _shapePtr)
   {
-    if (bitmask_map.find(_bodyptr) == bitmask_map.end())
+    if (bitmaskMap.find(_shapePtr) == bitmaskMap.end())
       return;
-    const uint16_t mask = bitmask_map.at(_bodyptr);
-    for (const auto& bitmask_pair : bitmask_map)
+    const uint16_t mask = bitmaskMap.at(_shapePtr);
+    for (const auto& bitmask_pair : bitmaskMap)
     {
       if ((bitmask_pair.second & mask) == 0)
-      {
-        // Remove both directions
-        this->removeBodyNodePairFromBlackList(bitmask_pair.first, _bodyptr);
-        this->removeBodyNodePairFromBlackList(_bodyptr, bitmask_pair.first);
-      }
+        this->shapeBlackList.removePair(bitmask_pair.first, _shapePtr);
     }
-    bitmask_map.erase(bitmask_map.find(_bodyptr));
+    bitmaskMap.erase(bitmaskMap.find(_shapePtr));
   }
 
-  void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skel)
+  public: void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skelPtr)
   {
-    for (std::size_t i = 0; i < _skel->getNumBodyNodes(); ++i)
+    for (std::size_t i = 0; i < _skelPtr->getNumShapeNodes(); ++i)
     {
-      auto bn = _skel->getBodyNode(i);
-      this->RemoveIgnoredCollision(bn);
+      auto shapePtr = _skelPtr->getShapeNode(i);
+      this->RemoveIgnoredCollision(shapePtr);
     }
   }
 
-  virtual ~BitmaskContactFilter() = default;
+  public: virtual ~BitmaskContactFilter() = default;
 };
-/////////////////////////////////////////////////
+
 /// Utility functions
+/////////////////////////////////////////////////
 static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
     const EntityManagementFeatures* _emf, std::size_t _worldID)
 {
@@ -102,6 +116,20 @@ static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
       world->getConstraintSolver()->getCollisionOption()
       .collisionFilter);
   return filter_ptr;
+}
+
+/////////////////////////////////////////////////
+static std::size_t GetWorldOfShapeNode(const EntityManagementFeatures *_emf,
+    const dart::dynamics::ShapeNode* _shapeNode)
+{
+  // Get the body of the shape node
+  const auto bn = _shapeNode->getBodyNodePtr();
+  // Get the body node's skeleton
+  const auto skel_ptr = bn->getSkeleton();
+  // Now find the skeleton's model
+  const std::size_t modelID = _emf->models.objectToID.at(skel_ptr);
+  // And the world containing the model
+  return _emf->models.idToContainerID.at(modelID);
 }
 
 /////////////////////////////////////////////////
@@ -637,51 +665,31 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
   return this->GenerateIdentity(linkID, this->links.at(linkID));
 }
 
-static std::size_t GetWorldOfBodyNode(const EntityManagementFeatures *_emf,
-    const dart::dynamics::BodyNode* _bn)
-{
-  // Get the world, start by getting the body node's skeleton
-  const auto skel_ptr = _bn->getSkeleton();
-  // Now find the skeleton's model
-  const std::size_t modelID = _emf->models.objectToID.at(skel_ptr);
-  // And the world containing the model
-  return _emf->models.idToContainerID.at(modelID);
-}
-
 void EntityManagementFeatures::SetCollisionFilterMask(
     const Identity &_shapeID, const uint16_t _mask)
 {
-  // Get the body node pointer of current shape
-  const auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
-  const DartBodyNode *const new_bn = shapeInfo->node->getBodyNodePtr();
-  // Get the world containing the current body node
-  const std::size_t worldID = GetWorldOfBodyNode(this, new_bn);
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filter_ptr = GetFilterPtr(this, worldID);
-  filter_ptr->SetIgnoredCollision(new_bn, _mask);
+  filter_ptr->SetIgnoredCollision(shapeNode, _mask);
 }
 
 uint16_t EntityManagementFeatures::GetCollisionFilterMask(
     const Identity &_shapeID) const
 {
-  // Get the body node pointer of current shape
-  const auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
-  const DartBodyNode *const new_bn = shapeInfo->node->getBodyNodePtr();
-  // Get the world containing the current body node
-  const std::size_t worldID = GetWorldOfBodyNode(this, new_bn);
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filter_ptr = GetFilterPtr(this, worldID);
-  return filter_ptr->GetIgnoredCollision(new_bn);
+  return filter_ptr->GetIgnoredCollision(shapeNode);
 }
 
 void EntityManagementFeatures::RemoveCollisionFilterMask(
     const Identity &_shapeID)
 {
-  // Get the body node pointer of current shape
-  const auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
-  const DartBodyNode *const new_bn = shapeInfo->node->getBodyNodePtr();
-  // Get the world containing the current body node
-  const std::size_t worldID = GetWorldOfBodyNode(this, new_bn);
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filter_ptr = GetFilterPtr(this, worldID);
-  filter_ptr->RemoveIgnoredCollision(new_bn);
+  filter_ptr->RemoveIgnoredCollision(shapeNode);
 }
 
 }

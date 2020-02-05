@@ -32,7 +32,6 @@
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/GetContacts.hh>
 #include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/CollisionFilterMask.hh>
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 

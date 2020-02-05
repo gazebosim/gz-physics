@@ -21,7 +21,7 @@
 #include <string>
 
 #include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/CollisionFilterMask.hh>
+#include <ignition/physics/Shape.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/RemoveEntities.hh>
 #include <ignition/physics/Implements.hh>
