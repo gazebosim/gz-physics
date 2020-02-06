@@ -703,9 +703,18 @@ Identity SDFFeatures::ConstructSdfJoint(
     }
   }
 
-  if (_parent)
   {
-    if (_parent->descendsFrom(_child))
+    auto childsParentJoint = _child->getParentJoint();
+    if (childsParentJoint->getType() != "FreeJoint")
+    {
+      ignerr << "Asked to create a joint between links "
+             << "[" << _parent->getName() << "] as parent and ["
+             << _child->getName() << "] as child, but the child link already "
+             << "has a parent joint of type [" << childsParentJoint->getType()
+             << "].\n";
+      return this->GenerateInvalidId();
+    }
+    else if (_parent && _parent->descendsFrom(_child))
     {
       // TODO(MXG): Add support for non-tree graph structures
       ignerr << "Asked to create a closed kinematic chain between links "
