@@ -5,9 +5,14 @@
 1. Clean up internal resources when a model gets removed
     * [Pull request 115](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/115)
 
-### Ignition Physics 1.4.0 (20XX-XX-XX)
+### Ignition Physics 1.5.0 (2019-10-14)
 
-1. Add SetJointVelocityCommand feature
+1. Add DetachJointFeature feature.
+    * [Pull request 102](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/102)
+
+### Ignition Physics 1.4.0 (2019-08-27)
+
+1. Add SetJointVelocityCommand feature.
     * [Pull request 100](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/100)
 
 1. Add `IGN_PROFILER_ENABLE` cmake option for enabling the ign-common profiler.

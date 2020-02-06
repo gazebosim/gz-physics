@@ -38,6 +38,7 @@ using JointFeatureList = FeatureList<
   GetBasicJointProperties,
   SetJointTransformFromParentFeature,
   SetJointTransformToChildFeature,
+  DetachJointFeature,
 
   SetFreeJointRelativeTransformFeature,
 
@@ -109,6 +110,10 @@ class JointFeatures :
 
   public: void SetJointTransformToChild(
       const Identity &_id, const Pose3d &_pose) override;
+
+
+  // ----- Detach Joint -----
+  public: void DetachJoint(const Identity &_jointId) override;
 
 
   // ----- Fixed Joint -----
