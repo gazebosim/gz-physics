@@ -189,9 +189,9 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
 
   for (const auto &world : worlds)
   {
-    auto base_box = world->GetModel("box_base");
-    auto filtered_box = world->GetModel("box_filtered");
-    auto colliding_box = world->GetModel("box_colliding");
+    auto baseBox = world->GetModel("box_base");
+    auto filteredBox = world->GetModel("box_filtered");
+    auto collidingBox = world->GetModel("box_colliding");
 
     StepWorld(world);
     auto contacts = world->GetContactsFromLastStep();
@@ -199,11 +199,11 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
     EXPECT_EQ(4u, contacts.size());
 
     // Now disable collisions for the colliding box as well
-    auto colliding_shape = colliding_box->GetLink(0)->GetShape(0);
-    auto filtered_shape = filtered_box->GetLink(0)->GetShape(0);
-    colliding_shape->SetCollisionFilterMask(0xF0);
+    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
+    collidingShape->SetCollisionFilterMask(0xF0);
     // Also test the getter
-    EXPECT_EQ(0xF0, colliding_shape->GetCollisionFilterMask());
+    EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
     // Step and make sure there is no collisions
     StepWorld(world);
     contacts = world->GetContactsFromLastStep();
@@ -211,8 +211,8 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
 
     // Now remove both filter masks (no collision will be filtered)
     // Equivalent to set to 0xFF
-    colliding_shape->RemoveCollisionFilterMask();
-    filtered_shape->RemoveCollisionFilterMask();
+    collidingShape->RemoveCollisionFilterMask();
+    filteredShape->RemoveCollisionFilterMask();
     StepWorld(world);
     // Expect both objects to collide
     contacts = world->GetContactsFromLastStep();

@@ -112,10 +112,10 @@ static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
 {
   const auto world = _emf->worlds.at(_worldID);
   // We need to cast the base class pointer to the derived class
-  const auto filter_ptr = std::static_pointer_cast<BitmaskContactFilter>(
+  const auto filterPtr = std::static_pointer_cast<BitmaskContactFilter>(
       world->getConstraintSolver()->getCollisionOption()
       .collisionFilter);
-  return filter_ptr;
+  return filterPtr;
 }
 
 /////////////////////////////////////////////////
@@ -125,9 +125,9 @@ static std::size_t GetWorldOfShapeNode(const EntityManagementFeatures *_emf,
   // Get the body of the shape node
   const auto bn = _shapeNode->getBodyNodePtr();
   // Get the body node's skeleton
-  const auto skel_ptr = bn->getSkeleton();
+  const auto skelPtr = bn->getSkeleton();
   // Now find the skeleton's model
-  const std::size_t modelID = _emf->models.objectToID.at(skel_ptr);
+  const std::size_t modelID = _emf->models.objectToID.at(skelPtr);
   // And the world containing the model
   return _emf->models.idToContainerID.at(modelID);
 }
@@ -563,8 +563,8 @@ bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
 
   if (model != nullptr && this->models.HasEntity(model))
   {
-    auto filter_ptr = GetFilterPtr(this, _worldID);
-    filter_ptr->RemoveSkeletonCollisions(model);
+    auto filterPtr = GetFilterPtr(this, _worldID);
+    filterPtr->RemoveSkeletonCollisions(model);
     this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
     return true;
   }
@@ -580,8 +580,8 @@ bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
 
   if (model != nullptr && this->models.HasEntity(model))
   {
-    auto filter_ptr = GetFilterPtr(this, _worldID);
-    filter_ptr->RemoveSkeletonCollisions(model);
+    auto filterPtr = GetFilterPtr(this, _worldID);
+    filterPtr->RemoveSkeletonCollisions(model);
     this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
     return true;
   }
@@ -596,8 +596,8 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 
   if (this->models.HasEntity(_modelID))
   {
-    auto filter_ptr = GetFilterPtr(this, worldID);
-    filter_ptr->RemoveSkeletonCollisions(model);
+    auto filterPtr = GetFilterPtr(this, worldID);
+    filterPtr->RemoveSkeletonCollisions(model);
     this->RemoveModelImpl(this->models.idToContainerID.at(_modelID), _modelID);
     return true;
   }
@@ -670,8 +670,8 @@ void EntityManagementFeatures::SetCollisionFilterMask(
 {
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
-  const auto filter_ptr = GetFilterPtr(this, worldID);
-  filter_ptr->SetIgnoredCollision(shapeNode, _mask);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->SetIgnoredCollision(shapeNode, _mask);
 }
 
 uint16_t EntityManagementFeatures::GetCollisionFilterMask(
@@ -679,8 +679,8 @@ uint16_t EntityManagementFeatures::GetCollisionFilterMask(
 {
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
-  const auto filter_ptr = GetFilterPtr(this, worldID);
-  return filter_ptr->GetIgnoredCollision(shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  return filterPtr->GetIgnoredCollision(shapeNode);
 }
 
 void EntityManagementFeatures::RemoveCollisionFilterMask(
@@ -688,8 +688,8 @@ void EntityManagementFeatures::RemoveCollisionFilterMask(
 {
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
-  const auto filter_ptr = GetFilterPtr(this, worldID);
-  filter_ptr->RemoveIgnoredCollision(shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->RemoveIgnoredCollision(shapeNode);
 }
 
 }
