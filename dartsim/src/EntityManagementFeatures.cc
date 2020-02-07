@@ -23,7 +23,6 @@
 #include <dart/dynamics/FreeJoint.hpp>
 
 #include <dart/collision/CollisionFilter.hpp>
-#include <dart/collision/detail/UnorderedPairs.hpp>
 #include <dart/collision/CollisionObject.hpp>
 
 #include <string>
@@ -39,10 +38,9 @@ namespace dartsim {
 class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 {
   public: using DartCollisionConstPtr = const dart::collision::CollisionObject*;
-  public: using DartShape = dart::dynamics::ShapeNode;
+  public: using DartShapeConstPtr = const dart::dynamics::ShapeNode*;
 
-  private: std::unordered_map<const DartShape*, uint16_t> bitmaskMap;
-  private: dart::collision::detail::UnorderedPairs<DartShape> shapeBlackList;
+  private: std::unordered_map<DartShapeConstPtr, uint16_t> bitmaskMap;
 
   public: bool ignoresCollision(DartCollisionConstPtr object1,
       DartCollisionConstPtr object2) const override
@@ -54,43 +52,34 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
           object1, object2))
       return true;
 
-    if (shapeBlackList.contains(shapeNode1, shapeNode2))
+    auto shape1Index = bitmaskMap.find(shapeNode1);
+    auto shape2Index = bitmaskMap.find(shapeNode2);
+    if (shape1Index != bitmaskMap.end() && shape2Index != bitmaskMap.end() &&
+        ((shape1Index->second & shape2Index->second) == 0))
       return true;
 
     return false;
   }
 
-  public: void SetIgnoredCollision(const DartShape* _shapePtr,
+  public: void SetIgnoredCollision(DartShapeConstPtr _shapePtr,
       const uint16_t _mask)
   {
-    // Remove previously filtered collisions
-    this->RemoveIgnoredCollision(_shapePtr);
-    for (const auto& bitmaskPair : bitmaskMap)
-    {
-      if ((bitmaskPair.second & _mask) == 0)
-        this->shapeBlackList.addPair(bitmaskPair.first, _shapePtr);
-    }
     bitmaskMap[_shapePtr] = _mask;
   }
 
-  public: uint16_t GetIgnoredCollision(const DartShape* _shapePtr) const
+  public: uint16_t GetIgnoredCollision(DartShapeConstPtr _shapePtr) const
   {
-    if (bitmaskMap.find(_shapePtr) == bitmaskMap.end())
-      return 0;
-    return bitmaskMap.at(_shapePtr);
+    auto shapeIterator = bitmaskMap.find(_shapePtr);
+    if (shapeIterator != bitmaskMap.end())
+      return shapeIterator->second;
+    return 0xff;
   }
 
-  public: void RemoveIgnoredCollision(const DartShape* _shapePtr)
+  public: void RemoveIgnoredCollision(DartShapeConstPtr _shapePtr)
   {
-    if (bitmaskMap.find(_shapePtr) == bitmaskMap.end())
-      return;
-    const uint16_t mask = bitmaskMap.at(_shapePtr);
-    for (const auto& bitmaskPair : bitmaskMap)
-    {
-      if ((bitmaskPair.second & mask) == 0)
-        this->shapeBlackList.removePair(bitmaskPair.first, _shapePtr);
-    }
-    bitmaskMap.erase(bitmaskMap.find(_shapePtr));
+    auto shapeIterator = bitmaskMap.find(_shapePtr);
+    if (shapeIterator != bitmaskMap.end())
+      bitmaskMap.erase(shapeIterator);
   }
 
   public: void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skelPtr)
@@ -591,11 +580,11 @@ bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
-  auto worldID = this->models.idToContainerID.at(_modelID);
-  auto model = this->models.at(_modelID)->model;
-
   if (this->models.HasEntity(_modelID))
   {
+    auto worldID = this->models.idToContainerID.at(_modelID);
+    auto model = this->models.at(_modelID)->model;
+
     auto filterPtr = GetFilterPtr(this, worldID);
     filterPtr->RemoveSkeletonCollisions(model);
     this->RemoveModelImpl(this->models.idToContainerID.at(_modelID), _modelID);
