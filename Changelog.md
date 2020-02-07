@@ -2,7 +2,10 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
-### Ignition Physics 1.5.0 (2019-10-14)
+### Ignition Physics 1.5.0 (20XX-XX-XX)
+
+1. Clean up internal resources when a model gets removed
+    * [Pull request 115](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/115)
 
 1. Add DetachJointFeature feature.
     * [Pull request 102](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/102)
