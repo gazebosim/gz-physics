@@ -52,10 +52,10 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
           object1, object2))
       return true;
 
-    auto shape1Index = bitmaskMap.find(shapeNode1);
-    auto shape2Index = bitmaskMap.find(shapeNode2);
-    if (shape1Index != bitmaskMap.end() && shape2Index != bitmaskMap.end() &&
-        ((shape1Index->second & shape2Index->second) == 0))
+    auto shape1Iter = bitmaskMap.find(shapeNode1);
+    auto shape2Iter = bitmaskMap.find(shapeNode2);
+    if (shape1Iter != bitmaskMap.end() && shape2Iter != bitmaskMap.end() &&
+        ((shape1Iter->second & shape2Iter->second) == 0))
       return true;
 
     return false;
@@ -69,17 +69,17 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   public: uint16_t GetIgnoredCollision(DartShapeConstPtr _shapePtr) const
   {
-    auto shapeIterator = bitmaskMap.find(_shapePtr);
-    if (shapeIterator != bitmaskMap.end())
-      return shapeIterator->second;
+    auto shapeIter = bitmaskMap.find(_shapePtr);
+    if (shapeIter != bitmaskMap.end())
+      return shapeIter->second;
     return 0xff;
   }
 
   public: void RemoveIgnoredCollision(DartShapeConstPtr _shapePtr)
   {
-    auto shapeIterator = bitmaskMap.find(_shapePtr);
-    if (shapeIterator != bitmaskMap.end())
-      bitmaskMap.erase(shapeIterator);
+    auto shapeIter = bitmaskMap.find(_shapePtr);
+    if (shapeIter != bitmaskMap.end())
+      bitmaskMap.erase(shapeIter);
   }
 
   public: void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skelPtr)
