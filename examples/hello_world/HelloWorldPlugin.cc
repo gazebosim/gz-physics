@@ -26,9 +26,8 @@ namespace mock
       ignition::physics::GetEngineInfo
   >;
 
-  template <typename PolicyT>
   class HelloWorldPlugin
-      : public ignition::physics::Implements<PolicyT, HelloWorldFeatureList>
+      : public ignition::physics::Implements3d<HelloWorldFeatureList>
   {
     using Identity = ignition::physics::Identity;
 
@@ -53,19 +52,8 @@ namespace mock
 
   };
 
-  class HelloWorldPlugin3d
-      : public HelloWorldPlugin<ignition::physics::FeaturePolicy3d> { };
-
   IGN_PHYSICS_ADD_PLUGIN(
-      HelloWorldPlugin3d,
+      HelloWorldPlugin,
       ignition::physics::FeaturePolicy3d,
-      HelloWorldFeatureList)
-
-  class HelloWorldPlugin2d
-    : public HelloWorldPlugin<ignition::physics::FeaturePolicy2d> { };
-
-  IGN_PHYSICS_ADD_PLUGIN(
-      HelloWorldPlugin2d,
-      ignition::physics::FeaturePolicy2d,
       HelloWorldFeatureList)
 }

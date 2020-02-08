@@ -34,45 +34,22 @@ int main(int argc, char **argv)
   auto plugins = pl.LoadLib(HelloWorldPlugin_LIB);
 
   // Look for 3d plugins
+  auto pluginNames = ignition::physics::FindFeatures3d<Features>::From(pl);
+  if (pluginNames.empty())
   {
-    auto pluginNames = ignition::physics::FindFeatures3d<Features>::From(pl);
-    if (pluginNames.empty())
-    {
-      std::cerr << "No plugins with required features found in "
-                << HelloWorldPlugin_LIB
-                << std::endl;
-    }
-
-    for (const std::string & name : pluginNames)
-    {
-      std::cout << "Testing plugin: " << name << std::endl;
-      ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
-
-      auto engine = ignition::physics::RequestEngine3d<Features>::From(plugin);
-
-      std::cout << "  engine name: " << engine->GetName() << std::endl;
-    }
+    std::cerr << "No plugins with required features found in "
+              << HelloWorldPlugin_LIB
+              << std::endl;
   }
 
-  // Look for 2d plugins
+  for (const std::string & name : pluginNames)
   {
-    auto pluginNames = ignition::physics::FindFeatures2d<Features>::From(pl);
-    if (pluginNames.empty())
-    {
-      std::cerr << "No plugins with required features found in "
-                << HelloWorldPlugin_LIB
-                << std::endl;
-    }
+    std::cout << "Testing plugin: " << name << std::endl;
+    ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
 
-    for (const std::string & name : pluginNames)
-    {
-      std::cout << "Testing plugin: " << name << std::endl;
-      ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
+    auto engine = ignition::physics::RequestEngine3d<Features>::From(plugin);
 
-      auto engine = ignition::physics::RequestEngine2d<Features>::From(plugin);
-
-      std::cout << "  engine name: " << engine->GetName() << std::endl;
-    }
+    std::cout << "  engine name: " << engine->GetName() << std::endl;
   }
 
   return 0;
