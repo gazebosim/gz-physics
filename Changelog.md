@@ -2,7 +2,7 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
-### Ignition Physics 1.5.0 (20XX-XX-XX)
+### Ignition Physics 1.5.0 (2020-02-10)
 
 1. Clean up internal resources when a model gets removed
     * [Pull request 115](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/115)
