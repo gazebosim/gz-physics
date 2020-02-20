@@ -222,8 +222,8 @@ namespace ignition
       {
         /// \brief Set the collision filter bitmask of this shape
         /// \param[in] _mask
-        ///   A sixteen bit bitmask, if the bitwise and of two objects
-        ///   evaluates to 0 their collision will be ignored
+        ///   A sixteen bit bitmask, if the bitwise AND of two objects
+        ///   evaluates to 0, their collision will be ignored
         public: void SetCollisionFilterMask(const uint16_t _mask);
 
         /// \brief Get the collision filter bitmask of this shape
