@@ -42,14 +42,14 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   private: std::unordered_map<DartShapeConstPtr, uint16_t> bitmaskMap;
 
-  public: bool ignoresCollision(DartCollisionConstPtr object1,
-      DartCollisionConstPtr object2) const override
+  public: bool ignoresCollision(DartCollisionConstPtr _object1,
+      DartCollisionConstPtr _object2) const override
   {
-    auto shapeNode1 = object1->getShapeFrame()->asShapeNode();
-    auto shapeNode2 = object2->getShapeFrame()->asShapeNode();
+    auto shapeNode1 = _object1->getShapeFrame()->asShapeNode();
+    auto shapeNode2 = _object2->getShapeFrame()->asShapeNode();
 
     if (dart::collision::BodyNodeCollisionFilter::ignoresCollision(
-          object1, object2))
+          _object1, _object2))
       return true;
 
     auto shape1Iter = bitmaskMap.find(shapeNode1);
