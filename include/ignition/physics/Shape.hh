@@ -169,6 +169,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     using GetLinkBoundingBoxRequiredFeatures = FeatureList<
+      GetShapeBoundingBox,
       GetShapeFromLink,
       LinkFrameSemantics>;
     class IGNITION_PHYSICS_VISIBLE GetLinkBoundingBox
