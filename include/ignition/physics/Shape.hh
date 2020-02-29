@@ -178,7 +178,7 @@ namespace ignition
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Link
-          : public virtual LinkFrameSemantics::Link<PolicyT, FeaturesT>
+          : public virtual GetShapeFromLink::Link<PolicyT, FeaturesT>
       {
         public: using AlignedBoxType =
             typename FromPolicy<PolicyT>::template Use<AlignedBox>;

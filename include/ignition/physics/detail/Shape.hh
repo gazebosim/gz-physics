@@ -83,21 +83,18 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetShapeBoundingBox::Link<PolicyT, FeaturesT>
+    auto GetLinkBoundingBox::Link<PolicyT, FeaturesT>
     ::GetAxisAlignedBoundingBox(const FrameID &_referenceFrame) const
     -> AlignedBoxType
     {
-      using RelativeAlignedBox =
-          ignition::physics::RelativeAlignedBox<
-            typename PolicyT::Scalar, PolicyT::Dim>;
-
       AlignedBoxType result;
       std::size_t shapeCount = this->GetShapeCount();
       for (std::size_t i = 0; i < shapeCount; ++i)
       {
         // for each shape in this link, merge its AlignedBox into result
         auto shape = this->GetShape(i);
-        // result.merge(shape->GetAxisAlignedBoundingBox(_referenceFrame);
+        result =
+            result.merged(shape->GetAxisAlignedBoundingBox(_referenceFrame));
       }
       return result;
     }
