@@ -19,9 +19,9 @@ set(engine_name dartsim-plugin)
 ign_add_component(${engine_name}
   SOURCES ${sources}
   DEPENDS_ON_COMPONENTS dartsim
-  GET_TARGET_NAME engine_target)
+  GET_TARGET_NAME dartsim_plugin)
 
-target_link_libraries(${engine_target}
+target_link_libraries(${dartsim_plugin}
   PUBLIC
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
@@ -34,12 +34,12 @@ target_link_libraries(${engine_target}
 )
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
-install(TARGETS ${engine_target} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+install(TARGETS ${dartsim_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 
 # The library created by `ign_add_component` includes the ign-physics version
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
-set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${engine_target}${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${dartsim_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
 set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (WIN32)
   # create_symlink requires cmake 3.13 on windows
@@ -63,7 +63,7 @@ ign_build_tests(
 foreach(test ${tests})
 
   target_compile_definitions(${test} PRIVATE
-    "engine_target_LIB=\"$<TARGET_FILE:${engine_target}>\""
+    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\""
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 
@@ -72,6 +72,6 @@ endforeach()
 if(TARGET UNIT_FindFeatures_TEST)
 
   target_compile_definitions(UNIT_FindFeatures_TEST PRIVATE
-    "engine_target_LIB=\"$<TARGET_FILE:${engine_target}>\"")
+    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
 
 endif()
