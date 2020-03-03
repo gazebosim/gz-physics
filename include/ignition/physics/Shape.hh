@@ -198,6 +198,36 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    using GetModelBoundingBoxRequiredFeatures = FeatureList<
+      GetLinkBoundingBox,
+      GetLinkFromModel,
+      ModelFrameSemantics>;
+    class IGNITION_PHYSICS_VISIBLE GetModelBoundingBox
+        : public virtual
+          FeatureWithRequirements<GetModelBoundingBoxRequiredFeatures>
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Model
+          : public virtual GetLinkFromModel::Model<PolicyT, FeaturesT>
+      {
+        public: using AlignedBoxType =
+            typename FromPolicy<PolicyT>::template Use<AlignedBox>;
+
+        /// \brief Get the axis aligned bounding box for the links attached
+        /// to this model in the requested frame.
+        /// \param[in] _referenceFrame
+        ///   The desired frame for the bounding box. By default, this will be
+        ///   the world frame.
+        ///   \note Axis-aligned bounding boxes will expand each time they are
+        ///   transformed into a new frame that has a different orientation.
+        /// \return Axis aligned bounding box for the shape, transformed into
+        /// the requested coordinate frame.
+        public: AlignedBoxType GetAxisAlignedBoundingBox(
+            const FrameID &_referenceFrame = FrameID::World()) const;
+      };
+    };
+
+    /////////////////////////////////////////////////
     class IGNITION_PHYSICS_VISIBLE SetShapeCollisionProperties
         : public virtual Feature
     {

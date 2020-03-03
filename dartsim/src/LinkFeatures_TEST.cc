@@ -48,7 +48,8 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::sdf::ConstructSdfModel,
   physics::sdf::ConstructSdfLink,
   physics::GetEntities,
-  physics::GetLinkBoundingBox
+  physics::GetLinkBoundingBox,
+  physics::GetModelBoundingBox
 >;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
@@ -299,6 +300,20 @@ TEST_F(LinkFeaturesFixture, AxisAlignedBoundingBox)
   EXPECT_PRED_FORMAT2(
       vectorPredicate, physics::Vector3d(1.8, 0.8, 2.2), bbox.max());
 }
+
+TEST_F(LinkFeaturesFixture, ModelAxisAlignedBoundingBox)
+{
+  auto world =
+      LoadWorld(this->engine, TEST_WORLD_DIR "contact.sdf");
+  auto model = world->GetModel("sphere");
+  auto bbox = model->GetAxisAlignedBoundingBox();
+  AssertVectorApprox vectorPredicate(1e-4);
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(-1, -1, -0.5), bbox.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(2, 2, 1.5), bbox.max());
+}
+
 
 /////////////////////////////////////////////////
 int main(int argc, char *argv[])
