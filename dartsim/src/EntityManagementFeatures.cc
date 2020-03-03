@@ -42,7 +42,8 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   private: std::unordered_map<DartShapeConstPtr, uint16_t> bitmaskMap;
 
-  public: bool ignoresCollision(DartCollisionConstPtr _object1,
+  public: bool ignoresCollision(
+      DartCollisionConstPtr _object1,
       DartCollisionConstPtr _object2) const override
   {
     auto shapeNode1 = _object1->getShapeFrame()->asShapeNode();
