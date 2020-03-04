@@ -2,6 +2,9 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+1. Add Get Bounding Box features
+    * [Pull request 122](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/122)
+
 ### Ignition Physics 1.5.0 (2020-02-10)
 
 1. Clean up internal resources when a model gets removed
