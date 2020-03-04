@@ -20,7 +20,6 @@
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FrameSemantics.hh>
-// #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/RelativeQuantity.hh>
 #include <ignition/physics/Geometry.hh>
 
