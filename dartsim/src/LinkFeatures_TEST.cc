@@ -28,8 +28,8 @@
 // Features
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/GetBoundingBox.hh>
 #include <ignition/physics/Link.hh>
-#include <ignition/physics/Shape.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
@@ -313,7 +313,6 @@ TEST_F(LinkFeaturesFixture, ModelAxisAlignedBoundingBox)
   EXPECT_PRED_FORMAT2(
       vectorPredicate, physics::Vector3d(2, 2, 1.5), bbox.max());
 }
-
 
 /////////////////////////////////////////////////
 int main(int argc, char *argv[])

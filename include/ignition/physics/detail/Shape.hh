@@ -83,42 +83,6 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetLinkBoundingBox::Link<PolicyT, FeaturesT>
-    ::GetAxisAlignedBoundingBox(const FrameID &_referenceFrame) const
-    -> AlignedBoxType
-    {
-      AlignedBoxType result;
-      std::size_t shapeCount = this->GetShapeCount();
-      for (std::size_t i = 0; i < shapeCount; ++i)
-      {
-        // for each shape in this link, merge its AlignedBox into result
-        auto shape = this->GetShape(i);
-        result =
-            result.merged(shape->GetAxisAlignedBoundingBox(_referenceFrame));
-      }
-      return result;
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
-    auto GetModelBoundingBox::Model<PolicyT, FeaturesT>
-    ::GetAxisAlignedBoundingBox(const FrameID &_referenceFrame) const
-    -> AlignedBoxType
-    {
-      AlignedBoxType result;
-      std::size_t linkCount = this->GetLinkCount();
-      for (std::size_t i = 0; i < linkCount; ++i)
-      {
-        // for each shape in this link, merge its AlignedBox into result
-        auto link = this->GetLink(i);
-        result =
-            result.merged(link->GetAxisAlignedBoundingBox(_referenceFrame));
-      }
-      return result;
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
     void SetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
     ::SetFrictionCoefficient(const BaseShapePtr<PolicyT> &_other, Scalar _value)
     {

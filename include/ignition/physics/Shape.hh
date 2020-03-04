@@ -20,7 +20,7 @@
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetEntities.hh>
+// #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/RelativeQuantity.hh>
 #include <ignition/physics/Geometry.hh>
 
@@ -164,66 +164,6 @@ namespace ignition
         /// \return The axis-aligned bounding box in the frame of the box.
         public: virtual AlignedBoxType GetShapeAxisAlignedBoundingBox(
             const Identity &_shape) const = 0;
-      };
-    };
-
-    /////////////////////////////////////////////////
-    using GetLinkBoundingBoxRequiredFeatures = FeatureList<
-      GetShapeBoundingBox,
-      GetShapeFromLink,
-      LinkFrameSemantics>;
-    class IGNITION_PHYSICS_VISIBLE GetLinkBoundingBox
-        : public virtual
-          FeatureWithRequirements<GetLinkBoundingBoxRequiredFeatures>
-    {
-      public: template <typename PolicyT, typename FeaturesT>
-      class Link
-          : public virtual GetShapeFromLink::Link<PolicyT, FeaturesT>
-      {
-        public: using AlignedBoxType =
-            typename FromPolicy<PolicyT>::template Use<AlignedBox>;
-
-        /// \brief Get the axis aligned bounding box for the shapes attached
-        /// to this link in the requested frame.
-        /// \param[in] _referenceFrame
-        ///   The desired frame for the bounding box. By default, this will be
-        ///   the world frame.
-        ///   \note Axis-aligned bounding boxes will expand each time they are
-        ///   transformed into a new frame that has a different orientation.
-        /// \return Axis aligned bounding box for the shape, transformed into
-        /// the requested coordinate frame.
-        public: AlignedBoxType GetAxisAlignedBoundingBox(
-            const FrameID &_referenceFrame = FrameID::World()) const;
-      };
-    };
-
-    /////////////////////////////////////////////////
-    using GetModelBoundingBoxRequiredFeatures = FeatureList<
-      GetLinkBoundingBox,
-      GetLinkFromModel,
-      ModelFrameSemantics>;
-    class IGNITION_PHYSICS_VISIBLE GetModelBoundingBox
-        : public virtual
-          FeatureWithRequirements<GetModelBoundingBoxRequiredFeatures>
-    {
-      public: template <typename PolicyT, typename FeaturesT>
-      class Model
-          : public virtual GetLinkFromModel::Model<PolicyT, FeaturesT>
-      {
-        public: using AlignedBoxType =
-            typename FromPolicy<PolicyT>::template Use<AlignedBox>;
-
-        /// \brief Get the axis aligned bounding box for the links attached
-        /// to this model in the requested frame.
-        /// \param[in] _referenceFrame
-        ///   The desired frame for the bounding box. By default, this will be
-        ///   the world frame.
-        ///   \note Axis-aligned bounding boxes will expand each time they are
-        ///   transformed into a new frame that has a different orientation.
-        /// \return Axis aligned bounding box for the shape, transformed into
-        /// the requested coordinate frame.
-        public: AlignedBoxType GetAxisAlignedBoundingBox(
-            const FrameID &_referenceFrame = FrameID::World()) const;
       };
     };
 
