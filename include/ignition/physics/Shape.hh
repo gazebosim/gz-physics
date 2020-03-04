@@ -212,6 +212,41 @@ namespace ignition
             Scalar _value) = 0;
       };
     };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE CollisionFilterMaskFeature
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      {
+        /// \brief Set the collision filter bitmask of this shape
+        /// \param[in] _mask
+        ///   A sixteen bit bitmask, if the bitwise AND of two objects
+        ///   evaluates to 0, their collision will be ignored
+        public: void SetCollisionFilterMask(const uint16_t _mask);
+
+        /// \brief Get the collision filter bitmask of this shape
+        /// \return The collision filter bitmask of this shape
+        public: uint16_t GetCollisionFilterMask() const;
+
+        /// \brief Removes the collision filter bitmask from this shape
+        public: void RemoveCollisionFilterMask();
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void SetCollisionFilterMask(
+            const Identity &_shapeID, const uint16_t _mask) = 0;
+
+        public: virtual uint16_t GetCollisionFilterMask(
+            const Identity &_shapeID) const = 0;
+
+        public: virtual void RemoveCollisionFilterMask(
+            const Identity &_shapeID) = 0;
+      };
+    };
   }
 }
 
