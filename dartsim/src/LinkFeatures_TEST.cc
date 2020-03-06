@@ -299,6 +299,14 @@ TEST_F(LinkFeaturesFixture, AxisAlignedBoundingBox)
       vectorPredicate, physics::Vector3d(0.2, -0.8, 0), bbox.min());
   EXPECT_PRED_FORMAT2(
       vectorPredicate, physics::Vector3d(1.8, 0.8, 2.2), bbox.max());
+
+  // test with non-world frame
+  auto bboxModelFrame = baseLink->GetAxisAlignedBoundingBox(
+      model->GetFrameID());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(-0.8, -0.8, 0), bboxModelFrame.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(0.8, 0.8, 2.2), bboxModelFrame.max());
 }
 
 TEST_F(LinkFeaturesFixture, ModelAxisAlignedBoundingBox)
@@ -312,6 +320,15 @@ TEST_F(LinkFeaturesFixture, ModelAxisAlignedBoundingBox)
       vectorPredicate, physics::Vector3d(-1, -1, -0.5), bbox.min());
   EXPECT_PRED_FORMAT2(
       vectorPredicate, physics::Vector3d(2, 2, 1.5), bbox.max());
+
+  // test with non-world frame
+  auto link = model->GetLink("link0");
+  auto bboxLinkFrame = model->GetAxisAlignedBoundingBox(
+      link->GetFrameID());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(-1, -1, -1.0), bboxLinkFrame.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(2, 2, 1.0), bboxLinkFrame.max());
 }
 
 /////////////////////////////////////////////////
