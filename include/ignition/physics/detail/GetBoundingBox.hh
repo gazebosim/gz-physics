@@ -36,8 +36,7 @@ namespace ignition
       {
         // for each shape in this link, merge its AlignedBox into result
         auto shape = this->GetShape(i);
-        result =
-            result.merged(shape->GetAxisAlignedBoundingBox(_referenceFrame));
+        result.extend(shape->GetAxisAlignedBoundingBox(_referenceFrame));
       }
       return result;
     }
@@ -54,8 +53,7 @@ namespace ignition
       {
         // for each link in this model, merge its AlignedBox into result
         auto link = this->GetLink(i);
-        result =
-            result.merged(link->GetAxisAlignedBoundingBox(_referenceFrame));
+        result.extend(link->GetAxisAlignedBoundingBox(_referenceFrame));
       }
       return result;
     }
