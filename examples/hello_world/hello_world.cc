@@ -51,6 +51,4 @@ int main(int argc, char **argv)
 
     std::cout << "  engine name: " << engine->GetName() << std::endl;
   }
-
-  return 0;
 }
