@@ -22,9 +22,9 @@
 
 namespace mock
 {
-  using HelloWorldFeatureList = ignition::physics::FeatureList<
+  struct HelloWorldFeatureList : ignition::physics::FeatureList<
       ignition::physics::GetEngineInfo
-  >;
+  > { };
 
   class HelloWorldPlugin
       : public ignition::physics::Implements3d<HelloWorldFeatureList>
