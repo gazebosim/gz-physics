@@ -307,6 +307,15 @@ TEST_F(LinkFeaturesFixture, AxisAlignedBoundingBox)
       vectorPredicate, physics::Vector3d(-0.8, -0.8, 0), bboxModelFrame.min());
   EXPECT_PRED_FORMAT2(
       vectorPredicate, physics::Vector3d(0.8, 0.8, 2.2), bboxModelFrame.max());
+
+  // test with non-world rotated frame
+  auto upperLink = model->GetLink("upper_link");
+  auto bboxUpperLinkFrame = baseLink->GetAxisAlignedBoundingBox(
+      upperLink->GetFrameID());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(-0.8, -0.1, -0.8), bboxUpperLinkFrame.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(0.8, 2.1, 0.8), bboxUpperLinkFrame.max());
 }
 
 TEST_F(LinkFeaturesFixture, ModelAxisAlignedBoundingBox)
