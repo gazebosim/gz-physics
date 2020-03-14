@@ -1,7 +1,3 @@
-install(
-  DIRECTORY include/
-  DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
-
 ign_get_libsources_and_unittests(sources test_sources)
 
 ign_add_component(tpe-lib
@@ -14,12 +10,6 @@ target_link_libraries(${tpe_lib_target}
   PRIVATE
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
 )
-
-target_include_directories(${tpe_lib_target}
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include
-)
-
 
 ign_build_tests(
   TYPE UNIT_tpe_lib
