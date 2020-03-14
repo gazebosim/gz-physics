@@ -1,6 +1,3 @@
-install(
-  DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
-
 ign_get_libsources_and_unittests(sources test_sources)
 
 ign_add_component(tpe-lib
