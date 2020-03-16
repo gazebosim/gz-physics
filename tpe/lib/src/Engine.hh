@@ -15,17 +15,18 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPESIM_TPE_ENGINE_HH_
-#define IGNITION_PHYSICS_TPESIM_TPE_ENGINE_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
 
 #include <string>
 #include <map>
 
-#include "ignition/physics/tpe/Entity.hh"
+#include "Entity.hh"
 
 namespace ignition {
 namespace physics {
 namespace tpe {
+namespace lib{
 
 class World;
 
@@ -62,6 +63,7 @@ class Engine
   protected: std::map<uint64_t, Entity> worlds;
 };
 
+} // namespace lib
 } // namespace tpe
 } // namespace physics
 } // namespace ignition

@@ -18,10 +18,10 @@
 
 #include <ignition/common/Console.hh>
 
-#include "ignition/physics/tpe/Entity.hh"
+#include "Entity.hh"
 
 /// \brief Private data class for entity
-class ignition::physics::tpe::EntityPrivate
+class ignition::physics::tpe::lib::EntityPrivate
 {
   /// \brief Name of entity
   public: std::string name;
@@ -39,6 +39,7 @@ class ignition::physics::tpe::EntityPrivate
 using namespace ignition;
 using namespace physics;
 using namespace tpe;
+using namespace lib;
 
 uint64_t Entity::nextId = 0;
 Entity Entity::kNullEntity = Entity(kNullEntityId);

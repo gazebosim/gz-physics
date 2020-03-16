@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPESIM_TPE_ENTITY_HH_
-#define IGNITION_PHYSICS_TPESIM_TPE_ENTITY_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
 
 #include <string>
 #include <map>
@@ -27,6 +27,7 @@
 namespace ignition {
 namespace physics {
 namespace tpe {
+namespace lib{
 
 // forward declaration
 class EntityPrivate;
@@ -125,7 +126,7 @@ class Entity
   private: EntityPrivate *dataPtr = nullptr;
 };
 
-
+}
 }
 }
 }

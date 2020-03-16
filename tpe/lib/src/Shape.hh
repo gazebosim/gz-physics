@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPESIM_TPE_SHAPE_HH_
-#define IGNITION_PHYSICS_TPESIM_TPE_SHAPE_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
 
 #include <string>
 #include <map>
@@ -27,6 +27,7 @@
 namespace ignition {
 namespace physics {
 namespace tpe {
+namespace lib {
 
 /// \enum ShapeType
 /// \brief The set of shape types.
@@ -231,6 +232,8 @@ class MeshShape : public Shape
   /// \brief Mesh object
   private: math::AxisAlignedBox meshAABB;
 };
+
+}
 }
 }
 }

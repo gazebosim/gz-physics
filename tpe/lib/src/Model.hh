@@ -15,18 +15,19 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPESIM_TPE_MODEL_HH_
-#define IGNITION_PHYSICS_TPESIM_TPE_MODEL_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
 
 #include <ignition/math/Pose3.hh>
 
-#include "ignition/physics/tpe/Entity.hh"
+#include "Entity.hh"
 
 namespace ignition {
 namespace physics {
 namespace tpe {
+namespace lib{
 
-class Link;
+// class Link;
 
 /// \brief Model class
 class Model : public Entity
@@ -82,6 +83,7 @@ class Model : public Entity
   protected: math::Vector3d angularVelocity;
 };
 
+}
 }
 }
 }

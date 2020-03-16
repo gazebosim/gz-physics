@@ -17,12 +17,13 @@
 
 #include <gtest/gtest.h>
 
-#include "ignition/physics/tpe/Collision.hh"
-#include "ignition/physics/tpe/Link.hh"
+#include "Collision.hh"
+#include "Link.hh"
 
 using namespace ignition;
 using namespace physics;
 using namespace tpe;
+using namespace lib;
 
 /////////////////////////////////////////////////
 TEST(Link, BasicAPI)

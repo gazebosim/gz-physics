@@ -18,13 +18,13 @@
 #include <string>
 
 #include <ignition/math/Pose3.hh>
-#include "ignition/physics/tpe/World.hh"
-
-#include "ignition/physics/tpe/Model.hh"
+#include "World.hh"
+#include "Model.hh"
 
 using namespace ignition;
 using namespace physics;
 using namespace tpe;
+using namespace lib;
 
 /////////////////////////////////////////////////
 World::World() : Entity()

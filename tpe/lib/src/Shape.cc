@@ -15,11 +15,12 @@
  *
 */
 
-#include "ignition/physics/tpe/Shape.hh"
+#include "Shape.hh"
 
 using namespace ignition;
 using namespace physics;
 using namespace tpe;
+using namespace lib;
 
 //////////////////////////////////////////////////
 Shape::Shape()

@@ -17,12 +17,13 @@
 
 #include <gtest/gtest.h>
 
-#include "ignition/physics/tpe/World.hh"
-#include "ignition/physics/tpe/Model.hh"
+#include "World.hh"
+#include "Model.hh"
 
 using namespace ignition;
 using namespace physics;
 using namespace tpe;
+using namespace lib;
 
 /////////////////////////////////////////////////
 TEST(World, BasicAPI)
@@ -35,13 +36,13 @@ TEST(World, BasicAPI)
   EXPECT_EQ("world_1", world.GetName());
 
   world.SetTime(1.0);
-  EXPECT_EQ(1.0, world.GetTime());
+  EXPECT_NEAR(world.GetTime()-1.0, 0.0, 1e-6);
 
   world.SetTimeStep(0.1);
-  EXPECT_EQ(0.1, world.GetTimeStep());
+  EXPECT_NEAR(world.GetTimeStep()-0.1, 0.0, 1e-6);
 
   world.Step();
-  EXPECT_EQ(1.1, world.GetTime());
+  EXPECT_NEAR(world.GetTime()-1.1, 0.0, 1e-6);
 
   World world2;
   EXPECT_NE(world.GetId(), world2.GetId());
