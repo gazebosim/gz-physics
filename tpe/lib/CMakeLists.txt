@@ -8,7 +8,7 @@ ign_add_component(tpe-lib
 target_link_libraries(${tpe_lib_target}
   PUBLIC
   PRIVATE
-    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+    ignition-common${IGN_COMMON_VER}::graphics
 )
 
 ign_build_tests(
