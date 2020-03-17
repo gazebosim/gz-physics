@@ -267,6 +267,90 @@ Identity EntityManagementFeatures::GetModelOfLink(
 }
 
 /////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeCount(
+  const Identity &_linkID) const
+{
+  auto it = links.find(_linkID);
+  if (it != links.end())
+    return it->second->link->GetChildCount();
+  return -1;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+  const Identity &_linkID, const std::size_t _shapeIndex) const
+{
+  // assume _shapeIndex ~= collisionIndex
+  auto shapeIt = collisions.begin();
+  std::advance(shapeIt, _shapeIndex);
+  auto linkIt = links.find(_linkID);
+  if (shapeIt != collisions.end() && linkIt != links.end())
+  {
+    uint64_t shapeID = shapeIt->first;
+    auto shape = linkIt->second->link->GetChildById(shapeID);
+    auto shapePtr = std::make_shared<tpe::lib::Entity>(shape);
+    return this->GenerateIdentity(shapeID, shapePtr);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+  const Identity &_linkID, const std::string &_shapeName) const
+{
+  // assume shapeName ~= collisionName
+  auto linkIt = links.find(_linkID);
+  if (linkIt != links.end())
+  {
+    auto shape = linkIt->second->link->GetChildByName(_shapeName);
+    for (auto it = collisions.begin(); it != collisions.end(); ++it)
+    {
+      if (it->second->collision->GetName() == _shapeName &&
+        it->first == shape.GetId())
+      {
+        return this->GenerateIdentity(shape.GetId(), it->second);
+      }
+    }
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetShapeName(
+  const Identity &_shapeID) const
+{
+  // assume _shapeID ~= collisionID
+  static std::string name{""};
+  auto it = collisions.find(_shapeID);
+  if (it != collisions.end())
+    name = it->second->collision->GetName();
+  return name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeIndex(
+  const Identity &_shapeID) const
+{
+  // assume _shapeID ~= collisionID
+  auto it = collisions.find(_shapeID);
+  if (it != collisions.end())
+    return std::distance(it, collisions.begin());
+  return -1;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLinkOfShape(
+  const Identity &_shapeID) const
+{
+  // assume _shapeID ~= collisionID
+  auto it = childIdToParentId.find(_shapeID);
+  auto linkIt = links.find(it->second);
+  if (it != childIdToParentId.end() && linkIt != links.end())
+    return this->GenerateIdentity(linkIt->first, linkIt->second);
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByIndex(
   const Identity &_worldID, std::size_t _modelIndex)
 {

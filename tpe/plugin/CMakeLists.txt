@@ -44,7 +44,7 @@ foreach(test ${tests})
 
   target_compile_definitions(${test} PRIVATE
     "tpe_plugin_LIB=\"$<TARGET_FILE:${tpe_plugin}>\""
-    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
+    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/plugin/src/\""
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 
 endforeach()

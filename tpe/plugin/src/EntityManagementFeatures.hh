@@ -37,6 +37,7 @@ struct EntityManagementFeatureList : FeatureList<
   GetWorldFromEngine,
   GetModelFromWorld,
   GetLinkFromModel,
+  GetShapeFromLink,
   RemoveEntities,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,
@@ -102,6 +103,21 @@ class EntityManagementFeatures :
   public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
 
   public: Identity GetModelOfLink(const Identity &_linkID) const override;
+
+  public: std::size_t GetShapeCount(const Identity &_linkID) const override;
+
+  public: Identity GetShape(
+    const Identity &_linkID, std::size_t _shapeIndex) const override;
+
+  public: Identity GetShape(
+    const Identity &_linkID, const std::string &_shapeName) const override;
+
+  public: const std::string &GetShapeName(
+    const Identity &_shapeID) const override;
+
+  public: std::size_t GetShapeIndex(const Identity &_shapeID) const override;
+
+  public: Identity GetLinkOfShape(const Identity &_shapeID) const override;
 
   // ----- Remove entities -----
   public: bool RemoveModelByIndex(

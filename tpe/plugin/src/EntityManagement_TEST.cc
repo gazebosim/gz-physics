@@ -19,12 +19,18 @@
 
 #include <ignition/plugin/Loader.hh>
 
+#include <ignition/common/MeshManager.hh>
+
+#include <ignition/math/eigen3/Conversions.hh>
+
 #include <ignition/physics/RequestEngine.hh>
 
 #include "EntityManagementFeatures.hh"
+#include "ShapeFeatures.hh"
 
 struct TestFeatureList : ignition::physics::FeatureList<
-  ignition::physics::tpe::plugin::EntityManagementFeatureList
+  ignition::physics::tpe::plugin::EntityManagementFeatureList,
+  ignition::physics::tpe::plugin::ShapeFeatureList
 > { };
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
@@ -57,6 +63,67 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ("empty link", link->GetName());
   EXPECT_EQ(model, link->GetModel());
   EXPECT_EQ(link, model->ConstructEmptyLink("dummy"));
+
+  const std::string boxName = "box";
+  const Eigen::Vector3d boxSize(0.5, 0.5, 0.5);
+  auto box = link->AttachBoxShape(boxName, boxSize);
+  EXPECT_EQ(boxName, box->GetName());
+  EXPECT_NEAR((boxSize - box->GetSize()).norm(), 0.0, 1e-6);
+
+  EXPECT_EQ(1u, link->GetShapeCount());
+  auto boxCopy = link->GetShape(0u);
+  EXPECT_EQ(box, boxCopy);
+
+  auto cylinderLink = model->ConstructEmptyLink("cylinder link");
+  const std::string cylinderName = "cylinder";
+  double cylinderRadius(1.0);
+  double cylinderHeight(1.0);
+  auto cylinder = cylinderLink->AttachCylinderShape(
+    cylinderName, cylinderRadius, cylinderHeight);
+
+  EXPECT_EQ(cylinderName, cylinder->GetName());
+  EXPECT_NEAR(cylinderRadius - cylinder->GetRadius(), 0.0, 1e-6);
+  EXPECT_NEAR(cylinderHeight - cylinder->GetHeight(), 0.0, 1e-6);
+
+  auto sphereLink = model->ConstructEmptyLink("sphere link");
+  const std::string sphereName = "sphere";
+  double sphereRadius(1.0);
+  auto sphere = sphereLink->AttachSphereShape(
+    sphereName, sphereRadius);
+
+  EXPECT_EQ(sphereName, sphere->GetName());
+  EXPECT_NEAR(sphereRadius - sphere->GetRadius(), 0.0, 1e-6);
+
+  auto meshLink = model->ConstructEmptyLink("mesh link");
+  const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
+  auto &meshManager = *ignition::common::MeshManager::Instance();
+  auto *mesh = meshManager.Load(meshFilename);
+
+  auto meshShape = meshLink->AttachMeshShape("chasis", *mesh);
+  const auto originalMeshSize = mesh->Max() - mesh->Min();
+  const auto meshShapeSize = meshShape->GetSize();
+
+  // copied from dartsim test
+  for (std::size_t i = 0; i < 3; ++i)
+    EXPECT_NEAR(originalMeshSize[i], meshShapeSize[i], 1e-6);
+
+  EXPECT_NEAR(meshShapeSize[0], 0.5106, 1e-4);
+  EXPECT_NEAR(meshShapeSize[1], 0.3831, 1e-4);
+  EXPECT_NEAR(meshShapeSize[2], 0.1956, 1e-4);
+
+  const ignition::math::Pose3d pose(0, 0, 0.2, 0, 0, 0);
+  const ignition::math::Vector3d scale(0.5, 1.0, 0.25);
+  auto meshShapeScaled = meshLink->AttachMeshShape("small_chassis", *mesh,
+                          ignition::math::eigen3::convert(pose),
+                          ignition::math::eigen3::convert(scale));
+  const auto meshShapeScaledSize = meshShapeScaled->GetSize();
+
+  for (std::size_t i = 0; i < 3; ++i)
+    EXPECT_NEAR(originalMeshSize[i] * scale[i], meshShapeScaledSize[i], 1e-6);
+
+  EXPECT_NEAR(meshShapeScaledSize[0], 0.2553, 1e-4);
+  EXPECT_NEAR(meshShapeScaledSize[1], 0.3831, 1e-4);
+  EXPECT_NEAR(meshShapeScaledSize[2], 0.0489, 1e-4);
 }
 
 TEST(EntityManagement_TEST, RemoveEntities)

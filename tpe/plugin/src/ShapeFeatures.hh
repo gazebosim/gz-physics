@@ -20,6 +20,7 @@
 
 #include <string>
 
+#include <ignition/physics/Shape.hh>
 #include <ignition/physics/BoxShape.hh>
 #include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/mesh/MeshShape.hh>
@@ -108,7 +109,7 @@ class ShapeFeatures :
     const Identity &_meshID) const override;
 
   public: Identity AttachMeshShape(
-      const Identity &_linkID,
+    const Identity &_linkID,
     const std::string &_name,
     const ignition::common::Mesh &_mesh,
     const Pose3d &_pose,

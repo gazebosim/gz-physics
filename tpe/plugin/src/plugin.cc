@@ -15,12 +15,15 @@
  *
 */
 
+// #include <string>
+
 #include <ignition/physics/Register.hh>
 
 #include "Base.hh"
 #include "CustomFeatures.hh"
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
+#include "KinematicsFeatures.hh"
 #include "SDFFeatures.hh"
 #include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
@@ -28,12 +31,12 @@
 namespace ignition {
 namespace physics {
 namespace tpesim {
-namespace plugin {
 
 struct TpesimFeatures : FeatureList<
   CustomFeatureList,
   EntityManagementFeatureList,
   FreeGroupFeatureList,
+  KinematicsFeatureList,
   SDFFeatureList,
   ShapeFeatureList,
   SimulationFeatureList
@@ -45,13 +48,13 @@ class Plugin :
   public virtual CustomFeatures,
   public virtual EntityManagementFeatures,
   public virtual FreeGroupFeatures,
+  public virtual KinematicsFeatures,
   public virtual SDFFeatures,
   public virtual ShapeFeatures,
   public virtual SimulationFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpesimFeatures)
 
-}
 }
 }
 }

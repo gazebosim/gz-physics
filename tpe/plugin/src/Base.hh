@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_HH_
+#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
+#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
 
 #include <ignition/physics/Implements.hh>
 
@@ -24,20 +24,20 @@
 #include <memory>
 #include <string>
 
-#include "ignition/physics/tpe/lib/src/World.hh"
-#include "ignition/physics/tpe/lib/src/Engine.hh"
-#include "ignition/physics/tpe/lib/src/Model.hh"
-#include "ignition/physics/tpe/lib/src/Link.hh"
-#include "ignition/physics/tpe/lib/src/Collision.hh"
-#include "ignition/physics/tpe/lib/src/Shape.hh"
+#include "../../lib/src/World.hh"
+#include "../../lib/src/Engine.hh"
+#include "../../lib/src/Model.hh"
+#include "../../lib/src/Link.hh"
+#include "../../lib/src/Collision.hh"
+#include "../../lib/src/Shape.hh"
 
 namespace ignition {
 namespace physics {
 namespace tpe {
 namespace plugin {
 
-/// \brief The structs tpe::ModelInfo,
-/// tpe::LinkInfo, JointInfo, and ShapeInfo are used
+/// \brief The structs tpe::lib::ModelInfo,
+/// tpe::lib::LinkInfo, JointInfo, and ShapeInfo are used
 /// for two reasons:
 /// 1) Holding extra information such as the name or offset
 ///    that will be different from the underlying engine
@@ -49,22 +49,22 @@ namespace plugin {
 
 struct WorldInfo
 {
-  std::shared_ptr<tpe::World> world;
+  std::shared_ptr<tpe::lib::World> world;
 };
 
 struct ModelInfo
 {
-  tpe::Model *model;
+  tpe::lib::Model *model;
 };
 
 struct LinkInfo
 {
-  tpe::Link *link;
+  tpe::lib::Link *link;
 };
 
 struct CollisionInfo
 {
-  tpe::Collision *collision;
+  tpe::lib::Collision *collision;
 };
 
 class Base : public Implements3d<FeatureList<Feature>>
@@ -75,7 +75,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(0);
   }
 
-  public: inline Identity AddWorld(std::shared_ptr<tpe::World> _world)
+  public: inline Identity AddWorld(std::shared_ptr<tpe::lib::World> _world)
   {
     auto worldPtr = std::make_shared<WorldInfo>();
     worldPtr->world = _world;
@@ -84,7 +84,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_world->GetId(), worldPtr);
   }
 
-  public: inline Identity AddModel(uint64_t _worldId, tpe::Model &_model)
+  public: inline Identity AddModel(uint64_t _worldId, tpe::lib::Model &_model)
   {
     auto modelPtr = std::make_shared<ModelInfo>();
     modelPtr->model = &_model;
@@ -94,7 +94,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_model.GetId(), modelPtr);
   }
 
-  public: inline Identity AddLink(uint64_t _modelId, tpe::Link &_link)
+  public: inline Identity AddLink(uint64_t _modelId, tpe::lib::Link &_link)
   {
     auto linkPtr = std::make_shared<LinkInfo>();
     linkPtr->link = &_link;
@@ -105,7 +105,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: inline Identity AddCollision(uint64_t _linkId,
-    tpe::Collision &_collision)
+    tpe::lib::Collision &_collision)
   {
     auto collisionPtr = std::make_shared<CollisionInfo>();
     collisionPtr->collision = &_collision;

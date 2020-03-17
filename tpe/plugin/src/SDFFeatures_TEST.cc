@@ -29,9 +29,9 @@
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
-#include <ignition/physics/tpe/lib/src/Entity.hh>
-#include <ignition/physics/tpe/lib/src/World.hh>
-#include <ignition/physics/tpe/lib/src/World.hh>
+#include "../../lib/src/Entity.hh"
+#include "../../lib/src/World.hh"
+#include "World.hh"
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
@@ -80,7 +80,7 @@ World LoadWorld(const std::string &_world)
   return *world;
 }
 
-// Test that the tpe plugin loaded all the relevant information correctly.
+// Test that the dartsim plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckTpeData)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/test.world");

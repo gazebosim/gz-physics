@@ -15,36 +15,17 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
+#include "KinematicsFeatures.hh"
 
-#include <ignition/physics/ForwardStep.hh>
+using namespace ignition;
+using namespace physics;
+using namespace tpe;
+using namespace plugin;
 
-#include "Base.hh"
-
-namespace ignition {
-namespace physics {
-namespace tpe{
-namespace plugin {
-
-struct SimulationFeatureList : FeatureList<
-  ForwardStep
-> { };
-
-class SimulationFeatures :
-  public virtual Base,
-  public virtual Implements3d<SimulationFeatureList>
+/////////////////////////////////////////////////
+FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
+  const FrameID &_id) const
 {
-  public: void WorldForwardStep(
-    const Identity &_worldID,
-    ForwardStep::Output &_h,
-    ForwardStep::State &_x,
-    const ForwardStep::Input &_u) override;
-};
-
+  FrameData3d data;
+  return data;
 }
-}
-}
-}
-
-#endif

@@ -23,7 +23,7 @@ using namespace tpe;
 using namespace plugin;
 
 /////////////////////////////////////////////////
-std::shared_ptr<tpe::lib::World> CustomFeatures::GetTpesimWorld(
+std::shared_ptr<tpe::lib::World> CustomFeatures::GetTpeLibWorld(
   const Identity &_worldID)
 {
   return this->worlds.at(_worldID)->world;

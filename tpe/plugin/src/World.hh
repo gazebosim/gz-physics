@@ -20,9 +20,9 @@
 
 #include <memory>
 
-#include <ignition/physics/tpe/lib/src/World.hh>
-
 #include <ignition/physics/FeatureList.hh>
+
+#include "../../lib/src/World.hh"
 
 namespace ignition {
 namespace physics {
@@ -35,7 +35,7 @@ class RetrieveWorld : public virtual Feature
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
-    /// \brief Get the underlying tpe lib world for this World object.
+    /// \brief Get the underlying tpesim world for this World object.
     public: std::shared_ptr<tpe::lib::World> GetTpeLibWorld();
   };
 
@@ -43,7 +43,7 @@ class RetrieveWorld : public virtual Feature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: virtual std::shared_ptr<tpe::lib::World> GetTpeLibWorld(
-      const Identity &_worldID) = 0;
+        const Identity &_worldID) = 0;
   };
 };
 
@@ -53,7 +53,7 @@ std::shared_ptr<tpe::lib::World> RetrieveWorld::World<PolicyT, FeaturesT>
 ::GetTpeLibWorld()
 {
   return this->template Interface<RetrieveWorld>()
-    ->GetTpeLibWorld(this->identity);
+      ->GetTpeLibWorld(this->identity);
 }
 
 }
