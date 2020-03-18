@@ -2,6 +2,8 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+### Ignition Physics 1.6.0 (2020-03-18)
+
 1. Add Get Bounding Box features
     * [Pull request 122](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/122)
 
