@@ -15,29 +15,34 @@
  *
 */
 
-#include "Collision.hh"
-#include "Link.hh"
+#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_LINK_HH_
+#define IGNITION_PHYSICS_TPE_ENGINE_SRC_LINK_HH_
 
-using namespace ignition;
-using namespace physics;
-using namespace tpe;
-using namespace lib;
+#include "Entity.hh"
 
-//////////////////////////////////////////////////
-Link::Link() : Entity()
+namespace ignition {
+namespace physics {
+namespace tpeengine {
+
+class Link : public Entity
 {
+  /// \brief Constructor
+  public: Link();
+
+  /// \brief Constructor
+  /// \param _id Link id
+  public: Link(uint64_t _id);
+
+  /// \brief Destructor
+  public: ~Link() = default;
+
+  /// \brief Add a collision
+  /// \return Newly created Collision
+  public: Entity &AddCollision();
+};
+
+}
+}
 }
 
-//////////////////////////////////////////////////
-Link::Link(uint64_t _id) : Entity(_id)
-{
-}
-
-//////////////////////////////////////////////////
-Entity &Link::AddCollision()
-{
-  uint64_t collisionId = Entity::GetNextId();
-  const auto [it, success] = this->GetChildren().insert(
-    {collisionId, std::make_shared<Collision>(collisionId)});
-  return *it->second.get();
-}
+#endif

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
+#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_WORLD_HH_
+#define IGNITION_PHYSICS_TPE_ENGINE_SRC_WORLD_HH_
 
 #include <memory>
 
@@ -24,8 +24,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace lib {
+namespace tpeengine {
 
 class Model;
 
@@ -71,7 +70,6 @@ class World : public Entity
   protected: double timeStep{0.1};
 };
 
-} // namespace lib
 } // namespace tpe
 } // namespace physics
 } // namespace ignition

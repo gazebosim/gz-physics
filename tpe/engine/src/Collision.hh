@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
+#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_COLLISISION_HH_
+#define IGNITION_PHYSICS_TPE_ENGINE_SRC_COLLISISION_HH_
 
 #include <ignition/common/Console.hh>
 
@@ -25,8 +25,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace lib {
+namespace tpeengine {
 
 // Forward declartion
 class CollisionPrivate;
@@ -63,7 +62,6 @@ class Collision : public Entity
   private: CollisionPrivate *dataPtr = nullptr;
 };
 
-}
 }
 }
 }

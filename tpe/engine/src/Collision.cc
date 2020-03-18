@@ -19,7 +19,7 @@
 #include "Shape.hh"
 
 /// \brief Private data class for Collision
-class ignition::physics::tpe::lib::CollisionPrivate
+class ignition::physics::tpeengine::CollisionPrivate
 {
   /// \brief Collision's geometry shape
   public: std::shared_ptr<Shape> shape = nullptr;
@@ -27,8 +27,7 @@ class ignition::physics::tpe::lib::CollisionPrivate
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace lib;
+using namespace tpeengine;
 
 //////////////////////////////////////////////////
 Collision::Collision()
