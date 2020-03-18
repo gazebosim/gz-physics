@@ -17,6 +17,7 @@
 
 
 #include <ignition/common/Console.hh>
+#include <ignition/math/Pose3.hh>
 
 #include "Entity.hh"
 

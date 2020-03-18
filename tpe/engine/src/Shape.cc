@@ -15,6 +15,8 @@
  *
 */
 
+#include <ignition/math/Vector3.hh>
+
 #include "Shape.hh"
 
 using namespace ignition;

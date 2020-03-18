@@ -17,6 +17,9 @@
 
 #include <string>
 
+#include <ignition/math/Pose3.hh>
+#include <ignition/math/Vector3.hh>
+
 #include "Link.hh"
 #include "Model.hh"
 
