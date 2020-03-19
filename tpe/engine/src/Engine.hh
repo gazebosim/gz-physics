@@ -21,6 +21,7 @@
 #include <string>
 #include <map>
 
+#include "ignition/physics/tpeengine/Export.hh"
 #include "Entity.hh"
 
 namespace ignition {
@@ -30,7 +31,7 @@ namespace tpeengine {
 class World;
 
 /// \brief Engine class
-class Engine
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE Engine
 {
   /// \brief Constructor
   public: Engine();

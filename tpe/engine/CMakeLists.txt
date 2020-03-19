@@ -1,11 +1,11 @@
 ign_get_libsources_and_unittests(sources test_sources)
 
-ign_add_component(tpe-engine
+ign_add_component(tpeengine
   SOURCES ${sources}
-  GET_TARGET_NAME tpe_engine_target
+  GET_TARGET_NAME tpeengine_target
   CXX_STANDARD 17)
 
-target_link_libraries(${tpe_engine_target}
+target_link_libraries(${tpeengine_target}
   PUBLIC
   PRIVATE
     ignition-common${IGN_COMMON_VER}::requested
@@ -13,7 +13,7 @@ target_link_libraries(${tpe_engine_target}
     # ignition-common${IGN_COMMON_VER}::graphics
 )
  ign_build_tests(
-  TYPE UNIT_tpe_engine
+  TYPE UNIT_tpeengine
   SOURCES ${test_sources}
   LIB_DEPS
     ${features}
@@ -23,6 +23,5 @@ target_link_libraries(${tpe_engine_target}
     # ignition-common${IGN_COMMON_VER}::graphics
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    ${tpe_engine_target}
-    # ${PROJECT_LIBRARY_TARGET_NAME}-tpe-engine
+    ${tpeengine_target}
   TEST_LIST tests)
