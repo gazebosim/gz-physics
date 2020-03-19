@@ -37,7 +37,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 # Find ignition-common
 ign_find_package(ignition-common3
   COMPONENTS graphics profiler
-  REQUIRED_BY mesh dartsim tpe engine)
+  REQUIRED_BY mesh dartsim tpe tpe-engine)
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
 #--------------------------------------
