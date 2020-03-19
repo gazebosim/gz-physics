@@ -15,13 +15,6 @@
  *
 */
 
-#include <string>
-#include <map>
-#include <memory>
-
-#include <ignition/common/Console.hh>
-#include <ignition/math/Pose3.hh>
-
 #include "Entity.hh"
 
 /// \brief Private data class for entity

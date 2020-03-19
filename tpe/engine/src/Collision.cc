@@ -16,7 +16,6 @@
 */
 
 #include "Collision.hh"
-#include "Shape.hh"
 
 /// \brief Private data class for Collision
 class ignition::physics::tpeengine::CollisionPrivate

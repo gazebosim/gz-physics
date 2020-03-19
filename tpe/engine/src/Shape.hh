@@ -18,6 +18,12 @@
 #ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_SHAPE_HH_
 #define IGNITION_PHYSICS_TPE_ENGINE_SRC_SHAPE_HH_
 
+#include <string>
+#include <map>
+
+#include <ignition/common/Mesh.hh>
+#include <ignition/math/Vector3.hh>
+#include <ignition/math/AxisAlignedBox.hh>
 #include "ignition/physics/tpeengine/Export.hh"
 
 namespace ignition {
