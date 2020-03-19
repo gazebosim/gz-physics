@@ -15,7 +15,12 @@
  *
 */
 
+#include <string>
+#include <map>
+
+#include <ignition/common/Mesh.hh>
 #include <ignition/math/Vector3.hh>
+#include <ignition/math/AxisAlignedBox.hh>
 
 #include "Shape.hh"
 

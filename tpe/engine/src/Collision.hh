@@ -18,8 +18,6 @@
 #ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_COLLISISION_HH_
 #define IGNITION_PHYSICS_TPE_ENGINE_SRC_COLLISISION_HH_
 
-#include <ignition/common/Console.hh>
-
 #include "ignition/physics/tpeengine/Export.hh"
 
 #include "Entity.hh"

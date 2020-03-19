@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_TPE_ENGINE_SRC_LINK_HH_
 
 #include "ignition/physics/tpeengine/Export.hh"
+
 #include "Entity.hh"
 
 namespace ignition {

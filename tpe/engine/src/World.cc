@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <memory>
 
 #include <ignition/math/Pose3.hh>
 #include "World.hh"

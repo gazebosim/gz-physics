@@ -18,10 +18,8 @@
 #ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_ENGINE_HH_
 #define IGNITION_PHYSICS_TPE_ENGINE_SRC_ENGINE_HH_
 
-#include <string>
-#include <map>
-
 #include "ignition/physics/tpeengine/Export.hh"
+
 #include "Entity.hh"
 
 namespace ignition {

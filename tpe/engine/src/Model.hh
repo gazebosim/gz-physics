@@ -18,9 +18,8 @@
 #ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_MODEL_HH_
 #define IGNITION_PHYSICS_TPE_ENGINE_SRC_MODEL_HH_
 
-#include <ignition/math/Pose3.hh>
-
 #include "ignition/physics/tpeengine/Export.hh"
+
 #include "Entity.hh"
 
 namespace ignition {

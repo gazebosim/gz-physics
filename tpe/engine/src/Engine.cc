@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <map>
 
 #include "World.hh"
 #include "Engine.hh"
