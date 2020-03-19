@@ -24,13 +24,15 @@
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/AxisAlignedBox.hh>
 
+#include "ignition/physics/tpeengine/Export.hh"
+
 namespace ignition {
 namespace physics {
 namespace tpeengine {
 
 /// \enum ShapeType
 /// \brief The set of shape types.
-enum class ShapeType
+enum class IGNITION_PHYSICS_TPEENGINE_VISIBLE ShapeType
 {
   /// \brief Empty shpae . This means no shape has been defined.
   EMPTY = 0,
@@ -53,7 +55,7 @@ enum class ShapeType
 
 
 /// \brief Base shape geometry class
-class Shape
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE Shape
 {
   /// \brief Constructor
   public: Shape();

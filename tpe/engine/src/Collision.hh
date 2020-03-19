@@ -20,6 +20,8 @@
 
 #include <ignition/common/Console.hh>
 
+#include "ignition/physics/tpeengine/Export.hh"
+
 #include "Entity.hh"
 #include "Shape.hh"
 
@@ -31,7 +33,7 @@ namespace tpeengine {
 class CollisionPrivate;
 
 /// \brief Collision class
-class Collision : public Entity
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE Collision : public Entity
 {
   /// \brief Constructor
   public: Collision();
