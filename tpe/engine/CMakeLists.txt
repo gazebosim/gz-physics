@@ -23,5 +23,6 @@ target_link_libraries(${tpe_engine_target}
     # ignition-common${IGN_COMMON_VER}::graphics
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    ${PROJECT_LIBRARY_TARGET_NAME}-tpe-engine
+    ${tpe_engine_target}
+    # ${PROJECT_LIBRARY_TARGET_NAME}-tpe-engine
   TEST_LIST tests)
