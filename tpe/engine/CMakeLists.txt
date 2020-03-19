@@ -7,8 +7,7 @@ ign_add_component(tpe-engine
 
 target_link_libraries(${tpe_engine_target}
   PUBLIC
-    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-#    ignition-common${IGN_COMMON_VER}::requested
+    ignition-common${IGN_COMMON_VER}::requested
 #    ignition-math${IGN_MATH_VER}::ignition-math${IGN_MATH_VER}
 #  PRIVATE
 #    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
