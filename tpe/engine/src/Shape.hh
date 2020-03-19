@@ -89,7 +89,7 @@ class IGNITION_PHYSICS_TPEENGINE_VISIBLE Shape
 };
 
 /// \brief Box geometry
-class BoxShape : public Shape
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE BoxShape : public Shape
 {
   /// \brief Constructor
   public: BoxShape();
@@ -121,7 +121,7 @@ class BoxShape : public Shape
 };
 
 /// \brief Cylinder geometry
-class CylinderShape : public Shape
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE CylinderShape : public Shape
 {
   /// \brief Constructor
   public: CylinderShape();
@@ -164,7 +164,7 @@ class CylinderShape : public Shape
 };
 
 /// \brief Sphere geometry
-class SphereShape : public Shape
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE SphereShape : public Shape
 {
   /// \brief Constructor
   public: SphereShape();
@@ -196,7 +196,7 @@ class SphereShape : public Shape
 };
 
 /// \brief Mesh geometry
-class MeshShape : public Shape
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE MeshShape : public Shape
 {
   /// \brief Constructor
   public: MeshShape();
