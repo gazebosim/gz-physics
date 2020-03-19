@@ -22,6 +22,7 @@
 #include <map>
 #include <memory>
 
+#include "ignition/physics/tpeengine/Export.hh"
 #include <ignition/math/Pose3.hh>
 
 namespace ignition {
@@ -34,7 +35,7 @@ class EntityPrivate;
 /// \brief Represents an invalid Id.
 static const uint64_t kNullEntityId = math::MAX_UI64;
 
-class Entity
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE Entity
 {
   /// \brief Constructor
   public: Entity();

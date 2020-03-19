@@ -20,6 +20,7 @@
 
 #include <ignition/math/Pose3.hh>
 
+#include "ignition/physics/tpeengine/Export.hh"
 #include "Entity.hh"
 
 namespace ignition {
@@ -29,7 +30,7 @@ namespace tpeengine {
 // class Link;
 
 /// \brief Model class
-class Model : public Entity
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE Model : public Entity
 {
   /// \brief Constructor
   public: Model();
