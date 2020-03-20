@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics1 VERSION 1.5.0)
+project(ignition-physics1 VERSION 1.6.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -13,7 +13,7 @@ find_package(ignition-cmake2 2.1.0 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project(VERSION_SUFFIX pre1)
+ign_configure_project()
 
 
 #============================================================================
@@ -82,6 +82,11 @@ ign_find_package(IgnBullet
 message(STATUS "-------------------------------------------\n")
 
 set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
+
+# Plugin install dirs
+set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
+  ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR}/ign-${IGN_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+)
 
 #============================================================================
 # Configure the build
