@@ -15,19 +15,20 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
+#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_ENTITY_HH_
+#define IGNITION_PHYSICS_TPE_ENGINE_SRC_ENTITY_HH_
 
-#include <string>
+#include <cstddef>
 #include <map>
 #include <memory>
+#include <string>
 
 #include <ignition/math/Pose3.hh>
+#include "ignition/physics/tpeengine/Export.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace lib{
+namespace tpeengine {
 
 // forward declaration
 class EntityPrivate;
@@ -35,7 +36,7 @@ class EntityPrivate;
 /// \brief Represents an invalid Id.
 static const uint64_t kNullEntityId = math::MAX_UI64;
 
-class Entity
+class IGNITION_PHYSICS_TPEENGINE_VISIBLE Entity
 {
   /// \brief Constructor
   public: Entity();
@@ -126,7 +127,6 @@ class Entity
   private: EntityPrivate *dataPtr = nullptr;
 };
 
-}
 }
 }
 }

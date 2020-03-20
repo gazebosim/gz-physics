@@ -17,13 +17,15 @@
 
 #include <string>
 
+#include <ignition/math/Pose3.hh>
+#include <ignition/math/Vector3.hh>
+
 #include "Link.hh"
 #include "Model.hh"
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace lib;
+using namespace tpeengine;
 
 //////////////////////////////////////////////////
 Model::Model() : Entity()

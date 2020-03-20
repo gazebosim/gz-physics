@@ -23,9 +23,7 @@
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace lib;
-
+using namespace tpeengine;
 /////////////////////////////////////////////////
 TEST(Collision, BasicAPI)
 {
