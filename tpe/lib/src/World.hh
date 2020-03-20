@@ -18,19 +18,18 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 
-#include <memory>
+#include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace lib {
+namespace tpelib {
 
 class Model;
 
 /// \brief World Class
-class World : public Entity
+class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
 {
   /// \brief Constructor
   public: World();
@@ -71,7 +70,6 @@ class World : public Entity
   protected: double timeStep{0.1};
 };
 
-} // namespace lib
 } // namespace tpe
 } // namespace physics
 } // namespace ignition

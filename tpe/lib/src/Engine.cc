@@ -16,14 +16,14 @@
 */
 
 #include <string>
+#include <map>
 
 #include "World.hh"
 #include "Engine.hh"
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace lib;
+using namespace tpelib;
 
 /////////////////////////////////////////////////
 Engine::Engine()

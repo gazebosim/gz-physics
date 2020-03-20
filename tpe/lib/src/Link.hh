@@ -18,14 +18,15 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
+#include "ignition/physics/tpelib/Export.hh"
+
 #include "Entity.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace lib {
+namespace tpelib {
 
-class Link : public Entity
+class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
 {
   /// \brief Constructor
   public: Link();
@@ -42,7 +43,6 @@ class Link : public Entity
   public: Entity &AddCollision();
 };
 
-}
 }
 }
 }

@@ -20,18 +20,19 @@
 
 #include <string>
 #include <map>
+
 #include <ignition/common/Mesh.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/AxisAlignedBox.hh>
+#include "ignition/physics/tpelib/Export.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace lib {
+namespace tpelib {
 
 /// \enum ShapeType
 /// \brief The set of shape types.
-enum class ShapeType
+enum class IGNITION_PHYSICS_TPELIB_VISIBLE ShapeType
 {
   /// \brief Empty shpae . This means no shape has been defined.
   EMPTY = 0,
@@ -54,7 +55,7 @@ enum class ShapeType
 
 
 /// \brief Base shape geometry class
-class Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
 {
   /// \brief Constructor
   public: Shape();
@@ -88,7 +89,7 @@ class Shape
 };
 
 /// \brief Box geometry
-class BoxShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
 {
   /// \brief Constructor
   public: BoxShape();
@@ -120,7 +121,7 @@ class BoxShape : public Shape
 };
 
 /// \brief Cylinder geometry
-class CylinderShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
 {
   /// \brief Constructor
   public: CylinderShape();
@@ -163,7 +164,7 @@ class CylinderShape : public Shape
 };
 
 /// \brief Sphere geometry
-class SphereShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
 {
   /// \brief Constructor
   public: SphereShape();
@@ -195,7 +196,7 @@ class SphereShape : public Shape
 };
 
 /// \brief Mesh geometry
-class MeshShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
 {
   /// \brief Constructor
   public: MeshShape();
@@ -233,7 +234,6 @@ class MeshShape : public Shape
   private: math::AxisAlignedBox meshAABB;
 };
 
-}
 }
 }
 }

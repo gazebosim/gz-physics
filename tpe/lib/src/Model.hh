@@ -18,19 +18,18 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
 
-#include <ignition/math/Pose3.hh>
+#include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace lib{
+namespace tpelib {
 
 // class Link;
 
 /// \brief Model class
-class Model : public Entity
+class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 {
   /// \brief Constructor
   public: Model();
@@ -83,7 +82,6 @@ class Model : public Entity
   protected: math::Vector3d angularVelocity;
 };
 
-}
 }
 }
 }
