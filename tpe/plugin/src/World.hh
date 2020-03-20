@@ -26,8 +26,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace plugin {
+namespace tpeplugin {
 
 /////////////////////////////////////////////////
 class RetrieveWorld : public virtual Feature
@@ -36,27 +35,26 @@ class RetrieveWorld : public virtual Feature
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
     /// \brief Get the underlying tpesim world for this World object.
-    public: std::shared_ptr<tpe::lib::World> GetTpeLibWorld();
+    public: std::shared_ptr<tpelib::World> GetTpeLibWorld();
   };
 
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
-    public: virtual std::shared_ptr<tpe::lib::World> GetTpeLibWorld(
+    public: virtual std::shared_ptr<tpelib::World> GetTpeLibWorld(
         const Identity &_worldID) = 0;
   };
 };
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-std::shared_ptr<tpe::lib::World> RetrieveWorld::World<PolicyT, FeaturesT>
+std::shared_ptr<tpelib::World> RetrieveWorld::World<PolicyT, FeaturesT>
 ::GetTpeLibWorld()
 {
   return this->template Interface<RetrieveWorld>()
       ->GetTpeLibWorld(this->identity);
 }
 
-}
 }
 }
 }

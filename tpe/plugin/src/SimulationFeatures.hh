@@ -24,8 +24,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe{
-namespace plugin {
+namespace tpeplugin {
 
 struct SimulationFeatureList : FeatureList<
   ForwardStep
@@ -42,7 +41,6 @@ class SimulationFeatures :
     const ForwardStep::Input &_u) override;
 };
 
-}
 }
 }
 }

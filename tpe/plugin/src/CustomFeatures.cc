@@ -19,11 +19,10 @@
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace plugin;
+using namespace tpeplugin;
 
 /////////////////////////////////////////////////
-std::shared_ptr<tpe::lib::World> CustomFeatures::GetTpeLibWorld(
+std::shared_ptr<tpelib::World> CustomFeatures::GetTpeLibWorld(
   const Identity &_worldID)
 {
   return this->worlds.at(_worldID)->world;

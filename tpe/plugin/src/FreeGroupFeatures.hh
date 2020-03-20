@@ -24,8 +24,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace plugin {
+namespace tpeplugin {
 
 struct FreeGroupFeatureList : FeatureList<
   FindFreeGroupFeature,
@@ -66,7 +65,6 @@ class FreeGroupFeatures :
     const AngularVelocity &_angularVelocity) override;
 };
 
-}
 }
 }
 }

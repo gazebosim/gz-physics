@@ -21,8 +21,7 @@
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace plugin;
+using namespace tpeplugin;
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetEngineName(
@@ -124,7 +123,7 @@ Identity EntityManagementFeatures::GetModel(
     uint64_t modelId = modelIt->first;
     auto model = worldIt->second->world->GetChildById(modelId);
     auto modelPtr = std::make_shared<ModelInfo>();
-    modelPtr->model = static_cast<tpe::lib::Model *>(&model);
+    modelPtr->model = static_cast<tpelib::Model *>(&model);
     return this->GenerateIdentity(modelId, modelPtr);
   }
   return this->GenerateInvalidId();
@@ -208,7 +207,7 @@ Identity EntityManagementFeatures::GetLink(
   {
     uint64_t linkId = linkIt->first;
     auto link = modelIt->second->model->GetChildById(linkId);
-    auto linkPtr = std::make_shared<tpe::lib::Entity>(link);
+    auto linkPtr = std::make_shared<tpelib::Entity>(link);
     return this->GenerateIdentity(linkId, linkPtr);
   }
   return this->GenerateInvalidId();
@@ -288,7 +287,7 @@ Identity EntityManagementFeatures::GetShape(
   {
     uint64_t shapeID = shapeIt->first;
     auto shape = linkIt->second->link->GetChildById(shapeID);
-    auto shapePtr = std::make_shared<tpe::lib::Entity>(shape);
+    auto shapePtr = std::make_shared<tpelib::Entity>(shape);
     return this->GenerateIdentity(shapeID, shapePtr);
   }
   return this->GenerateInvalidId();
@@ -411,7 +410,7 @@ bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 Identity EntityManagementFeatures::ConstructEmptyWorld(
   const Identity &/*_engineID*/, const std::string &_name)
 {
-  auto world = std::make_shared<tpe::lib::World>();
+  auto world = std::make_shared<tpelib::World>();
   world->SetName(_name);
   return this->AddWorld(world);
 }
@@ -420,7 +419,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 Identity EntityManagementFeatures::ConstructEmptyModel(
   const Identity &_worldID, const std::string &_name)
 {
-  tpe::lib::Model model;
+  tpelib::Model model;
   model.SetName(_name);
   return this->AddModel(_worldID, model);
 }
@@ -429,7 +428,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
 Identity EntityManagementFeatures::ConstructEmptyLink(
   const Identity &_modelID, const std::string &_name)
 {
-  tpe::lib::Link link;
+  tpelib::Link link;
   link.SetName(_name);
   return this->AddLink(_modelID, link);
 }

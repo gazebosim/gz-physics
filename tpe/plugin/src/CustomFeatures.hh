@@ -22,13 +22,12 @@
 
 #include <ignition/physics/Implements.hh>
 
-#include "ignition/physics/tpe/plugin/src/World.hh"
-
 #include "Base.hh"
+#include "World.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpesim {
+namespace tpeplugin {
 
 using CustomFeatureList = FeatureList<
   RetrieveWorld
@@ -38,7 +37,7 @@ class CustomFeatures :
   public virtual Base,
   public virtual Implements3d<CustomFeatureList>
 {
-  public: std::shared_ptr<tpe::lib::World> GetTpeLibWorld(
+  public: std::shared_ptr<tpelib::World> GetTpeLibWorld(
     const Identity &_worldID) override;
 };
 

@@ -4,7 +4,7 @@ ign_add_component(tpe INTERFACE
   DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
-target_link_libraries(${features} INTERFACE ${PROJECT_LIBRARY_TARGET_NAME}-tpe)
+target_link_libraries(${features} INTERFACE ${PROJECT_LIBRARY_TARGET_NAME}-tpelib)
 target_include_directories(${features} SYSTEM INTERFACE)
 
 ign_get_libsources_and_unittests(sources test_sources)

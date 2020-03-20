@@ -24,8 +24,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace plugin {
+namespace tpeplugin {
 
 struct KinematicsFeatureList : FeatureList<
   ShapeFrameSemantics
@@ -38,7 +37,6 @@ class KinematicsFeatures :
   public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const;
 };
 
-}
 }
 }
 }

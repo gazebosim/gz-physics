@@ -30,8 +30,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace plugin {
+namespace tpeplugin {
 
 struct ShapeFeatureList : FeatureList<
   GetBoxShapeProperties,
@@ -120,7 +119,6 @@ class ShapeFeatures :
     const Identity &_shapeID) const override;
 };
 
-}
 }
 }
 }

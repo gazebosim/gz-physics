@@ -24,8 +24,7 @@
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace plugin;
+using namespace tpeplugin;
 
 /////////////////////////////////////////////////
 Identity FreeGroupFeatures::FindFreeGroupForModel(

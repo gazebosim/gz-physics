@@ -35,8 +35,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace plugin {
+namespace tpeplugin {
 
 using SDFFeatureList = FeatureList<
   sdf::ConstructSdfWorld,
@@ -72,7 +71,6 @@ class SDFFeatures :
     const ignition::common::Mesh *_mesh = nullptr);
 };
 
-}
 }
 }
 }

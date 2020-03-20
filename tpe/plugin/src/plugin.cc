@@ -15,8 +15,6 @@
  *
 */
 
-// #include <string>
-
 #include <ignition/physics/Register.hh>
 
 #include "Base.hh"
@@ -30,7 +28,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpesim {
+namespace tpeplugin {
 
 struct TpesimFeatures : FeatureList<
   CustomFeatureList,

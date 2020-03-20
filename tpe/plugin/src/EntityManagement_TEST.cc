@@ -29,8 +29,8 @@
 #include "ShapeFeatures.hh"
 
 struct TestFeatureList : ignition::physics::FeatureList<
-  ignition::physics::tpe::plugin::EntityManagementFeatureList,
-  ignition::physics::tpe::plugin::ShapeFeatureList
+  ignition::physics::tpeplugin::EntityManagementFeatureList,
+  ignition::physics::tpeplugin::ShapeFeatureList
 > { };
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
@@ -39,7 +39,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   loader.LoadLib(tpe_plugin_LIB);
 
   ignition::plugin::PluginPtr tpe_plugin =
-    loader.Instantiate("ignition::physics::tpe::plugin::Plugin");
+    loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
   auto engine =
     ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
@@ -132,7 +132,7 @@ TEST(EntityManagement_TEST, RemoveEntities)
   loader.LoadLib(tpe_plugin_LIB);
 
   ignition::plugin::PluginPtr tpe_plugin =
-    loader.Instantiate("ignition::physics::tpe::plugin::Plugin");
+    loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
   auto engine =
     ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);

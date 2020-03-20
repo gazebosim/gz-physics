@@ -33,11 +33,10 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace plugin {
+namespace tpeplugin {
 
-/// \brief The structs tpe::lib::ModelInfo,
-/// tpe::lib::LinkInfo, JointInfo, and ShapeInfo are used
+/// \brief The structs tpelib::ModelInfo,
+/// tpelib::LinkInfo, JointInfo, and ShapeInfo are used
 /// for two reasons:
 /// 1) Holding extra information such as the name or offset
 ///    that will be different from the underlying engine
@@ -49,22 +48,22 @@ namespace plugin {
 
 struct WorldInfo
 {
-  std::shared_ptr<tpe::lib::World> world;
+  std::shared_ptr<tpelib::World> world;
 };
 
 struct ModelInfo
 {
-  tpe::lib::Model *model;
+  tpelib::Model *model;
 };
 
 struct LinkInfo
 {
-  tpe::lib::Link *link;
+  tpelib::Link *link;
 };
 
 struct CollisionInfo
 {
-  tpe::lib::Collision *collision;
+  tpelib::Collision *collision;
 };
 
 class Base : public Implements3d<FeatureList<Feature>>
@@ -75,7 +74,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(0);
   }
 
-  public: inline Identity AddWorld(std::shared_ptr<tpe::lib::World> _world)
+  public: inline Identity AddWorld(std::shared_ptr<tpelib::World> _world)
   {
     auto worldPtr = std::make_shared<WorldInfo>();
     worldPtr->world = _world;
@@ -84,7 +83,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_world->GetId(), worldPtr);
   }
 
-  public: inline Identity AddModel(uint64_t _worldId, tpe::lib::Model &_model)
+  public: inline Identity AddModel(uint64_t _worldId, tpelib::Model &_model)
   {
     auto modelPtr = std::make_shared<ModelInfo>();
     modelPtr->model = &_model;
@@ -94,7 +93,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_model.GetId(), modelPtr);
   }
 
-  public: inline Identity AddLink(uint64_t _modelId, tpe::lib::Link &_link)
+  public: inline Identity AddLink(uint64_t _modelId, tpelib::Link &_link)
   {
     auto linkPtr = std::make_shared<LinkInfo>();
     linkPtr->link = &_link;
@@ -105,7 +104,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: inline Identity AddCollision(uint64_t _linkId,
-    tpe::lib::Collision &_collision)
+    tpelib::Collision &_collision)
   {
     auto collisionPtr = std::make_shared<CollisionInfo>();
     collisionPtr->collision = &_collision;
@@ -122,7 +121,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::map<uint64_t, uint64_t> childIdToParentId;
 };
 
-}
 }
 }
 }

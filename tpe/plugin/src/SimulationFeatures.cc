@@ -22,8 +22,7 @@
 
 using namespace ignition;
 using namespace physics;
-using namespace tpe;
-using namespace plugin;
+using namespace tpeplugin;
 
 void SimulationFeatures::WorldForwardStep(
   const Identity &_worldID,

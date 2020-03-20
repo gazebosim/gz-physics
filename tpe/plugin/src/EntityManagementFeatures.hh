@@ -29,8 +29,7 @@
 
 namespace ignition {
 namespace physics {
-namespace tpe {
-namespace plugin {
+namespace tpeplugin {
 
 struct EntityManagementFeatureList : FeatureList<
   GetEngineInfo,
@@ -141,7 +140,6 @@ class EntityManagementFeatures :
     const Identity &_modelID, const std::string &_name) override;
 };
 
-}
 }
 }
 }
