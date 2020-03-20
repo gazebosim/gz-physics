@@ -15,18 +15,18 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_LINK_HH_
-#define IGNITION_PHYSICS_TPE_ENGINE_SRC_LINK_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
-#include "ignition/physics/tpeengine/Export.hh"
+#include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpeengine {
+namespace tpelib {
 
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE Link : public Entity
+class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
 {
   /// \brief Constructor
   public: Link();

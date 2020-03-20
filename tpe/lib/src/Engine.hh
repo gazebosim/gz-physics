@@ -15,21 +15,21 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_ENGINE_HH_
-#define IGNITION_PHYSICS_TPE_ENGINE_SRC_ENGINE_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
 
-#include "ignition/physics/tpeengine/Export.hh"
+#include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpeengine {
+namespace tpelib {
 
 class World;
 
 /// \brief Engine class
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE Engine
+class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
 {
   /// \brief Constructor
   public: Engine();
@@ -61,7 +61,7 @@ class IGNITION_PHYSICS_TPEENGINE_VISIBLE Engine
   protected: std::map<uint64_t, Entity> worlds;
 };
 
-} // namespace tpe
+} // namespace tpelib
 } // namespace physics
 } // namespace ignition
 

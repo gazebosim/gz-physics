@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_SHAPE_HH_
-#define IGNITION_PHYSICS_TPE_ENGINE_SRC_SHAPE_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
 
 #include <string>
 #include <map>
@@ -24,15 +24,15 @@
 #include <ignition/common/Mesh.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/AxisAlignedBox.hh>
-#include "ignition/physics/tpeengine/Export.hh"
+#include "ignition/physics/tpelib/Export.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpeengine {
+namespace tpelib {
 
 /// \enum ShapeType
 /// \brief The set of shape types.
-enum class IGNITION_PHYSICS_TPEENGINE_VISIBLE ShapeType
+enum class IGNITION_PHYSICS_TPELIB_VISIBLE ShapeType
 {
   /// \brief Empty shpae . This means no shape has been defined.
   EMPTY = 0,
@@ -55,7 +55,7 @@ enum class IGNITION_PHYSICS_TPEENGINE_VISIBLE ShapeType
 
 
 /// \brief Base shape geometry class
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
 {
   /// \brief Constructor
   public: Shape();
@@ -89,7 +89,7 @@ class IGNITION_PHYSICS_TPEENGINE_VISIBLE Shape
 };
 
 /// \brief Box geometry
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE BoxShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
 {
   /// \brief Constructor
   public: BoxShape();
@@ -121,7 +121,7 @@ class IGNITION_PHYSICS_TPEENGINE_VISIBLE BoxShape : public Shape
 };
 
 /// \brief Cylinder geometry
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE CylinderShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
 {
   /// \brief Constructor
   public: CylinderShape();
@@ -164,7 +164,7 @@ class IGNITION_PHYSICS_TPEENGINE_VISIBLE CylinderShape : public Shape
 };
 
 /// \brief Sphere geometry
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE SphereShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
 {
   /// \brief Constructor
   public: SphereShape();
@@ -196,7 +196,7 @@ class IGNITION_PHYSICS_TPEENGINE_VISIBLE SphereShape : public Shape
 };
 
 /// \brief Mesh geometry
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE MeshShape : public Shape
+class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
 {
   /// \brief Constructor
   public: MeshShape();

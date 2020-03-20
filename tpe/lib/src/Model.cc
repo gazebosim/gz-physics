@@ -25,7 +25,7 @@
 
 using namespace ignition;
 using namespace physics;
-using namespace tpeengine;
+using namespace tpelib;
 
 //////////////////////////////////////////////////
 Model::Model() : Entity()

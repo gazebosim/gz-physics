@@ -15,21 +15,21 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_WORLD_HH_
-#define IGNITION_PHYSICS_TPE_ENGINE_SRC_WORLD_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 
-#include "ignition/physics/tpeengine/Export.hh"
+#include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpeengine {
+namespace tpelib {
 
 class Model;
 
 /// \brief World Class
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE World : public Entity
+class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
 {
   /// \brief Constructor
   public: World();

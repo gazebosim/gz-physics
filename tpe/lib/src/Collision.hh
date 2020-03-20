@@ -15,23 +15,23 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_ENGINE_SRC_COLLISISION_HH_
-#define IGNITION_PHYSICS_TPE_ENGINE_SRC_COLLISISION_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
 
-#include "ignition/physics/tpeengine/Export.hh"
+#include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 #include "Shape.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpeengine {
+namespace tpelib {
 
 // Forward declartion
 class CollisionPrivate;
 
 /// \brief Collision class
-class IGNITION_PHYSICS_TPEENGINE_VISIBLE Collision : public Entity
+class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
 {
   /// \brief Constructor
   public: Collision();

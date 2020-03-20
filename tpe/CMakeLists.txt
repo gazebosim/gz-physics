@@ -1,2 +1,2 @@
-add_subdirectory(engine)
+add_subdirectory(lib)
 add_subdirectory(plugin)
