@@ -620,7 +620,7 @@ namespace ignition
     //
     // This is repeated for each of the built-in feature objects (e.g. Link,
     // Joint, Model).
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Engine)
+//    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Engine)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(World)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Model)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Link)
@@ -641,6 +641,36 @@ namespace ignition
         typename ExtractAPI<ImplementationSelector, List>
             ::template type<PolicyT>;
     }
+
+    namespace detail {
+      template<typename InFeature>
+      struct SelectEngine
+      {
+        template<typename F, typename PolicyT, typename FeaturesT,
+                 typename = ::ignition::physics::void_t<>>
+        struct Implementation
+        {
+          using type = ::ignition::physics::Empty;
+        };
+
+        template<typename F, typename PolicyT, typename FeaturesT>
+        struct Implementation<F, PolicyT, FeaturesT,
+            ::ignition::physics::void_t<
+                typename F::template Engine<PolicyT, FeaturesT>>>
+        {
+          using type = typename F::template X <PolicyT, FeaturesT>;
+        };
+
+        template <typename PolicyT, typename FeaturesT>
+        struct type : Implementation<InFeature, PolicyT, FeaturesT>::type { };
+      };
+    }
+
+    template <typename PolicyT, typename FeaturesT, typename... FeaturePack>
+    class AggregateEngine : public detail::SelectEngine<FeaturePack>::template type<PolicyT, FeaturesT>... { };
+
+    template <typename PolicyT, typename FeaturesT>
+    class Engine : public AggregateEngine<PolicyT, FeaturesT, typename FeaturesT::Features> { };
   }
 }
 
