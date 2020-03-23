@@ -18,6 +18,11 @@
 #ifndef IGNITION_PHYSICS_DETAIL_REQUESTFEATURES_HH_
 #define IGNITION_PHYSICS_DETAIL_REQUESTFEATURES_HH_
 
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+
 #include <ignition/physics/RequestFeatures.hh>
 #include <ignition/physics/detail/InspectFeatures.hh>
 

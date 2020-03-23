@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_REQUESTFEATURES_HH_
 #define IGNITION_PHYSICS_REQUESTFEATURES_HH_
 
+#include <set>
+#include <string>
+
 #include <ignition/physics/Entity.hh>
 
 namespace ignition

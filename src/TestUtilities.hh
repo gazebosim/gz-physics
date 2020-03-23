@@ -18,6 +18,8 @@
 #ifndef SRC_IGNITION_PHYSICS_TESTUTILITIES_HH_
 #define SRC_IGNITION_PHYSICS_TESTUTILITIES_HH_
 
+#include <string>
+
 #include <ignition/physics/Feature.hh>
 #include <ignition/plugin/Loader.hh>
 

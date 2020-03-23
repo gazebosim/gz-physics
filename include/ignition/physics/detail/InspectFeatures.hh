@@ -18,6 +18,10 @@
 #ifndef IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
 #define IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
 
+#include <set>
+#include <string>
+#include <tuple>
+
 #include <ignition/plugin/PluginPtr.hh>
 
 namespace ignition
@@ -108,4 +112,4 @@ namespace ignition
   }
 }
 
-#endif // IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
+#endif  // IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
