@@ -72,6 +72,9 @@ TEST(RequestFeatures_TEST, Casting)
     ASSERT_TRUE(initialWorld);
     EXPECT_EQ("test_world", initialWorld->GetName());
 
+    EXPECT_TRUE(ignition::physics::RequestFeatures<ExtendFeatures>
+                ::MissingFeatureNames(initialWorld).empty());
+
     auto extendWorld =
         ignition::physics::RequestFeatures<ExtendFeatures>::From(initialWorld);
     ASSERT_TRUE(extendWorld);
@@ -79,11 +82,17 @@ TEST(RequestFeatures_TEST, Casting)
     ASSERT_TRUE(model);
     EXPECT_EQ("test_model", model->GetName());
 
+    EXPECT_TRUE(ignition::physics::RequestFeatures<SidewaysFeatures>
+                ::MissingFeatureNames(model).empty());
+
     auto sidewaysModel =
         ignition::physics::RequestFeatures<SidewaysFeatures>::From(model);
     ASSERT_TRUE(sidewaysModel);
     auto link = sidewaysModel->ConstructEmptyLink("test_link");
     link->AttachRevoluteJoint(nullptr);
+
+    EXPECT_EQ(1u, ignition::physics::RequestFeatures<UnavailableFeatures>
+              ::MissingFeatureNames(link).size());
 
     auto unavailableFeatureLink =
         ignition::physics::RequestFeatures<UnavailableFeatures>::From(link);

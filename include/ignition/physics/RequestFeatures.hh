@@ -37,6 +37,13 @@ namespace ignition
           template <typename, typename> class EntityT>
       static EntityPtr<EntityT<PolicyT, FeatureListT>> From(
           const EntityPtr<EntityT<PolicyT, FromFeatureList>>& from);
+
+      template <
+          typename PolicyT,
+          typename FromFeatureList,
+          template <typename, typename> class EntityT>
+      static std::set<std::string> MissingFeatureNames(
+          const EntityPtr<EntityT<PolicyT, FromFeatureList>>& from);
     };
   }
 }

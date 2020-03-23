@@ -25,6 +25,7 @@ namespace ignition
 {
   namespace physics
   {
+    /////////////////////////////////////////////////
     template <typename FeatureListT>
     template <
       typename PolicyT,
@@ -61,6 +62,28 @@ namespace ignition
       return EntityPtr<EntityT<PolicyT, FeatureListT>>(
             std::make_shared<ToPluginType>(std::move(to_plugin)),
             from.entity->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename FeatureListT>
+    template <
+        typename PolicyT,
+        typename FromFeatureList,
+        template <typename, typename> class EntityT>
+    std::set<std::string> RequestFeatures<FeatureListT>::MissingFeatureNames(
+        const EntityPtr<EntityT<PolicyT, FromFeatureList>>& from)
+    {
+      std::set<std::string> names;
+      if (!from.entity || !from.entity->pimpl)
+      {
+        detail::InspectFeatures<PolicyT, Features>::MissingNames(
+              plugin::PluginPtr(), names);
+        return names;
+      }
+
+      detail::InspectFeatures<PolicyT, Features>::MissingNames(
+            *from.entity->pimpl, names);
+      return names;
     }
   }
 }
