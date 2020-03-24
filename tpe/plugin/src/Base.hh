@@ -83,7 +83,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_world->GetId(), worldPtr);
   }
 
-  public: inline Identity AddModel(uint64_t _worldId, tpelib::Model &_model)
+  public: inline Identity AddModel(std::size_t _worldId, tpelib::Model &_model)
   {
     auto modelPtr = std::make_shared<ModelInfo>();
     modelPtr->model = &_model;
@@ -93,7 +93,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_model.GetId(), modelPtr);
   }
 
-  public: inline Identity AddLink(uint64_t _modelId, tpelib::Link &_link)
+  public: inline Identity AddLink(std::size_t _modelId, tpelib::Link &_link)
   {
     auto linkPtr = std::make_shared<LinkInfo>();
     linkPtr->link = &_link;
@@ -103,7 +103,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_link.GetId(), linkPtr);
   }
 
-  public: inline Identity AddCollision(uint64_t _linkId,
+  public: inline Identity AddCollision(std::size_t _linkId,
     tpelib::Collision &_collision)
   {
     auto collisionPtr = std::make_shared<CollisionInfo>();
@@ -114,11 +114,11 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(_collision.GetId(), collisionPtr);
   }
 
-  public: std::map<uint64_t, std::shared_ptr<WorldInfo>> worlds;
-  public: std::map<uint64_t, std::shared_ptr<ModelInfo>> models;
-  public: std::map<uint64_t, std::shared_ptr<LinkInfo>> links;
-  public: std::map<uint64_t, std::shared_ptr<CollisionInfo>> collisions;
-  public: std::map<uint64_t, uint64_t> childIdToParentId;
+  public: std::map<std::size_t, std::shared_ptr<WorldInfo>> worlds;
+  public: std::map<std::size_t, std::shared_ptr<ModelInfo>> models;
+  public: std::map<std::size_t, std::shared_ptr<LinkInfo>> links;
+  public: std::map<std::size_t, std::shared_ptr<CollisionInfo>> collisions;
+  public: std::map<std::size_t, std::size_t> childIdToParentId;
 };
 
 }
