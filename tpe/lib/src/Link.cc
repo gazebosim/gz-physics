@@ -28,14 +28,14 @@ Link::Link() : Entity()
 }
 
 //////////////////////////////////////////////////
-Link::Link(uint64_t _id) : Entity(_id)
+Link::Link(std::size_t _id) : Entity(_id)
 {
 }
 
 //////////////////////////////////////////////////
 Entity &Link::AddCollision()
 {
-  uint64_t collisionId = Entity::GetNextId();
+  std::size_t collisionId = Entity::GetNextId();
   const auto [it, success] = this->GetChildren().insert(
     {collisionId, std::make_shared<Collision>(collisionId)});
   return *it->second.get();

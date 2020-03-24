@@ -53,7 +53,7 @@ TEST(Model, Link)
   linkEnt.SetPose(math::Pose3d(2, 3, 4, 0, 0, 1));
   EXPECT_EQ(1u, model.GetChildCount());
 
-  uint64_t linkId = linkEnt.GetId();
+  std::size_t linkId = linkEnt.GetId();
   Entity ent = model.GetChildById(linkId);
   EXPECT_EQ(linkId, ent.GetId());
   EXPECT_EQ("link_1", ent.GetName());

@@ -33,7 +33,7 @@ Model::Model() : Entity()
 }
 
 //////////////////////////////////////////////////
-Model::Model(uint64_t _id) : Entity(_id)
+Model::Model(std::size_t _id) : Entity(_id)
 {
 }
 
@@ -41,8 +41,8 @@ Model::Model(uint64_t _id) : Entity(_id)
 Entity &Model::AddLink()
 {
   // Link link;
-  // uint64_t linkId = link.GetId();
-  uint64_t linkId = Entity::GetNextId();
+  // std::size_t linkId = link.GetId();
+  std::size_t linkId = Entity::GetNextId();
   const auto [it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
   return *it->second.get();

@@ -38,7 +38,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 
   /// \brief Constructor
   /// \param _id Model id
-  public: Model(uint64_t _id);
+  public: Model(std::size_t _id);
 
   /// \brief Destructor
   public: ~Model() = default;

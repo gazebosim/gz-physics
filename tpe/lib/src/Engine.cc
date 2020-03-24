@@ -34,25 +34,25 @@ Engine::Engine()
 Entity &Engine::AddWorld()
 {
   World world;
-  uint64_t worldId = world.GetId();
+  std::size_t worldId = world.GetId();
   const auto [it, success] = this->worlds.insert({worldId, world});
   return it->second;
 }
 
 /////////////////////////////////////////////////
-uint64_t Engine::GetWorldCount() const
+std::size_t Engine::GetWorldCount() const
 {
   return this->worlds.size();
 }
 
 /////////////////////////////////////////////////
-std::map<uint64_t, Entity> Engine::GetWorlds()
+std::map<std::size_t, Entity> Engine::GetWorlds()
 {
   return this->worlds;
 }
 
 /////////////////////////////////////////////////
-Entity &Engine::GetWorldById(uint64_t _worldId)
+Entity &Engine::GetWorldById(std::size_t _worldId)
 {
   auto it = this->worlds.find(_worldId);
   if (it != this->worlds.end())
@@ -63,7 +63,7 @@ Entity &Engine::GetWorldById(uint64_t _worldId)
 }
 
 /////////////////////////////////////////////////
-bool Engine::RemoveWorldById(uint64_t _worldId)
+bool Engine::RemoveWorldById(std::size_t _worldId)
 {
   auto it = this->worlds.find(_worldId);
   if (it != this->worlds.end())
