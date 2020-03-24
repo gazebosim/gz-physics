@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
 
+#include <ignition/utilities/SuppressWarning.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
@@ -43,22 +45,24 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
 
   /// \brief Get World
   /// \param_worldId World ID
-  public: Entity &GetWorldById(uint64_t _worldId);
+  public: Entity &GetWorldById(std::size_t _worldId);
 
   /// \brief Get total number of worlds
   /// \return number of worlds
-  public: uint64_t GetWorldCount() const;
+  public: std::size_t GetWorldCount() const;
 
   /// \brief Get all worlds in engine
   /// \return a map of id -> world
-  public: std::map<uint64_t, Entity> GetWorlds();
+  public: std::map<std::size_t, Entity> GetWorlds();
 
   /// \brief Remove World from engine
   /// \return true/false if world is removed/not
-  public: bool RemoveWorldById(uint64_t _worldId);
+  public: bool RemoveWorldById(std::size_t _worldId);
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief World entities in engine
-  protected: std::map<uint64_t, Entity> worlds;
+  protected: std::map<std::size_t, Entity> worlds;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 } // namespace tpelib

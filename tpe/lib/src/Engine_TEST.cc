@@ -34,7 +34,7 @@ TEST(Engine, World)
   Entity &world = engine.AddWorld();
   EXPECT_EQ(1u, engine.GetWorldCount());
 
-  uint64_t worldId = world.GetId();
+  std::size_t worldId = world.GetId();
   Entity ent = engine.GetWorldById(worldId);
   EXPECT_EQ(worldId, ent.GetId());
 

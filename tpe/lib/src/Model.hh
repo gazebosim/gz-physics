@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
 
+#include <ignition/utilities/SuppressWarning.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
@@ -36,7 +38,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 
   /// \brief Constructor
   /// \param _id Model id
-  public: Model(uint64_t _id);
+  public: Model(std::size_t _id);
 
   /// \brief Destructor
   public: ~Model() = default;
@@ -75,11 +77,13 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
     const math::Vector3d _linearVelocity,
     const math::Vector3d _angularVelocity);
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of model
   protected: math::Vector3d linearVelocity;
 
   /// \brief angular velocity of model
   protected: math::Vector3d angularVelocity;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 }

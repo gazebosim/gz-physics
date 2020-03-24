@@ -80,8 +80,8 @@ void World::Step()
 Entity &World::AddModel()
 {
   // Model model;
-  // uint64_t modelId = model.GetId();
-  uint64_t modelId = Entity::GetNextId();
+  // std::size_t modelId = model.GetId();
+  std::size_t modelId = Entity::GetNextId();
   const auto [it, success]  = this->GetChildren().insert(
     {modelId, std::make_shared<Model>(modelId)});
   return *it->second.get();

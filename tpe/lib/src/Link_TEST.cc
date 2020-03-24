@@ -53,7 +53,7 @@ TEST(Link, Collision)
   collisionEnt.SetPose(math::Pose3d(2, 3, 4, 0, 0, 1));
   EXPECT_EQ(1u, link.GetChildCount());
 
-  uint64_t collisionId = collisionEnt.GetId();
+  std::size_t collisionId = collisionEnt.GetId();
   Entity ent = link.GetChildById(collisionId);
   EXPECT_EQ(collisionId, ent.GetId());
   EXPECT_EQ("collision_1", ent.GetName());

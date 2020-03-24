@@ -34,7 +34,7 @@ namespace tpelib {
 class EntityPrivate;
 
 /// \brief Represents an invalid Id.
-static const uint64_t kNullEntityId = math::MAX_UI64;
+static const std::size_t kNullEntityId = math::MAX_UI64;
 
 class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
 {
@@ -51,7 +51,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
 
   /// \brief Constructor with id
   /// \param _id Id to set the entity to
-  protected: explicit Entity(uint64_t _id);
+  protected: explicit Entity(std::size_t _id);
 
   /// \brief Destructor
   public: ~Entity();
@@ -70,11 +70,11 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
 
   /// \brief Set the id of the entity
   /// \param _unique Id
-  public: virtual void SetId(uint64_t _id);
+  public: virtual void SetId(std::size_t _id);
 
   /// \brief Get the id of the entity
   /// \return Entity id
-  public: virtual uint64_t GetId() const;
+  public: virtual std::size_t GetId() const;
 
   /// \brief Set the pose of the entity
   /// \param _pose Pose of entity to set to
@@ -87,7 +87,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \brief Get a child entity by id
   /// \param _id Id of child entity
   /// \return Child entity
-  public: virtual Entity &GetChildById(uint64_t _id);
+  public: virtual Entity &GetChildById(std::size_t _id);
 
   /// \brief Get a child entity by name
   /// \param _name Name of child entity
@@ -96,7 +96,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
 
   /// \brief Remove a child entity by id
   /// \param _id Id of child entity to remove
-  public: virtual bool RemoveChildById(uint64_t _id);
+  public: virtual bool RemoveChildById(std::size_t _id);
 
   /// \brief Remove a child entity by name
   /// \param _name Name of child entity to remove
@@ -112,16 +112,16 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
 
   /// \brief Get number of children
   /// \return Map of child id's to child entities
-  protected: std::map<uint64_t, std::shared_ptr<Entity>> &GetChildren();
+  protected: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren();
 
   /// \brief An invalid vertex.
   public: static Entity kNullEntity;
 
   /// \brief
-  protected: static uint64_t GetNextId();
+  protected: static std::size_t GetNextId();
 
   /// \brief Entity id counter
-  private: static uint64_t nextId;
+  private: static std::size_t nextId;
 
   /// \brief Pointer to private data class
   private: EntityPrivate *dataPtr = nullptr;

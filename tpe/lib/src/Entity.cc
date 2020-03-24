@@ -27,17 +27,17 @@ class ignition::physics::tpelib::EntityPrivate
   public: math::Pose3d pose;
 
   /// \brief Entity Id
-  public: uint64_t id = 0u;
+  public: std::size_t id = 0u;
 
   /// \brief Child entities
-  public: std::map<uint64_t, std::shared_ptr<Entity>> children;
+  public: std::map<std::size_t, std::shared_ptr<Entity>> children;
 };
 
 using namespace ignition;
 using namespace physics;
 using namespace tpelib;
 
-uint64_t Entity::nextId = 0;
+std::size_t Entity::nextId = 0;
 Entity Entity::kNullEntity = Entity(kNullEntityId);
 
 //////////////////////////////////////////////////
@@ -64,7 +64,7 @@ Entity::Entity(Entity &&_other) noexcept
 }
 
 //////////////////////////////////////////////////
-Entity::Entity(uint64_t _id)
+Entity::Entity(std::size_t _id)
   : dataPtr(new EntityPrivate)
 {
   this->dataPtr->id = _id;
@@ -108,19 +108,19 @@ math::Pose3d Entity::GetPose() const
 }
 
 //////////////////////////////////////////////////
-void Entity::SetId(uint64_t _id)
+void Entity::SetId(std::size_t _id)
 {
   this->dataPtr->id = _id;
 }
 
 //////////////////////////////////////////////////
-uint64_t Entity::GetId() const
+std::size_t Entity::GetId() const
 {
   return this->dataPtr->id;
 }
 
 //////////////////////////////////////////////////
-Entity &Entity::GetChildById(uint64_t _id)
+Entity &Entity::GetChildById(std::size_t _id)
 {
   auto it = this->dataPtr->children.find(_id);
   if (it != this->dataPtr->children.end())
@@ -147,7 +147,7 @@ Entity &Entity::GetChildByName(const std::string &_name)
 }
 
 //////////////////////////////////////////////////
-bool Entity::RemoveChildById(uint64_t _id)
+bool Entity::RemoveChildById(std::size_t _id)
 {
   auto it = this->dataPtr->children.find(_id);
   if (it != this->dataPtr->children.end())
@@ -181,13 +181,13 @@ size_t Entity::GetChildCount() const
 }
 
 //////////////////////////////////////////////////
-std::map<uint64_t, std::shared_ptr<Entity>> &Entity::GetChildren()
+std::map<std::size_t, std::shared_ptr<Entity>> &Entity::GetChildren()
 {
   return this->dataPtr->children;
 }
 
 //////////////////////////////////////////////////
-uint64_t Entity::GetNextId()
+std::size_t Entity::GetNextId()
 {
   return nextId++;
 }

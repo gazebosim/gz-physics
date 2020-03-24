@@ -59,7 +59,7 @@ TEST(World, Model)
   modelEnt.SetPose(math::Pose3d(2, 3, 4, 0, 0, 1));
   EXPECT_EQ(1u, world.GetChildCount());
 
-  uint64_t modelId = modelEnt.GetId();
+  std::size_t modelId = modelEnt.GetId();
   Entity ent = world.GetChildById(modelId);
   EXPECT_EQ(modelId, ent.GetId());
   EXPECT_EQ("model_1", ent.GetName());

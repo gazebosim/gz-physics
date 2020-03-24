@@ -35,7 +35,7 @@ Collision::Collision()
 }
 
 //////////////////////////////////////////////////
-Collision::Collision(uint64_t _id)
+Collision::Collision(std::size_t _id)
   : Entity(_id), dataPtr(new CollisionPrivate)
 {
 }
