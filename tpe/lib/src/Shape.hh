@@ -24,6 +24,8 @@
 #include <ignition/common/Mesh.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/AxisAlignedBox.hh>
+#include <ignition/utilities/SuppressWarning.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 namespace ignition {
@@ -116,8 +118,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief Size of box
   private: math::Vector3d size;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 /// \brief Cylinder geometry
@@ -227,8 +231,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief Mesh scale
   private: math::Vector3d scale{1.0, 1.0, 1.0};
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 
   /// \brief Mesh object
   private: math::AxisAlignedBox meshAABB;
