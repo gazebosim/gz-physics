@@ -38,26 +38,26 @@ namespace ignition
       template <typename, typename> class EntityT>
     EntityPtr<EntityT<PolicyT, FeatureListT>>
     RequestFeatures<FeatureListT>::From(
-        const EntityPtr<EntityT<PolicyT, FromFeatureList>>& from)
+        const EntityPtr<EntityT<PolicyT, FromFeatureList>>& _from)
     {
       using ToPluginType =
           typename detail::DeterminePlugin<PolicyT, FeatureListT>::type;
 
       // If there is no underlying entity, then just return a null EntityPtr.
-      if (!from.entity)
+      if (!_from.entity)
         return nullptr;
 
       // If there is no underlying pimpl, then just return a null EntityPtr.
       // TODO(MXG): Should this ever be possible? Maybe this should be an
       // assertion instead?
-      if (!from.entity->pimpl)
+      if (!_from.entity->pimpl)
         return nullptr;
 
-      ToPluginType to_plugin(*from.entity->pimpl);
+      ToPluginType toPlugin(*_from.entity->pimpl);
       if (!detail::InspectFeatures<
               PolicyT,
               typename FeatureListT::Features
-          >::Verify(to_plugin))
+          >::Verify(toPlugin))
       {
         // The physics plugin does not implement all of the features that were
         // requested, so we will return a nullptr.
@@ -65,8 +65,8 @@ namespace ignition
       }
 
       return EntityPtr<EntityT<PolicyT, FeatureListT>>(
-            std::make_shared<ToPluginType>(std::move(to_plugin)),
-            from.entity->identity);
+            std::make_shared<ToPluginType>(std::move(toPlugin)),
+            _from.entity->identity);
     }
 
     /////////////////////////////////////////////////
@@ -76,10 +76,10 @@ namespace ignition
         typename FromFeatureList,
         template <typename, typename> class EntityT>
     std::set<std::string> RequestFeatures<FeatureListT>::MissingFeatureNames(
-        const EntityPtr<EntityT<PolicyT, FromFeatureList>>& from)
+        const EntityPtr<EntityT<PolicyT, FromFeatureList>> &_entity)
     {
       std::set<std::string> names;
-      if (!from.entity || !from.entity->pimpl)
+      if (!_entity.entity || !_entity.entity->pimpl)
       {
         detail::InspectFeatures<PolicyT, Features>::MissingNames(
               plugin::PluginPtr(), names);
@@ -87,7 +87,7 @@ namespace ignition
       }
 
       detail::InspectFeatures<PolicyT, Features>::MissingNames(
-            *from.entity->pimpl, names);
+            *_entity.entity->pimpl, names);
       return names;
     }
   }
