@@ -19,3 +19,8 @@ if(TARGET UNIT_FindFeatures_TEST)
   target_link_libraries(UNIT_FindFeatures_TEST
     ignition-plugin${IGN_PLUGIN_VER}::loader)
 endif()
+
+if(TARGET UNIT_RequestFeatures_TEST)
+  target_link_libraries(UNIT_RequestFeatures_TEST
+    ignition-plugin${IGN_PLUGIN_VER}::loader)
+endif()
