@@ -50,7 +50,8 @@ Collision::Collision(const Collision &_other)
 //////////////////////////////////////////////////
 Collision &Collision::operator=(const Collision &_other)
 {
-  return *this = Collision(_other);
+  this->dataPtr->shape = _other.dataPtr->shape;
+  return *this;
 }
 
 //////////////////////////////////////////////////
