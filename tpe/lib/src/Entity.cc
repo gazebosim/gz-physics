@@ -80,7 +80,8 @@ Entity::~Entity()
 //////////////////////////////////////////////////
 Entity &Entity::operator=(const Entity &_other)
 {
-  return *this = Entity(_other);
+  this->dataPtr->children = _other.dataPtr->children;
+  return *this;
 }
 
 //////////////////////////////////////////////////
