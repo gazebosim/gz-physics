@@ -50,6 +50,23 @@ The implementation of physics plugin revolves around four key elements.
     This is the class that aggregates a list of features.
     FeatureLists can be constructed in hierarchies, e.g. a ``FeatureList`` can be passed into another ``FeatureList``, and the set of all features in the new list will be the sum.
 
+
+### FeatureList Definition
+
+| Name  | Definition  |
+|---|---|
+| Base  | contains data structures and functions that define and use "proxy objects"   |
+| CustomFeatures  | retrieves ``World`` entity from physics engine|
+| EntityManagementFeatures  | provides features to get, remove and contruct entities  |
+| FreeGroupFeatures  | finds free group entities and sets world pose, linear and angular velocities  |
+| JointFeatures  | defines types of joints used and sets joint properties  |
+| KinematicsFeatures  | computes frame relative to world  |
+| LinkFeatures  | applies external force and torque to link  |
+| SDFFeatures  | contructs entities from sdf file  |
+| ShapeFeatures  | retrieves ``Shape`` related properties like ``BoundingBox``, ``ShapeSize`` etc. |
+| SimulationFeatures  | updates ``World`` and everything within by defined stepsize |
+|   |   |
+
 ### Dart vs. Trivial Physics Engine (TPE)
 
 <!-- TODO: add Bullet once it's supported -->
@@ -97,19 +114,4 @@ The following is a table of implemented ``FeatureList``s of Dartsim and TPE-Plug
 | SDFFeatures  | SDFFeatures  |
 | ShapeFeatures  | ShapeFeatures   |
 | SimulationFeatures  | SimulationFeatures  |
-
-#### Feature Definition
-
-| Name  | Definition  |
-|---|---|
-| Base  | contains data structures and functions that define and use "proxy objects"   |
-| CustomFeatures  | retrieves ``World`` entity from physics engine|
-| EntityManagementFeatures  | provides features to get, remove and contruct entities  |
-| FreeGroupFeatures  | finds free group entities and sets world pose, linear and angular velocities  |
-| JointFeatures  | defines types of joints used and sets joint properties  |
-| KinematicsFeatures  | computes frame relative to world  |
-| LinkFeatures  | applies external force and torque to link  |
-| SDFFeatures  | contructs entities from sdf file  |
-| ShapeFeatures  | retrieves ``Shape`` related properties like ``BoundingBox``, ``ShapeSize`` etc. |
-| SimulationFeatures  | updates ``World`` and everything within by defined stepsize |
-|   |   |
+|  |  |
