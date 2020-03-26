@@ -50,11 +50,66 @@ The implementation of physics plugin revolves around four key elements.
     This is the class that aggregates a list of features.
     FeatureLists can be constructed in hierarchies, e.g. a ``FeatureList`` can be passed into another ``FeatureList``, and the set of all features in the new list will be the sum.
 
-### Dartsim vs. Trivial Physics Engine (TPE)
+### Dart vs. Trivial Physics Engine (TPE)
 
 <!-- TODO: add Bullet once it's supported -->
 <!-- ### Bullet -->
 
+Dart ([Dynamic Animation and Robotics Toolkit](https://dartsim.github.io/)) is an open source library that provides data structures and algorithms for kinematic and dynamic applications in robotics and computer animation.
+It is the default physics engine used in Ignition Simulation.
+The plugin interface for DART is called ``Dartsim`` in Ignition Physics.
+
+TPE ([Trivial Physics Engine](<!-- TODO: add repo link -->)) is an open source library createtd by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
+It supports higher-order fleet dynamics without real physics (eg. gravity, force, contraint etc.) and multi-machine sychronization.
+The plugin interface for TPE is called ``TPE-Plugin`` in Ignition Physics.
+
+The following is a list of features supported by each physics engine to help user select one that fits their needs.
+
 #### Entity Comparison
 
+The following is a table of ``Entity`` names used in ``ign-physcis`` plugin interface, Dart and TPE. Entities are arranged in top-down hierarchical order.
+
+| Physics Plugin | Dart  | TPE  |
+|:-:|:-:|:-:|
+| Engine  | Engine  | Engine  |
+| World  | World  | World  |
+| Frame  | Frame  | N/A  |
+| Model  | Skeleton  | Model |
+| Joint  | Joint  | N/A |
+| Link  | Node  | Link  |
+| Shape  | Shape  | Collision |
+| Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc.  | Shape |
+|   |   |   |
+
 #### Feature Comparison
+
+The following is a table of implemented ``FeatureList``s of Dartsim and TPE-Plugin.
+
+| Dartsim  | TPE-Plugin  |
+|:-:|:-:|
+| Base  | Base  |
+| CustomFeatures  | CustomFeatures  |
+| EntityManagementFeatures  | EntityManagementFeatures  |
+| FreeGroupFeatures  | FreeGroupFeatures  |
+| JointFeatures  | N/A  |
+| KinematicsFeatures  | KinematicsFeatures  |
+| LinkFeatures  | N/A  |
+| SDFFeatures  | SDFFeatures  |
+| ShapeFeatures  | ShapeFeatures   |
+| SimulationFeatures  | SimulationFeatures  |
+
+#### Feature Definition
+
+| Name  | Definition  |
+|---|---|
+| Base  | contains data structures and functions that define and use "proxy objects"   |
+| CustomFeatures  | retrieves ``World`` entity from physics engine|
+| EntityManagementFeatures  | provides features to get, remove and contruct entities  |
+| FreeGroupFeatures  | finds free group entities and sets world pose, linear and angular velocities  |
+| JointFeatures  | defines types of joints used and sets joint properties  |
+| KinematicsFeatures  | computes frame relative to world  |
+| LinkFeatures  | applies external force and torque to link  |
+| SDFFeatures  | contructs entities from sdf file  |
+| ShapeFeatures  | retrieves ``Shape`` related properties like ``BoundingBox``, ``ShapeSize`` etc. |
+| SimulationFeatures  | updates ``World`` and everything within by defined stepsize |
+|   |   |
