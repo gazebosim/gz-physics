@@ -159,6 +159,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   return true;
 }
 
+/////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(
   const Identity &_modelID) const
 {

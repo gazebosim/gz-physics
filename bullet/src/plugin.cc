@@ -25,7 +25,6 @@
 #include "FreeGroupFeatures.hh"
 #include "JointFeatures.hh"
 #include "LinkFeatures.hh"
-#include "ShapeFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -38,8 +37,7 @@ struct BulletFeatures : FeatureList <
   KinematicsFeatureList,
   FreeGroupFeatureList,
   JointFeatureList,
-  LinkFeatureList,
-  ShapeFeatureList
+  LinkFeatureList
 > { };
 
 class Plugin :
@@ -51,8 +49,7 @@ class Plugin :
     public virtual KinematicsFeatures,
     public virtual FreeGroupFeatures,
     public virtual JointFeatures,
-    public virtual LinkFeatures,
-    public virtual ShapeFeatures { };
+    public virtual LinkFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 

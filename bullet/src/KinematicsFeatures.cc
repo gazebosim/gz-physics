@@ -123,7 +123,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   data.linearVelocity = convert(vel);
   data.angularVelocity = convert(omega);
 
-  // ToDo: compute frame accelerations
+  // \todo(anyone) compute frame accelerations
 
   return data;
 }

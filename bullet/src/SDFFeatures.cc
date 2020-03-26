@@ -26,6 +26,7 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
+/////////////////////////////////////////////////
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
 {
   return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
@@ -33,6 +34,7 @@ inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
                      mat(2, 0), mat(2, 1), mat(2, 2));
 }
 
+/////////////////////////////////////////////////
 inline btVector3 convertVec(Eigen::Vector3d vec)
 {
   return btVector3(vec(0), vec(1), vec(2));
@@ -52,6 +54,7 @@ Identity SDFFeatures::ConstructSdfWorld(
   return worldID;
 }
 
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModel(
   const Identity &_worldID,
   const ::sdf::Model &_sdfModel)
@@ -123,7 +126,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // Buld joints
   for (std::size_t i = 0; i < _sdfModel.JointCount(); ++i)
   {
-    this->BuildSdfJoint(modelIdentity, *_sdfModel.JointByIndex(i));
+    this->ConstructSdfJoint(modelIdentity, *_sdfModel.JointByIndex(i));
   }
 
   // Finalize model
@@ -139,6 +142,7 @@ Identity SDFFeatures::ConstructSdfModel(
   return modelIdentity;
 }
 
+/////////////////////////////////////////////////
 Identity SDFFeatures::BuildSdfLink(
   const Identity &_modelID,
   const ::sdf::Link &_sdfLink,
@@ -182,13 +186,14 @@ Identity SDFFeatures::BuildSdfLink(
   // Build collisions
   for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
   {
-    this->BuildSdfCollision(linkIdentity, *_sdfLink.CollisionByIndex(i));
+    this->ConstructSdfCollision(linkIdentity, *_sdfLink.CollisionByIndex(i));
   }
 
   return linkIdentity;
 }
 
-Identity SDFFeatures::BuildSdfJoint(
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfJoint(
   const Identity &_modelID,
   const ::sdf::Joint &_sdfJoint)
 {
@@ -328,7 +333,8 @@ Identity SDFFeatures::BuildSdfJoint(
   return this->AddJoint({name, type, childIndex, parentIndex, _modelID});
 }
 
-Identity SDFFeatures::BuildSdfCollision(
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfCollision(
       const Identity &_linkID,
       const ::sdf::Collision &_collision)
 {
