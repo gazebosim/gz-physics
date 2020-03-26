@@ -1,4 +1,4 @@
-# Understanding Physics Engines and Plugins
+# Understanding Physics Plugin
 
 This is an introduction to different physics engines and how they are integrated into the Ignition Physics library.
 
