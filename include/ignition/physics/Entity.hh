@@ -31,6 +31,7 @@ namespace ignition
   {
     // Forward declaration
     namespace detail { template <typename, typename> struct DeterminePlugin; }
+    template <typename> struct RequestFeatures;
 
     /// \brief This constant-value should be used to indicate that an Entity ID
     /// is invalid (i.e. does not refer to a real entity).
@@ -196,8 +197,9 @@ namespace ignition
       private: mutable std::optional<std::remove_const_t<EntityT>> entity;
 
 
-      // Declare this friendship so we can cast between different Entity types.
+      // Declare these friendships so we can cast between different Entity types
       template <typename> friend class EntityPtr;
+      template <typename> friend struct RequestFeatures;
     };
 
     /// \brief This is the base class of all "proxy objects". The "proxy
@@ -292,7 +294,8 @@ namespace ignition
       public: virtual ~Entity() = default;
 
       // Allow EntityPtr to cast between EntityTypes
-      template<typename> friend class EntityPtr;
+      template <typename> friend class EntityPtr;
+      template <typename> friend struct RequestFeatures;
     };
   }
 }

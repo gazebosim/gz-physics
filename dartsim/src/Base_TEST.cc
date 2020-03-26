@@ -64,7 +64,7 @@ TEST(BaseClass, RemoveModel)
     auto sn = pair.second->createShapeNodeWith<dart::dynamics::CollisionAspect>(
       boxShape);
 
-    auto res = base.AddModel({skel, frame}, worldID);
+    auto res = base.AddModel({skel, frame, ""}, worldID);
     base.AddLink(pair.second);
     base.AddJoint(pair.first);
     base.AddShape({sn, name + "_shape"});
