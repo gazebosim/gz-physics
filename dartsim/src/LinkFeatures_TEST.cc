@@ -44,7 +44,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::ForwardStep,
     ignition::physics::sdf::ConstructSdfWorld,
     ignition::physics::sdf::ConstructSdfModel,
-    ignition::physics::sdf::ConstructSdfLink
+    ignition::physics::sdf::ConstructSdfLink,
     ignition::physics::GetEntities,
     ignition::physics::GetLinkBoundingBox,
     ignition::physics::GetModelBoundingBox
