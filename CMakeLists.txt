@@ -76,6 +76,11 @@ message(STATUS "-------------------------------------------\n")
 
 set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
+# Plugin install dirs
+set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
+  ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR}/ign-${IGN_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+)
+
 #============================================================================
 # Configure the build
 #============================================================================

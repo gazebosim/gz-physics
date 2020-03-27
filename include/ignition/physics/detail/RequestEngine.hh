@@ -23,6 +23,7 @@
 #include <string>
 
 #include <ignition/physics/RequestEngine.hh>
+#include <ignition/physics/detail/InspectFeatures.hh>
 
 namespace ignition
 {
