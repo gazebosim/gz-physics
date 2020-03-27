@@ -24,31 +24,7 @@
 
 #include <ignition/plugin/Loader.hh>
 
-#include <test/PhysicsPluginsList.hh>
-
-namespace test
-{
-  class UnimplementedFeature : public virtual ignition::physics::Feature
-  {
-    public: template <typename PolicyT>
-    class Implementation : public virtual Feature::Implementation<PolicyT>
-    {
-      public: virtual void someUnimplementedVirtualFunction() = 0;
-
-      public: ~Implementation() override;
-    };
-  };
-}
-
-void PrimeTheLoader(ignition::plugin::Loader &_loader)
-{
-  for (const std::string &library
-       : ignition::physics::test::g_PhysicsPluginLibraries)
-  {
-    if (!library.empty())
-      _loader.LoadLib(library);
-  }
-}
+#include "TestUtilities.hh"
 
 TEST(FindFeatures_TEST, ForwardStep)
 {

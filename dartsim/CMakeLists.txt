@@ -69,9 +69,9 @@ foreach(test ${tests})
 
 endforeach()
 
-if(TARGET UNIT_FindFeatures_TEST)
-
-  target_compile_definitions(UNIT_FindFeatures_TEST PRIVATE
-    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
-
-endif()
+foreach(test UNIT_FindFeatures_TEST UNIT_RequestFeatures_TEST)
+  if(TARGET ${test})
+    target_compile_definitions(${test} PRIVATE
+      "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
+  endif()
+endforeach()
