@@ -9,6 +9,9 @@
     * [Pull request 99](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/99)
     * [Pull request 98](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/98)
 
+1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
+    * [Pull request 130](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/130)
+
 ### Ignition Physics 1.6.0 (2020-03-18)
 
 1. Add Get Bounding Box features
