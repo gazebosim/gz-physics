@@ -38,7 +38,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   public: virtual ~World() = default;
 
   /// \brief Set the time of the world
-  /// \param _time time of the world
+  /// \param[in] _time time of the world
   public: void SetTime(double _time);
 
   /// \brief Get the time of the world
@@ -59,9 +59,9 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   public: Entity &AddModel();
 
   /// \brief Get model from current world
-  /// \param _name model name
+  /// \param[in] _name model name
   /// \return pointer to the model object
-  public: Entity &GetModelByName(const std::string &_name);
+  public: Entity &GetModelByName(const std::string &_name) const;
 
   /// \brief World time
   protected: double time{0.0};
@@ -70,7 +70,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   protected: double timeStep{0.1};
 };
 
-} // namespace tpe
+} // namespace tpelib
 } // namespace physics
 } // namespace ignition
 

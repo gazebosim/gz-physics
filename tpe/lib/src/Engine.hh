@@ -44,7 +44,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
   public: Entity &AddWorld();
 
   /// \brief Get World
-  /// \param_worldId World ID
+  /// \param[in] _worldId World ID
   public: Entity &GetWorldById(std::size_t _worldId);
 
   /// \brief Get total number of worlds

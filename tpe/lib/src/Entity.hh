@@ -36,32 +36,33 @@ class EntityPrivate;
 /// \brief Represents an invalid Id.
 static const std::size_t kNullEntityId = math::MAX_UI64;
 
+/// \brief Entity class
 class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
 {
   /// \brief Constructor
   public: Entity();
 
   /// \brief Copy Constructor
-  /// \param _other Other entity to copy from
+  /// \param[in] _other Other entity to copy from
   public: Entity(const Entity &_other);
 
   /// \brief Move constructor
-  /// \param _other Other entity to move from
+  /// \param[in] _other Other entity to move from
   public: Entity(Entity &&_entity) noexcept;
 
   /// \brief Constructor with id
-  /// \param _id Id to set the entity to
+  /// \param[in] _id Id to set the entity to
   protected: explicit Entity(std::size_t _id);
 
   /// \brief Destructor
   public: ~Entity();
 
   /// \brief Assignment operator
-  /// \param _other Other entity to copy from
+  /// \param[in] _other Other entity to copy from
   public: Entity &operator=(const Entity &_other);
 
   /// \brief Set the name of the entity
-  /// \param _name Name of entity
+  /// \param[in] _name Name of entity
   public: virtual void SetName(const std::string &_name);
 
   /// \brief Get the name of the entity
@@ -69,7 +70,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: virtual std::string GetName() const;
 
   /// \brief Set the id of the entity
-  /// \param _unique Id
+  /// \param[in] _unique Id
   public: virtual void SetId(std::size_t _id);
 
   /// \brief Get the id of the entity
@@ -77,7 +78,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: virtual std::size_t GetId() const;
 
   /// \brief Set the pose of the entity
-  /// \param _pose Pose of entity to set to
+  /// \param[in] _pose Pose of entity to set to
   public: virtual void SetPose(const math::Pose3d &_pose);
 
   /// \brief Get the pose of the entity
@@ -85,34 +86,36 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: virtual math::Pose3d GetPose() const;
 
   /// \brief Get a child entity by id
-  /// \param _id Id of child entity
+  /// \param[in] _id Id of child entity
   /// \return Child entity
-  public: virtual Entity &GetChildById(std::size_t _id);
+  public: virtual Entity &GetChildById(std::size_t _id) const;
 
   /// \brief Get a child entity by name
-  /// \param _name Name of child entity
+  /// \param[in] _name Name of child entity
   /// \return Child entity
-  public: virtual Entity &GetChildByName(const std::string &_name);
+  public: virtual Entity &GetChildByName(const std::string &_name) const;
 
   /// \brief Remove a child entity by id
-  /// \param _id Id of child entity to remove
+  /// \param[in] _id Id of child entity to remove
   public: virtual bool RemoveChildById(std::size_t _id);
 
   /// \brief Remove a child entity by name
-  /// \param _name Name of child entity to remove
+  /// \param[in] _name Name of child entity to remove
   /// \return True if child entity was removed, false otherwise
   public: virtual bool RemoveChildByName(const std::string &_name);
 
   /// \brief Remove a child entity by index
-  /// \param _index Index of child entity to remove
+  /// \param[in] _index Index of child entity to remove
   // public: virtual void RemoveChildByIndex(size_t _index);
 
   /// \brief Get number of children
+  /// \return Number of children
   public: virtual size_t GetChildCount() const;
 
   /// \brief Get number of children
   /// \return Map of child id's to child entities
-  protected: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren();
+  protected: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren()
+      const;
 
   /// \brief An invalid vertex.
   public: static Entity kNullEntity;

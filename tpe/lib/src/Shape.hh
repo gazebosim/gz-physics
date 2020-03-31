@@ -97,22 +97,22 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
   public: BoxShape();
 
   /// \brief Copy Constructor
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: BoxShape(const BoxShape &_other);
 
   /// \brief Destructor
   public: ~BoxShape();
 
   /// \brief Assignment operator
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: Shape &operator=(const Shape &_other);
 
   /// \brief Set size of box
-  /// \param _size Size of box
+  /// \param[in] _size Size of box
   public: void SetSize(const math::Vector3d &_size);
 
   /// \brief Get size of box
-  /// \return _size Size of box
+  /// \return Size of box
   public: math::Vector3d GetSize();
 
   // Documentation inherited
@@ -131,30 +131,30 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
   public: CylinderShape();
 
   /// \brief Copy Constructor
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: CylinderShape(const CylinderShape &_other);
 
   /// \brief Destructor
   public: ~CylinderShape() = default;
 
   /// \brief Assignment operator
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: Shape &operator=(const Shape &_other);
 
   /// \brief Get cylinder radius
-  /// \return _radius cylinder radius
-  public: double GetRadius();
+  /// \return cylinder radius
+  public: double GetRadius() const;
 
   /// \brief Set cylinder radius
-  /// \param _radius Cylinder radius
+  /// \param[in] _radius Cylinder radius
   public: void SetRadius(double _radius);
 
   /// \brief Get cylinder length
-  /// \return _length Cylinder length
-  public: double GetLength();
+  /// \return Cylinder length
+  public: double GetLength() const;
 
   /// \brief Set cylinder length
-  /// \param _length Cylinder length
+  /// \param[in] _length Cylinder length
   public: void SetLength(double _length);
 
   // Documentation inherited
@@ -174,22 +174,22 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
   public: SphereShape();
 
   /// \brief Copy Constructor
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: SphereShape(const SphereShape &_other);
 
   /// \brief Destructor
   public: ~SphereShape() = default;
 
   /// \brief Assignment operator
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: Shape &operator=(const Shape &_other);
 
   /// \brief Get sphere radius
-  /// \return _radius Sphere radius
-  public: double GetRadius();
+  /// \return Sphere radius
+  public: double GetRadius() const;
 
   /// \brief Set sphere radius
-  /// \param _radius Sphere radius
+  /// \param[in] _radius Sphere radius
   public: void SetRadius(double _radius);
 
   // Documentation inherited
@@ -206,26 +206,26 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
   public: MeshShape();
 
   /// \brief Copy Constructor
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: MeshShape(const MeshShape &_other);
 
   /// \brief Destructor
   public: ~MeshShape() = default;
 
   /// \brief Assignment operator
-  /// \param _other shape to copy from
+  /// \param[in] _other shape to copy from
   public: Shape &operator=(const Shape &_other);
 
   /// \brief Set mesh
-  /// \param _mesh Mesh object
+  /// \param[in] _mesh Mesh object
   public: void SetMesh(const ignition::common::Mesh &_mesh);
 
   /// \brief Get mesh scale
-  /// \return _scale Mesh scale
-  public: math::Vector3d GetScale();
+  /// \return Mesh scale
+  public: math::Vector3d GetScale() const;
 
   /// \brief Set mesh scale
-  /// \param _scale Mesh scale
+  /// \param[in] _scale Mesh scale
   public: void SetScale(math::Vector3d _scale);
 
   // Documentation inherited
