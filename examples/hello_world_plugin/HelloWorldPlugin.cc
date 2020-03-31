@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,12 @@
 
 namespace mock
 {
+  // List of all features that this plugin will implement
   struct HelloWorldFeatureList : ignition::physics::FeatureList<
       ignition::physics::GetEngineInfo
   > { };
 
+  // The plugin class, which implements a 3D policy
   class HelloWorldPlugin
       : public ignition::physics::Implements3d<HelloWorldFeatureList>
   {
@@ -49,9 +51,9 @@ namespace mock
     }
 
     std::string engineName;
-
   };
 
+  // Register plugin
   IGN_PHYSICS_ADD_PLUGIN(
       HelloWorldPlugin,
       ignition::physics::FeaturePolicy3d,
