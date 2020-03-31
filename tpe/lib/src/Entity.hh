@@ -117,7 +117,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \brief An invalid vertex.
   public: static Entity kNullEntity;
 
-  /// \brief
+  /// \brief Get the id of next entity
+  /// \return size_t id of next entity
   protected: static std::size_t GetNextId();
 
   /// \brief Entity id counter

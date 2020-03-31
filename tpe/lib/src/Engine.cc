@@ -46,7 +46,7 @@ std::size_t Engine::GetWorldCount() const
 }
 
 /////////////////////////////////////////////////
-std::map<std::size_t, Entity> Engine::GetWorlds()
+std::map<std::size_t, Entity> Engine::GetWorlds() const
 {
   return this->worlds;
 }

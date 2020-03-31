@@ -43,13 +43,13 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
 
   /// \brief Get the time of the world
   /// \return double current time of the world
-  public: double GetTime();
+  public: double GetTime() const;
 
   public: void SetTimeStep(double _timeStep);
 
   /// \brief Get the timestep
   /// \return double current timestep of the world
-  public: double GetTimeStep();
+  public: double GetTimeStep() const;
 
   /// \brief Step forward at a constant timestep
   public: void Step();

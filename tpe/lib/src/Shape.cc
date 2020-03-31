@@ -204,7 +204,6 @@ MeshShape::MeshShape(const MeshShape &_other)
 Shape &MeshShape::operator=(const Shape &_other)
 {
   auto other = static_cast<const MeshShape *>(&_other);
-//  Shape::operator=(_other);
   this->scale = other->scale;
   this->meshAABB = other->meshAABB;
   return *this;

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
 #include "ignition/physics/tpelib/Export.hh"
 
@@ -55,7 +55,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
   /// \param _shape shape
   public: void SetShape(const Shape &_shape);
 
-  /// brief Get Shape
+  /// \brief Get Shape
+  /// \return shape of collision
   public: Shape *GetShape() const;
 
   /// \brief Private data pointer class
