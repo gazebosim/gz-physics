@@ -8,7 +8,7 @@ plugins, according to a desired feature list.
 From the root of the `ign-physics` repository, do the following to build the example:
 
 ~~~
-cd ign-physics/examples/hello_world_loader
+cd examples/hello_world_loader
 mkdir build
 cd build
 cmake ..
@@ -20,7 +20,7 @@ This will generate the `hello_world_loader` executable under `build`.
 ## Run
 
 This loader will load any plugin that implements the `GetEngineInfo` feature,
-and pring the engine name.
+and print the engine name.
 
 ### DART plugin
 
@@ -35,7 +35,7 @@ You may find more than one file. Choose one of them, and load it with
 the example loader like this:
 
 ~~~
-cd ign-physics/examples/hello_world_loader/build
+cd examples/hello_world_loader/build
 ./hello_world_loader <path_to>/libignition-physics-dartsim-plugin.so
 ~~~
 
@@ -53,7 +53,7 @@ After you've followed the instructions to compile both the plugin and the
 loader, you can load the plugin like:
 
 ~~~
-cd ign-physics/examples/hello_world_loader/build
+cd examples/hello_world_loader/build
 ./hello_world_loader ../../hello_world_plugin/build/libHelloWorldPlugin.so
 ~~~
 
