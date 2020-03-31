@@ -37,7 +37,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 # Find ignition-common
 ign_find_package(ignition-common3
   COMPONENTS graphics profiler
-  REQUIRED_BY mesh dartsim)
+  REQUIRED_BY mesh dartsim tpe)
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
 #--------------------------------------
@@ -56,7 +56,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat9 REQUIRED_BY sdf dartsim)
+ign_find_package(sdformat9 REQUIRED_BY sdf dartsim tpe)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
@@ -76,11 +76,16 @@ message(STATUS "-------------------------------------------\n")
 
 set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
+# Plugin install dirs
+set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
+  ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR}/ign-${IGN_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+)
+
 #============================================================================
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf mesh dartsim)
+  COMPONENTS sdf mesh dartsim tpe)
 
 
 #============================================================================

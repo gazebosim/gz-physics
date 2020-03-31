@@ -32,34 +32,95 @@ namespace physics {
 namespace dartsim {
 
 /////////////////////////////////////////////////
-/// This class helps to resolve an issue with excessive contacts being computed:
-/// https://bitbucket.org/ignitionrobotics/ign-physics/issues/11/
-///
-/// TODO(MXG): Delete this class when we switch to using dartsim-6.8:
-/// https://github.com/dartsim/dart/pull/1232
-class ImmobileContactFilter : public dart::collision::BodyNodeCollisionFilter
+/// This class filters collision based on a bitmask:
+/// Each objects has a bitmask. If the bitwise-and of two objects' bitmasks
+/// evaluates to 0, then collisions between them are ignored.
+class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 {
+  public: using DartCollisionConstPtr = const dart::collision::CollisionObject*;
+  public: using DartShapeConstPtr = const dart::dynamics::ShapeNode*;
+
+  private: std::unordered_map<DartShapeConstPtr, uint16_t> bitmaskMap;
+
   public: bool ignoresCollision(
-      const dart::collision::CollisionObject *_object1,
-      const dart::collision::CollisionObject *_object2) const override
+      DartCollisionConstPtr _object1,
+      DartCollisionConstPtr _object2) const override
   {
-    const auto &shapeNode1 = _object1->getShapeFrame()->asShapeNode();
-    const auto &shapeNode2 = _object2->getShapeFrame()->asShapeNode();
+    auto shapeNode1 = _object1->getShapeFrame()->asShapeNode();
+    auto shapeNode2 = _object2->getShapeFrame()->asShapeNode();
 
-    if (!shapeNode1 || !shapeNode2)
-      return false;
-
-    const auto &skeleton1 = shapeNode1->getSkeleton();
-    const auto &skeleton2 = shapeNode2->getSkeleton();
-
-    if (!skeleton1->isMobile() && !skeleton2->isMobile())
+    if (dart::collision::BodyNodeCollisionFilter::ignoresCollision(
+          _object1, _object2))
       return true;
 
-    return BodyNodeCollisionFilter::ignoresCollision(_object1, _object2);
+    auto shape1Iter = bitmaskMap.find(shapeNode1);
+    auto shape2Iter = bitmaskMap.find(shapeNode2);
+    if (shape1Iter != bitmaskMap.end() && shape2Iter != bitmaskMap.end() &&
+        ((shape1Iter->second & shape2Iter->second) == 0))
+      return true;
+
+    return false;
   }
 
-  virtual ~ImmobileContactFilter() = default;
+  public: void SetIgnoredCollision(DartShapeConstPtr _shapePtr,
+      const uint16_t _mask)
+  {
+    bitmaskMap[_shapePtr] = _mask;
+  }
+
+  public: uint16_t GetIgnoredCollision(DartShapeConstPtr _shapePtr) const
+  {
+    auto shapeIter = bitmaskMap.find(_shapePtr);
+    if (shapeIter != bitmaskMap.end())
+      return shapeIter->second;
+    return 0xff;
+  }
+
+  public: void RemoveIgnoredCollision(DartShapeConstPtr _shapePtr)
+  {
+    auto shapeIter = bitmaskMap.find(_shapePtr);
+    if (shapeIter != bitmaskMap.end())
+      bitmaskMap.erase(shapeIter);
+  }
+
+  public: void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skelPtr)
+  {
+    for (std::size_t i = 0; i < _skelPtr->getNumShapeNodes(); ++i)
+    {
+      auto shapePtr = _skelPtr->getShapeNode(i);
+      this->RemoveIgnoredCollision(shapePtr);
+    }
+  }
+
+  public: virtual ~BitmaskContactFilter() = default;
 };
+
+/// Utility functions
+/////////////////////////////////////////////////
+static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
+    const EntityManagementFeatures* _emf, std::size_t _worldID)
+{
+  const auto world = _emf->worlds.at(_worldID);
+  // We need to cast the base class pointer to the derived class
+  const auto filterPtr = std::static_pointer_cast<BitmaskContactFilter>(
+      world->getConstraintSolver()->getCollisionOption()
+      .collisionFilter);
+  return filterPtr;
+}
+
+/////////////////////////////////////////////////
+static std::size_t GetWorldOfShapeNode(const EntityManagementFeatures *_emf,
+    const dart::dynamics::ShapeNode* _shapeNode)
+{
+  // Get the body of the shape node
+  const auto bn = _shapeNode->getBodyNodePtr();
+  // Get the body node's skeleton
+  const auto skelPtr = bn->getSkeleton();
+  // Now find the skeleton's model
+  const std::size_t modelID = _emf->models.objectToID.at(skelPtr);
+  // And the world containing the model
+  return _emf->models.idToContainerID.at(modelID);
+}
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetEngineName(
@@ -492,6 +553,8 @@ bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
 
   if (model != nullptr && this->models.HasEntity(model))
   {
+    auto filterPtr = GetFilterPtr(this, _worldID);
+    filterPtr->RemoveSkeletonCollisions(model);
     this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
     return true;
   }
@@ -507,6 +570,8 @@ bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
 
   if (model != nullptr && this->models.HasEntity(model))
   {
+    auto filterPtr = GetFilterPtr(this, _worldID);
+    filterPtr->RemoveSkeletonCollisions(model);
     this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
     return true;
   }
@@ -518,6 +583,11 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   if (this->models.HasEntity(_modelID))
   {
+    auto worldID = this->models.idToContainerID.at(_modelID);
+    auto model = this->models.at(_modelID)->model;
+
+    auto filterPtr = GetFilterPtr(this, worldID);
+    filterPtr->RemoveSkeletonCollisions(model);
     this->RemoveModelImpl(this->models.idToContainerID.at(_modelID), _modelID);
     return true;
   }
@@ -543,7 +613,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   collOpt.maxNumContacts = 10000;
 
   world->getConstraintSolver()->getCollisionOption().collisionFilter =
-      std::make_shared<ImmobileContactFilter>();
+      std::make_shared<BitmaskContactFilter>();
 
   const std::size_t worldID = this->AddWorld(world, _name);
   return this->GenerateIdentity(worldID, this->worlds.at(worldID));
@@ -583,6 +653,33 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
 
   const std::size_t linkID = this->AddLink(bn);
   return this->GenerateIdentity(linkID, this->links.at(linkID));
+}
+
+void EntityManagementFeatures::SetCollisionFilterMask(
+    const Identity &_shapeID, const uint16_t _mask)
+{
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->SetIgnoredCollision(shapeNode, _mask);
+}
+
+uint16_t EntityManagementFeatures::GetCollisionFilterMask(
+    const Identity &_shapeID) const
+{
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  return filterPtr->GetIgnoredCollision(shapeNode);
+}
+
+void EntityManagementFeatures::RemoveCollisionFilterMask(
+    const Identity &_shapeID)
+{
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->RemoveIgnoredCollision(shapeNode);
 }
 
 }

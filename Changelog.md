@@ -2,8 +2,20 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
+1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
+    * [Pull request 130](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/130)
+
+1. Add Get Bounding Box features
+    * [Pull request 122](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/122)
+
+1. Install plugins to unversioned files
+    * [Pull request 121](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/121)
+
 1. Add DetachJointFeature feature.
     * [Pull request 102](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/102)
+
+1. Added support for collision bitmasks for collision filtering
+    * [Pull request 116](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/116)
 
 ### Ignition Physics 2.0.0 (2019-12-10)
 
@@ -24,7 +36,21 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
-### Ignition Physics 1.5.0 (2019-10-14)
+1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
+    * [Pull request 130](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/130)
+
+### Ignition Physics 1.6.0 (2020-03-18)
+
+1. Add Get Bounding Box features
+    * [Pull request 122](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/122)
+
+1. Install plugins to unversioned files
+    * [Pull request 121](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/121)
+
+### Ignition Physics 1.5.0 (2020-02-10)
+
+1. Clean up internal resources when a model gets removed
+    * [Pull request 115](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/115)
 
 1. Add DetachJointFeature feature.
     * [Pull request 102](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/102)
