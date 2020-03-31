@@ -47,7 +47,7 @@ Entity &Model::AddLink()
 }
 
 //////////////////////////////////////////////////
-Entity &Model::GetLinkByName(const std::string &_name)
+Entity &Model::GetLinkByName(const std::string &_name) const
 {
   auto children = this->GetChildren();
   for (auto it = children.begin(); it != children.end(); ++it)

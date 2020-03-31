@@ -121,7 +121,7 @@ std::size_t Entity::GetId() const
 }
 
 //////////////////////////////////////////////////
-Entity &Entity::GetChildById(std::size_t _id)
+Entity &Entity::GetChildById(std::size_t _id) const
 {
   auto it = this->dataPtr->children.find(_id);
   if (it != this->dataPtr->children.end())
@@ -133,7 +133,7 @@ Entity &Entity::GetChildById(std::size_t _id)
 }
 
 //////////////////////////////////////////////////
-Entity &Entity::GetChildByName(const std::string &_name)
+Entity &Entity::GetChildByName(const std::string &_name) const
 {
   for (auto it = this->dataPtr->children.begin();
       it != this->dataPtr->children.end(); ++it)
@@ -182,7 +182,7 @@ size_t Entity::GetChildCount() const
 }
 
 //////////////////////////////////////////////////
-std::map<std::size_t, std::shared_ptr<Entity>> &Entity::GetChildren()
+std::map<std::size_t, std::shared_ptr<Entity>> &Entity::GetChildren() const
 {
   return this->dataPtr->children;
 }

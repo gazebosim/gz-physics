@@ -114,7 +114,7 @@ Shape &CylinderShape::operator=(const Shape &_other)
 }
 
 //////////////////////////////////////////////////
-double CylinderShape::GetRadius()
+double CylinderShape::GetRadius() const
 {
   return this->radius;
 }
@@ -127,7 +127,7 @@ void CylinderShape::SetRadius(double _radius)
 }
 
 //////////////////////////////////////////////////
-double CylinderShape::GetLength()
+double CylinderShape::GetLength() const
 {
   return this->length;
 }
@@ -168,7 +168,7 @@ Shape &SphereShape::operator=(const Shape &_other)
 }
 
 //////////////////////////////////////////////////
-double SphereShape::GetRadius()
+double SphereShape::GetRadius() const
 {
   return this->radius;
 }
@@ -210,7 +210,7 @@ Shape &MeshShape::operator=(const Shape &_other)
 }
 
 //////////////////////////////////////////////////
-math::Vector3d MeshShape::GetScale()
+math::Vector3d MeshShape::GetScale() const
 {
   return this->scale;
 }

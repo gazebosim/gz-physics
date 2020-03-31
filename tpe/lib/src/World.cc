@@ -86,7 +86,7 @@ Entity &World::AddModel()
 }
 
 ///////////////////////////////////////////////
-Entity &World::GetModelByName(const std::string &_name)
+Entity &World::GetModelByName(const std::string &_name) const
 {
   auto children = this->GetChildren();
   for (auto it = children.begin(); it != children.end(); ++it)
