@@ -4,13 +4,14 @@ ign_add_component(tpe INTERFACE
   DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
-target_link_libraries(${features} INTERFACE ${PROJECT_LIBRARY_TARGET_NAME}-tpe)
+target_link_libraries(${features} INTERFACE ${PROJECT_LIBRARY_TARGET_NAME}-tpelib)
 target_include_directories(${features} SYSTEM INTERFACE)
 
 ign_get_libsources_and_unittests(sources test_sources)
 
 # TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
-ign_add_component(tpe-plugin
+set(engine_name tpe-plugin)
+ign_add_component(${engine_name}
   SOURCES ${sources}
   DEPENDS_ON_COMPONENTS tpe
   GET_TARGET_NAME tpe_plugin)
@@ -34,7 +35,7 @@ install(TARGETS ${tpe_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-tpe-plugin${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (WIN32)
   # create_symlink requires cmake 3.13 on windows
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
