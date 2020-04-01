@@ -34,7 +34,7 @@ install(TARGETS ${tpe_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-"tpe-plugin"${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-tpe-plugin${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (WIN32)
   # create_symlink requires cmake 3.13 on windows
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
