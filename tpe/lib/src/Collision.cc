@@ -15,6 +15,8 @@
  *
 */
 
+#include <ignition/common/Console.hh>
+
 #include "Collision.hh"
 
 /// \brief Private data class for Collision
@@ -87,6 +89,7 @@ void Collision::SetShape(const Shape &_shape)
   }
   else
   {
+    ignwarn << "Failed to set shape [" << _shape.GetType << "]." << std::endl;
   }
 }
 
