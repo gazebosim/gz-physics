@@ -52,16 +52,6 @@ TEST(Collision, BoxShape)
   ASSERT_NE(nullptr, result);
   EXPECT_EQ(ignition::math::Vector3d(0.25, 0.25, 0.25),
       result->GetBoundingBox().Max());
-
-//  Collision collision;
-//  EXPECT_EQ(0u, collision.GetBoxShapeCount());
-//
-//  // add a box shape
-//  BoxShape boxShape = collision.AddBoxShape();
-//  EXPECT_EQ(1u, collision.GetBoxShapeCount());
-//
-//  BoxShape *box = static_cast<BoxShape *>(&boxShape);
-//  EXPECT_NE(nullptr, box);
 }
 
 /////////////////////////////////////////////////
@@ -76,16 +66,6 @@ TEST(Collision, CylinderShape)
   ASSERT_NE(nullptr, result);
   EXPECT_EQ(ignition::math::Vector3d(2.0, 2.0, 1.5),
       result->GetBoundingBox().Max());
-
-//  Collision collision;
-//  EXPECT_EQ(0u, collision.GetCylinderShapeCount());
-//
-//  // add a cylinder shape
-//  CylinderShape cylinderShape = collision.AddCylinderShape();
-//  EXPECT_EQ(1u, collision.GetCylinderShapeCount());
-//
-//  CylinderShape *cylinder = static_cast<CylinderShape *>(&cylinderShape);
-//  EXPECT_NE(nullptr, cylinder);
 }
 
 /////////////////////////////////////////////////
@@ -99,16 +79,6 @@ TEST(Collision, SphereShape)
   ASSERT_NE(nullptr, result);
   EXPECT_EQ(ignition::math::Vector3d(2.0, 2.0, 2.0),
       result->GetBoundingBox().Max());
-
-//  Collision collision;
-//  EXPECT_EQ(0u, collision.GetSphereShapeCount());
-//
-//  // add a sphere shape
-//  SphereShape sphereShape = collision.AddSphereShape();
-//  EXPECT_EQ(1u, collision.GetSphereShapeCount());
-//
-//  SphereShape *sphere = static_cast<SphereShape *>(&sphereShape);
-//  EXPECT_NE(nullptr, sphere);
 }
 
 /////////////////////////////////////////////////
@@ -119,14 +89,4 @@ TEST(Collision, MeshShape)
   collision.SetShape(meshShape);
   auto result = collision.GetShape();
   ASSERT_NE(nullptr, result);
-
-//  Collision collision;
-//  EXPECT_EQ(0u, collision.GetMeshShapeCount());
-//
-//  // add a mesh shape
-//  MeshShape meshShape = collision.AddMeshShape();
-//  EXPECT_EQ(1u, collision.GetMeshShapeCount());
-//
-//  MeshShape *mesh = static_cast<MeshShape *>(&meshShape);
-//  EXPECT_NE(nullptr, mesh);
 }

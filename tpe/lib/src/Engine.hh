@@ -44,7 +44,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
   public: Entity &AddWorld();
 
   /// \brief Get World
-  /// \param_worldId World ID
+  /// \param[in] _worldId World ID
   public: Entity &GetWorldById(std::size_t _worldId);
 
   /// \brief Get total number of worlds
@@ -53,7 +53,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
 
   /// \brief Get all worlds in engine
   /// \return a map of id -> world
-  public: std::map<std::size_t, Entity> GetWorlds();
+  public: std::map<std::size_t, Entity> GetWorlds() const;
 
   /// \brief Remove World from engine
   /// \return true/false if world is removed/not

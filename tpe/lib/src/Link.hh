@@ -26,13 +26,14 @@ namespace ignition {
 namespace physics {
 namespace tpelib {
 
+/// \brief Link class
 class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
 {
   /// \brief Constructor
   public: Link();
 
   /// \brief Constructor
-  /// \param _id Link id
+  /// \param[in] _id Link id
   public: Link(std::size_t _id);
 
   /// \brief Destructor

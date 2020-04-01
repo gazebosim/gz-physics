@@ -37,7 +37,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   public: Model();
 
   /// \brief Constructor
-  /// \param _id Model id
+  /// \param[in] _id Model id
   public: Model(std::size_t _id);
 
   /// \brief Destructor
@@ -48,30 +48,30 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   public: Entity &AddLink();
 
   /// \brief Get a link
-  /// \param _linkName link name
+  /// \param[in] _linkName link name
   /// \return Link
-  public: Entity &GetLinkByName(const std::string &_name);
+  public: Entity &GetLinkByName(const std::string &_name) const;
 
   /// \brief Set the linear velocity of model
-  /// \param _velocity linear velocity
+  /// \param[in] _velocity linear velocity
   public: void SetLinearVelocity(const math::Vector3d _velocity);
 
   /// \brief Get the linear velocity of model
-  /// \return _velocity linear velocity of model
+  /// \return linear velocity of model
   public: math::Vector3d GetLinearVelocity() const;
 
   /// \brief Set the angular velocity of model
-  /// \param _velocity angular velocity from world
+  /// \param[in] _velocity angular velocity from world
   public: void SetAngularVelocity(const math::Vector3d _velocity);
 
   /// \brief Get the angular velocity of model
-  /// \return _velocity angular velocity
+  /// \return angular velocity
   public: math::Vector3d GetAngularVelocity() const;
 
   /// \brief Update the pose of the entity
-  /// \param _timeStep current world timestep
-  /// \param _linearVelocity linear velocity
-  /// \param _angularVelocity angular velocity
+  /// \param[in] _timeStep current world timestep
+  /// \param[in] _linearVelocity linear velocity
+  /// \param[in] _angularVelocity angular velocity
   public: virtual void UpdatePose(
     const double _timeStep,
     const math::Vector3d _linearVelocity,

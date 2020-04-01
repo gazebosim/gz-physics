@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISISION_HH_
+#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
+#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
 #include "ignition/physics/tpelib/Export.hh"
 
@@ -37,25 +37,27 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
   public: Collision();
 
   /// \brief Constructor
-  /// \param _id Collision id
+  /// \param[in] _id Collision id
   public: Collision(std::size_t _id);
 
   /// \brief Copy Constructor
+  /// \param[in] _other The other collision to copy from
   public: Collision(const Collision &_other);
 
   /// \brief Destructor
   public: ~Collision();
 
   /// \brief Assignment operator
-  /// \param _other collision
+  /// \param[in] _other collision
   /// \return collision
   public: Collision &operator=(const Collision &_other);
 
   /// \brief Set Shape
-  /// \param _shape shape
+  /// \param[in] _shape shape
   public: void SetShape(const Shape &_shape);
 
-  /// brief Get Shape
+  /// \brief Get Shape
+  /// \return shape of collision
   public: Shape *GetShape() const;
 
   /// \brief Private data pointer class

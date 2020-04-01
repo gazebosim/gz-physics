@@ -9,8 +9,6 @@ target_link_libraries(${tpelib_target}
   PUBLIC
   PRIVATE
     ignition-common${IGN_COMMON_VER}::requested
-    # ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    # ignition-common${IGN_COMMON_VER}::graphics
 )
  ign_build_tests(
   TYPE UNIT_tpelib
@@ -19,8 +17,6 @@ target_link_libraries(${tpelib_target}
     ${features}
     ignition-plugin${IGN_PLUGIN_VER}::loader
     ignition-common${IGN_COMMON_VER}::requested
-    # ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    # ignition-common${IGN_COMMON_VER}::graphics
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     ${tpelib_target}

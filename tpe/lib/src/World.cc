@@ -38,7 +38,7 @@ void World::SetTime(double _time)
 }
 
 /////////////////////////////////////////////////
-double World::GetTime()
+double World::GetTime() const
 {
   return this->time;
 }
@@ -50,7 +50,7 @@ void World::SetTimeStep(double _timeStep)
 }
 
 /////////////////////////////////////////////////
-double World::GetTimeStep()
+double World::GetTimeStep() const
 {
   return this->timeStep;
 }
@@ -79,8 +79,6 @@ void World::Step()
 /////////////////////////////////////////////////
 Entity &World::AddModel()
 {
-  // Model model;
-  // std::size_t modelId = model.GetId();
   std::size_t modelId = Entity::GetNextId();
   const auto [it, success]  = this->GetChildren().insert(
     {modelId, std::make_shared<Model>(modelId)});
@@ -88,7 +86,7 @@ Entity &World::AddModel()
 }
 
 ///////////////////////////////////////////////
-Entity &World::GetModelByName(const std::string &_name)
+Entity &World::GetModelByName(const std::string &_name) const
 {
   auto children = this->GetChildren();
   for (auto it = children.begin(); it != children.end(); ++it)
