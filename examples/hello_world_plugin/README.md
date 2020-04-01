@@ -15,7 +15,10 @@ cmake ..
 make
 ~~~
 
-This will generate the `libHelloWorldPlugin.so` library under `build`.
+This will generate the `HelloWorldPlugin` library under `build`.
+The exact name of the library file depends on the operating system
+such as `libHelloWorldPlugin.so` on Linux, `libHelloWorldPlugin.dylib` on macOS,
+and `HelloWorldPlugin.dll` on Windows.
 
 ## Run
 

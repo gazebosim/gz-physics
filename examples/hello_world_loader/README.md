@@ -22,7 +22,7 @@ This will generate the `hello_world_loader` executable under `build`.
 This loader will load any plugin that implements the `GetEngineInfo` feature,
 and print the engine name.
 
-### DART plugin
+### DART plugin on Linux
 
 For example, if you have the Ignition Physics plugin for DART compiled, find
 where it's installed with:
@@ -46,7 +46,7 @@ Testing plugin: ignition::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ~~~
 
-### Hello world plugin
+### Hello world plugin on Linux
 
 This loader should also be able to load the hello world plugin example.
 After you've followed the instructions to compile both the plugin and the
