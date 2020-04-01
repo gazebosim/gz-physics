@@ -21,12 +21,10 @@ target_link_libraries(${tpe_plugin}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    ignition-math${IGN_MATH_VER}::eigen3)
-
-# We need to link this, even when the profiler isn't used to get headers.
-target_link_libraries(${tpe_plugin}
+    ignition-math${IGN_MATH_VER}::eigen3
   PRIVATE
-  ignition-common${IGN_COMMON_VER}::profiler
+    # We need to link this, even when the profiler isn't used to get headers.
+    ignition-common${IGN_COMMON_VER}::profiler
 )
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
@@ -36,7 +34,7 @@ install(TARGETS ${tpe_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-tpe-plugin${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-"tpe-plugin"${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (WIN32)
   # create_symlink requires cmake 3.13 on windows
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
