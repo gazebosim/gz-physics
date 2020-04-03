@@ -56,7 +56,9 @@ TEST(Shape, CylinderShape)
   double radius = 0.6;
   double length = 2.8;
   shape.SetRadius(radius);
+  EXPECT_NEAR(radius, shape.GetRadius(), 1e-6);
   shape.SetLength(length);
+  EXPECT_NEAR(length, shape.GetLength(), 1e-6);
   math::AxisAlignedBox bbox = shape.GetBoundingBox();
   EXPECT_EQ(math::Vector3d::Zero, bbox.Center());
   EXPECT_EQ(math::Vector3d(1.2, 1.2, 2.8), bbox.Size());
@@ -75,6 +77,7 @@ TEST(Shape, SphereShape)
 
   double radius = 30.2;
   shape.SetRadius(radius);
+  EXPECT_NEAR(radius, shape.GetRadius(), 1e-6);
   math::AxisAlignedBox bbox = shape.GetBoundingBox();
   EXPECT_EQ(math::Vector3d::Zero, bbox.Center());
   EXPECT_EQ(math::Vector3d(60.4, 60.4, 60.4), bbox.Size());
@@ -102,6 +105,7 @@ TEST(Shape, MeshShape)
   shape.SetMesh(mesh);
   math::Vector3d scale = math::Vector3d(1.0, 1.0, 1.0);
   shape.SetScale(scale);
+  EXPECT_EQ(scale, shape.GetScale());
   math::AxisAlignedBox bbox = shape.GetBoundingBox();
   EXPECT_EQ(math::Vector3d(0, 0.5, 0.5), bbox.Center());
   EXPECT_EQ(math::Vector3d(0, 1.0, 1.0), bbox.Size());

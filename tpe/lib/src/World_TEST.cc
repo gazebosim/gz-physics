@@ -65,6 +65,12 @@ TEST(World, Model)
   EXPECT_EQ("model_1", ent.GetName());
   EXPECT_EQ(math::Pose3d(2, 3, 4, 0, 0, 1), ent.GetPose());
 
+  std::string modelName = modelEnt.GetName();
+  Entity sameEnt = world.GetChildByName(modelName);
+  EXPECT_EQ(modelName, sameEnt.GetName());
+  EXPECT_EQ(modelEnt.GetId(), ent.GetId());
+  EXPECT_EQ(math::Pose3d(2, 3, 4, 0, 0, 1), sameEnt.GetPose());
+
   // test casting to model
   Model *model = static_cast<Model *>(&modelEnt);
   EXPECT_NE(nullptr, model);

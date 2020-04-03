@@ -71,7 +71,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
 
   /// \brief Get type of shape
   /// \return Type of shape
-  public: ShapeType GetType() const;
+  public: virtual ShapeType GetType() const;
 
   /// \brief Update the shape's bounding box
   protected: virtual void UpdateBoundingBox();

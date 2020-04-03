@@ -58,11 +58,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   /// \return Model added to the world
   public: Entity &AddModel();
 
-  /// \brief Get model from current world
-  /// \param[in] _name model name
-  /// \return pointer to the model object
-  public: Entity &GetModelByName(const std::string &_name) const;
-
   /// \brief World time
   protected: double time{0.0};
 
