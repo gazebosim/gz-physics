@@ -36,7 +36,7 @@ namespace tpelib {
 /// \brief The set of shape types.
 enum class IGNITION_PHYSICS_TPELIB_VISIBLE ShapeType
 {
-  /// \brief Empty shpae . This means no shape has been defined.
+  /// \brief Empty shape. This means no shape has been defined.
   EMPTY = 0,
 
   /// \brief A box shape.
