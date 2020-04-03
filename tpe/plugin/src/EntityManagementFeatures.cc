@@ -139,7 +139,7 @@ Identity EntityManagementFeatures::GetModel(
     return this->GenerateInvalidId();
 
   // Get the selected model and check name and id
-  auto model = worldIt->second->world->GetModelByName(_modelName);
+  auto model = worldIt->second->world->GetChildByName(_modelName);
   for (auto it = models.begin(); it != models.end(); ++it)
   {
     if (it->second->model->GetName() == _modelName &&
@@ -220,7 +220,7 @@ Identity EntityManagementFeatures::GetLink(
   auto modelIt = models.find(_modelID);
   if (modelIt != models.end())
   {
-    auto link = modelIt->second->model->GetLinkByName(_linkName);
+    auto link = modelIt->second->model->GetChildByName(_linkName);
     for (auto it = links.begin(); it != links.end(); ++it)
     {
       if (it->second->link->GetName() == _linkName &&
@@ -373,7 +373,7 @@ bool EntityManagementFeatures::RemoveModelByName(
   auto worldIt = worlds.find(_worldID);
   if (worldIt != worlds.end())
   {
-    auto modelId = worldIt->second->world->GetModelByName(_modelName).GetId();
+    auto modelId = worldIt->second->world->GetChildByName(_modelName).GetId();
     auto it = models.find(modelId);
     if (it != models.end())
     {

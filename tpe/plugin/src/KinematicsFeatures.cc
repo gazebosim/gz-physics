@@ -15,6 +15,8 @@
  *
 */
 
+#include <ignition/common/Console.hh>
+
 #include "KinematicsFeatures.hh"
 
 using namespace ignition;
@@ -25,6 +27,10 @@ using namespace tpeplugin;
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const FrameID &_id) const
 {
+  igndbg << "FrameData with id ["
+    << _id.ID()
+    << "] is not used in TPE."
+    << std::endl;
   FrameData3d data;
   return data;
 }
