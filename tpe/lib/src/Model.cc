@@ -77,9 +77,8 @@ void Model::UpdatePose(
   const math::Vector3d _angularVelocity)
 {
   math::Pose3d currentPose = this->GetPose();
-  math::Pose3d changeInPose;
-  changeInPose.Set(
-    _linearVelocity * _timeStep, _angularVelocity * _timeStep);
-  math::Pose3d nextPose = currentPose + changeInPose;
+  math::Pose3d nextPose(
+    currentPose.Pos() + _linearVelocity * _timeStep,
+    currentPose.Rot().Integrate(_angularVelocity, _timeStep));
   this->SetPose(nextPose);
 }

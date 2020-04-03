@@ -45,6 +45,18 @@ TEST(Model, BasicAPI)
 
   Model model2;
   EXPECT_NE(model.GetId(), model2.GetId());
+
+  // test UpdatePose
+  math::Pose3d originalPose = math::Pose3d::Zero;
+  double timeStep = 0.1;
+  model2.SetPose(originalPose);
+  model2.SetLinearVelocity(math::Vector3d(0.1, 0.1, 0.1));
+  model2.SetAngularVelocity(math::Vector3d(1.0, 0, 0));
+  math::Pose3d expectedPose(
+    originalPose.Pos() + math::Vector3d(0.1, 0.1, 0.1) * timeStep,
+    originalPose.Rot().Integrate(math::Vector3d(1.0, 0, 0), timeStep));
+  model2.UpdatePose(timeStep, model2.GetLinearVelocity(), model2.GetAngularVelocity());
+  EXPECT_EQ(expectedPose, model2.GetPose());
 }
 
 /////////////////////////////////////////////////
