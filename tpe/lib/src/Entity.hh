@@ -47,8 +47,12 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: Entity(const Entity &_other);
 
   /// \brief Move constructor
-  /// \param[in] _other Other entity to move from
+  /// \param[in] _entity Other entity to move from
   public: Entity(Entity &&_entity) noexcept;
+
+  /// \brief Move assignment operator
+  /// \param[in] _entity Entity to move
+  public: Entity &operator=(Entity &&_entity) noexcept;
 
   /// \brief Constructor with id
   /// \param[in] _id Id to set the entity to

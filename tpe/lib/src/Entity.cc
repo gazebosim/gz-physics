@@ -63,6 +63,9 @@ Entity::Entity(Entity &&_other) noexcept
 {
 }
 
+/////////////////////////////////////////////////
+Entity &Entity::operator=(Entity &&_entity) noexcept = default;
+
 //////////////////////////////////////////////////
 Entity::Entity(std::size_t _id)
   : dataPtr(new EntityPrivate)
