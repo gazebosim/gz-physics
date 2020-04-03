@@ -47,11 +47,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \return Newly created Link
   public: Entity &AddLink();
 
-  /// \brief Get a link
-  /// \param[in] _linkName link name
-  /// \return Link
-  public: Entity &GetLinkByName(const std::string &_name) const;
-
   /// \brief Set the linear velocity of model
   /// \param[in] _velocity linear velocity
   public: void SetLinearVelocity(const math::Vector3d _velocity);

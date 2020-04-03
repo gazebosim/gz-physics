@@ -84,15 +84,3 @@ Entity &World::AddModel()
     {modelId, std::make_shared<Model>(modelId)});
   return *it->second.get();
 }
-
-///////////////////////////////////////////////
-Entity &World::GetModelByName(const std::string &_name) const
-{
-  auto children = this->GetChildren();
-  for (auto it = children.begin(); it != children.end(); ++it)
-  {
-    if (it->second->GetName() == _name)
-      return *it->second.get();
-  }
-  return Entity::kNullEntity;
-}
