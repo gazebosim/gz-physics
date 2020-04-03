@@ -62,10 +62,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
   /// \brief Constructor
   public: Shape();
 
-  /// \brief Copy Constructor
-  /// \param _other shape to copy from
-  // public: Shape(const Shape &_other);
-
   /// \brief Destructor
   public: ~Shape() = default;
 
@@ -75,7 +71,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
 
   /// \brief Get type of shape
   /// \return Type of shape
-  public: virtual ShapeType GetType() const;
+  public: ShapeType GetType() const;
 
   /// \brief Update the shape's bounding box
   protected: virtual void UpdateBoundingBox();
