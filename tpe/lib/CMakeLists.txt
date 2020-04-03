@@ -14,7 +14,6 @@ target_link_libraries(${tpelib_target}
   TYPE UNIT_tpelib
   SOURCES ${test_sources}
   LIB_DEPS
-    ${features}
     ignition-plugin${IGN_PLUGIN_VER}::loader
     ignition-common${IGN_COMMON_VER}::requested
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
