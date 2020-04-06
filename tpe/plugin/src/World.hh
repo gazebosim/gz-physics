@@ -22,7 +22,7 @@
 
 #include <ignition/physics/FeatureList.hh>
 
-#include "../../lib/src/World.hh"
+#include "lib/src/World.hh"
 
 namespace ignition {
 namespace physics {
