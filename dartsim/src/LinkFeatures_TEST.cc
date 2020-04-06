@@ -28,6 +28,7 @@
 // Features
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/GetBoundingBox.hh>
 #include <ignition/physics/Link.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
@@ -45,7 +46,10 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::ForwardStep,
   physics::sdf::ConstructSdfWorld,
   physics::sdf::ConstructSdfModel,
-  physics::sdf::ConstructSdfLink
+  physics::sdf::ConstructSdfLink,
+  physics::GetEntities,
+  physics::GetLinkBoundingBox,
+  physics::GetModelBoundingBox
 >;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
@@ -281,6 +285,59 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
                         frameData.pose.linear() * offset.cross(cmdLocalForce),
                         moi * frameData.angularAcceleration);
   }
+}
+
+TEST_F(LinkFeaturesFixture, AxisAlignedBoundingBox)
+{
+  auto world =
+      LoadWorld(this->engine, TEST_WORLD_DIR "test.world");
+  auto model = world->GetModel("double_pendulum_with_base");
+  auto baseLink = model->GetLink("base");
+  auto bbox = baseLink->GetAxisAlignedBoundingBox();
+  AssertVectorApprox vectorPredicate(1e-4);
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(0.2, -0.8, 0), bbox.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(1.8, 0.8, 2.2), bbox.max());
+
+  // test with non-world frame
+  auto bboxModelFrame = baseLink->GetAxisAlignedBoundingBox(
+      model->GetFrameID());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(-0.8, -0.8, 0), bboxModelFrame.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(0.8, 0.8, 2.2), bboxModelFrame.max());
+
+  // test with non-world rotated frame
+  auto upperLink = model->GetLink("upper_link");
+  auto bboxUpperLinkFrame = baseLink->GetAxisAlignedBoundingBox(
+      upperLink->GetFrameID());
+  EXPECT_PRED_FORMAT2(vectorPredicate,
+      physics::Vector3d(-0.8, -0.1, -0.8), bboxUpperLinkFrame.min());
+  EXPECT_PRED_FORMAT2(vectorPredicate,
+      physics::Vector3d(0.8, 2.1, 0.8), bboxUpperLinkFrame.max());
+}
+
+TEST_F(LinkFeaturesFixture, ModelAxisAlignedBoundingBox)
+{
+  auto world =
+      LoadWorld(this->engine, TEST_WORLD_DIR "contact.sdf");
+  auto model = world->GetModel("sphere");
+  auto bbox = model->GetAxisAlignedBoundingBox();
+  AssertVectorApprox vectorPredicate(1e-4);
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(-1, -1, -0.5), bbox.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(2, 2, 1.5), bbox.max());
+
+  // test with non-world frame
+  auto link = model->GetLink("link0");
+  auto bboxLinkFrame = model->GetAxisAlignedBoundingBox(
+      link->GetFrameID());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(-1, -1, -1.0), bboxLinkFrame.min());
+  EXPECT_PRED_FORMAT2(
+      vectorPredicate, physics::Vector3d(2, 2, 1.0), bboxLinkFrame.max());
 }
 
 /////////////////////////////////////////////////
