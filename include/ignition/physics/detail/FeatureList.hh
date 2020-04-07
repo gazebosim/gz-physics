@@ -364,12 +364,50 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      template <template<typename> class Selector, typename FeatureListT>
-      struct ExtractAPI
+      template<template<typename> class Selector, typename Feature>
+      struct SplitFeatures;
+
+      /////////////////////////////////////////////////
+      template <template<typename> class Selector, typename FeatureTuple>
+      struct ExtractAPI;
+
+      template <template<typename> class Selector, typename... Features>
+      struct ExtractAPI<Selector, std::tuple<Features...>>
       {
         public: template<typename... T>
         class type : public virtual
-            Aggregate<Selector, FeatureListT>::template type<T...> { };
+            SplitFeatures<Selector, Features>::template type<T...>... { };
+      };
+
+      /////////////////////////////////////////////////
+      template <template<typename> class Selector, typename Feature>
+      struct SplitFeatures
+      {
+        template <typename F, typename = ::ignition::physics::void_t<>>
+        struct Implementation
+        {
+          template <typename... T>
+          struct type :
+              virtual Selector<F>::template type<T...>,
+              virtual Implementation<typename F::RequiredFeatures>::template type<T...> { };
+        };
+
+        template <>
+        struct Implementation<void, ::ignition::physics::void_t<>>
+        {
+          template <typename... T>
+          using type = Empty;
+        };
+
+        template <typename F>
+        struct Implementation<F, ::ignition::physics::void_t<typename F::FeatureTuple>>
+        {
+          template <typename... T>
+          using type = typename ExtractAPI<Selector, typename F::FeatureTuple>::template type<T...>;
+        };
+
+        template <typename... T>
+        using type = typename Implementation<Feature>::template type<T...>;
       };
 
       /////////////////////////////////////////////////
@@ -570,7 +608,7 @@ namespace ignition
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public ::ignition::physics::detail::ExtractAPI< \
-        detail::Select ## X, FeaturesT> \
+        detail::Select ## X, typename FeaturesT::FeatureTuple> \
           ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
   { \
@@ -633,12 +671,12 @@ namespace ignition
       struct ImplementationSelector
       {
         public: template <typename PolicyT>
-        using type = typename T::template Implementation<PolicyT>;
+        struct type : virtual T::template Implementation<PolicyT> { };
       };
 
       template <typename PolicyT, typename List>
       using ExtractImplementation =
-        typename ExtractAPI<ImplementationSelector, List>
+        typename ExtractAPI<ImplementationSelector, typename List::FeatureTuple>
             ::template type<PolicyT>;
     }
   }
