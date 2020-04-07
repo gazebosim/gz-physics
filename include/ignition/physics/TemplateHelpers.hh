@@ -98,7 +98,7 @@ namespace ignition
     }; \
     \
     template <typename PolicyT, typename FeaturesT> \
-    using type = typename Implementation<InFeature, PolicyT, FeaturesT>::type; \
+    struct type : virtual Implementation<InFeature, PolicyT, FeaturesT>::type { }; \
   };
 
 #endif
