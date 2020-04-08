@@ -27,10 +27,10 @@ class ClassD : public ClassB { };
 using Filter = std::tuple<ClassA, ClassD>;
 using Input = std::tuple<ClassB, ClassC, ClassD, ClassA>;
 
-using Result = ignition::physics::detail::FilterTuple<Filter, Input>::Result;
+using Result = ignition::physics::detail::SubtractTuple<Filter>::From<Input>::type;
 
 using UnfilteredResult =
-    ignition::physics::detail::FilterTuple<std::tuple<>, Input>::Result;
+    ignition::physics::detail::SubtractTuple<std::tuple<>>::From<Input>::type;
 
 TEST(FilterTuple_TEST, FilterTupleResult)
 {
@@ -46,7 +46,7 @@ TEST(FilterTuple_TEST, FilterTupleResult)
 
 using SingleCombineLists =
   ignition::physics::detail::CombineListsImpl<
-      std::tuple<>, ClassA>::Result;
+      std::tuple<>, ClassA>::type;
 
 using SingleCombineListsInitial =
   ignition::physics::detail::CombineListsImpl<

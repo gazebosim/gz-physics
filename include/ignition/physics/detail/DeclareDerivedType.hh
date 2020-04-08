@@ -41,10 +41,10 @@
     public: template <typename PolicyT, typename FeaturesT> \
     class Using : \
       public virtual ::ignition::physics::detail::ExtractAPI< \
-        Select ## Derived, typename FeaturesT::FeatureTuple>:: \
+        Select ## Derived, FeaturesT>:: \
             template type<PolicyT, FeaturesT>, \
       public virtual ::ignition::physics::detail::ExtractAPI< \
-        ::ignition::physics::detail:: Select ## Base,  typename FeaturesT::FeatureTuple>:: \
+        ::ignition::physics::detail:: Select ## Base, FeaturesT>:: \
             template type<PolicyT, FeaturesT> \
     { \
       public: using Identifier = Derived ## Identifier; \

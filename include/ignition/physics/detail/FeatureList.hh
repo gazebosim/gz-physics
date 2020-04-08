@@ -172,7 +172,7 @@ namespace ignition
       class ExtractFeatures
           : public VerifyFeatures<F>
       {
-        public: using Result = std::tuple<F>;
+        public: using type = std::tuple<F>;
       };
 
       /// \private This specialization of ExtractFeatures is used to wipe away
@@ -182,7 +182,7 @@ namespace ignition
       class ExtractFeatures<std::tuple<F...>>
           : public VerifyFeatures<F...>
       {
-        public: using Result = std::tuple<F...>;
+        public: using type = std::tuple<F...>;
       };
 
       /// \private This specialization of ExtractFeatures is used to wipe away
@@ -195,7 +195,7 @@ namespace ignition
               void_t<typename SomeFeatureList::Features>>
           : public VerifyFeatures<typename SomeFeatureList::Features>
       {
-        public: using Result = typename SomeFeatureList::Features;
+        public: using type = typename SomeFeatureList::Features;
       };
 
       /// \private This specialization skips over any void entries. This allows
@@ -204,28 +204,142 @@ namespace ignition
       template <>
       class ExtractFeatures<void>
       {
-        public: using Result = std::tuple<>;
+        public: using type = std::tuple<>;
       };
 
       /////////////////////////////////////////////////
-      template <typename DiscardTuple, typename InputTuple>
+      template <typename DiscardTuple>
+      struct RedundantTupleFilter
+      {
+        template <typename T>
+        struct Apply : TupleContainsBase<T, DiscardTuple> { };
+      };
+
+      /////////////////////////////////////////////////
+      template <template <typename> class Filter, typename InputTuple>
       struct FilterTuple;
 
       /////////////////////////////////////////////////
-      template <typename DiscardTuple, typename... InputTypes>
-      struct FilterTuple<DiscardTuple, std::tuple<InputTypes...>>
+      template <template <typename> class Filter, typename... InputTypes>
+      struct FilterTuple<Filter, std::tuple<InputTypes...>>
       {
-        using Result = decltype(std::tuple_cat(
+        using type = decltype(std::tuple_cat(
             std::conditional_t<
               // If the input type is a base class of anything that should be
               // discared ...
-              TupleContainsBase<InputTypes, DiscardTuple>::value,
+              Filter<InputTypes>::value,
               // ... then we should leave it out of the final tuple ...
               std::tuple<>,
               // ... otherwise, include it.
               std::tuple<InputTypes>
             // Do this for each type in the InputTypes parameter pack.
             >()...));
+      };
+
+      /////////////////////////////////////////////////
+      template <typename DiscardTuple>
+      struct SubtractTuple
+      {
+        template <typename T>
+        using Filter =
+            typename RedundantTupleFilter<DiscardTuple>::template Apply<T>;
+
+        template <typename FromTuple>
+        struct From : FilterTuple<Filter, FromTuple> { };
+      };
+
+      /////////////////////////////////////////////////
+      template <typename InputTuple>
+      struct RemoveTupleRedundancies;
+
+      template <typename... InputTupleArgs>
+      struct RemoveTupleRedundancies<std::tuple<InputTupleArgs...>>
+      {
+        template <typename PartialResultInput, typename...>
+        struct Impl;
+
+        template <typename PartialResultInput>
+        struct Impl<PartialResultInput>
+        {
+          using type = std::tuple<>;
+        };
+
+        template <typename ParentResultInput, typename F1, typename... Others>
+        struct Impl<ParentResultInput, F1, Others...>
+        {
+          using PartialResult =
+              std::conditional_t<
+                TupleContainsBase<F1, ParentResultInput>::value,
+                std::tuple<>,
+                std::tuple<F1>
+              >;
+
+          using AggregateResult = decltype(std::tuple_cat(
+              ParentResultInput(), PartialResult()));
+
+          using type = decltype(std::tuple_cat(
+              PartialResult(),
+              typename Impl<AggregateResult, Others...>::type()));
+        };
+
+        using type = typename Impl<std::tuple<>, InputTupleArgs...>::type;
+      };
+      /////////////////////////////////////////////////
+      template <typename FeatureTuple, typename = void_t<>>
+      struct FlattenFeatures;
+
+      /////////////////////////////////////////////////
+      template <typename FeatureOrList, typename = void_t<>>
+      struct ExpandFeatures
+      {
+        using type = std::conditional_t<
+            std::is_void_v<typename FeatureOrList::RequiredFeatures>,
+            std::tuple<FeatureOrList>,
+            decltype(std::tuple_cat(
+              std::tuple<FeatureOrList>(),
+              typename FlattenFeatures<
+                typename FeatureOrList::RequiredFeatures>::type()))
+        >;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename List>
+      struct ExpandFeatures<List, void_t<typename List::Features>>
+      {
+        using type = typename FlattenFeatures<typename List::Features>::type;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename FeatureListT>
+      struct FlattenFeatures<FeatureListT, void_t<typename FeatureListT::FeatureTuple>>
+      {
+        using type =
+            typename FlattenFeatures<typename FeatureListT::FeatureTuple>::type;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename... Features>
+      struct FlattenFeatures<std::tuple<Features...>, void_t<>>
+      {
+        using type = decltype(std::tuple_cat(
+            typename ExpandFeatures<Features>::type()...));
+      };
+
+      /////////////////////////////////////////////////
+      template <>
+      struct FlattenFeatures<void>
+      {
+        using type = std::tuple<>;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename FeatureListT>
+      struct FlatLeanFeatureTuple
+      {
+        using type =
+          typename RemoveTupleRedundancies<
+            typename FlattenFeatures<typename FeatureListT::Features>::type
+          >::type;
       };
 
       /////////////////////////////////////////////////
@@ -238,7 +352,7 @@ namespace ignition
       template <typename PartialResultInput>
       struct CombineListsImpl<PartialResultInput>
       {
-        using Result = std::tuple<>;
+        using type = std::tuple<>;
       };
 
       template <typename ParentResultInput, typename F1, typename... Others>
@@ -247,28 +361,27 @@ namespace ignition
         // Add the features of the feature list F1, while filtering out any
         // repeated features.
         using InitialResult =
-            typename FilterTuple<
-              ParentResultInput,
-              typename ExtractFeatures<F1>::Result
-            >::Result;
+            typename SubtractTuple<ParentResultInput>
+            ::template From<typename ExtractFeatures<F1>::type>::type;
 
         // Add the features that are required by F1, while filtering out any
         // repeated features.
         using PartialResult = decltype(std::tuple_cat(
             InitialResult(),
-            typename FilterTuple<
-              decltype(std::tuple_cat(ParentResultInput(), InitialResult())),
-              typename ExtractFeatures<typename F1::RequiredFeatures>::Result
-            >::Result()));
+            typename SubtractTuple<
+              decltype(std::tuple_cat(ParentResultInput(), InitialResult()))>
+              ::template From<
+                typename ExtractFeatures<typename F1::RequiredFeatures>::type
+            >::type()));
 
         // Define the tuple that the child should use to filter its list
         using ChildFilter =
             decltype(std::tuple_cat(ParentResultInput(), PartialResult()));
 
         // Construct the final result
-        using Result = decltype(std::tuple_cat(
+        using type = decltype(std::tuple_cat(
             PartialResult(),
-            typename CombineListsImpl<ChildFilter, Others...>::Result()));
+            typename CombineListsImpl<ChildFilter, Others...>::type()));
       };
 
       /// \private CombineLists is used to take variadic lists of features,
@@ -280,7 +393,7 @@ namespace ignition
       struct CombineLists
       {
         public: using Result =
-            typename CombineListsImpl<std::tuple<>, FeatureLists...>::Result;
+            typename CombineListsImpl<std::tuple<>, FeatureLists...>::type;
       };
 
       /////////////////////////////////////////////////
@@ -368,28 +481,45 @@ namespace ignition
       struct SplitFeatures;
 
       /////////////////////////////////////////////////
-      template <template<typename> class Selector, typename FeatureTuple>
-      struct ExtractAPI;
-
-      template <template<typename> class Selector, typename... Features>
-      struct ExtractAPI<Selector, std::tuple<Features...>>
+      template <template<typename> class Selector, typename FeatureListT>
+      struct ExtractAPI
       {
-        public: template<typename... T>
-        class type : public virtual
-            SplitFeatures<Selector, Features>::template type<T...>... { };
+        template <typename FeatureTuple>
+        struct Impl;
+
+        template <typename... Features>
+        struct Impl<std::tuple<Features...>>
+        {
+          template <typename... T>
+          class type : public virtual
+              Selector<Features>::template type<T...>... { };
+        };
+
+        template <typename T>
+        struct Filter : std::is_same<Selector<T>, Empty> { };
+
+        template <typename... T>
+        using type =
+          typename Impl<
+            typename FilterTuple<
+              Filter,
+              typename FlatLeanFeatureTuple<FeatureListT>::type
+            >::type
+          >::template type<T...>;
       };
 
       /////////////////////////////////////////////////
       template <template<typename> class Selector, typename Feature>
       struct SplitFeatures
       {
+        template <typename, typename> struct WithRequiredFeatures;
+
         template <typename F, typename = ::ignition::physics::void_t<>>
         struct Implementation
         {
           template <typename... T>
-          struct type :
-              virtual Selector<F>::template type<T...>,
-              virtual Implementation<typename F::RequiredFeatures>::template type<T...> { };
+          using type = typename WithRequiredFeatures<
+              F, typename F::RequiredFeatures>::template type<T...>;
         };
 
         template <>
@@ -404,6 +534,22 @@ namespace ignition
         {
           template <typename... T>
           using type = typename ExtractAPI<Selector, typename F::FeatureTuple>::template type<T...>;
+        };
+
+        template <typename F, typename R>
+        struct WithRequiredFeatures
+        {
+          template <typename... T>
+          struct type :
+              virtual Selector<F>::template type<T...>,
+              virtual Implementation<typename F::RequiredFeatures>::template type<T...> { };
+        };
+
+        template <typename F>
+        struct WithRequiredFeatures<F, void>
+        {
+          template <typename... T>
+          using type = typename Selector<F>::template type<T...>;
         };
 
         template <typename... T>
@@ -502,7 +648,7 @@ namespace ignition
   } \
   template <typename PolicyT, typename FeaturesT> \
   class X : public ::ignition::physics::detail::ExtractAPI< \
-        detail::Select ## X, typename FeaturesT::FeatureTuple> \
+        detail::Select ## X, FeaturesT> \
           ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
   { \
@@ -570,7 +716,7 @@ namespace ignition
 
       template <typename PolicyT, typename List>
       using ExtractImplementation =
-        typename ExtractAPI<ImplementationSelector, typename List::FeatureTuple>
+        typename ExtractAPI<ImplementationSelector, List>
             ::template type<PolicyT>;
     }
   }
