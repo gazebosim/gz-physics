@@ -419,7 +419,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 Identity EntityManagementFeatures::ConstructEmptyModel(
   const Identity &_worldID, const std::string &_name)
 {
-  tpelib::Model model;
+  auto model = std::make_shared<tpelib::Model>();
   model.SetName(_name);
   return this->AddModel(_worldID, model);
 }
@@ -428,7 +428,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
 Identity EntityManagementFeatures::ConstructEmptyLink(
   const Identity &_modelID, const std::string &_name)
 {
-  tpelib::Link link;
+  auto link = std::make_shared<tpelib::Link>();
   link.SetName(_name);
   return this->AddLink(_modelID, link);
 }
