@@ -29,8 +29,8 @@
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
-#include "../../lib/src/Entity.hh"
-#include "../../lib/src/World.hh"
+#include "lib/src/Entity.hh"
+#include "lib/src/World.hh"
 #include "World.hh"
 
 #include <sdf/Root.hh>

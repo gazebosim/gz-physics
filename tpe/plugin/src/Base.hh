@@ -24,12 +24,12 @@
 #include <memory>
 #include <string>
 
-#include "../../lib/src/World.hh"
-#include "../../lib/src/Engine.hh"
-#include "../../lib/src/Model.hh"
-#include "../../lib/src/Link.hh"
-#include "../../lib/src/Collision.hh"
-#include "../../lib/src/Shape.hh"
+#include "lib/src/World.hh"
+#include "lib/src/Engine.hh"
+#include "lib/src/Model.hh"
+#include "lib/src/Link.hh"
+#include "lib/src/Collision.hh"
+#include "lib/src/Shape.hh"
 
 namespace ignition {
 namespace physics {
