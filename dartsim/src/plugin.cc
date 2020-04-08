@@ -46,7 +46,6 @@ struct DartsimFeatures : FeatureList<
 > { };
 
 class Plugin :
-    public virtual Implements3d<DartsimFeatures>,
     public virtual Base,
     public virtual CustomFeatures,
     public virtual EntityManagementFeatures,

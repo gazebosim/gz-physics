@@ -482,10 +482,6 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
-      template<template<typename> class Selector, typename Feature>
-      struct SplitFeatures;
-
-      /////////////////////////////////////////////////
       template <template<typename> class Selector, typename FeatureListT>
       struct ExtractAPI
       {
@@ -533,54 +529,6 @@ namespace ignition
 
         template <typename... T>
         using type = typename Impl<IndexSequence<T...>>::template type<T...>;
-      };
-
-      /////////////////////////////////////////////////
-      template <template<typename> class Selector, typename Feature>
-      struct SplitFeatures
-      {
-        template <typename, typename> struct WithRequiredFeatures;
-
-        template <typename F, typename = ::ignition::physics::void_t<>>
-        struct Implementation
-        {
-          template <typename... T>
-          using type = typename WithRequiredFeatures<
-              F, typename F::RequiredFeatures>::template type<T...>;
-        };
-
-        template <>
-        struct Implementation<void, ::ignition::physics::void_t<>>
-        {
-          template <typename... T>
-          using type = Empty;
-        };
-
-        template <typename F>
-        struct Implementation<F, ::ignition::physics::void_t<typename F::FeatureTuple>>
-        {
-          template <typename... T>
-          using type = typename ExtractAPI<Selector, typename F::FeatureTuple>::template type<T...>;
-        };
-
-        template <typename F, typename R>
-        struct WithRequiredFeatures
-        {
-          template <typename... T>
-          struct type :
-              virtual Selector<F>::template type<T...>,
-              virtual Implementation<typename F::RequiredFeatures>::template type<T...> { };
-        };
-
-        template <typename F>
-        struct WithRequiredFeatures<F, void>
-        {
-          template <typename... T>
-          using type = typename Selector<F>::template type<T...>;
-        };
-
-        template <typename... T>
-        using type = typename Implementation<Feature>::template type<T...>;
       };
     }
 
