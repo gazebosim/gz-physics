@@ -255,6 +255,9 @@ namespace ignition
       template <typename... InputTupleArgs>
       struct RemoveTupleRedundancies<std::tuple<InputTupleArgs...>>
       {
+        template <typename T>
+        struct wrap { };
+
         template <typename PartialResultInput, typename...>
         struct Impl;
 
@@ -269,9 +272,9 @@ namespace ignition
         {
           using PartialResult =
               std::conditional_t<
-                TupleContainsBase<F1, ParentResultInput>::value,
+                TupleContainsBase<wrap<F1>, ParentResultInput>::value,
                 std::tuple<>,
-                std::tuple<F1>
+                std::tuple<wrap<F1>>
               >;
 
           using AggregateResult = decltype(std::tuple_cat(
@@ -282,7 +285,19 @@ namespace ignition
               typename Impl<AggregateResult, Others...>::type()));
         };
 
-        using type = typename Impl<std::tuple<>, InputTupleArgs...>::type;
+        template <typename Tuple>
+        struct unwrap;
+
+        template <typename... T>
+        struct unwrap<std::tuple<wrap<T>...>>
+        {
+          using type = std::tuple<T...>;
+        };
+
+        using type =
+          typename unwrap<
+            typename Impl<std::tuple<>, InputTupleArgs...>::type
+          >::type;
       };
       /////////////////////////////////////////////////
       template <typename FeatureTuple, typename = void_t<>>
@@ -330,16 +345,6 @@ namespace ignition
       struct FlattenFeatures<void>
       {
         using type = std::tuple<>;
-      };
-
-      /////////////////////////////////////////////////
-      template <typename FeatureListT>
-      struct FlatLeanFeatureTuple
-      {
-        using type =
-          typename RemoveTupleRedundancies<
-            typename FlattenFeatures<typename FeatureListT::Features>::type
-          >::type;
       };
 
       /////////////////////////////////////////////////
@@ -484,28 +489,50 @@ namespace ignition
       template <template<typename> class Selector, typename FeatureListT>
       struct ExtractAPI
       {
-        template <typename FeatureTuple>
-        struct Impl;
+        template <typename FeatureTuple, typename... T>
+        struct Select;
 
-        template <typename... Features>
-        struct Impl<std::tuple<Features...>>
+        template <typename... Features, typename... T>
+        struct Select<std::tuple<Features...>, T...>
         {
-          template <typename... T>
-          class type : public virtual
-              Selector<Features>::template type<T...>... { };
+          using type =
+            typename RemoveTupleRedundancies<
+              std::tuple<typename Selector<Features>::template type<T...>...>
+            >::type;
         };
 
         template <typename T>
         struct Filter : std::is_same<Selector<T>, Empty> { };
 
         template <typename... T>
-        using type =
-          typename Impl<
-            typename FilterTuple<
-              Filter,
-              typename FlatLeanFeatureTuple<FeatureListT>::type
-            >::type
-          >::template type<T...>;
+        using Bases =
+            typename Select<
+              typename FilterTuple<
+                Filter,
+                typename FlattenFeatures<FeatureListT>::type
+              >::type,
+              T...
+            >::type;
+
+        template <typename... T>
+        struct S : std::tuple_size<Bases<T...>> { };
+
+        template <typename... T>
+        using IndexSequence = std::make_index_sequence<S<T...>::value>;
+
+        template <typename>
+        struct Impl;
+
+        template <std::size_t... I>
+        struct Impl<std::index_sequence<I...>>
+        {
+          template<typename... T>
+          class type
+              : public virtual std::tuple_element<I, Bases<T...>>::type... { };
+        };
+
+        template <typename... T>
+        using type = typename Impl<IndexSequence<T...>>::template type<T...>;
       };
 
       /////////////////////////////////////////////////
@@ -711,7 +738,7 @@ namespace ignition
       struct ImplementationSelector
       {
         public: template <typename PolicyT>
-        struct type : virtual T::template Implementation<PolicyT> { };
+        using type = typename T::template Implementation<PolicyT>;
       };
 
       template <typename PolicyT, typename List>
