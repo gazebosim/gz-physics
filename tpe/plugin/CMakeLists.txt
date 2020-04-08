@@ -16,6 +16,9 @@ ign_add_component(${engine_name}
   DEPENDS_ON_COMPONENTS tpe
   GET_TARGET_NAME tpe_plugin)
 
+set(tpelib_dir ${PROJECT_SOURCE_DIR}/tpe)
+target_include_directories(${tpe_plugin} PRIVATE ${tpelib_dir})
+
 target_link_libraries(${tpe_plugin}
   PUBLIC
     ${features}
@@ -56,6 +59,7 @@ ign_build_tests(
 
 foreach(test ${tests})
 
+  target_include_directories(${test} PRIVATE ${tpelib_dir})
   target_compile_definitions(${test} PRIVATE
     "tpe_plugin_LIB=\"$<TARGET_FILE:${tpe_plugin}>\""
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
