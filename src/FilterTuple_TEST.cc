@@ -27,7 +27,8 @@ class ClassD : public ClassB { };
 using Filter = std::tuple<ClassA, ClassD>;
 using Input = std::tuple<ClassB, ClassC, ClassD, ClassA>;
 
-using Result = ignition::physics::detail::SubtractTuple<Filter>::From<Input>::type;
+using Result = ignition::physics::detail::SubtractTuple<Filter>
+    ::From<Input>::type;
 
 using UnfilteredResult =
     ignition::physics::detail::SubtractTuple<std::tuple<>>::From<Input>::type;

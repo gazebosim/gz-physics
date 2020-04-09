@@ -326,7 +326,8 @@ namespace ignition
 
       /////////////////////////////////////////////////
       template <typename FeatureListT>
-      struct FlattenFeatures<FeatureListT, void_t<typename FeatureListT::FeatureTuple>>
+      struct FlattenFeatures<
+          FeatureListT, void_t<typename FeatureListT::FeatureTuple>>
       {
         using type =
             typename FlattenFeatures<typename FeatureListT::FeatureTuple>::type;
