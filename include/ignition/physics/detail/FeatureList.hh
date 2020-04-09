@@ -208,6 +208,8 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
+      /// \private This struct wraps the TupleContainsBase class to create a
+      /// tuple filter that can be passed to FilterTuple.
       template <typename DiscardTuple>
       struct RedundantTupleFilter
       {
@@ -220,6 +222,9 @@ namespace ignition
       struct FilterTuple;
 
       /////////////////////////////////////////////////
+      /// \private This class will apply a Filter to a tuple and produce a new
+      /// tuple that only includes the tuple elements which were ignored by the
+      /// Filter.
       template <template <typename> class Filter, typename... InputTypes>
       struct FilterTuple<Filter, std::tuple<InputTypes...>>
       {
@@ -237,6 +242,8 @@ namespace ignition
       };
 
       /////////////////////////////////////////////////
+      /// \private Use this struct to remove the tuple elements of one tuple
+      /// from another tuple
       template <typename DiscardTuple>
       struct SubtractTuple
       {
@@ -244,11 +251,16 @@ namespace ignition
         using Filter =
             typename RedundantTupleFilter<DiscardTuple>::template Apply<T>;
 
+        /// This struct will contain a nested struct called `type` which will be
+        /// a tuple with all the elements of FromTuple that are not present in
+        /// DiscardTuple
         template <typename FromTuple>
         struct From : FilterTuple<Filter, FromTuple> { };
       };
 
       /////////////////////////////////////////////////
+      /// \private This template takes in a tuple as InputTuple and gives back
+      /// a tuple where every element type is only present once.
       template <typename InputTuple>
       struct RemoveTupleRedundancies;
 
@@ -299,11 +311,15 @@ namespace ignition
             typename Impl<std::tuple<>, InputTupleArgs...>::type
           >::type;
       };
+
       /////////////////////////////////////////////////
+      /// \private This template is used to take a hierarchy of FeatureLists and
+      /// flatten them into a single tuple.
       template <typename FeatureTuple, typename = void_t<>>
       struct FlattenFeatures;
 
       /////////////////////////////////////////////////
+      /// \private This template is a helper for FlattenFeatures
       template <typename FeatureOrList, typename = void_t<>>
       struct ExpandFeatures
       {
