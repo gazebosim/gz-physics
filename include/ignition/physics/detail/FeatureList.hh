@@ -37,6 +37,14 @@ namespace ignition
     {
       /////////////////////////////////////////////////
       template <typename T>
+      struct ImplementationSelector
+      {
+        public: template <typename PolicyT>
+        using type = typename T::template Implementation<PolicyT>;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename T>
       struct IterateTuple;
 
       template <typename Current, typename... T>
@@ -117,19 +125,20 @@ namespace ignition
         struct type { };
       };
 
-      /////////////////////////////////////////////////
-      /// \private This class is used to determine what type of
-      /// SpecializedPluginPtr should be used by the entities provided by a
-      /// plugin.
-      template <typename Policy, typename FeaturesT>
-      struct DeterminePlugin
-      {
-        struct Specializer
-            : ::ignition::plugin::detail::SelectSpecializers<
-              typename ComposePlugin<Policy, FeaturesT>::type> { };
+//      /////////////////////////////////////////////////
+//      /// \private This class is used to determine what type of
+//      /// SpecializedPluginPtr should be used by the entities provided by a
+//      /// plugin.
+//      template <typename Policy, typename FeaturesT>
+//      struct DeterminePlugin
+//      {
+//        struct Specializer
+//            : ::ignition::plugin::detail::SelectSpecializers<
+//              typename ComposePlugin<Policy, FeaturesT>::type> { };
 
-        using type = ::ignition::plugin::TemplatePluginPtr<Specializer>;
-      };
+
+//        using type = ::ignition::plugin::TemplatePluginPtr<Specializer>;
+//      };
 
       /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
@@ -449,39 +458,6 @@ namespace ignition
           : std::integral_constant<bool, false> {};
 
       /////////////////////////////////////////////////
-      /// \private Extract the API out of a FeatureList
-      template <template<typename> class Selector,
-                typename FeatureT, typename = void_t<>>
-      struct Aggregate
-      {
-        public: template<typename... T>
-        struct type
-            : public virtual Selector<FeatureT>::template type<T...>,
-              public virtual Aggregate<Selector,
-                typename FeatureT::RequiredFeatures>::template type<T...>
-        { };
-      };
-
-      template <template<typename> class Selector>
-      struct Aggregate<Selector, void, void_t<>>
-      {
-        public: template<typename... T>
-        struct type { };
-      };
-
-      template <template<typename> class Selector, typename Iterable>
-      struct Aggregate<Selector, Iterable,
-            void_t<typename Iterable::CurrentTupleEntry>>
-      {
-        public: template <typename... T>
-        struct type
-            : public virtual Aggregate<Selector,
-                  typename Iterable::CurrentTupleEntry>::template type<T...>,
-              public virtual Aggregate<Selector,
-                  typename GetNext<Iterable>::n>::template type<T...> { };
-      };
-
-      /////////////////////////////////////////////////
       template <template<typename> class Selector, typename FeatureListT>
       struct ExtractAPI
       {
@@ -529,6 +505,46 @@ namespace ignition
 
         template <typename... T>
         using type = typename Impl<IndexSequence<T...>>::template type<T...>;
+      };
+
+      template <typename PolicyT, typename List>
+      using ExtractImplementation =
+        typename ExtractAPI<ImplementationSelector, List>
+            ::template type<PolicyT>;
+
+      /////////////////////////////////////////////////
+      template <typename Policy, typename FeaturesT>
+      struct DeterminePlugin
+      {
+        using Bases =
+            typename ExtractAPI<ImplementationSelector, FeaturesT>
+            ::template Bases<Policy>;
+
+        using S = typename ExtractAPI<ImplementationSelector, FeaturesT>
+            ::template S<Policy>;
+
+        using IndexSequence =
+            typename ExtractAPI<ImplementationSelector, FeaturesT>
+            ::template IndexSequence<Policy>;
+
+        template <typename>
+        struct Impl;
+
+        template <std::size_t... I>
+        struct Impl<std::index_sequence<I...>>
+        {
+          struct type
+              : public virtual
+              ignition::plugin::SpecializedPlugin<
+                typename std::tuple_element<I, Bases>::type
+              >... { };
+        };
+
+        struct Plugin : public virtual Impl<IndexSequence>::type { };
+
+        using type = ::ignition::plugin::TemplatePluginPtr<
+          ::ignition::plugin::detail::SelectSpecializers<Plugin>
+        >;
       };
     }
 
@@ -679,21 +695,6 @@ namespace ignition
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Link)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Joint)
     DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Shape)
-
-    namespace detail
-    {
-      template <typename T>
-      struct ImplementationSelector
-      {
-        public: template <typename PolicyT>
-        using type = typename T::template Implementation<PolicyT>;
-      };
-
-      template <typename PolicyT, typename List>
-      using ExtractImplementation =
-        typename ExtractAPI<ImplementationSelector, List>
-            ::template type<PolicyT>;
-    }
   }
 }
 
