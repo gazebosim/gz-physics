@@ -110,20 +110,17 @@ std::size_t EntityManagementFeatures::GetModelCount(
 Identity EntityManagementFeatures::GetModel(
   const Identity &_worldID, const std::size_t _modelIndex) const
 {
-  // Get the selected world
-  auto worldIt = worlds.find(_worldID);
-
   // Get the selected model
   auto modelIt = models.begin();
   std::advance(modelIt, _modelIndex);
-
-  if (worldIt != worlds.end() && modelIt != models.end())
+  auto worldIt = worlds.find(_worldID);
+  if (modelIt != models.end() && worldIt != worlds.end())
   {
-    // Get the model
-    std::size_t modelId = modelIt->first;
-    auto model = worldIt->second->world->GetChildById(modelId);
     auto modelPtr = std::make_shared<ModelInfo>();
-    modelPtr->model = static_cast<tpelib::Model *>(&model);
+    std::size_t modelId = modelIt->first;
+    tpelib::Entity &ent = worldIt->second->world->GetChildById(modelId);
+    tpelib::Model *model = static_cast<tpelib::Model *>(&ent);
+    modelPtr->model = std::shared_ptr<tpelib::Model>(model);
     return this->GenerateIdentity(modelId, modelPtr);
   }
   return this->GenerateInvalidId();
@@ -139,7 +136,7 @@ Identity EntityManagementFeatures::GetModel(
     return this->GenerateInvalidId();
 
   // Get the selected model and check name and id
-  auto model = worldIt->second->world->GetChildByName(_modelName);
+  tpelib::Entity &model = worldIt->second->world->GetChildByName(_modelName);
   for (auto it = models.begin(); it != models.end(); ++it)
   {
     if (it->second->model->GetName() == _modelName &&
@@ -205,9 +202,11 @@ Identity EntityManagementFeatures::GetLink(
   auto modelIt = models.find(_modelID);
   if (linkIt != links.end() && modelIt != models.end())
   {
+    auto linkPtr = std::make_shared<LinkInfo>();
     std::size_t linkId = linkIt->first;
-    auto link = modelIt->second->model->GetChildById(linkId);
-    auto linkPtr = std::make_shared<tpelib::Entity>(link);
+    tpelib::Entity &ent = modelIt->second->model->GetChildById(linkId);
+    tpelib::Link *link = static_cast<tpelib::Link *>(&ent);
+    linkPtr->link = std::make_shared<tpelib::Link>(link);
     return this->GenerateIdentity(linkId, linkPtr);
   }
   return this->GenerateInvalidId();
@@ -220,7 +219,7 @@ Identity EntityManagementFeatures::GetLink(
   auto modelIt = models.find(_modelID);
   if (modelIt != models.end())
   {
-    auto link = modelIt->second->model->GetChildByName(_linkName);
+    tpelib::Entity &link = modelIt->second->model->GetChildByName(_linkName);
     for (auto it = links.begin(); it != links.end(); ++it)
     {
       if (it->second->link->GetName() == _linkName &&
@@ -280,15 +279,17 @@ Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, const std::size_t _shapeIndex) const
 {
   // assume _shapeIndex ~= collisionIndex
-  auto shapeIt = collisions.begin();
-  std::advance(shapeIt, _shapeIndex);
+  auto collisionIt = collisions.begin();
+  std::advance(collisionIt, _shapeIndex);
   auto linkIt = links.find(_linkID);
-  if (shapeIt != collisions.end() && linkIt != links.end())
+  if (collisionIt != collisions.end() && linkIt != links.end())
   {
-    std::size_t shapeID = shapeIt->first;
-    auto shape = linkIt->second->link->GetChildById(shapeID);
-    auto shapePtr = std::make_shared<tpelib::Entity>(shape);
-    return this->GenerateIdentity(shapeID, shapePtr);
+    auto collisionPtr = std::make_shared<CollisionInfo>();
+    std::size_t collisionId = collisionIt->first;
+    tpelib::Entity &ent = linkIt->second->link->GetChildById(collisionId);
+    tpelib::Collision *collision = static_cast<tpelib::Collision *>(&ent);
+    collisionPtr->collision = std::make_shared<tpelib::Collision>(*collision);
+    return this->GenerateIdentity(collisionId, collisionPtr);
   }
   return this->GenerateInvalidId();
 }
@@ -301,13 +302,13 @@ Identity EntityManagementFeatures::GetShape(
   auto linkIt = links.find(_linkID);
   if (linkIt != links.end())
   {
-    auto shape = linkIt->second->link->GetChildByName(_shapeName);
+    tpelib::Entity &collision = linkIt->second->link->GetChildByName(_shapeName);
     for (auto it = collisions.begin(); it != collisions.end(); ++it)
     {
       if (it->second->collision->GetName() == _shapeName &&
-        it->first == shape.GetId())
+        it->first == collision.GetId())
       {
-        return this->GenerateIdentity(shape.GetId(), it->second);
+        return this->GenerateIdentity(collision.GetId(), it->second);
       }
     }
   }
@@ -421,7 +422,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
 {
   auto model = std::make_shared<tpelib::Model>();
   model->SetName(_name);
-  return this->AddModel(_worldID, *model.get());
+  return this->AddModel(_worldID, model);
 }
 
 /////////////////////////////////////////////////
@@ -430,5 +431,5 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
 {
   auto link = std::make_shared<tpelib::Link>();
   link->SetName(_name);
-  return this->AddLink(_modelID, *link.get());
+  return this->AddLink(_modelID, link);
 }
