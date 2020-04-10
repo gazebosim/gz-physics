@@ -38,6 +38,7 @@ using JointFeatureList = FeatureList<
   GetBasicJointProperties,
   SetJointTransformFromParentFeature,
   SetJointTransformToChildFeature,
+  DetachJointFeature,
 
   SetFreeJointRelativeTransformFeature,
 
@@ -49,7 +50,9 @@ using JointFeatureList = FeatureList<
 
   SetPrismaticJointProperties,
   GetPrismaticJointProperties,
-  AttachPrismaticJointFeature
+  AttachPrismaticJointFeature,
+
+  SetJointVelocityCommandFeature
 >;
 
 class JointFeatures :
@@ -109,6 +112,10 @@ class JointFeatures :
       const Identity &_id, const Pose3d &_pose) override;
 
 
+  // ----- Detach Joint -----
+  public: void DetachJoint(const Identity &_jointId) override;
+
+
   // ----- Fixed Joint -----
   public: Identity CastToFixedJoint(
       const Identity &_jointID) const override;
@@ -159,6 +166,11 @@ class JointFeatures :
       const BaseLink3dPtr &_parent,
       const std::string &_name,
       const LinearVector3d &_axis) override;
+
+  // ----- Joint Commands -----
+  public: void SetJointVelocityCommand(
+      const Identity &_id, const std::size_t _dof,
+      const double _value) override;
 };
 
 }

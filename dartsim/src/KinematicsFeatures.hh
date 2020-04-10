@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_DARTSIM_SRC_KINEMATICSFEATURES_HH_
 
 #include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/FreeGroup.hh>
 
 #include "Base.hh"
 
@@ -28,7 +29,8 @@ namespace dartsim {
 
 using KinematicsFeatureList = FeatureList<
   LinkFrameSemantics,
-  ShapeFrameSemantics
+  ShapeFrameSemantics,
+  FreeGroupFrameSemantics
 >;
 
 class KinematicsFeatures :
@@ -36,6 +38,8 @@ class KinematicsFeatures :
     public virtual Implements3d<KinematicsFeatureList>
 {
   public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const;
+
+  public: const dart::dynamics::Frame *SelectFrame(const FrameID &_id) const;
 };
 
 }

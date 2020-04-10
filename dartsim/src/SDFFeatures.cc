@@ -473,8 +473,41 @@ Identity SDFFeatures::ConstructSdfCollision(
       bn->getName() + ":" + _collision.Name();
 
   dart::dynamics::ShapeNode * const node =
-      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        shape, internalName);
+      bn->createShapeNodeWith<
+        dart::dynamics::CollisionAspect, dart::dynamics::DynamicsAspect>(
+          shape, internalName);
+
+  // Calling GetElement creates a new element with default values if the element
+  // doesn't exist, so the following is okay.
+  // TODO(addisu) We are using the coefficient specified in the <ode> tag.
+  // Either add parameters specific to DART or generic to all physics engines.
+  if (_collision.Element())
+  {
+    const auto &odeFriction = _collision.Element()
+                                  ->GetElement("surface")
+                                  ->GetElement("friction")
+                                  ->GetElement("ode");
+
+    auto aspect = node->getDynamicsAspect();
+    aspect->setFrictionCoeff(odeFriction->Get<double>("mu"));
+    if (odeFriction->HasElement("mu2"))
+    {
+      aspect->setSecondaryFrictionCoeff(odeFriction->Get<double>("mu2"));
+    }
+    if (odeFriction->HasElement("slip1"))
+    {
+      aspect->setSlipCompliance(odeFriction->Get<double>("slip1"));
+    }
+    if (odeFriction->HasElement("slip2"))
+    {
+      aspect->setSecondarySlipCompliance(odeFriction->Get<double>("slip2"));
+    }
+    if (odeFriction->HasElement("fdir1"))
+    {
+      math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
+      aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
+    }
+  }
 
   node->setRelativeTransform(
         math::eigen3::convert(_collision.Pose()) * tf_shape);
@@ -608,9 +641,18 @@ Identity SDFFeatures::ConstructSdfJoint(
     }
   }
 
-  if (_parent)
   {
-    if (_parent->descendsFrom(_child))
+    auto childsParentJoint = _child->getParentJoint();
+    if (childsParentJoint->getType() != "FreeJoint")
+    {
+      ignerr << "Asked to create a joint between links "
+             << "[" << _parent->getName() << "] as parent and ["
+             << _child->getName() << "] as child, but the child link already "
+             << "has a parent joint of type [" << childsParentJoint->getType()
+             << "].\n";
+      return this->GenerateInvalidId();
+    }
+    else if (_parent && _parent->descendsFrom(_child))
     {
       // TODO(MXG): Add support for non-tree graph structures
       ignerr << "Asked to create a closed kinematic chain between links "

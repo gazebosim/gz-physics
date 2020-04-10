@@ -314,6 +314,61 @@ namespace ignition
             const Identity &_id, const Pose &_pose) = 0;
       };
     };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE SetJointVelocityCommandFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting velocity commands (target velocity).
+      /// This is different from SetVelocity in that this does not modify the
+      /// internal state of the joint. Instead, the physics engine is expected
+      /// to compute the necessary joint torque for the commanded velocity and
+      /// apply it in the next simulation step.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the commanded value of generalized velocity of a specific
+        /// generalized coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The desired generalized velocity. Units depend on the underlying
+        ///   joint type.
+        public: void SetVelocityCommand(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting joint velocity commands
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetVelocityCommand above
+        public: virtual void SetJointVelocityCommand(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
+    class IGNITION_PHYSICS_VISIBLE DetachJointFeature
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        /// \brief Detach this joint.
+        public: void Detach();
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void DetachJoint(const Identity &_jointID) = 0;
+      };
+    };
   }
 }
 

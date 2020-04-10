@@ -149,6 +149,23 @@ namespace ignition
       this->template Interface<SetJointTransformToChildFeature>()
         ->SetJointTransformToChild(this->identity, _pose);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointVelocityCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetVelocityCommand(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointVelocityCommandFeature>()
+          ->SetJointVelocityCommand(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void DetachJointFeature::Joint<PolicyT, FeaturesT>::Detach()
+    {
+      this->template Interface<DetachJointFeature>()
+          ->DetachJoint(this->identity);
+    }
   }
 }
 

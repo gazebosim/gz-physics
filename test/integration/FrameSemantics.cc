@@ -16,6 +16,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <cmath>
 
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/PluginPtr.hh>
@@ -33,6 +34,7 @@ using ignition::physics::Pose;
 using ignition::physics::Vector;
 using ignition::physics::LinearVector;
 using ignition::physics::AngularVector;
+using ignition::physics::AlignedBox;
 
 using ignition::math::Rand;
 using namespace ignition::physics::test;
@@ -136,6 +138,163 @@ TEST(FrameSemantics_TEST, RelativeFrames3f)
 TEST(FrameSemantics_TEST, RelativeFrames2f)
 {
   TestRelativeFrames<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT>
+void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
+{
+  using Scalar = typename PolicyT::Scalar;
+  constexpr std::size_t Dim = PolicyT::Dim;
+
+  // Instantiate an engine that provides Frame Semantics.
+  auto fs =
+      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
+        ::From(LoadMockFrameSemanticsPlugin(_suffix));
+
+  using FrameData = FrameData<Scalar, Dim>;
+  using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
+  using AlignedBox = AlignedBox<Scalar, Dim>;
+  using RelativeAlignedBox = ignition::physics::RelativeAlignedBox<Scalar, Dim>;
+  using AngularVector = AngularVector<Scalar, Dim>;
+  using Pose = Pose<Scalar, Dim>;
+  using Vector = Vector<Scalar, Dim>;
+
+  // The World Frame is designated by the letter O
+  const FrameID World = FrameID::World();
+
+  // Create Frame A, translated along X
+  FrameData T_A;
+  const Scalar dx_A = 1.5;
+  T_A.pose.translation()[0] = dx_A;
+  const RelativeFrameData O_T_A(World, T_A);
+  const FrameID A = *fs->CreateLink("A", fs->Resolve(O_T_A, World));
+
+  // Create Frame B, translated along Y and rotated about Z
+  const Scalar dy_B = 0.5;
+  const Scalar yaw_B = std::atan(0.5);
+  FrameData T_B;
+  {
+    AngularVector yawAxis = AngularVector::Zero();
+    yawAxis[yawAxis.rows()-1] = 1;
+    T_B.pose = Pose{ignition::physics::Rotate<Scalar>(yaw_B, yawAxis)};
+  }
+  T_B.pose.translation()[1] = dy_B;
+
+  const RelativeFrameData A_T_B(A, T_B);
+  const FrameID B = *fs->CreateLink("B", fs->Resolve(A_T_B, World));
+
+  // Create centered and offset AlignedBoxes
+  AlignedBox box;
+  box.min() = Vector::Zero();
+  box.max() = Vector::Zero();
+  box.min()[0] = -1;
+  box.min()[1] = -2;
+  box.max()[0] = 1;
+  box.max()[1] = 2;
+
+  AlignedBox boxOA;
+  boxOA.min() = Vector::Zero();
+  boxOA.max() = Vector::Zero();
+  boxOA.min()[0] = box.min()[0] + dx_A;
+  boxOA.min()[1] = box.min()[1];
+  boxOA.max()[0] = box.max()[0] + dx_A;
+  boxOA.max()[1] = box.max()[1];
+
+  // compare AlignedBoxes in O,A frames
+  const RelativeAlignedBox O_boxOA(FrameID::World(), boxOA);
+  EXPECT_TRUE(Equal(O_boxOA.RelativeToParent(),
+              fs->Resolve(O_boxOA, FrameID::World()), _tolerance));
+
+  const RelativeAlignedBox A_box(A, box);
+  EXPECT_TRUE(Equal(A_box.RelativeToParent(),
+              fs->Resolve(A_box, A), _tolerance));
+
+  EXPECT_TRUE(Equal(boxOA,
+              fs->Resolve(A_box, FrameID::World()), _tolerance));
+
+  EXPECT_TRUE(Equal(box,
+              fs->Resolve(O_boxOA, A), _tolerance));
+
+  // inCoordinatesOf coverage, even though it's not supported in AABBSpace
+  std::cerr << " -- Ignore the following warnings; these functions are being "
+            << "called for the sake of test coverage:" << std::endl;
+  EXPECT_TRUE(Equal(boxOA,
+              fs->Resolve(A_box, FrameID::World(), B), _tolerance));
+
+  EXPECT_TRUE(Equal(box,
+              fs->Resolve(O_boxOA, A, FrameID::World()), _tolerance));
+
+  // Compare AlignedBoxes in A,B frames
+  AlignedBox boxAB;
+  boxAB.min() = Vector::Zero();
+  boxAB.max() = Vector::Zero();
+  boxAB.min()[0] = box.min()[0] + dy_B*std::sin(yaw_B);
+  boxAB.min()[1] = box.min()[1] + dy_B*std::cos(yaw_B);
+  boxAB.max()[0] = box.max()[0] + dy_B*std::sin(yaw_B);
+  boxAB.max()[1] = box.max()[1] + dy_B*std::cos(yaw_B);
+
+  AlignedBox box_rotated;
+  box_rotated.min() = Vector::Zero();
+  box_rotated.max() = Vector::Zero();
+  box_rotated.min()[0] = -4 / std::sqrt(5);
+  box_rotated.min()[1] = -std::sqrt(5);
+  box_rotated.max()[0] = 4 / std::sqrt(5);
+  box_rotated.max()[1] = std::sqrt(5);
+
+  AlignedBox boxAB_rotated;
+  boxAB_rotated.min() = Vector::Zero();
+  boxAB_rotated.max() = Vector::Zero();
+  boxAB_rotated.min()[0] = box_rotated.min()[0];
+  boxAB_rotated.min()[1] = box_rotated.min()[1] + dy_B;
+  boxAB_rotated.max()[0] = box_rotated.max()[0];
+  boxAB_rotated.max()[1] = box_rotated.max()[1] + dy_B;
+
+  AlignedBox boxOB_rotated;
+  boxOB_rotated.min() = Vector::Zero();
+  boxOB_rotated.max() = Vector::Zero();
+  boxOB_rotated.min()[0] = boxAB_rotated.min()[0] + dx_A;
+  boxOB_rotated.min()[1] = boxAB_rotated.min()[1];
+  boxOB_rotated.max()[0] = boxAB_rotated.max()[0] + dx_A;
+  boxOB_rotated.max()[1] = boxAB_rotated.max()[1];
+
+  const RelativeAlignedBox A_boxAB(A, boxAB);
+  EXPECT_TRUE(Equal(A_boxAB.RelativeToParent(),
+              fs->Resolve(A_boxAB, A), _tolerance));
+
+  const RelativeAlignedBox B_box(B, box);
+  EXPECT_TRUE(Equal(B_box.RelativeToParent(),
+              fs->Resolve(B_box, B), _tolerance));
+
+  EXPECT_TRUE(Equal(boxAB_rotated,
+              fs->Resolve(B_box, A), _tolerance));
+
+  EXPECT_TRUE(Equal(boxOB_rotated,
+              fs->Resolve(B_box, FrameID::World()), _tolerance));
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox3d)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3d>(1e-11, "3d");
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox2d)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2d>(1e-14, "2d");
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox3f)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3f>(1e-3, "3f");
+}
+
+/////////////////////////////////////////////////
+TEST(FrameSemantics_TEST, RelativeAlignedBox2f)
+{
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////

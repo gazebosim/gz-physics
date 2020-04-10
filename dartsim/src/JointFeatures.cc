@@ -93,6 +93,18 @@ void JointFeatures::SetJointForce(
 }
 
 /////////////////////////////////////////////////
+void JointFeatures::SetJointVelocityCommand(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  if (joint->getActuatorType() != dart::dynamics::Joint::SERVO)
+  {
+    joint->setActuatorType(dart::dynamics::Joint::SERVO);
+  }
+  joint->setCommand(_dof, _value);
+}
+
+/////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();
@@ -129,6 +141,29 @@ void JointFeatures::SetJointTransformToChild(
 }
 
 /////////////////////////////////////////////////
+void JointFeatures::DetachJoint(const Identity &_jointId)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_jointId)->joint;
+  if (joint->getType() == "FreeJoint")
+  {
+    // don't need to do anything, joint is already a FreeJoint
+    return;
+  }
+
+  auto child = joint->getChildBodyNode();
+  auto transform = child->getWorldTransform();
+  auto spatialVelocity =
+      child->getSpatialVelocity(
+          dart::dynamics::Frame::World(),
+          dart::dynamics::Frame::World());
+  auto freeJoint = child->moveTo<dart::dynamics::FreeJoint>(nullptr);
+  freeJoint->setTransform(transform);
+  freeJoint->setSpatialVelocity(spatialVelocity,
+          dart::dynamics::Frame::World(),
+          dart::dynamics::Frame::World());
+}
+
+/////////////////////////////////////////////////
 Identity JointFeatures::CastToFixedJoint(
     const Identity &_jointID) const
 {
@@ -155,6 +190,13 @@ Identity JointFeatures::AttachFixedJoint(
 
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
+
+  if (bn->getParentJoint()->getType() != "FreeJoint")
+  {
+    // child already has a parent joint
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    return this->GenerateInvalidId();
+  }
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
@@ -231,6 +273,13 @@ Identity JointFeatures::AttachRevoluteJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
+  if (bn->getParentJoint()->getType() != "FreeJoint")
+  {
+    // child already has a parent joint
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    return this->GenerateInvalidId();
+  }
+
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
@@ -282,6 +331,13 @@ Identity JointFeatures::AttachPrismaticJoint(
 
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
+
+  if (bn->getParentJoint()->getType() != "FreeJoint")
+  {
+    // child already has a parent joint
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    return this->GenerateInvalidId();
+  }
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));

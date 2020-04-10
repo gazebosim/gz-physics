@@ -20,9 +20,6 @@ pipelines:
           - cd ..
           # Ignition dependencies
           - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
-          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease bionic main" > /etc/apt/sources.list.d/gazebo-prerelease.list
-          # use nightly repos until ign-cmake is fixed
-          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly bionic main" > /etc/apt/sources.list.d/gazebo-nightly.list
           - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
           - apt-get update
           - apt-get -y install
@@ -33,14 +30,11 @@ pipelines:
             libignition-plugin-dev
             libeigen3-dev
             libsdformat8-dev
-          # DARTsim
-          - apt-add-repository -y ppa:dartsim
-          - apt-get update
-          - apt-get -y install
             dart6-data
             libdart6-collision-ode-dev
             libdart6-dev
             libdart6-utils-urdf-dev
+            libbenchmark-dev
           # Ignition physics
           - mkdir build
           - cd build

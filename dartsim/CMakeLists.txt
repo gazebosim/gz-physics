@@ -1,11 +1,4 @@
 
-if(APPLE)
-  # workaround for dart issue 1200 until a fix is released
-  # https://github.com/dartsim/dart/issues/1200
-  # https://github.com/dartsim/dart/pull/1209
-  link_directories(/usr/local/opt/console_bridge/lib)
-endif()
-
 # This component expresses custom features of the dartsim plugin, which can
 # expose native dartsim data types.
 ign_add_component(dartsim INTERFACE
@@ -22,7 +15,8 @@ install(
 ign_get_libsources_and_unittests(sources test_sources)
 
 # TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
-ign_add_component(dartsim-plugin
+set(engine_name dartsim-plugin)
+ign_add_component(${engine_name}
   SOURCES ${sources}
   DEPENDS_ON_COMPONENTS dartsim
   GET_TARGET_NAME dartsim_plugin)
@@ -33,8 +27,28 @@ target_link_libraries(${dartsim_plugin}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    ignition-math${IGN_MATH_VER}::eigen3)
+    ignition-math${IGN_MATH_VER}::eigen3
+  PRIVATE
+    # We need to link this, even when the profiler isn't used to get headers.
+    ignition-common${IGN_COMMON_VER}::profiler
+)
 
+# Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
+install(TARGETS ${dartsim_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+
+# The library created by `ign_add_component` includes the ign-physics version
+# (i.e. libignition-physics1-name-plugin.so), but for portability,
+# we also install an unversioned symlink into the same versioned folder.
+set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${dartsim_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
+if (WIN32)
+  # create_symlink requires cmake 3.13 on windows
+  cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+endif()
+EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
+INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+
+# Testing
 ign_build_tests(
   TYPE UNIT
   SOURCES ${test_sources}
@@ -55,9 +69,9 @@ foreach(test ${tests})
 
 endforeach()
 
-if(TARGET UNIT_FindFeatures_TEST)
-
-  target_compile_definitions(UNIT_FindFeatures_TEST PRIVATE
-    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
-
-endif()
+foreach(test UNIT_FindFeatures_TEST UNIT_RequestFeatures_TEST)
+  if(TARGET ${test})
+    target_compile_definitions(${test} PRIVATE
+      "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
+  endif()
+endforeach()
