@@ -66,7 +66,6 @@ Identity SDFFeatures::ConstructSdfModel(
   const bool selfCollide = _sdfModel.SelfCollide();
 
   // Set multibody params
-  const int numLinks = _sdfModel.LinkCount();
   const btScalar baseMass = 0;
   const btVector3 baseInertiaDiag(0, 0, 0);
   // To Do: experiment with it
@@ -96,6 +95,9 @@ Identity SDFFeatures::ConstructSdfModel(
     }
   }
 
+  // Initialize model with zero links and increase the number as links are added
+  const int numLinks = 0;
+
   // Build model
   btMultiBody* model = new btMultiBody(numLinks,
                                        baseMass,
@@ -120,7 +122,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // Build links
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
-    this->BuildSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i), i);
+    this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
   }
 
   // Buld joints
@@ -143,10 +145,9 @@ Identity SDFFeatures::ConstructSdfModel(
 }
 
 /////////////////////////////////////////////////
-Identity SDFFeatures::BuildSdfLink(
+Identity SDFFeatures::ConstructSdfLink(
   const Identity &_modelID,
-  const ::sdf::Link &_sdfLink,
-  const int _linkIndex)
+  const ::sdf::Link &_sdfLink)
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
@@ -176,11 +177,17 @@ Identity SDFFeatures::BuildSdfLink(
   // Set up fixed joints
   const int parentIndex = -1;
   const auto &model = this->models.at(_modelID)->model;
-  model->setupFixed(_linkIndex, linkMass, linkInertiaDiag, parentIndex,
+
+  // Update number of links in the model
+  auto linkIndex = model->getNumLinks();
+  model->setNumLinks(linkIndex + 1);
+
+  // Create link
+  model->setupFixed(linkIndex, linkMass, linkInertiaDiag, parentIndex,
                      rotParentToThis, parentComToCurrentPivot,
                      currentPivotToCurrentCom);
 
-  const auto linkIdentity = this->AddLink({name, _linkIndex, linkMass,
+  const auto linkIdentity = this->AddLink({name, linkIndex, linkMass,
                                   linkInertiaDiag, poseIsometry, _modelID});
 
   // Build collisions
