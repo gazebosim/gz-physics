@@ -46,8 +46,7 @@ namespace physics
       /// \returns the normal vector for this plane.
       public: Normal GetNormal() const;
 
-      /// \brief Get a point on the plane. For a 2D simulation, this value
-      /// is irrelevant, because all (x, y) locations will be on the plane.
+      /// \brief Get a point on the plane.
       /// \returns the offset of the plane.
       public: Point GetPoint() const;
     };

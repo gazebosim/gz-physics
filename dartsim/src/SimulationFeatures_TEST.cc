@@ -34,7 +34,6 @@
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/mesh/MeshShape.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
