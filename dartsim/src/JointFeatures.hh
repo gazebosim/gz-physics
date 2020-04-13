@@ -27,7 +27,6 @@
 #include <ignition/physics/RevoluteJoint.hh>
 
 #include "Base.hh"
-#include "EntityManagementFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -57,7 +56,7 @@ using JointFeatureList = FeatureList<
 >;
 
 class JointFeatures :
-    public virtual EntityManagementFeatures,
+    public virtual Base,
     public virtual Implements3d<JointFeatureList>
 {
   // ----- Get Basic Joint State -----
