@@ -264,12 +264,21 @@ namespace ignition
       template <typename InputTuple>
       struct RemoveTupleRedundancies;
 
+      template <typename T>
+      struct wrap { };
+
+      template <typename Tuple>
+      struct unwrap;
+
+      template <typename... T>
+      struct unwrap<std::tuple<wrap<T>...>>
+      {
+        using type = std::tuple<T...>;
+      };
+
       template <typename... InputTupleArgs>
       struct RemoveTupleRedundancies<std::tuple<InputTupleArgs...>>
       {
-        template <typename T>
-        struct wrap { };
-
         template <typename PartialResultInput, typename...>
         struct Impl;
 
@@ -295,15 +304,6 @@ namespace ignition
           using type = decltype(std::tuple_cat(
               PartialResult(),
               typename Impl<AggregateResult, Others...>::type()));
-        };
-
-        template <typename Tuple>
-        struct unwrap;
-
-        template <typename... T>
-        struct unwrap<std::tuple<wrap<T>...>>
-        {
-          using type = std::tuple<T...>;
         };
 
         using type =
