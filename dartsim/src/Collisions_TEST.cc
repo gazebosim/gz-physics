@@ -109,7 +109,7 @@ TestWorldPtr ConstructMeshPlaneWorld(
   model = world->ConstructEmptyModel("plane");
   link = model->ConstructEmptyLink("link");
 
-  link->AttachPlaneShape("plane", ignition::physics::AngularVector3d::UnitZ());
+  link->AttachPlaneShape("plane", ignition::physics::LinearVector3d::UnitZ());
   link->AttachFixedJoint(nullptr);
 
   return world;

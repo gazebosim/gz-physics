@@ -139,7 +139,7 @@ class ShapeFeatures :
   public: Identity CastToPlaneShape(
       const Identity &_shapeID) const override;
 
-  public: AngularVector3d GetPlaneShapeNormal(
+  public: LinearVector3d GetPlaneShapeNormal(
       const Identity &_planeID) const override;
 
   public: LinearVector3d GetPlaneShapePoint(
@@ -148,7 +148,7 @@ class ShapeFeatures :
   public: Identity AttachPlaneShape(
       const Identity &_linkID,
       const std::string &_name,
-      const AngularVector3d &_normal,
+      const LinearVector3d &_normal,
       const LinearVector3d &_point) override;
 };
 

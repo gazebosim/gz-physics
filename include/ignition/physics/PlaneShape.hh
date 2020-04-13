@@ -37,13 +37,12 @@ namespace physics
     class PlaneShape : public virtual Entity<PolicyT, FeaturesT>
     {
       public: using Normal =
-          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: using Point =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-      /// \brief Get the normal vector for this plane. For a 2D simulation, this
-      /// will be a scalar quantity.
+      /// \brief Get the normal vector for this plane.
       /// \returns the normal vector for this plane.
       public: Normal GetNormal() const;
 
@@ -57,7 +56,7 @@ namespace physics
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: using Normal =
-          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: using Point =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
@@ -80,7 +79,7 @@ namespace physics
     class PlaneShape : public virtual Entity<PolicyT, FeaturesT>
     {
       public: using Normal =
-          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: using Point =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
@@ -101,7 +100,7 @@ namespace physics
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: using Normal =
-          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: using Point =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
@@ -124,7 +123,7 @@ namespace physics
     class Link : public virtual Feature::Link<PolicyT, FeaturesT>
     {
       public: using Normal =
-          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: using Point =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
@@ -147,7 +146,7 @@ namespace physics
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: using Normal =
-          typename FromPolicy<PolicyT>::template Use<AngularVector>;
+          typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: using Point =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;

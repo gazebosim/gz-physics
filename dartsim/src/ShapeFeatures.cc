@@ -275,7 +275,7 @@ Identity ShapeFeatures::CastToPlaneShape(const Identity &_shapeID) const
 }
 
 /////////////////////////////////////////////////
-AngularVector3d ShapeFeatures::GetPlaneShapeNormal(
+LinearVector3d ShapeFeatures::GetPlaneShapeNormal(
     const Identity &_planeID) const
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_planeID);
@@ -311,8 +311,9 @@ Identity ShapeFeatures::AttachPlaneShape(
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
-      bn->createShapeNodeWith<dart::dynamics::CollisionAspect>(
-        plane, bn->getName() + ":" + _name);
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          plane, bn->getName() + ":" + _name);
 
   const std::size_t shapeID = this->AddShape({sn, _name});
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
