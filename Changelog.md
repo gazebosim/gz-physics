@@ -2,6 +2,8 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+### Ignition Physics 1.7.0 (2020-04-13)
+
 1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
     * [Pull request 130](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/130)
 
