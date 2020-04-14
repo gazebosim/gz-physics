@@ -30,7 +30,7 @@ namespace ignition
     SetRelativeTransform(const PoseType &_pose)
     {
       this->template Interface<SetFreeJointRelativeTransformFeature>()->
-          SetFreeJointTransform(this->identity, _pose);
+          SetFreeJointRelativeTransform(this->identity, _pose);
     }
   }
 }
