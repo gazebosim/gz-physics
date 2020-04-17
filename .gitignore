@@ -1,12 +1,7 @@
-# CMake /build folder #
-#######################
-build/*
+# CMake build folder
+build
 build_*
 
-# OS generated files #
-#######################
+# OS generated files
 .DS_Store
-
-# Packages #
-#######################
 *.swp
