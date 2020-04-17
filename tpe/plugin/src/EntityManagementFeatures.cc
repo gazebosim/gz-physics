@@ -265,20 +265,6 @@ Identity EntityManagementFeatures::GetShape(
     return this->GenerateIdentity(collisionId, collisionPtr);
   }
   return this->GenerateInvalidId();
-
-  // // assume _shapeIndex ~= collisionIndex
-  // auto shapeIt = collisions.begin();
-  // std::advance(shapeIt, _shapeIndex);
-  // auto linkIt = links.find(_linkID);
-  // if (shapeIt != collisions.end() && linkIt != links.end())
-  // {
-  //   std::size_t shapeID = shapeIt->first;
-  //   auto shape = linkIt->second->link->GetChildById(shapeID);
-  //   auto shapePtr = std::make_shared<tpelib::Entity>(shape);
-  //   return this->GenerateIdentity(shapeID, shapePtr);
-  // }
-  // return this->GenerateInvalidId();
-  ////// stopping point 
 }
 
 /////////////////////////////////////////////////
@@ -286,17 +272,14 @@ Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, const std::string &_shapeName) const
 {
   // assume shapeName ~= collisionName
-  auto linkIt = links.find(_linkID);
-  if (linkIt != links.end())
+  tpelib::Entity &shapeEnt = 
+    this->links.at(_linkID)->link->GetChildByName(_shapeName);
+  for (auto it = this->collisions.begin(); it != this->collisions.end(); ++it)
   {
-    auto shape = linkIt->second->link->GetChildByName(_shapeName);
-    for (auto it = collisions.begin(); it != collisions.end(); ++it)
+    if (it->first == shapeEnt.GetId() &&
+      it->second->collision->GetName() == shapeEnt.GetName())
     {
-      if (it->second->collision->GetName() == _shapeName &&
-        it->first == shape.GetId())
-      {
-        return this->GenerateIdentity(shape.GetId(), it->second);
-      }
+      return this->GenerateIdentity(it->first, it->second);
     }
   }
   return this->GenerateInvalidId();
@@ -307,11 +290,9 @@ const std::string &EntityManagementFeatures::GetShapeName(
   const Identity &_shapeID) const
 {
   // assume _shapeID ~= collisionID
-  static std::string name{""};
-  auto it = collisions.find(_shapeID);
-  if (it != collisions.end())
-    name = it->second->collision->GetName();
-  return name;
+  static std::string shapeName =
+    this->collisions.at(_shapeID)->collision->GetName();
+  return shapeName;
 }
 
 /////////////////////////////////////////////////
@@ -319,9 +300,9 @@ std::size_t EntityManagementFeatures::GetShapeIndex(
   const Identity &_shapeID) const
 {
   // assume _shapeID ~= collisionID
-  auto it = collisions.find(_shapeID);
-  if (it != collisions.end())
-    return std::distance(it, collisions.begin());
+  auto it = this->collisions.find(_shapeID);
+  if (it != this->collisions.end())
+    return std::distance(it, this->collisions.begin());
   return -1;
 }
 
@@ -330,27 +311,25 @@ Identity EntityManagementFeatures::GetLinkOfShape(
   const Identity &_shapeID) const
 {
   // assume _shapeID ~= collisionID
-  auto it = childIdToParentId.find(_shapeID);
-  auto linkIt = links.find(it->second);
-  if (it != childIdToParentId.end() && linkIt != links.end())
-    return this->GenerateIdentity(linkIt->first, linkIt->second);
-  return this->GenerateInvalidId();
+  std::size_t linkId = this->childIdToParentId.at(_shapeID);
+  return this->GenerateIdentity(linkId, this->links.at(linkId));
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByIndex(
   const Identity &_worldID, std::size_t _modelIndex)
 {
-  auto modelIt = this->models.begin();
-  std::advance(modelIt, _modelIndex);
-  auto worldIt = this->worlds.find(_worldID);
+  std::shared_ptr<tpelib::World> world = this->worlds.at(_worldID)->world;
 
-  if (modelIt != models.end() && worldIt != worlds.end())
+  auto it = this->models.begin();
+  std::advance(it, _modelIndex);
+
+  if (it != this->models.end())
   {
-    std::size_t modelId = modelIt->first;
-    models.erase(modelId);
+    std::size_t modelId = it->first;
+    this->models.erase(modelId);
     this->childIdToParentId.erase(modelId);
-    return worldIt->second->world->RemoveChildById(modelId);
+    return world->RemoveChildById(modelId);
   }
   return false;
 }
@@ -359,43 +338,28 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 bool EntityManagementFeatures::RemoveModelByName(
   const Identity &_worldID, const std::string &_modelName)
 {
-  auto worldIt = worlds.find(_worldID);
-  if (worldIt != worlds.end())
-  {
-    auto modelId = worldIt->second->world->GetChildByName(_modelName).GetId();
-    auto modelIt = this->models.find(modelId);
-    if (modelIt != this->models.end())
-    {
-      this->models.erase(modelId);
-      this->childIdToParentId.erase(modelId);
-      return worldIt->second->world->RemoveChildByName(_modelName);
-    }
-  }
-  return false;
+  std::shared_ptr<tpelib::World> world = this->worlds.at(_worldID)->world;
+  std::size_t modelId = world->GetChildByName(_modelName).GetId();
+  this->models.erase(modelId);
+  this->childIdToParentId.erase(modelId);
+  return world->RemoveChildById(modelId);
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
-  auto it = childIdToParentId.find(_modelID);
-  if (it != childIdToParentId.end())
-  {
-    auto worldIt = worlds.find(it->second);
-    if (worldIt != worlds.end())
-    {
-      this->models.erase(_modelID);
-      this->childIdToParentId.erase(_modelID);
-      return worldIt->second->world->RemoveChildById(_modelID);
-    }
-  }
-  return false;
+  // find world
+  std::size_t worldId = this->childIdToParentId.at(_modelID);
+  std::shared_ptr<tpelib::World> world = this->worlds.at(worldId)->world;
+  this->models.erase(_modelID);
+  this->childIdToParentId.erase(_modelID);
+  return world->RemoveChildById(_modelID);
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
-  auto it = models.find(_modelID);
-  return it == models.end();
+  return this->models.find(_modelID) == this->models.end();
 }
 
 /////////////////////////////////////////////////
