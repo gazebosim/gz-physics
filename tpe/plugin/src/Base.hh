@@ -98,6 +98,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     modelPtr->model = &_model;
     size_t modelId = _model.GetId();
     this->models.insert({modelId, modelPtr});
+    // keep track of model's corresponding world 
     this->childIdToParentId.insert({modelId, _worldId});
 
     return this->GenerateIdentity(modelId, modelPtr);
@@ -109,6 +110,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     linkPtr->link = &_link;
     size_t linkId = _link.GetId();
     this->links.insert({linkId, linkPtr});
+    // keep track of link's corresponding model
     this->childIdToParentId.insert({linkId, _modelId});
 
     return this->GenerateIdentity(linkId, linkPtr);
@@ -121,6 +123,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     collisionPtr->collision = &_collision;
     size_t collisionId = _collision.GetId();
     this->collisions.insert({collisionId, collisionPtr});
+    // keep track of collision's corresponding link
     this->childIdToParentId.insert({collisionId, _linkId});
 
     return this->GenerateIdentity(collisionId, collisionPtr);
