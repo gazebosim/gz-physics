@@ -161,6 +161,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   freeJoint->setSpatialVelocity(spatialVelocity,
           dart::dynamics::Frame::World(),
           dart::dynamics::Frame::World());
+  child->incrementVersion();
 }
 
 /////////////////////////////////////////////////
@@ -200,6 +201,7 @@ Identity JointFeatures::AttachFixedJoint(
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
@@ -282,6 +284,7 @@ Identity JointFeatures::AttachRevoluteJoint(
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
@@ -341,6 +344,7 @@ Identity JointFeatures::AttachPrismaticJoint(
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
