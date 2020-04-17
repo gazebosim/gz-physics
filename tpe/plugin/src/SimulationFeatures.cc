@@ -33,23 +33,25 @@ void SimulationFeatures::WorldForwardStep(
   auto it = this->worlds.find(_worldID);
   if (it == this->worlds.end())
   {
-    ignerr << "World with id [" << _worldID.id << "] not found."
+    ignerr << "World with id ["
+      << _worldID.id
+      << "] not found."
       << std::endl;
   }
-  auto worldPtr = it->second->world;
-  auto *dtDur =
+  std::shared_ptr<tpelib::World> world = it->second->world;
+  auto *dtDur = 
     _u.Query<std::chrono::steady_clock::duration>();
   const double tol = 1e-6;
   if (dtDur)
   {
     std::chrono::duration<double> dt = *dtDur;
-    if (std::fabs(dt.count() - worldPtr->GetTimeStep()) > tol)
+    if (std::fabs(dt.count() - world->GetTimeStep()) > tol)
     {
-      worldPtr->SetTimeStep(dt.count());
+      world->SetTimeStep(dt.count());
       igndbg << "Simulation timestep set to: "
-        << worldPtr->GetTimeStep()
+        << world->GetTimeStep()
         << std::endl;
     }
   }
-  worldPtr->Step();
+  world->Step();
 }
