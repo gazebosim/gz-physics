@@ -2,8 +2,8 @@
 
 **Maintainer:** scpeters AT openrobotics DOT org
 
-[![Bitbucket open issues](https://img.shields.io/bitbucket/issues-raw/ignitionrobotics/ign-physics.svg)](https://bitbucket.org/ignitionrobotics/ign-physics/issues)
-[![Bitbucket open pull requests](https://img.shields.io/bitbucket/pr-raw/ignitionrobotics/ign-physics.svg)](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests)
+[![GitHub open issues](https://img.shields.io/github/issues-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/issues)
+[![GitHub open pull requests](https://img.shields.io/github/issues-pr-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/pulls)
 [![Discourse topics](https://img.shields.io/discourse/https/community.gazebosim.org/topics.svg)](https://community.gazebosim.org)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -125,7 +125,7 @@ sudo update-alternatives --install \
 1. Clone the repository
 
     ```
-    hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics2
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
     ```
 
 2. Configure and build
@@ -142,7 +142,7 @@ sudo update-alternatives --install \
 
 # Usage
 
-Please refer to the [examples directory](https://bitbucket.org/ignitionrobotics/ign-physics/raw/default/examples/?at=default).
+Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/master/examples/).
 
 # Documentation
 
@@ -159,7 +159,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics2
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
     ```
 
 3. Configure and build the documentation.
@@ -218,12 +218,12 @@ ign-physics
 # Contributing
 
 Please see
-[CONTRIBUTING.md](https://bitbucket.org/ignitionrobotics/ign-gazebo/src/406665896aa40bb42f14cf61d48b3d94f2fc5dd8/CONTRIBUTING.md?at=default&fileviewer=file-view-default).
+[CONTRIBUTING.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CONTRIBUTING.md).
 
 # Code of Conduct
 
 Please see
-[CODE\_OF\_CONDUCT.md](https://bitbucket.org/ignitionrobotics/ign-gazebo/src/406665896aa40bb42f14cf61d48b3d94f2fc5dd8/CODE_OF_CONDUCT.md?at=default&fileviewer=file-view-default).
+[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CODE_OF_CONDUCT.md).
 
 # Versioning
 
@@ -231,4 +231,4 @@ This library uses [Semantic Versioning](https://semver.org/). Additionally, this
 
 # License
 
-This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://bitbucket.org/ignitionrobotics/ign-physics/src/default/LICENSE) file.
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/master/LICENSE) file.
