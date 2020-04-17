@@ -70,37 +70,48 @@ class Base : public Implements3d<FeatureList<Feature>>
 {
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
-    // tpesim does not have multiple "engines"
+    // initiate a world placeholder
+    this->worlds.insert(
+      {0u, std::make_shared<WorldInfo>()});
     return this->GenerateIdentity(0);
   }
 
   public: inline Identity AddWorld(std::shared_ptr<tpelib::World> _world)
   {
-    auto worldPtr = std::make_shared<WorldInfo>();
-    worldPtr->world = _world;
-    this->worlds.insert({_world->GetId(), worldPtr});
+    size_t worldId = _world->GetId();
+    auto it = this->worlds.find(worldId);
 
-    return this->GenerateIdentity(_world->GetId(), worldPtr);
+    // find the placeholder WorldInfo
+    if (it != this->worlds.end())
+    {
+      std::shared_ptr<WorldInfo> worldPtr = it->second;
+      // assign the new world object to placeholder WorldInfo
+      worldPtr->world = _world;
+      return this->GenerateIdentity(worldId, worldPtr);
+    }
+    return this->GenerateInvalidId();
   }
 
   public: inline Identity AddModel(std::size_t _worldId, tpelib::Model &_model)
   {
     auto modelPtr = std::make_shared<ModelInfo>();
     modelPtr->model = &_model;
-    this->models.insert({_model.GetId(), modelPtr});
-    this->childIdToParentId.insert({_model.GetId(), _worldId});
+    size_t modelId = _model.GetId();
+    this->models.insert({modelId, modelPtr});
+    this->childIdToParentId.insert({modelId, _worldId});
 
-    return this->GenerateIdentity(_model.GetId(), modelPtr);
+    return this->GenerateIdentity(modelId, modelPtr);
   }
 
   public: inline Identity AddLink(std::size_t _modelId, tpelib::Link &_link)
   {
     auto linkPtr = std::make_shared<LinkInfo>();
     linkPtr->link = &_link;
-    this->links.insert({_link.GetId(), linkPtr});
-    this->childIdToParentId.insert({_link.GetId(), _modelId});
+    size_t linkId = _link.GetId();
+    this->links.insert({linkId, linkPtr});
+    this->childIdToParentId.insert({linkId, _modelId});
 
-    return this->GenerateIdentity(_link.GetId(), linkPtr);
+    return this->GenerateIdentity(linkId, linkPtr);
   }
 
   public: inline Identity AddCollision(std::size_t _linkId,
@@ -108,10 +119,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     auto collisionPtr = std::make_shared<CollisionInfo>();
     collisionPtr->collision = &_collision;
-    this->collisions.insert({_collision.GetId(), collisionPtr});
-    this->childIdToParentId.insert({_collision.GetId(), _linkId});
+    size_t collisionId = _collision.GetId();
+    this->collisions.insert({collisionId, collisionPtr});
+    this->childIdToParentId.insert({collisionId, _linkId});
 
-    return this->GenerateIdentity(_collision.GetId(), collisionPtr);
+    return this->GenerateIdentity(collisionId, collisionPtr);
   }
 
   public: std::map<std::size_t, std::shared_ptr<WorldInfo>> worlds;

@@ -353,14 +353,15 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 bool EntityManagementFeatures::RemoveModelByIndex(
   const Identity &_worldID, std::size_t _modelIndex)
 {
-  auto modelIt = models.begin();
+  auto modelIt = this->models.begin();
   std::advance(modelIt, _modelIndex);
-  auto worldIt = worlds.find(_worldID);
+  auto worldIt = this->worlds.find(_worldID);
 
   if (modelIt != models.end() && worldIt != worlds.end())
   {
     std::size_t modelId = modelIt->first;
-    models.erase(modelIt);
+    models.erase(modelId);
+    this->childIdToParentId.erase(modelId);
     return worldIt->second->world->RemoveChildById(modelId);
   }
   return false;
@@ -374,10 +375,11 @@ bool EntityManagementFeatures::RemoveModelByName(
   if (worldIt != worlds.end())
   {
     auto modelId = worldIt->second->world->GetChildByName(_modelName).GetId();
-    auto it = models.find(modelId);
-    if (it != models.end())
+    auto modelIt = this->models.find(modelId);
+    if (modelIt != this->models.end())
     {
-      models.erase(it);
+      this->models.erase(modelId);
+      this->childIdToParentId.erase(modelId);
       return worldIt->second->world->RemoveChildByName(_modelName);
     }
   }
@@ -393,6 +395,8 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
     auto worldIt = worlds.find(it->second);
     if (worldIt != worlds.end())
     {
+      this->models.erase(_modelID);
+      this->childIdToParentId.erase(_modelID);
       return worldIt->second->world->RemoveChildById(_modelID);
     }
   }
@@ -419,16 +423,32 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 Identity EntityManagementFeatures::ConstructEmptyModel(
   const Identity &_worldID, const std::string &_name)
 {
-  auto model = std::make_shared<tpelib::Model>();
-  model->SetName(_name);
-  return this->AddModel(_worldID, *model.get());
+  auto it = this->worlds.find(_worldID);
+  if (it != this->worlds.end())
+  {
+    // add model to the corresponding world
+    std::shared_ptr<WorldInfo> worldPtr = it->second;
+    auto &modelEnt = worldPtr->world->AddModel();
+    modelEnt.SetName(_name);
+    tpelib::Model *model = static_cast<tpelib::Model *>(&modelEnt);
+    return this->AddModel(_worldID, *model);
+  }
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyLink(
   const Identity &_modelID, const std::string &_name)
 {
-  auto link = std::make_shared<tpelib::Link>();
-  link->SetName(_name);
-  return this->AddLink(_modelID, *link.get());
+  auto it = this->models.find(_modelID);
+  if (it != this->models.end())
+  {
+    // add link to the corresponding model
+    std::shared_ptr<ModelInfo> modelPtr = it->second;
+    auto &linkEnt = modelPtr->model->AddLink();
+    linkEnt.SetName(_name);
+    tpelib::Link *link = static_cast<tpelib::Link *>(&linkEnt);
+    return this->AddLink(_modelID, *link);
+  }
+  return this->GenerateInvalidId();
 }
