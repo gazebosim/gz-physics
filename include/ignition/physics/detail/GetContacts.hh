@@ -54,6 +54,12 @@ auto GetContactsFromLastStepFeature::World<
     //
     auto &contactOutput = output.emplace_back();
     contactOutput.template Get<ContactPoint>() = std::move(contactPoint);
+
+    auto* extraContactData = contact.extraData.template Query<ExtraContactData>();
+
+    if (extraContactData) {
+        contactOutput.template Get<ExtraContactData>() = std::move(*extraContactData);
+    }
   }
   return output;
 }
