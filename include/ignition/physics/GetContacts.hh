@@ -33,9 +33,12 @@ namespace physics
 class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
-  public: template <typename VectorType, typename Scalar>
+  public: template <typename PolicyT>
   struct ExtraContactDataT
   {
+     using Scalar = typename PolicyT::Scalar;
+     using VectorType = typename FromPolicy<PolicyT>::template Use<Vector>;
+
     /// \brief The contact force from body acting on the first body
     /// expressed in the world frame
     VectorType force;
@@ -53,7 +56,7 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
     public: using ShapePtrType = ShapePtr<PolicyT, FeaturesT>;
     public: using VectorType =
         typename FromPolicy<PolicyT>::template Use<Vector>;
-    public: using ExtraContactData = ExtraContactDataT<VectorType, Scalar>;
+    public: using ExtraContactData = ExtraContactDataT<PolicyT>;
 
     public: struct ContactPoint
     {
@@ -79,7 +82,7 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
     public: using Scalar = typename PolicyT::Scalar;
     public: using VectorType =
         typename FromPolicy<PolicyT>::template Use<Vector>;
-    public: using ExtraContactData = ExtraContactDataT<VectorType, Scalar>;
+    public: using ExtraContactData = ExtraContactDataT<PolicyT>;
 
     public: struct ContactInternal
     {
