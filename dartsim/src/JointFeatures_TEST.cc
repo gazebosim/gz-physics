@@ -513,7 +513,8 @@ TEST_F(JointFeaturesFixture, JointAttachDetachSpawnedModel)
   const auto poseParent = dartBody1->getTransform();
   const auto poseChild = dartBody2->getTransform();
 
-  // Commenting out the following `step` call makes this test fail
+  // Before ign-physics PR #31, uncommenting the following `step` call makes
+  // this test pass, but commenting it out makes it fail.
   // world->Step(output, state, input);
   auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
 
