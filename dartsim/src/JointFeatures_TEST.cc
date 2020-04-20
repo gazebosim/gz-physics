@@ -328,7 +328,7 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
   auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
 
   // AttachFixedJoint snaps the child body to the origin of the parent, so we
-  // set a transform ont he joint to keep the transform between the two bodies
+  // set a transform on the joint to keep the transform between the two bodies
   // the same as it was before they were attached
   fixedJoint->SetTransformFromParent(poseParentChild);
 
