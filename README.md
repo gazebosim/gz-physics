@@ -155,10 +155,6 @@ sudo update-alternatives --install \
     sudo make install
     ```
 
-# Usage
-
-Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/master/examples/).
-
 # Documentation
 
 API and tutorials can be found at [https://ignitionrobotics.org/libs/physics](https://ignitionrobotics.org/libs/physics).
