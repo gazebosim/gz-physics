@@ -2,47 +2,50 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+1. Add PlaneShape feature and implement in dartsim with test.
+    * [BitBucket pull request 66](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/66)
+
 ### Ignition Physics 1.7.0 (2020-04-13)
 
 1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
-    * [Pull request 130](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/130)
+    * [BitBucket pull request 130](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/130)
 
 ### Ignition Physics 1.6.0 (2020-03-18)
 
 1. Add Get Bounding Box features
-    * [Pull request 122](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/122)
+    * [BitBucket pull request 122](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/122)
 
 1. Install plugins to unversioned files
-    * [Pull request 121](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/121)
+    * [BitBucket pull request 121](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/121)
 
 ### Ignition Physics 1.5.0 (2020-02-10)
 
 1. Clean up internal resources when a model gets removed
-    * [Pull request 115](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/115)
+    * [BitBucket pull request 115](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/115)
 
 1. Add DetachJointFeature feature.
-    * [Pull request 102](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/102)
+    * [BitBucket pull request 102](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/102)
 
 ### Ignition Physics 1.4.0 (2019-08-27)
 
 1. Add SetJointVelocityCommand feature.
-    * [Pull request 100](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/100)
+    * [BitBucket pull request 100](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/100)
 
 1. Add `IGN_PROFILER_ENABLE` cmake option for enabling the ign-common profiler.
-    * [Pull request 96](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/96)
+    * [BitBucket pull request 96](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/96)
 
 ### Ignition Physics 1.3.1 (2019-07-19)
 
 1. Set the time step from ForwardStep::Input in dartsim.
-    * [Pull request 95](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/95)
+    * [BitBucket pull request 95](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/95)
 
 ### Ignition Physics 1.3.0 (2019-07-18)
 
 1. Support for more friction pyramid parameters in dartsim.
-    * [Pull request 94](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/94)
+    * [BitBucket pull request 94](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/94)
 
 1. Skip compilation of test plugins if `BUILD_TESTING` is false
-    * [Pull request 92](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/92)
+    * [BitBucket pull request 92](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/92)
 
 ### Ignition Physics 1.2.0 (2019-05-29)
 
@@ -51,34 +54,34 @@
 ### Ignition Physics 1.1.0 (2019-05-20)
 
 1. Simple port of existing PERFORMANCE test as BENCHMARK
-    * [Pull request 84](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/84)
+    * [BitBucket pull request 84](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/84)
 
 1. Add prototype of FreeGroup features
-    * [Pull request 85](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/85)
+    * [BitBucket pull request 85](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/85)
 
 1. Feature for adding external forces and torques to a link
-    * [Pull request 79](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/79)
+    * [BitBucket pull request 79](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/79)
 
 1. Assign friction coefficients from collision elements
-    * [Pull request 80](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/80)
+    * [BitBucket pull request 80](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/80)
 
 1. Added axis-aligned bounding box feature
-    * [Pull request 68](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/68)
-    * [Pull request 69](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/69)
-    * [Pull request 71](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/71)
-    * [Pull request 78](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/78)
+    * [BitBucket pull request 68](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/68)
+    * [BitBucket pull request 69](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/69)
+    * [BitBucket pull request 71](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/71)
+    * [BitBucket pull request 78](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/78)
 
 1. Add introduction and installation tutorials
-    * [Pull request 76](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/76)
-    * [Pull request 77](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/77)
+    * [BitBucket pull request 76](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/76)
+    * [BitBucket pull request 77](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/77)
 
 1. Remove workaround for console\_bridge linking on macOS
-    * [Pull request 75](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/75)
+    * [BitBucket pull request 75](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/75)
 
 ### Ignition Physics 1.0.1 (2019-03-05)
 
 1. Don't link core to ignition-common3, just the test plugin that uses it
-    * [Pull request 74](https://bitbucket.org/ignitionrobotics/ign-physics/pull-requests/74)
+    * [BitBucket pull request 74](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/74)
 
 ### Ignition Physics 1.0.0 (2019-03-01)
 
