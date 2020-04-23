@@ -161,6 +161,9 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   freeJoint->setSpatialVelocity(spatialVelocity,
           dart::dynamics::Frame::World(),
           dart::dynamics::Frame::World());
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  child->incrementVersion();
 }
 
 /////////////////////////////////////////////////
@@ -200,6 +203,9 @@ Identity JointFeatures::AttachFixedJoint(
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
@@ -282,6 +288,9 @@ Identity JointFeatures::AttachRevoluteJoint(
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
@@ -341,6 +350,9 @@ Identity JointFeatures::AttachPrismaticJoint(
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
