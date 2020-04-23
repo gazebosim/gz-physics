@@ -18,7 +18,9 @@
 #ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
 #define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
 
+#include <vector>
 #include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/GetContacts.hh>
 
 #include "Base.hh"
 
@@ -27,7 +29,8 @@ namespace physics {
 namespace tpeplugin {
 
 struct SimulationFeatureList : FeatureList<
-  ForwardStep
+  ForwardStep,
+  GetContactsFromLastStepFeature
 > { };
 
 class SimulationFeatures :
@@ -39,6 +42,9 @@ class SimulationFeatures :
     ForwardStep::Output &_h,
     ForwardStep::State &_x,
     const ForwardStep::Input &_u) override;
+
+  public: std::vector<ContactInternal> GetContactsFromLastStep(
+    const Identity &_worldID) const override;
 };
 
 }

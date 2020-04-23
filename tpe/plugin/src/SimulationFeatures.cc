@@ -55,3 +55,11 @@ void SimulationFeatures::WorldForwardStep(
   }
   world->Step();
 }
+
+std::vector<SimulationFeatures::ContactInternal>
+SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
+{
+  std::vector<SimulationFeatures::ContactInternal> outContacts;
+  std::shared_ptr<tpelib::World> world = this->worlds.at(_worldID)->world;
+  return outContacts;
+}
