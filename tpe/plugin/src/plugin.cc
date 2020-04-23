@@ -41,7 +41,7 @@ struct TpesimFeatures : FeatureList<
 > { };
 
 class Plugin :
-  public virtual Implements3d<TpesimFeatures>,
+  public virtual Implements3d<TpePluginFeatures>,
   public virtual Base,
   public virtual CustomFeatures,
   public virtual EntityManagementFeatures,
@@ -51,7 +51,7 @@ class Plugin :
   public virtual ShapeFeatures,
   public virtual SimulationFeatures { };
 
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpesimFeatures)
+IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpePluginFeatures)
 
 }
 }

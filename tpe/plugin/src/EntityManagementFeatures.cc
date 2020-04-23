@@ -129,7 +129,7 @@ Identity EntityManagementFeatures::GetModel(
 {
   tpelib::Entity &modelEnt =
     this->worlds.at(_worldID)->world->GetChildByName(_modelName);
-  
+
   for (auto it = this->models.begin(); it != this->models.end(); ++it)
   {
     if (it->first == modelEnt.GetId() &&

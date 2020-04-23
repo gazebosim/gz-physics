@@ -27,10 +27,22 @@ using namespace tpeplugin;
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const FrameID &_id) const
 {
-  igndbg << "FrameData with id ["
-    << _id.ID()
-    << "] is not used in TPE."
-    << std::endl;
   FrameData3d data;
+
+  // The feature system should never send us the world ID.
+  if (_id.IsWorld())
+  {
+    ignerr << "Given a FrameID belonging to the world. This should not be "
+           << "possible! Please report this bug!\n";
+    assert(false);
+    return data;
+  }
+
+  tpelib::Model *model = this->models.at(_id.ID)->model;
+
+  data.pose = model->GetPose();
+  data.linearVelocity = model->GetLinearVelocity();
+  data.angularVelocity = model->GetAngularVelocity();
+
   return data;
 }
