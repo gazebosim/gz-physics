@@ -30,7 +30,7 @@ namespace ignition {
 namespace physics {
 namespace tpeplugin {
 
-struct TpesimFeatures : FeatureList<
+struct TpePluginFeatures : FeatureList<
   CustomFeatureList,
   EntityManagementFeatureList,
   FreeGroupFeatureList,

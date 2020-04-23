@@ -16,6 +16,7 @@
 */
 
 #include <ignition/common/Console.hh>
+#include <ignition/math/eigen3/Conversions.hh>
 
 #include "KinematicsFeatures.hh"
 
@@ -38,11 +39,12 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
 
-  tpelib::Model *model = this->models.at(_id.ID)->model;
+  std::size_t modelId = this->childIdToParentId.at(_id.ID());
+  tpelib::Model *model = this->models.at(modelId)->model;
 
-  data.pose = model->GetPose();
-  data.linearVelocity = model->GetLinearVelocity();
-  data.angularVelocity = model->GetAngularVelocity();
+  data.pose = math::eigen3::convert(model->GetPose());
+  data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
+  data.angularVelocity = math::eigen3::convert(model->GetAngularVelocity());
 
   return data;
 }
