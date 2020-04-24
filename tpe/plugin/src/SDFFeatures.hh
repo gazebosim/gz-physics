@@ -69,7 +69,7 @@ class SDFFeatures :
 
   private: Identity ConstructSdfCollision(
     const Identity &_linkID,
-    const ::sdf::Collision &_collision);
+    const ::sdf::Collision &_collision) override;
 
   private: Identity ConstructSdfCollision(
     const Identity &_linkID,
