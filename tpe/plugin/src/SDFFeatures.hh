@@ -26,6 +26,7 @@
 
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructVisual.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
@@ -41,6 +42,7 @@ using SDFFeatureList = FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
   sdf::ConstructSdfLink,
+  sdf::ConstructSdfCollision,
   sdf::ConstructSdfVisual
 >;
 
@@ -67,8 +69,12 @@ class SDFFeatures :
 
   private: Identity ConstructSdfCollision(
     const Identity &_linkID,
+    const ::sdf::Collision &_collision);
+
+  private: Identity ConstructSdfCollision(
+    const Identity &_linkID,
     const ::sdf::Collision &_collision,
-    const ignition::common::Mesh *_mesh = nullptr);
+    const ignition::common::Mesh *_mesh);
 };
 
 }

@@ -96,8 +96,7 @@ Identity SDFFeatures::ConstructSdfLink(
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfCollision(
     const Identity &_linkID,
-    const ::sdf::Collision &_sdfCollision,
-    const common::Mesh *_mesh)
+    const ::sdf::Collision &_sdfCollision)
 {
   // Read sdf params
   const std::string name = _sdfCollision.Name();
@@ -132,7 +131,28 @@ Identity SDFFeatures::ConstructSdfCollision(
     shape.SetRadius(sphereSdf->Radius());
     collision->SetShape(shape);
   }
-  else if (geom->Type() == ::sdf::GeometryType::MESH)
+  const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
+  return collisionIdentity;
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfCollision(
+    const Identity &_linkID,
+    const ::sdf::Collision &_sdfCollision,
+    const common::Mesh *_mesh)
+{
+  // Read sdf params
+  const std::string name = _sdfCollision.Name();
+  std::cerr << "construct collision " << name << std::endl;
+  const auto pose = _sdfCollision.RawPose();
+  const auto geom = _sdfCollision.Geom();
+
+  auto link = this->links.at(_linkID)->link;
+  tpelib::Entity &ent = link->AddCollision();
+  tpelib::Collision *collision = static_cast<tpelib::Collision *>(&ent);
+  collision->SetName(name);
+  collision->SetPose(pose);
+  if (geom->Type() == ::sdf::GeometryType::MESH)
   {
     // \todo(anyone) the code here assumes that the mesh is loaded externally
     // and passed in as argument as there is no logic for searching resources
@@ -151,6 +171,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 
   const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
   return collisionIdentity;
+}
 
 /*/////////////////////////////////////////////////
 Identity SDFFeatures::BuildSdfLink(
@@ -202,4 +223,3 @@ Identity SDFFeatures::BuildSdfLink(
   return linkIdentity;
 }
 */
-}
