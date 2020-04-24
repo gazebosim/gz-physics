@@ -42,9 +42,10 @@ set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-$
 if (WIN32)
   # create_symlink requires cmake 3.13 on windows
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+  file(COPY ${versioned} DESTINATION ${unversioned})
+else()
+  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
 endif()
-
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
 INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 
 ign_build_tests(
