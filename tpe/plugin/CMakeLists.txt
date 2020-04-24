@@ -42,7 +42,8 @@ set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-$
 if (WIN32)
   # create_symlink requires cmake 3.13 on windows
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-  file(COPY ${versioned} DESTINATION ${unversioned})
+  # make a copy of file to pass windows CI
+  configure_file(${versioned} ${unversioned} COPYONLY)
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
 endif()
