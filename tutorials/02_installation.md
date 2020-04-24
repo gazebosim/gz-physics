@@ -42,9 +42,9 @@ sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-
 sudo apt-get build-dep -y ignition-physics2
 ```
 
-Clone the ign-physics repository from bitbucket
+Clone the ign-physics repository from GitHub
 ```{.sh}
-hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics2
+git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
 ```
 
 Then build using CMake
@@ -90,9 +90,9 @@ brew tap osrf/simulation
 brew install ignition-physics2 --only-dependencies
 ```
 
-Clone the ign-physics repository from bitbucket
+Clone the ign-physics repository from GitHub
 ```{.sh}
-hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics2
+git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
 ```
 
 Then build using CMake
