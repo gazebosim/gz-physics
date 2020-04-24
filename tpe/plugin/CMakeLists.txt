@@ -39,16 +39,14 @@ install(TARGETS ${tpe_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
 set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(unversioned_folder ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name})
 if (WIN32)
-  # create_symlink requires cmake 3.13 on windows
-  cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-  # make a copy of file to pass windows CI
-  file(COPY (${versioned} ${unversioned_folder})
+  INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
+      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned} 
+      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
+  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
-INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 
 ign_build_tests(
   TYPE UNIT_tpe
