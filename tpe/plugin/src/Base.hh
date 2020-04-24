@@ -70,26 +70,16 @@ class Base : public Implements3d<FeatureList<Feature>>
 {
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
-    // initiate a world placeholder
-    this->worlds.insert(
-      {0u, std::make_shared<WorldInfo>()});
     return this->GenerateIdentity(0);
   }
 
   public: inline Identity AddWorld(std::shared_ptr<tpelib::World> _world)
   {
     size_t worldId = _world->GetId();
-    auto it = this->worlds.find(worldId);
-
-    // find the placeholder WorldInfo
-    if (it != this->worlds.end())
-    {
-      std::shared_ptr<WorldInfo> worldPtr = it->second;
-      // assign the new world object to placeholder WorldInfo
-      worldPtr->world = _world;
-      return this->GenerateIdentity(worldId, worldPtr);
-    }
-    return this->GenerateInvalidId();
+    auto worldPtr = std::make_shared<WorldInfo>();
+    worldPtr->world = _world;
+    this->worlds.insert({worldId, worldPtr});
+    return this->GenerateIdentity(worldId, worldPtr);
   }
 
   public: inline Identity AddModel(std::size_t _worldId, tpelib::Model &_model)

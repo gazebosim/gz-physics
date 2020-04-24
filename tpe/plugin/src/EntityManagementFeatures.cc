@@ -74,8 +74,12 @@ Identity EntityManagementFeatures::GetWorld(
 const std::string &EntityManagementFeatures::GetWorldName(
   const Identity &_worldID) const
 {
-  static std::string worldName =
-    this->worlds.at(_worldID)->world->GetName();
+  static std::string worldName {};
+  auto it = this->worlds.find(_worldID);
+  if (it != this->worlds.end())
+  {
+    worldName = it->second->world->GetName();
+  }
   return worldName;
 }
 
@@ -107,15 +111,15 @@ std::size_t EntityManagementFeatures::GetModelCount(
 Identity EntityManagementFeatures::GetModel(
   const Identity &_worldID, const std::size_t _modelIndex) const
 {
-  std::shared_ptr<tpelib::World> world = this->worlds.at(_worldID)->world;
+  auto it = this->worlds.find(_worldID);
 
   auto modelIt = this->models.begin();
   std::advance(modelIt, _modelIndex);
 
-  if (modelIt != this->models.end())
+  if (modelIt != this->models.end() && it != this->worlds.end())
   {
     std::size_t modelId = modelIt->first;
-    tpelib::Entity &modelEnt = world->GetChildById(modelId);
+    tpelib::Entity &modelEnt = it->second->world->GetChildById(modelId);
     auto modelPtr = std::make_shared<ModelInfo>();
     modelPtr->model = static_cast<tpelib::Model *>(&modelEnt);
     return this->GenerateIdentity(modelId, modelPtr);

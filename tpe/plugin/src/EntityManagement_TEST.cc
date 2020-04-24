@@ -19,21 +19,15 @@
 
 #include <ignition/plugin/Loader.hh>
 
-#include <ignition/common/MeshManager.hh>
-
-#include <ignition/math/eigen3/Conversions.hh>
-
 #include <ignition/physics/RequestEngine.hh>
 
 #include "EntityManagementFeatures.hh"
-#include "ShapeFeatures.hh"
 
 struct TestFeatureList : ignition::physics::FeatureList<
-  ignition::physics::tpeplugin::EntityManagementFeatureList,
-  ignition::physics::tpeplugin::ShapeFeatureList
+  ignition::physics::tpeplugin::EntityManagementFeatureList
 > { };
 
-TEST(EntityManagement_TEST, GetEntities)
+TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   ignition::plugin::Loader loader;
   loader.LoadLib(tpe_plugin_LIB);
@@ -74,7 +68,7 @@ TEST(EntityManagement_TEST, RemoveEntities)
     loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
   auto engine =
-    ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("empty world");
@@ -91,8 +85,8 @@ TEST(EntityManagement_TEST, RemoveEntities)
   EXPECT_EQ(nullptr, world->GetModel("empty model"));
   EXPECT_EQ(0ul, world->GetModelCount());
 
-  // why is it expected to be eq? Isn't model removed? 
-  // EXPECT_EQ("empty_model", model->GetName());
+  // Why calling GetName shouldn't throw (from dartsim) 
+  // EXPECT_EQ("empty model", model->GetName());
 
   auto model2 = world->ConstructEmptyModel("model2");
   ASSERT_NE(nullptr, model2);
