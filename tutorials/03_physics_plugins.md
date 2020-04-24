@@ -108,12 +108,10 @@ Entities are arranged in top-down hierarchical order.
 
 #### Feature Comparison
 
-The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
+The following is a table of implemented `Features` of Dartsim, TPE-Plugin and Bullet.
 
 | Features | Dartsim | TPE-Plugin | Bullet |
 |:-:|:-:|:-:|:-:|
-| Base | ✓ | ✓ | ✓ |
-| RetrieveWorld | ✓  | ✓ | ✕ |
 | GetEntities | ✓ | ✓ (no joint in TPE) |  ✓|
 | RemoveEntities | ✓ | ✓ | ✓ |
 | ConstructEmptyWorldFeature | ✓ | ✓ | ✓ |
