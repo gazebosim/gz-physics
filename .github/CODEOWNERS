@@ -1,7 +1,7 @@
 # More info:
 # https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
-dartsim/*             @mxgrey
+*                     @mxgrey
 include/*             @scpeters
 tpe/*                 @claireyywang
 tutorials/*           @maryaB-osr
