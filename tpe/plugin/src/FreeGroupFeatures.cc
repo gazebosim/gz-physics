@@ -20,6 +20,7 @@
 #include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Pose3.hh>
 
+#include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
 
 using namespace ignition;
@@ -56,7 +57,18 @@ Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
   const Identity &_groupID) const
 {
   // assume no canonical link for now
-  return _groupID;
+  // assume groupID ~= modelID
+
+  const auto model_it = this->models.find(_groupID);
+  if (model_it != this->models.end())
+  {
+    // assume canonical link is the first link in model
+    tpelib::Entity &link = model_it->second->model->GetCanonicalLink();
+    auto linkPtr = std::make_shared<LinkInfo>();
+    linkPtr->link = static_cast<tpelib::Link *>(&link);
+    return this->GenerateIdentity(link.GetId(), linkPtr); 
+  }
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
