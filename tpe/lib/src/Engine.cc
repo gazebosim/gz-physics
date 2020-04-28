@@ -33,10 +33,9 @@ Engine::Engine()
 /////////////////////////////////////////////////
 Entity &Engine::AddWorld()
 {
-  World world;
-  std::size_t worldId = world.GetId();
-  const auto [it, success] = this->worlds.insert({worldId, world});
-  return it->second;
+  auto world = std::make_shared<World>();
+  const auto [it, success] = this->worlds.insert({world->GetId(), world});
+  return *it->second;
 }
 
 /////////////////////////////////////////////////
@@ -46,7 +45,7 @@ std::size_t Engine::GetWorldCount() const
 }
 
 /////////////////////////////////////////////////
-std::map<std::size_t, Entity> Engine::GetWorlds() const
+std::map<std::size_t, std::shared_ptr<Entity>> Engine::GetWorlds() const
 {
   return this->worlds;
 }
@@ -57,7 +56,7 @@ Entity &Engine::GetWorldById(std::size_t _worldId)
   auto it = this->worlds.find(_worldId);
   if (it != this->worlds.end())
   {
-    return it->second;
+    return *it->second;
   }
   return Entity::kNullEntity;
 }
