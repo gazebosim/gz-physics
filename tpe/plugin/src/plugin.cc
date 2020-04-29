@@ -18,17 +18,20 @@
 #include <ignition/physics/Register.hh>
 
 #include "Base.hh"
+#include "EntityManagementFeatures.hh"
 
 namespace ignition {
 namespace physics {
 namespace tpeplugin {
 
 struct TpePluginFeatures : FeatureList<
+  EntityManagementFeatureList
 > { };
 
 class Plugin :
   public virtual Implements3d<TpePluginFeatures>,
-  public virtual Base { };
+  public virtual Base,
+  public virtual EntityManagementFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpePluginFeatures)
 
