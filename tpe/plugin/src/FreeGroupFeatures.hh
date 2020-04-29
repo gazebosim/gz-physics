@@ -43,14 +43,7 @@ class FreeGroupFeatures :
 
   Identity GetFreeGroupCanonicalLink(const Identity &_groupID) const override;
 
-  // used for CanonicalLink
-  /*
-  struct FreeGroupInfo
-  {
-    tpe::Model *model;
-    tpe::Link *link;
-  };
-  */
+  FreeGroupInfo GetCanonicalInfo(const Identity &_groupID) const;
 
   void SetFreeGroupWorldPose(
     const Identity &_groupID,

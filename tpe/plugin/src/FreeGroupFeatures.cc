@@ -58,7 +58,6 @@ Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
 {
   // assume no canonical link for now
   // assume groupID ~= modelID
-
   const auto model_it = this->models.find(_groupID);
   if (model_it != this->models.end())
   {
