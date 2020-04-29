@@ -37,6 +37,7 @@ TEST(Shape, BoxShape)
 
   math::Vector3d size(1.2, 3.6, 5.8);
   shape.SetSize(size);
+  EXPECT_EQ(size, shape.GetSize());
   math::AxisAlignedBox bbox = shape.GetBoundingBox();
   EXPECT_EQ(math::Vector3d::Zero, bbox.Center());
   EXPECT_EQ(size, bbox.Size());
