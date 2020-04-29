@@ -47,14 +47,6 @@ Entity &Model::AddLink()
 }
 
 //////////////////////////////////////////////////
-Entity &Model::GetCanonicalLink()
-{
-  // return first link as canonical link
-  return *this->GetChildren().begin()->second;
-}
-
-
-//////////////////////////////////////////////////
 void Model::SetLinearVelocity(const math::Vector3d _velocity)
 {
   this->linearVelocity = _velocity;

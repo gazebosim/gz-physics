@@ -85,12 +85,6 @@ void BoxShape::SetSize(const math::Vector3d &_size)
 }
 
 //////////////////////////////////////////////////
-math::Vector3d BoxShape::GetSize()
-{
-  return this->size;
-}
-
-//////////////////////////////////////////////////
 void BoxShape::UpdateBoundingBox()
 {
   math::Vector3d halfSize = this->size * 0.5;
