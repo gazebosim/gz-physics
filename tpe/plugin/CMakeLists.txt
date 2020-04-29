@@ -68,5 +68,3 @@ foreach(test ${tests})
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 
 endforeach()
-
-
