@@ -22,7 +22,7 @@ The interface is made possible through the \ref ignition::plugin "Ignition Plugi
 This "user side interface" makes the Ignition Physics library "callable" from other Ignition libraries.
 
 The implementation side interface handles specific implementations of each `Feature`.
-Depending on what external physics engine we are using (DART, TPE, Bullet etc.), the interface might be different.
+Depending on what external physics engine we are using (DART, TPE etc.), the interface might be different.
 This interface is more internal facing, i.e. used mostly inside the Ignition Physics library.
 
 The implementation of the physics plugin revolves around four key elements.
@@ -54,7 +54,7 @@ The implementation of the physics plugin revolves around four key elements.
 
 ### FeatureList Definitions
 
-This list of `FeatureLists` is specific to the implementation of `Dartsim`, `TPE-plugin` and `Bullet`.
+This list of `FeatureLists` is specific to the implementation of `Dartsim` and `TPE-plugin`.
 Users do not need to organize their own plugin implementations this way.
 
 | Name  | Definition  |
@@ -70,7 +70,7 @@ Users do not need to organize their own plugin implementations this way.
 | ShapeFeatures  | retrieves `Shape` related properties like `BoundingBox`, `ShapeSize` etc. |
 | SimulationFeatures  | updates `World` and everything within by defined stepsize |
 
-### Dart vs. TPE vs. Bullet
+### Dart vs. TPE
 
 <!-- TODO: add Bullet once it's supported -->
 <!-- ### Bullet -->
@@ -84,10 +84,6 @@ It supports higher-order fleet dynamics without real physics (eg. gravity, force
 Ignition support for TPE targets [Citadel](https://ignitionrobotics.org/docs/citadel) and onward releases.
 The source code for TPE plugin can be found in [Ignition Physics repository](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2) under `tpe/plugin` directory
 
-Bullet ([Bullet Real-Time Physics Simulation](https://github.com/bulletphysics/bullet3)) is a physics engine that simulates collision detection, soft and rigid body dynamics.
-Ignition support for Bullet targets [Blueprint](https://ignitionrobotics.org/docs/blueprint) and onward releases.
-The source code for bullet plugin can be found in [Ignition Physics repository](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics1) under `bullet` directory.
-
 The following is a list of features supported by each physics engine to help users select one that fits their needs.
 
 #### Entity Comparison
@@ -95,67 +91,67 @@ The following is a list of features supported by each physics engine to help use
 The following is a table of `Entity` names used in Ignition Physics plugin interface, Dart and TPE.
 Entities are arranged in top-down hierarchical order.
 
-| Physics Plugin | Dart  | TPE  | Bullet |
-|:-:|:-:|:-:|:-:|
-| Engine  | Engine  | Engine  | Engine |
-| World  | World  | World  | MultiBodyDynamicsWorld |
-| Frame  | Frame  | N/A  | N/A |
-| Model  | Skeleton  | Model | MultiBody |
-| Joint  | Joint  | N/A | MultiBodyJoint |
-| Link  | BodyNode  | Link | Scalar |
-| Shape  | Shape  | Collision | CollisionShape |
-| Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder/Mesh etc. | Box/TriangleMesh/Convex etc. |
+| Physics Plugin | Dart  | TPE |
+|:-:|:-:|:-:|
+| Engine  | Engine  | Engine  |
+| World  | World  | World  |
+| Frame  | Frame  | N/A  |
+| Model  | Skeleton  | Model |
+| Joint  | Joint  | N/A |
+| Link  | BodyNode  | Link |
+| Shape  | Shape  | Collision |
+| Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder/Mesh etc. |
 
 #### Feature Comparison
 
-The following is a table of implemented `Features` of Dartsim, TPE-Plugin and Bullet.
+The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
 
-| Features | Dartsim | TPE-Plugin | Bullet |
-|:-:|:-:|:-:|:-:|
-| GetEntities | ✓ | ✓ (no joint in TPE) |  ✓|
-| RemoveEntities | ✓ | ✓ | ✓ |
-| ConstructEmptyWorldFeature | ✓ | ✓ | ✓ |
-| ConstructEmptyModelFeature | ✓ | ✓ | ✕ |
-| ConstructEmptyLinkFeature | ✓ | ✓ | ✕ |
-| CollisionFilterMaskFeature | ✓ | ✕ | ✕ |
-| FindFreeGroupFeature | ✓ | ✓ | ✓ |
-| SetFreeGroupWorldPose | ✓ | ✓ | ✓ |
-| SetFreeGroupWorldVelocity | ✓ | ✓ | ✕ |
-| GetBasicJointState | ✓ | ✕ | ✓ |
-| SetBasicJointState | ✓ | ✕ | ✓ |
-| GetBasicJointProperties | ✓ | ✕ | ✓ |
-| SetJointTransformFromParentFeature | ✓ | ✕ | ✕ |
-| SetJointTransformToChildFeature |✓  | ✕ | ✕ |
-| DetachJointFeature | ✓ | ✕ | ✕ |
-| SetFreeJointRelativeTransformFeature | ✓ | ✕ | ✕ |
-| AttachFixedJointFeature | ✓ | ✕ | ✕ |
-| SetRevoluteJointProperties | ✓ | ✕ | ✕ |
-| GetRevoluteJointProperties | ✓ | ✕ | ✕ |
-| AttachRevoluteJointFeature | ✓ | ✕ | ✕ |
-| SetPrismaticJointProperties | ✓ | ✕ | ✕ |
-| GetPrismaticJointProperties | ✓ | ✕ | ✕ |
-| AttachPrismaticJointFeature | ✓ | ✕ | ✕ |
-| SetJointVelocityCommandFeature | ✓ | ✕ | ✕ |
-| LinkFrameSemantics | ✓ | ✕ | ✓ |
-| ShapeFrameSemantics | ✓ | ✓ | ✕ |
-| FreeGroupFrameSemantics | ✓ | ✕ | ✓ |
-| AddLinkExternalForceTorque | ✓ | ✕ | ✓ |
-| sdf::ConstructSdfWorld | ✓ | ✓ | ✓ |
-| sdf::ConstructSdfModel | ✓ | ✓ | ✓ |
-| sdf::ConstructSdfLink | ✓ | ✓ | ✓ |
-| sdf::ConstructSdfJoint | ✓ | ✕ | ✓ |
-| sdf::ConstructSdfCollision | ✓ | ✕ | ✓ |
-| sdf::ConstructSdfVisual | ✓ | ✓ | ✕ |
-| GetShapeKinematicProperties | ✓ | ✓ | ✕ |
-| SetShapeKinematicProperties | ✓ | ✕ | ✕ |
-| GetShapeBoundingBox | ✓ | ✓ | ✕ |
-| GetBoxShapeProperties | ✓ | ✓ | ✕ |
-| AttachBoxShapeFeature | ✓ | ✓ | ✕ |
-| GetCylinderShapeProperties | ✓ | ✓ | ✕ |
-| AttachCylinderShapeFeature | ✓ | ✓ | ✕ |
-| GetSphereShapeProperties | ✓ | ✓ | ✕ |
-| AttachSphereShapeFeature | ✓ | ✓ | ✕ |
-| mesh::GetMeshShapeProperties | ✓ | ✓ | ✕ |
-| mesh::AttachMeshShapeFeature | ✓ | ✓ | ✕ |
+| Features | Dartsim | TPE-Plugin |
+|:-:|:-:|:-:|
+| GetEntities | ✓ | ✓ (no joint in TPE) |
+| RemoveEntities | ✓ | ✓ |
+| ConstructEmptyWorldFeature | ✓ | ✓ |
+| ConstructEmptyModelFeature | ✓ | ✓ |
+| ConstructEmptyLinkFeature | ✓ | ✓ |
+| CollisionFilterMaskFeature | ✓ | ✕ |
+| FindFreeGroupFeature | ✓ | ✓ |
+| SetFreeGroupWorldPose | ✓ | ✓ |
+| SetFreeGroupWorldVelocity | ✓ | ✓ |
+| GetBasicJointState | ✓ | ✕ |
+| SetBasicJointState | ✓ | ✕ |
+| GetBasicJointProperties | ✓ | ✕ |
+| SetJointTransformFromParentFeature | ✓ | ✕ |
+| SetJointTransformToChildFeature |✓  | ✕ |
+| DetachJointFeature | ✓ | ✕ |
+| SetFreeJointRelativeTransformFeature | ✓ | ✕ |
+| AttachFixedJointFeature | ✓ | ✕ |
+| SetRevoluteJointProperties | ✓ | ✕ |
+| GetRevoluteJointProperties | ✓ | ✕ |
+| AttachRevoluteJointFeature | ✓ | ✕ |
+| SetPrismaticJointProperties | ✓ | ✕ |
+| GetPrismaticJointProperties | ✓ | ✕ |
+| AttachPrismaticJointFeature | ✓ | ✕ |
+| SetJointVelocityCommandFeature | ✓ | ✕ |
+| LinkFrameSemantics | ✓ | ✕ |
+| ShapeFrameSemantics | ✓ | ✓ |
+| FreeGroupFrameSemantics | ✓ | ✕ |
+| AddLinkExternalForceTorque | ✓ | ✕ |
+| sdf::ConstructSdfWorld | ✓ | ✓ |
+| sdf::ConstructSdfModel | ✓ | ✓ |
+| sdf::ConstructSdfLink | ✓ | ✓ |
+| sdf::ConstructSdfJoint | ✓ | ✕ |
+| sdf::ConstructSdfCollision | ✓ | ✕ |
+| sdf::ConstructSdfVisual | ✓ | ✓ |
+| GetShapeKinematicProperties | ✓ | ✓ |
+| SetShapeKinematicProperties | ✓ | ✕ |
+| GetShapeBoundingBox | ✓ | ✓ |
+| GetBoxShapeProperties | ✓ | ✓ |
+| AttachBoxShapeFeature | ✓ | ✓ |
+| GetCylinderShapeProperties | ✓ | ✓ |
+| AttachCylinderShapeFeature | ✓ | ✓ |
+| GetSphereShapeProperties | ✓ | ✓ |
+| AttachSphereShapeFeature | ✓ | ✓ |
+| mesh::GetMeshShapeProperties | ✓ | ✓ |
+| mesh::AttachMeshShapeFeature | ✓ | ✓ |
 | ForwardStep | ✓ | ✓ | ✓ |
-| GetContactsFromLastStepFeature | ✓ | ✕ | ✓ |
+| GetContactsFromLastStepFeature | ✓ | ✕ |
