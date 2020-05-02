@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/bb/ignitionrobotics/ign-physics/branch/default/graph/badge.svg)](https://codecov.io/bb/ignitionrobotics/ign-physics)
-Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-default-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-default-bionic-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-default-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-default-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/master/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
+Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-bionic-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Ignition Physics, a component of [Ignition
