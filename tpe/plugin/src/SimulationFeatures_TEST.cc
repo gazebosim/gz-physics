@@ -96,7 +96,7 @@ TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
   if (library.empty())
     return;
 
-  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/test.world");
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/falling.world");
 
   for (const auto &world : worlds)
   {
