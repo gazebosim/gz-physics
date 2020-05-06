@@ -30,10 +30,10 @@ Identity ShapeFeatures::CastToBoxShape(const Identity &_shapeID) const
 {
   // dart::_shapeID = tpelib::_collisionID
   auto it = this->collisions.find(_shapeID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto shape = it->second->collision->GetShape();
-    if (dynamic_cast<tpelib::BoxShape*>(shape))
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::BoxShape*>(shape))
       return this->GenerateIdentity(_shapeID, it->second);
   }
   return this->GenerateInvalidId();
@@ -45,12 +45,16 @@ LinearVector3d ShapeFeatures::GetBoxShapeSize(
 {
   // _boxID ~= _collisionID
   auto it = this->collisions.find(_boxID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    tpelib::BoxShape *box = static_cast<tpelib::BoxShape*>(
-      it->second->collision->GetShape());
-    return math::eigen3::convert(box->GetSize());
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      tpelib::BoxShape *box = static_cast<tpelib::BoxShape*>(shape);
+      return math::eigen3::convert(box->GetSize());
+    }
   }
+  // return invalid box shape size if no collision found
   return math::eigen3::convert(math::Vector3d(-1.0, -1.0, -1.0));
 }
 
@@ -62,30 +66,30 @@ Identity ShapeFeatures::AttachBoxShape(
   const Pose3d &_pose)
 {
   auto it = this->links.find(_linkID);
-  if (it == this->links.end())
+  if (it != this->links.end() && it->second != nullptr)
   {
-    return this->GenerateInvalidId();
+    auto &collision = static_cast<tpelib::Collision&>(
+      it->second->link->AddCollision());
+    collision.SetName(_name);
+    collision.SetPose(math::eigen3::convert(_pose));
+
+    tpelib::BoxShape boxshape;
+    boxshape.SetSize(math::eigen3::convert(_size));
+    collision.SetShape(boxshape);
+
+    return this->AddCollision(_linkID, collision);
   }
-  auto &collision = static_cast<tpelib::Collision&>(
-    it->second->link->AddCollision());
-  collision.SetName(_name);
-  collision.SetPose(math::eigen3::convert(_pose));
-
-  tpelib::BoxShape boxshape;
-  boxshape.SetSize(math::eigen3::convert(_size));
-  collision.SetShape(boxshape);
-
-  return this->AddCollision(_linkID, collision);
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
 {
   auto it = this->collisions.find(_shapeID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto shape = it->second->collision->GetShape();
-    if (dynamic_cast<tpelib::CylinderShape*>(shape))
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::CylinderShape*>(shape))
       return this->GenerateIdentity(_shapeID, it->second);
   }
   return this->GenerateInvalidId();
@@ -97,12 +101,16 @@ double ShapeFeatures::GetCylinderShapeRadius(
 {
   // assume _cylinderID ~= _collisionID
   auto it = this->collisions.find(_cylinderID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto *shape = static_cast<tpelib::CylinderShape*>(
-      it->second->collision->GetShape());
-    return shape->GetRadius();
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *cylinder = static_cast<tpelib::CylinderShape*>(shape);
+      return cylinder->GetRadius();
+    }
   }
+  // return invalid radius if no collision found
   return -1.0;
 }
 
@@ -112,12 +120,16 @@ double ShapeFeatures::GetCylinderShapeHeight(
 {
   // assume _cylinderID ~= _collisionID
   auto it = this->collisions.find(_cylinderID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto *shape = static_cast<tpelib::CylinderShape*>(
-      it->second->collision->GetShape());
-    return shape->GetLength();
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *cylinder = static_cast<tpelib::CylinderShape*>(shape);
+      return cylinder->GetLength();
+    }
   }
+  // return invalid height if no collision found
   return -1.0;
 }
 
@@ -130,21 +142,21 @@ Identity ShapeFeatures::AttachCylinderShape(
   const Pose3d &_pose)
 {
   auto it = this->links.find(_linkID);
-  if (it == this->links.end())
+  if (it != this->links.end() && it->second != nullptr)
   {
-    return this->GenerateInvalidId();
+    auto &collision = static_cast<tpelib::Collision&>(
+      it->second->link->AddCollision());
+    collision.SetName(_name);
+    collision.SetPose(math::eigen3::convert(_pose));
+    
+    tpelib::CylinderShape cylindershape;
+    cylindershape.SetRadius(_radius);
+    cylindershape.SetLength(_height);
+    collision.SetShape(cylindershape);
+
+    return this->AddCollision(_linkID, collision);
   }
-  auto &collision = static_cast<tpelib::Collision&>(
-    it->second->link->AddCollision());
-  collision.SetName(_name);
-  collision.SetPose(math::eigen3::convert(_pose));
-
-  tpelib::CylinderShape cylindershape;
-  cylindershape.SetRadius(_radius);
-  cylindershape.SetLength(_height);
-  collision.SetShape(cylindershape);
-
-  return this->AddCollision(_linkID, collision);
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -152,10 +164,10 @@ Identity ShapeFeatures::CastToSphereShape(
   const Identity &_shapeID) const
 {
   auto it = this->collisions.find(_shapeID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto sphere = it->second->collision->GetShape();
-    if (dynamic_cast<tpelib::SphereShape*>(sphere))
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::SphereShape*>(shape))
       return this->GenerateIdentity(_shapeID, it->second);
   }
   return this->GenerateInvalidId();
@@ -165,12 +177,16 @@ Identity ShapeFeatures::CastToSphereShape(
 double ShapeFeatures::GetSphereShapeRadius(const Identity &_sphereID) const
 {
   auto it = this->collisions.find(_sphereID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto *sphere = static_cast<tpelib::SphereShape*>(
-      it->second->collision->GetShape());
-    return sphere->GetRadius();
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *sphere = static_cast<tpelib::SphereShape*>(shape);
+      return sphere->GetRadius();
+    }
   }
+  // return invalid radius if collision not found
   return -1.0;
 }
 
@@ -182,20 +198,20 @@ Identity ShapeFeatures::AttachSphereShape(
   const Pose3d &_pose)
 {
   auto it = this->links.find(_linkID);
-  if (it == this->links.end())
+  if (it != this->links.end() && it->second != nullptr)
   {
-    return this->GenerateInvalidId();
+    auto &collision = static_cast<tpelib::Collision&>(
+      it->second->link->AddCollision());
+    collision.SetName(_name);
+    collision.SetPose(math::eigen3::convert(_pose));
+
+    tpelib::SphereShape sphereshape;
+    sphereshape.SetRadius(_radius);
+    collision.SetShape(sphereshape);
+
+    return this->AddCollision(_linkID, collision);
   }
-  auto &collision = static_cast<tpelib::Collision&>(
-    it->second->link->AddCollision());
-  collision.SetName(_name);
-  collision.SetPose(math::eigen3::convert(_pose));
-
-  tpelib::SphereShape sphereshape;
-  sphereshape.SetRadius(_radius);
-  collision.SetShape(sphereshape);
-
-  return this->AddCollision(_linkID, collision);
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -203,10 +219,10 @@ Identity ShapeFeatures::CastToMeshShape(
   const Identity &_shapeID) const
 {
   auto it = this->collisions.find(_shapeID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto mesh = it->second->collision->GetShape();
-    if (dynamic_cast<tpelib::MeshShape*>(mesh))
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::MeshShape*>(shape))
       return this->GenerateIdentity(_shapeID, it->second);
   }
   return this->GenerateInvalidId();
@@ -217,12 +233,16 @@ LinearVector3d ShapeFeatures::GetMeshShapeSize(
   const Identity &_meshID) const
 {
   auto it = this->collisions.find(_meshID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto *mesh = static_cast<tpelib::MeshShape*>(
-      it->second->collision->GetShape());
-    return math::eigen3::convert(mesh->GetBoundingBox().Size());
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *mesh = static_cast<tpelib::MeshShape*>(shape);
+      return math::eigen3::convert(mesh->GetBoundingBox().Size());
+    }
   }
+  // return invalid size if collision not found
   return math::eigen3::convert(math::Vector3d(-1.0, -1.0, -1.0));
 }
 
@@ -231,12 +251,16 @@ LinearVector3d ShapeFeatures::GetMeshShapeScale(
   const Identity &_meshID) const
 {
   auto it = this->collisions.find(_meshID);
-  if (it != this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    auto *mesh = static_cast<tpelib::MeshShape*>(
-      it->second->collision->GetShape());
-    return math::eigen3::convert(mesh->GetScale());
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *mesh = static_cast<tpelib::MeshShape*>(shape);
+      return math::eigen3::convert(mesh->GetScale());
+    }
   }
+  // return invalid scale if collision not found
   return math::eigen3::convert(math::Vector3d(-1.0, -1.0, -1.0));
 }
 
@@ -249,21 +273,21 @@ Identity ShapeFeatures::AttachMeshShape(
   const LinearVector3d &_scale)
 {
   auto it = this->links.find(_linkID);
-  if (it == this->links.end())
+  if (it != this->links.end() && it->second != nullptr)
   {
-    return this->GenerateInvalidId();
+    auto &collision = static_cast<tpelib::Collision&>(
+      it->second->link->AddCollision());
+    collision.SetName(_name);
+    collision.SetPose(math::eigen3::convert(_pose));
+
+    tpelib::MeshShape mesh;
+    mesh.SetMesh(_mesh);
+    mesh.SetScale(math::eigen3::convert(_scale));
+    collision.SetShape(mesh);
+
+    return this->AddCollision(_linkID, collision);
   }
-  auto &collision = static_cast<tpelib::Collision&>(
-    it->second->link->AddCollision());
-  collision.SetName(_name);
-  collision.SetPose(math::eigen3::convert(_pose));
-
-  tpelib::MeshShape mesh;
-  mesh.SetMesh(_mesh);
-  mesh.SetScale(math::eigen3::convert(_scale));
-  collision.SetShape(mesh);
-
-  return this->AddCollision(_linkID, collision);
+  return this->GenerateInvalidId();
 }
 
 ///////////////////////////////////////////////
@@ -271,12 +295,14 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   const Identity &_shapeID) const
 {
   auto it = this->collisions.find(_shapeID);
-  if (it == this->collisions.end())
+  if (it != this->collisions.end() && it->second != nullptr)
   {
-    return math::eigen3::convert(math::AxisAlignedBox(
+    auto *shape = it->second->collision->GetShape();
+    return math::eigen3::convert(shape->GetBoundingBox());
+  }
+  // return invalid bounding box if collision not found
+  return math::eigen3::convert(
+    math::AxisAlignedBox(
       math::Vector3d(-1.0, -1.0, -1.0),
       math::Vector3d(-1.0, -1.0, -1.0)));
-  }
-  auto shape = it->second->collision->GetShape();
-  return math::eigen3::convert(shape->GetBoundingBox());
 }

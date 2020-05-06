@@ -34,7 +34,7 @@ class KinematicsFeatures :
   public virtual Base,
   public virtual Implements3d<KinematicsFeatureList>
 {
-  public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const;
+  public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const override;
 };
 
 }

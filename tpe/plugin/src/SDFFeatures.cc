@@ -16,6 +16,9 @@
 */
 
 #include <sdf/Box.hh>
+#include <sdf/Cylinder.hh>
+#include <sdf/Mesh.hh>
+#include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
 #include <ignition/common/Console.hh>
 
@@ -48,10 +51,20 @@ Identity SDFFeatures::ConstructSdfModel(
 {
   // Read sdf params
   const std::string name = _sdfModel.Name();
-  std::cerr << "construct model " << name << std::endl;
+  igndbg << "construct model " << name << std::endl;
   const auto pose = _sdfModel.RawPose();
 
+  if (this->worlds.find(_worldID.id) == this->worlds.end())
+  {
+    ignwarn << "World [" << _worldID.id << "] is not found." << std::endl;
+    return this->GenerateInvalidId();
+  }
   auto world = this->worlds.at(_worldID)->world;
+  if (world == nullptr)
+  {
+    ignwarn << "World is a nullptr" << std::endl;
+    return this->GenerateInvalidId();
+  }
   tpelib::Entity &ent = world->AddModel();
   tpelib::Model *model = static_cast<tpelib::Model *>(&ent);
   model->SetName(name);
@@ -74,10 +87,20 @@ Identity SDFFeatures::ConstructSdfLink(
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
-  std::cerr << "construct link " << name << std::endl;
+  igndbg << "construct link " << name << std::endl;
   const auto pose = _sdfLink.RawPose();
 
+  if (this->models.find(_modelID) == this->models.end())
+  {
+    ignwarn << "Model [" << _modelID.id << "] is not found" << std::endl;
+    return this->GenerateInvalidId();
+  } 
   auto model = this->models.at(_modelID)->model;
+  if (model == nullptr)
+  {
+    ignwarn << "Model is a nullptr" << std::endl;
+    return this->GenerateInvalidId();
+  }
   tpelib::Entity &ent = model->AddLink();
   tpelib::Link *link = static_cast<tpelib::Link *>(&ent);
   link->SetName(name);
@@ -100,11 +123,22 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   // Read sdf params
   const std::string name = _sdfCollision.Name();
-  std::cerr << "construct collision " << name << std::endl;
+  igndbg << "construct collision " << name << std::endl;
   const auto pose = _sdfCollision.RawPose();
   const auto geom = _sdfCollision.Geom();
 
+  if (this->links.find(_linkID) == this->links.end())
+  {
+    ignwarn << "Link [" << _linkID.id << "] is not found" << std::endl;
+    return this->GenerateInvalidId();
+  }
   auto link = this->links.at(_linkID)->link;
+  if (link == nullptr)
+  {
+    ignwarn << "Link is a nullptr" << std::endl;
+    return this->GenerateInvalidId();
+  }
+
   tpelib::Entity &ent = link->AddCollision();
   tpelib::Collision *collision = static_cast<tpelib::Collision *>(&ent);
   collision->SetName(name);
@@ -143,11 +177,22 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   // Read sdf params
   const std::string name = _sdfCollision.Name();
-  std::cerr << "construct collision " << name << std::endl;
+  igndbg << "construct collision " << name << std::endl;
   const auto pose = _sdfCollision.RawPose();
   const auto geom = _sdfCollision.Geom();
 
+  if (this->links.find(_linkID) == this->links.end())
+  {
+    ignwarn << "Link [" << _linkID.id << "] is not found" << std::endl;
+    return this->GenerateInvalidId();
+  }
   auto link = this->links.at(_linkID)->link;
+  if (link == nullptr)
+  {
+    ignwarn << "Link is a nullptr" << std::endl;
+    return this->GenerateInvalidId();
+  }
+
   tpelib::Entity &ent = link->AddCollision();
   tpelib::Collision *collision = static_cast<tpelib::Collision *>(&ent);
   collision->SetName(name);
@@ -172,54 +217,3 @@ Identity SDFFeatures::ConstructSdfCollision(
   const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
   return collisionIdentity;
 }
-
-/*/////////////////////////////////////////////////
-Identity SDFFeatures::BuildSdfLink(
-  const Identity &_modelID,
-  const ::sdf::Link &_sdfLink,
-  const int _linkIndex)
-{
-  // Read sdf params
-  const std::string name = _sdfLink.Name();
-  const auto pose = _sdfLink.Pose();
-  const auto inertial = _sdfLink.Inertial();
-  const auto mass = inertial.MassMatrix().Mass();
-  const auto diagonalMoments = inertial.MassMatrix().DiagonalMoments();
-
-  // Get link properties
-  const btScalar linkMass = mass;
-  const btVector3 linkInertiaDiag =
-      convertVec(ignition::math::eigen3::convert(diagonalMoments));
-  const auto poseIsometry = ignition::math::eigen3::convert(pose);
-
-  // Add default fixed joints to links unless replaced by other joints
-  // Find translation
-  const btVector3 parentComToCurrentCom = convertVec(
-    poseIsometry.translation());
-  const btVector3 currentPivotToCurrentCom(0, 0, 0);
-  const btVector3 parentComToCurrentPivot = parentComToCurrentCom -
-    currentPivotToCurrentCom;
-  // Find rotation
-  btQuaternion rotParentToThis;
-  const btMatrix3x3 mat = convertMat(poseIsometry.linear());
-  mat.getRotation(rotParentToThis);
-
-  // Set up fixed joints
-  const int parentIndex = -1;
-  const auto &model = this->models.at(_modelID)->model;
-  model->setupFixed(_linkIndex, linkMass, linkInertiaDiag, parentIndex,
-                     rotParentToThis, parentComToCurrentPivot,
-                     currentPivotToCurrentCom);
-
-  const auto linkIdentity = this->AddLink({name, _linkIndex, linkMass,
-                                  linkInertiaDiag, poseIsometry, _modelID});
-
-  // Build collisions
-  for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
-  {
-    this->BuildSdfCollision(linkIdentity, *_sdfLink.CollisionByIndex(i));
-  }
-
-  return linkIdentity;
-}
-*/

@@ -15,6 +15,8 @@
  *
 */
 
+#include <ignition/common/Console.hh>
+
 #include "CustomFeatures.hh"
 
 using namespace ignition;
@@ -25,5 +27,15 @@ using namespace tpeplugin;
 std::shared_ptr<tpelib::World> CustomFeatures::GetTpeLibWorld(
   const Identity &_worldID)
 {
-  return this->worlds.at(_worldID)->world;
+  if (this->worlds.find(_worldID) != this->worlds.end())
+  {
+    return this->worlds.at(_worldID)->world;
+  }
+  else
+  {
+    ignerr << "Unable to retrieve world ["
+      << _worldID.id
+      << "]"
+      << std::endl;
+  }
 }

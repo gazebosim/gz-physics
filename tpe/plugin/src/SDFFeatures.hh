@@ -27,7 +27,6 @@
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructCollision.hh>
-#include <ignition/physics/sdf/ConstructVisual.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <ignition/physics/Implements.hh>
@@ -42,8 +41,8 @@ using SDFFeatureList = FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
   sdf::ConstructSdfLink,
-  sdf::ConstructSdfCollision,
-  sdf::ConstructSdfVisual
+  sdf::ConstructSdfCollision
+  // sdf::ConstructSdfVisual
 >;
 
 class SDFFeatures :
@@ -57,11 +56,6 @@ class SDFFeatures :
   public: Identity ConstructSdfModel(
     const Identity &_worldID,
     const ::sdf::Model &_sdfModel) override;
-
-  public: Identity ConstructSdfVisual(
-    const Identity &/* _linkID */,
-    const ::sdf::Visual &/* _visual */) override
-    { return this->GenerateInvalidId(); };
 
   public: Identity ConstructSdfLink(
     const Identity &_modelID,

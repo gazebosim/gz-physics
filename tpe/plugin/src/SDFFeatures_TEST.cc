@@ -80,7 +80,7 @@ World LoadWorld(const std::string &_world)
   return *world;
 }
 
-// Test that the dartsim plugin loaded all the relevant information correctly.
+// Test that the tpe plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckTpeData)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/test.world");

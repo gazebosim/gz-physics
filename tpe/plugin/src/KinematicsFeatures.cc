@@ -38,8 +38,23 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     assert(false);
     return data;
   }
-
+  // check if ids are present and skip if any of them isn't
+  if (this->childIdToParentId.find(_id.ID()) == this->childIdToParentId.end())
+  {
+    ignwarn << "Link [" << _id.ID() << "]  is not found." << std::endl;
+    return data;
+  }
   std::size_t modelId = this->childIdToParentId.at(_id.ID());
+  if (this->models.find(modelId) == this->models.end())
+  {
+    ignwarn << "Parent model ["
+      << modelId
+      << "] of link ["
+      << _id.ID()
+      << "] is not found."
+      << std::endl;
+    return data;
+  }
   tpelib::Model *model = this->models.at(modelId)->model;
 
   data.pose = math::eigen3::convert(model->GetPose());

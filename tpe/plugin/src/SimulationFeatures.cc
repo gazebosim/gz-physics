@@ -59,6 +59,7 @@ void SimulationFeatures::WorldForwardStep(
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
+  // TODO(claireyywang): Implement contact points after collision detection is added
   std::vector<SimulationFeatures::ContactInternal> outContacts;
   std::shared_ptr<tpelib::World> world = this->worlds.at(_worldID)->world;
   return outContacts;

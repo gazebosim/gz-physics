@@ -43,8 +43,6 @@ class FreeGroupFeatures :
 
   Identity GetFreeGroupCanonicalLink(const Identity &_groupID) const override;
 
-  FreeGroupInfo GetCanonicalInfo(const Identity &_groupID) const;
-
   void SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose) override;

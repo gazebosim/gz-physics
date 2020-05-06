@@ -32,7 +32,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   const Identity &_modelID) const
 {
   auto it = this->models.find(_modelID);
-  if (it == this->models.end())
+  if (it == this->models.end() || it->second == nullptr)
     return this->GenerateInvalidId();
   auto modelPtr = it->second;
   // if there are no links in this model, then the FreeGroup functions
@@ -47,7 +47,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
   const Identity &_linkID) const
 {
   auto it = this->links.find(_linkID);
-  if (it != this->links.end())
+  if (it != this->links.end() && it->second != nullptr)
     return this->GenerateIdentity(_linkID, it->second);
   return this->GenerateInvalidId();
 }
@@ -59,7 +59,7 @@ Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
   // assume no canonical link for now
   // assume groupID ~= modelID
   const auto model_it = this->models.find(_groupID);
-  if (model_it != this->models.end())
+  if (model_it != this->models.end() && model_it->second != nullptr)
   {
     // assume canonical link is the first link in model
     tpelib::Entity &link = model_it->second->model->GetCanonicalLink();
@@ -78,7 +78,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   // assume no canonical link for now
   // assume groupID ~= modelID
   auto it = this->models.find(_groupID);
-  if (it != this->models.end())
+  if (it != this->models.end() && it->second != nullptr)
     // convert Eigen::Tranform to Math::Pose3d
     it->second->model->SetPose(math::eigen3::convert(_pose));
 }
@@ -92,7 +92,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   // assume groupID ~= modelID
   auto it = this->models.find(_groupID);
   // set model linear velocity
-  if (it != this->models.end())
+  if (it != this->models.end() && it->second != nullptr)
     it->second->model->SetLinearVelocity(
       math::eigen3::convert(_linearVelocity));
 }
@@ -105,7 +105,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   // assume groupID ~= modelID
   auto it = this->models.find(_groupID);
   // set model angular velocity
-  if (it != this->models.end())
+  if (it != this->models.end() && it->second != nullptr)
     it->second->model->SetAngularVelocity(
       math::eigen3::convert(_angularVelocity));
 }
