@@ -43,6 +43,9 @@
 1. Reduce the symbol load caused by feature templates
     * [Pull request 41](https://github.com/ignitionrobotics/ign-physics/pull/41)
 
+1. Fix collision issue with detachable joints
+    * [Pull request 31](https://github.com/ignitionrobotics/ign-physics/pull/31)
+
 1. Add PlaneShape feature and implement in dartsim with test.
     * [BitBucket pull request 66](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/66)
 
