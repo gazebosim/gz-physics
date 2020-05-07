@@ -100,6 +100,42 @@
         </visual>
       </link>
     </model>
+    <model name="body">
+      <pose>10 0 3.0 0 0.0 0</pose>
+      <link name="body">
+        <inertial>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>1 1 0.5</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="box_visual">
+          <geometry>
+            <box>
+              <size>1 1 0.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>1 0 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>
 

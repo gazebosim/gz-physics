@@ -321,7 +321,7 @@ Identity EntityManagementFeatures::GetJoint(
 const std::string &EntityManagementFeatures::GetLinkName(
     const Identity &_linkID) const
 {
-  return this->ReferenceInterface<LinkInfo>(_linkID)->link->getName();
+  return this->ReferenceInterface<LinkInfo>(_linkID)->name;
 }
 
 /////////////////////////////////////////////////
