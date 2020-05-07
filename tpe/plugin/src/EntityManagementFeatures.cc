@@ -25,7 +25,7 @@ using namespace tpeplugin;
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetEngineName(
-  const Identity &/*_engineID*/) const
+  const Identity &) const
 {
   // engine name should not change
   static const std::string engineName = "tpe";
@@ -34,14 +34,14 @@ const std::string &EntityManagementFeatures::GetEngineName(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetEngineIndex(
-  const Identity &/*_engineID*/) const
+  const Identity &) const
 {
   return 0;
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetWorldCount(
-  const Identity &/*_engineID*/) const
+  const Identity &) const
 {
   // should always be 1
   return this->worlds.size();
@@ -103,7 +103,7 @@ std::size_t EntityManagementFeatures::GetWorldIndex(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetEngineOfWorld(
-  const Identity &/*_worldID*/) const
+  const Identity &) const
 {
   return this->GenerateIdentity(0);
 }
@@ -134,21 +134,6 @@ Identity EntityManagementFeatures::GetModel(
       return this->GenerateIdentity(it->first, it->second);
     }
   }
-
-  // auto modelIt = this->models.begin();
-  // std::advance(modelIt, _modelIndex);
-
-  // if (modelIt != this->models.end()
-  //   && it != this->worlds.end()
-  //   && modelIt->second != nullptr
-  //   && it->second != nullptr)
-  // {
-  //   std::size_t modelId = modelIt->first;
-  //   tpelib::Entity &modelEnt = it->second->world->GetChildById(modelId);
-  //   auto modelPtr = std::make_shared<ModelInfo>();
-  //   modelPtr->model = static_cast<tpelib::Model *>(&modelEnt);
-  //   return this->GenerateIdentity(modelId, modelPtr);
-  // }
   return this->GenerateInvalidId();
 }
 
@@ -245,23 +230,6 @@ Identity EntityManagementFeatures::GetLink(
       return this->GenerateIdentity(it->first, it->second);
     }
   }
-
-  // auto it = this->models.find(_modelID);
-  
-  // auto linkIt = this->links.begin();
-  // std::advance(linkIt, _linkIndex);
-
-  // if (linkIt != this->links.end()
-  //   && it != this->models.end()
-  //   && linkIt->second != nullptr
-  //   && it->second != nullptr)
-  // {
-  //   std::size_t linkId = linkIt->first;
-  //   tpelib::Entity &linkEnt = it->second->model->GetChildById(linkId);
-  //   auto linkPtr = std::make_shared<LinkInfo>();
-  //   linkPtr->link = static_cast<tpelib::Link *>(&linkEnt);
-  //   return this->GenerateIdentity(linkId, linkPtr);
-  // }
   return this->GenerateInvalidId();
 }
 
@@ -358,23 +326,6 @@ Identity EntityManagementFeatures::GetShape(
       return this->GenerateIdentity(it->first, it->second);
     }
   }
-  // auto it = this->links.find(_linkID);
-
-  // auto shapeIt = this->collisions.begin();
-  // std::advance(shapeIt, _shapeIndex);
-
-  // if (shapeIt != this->collisions.end()
-  //   && it != this->links.end()
-  //   && shapeIt->second != nullptr
-  //   && it->second != nullptr)
-  // {
-  //   std::size_t shapeId = shapeIt->first;
-
-  //   tpelib::Entity &shapeEnt = it->second->link->GetChildById(shapeId);
-  //   auto collisionPtr = std::make_shared<CollisionInfo>();
-  //   collisionPtr->collision = static_cast<tpelib::Collision *>(&shapeEnt);
-  //   return this->GenerateIdentity(shapeId, collisionPtr);
-  // }
   return this->GenerateInvalidId();
 }
 
@@ -462,19 +413,6 @@ bool EntityManagementFeatures::RemoveModelByIndex(
       return it->second->world->RemoveChildById(modelId);
     }
   }
-  // auto it = this->models.begin();
-  // std::advance(it, _modelIndex);
-
-  // if (it != this->models.end()
-  //   && worldIt != this->worlds.end()
-  //   && it->second != nullptr
-  //   && worldIt->second != nullptr)
-  // {
-  //   std::size_t modelId = it->first;
-  //   this->models.erase(modelId);
-  //   this->childIdToParentId.erase(modelId);
-  //   return worldIt->second->world->RemoveChildById(modelId);
-  // }
   return false;
 }
 

@@ -35,16 +35,9 @@ namespace ignition {
 namespace physics {
 namespace tpeplugin {
 
-/// \brief The structs tpelib::ModelInfo,
-/// tpelib::LinkInfo, JointInfo, and ShapeInfo are used
-/// for two reasons:
-/// 1) Holding extra information such as the name or offset
-///    that will be different from the underlying engine
-/// 2) Wrap shared pointers to DART entities. Since these shared pointers (eg.
-///    dart::dynamics::BodyNodePtr) are different from std::shared_ptr, we
-///    cannot use them directly as parameters to GenerateIdentity. Instead we
-///    create a std::shared_ptr of the struct that wraps the corresponding DART
-///    shared pointer.
+/// \brief The structs tpelib::WorldInfo,
+/// tpelib::ModelInfo, LinkInfo, and CollisionInfo are used
+/// to provide easy access to tpelib structures in the plugin library
 
 struct WorldInfo
 {
