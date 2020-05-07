@@ -102,24 +102,25 @@ TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
   {
     auto sphere = world->GetModel("sphere");
     auto sphereCollision = sphere->GetLink(0)->GetShape(0);
-    // auto ground = world->GetModel("box");
-    // auto groundCollision = ground->GetLink(0)->GetShape(0);
+  
+    auto ground = world->GetModel("box");
+    auto groundCollision = ground->GetLink(0)->GetShape(0);
 
-    // // Test the bounding boxes in the local frames
-    // auto sphereAABB =
-    //   sphereCollision->GetAxisAlignedBoundingBox(*sphereCollision);
+    // Test the bounding boxes in the local frames
+    auto sphereAABB =
+      sphereCollision->GetAxisAlignedBoundingBox(*sphereCollision);
 
-    // auto groundAABB =
-    //   groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
+    auto groundAABB =
+      groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
 
-    // EXPECT_EQ(ignition::math::Vector3d(-1, -1, -1),
-    //           ignition::math::eigen3::convert(sphereAABB).Min());
-    // EXPECT_EQ(ignition::math::Vector3d(1, 1, 1),
-    //           ignition::math::eigen3::convert(sphereAABB).Max());
-    // EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.5),
-    //           ignition::math::eigen3::convert(groundAABB).Min());
-    // EXPECT_EQ(ignition::math::Vector3d(50, 50, 0.5),
-    //           ignition::math::eigen3::convert(groundAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-1, -1, -1),
+              ignition::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(1, 1, 1),
+              ignition::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.5),
+              ignition::math::eigen3::convert(groundAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(50, 50, 0.5),
+              ignition::math::eigen3::convert(groundAABB).Max());
 
     // // Test the bounding boxes in the world frames
     // sphereAABB = sphereCollision->GetAxisAlignedBoundingBox();
