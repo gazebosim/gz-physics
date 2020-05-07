@@ -2,6 +2,8 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
+### Ignition Physics 2.1.0 (2020-05-07)
+
 1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
     * [BitBucket pull request 130](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/130)
 
@@ -16,6 +18,30 @@
 
 1. Added support for collision bitmasks for collision filtering
     * [BitBucket pull request 116](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/116)
+
+1. Clean up internal resources when a model gets removed
+    * [BitBucket pull request 115](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/115)
+
+1. Trivial Physics Engine - partial implementation
+    * [BitBucket pull request 125](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/125)
+    * [BitBucket pull request 126](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/126)
+    * [Pull request 30](https://github.com/ignitionrobotics/ign-physics/pull/30)
+    * [Pull request 45](https://github.com/ignitionrobotics/ign-physics/pull/45)
+
+1. Add simple example of physics plugin and loader
+    * [BitBucket pull request 115](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/115)
+
+1. Update BitBucket links, add .gitignore, CODEOWNERS, workflow
+    * [Pull request 34](https://github.com/ignitionrobotics/ign-physics/pull/34)
+    * [Pull request 39](https://github.com/ignitionrobotics/ign-physics/pull/39)
+    * [Pull request 47](https://github.com/ignitionrobotics/ign-physics/pull/47)
+    * [Pull request 52](https://github.com/ignitionrobotics/ign-physics/pull/52)
+
+1. Physics Plugin Documentation
+    * [Pull request 36](https://github.com/ignitionrobotics/ign-physics/pull/36)
+
+1. Reduce the symbol load caused by feature templates
+    * [Pull request 41](https://github.com/ignitionrobotics/ign-physics/pull/41)
 
 ### Ignition Physics 2.0.0 (2019-12-10)
 
