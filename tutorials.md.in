@@ -9,6 +9,7 @@ Ignition @IGN_DESIGNATION_CAP@ library and how to use the library effectively.
 
 1. \subpage introduction "Introduction"
 2. \subpage installation "Installation"
+3. \subpage physicsplugin "Understanding the Physics Plugin"
 
 ## License
 

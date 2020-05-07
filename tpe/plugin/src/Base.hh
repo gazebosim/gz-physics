@@ -35,16 +35,9 @@ namespace ignition {
 namespace physics {
 namespace tpeplugin {
 
-/// \brief The structs tpelib::ModelInfo,
-/// tpelib::LinkInfo, JointInfo, and ShapeInfo are used
-/// for two reasons:
-/// 1) Holding extra information such as the name or offset
-///    that will be different from the underlying engine
-/// 2) Wrap shared pointers to DART entities. Since these shared pointers (eg.
-///    dart::dynamics::BodyNodePtr) are different from std::shared_ptr, we
-///    cannot use them directly as parameters to GenerateIdentity. Instead we
-///    create a std::shared_ptr of the struct that wraps the corresponding DART
-///    shared pointer.
+/// \brief The structs tpelib::WorldInfo,
+/// tpelib::ModelInfo, LinkInfo, and CollisionInfo are used
+/// to provide easy access to tpelib structures in the plugin library
 
 struct WorldInfo
 {
@@ -72,6 +65,51 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     return this->GenerateIdentity(0);
   }
+
+  public: inline std::size_t idToIndexInContainer(std::size_t _id) const
+  {
+    std::size_t index = 0;
+    if (this->childIdToParentId.find(_id) != this->childIdToParentId.end())
+    {
+      auto containerId = this->childIdToParentId.at(_id);
+      for (const auto &pair : this->childIdToParentId)
+      {
+        if (pair.first == _id && pair.second == containerId)
+        {
+          return index;
+        }
+        else if (pair.second == containerId)
+        {
+          ++index;
+        }
+      }
+    }
+    // return invalid index if not found in id map
+    return -1;
+  }
+
+  public: inline std::size_t indexInContainerToId(
+    const std::size_t _containerId, const std::size_t _index) const
+  {
+    std::size_t counter = 0;
+    auto it = this->childIdToParentId.begin();
+
+    while (counter <= _index && it != this->childIdToParentId.end())
+    {
+      if (it->second == _containerId && counter == _index)
+      {
+        return it->first;
+      }
+      else if (it->second == _containerId)
+      {
+        ++counter;
+      }
+      ++it;
+    }
+    // return invalid id if entity not found
+    return -1;
+  }
+
 
   public: inline Identity AddWorld(std::shared_ptr<tpelib::World> _world)
   {
