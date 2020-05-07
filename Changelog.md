@@ -2,6 +2,9 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+1. Restore detached BodyNodes to original skeleton
+    * [Pull request 42](https://github.com/ignitionrobotics/ign-physics/pull/42)
+
 1. Fix collision issue with detachable joints
     * [Pull request 31](https://github.com/ignitionrobotics/ign-physics/pull/31)
 
