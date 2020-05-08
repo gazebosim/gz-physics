@@ -49,6 +49,9 @@
 1. Add PlaneShape feature and implement in dartsim with test.
     * [BitBucket pull request 66](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/66)
 
+1. Restore detached BodyNodes to original skeleton
+    * [Pull request 42](https://github.com/ignitionrobotics/ign-physics/pull/42)
+
 ### Ignition Physics 2.0.0 (2019-12-10)
 
 1. Support compiling against dart 6.9.
