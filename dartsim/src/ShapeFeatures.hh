@@ -24,6 +24,7 @@
 #include <ignition/physics/BoxShape.hh>
 #include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/mesh/MeshShape.hh>
+#include <ignition/physics/PlaneShape.hh>
 #include <ignition/physics/SphereShape.hh>
 
 #include "Base.hh"
@@ -53,7 +54,10 @@ struct ShapeFeatureList : FeatureList<
 
   mesh::GetMeshShapeProperties,
 //  mesh::SetMeshShapeProperties,
-  mesh::AttachMeshShapeFeature
+  mesh::AttachMeshShapeFeature,
+  GetPlaneShapeProperties,
+//  SetPlaneShapeProperties,
+  AttachPlaneShapeFeature
 > { };
 
 class ShapeFeatures :
@@ -134,6 +138,22 @@ class ShapeFeatures :
   // ----- Boundingbox Features -----
   public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
               const Identity &_shapeID) const override;
+
+  // ----- Plane Features -----
+  public: Identity CastToPlaneShape(
+      const Identity &_shapeID) const override;
+
+  public: LinearVector3d GetPlaneShapeNormal(
+      const Identity &_planeID) const override;
+
+  public: LinearVector3d GetPlaneShapePoint(
+      const Identity &_planeID) const override;
+
+  public: Identity AttachPlaneShape(
+      const Identity &_linkID,
+      const std::string &_name,
+      const LinearVector3d &_normal,
+      const LinearVector3d &_point) override;
 };
 
 }
