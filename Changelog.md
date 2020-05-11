@@ -2,6 +2,8 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+### Ignition Physics 1.8.0 (2020-05-08)
+
 1. Restore detached BodyNodes to original skeleton
     * [Pull request 42](https://github.com/ignitionrobotics/ign-physics/pull/42)
 
