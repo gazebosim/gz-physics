@@ -61,7 +61,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
   const std::set<std::string> pluginNames =
     ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
 
-  EXPECT_LT(0u, pluginNames.size());
+  EXPECT_EQ(1u, pluginNames.size());
 
   std::unordered_set<TestWorldPtr> worlds;
   for (const std::string &name : pluginNames)

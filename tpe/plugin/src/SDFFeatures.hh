@@ -42,7 +42,6 @@ using SDFFeatureList = FeatureList<
   sdf::ConstructSdfModel,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfCollision
-  // sdf::ConstructSdfVisual
 >;
 
 class SDFFeatures :

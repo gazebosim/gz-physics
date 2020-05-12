@@ -38,7 +38,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     assert(false);
     return data;
   }
-  // check if ids are present and skip if any of them isn't
+  // check if id is present and skip if not
   if (this->childIdToParentId.find(_id.ID()) == this->childIdToParentId.end())
   {
     ignwarn << "Link [" << _id.ID() << "]  is not found." << std::endl;
