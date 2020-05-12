@@ -27,15 +27,13 @@ using namespace tpeplugin;
 std::shared_ptr<tpelib::World> CustomFeatures::GetTpeLibWorld(
   const Identity &_worldID)
 {
-  if (this->worlds.find(_worldID) != this->worlds.end())
-  {
-    return this->worlds.at(_worldID)->world;
-  }
-  else
+  if (this->worlds.find(_worldID) == this->worlds.end())
   {
     ignerr << "Unable to retrieve world ["
       << _worldID.id
       << "]"
       << std::endl;
+    return nullptr;
   }
+  return this->worlds.at(_worldID)->world;
 }
