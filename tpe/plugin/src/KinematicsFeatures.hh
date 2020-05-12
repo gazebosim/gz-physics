@@ -27,7 +27,7 @@ namespace physics {
 namespace tpeplugin {
 
 struct KinematicsFeatureList : FeatureList<
-  ShapeFrameSemantics
+  LinkFrameSemantics
 > { };
 
 class KinematicsFeatures :
