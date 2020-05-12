@@ -121,24 +121,6 @@ TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
               ignition::math::eigen3::convert(groundAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(50, 50, 0.5),
               ignition::math::eigen3::convert(groundAABB).Max());
-
-    // // Test the bounding boxes in the world frames
-    // sphereAABB = sphereCollision->GetAxisAlignedBoundingBox();
-    // groundAABB = groundCollision->GetAxisAlignedBoundingBox();
-
-    // // The sphere shape has a radius of 1.0, so its bounding box will have
-    // // dimensions of 1.0 x 1.0 x 1.0. When that bounding box is transformed by
-    // // a 45-degree rotation, the dimensions that are orthogonal to the axis of
-    // // rotation will dilate from 1.0 to sqrt(2).
-    // const double d = std::sqrt(2);
-    // EXPECT_EQ(ignition::math::Vector3d(-d, -1, 2.0 - d),
-    //           ignition::math::eigen3::convert(sphereAABB).Min());
-    // EXPECT_EQ(ignition::math::Vector3d(d, 1, 2 + d),
-    //           ignition::math::eigen3::convert(sphereAABB).Max());
-    // EXPECT_EQ(ignition::math::Vector3d(-50*d, -50*d, -1),
-    //           ignition::math::eigen3::convert(groundAABB).Min());
-    // EXPECT_EQ(ignition::math::Vector3d(50*d, 50*d, 0),
-    //           ignition::math::eigen3::convert(groundAABB).Max());
   }
 }
 
