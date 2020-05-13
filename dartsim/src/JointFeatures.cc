@@ -93,6 +93,18 @@ void JointFeatures::SetJointForce(
 }
 
 /////////////////////////////////////////////////
+void JointFeatures::SetJointVelocityCommand(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  if (joint->getActuatorType() != dart::dynamics::Joint::SERVO)
+  {
+    joint->setActuatorType(dart::dynamics::Joint::SERVO);
+  }
+  joint->setCommand(_dof, _value);
+}
+
+/////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();
@@ -129,6 +141,81 @@ void JointFeatures::SetJointTransformToChild(
 }
 
 /////////////////////////////////////////////////
+void JointFeatures::DetachJoint(const Identity &_jointId)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_jointId)->joint;
+  if (joint->getType() == "FreeJoint")
+  {
+    // don't need to do anything, joint is already a FreeJoint
+    return;
+  }
+
+  auto child = joint->getChildBodyNode();
+  auto transform = child->getWorldTransform();
+  auto spatialVelocity =
+      child->getSpatialVelocity(
+          dart::dynamics::Frame::World(),
+          dart::dynamics::Frame::World());
+
+  if (!this->links.HasEntity(child))
+  {
+    return;
+  }
+
+  auto childLinkInfo = this->links.at(child);
+
+  dart::dynamics::SkeletonPtr skeleton;
+  {
+    // Find the original skeleton the child BodyNode belonged to
+    std::string oldName = child->getName();
+    if (oldName != childLinkInfo->name)
+    {
+      std::size_t originalNameIndex = oldName.rfind(childLinkInfo->name);
+      if (originalNameIndex > 1 && originalNameIndex != std::string::npos &&
+          this->models.HasEntity(joint->getSkeleton()))
+      {
+        // Assume that the original and the current skeletons are in the same
+        // world.
+        auto worldId =
+          this->models
+          .idToContainerID[this->models.IdentityOf(joint->getSkeleton())];
+        auto dartWorld = this->worlds.at(worldId);
+        std::string modelName = oldName.substr(0, originalNameIndex - 1);
+        skeleton = dartWorld->getSkeleton(modelName);
+        if (skeleton)
+        {
+          child->setName(childLinkInfo->name);
+        }
+      }
+      if (nullptr == skeleton)
+      {
+        ignerr << "Could not find the original skeleton of BodyNode "
+               << "[" << oldName << "] when detaching joint "
+               << "[" << joint->getName() << "]. Detached links may not work "
+               << "as expected.\n";
+      }
+    }
+  }
+
+  dart::dynamics::FreeJoint *freeJoint;
+  if (skeleton)
+  {
+    freeJoint = child->moveTo<dart::dynamics::FreeJoint>(skeleton, nullptr);
+  }
+  else
+  {
+    freeJoint = child->moveTo<dart::dynamics::FreeJoint>(nullptr);
+  }
+  freeJoint->setTransform(transform);
+  freeJoint->setSpatialVelocity(spatialVelocity,
+          dart::dynamics::Frame::World(),
+          dart::dynamics::Frame::World());
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  child->incrementVersion();
+}
+
+/////////////////////////////////////////////////
 Identity JointFeatures::CastToFixedJoint(
     const Identity &_jointID) const
 {
@@ -148,16 +235,33 @@ Identity JointFeatures::AttachFixedJoint(
     const BaseLink3dPtr &_parent,
     const std::string &_name)
 {
-  DartBodyNode *const bn =
-      this->ReferenceInterface<LinkInfo>(_childID)->link.get();
+  auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
+  DartBodyNode *const bn = linkInfo->link.get();
   dart::dynamics::WeldJoint::Properties properties;
   properties.mName = _name;
 
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
+  if (bn->getParentJoint()->getType() != "FreeJoint")
+  {
+    // child already has a parent joint
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    return this->GenerateInvalidId();
+  }
+
+  {
+    auto skeleton = bn->getSkeleton();
+    if (skeleton)
+    {
+      bn->setName(skeleton->getName() + '/' + linkInfo->name);
+    }
+  }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
@@ -222,8 +326,8 @@ Identity JointFeatures::AttachRevoluteJoint(
     const std::string &_name,
     const AngularVector3d &_axis)
 {
-  DartBodyNode *const bn =
-      this->ReferenceInterface<LinkInfo>(_childID)->link.get();
+  auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
+  DartBodyNode *const bn = linkInfo->link.get();
   dart::dynamics::RevoluteJoint::Properties properties;
   properties.mName = _name;
   properties.mAxis = _axis;
@@ -231,8 +335,25 @@ Identity JointFeatures::AttachRevoluteJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
+  if (bn->getParentJoint()->getType() != "FreeJoint")
+  {
+    // child already has a parent joint
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    return this->GenerateInvalidId();
+  }
+
+  {
+    auto skeleton = bn->getSkeleton();
+    if (skeleton)
+    {
+      bn->setName(skeleton->getName() + '/' + linkInfo->name);
+    }
+  }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
@@ -274,8 +395,8 @@ Identity JointFeatures::AttachPrismaticJoint(
     const std::string &_name,
     const LinearVector3d &_axis)
 {
-  DartBodyNode *const bn =
-      this->ReferenceInterface<LinkInfo>(_childID)->link.get();
+  auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
+  DartBodyNode *const bn = linkInfo->link.get();
   dart::dynamics::PrismaticJoint::Properties properties;
   properties.mName = _name;
   properties.mAxis = _axis;
@@ -283,8 +404,25 @@ Identity JointFeatures::AttachPrismaticJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
+  if (bn->getParentJoint()->getType() != "FreeJoint")
+  {
+    // child already has a parent joint
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    return this->GenerateInvalidId();
+  }
+
+  {
+    auto skeleton = bn->getSkeleton();
+    if (skeleton)
+    {
+      bn->setName(skeleton->getName() + '/' + linkInfo->name);
+    }
+  }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 

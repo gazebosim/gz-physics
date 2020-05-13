@@ -50,9 +50,9 @@ sudo apt-get install libignition-cmake2-dev \
                      libsdformat8-dev
 ```
 
-Clone the ign-physics repository from bitbucket
+Clone the ign-physics repository from GitHub
 ```{.sh}
-hg clone https://bitbucket.org/ignitionrobotics/ign-physics
+git clone https://github.com/ignitionrobotics/ign-physics
 ```
 
 Then build using CMake
@@ -98,9 +98,9 @@ brew tap osrf/simulation
 brew install ignition-physics1 --only-dependencies
 ```
 
-Clone the ign-physics repository from bitbucket
+Clone the ign-physics repository from GitHub
 ```{.sh}
-hg clone https://bitbucket.org/ignitionrobotics/ign-physics
+git clone https://github.com/ignitionrobotics/ign-physics
 ```
 
 Then build using CMake

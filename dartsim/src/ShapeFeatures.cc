@@ -18,6 +18,7 @@
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
+#include <dart/dynamics/PlaneShape.hpp>
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 
@@ -255,6 +256,65 @@ Identity ShapeFeatures::AttachMeshShape(
           mesh, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
+  const std::size_t shapeID = this->AddShape({sn, _name});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToPlaneShape(const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+
+  const dart::dynamics::ShapePtr &shape =
+      shapeInfo->node->getShape();
+
+  if (dynamic_cast<dart::dynamics::PlaneShape*>(shape.get()))
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d ShapeFeatures::GetPlaneShapeNormal(
+    const Identity &_planeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_planeID);
+
+  const dart::dynamics::PlaneShape *plane =
+      static_cast<dart::dynamics::PlaneShape*>(
+        shapeInfo->node->getShape().get());
+
+  return plane->getNormal();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d ShapeFeatures::GetPlaneShapePoint(
+    const Identity &_planeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_planeID);
+
+  const dart::dynamics::PlaneShape *plane =
+      static_cast<dart::dynamics::PlaneShape*>(
+        shapeInfo->node->getShape().get());
+
+  return plane->getOffset() * plane->getNormal();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachPlaneShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const AngularVector3d &_normal,
+    const LinearVector3d &_point)
+{
+  auto plane = std::make_shared<dart::dynamics::PlaneShape>(_normal, _point);
+
+  DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
+  dart::dynamics::ShapeNode *sn =
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          plane, bn->getName() + ":" + _name);
+
   const std::size_t shapeID = this->AddShape({sn, _name});
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }

@@ -33,7 +33,7 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 /// This class helps to resolve an issue with excessive contacts being computed:
-/// https://bitbucket.org/ignitionrobotics/ign-physics/issues/11/
+/// https://github.com/ignitionrobotics/ign-physics/issues/11/
 ///
 /// TODO(MXG): Delete this class when we switch to using dartsim-6.8:
 /// https://github.com/dartsim/dart/pull/1232
@@ -321,7 +321,7 @@ Identity EntityManagementFeatures::GetJoint(
 const std::string &EntityManagementFeatures::GetLinkName(
     const Identity &_linkID) const
 {
-  return this->ReferenceInterface<LinkInfo>(_linkID)->link->getName();
+  return this->ReferenceInterface<LinkInfo>(_linkID)->name;
 }
 
 /////////////////////////////////////////////////

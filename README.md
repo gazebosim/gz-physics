@@ -1,49 +1,245 @@
-# Ignition Physics 
+# Ignition Physics : Physics classes and functions for robot applications
 
-** Ignition Physics classes and functions for robot applications.**
+**Maintainer:** scpeters AT openrobotics DOT org
 
-Ignition Physics is a component in the ignition framework, a set
-of libraries designed to rapidly develop robot applications.
-  
-  [http://ignitionrobotics.org](http://ignitionrobotics.org)
+[![GitHub open issues](https://img.shields.io/github/issues-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/issues)
+[![GitHub open pull requests](https://img.shields.io/github/issues-pr-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/pulls)
+[![Discourse topics](https://img.shields.io/discourse/https/community.gazebosim.org/topics.svg)](https://community.gazebosim.org)
+[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-## Installation
+Build | Status
+-- | --
+Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/master/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
+Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-bionic-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-homebrew-amd64)
+Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
-Standard installation can be performed in UNIX systems using the following 
-steps:
+Ignition Physics, a component of [Ignition
+Robotics](https://ignitionrobotics.org), provides an abstract physics interface
+designed to support simulation and rapid development of robot applications.
 
- - mkdir build/
- - cd build/
- - cmake ..
- - sudo make install
+# Table of Contents
 
-## Uninstallation 
+[Motivation](#motivation)
 
-To uninstall the software installed with the previous steps:
+[Features](#features)
 
- - cd build/
- - sudo make uninstall
+[Install](#install)
 
-## Create Documentation & Release
+* [Binary Install](#binary-install)
 
-1. Build documentation
+* [Source Install](#source-install)
+
+    * [Prerequisites](#prerequisites)
+
+    * [Building from Source](#building-from-source)
+
+[Usage](#usage)
+
+[Documentation](#documentation)
+
+[Testing](#testing)
+
+[Folder Structure](#folder-structure)
+
+[Code of Conduct](#code-of-conduct)
+
+[Contributing](#code-of-contributing)
+
+[Versioning](#versioning)
+
+[License](#license)
+
+# Motivation
+
+Many physics simulation software libraries have been designed for different
+applications (gaming, robotics, science) and with different features
+(rigid or deformable contact, 2d or 3d).
+Ignition Physics is designed on the premise that there is not a single physics
+engine that is universally best for all simulation contexts.
+It should be possible to support a different set of features
+for each physics engine according to its capabilities.
+A physics engine can then be chosen for each application
+based on its context.
+
+# Features
+
+Ignition Physics provides the following functionality:
+
+* Granular definition of physics engine features as optional API's.
+* Plugin interface for loading physics engines with requested features
+  at runtime.
+* Features for common aspects of rigid body dynamic simulation
+    - Construct model from SDFormat file.
+    - Collision shapes (such as box, sphere, cylinder, mesh, heightmap).
+    - Joint types (such as revolute, prismatic, fixed, ball, screw, universal).
+    - Step simulation, get/set state, apply inputs.
+* Reference implementation of physics plugin using
+  [dartsim](http://dartsim.github.io/).
+* CompositeData structures for efficiently using native types in API.
+
+# Install
+
+We recommend following the [Binary Install](#binary-install) instructions to get up and running as quickly and painlessly as possible.
+
+The [Source Install](#source-install) instructions should be used if you need the very latest software improvements, you need to modify the code, or you plan to make a contribution.
+
+## Binary Install
+
+On Ubuntu systems, `apt-get` can be used to install `ignition-physics`:
 
 ```
-cd build
-make doc
+sudo apt install libignition-physics-dev
 ```
 
-1. Upload documentation to ignitionrobotics.org.
+## Source Install
+
+Source installation can be performed in UNIX systems by first installing the
+necessary prerequisites followed by building from source.
+
+### Prerequisites
+
+Install required dependencies:
+
+~~~
+sudo apt update
+sudo apt-get -y install lsb-release
+sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+sudo apt update
+sudo apt install -y \
+  cmake \
+  build-essential \
+  libignition-cmake2-dev \
+  libignition-common3-dev \
+  libignition-math6-dev \
+  libignition-math6-eigen3-dev \
+  libignition-plugin-dev \
+  libeigen3-dev \
+  libsdformat8-dev \
+  dart6-data \
+  libdart6-collision-ode-dev \
+  libdart6-dev \
+  libdart6-utils-urdf-dev \
+  libbenchmark-dev
+~~~
+
+Use gcc-8:
+
+~~~
+sudo apt update
+sudo apt-get -y install g++-8
+sudo update-alternatives --install \
+  /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
+  --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
+  --slave /usr/bin/gcov gcov /usr/bin/gcov-8
+~~~
+
+### Building from source
+
+1. Clone the repository
+
+    ```
+    git clone https://github.com/ignitionrobotics/ign-physics
+    ```
+
+2. Configure and build
+
+    ```
+    cd ign-physics; mkdir build; cd build; cmake ..; make
+    ```
+
+3. Optionally, install Ignition Physics
+
+    ```
+    sudo make install
+    ```
+
+# Documentation
+
+API and tutorials can be found at [https://ignitionrobotics.org/libs/physics](https://ignitionrobotics.org/libs/physics).
+
+You can also generate the documentation from a clone of this repository by following these steps.
+
+1. You will need Doxygen. On Ubuntu Doxygen can be installed using
+
+    ```
+    sudo apt-get install doxygen
+    ```
+
+2. Clone the repository
+
+    ```
+    git clone https://github.com/ignitionrobotics/ign-physics
+    ```
+
+3. Configure and build the documentation.
+
+    ```
+    cd ign-physics; mkdir build; cd build; cmake ../; make doc
+    ```
+
+4. View the documentation by running the following command from the build directory.
+
+    ```
+    firefox doxygen/html/index.html
+    ```
+
+# Testing
+
+Follow these steps to run tests and static code analysis in your clone of this repository.
+
+1. Follow the [source install instruction](#source-install).
+
+2. Run tests.
+
+    ```
+    make test
+    ```
+
+3. Static code checker.
+
+    ```
+    make codecheck
+    ```
+
+# Folder Structure
+
+Refer to the following table for information about important directories and files in this repository.
 
 ```
-cd build
-sh upload.sh
+ign-physics
+├── dartsim                   Files for dartsim plugin component.
+├── include/ignition/physics  Header files.
+├── mesh                      Files for mesh component.
+├── resources                 Model and mesh resource files used by tests.
+├── sdf                       Files for sdf component.
+├── src                       Source files and unit tests.
+├── test
+│    ├── benchmark            Benchmark tests.
+│    ├── integration          Integration tests.
+│    ├── performance          Performance tests.
+│    ├── plugins              Plugins used in tests.
+│    ├── regression           Regression tests.
+│    └── static_assert        Tests involving compilation failures.
+├── tutorials                 Tutorials, written in markdown.
+├── Changelog.md              Changelog.
+└── CMakeLists.txt            CMake build script.
 ```
+# Contributing
 
-1. If you're creating a new release, then tell ignitionrobotics.org about
-   the new version. For example:
+Please see
+[CONTRIBUTING.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CONTRIBUTING.md).
 
-```
-curl -k -X POST -d '{"libName":"common", "version":"1.0.0", "releaseDate":"2017-10-09T12:10:13+02:00","password":"secret"}' https://api.ignitionrobotics.org/1.0/versions
-```
+# Code of Conduct
 
+Please see
+[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CODE_OF_CONDUCT.md).
+
+# Versioning
+
+This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Ignition Robotics project](https://ignitionrobotics.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Ignition Robotics website](https://ignitionrobotics.org) for version and release information.
+
+# License
+
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/master/LICENSE) file.
