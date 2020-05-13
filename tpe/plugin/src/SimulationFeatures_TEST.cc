@@ -36,6 +36,7 @@
 #include <test/Utils.hh>
 
 #include "EntityManagementFeatures.hh"
+#include "FreeGroupFeatures.hh"
 #include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
 
@@ -43,6 +44,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
   ignition::physics::tpeplugin::SimulationFeatureList,
   ignition::physics::tpeplugin::ShapeFeatureList,
   ignition::physics::tpeplugin::EntityManagementFeatureList,
+  ignition::physics::tpeplugin::FreeGroupFeatureList,
   ignition::physics::LinkFrameSemantics,
   ignition::physics::sdf::ConstructSdfWorld
 > { };
@@ -116,8 +118,9 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
     StepWorld(world, 1000);
 
     auto link = world->GetModel(0)->GetLink(0);
-    auto pos = link->FrameDataRelativeToWorld().pose.translation();
-    EXPECT_NEAR(pos.z(), 0.5, 5e-2);
+    auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(ignition::math::Pose3d(0, 1.5, 0.5, 0, 0, 0),
+              ignition::math::eigen3::convert(frameData.pose));
   }
 }
 
@@ -192,6 +195,38 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
               ignition::math::eigen3::convert(cylinderAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(0.5, 0.5, 0.55),
               ignition::math::eigen3::convert(cylinderAABB).Max());
+  }
+}
+
+TEST_P(SimulationFeatures_TEST, FreeGroup)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
+
+  for (const auto &world : worlds)
+  {
+    auto model = world->GetModel("sphere");
+    auto freeGroup = model->FindFreeGroup();
+    EXPECT_NE(nullptr, freeGroup);
+    EXPECT_NE(nullptr, freeGroup->CanonicalLink());
+
+    freeGroup->SetWorldPose(
+      ignition::math::eigen3::convert(ignition::math::Pose3d(0, 0, 2, 0, 0, 0)));
+    freeGroup->SetWorldLinearVelocity(
+      ignition::math::eigen3::convert(ignition::math::Vector3d(0.5, 0, 0.1)));
+    freeGroup->SetWorldAngularVelocity(
+      ignition::math::eigen3::convert(ignition::math::Vector3d(0.1, 0.2, 0)));
+
+    auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
+    EXPECT_EQ(ignition::math::Pose3d(0, 0, 2, 0, 0, 0),
+              ignition::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(ignition::math::Vector3d(0.5, 0, 0.1),
+              ignition::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(ignition::math::Vector3d(0.1, 0.2, 0),
+              ignition::math::eigen3::convert(frameData.angularVelocity));
   }
 }
 
