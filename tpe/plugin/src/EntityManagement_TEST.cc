@@ -35,28 +35,50 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   ignition::plugin::PluginPtr tpe_plugin =
     loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
+  // GetEntities_TEST
   auto engine =
     ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
   ASSERT_NE(nullptr, engine);
+  EXPECT_EQ("tpe", engine->GetName());
+  EXPECT_EQ(0u, engine->GetIndex());
+  EXPECT_EQ(0u, engine->GetWorldCount());
 
-  // GetEntities_TEST
   auto world = engine->ConstructEmptyWorld("empty world");
+  EXPECT_EQ(1u, engine->GetWorldCount());
   ASSERT_NE(nullptr, world);
   EXPECT_EQ("empty world", world->GetName());
+  EXPECT_EQ(0u, world->GetIndex());
+  EXPECT_EQ(0u, world->GetModelCount());
+
   EXPECT_EQ(engine, world->GetEngine());
+  EXPECT_EQ(world, engine->GetWorld(0));
+  EXPECT_EQ(world, engine->GetWorld("empty world"));
 
   auto model = world->ConstructEmptyModel("empty model");
+  EXPECT_EQ(1u, world->GetModelCount());
   ASSERT_NE(nullptr, model);
   EXPECT_EQ("empty model", model->GetName());
-  EXPECT_EQ(world, model->GetWorld());
   EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
+  EXPECT_EQ(2u, world->GetModelCount());
+  EXPECT_EQ(0u, model->GetIndex());
+  EXPECT_EQ(0u, model->GetLinkCount());
+
+  EXPECT_EQ(world, model->GetWorld());
+  EXPECT_EQ(model, world->GetModel(0));
+  EXPECT_EQ(model, world->GetModel("empty model"));
 
   auto link = model->ConstructEmptyLink("empty link");
+  EXPECT_EQ(1u, model->GetLinkCount());
   ASSERT_NE(nullptr, link);
   EXPECT_EQ("empty link", link->GetName());
-  EXPECT_EQ(model, link->GetModel());
   EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
+  EXPECT_EQ(2u, model->GetLinkCount());
+  EXPECT_EQ(0u, link->GetIndex());
   EXPECT_EQ(0u, link->GetShapeCount());
+
+  EXPECT_EQ(model, link->GetModel());
+  EXPECT_EQ(link, model->GetLink(0));
+  EXPECT_EQ(link, model->GetLink("empty link"));
 }
 
 TEST(EntityManagement_TEST, RemoveEntities)
@@ -93,6 +115,13 @@ TEST(EntityManagement_TEST, RemoveEntities)
   EXPECT_EQ(0ul, model2->GetIndex());
   world->RemoveModel(0);
   EXPECT_EQ(0ul, world->GetModelCount());
+
+  auto model3 = world->ConstructEmptyModel("model 3");
+  ASSERT_NE(nullptr, model3);
+  EXPECT_EQ(1u, world->GetModelCount());
+  world->RemoveModel("model 3");
+  EXPECT_EQ(0ul, world->GetModelCount());
+  EXPECT_EQ(nullptr, world->GetModel("model 3"));
 }
 
 int main(int argc, char *argv[])

@@ -57,6 +57,10 @@ struct ModelInfo
 struct LinkInfo
 {
   dart::dynamics::BodyNodePtr link;
+  /// \brief It may be necessary for dartsim to rename a BodyNode (eg. when
+  /// moving the BodyNode to a new skeleton), so we store the Gazebo-specified
+  /// name of the Link here.
+  std::string name;
 };
 
 struct JointInfo
@@ -123,6 +127,16 @@ struct EntityStorage
   const Value1 &at(const std::size_t _id) const
   {
     return idToObject.at(_id);
+  }
+
+  Value1 &at(const Key2 &_key)
+  {
+    return idToObject.at(objectToID.at(_key));
+  }
+
+  const Value1 &at(const Key2 &_key) const
+  {
+    return idToObject.at(objectToID.at(_key));
   }
 
   std::size_t size() const
@@ -275,6 +289,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     this->links.idToObject[id] = std::make_shared<LinkInfo>();
     this->links.idToObject[id]->link = _bn;
+    // The name of the BodyNode during creation is assumed to be the
+    // Gazebo-specified name.
+    this->links.idToObject[id]->name = _bn->getName();
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
