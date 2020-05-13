@@ -18,6 +18,7 @@
 #include <ignition/physics/Register.hh>
 
 #include "Base.hh"
+
 #include "CustomFeatures.hh"
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
