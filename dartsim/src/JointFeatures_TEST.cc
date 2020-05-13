@@ -37,8 +37,10 @@
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RevoluteJoint.hh>
 #include <ignition/physics/dartsim/World.hh>
+#include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
+#include <sdf/Model.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
@@ -50,12 +52,14 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::dartsim::RetrieveWorld,
   physics::AttachFixedJointFeature,
   physics::DetachJointFeature,
+  physics::SetJointTransformFromParentFeature,
   physics::ForwardStep,
   physics::FreeJointCast,
   physics::GetBasicJointState,
   physics::GetEntities,
   physics::RevoluteJointCast,
   physics::SetJointVelocityCommandFeature,
+  physics::sdf::ConstructSdfModel,
   physics::sdf::ConstructSdfWorld
 >;
 
@@ -317,7 +321,20 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
     EXPECT_GT(0.0, body2LinearVelocity.Z());
   }
 
+  const auto poseParent = dartBody1->getTransform();
+  const auto poseChild = dartBody2->getTransform();
+  auto poseParentChild = poseParent.inverse() * poseChild;
+
   auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
+
+  // AttachFixedJoint snaps the child body to the origin of the parent, so we
+  // set a transform on the joint to keep the transform between the two bodies
+  // the same as it was before they were attached
+  fixedJoint->SetTransformFromParent(poseParentChild);
+
+  // The name of the link obtained using the ign-physics API should remain the
+  // same even though AttachFixedJoint renames the associated BodyNode.
+  EXPECT_EQ(bodyName, model2Body->GetName());
 
   for (std::size_t i = 0; i < numSteps; ++i)
   {
@@ -336,6 +353,10 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
   // now detach joint and expect model2 to start moving again
   fixedJoint->Detach();
 
+  // The name of the link obtained using the ign-physics API should remain the
+  // same even though Detach renames the associated BodyNode.
+  EXPECT_EQ(bodyName, model2Body->GetName());
+
   for (std::size_t i = 0; i < numSteps; ++i)
   {
     world->Step(output, state, input);
@@ -350,6 +371,14 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
     // Negative z velocity
     EXPECT_GT(0.0, body2LinearVelocity.Z());
   }
+
+  // After a while, body2 should reach the ground and come to a stop
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    world->Step(output, state, input);
+  }
+
+  EXPECT_NEAR(0.0, dartBody2->getLinearVelocity().z(), 1e-3);
 }
 
 /////////////////////////////////////////////////
@@ -389,12 +418,151 @@ TEST_F(JointFeaturesFixture, LinkCountsInJointAttachDetach)
 
   // now detach joint and expect model2 to start moving again
   fixedJoint->Detach();
-  // After detaching we expect each model to have 1 link, but the current
-  // behavior is that there are 2 links in model1 and 0 in model2
-  // EXPECT_EQ(1u, model1->GetLinkCount());
-  // EXPECT_EQ(1u, model2->GetLinkCount());
-  EXPECT_EQ(2u, model1->GetLinkCount());
-  EXPECT_EQ(0u, model2->GetLinkCount());
+  // After detaching we expect each model to have 1 link
+  EXPECT_EQ(1u, model1->GetLinkCount());
+  EXPECT_EQ(1u, model2->GetLinkCount());
+
+  // Test that a model with the same name as a link doesn't cause problems
+  const std::string modelName3{"body"};
+  auto model3 = world->GetModel(modelName3);
+  EXPECT_EQ(1u, model3->GetLinkCount());
+
+  auto model3Body = model3->GetLink(bodyName);
+  auto fixedJoint2 = model3Body->AttachFixedJoint(model2Body);
+  EXPECT_EQ(2u, model2->GetLinkCount());
+  fixedJoint2->Detach();
+  // After detaching we expect each model to have 1 link
+  EXPECT_EQ(1u, model2->GetLinkCount());
+  EXPECT_EQ(1u, model3->GetLinkCount());
+}
+
+/////////////////////////////////////////////////
+// Attach a fixed joint between links that belong to different models where one
+// of the models is created after a step is called
+TEST_F(JointFeaturesFixture, JointAttachDetachSpawnedModel)
+{
+  std::string model1Str = R"(
+  <sdf version="1.6">
+    <model name="M1">
+      <pose>0 0 0.1 0 0 0</pose>
+      <link name="body">
+        <collision name="coll_box">
+          <geometry>
+            <box>
+              <size>0.2 0.2 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </sdf>)";
+
+  std::string model2Str = R"(
+  <sdf version="1.6">
+    <model name="M2">
+      <pose>1 0 0.1 0 0 0</pose>
+      <link name="chassis">
+        <collision name="coll_sphere">
+          <geometry>
+            <sphere>
+              <radius>0.1</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </sdf>)";
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  physics::World3dPtr<TestFeatureList> world;
+  {
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(TEST_WORLD_DIR "ground.sdf");
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+  }
+
+  {
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(model1Str);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.ModelByIndex(0));
+    world->ConstructModel(*root.ModelByIndex(0));
+  }
+
+  world->Step(output, state, input);
+
+  {
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(model2Str);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.ModelByIndex(0));
+    world->ConstructModel(*root.ModelByIndex(0));
+  }
+
+  const std::string modelName1{"M1"};
+  const std::string modelName2{"M2"};
+  const std::string bodyName1{"body"};
+  const std::string bodyName2{"chassis"};
+
+  auto model1 = world->GetModel(modelName1);
+  auto model2 = world->GetModel(modelName2);
+  auto model1Body = model1->GetLink(bodyName1);
+  auto model2Body = model2->GetLink(bodyName2);
+
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  const auto skeleton1 = dartWorld->getSkeleton(modelName1);
+  const auto skeleton2 = dartWorld->getSkeleton(modelName2);
+  ASSERT_NE(nullptr, skeleton1);
+  ASSERT_NE(nullptr, skeleton2);
+
+  auto *dartBody1 = skeleton1->getBodyNode(bodyName1);
+  auto *dartBody2 = skeleton2->getBodyNode(bodyName2);
+
+  ASSERT_NE(nullptr, dartBody1);
+  ASSERT_NE(nullptr, dartBody2);
+
+  const auto poseParent = dartBody1->getTransform();
+  const auto poseChild = dartBody2->getTransform();
+
+  // Before ign-physics PR #31, uncommenting the following `step` call makes
+  // this test pass, but commenting it out makes it fail.
+  // world->Step(output, state, input);
+  auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
+
+  // Pose of child relative to parent
+  auto poseParentChild = poseParent.inverse() * poseChild;
+
+  // We let the joint be at the origin of the child link.
+  fixedJoint->SetTransformFromParent(poseParentChild);
+
+  const std::size_t numSteps = 100;
+
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    world->Step(output, state, input);
+  }
+
+  // Expect both bodies to hit the ground and stop
+  EXPECT_NEAR(0.0, dartBody1->getLinearVelocity().z(), 1e-3);
+  EXPECT_NEAR(0.0, dartBody2->getLinearVelocity().z(), 1e-3);
+
+  fixedJoint->Detach();
+
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    world->Step(output, state, input);
+  }
+
+  // Expect both bodies to remain in contact with the ground with zero velocity.
+  EXPECT_NEAR(0.0, dartBody1->getLinearVelocity().z(), 1e-3);
+  EXPECT_NEAR(0.0, dartBody2->getLinearVelocity().z(), 1e-3);
 }
 
 /////////////////////////////////////////////////
