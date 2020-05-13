@@ -117,6 +117,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     auto worldPtr = std::make_shared<WorldInfo>();
     worldPtr->world = _world;
     this->worlds.insert({worldId, worldPtr});
+    this->childIdToParentId.insert({worldId, -1});
     return this->GenerateIdentity(worldId, worldPtr);
   }
 
