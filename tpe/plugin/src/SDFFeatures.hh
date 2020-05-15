@@ -49,7 +49,7 @@ class SDFFeatures :
     public virtual Implements3d<SDFFeatureList>
 {
   public: Identity ConstructSdfWorld(
-    const Identity &/*_engine*/,
+    const Identity &_engine,
     const ::sdf::World &_sdfWorld) override;
 
   public: Identity ConstructSdfModel(

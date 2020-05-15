@@ -39,13 +39,15 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
   // check if id is present and skip if not
-  if (this->childIdToParentId.find(_id.ID()) == this->childIdToParentId.end())
+  auto it = this->childIdToParentId.find(_id.ID());
+  if (it == this->childIdToParentId.end())
   {
     ignwarn << "Link [" << _id.ID() << "]  is not found." << std::endl;
     return data;
   }
-  std::size_t modelId = this->childIdToParentId.at(_id.ID());
-  if (this->models.find(modelId) == this->models.end())
+  std::size_t modelId = it->second;
+  auto modelIt = this->models.find(modelId);
+  if (modelIt == this->models.end())
   {
     ignwarn << "Parent model ["
       << modelId
@@ -55,7 +57,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       << std::endl;
     return data;
   }
-  tpelib::Model *model = this->models.at(modelId)->model;
+  tpelib::Model *model = modelIt->second->model;
 
   data.pose = math::eigen3::convert(model->GetPose());
   data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());

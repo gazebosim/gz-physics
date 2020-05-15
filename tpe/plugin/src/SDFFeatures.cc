@@ -51,7 +51,6 @@ Identity SDFFeatures::ConstructSdfModel(
 {
   // Read sdf params
   const std::string name = _sdfModel.Name();
-  igndbg << "construct model " << name << std::endl;
   const auto pose = _sdfModel.RawPose();
 
   if (this->worlds.find(_worldID.id) == this->worlds.end())

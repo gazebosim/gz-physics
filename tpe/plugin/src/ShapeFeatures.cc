@@ -302,8 +302,5 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
       return math::eigen3::convert(shape->GetBoundingBox());
   }
   // return invalid bounding box if collision not found
-  return math::eigen3::convert(
-    math::AxisAlignedBox(
-      math::Vector3d(0, 0, 0),
-      math::Vector3d(0, 0, 0)));
+  return math::eigen3::convert(math::AxisAlignedBox();
 }
