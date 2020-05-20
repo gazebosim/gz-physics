@@ -53,12 +53,13 @@ Identity SDFFeatures::ConstructSdfModel(
   const std::string name = _sdfModel.Name();
   const auto pose = _sdfModel.RawPose();
 
-  if (this->worlds.find(_worldID.id) == this->worlds.end())
+  auto it = this->worlds.find(_worldID.id);
+  if (it == this->worlds.end())
   {
     ignwarn << "World [" << _worldID.id << "] is not found." << std::endl;
     return this->GenerateInvalidId();
   }
-  auto world = this->worlds.at(_worldID)->world;
+  auto world = it->second->world;
   if (world == nullptr)
   {
     ignwarn << "World is a nullptr" << std::endl;
@@ -89,12 +90,13 @@ Identity SDFFeatures::ConstructSdfLink(
   igndbg << "construct link " << name << std::endl;
   const auto pose = _sdfLink.RawPose();
 
-  if (this->models.find(_modelID) == this->models.end())
+  auto it = this->models.find(_modelID);
+  if (it == this->models.end())
   {
     ignwarn << "Model [" << _modelID.id << "] is not found" << std::endl;
     return this->GenerateInvalidId();
   } 
-  auto model = this->models.at(_modelID)->model;
+  auto model = it->second->model;
   if (model == nullptr)
   {
     ignwarn << "Model is a nullptr" << std::endl;
@@ -126,12 +128,13 @@ Identity SDFFeatures::ConstructSdfCollision(
   const auto pose = _sdfCollision.RawPose();
   const auto geom = _sdfCollision.Geom();
 
-  if (this->links.find(_linkID) == this->links.end())
+  auto it = this->links.find(_linkID);
+  if (it == this->links.end())
   {
     ignwarn << "Link [" << _linkID.id << "] is not found" << std::endl;
     return this->GenerateInvalidId();
   }
-  auto link = this->links.at(_linkID)->link;
+  auto link = it->second->link;
   if (link == nullptr)
   {
     ignwarn << "Link is a nullptr" << std::endl;
@@ -180,12 +183,13 @@ Identity SDFFeatures::ConstructSdfCollision(
   const auto pose = _sdfCollision.RawPose();
   const auto geom = _sdfCollision.Geom();
 
-  if (this->links.find(_linkID) == this->links.end())
+  auto it = this->links.find(_linkID);
+  if (it == this->links.end())
   {
     ignwarn << "Link [" << _linkID.id << "] is not found" << std::endl;
     return this->GenerateInvalidId();
   }
-  auto link = this->links.at(_linkID)->link;
+  auto link = it->second->link;
   if (link == nullptr)
   {
     ignwarn << "Link is a nullptr" << std::endl;

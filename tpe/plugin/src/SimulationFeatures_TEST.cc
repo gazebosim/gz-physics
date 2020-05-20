@@ -69,7 +69,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
   {
     ignition::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    std::cout << " -- Plugin name: " << name << std::endl;
+    igndbg << " -- Plugin name: " << name << std::endl;
 
     auto engine =
       ignition::physics::RequestEngine3d<TestFeatureList>::From(plugin);
@@ -110,7 +110,7 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
   if (library.empty())
     return;
 
-  std::cout << "Testing library " << library << std::endl;
+  igndbg << "Testing library " << library << std::endl;
   auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
 
   for (const auto &world : worlds)
