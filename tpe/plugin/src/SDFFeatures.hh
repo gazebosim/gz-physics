@@ -18,8 +18,6 @@
 #ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SDFFEATURES_HH_
 #define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SDFFEATURES_HH_
 
-#include <string>
-
 #include <sdf/Collision.hh>
 #include <sdf/Link.hh>
 #include <sdf/Joint.hh>
