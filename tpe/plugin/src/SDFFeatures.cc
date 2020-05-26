@@ -87,7 +87,6 @@ Identity SDFFeatures::ConstructSdfLink(
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
-  igndbg << "construct link " << name << std::endl;
   const auto pose = _sdfLink.RawPose();
 
   auto it = this->models.find(_modelID);
@@ -124,7 +123,6 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   // Read sdf params
   const std::string name = _sdfCollision.Name();
-  igndbg << "construct collision " << name << std::endl;
   const auto pose = _sdfCollision.RawPose();
   const auto geom = _sdfCollision.Geom();
 
@@ -179,7 +177,6 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   // Read sdf params
   const std::string name = _sdfCollision.Name();
-  igndbg << "construct collision " << name << std::endl;
   const auto pose = _sdfCollision.RawPose();
   const auto geom = _sdfCollision.Geom();
 
