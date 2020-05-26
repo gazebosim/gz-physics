@@ -24,9 +24,9 @@
 #include <sdf/Link.hh>
 #include <sdf/Joint.hh>
 
+#include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <ignition/physics/Implements.hh>
