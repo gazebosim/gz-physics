@@ -116,8 +116,11 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
   for (const auto &world : worlds)
   {
     StepWorld(world, 1000);
-
-    auto link = world->GetModel(0)->GetLink(0);
+    
+    auto model = world->GetModel(0);
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink(0);
+    ASSERT_NE(nullptr, link);
     auto frameData = link->FrameDataRelativeToWorld();
     EXPECT_EQ(ignition::math::Pose3d(0, 1.5, 0.5, 0, 0, 0),
               ignition::math::eigen3::convert(frameData.pose));
@@ -141,6 +144,7 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     auto sphereShape = sphereCollision->CastToSphereShape();
     EXPECT_NEAR(1.0, sphereShape->GetRadius(), 1e-6);
 
+    EXPECT_EQ(1u, sphereLink->GetShapeCount());
     auto sphere2 = sphereLink->AttachSphereShape(
       "sphere2", 1.0, Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, sphereLink->GetShapeCount());
@@ -210,8 +214,8 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
   {
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
-    EXPECT_NE(nullptr, freeGroup);
-    EXPECT_NE(nullptr, freeGroup->CanonicalLink());
+    ASSERT_NE(nullptr, freeGroup);
+    ASSERT_NE(nullptr, freeGroup->CanonicalLink());
 
     freeGroup->SetWorldPose(
       ignition::math::eigen3::convert(ignition::math::Pose3d(0, 0, 2, 0, 0, 0)));
