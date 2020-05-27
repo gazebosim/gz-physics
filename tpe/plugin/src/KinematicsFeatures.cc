@@ -42,26 +42,29 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   auto it = this->childIdToParentId.find(_id.ID());
   if (it == this->childIdToParentId.end())
   {
-    ignwarn << "Link [" << _id.ID() << "]  is not found." << std::endl;
+    ignwarn << "Entity [" << _id.ID() << "]  is not found." << std::endl;
     return data;
   }
-  std::size_t modelId = it->second;
-  auto modelIt = this->models.find(modelId);
-  if (modelIt == this->models.end())
-  {
-    ignwarn << "Parent model ["
-      << modelId
-      << "] of link ["
-      << _id.ID()
-      << "] is not found."
-      << std::endl;
-    return data;
-  }
-  tpelib::Model *model = modelIt->second->model;
 
-  data.pose = math::eigen3::convert(model->GetPose());
-  data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
-  data.angularVelocity = math::eigen3::convert(model->GetAngularVelocity());
+  auto modelIt = this->models.find(it->second);
+  auto worldIt = this->worlds.find(it->second);
+  if (modelIt != this->models.end())
+  {
+    auto model = modelIt->second->model;
+    data.pose = math::eigen3::convert(model->GetPose());
+    data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
+    data.angularVelocity = math::eigen3::convert(model->GetAngularVelocity());
+  }
+  else if (worldIt != this->worlds.end())
+  {
+    auto world = worldIt->second->world;
+    data.pose = math::eigen3::convert(world->GetPose());
+  }
+  else
+  {
+    ignwarn << "Neither world or model with id ["
+      << it->second << "] is not found" << std::endl;
+  }
 
   return data;
 }
