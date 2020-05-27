@@ -17,7 +17,6 @@
 
 #include <sdf/Box.hh>
 #include <sdf/Cylinder.hh>
-#include <sdf/Mesh.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
 #include <ignition/common/Console.hh>
@@ -165,55 +164,9 @@ Identity SDFFeatures::ConstructSdfCollision(
     shape.SetRadius(sphereSdf->Radius());
     collision->SetShape(shape);
   }
-  const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
-  return collisionIdentity;
-}
-
-/////////////////////////////////////////////////
-Identity SDFFeatures::ConstructSdfCollision(
-    const Identity &_linkID,
-    const ::sdf::Collision &_sdfCollision,
-    const common::Mesh *_mesh)
-{
-  // Read sdf params
-  const std::string name = _sdfCollision.Name();
-  const auto pose = _sdfCollision.RawPose();
-  const auto geom = _sdfCollision.Geom();
-
-  auto it = this->links.find(_linkID);
-  if (it == this->links.end())
-  {
-    ignwarn << "Link [" << _linkID.id << "] is not found" << std::endl;
-    return this->GenerateInvalidId();
-  }
-  auto link = it->second->link;
-  if (link == nullptr)
-  {
-    ignwarn << "Link is a nullptr" << std::endl;
-    return this->GenerateInvalidId();
-  }
-
-  tpelib::Entity &ent = link->AddCollision();
-  tpelib::Collision *collision = static_cast<tpelib::Collision *>(&ent);
-  collision->SetName(name);
-  collision->SetPose(pose);
-  if (geom->Type() == ::sdf::GeometryType::MESH)
-  {
-    // \todo(anyone) the code here assumes that the mesh is loaded externally
-    // and passed in as argument as there is no logic for searching resources
-    // in ign-physics
-    if (_mesh)
-    {
-      tpelib::MeshShape shape;
-      shape.SetMesh(*_mesh);
-      collision->SetShape(shape);
-    }
-    else
-    {
-      ignerr << "Unable to construct mesh shape. Mesh is null" << std::endl;
-    }
-  }
-
+  // \todo(anyone) add mesh. currently mesh has to be loaded externally
+  // and passed in as argument as there is no logic for searching resources
+  // in ign-physics
   const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
   return collisionIdentity;
 }
