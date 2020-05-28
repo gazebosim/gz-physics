@@ -50,6 +50,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   auto worldIt = this->worlds.find(it->second);
   if (modelIt != this->models.end())
   {
+    // \todo(anyone): add link offset to consider link pose
     auto model = modelIt->second->model;
     data.pose = math::eigen3::convert(model->GetPose());
     data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
