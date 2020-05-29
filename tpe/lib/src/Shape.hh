@@ -76,10 +76,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
   /// \brief Update the shape's bounding box
   protected: virtual void UpdateBoundingBox();
 
-   /// \brief Bounding Box
+  /// \brief Bounding Box
   protected: math::AxisAlignedBox bbox;
 
-   /// \brief Type of shape
+  /// \brief Type of shape
   protected: ShapeType type;
 
    /// \brief Flag to indicate if dimensions changed
