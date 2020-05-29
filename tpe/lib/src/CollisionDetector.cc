@@ -157,4 +157,3 @@ bool CollisionDetector::GetIntersectionPoints(const math::AxisAlignedBox &_b1,
   }
   return false;
 }
-

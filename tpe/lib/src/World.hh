@@ -74,7 +74,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   /// \brief Collision detector
   protected: CollisionDetector collisionDetector;
 
-  /// \brief Collision detector
+  /// \brief list of contacts
   protected: std::vector<Contact> contacts;
 };
 
