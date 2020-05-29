@@ -45,6 +45,11 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
     const Identity &_worldID) const override;
+
+  /// \brief Get a collision from the canonical link of a model
+  /// \param[in] _id Model ID
+  /// \return ID Collision entity
+  private: tpelib::Entity &GetModelCollision(std::size_t _id) const;
 };
 
 }

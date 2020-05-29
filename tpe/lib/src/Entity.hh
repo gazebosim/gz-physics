@@ -74,6 +74,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \return Name of entity
   public: virtual std::string GetName() const;
 
+  /// \brief Get a const reference to the name of the entity
+  /// \return Name of entity
+  public: virtual const std::string &GetNameRef() const;
+
   /// \brief Set the id of the entity
   /// \param[in] _unique Id
   public: virtual void SetId(std::size_t _id);
@@ -99,6 +103,11 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \param[in] _name Name of child entity
   /// \return Child entity
   public: virtual Entity &GetChildByName(const std::string &_name) const;
+
+  /// \brief Get a child entity by index
+  /// \param[in] _index Index of child entity
+  /// \return Child entity
+  public: virtual Entity &GetChildByIndex(unsigned int _index) const;
 
   /// \brief Remove a child entity by id
   /// \param[in] _id Id of child entity to remove

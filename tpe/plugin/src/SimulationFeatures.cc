@@ -15,10 +15,15 @@
  *
 */
 
+#include "lib/src/Entity.hh"
+
 #include "SimulationFeatures.hh"
 
 #include <ignition/common/Console.hh>
-#include "ignition/common/Profiler.hh"
+#include <ignition/common/Profiler.hh>
+
+#include <ignition/math/eigen3/Conversions.hh>
+
 
 using namespace ignition;
 using namespace physics;
@@ -39,7 +44,7 @@ void SimulationFeatures::WorldForwardStep(
       << std::endl;
   }
   std::shared_ptr<tpelib::World> world = it->second->world;
-  auto *dtDur = 
+  auto *dtDur =
     _u.Query<std::chrono::steady_clock::duration>();
   const double tol = 1e-6;
   if (dtDur)
@@ -59,8 +64,38 @@ void SimulationFeatures::WorldForwardStep(
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
-  // TODO(claireyywang): Implement contact points after collision detection is added
   std::vector<SimulationFeatures::ContactInternal> outContacts;
-  std::shared_ptr<tpelib::World> world = this->worlds.at(_worldID)->world;
+  auto const world = this->ReferenceInterface<WorldInfo>(_worldID)->world;
+  const auto contacts = world->GetContacts();
+
+  for (const auto &c : contacts)
+  {
+    CompositeData extraData;
+
+    // Contact expects identity to be associated with shapes not models
+    // but tpe computes collisions between models
+    // Workaround is to return the first shape of a model
+    auto s1 = this->GetModelCollision(c.entity1);
+    auto s2 = this->GetModelCollision(c.entity2);
+
+    outContacts.push_back(
+        {this->GenerateIdentity(s1.GetId(), this->collisions.at(s1.GetId())),
+         this->GenerateIdentity(s2.GetId(), this->collisions.at(s2.GetId())),
+         math::eigen3::convert(c.point), extraData});
+  }
+
   return outContacts;
+}
+
+tpelib::Entity &SimulationFeatures::GetModelCollision(std::size_t _id) const
+{
+  auto m = this->models.at(_id);
+  if (!m || !m->model)
+    return tpelib::Entity::kNullEntity;
+
+  tpelib::Entity &link = m->model->GetCanonicalLink();
+  if (link.GetChildCount() == 0u)
+    return tpelib::Entity::kNullEntity;
+
+  return link.GetChildByIndex(0u);
 }

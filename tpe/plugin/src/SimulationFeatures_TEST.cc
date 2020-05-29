@@ -45,12 +45,14 @@ struct TestFeatureList : ignition::physics::FeatureList<
   ignition::physics::tpeplugin::ShapeFeatureList,
   ignition::physics::tpeplugin::EntityManagementFeatureList,
   ignition::physics::tpeplugin::FreeGroupFeatureList,
+  ignition::physics::GetContactsFromLastStepFeature,
   ignition::physics::LinkFrameSemantics,
   ignition::physics::sdf::ConstructSdfWorld
 > { };
 
 using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
+using ContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
 
 std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
@@ -149,7 +151,7 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
       "sphere2", 1.0, Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, sphereLink->GetShapeCount());
     EXPECT_EQ(sphere2, sphereLink->GetShape(1));
-  
+
     auto ground = world->GetModel("box");
     auto groundLink = ground->GetLink(0);
     auto groundCollision = groundLink->GetShape(0);
@@ -183,7 +185,7 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
 
     auto groundAABB =
       groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
-    
+
     auto cylinderAABB =
       cylinderCollision->GetAxisAlignedBoundingBox(*cylinderCollision);
 
@@ -231,6 +233,119 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
               ignition::math::eigen3::convert(frameData.linearVelocity));
     EXPECT_EQ(ignition::math::Vector3d(0.1, 0.2, 0),
               ignition::math::eigen3::convert(frameData.angularVelocity));
+  }
+}
+
+TEST_P(SimulationFeatures_TEST, RetrieveContacts)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
+
+  for (const auto &world : worlds)
+  {
+    auto sphere = world->GetModel("sphere");
+    auto sphereFreeGroup = sphere->FindFreeGroup();
+    EXPECT_NE(nullptr, sphereFreeGroup);
+
+    auto cylinder = world->GetModel("cylinder");
+    auto cylinderFreeGroup = cylinder->FindFreeGroup();
+    EXPECT_NE(nullptr, cylinderFreeGroup);
+
+    auto box = world->GetModel("box");
+
+    // step and get contacts
+    StepWorld(world, 1);
+    auto contacts = world->GetContactsFromLastStep();
+
+    // large box in the middle should be intersecting with sphere and cylinder
+    EXPECT_EQ(2u, contacts.size());
+    unsigned int contactBoxSphere = 0u;
+    unsigned int contactBoxCylinder = 0u;
+
+    for (auto &contact : contacts)
+    {
+      const auto &contactPoint = contact.Get<ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      auto m1 = c1->GetLink()->GetModel();
+      auto m2 = c2->GetLink()->GetModel();
+      if ((m1->GetName() == "sphere" && m2->GetName() == "box") ||
+          (m1->GetName() == "box" && m2->GetName() == "sphere"))
+      {
+        contactBoxSphere++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, 1.5, 0.5);
+        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
+      else if ((m1->GetName() == "box" && m2->GetName() == "cylinder") ||
+          (m1->GetName() == "cylinder" && m2->GetName() == "box"))
+      {
+        contactBoxCylinder++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, -1.5, 0.5);
+        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
+      else
+      {
+        FAIL() << "There should not be contacts between: "
+               << m1->GetName() << " " << m2->GetName();
+      }
+    }
+    EXPECT_EQ(1u, contactBoxSphere);
+    EXPECT_EQ(1u, contactBoxCylinder);
+
+    // move sphere away
+    sphereFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
+        ignition::math::Pose3d(0, 100, 0.5, 0, 0, 0)));
+
+    // step and get contacts
+    StepWorld(world, 1);
+    contacts = world->GetContactsFromLastStep();
+
+    // large box in the middle should be intersecting with cylinder
+    EXPECT_EQ(1u, contacts.size());
+
+    contactBoxCylinder = 0u;
+    for (auto contact : contacts)
+    {
+      const auto &contactPoint = contact.Get<::ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      auto m1 = c1->GetLink()->GetModel();
+      auto m2 = c2->GetLink()->GetModel();
+      if ((m1->GetName() == "box" && m2->GetName() == "cylinder") ||
+          (m1->GetName() == "cylinder" && m2->GetName() == "box"))
+        contactBoxCylinder++;
+      else
+        FAIL() << "There should only be contacts between box and cylinder";
+
+      Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, -1.5, 0.5);
+      EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+          contactPoint.point, 1e-6));
+    }
+    EXPECT_EQ(1u, contactBoxCylinder);
+
+    // move cylinder away
+    cylinderFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
+        ignition::math::Pose3d(0, -100, 0.5, 0, 0, 0)));
+
+    // step and get contacts
+    StepWorld(world, 1);
+    contacts = world->GetContactsFromLastStep();
+
+    // no entities should be colliding
+    EXPECT_TRUE(contacts.empty());
   }
 }
 
