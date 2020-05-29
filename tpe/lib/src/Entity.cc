@@ -37,7 +37,7 @@ class ignition::physics::tpelib::EntityPrivate
   public: math::AxisAlignedBox bbox;
 
   /// \brief Flag to indicate if bounding box changed
-  public: bool bboxDirty = false;
+  public: bool bboxDirty = true;
 };
 
 using namespace ignition;
