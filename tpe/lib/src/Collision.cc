@@ -74,7 +74,8 @@ void Collision::SetShape(const Shape &_shape)
   }
   else if (_shape.GetType() == ShapeType::CYLINDER)
   {
-    const CylinderShape *typedShape = static_cast<const CylinderShape *>(&_shape);
+    const CylinderShape *typedShape =
+      static_cast<const CylinderShape *>(&_shape);
     this->dataPtr->shape.reset(new CylinderShape(*typedShape));
   }
   else if (_shape.GetType() == ShapeType::SPHERE)

@@ -15,9 +15,9 @@
  *
  */
 
-#include <memory>
-
 #include <gtest/gtest.h>
+
+#include <memory>
 
 #include <ignition/physics/Implements.hh>
 
@@ -50,21 +50,23 @@ TEST(BaseClass, AddEntities)
 
   EXPECT_TRUE(base.worlds.find(worldId) != base.worlds.end());
   EXPECT_EQ(worldId, base.worlds.find(worldId)->second->world->GetId());
-  EXPECT_EQ(world->GetName(), base.worlds.find(worldId)->second->world->GetName());
+  EXPECT_EQ(
+    world->GetName(), base.worlds.find(worldId)->second->world->GetName());
 
   // add models to world
   auto &modelEnt1 = world->AddModel();
   modelEnt1.SetName("box");
   auto *model1 = static_cast<tpelib::Model *>(&modelEnt1);
   std::size_t modelId1 = model1->GetId();
-  
+
   EXPECT_EQ(0u, base.models.size());
   auto modelIdentity1 = base.AddModel(worldId, *model1);
   EXPECT_EQ(1u, base.models.size());
 
   EXPECT_TRUE(base.models.find(modelId1) != base.models.end());
   EXPECT_EQ(modelId1, base.models.find(modelId1)->second->model->GetId());
-  EXPECT_EQ(model1->GetName(), base.models.find(modelId1)->second->model->GetName());
+  EXPECT_EQ(
+    model1->GetName(), base.models.find(modelId1)->second->model->GetName());
 
   auto &modelEnt2 = world->AddModel();
   modelEnt2.SetName("cylinder");
@@ -77,7 +79,8 @@ TEST(BaseClass, AddEntities)
 
   EXPECT_TRUE(base.models.find(modelId2) != base.models.end());
   EXPECT_EQ(modelId2, base.models.find(modelId2)->second->model->GetId());
-  EXPECT_EQ(model2->GetName(), base.models.find(modelId2)->second->model->GetName());
+  EXPECT_EQ(
+    model2->GetName(), base.models.find(modelId2)->second->model->GetName());
 
   // add first link to model1
   auto &linkEnt1 = model1->AddLink();
@@ -92,7 +95,8 @@ TEST(BaseClass, AddEntities)
 
   EXPECT_TRUE(base.links.find(linkId1) != base.links.end());
   EXPECT_EQ(linkId1, base.links.find(linkId1)->second->link->GetId());
-  EXPECT_EQ(link1->GetName(), base.links.find(linkId1)->second->link->GetName());
+  EXPECT_EQ(
+    link1->GetName(), base.links.find(linkId1)->second->link->GetName());
   EXPECT_EQ(modelId1, base.childIdToParentId.find(linkId1)->second);
 
   // add second link to model2
@@ -108,7 +112,8 @@ TEST(BaseClass, AddEntities)
 
   EXPECT_TRUE(base.links.find(linkId2) != base.links.end());
   EXPECT_EQ(linkId2, base.links.find(linkId2)->second->link->GetId());
-  EXPECT_EQ(link2->GetName(), base.links.find(linkId2)->second->link->GetName());
+  EXPECT_EQ(
+    link2->GetName(), base.links.find(linkId2)->second->link->GetName());
   EXPECT_EQ(modelId2, base.childIdToParentId.find(linkId2)->second);
 
   // add collision shape box to link1
@@ -123,8 +128,11 @@ TEST(BaseClass, AddEntities)
   EXPECT_EQ(1u, link1->GetChildCount());
 
   EXPECT_TRUE(base.collisions.find(boxId) != base.collisions.end());
-  EXPECT_EQ(boxId, base.collisions.find(boxId)->second->collision->GetId());
-  EXPECT_EQ(box->GetName(), base.collisions.find(boxId)->second->collision->GetName());
+  EXPECT_EQ(
+    boxId, base.collisions.find(boxId)->second->collision->GetId());
+  EXPECT_EQ(
+    box->GetName(),
+    base.collisions.find(boxId)->second->collision->GetName());
   EXPECT_EQ(linkId1, base.childIdToParentId.find(boxId)->second);
 
   // add collision shape cylinder to link2
@@ -139,8 +147,12 @@ TEST(BaseClass, AddEntities)
   EXPECT_EQ(1u, link2->GetChildCount());
 
   EXPECT_TRUE(base.collisions.find(cylinderId) != base.collisions.end());
-  EXPECT_EQ(cylinderId, base.collisions.find(cylinderId)->second->collision->GetId());
-  EXPECT_EQ(cylinder->GetName(), base.collisions.find(cylinderId)->second->collision->GetName());
+  EXPECT_EQ(
+    cylinderId,
+    base.collisions.find(cylinderId)->second->collision->GetId());
+  EXPECT_EQ(
+    cylinder->GetName(),
+    base.collisions.find(cylinderId)->second->collision->GetName());
   EXPECT_EQ(linkId2, base.childIdToParentId.find(cylinderId)->second);
 
   // check indices

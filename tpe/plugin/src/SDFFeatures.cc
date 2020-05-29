@@ -93,7 +93,7 @@ Identity SDFFeatures::ConstructSdfLink(
   {
     ignwarn << "Model [" << _modelID.id << "] is not found" << std::endl;
     return this->GenerateInvalidId();
-  } 
+  }
   auto model = it->second->model;
   if (model == nullptr)
   {
