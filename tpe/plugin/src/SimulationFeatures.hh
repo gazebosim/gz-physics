@@ -48,7 +48,7 @@ class SimulationFeatures :
 
   /// \brief Get a collision from the canonical link of a model
   /// \param[in] _id Model ID
-  /// \return ID Collision entity
+  /// \return Collision entity
   private: tpelib::Entity &GetModelCollision(std::size_t _id) const;
 };
 

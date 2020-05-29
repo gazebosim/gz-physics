@@ -15,8 +15,6 @@
  *
 */
 
-#include "lib/src/Entity.hh"
-
 #include "SimulationFeatures.hh"
 
 #include <ignition/common/Console.hh>
