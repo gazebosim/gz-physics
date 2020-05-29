@@ -58,7 +58,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ(1u, world->GetModelCount());
   ASSERT_NE(nullptr, model);
   EXPECT_EQ("empty model", model->GetName());
-  EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
+  ASSERT_NE(model, world->ConstructEmptyModel("dummy"));
   EXPECT_EQ(2u, world->GetModelCount());
   EXPECT_EQ(0u, model->GetIndex());
   EXPECT_EQ(0u, model->GetLinkCount());
@@ -71,7 +71,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ(1u, model->GetLinkCount());
   ASSERT_NE(nullptr, link);
   EXPECT_EQ("empty link", link->GetName());
-  EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
+  ASSERT_NE(link, model->ConstructEmptyLink("dummy"));
   EXPECT_EQ(2u, model->GetLinkCount());
   EXPECT_EQ(0u, link->GetIndex());
   EXPECT_EQ(0u, link->GetShapeCount());

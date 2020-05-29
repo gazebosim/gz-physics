@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,37 +15,26 @@
  *
 */
 
-#ifndef TEST_PHYSICSPLUGINLIST_HH_
-#define TEST_PHYSICSPLUGINLIST_HH_
+#include <ignition/common/Console.hh>
 
-#include <string>
-#include <vector>
+#include "CustomFeatures.hh"
 
-#ifndef dartsim_plugin_LIB
-#define dartsim_plugin_LIB ""
-#endif
+using namespace ignition;
+using namespace physics;
+using namespace tpeplugin;
 
-#ifndef bullet_plugin_LIB
-#define bullet_plugin_LIB ""
-#endif
-
-#ifndef tpe_plugin_LIB
-#define tpe_plugin_LIB ""
-#endif
-
-namespace ignition
+/////////////////////////////////////////////////
+std::shared_ptr<tpelib::World> CustomFeatures::GetTpeLibWorld(
+  const Identity &_worldID)
 {
-  namespace physics
+  auto it = this->worlds.find(_worldID);
+  if (it == this->worlds.end())
   {
-    namespace test
-    {
-      const std::vector<std::string> g_PhysicsPluginLibraries = {
-        dartsim_plugin_LIB,
-        bullet_plugin_LIB,
-        tpe_plugin_LIB
-      };
-    }
+    ignerr << "Unable to retrieve world ["
+      << _worldID.id
+      << "]"
+      << std::endl;
+    return nullptr;
   }
+  return it->second->world;
 }
-
-#endif

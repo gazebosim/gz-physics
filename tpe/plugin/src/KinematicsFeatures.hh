@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,37 +15,30 @@
  *
 */
 
-#ifndef TEST_PHYSICSPLUGINLIST_HH_
-#define TEST_PHYSICSPLUGINLIST_HH_
+#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_KINEMATICSFEATURES_HH_
+#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_KINEMATICSFEATURES_HH_
 
-#include <string>
-#include <vector>
+#include <ignition/physics/FrameSemantics.hh>
 
-#ifndef dartsim_plugin_LIB
-#define dartsim_plugin_LIB ""
-#endif
+#include "Base.hh"
 
-#ifndef bullet_plugin_LIB
-#define bullet_plugin_LIB ""
-#endif
+namespace ignition {
+namespace physics {
+namespace tpeplugin {
 
-#ifndef tpe_plugin_LIB
-#define tpe_plugin_LIB ""
-#endif
+struct KinematicsFeatureList : FeatureList<
+  LinkFrameSemantics
+> { };
 
-namespace ignition
+class KinematicsFeatures :
+  public virtual Base,
+  public virtual Implements3d<KinematicsFeatureList>
 {
-  namespace physics
-  {
-    namespace test
-    {
-      const std::vector<std::string> g_PhysicsPluginLibraries = {
-        dartsim_plugin_LIB,
-        bullet_plugin_LIB,
-        tpe_plugin_LIB
-      };
-    }
-  }
+  public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const override;
+};
+
+}
+}
 }
 
 #endif

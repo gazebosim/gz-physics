@@ -390,7 +390,7 @@ bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
-  const Identity &/*_engineID*/, const std::string &_name)
+  const Identity &, const std::string &_name)
 {
   auto world = std::make_shared<tpelib::World>();
   world->SetName(_name);
