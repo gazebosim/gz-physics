@@ -148,7 +148,7 @@ Identity ShapeFeatures::AttachCylinderShape(
       it->second->link->AddCollision());
     collision.SetName(_name);
     collision.SetPose(math::eigen3::convert(_pose));
-    
+
     tpelib::CylinderShape cylindershape;
     cylindershape.SetRadius(_radius);
     cylindershape.SetLength(_height);

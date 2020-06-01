@@ -55,7 +55,8 @@ TEST(Model, BasicAPI)
   math::Pose3d expectedPose(
     originalPose.Pos() + math::Vector3d(0.1, 0.1, 0.1) * timeStep,
     originalPose.Rot().Integrate(math::Vector3d(1.0, 0, 0), timeStep));
-  model2.UpdatePose(timeStep, model2.GetLinearVelocity(), model2.GetAngularVelocity());
+  model2.UpdatePose(
+    timeStep, model2.GetLinearVelocity(), model2.GetAngularVelocity());
   EXPECT_EQ(expectedPose, model2.GetPose());
 }
 

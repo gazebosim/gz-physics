@@ -65,7 +65,7 @@ Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
     tpelib::Entity &link = model_it->second->model->GetCanonicalLink();
     auto linkPtr = std::make_shared<LinkInfo>();
     linkPtr->link = static_cast<tpelib::Link *>(&link);
-    return this->GenerateIdentity(link.GetId(), linkPtr); 
+    return this->GenerateIdentity(link.GetId(), linkPtr);
   }
   return this->GenerateInvalidId();
 }

@@ -65,9 +65,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   protected: double timeStep{0.1};
 };
 
-} // namespace tpelib
-} // namespace physics
-} // namespace ignition
-
+}  // namespace tpelib
+}  // namespace physics
+}  // namespace ignition
 
 #endif

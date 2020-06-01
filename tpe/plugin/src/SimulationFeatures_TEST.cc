@@ -116,7 +116,7 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
   for (const auto &world : worlds)
   {
     StepWorld(world, 1000);
-    
+
     auto model = world->GetModel(0);
     ASSERT_NE(nullptr, model);
     auto link = model->GetLink(0);
@@ -149,7 +149,7 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
       "sphere2", 1.0, Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, sphereLink->GetShapeCount());
     EXPECT_EQ(sphere2, sphereLink->GetShape(1));
-  
+
     auto ground = world->GetModel("box");
     auto groundLink = ground->GetLink(0);
     auto groundCollision = groundLink->GetShape(0);
@@ -183,7 +183,7 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
 
     auto groundAABB =
       groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
-    
+
     auto cylinderAABB =
       cylinderCollision->GetAxisAlignedBoundingBox(*cylinderCollision);
 
@@ -218,7 +218,8 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     ASSERT_NE(nullptr, freeGroup->CanonicalLink());
 
     freeGroup->SetWorldPose(
-      ignition::math::eigen3::convert(ignition::math::Pose3d(0, 0, 2, 0, 0, 0)));
+      ignition::math::eigen3::convert(
+        ignition::math::Pose3d(0, 0, 2, 0, 0, 0)));
     freeGroup->SetWorldLinearVelocity(
       ignition::math::eigen3::convert(ignition::math::Vector3d(0.5, 0, 0.1)));
     freeGroup->SetWorldAngularVelocity(

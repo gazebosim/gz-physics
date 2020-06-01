@@ -127,7 +127,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     modelPtr->model = &_model;
     size_t modelId = _model.GetId();
     this->models.insert({modelId, modelPtr});
-    // keep track of model's corresponding world 
+    // keep track of model's corresponding world
     this->childIdToParentId.insert({modelId, _worldId});
 
     return this->GenerateIdentity(modelId, modelPtr);
