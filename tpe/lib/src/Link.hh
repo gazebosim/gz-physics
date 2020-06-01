@@ -34,7 +34,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
 
   /// \brief Constructor
   /// \param[in] _id Link id
-  public: Link(std::size_t _id);
+  public: explicit Link(std::size_t _id);
 
   /// \brief Destructor
   public: ~Link() = default;

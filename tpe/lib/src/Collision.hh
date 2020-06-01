@@ -38,7 +38,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
 
   /// \brief Constructor
   /// \param[in] _id Collision id
-  public: Collision(std::size_t _id);
+  public: explicit Collision(std::size_t _id);
 
   /// \brief Copy Constructor
   /// \param[in] _other The other collision to copy from
