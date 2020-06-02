@@ -41,7 +41,7 @@ Model::Model(std::size_t _id) : Entity(_id)
 Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
-  const auto [it, success]  = this->GetChildren().insert(
+  const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
   return *it->second.get();
 }

@@ -36,7 +36,7 @@ Link::Link(std::size_t _id) : Entity(_id)
 Entity &Link::AddCollision()
 {
   std::size_t collisionId = Entity::GetNextId();
-  const auto [it, success] = this->GetChildren().insert(
+  const auto[it, success] = this->GetChildren().insert(
     {collisionId, std::make_shared<Collision>(collisionId)});
   return *it->second.get();
 }
