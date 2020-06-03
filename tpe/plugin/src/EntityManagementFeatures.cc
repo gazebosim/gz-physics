@@ -72,7 +72,7 @@ Identity EntityManagementFeatures::GetWorld(
       {
         return this->GenerateIdentity(it->first, it->second);
       }
-    } 
+    }
   }
   return this->GenerateInvalidId();
 }
@@ -376,15 +376,16 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
       return worldIt->second->world->RemoveChildById(_modelID.id);
     }
   }
-  return false;  
+  return false;
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
   if (this->models.find(_modelID.id) == this->models.end()
-    && this->childIdToParentId.find(_modelID.id) == this->childIdToParentId.end())
-      return true;
+    && this->childIdToParentId.find(_modelID.id) ==
+      this->childIdToParentId.end())
+        return true;
   return false;
 }
 

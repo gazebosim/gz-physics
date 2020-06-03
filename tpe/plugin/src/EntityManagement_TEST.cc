@@ -107,9 +107,6 @@ TEST(EntityManagement_TEST, RemoveEntities)
   EXPECT_EQ(nullptr, world->GetModel("empty model"));
   EXPECT_EQ(0ul, world->GetModelCount());
 
-  // Why calling GetName shouldn't throw (from dartsim) 
-  // EXPECT_EQ("empty model", model->GetName());
-
   auto model2 = world->ConstructEmptyModel("model2");
   ASSERT_NE(nullptr, model2);
   EXPECT_EQ(0ul, model2->GetIndex());

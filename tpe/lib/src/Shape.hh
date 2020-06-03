@@ -82,7 +82,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
   /// \brief Type of shape
   protected: ShapeType type;
 
-   /// \brief Flag to indicate if dimensions changed
+  /// \brief Flag to indicate if dimensions changed
   protected: bool dirty = true;
 };
 

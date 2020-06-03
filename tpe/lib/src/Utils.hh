@@ -18,6 +18,8 @@
 #include <ignition/math/AxisAlignedBox.hh>
 #include <ignition/math/Pose3.hh>
 
+#include "ignition/physics/tpelib/Export.hh"
+
 namespace ignition {
 namespace physics {
 namespace tpelib {
@@ -27,6 +29,7 @@ namespace tpelib {
   /// \param[in] _pose Transform to be applied
   /// \return New axis aligned box that surrounds the transformed version of
   /// the old box
+  IGNITION_PHYSICS_TPELIB_VISIBLE
   math::AxisAlignedBox transformAxisAlignedBox(
       const math::AxisAlignedBox &_box, const math::Pose3d &_pose);
 }

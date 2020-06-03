@@ -78,9 +78,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   protected: std::vector<Contact> contacts;
 };
 
-} // namespace tpelib
-} // namespace physics
-} // namespace ignition
-
+}  // namespace tpelib
+}  // namespace physics
+}  // namespace ignition
 
 #endif
