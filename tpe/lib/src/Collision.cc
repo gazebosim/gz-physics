@@ -99,3 +99,11 @@ Shape *Collision::GetShape() const
 {
   return this->dataPtr->shape.get();
 }
+
+//////////////////////////////////////////////////
+math::AxisAlignedBox Collision::GetBoundingBox(bool /*_force*/) // NOLINT
+{
+  if (this->dataPtr->shape)
+    return this->dataPtr->shape->GetBoundingBox();
+  return math::AxisAlignedBox();
+}

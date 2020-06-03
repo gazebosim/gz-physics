@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 
+#include <ignition/math/AxisAlignedBox.hh>
 #include <ignition/math/Pose3.hh>
 #include "ignition/physics/tpelib/Export.hh"
 
@@ -116,10 +117,19 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \return Number of children
   public: virtual size_t GetChildCount() const;
 
+  /// \brief Get bounding box of entity
+  /// \param[in] _force True to force update bounding box
+  /// \return Entity bounding box
+  public: virtual math::AxisAlignedBox GetBoundingBox(bool _force = false);
+
   /// \brief Get number of children
   /// \return Map of child id's to child entities
   protected: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren()
       const;
+
+  /// \brief Update the entity bounding box
+  /// \param[in] _force True to force update children's bounding box
+  private: virtual void UpdateBoundingBox(bool _force = false);
 
   /// \brief An invalid vertex.
   public: static Entity kNullEntity;

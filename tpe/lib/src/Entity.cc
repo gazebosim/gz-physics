@@ -16,6 +16,7 @@
 */
 
 #include "Entity.hh"
+#include "Utils.hh"
 
 /// \brief Private data class for entity
 class ignition::physics::tpelib::EntityPrivate
@@ -31,6 +32,12 @@ class ignition::physics::tpelib::EntityPrivate
 
   /// \brief Child entities
   public: std::map<std::size_t, std::shared_ptr<Entity>> children;
+
+  /// \brief Bounding Box
+  public: math::AxisAlignedBox bbox;
+
+  /// \brief Flag to indicate if bounding box changed
+  public: bool bboxDirty = true;
 };
 
 using namespace ignition;
@@ -55,6 +62,7 @@ Entity::Entity(const Entity &_other)
   this->dataPtr->name = _other.dataPtr->name;
   this->dataPtr->pose = _other.dataPtr->pose;
   this->dataPtr->children = _other.dataPtr->children;
+  this->dataPtr->bbox = _other.dataPtr->bbox;
 }
 
 //////////////////////////////////////////////////
@@ -182,6 +190,32 @@ bool Entity::RemoveChildByName(const std::string &_name)
 size_t Entity::GetChildCount() const
 {
   return this->dataPtr->children.size();
+}
+
+//////////////////////////////////////////////////
+math::AxisAlignedBox Entity::GetBoundingBox(bool _force)
+{
+  if (_force || this->dataPtr->bboxDirty)
+  {
+    this->UpdateBoundingBox(_force);
+    this->dataPtr->bboxDirty = false;
+  }
+  return this->dataPtr->bbox;
+}
+
+//////////////////////////////////////////////////
+void Entity::UpdateBoundingBox(bool _force)
+{
+  math::AxisAlignedBox box;
+  for (auto &it : this->dataPtr->children)
+  {
+    auto transformedBox =
+        transformAxisAlignedBox(it.second->GetBoundingBox(_force),
+        it.second->GetPose());
+    box.Merge(transformedBox);
+  }
+
+  this->dataPtr->bbox = box;
 }
 
 //////////////////////////////////////////////////
