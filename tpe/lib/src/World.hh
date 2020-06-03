@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 
+#include <vector>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "CollisionDetector.hh"

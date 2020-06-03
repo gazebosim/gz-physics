@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <ignition/math/Pose3.hh>
 #include "ignition/physics/tpelib/Export.hh"
@@ -35,7 +36,7 @@ namespace tpelib {
 class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
 {
   /// \brief Id of frst collision entity
-  public: std::size_t entity1= kNullEntityId;
+  public: std::size_t entity1 = kNullEntityId;
 
   /// \brief Id of second collision entity
   public: std::size_t entity2 = kNullEntityId;
