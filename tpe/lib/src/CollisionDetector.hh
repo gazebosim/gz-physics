@@ -41,8 +41,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
   /// \brief Id of second collision entity
   public: std::size_t entity2 = kNullEntityId;
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief Point of contact in world frame;
   public: math::Vector3d point;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 /// \brief Collision Detector that checks collisions between a list of entities

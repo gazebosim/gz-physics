@@ -76,8 +76,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   /// \brief Collision detector
   protected: CollisionDetector collisionDetector;
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief list of contacts
   protected: std::vector<Contact> contacts;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 }  // namespace tpelib
