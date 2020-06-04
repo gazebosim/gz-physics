@@ -41,9 +41,12 @@ TEST(CollisionDetector, GetIntersectionPoints)
   EXPECT_TRUE(points.empty());
 
   // get intersection points between two valid boxes
-  // there should be 8 intersection points representing the region of intersection
-  box1 = math::AxisAlignedBox(math::Vector3d(-2, -2, -2), math::Vector3d(2, 2, 2));
-  box2 = math::AxisAlignedBox(math::Vector3d(-1, -1, -1), math::Vector3d(3, 3, 3));
+  // there should be 8 intersection points representing the region of
+  // intersection
+  box1 = math::AxisAlignedBox(
+      math::Vector3d(-2, -2, -2), math::Vector3d(2, 2, 2));
+  box2 = math::AxisAlignedBox(
+      math::Vector3d(-1, -1, -1), math::Vector3d(3, 3, 3));
   EXPECT_TRUE(cd.GetIntersectionPoints(box1, box2, points));
   EXPECT_EQ(8u, points.size());
 
@@ -60,7 +63,8 @@ TEST(CollisionDetector, GetIntersectionPoints)
   // check against expected points and remove if found
   for (const auto &p : points)
   {
-    expectedPoints.erase(std::remove(expectedPoints.begin(), expectedPoints.end(), p),
+    expectedPoints.erase(
+      std::remove(expectedPoints.begin(), expectedPoints.end(), p),
       expectedPoints.end());
   }
   // all contact points should match expected points

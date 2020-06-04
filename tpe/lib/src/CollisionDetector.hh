@@ -21,8 +21,11 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <ignition/math/Pose3.hh>
+#include <ignition/utilities/SuppressWarning.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
@@ -35,13 +38,15 @@ namespace tpelib {
 class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
 {
   /// \brief Id of frst collision entity
-  public: std::size_t entity1= kNullEntityId;
+  public: std::size_t entity1 = kNullEntityId;
 
   /// \brief Id of second collision entity
   public: std::size_t entity2 = kNullEntityId;
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief Point of contact in world frame;
   public: math::Vector3d point;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 /// \brief Collision Detector that checks collisions between a list of entities
@@ -53,9 +58,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CollisionDetector
   /// \brief Destructor
   public: ~CollisionDetector() = default;
 
-  /// \brief Check collisions between a list entities and all contact points
+  /// \brief Check collisions between a list entities and get all contact points
   /// \param[in] _entities List of entities
-  /// \param[in] _singleContact Get only 1 contact point for each pair of collisions.
+  /// \param[in] _singleContact Get only 1 contact point for each pair of
+  /// collisions.
   /// The contact point will be at the center of all points
   /// \return A list of contact points
   public: std::vector<Contact> CheckCollisions(

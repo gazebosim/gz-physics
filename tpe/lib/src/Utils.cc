@@ -28,15 +28,27 @@ math::AxisAlignedBox transformAxisAlignedBox(
   if (_box == math::AxisAlignedBox())
     return _box;
 
-  // transform each corner and merge the result
+  // Transform the original axis aligned box by applying the pose
+  // transformation to all 8 corners. This results in a rotated box, which
+  // we need to fit a new axis aligned box to. We can achieve this by creating
+  // an empty axis aligned box and merging it with each corner of the rotated
+  // box. The result is a larger axis aligned box that surrounds the rotated box
+
+  // old min and max of original axis aligned box
   math::Vector3d oldMin = _box.Min();
   math::Vector3d oldMax = _box.Max();
+
+  // empty min max of new axis aligned box
+  // we will merge the empty min and max values with each of the
+  //  transformed corners
   math::Vector3d newMin(math::MAX_D, math::MAX_D, math::MAX_D);
   math::Vector3d newMax(math::LOW_D, math::LOW_D, math::LOW_D);
 
   // min min min
+  // transform corner
   math::Vector3d corner = oldMin;
   auto v = _pose.Rot() * corner + _pose.Pos();
+  // merge min/max with transformed corner
   newMin.Min(v);
   newMax.Max(v);
 

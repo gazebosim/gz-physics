@@ -18,6 +18,9 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 
+#include <vector>
+#include <ignition/utilities/SuppressWarning.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "CollisionDetector.hh"
@@ -74,13 +77,14 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   /// \brief Collision detector
   protected: CollisionDetector collisionDetector;
 
-  /// \brief Collision detector
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  /// \brief list of contacts
   protected: std::vector<Contact> contacts;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
-} // namespace tpelib
-} // namespace physics
-} // namespace ignition
-
+}  // namespace tpelib
+}  // namespace physics
+}  // namespace ignition
 
 #endif

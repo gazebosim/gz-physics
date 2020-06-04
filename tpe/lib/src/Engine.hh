@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_ENGINE_HH_
 
+#include <map>
 #include <memory>
 
 #include <ignition/utilities/SuppressWarning.hh>
@@ -67,8 +68,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
   IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
-} // namespace tpelib
-} // namespace physics
-} // namespace ignition
+}  // namespace tpelib
+}  // namespace physics
+}  // namespace ignition
 
 #endif

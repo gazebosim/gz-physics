@@ -74,7 +74,8 @@ void Collision::SetShape(const Shape &_shape)
   }
   else if (_shape.GetType() == ShapeType::CYLINDER)
   {
-    const CylinderShape *typedShape = static_cast<const CylinderShape *>(&_shape);
+    const CylinderShape *typedShape =
+      static_cast<const CylinderShape *>(&_shape);
     this->dataPtr->shape.reset(new CylinderShape(*typedShape));
   }
   else if (_shape.GetType() == ShapeType::SPHERE)
@@ -100,7 +101,7 @@ Shape *Collision::GetShape() const
 }
 
 //////////////////////////////////////////////////
-math::AxisAlignedBox Collision::GetBoundingBox(bool /*_force*/)
+math::AxisAlignedBox Collision::GetBoundingBox(bool /*_force*/) // NOLINT
 {
   if (this->dataPtr->shape)
     return this->dataPtr->shape->GetBoundingBox();

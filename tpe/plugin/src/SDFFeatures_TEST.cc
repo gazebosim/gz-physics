@@ -19,6 +19,11 @@
 
 #include <tuple>
 
+#include <sdf/Root.hh>
+#include <sdf/World.hh>
+
+#include <test/Utils.hh>
+
 #include <ignition/plugin/Loader.hh>
 
 #include <ignition/physics/Joint.hh>
@@ -32,11 +37,6 @@
 #include "lib/src/Entity.hh"
 #include "lib/src/World.hh"
 #include "World.hh"
-
-#include <sdf/Root.hh>
-#include <sdf/World.hh>
-
-#include <test/Utils.hh>
 
 struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::tpeplugin::RetrieveWorld,
@@ -146,7 +146,8 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ(ignition::math::Pose3d(-0.275, 0, 1.1, 0, 0, 0),
         collision02.GetPose());
 
-    ignition::physics::tpelib::Entity &link02 = model.GetChildByName("upper_link");
+    ignition::physics::tpelib::Entity &link02 =
+        model.GetChildByName("upper_link");
     ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
         link02.GetId());
     EXPECT_EQ("upper_link", link02.GetName());
@@ -179,7 +180,8 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0.5, 0, 0, 0),
         collision05.GetPose());
 
-    ignition::physics::tpelib::Entity &link03 = model.GetChildByName("lower_link");
+    ignition::physics::tpelib::Entity &link03 =
+        model.GetChildByName("lower_link");
     ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
         link03.GetId());
     EXPECT_EQ("lower_link", link03.GetName());
