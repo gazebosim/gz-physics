@@ -18,8 +18,12 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 
+#include <vector>
+#include <ignition/utilities/SuppressWarning.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
+#include "CollisionDetector.hh"
 #include "Entity.hh"
 
 namespace ignition {
@@ -42,9 +46,11 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   public: void SetTime(double _time);
 
   /// \brief Get the time of the world
-  /// \return double current time of the world
+  /// \return current time of the world
   public: double GetTime() const;
 
+  /// \brief Set the time step of the world
+  /// \param[in] _timestep time step to set to.
   public: void SetTimeStep(double _timeStep);
 
   /// \brief Get the timestep
@@ -58,11 +64,23 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
   /// \return Model added to the world
   public: Entity &AddModel();
 
+  /// \brief Get contacts from last step
+  /// \return Contacts from last step
+  public: std::vector<Contact> GetContacts() const;
+
   /// \brief World time
   protected: double time{0.0};
 
   /// \brief Time step size
   protected: double timeStep{0.1};
+
+  /// \brief Collision detector
+  protected: CollisionDetector collisionDetector;
+
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  /// \brief list of contacts
+  protected: std::vector<Contact> contacts;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 }  // namespace tpelib

@@ -72,6 +72,12 @@ void World::Step()
       model->GetAngularVelocity());
   }
 
+  // check colliisions
+  // the last bool arg tells the collision checker to return one single contact
+  // point for each pair of collisions
+  this->contacts = std::move(
+      this->collisionDetector.CheckCollisions(children, true));
+
   // increment world time by step size
   this->time += this->timeStep;
 }
@@ -83,4 +89,10 @@ Entity &World::AddModel()
   const auto[it, success] = this->GetChildren().insert(
     {modelId, std::make_shared<Model>(modelId)});
   return *it->second.get();
+}
+
+/////////////////////////////////////////////////
+std::vector<Contact> World::GetContacts() const
+{
+  return this->contacts;
 }
