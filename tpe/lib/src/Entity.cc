@@ -108,6 +108,12 @@ std::string Entity::GetName() const
 }
 
 //////////////////////////////////////////////////
+const std::string &Entity::GetNameRef() const
+{
+  return this->dataPtr->name;
+}
+
+//////////////////////////////////////////////////
 void Entity::SetPose(const math::Pose3d &_pose)
 {
   this->dataPtr->pose = _pose;
@@ -153,6 +159,22 @@ Entity &Entity::GetChildByName(const std::string &_name) const
     {
       return *it->second.get();
     }
+  }
+
+  return kNullEntity;
+}
+
+//////////////////////////////////////////////////
+Entity &Entity::GetChildByIndex(unsigned int _index) const
+{
+  if (_index >= this->dataPtr->children.size())
+    return kNullEntity;
+
+  auto it = this->dataPtr->children.begin();
+  std::advance(it, _index);
+  if (it != this->dataPtr->children.end())
+  {
+    return *it->second.get();
   }
 
   return kNullEntity;

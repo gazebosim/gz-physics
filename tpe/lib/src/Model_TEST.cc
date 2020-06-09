@@ -35,6 +35,7 @@ TEST(Model, BasicAPI)
 
   model.SetName("model_1");
   EXPECT_EQ("model_1", model.GetName());
+  EXPECT_EQ("model_1", model.GetNameRef());
 
   model.SetPose(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3));
   EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), model.GetPose());
@@ -83,6 +84,9 @@ TEST(Model, Link)
   Entity entByName = model.GetChildByName("link_1");
   EXPECT_EQ("link_1", entByName.GetName());
 
+  Entity entByIdx = model.GetChildByIndex(0u);
+  EXPECT_EQ("link_1", entByIdx.GetName());
+
   // test casting to link
   Link *link = static_cast<Link *>(&linkEnt);
   EXPECT_NE(nullptr, link);
@@ -91,6 +95,9 @@ TEST(Model, Link)
   // add another child
   Entity &linkEnt2 = model.AddLink();
   EXPECT_EQ(2u, model.GetChildCount());
+
+  Entity ent2ByIdx = model.GetChildByIndex(1u);
+  EXPECT_EQ(linkEnt2.GetId(), ent2ByIdx.GetId());
 
   Link *link2 = static_cast<Link *>(&linkEnt2);
   EXPECT_NE(nullptr, link2);
