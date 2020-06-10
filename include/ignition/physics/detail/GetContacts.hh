@@ -58,10 +58,12 @@ auto GetContactsFromLastStepFeature::World<
     auto *extraContactData =
         contact.extraData.template Query<ExtraContactData>();
 
-    if (extraContactData) {
-        contactOutput.template Get<ExtraContactData>() =
-            std::move(*extraContactData);
+    if (extraContactData)
+    {
+      contactOutput.template Get<ExtraContactData>() =
+          std::move(*extraContactData);
     }
+
   }
   return output;
 }

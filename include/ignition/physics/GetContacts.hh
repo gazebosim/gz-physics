@@ -36,14 +36,14 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
   public: template <typename PolicyT>
   struct ExtraContactDataT
   {
-     using Scalar = typename PolicyT::Scalar;
-     using VectorType = typename FromPolicy<PolicyT>::template Use<Vector>;
+    using Scalar = typename PolicyT::Scalar;
+    using VectorType = typename FromPolicy<PolicyT>::template Use<Vector>;
 
-    /// \brief The contact force from body acting on the first body
-    /// expressed in the world frame
+    /// \brief The contact force acting on the first body expressed
+    /// in the world frame
     VectorType force;
-    /// \brief The normal of the force from the second body to the first
-    /// body expressed in the world frame
+    /// \brief The normal of the force acting on the first body expressed
+    /// in the world frame
     VectorType normal;
     /// \brief The penetration depth
     Scalar depth;

@@ -86,7 +86,7 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       CompositeData extraData;
 
       // Add normal, depth and wrench to extraData.
-      auto& extraContactData = extraData.Get<ExtraContactData>();
+      auto &extraContactData = extraData.Get<ExtraContactData>();
       extraContactData.force = dtContact.force;
       extraContactData.normal = dtContact.normal;
       extraContactData.depth = dtContact.penetrationDepth;
