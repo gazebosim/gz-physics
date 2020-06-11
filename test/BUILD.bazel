@@ -1,27 +1,3 @@
-sources = [
-   # "integration/CanReadWrite.cc",
-   # "integration/DoublePendulum.cc",
-   # "integration/FeatureSystem.cc",
-   # "integration/FrameSemantics2d.cc",
-   # "integration/FrameSemantics2f.cc",
-   # "integration/FrameSemantics3d.cc",
-   # "integration/FrameSemantics3f.cc",
-   # "integration/JointTypes2d.cc",
-   # "integration/JointTypes2f.cc",
-   # "integration/JointTypes3d.cc",
-   # "integration/JointTypes3f.cc",
-   # "integration/RequestFeatures.cc",
-   # "performance/ExpectData.cc",
-   # "performance/symbol_names.cc",
-   # "plugins/DARTDoublePendulum.cc",
-   # "plugins/frames.cc",
-   # "plugins/MockEntities.cc",
-   # "plugins/MockJoints.cc",
-   # "static_assert/FeatureList_conflict.cc",
-   # "static_assert/FeatureList_InvalidFeature.cc",
-   # "static_assert/FeatureList_nested_conflict.cc",
-]
-
 public_headers = [
     "integration/FrameSemantics.hh",
     "integration/JointTypes.hh",

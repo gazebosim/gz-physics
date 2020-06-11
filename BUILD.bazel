@@ -200,6 +200,7 @@ cc_binary(
         "//ign_plugin/core:ign_plugin",
         "//ign_math:ign_math",
         "//ign_bazel:utilities",
+        "//dart:dart",
     ],
     # local_defines = ["IGN_RENDERING_PLUGIN_PATH='\"TODO: insert the correct string\"'"],
 )
@@ -212,18 +213,18 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-'''
 [cc_test(
     name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
     srcs = [src],
     deps = [
         "//ign_physics",
+        "//ign_physics/test:test_utils",
         "//ign_math",
         "//ign_bazel:utilities",
         "//ign_plugin/core:ign_plugin",
         "//ign_plugin/loader:loader",
+        "//dart:dart",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ]
 ) for src in test_sources]
-'''

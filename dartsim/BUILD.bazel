@@ -13,12 +13,12 @@ load(
 
 test_sources = [
     "src/Base_TEST.cc",
-    #"src/Collisions_TEST.cc",
+  # "src/Collisions_TEST.cc",
     "src/EntityManagement_TEST.cc",
     "src/JointFeatures_TEST.cc",
     "src/LinkFeatures_TEST.cc",
     "src/SDFFeatures_TEST.cc",
-    # "src/SimulationFeatures_TEST.cc",
+  # "src/SimulationFeatures_TEST.cc",
 ]
 
 sources = [
