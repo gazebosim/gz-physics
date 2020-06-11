@@ -1,0 +1,23 @@
+public_headers = [
+    "include/ignition/physics/mesh/MeshShape.hh",
+    "include/ignition/physics/mesh/detail/MeshShape.hh",
+]
+
+cc_binary( 
+    name = "libign_physics-mesh.so",
+    srcs = public_headers,
+    includes = ["include"],
+    linkopts = ["-Wl,-soname,libign_physics-mesh.so"],
+    linkshared =  True,
+    visibility = [],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "mesh",
+    srcs = ["libign_physics-mesh.so"],
+    hdrs = public_headers,
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)

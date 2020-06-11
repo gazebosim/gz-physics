@@ -1,0 +1,229 @@
+load(
+    "//ign_bazel:cmake_configure_file.bzl",
+    "cmake_configure_file",
+)
+load(
+    "//ign_bazel:generate_include_header.bzl",
+    "generate_include_header",
+)
+load(
+    "//ign_bazel:generate_file.bzl",
+    "generate_file",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+RESOURCE_PATH = "~/.ignition"
+PROJECT_NAME = "ignition-physics"
+PROJECT_MAJOR = 2
+PROJECT_MINOR = 1
+PROJECT_PATCH = 0
+IGN_DESIGNATION_UPPER = "TEST"
+PHYSICS_ENGINE_INSTALL_DIR = "/tmp"
+
+# Generates config.hh based on the version numbers in CMake code.
+cmake_configure_file(
+    name = "config",
+    src = "include/ignition/physics/config.hh.in",
+    out = "include/ignition/physics/config.hh",
+    cmakelists = ["CMakeLists.txt"],
+    defines = [
+        "PROJECT_VERSION_MAJOR=%d" % (PROJECT_MAJOR),
+        "PROJECT_VERSION_MINOR=%d" % (PROJECT_MINOR),
+        "PROJECT_VERSION_PATCH=%d" % (PROJECT_PATCH),
+        "PROJECT_MAJOR_VERSION=%d" % (PROJECT_MAJOR),
+        "PROJECT_MINOR_VERSION=%d" % (PROJECT_MINOR),
+        "PROJECT_PATCH_VERSION=%d" % (PROJECT_PATCH),
+        "PROJECT_VERSION=%d.%d" % (PROJECT_MAJOR, PROJECT_MINOR),
+        "PROJECT_VERSION_FULL=%d.%d.%d" % (PROJECT_MAJOR, PROJECT_MINOR, PROJECT_PATCH),  # noqa
+        "PROJECT_NAME_NO_VERSION=%s" % (PROJECT_NAME),
+        "PROJECT_NAME=%s" % (PROJECT_NAME),
+        "IGN_PROJECT_NAME=%s" % (PROJECT_NAME),
+        "IGN_RENDERING_RESOURCE_PATH=%s" % (RESOURCE_PATH),
+        "IGN_DESIGNATION_UPPER=%s" % (IGN_DESIGNATION_UPPER),
+        "IGNITION_PHYSICS_ENGINE_INSTALL_DIR=%s" % (PHYSICS_ENGINE_INSTALL_DIR),
+    ],
+    visibility = ["//visibility:private"],
+)
+
+generate_file(
+    name = "include/ignition/physics/Export.hh",
+    content = """
+#pragma once
+// IGN_DEPRECATED is defined by all ignition libraries, but the version below
+// is a simplified version.  When mixing the regular ignition libraries and
+// the drake compiled ignition libraries, the compiler throws a warning about
+// the macro being multiply defined.  We undefine it before redefining it here
+// to work around that issue.  Note that the IGNITION_PHYSICS_VISIBLE macro
+// shouldn't be defined multiple times, but we undefine it just in case.
+#ifdef IGNITION_PHYSICS_VISIBLE
+#undef IGNITION_PHYSICS_VISIBLE
+#endif
+#define IGNITION_PHYSICS_VISIBLE __attribute__ ((visibility("default")))
+#ifdef IGN_DEPRECATED
+#undef IGN_DEPRECATED
+#endif
+#define IGN_DEPRECATED(version) __attribute__ ((__deprecated__))
+    """,
+    visibility = ["//visibility:private"],
+)
+
+public_headers_no_gen = [
+    "include/ignition/physics/BoxShape.hh",
+    "include/ignition/physics/CanReadData.hh",
+    "include/ignition/physics/CanWriteData.hh",
+    "include/ignition/physics/Cloneable.hh",
+    "include/ignition/physics/CompositeData.hh",
+    "include/ignition/physics/ConstructEmpty.hh",
+    "include/ignition/physics/CylinderShape.hh",
+    "include/ignition/physics/DataStatusMask.hh",
+    "include/ignition/physics/DeclareJointType.hh",
+    "include/ignition/physics/DeclareShapeType.hh",
+    "include/ignition/physics/Entity.hh",
+    "include/ignition/physics/Feature.hh",
+    "include/ignition/physics/FeatureList.hh",
+    "include/ignition/physics/FeaturePolicy.hh",
+    "include/ignition/physics/FindFeatures.hh",
+    "include/ignition/physics/FixedJoint.hh",
+    "include/ignition/physics/ForwardStep.hh",
+    "include/ignition/physics/FrameData.hh",
+    "include/ignition/physics/FrameID.hh",
+    "include/ignition/physics/FrameSemantics.hh",
+    "include/ignition/physics/FreeGroup.hh",
+    "include/ignition/physics/FreeJoint.hh",
+    "include/ignition/physics/Geometry.hh",
+    "include/ignition/physics/GetBoundingBox.hh",
+    "include/ignition/physics/GetContacts.hh",
+    "include/ignition/physics/GetEntities.hh",
+    "include/ignition/physics/Implements.hh",
+    "include/ignition/physics/Joint.hh",
+    "include/ignition/physics/Link.hh",
+    "include/ignition/physics/OperateOnSpecifiedData.hh",
+    "include/ignition/physics/PlaneShape.hh",
+    "include/ignition/physics/PrismaticJoint.hh",
+    "include/ignition/physics/Register.hh",
+    "include/ignition/physics/RegisterMore.hh",
+    "include/ignition/physics/RelativeQuantity.hh",
+    "include/ignition/physics/RemoveEntities.hh",
+    "include/ignition/physics/RequestEngine.hh",
+    "include/ignition/physics/RequestFeatures.hh",
+    "include/ignition/physics/RevoluteJoint.hh",
+    "include/ignition/physics/Shape.hh",
+    "include/ignition/physics/SpecifyData.hh",
+    "include/ignition/physics/SphereShape.hh",
+    "include/ignition/physics/TemplateHelpers.hh",
+    "include/ignition/physics/detail/BoxShape.hh",
+    "include/ignition/physics/detail/CanReadData.hh",
+    "include/ignition/physics/detail/CanWriteData.hh",
+    "include/ignition/physics/detail/Cloneable.hh",
+    "include/ignition/physics/detail/CompositeData.hh",
+    "include/ignition/physics/detail/ConstructEmpty.hh",
+    "include/ignition/physics/detail/CylinderShape.hh",
+    "include/ignition/physics/detail/DeclareDerivedType.hh",
+    "include/ignition/physics/detail/Entity.hh",
+    "include/ignition/physics/detail/FeatureList.hh",
+    "include/ignition/physics/detail/FindFeatures.hh",
+    "include/ignition/physics/detail/FixedJoint.hh",
+    "include/ignition/physics/detail/FrameData.hh",
+    "include/ignition/physics/detail/FrameSemantics.hh",
+    "include/ignition/physics/detail/FreeGroup.hh",
+    "include/ignition/physics/detail/FreeJoint.hh",
+    "include/ignition/physics/detail/GetBoundingBox.hh",
+    "include/ignition/physics/detail/GetContacts.hh",
+    "include/ignition/physics/detail/GetEntities.hh",
+    "include/ignition/physics/detail/Identity.hh",
+    "include/ignition/physics/detail/InspectFeatures.hh",
+    "include/ignition/physics/detail/Joint.hh",
+    "include/ignition/physics/detail/Link.hh",
+    "include/ignition/physics/detail/OperateOnSpecifiedData.hh",
+    "include/ignition/physics/detail/PlaneShape.hh",
+    "include/ignition/physics/detail/PrismaticJoint.hh",
+    "include/ignition/physics/detail/PrivateSpecifyData.hh",
+    "include/ignition/physics/detail/Register.hh",
+    "include/ignition/physics/detail/RelativeQuantity.hh",
+    "include/ignition/physics/detail/RemoveEntities.hh",
+    "include/ignition/physics/detail/RequestEngine.hh",
+    "include/ignition/physics/detail/RequestFeatures.hh",
+    "include/ignition/physics/detail/RevoluteJoint.hh",
+    "include/ignition/physics/detail/Shape.hh",
+    "include/ignition/physics/detail/SpecifyData.hh",
+    "include/ignition/physics/detail/SphereShape.hh",
+]
+
+test_sources = [
+    "src/Cloneable_TEST.cc",
+    "src/CompositeData_TEST.cc",
+    "src/FeatureList_TEST.cc",
+    "src/Feature_TEST.cc",
+    "src/FindFeatures_TEST.cc",
+    "src/SpecifyData_TEST.cc",
+]
+
+sources = [
+   "src/CanReadData.cc",
+   "src/CanWriteData.cc",
+   "src/CompositeData.cc",
+   "src/DataStatusMask.cc",
+   "src/FrameID.cc",
+   "src/Identity.cc",
+]
+
+generate_include_header(
+    name = "physicshh_genrule",
+    out = "include/ignition/physics.hh",
+    hdrs = public_headers_no_gen + [
+        "include/ignition/physics/config.hh",
+        "include/ignition/physics/Export.hh",
+    ],
+)
+
+public_headers = public_headers_no_gen + [
+    "include/ignition/physics/config.hh",
+    "include/ignition/physics/Export.hh",
+    "include/ignition/physics.hh",
+    "src/utils/TestDataTypes.hh",
+    "src/TestUtilities.hh",
+]
+
+cc_binary(
+    name = "libign_physics.so",
+    srcs = sources + public_headers,
+    includes = ["include", "src"],
+    linkopts = ["-Wl,-soname,libign_physics.so"],
+    linkshared =  True,
+    visibility = [],
+    deps = [
+        "//ign_common:ign_common",
+        "//ign_common/graphics:graphics",
+        "//ign_common/events:events",
+        "//ign_plugin/loader:loader",
+        "//ign_plugin/core:ign_plugin",
+        "//ign_math:ign_math",
+        "//ign_bazel:utilities",
+    ],
+    # local_defines = ["IGN_RENDERING_PLUGIN_PATH='\"TODO: insert the correct string\"'"],
+)
+
+cc_library(
+    name = "ign_physics",
+    srcs = ["libign_physics.so"],
+    hdrs = public_headers,
+    includes = ["include", "src"],
+    visibility = ["//visibility:public"],
+)
+
+'''
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [src],
+    deps = [
+        "//ign_physics",
+        "//ign_math",
+        "//ign_bazel:utilities",
+        "//ign_plugin/core:ign_plugin",
+        "//ign_plugin/loader:loader",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ]
+) for src in test_sources]
+'''
