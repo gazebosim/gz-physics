@@ -63,7 +63,6 @@ auto GetContactsFromLastStepFeature::World<
       contactOutput.template Get<ExtraContactData>() =
           std::move(*extraContactData);
     }
-
   }
   return output;
 }
