@@ -189,7 +189,7 @@ cc_binary(
     name = "libign_physics.so",
     srcs = sources + public_headers,
     includes = ["include", "src"],
-    linkopts = ["-Wl,-soname,libign_physics.so"],
+    linkopts = ["-Wl,-soname,libign_physics.so", "-lglut", "-lGL", "-lGLU"],
     linkshared =  True,
     visibility = [],
     deps = [
