@@ -200,7 +200,7 @@ cc_binary(
         "//ign_plugin/core:ign_plugin",
         "//ign_math:ign_math",
         "//ign_bazel:utilities",
-        "//dart:dart",
+        "@dart",
     ],
     # local_defines = ["IGN_RENDERING_PLUGIN_PATH='\"TODO: insert the correct string\"'"],
 )
@@ -223,7 +223,7 @@ cc_library(
         "//ign_bazel:utilities",
         "//ign_plugin/core:ign_plugin",
         "//ign_plugin/loader:loader",
-        "//dart:dart",
+        "@dart",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ]

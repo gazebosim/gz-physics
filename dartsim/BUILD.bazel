@@ -57,9 +57,6 @@ cc_binary(
     linkopts = ["-Wl,-soname,libign_physics-dartsim.so"],
     linkshared =  True,
     visibility = [],
-    copts = [
-        "-Iexternal/eigen3",
-    ],
     deps = [
         "//ign_bazel:utilities",
         "//ign_plugin/core:ign_plugin",
@@ -73,8 +70,8 @@ cc_binary(
         "//ign_math",
         "//ign_math/eigen3:ign_math_eigen3",
         "//sdformat",
-        "@eigen3//:headers",
-        "//dart:dart",
+        "@eigen3",
+        "@dart",
     ],
 )
 
@@ -89,9 +86,6 @@ cc_library(
 [cc_test(
     name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
     srcs = [src],
-    copts = [
-        "-Iexternal/eigen3",
-    ],
     deps = [
         "//ign_bazel:utilities",
         "//ign_math",
@@ -102,10 +96,10 @@ cc_library(
         "//ign_physics/mesh:mesh",
         "//ign_common/graphics:graphics",
         "//sdformat",
-        "//dart:dart",
+        "@dart",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
-        "@eigen3//:headers",
+        "@eigen3",
     ],
     local_defines = [
         "TEST_WORLD_DIR='\"TODO: insert the correct string\"'",

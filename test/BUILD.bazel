@@ -18,9 +18,6 @@ cc_library(
     hdrs = public_headers,
     includes = ["."],
     visibility = ["//visibility:public"],
-    copts = [
-        "-Iexternal/eigen3",
-    ],
     deps = [
         "//ign_common",
         "//ign_physics",
@@ -30,7 +27,7 @@ cc_library(
         "//ign_plugin/register:register",
         "//ign_plugin/loader:loader",
         "//ign_bazel:utilities",
-        "@eigen3//:headers",
+        "@eigen3",
     ],
     include_prefix = "test",
     local_defines = [
