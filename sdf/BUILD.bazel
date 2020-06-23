@@ -7,20 +7,9 @@ public_headers = [
     "include/ignition/physics/sdf/ConstructWorld.hh",
 ]
 
-cc_binary( 
-    name = "libign_physics-sdf.so",
-    srcs = public_headers,
-    includes = ["include"],
-    linkopts = ["-Wl,-soname,libign_physics-sdf.so"],
-    linkshared =  True,
-    visibility = [],
-    deps = [
-    ],
-)
-
 cc_library(
     name = "sdf",
-    srcs = ["libign_physics-sdf.so"],
+    srcs = public_headers,
     hdrs = public_headers,
     includes = ["include"],
     visibility = ["//visibility:public"],

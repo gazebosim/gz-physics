@@ -13,12 +13,12 @@ load(
 
 test_sources = [
     "src/Base_TEST.cc",
-  # "src/Collisions_TEST.cc",
+    "src/Collisions_TEST.cc",
     "src/EntityManagement_TEST.cc",
     "src/JointFeatures_TEST.cc",
     "src/LinkFeatures_TEST.cc",
     "src/SDFFeatures_TEST.cc",
-  # "src/SimulationFeatures_TEST.cc",
+    "src/SimulationFeatures_TEST.cc",
 ]
 
 sources = [
@@ -51,59 +51,59 @@ public_headers = [
 ]
 
 cc_binary(
-    name = "libign_physics-dartsim.so",
+    name = "libignition-physics2-dartsim.so",
     srcs = sources + public_headers,
     includes = ["include", "src"],
-    linkopts = ["-Wl,-soname,libign_physics-dartsim.so"],
+    linkopts = ["-Wl,-soname,libignition-physics2-dartsim.so"],
     linkshared =  True,
     visibility = [],
     deps = [
         "//ign_bazel:utilities",
         "//ign_plugin/core:ign_plugin",
-        "//ign_plugin/register:register",
+        "//ign_plugin/register",
         "//ign_physics",
-        "//ign_physics/sdf:sdf",
-        "//ign_physics/mesh:mesh",
+        "//ign_physics/sdf",
+        "//ign_physics/mesh",
         "//ign_common",
-        "//ign_common/graphics:graphics",
-        "//ign_common/profiler:profiler",
+        "//ign_common/graphics",
+        "//ign_common/profiler",
         "//ign_math",
-        "//ign_math/eigen3:ign_math_eigen3",
+        "//ign_math/eigen3",
         "//sdformat",
         "@eigen3",
-        "@dart",
+        "//dart",
     ],
 )
 
 cc_library(
     name = "dartsim",
-    srcs = ["libign_physics-dartsim.so"],
+    srcs = ["libignition-physics2-dartsim.so"],
     hdrs = public_headers,
     includes = ["include", "src"],
     visibility = ["//visibility:public"],
+    deps = [
+        "//ign_common",
+        "//ign_common/graphics",
+        "//ign_physics/mesh",
+        "//ign_physics/sdf",
+        "//sdformat",
+    ],
 )
 
 [cc_test(
     name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
     srcs = [src],
     deps = [
-        "//ign_bazel:utilities",
-        "//ign_math",
-        "//ign_physics",
-        "//ign_physics/dartsim:dartsim",
-        "//ign_physics/sdf:sdf",
+        ":dartsim",
         "//ign_physics/test:test_utils",
-        "//ign_physics/mesh:mesh",
-        "//ign_common/graphics:graphics",
-        "//sdformat",
-        "@dart",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
-        "@eigen3",
     ],
+    data = [ "worlds", "//ign_physics:resources" ],
     local_defines = [
-        "TEST_WORLD_DIR='\"TODO: insert the correct string\"'",
-        "IGNITION_PHYSICS_RESOURCE_DIR='\"TODO: insert the correct string\"'",
-        "dartsim_plugin_LIB='\"TODO: insert the correct string\"'",
+        "tpe_plugin_LIB='\"\"'",
+        "bullet_plugin_LIB='\"\"'",
+        "TEST_WORLD_DIR='\"./ign_physics/dartsim/worlds/\"'",
+        "IGNITION_PHYSICS_RESOURCE_DIR='\"./ign_physics/resources/\"'",
     ],
 ) for src in test_sources]
