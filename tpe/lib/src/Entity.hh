@@ -131,6 +131,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \return Entity bounding box
   public: virtual math::AxisAlignedBox GetBoundingBox(bool _force = false);
 
+  /// \brief Get collide bitmask
+  /// \return Collision's collide bitmask
+  public: virtual uint16_t GetCollideBitmask() const;
+
   /// \brief Get number of children
   /// \return Map of child id's to child entities
   protected: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren()

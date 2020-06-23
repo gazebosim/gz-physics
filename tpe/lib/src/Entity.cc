@@ -241,6 +241,17 @@ void Entity::UpdateBoundingBox(bool _force)
 }
 
 //////////////////////////////////////////////////
+uint16_t Entity::GetCollideBitmask() const
+{
+  uint16_t mask = 0u;
+  for (auto &it : this->dataPtr->children)
+  {
+    mask |= it.second->GetCollideBitmask();
+  }
+  return mask;
+}
+
+//////////////////////////////////////////////////
 std::map<std::size_t, std::shared_ptr<Entity>> &Entity::GetChildren() const
 {
   return this->dataPtr->children;

@@ -24,6 +24,9 @@ class ignition::physics::tpelib::CollisionPrivate
 {
   /// \brief Collision's geometry shape
   public: std::shared_ptr<Shape> shape = nullptr;
+
+  /// \brief Collide bitmask
+  public: uint16_t collideBitmask = 0xFF;
 };
 
 using namespace ignition;
@@ -106,4 +109,16 @@ math::AxisAlignedBox Collision::GetBoundingBox(bool /*_force*/) // NOLINT
   if (this->dataPtr->shape)
     return this->dataPtr->shape->GetBoundingBox();
   return math::AxisAlignedBox();
+}
+
+//////////////////////////////////////////////////
+void Collision::SetCollideBitmask(uint16_t _mask)
+{
+  this->dataPtr->collideBitmask = _mask;
+}
+
+//////////////////////////////////////////////////
+uint16_t Collision::GetCollideBitmask() const
+{
+  return this->dataPtr->collideBitmask;
 }

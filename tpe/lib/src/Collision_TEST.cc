@@ -37,6 +37,10 @@ TEST(Collision, BasicAPI)
   collision.SetPose(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3));
   EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), collision.GetPose());
 
+  EXPECT_EQ(0xFF, collision.GetCollideBitmask());
+  collision.SetCollideBitmask(0x03);
+  EXPECT_EQ(0x03, collision.GetCollideBitmask());
+
   Collision collision2;
   EXPECT_NE(collision.GetId(), collision2.GetId());
 }
