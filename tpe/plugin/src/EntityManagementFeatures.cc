@@ -425,11 +425,6 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
 void EntityManagementFeatures::SetCollisionFilterMask(
     const Identity &_shapeID, const uint16_t _mask)
 {
-/*  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
-  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
-  const auto filterPtr = GetFilterPtr(this, worldID);
-  filterPtr->SetIgnoredCollision(shapeNode, _mask);
-*/
   auto collision =
       this->ReferenceInterface<CollisionInfo>(_shapeID)->collision;
   collision->SetCollideBitmask(_mask);
@@ -439,12 +434,6 @@ void EntityManagementFeatures::SetCollisionFilterMask(
 uint16_t EntityManagementFeatures::GetCollisionFilterMask(
     const Identity &_shapeID) const
 {
-/*
-  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
-  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
-  const auto filterPtr = GetFilterPtr(this, worldID);
-  return filterPtr->GetIgnoredCollision(shapeNode);
-*/
   const auto collision =
       this->ReferenceInterface<CollisionInfo>(_shapeID)->collision;
   return collision->GetCollideBitmask();
@@ -454,15 +443,8 @@ uint16_t EntityManagementFeatures::GetCollisionFilterMask(
 void EntityManagementFeatures::RemoveCollisionFilterMask(
     const Identity &_shapeID)
 {
-/*
-  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
-  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
-  const auto filterPtr = GetFilterPtr(this, worldID);
-  filterPtr->RemoveIgnoredCollision(shapeNode);
-*/
   auto collision =
       this->ReferenceInterface<CollisionInfo>(_shapeID)->collision;
   // remove = reset to default bitmask
   collision->SetCollideBitmask(0xFF);
 }
-

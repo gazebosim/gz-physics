@@ -70,7 +70,7 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     {
       std::shared_ptr<Entity> e2 = it2->second;
 
-      // Get collid bitmask for entity 2
+      // Get collide bitmask for entity 2
       uint16_t cb2 = 0xFF;
       auto cb2It = collideBitmasks.find(e2->GetId());
       if (cb2It == collideBitmasks.end())
