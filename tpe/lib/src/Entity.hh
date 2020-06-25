@@ -135,6 +135,21 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \return Collision's collide bitmask
   public: virtual uint16_t GetCollideBitmask() const;
 
+  /// \internal
+  /// \brief Set the parent of this entity.
+  /// \param[in] _parent Parent to set to
+  public: void SetParent(Entity *_parent);
+
+  /// \internal
+  /// \brief Get the parent of this entity.
+  /// \return Parent of this entity
+  public: Entity *GetParent() const;
+
+  /// \internal
+  /// \brief Mark that the children of the entity has changed, e.g. a child
+  /// entity is added or removed, or child entity properties changed.
+  public: void ChildrenChanged();
+
   /// \brief Get number of children
   /// \return Map of child id's to child entities
   protected: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren()

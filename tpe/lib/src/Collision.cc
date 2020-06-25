@@ -115,6 +115,8 @@ math::AxisAlignedBox Collision::GetBoundingBox(bool /*_force*/) // NOLINT
 void Collision::SetCollideBitmask(uint16_t _mask)
 {
   this->dataPtr->collideBitmask = _mask;
+  if (this->GetParent())
+    this->GetParent()->ChildrenChanged();
 }
 
 //////////////////////////////////////////////////
