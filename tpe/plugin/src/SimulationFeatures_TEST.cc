@@ -61,7 +61,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_world)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(_library);
+  loader.LoadLib(resolveLibrary(_library));
 
   const std::set<std::string> pluginNames =
     ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
@@ -409,8 +409,10 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
   }
 }
 
-INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
-  ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+INSTANTIATE_TEST_SUITE_P(
+    PhysicsPlugins,
+    SimulationFeatures_TEST,
+    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries)); // NOLINT
 
 int main(int argc, char *argv[])
 {

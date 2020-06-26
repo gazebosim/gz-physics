@@ -60,7 +60,7 @@ class LinkFeaturesFixture : public ::testing::Test
   protected: void SetUp() override
   {
     ignition::plugin::Loader loader;
-    loader.LoadLib(dartsim_plugin_LIB);
+    loader.LoadLib(DartsimPluginLib());
 
     ignition::plugin::PluginPtr dartsim =
         loader.Instantiate("ignition::physics::dartsim::Plugin");

@@ -32,6 +32,8 @@
 #include "KinematicsFeatures.hh"
 #include "ShapeFeatures.hh"
 
+#include "test/Utils.hh"
+
 struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::dartsim::EntityManagementFeatureList,
     ignition::physics::dartsim::JointFeatureList,
@@ -42,7 +44,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(dartsim_plugin_LIB);
+  loader.LoadLib(DartsimPluginLib());
 
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
@@ -188,7 +190,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 TEST(EntityManagement_TEST, RemoveEntities)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(dartsim_plugin_LIB);
+  loader.LoadLib(DartsimPluginLib());
 
   ignition::plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");

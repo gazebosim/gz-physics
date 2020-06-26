@@ -23,6 +23,8 @@
 
 #include "EntityManagementFeatures.hh"
 
+#include "test/Utils.hh"
+
 struct TestFeatureList : ignition::physics::FeatureList<
   ignition::physics::tpeplugin::EntityManagementFeatureList
 > { };
@@ -30,7 +32,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(tpe_plugin_LIB);
+  loader.LoadLib(TpePluginLib());
 
   ignition::plugin::PluginPtr tpe_plugin =
     loader.Instantiate("ignition::physics::tpeplugin::Plugin");
@@ -84,7 +86,9 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 TEST(EntityManagement_TEST, RemoveEntities)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(tpe_plugin_LIB);
+  auto list = loader.LoadLib(TpePluginLib());
+
+  std::cout << TpePluginLib() << " " << list.size() << std::endl;
 
   ignition::plugin::PluginPtr tpe_plugin =
     loader.Instantiate("ignition::physics::tpeplugin::Plugin");
