@@ -6,10 +6,6 @@ load(
     "//ign_bazel:generate_include_header.bzl",
     "generate_include_header",
 )
-load(
-    "//ign_bazel:generate_file.bzl",
-    "generate_file",
-)
 
 test_sources = [
     "src/Base_TEST.cc",
