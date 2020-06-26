@@ -1,0 +1,122 @@
+load(
+    "//ign_bazel:build_defs.bzl",
+    "IGNITION_FEATURES",
+    "IGNITION_ROOT",
+    "IGNITION_VISIBILITY",
+    "generate_include_header",
+    "ign_config_header",
+    "ign_export_header",
+)
+
+package(
+    default_visibility = IGNITION_VISIBILITY,
+    features = IGNITION_FEATURES,
+)
+
+lib_test_sources = glob(["lib/src/*_TEST.cc"])
+
+lib_sources = glob(
+    ["lib/src/*.cc"],
+    exclude = ["lib/src/*_TEST.cc"],
+)
+
+lib_headers = glob(["lib/src/*.hh"])
+
+plugin_test_sources = glob(["plugin/src/*_TEST.cc"])
+
+plugin_sources = glob(
+    ["plugin/src/*.cc"],
+    exclude = ["plugin/src/*_TEST.cc"],
+)
+
+plugin_headers = glob(["plugin/src/*.hh"])
+
+ign_export_header(
+    name = "include/ignition/physics/tpelib/Export.hh",
+    export_base = "IGNITION_PHYSICS_TPELIB",
+    lib_name = "ignition-physics",
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "aabb_tree",
+    srcs = ["lib/src/aabb_tree/AABB.cc"],
+    hdrs = ["lib/src/aabb_tree/AABB.h"],
+    includes = ["lib/src/aabb_tree"],
+)
+
+cc_library(
+    name = "tpelib",
+    srcs = lib_sources,
+    hdrs = lib_headers + ["include/ignition/physics/tpelib/Export.hh"],
+    includes = [
+        ".",
+        "include",
+        "lib/src",
+    ],
+    deps = [
+        ":aabb_tree",
+        IGNITION_ROOT + "ign_bazel:utilities",
+        IGNITION_ROOT + "ign_common/graphics",
+        IGNITION_ROOT + "ign_common/profiler",
+    ],
+)
+
+[
+    cc_test(
+        name = src.replace("/", "_").replace(".cc", "").replace("lib_src_", ""),
+        srcs = [src],
+        deps = [
+            ":tpelib",
+            "@gtest",
+            "@gtest//:gtest_main",
+        ],
+    )
+    for src in lib_test_sources
+]
+
+cc_library(
+    name = "plugin",
+    srcs = plugin_sources,
+    hdrs = plugin_headers + ["include/ignition/physics/tpelib/Export.hh"],
+    includes = [
+        "include",
+        "plugin/src",
+    ],
+    deps = [
+        ":tpelib",
+        IGNITION_ROOT + "ign_math/eigen3",
+        IGNITION_ROOT + "ign_physics",
+        IGNITION_ROOT + "ign_plugin/register",
+    ],
+)
+
+cc_binary(
+    name = "libignition-physics-tpe-plugin.so",
+    srcs = [":plugin"],
+    linkshared = True,
+)
+
+[
+    cc_test(
+        name = src.replace("/", "_").replace(".cc", "").replace("plugin_src_", ""),
+        srcs = [src],
+        data = [
+            "plugin/worlds",
+            ":libignition-physics-tpe-plugin.so",
+        ],
+        local_defines = [
+            "dartsim_plugin_LIB='\"\"'",
+            "bullet_plugin_LIB='\"\"'",
+            "TEST_WORLD_DIR='\"./ign_physics/tpe/plugin/worlds/\"'",
+            "IGNITION_PHYSICS_RESOURCE_DIR='\"./ign_physics/resources/\"'",
+        ],
+        deps = [
+            ":plugin",
+            IGNITION_ROOT + "ign_physics/test:test_utils",
+            "@gtest",
+            "@gtest//:gtest_main",
+        ],
+    )
+    for src in plugin_test_sources
+]

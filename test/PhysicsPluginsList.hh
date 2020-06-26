@@ -21,8 +21,11 @@
 #include <string>
 #include <vector>
 
+#include <ignition/common/Filesystem.hh>
+#include <ignition/common/Util.hh>
+
 #ifndef dartsim_plugin_LIB
-#define dartsim_plugin_LIB ""
+#define dartsim_plugin_LIB "__main__/ign_physics/dartsim/libignition-physics-dartsim-plugin.so"
 #endif
 
 #ifndef bullet_plugin_LIB
@@ -30,8 +33,41 @@
 #endif
 
 #ifndef tpe_plugin_LIB
-#define tpe_plugin_LIB ""
+#define tpe_plugin_LIB "__main__/ign_physics/tpe/libignition-physics-tpe-plugin.so"
 #endif
+
+/////////////////////////////////////////////////
+std::string resolveLibrary(const std::string &_path)
+{
+  auto it = _path.find("__main__");
+  if(it != std::string::npos && it == 0)
+  {
+    std::string dataDir;
+    if (ignition::common::env("TEST_SRCDIR", dataDir))
+    {
+      return ignition::common::joinPaths(dataDir, _path);
+    }
+  }
+  return _path;
+}
+
+/////////////////////////////////////////////////
+std::string DartsimPluginLib()
+{
+  return resolveLibrary(dartsim_plugin_LIB);
+}
+
+/////////////////////////////////////////////////
+std::string TpePluginLib()
+{
+  return resolveLibrary(tpe_plugin_LIB);
+}
+
+/////////////////////////////////////////////////
+std::string BulletPluginLib()
+{
+  return resolveLibrary(bullet_plugin_LIB);
+}
 
 namespace ignition
 {

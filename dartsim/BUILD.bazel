@@ -1,0 +1,109 @@
+load(
+    "//ign_bazel:build_defs.bzl",
+    "IGNITION_FEATURES",
+    "IGNITION_ROOT",
+    "IGNITION_VISIBILITY",
+    "generate_include_header",
+    "ign_config_header",
+    "ign_export_header",
+)
+
+package(
+    default_visibility = IGNITION_VISIBILITY,
+    features = IGNITION_FEATURES,
+)
+
+test_sources = [
+    "src/Base_TEST.cc",
+    "src/Collisions_TEST.cc",
+    "src/EntityManagement_TEST.cc",
+    "src/JointFeatures_TEST.cc",
+    "src/LinkFeatures_TEST.cc",
+    "src/SDFFeatures_TEST.cc",
+    "src/SimulationFeatures_TEST.cc",
+]
+
+sources = [
+    "src/CustomFeatures.cc",
+    "src/CustomMeshShape.cc",
+    "src/EntityManagementFeatures.cc",
+    "src/FreeGroupFeatures.cc",
+    "src/JointFeatures.cc",
+    "src/KinematicsFeatures.cc",
+    "src/LinkFeatures.cc",
+    "src/plugin.cc",
+    "src/SDFFeatures.cc",
+    "src/ShapeFeatures.cc",
+    "src/SimulationFeatures.cc",
+]
+
+public_headers = [
+    "src/Base.hh",
+    "src/CustomFeatures.hh",
+    "src/CustomMeshShape.hh",
+    "src/EntityManagementFeatures.hh",
+    "src/FreeGroupFeatures.hh",
+    "src/JointFeatures.hh",
+    "src/KinematicsFeatures.hh",
+    "src/LinkFeatures.hh",
+    "src/SDFFeatures.hh",
+    "src/ShapeFeatures.hh",
+    "src/SimulationFeatures.hh",
+    "include/ignition/physics/dartsim/World.hh",
+]
+
+cc_library(
+    name = "dartsim",
+    srcs = sources,
+    hdrs = public_headers,
+    includes = [
+        "include",
+        "src",
+    ],
+    deps = [
+        IGNITION_ROOT + "dart",
+        IGNITION_ROOT + "ign_common/graphics",
+        IGNITION_ROOT + "ign_common/profiler",
+        IGNITION_ROOT + "ign_math/eigen3",
+        IGNITION_ROOT + "ign_physics",
+        IGNITION_ROOT + "ign_plugin/register",
+        IGNITION_ROOT + "sdformat",
+    ],
+)
+
+cc_binary(
+    name = "libignition-physics-dartsim-plugin.so",
+    srcs = [":dartsim"],
+    includes = [
+        "include",
+        "src",
+    ],
+    linkshared = True,
+)
+
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [
+        src,
+        "src/Base.hh",
+    ],
+    data = [
+        "worlds",
+        ":libignition-physics-dartsim-plugin.so",
+        "//ign_physics:resources",
+    ],
+    includes = ["src"],
+    local_defines = [
+        "tpe_plugin_LIB='\"\"'",
+        "bullet_plugin_LIB='\"\"'",
+        "TEST_WORLD_DIR='\"./ign_physics/dartsim/worlds/\"'",
+        "IGNITION_PHYSICS_RESOURCE_DIR='\"./ign_physics/resources/\"'",
+    ],
+    deps = [
+        IGNITION_ROOT + "ign_physics",
+        IGNITION_ROOT + "ign_physics/test:test_utils",
+        ":dartsim",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for src in test_sources]

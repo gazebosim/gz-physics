@@ -1,0 +1,39 @@
+load(
+    "//ign_bazel:build_defs.bzl",
+    "IGNITION_FEATURES",
+    "IGNITION_ROOT",
+    "IGNITION_VISIBILITY",
+)
+
+package(
+    default_visibility = IGNITION_VISIBILITY,
+    features = IGNITION_FEATURES,
+)
+
+public_headers = [
+    "integration/FrameSemantics.hh",
+    "integration/JointTypes.hh",
+    "MockCenterOfMass.hh",
+    "MockCreateEntities.hh",
+    "MockDoublePendulum.hh",
+    "MockFeatures.hh",
+    "MockFrameSemantics.hh",
+    "MockGetByName.hh",
+    "MockJoints.hh",
+    "MockSetName.hh",
+    "PhysicsPluginsList.hh",
+    "Utils.hh",
+]
+
+cc_library(
+    name = "test_utils",
+    hdrs = public_headers,
+    include_prefix = "test",
+    includes = ["."],
+    local_defines = [
+        "IGNITION_PHYSICS_RESOURCE_DIR='\"./ign_physics/resources/\"'",
+    ],
+    deps = [
+        "@eigen3",
+    ],
+)

@@ -56,7 +56,7 @@ using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 auto LoadEngine()
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(tpe_plugin_LIB);
+  loader.LoadLib(TpePluginLib());
 
   ignition::plugin::PluginPtr tpe_plugin =
       loader.Instantiate("ignition::physics::tpeplugin::Plugin");

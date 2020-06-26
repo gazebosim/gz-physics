@@ -1,0 +1,209 @@
+load(
+    "//ign_bazel:build_defs.bzl",
+    "IGNITION_FEATURES",
+    "IGNITION_ROOT",
+    "IGNITION_VISIBILITY",
+    "generate_include_header",
+    "ign_config_header",
+    "ign_export_header",
+)
+
+package(
+    default_visibility = IGNITION_VISIBILITY,
+    features = IGNITION_FEATURES,
+)
+
+licenses(["notice"])
+
+exports_files(["LICENSE"])
+
+PROJECT_NAME = "ignition-physics"
+
+PROJECT_MAJOR = 2
+
+PROJECT_MINOR = 1
+
+PROJECT_PATCH = 0
+
+# Generates config.hh based on the version numbers in CMake code.
+ign_config_header(
+    name = "config",
+    src = "include/ignition/physics/config.hh.in",
+    cmakelists = ["CMakeLists.txt"],
+    extra_defines = [
+        "IGNITION_PHYSICS_ENGINE_INSTALL_DIR=foobar",
+    ],
+    project_name = PROJECT_NAME,
+    project_version = (PROJECT_MAJOR, PROJECT_MINOR, PROJECT_PATCH),
+)
+
+ign_export_header(
+    name = "include/ignition/physics/Export.hh",
+    export_base = "IGNITION_PHYSICS",
+    lib_name = "ignition-physics",
+    visibility = ["//visibility:private"],
+)
+
+public_headers_no_gen = [
+    "include/ignition/physics/BoxShape.hh",
+    "include/ignition/physics/CanReadData.hh",
+    "include/ignition/physics/CanWriteData.hh",
+    "include/ignition/physics/Cloneable.hh",
+    "include/ignition/physics/CompositeData.hh",
+    "include/ignition/physics/ConstructEmpty.hh",
+    "include/ignition/physics/CylinderShape.hh",
+    "include/ignition/physics/DataStatusMask.hh",
+    "include/ignition/physics/DeclareJointType.hh",
+    "include/ignition/physics/DeclareShapeType.hh",
+    "include/ignition/physics/Entity.hh",
+    "include/ignition/physics/Feature.hh",
+    "include/ignition/physics/FeatureList.hh",
+    "include/ignition/physics/FeaturePolicy.hh",
+    "include/ignition/physics/FindFeatures.hh",
+    "include/ignition/physics/FixedJoint.hh",
+    "include/ignition/physics/ForwardStep.hh",
+    "include/ignition/physics/FrameData.hh",
+    "include/ignition/physics/FrameID.hh",
+    "include/ignition/physics/FrameSemantics.hh",
+    "include/ignition/physics/FreeGroup.hh",
+    "include/ignition/physics/FreeJoint.hh",
+    "include/ignition/physics/Geometry.hh",
+    "include/ignition/physics/GetBoundingBox.hh",
+    "include/ignition/physics/GetContacts.hh",
+    "include/ignition/physics/GetEntities.hh",
+    "include/ignition/physics/Implements.hh",
+    "include/ignition/physics/Joint.hh",
+    "include/ignition/physics/Link.hh",
+    "include/ignition/physics/OperateOnSpecifiedData.hh",
+    "include/ignition/physics/PlaneShape.hh",
+    "include/ignition/physics/PrismaticJoint.hh",
+    "include/ignition/physics/Register.hh",
+    "include/ignition/physics/RegisterMore.hh",
+    "include/ignition/physics/RelativeQuantity.hh",
+    "include/ignition/physics/RemoveEntities.hh",
+    "include/ignition/physics/RequestEngine.hh",
+    "include/ignition/physics/RequestFeatures.hh",
+    "include/ignition/physics/RevoluteJoint.hh",
+    "include/ignition/physics/Shape.hh",
+    "include/ignition/physics/SpecifyData.hh",
+    "include/ignition/physics/SphereShape.hh",
+    "include/ignition/physics/TemplateHelpers.hh",
+    "include/ignition/physics/detail/BoxShape.hh",
+    "include/ignition/physics/detail/CanReadData.hh",
+    "include/ignition/physics/detail/CanWriteData.hh",
+    "include/ignition/physics/detail/Cloneable.hh",
+    "include/ignition/physics/detail/CompositeData.hh",
+    "include/ignition/physics/detail/ConstructEmpty.hh",
+    "include/ignition/physics/detail/CylinderShape.hh",
+    "include/ignition/physics/detail/DeclareDerivedType.hh",
+    "include/ignition/physics/detail/Entity.hh",
+    "include/ignition/physics/detail/FeatureList.hh",
+    "include/ignition/physics/detail/FindFeatures.hh",
+    "include/ignition/physics/detail/FixedJoint.hh",
+    "include/ignition/physics/detail/FrameData.hh",
+    "include/ignition/physics/detail/FrameSemantics.hh",
+    "include/ignition/physics/detail/FreeGroup.hh",
+    "include/ignition/physics/detail/FreeJoint.hh",
+    "include/ignition/physics/detail/GetBoundingBox.hh",
+    "include/ignition/physics/detail/GetContacts.hh",
+    "include/ignition/physics/detail/GetEntities.hh",
+    "include/ignition/physics/detail/Identity.hh",
+    "include/ignition/physics/detail/InspectFeatures.hh",
+    "include/ignition/physics/detail/Joint.hh",
+    "include/ignition/physics/detail/Link.hh",
+    "include/ignition/physics/detail/OperateOnSpecifiedData.hh",
+    "include/ignition/physics/detail/PlaneShape.hh",
+    "include/ignition/physics/detail/PrismaticJoint.hh",
+    "include/ignition/physics/detail/PrivateSpecifyData.hh",
+    "include/ignition/physics/detail/Register.hh",
+    "include/ignition/physics/detail/RelativeQuantity.hh",
+    "include/ignition/physics/detail/RemoveEntities.hh",
+    "include/ignition/physics/detail/RequestEngine.hh",
+    "include/ignition/physics/detail/RequestFeatures.hh",
+    "include/ignition/physics/detail/RevoluteJoint.hh",
+    "include/ignition/physics/detail/Shape.hh",
+    "include/ignition/physics/detail/SpecifyData.hh",
+    "include/ignition/physics/detail/SphereShape.hh",
+]
+
+test_sources = [
+    "src/Cloneable_TEST.cc",
+    "src/CompositeData_TEST.cc",
+    "src/FeatureList_TEST.cc",
+    "src/Feature_TEST.cc",
+    "src/FindFeatures_TEST.cc",
+    "src/SpecifyData_TEST.cc",
+]
+
+sources = [
+    "src/CanReadData.cc",
+    "src/CanWriteData.cc",
+    "src/CompositeData.cc",
+    "src/DataStatusMask.cc",
+    "src/FrameID.cc",
+    "src/Identity.cc",
+]
+
+generate_include_header(
+    name = "physicshh_genrule",
+    out = "include/ignition/physics.hh",
+    hdrs = public_headers_no_gen + [
+        "include/ignition/physics/config.hh",
+        "include/ignition/physics/Export.hh",
+    ],
+)
+
+public_headers = public_headers_no_gen + [
+    "include/ignition/physics/config.hh",
+    "include/ignition/physics/Export.hh",
+    "include/ignition/physics.hh",
+    "src/utils/TestDataTypes.hh",
+    "src/TestUtilities.hh",
+]
+
+cc_library(
+    name = "mesh",
+    hdrs = glob([
+        "mesh/include/ignition/physics/mesh/*.hh",
+        "mesh/include/ignition/physics/mesh/**/*.hh",
+    ]),
+    includes = ["mesh/include"],
+)
+
+cc_library(
+    name = "sdf",
+    hdrs = glob(["sdf/include/ignition/physics/sdf/*.hh"]),
+    includes = ["sdf/include"],
+    deps = [
+        IGNITION_ROOT + "sdformat",
+    ],
+)
+
+cc_library(
+    name = "ign_physics",
+    srcs = sources,
+    hdrs = public_headers,
+    includes = ["include"],
+    deps = [
+        ":mesh",
+        ":sdf",
+        "@eigen3",
+        IGNITION_ROOT + "ign_bazel:utilities",
+        IGNITION_ROOT + "ign_common",
+        IGNITION_ROOT + "ign_math",
+        IGNITION_ROOT + "ign_plugin/loader",
+    ],
+)
+
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [src],
+    deps = [
+        ":ign_physics",
+        IGNITION_ROOT + "ign_physics/test:test_utils",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for src in test_sources]
+
+exports_files(["resources"])
