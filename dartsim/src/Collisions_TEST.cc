@@ -58,7 +58,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     const WorldConstructor &_constructor)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(_library);
+  loader.LoadLib(resolveLibrary(_library));
 
   const std::set<std::string> pluginNames =
       ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
@@ -85,8 +85,10 @@ class Collisions_TEST
       public ::testing::WithParamInterface<std::string>
 {};
 
-INSTANTIATE_TEST_CASE_P(PhysicsPlugins, Collisions_TEST,
-    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+INSTANTIATE_TEST_SUITE_P(
+    PhysicsPlugins,
+    Collisions_TEST,
+    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries)); // NOLINT
 
 TestWorldPtr ConstructMeshPlaneWorld(
     const ignition::physics::Engine3dPtr<TestFeatureList> &_engine,

@@ -186,30 +186,31 @@ public_headers = public_headers_no_gen + [
 ]
 
 cc_binary(
-    name = "libign_physics.so",
+    name = "libignition-physics2.so",
     srcs = sources + public_headers,
     includes = ["include", "src"],
-    linkopts = ["-Wl,-soname,libign_physics.so", "-lglut", "-lGL", "-lGLU"],
+    linkopts = ["-Wl,-soname,libignition-physics2.so"],
     linkshared =  True,
     visibility = [],
     deps = [
-        "//ign_common:ign_common",
-        "//ign_common/graphics:graphics",
-        "//ign_common/events:events",
-        "//ign_plugin/loader:loader",
+        "//ign_common",
+        "//ign_common/graphics",
+        "//ign_common/events",
+        "//ign_plugin/loader",
         "//ign_plugin/core:ign_plugin",
-        "//ign_math:ign_math",
+        "//ign_math",
         "//ign_bazel:utilities",
-        "@dart",
     ],
-    # local_defines = ["IGN_RENDERING_PLUGIN_PATH='\"TODO: insert the correct string\"'"],
 )
 
 cc_library(
     name = "ign_physics",
-    srcs = ["libign_physics.so"],
+    srcs = ["libignition-physics2.so"],
     hdrs = public_headers,
-    includes = ["include", "src"],
+    includes = ["include"],
+    deps = [
+        "//ign_plugin/loader",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -217,14 +218,15 @@ cc_library(
     name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
     srcs = [src],
     deps = [
-        "//ign_physics",
+        ":ign_physics",
         "//ign_physics/test:test_utils",
         "//ign_math",
         "//ign_bazel:utilities",
         "//ign_plugin/core:ign_plugin",
-        "//ign_plugin/loader:loader",
-        "@dart",
+        "//ign_plugin/loader",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ]
 ) for src in test_sources]
+
+exports_files(["resources"])
