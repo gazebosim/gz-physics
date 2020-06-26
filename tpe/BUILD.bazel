@@ -1,6 +1,6 @@
 load(
-    "//ign_bazel:generate_file.bzl",
-    "generate_file",
+    "//ign_bazel:ign_export_header.bzl",
+    "ign_export_header",
 )
 
 lib_test_sources = glob(["lib/src/*_TEST.cc"])
@@ -11,25 +11,10 @@ plugin_test_sources = glob(["plugin/src/*_TEST.cc"])
 plugin_sources = glob(["plugin/src/*.cc"], exclude=["plugin/src/*_TEST.cc"])
 plugin_headers = glob(["plugin/src/*.hh"])
 
-generate_file(
+ign_export_header(
     name = "include/ignition/physics/tpelib/Export.hh",
-    content = """
-#pragma once
-// IGN_DEPRECATED is defined by all ignition libraries, but the version below
-// is a simplified version.  When mixing the regular ignition libraries and
-// the drake compiled ignition libraries, the compiler throws a warning about
-// the macro being multiply defined.  We undefine it before redefining it here
-// to work around that issue.  Note that the IGNITION_PHYSICS_VISIBLE macro
-// shouldn't be defined multiple times, but we undefine it just in case.
-#ifdef IGNITION_PHYSICS_TPELIB_VISIBLE
-#undef IGNITION_PHYSICS_TPELIB_VISIBLE
-#endif
-#define IGNITION_PHYSICS_TPELIB_VISIBLE __attribute__ ((visibility("default")))
-#ifdef IGN_DEPRECATED
-#undef IGN_DEPRECATED
-#endif
-#define IGN_DEPRECATED(version) __attribute__ ((__deprecated__))
-    """,
+    lib_name = "ignition-physics",
+    export_base = "IGNITION_PHYSICS_TPELIB",
     visibility = ["//visibility:private"],
 )
 
