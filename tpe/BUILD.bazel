@@ -1,0 +1,145 @@
+load(
+    "//ign_bazel:generate_file.bzl",
+    "generate_file",
+)
+
+lib_test_sources = glob(["lib/src/*_TEST.cc"])
+lib_sources = glob(["lib/src/*.cc"], exclude=["lib/src/*_TEST.cc"])
+lib_headers = glob(["lib/src/*.hh"])
+
+plugin_test_sources = glob(["plugin/src/*_TEST.cc"])
+plugin_sources = glob(["plugin/src/*.cc"], exclude=["plugin/src/*_TEST.cc"])
+plugin_headers = glob(["plugin/src/*.hh"])
+
+generate_file(
+    name = "include/ignition/physics/tpelib/Export.hh",
+    content = """
+#pragma once
+// IGN_DEPRECATED is defined by all ignition libraries, but the version below
+// is a simplified version.  When mixing the regular ignition libraries and
+// the drake compiled ignition libraries, the compiler throws a warning about
+// the macro being multiply defined.  We undefine it before redefining it here
+// to work around that issue.  Note that the IGNITION_PHYSICS_VISIBLE macro
+// shouldn't be defined multiple times, but we undefine it just in case.
+#ifdef IGNITION_PHYSICS_TPELIB_VISIBLE
+#undef IGNITION_PHYSICS_TPELIB_VISIBLE
+#endif
+#define IGNITION_PHYSICS_TPELIB_VISIBLE __attribute__ ((visibility("default")))
+#ifdef IGN_DEPRECATED
+#undef IGN_DEPRECATED
+#endif
+#define IGN_DEPRECATED(version) __attribute__ ((__deprecated__))
+    """,
+    visibility = ["//visibility:private"],
+)
+
+cc_binary(
+    name = "libignition-physics2-tpelib.so",
+    srcs =
+      lib_sources +
+      lib_headers + ["include/ignition/physics/tpelib/Export.hh"],
+    includes = ["lib/src", "include", "."],
+    linkopts = ["-Wl,-soname,libignition-physics2-tpelib.so"],
+    linkshared =  True,
+    visibility = [],
+    deps = [
+        "//ign_bazel:utilities",
+        "//ign_plugin/core:ign_plugin",
+        "//ign_plugin/register",
+        "//ign_physics",
+        "//ign_physics/sdf",
+        "//ign_physics/mesh",
+        "//ign_common",
+        "//ign_common/graphics",
+        "//ign_common/profiler",
+        "//ign_math",
+        "//ign_math/eigen3",
+        "//sdformat",
+    ],
+)
+
+cc_library(
+    name = "tpelib",
+    srcs = ["libignition-physics2-tpelib.so"],
+    hdrs = lib_headers + ["include/ignition/physics/tpelib/Export.hh"],
+    includes = ["lib/src", "include", "."],
+    visibility = ["//visibility:private"],
+    deps = [
+        "//ign_bazel:utilities",
+        "//ign_common",
+        "//ign_common/graphics",
+        "//ign_physics/sdf",
+        "//sdformat",
+    ],
+)
+
+[
+    cc_test(
+      name = src.replace("/", "_").replace(".cc", "").replace("lib_src_", ""),
+      srcs = [src],
+      includes = [".", "lib/src"],
+      deps = [
+          ":tpelib",
+          "@gtest//:gtest",
+          "@gtest//:gtest_main",
+      ],
+) for src in lib_test_sources]
+
+cc_binary(
+    name = "libignition-physics2-tpe.so",
+    srcs = plugin_sources + plugin_headers,
+    includes = ["plugin/src", "include"],
+    linkopts = ["-Wl,-soname,libignition-physics2-tpe.so"],
+    linkshared =  True,
+    visibility = [],
+    deps = [
+        ":tpelib",
+        "//ign_bazel:utilities",
+        "//ign_plugin/core:ign_plugin",
+        "//ign_plugin/register",
+        "//ign_physics",
+        "//ign_physics/sdf",
+        "//ign_physics/mesh",
+        "//ign_common",
+        "//ign_common/graphics",
+        "//ign_common/profiler",
+        "//ign_math",
+        "//ign_math/eigen3",
+        "//sdformat",
+    ],
+)
+
+cc_library(
+    name = "tpe",
+    srcs = ["libignition-physics2-tpe.so"],
+    hdrs = plugin_headers,
+    visibility = ["//visibility:public"],
+    includes = ["plugin/src"],
+    deps = [
+        ":tpelib",
+        "//ign_physics/mesh",
+        "//ign_physics/sdf",
+        "//sdformat",
+    ]
+)
+
+[
+    cc_test(
+      name = src.replace("/", "_").replace(".cc", "").replace("plugin_src_", ""),
+      srcs = [src],
+      deps = [
+          ":tpe",
+          "//ign_physics/test:test_utils",
+          "//ign_plugin/core:ign_plugin",
+          "@gtest//:gtest",
+          "@gtest//:gtest_main",
+      ],
+      data = ["plugin/worlds"],
+      local_defines = [
+          "dartsim_plugin_LIB='\"\"'",
+          "bullet_plugin_LIB='\"\"'",
+          "TEST_WORLD_DIR='\"./ign_physics/tpe/plugin/worlds/\"'",
+          "IGNITION_PHYSICS_RESOURCE_DIR='\"./ign_physics/resources/\"'",
+      ],
+) for src in plugin_test_sources]
+

@@ -1,0 +1,109 @@
+load(
+    "//ign_bazel:cmake_configure_file.bzl",
+    "cmake_configure_file",
+)
+load(
+    "//ign_bazel:generate_include_header.bzl",
+    "generate_include_header",
+)
+load(
+    "//ign_bazel:generate_file.bzl",
+    "generate_file",
+)
+
+test_sources = [
+    "src/Base_TEST.cc",
+    "src/Collisions_TEST.cc",
+    "src/EntityManagement_TEST.cc",
+    "src/JointFeatures_TEST.cc",
+    "src/LinkFeatures_TEST.cc",
+    "src/SDFFeatures_TEST.cc",
+    "src/SimulationFeatures_TEST.cc",
+]
+
+sources = [
+    "src/CustomFeatures.cc",
+    "src/CustomMeshShape.cc",
+    "src/EntityManagementFeatures.cc",
+    "src/FreeGroupFeatures.cc",
+    "src/JointFeatures.cc",
+    "src/KinematicsFeatures.cc",
+    "src/LinkFeatures.cc",
+    "src/plugin.cc",
+    "src/SDFFeatures.cc",
+    "src/ShapeFeatures.cc",
+    "src/SimulationFeatures.cc",
+]
+
+public_headers = [
+    "src/Base.hh",
+    "src/CustomFeatures.hh",
+    "src/CustomMeshShape.hh",
+    "src/EntityManagementFeatures.hh",
+    "src/FreeGroupFeatures.hh",
+    "src/JointFeatures.hh",
+    "src/KinematicsFeatures.hh",
+    "src/LinkFeatures.hh",
+    "src/SDFFeatures.hh",
+    "src/ShapeFeatures.hh",
+    "src/SimulationFeatures.hh",
+    "include/ignition/physics/dartsim/World.hh",
+]
+
+cc_binary(
+    name = "libignition-physics2-dartsim.so",
+    srcs = sources + public_headers,
+    includes = ["include", "src"],
+    linkopts = ["-Wl,-soname,libignition-physics2-dartsim.so"],
+    linkshared =  True,
+    visibility = [],
+    deps = [
+        "//ign_bazel:utilities",
+        "//ign_plugin/core:ign_plugin",
+        "//ign_plugin/register",
+        "//ign_physics",
+        "//ign_physics/sdf",
+        "//ign_physics/mesh",
+        "//ign_common",
+        "//ign_common/graphics",
+        "//ign_common/profiler",
+        "//ign_math",
+        "//ign_math/eigen3",
+        "//sdformat",
+        "@eigen3",
+        "//dart",
+    ],
+)
+
+cc_library(
+    name = "dartsim",
+    srcs = ["libignition-physics2-dartsim.so"],
+    hdrs = public_headers,
+    includes = ["include", "src"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//ign_common",
+        "//ign_common/graphics",
+        "//ign_physics/mesh",
+        "//ign_physics/sdf",
+        "//sdformat",
+    ],
+)
+
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [src],
+    deps = [
+        ":dartsim",
+        "//ign_physics/test:test_utils",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ],
+    data = [ "worlds", "//ign_physics:resources" ],
+    local_defines = [
+        "tpe_plugin_LIB='\"\"'",
+        "bullet_plugin_LIB='\"\"'",
+        "TEST_WORLD_DIR='\"./ign_physics/dartsim/worlds/\"'",
+        "IGNITION_PHYSICS_RESOURCE_DIR='\"./ign_physics/resources/\"'",
+    ],
+) for src in test_sources]

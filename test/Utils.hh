@@ -22,6 +22,8 @@
 #include <ignition/math/Rand.hh>
 #include <ignition/physics/FrameData.hh>
 
+#include "test/PhysicsPluginsList.hh"
+
 namespace ignition
 {
   namespace physics

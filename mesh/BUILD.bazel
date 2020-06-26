@@ -1,0 +1,12 @@
+public_headers = [
+    "include/ignition/physics/mesh/MeshShape.hh",
+    "include/ignition/physics/mesh/detail/MeshShape.hh",
+]
+
+cc_library(
+    name = "mesh",
+    srcs = public_headers,
+    hdrs = public_headers,
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
