@@ -219,6 +219,8 @@ cc_library(
     srcs = [src],
     deps = [
         ":ign_physics",
+	"//ign_common/events:events",
+	"//ign_common/graphics:graphics",
         "//ign_physics/test:test_utils",
         "//ign_math",
         "//ign_bazel:utilities",
