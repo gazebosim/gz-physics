@@ -133,11 +133,11 @@ TEST(Model, BoundingBox)
 
   math::AxisAlignedBox expectedBoxLinkFrame(
       math::Vector3d(-2, -2, -2), math::Vector3d(2, 2, 2));
-  EXPECT_EQ(expectedBoxLinkFrame, linkEnt.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxLinkFrame, linkEnt.GetBoundingBox());
 
   math::AxisAlignedBox expectedBoxModelFrame(
       math::Vector3d(-2, -2, -1), math::Vector3d(2, 2, 3));
-  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
 
   // add another link with box collision shape
   Entity &linkEnt2 = model.AddLink();
@@ -154,11 +154,11 @@ TEST(Model, BoundingBox)
 
   expectedBoxLinkFrame = math::AxisAlignedBox(
       math::Vector3d(-1.5, -2, -2.5), math::Vector3d(1.5, 2, 2.5));
-  EXPECT_EQ(expectedBoxLinkFrame, linkEnt2.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxLinkFrame, linkEnt2.GetBoundingBox());
 
   expectedBoxModelFrame = math::AxisAlignedBox(
       math::Vector3d(-2, -2, -2.5), math::Vector3d(2, 3, 3));
-  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
 }
 
 /////////////////////////////////////////////////
