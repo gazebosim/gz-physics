@@ -15,37 +15,26 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#include <ignition/math/AxisAlignedBox.hh>
+#include <ignition/math/Pose3.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
-
-#include "Entity.hh"
 
 namespace ignition {
 namespace physics {
 namespace tpelib {
 
-/// \brief Link class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
-{
-  /// \brief Constructor
-  public: Link();
-
-  /// \brief Constructor
-  /// \param[in] _id Link id
-  public: explicit Link(std::size_t _id);
-
-  /// \brief Destructor
-  public: ~Link() = default;
-
-  /// \brief Add a collision
-  /// \return Newly created Collision
-  public: Entity &AddCollision();
-};
-
+  /// \brief Transform an axis aligned box by pose
+  /// \param[in] _box Axis aligned box to be transformed
+  /// \param[in] _pose Transform to be applied
+  /// \return New axis aligned box that surrounds the transformed version of
+  /// the old box
+  IGNITION_PHYSICS_TPELIB_VISIBLE
+  math::AxisAlignedBox transformAxisAlignedBox(
+      const math::AxisAlignedBox &_box, const math::Pose3d &_pose);
 }
 }
 }
 
-#endif
+
+

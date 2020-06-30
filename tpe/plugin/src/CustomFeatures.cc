@@ -15,37 +15,26 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#include <ignition/common/Console.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "CustomFeatures.hh"
 
-#include "Entity.hh"
+using namespace ignition;
+using namespace physics;
+using namespace tpeplugin;
 
-namespace ignition {
-namespace physics {
-namespace tpelib {
-
-/// \brief Link class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
+/////////////////////////////////////////////////
+std::shared_ptr<tpelib::World> CustomFeatures::GetTpeLibWorld(
+  const Identity &_worldID)
 {
-  /// \brief Constructor
-  public: Link();
-
-  /// \brief Constructor
-  /// \param[in] _id Link id
-  public: explicit Link(std::size_t _id);
-
-  /// \brief Destructor
-  public: ~Link() = default;
-
-  /// \brief Add a collision
-  /// \return Newly created Collision
-  public: Entity &AddCollision();
-};
-
+  auto it = this->worlds.find(_worldID);
+  if (it == this->worlds.end())
+  {
+    ignerr << "Unable to retrieve world ["
+      << _worldID.id
+      << "]"
+      << std::endl;
+    return nullptr;
+  }
+  return it->second->world;
 }
-}
-}
-
-#endif

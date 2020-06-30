@@ -69,16 +69,16 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline std::size_t idToIndexInContainer(std::size_t _id) const
   {
     std::size_t index = 0;
-    if (this->childIdToParentId.find(_id) != this->childIdToParentId.end())
+    auto it = this->childIdToParentId.find(_id);
+    if (it != this->childIdToParentId.end())
     {
-      auto containerId = this->childIdToParentId.at(_id);
       for (const auto &pair : this->childIdToParentId)
       {
-        if (pair.first == _id && pair.second == containerId)
+        if (pair.first == _id && pair.second == it->second)
         {
           return index;
         }
-        else if (pair.second == containerId)
+        else if (pair.second == it->second)
         {
           ++index;
         }
@@ -127,7 +127,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     modelPtr->model = &_model;
     size_t modelId = _model.GetId();
     this->models.insert({modelId, modelPtr});
-    // keep track of model's corresponding world 
+    // keep track of model's corresponding world
     this->childIdToParentId.insert({modelId, _worldId});
 
     return this->GenerateIdentity(modelId, modelPtr);

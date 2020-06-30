@@ -34,7 +34,8 @@ Engine::Engine()
 Entity &Engine::AddWorld()
 {
   auto world = std::make_shared<World>();
-  const auto [it, success] = this->worlds.insert({world->GetId(), world});
+  const auto[it, success] =
+    this->worlds.insert({world->GetId(), world});
   return *it->second;
 }
 
