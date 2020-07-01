@@ -89,7 +89,12 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->ReferenceInterface<JointInfo>(_id)->joint->setForce(_dof, _value);
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  if (joint->getActuatorType() != dart::dynamics::Joint::FORCE)
+  {
+    joint->setActuatorType(dart::dynamics::Joint::FORCE);
+  }
+  this->ReferenceInterface<JointInfo>(_id)->joint->setCommand(_dof, _value);
 }
 
 /////////////////////////////////////////////////
