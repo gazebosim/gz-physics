@@ -92,9 +92,7 @@ brew install ignition-physics3 --only-dependencies
 
 Clone the ign-physics repository from GitHub
 ```{.sh}
-==== BASE ====
-hg clone https://bitbucket.org/ignitionrobotics/ign-physics -b ign-physics2
-==== BASE ====
+git clone https://github.com/ignitionrobotics/ign-physics -b master
 ```
 
 Then build using CMake
