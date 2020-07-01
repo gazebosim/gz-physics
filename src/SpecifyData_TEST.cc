@@ -673,6 +673,16 @@ TEST(SpecifyData, Copy)
     data.Get<StringData>().myString = "new_string";
     EXPECT_EQ("old_string", copyCtor.Get<StringData>().myString);
   }
+
+  {
+    RequireStringBoolChar data;
+    data.Get<StringData>().myString = "old_string";
+    EXPECT_EQ("old_string", data.Get<StringData>().myString);
+
+    RequireStringBoolChar opEqData;
+    opEqData = data;
+    EXPECT_EQ("old_string", opEqData.Get<StringData>().myString);
+  }
 }
 
 /////////////////////////////////////////////////
@@ -683,7 +693,7 @@ TEST(SpecifyData, Move)
     data.Get<StringData>().myString = "old_string";
     EXPECT_EQ("old_string", data.Get<StringData>().myString);
 
-    // TODO(anyone) This is actually doing a copy right now
+    // TODO (anyone) This is actually doing a copy right now
     RequireStringBoolChar moveCtor(std::move(data));
     EXPECT_EQ("old_string", moveCtor.Get<StringData>().myString);
   }
@@ -692,6 +702,10 @@ TEST(SpecifyData, Move)
     RequireStringBoolChar data;
     data.Get<StringData>().myString = "old_string";
     EXPECT_EQ("old_string", data.Get<StringData>().myString);
+
+    RequireStringBoolChar opEqData;
+    opEqData = std::move(data);
+    EXPECT_EQ("old_string", opEqData.Get<StringData>().myString);
   }
 }
 

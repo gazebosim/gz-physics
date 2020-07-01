@@ -48,6 +48,17 @@ namespace ignition
       /// \brief Default constructor
       public: ExpectData();
 
+      /// \brief Copy constructor.
+      public: ExpectData(const ExpectData &_other);
+
+      // /// \brief Copy assignment operator
+      public: ExpectData<Expected>& operator=(const ExpectData &_other);
+
+      /// TODO(anyone) Implement move constructor and assignment operator. Due
+      /// to the multiple inheritence used to implement SpcifyData, care must be
+      /// taken when implementing move constructs to avoid calling a move
+      /// constructor on a moved-from object.
+
       /// \brief Virtual destructor
       public: virtual ~ExpectData() = default;
 
