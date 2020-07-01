@@ -172,7 +172,7 @@ namespace ignition
       class ExtractFeatures
           : public VerifyFeatures<F>
       {
-        public: using Result = std::tuple<F>;
+        public: using type = std::tuple<F>;
       };
 
       /// \private This specialization of ExtractFeatures is used to wipe away
@@ -182,7 +182,7 @@ namespace ignition
       class ExtractFeatures<std::tuple<F...>>
           : public VerifyFeatures<F...>
       {
-        public: using Result = std::tuple<F...>;
+        public: using type = std::tuple<F...>;
       };
 
       /// \private This specialization of ExtractFeatures is used to wipe away
@@ -195,7 +195,7 @@ namespace ignition
               void_t<typename SomeFeatureList::Features>>
           : public VerifyFeatures<typename SomeFeatureList::Features>
       {
-        public: using Result = typename SomeFeatureList::Features;
+        public: using type = typename SomeFeatureList::Features;
       };
 
       /// \private This specialization skips over any void entries. This allows
@@ -204,28 +204,164 @@ namespace ignition
       template <>
       class ExtractFeatures<void>
       {
-        public: using Result = std::tuple<>;
+        public: using type = std::tuple<>;
       };
 
       /////////////////////////////////////////////////
-      template <typename DiscardTuple, typename InputTuple>
+      /// \private This struct wraps the TupleContainsBase class to create a
+      /// tuple filter that can be passed to FilterTuple.
+      template <typename DiscardTuple>
+      struct RedundantTupleFilter
+      {
+        template <typename T>
+        struct Apply : TupleContainsBase<T, DiscardTuple> { };
+      };
+
+      /////////////////////////////////////////////////
+      template <template <typename> class Filter, typename InputTuple>
       struct FilterTuple;
 
       /////////////////////////////////////////////////
-      template <typename DiscardTuple, typename... InputTypes>
-      struct FilterTuple<DiscardTuple, std::tuple<InputTypes...>>
+      /// \private This class will apply a Filter to a tuple and produce a new
+      /// tuple that only includes the tuple elements which were ignored by the
+      /// Filter.
+      template <template <typename> class Filter, typename... InputTypes>
+      struct FilterTuple<Filter, std::tuple<InputTypes...>>
       {
-        using Result = decltype(std::tuple_cat(
+        using type = decltype(std::tuple_cat(
             std::conditional_t<
               // If the input type is a base class of anything that should be
               // discared ...
-              TupleContainsBase<InputTypes, DiscardTuple>::value,
+              Filter<InputTypes>::value,
               // ... then we should leave it out of the final tuple ...
               std::tuple<>,
               // ... otherwise, include it.
               std::tuple<InputTypes>
             // Do this for each type in the InputTypes parameter pack.
             >()...));
+      };
+
+      /////////////////////////////////////////////////
+      /// \private Use this struct to remove the tuple elements of one tuple
+      /// from another tuple
+      template <typename DiscardTuple>
+      struct SubtractTuple
+      {
+        template <typename T>
+        using Filter =
+            typename RedundantTupleFilter<DiscardTuple>::template Apply<T>;
+
+        /// This struct will contain a nested struct called `type` which will be
+        /// a tuple with all the elements of FromTuple that are not present in
+        /// DiscardTuple
+        template <typename FromTuple>
+        struct From : FilterTuple<Filter, FromTuple> { };
+      };
+
+      /////////////////////////////////////////////////
+      /// \private This template takes in a tuple as InputTuple and gives back
+      /// a tuple where every element type is only present once.
+      template <typename InputTuple>
+      struct RemoveTupleRedundancies;
+
+      template <typename T>
+      struct wrap { };
+
+      template <typename Tuple>
+      struct unwrap;
+
+      template <typename... T>
+      struct unwrap<std::tuple<wrap<T>...>>
+      {
+        using type = std::tuple<T...>;
+      };
+
+      template <typename... InputTupleArgs>
+      struct RemoveTupleRedundancies<std::tuple<InputTupleArgs...>>
+      {
+        template <typename PartialResultInput, typename...>
+        struct Impl;
+
+        template <typename PartialResultInput>
+        struct Impl<PartialResultInput>
+        {
+          using type = std::tuple<>;
+        };
+
+        template <typename ParentResultInput, typename F1, typename... Others>
+        struct Impl<ParentResultInput, F1, Others...>
+        {
+          using PartialResult =
+              std::conditional_t<
+                TupleContainsBase<wrap<F1>, ParentResultInput>::value,
+                std::tuple<>,
+                std::tuple<wrap<F1>>
+              >;
+
+          using AggregateResult = decltype(std::tuple_cat(
+              ParentResultInput(), PartialResult()));
+
+          using type = decltype(std::tuple_cat(
+              PartialResult(),
+              typename Impl<AggregateResult, Others...>::type()));
+        };
+
+        using type =
+          typename unwrap<
+            typename Impl<std::tuple<>, InputTupleArgs...>::type
+          >::type;
+      };
+
+      /////////////////////////////////////////////////
+      /// \private This template is used to take a hierarchy of FeatureLists and
+      /// flatten them into a single tuple.
+      template <typename FeatureTuple, typename = void_t<>>
+      struct FlattenFeatures;
+
+      /////////////////////////////////////////////////
+      /// \private This template is a helper for FlattenFeatures
+      template <typename FeatureOrList, typename = void_t<>>
+      struct ExpandFeatures
+      {
+        using type = std::conditional_t<
+            std::is_void_v<typename FeatureOrList::RequiredFeatures>,
+            std::tuple<FeatureOrList>,
+            decltype(std::tuple_cat(
+              std::tuple<FeatureOrList>(),
+              typename FlattenFeatures<
+                typename FeatureOrList::RequiredFeatures>::type()))
+        >;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename List>
+      struct ExpandFeatures<List, void_t<typename List::Features>>
+      {
+        using type = typename FlattenFeatures<typename List::Features>::type;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename FeatureListT>
+      struct FlattenFeatures<
+          FeatureListT, void_t<typename FeatureListT::FeatureTuple>>
+      {
+        using type =
+            typename FlattenFeatures<typename FeatureListT::FeatureTuple>::type;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename... Features>
+      struct FlattenFeatures<std::tuple<Features...>, void_t<>>
+      {
+        using type = decltype(std::tuple_cat(
+            typename ExpandFeatures<Features>::type()...));
+      };
+
+      /////////////////////////////////////////////////
+      template <>
+      struct FlattenFeatures<void>
+      {
+        using type = std::tuple<>;
       };
 
       /////////////////////////////////////////////////
@@ -238,7 +374,7 @@ namespace ignition
       template <typename PartialResultInput>
       struct CombineListsImpl<PartialResultInput>
       {
-        using Result = std::tuple<>;
+        using type = std::tuple<>;
       };
 
       template <typename ParentResultInput, typename F1, typename... Others>
@@ -247,28 +383,27 @@ namespace ignition
         // Add the features of the feature list F1, while filtering out any
         // repeated features.
         using InitialResult =
-            typename FilterTuple<
-              ParentResultInput,
-              typename ExtractFeatures<F1>::Result
-            >::Result;
+            typename SubtractTuple<ParentResultInput>
+            ::template From<typename ExtractFeatures<F1>::type>::type;
 
         // Add the features that are required by F1, while filtering out any
         // repeated features.
         using PartialResult = decltype(std::tuple_cat(
             InitialResult(),
-            typename FilterTuple<
-              decltype(std::tuple_cat(ParentResultInput(), InitialResult())),
-              typename ExtractFeatures<typename F1::RequiredFeatures>::Result
-            >::Result()));
+            typename SubtractTuple<
+              decltype(std::tuple_cat(ParentResultInput(), InitialResult()))>
+              ::template From<
+                typename ExtractFeatures<typename F1::RequiredFeatures>::type
+            >::type()));
 
         // Define the tuple that the child should use to filter its list
         using ChildFilter =
             decltype(std::tuple_cat(ParentResultInput(), PartialResult()));
 
         // Construct the final result
-        using Result = decltype(std::tuple_cat(
+        using type = decltype(std::tuple_cat(
             PartialResult(),
-            typename CombineListsImpl<ChildFilter, Others...>::Result()));
+            typename CombineListsImpl<ChildFilter, Others...>::type()));
       };
 
       /// \private CombineLists is used to take variadic lists of features,
@@ -280,7 +415,7 @@ namespace ignition
       struct CombineLists
       {
         public: using Result =
-            typename CombineListsImpl<std::tuple<>, FeatureLists...>::Result;
+            typename CombineListsImpl<std::tuple<>, FeatureLists...>::type;
       };
 
       /////////////////////////////////////////////////
@@ -367,115 +502,50 @@ namespace ignition
       template <template<typename> class Selector, typename FeatureListT>
       struct ExtractAPI
       {
-        public: template<typename... T>
-        class type : public virtual
-            Aggregate<Selector, FeatureListT>::template type<T...> { };
-      };
+        template <typename FeatureTuple, typename... T>
+        struct Select;
 
-      /////////////////////////////////////////////////
-      /// \private This class is used to inspect what features are provided by
-      /// a plugin. It implements the API of RequestEngine.
-      template <typename PolicyT, typename FeatureT, typename = void_t<> >
-      struct InspectFeatures
-      {
-        using Interface = typename FeatureT::template Implementation<PolicyT>;
-
-        /// \brief Check that each feature is provided by the plugin.
-        template <typename PtrT>
-        static bool Verify(const PtrT &_pimpl)
+        template <typename... Features, typename... T>
+        struct Select<std::tuple<Features...>, T...>
         {
-          return _pimpl && _pimpl->template HasInterface<Interface>();
-        }
+          using type =
+            typename RemoveTupleRedundancies<
+              std::tuple<typename Selector<Features>::template type<T...>...>
+            >::type;
+        };
 
-        template <typename LoaderT, typename ContainerT>
-        static void EraseIfMissing(
-            const LoaderT &_loader,
-            ContainerT &_plugins)
+        template <typename T>
+        struct Filter : std::is_same<Selector<T>, Empty> { };
+
+        template <typename... T>
+        using Bases =
+            typename Select<
+              typename FilterTuple<
+                Filter,
+                typename FlattenFeatures<FeatureListT>::type
+              >::type,
+              T...
+            >::type;
+
+        template <typename... T>
+        struct S : std::tuple_size<Bases<T...>> { };
+
+        template <typename... T>
+        using IndexSequence = std::make_index_sequence<S<T...>::value>;
+
+        template <typename>
+        struct Impl;
+
+        template <std::size_t... I>
+        struct Impl<std::index_sequence<I...>>
         {
-          const auto acceptable =
-              _loader.template PluginsImplementing<Interface>();
+          template<typename... T>
+          class type
+              : public virtual std::tuple_element<I, Bases<T...>>::type... { };
+        };
 
-          std::set<std::string> unacceptable;
-          for (const std::string &p : _plugins)
-          {
-            const auto it = std::find(acceptable.begin(), acceptable.end(), p);
-            if (it == acceptable.end())
-              unacceptable.insert(unacceptable.end(), p);
-          }
-
-          for (const std::string &u : unacceptable)
-            _plugins.erase(u);
-        }
-
-        template <typename PtrT>
-        static void MissingNames(const PtrT &_pimpl,
-                                 std::set<std::string> &_names)
-        {
-          if (!_pimpl || !_pimpl->template HasInterface<Interface>())
-            _names.insert(typeid(FeatureT).name());
-        }
-      };
-
-      template <typename PolicyT>
-      struct InspectFeatures<PolicyT, void, void_t<> >
-      {
-        template <typename PtrT>
-        static bool Verify(const PtrT &/*_pimpl*/)
-        {
-          // This is just the terminal leaf of the inspection tree, so it must
-          // not falsify the verification.
-          return true;
-        }
-
-        template <typename LoaderT, typename ContainerT>
-        static void EraseIfMissing(
-            const LoaderT &/*_loader*/,
-            ContainerT &/*_plugins*/)
-        {
-          // Do nothing, this is a terminal leaf
-        }
-
-        template <typename PtrT>
-        static void MissingNames(const PtrT &/*_pimpl*/,
-                                 std::set<std::string> &/*_names*/)
-        {
-          // Do nothing, this is a terminal leaf
-        }
-      };
-
-      /// \private Implementation of InspectFeatures.
-      template <typename PolicyT, typename FeatureListT>
-      struct InspectFeatures<PolicyT, FeatureListT,
-          void_t<typename FeatureListT::CurrentTupleEntry>>
-      {
-        using Branch1 = InspectFeatures<PolicyT,
-            typename FeatureListT::CurrentTupleEntry>;
-        using Branch2 = InspectFeatures<PolicyT,
-            typename GetNext<FeatureListT>::n>;
-
-        /// \brief Check that each feature is provided by the plugin.
-        template <typename PtrT>
-        static bool Verify(const PtrT &_pimpl)
-        {
-          return Branch1::Verify(_pimpl) && Branch2::Verify(_pimpl);
-        }
-
-        template <typename LoaderT, typename ContainerT>
-        static void EraseIfMissing(
-            const LoaderT &_loader,
-            ContainerT &_plugins)
-        {
-          Branch1::EraseIfMissing(_loader, _plugins);
-          Branch2::EraseIfMissing(_loader, _plugins);
-        }
-
-        template <typename PtrT>
-        static void MissingNames(const PtrT &_pimpl,
-                                 std::set<std::string> &_names)
-        {
-          Branch1::MissingNames(_pimpl, _names);
-          Branch2::MissingNames(_pimpl, _names);
-        }
+        template <typename... T>
+        using type = typename Impl<IndexSequence<T...>>::template type<T...>;
       };
     }
 

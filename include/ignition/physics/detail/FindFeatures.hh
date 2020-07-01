@@ -22,6 +22,7 @@
 #include <string>
 
 #include <ignition/physics/FindFeatures.hh>
+#include <ignition/physics/detail/InspectFeatures.hh>
 
 namespace ignition
 {
