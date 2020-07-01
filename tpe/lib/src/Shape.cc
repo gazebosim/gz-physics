@@ -27,16 +27,16 @@ Shape::Shape()
   this->type = ShapeType::EMPTY;
 }
 
- //////////////////////////////////////////////////
- math::AxisAlignedBox Shape::GetBoundingBox()
- {
-   if (this->dirty)
-   {
-     this->UpdateBoundingBox();
-     this->dirty = false;
-   }
-   return this->bbox;
- }
+//////////////////////////////////////////////////
+math::AxisAlignedBox Shape::GetBoundingBox()
+{
+  if (this->dirty)
+  {
+    this->UpdateBoundingBox();
+    this->dirty = false;
+  }
+  return this->bbox;
+}
 
 //////////////////////////////////////////////////
 void Shape::UpdateBoundingBox()

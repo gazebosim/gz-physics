@@ -72,7 +72,7 @@ Identity EntityManagementFeatures::GetWorld(
       {
         return this->GenerateIdentity(it->first, it->second);
       }
-    } 
+    }
   }
   return this->GenerateInvalidId();
 }
@@ -81,9 +81,7 @@ Identity EntityManagementFeatures::GetWorld(
 const std::string &EntityManagementFeatures::GetWorldName(
   const Identity &_worldID) const
 {
-  static std::string worldName =
-    this->ReferenceInterface<WorldInfo>(_worldID)->world->GetName();
-  return worldName;
+  return this->ReferenceInterface<WorldInfo>(_worldID)->world->GetNameRef();
 }
 
 /////////////////////////////////////////////////
@@ -148,9 +146,7 @@ Identity EntityManagementFeatures::GetModel(
 const std::string &EntityManagementFeatures::GetModelName(
   const Identity &_modelID) const
 {
-  static std::string modelName =
-    this->ReferenceInterface<ModelInfo>(_modelID)->model->GetName();
-  return modelName;
+  return this->ReferenceInterface<ModelInfo>(_modelID)->model->GetNameRef();
 }
 
 /////////////////////////////////////////////////
@@ -223,9 +219,7 @@ Identity EntityManagementFeatures::GetLink(
 const std::string &EntityManagementFeatures::GetLinkName(
   const Identity &_linkID) const
 {
-  static std::string linkName =
-    this->ReferenceInterface<LinkInfo>(_linkID)->link->GetName();
-  return linkName;
+  return this->ReferenceInterface<LinkInfo>(_linkID)->link->GetNameRef();
 }
 
 /////////////////////////////////////////////////
@@ -300,9 +294,8 @@ Identity EntityManagementFeatures::GetShape(
 const std::string &EntityManagementFeatures::GetShapeName(
   const Identity &_shapeID) const
 {
-  static std::string shapeName =
-    this->ReferenceInterface<CollisionInfo>(_shapeID)->collision->GetName();
-  return shapeName;
+  return this->ReferenceInterface<CollisionInfo>(
+      _shapeID)->collision->GetNameRef();
 }
 
 /////////////////////////////////////////////////
@@ -376,21 +369,22 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
       return worldIt->second->world->RemoveChildById(_modelID.id);
     }
   }
-  return false;  
+  return false;
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
   if (this->models.find(_modelID.id) == this->models.end()
-    && this->childIdToParentId.find(_modelID.id) == this->childIdToParentId.end())
-      return true;
+    && this->childIdToParentId.find(_modelID.id) ==
+      this->childIdToParentId.end())
+        return true;
   return false;
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
-  const Identity &/*_engineID*/, const std::string &_name)
+  const Identity &, const std::string &_name)
 {
   auto world = std::make_shared<tpelib::World>();
   world->SetName(_name);

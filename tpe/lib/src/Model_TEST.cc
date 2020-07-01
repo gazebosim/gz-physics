@@ -17,8 +17,10 @@
 
 #include <gtest/gtest.h>
 
+#include "Collision.hh"
 #include "Link.hh"
 #include "Model.hh"
+#include "Shape.hh"
 
 using namespace ignition;
 using namespace physics;
@@ -33,6 +35,7 @@ TEST(Model, BasicAPI)
 
   model.SetName("model_1");
   EXPECT_EQ("model_1", model.GetName());
+  EXPECT_EQ("model_1", model.GetNameRef());
 
   model.SetPose(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3));
   EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), model.GetPose());
@@ -55,7 +58,8 @@ TEST(Model, BasicAPI)
   math::Pose3d expectedPose(
     originalPose.Pos() + math::Vector3d(0.1, 0.1, 0.1) * timeStep,
     originalPose.Rot().Integrate(math::Vector3d(1.0, 0, 0), timeStep));
-  model2.UpdatePose(timeStep, model2.GetLinearVelocity(), model2.GetAngularVelocity());
+  model2.UpdatePose(
+    timeStep, model2.GetLinearVelocity(), model2.GetAngularVelocity());
   EXPECT_EQ(expectedPose, model2.GetPose());
 }
 
@@ -80,6 +84,9 @@ TEST(Model, Link)
   Entity entByName = model.GetChildByName("link_1");
   EXPECT_EQ("link_1", entByName.GetName());
 
+  Entity entByIdx = model.GetChildByIndex(0u);
+  EXPECT_EQ("link_1", entByIdx.GetName());
+
   // test casting to link
   Link *link = static_cast<Link *>(&linkEnt);
   EXPECT_NE(nullptr, link);
@@ -88,6 +95,9 @@ TEST(Model, Link)
   // add another child
   Entity &linkEnt2 = model.AddLink();
   EXPECT_EQ(2u, model.GetChildCount());
+
+  Entity ent2ByIdx = model.GetChildByIndex(1u);
+  EXPECT_EQ(linkEnt2.GetId(), ent2ByIdx.GetId());
 
   Link *link2 = static_cast<Link *>(&linkEnt2);
   EXPECT_NE(nullptr, link2);
@@ -101,3 +111,52 @@ TEST(Model, Link)
   EXPECT_EQ(Entity::kNullEntity.GetId(), nullEnt.GetId());
 }
 
+/////////////////////////////////////////////////
+TEST(Model, BoundingBox)
+{
+  Model model;
+  EXPECT_EQ(0u, model.GetChildCount());
+  EXPECT_EQ(math::AxisAlignedBox(), model.GetBoundingBox());
+
+  // add link with sphere collision shape
+  Entity &linkEnt = model.AddLink();
+  linkEnt.SetPose(math::Pose3d(0, 0, 1, 0, 0, 0));
+  EXPECT_EQ(math::AxisAlignedBox(), linkEnt.GetBoundingBox());
+  EXPECT_EQ(math::AxisAlignedBox(), model.GetBoundingBox());
+
+  Link *link = static_cast<Link *>(&linkEnt);
+  Entity &collisionEnt = link->AddCollision();
+  Collision *collision = static_cast<Collision *>(&collisionEnt);
+  SphereShape sphereShape;
+  sphereShape.SetRadius(2.0);
+  collision->SetShape(sphereShape);
+
+  math::AxisAlignedBox expectedBoxLinkFrame(
+      math::Vector3d(-2, -2, -2), math::Vector3d(2, 2, 2));
+  EXPECT_EQ(expectedBoxLinkFrame, linkEnt.GetBoundingBox(true));
+
+  math::AxisAlignedBox expectedBoxModelFrame(
+      math::Vector3d(-2, -2, -1), math::Vector3d(2, 2, 3));
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox(true));
+
+  // add another link with box collision shape
+  Entity &linkEnt2 = model.AddLink();
+  linkEnt2.SetPose(math::Pose3d(0, 1, 0, 0, 0, 0));
+  EXPECT_EQ(math::AxisAlignedBox(), linkEnt2.GetBoundingBox());
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
+
+  Link *link2 = static_cast<Link *>(&linkEnt2);
+  Entity &collisionEnt2 = link2->AddCollision();
+  Collision *collision2 = static_cast<Collision *>(&collisionEnt2);
+  BoxShape boxShape;
+  boxShape.SetSize(math::Vector3d(3, 4, 5));
+  collision2->SetShape(boxShape);
+
+  expectedBoxLinkFrame = math::AxisAlignedBox(
+      math::Vector3d(-1.5, -2, -2.5), math::Vector3d(1.5, 2, 2.5));
+  EXPECT_EQ(expectedBoxLinkFrame, linkEnt2.GetBoundingBox(true));
+
+  expectedBoxModelFrame = math::AxisAlignedBox(
+      math::Vector3d(-2, -2, -2.5), math::Vector3d(2, 3, 3));
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox(true));
+}

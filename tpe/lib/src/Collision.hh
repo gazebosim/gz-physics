@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
+#include <ignition/math/AxisAlignedBox.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
@@ -38,7 +40,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
 
   /// \brief Constructor
   /// \param[in] _id Collision id
-  public: Collision(std::size_t _id);
+  public: explicit Collision(std::size_t _id);
 
   /// \brief Copy Constructor
   /// \param[in] _other The other collision to copy from
@@ -59,6 +61,9 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
   /// \brief Get Shape
   /// \return shape of collision
   public: Shape *GetShape() const;
+
+  // Documentation inherited
+  public: math::AxisAlignedBox GetBoundingBox(bool _force) override;
 
   /// \brief Private data pointer class
   private: CollisionPrivate *dataPtr = nullptr;

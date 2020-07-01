@@ -15,33 +15,27 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_KINEMATICSFEATURES_HH_
+#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_KINEMATICSFEATURES_HH_
 
-#include "ignition/physics/tpelib/Export.hh"
+#include <ignition/physics/FrameSemantics.hh>
 
-#include "Entity.hh"
+#include "Base.hh"
 
 namespace ignition {
 namespace physics {
-namespace tpelib {
+namespace tpeplugin {
 
-/// \brief Link class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
+struct KinematicsFeatureList : FeatureList<
+  LinkFrameSemantics
+> { };
+
+class KinematicsFeatures :
+  public virtual Base,
+  public virtual Implements3d<KinematicsFeatureList>
 {
-  /// \brief Constructor
-  public: Link();
-
-  /// \brief Constructor
-  /// \param[in] _id Link id
-  public: explicit Link(std::size_t _id);
-
-  /// \brief Destructor
-  public: ~Link() = default;
-
-  /// \brief Add a collision
-  /// \return Newly created Collision
-  public: Entity &AddCollision();
+  public: FrameData3d FrameDataRelativeToWorld(
+    const FrameID &_id) const override;
 };
 
 }
