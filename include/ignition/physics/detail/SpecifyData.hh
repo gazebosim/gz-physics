@@ -41,19 +41,10 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Expected>
-    ExpectData<Expected>::ExpectData(const ExpectData<Expected> &_other)
+    ExpectData<Expected>::ExpectData(const ExpectData<Expected> &)
         : ExpectData()
     {
-      this->Copy(_other);
-    }
-
-    /////////////////////////////////////////////////
-    template <typename Expected>
-    ExpectData<Expected> &ExpectData<Expected>::operator=(
-        const ExpectData<Expected> &_other)
-    {
-      this->Copy(_other);
-      return *this;
+      // Do nothing
     }
 
     /////////////////////////////////////////////////

@@ -693,7 +693,7 @@ TEST(SpecifyData, Move)
     data.Get<StringData>().myString = "old_string";
     EXPECT_EQ("old_string", data.Get<StringData>().myString);
 
-    // TODO (anyone) This is actually doing a copy right now
+    // TODO(anyone) This is actually doing a copy right now
     RequireStringBoolChar moveCtor(std::move(data));
     EXPECT_EQ("old_string", moveCtor.Get<StringData>().myString);
   }
