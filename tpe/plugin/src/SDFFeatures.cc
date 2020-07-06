@@ -24,9 +24,9 @@
 #include <sdf/World.hh>
 #include <ignition/common/Console.hh>
 
-using namespace ignition;
-using namespace physics;
-using namespace tpeplugin;
+namespace ignition {
+namespace physics {
+namespace tpeplugin {
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
@@ -192,4 +192,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   }
 
   return collisionIdentity;
+}
+
+}
+}
 }
