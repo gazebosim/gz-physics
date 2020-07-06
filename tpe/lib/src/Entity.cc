@@ -285,7 +285,7 @@ std::size_t Entity::GetNextId()
 void Entity::ChildrenChanged()
 {
   this->dataPtr->bboxDirty = true;
-  this->dataPtr->collideBitmaskDirty= true;
+  this->dataPtr->collideBitmaskDirty = true;
 
   if (this->dataPtr->parent)
     this->dataPtr->parent->ChildrenChanged();
