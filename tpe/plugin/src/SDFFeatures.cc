@@ -17,7 +17,6 @@
 
 #include <sdf/Box.hh>
 #include <sdf/Cylinder.hh>
-#include <sdf/Element.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
 #include <ignition/common/Console.hh>
@@ -184,7 +183,7 @@ Identity SDFFeatures::ConstructSdfCollision(
         elem = elem->GetElement("contact");
         if (elem->HasElement("collide_bitmask"))
         {
-          collideBitmask = elem->Get<unsigned int>("collide_bitmask");
+          collideBitmask = elem->Get<int>("collide_bitmask");
           this->SetCollisionFilterMask(collisionIdentity, collideBitmask);
         }
       }
