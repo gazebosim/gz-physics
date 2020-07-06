@@ -45,35 +45,64 @@ Identity SDFFeatures::ConstructSdfWorld(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModel(
-  const Identity &_worldID,
+  const Identity &_parentID,
   const ::sdf::Model &_sdfModel)
 {
+  tpelib::Model *model = nullptr;
+  std::size_t parentId = 0u;
+
+  // parent is world
+  auto it = this->worlds.find(_parentID.id);
+  if (it != this->worlds.end())
+  {
+    auto world = it->second->world;
+    if (world == nullptr)
+    {
+      ignwarn << "World is a null" << std::endl;
+      return this->GenerateInvalidId();
+    }
+    parentId = world->GetId();
+    tpelib::Entity &ent = world->AddModel();
+    model = static_cast<tpelib::Model *>(&ent);
+  }
+  // parent is model (nested model)
+  else
+  {
+    auto modelIt = this->models.find(_parentID.id);
+    if (modelIt != this->models.end())
+    {
+      auto parent = modelIt->second->model;
+      if (parent == nullptr)
+      {
+        ignwarn << "Parent model is a null" << std::endl;
+        return this->GenerateInvalidId();
+      }
+      parentId = parent->GetId();
+      tpelib::Entity &ent = parent->AddModel();
+      model = static_cast<tpelib::Model *>(&ent);
+    }
+  }
+  if (!model)
+    return this->GenerateInvalidId();
+
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const auto pose = _sdfModel.RawPose();
 
-  auto it = this->worlds.find(_worldID.id);
-  if (it == this->worlds.end())
-  {
-    ignwarn << "World [" << _worldID.id << "] is not found." << std::endl;
-    return this->GenerateInvalidId();
-  }
-  auto world = it->second->world;
-  if (world == nullptr)
-  {
-    ignwarn << "World is a nullptr" << std::endl;
-    return this->GenerateInvalidId();
-  }
-  tpelib::Entity &ent = world->AddModel();
-  tpelib::Model *model = static_cast<tpelib::Model *>(&ent);
   model->SetName(name);
   model->SetPose(pose);
-  const auto modelIdentity = this->AddModel(world->GetId(), *model);
+  const auto modelIdentity = this->AddModel(parentId, *model);
 
   // construct links
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
+  }
+
+  // construct nested models
+  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
+  {
+    this->ConstructSdfModel(modelIdentity, *_sdfModel.ModelByIndex(i));
   }
 
   return modelIdentity;

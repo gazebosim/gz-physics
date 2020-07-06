@@ -47,12 +47,26 @@ Entity &Model::AddLink()
 }
 
 //////////////////////////////////////////////////
+Entity &Model::AddModel()
+{
+  std::size_t modelId = Entity::GetNextId();
+  const auto[it, success]  = this->GetChildren().insert(
+      {modelId, std::make_shared<Model>(modelId)});
+  return *it->second.get();
+}
+
+//////////////////////////////////////////////////
 Entity &Model::GetCanonicalLink()
 {
   // return first link as canonical link
-  return *this->GetChildren().begin()->second;
+  for (auto &it : this->GetChildren())
+  {
+    // make sure it is a link and not a nested model
+    if (static_cast<Link *>(it.second.get()))
+      return *it.second;
+  }
+  return kNullEntity;
 }
-
 
 //////////////////////////////////////////////////
 void Model::SetLinearVelocity(const math::Vector3d _velocity)

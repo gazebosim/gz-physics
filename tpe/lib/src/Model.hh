@@ -47,6 +47,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \return Newly created Link
   public: Entity &AddLink();
 
+  /// \brief Add a nested model
+  /// \return Newly created nested model
+  public: Entity &AddModel();
+
   /// \brief Get the canonical link of model
   /// \return Entity the canonical (first) link
   public: Entity &GetCanonicalLink();

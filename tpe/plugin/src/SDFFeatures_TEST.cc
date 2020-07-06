@@ -328,6 +328,64 @@ TEST(SDFFeatures_TEST, CheckTpeData)
   }
 }
 
+// Test that the tpe plugin loaded nested models correctly.
+TEST(SDFFeatures_TEST, NestedModel)
+{
+  World world = LoadWorld(TEST_WORLD_DIR"/nested_model.world");
+  auto tpeWorld = world.GetTpeLibWorld();
+  ASSERT_NE(nullptr, tpeWorld);
+
+  ASSERT_EQ(1u, tpeWorld->GetChildCount());
+
+  // check top level model
+  ignition::physics::tpelib::Entity &model =
+      tpeWorld->GetChildByName("model");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      model.GetId());
+  EXPECT_EQ("model", model.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, model.GetPose());
+  EXPECT_EQ(2u, model.GetChildCount());
+
+  ignition::physics::tpelib::Entity &link = model.GetChildByName("link");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      link.GetId());
+  EXPECT_EQ("link", link.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, link.GetPose());
+  EXPECT_EQ(1u, link.GetChildCount());
+
+  ignition::physics::tpelib::Entity &collision =
+      link.GetChildByName("collision");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      collision.GetId());
+  EXPECT_EQ("collision", collision.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, collision.GetPose());
+
+  // check nested model
+  ignition::physics::tpelib::Entity &nestedModel =
+      model.GetChildByName("nested_model");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      nestedModel.GetId());
+  EXPECT_EQ("nested_model", nestedModel.GetName());
+  EXPECT_EQ(ignition::math::Pose3d(1, 2, 2, 0, 0, 0), nestedModel.GetPose());
+  EXPECT_EQ(1u, nestedModel.GetChildCount());
+
+  ignition::physics::tpelib::Entity &nestedLink =
+      nestedModel.GetChildByName("nested_link");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      nestedLink.GetId());
+  EXPECT_EQ("nested_link", nestedLink.GetName());
+  EXPECT_EQ(ignition::math::Pose3d(3, 1, 1, 0, 0, 1.5707),
+      nestedLink.GetPose());
+  EXPECT_EQ(1u, nestedLink.GetChildCount());
+
+  ignition::physics::tpelib::Entity &nestedCollision =
+      nestedLink.GetChildByName("nested_collision");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      nestedCollision.GetId());
+  EXPECT_EQ("nested_collision", nestedCollision.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, nestedCollision.GetPose());
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
