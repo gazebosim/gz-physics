@@ -17,6 +17,7 @@
 
 #include <sdf/Box.hh>
 #include <sdf/Cylinder.hh>
+#include <sdf/Element.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
 #include <ignition/common/Console.hh>
