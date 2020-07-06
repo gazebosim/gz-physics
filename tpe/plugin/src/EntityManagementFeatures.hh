@@ -21,6 +21,7 @@
 #include <string>
 
 #include <ignition/physics/ConstructEmpty.hh>
+#include <ignition/physics/Shape.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/RemoveEntities.hh>
 #include <ignition/physics/Implements.hh>
@@ -40,7 +41,8 @@ struct EntityManagementFeatureList : FeatureList<
   RemoveEntities,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,
-  ConstructEmptyLinkFeature
+  ConstructEmptyLinkFeature,
+  CollisionFilterMaskFeature
 > { };
 
 class EntityManagementFeatures :
@@ -135,6 +137,15 @@ class EntityManagementFeatures :
 
   public: Identity ConstructEmptyLink(
     const Identity &_modelID, const std::string &_name) override;
+
+  // ----- Manage collision filter masks -----
+  public: void SetCollisionFilterMask(
+      const Identity &_shapeID, const uint16_t _mask) override;
+
+  public: uint16_t GetCollisionFilterMask(
+      const Identity &_shapeID) const override;
+
+  public: void RemoveCollisionFilterMask(const Identity &_shapeID) override;
 };
 
 }
