@@ -15,17 +15,18 @@
  *
 */
 
+#include "SDFFeatures.hh"
+
 #include <sdf/Box.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
+#include <sdf/World.hh>
 #include <ignition/common/Console.hh>
 
-#include "SDFFeatures.hh"
-
-using namespace ignition;
-using namespace physics;
-using namespace tpeplugin;
+namespace ignition {
+namespace physics {
+namespace tpeplugin {
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
@@ -197,5 +198,31 @@ Identity SDFFeatures::ConstructSdfCollision(
   // and passed in as argument as there is no logic for searching resources
   // in ign-physics
   const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
+
+  // set collide bitmask
+  uint16_t collideBitmask = 0xFF;
+  if (_sdfCollision.Element())
+  {
+    // TODO(anyone) add category_bitmask as well
+    auto elem = _sdfCollision.Element();
+    if (elem->HasElement("surface"))
+    {
+      elem = elem->GetElement("surface");
+      if (elem->HasElement("contact"))
+      {
+        elem = elem->GetElement("contact");
+        if (elem->HasElement("collide_bitmask"))
+        {
+          collideBitmask = elem->Get<unsigned int>("collide_bitmask");
+          this->SetCollisionFilterMask(collisionIdentity, collideBitmask);
+        }
+      }
+    }
+  }
+
   return collisionIdentity;
+}
+
+}
+}
 }
