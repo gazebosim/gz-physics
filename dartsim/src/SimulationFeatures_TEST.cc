@@ -47,6 +47,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::GetContactsFromLastStepFeature,
     ignition::physics::GetEntities,
     ignition::physics::GetShapeBoundingBox,
+    ignition::physics::CollisionFilterMaskFeature,
     ignition::physics::sdf::ConstructSdfWorld
 > { };
 
@@ -89,6 +90,18 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
   return worlds;
 }
 
+void StepWorld(const TestWorldPtr &_world, const std::size_t _num_steps = 1)
+{
+  ignition::physics::ForwardStep::Input input;
+  ignition::physics::ForwardStep::State state;
+  ignition::physics::ForwardStep::Output output;
+
+  for (size_t i = 0; i < _num_steps; ++i)
+  {
+    _world->Step(output, state, input);
+  }
+}
+
 class SimulationFeatures_TEST
   : public ::testing::Test,
     public ::testing::WithParamInterface<std::string>
@@ -106,14 +119,7 @@ TEST_P(SimulationFeatures_TEST, Falling)
 
   for (const auto &world : worlds)
   {
-    ignition::physics::ForwardStep::Input input;
-    ignition::physics::ForwardStep::State state;
-    ignition::physics::ForwardStep::Output output;
-
-    for (size_t i = 0; i < 1000; ++i)
-    {
-      world->Step(output, state, input);
-    }
+    StepWorld(world, 1000);
 
     auto link = world->GetModel(0)->GetLink(0);
     auto pos = link->FrameDataRelativeToWorld().pose.translation();
@@ -172,6 +178,48 @@ TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
   }
 }
 
+// Tests collision filtering based on bitmasks
+TEST_P(SimulationFeatures_TEST, CollideBitmasks)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes_bitmask.sdf");
+
+  for (const auto &world : worlds)
+  {
+    auto baseBox = world->GetModel("box_base");
+    auto filteredBox = world->GetModel("box_filtered");
+    auto collidingBox = world->GetModel("box_colliding");
+
+    StepWorld(world);
+    auto contacts = world->GetContactsFromLastStep();
+    // Only one box (box_colliding) should collide
+    EXPECT_EQ(4u, contacts.size());
+
+    // Now disable collisions for the colliding box as well
+    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
+    collidingShape->SetCollisionFilterMask(0xF0);
+    // Also test the getter
+    EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
+    // Step and make sure there is no collisions
+    StepWorld(world);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(0u, contacts.size());
+
+    // Now remove both filter masks (no collision will be filtered)
+    // Equivalent to set to 0xFF
+    collidingShape->RemoveCollisionFilterMask();
+    filteredShape->RemoveCollisionFilterMask();
+    StepWorld(world);
+    // Expect both objects to collide
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(8u, contacts.size());
+  }
+}
+
 TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 {
   const std::string library = GetParam();
@@ -187,11 +235,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     auto groundPlane = world->GetModel("ground_plane");
     auto groundPlaneCollision = groundPlane->GetLink(0)->GetShape(0);
 
-    ignition::physics::ForwardStep::Input input;
-    ignition::physics::ForwardStep::State state;
-    ignition::physics::ForwardStep::Output output;
-
-    world->Step(output, state, input);
+    StepWorld(world);
 
     auto contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(4u, contacts.size());

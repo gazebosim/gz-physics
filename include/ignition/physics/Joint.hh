@@ -352,6 +352,23 @@ namespace ignition
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
+
+    class IGNITION_PHYSICS_VISIBLE DetachJointFeature
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        /// \brief Detach this joint.
+        public: void Detach();
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void DetachJoint(const Identity &_jointID) = 0;
+      };
+    };
   }
 }
 

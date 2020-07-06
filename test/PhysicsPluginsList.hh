@@ -29,6 +29,10 @@
 #define bullet_plugin_LIB ""
 #endif
 
+#ifndef tpe_plugin_LIB
+#define tpe_plugin_LIB ""
+#endif
+
 namespace ignition
 {
   namespace physics
@@ -38,6 +42,7 @@ namespace ignition
       const std::vector<std::string> g_PhysicsPluginLibraries = {
         dartsim_plugin_LIB,
         bullet_plugin_LIB,
+        tpe_plugin_LIB
       };
     }
   }

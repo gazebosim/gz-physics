@@ -28,12 +28,12 @@
         <pose>0 0 0.5 0 0 0</pose>
         <collision name="sphere_collision">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </collision>
         <visual name="sphere_visual">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
       </link>
@@ -41,12 +41,12 @@
         <pose>0 1 0.5 0 0 0</pose>
         <collision name="sphere_collision">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </collision>
         <visual name="sphere_visual">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
       </link>
@@ -54,12 +54,12 @@
         <pose>1 0 0.5 0 0 0</pose>
         <collision name="sphere_collision">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </collision>
         <visual name="sphere_visual">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
       </link>
@@ -67,12 +67,12 @@
         <pose>1 1 0.5 0 0 0</pose>
         <collision name="sphere_collision">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </collision>
         <visual name="sphere_visual">
           <geometry>
-            <sphere>0.25</sphere>
+            <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
       </link>
