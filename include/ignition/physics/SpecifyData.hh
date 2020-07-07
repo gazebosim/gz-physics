@@ -48,6 +48,20 @@ namespace ignition
       /// \brief Default constructor
       public: ExpectData();
 
+      /// \brief Copy constructor.
+      /// The copy constructor of the base class, CompositeData, is called
+      /// before this copy constructor and it does the actual copying of the
+      /// data contained in the MapData object of `_other`. Thus, this copy
+      /// constructor simply calls the default constructor to initialize the
+      /// MapData iterator of this object to point the appropriate iterator in
+      /// the newly copied MapData.
+      public: ExpectData(const ExpectData &_other);
+
+      /// TODO(anyone) Implement move constructor and assignment operator. Due
+      /// to the multiple inheritence used to implement SpcifyData, care must be
+      /// taken when implementing move constructs to avoid calling a move
+      /// constructor on a moved-from object.
+
       /// \brief Virtual destructor
       public: virtual ~ExpectData() = default;
 

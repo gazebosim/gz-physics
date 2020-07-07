@@ -237,6 +237,47 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
   }
 }
 
+TEST_P(SimulationFeatures_TEST, CollideBitmasks)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes_bitmask.sdf");
+
+  for (const auto &world : worlds)
+  {
+    auto baseBox = world->GetModel("box_base");
+    auto filteredBox = world->GetModel("box_filtered");
+    auto collidingBox = world->GetModel("box_colliding");
+
+    StepWorld(world);
+    auto contacts = world->GetContactsFromLastStep();
+    // Only box_colliding should collide with box_base
+    EXPECT_EQ(1u, contacts.size());
+
+    // Now disable collisions for the colliding box as well
+    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
+    collidingShape->SetCollisionFilterMask(0xF0);
+    // Also test the getter
+    EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
+    // Step and make sure there are no collisions
+    StepWorld(world);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(0u, contacts.size());
+
+    // Now remove both filter masks (no collisions will be filtered)
+    // Equivalent to 0xFF
+    collidingShape->RemoveCollisionFilterMask();
+    filteredShape->RemoveCollisionFilterMask();
+    StepWorld(world);
+    // Expect box_filtered and box_colliding to collide with box_base
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(2u, contacts.size());
+  }
+}
+
 TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 {
   const std::string library = GetParam();

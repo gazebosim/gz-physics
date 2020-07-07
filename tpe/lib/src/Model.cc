@@ -43,6 +43,9 @@ Entity &Model::AddLink()
   std::size_t linkId = Entity::GetNextId();
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
+
+  it->second->SetParent(this);
+  this->ChildrenChanged();
   return *it->second.get();
 }
 
