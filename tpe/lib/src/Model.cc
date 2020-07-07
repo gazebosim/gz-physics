@@ -67,9 +67,20 @@ Entity &Model::GetCanonicalLink()
   // return first link as canonical link
   for (auto &it : this->GetChildren())
   {
-    // make sure it is a link and not a nested model
-    if (static_cast<Link *>(it.second.get()))
+    // if child is nested model, return its canonical link
+    Model *model = dynamic_cast<Model *>(it.second.get());
+    if (model)
+    {
+      auto &link = model->GetCanonicalLink();
+      if (link.GetId() != kNullEntity.GetId())
+        return link;
+    }
+    // if child is link and a canonical link has not been found yet,
+    // return this child link
+    else if (dynamic_cast<Link *>(it.second.get()))
+    {
       return *it.second;
+    }
   }
   return kNullEntity;
 }
