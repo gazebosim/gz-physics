@@ -386,6 +386,22 @@ namespace ignition
           // Do nothing
         }
 
+        /// \brief Copy constructor.
+        /// Explcitly defaulted for clarity.
+        private: PrivateExpectData(const PrivateExpectData&) = default;
+
+        /// \brief Copy assignment operator.
+        /// We need to specify a copy constructor because the compiler will not
+        /// generate one for us. This is because the generated constructor would
+        /// try to copy expectedIterator and fail because it's a const. Since
+        /// expectedIterator is already initialized when the copy assignment
+        /// operator is used we do nothing here.
+        private: PrivateExpectData<Expected> &operator=(
+            const PrivateExpectData<Expected> &)
+        {
+          return *this;
+        }
+
         public: const CompositeData::MapOfData::iterator expectedIterator;
       };
 

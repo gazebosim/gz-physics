@@ -195,7 +195,10 @@ namespace ignition
           // should just add each remaining entry from sender. We don't have to
           // worry about conflicts, because this CompositeData cannot already
           // have any of these types.
-          CreateDataFnc(_toMap, sender, _mergeRequirements, _numEntries);
+          if (sender->second.data)
+          {
+            CreateDataFnc(_toMap, sender, _mergeRequirements, _numEntries);
+          }
 
           ++sender;
         }
