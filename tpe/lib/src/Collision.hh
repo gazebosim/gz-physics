@@ -62,6 +62,13 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
   /// \return shape of collision
   public: Shape *GetShape() const;
 
+  /// \brief Set collide bitmask
+  /// \param[in] _mask Bitmask to set
+  public: void SetCollideBitmask(uint16_t _mask);
+
+  // Documentation Inherited
+  public: uint16_t GetCollideBitmask() const override;
+
   // Documentation inherited
   public: math::AxisAlignedBox GetBoundingBox(bool _force) override;
 

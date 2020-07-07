@@ -133,11 +133,11 @@ TEST(Model, BoundingBox)
 
   math::AxisAlignedBox expectedBoxLinkFrame(
       math::Vector3d(-2, -2, -2), math::Vector3d(2, 2, 2));
-  EXPECT_EQ(expectedBoxLinkFrame, linkEnt.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxLinkFrame, linkEnt.GetBoundingBox());
 
   math::AxisAlignedBox expectedBoxModelFrame(
       math::Vector3d(-2, -2, -1), math::Vector3d(2, 2, 3));
-  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
 
   // add another link with box collision shape
   Entity &linkEnt2 = model.AddLink();
@@ -154,9 +154,48 @@ TEST(Model, BoundingBox)
 
   expectedBoxLinkFrame = math::AxisAlignedBox(
       math::Vector3d(-1.5, -2, -2.5), math::Vector3d(1.5, 2, 2.5));
-  EXPECT_EQ(expectedBoxLinkFrame, linkEnt2.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxLinkFrame, linkEnt2.GetBoundingBox());
 
   expectedBoxModelFrame = math::AxisAlignedBox(
       math::Vector3d(-2, -2, -2.5), math::Vector3d(2, 3, 3));
-  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox(true));
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
+}
+
+/////////////////////////////////////////////////
+TEST(Model, CollideBitmask)
+{
+  Model model;
+  EXPECT_EQ(0x00, model.GetCollideBitmask());
+
+  // add link and verify bitmask is still empty
+  Entity &linkEnt = model.AddLink();
+  EXPECT_EQ(0x00, linkEnt.GetCollideBitmask());
+  EXPECT_EQ(0x00, model.GetCollideBitmask());
+
+  // add a collision and verify the model has the same collision bitmask
+  Link *link = static_cast<Link *>(&linkEnt);
+  Entity &collisionEnt = link->AddCollision();
+  Collision *collision = static_cast<Collision *>(&collisionEnt);
+  collision->SetCollideBitmask(0x01);
+  EXPECT_EQ(0x01, collision->GetCollideBitmask());
+  EXPECT_EQ(0x01, linkEnt.GetCollideBitmask());
+  EXPECT_EQ(0x01, model.GetCollideBitmask());
+
+  // add another collision and verify bitmasks are bitwise OR'd.
+  Entity &collisionEnt2 = link->AddCollision();
+  Collision *collision2 = static_cast<Collision *>(&collisionEnt2);
+  collision2->SetCollideBitmask(0x04);
+  EXPECT_EQ(0x04, collision2->GetCollideBitmask());
+  EXPECT_EQ(0x05, linkEnt.GetCollideBitmask());
+  EXPECT_EQ(0x05, model.GetCollideBitmask());
+
+  // add another link with collision and verify
+  Entity &linkEnt2 = model.AddLink();
+  Link *link2 = static_cast<Link *>(&linkEnt2);
+  Entity &collisionEnt3 = link2->AddCollision();
+  Collision *collision3 = static_cast<Collision *>(&collisionEnt3);
+  collision3->SetCollideBitmask(0x09);
+  EXPECT_EQ(0x09, collision3->GetCollideBitmask());
+  EXPECT_EQ(0x09, linkEnt2.GetCollideBitmask());
+  EXPECT_EQ(0x0D, model.GetCollideBitmask());
 }
