@@ -29,6 +29,7 @@
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
 
+#include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
@@ -40,6 +41,7 @@
 
 struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::tpeplugin::RetrieveWorld,
+    ignition::physics::GetModelFromWorld,
     ignition::physics::sdf::ConstructSdfLink,
     ignition::physics::sdf::ConstructSdfModel,
     ignition::physics::sdf::ConstructSdfWorld
@@ -384,6 +386,28 @@ TEST(SDFFeatures_TEST, NestedModel)
       nestedCollision.GetId());
   EXPECT_EQ("nested_collision", nestedCollision.GetName());
   EXPECT_EQ(ignition::math::Pose3d::Zero, nestedCollision.GetPose());
+}
+
+// Test ConstructModel function.
+TEST(SDFFeatures_TEST, ConstructModel)
+{
+  auto engine = LoadEngine();
+  ASSERT_NE(nullptr, engine);
+  sdf::World sdfWorld;
+  sdfWorld.SetName("default");
+  auto world = engine->ConstructWorld(sdfWorld);
+  EXPECT_NE(nullptr, world);
+
+  sdf::Model sdfModel;
+  sdfModel.SetName("model");
+  auto model = world->ConstructModel(sdfModel);
+  EXPECT_NE(nullptr, model);
+  EXPECT_EQ("model", model->GetName());
+
+  sdfModel.SetName("nested_model");
+  auto nestedModel = model->ConstructModel(sdfModel);
+  EXPECT_NE(nullptr, nestedModel);
+  EXPECT_EQ("nested_model", nestedModel->GetName());
 }
 
 int main(int argc, char *argv[])

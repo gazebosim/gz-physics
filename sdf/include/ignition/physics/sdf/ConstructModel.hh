@@ -36,6 +36,15 @@ class ConstructSdfModel : public virtual Feature
     public: ModelPtrType ConstructModel(const ::sdf::Model &_model);
   };
 
+  public: template <typename PolicyT, typename FeaturesT>
+  class Model: public virtual Feature::Model<PolicyT, FeaturesT>
+  {
+    public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+
+    public: ModelPtrType ConstructModel(const ::sdf::Model &_model);
+  };
+
+
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
@@ -47,6 +56,16 @@ class ConstructSdfModel : public virtual Feature
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfModel::World<PolicyT, FeaturesT>::ConstructModel(
+    const ::sdf::Model &_model) -> ModelPtrType
+{
+  return ModelPtrType(this->pimpl,
+        this->template Interface<ConstructSdfModel>()
+              ->ConstructSdfModel(this->identity, _model));
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+auto ConstructSdfModel::Model<PolicyT, FeaturesT>::ConstructModel(
     const ::sdf::Model &_model) -> ModelPtrType
 {
   return ModelPtrType(this->pimpl,

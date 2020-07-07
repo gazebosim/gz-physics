@@ -55,6 +55,9 @@ Entity &Model::AddModel()
   std::size_t modelId = Entity::GetNextId();
   const auto[it, success]  = this->GetChildren().insert(
       {modelId, std::make_shared<Model>(modelId)});
+
+  it->second->SetParent(this);
+  this->ChildrenChanged();
   return *it->second.get();
 }
 
