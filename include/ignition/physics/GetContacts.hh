@@ -33,12 +33,30 @@ namespace physics
 class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
+  public: template <typename PolicyT>
+  struct ExtraContactDataT
+  {
+    using Scalar = typename PolicyT::Scalar;
+    using VectorType = typename FromPolicy<PolicyT>::template Use<Vector>;
+
+    /// \brief The contact force acting on the first body expressed
+    /// in the world frame
+    VectorType force;
+    /// \brief The normal of the force acting on the first body expressed
+    /// in the world frame
+    VectorType normal;
+    /// \brief The penetration depth
+    Scalar depth;
+  };
+
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
+    public: using Scalar = typename PolicyT::Scalar;
     public: using ShapePtrType = ShapePtr<PolicyT, FeaturesT>;
     public: using VectorType =
         typename FromPolicy<PolicyT>::template Use<Vector>;
+    public: using ExtraContactData = ExtraContactDataT<PolicyT>;
 
     public: struct ContactPoint
     {
@@ -50,7 +68,9 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
       VectorType point;
     };
 
-    public: using Contact = RequireData<ContactPoint>;
+    public: using Contact = SpecifyData<
+            RequireData<ContactPoint>,
+            ExpectData<ExtraContactData> >;
 
     /// \brief Get contacts generated in the previous simulation step
     public: std::vector<Contact> GetContactsFromLastStep() const;
@@ -59,8 +79,10 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
+    public: using Scalar = typename PolicyT::Scalar;
     public: using VectorType =
         typename FromPolicy<PolicyT>::template Use<Vector>;
+    public: using ExtraContactData = ExtraContactDataT<PolicyT>;
 
     public: struct ContactInternal
     {
