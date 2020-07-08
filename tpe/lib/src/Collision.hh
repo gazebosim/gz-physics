@@ -18,7 +18,7 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
-#include <ignition/math/AxisAlignedBox.hh>
+#include <ignition/math/eigen3/Conversions.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
 
@@ -71,6 +71,18 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
 
   // Documentation inherited
   public: math::AxisAlignedBox GetBoundingBox(bool _force) override;
+
+  /// \brief Update the pose of the entity
+  /// \param[in] _linkPose parent link pose
+  public: void UpdatePose(const math::Pose3d _linkPose);
+
+  /// \brief Get the relative transform to its parent link
+  /// \return relative transform
+  public: const Eigen::Isometry3d GetTf();
+
+  /// \brief Set the relative transform to its parent link
+  /// \param[in] _tf relative transform
+  public: void SetTf(const Eigen::Isometry3d _tf);
 
   /// \brief Private data pointer class
   private: CollisionPrivate *dataPtr = nullptr;
