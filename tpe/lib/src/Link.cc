@@ -42,3 +42,23 @@ Entity &Link::AddCollision()
   this->ChildrenChanged();
   return *it->second.get();
 }
+
+//////////////////////////////////////////////////
+void Link::UpdatePose(const math::Pose3d _modelPose)
+{
+  math::Pose3d nextPose = math::eigen3::convert(
+    math::eigen3::convert(_modelPose) * this->tf);
+  this->SetPose(nextPose);
+}
+
+//////////////////////////////////////////////////
+const Eigen::Isometry3d Link::GetTf()
+{
+  return this->tf;
+}
+
+//////////////////////////////////////////////////
+void Link::SetTf(const Eigen::Isometry3d _tf)
+{
+  this->tf = _tf;
+}

@@ -37,6 +37,16 @@ TEST(Link, BasicAPI)
   link.SetPose(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3));
   EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), link.GetPose());
 
+  link.SetTf(math::eigen3::convert(
+      math::Pose3d(0, 0.2, 0.5, 0, 1, 0)));
+  EXPECT_EQ(math::Pose3d(0, 0.2, 0.5, 0, 1, 0),
+            math::eigen3::convert(link.GetTf()));
+
+  auto modelPose = math::Pose3d(10, 0, 2, 1, 0, 0);
+  link.UpdatePose(modelPose);
+  EXPECT_EQ(math::Pose3d(10, -0.312675, 2.43845, 1.23686, 0.471978, 0.918989),
+            link.GetPose());
+
   Link link2;
   EXPECT_NE(link.GetId(), link2.GetId());
 }

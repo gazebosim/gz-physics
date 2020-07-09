@@ -25,9 +25,9 @@ class ignition::physics::tpelib::CollisionPrivate
   /// \brief Collision's geometry shape
   public: std::shared_ptr<Shape> shape = nullptr;
 
-  /// \brief Private relative transform to its parent entity
-  public: Eigen::Isometry3d tf =
-    math::eigen3::convert(math::Pose3d(0, 0, 0, 0, 0, 0));
+  /// \brief Relative transform to its parent entity
+  public: Eigen::Isometry3d tf = math::eigen3::convert(
+    math::Pose3d(0, 0, 0, 0, 0, 0));
 
   /// \brief Collide bitmask
   public: uint16_t collideBitmask = 0xFF;
