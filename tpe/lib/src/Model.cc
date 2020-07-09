@@ -92,4 +92,13 @@ void Model::UpdatePose(
     currentPose.Pos() + _linearVelocity * _timeStep,
     currentPose.Rot().Integrate(_angularVelocity, _timeStep));
   this->SetPose(nextPose);
+
+  // update link poses
+  auto &children = this->GetChildren();
+  for (auto it = children.begin(); it != children.end(); ++it)
+  {
+    std::shared_ptr<Link> link =
+      std::dynamic_pointer_cast<Link>(it->second);
+    link->UpdatePose(this->GetPose());
+  }
 }
