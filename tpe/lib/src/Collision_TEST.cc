@@ -37,14 +37,15 @@ TEST(Collision, BasicAPI)
   collision.SetPose(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3));
   EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), collision.GetPose());
 
-  collision.SetTf(
-    math::eigen3::convert(math::Pose3d(0, 1.5, 0, 0, 0, 0)));
-  EXPECT_EQ(math::Pose3d(0, 1.5, 0, 0, 0, 0),
-            math::eigen3::convert(collision.GetTf()));
+  Link link;
+  auto linkPose = math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3);
+  link.SetPose(linkPose);
+  Entity &collisionEnt = link.AddCollision();
+  ASSERT_NE(nullptr, collisionEnt.GetParent());
 
-  auto linkPose = math::Pose3d(1, 0, 0, 0, 0, 0);
-  collision.UpdatePose(linkPose);
-  EXPECT_EQ(math::Pose3d(1, 1.5, 0, 0, 0, 0), collision.GetPose());
+  collisionEnt.SetPose(math::Pose3d(0, 0.2, 0.5, 0, 1, 0));
+  EXPECT_EQ(math::Pose3d(3.06472, 2.2, 1.27944, 0.691965, 1.10889, 0.707449),
+            collisionEnt.GetWorldPose());
 
   EXPECT_EQ(0xFF, collision.GetCollideBitmask());
   collision.SetCollideBitmask(0x03);

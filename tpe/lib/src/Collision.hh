@@ -72,18 +72,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
   // Documentation inherited
   public: math::AxisAlignedBox GetBoundingBox(bool _force) override;
 
-  /// \brief Update the pose of the entity
-  /// \param[in] _linkPose parent link pose
-  public: void UpdatePose(const math::Pose3d _linkPose);
-
-  /// \brief Get the relative transform to its parent link
-  /// \return relative transform
-  public: const Eigen::Isometry3d GetTf();
-
-  /// \brief Set the relative transform to its parent link
-  /// \param[in] _tf relative transform
-  public: void SetTf(const Eigen::Isometry3d _tf);
-
   /// \brief Private data pointer class
   private: CollisionPrivate *dataPtr = nullptr;
 };

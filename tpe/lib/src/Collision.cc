@@ -25,10 +25,6 @@ class ignition::physics::tpelib::CollisionPrivate
   /// \brief Collision's geometry shape
   public: std::shared_ptr<Shape> shape = nullptr;
 
-  /// \brief Relative transform to its parent entity
-  public: Eigen::Isometry3d tf = math::eigen3::convert(
-    math::Pose3d(0, 0, 0, 0, 0, 0));
-
   /// \brief Collide bitmask
   public: uint16_t collideBitmask = 0xFF;
 };
@@ -127,24 +123,4 @@ void Collision::SetCollideBitmask(uint16_t _mask)
 uint16_t Collision::GetCollideBitmask() const
 {
   return this->dataPtr->collideBitmask;
-}
-
-//////////////////////////////////////////////////
-void Collision::UpdatePose(const math::Pose3d _linkPose)
-{
-  math::Pose3d nextPose = math::eigen3::convert(
-    math::eigen3::convert(_linkPose) * this->dataPtr->tf);
-  this->SetPose(nextPose);
-}
-
-//////////////////////////////////////////////////
-const Eigen::Isometry3d Collision::GetTf()
-{
-  return this->dataPtr->tf;
-}
-
-//////////////////////////////////////////////////
-void Collision::SetTf(const Eigen::Isometry3d _tf)
-{
-  this->dataPtr->tf = _tf;
 }

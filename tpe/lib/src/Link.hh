@@ -44,22 +44,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
   /// \brief Add a collision
   /// \return Newly created Collision
   public: Entity &AddCollision();
-
-  /// \brief Update the pose of the entity
-  /// \param[in] _modelPose parent model pose
-  public: void UpdatePose(const math::Pose3d _modelPose);
-
-  /// \brief Get the relative transform to its parent model
-  /// \return relative transform
-  public: const Eigen::Isometry3d GetTf();
-
-  /// \brief Set the relative transform to its parent model
-  /// \param[in] _tf relative transform
-  public: void SetTf(const Eigen::Isometry3d _tf);
-
-  /// \brief Private relative transform to its parent entity
-  public: Eigen::Isometry3d tf =
-    math::eigen3::convert(math::Pose3d(0, 0, 0, 0, 0, 0));
 };
 
 }
