@@ -19,6 +19,7 @@
 
 #include "Collision.hh"
 #include "Link.hh"
+#include "Model.hh"
 
 using namespace ignition;
 using namespace physics;
@@ -46,6 +47,15 @@ TEST(Link, BasicAPI)
   link.UpdatePose(modelPose);
   EXPECT_EQ(math::Pose3d(10, -0.312675, 2.43845, 1.23686, 0.471978, 0.918989),
             link.GetPose());
+
+  Model model;
+  model.SetPose(modelPose);
+  Entity &linkEnt = model.AddLink();
+  linkEnt.SetPose(math::Pose3d(0, 0.2, 0.5, 0, 1, 0));
+  EXPECT_EQ(math::Pose3d(10, -0.312675, 2.43845, 1.23686, 0.471978, 0.918989),
+            link.GetWorldPose());
+
+  // std::cerr << "link entity world pose " << linkEnt.GetWorldPose() << std::endl;
 
   Link link2;
   EXPECT_NE(link.GetId(), link2.GetId());
