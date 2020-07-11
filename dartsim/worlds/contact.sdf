@@ -36,6 +36,9 @@
             <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
+        <inertial>
+          <mass>0.1</mass>
+        </inertial>
       </link>
       <link name="link1">
         <pose>0 1 0.5 0 0 0</pose>
@@ -49,6 +52,9 @@
             <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
+        <inertial>
+          <mass>1</mass>
+        </inertial>
       </link>
       <link name="link2">
         <pose>1 0 0.5 0 0 0</pose>
@@ -62,6 +68,9 @@
             <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
+        <inertial>
+          <mass>2</mass>
+        </inertial>
       </link>
       <link name="link3">
         <pose>1 1 0.5 0 0 0</pose>
@@ -75,6 +84,9 @@
             <sphere><radius>1</radius></sphere>
           </geometry>
         </visual>
+        <inertial>
+          <mass>3</mass>
+        </inertial>
       </link>
     </model>
   </world>

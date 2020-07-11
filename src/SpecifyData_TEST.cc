@@ -659,6 +659,57 @@ TEST(SpecifyData, OtherDataTypes)
 }
 
 /////////////////////////////////////////////////
+TEST(SpecifyData, Copy)
+{
+  {
+    RequireStringBoolChar data;
+    data.Get<StringData>().myString = "old_string";
+    EXPECT_EQ("old_string", data.Get<StringData>().myString);
+
+    RequireStringBoolChar copyCtor(data);
+    EXPECT_EQ("old_string", copyCtor.Get<StringData>().myString);
+
+    // Modify the original and check that the copy is not affected
+    data.Get<StringData>().myString = "new_string";
+    EXPECT_EQ("old_string", copyCtor.Get<StringData>().myString);
+  }
+
+  {
+    RequireStringBoolChar data;
+    data.Get<StringData>().myString = "old_string";
+    EXPECT_EQ("old_string", data.Get<StringData>().myString);
+
+    RequireStringBoolChar opEqData;
+    opEqData = data;
+    EXPECT_EQ("old_string", opEqData.Get<StringData>().myString);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST(SpecifyData, Move)
+{
+  {
+    RequireStringBoolChar data;
+    data.Get<StringData>().myString = "old_string";
+    EXPECT_EQ("old_string", data.Get<StringData>().myString);
+
+    // TODO(anyone) This is actually doing a copy right now
+    RequireStringBoolChar moveCtor(std::move(data));
+    EXPECT_EQ("old_string", moveCtor.Get<StringData>().myString);
+  }
+
+  {
+    RequireStringBoolChar data;
+    data.Get<StringData>().myString = "old_string";
+    EXPECT_EQ("old_string", data.Get<StringData>().myString);
+
+    RequireStringBoolChar opEqData;
+    opEqData = std::move(data);
+    EXPECT_EQ("old_string", opEqData.Get<StringData>().myString);
+  }
+}
+
+/////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

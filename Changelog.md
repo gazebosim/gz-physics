@@ -2,6 +2,9 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
+1. Fix copying of SpecifyData objects
+    * [Pull Request 77](https://github.com/ignitionrobotics/ign-physics/pull/77)
+
 ### Ignition Physics 2.1.0 (2020-05-07)
 
 1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.

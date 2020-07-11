@@ -41,6 +41,14 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Expected>
+    ExpectData<Expected>::ExpectData(const ExpectData<Expected> &)
+        : ExpectData()
+    {
+      // Do nothing
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Expected>
     template <typename Data>
     Data &ExpectData<Expected>::Get()
     {
