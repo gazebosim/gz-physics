@@ -231,6 +231,30 @@ TEST(Model, CollideBitmask)
   EXPECT_EQ(0x09, collision3->GetCollideBitmask());
   EXPECT_EQ(0x09, linkEnt2.GetCollideBitmask());
   EXPECT_EQ(0x0D, model.GetCollideBitmask());
+
+  // add nested model and verify bitmask is empty
+  Entity &nestedModelEnt = model.AddModel();
+  EXPECT_EQ(0x00, nestedModelEnt.GetCollideBitmask());
+  EXPECT_EQ(0x0D, model.GetCollideBitmask());
+
+  // add nested link and verify bitmask is still empty
+  Model *nestedModel = static_cast<Model *>(&nestedModelEnt);
+  Entity &nestedLinkEnt = nestedModel->AddLink();
+  EXPECT_EQ(0x00, nestedLinkEnt.GetCollideBitmask());
+  EXPECT_EQ(0x00, nestedModelEnt.GetCollideBitmask());
+  EXPECT_EQ(0x0D, model.GetCollideBitmask());
+
+  // add a nested collision and verify the nested model has the same bitmask
+  // as the nested collision bitmask, and the top level model's bitmask now
+  // includes the nested collision's bitmask
+  Link *nestedLink = static_cast<Link *>(&nestedLinkEnt);
+  Entity &nestedCollisionEnt = nestedLink->AddCollision();
+  Collision *nestedCollision = static_cast<Collision *>(&nestedCollisionEnt);
+  nestedCollision->SetCollideBitmask(0x02);
+  EXPECT_EQ(0x02, nestedCollision->GetCollideBitmask());
+  EXPECT_EQ(0x02, nestedLinkEnt.GetCollideBitmask());
+  EXPECT_EQ(0x02, nestedModelEnt.GetCollideBitmask());
+  EXPECT_EQ(0x0F, model.GetCollideBitmask());
 }
 
 /////////////////////////////////////////////////
