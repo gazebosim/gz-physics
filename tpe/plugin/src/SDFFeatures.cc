@@ -28,6 +28,32 @@ namespace ignition {
 namespace physics {
 namespace tpeplugin {
 
+namespace {
+/////////////////////////////////////////////////
+/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
+/// frame. If that fails, return the raw pose
+static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
+{
+  math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose);
+  if (!errors.empty())
+  {
+    if (!_semPose.RelativeTo().empty())
+    {
+      ignerr << "There was an error in SemanticPose::Resolve\n";
+      for (const auto &err : errors)
+      {
+        ignerr << err.Message() << std::endl;
+      }
+      ignerr << "There is no optimal fallback since the relative_to attribute["
+             << _semPose.RelativeTo() << "] of the pose is not empty. "
+             << "Falling back to using the raw Pose.\n";
+    }
+    pose = _semPose.RawPose();
+  }
+  return pose;
+}
+
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
@@ -51,7 +77,7 @@ Identity SDFFeatures::ConstructSdfModel(
 {
   // Read sdf params
   const std::string name = _sdfModel.Name();
-  const auto pose = _sdfModel.RawPose();
+  const auto pose = ResolveSdfPose(_sdfModel.SemanticPose());
 
   auto it = this->worlds.find(_worldID.id);
   if (it == this->worlds.end())
@@ -87,7 +113,7 @@ Identity SDFFeatures::ConstructSdfLink(
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
-  const auto pose = _sdfLink.RawPose();
+  const auto pose = ResolveSdfPose(_sdfLink.SemanticPose());
 
   auto it = this->models.find(_modelID);
   if (it == this->models.end())
@@ -123,7 +149,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   // Read sdf params
   const std::string name = _sdfCollision.Name();
-  const auto pose = _sdfCollision.RawPose();
+  const auto pose = ResolveSdfPose(_sdfCollision.SemanticPose());
   const auto geom = _sdfCollision.Geom();
 
   auto it = this->links.find(_linkID);
