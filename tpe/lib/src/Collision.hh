@@ -18,7 +18,7 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
-#include <ignition/math/eigen3/Conversions.hh>
+#include <ignition/math/AxisAlignedBox.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
 
