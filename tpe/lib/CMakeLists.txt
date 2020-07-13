@@ -9,6 +9,7 @@ target_link_libraries(${tpelib_target}
   PUBLIC
   PRIVATE
     ignition-common${IGN_COMMON_VER}::requested
+    ignition-math${IGN_MATH_VER}::eigen3
 )
  ign_build_tests(
   TYPE UNIT_tpelib
