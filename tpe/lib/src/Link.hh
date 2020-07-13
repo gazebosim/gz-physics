@@ -18,8 +18,6 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
-#include <ignition/math/eigen3/Conversions.hh>
-
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
