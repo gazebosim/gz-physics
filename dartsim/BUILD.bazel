@@ -47,12 +47,11 @@ public_headers = [
 ]
 
 cc_binary(
-    name = "libignition-physics2-dartsim.so",
+    name = "libignition-physics-dartsim-plugin.so",
     srcs = sources + public_headers,
     includes = ["include", "src"],
-    linkopts = ["-Wl,-soname,libignition-physics2-dartsim.so"],
     linkshared =  True,
-    visibility = [],
+    visibility = ["//visibility:public"],
     deps = [
         "//ign_bazel:utilities",
         "//ign_plugin/core:ign_plugin",
@@ -74,7 +73,6 @@ cc_binary(
 
 cc_library(
     name = "dartsim",
-    srcs = ["libignition-physics2-dartsim.so"],
     hdrs = public_headers,
     includes = ["include", "src"],
     visibility = ["//visibility:public"],

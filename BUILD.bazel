@@ -19,7 +19,7 @@ PROJECT_MAJOR = 2
 PROJECT_MINOR = 1
 PROJECT_PATCH = 0
 IGN_DESIGNATION_UPPER = "TEST"
-PHYSICS_ENGINE_INSTALL_DIR = "/tmp"
+PHYSICS_ENGINE_INSTALL_DIR = "./ign_physics/"
 
 # Generates config.hh based on the version numbers in CMake code.
 cmake_configure_file(
