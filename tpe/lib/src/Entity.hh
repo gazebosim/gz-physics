@@ -91,8 +91,12 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: virtual void SetPose(const math::Pose3d &_pose);
 
   /// \brief Get the pose of the entity
-  /// \return Pose of entity to set to
+  /// \return Pose of entity
   public: virtual math::Pose3d GetPose() const;
+
+  /// \brief Get the world pose of the entity
+  /// \return World pose of entity
+  public: virtual math::Pose3d GetWorldPose() const;
 
   /// \brief Get a child entity by id
   /// \param[in] _id Id of child entity

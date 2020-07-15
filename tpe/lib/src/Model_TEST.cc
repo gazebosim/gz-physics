@@ -39,12 +39,16 @@ TEST(Model, BasicAPI)
 
   model.SetPose(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3));
   EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), model.GetPose());
+  EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), model.GetWorldPose());
 
   model.SetLinearVelocity(math::Vector3d(.5, .5, .5));
   EXPECT_EQ(math::Vector3d(.5, .5, .5), model.GetLinearVelocity());
 
   model.SetAngularVelocity(math::Vector3d(1.0, 1.0, 1.0));
   EXPECT_EQ(math::Vector3d(1.0, 1.0, 1.0), model.GetAngularVelocity());
+
+  model.UpdatePose(0.1, model.GetLinearVelocity(), model.GetAngularVelocity());
+  EXPECT_EQ(model.GetPose(), model.GetWorldPose());
 
   Model model2;
   EXPECT_NE(model.GetId(), model2.GetId());

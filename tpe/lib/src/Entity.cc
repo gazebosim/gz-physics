@@ -136,6 +136,15 @@ math::Pose3d Entity::GetPose() const
 }
 
 //////////////////////////////////////////////////
+math::Pose3d Entity::GetWorldPose() const
+{
+  if (this->dataPtr->parent)
+    return this->dataPtr->pose * this->dataPtr->parent->GetWorldPose();
+
+  return this->dataPtr->pose;
+}
+
+//////////////////////////////////////////////////
 void Entity::SetId(std::size_t _id)
 {
   this->dataPtr->id = _id;
