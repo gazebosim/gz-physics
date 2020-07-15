@@ -78,6 +78,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const auto pose = ResolveSdfPose(_sdfModel.SemanticPose());
+  ignwarn << "Model [" << name << "] with pose " << pose << std::endl;
 
   auto it = this->worlds.find(_worldID.id);
   if (it == this->worlds.end())
@@ -95,7 +96,9 @@ Identity SDFFeatures::ConstructSdfModel(
   tpelib::Model *model = static_cast<tpelib::Model *>(&ent);
   model->SetName(name);
   model->SetPose(pose);
+  ignwarn << "Constructing model with ID [" << model->GetId() << "]" << std::endl;
   const auto modelIdentity = this->AddModel(world->GetId(), *model);
+  ignwarn << "Got model identity " << modelIdentity.id << std::endl;
 
   // construct links
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)

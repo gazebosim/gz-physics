@@ -38,47 +38,29 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     assert(false);
     return data;
   }
-  // check if id is present and skip if not
-  auto it = this->childIdToParentId.find(_id.ID());
-  if (it == this->childIdToParentId.end())
-  {
-    ignwarn << "Entity [" << _id.ID() << "]  is not found." << std::endl;
-    return data;
-  }
-
-  auto worldIt = this->worlds.find(it->second);
-  auto modelIt = this->models.find(it->second);
-  auto linkIt = this->links.find(it->second);
-  auto collisionIt = this->collisions.find(it->second);
+  auto modelIt = this->models.find(_id.ID());
+  auto linkIt = this->links.find(_id.ID());
 
   if (modelIt != this->models.end())
   {
     // \todo(anyone): add link offset to consider link pose
     auto model = modelIt->second->model;
     data.pose = math::eigen3::convert(model->GetPose());
+    ignwarn << "Setting model [" << model->GetName() << "] frame data with pose" << model->GetPose() << std::endl;
     data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
     data.angularVelocity = math::eigen3::convert(model->GetAngularVelocity());
-  }
-  else if (worldIt != this->worlds.end())
-  {
-    auto world = worldIt->second->world;
-    data.pose = math::eigen3::convert(world->GetPose());
+    return data;
   }
   else if (linkIt != this->links.end())
   {
     auto link = linkIt->second->link;
     data.pose = math::eigen3::convert(link->GetPose());
-  }
-  else if (collisionIt != this->collisions.end())
-  {
-    auto collision = collisionIt->second->collision;
-    data.pose = math::eigen3::convert(collision->GetPose());
+    return data;
   }
   else
   {
     ignwarn << "Entity with id ["
-      << it->second << "] is not found" << std::endl;
+      << _id.ID() << "] is not found" << std::endl;
   }
-
   return data;
 }
