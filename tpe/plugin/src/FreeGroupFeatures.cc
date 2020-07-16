@@ -81,13 +81,11 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   auto linkIt = this->links.find(_groupID.id);
   if (modelIt != this->models.end())
   {
-    ignwarn << "Found model [" << _groupID.id << "] as freegroup" << std::endl;
     if (modelIt->second != nullptr)
       modelIt->second->model->SetPose(math::eigen3::convert(_pose));
   }
   else if (linkIt != this->links.end())
   {
-    ignwarn << "Found link [" << _groupID.id << "] as freegroup" << std::endl;
     if (linkIt->second != nullptr)
       linkIt->second->link->SetPose(math::eigen3::convert(_pose));
   }
