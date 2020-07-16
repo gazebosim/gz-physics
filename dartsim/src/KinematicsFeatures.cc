@@ -61,6 +61,7 @@ const dart::dynamics::Frame *KinematicsFeatures::SelectFrame(
     // frame
     return model_it->second->model->getRootBodyNode();
   }
+
   return this->frames.at(_id.ID());
 }
 
