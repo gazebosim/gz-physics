@@ -38,24 +38,21 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     assert(false);
     return data;
   }
+
   auto modelIt = this->models.find(_id.ID());
   auto linkIt = this->links.find(_id.ID());
 
   if (modelIt != this->models.end())
   {
-    // \todo(anyone): add link offset to consider link pose
     auto model = modelIt->second->model;
-    data.pose = math::eigen3::convert(model->GetPose());
-    ignwarn << "Setting model [" << model->GetName() << "] frame data with pose" << model->GetPose() << std::endl;
+    data.pose = math::eigen3::convert(model->GetWorldPose());
     data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
     data.angularVelocity = math::eigen3::convert(model->GetAngularVelocity());
-    return data;
   }
   else if (linkIt != this->links.end())
   {
     auto link = linkIt->second->link;
-    data.pose = math::eigen3::convert(link->GetPose());
-    return data;
+    data.pose = math::eigen3::convert(link->GetWorldPose());
   }
   else
   {
