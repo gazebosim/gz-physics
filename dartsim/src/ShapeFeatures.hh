@@ -137,19 +137,6 @@ class ShapeFeatures :
   public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
               const Identity &_shapeID) const override;
 
-  // ----- Friction Features -----
-  public: virtual double GetShapeFrictionPyramidPrimarySlipCompliance(
-            const Identity &_shapeID) const override;
-
-  public: virtual double GetShapeFrictionPyramidSecondarySlipCompliance(
-            const Identity &_shapeID) const override;
-
-  public: virtual bool SetShapeFrictionPyramidPrimarySlipCompliance(
-            const Identity &_shapeID, double _value) override;
-
-  public: virtual bool SetShapeFrictionPyramidSecondarySlipCompliance(
-            const Identity &_shapeID, double _value) override;
-
   // ----- Plane Features -----
   public: Identity CastToPlaneShape(
       const Identity &_shapeID) const override;

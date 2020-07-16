@@ -106,7 +106,7 @@ namespace ignition
     ::GetPrimarySlipCompliance() const
     -> Scalar
     {
-      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+      return this->template Interface<GetShapeFrictionPyramidSlipCompliance>()
           ->GetShapeFrictionPyramidPrimarySlipCompliance(this->identity);
     }
 
@@ -116,7 +116,7 @@ namespace ignition
     ::GetSecondarySlipCompliance() const
     -> Scalar
     {
-      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+      return this->template Interface<GetShapeFrictionPyramidSlipCompliance>()
           ->GetShapeFrictionPyramidSecondarySlipCompliance(this->identity);
     }
 
