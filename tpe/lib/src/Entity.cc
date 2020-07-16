@@ -139,7 +139,7 @@ math::Pose3d Entity::GetPose() const
 math::Pose3d Entity::GetWorldPose() const
 {
   if (this->dataPtr->parent)
-    return this->dataPtr->pose * this->dataPtr->parent->GetWorldPose();
+    return this->dataPtr->parent->GetWorldPose() * this->dataPtr->pose;
 
   return this->dataPtr->pose;
 }

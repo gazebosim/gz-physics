@@ -17,6 +17,8 @@
 
 #include <Eigen/Geometry>
 
+#include <ignition/common/Console.hh>
+
 #include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Pose3.hh>
 
@@ -31,7 +33,7 @@ using namespace tpeplugin;
 Identity FreeGroupFeatures::FindFreeGroupForModel(
   const Identity &_modelID) const
 {
-  auto it = this->models.find(_modelID);
+  auto it = this->models.find(_modelID.id);
   if (it == this->models.end() || it->second == nullptr)
     return this->GenerateInvalidId();
   auto modelPtr = it->second;
@@ -46,19 +48,19 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
   const Identity &_linkID) const
 {
-  auto it = this->links.find(_linkID);
+  auto it = this->links.find(_linkID.id);
   if (it != this->links.end() && it->second != nullptr)
-    return this->GenerateIdentity(_linkID, it->second);
+    return this->GenerateIdentity(_linkID.id, it->second);
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
-  const Identity &/*_groupID*/) const
+  const Identity &_groupID) const
 {
   // assume no canonical link for now
   // assume groupID ~= modelID
-  // const auto model_it = this->models.find(_groupID);
+  // const auto model_it = this->models.find(_groupID.id);
   // if (model_it != this->models.end() && model_it->second != nullptr)
   // {
   //   // assume canonical link is the first link in model
@@ -75,12 +77,24 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const Identity &_groupID,
   const PoseType &_pose)
 {
-  // assume no canonical link for now
-  // assume groupID ~= modelID
-  auto it = this->models.find(_groupID);
-  if (it != this->models.end() && it->second != nullptr)
-    // convert Eigen::Tranform to Math::Pose3d
-    it->second->model->SetPose(math::eigen3::convert(_pose));
+  auto modelIt = this->models.find(_groupID.id);
+  auto linkIt = this->links.find(_groupID.id);
+  if (modelIt != this->models.end())
+  {
+    if (modelIt->second != nullptr)
+      modelIt->second->model->SetPose(math::eigen3::convert(_pose));
+  }
+  else if (linkIt != this->links.end())
+  {
+    if (linkIt->second != nullptr)
+      linkIt->second->link->SetPose(math::eigen3::convert(_pose));
+  }
+  else
+  {
+    ignwarn << "No free group with id [" << _groupID.id << "] found."
+      << std::endl;
+    return;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -90,7 +104,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 {
   // assume no canonical link for now
   // assume groupID ~= modelID
-  auto it = this->models.find(_groupID);
+  auto it = this->models.find(_groupID.id);
   // set model linear velocity
   if (it != this->models.end() && it->second != nullptr)
     it->second->model->SetLinearVelocity(
@@ -103,7 +117,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
 {
   // assume no canonical link for now
   // assume groupID ~= modelID
-  auto it = this->models.find(_groupID);
+  auto it = this->models.find(_groupID.id);
   // set model angular velocity
   if (it != this->models.end() && it->second != nullptr)
     it->second->model->SetAngularVelocity(
