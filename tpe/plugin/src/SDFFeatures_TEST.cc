@@ -173,7 +173,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ(ignition::math::Pose3d(-0.05, 0, 0, 0, 1.5708, 0),
         collision03.GetPose());
     EXPECT_EQ(
-        ignition::math::Pose3d(2.05, 0, -1.00001, 1.57079, 1.57079, 3.14159),
+        ignition::math::Pose3d(0.95, 0, 2.1, -1.5708, -4e-06, -1.5708),
         collision03.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision04 =
@@ -184,7 +184,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 1.0, 0, 1.5708, 0),
         collision04.GetPose());
     EXPECT_EQ(
-        ignition::math::Pose3d(2.1, 0, -8e-06, 1.57079, 1.57079, 3.14159),
+        ignition::math::Pose3d(1, 1, 2.1, -1.5708, -4e-06, -1.5708),
         collision04.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision05 =
@@ -194,7 +194,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_cylinder", collision05.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0.5, 0, 0, 0),
         collision05.GetPose());
-    EXPECT_EQ(ignition::math::Pose3d(1, 0, 2.6, -1.5708, 0, 0),
+    EXPECT_EQ(ignition::math::Pose3d(1, 0.5, 2.1, -1.5708, 0, 0),
         collision05.GetWorldPose());
 
     ignition::physics::tpelib::Entity &link03 =
@@ -216,7 +216,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0, 0, 1.5708, 0),
         collision06.GetPose());
     EXPECT_EQ(
-        ignition::math::Pose3d(2.09999, 1, -1.25001, 1.14159, 1.57079, 3.14159),
+        ignition::math::Pose3d(1.25, 1, 2.1, -1.57079, -0.429204, -1.5708),
         collision06.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision07 =
@@ -226,7 +226,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_cylinder", collision07.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0.5, 0, 0, 0),
         collision07.GetPose());
-    EXPECT_EQ(ignition::math::Pose3d(1.25, 1, 2.6, -2, 0, 0),
+    EXPECT_EQ(ignition::math::Pose3d(1.25, 1.45465, 1.89193, -2, 0, 0),
         collision07.GetWorldPose());
   }
 

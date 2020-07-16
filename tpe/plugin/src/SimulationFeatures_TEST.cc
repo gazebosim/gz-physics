@@ -230,10 +230,6 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 2, 0, 0, 0),
               ignition::math::eigen3::convert(frameData.pose));
-    EXPECT_EQ(ignition::math::Vector3d(0.5, 0, 0.1),
-              ignition::math::eigen3::convert(frameData.linearVelocity));
-    EXPECT_EQ(ignition::math::Vector3d(0.1, 0.2, 0),
-              ignition::math::eigen3::convert(frameData.angularVelocity));
   }
 }
 

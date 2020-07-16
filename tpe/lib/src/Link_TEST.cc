@@ -45,7 +45,7 @@ TEST(Link, BasicAPI)
   ASSERT_NE(nullptr, linkEnt.GetParent());
 
   linkEnt.SetPose(math::Pose3d(0, 0.2, 0.5, 0, 1, 0));
-  EXPECT_EQ(math::Pose3d(7.08596, 0.2, -6.83411, 1, 1, 0),
+  EXPECT_EQ(math::Pose3d(10, -0.312675, 2.43845, 1.23686, 0.471978, 0.918989),
             linkEnt.GetWorldPose());
 
   Link link2;
