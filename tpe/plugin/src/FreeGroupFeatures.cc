@@ -60,15 +60,15 @@ Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
 {
   // assume no canonical link for now
   // assume groupID ~= modelID
-  // const auto model_it = this->models.find(_groupID.id);
-  // if (model_it != this->models.end() && model_it->second != nullptr)
-  // {
-  //   // assume canonical link is the first link in model
-  //   tpelib::Entity &link = model_it->second->model->GetCanonicalLink();
-  //   auto linkPtr = std::make_shared<LinkInfo>();
-  //   linkPtr->link = static_cast<tpelib::Link *>(&link);
-  //   return this->GenerateIdentity(link.GetId(), linkPtr);
-  // }
+  const auto model_it = this->models.find(_groupID.id);
+  if (model_it != this->models.end() && model_it->second != nullptr)
+  {
+    // assume canonical link is the first link in model
+    tpelib::Entity &link = model_it->second->model->GetCanonicalLink();
+    auto linkPtr = std::make_shared<LinkInfo>();
+    linkPtr->link = static_cast<tpelib::Link *>(&link);
+    return this->GenerateIdentity(link.GetId(), linkPtr);
+  }
   return this->GenerateInvalidId();
 }
 
@@ -77,24 +77,56 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const Identity &_groupID,
   const PoseType &_pose)
 {
+  // The input _pose is the target world pose for the canonical link
+  // in the model! So we need to compute the world pose to set the model to
+  // so that the canonical link is placed at the specified _pose
+  tpelib::Link *link = nullptr;
   auto modelIt = this->models.find(_groupID.id);
-  auto linkIt = this->links.find(_groupID.id);
   if (modelIt != this->models.end())
   {
     if (modelIt->second != nullptr)
-      modelIt->second->model->SetPose(math::eigen3::convert(_pose));
-  }
-  else if (linkIt != this->links.end())
-  {
-    if (linkIt->second != nullptr)
-      linkIt->second->link->SetPose(math::eigen3::convert(_pose));
+    {
+      tpelib::Entity &linkEnt = modelIt->second->model->GetCanonicalLink();
+      link = dynamic_cast<tpelib::Link *>(&linkEnt);
+    }
   }
   else
+  {
+    auto linkIt = this->links.find(_groupID.id);
+    if (linkIt != this->links.end())
+    {
+      // assume canonical link
+      link = linkIt->second->link;
+    }
+  }
+
+  if (!link)
   {
     ignwarn << "No free group with id [" << _groupID.id << "] found."
       << std::endl;
     return;
   }
+
+  math::Pose3d targetWorldPose = math::eigen3::convert(_pose);
+  math::Pose3d tfChange = targetWorldPose - link->GetWorldPose();
+
+  // get top level model
+  tpelib::Entity *parent = link->GetParent();
+  tpelib::Entity *model = nullptr;
+  while (parent && dynamic_cast<tpelib::Model *>(parent))
+  {
+    model = parent;
+    parent = model->GetParent();
+  }
+  if (!model)
+  {
+    ignerr << "No model for free group with [" << _groupID.id << "] found."
+      << std::endl;
+    return;
+  }
+
+  // set the pose
+  model->SetPose(tfChange * model->GetPose());
 }
 
 /////////////////////////////////////////////////
