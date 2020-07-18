@@ -13,5 +13,18 @@ jobs:
         id: ci
         uses: ignition-tooling/ubuntu-bionic-ci-action@master
         with:
-          apt-dependencies: 'software-properties-common libignition-cmake2-dev libignition-common3-dev libignition-math6-dev libignition-math6-eigen3-dev libignition-plugin-dev libeigen3-dev dart6-data libdart6-collision-ode-dev libdart6-dev libdart6-utils-urdf-dev libbenchmark-dev libsdformat9-dev'
+          apt-dependencies: |
+            dart6-data
+            libbenchmark-dev
+            libdart6-collision-ode-dev
+            libdart6-dev
+            libdart6-utils-urdf-dev
+            libeigen3-dev
+            libignition-cmake2-dev
+            libignition-common3-dev
+            libignition-math6-dev
+            libignition-math6-eigen3-dev
+            libignition-plugin-dev
+            libsdformat10-dev
+            software-properties-common
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
