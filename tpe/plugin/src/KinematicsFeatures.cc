@@ -38,34 +38,26 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     assert(false);
     return data;
   }
-  // check if id is present and skip if not
-  auto it = this->childIdToParentId.find(_id.ID());
-  if (it == this->childIdToParentId.end())
-  {
-    ignwarn << "Entity [" << _id.ID() << "]  is not found." << std::endl;
-    return data;
-  }
 
-  auto modelIt = this->models.find(it->second);
-  auto worldIt = this->worlds.find(it->second);
+  auto modelIt = this->models.find(_id.ID());
+  auto linkIt = this->links.find(_id.ID());
+
   if (modelIt != this->models.end())
   {
-    // \todo(anyone): add link offset to consider link pose
     auto model = modelIt->second->model;
-    data.pose = math::eigen3::convert(model->GetPose());
+    data.pose = math::eigen3::convert(model->GetWorldPose());
     data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
     data.angularVelocity = math::eigen3::convert(model->GetAngularVelocity());
   }
-  else if (worldIt != this->worlds.end())
+  else if (linkIt != this->links.end())
   {
-    auto world = worldIt->second->world;
-    data.pose = math::eigen3::convert(world->GetPose());
+    auto link = linkIt->second->link;
+    data.pose = math::eigen3::convert(link->GetWorldPose());
   }
   else
   {
-    ignwarn << "Neither world or model with id ["
-      << it->second << "] is not found" << std::endl;
+    ignwarn << "Entity with id ["
+      << _id.ID() << "] is not found" << std::endl;
   }
-
   return data;
 }

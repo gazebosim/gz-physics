@@ -214,10 +214,15 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
 
   for (const auto &world : worlds)
   {
+    // model free group test
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
     ASSERT_NE(nullptr, freeGroup->CanonicalLink());
+
+    auto link = model->GetLink("sphere_link");
+    auto freeGroupLink = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroupLink);
 
     freeGroup->SetWorldPose(
       ignition::math::eigen3::convert(
@@ -230,10 +235,6 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 2, 0, 0, 0),
               ignition::math::eigen3::convert(frameData.pose));
-    EXPECT_EQ(ignition::math::Vector3d(0.5, 0, 0.1),
-              ignition::math::eigen3::convert(frameData.linearVelocity));
-    EXPECT_EQ(ignition::math::Vector3d(0.1, 0.2, 0),
-              ignition::math::eigen3::convert(frameData.angularVelocity));
   }
 }
 
