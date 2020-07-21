@@ -54,6 +54,7 @@ static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
   return pose;
 }
 }
+
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,

@@ -214,10 +214,15 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
 
   for (const auto &world : worlds)
   {
+    // model free group test
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
     ASSERT_NE(nullptr, freeGroup->CanonicalLink());
+
+    auto link = model->GetLink("sphere_link");
+    auto freeGroupLink = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroupLink);
 
     freeGroup->SetWorldPose(
       ignition::math::eigen3::convert(
