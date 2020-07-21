@@ -44,8 +44,9 @@ TEST(Collision, BasicAPI)
   ASSERT_NE(nullptr, collisionEnt.GetParent());
 
   collisionEnt.SetPose(math::Pose3d(0, 0.2, 0.5, 0, 1, 0));
-  EXPECT_EQ(math::Pose3d(1.05416, 2.17281, 3.50715, 0.265579, 1.18879, 0.527304),
-            collisionEnt.GetWorldPose());
+  EXPECT_EQ(
+      math::Pose3d(1.05416, 2.17281, 3.50715, 0.265579, 1.18879, 0.527304),
+      collisionEnt.GetWorldPose());
 
   EXPECT_EQ(0xFF, collision.GetCollideBitmask());
   collision.SetCollideBitmask(0x03);

@@ -144,7 +144,8 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         collision.GetId());
     EXPECT_EQ("col_plate_on_ground", collision.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0.01, 0, 0, 0), collision.GetPose());
-    EXPECT_EQ(ignition::math::Pose3d(1, 0, 0.01, 0, 0, 0), collision.GetWorldPose());
+    EXPECT_EQ(ignition::math::Pose3d(1, 0, 0.01, 0, 0, 0),
+        collision.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision02 =
         link.GetChildByName("col_pole");
