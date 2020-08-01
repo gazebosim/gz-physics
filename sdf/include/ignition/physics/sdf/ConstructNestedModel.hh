@@ -26,6 +26,9 @@ namespace ignition {
 namespace physics {
 namespace sdf {
 
+/// \brief Construct nested models. Note this is a partial implementation
+/// and the behavior may change once the model composition sdf proposal lands in
+/// libSDFormat11.
 class ConstructSdfNestedModel : public virtual Feature
 {
   public: template <typename PolicyT, typename FeaturesT>
