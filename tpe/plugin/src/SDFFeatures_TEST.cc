@@ -33,6 +33,7 @@
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include "lib/src/Entity.hh"
@@ -44,6 +45,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::GetModelFromWorld,
     ignition::physics::sdf::ConstructSdfLink,
     ignition::physics::sdf::ConstructSdfModel,
+    ignition::physics::sdf::ConstructSdfNestedModel,
     ignition::physics::sdf::ConstructSdfWorld
 > { };
 
@@ -430,7 +432,7 @@ TEST(SDFFeatures_TEST, ConstructModel)
   EXPECT_EQ("model", model->GetName());
 
   sdfModel.SetName("nested_model");
-  auto nestedModel = model->ConstructModel(sdfModel);
+  auto nestedModel = model->ConstructNestedModel(sdfModel);
   EXPECT_NE(nullptr, nestedModel);
   EXPECT_EQ("nested_model", nestedModel->GetName());
 }

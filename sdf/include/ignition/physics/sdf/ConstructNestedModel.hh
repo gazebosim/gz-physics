@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_SDF_CONSTRUCTMODEL_HH_
-#define IGNITION_PHYSICS_SDF_CONSTRUCTMODEL_HH_
+#ifndef IGNITION_PHYSICS_SDF_CONSTRUCTNESTEDMODEL_HH_
+#define IGNITION_PHYSICS_SDF_CONSTRUCTNESTEDMODEL_HH_
 
 #include <sdf/Model.hh>
 
@@ -26,32 +26,32 @@ namespace ignition {
 namespace physics {
 namespace sdf {
 
-class ConstructSdfModel : public virtual Feature
+class ConstructSdfNestedModel : public virtual Feature
 {
   public: template <typename PolicyT, typename FeaturesT>
-  class World : public virtual Feature::World<PolicyT, FeaturesT>
+  class Model: public virtual Feature::Model<PolicyT, FeaturesT>
   {
     public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
 
-    public: ModelPtrType ConstructModel(const ::sdf::Model &_model);
+    public: ModelPtrType ConstructNestedModel(const ::sdf::Model &_model);
   };
 
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
-    public: virtual Identity ConstructSdfModel(
-        const Identity &_world, const ::sdf::Model &_model) = 0;
+    public: virtual Identity ConstructSdfNestedModel(
+        const Identity &_modelId, const ::sdf::Model &_model) = 0;
   };
 };
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-auto ConstructSdfModel::World<PolicyT, FeaturesT>::ConstructModel(
+auto ConstructSdfNestedModel::Model<PolicyT, FeaturesT>::ConstructNestedModel(
     const ::sdf::Model &_model) -> ModelPtrType
 {
   return ModelPtrType(this->pimpl,
-        this->template Interface<ConstructSdfModel>()
-              ->ConstructSdfModel(this->identity, _model));
+        this->template Interface<ConstructSdfNestedModel>()
+              ->ConstructSdfNestedModel(this->identity, _model));
 }
 
 }
