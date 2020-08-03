@@ -25,7 +25,7 @@
 #include <ignition/common/Util.hh>
 
 #ifndef dartsim_plugin_LIB
-#define dartsim_plugin_LIB "__main__/ign_physics/dartsim/libignition-physics2-dartsim.so"
+#define dartsim_plugin_LIB "__main__/ign_physics/dartsim/libignition-physics-dartsim-plugin.so"
 #endif
 
 #ifndef bullet_plugin_LIB
@@ -33,7 +33,7 @@
 #endif
 
 #ifndef tpe_plugin_LIB
-#define tpe_plugin_LIB "__main__/ign_physics/tpe/libignition-physics2-tpe.so"
+#define tpe_plugin_LIB "__main__/ign_physics/tpe/libignition-physics-tpe-plugin.so"
 #endif
 
 /////////////////////////////////////////////////

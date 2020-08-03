@@ -77,6 +77,7 @@ cc_library(
     includes = ["include", "src"],
     visibility = ["//visibility:public"],
     deps = [
+        ":libignition-physics-dartsim-plugin.so",
         "//ign_bazel:utilities",
         "//ign_plugin/core:ign_plugin",
         "//ign_plugin/register",
