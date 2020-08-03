@@ -36,8 +36,17 @@ class ignition::physics::tpelib::EntityPrivate
   /// \brief Bounding Box
   public: math::AxisAlignedBox bbox;
 
+  /// \brief Collide bitmask
+  public: uint16_t collideBitmask = 0xFF;
+
   /// \brief Flag to indicate if bounding box changed
   public: bool bboxDirty = true;
+
+  /// \brief Flag to indicate if collide bitmask changed
+  public: bool collideBitmaskDirty = true;
+
+  /// \brief Parent of this entity
+  public: Entity *parent = nullptr;
 };
 
 using namespace ignition;
@@ -63,6 +72,7 @@ Entity::Entity(const Entity &_other)
   this->dataPtr->pose = _other.dataPtr->pose;
   this->dataPtr->children = _other.dataPtr->children;
   this->dataPtr->bbox = _other.dataPtr->bbox;
+  this->dataPtr->collideBitmask = _other.dataPtr->collideBitmask;
 }
 
 //////////////////////////////////////////////////
@@ -122,6 +132,15 @@ void Entity::SetPose(const math::Pose3d &_pose)
 //////////////////////////////////////////////////
 math::Pose3d Entity::GetPose() const
 {
+  return this->dataPtr->pose;
+}
+
+//////////////////////////////////////////////////
+math::Pose3d Entity::GetWorldPose() const
+{
+  if (this->dataPtr->parent)
+    return this->dataPtr->parent->GetWorldPose() * this->dataPtr->pose;
+
   return this->dataPtr->pose;
 }
 
@@ -187,6 +206,7 @@ bool Entity::RemoveChildById(std::size_t _id)
   if (it != this->dataPtr->children.end())
   {
     this->dataPtr->children.erase(it);
+    this->ChildrenChanged();
     return true;
   }
 
@@ -202,6 +222,7 @@ bool Entity::RemoveChildByName(const std::string &_name)
     if (it->second->GetName() == _name)
     {
       this->dataPtr->children.erase(it);
+      this->ChildrenChanged();
       return true;
     }
   }
@@ -241,6 +262,23 @@ void Entity::UpdateBoundingBox(bool _force)
 }
 
 //////////////////////////////////////////////////
+uint16_t Entity::GetCollideBitmask() const
+{
+  if (this->dataPtr->collideBitmaskDirty)
+  {
+    uint16_t mask = 0u;
+    for (auto &it : this->dataPtr->children)
+    {
+      mask |= it.second->GetCollideBitmask();
+    }
+    this->dataPtr->collideBitmask = mask;
+    this->dataPtr->collideBitmaskDirty = false;
+  }
+
+  return this->dataPtr->collideBitmask;
+}
+
+//////////////////////////////////////////////////
 std::map<std::size_t, std::shared_ptr<Entity>> &Entity::GetChildren() const
 {
   return this->dataPtr->children;
@@ -250,4 +288,26 @@ std::map<std::size_t, std::shared_ptr<Entity>> &Entity::GetChildren() const
 std::size_t Entity::GetNextId()
 {
   return nextId++;
+}
+
+//////////////////////////////////////////////////
+void Entity::ChildrenChanged()
+{
+  this->dataPtr->bboxDirty = true;
+  this->dataPtr->collideBitmaskDirty = true;
+
+  if (this->dataPtr->parent)
+    this->dataPtr->parent->ChildrenChanged();
+}
+
+//////////////////////////////////////////////////
+void Entity::SetParent(Entity *_parent)
+{
+  this->dataPtr->parent = _parent;
+}
+
+//////////////////////////////////////////////////
+Entity *Entity::GetParent() const
+{
+  return this->dataPtr->parent;
 }

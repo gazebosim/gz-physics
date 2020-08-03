@@ -420,3 +420,31 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
   }
   return this->GenerateInvalidId();
 }
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::SetCollisionFilterMask(
+    const Identity &_shapeID, const uint16_t _mask)
+{
+  auto collision =
+      this->ReferenceInterface<CollisionInfo>(_shapeID)->collision;
+  collision->SetCollideBitmask(_mask);
+}
+
+/////////////////////////////////////////////////
+uint16_t EntityManagementFeatures::GetCollisionFilterMask(
+    const Identity &_shapeID) const
+{
+  const auto collision =
+      this->ReferenceInterface<CollisionInfo>(_shapeID)->collision;
+  return collision->GetCollideBitmask();
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::RemoveCollisionFilterMask(
+    const Identity &_shapeID)
+{
+  auto collision =
+      this->ReferenceInterface<CollisionInfo>(_shapeID)->collision;
+  // remove = reset to default bitmask
+  collision->SetCollideBitmask(0xFF);
+}

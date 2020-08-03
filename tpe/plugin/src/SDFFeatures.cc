@@ -15,17 +15,45 @@
  *
 */
 
+#include "SDFFeatures.hh"
+
 #include <sdf/Box.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
+#include <sdf/World.hh>
 #include <ignition/common/Console.hh>
 
-#include "SDFFeatures.hh"
+namespace ignition {
+namespace physics {
+namespace tpeplugin {
 
-using namespace ignition;
-using namespace physics;
-using namespace tpeplugin;
+namespace {
+/////////////////////////////////////////////////
+/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
+/// frame. If that fails, return the raw pose
+static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
+{
+  math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose);
+  if (!errors.empty())
+  {
+    if (!_semPose.RelativeTo().empty())
+    {
+      ignerr << "There was an error in SemanticPose::Resolve\n";
+      for (const auto &err : errors)
+      {
+        ignerr << err.Message() << std::endl;
+      }
+      ignerr << "There is no optimal fallback since the relative_to attribute["
+             << _semPose.RelativeTo() << "] of the pose is not empty. "
+             << "Falling back to using the raw Pose.\n";
+    }
+    pose = _semPose.RawPose();
+  }
+  return pose;
+}
+}  // namespace
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
@@ -50,7 +78,7 @@ Identity SDFFeatures::ConstructSdfModel(
 {
   // Read sdf params
   const std::string name = _sdfModel.Name();
-  const auto pose = _sdfModel.RawPose();
+  const auto pose = ResolveSdfPose(_sdfModel.SemanticPose());
 
   auto it = this->worlds.find(_worldID.id);
   if (it == this->worlds.end())
@@ -86,7 +114,7 @@ Identity SDFFeatures::ConstructSdfLink(
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
-  const auto pose = _sdfLink.RawPose();
+  const auto pose = ResolveSdfPose(_sdfLink.SemanticPose());
 
   auto it = this->models.find(_modelID);
   if (it == this->models.end())
@@ -122,7 +150,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   // Read sdf params
   const std::string name = _sdfCollision.Name();
-  const auto pose = _sdfCollision.RawPose();
+  const auto pose = ResolveSdfPose(_sdfCollision.SemanticPose());
   const auto geom = _sdfCollision.Geom();
 
   auto it = this->links.find(_linkID);
@@ -168,5 +196,31 @@ Identity SDFFeatures::ConstructSdfCollision(
   // and passed in as argument as there is no logic for searching resources
   // in ign-physics
   const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
+
+  // set collide bitmask
+  uint16_t collideBitmask = 0xFF;
+  if (_sdfCollision.Element())
+  {
+    // TODO(anyone) add category_bitmask as well
+    auto elem = _sdfCollision.Element();
+    if (elem->HasElement("surface"))
+    {
+      elem = elem->GetElement("surface");
+      if (elem->HasElement("contact"))
+      {
+        elem = elem->GetElement("contact");
+        if (elem->HasElement("collide_bitmask"))
+        {
+          collideBitmask = elem->Get<unsigned int>("collide_bitmask");
+          this->SetCollisionFilterMask(collisionIdentity, collideBitmask);
+        }
+      }
+    }
+  }
+
   return collisionIdentity;
+}
+
+}
+}
 }

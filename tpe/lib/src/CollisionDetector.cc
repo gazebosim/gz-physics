@@ -15,6 +15,8 @@
  *
 */
 
+#include <unordered_map>
+
 #include "CollisionDetector.hh"
 #include "Utils.hh"
 
@@ -32,13 +34,17 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
   std::vector<Contact> contacts;
 
   // cache of axis aligned box in world frame
-  std::map<std::size_t, math::AxisAlignedBox> worldAabb;
+  std::unordered_map<std::size_t, math::AxisAlignedBox> worldAabb;
 
   for (auto it = _entities.begin(); it != _entities.end(); ++it)
   {
+    std::shared_ptr<Entity> e1 = it->second;
+
+    // Get collide bitmask for enitty 1
+    uint16_t cb1 = e1->GetCollideBitmask();
+
     // Get world axis aligned box for entity 1
     math::AxisAlignedBox wb1;
-    std::shared_ptr<Entity> e1 = it->second;
     auto wb1It = worldAabb.find(e1->GetId());
     if (wb1It == worldAabb.end())
     {
@@ -56,9 +62,17 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
 
     for (auto it2 = std::next(it, 1); it2 != _entities.end(); ++it2)
     {
+      std::shared_ptr<Entity> e2 = it2->second;
+
+      // Get collide bitmask for entity 2
+      uint16_t cb2 = e2->GetCollideBitmask();
+
+      // collision filtering using collide bitmask
+      if ((cb1 & cb2) == 0)
+        continue;
+
       // Get world axis aligned box for entity 2
       math::AxisAlignedBox wb2;
-      std::shared_ptr<Entity> e2 = it2->second;
       auto wb2It = worldAabb.find(e2->GetId());
       if (wb2It == worldAabb.end())
       {

@@ -8,6 +8,41 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
+### Ignition Physics 2.2.0 (2020-07-30)
+
+1. Add Base and EntityManagement to tpeplugin
+    * [Pull Request 32](https://github.com/ignitionrobotics/ign-physics/pull/32)
+
+1. Add all features to tpeplugin
+    * [Pull Request 46](https://github.com/ignitionrobotics/ign-physics/pull/46)
+
+1. Fix TPE codecheck errors
+    * [Pull Request 62](https://github.com/ignitionrobotics/ign-physics/pull/62)
+
+1. [TPE] Add function to get an Entity's bounding box
+    * [Pull Request 59](https://github.com/ignitionrobotics/ign-physics/pull/59)
+
+1. [TPE] Add collision detector
+    * [Pull Request 60](https://github.com/ignitionrobotics/ign-physics/pull/60)
+
+1. [TPE] Add GetContactsFromLastStepFeature
+    * [Pull Request 61](https://github.com/ignitionrobotics/ign-physics/pull/61)
+
+1. [TPE] Implement collision filtering using collide bitmasks and add CollisionFilterMaskFeature
+    * [Pull Request 69](https://github.com/ignitionrobotics/ign-physics/pull/69)
+
+1. Fix copying SpecifyData objects
+    * [Pull Request 77](https://github.com/ignitionrobotics/ign-physics/pull/77)
+
+1. Extend contact data with force, normal, and penetration depth
+    * [Pull Request 40](https://github.com/ignitionrobotics/ign-physics/pull/40)
+
+1. Add offset to link and collision pose
+    * [Pull Request 79](https://github.com/ignitionrobotics/ign-physics/pull/79)
+
+1. Add link offset to simulation
+    * [Pull Request 83](https://github.com/ignitionrobotics/ign-physics/pull/83)
+
 ### Ignition Physics 2.1.0 (2020-05-07)
 
 1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.

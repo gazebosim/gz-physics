@@ -97,6 +97,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         model.GetId());
     EXPECT_EQ("ground_plane", model.GetName());
     EXPECT_EQ(ignition::math::Pose3d::Zero, model.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d::Zero, model.GetWorldPose());
     EXPECT_EQ(1u, model.GetChildCount());
 
     ignition::physics::tpelib::Entity &link = model.GetChildByName("link");
@@ -104,6 +105,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         link.GetId());
     EXPECT_EQ("link", link.GetName());
     EXPECT_EQ(ignition::math::Pose3d::Zero, link.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d::Zero, link.GetWorldPose());
     EXPECT_EQ(1u, link.GetChildCount());
 
     ignition::physics::tpelib::Entity &collision =
@@ -112,6 +114,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         collision.GetId());
     EXPECT_EQ("collision", collision.GetName());
     EXPECT_EQ(ignition::math::Pose3d::Zero, collision.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d::Zero, collision.GetWorldPose());
   }
 
   // check model 02
@@ -122,6 +125,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         model.GetId());
     EXPECT_EQ("double_pendulum_with_base", model.GetName());
     EXPECT_EQ(ignition::math::Pose3d(1, 0, 0, 0, 0, 0), model.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(1, 0, 0, 0, 0, 0), model.GetWorldPose());
     EXPECT_EQ(3u, model.GetChildCount());
 
     ignition::physics::tpelib::Entity &link = model.GetChildByName("base");
@@ -129,6 +133,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         link.GetId());
     EXPECT_EQ("base", link.GetName());
     EXPECT_EQ(ignition::math::Pose3d::Zero, link.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(1, 0, 0, 0, 0, 0), model.GetWorldPose());
     EXPECT_EQ(2u, link.GetChildCount());
 
     ignition::physics::tpelib::Entity &collision =
@@ -137,6 +142,8 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         collision.GetId());
     EXPECT_EQ("col_plate_on_ground", collision.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0.01, 0, 0, 0), collision.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(1, 0, 0.01, 0, 0, 0),
+        collision.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision02 =
         link.GetChildByName("col_pole");
@@ -145,15 +152,18 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_pole", collision02.GetName());
     EXPECT_EQ(ignition::math::Pose3d(-0.275, 0, 1.1, 0, 0, 0),
         collision02.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(0.725, 0, 1.1, 0, 0, 0),
+        collision02.GetWorldPose());
 
     ignition::physics::tpelib::Entity &link02 =
         model.GetChildByName("upper_link");
     ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
         link02.GetId());
     EXPECT_EQ("upper_link", link02.GetName());
-    EXPECT_EQ(
-        ignition::math::Pose3d(0, 0, 2.1, -1.5708, 0, 0),
+    EXPECT_EQ(ignition::math::Pose3d(0, 0, 2.1, -1.5708, 0, 0),
         link02.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(1, 0, 2.1, -1.5708, 0, 0),
+        link02.GetWorldPose());
     EXPECT_EQ(3u, link02.GetChildCount());
 
     ignition::physics::tpelib::Entity &collision03 =
@@ -163,6 +173,9 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_upper_joint", collision03.GetName());
     EXPECT_EQ(ignition::math::Pose3d(-0.05, 0, 0, 0, 1.5708, 0),
         collision03.GetPose());
+    EXPECT_EQ(
+        ignition::math::Pose3d(0.95, 0, 2.1, -1.5708, -4e-06, -1.5708),
+        collision03.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision04 =
         link02.GetChildByName("col_lower_joint");
@@ -171,6 +184,9 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_lower_joint", collision04.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 1.0, 0, 1.5708, 0),
         collision04.GetPose());
+    EXPECT_EQ(
+        ignition::math::Pose3d(1, 1, 2.1, -1.5708, -4e-06, -1.5708),
+        collision04.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision05 =
         link02.GetChildByName("col_cylinder");
@@ -179,6 +195,8 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_cylinder", collision05.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0.5, 0, 0, 0),
         collision05.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(1, 0.5, 2.1, -1.5708, 0, 0),
+        collision05.GetWorldPose());
 
     ignition::physics::tpelib::Entity &link03 =
         model.GetChildByName("lower_link");
@@ -187,6 +205,8 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("lower_link", link03.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0.25, 1.0, 2.1, -2, 0, 0),
         link03.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(1.25, 1.0, 2.1, -2, 0, 0),
+        link03.GetWorldPose());
     EXPECT_EQ(2u, link03.GetChildCount());
 
     ignition::physics::tpelib::Entity &collision06 =
@@ -196,6 +216,9 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_lower_joint", collision06.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0, 0, 1.5708, 0),
         collision06.GetPose());
+    EXPECT_EQ(
+        ignition::math::Pose3d(1.25, 1, 2.1, -1.57079, -0.429204, -1.5708),
+        collision06.GetWorldPose());
 
     ignition::physics::tpelib::Entity &collision07 =
         link03.GetChildByName("col_cylinder");
@@ -204,6 +227,8 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ("col_cylinder", collision07.GetName());
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 0.5, 0, 0, 0),
         collision07.GetPose());
+    EXPECT_EQ(ignition::math::Pose3d(1.25, 1.45465, 1.89193, -2, 0, 0),
+        collision07.GetWorldPose());
   }
 
   // check model 03

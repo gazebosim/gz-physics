@@ -91,8 +91,12 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: virtual void SetPose(const math::Pose3d &_pose);
 
   /// \brief Get the pose of the entity
-  /// \return Pose of entity to set to
+  /// \return Pose of entity
   public: virtual math::Pose3d GetPose() const;
+
+  /// \brief Get the world pose of the entity
+  /// \return World pose of entity
+  public: virtual math::Pose3d GetWorldPose() const;
 
   /// \brief Get a child entity by id
   /// \param[in] _id Id of child entity
@@ -130,6 +134,25 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \param[in] _force True to force update bounding box
   /// \return Entity bounding box
   public: virtual math::AxisAlignedBox GetBoundingBox(bool _force = false);
+
+  /// \brief Get collide bitmask
+  /// \return Collision's collide bitmask
+  public: virtual uint16_t GetCollideBitmask() const;
+
+  /// \internal
+  /// \brief Set the parent of this entity.
+  /// \param[in] _parent Parent to set to
+  public: void SetParent(Entity *_parent);
+
+  /// \internal
+  /// \brief Get the parent of this entity.
+  /// \return Parent of this entity
+  public: Entity *GetParent() const;
+
+  /// \internal
+  /// \brief Mark that the children of the entity has changed, e.g. a child
+  /// entity is added or removed, or child entity properties changed.
+  public: void ChildrenChanged();
 
   /// \brief Get number of children
   /// \return Map of child id's to child entities
