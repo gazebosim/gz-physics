@@ -106,6 +106,11 @@
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
 
+1. Enforce joint effort limit in dartsim-plugin
+    * [Pull request 74](https://github.com/ignitionrobotics/ign-physics/pull/74)
+
+### Ignition Physics 1.8.0 (2020-05-08)
+
 1. Restore detached BodyNodes to original skeleton
     * [Pull request 42](https://github.com/ignitionrobotics/ign-physics/pull/42)
 
