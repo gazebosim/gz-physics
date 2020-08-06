@@ -153,26 +153,6 @@ TEST_F(ShapeFeaturesFixture, SlipCompliance)
   auto boxLink = model->GetLink(linkName);
   auto boxShape = boxLink->GetShape(shapeName);
 
-
-  /*
-  auto world = LoadWorld(this->engine, TEST_WORLD_DIR "/empty.sdf",
-                         Eigen::Vector3d::Zero());
-
-  sdf::Model modelSDF;
-  modelSDF.SetName("box");
-  modelSDF.SetPose(math::Pose3d(0, 0, 0, 0, 0, 0));
-  auto model = world->ConstructModel(modelSDF);
-
-  math::MassMatrix3d massMatrix{mass, math::Vector3d{1.0, 1.0, 1.0},
-                                math::Vector3d::Zero};
-
-  sdf::Link linkSDF;
-  linkSDF.SetName("box_link");
-  linkSDF.SetInertial({massMatrix, math::Pose3d::Zero});
-  auto link = model->ConstructLink(linkSDF);
-
-  */
-  
   AssertVectorApprox vectorPredicate(1e-4);
 
   ignition::physics::ForwardStep::Input input;
@@ -203,7 +183,6 @@ TEST_F(ShapeFeaturesFixture, SlipCompliance)
   const double primarySlip = 1.0;
   boxShape->SetPrimarySlipCompliance(primarySlip);
 
-  //link->SetShapeFrictionPyramidPrimarySlipCompliance();
   world->Step(output, state, input);
 
   {
