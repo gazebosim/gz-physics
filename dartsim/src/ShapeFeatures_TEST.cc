@@ -173,7 +173,7 @@ TEST_F(ShapeFeaturesFixture, PrimarySlipCompliance)
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
                         frameData.angularAcceleration);
   }
-  
+
   const Eigen::Vector3d cmdForce{1, 0, 0};
   const double primarySlip = 0.5;
 
@@ -232,7 +232,7 @@ TEST_F(ShapeFeaturesFixture, SecondarySlipCompliance)
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
                         frameData.angularAcceleration);
   }
-  
+
   const Eigen::Vector3d cmdForce{0, 1, 0};
   const double secondarySlip = 0.25;
 
