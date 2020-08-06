@@ -2,6 +2,9 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
+1. Enforce joint effort limit in dartsim-plugin
+    * [Pull request 74](https://github.com/ignitionrobotics/ign-physics/pull/74)
+
 ### Ignition Physics 2.2.0 (2020-07-30)
 
 1. Add Base and EntityManagement to tpeplugin
