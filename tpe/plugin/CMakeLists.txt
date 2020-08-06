@@ -34,8 +34,6 @@ target_link_libraries(${tpe_plugin}
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${tpe_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 
-target_compile_definitions(${tpe_plugin} PUBLIC "IGN_PROFILER_ENABLE=1")
-
 # The library created by `ign_add_component` includes the ign-physics version
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
