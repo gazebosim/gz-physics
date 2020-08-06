@@ -139,6 +139,22 @@ class AssertVectorApprox
 
 TEST_F(ShapeFeaturesFixture, SlipCompliance)
 {
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "slip_compliance.sdf");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  const std::string modelName{"box"};
+  const std::string linkName{"box_link"};
+  const std::string shapeName{"box_collision"};
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+
+  auto model = world->GetModel(modelName);
+  auto boxLink = model->GetLink(linkName);
+  auto boxShape = boxLink->GetShape(shapeName);
+
+
+  /*
   auto world = LoadWorld(this->engine, TEST_WORLD_DIR "/empty.sdf",
                          Eigen::Vector3d::Zero());
 
@@ -147,7 +163,6 @@ TEST_F(ShapeFeaturesFixture, SlipCompliance)
   modelSDF.SetPose(math::Pose3d(0, 0, 0, 0, 0, 0));
   auto model = world->ConstructModel(modelSDF);
 
-  const double mass = 1.0;
   math::MassMatrix3d massMatrix{mass, math::Vector3d{1.0, 1.0, 1.0},
                                 math::Vector3d::Zero};
 
@@ -156,15 +171,19 @@ TEST_F(ShapeFeaturesFixture, SlipCompliance)
   linkSDF.SetInertial({massMatrix, math::Pose3d::Zero});
   auto link = model->ConstructLink(linkSDF);
 
+  */
+  
+  AssertVectorApprox vectorPredicate(1e-4);
+
   ignition::physics::ForwardStep::Input input;
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;
 
-  AssertVectorApprox vectorPredicate(1e-4);
+  const double mass = 1.0;
 
   // Check that link is at rest
   {
-    const auto frameData = link->FrameDataRelativeToWorld();
+    const auto frameData = boxLink->FrameDataRelativeToWorld();
 
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
                         frameData.linearVelocity);
@@ -177,18 +196,23 @@ TEST_F(ShapeFeaturesFixture, SlipCompliance)
   }
   
   const Eigen::Vector3d cmdForce{1, 0, 0};
-  link->AddExternalForce(
+  boxLink->AddExternalForce(
       physics::RelativeForce3d(physics::FrameID::World(), cmdForce),
-      physics::RelativePosition3d(*link, Eigen::Vector3d::Zero()));
+      physics::RelativePosition3d(*boxLink, Eigen::Vector3d::Zero()));
 
-  // TODO(john) set slip compliance
+  const double primarySlip = 1.0;
+  boxShape->SetPrimarySlipCompliance(primarySlip);
+
+  //link->SetShapeFrictionPyramidPrimarySlipCompliance();
   world->Step(output, state, input);
 
   {
-    // TODO(john) check for calculated value
-    const auto frameData = link->FrameDataRelativeToWorld();
+    // velocity = slip * applied force
+    const auto frameData = boxLink->FrameDataRelativeToWorld();
     EXPECT_PRED_FORMAT2(vectorPredicate, cmdForce,
                         mass * (frameData.linearAcceleration));
+    EXPECT_PRED_FORMAT2(vectorPredicate, primarySlip * cmdForce,
+                        (frameData.linearVelocity));
   }
 }
 
