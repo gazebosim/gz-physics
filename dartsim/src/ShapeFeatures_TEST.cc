@@ -137,7 +137,8 @@ class AssertVectorApprox
   private: double tol;
 };
 
-TEST_F(ShapeFeaturesFixture, SlipCompliance)
+/////////////////////////////////////////////////
+TEST_F(ShapeFeaturesFixture, PrimarySlipCompliance)
 {
   sdf::Root root;
   const sdf::Errors errors = root.Load(TEST_WORLD_DIR "slip_compliance.sdf");
@@ -159,8 +160,6 @@ TEST_F(ShapeFeaturesFixture, SlipCompliance)
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;
 
-  const double mass = 1.0;
-
   // Check that link is at rest
   {
     const auto frameData = boxLink->FrameDataRelativeToWorld();
@@ -176,21 +175,82 @@ TEST_F(ShapeFeaturesFixture, SlipCompliance)
   }
   
   const Eigen::Vector3d cmdForce{1, 0, 0};
-  boxLink->AddExternalForce(
-      physics::RelativeForce3d(physics::FrameID::World(), cmdForce),
-      physics::RelativePosition3d(*boxLink, Eigen::Vector3d::Zero()));
+  const double primarySlip = 0.5;
 
-  const double primarySlip = 1.0;
   boxShape->SetPrimarySlipCompliance(primarySlip);
 
-  world->Step(output, state, input);
+  const std::size_t numSteps = 10000;
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    world->Step(output, state, input);
+    boxLink->AddExternalForce(
+        physics::RelativeForce3d(physics::FrameID::World(), cmdForce),
+        physics::RelativePosition3d(*boxLink, Eigen::Vector3d::Zero()));
+  }
 
   {
     // velocity = slip * applied force
     const auto frameData = boxLink->FrameDataRelativeToWorld();
-    EXPECT_PRED_FORMAT2(vectorPredicate, cmdForce,
-                        mass * (frameData.linearAcceleration));
     EXPECT_PRED_FORMAT2(vectorPredicate, primarySlip * cmdForce,
+                        (frameData.linearVelocity));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(ShapeFeaturesFixture, SecondarySlipCompliance)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "slip_compliance.sdf");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  const std::string modelName{"box"};
+  const std::string linkName{"box_link"};
+  const std::string shapeName{"box_collision"};
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+
+  auto model = world->GetModel(modelName);
+  auto boxLink = model->GetLink(linkName);
+  auto boxShape = boxLink->GetShape(shapeName);
+
+  AssertVectorApprox vectorPredicate(1e-4);
+
+  ignition::physics::ForwardStep::Input input;
+  ignition::physics::ForwardStep::State state;
+  ignition::physics::ForwardStep::Output output;
+
+  // Check that link is at rest
+  {
+    const auto frameData = boxLink->FrameDataRelativeToWorld();
+
+    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                        frameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                        frameData.angularVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                        frameData.linearAcceleration);
+    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                        frameData.angularAcceleration);
+  }
+  
+  const Eigen::Vector3d cmdForce{0, 1, 0};
+  const double secondarySlip = 0.25;
+
+  boxShape->SetSecondarySlipCompliance(secondarySlip);
+
+  const std::size_t numSteps = 10000;
+  for (std::size_t i = 0; i < numSteps; ++i)
+  {
+    world->Step(output, state, input);
+    boxLink->AddExternalForce(
+        physics::RelativeForce3d(physics::FrameID::World(), cmdForce),
+        physics::RelativePosition3d(*boxLink, Eigen::Vector3d::Zero()));
+  }
+
+  {
+    // velocity = slip * applied force
+    const auto frameData = boxLink->FrameDataRelativeToWorld();
+    EXPECT_PRED_FORMAT2(vectorPredicate, secondarySlip * cmdForce,
                         (frameData.linearVelocity));
   }
 }
