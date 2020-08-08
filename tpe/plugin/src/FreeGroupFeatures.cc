@@ -108,7 +108,8 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   }
 
   math::Pose3d targetWorldPose = math::eigen3::convert(_pose);
-  math::Pose3d tfChange = targetWorldPose - link->GetWorldPose();
+  math::Pose3d linkWorldPose = link->GetWorldPose();
+  math::Pose3d tfChange = targetWorldPose * linkWorldPose.Inverse();
 
   // get top level model
   tpelib::Entity *parent = link->GetParent();
@@ -125,8 +126,15 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     return;
   }
 
-  // set the pose
-  model->SetPose(tfChange * model->GetPose());
+  // compute model world pose base that moves the link to its target world pose
+  math::Pose3d modelWorldPose = model->GetWorldPose();
+  math::Pose3d targetModelWorldPose;
+  targetModelWorldPose.Pos() = targetWorldPose.Pos() - tfChange.Rot() *
+     (linkWorldPose.Pos() - modelWorldPose.Pos());
+  targetModelWorldPose.Rot() = tfChange.Rot() * modelWorldPose.Rot();
+
+  // set the model world pose
+  model->SetPose(targetModelWorldPose);
 }
 
 /////////////////////////////////////////////////

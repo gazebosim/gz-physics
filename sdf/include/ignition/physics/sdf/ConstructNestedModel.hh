@@ -39,6 +39,14 @@ class ConstructSdfNestedModel : public virtual Feature
     public: ModelPtrType ConstructNestedModel(const ::sdf::Model &_model);
   };
 
+  public: template <typename PolicyT, typename FeaturesT>
+  class World: public virtual Feature::World<PolicyT, FeaturesT>
+  {
+    public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+
+    public: ModelPtrType ConstructNestedModel(const ::sdf::Model &_model);
+  };
+
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
@@ -57,6 +65,15 @@ auto ConstructSdfNestedModel::Model<PolicyT, FeaturesT>::ConstructNestedModel(
               ->ConstructSdfNestedModel(this->identity, _model));
 }
 
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+auto ConstructSdfNestedModel::World<PolicyT, FeaturesT>::ConstructNestedModel(
+    const ::sdf::Model &_model) -> ModelPtrType
+{
+  return ModelPtrType(this->pimpl,
+        this->template Interface<ConstructSdfNestedModel>()
+              ->ConstructSdfNestedModel(this->identity, _model));
+}
 }
 }
 }

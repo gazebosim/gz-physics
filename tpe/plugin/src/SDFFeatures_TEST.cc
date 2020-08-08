@@ -431,10 +431,15 @@ TEST(SDFFeatures_TEST, ConstructModel)
   EXPECT_NE(nullptr, model);
   EXPECT_EQ("model", model->GetName());
 
-  sdfModel.SetName("nested_model");
-  auto nestedModel = model->ConstructNestedModel(sdfModel);
-  EXPECT_NE(nullptr, nestedModel);
-  EXPECT_EQ("nested_model", nestedModel->GetName());
+  sdfModel.SetName("nested_model_by_world");
+  auto nestedModelByWorld = world->ConstructNestedModel(sdfModel);
+  EXPECT_NE(nullptr, nestedModelByWorld);
+  EXPECT_EQ("nested_model_by_world", nestedModelByWorld->GetName());
+
+  sdfModel.SetName("nested_model_by_model");
+  auto nestedModelByModel = model->ConstructNestedModel(sdfModel);
+  EXPECT_NE(nullptr, nestedModelByModel);
+  EXPECT_EQ("nested_model_by_model", nestedModelByModel->GetName());
 }
 
 int main(int argc, char *argv[])
