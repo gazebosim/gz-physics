@@ -93,10 +93,9 @@ cc_library(
 ) for src in lib_test_sources]
 
 cc_binary(
-    name = "libignition-physics2-tpe.so",
+    name = "libignition-physics-tpe-plugin.so",
     srcs = plugin_sources + plugin_headers,
     includes = ["plugin/src", "include"],
-    linkopts = ["-Wl,-soname,libignition-physics2-tpe.so"],
     linkshared =  True,
     visibility = [],
     deps = [
@@ -119,7 +118,7 @@ cc_binary(
 
 cc_library(
     name = "tpe",
-    srcs = ["libignition-physics2-tpe.so"],
+    srcs = ["libignition-physics-tpe-plugin.so"],
     hdrs = plugin_headers,
     visibility = ["//visibility:public"],
     includes = ["plugin/src"],
