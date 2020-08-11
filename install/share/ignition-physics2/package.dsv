@@ -1,0 +1,9 @@
+source;share/ignition-physics2/hook/cmake_prefix_path.ps1
+source;share/ignition-physics2/hook/cmake_prefix_path.dsv
+source;share/ignition-physics2/hook/cmake_prefix_path.sh
+source;share/ignition-physics2/hook/ld_library_path_lib.ps1
+source;share/ignition-physics2/hook/ld_library_path_lib.dsv
+source;share/ignition-physics2/hook/ld_library_path_lib.sh
+source;share/ignition-physics2/hook/pkg_config.ps1
+source;share/ignition-physics2/hook/pkg_config.dsv
+source;share/ignition-physics2/hook/pkg_config.sh

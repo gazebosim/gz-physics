@@ -17,6 +17,8 @@
 
 #include <string>
 
+#include <ignition/common/Profiler.hh>
+
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
 
@@ -66,6 +68,7 @@ void Model::SetLinearVelocity(const math::Vector3d _velocity)
 //////////////////////////////////////////////////
 math::Vector3d Model::GetLinearVelocity() const
 {
+  IGN_PROFILE("tpelib::Model::GetLinearVelocity");
   return this->linearVelocity;
 }
 
@@ -78,6 +81,7 @@ void Model::SetAngularVelocity(const math::Vector3d _velocity)
 //////////////////////////////////////////////////
 math::Vector3d Model::GetAngularVelocity() const
 {
+  IGN_PROFILE("tpelib::Model::GetAngularVelocity");
   return this->angularVelocity;
 }
 
@@ -87,6 +91,7 @@ void Model::UpdatePose(
   const math::Vector3d _linearVelocity,
   const math::Vector3d _angularVelocity)
 {
+  IGN_PROFILE("tpelib::Model::UpdatePose");
   math::Pose3d currentPose = this->GetPose();
   math::Pose3d nextPose(
     currentPose.Pos() + _linearVelocity * _timeStep,
