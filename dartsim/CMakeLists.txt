@@ -67,6 +67,8 @@ foreach(test ${tests})
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 
+  # Helps when we want to build a single test after making changes to dartsim_plugin
+  add_dependencies(${test} ${dartsim_plugin})
 endforeach()
 
 foreach(test UNIT_FindFeatures_TEST UNIT_RequestFeatures_TEST)
