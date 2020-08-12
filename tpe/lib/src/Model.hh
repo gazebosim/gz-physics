@@ -82,7 +82,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 
   /// \brief angular velocity of model
   protected: math::Vector3d angularVelocity;
-
   IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
