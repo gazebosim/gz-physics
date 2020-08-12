@@ -1,0 +1,8 @@
+libbenchmark-dev
+libeigen3-dev
+libignition-cmake2-dev
+libignition-common3-dev
+libignition-math6-dev
+libignition-math6-eigen3-dev
+libignition-plugin-dev
+libsdformat10-dev
