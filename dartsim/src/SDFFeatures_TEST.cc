@@ -28,6 +28,7 @@
 
 #include <ignition/plugin/Loader.hh>
 
+#include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
 
@@ -44,6 +45,7 @@
 #include <test/Utils.hh>
 
 struct TestFeatureList : ignition::physics::FeatureList<
+    ignition::physics::GetEntities,
     ignition::physics::GetBasicJointState,
     ignition::physics::SetBasicJointState,
     ignition::physics::dartsim::RetrieveWorld,
@@ -189,24 +191,27 @@ TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
   dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
+  const auto model = world.GetModel("joint_limit_test");
   const dart::dynamics::SkeletonPtr skeleton =
       dartWorld->getSkeleton("joint_limit_test");
   ASSERT_NE(nullptr, skeleton);
   auto * const joint = dynamic_cast<dart::dynamics::RevoluteJoint *>(
       skeleton->getJoint(1));
+  auto jointPhys = model->GetJoint(1);
 
   ASSERT_NE(nullptr, joint);
   // the joint starts at 0. Apply force in either direction and check the limits
   // are enforced
-  auto verify = [&dartWorld](dart::dynamics::DegreeOfFreedom * const dof,
-                             const double force, const double tol)
+  auto verify = [&](std::size_t index, const double force, const double tol)
   {
     dartWorld->reset();
-    dof->setForce(force);
+    dart::dynamics::DegreeOfFreedom * const dof = joint->getDof(index);
+    jointPhys->SetForce(index, force);
     for (std::size_t i = 0; i < 1000; ++i)
     {
       dartWorld->step();
     }
+    jointPhys->SetForce(index, force);
     EXPECT_LE(dof->getPositionLowerLimit() - tol, dof->getPosition());
     EXPECT_LE(dof->getForceLowerLimit() - tol, dof->getForce());
     EXPECT_LE(dof->getVelocityLowerLimit() - tol, dof->getVelocity());
@@ -216,8 +221,8 @@ TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
     EXPECT_GE(dof->getVelocityUpperLimit() + tol, dof->getVelocity());
   };
 
-  verify(joint->getDof(0), -1000, 2e-3);
-  verify(joint->getDof(0), 1000, 2e-3);
+  verify(0, -1000, 2e-3);
+  verify(0, 1000, 2e-3);
 }
 
 // Create Model with parent and child links. If a link is not set, the joint

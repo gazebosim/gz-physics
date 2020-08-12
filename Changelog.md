@@ -2,6 +2,9 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
+1. Enforce joint effort limit in dartsim-plugin
+    * [Pull request 74](https://github.com/ignitionrobotics/ign-physics/pull/74)
+
 ### Ignition Physics 2.2.0 (2020-07-30)
 
 1. Add Base and EntityManagement to tpeplugin
@@ -105,6 +108,11 @@
 ## Ignition Physics 1.x
 
 ### Ignition Physics 1.x.x (20XX-XX-XX)
+
+1. Enforce joint effort limit in dartsim-plugin
+    * [Pull request 74](https://github.com/ignitionrobotics/ign-physics/pull/74)
+
+### Ignition Physics 1.8.0 (2020-05-08)
 
 1. Restore detached BodyNodes to original skeleton
     * [Pull request 42](https://github.com/ignitionrobotics/ign-physics/pull/42)
