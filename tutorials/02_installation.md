@@ -36,26 +36,41 @@ sudo apt-get install libignition-physics3-dev
 
 **Build from source**
 
-Run the following to install dependencies
-```{.sh}
-sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-sudo apt-get build-dep -y ignition-physics3
-```
+1. Run the following to install dependencies
 
-Clone the ign-physics repository from GitHub
-```{.sh}
-git clone https://github.com/ignitionrobotics/ign-physics -b master
-```
+    ```{.sh}
+    sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
+    sudo apt-get build-dep -y ignition-physics3
+    ```
 
-Then build using CMake
-```{.sh}
-cd ign-physics
-mkdir build
-cd build
-cmake ..
-make
-sudo make install
-```
+2. Use gcc-8:
+
+    ```
+    sudo apt update
+    sudo apt-get -y install g++-8
+    sudo update-alternatives --install \
+      /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
+      --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
+      --slave /usr/bin/gcov gcov /usr/bin/gcov-8
+    ```
+
+3. Clone the repository
+
+    ```
+    git clone https://github.com/ignitionrobotics/ign-physics -b master
+    ```
+
+4. Configure and build
+
+    ```
+    cd ign-physics; mkdir build; cd build; cmake ..; make
+    ```
+
+5. Optionally, install Ignition Physics
+
+    ```
+    sudo make install
+    ```
 
 ## macOS
 
