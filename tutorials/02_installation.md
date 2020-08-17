@@ -31,8 +31,10 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 
 ```{.sh}
 sudo apt-get update
-sudo apt-get install libignition-physics3-dev
+sudo apt-get install libignition-physics<#>-dev
 ```
+
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 **Build from source**
 
@@ -40,8 +42,10 @@ sudo apt-get install libignition-physics3-dev
 
     ```{.sh}
     sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-    sudo apt-get build-dep -y ignition-physics3
+    sudo apt-get build-dep -y ignition-physics<#>-dev
     ```
+    Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+
 
 2. Use gcc-8:
 
@@ -57,8 +61,10 @@ sudo apt-get install libignition-physics3-dev
 3. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b master
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>-dev
     ```
+    Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+
 
 4. Configure and build
 
@@ -94,21 +100,26 @@ Run the following commands:
 
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics3
+brew install ignition-physics<#>
 ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+
 
 **Build from source using Homebrew**
 
 Run the following to install dependencies
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics3 --only-dependencies
+brew install ignition-physics<#> --only-dependencies
 ```
+
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 Clone the ign-physics repository from GitHub
 ```{.sh}
-git clone https://github.com/ignitionrobotics/ign-physics -b master
+git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>-dev
 ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 Then build using CMake
 ```{.sh}
