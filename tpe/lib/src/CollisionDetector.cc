@@ -17,6 +17,8 @@
 
 #include <unordered_map>
 
+#include <ignition/common/Profiler.hh>
+
 #include "CollisionDetector.hh"
 #include "Utils.hh"
 
@@ -30,6 +32,7 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     const std::map<std::size_t, std::shared_ptr<Entity>> &_entities,
     bool _singleContact)
 {
+  IGN_PROFILE("tpelib::CollisionDetector::CheckCollisions");
   // contacts to be filled and returned
   std::vector<Contact> contacts;
 
