@@ -42,6 +42,9 @@ class ignition::physics::tpelib::EntityPrivate
   /// \brief Flag to indicate if bounding box changed
   public: bool bboxDirty = true;
 
+  /// \brief Flag to indicate if pose changed
+  public: bool poseDirty = false;
+
   /// \brief Flag to indicate if collide bitmask changed
   public: bool collideBitmaskDirty = true;
 
@@ -127,6 +130,7 @@ const std::string &Entity::GetNameRef() const
 void Entity::SetPose(const math::Pose3d &_pose)
 {
   this->dataPtr->pose = _pose;
+  this->dataPtr->poseDirty = true;
 }
 
 //////////////////////////////////////////////////
@@ -310,4 +314,16 @@ void Entity::SetParent(Entity *_parent)
 Entity *Entity::GetParent() const
 {
   return this->dataPtr->parent;
+}
+
+//////////////////////////////////////////////////
+bool Entity::PoseDirty() const
+{
+  return this->dataPtr->poseDirty = true;
+}
+
+//////////////////////////////////////////////////
+void Entity::ClearPoseDirty()
+{
+  this->dataPtr->poseDirty = false;
 }

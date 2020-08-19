@@ -30,9 +30,14 @@
 
 #include "Entity.hh"
 
+#include "AABBTree.hh"
+
 namespace ignition {
 namespace physics {
 namespace tpelib {
+
+// forward declaration
+class CollisionDetectorPrivate;
 
 /// \brief A data structure to store contact properties
 class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
@@ -53,10 +58,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
 class IGNITION_PHYSICS_TPELIB_VISIBLE CollisionDetector
 {
   /// \brief Constructor
-  public: CollisionDetector() = default;
+  public: CollisionDetector();
 
   /// \brief Destructor
-  public: ~CollisionDetector() = default;
+  public: ~CollisionDetector();
 
   /// \brief Check collisions between a list entities and get all contact points
   /// \param[in] _entities List of entities
@@ -78,6 +83,9 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CollisionDetector
       const math::AxisAlignedBox &_b2,
       std::vector<math::Vector3d> &_points,
       bool _singleContact = false);
+
+  /// \brief Pointer to private data
+  private: std::unique_ptr<CollisionDetectorPrivate> dataPtr;
 };
 
 }
