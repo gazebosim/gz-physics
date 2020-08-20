@@ -22,6 +22,7 @@
 #include <set>
 
 #include <ignition/math/AxisAlignedBox.hh>
+#include <ignition/utilities/SuppressWarning.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
 
@@ -76,7 +77,9 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE AABBTree
   public: bool HasNode(std::size_t _id) const;
 
   /// \brief Pointer to the private data
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   private: std::unique_ptr<AABBTreePrivate> dataPtr;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 }
 }

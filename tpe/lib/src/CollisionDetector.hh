@@ -85,7 +85,9 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CollisionDetector
       bool _singleContact = false);
 
   /// \brief Pointer to private data
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   private: std::unique_ptr<CollisionDetectorPrivate> dataPtr;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 }

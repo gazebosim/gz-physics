@@ -1215,18 +1215,19 @@ namespace aabb
 
         for (unsigned int i=0;i<dimension;i++)
         {
+            int periodicityVal = static_cast<int>(periodicity[i]);
             if (separation[i] < negMinImage[i])
             {
-                separation[i] += periodicity[i]*boxSize[i];
-                shift[i] = periodicity[i]*boxSize[i];
+                separation[i] += periodicityVal*boxSize[i];
+                shift[i] = periodicityVal*boxSize[i];
                 isShifted = true;
             }
             else
             {
                 if (separation[i] >= posMinImage[i])
                 {
-                    separation[i] -= periodicity[i]*boxSize[i];
-                    shift[i] = -periodicity[i]*boxSize[i];
+                    separation[i] -= periodicityVal*boxSize[i];
+                    shift[i] = -periodicityVal*boxSize[i];
                     isShifted = true;
                 }
             }
