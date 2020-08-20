@@ -323,7 +323,7 @@ bool Entity::PoseDirty() const
 }
 
 //////////////////////////////////////////////////
-void Entity::ClearPoseDirty()
+void Entity::ResetPoseDirty()
 {
   this->dataPtr->poseDirty = false;
 }

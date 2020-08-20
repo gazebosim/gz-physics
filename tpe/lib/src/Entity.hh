@@ -155,8 +155,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: bool PoseDirty() const;
 
   /// \internal
-  /// \brief Clear the pose dirty flag
-  public: void ClearPoseDirty();
+  /// \brief Reset the pose dirty flag
+  public: void ResetPoseDirty();
 
   /// \internal
   /// \brief Mark that the children of the entity has changed, e.g. a child

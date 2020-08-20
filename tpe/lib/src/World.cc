@@ -79,7 +79,7 @@ void World::Step()
       this->collisionDetector.CheckCollisions(children, true));
 
   for (auto it = children.begin(); it != children.end(); ++it)
-    it->second->ClearPoseDirty();
+    it->second->ResetPoseDirty();
 
   // increment world time by step size
   this->time += this->timeStep;
