@@ -16,23 +16,36 @@
 */
 
 #include <set>
+#include <unordered_map>
 
 #include <ignition/common/Profiler.hh>
 
 #include "CollisionDetector.hh"
 #include "Utils.hh"
 
-#include "aabb_tree/AABBTree.h"
-#include "aabb_tree/IAABB.h"
+#include "AABBTree.hh"
 
 /// \brief Private data class for CollisionDetector
 class ignition::physics::tpelib::CollisionDetectorPrivate
 {
+  /// \brief Helper function to check if collisions for a pair of nodes have
+  /// already been recorded or not
+  /// \param[in] _a Node A Id
+  /// \param[in] _b Node B Id
+  /// \return True if this is a duplicate collision
+  public: bool CheckDuplicateCollisionPair(std::size_t _a, std::size_t _b);
+
   /// \brief AABB tree
-  public: AABBTreeIface aabbTree;
+  public: AABBTree aabbTree;
 
   /// \brief Set of entity id
   public: std::set<std::size_t> nodeIds;
+
+  /// \brief Keep track of pairs of node ids that collided. The map is cleared
+  /// after each collision detection iteration. The key and value are:
+  ///   std::unorderd_map<node_a_id, std::unordered_map<node_b_id, collided>
+  public: std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool>>
+    collisionStateMap;
 };
 
 using namespace ignition;
@@ -72,6 +85,7 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     }
   }
 
+  // add and update nodes in the tree
   for (auto it = _entities.begin(); it != _entities.end(); ++it)
   {
     std::shared_ptr<Entity> e = it->second;
@@ -79,6 +93,10 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     if (!this->dataPtr->aabbTree.HasNode(it->first))
     {
       math::AxisAlignedBox b = e->GetBoundingBox();
+
+      if (b == math::AxisAlignedBox())
+        continue;
+
       // convert to world aabb
       math::AxisAlignedBox aabb;
       math::Pose3d p = e->GetPose();
@@ -91,6 +109,10 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     else if (e->PoseDirty())
     {
       math::AxisAlignedBox b = e->GetBoundingBox();
+
+      if (b == math::AxisAlignedBox())
+        continue;
+
       // convert to world aabb
       math::AxisAlignedBox aabb;
       math::Pose3d p = e->GetPose();
@@ -104,6 +126,11 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
   {
     std::shared_ptr<Entity> e = it->second;
 
+    math::AxisAlignedBox b = e->GetBoundingBox();
+    if (b == math::AxisAlignedBox())
+        continue;
+
+    // check collisions
     auto result = this->dataPtr->aabbTree.Collisions(e->GetId());
     if (result.empty())
       continue;
@@ -116,6 +143,10 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     // Check intersection
     for (const auto &nId : result)
     {
+      // skip if we have already checked collision for this pair of nodes
+      if (this->dataPtr->CheckDuplicateCollisionPair(e->GetId(), nId))
+        continue;
+
       // Get collide bitmask for entity 2
       uint16_t cb2 = _entities.at(nId)->GetCollideBitmask();
 
@@ -141,102 +172,9 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     }
   }
 
-  std::cerr << "contacts ===== " << contacts.size() << std::endl;
+  this->dataPtr->collisionStateMap.clear();
   return contacts;
 }
-
-
-// //////////////////////////////////////////////////
-// std::vector<Contact> CollisionDetector::CheckCollisions(
-//     const std::map<std::size_t, std::shared_ptr<Entity>> &_entities,
-//     bool _singleContact)
-// {
-//   IGN_PROFILE("CollisionDetector::CheckCollisions");
-//
-//   // contacts to be filled and returned
-//   std::vector<Contact> contacts;
-//
-//   // cache of axis aligned box in world frame
-//   std::unordered_map<std::size_t, math::AxisAlignedBox> worldAabb;
-//
-//   for (auto it = _entities.begin(); it != _entities.end(); ++it)
-//   {
-//     std::shared_ptr<Entity> e1 = it->second;
-//
-//     // Get collide bitmask for enitty 1
-//     uint16_t cb1 = e1->GetCollideBitmask();
-//
-//     // Get world axis aligned box for entity 1
-//     math::AxisAlignedBox wb1;
-//     auto wb1It = worldAabb.find(e1->GetId());
-//     if (wb1It == worldAabb.end())
-//     {
-//       // get bbox in local frame
-//       math::AxisAlignedBox b1 = e1->GetBoundingBox();
-//       // convert to world aabb
-//       math::Pose3d p1 = e1->GetPose();
-//       wb1 = transformAxisAlignedBox(b1, p1);
-//       worldAabb[e1->GetId()] = wb1;
-//     }
-//     else
-//     {
-//       wb1 = wb1It->second;
-//     }
-//
-//     for (auto it2 = std::next(it, 1); it2 != _entities.end(); ++it2)
-//     {
-//       std::shared_ptr<Entity> e2 = it2->second;
-//
-// //      IGN_PROFILE_BEGIN("CollisionDetector GetCollideBitMask");
-//       // Get collide bitmask for entity 2
-//       uint16_t cb2 = e2->GetCollideBitmask();
-// //      IGN_PROFILE_END();
-//
-//       // collision filtering using collide bitmask
-//       if ((cb1 & cb2) == 0)
-//         continue;
-//
-//       IGN_PROFILE_BEGIN("CollisionDetector find bbox");
-//       // Get world axis aligned box for entity 2
-//       math::AxisAlignedBox wb2;
-//       auto wb2It = worldAabb.find(e2->GetId());
-//       IGN_PROFILE_END();
-//
-//       if (wb2It == worldAabb.end())
-//       {
-//         // get bbox in local frame
-//         math::AxisAlignedBox b2 = e2->GetBoundingBox();
-//         // convert to world aabb
-//         math::Pose3d p2 = e2->GetPose();
-//         wb2 = transformAxisAlignedBox(b2, p2);
-//         worldAabb[e2->GetId()] = wb2;
-//       }
-//       else
-//       {
-//         wb2 = wb2It->second;
-//       }
-//
-//       // Check intersection
-//       std::vector<math::Vector3d> points;
-//       if (this->GetIntersectionPoints(wb1, wb2, points, _singleContact))
-//       {
-//         std::cerr << "got intersection " << std::endl;
-//         Contact c;
-//         // TPE checks collisions in the model level so contacts are associated
-//         // with models and not collisions!
-//         c.entity1 = e1->GetId();
-//         c.entity2 = e2->GetId();
-//         for (const auto &p : points)
-//         {
-//           c.point = p;
-//           contacts.push_back(c);
-//         }
-//       }
-//     }
-//   }
-//
-//   return contacts;
-// }
 
 //////////////////////////////////////////////////
 bool CollisionDetector::GetIntersectionPoints(const math::AxisAlignedBox &_b1,
@@ -301,4 +239,34 @@ bool CollisionDetector::GetIntersectionPoints(const math::AxisAlignedBox &_b1,
     return true;
   }
   return false;
+}
+
+//////////////////////////////////////////////////
+bool CollisionDetectorPrivate::CheckDuplicateCollisionPair(
+    std::size_t _a, std::size_t _b)
+{
+  // use a 2d map to keep track of pairs of collisions
+  // mark the corresponding elements in the 2d map to true to indicate
+  // the check is done
+  bool duplicate = true;
+  auto aIt = this->collisionStateMap.find(_a);
+  if (aIt == this->collisionStateMap.end())
+  {
+    duplicate = false;
+  }
+  else
+  {
+    auto bIt = aIt->second.find(_b);
+    if (bIt == aIt->second.end())
+    {
+      duplicate = false;
+    }
+  }
+
+  if (!duplicate)
+  {
+    this->collisionStateMap[_a][_b] = true;
+    this->collisionStateMap[_b][_a] = true;
+  }
+  return duplicate;
 }

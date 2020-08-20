@@ -2,9 +2,7 @@ ign_get_libsources_and_unittests(sources test_sources)
 
 set (aabb_tree_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/aabb_tree/AABB.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/aabb_tree/AABBTree.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/aabb_tree/AABBTree.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/aabb_tree/IAABB.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/aabb_tree/AABB.cc)
 set(sources ${sources} ${aabb_tree_SRC})
 
 ign_add_component(tpelib
