@@ -61,7 +61,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 3. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>-dev
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
     ```
     Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
@@ -117,7 +117,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 Clone the ign-physics repository from GitHub
 ```{.sh}
-git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>-dev
+git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
 ```
 Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
