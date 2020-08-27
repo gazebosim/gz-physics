@@ -26,14 +26,6 @@ designed to support simulation and rapid development of robot applications.
 
 [Install](#install)
 
-* [Binary Install](#binary-install)
-
-* [Source Install](#source-install)
-
-    * [Prerequisites](#prerequisites)
-
-    * [Building from Source](#building-from-source)
-
 [Usage](#usage)
 
 [Documentation](#documentation)
@@ -80,66 +72,7 @@ Ignition Physics provides the following functionality:
 
 # Install
 
-We recommend following the [Binary Install](#binary-install) instructions to get up and running as quickly and painlessly as possible.
-
-The [Source Install](#source-install) instructions should be used if you need the very latest software improvements, you need to modify the code, or you plan to make a contribution.
-
-## Binary Install
-
-On Ubuntu systems, `apt-get` can be used to install `ignition-physics3`:
-
-```
-sudo apt install libignition-physics3-dev
-```
-
-## Source Install
-
-Source installation can be performed in UNIX systems by first installing the
-necessary prerequisites followed by building from source.
-
-### Prerequisites
-
-Install required dependencies:
-
-~~~
-sudo apt update
-sudo apt-get -y install lsb-release
-sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
-sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-sudo apt-get build-dep -y ignition-physics3
-~~~
-
-Use gcc-8:
-
-~~~
-sudo apt update
-sudo apt-get -y install g++-8
-sudo update-alternatives --install \
-  /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
-  --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
-  --slave /usr/bin/gcov gcov /usr/bin/gcov-8
-~~~
-
-### Building from source
-
-1. Clone the repository
-
-    ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b master
-    ```
-
-2. Configure and build
-
-    ```
-    cd ign-physics; mkdir build; cd build; cmake ..; make
-    ```
-
-3. Optionally, install Ignition Physics
-
-    ```
-    sudo make install
-    ```
+See the [installation tutorial](https://ignitionrobotics.org/api/physics/2.2/installation.html).
 
 # Usage
 

@@ -31,31 +31,52 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 
 ```{.sh}
 sudo apt-get update
-sudo apt-get install libignition-physics3-dev
+sudo apt-get install libignition-physics<#>-dev
 ```
+
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 **Build from source**
 
-Run the following to install dependencies
-```{.sh}
-sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-sudo apt-get build-dep -y ignition-physics3
-```
+1. Run the following to install dependencies
 
-Clone the ign-physics repository from GitHub
-```{.sh}
-git clone https://github.com/ignitionrobotics/ign-physics -b master
-```
+    ```{.sh}
+    sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
+    sudo apt-get build-dep -y ignition-physics<#>-dev
+    ```
+    Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
-Then build using CMake
-```{.sh}
-cd ign-physics
-mkdir build
-cd build
-cmake ..
-make
-sudo make install
-```
+
+2. Use gcc-8:
+
+    ```
+    sudo apt update
+    sudo apt-get -y install g++-8
+    sudo update-alternatives --install \
+      /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
+      --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
+      --slave /usr/bin/gcov gcov /usr/bin/gcov-8
+    ```
+
+3. Clone the repository
+
+    ```
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+    ```
+    Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+
+
+4. Configure and build
+
+    ```
+    cd ign-physics; mkdir build; cd build; cmake ..; make
+    ```
+
+5. Optionally, install Ignition Physics
+
+    ```
+    sudo make install
+    ```
 
 ## macOS
 
@@ -79,21 +100,26 @@ Run the following commands:
 
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics3
+brew install ignition-physics<#>
 ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+
 
 **Build from source using Homebrew**
 
 Run the following to install dependencies
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics3 --only-dependencies
+brew install ignition-physics<#> --only-dependencies
 ```
+
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 Clone the ign-physics repository from GitHub
 ```{.sh}
-git clone https://github.com/ignitionrobotics/ign-physics -b master
+git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
 ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 Then build using CMake
 ```{.sh}
