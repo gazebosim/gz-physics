@@ -92,6 +92,11 @@ void Model::UpdatePose(
   const math::Vector3d _angularVelocity)
 {
   IGN_PROFILE("tpelib::Model::UpdatePose");
+
+  if (_linearVelocity == math::Vector3d::Zero &&
+      _angularVelocity == math::Vector3d::Zero)
+    return;
+
   math::Pose3d currentPose = this->GetPose();
   math::Pose3d nextPose(
     currentPose.Pos() + _linearVelocity * _timeStep,

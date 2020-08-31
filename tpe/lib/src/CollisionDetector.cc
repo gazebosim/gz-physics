@@ -15,6 +15,7 @@
  *
 */
 
+#include <set>
 #include <unordered_map>
 
 #include <ignition/common/Profiler.hh>
@@ -22,10 +23,45 @@
 #include "CollisionDetector.hh"
 #include "Utils.hh"
 
+#include "AABBTree.hh"
+
+/// \brief Private data class for CollisionDetector
+class ignition::physics::tpelib::CollisionDetectorPrivate
+{
+  /// \brief Helper function to check if collisions for a pair of nodes have
+  /// already been recorded or not
+  /// \param[in] _a Node A Id
+  /// \param[in] _b Node B Id
+  /// \return True if this is a duplicate collision
+  public: bool CheckDuplicateCollisionPair(std::size_t _a, std::size_t _b);
+
+  /// \brief AABB tree
+  public: AABBTree aabbTree;
+
+  /// \brief Set of entity id
+  public: std::set<std::size_t> nodeIds;
+
+  /// \brief Keep track of pairs of node ids that collided. The map is cleared
+  /// after each collision detection iteration. The key and value are:
+  ///   std::unorderd_map<node_a_id, std::unordered_map<node_b_id, collided>
+  public: std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool>>
+    collisionStateMap;
+};
+
 using namespace ignition;
 using namespace physics;
 using namespace tpelib;
 
+//////////////////////////////////////////////////
+CollisionDetector::CollisionDetector()
+  : dataPtr(new CollisionDetectorPrivate)
+{
+}
+
+//////////////////////////////////////////////////
+CollisionDetector::~CollisionDetector()
+{
+}
 
 //////////////////////////////////////////////////
 std::vector<Contact> CollisionDetector::CheckCollisions(
@@ -33,73 +69,100 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     bool _singleContact)
 {
   IGN_PROFILE("tpelib::CollisionDetector::CheckCollisions");
+
   // contacts to be filled and returned
   std::vector<Contact> contacts;
 
-  // cache of axis aligned box in world frame
-  std::unordered_map<std::size_t, math::AxisAlignedBox> worldAabb;
+  // update AABB tree
+  // remove nodes that no longer exist
+  auto nodesToCheckForRemoval = this->dataPtr->nodeIds;
+  for (auto id : nodesToCheckForRemoval)
+  {
+    if (_entities.find(id) == _entities.end())
+    {
+      this->dataPtr->aabbTree.RemoveNode(id);
+      this->dataPtr->nodeIds.erase(id);
+    }
+  }
 
+  // add and update nodes in the tree
   for (auto it = _entities.begin(); it != _entities.end(); ++it)
   {
-    std::shared_ptr<Entity> e1 = it->second;
-
-    // Get collide bitmask for enitty 1
-    uint16_t cb1 = e1->GetCollideBitmask();
-
-    // Get world axis aligned box for entity 1
-    math::AxisAlignedBox wb1;
-    auto wb1It = worldAabb.find(e1->GetId());
-    if (wb1It == worldAabb.end())
+    std::shared_ptr<Entity> e = it->second;
+    // add new nodes
+    if (!this->dataPtr->aabbTree.HasNode(it->first))
     {
-      // get bbox in local frame
-      math::AxisAlignedBox b1 = e1->GetBoundingBox();
+      math::AxisAlignedBox b = e->GetBoundingBox();
+
+      if (b == math::AxisAlignedBox())
+        continue;
+
       // convert to world aabb
-      math::Pose3d p1 = e1->GetPose();
-      wb1 = transformAxisAlignedBox(b1, p1);
-      worldAabb[e1->GetId()] = wb1;
-    }
-    else
-    {
-      wb1 = wb1It->second;
-    }
+      math::AxisAlignedBox aabb;
+      math::Pose3d p = e->GetPose();
+      aabb = transformAxisAlignedBox(b, p);
+      this->dataPtr->aabbTree.AddNode(e->GetId(), aabb);
 
-    for (auto it2 = std::next(it, 1); it2 != _entities.end(); ++it2)
+      this->dataPtr->nodeIds.insert(it->first);
+    }
+    // update existing nodes
+    else if (e->PoseDirty())
     {
-      std::shared_ptr<Entity> e2 = it2->second;
+      math::AxisAlignedBox b = e->GetBoundingBox();
+
+      if (b == math::AxisAlignedBox())
+        continue;
+
+      // convert to world aabb
+      math::AxisAlignedBox aabb;
+      math::Pose3d p = e->GetPose();
+      aabb = transformAxisAlignedBox(b, p);
+      this->dataPtr->aabbTree.UpdateNode(e->GetId(), aabb);
+    }
+  }
+
+  // query AABB tree for collisions
+  for (auto it = _entities.begin(); it != _entities.end(); ++it)
+  {
+    std::shared_ptr<Entity> e = it->second;
+
+    math::AxisAlignedBox b = e->GetBoundingBox();
+    if (b == math::AxisAlignedBox())
+        continue;
+
+    // check collisions
+    auto result = this->dataPtr->aabbTree.Collisions(e->GetId());
+    if (result.empty())
+      continue;
+
+    math::AxisAlignedBox wb1 = this->dataPtr->aabbTree.AABB(e->GetId());
+
+    // Get collide bitmask for entity 1
+    uint16_t cb1 = e->GetCollideBitmask();
+
+    // Check intersection
+    for (const auto &nId : result)
+    {
+      // skip if we have already checked collision for this pair of nodes
+      if (this->dataPtr->CheckDuplicateCollisionPair(e->GetId(), nId))
+        continue;
 
       // Get collide bitmask for entity 2
-      uint16_t cb2 = e2->GetCollideBitmask();
+      uint16_t cb2 = _entities.at(nId)->GetCollideBitmask();
 
       // collision filtering using collide bitmask
       if ((cb1 & cb2) == 0)
         continue;
 
-      // Get world axis aligned box for entity 2
-      math::AxisAlignedBox wb2;
-      auto wb2It = worldAabb.find(e2->GetId());
-      if (wb2It == worldAabb.end())
-      {
-        // get bbox in local frame
-        math::AxisAlignedBox b2 = e2->GetBoundingBox();
-        // convert to world aabb
-        math::Pose3d p2 = e2->GetPose();
-        wb2 = transformAxisAlignedBox(b2, p2);
-        worldAabb[e2->GetId()] = wb2;
-      }
-      else
-      {
-        wb2 = wb2It->second;
-      }
-
-      // Check intersection
       std::vector<math::Vector3d> points;
+      math::AxisAlignedBox wb2 = this->dataPtr->aabbTree.AABB(nId);
       if (this->GetIntersectionPoints(wb1, wb2, points, _singleContact))
       {
         Contact c;
         // TPE checks collisions in the model level so contacts are associated
         // with models and not collisions!
-        c.entity1 = e1->GetId();
-        c.entity2 = e2->GetId();
+        c.entity1 = e->GetId();
+        c.entity2 = nId;
         for (const auto &p : points)
         {
           c.point = p;
@@ -108,6 +171,8 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
       }
     }
   }
+
+  this->dataPtr->collisionStateMap.clear();
   return contacts;
 }
 
@@ -116,6 +181,7 @@ bool CollisionDetector::GetIntersectionPoints(const math::AxisAlignedBox &_b1,
     const math::AxisAlignedBox &_b2,
     std::vector<math::Vector3d> &_points, bool _singleContact)
 {
+  IGN_PROFILE("CollisionDetector::GetIntersectionPoints");
   // fast intersection check
   if (_b1.Intersects(_b2))
   {
@@ -173,4 +239,34 @@ bool CollisionDetector::GetIntersectionPoints(const math::AxisAlignedBox &_b1,
     return true;
   }
   return false;
+}
+
+//////////////////////////////////////////////////
+bool CollisionDetectorPrivate::CheckDuplicateCollisionPair(
+    std::size_t _a, std::size_t _b)
+{
+  // use a 2d map to keep track of pairs of collisions
+  // mark the corresponding elements in the 2d map to true to indicate
+  // the check is done
+  bool duplicate = true;
+  auto aIt = this->collisionStateMap.find(_a);
+  if (aIt == this->collisionStateMap.end())
+  {
+    duplicate = false;
+  }
+  else
+  {
+    auto bIt = aIt->second.find(_b);
+    if (bIt == aIt->second.end())
+    {
+      duplicate = false;
+    }
+  }
+
+  if (!duplicate)
+  {
+    this->collisionStateMap[_a][_b] = true;
+    this->collisionStateMap[_b][_a] = true;
+  }
+  return duplicate;
 }
