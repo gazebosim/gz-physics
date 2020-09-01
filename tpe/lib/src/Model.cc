@@ -15,6 +15,7 @@
  *
 */
 
+#include <set>
 #include <string>
 
 #include <ignition/common/Profiler.hh>
@@ -66,24 +67,34 @@ Entity &Model::AddModel()
 //////////////////////////////////////////////////
 Entity &Model::GetCanonicalLink()
 {
-  // return first link as canonical link
+  std::set<Model *> models;
+
   for (auto &it : this->GetChildren())
   {
-    // if child is nested model, return its canonical link
-    Model *model = dynamic_cast<Model *>(it.second.get());
-    if (model)
-    {
-      auto &link = model->GetCanonicalLink();
-      if (link.GetId() != kNullEntity.GetId())
-        return link;
-    }
-    // if child is link and a canonical link has not been found yet,
-    // return this child link
-    else if (dynamic_cast<Link *>(it.second.get()))
+    // return the first link found as canonical link
+    if (dynamic_cast<Link *>(it.second.get()))
     {
       return *it.second;
     }
+    // if child is neseted model, store its id first and only return nested
+    // links if there are no links in this model
+    else
+    {
+      Model *model = dynamic_cast<Model *>(it.second.get());
+      if (model)
+      {
+        models.insert(model);
+      }
+    }
   }
+
+  for (auto m : models)
+  {
+    auto &link = m->GetCanonicalLink();
+    if (link.GetId() != kNullEntity.GetId())
+      return link;
+  }
+
   return kNullEntity;
 }
 
