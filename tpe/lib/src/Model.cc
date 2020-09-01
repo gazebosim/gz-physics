@@ -76,7 +76,7 @@ Entity &Model::GetCanonicalLink()
     {
       return *it.second;
     }
-    // if child is neseted model, store its id first and only return nested
+    // if child is neseted model, store it first and only return nested
     // links if there are no links in this model
     else
     {
