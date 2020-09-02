@@ -28,7 +28,8 @@ namespace ignition {
 namespace physics {
 namespace tpelib {
 
-// class Link;
+// forward declaration
+class ModelPrivate;
 
 /// \brief Model class
 class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
@@ -87,6 +88,9 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \brief angular velocity of model
   protected: math::Vector3d angularVelocity;
   IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+
+  /// \brief Pointer to private data class
+  private: ModelPrivate *dataPtr = nullptr;
 };
 
 }

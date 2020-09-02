@@ -316,4 +316,10 @@ TEST(Model, NestedModel)
   // link in the tree as preference is given to links in higher level
   Entity &link = model.AddLink();
   EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
+
+  // add a few more links in top level model and verify canonical link stays
+  // the same
+  model.AddLink();
+  model.AddLink();
+  EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
 }

@@ -26,24 +26,45 @@
 #include "Link.hh"
 #include "Model.hh"
 
+/// \brief Private data class for Model
+class ignition::physics::tpelib::ModelPrivate
+{
+  /// \brief Canonical link id;
+  public: std::size_t canonicalLinkId = kNullEntityId;
+};
+
 using namespace ignition;
 using namespace physics;
 using namespace tpelib;
 
 //////////////////////////////////////////////////
 Model::Model() : Entity()
+  : dataPtr(new ModelPrivate)
 {
 }
 
 //////////////////////////////////////////////////
 Model::Model(std::size_t _id) : Entity(_id)
+  : dataPtr(new ModelPrivate)
 {
+}
+
+//////////////////////////////////////////////////
+Model::~Model()
+{
+  delete this->dataPtr;
+  this->dataPtr = nullptr;
 }
 
 //////////////////////////////////////////////////
 Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
+
+  // first link added is the canonical link
+  if (this->children.empty())
+    this->dataPtr->canonicalLinkId = linkId;
+
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
 
@@ -67,8 +88,13 @@ Entity &Model::AddModel()
 //////////////////////////////////////////////////
 Entity &Model::GetCanonicalLink()
 {
-  std::set<Model *> models;
+  // return canonical link but make sure it exists
+  // todo(anyone) Prevent removal of canonical link in a model?
+  Entity linkEnt = this->GetChildById(this->dataPtr->canonicalLinkId);
+  if (linkEnt != kNullEntity)
+    return linkEnt;
 
+  std::set<Model *> models;
   for (auto &it : this->GetChildren())
   {
     // return the first link found as canonical link
@@ -76,7 +102,7 @@ Entity &Model::GetCanonicalLink()
     {
       return *it.second;
     }
-    // if child is neseted model, store it first and only return nested
+    // if child is nested model, store it first and only return nested
     // links if there are no links in this model
     else
     {
