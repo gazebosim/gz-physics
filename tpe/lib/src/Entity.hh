@@ -150,6 +150,15 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   public: Entity *GetParent() const;
 
   /// \internal
+  /// \brief Get whether the pose has changed
+  /// \return True if pose has changed, false otherwise
+  public: bool PoseDirty() const;
+
+  /// \internal
+  /// \brief Reset the pose dirty flag
+  public: void ResetPoseDirty();
+
+  /// \internal
   /// \brief Mark that the children of the entity has changed, e.g. a child
   /// entity is added or removed, or child entity properties changed.
   public: void ChildrenChanged();

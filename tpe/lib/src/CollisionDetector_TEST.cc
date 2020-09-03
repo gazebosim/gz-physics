@@ -233,4 +233,11 @@ TEST(CollisionDetector, CheckCollisions)
   // check single contact point
   contacts = cd.CheckCollisions(entities, true);
   EXPECT_EQ(3u, contacts.size());
+
+  // remove entity and check again
+  entities.erase(modelC->GetId());
+  contacts = cd.CheckCollisions(entities, false);
+  EXPECT_EQ(8u, contacts.size());
+  contacts = cd.CheckCollisions(entities, true);
+  EXPECT_EQ(1u, contacts.size());
 }

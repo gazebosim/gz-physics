@@ -46,14 +46,15 @@ then
   QUICK_TMP=`mktemp -t asdfXXXXXXXXXX`
 else
   CHECK_DIRS="./src ./include ./test/integration ./test/regression ./test/performance ./tpe"
+  EXCLUDE_DIRS="tpe/lib/src/aabb_tree"
   if [ $CPPCHECK_LT_157 -eq 1 ]; then
     # cppcheck is older than 1.57, so don't check header files (issue #907)
-    CPPCHECK_FILES=`find $CHECK_DIRS -name "*.cc"`
+    CPPCHECK_FILES=`find $CHECK_DIRS -name "*.cc" | grep -v "$EXCLUDE_DIRS"`
   else
-    CPPCHECK_FILES=`find $CHECK_DIRS -name "*.cc" -o -name "*.hh"`
+    CPPCHECK_FILES=`find $CHECK_DIRS -name "*.cc" -o -name "*.hh" | grep -v "$EXCLUDE_DIRS"`
   fi
   CPPLINT_FILES=`\
-    find $CHECK_DIRS -name "*.cc" -o -name "*.hh" -o -name "*.c" -o -name "*.h" | grep -v -e NetUtils`
+    find $CHECK_DIRS -name "*.cc" -o -name "*.hh" -o -name "*.c" -o -name "*.h" | grep -v -e NetUtils | grep -v "$EXCLUDE_DIRS"`
 fi
 
 SUPPRESS=/tmp/cpp_check.suppress
