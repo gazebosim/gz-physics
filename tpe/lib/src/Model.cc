@@ -38,14 +38,14 @@ using namespace physics;
 using namespace tpelib;
 
 //////////////////////////////////////////////////
-Model::Model() : Entity()
-  : dataPtr(new ModelPrivate)
+Model::Model()
+    : Entity(), dataPtr(new ModelPrivate)
 {
 }
 
 //////////////////////////////////////////////////
-Model::Model(std::size_t _id) : Entity(_id)
-  : dataPtr(new ModelPrivate)
+Model::Model(std::size_t _id)
+    : Entity(_id), dataPtr(new ModelPrivate)
 {
 }
 
@@ -62,7 +62,7 @@ Entity &Model::AddLink()
   std::size_t linkId = Entity::GetNextId();
 
   // first link added is the canonical link
-  if (this->children.empty())
+  if (this->GetChildren().empty())
     this->dataPtr->canonicalLinkId = linkId;
 
   const auto[it, success]  = this->GetChildren().insert(
@@ -90,8 +90,8 @@ Entity &Model::GetCanonicalLink()
 {
   // return canonical link but make sure it exists
   // todo(anyone) Prevent removal of canonical link in a model?
-  Entity linkEnt = this->GetChildById(this->dataPtr->canonicalLinkId);
-  if (linkEnt != kNullEntity)
+  Entity &linkEnt = this->GetChildById(this->dataPtr->canonicalLinkId);
+  if (linkEnt.GetId() != kNullEntityId)
     return linkEnt;
 
   std::set<Model *> models;
