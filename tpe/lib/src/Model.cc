@@ -94,6 +94,9 @@ Entity &Model::GetCanonicalLink()
   if (linkEnt.GetId() != kNullEntityId)
     return linkEnt;
 
+  // todo(anyone) the code below does not guarantee that the link returned is
+  // the first link defined in SDF since GetChildren returns a std::map, and
+  // likewise the use of std::set, do not preserve order.
   std::set<Model *> models;
   for (auto &it : this->GetChildren())
   {
