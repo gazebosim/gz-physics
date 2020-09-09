@@ -18,6 +18,8 @@
 #include <string>
 #include <memory>
 
+#include <ignition/common/Profiler.hh>
+
 #include <ignition/math/Pose3.hh>
 #include "World.hh"
 #include "Model.hh"
@@ -58,14 +60,12 @@ double World::GetTimeStep() const
 /////////////////////////////////////////////////
 void World::Step()
 {
+  IGN_PROFILE("tpelib::World::Step");
   // apply updates to each model
   auto &children = this->GetChildren();
   for (auto it = children.begin(); it != children.end(); ++it)
   {
-    std::shared_ptr<Entity> ent;
-    std::shared_ptr<Model> model;
-    ent = it->second;
-    model = std::dynamic_pointer_cast<Model>(ent);
+    auto model = std::dynamic_pointer_cast<Model>(it->second);
     model->UpdatePose(
       this->timeStep,
       model->GetLinearVelocity(),
@@ -77,6 +77,9 @@ void World::Step()
   // point for each pair of collisions
   this->contacts = std::move(
       this->collisionDetector.CheckCollisions(children, true));
+
+  for (auto it = children.begin(); it != children.end(); ++it)
+    it->second->ResetPoseDirty();
 
   // increment world time by step size
   this->time += this->timeStep;
