@@ -36,8 +36,10 @@ namespace dartsim {
 struct ShapeFeatureList : FeatureList<
   GetShapeKinematicProperties,
   SetShapeKinematicProperties,
+#if DART_VERSION_AT_LEAST(6, 10, 0)
   GetShapeFrictionPyramidSlipCompliance,
   SetShapeFrictionPyramidSlipCompliance,
+#endif
   GetShapeBoundingBox,
 
   GetBoxShapeProperties,
@@ -157,6 +159,7 @@ class ShapeFeatures :
       const LinearVector3d &_normal,
       const LinearVector3d &_point) override;
 
+#if DART_VERSION_AT_LEAST(6, 10, 0)
   // ----- Friction Features -----
   public: virtual double GetShapeFrictionPyramidPrimarySlipCompliance(
             const Identity &_shapeID) const override;
@@ -169,6 +172,7 @@ class ShapeFeatures :
 
   public: virtual bool SetShapeFrictionPyramidSecondarySlipCompliance(
             const Identity &_shapeID, double _value) override;
+#endif
 };
 
 }

@@ -69,10 +69,12 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::GetEntities,
   physics::RevoluteJointCast,
   physics::SetJointVelocityCommandFeature,
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+  physics::SetShapeFrictionPyramidSlipCompliance,
+#endif
   physics::sdf::ConstructSdfModel,
   physics::sdf::ConstructSdfWorld,
-  physics::sdf::ConstructSdfLink,
-  physics::SetShapeFrictionPyramidSlipCompliance
+  physics::sdf::ConstructSdfLink
 >;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
@@ -137,6 +139,7 @@ class AssertVectorApprox
   private: double tol;
 };
 
+#if DART_VERSION_AT_LEAST(6, 10, 0)
 /////////////////////////////////////////////////
 TEST_F(ShapeFeaturesFixture, PrimarySlipCompliance)
 {
@@ -254,6 +257,7 @@ TEST_F(ShapeFeaturesFixture, SecondarySlipCompliance)
                         (frameData.linearVelocity));
   }
 }
+#endif
 
 /////////////////////////////////////////////////
 int main(int argc, char *argv[])

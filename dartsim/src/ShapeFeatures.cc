@@ -328,6 +328,7 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   return AlignedBox3d(box.getMin(), box.getMax());
 }
 
+#if DART_VERSION_AT_LEAST(6, 10, 0)
 /////////////////////////////////////////////////
 double ShapeFeatures::GetShapeFrictionPyramidPrimarySlipCompliance(
     const Identity &_shapeID) const
@@ -401,6 +402,7 @@ bool ShapeFeatures::SetShapeFrictionPyramidSecondarySlipCompliance(
   aspect->setSecondarySlipCompliance(_value);
   return true;
 }
+#endif
 
 }
 }
