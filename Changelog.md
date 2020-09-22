@@ -107,7 +107,10 @@
 
 ## Ignition Physics 1.x
 
-### Ignition Physics 1.x.x (20XX-XX-XX)
+### Ignition Physics 1.9.0 (2020-09-17)
+
+1. Support for slip compliance in the dartsim-plugin.
+    * [Pull request 56](https://github.com/ignitionrobotics/ign-physics/pull/56)
 
 1. Enforce joint effort limit in dartsim-plugin
     * [Pull request 74](https://github.com/ignitionrobotics/ign-physics/pull/74)
