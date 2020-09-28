@@ -14,7 +14,7 @@ At the time of writing, there are two physics engines available (more detail in 
 - **DART**: `ignition-physics-dartsim-plugin`.
 - **TPE**: `ignition-physics-tpe-plugin`.
 
-If you've created a custom engine plugin, you can tell Gazebo where to find it by setting the `IGN_GAZEBO_PHYSICS_ENGINE_PATH` environment variable to the directory where the plugin's shared library can be found.
+If you've created a custom engine plugin, you can tell Ignition Gazebo where to find it by setting the `IGN_GAZEBO_PHYSICS_ENGINE_PATH` environment variable to the directory where the plugin's shared library can be found.
 
 For example, if you've created the following physics engine shared library on Linux:
 
@@ -34,14 +34,14 @@ For additional environment variables that Ignition Gazebo finds other plugins or
 
 ## Pointing Ignition Gazebo to physics engines
 
-There are a few different ways of telling Gazebo which engine to load.
+There are a few different ways of telling Ignition Gazebo which engine to load.
 
 In any way, the standard naming for your plugin's shared library is to have a `lib` prefix and the file extension.
 Following this naming convention, the name should be `libCustomEngine.so` but the `CustomEngine` could also work.
 
 ### From SDF
 
-You can specify Gazebo which engine to load from the SDF world file by giving the shared library name to the `Physics` plugin tag.
+You can specify Ignition Gazebo which engine to load from the SDF world file by giving the shared library name to the `Physics` plugin tag.
 For the example above, you can load it like this:
 
 ```{.xml}
