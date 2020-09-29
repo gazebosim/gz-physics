@@ -72,7 +72,7 @@ Ignition Physics provides the following functionality:
 
 # Install
 
-See the [installation tutorial](https://ignitionrobotics.org/api/physics/2.2/installation.html).
+See the [installation tutorial](https://ignitionrobotics.org/api/physics/3.0/installation.html).
 
 # Usage
 
