@@ -2,7 +2,7 @@
 
 Next Tutorial: \ref installation
 
-Ignition Physics is a component in Ignition Robotics, a set of libraries
+Ignition Physics is a component in Ignition, a set of libraries
 designed to rapidly develop robot and simulation applications. The main
 goal of the library is to provide an abstraction layer to various physics
 engines, which gives end users the ability to use multiple physics engines
