@@ -4,14 +4,14 @@ Next Tutorial: \ref installation
 
 ## Motivation
 
-Ignition Physics (`ign-physics`) is a library component in Ignition Robotics, a set of libraries designed to rapidly develop robot and simulation applications.
+Ignition Physics (`ign-physics`) is a library component in Ignition, a set of libraries designed to rapidly develop robot and simulation applications.
 The main goal of the library is to provide an abstraction layer to various physics engines, which gives end-users the ability to use multiple physics engines with minimal change to their application code.
 Users can request for physics engines that support a set of features and the plugin loading mechanism loads only the engines that implement the requested features.
 Besides, a user-selected physics engine can be integrated into the existing code-base by writing a compatible plugin interface, which enables Ignition Physics extensibility and modularity.  
 
 ## Overview
 
-For a big picture of the Ignition Physics operation in Ignition Robotics ecosystem, see the abstract diagram below:
+For a big picture of the Ignition Physics operation in Ignition ecosystem, see the abstract diagram below:
 
 <img src="https://user-images.githubusercontent.com/18066876/94050480-9dc54000-fdd6-11ea-92e7-832dcdf4caba.png"/>
 
@@ -58,5 +58,5 @@ For a list of supported physics engines and their descriptions, please refer to 
 
 ### Future roadmap
 
-Ignition Physics evolves closely with the Ignition Robotics ecosystem.
-For a broader overview, please visit [Ignition Robotics's roadmap](https://ignitionrobotics.org/about).
+Ignition Physics evolves closely with the Ignition ecosystem.
+For a broader overview, please visit [Ignition's roadmap](https://ignitionrobotics.org/about).
