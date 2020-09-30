@@ -39,45 +39,39 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 **Build from source**
 
 1. Run the following to install dependencies
-
-    ```{.sh}
-    sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-    sudo apt-get build-dep -y ignition-physics<#>-dev
-    ```
-
-    Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+  ```{.sh}
+  sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
+  sudo apt-get build-dep -y ignition-physics<#>-dev
+  ```
+  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 
 2. Use gcc-8:
-
-    ```
-    sudo apt update
-    sudo apt-get -y install g++-8
-    sudo update-alternatives --install \
-      /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
-      --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
-      --slave /usr/bin/gcov gcov /usr/bin/gcov-8
-    ```
+  ```
+  sudo apt update
+  sudo apt-get -y install g++-8
+  sudo update-alternatives --install \
+    /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-8
+  ```
 
 3. Clone the repository
-
-    ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
-    ```
-    Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+  ```
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+  ```
+  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 
 4. Configure and build
-
-    ```
-    cd ign-physics; mkdir build; cd build; cmake ..; make
-    ```
+  ```
+  cd ign-physics; mkdir build; cd build; cmake ..; make
+  ```
 
 5. Optionally, install Ignition Physics
-
-    ```
-    sudo make install
-    ```
+  ```
+  sudo make install
+  ```
 
 ## macOS
 
