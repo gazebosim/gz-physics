@@ -1,11 +1,11 @@
-\page switchphysicsengines Physics engines
+\page switchphysicsengines Switching physics engines
 
 This tutorial describes how to switch between physics engines in Ignition Physics when using Ignition Gazebo.
 Ignition Physics enables Ignition Gazebo to choose flexibly what physics engine to use at runtime.
 By default, Ignition Gazebo uses the [DART](https://dartsim.github.io/) physics engine.
 
 Downstream developers may also integrate other physics engines by creating new Ignition Physics engine plugins.
-See [Ignition Physics](https://ignitionrobotics.org/api/physics/3.0/tutorials.html)'s tutorials to learn how to integrate a new engine.
+See \ref tutorials "Ignition Physics'" tutorials to learn how to integrate a new engine.
 
 ## How Ignition Gazebo finds physics engines
 
@@ -22,15 +22,21 @@ For example, if you've created the following physics engine shared library on Li
 
 You should set the variable as follows:
 
-`export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines`
+```bash
+export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines
+```
 
-If you have several libraries installed in different paths, you can add more paths, for example:
+If you have several libraries installed in different paths, you can add more paths separated by a colon, for example:
 
-`export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines:/home/more_engines`
+```bash
+export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines:/home/more_engines
+```
 
 For additional environment variables that Ignition Gazebo finds other plugins or resources, you can see them by:
 
-`ign gazebo -h`
+```bash
+ign gazebo -h
+```
 
 ## Pointing Ignition Gazebo to physics engines
 
@@ -41,7 +47,7 @@ Following this naming convention, the name should be `libCustomEngine.so` but th
 
 ### From SDF
 
-You can specify Ignition Gazebo which engine to load from the SDF world file by giving the shared library name to the `Physics` plugin tag.
+You can specify in Ignition Gazebo which engine to load from the SDF world file by giving the shared library name to the `Physics` plugin tag.
 For the example above, you can load it like this:
 
 ```{.xml}
@@ -59,7 +65,9 @@ For the example above, you can load it like this:
 Alternatively, you can choose a plugin from the command line using the
 `--physics-engine` option, for example:
 
-`ign gazebo --physics-engine CustomEngine`
+```bash
+ign gazebo --physics-engine CustomEngine
+```
 
 ### From C++ API
 
