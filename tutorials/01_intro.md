@@ -13,7 +13,7 @@ Besides, a user-selected physics engine can be integrated into the existing code
 
 For a big picture of the Ignition Physics operation in Ignition Robotics ecosystem, see the abstract diagram below:
 
-<img src="https://user-images.githubusercontent.com/18066876/94050480-9dc54000-fdd6-11ea-92e7-832dcdf4caba.png"/>
+<img src="https://user-images.githubusercontent.com/18066876/94801505-6bbf6980-03e6-11eb-97e5-e5f0dc68229f.png"/>
 
 In general, `ign-gazebo` is the main simulation library, in which its functionalities are powered by many component libraries.
 For example, its graphical drawing is supported by `ign-rendering` or simulated sensors that are defined and implemented in `ign-sensors`.
@@ -23,12 +23,12 @@ The communication between these libraries at runtime is provided by `ign-transpo
 Ignition Physics uses a plugin architecture where each physics engine is implemented as a plugin that can be loaded at runtime.
 To enable users the ability to choose between physics engines, Ignition Physics introduces four keys elements:
 
-- \ref ignition::physics::Entity "Entity": the base class, which abstracts all proxy objects, which contains minimal descriptive data (e.g. a unique identifier, a reference-counter, etc.) pointed the corresponding implemented objects.
-- \ref ignition::physics::FeaturePolicy "FeaturePolicy": the policy class, which provides metadata to features about their simulation engine specifications.
+- \ref ignition::physics::Entity "Entity": the base class, which abstracts all proxy objects, which contains minimal descriptive data (e.g. a unique identifier, a reference-counter, etc.) pointing the corresponding implemented objects.
+- \ref ignition::physics::FeaturePolicy "FeaturePolicy": the policy class, which provides metadata to features about their simulation engine specifications. FeaturePolicy supports customizing Ignition Physics' APIs by the number of dimensions (2D or 3D) and also the floating-point scalar type (float or double).
 - \ref ignition::physics::Feature "Feature": defines the concept used to encode the capabilities of a physics engine.
 - \ref ignition::physics::FeatureList "FeatureList": aggregates a list of features.
 
-Depending on using an external physics engine (e.g. DART, TPE, Bullet, etc.), the internal interface to the physics engine might be different.
+Depending on which external physics engine is used (e.g. DART, TPE, Bullet, etc.), the internal interface to the physics engine might be different.
 However, the API provided by Ignition Physics will be unchanged between different physics engines.
 
 ## Supported physics engines
