@@ -2,7 +2,16 @@
 
 ### Ignition Physics 3.x.x (20XX-XX-XX)
 
-### Ignition Physics 3.0.0 (20XX-XX-XX)
+### Ignition Physics 3.0.0 (2020-09-30)
+
+1. Upgrade to libsdformat10
+    * [Pull request 85](https://github.com/ignitionrobotics/ign-physics/pull/85)
+
+1. Update examples and tutorials
+    * [Pull request 107](https://github.com/ignitionrobotics/ign-physics/pull/107)
+    * [Pull request 110](https://github.com/ignitionrobotics/ign-physics/pull/110)
+    * [Pull request 111](https://github.com/ignitionrobotics/ign-physics/pull/111)
+    * [Pull request 112](https://github.com/ignitionrobotics/ign-physics/pull/112)
 
 ## Ignition Physics 2.x
 
