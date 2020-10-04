@@ -11,6 +11,9 @@ Ignition @IGN_DESIGNATION_CAP@ library and how to use the library effectively.
 2. \subpage installation "Installation"
 3. \subpage physicsplugin "Understanding the Physics Plugin"
 
+
+6. \subpage physicsconcepts "Ignition Physics simulation concepts"
+
 ## License
 
 The code associated with this documentation is licensed under an [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
