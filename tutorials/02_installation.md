@@ -21,7 +21,13 @@ Setup your computer to accept software from
 sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
 ```
 
-Setup keys:
+Optionally, you also can add unstable nightly repository from **osrfoundation**:
+
+```{.sh}
+sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-nightly.list'
+```
+
+Then setup keys:
 
 ```{.sh}
 wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
@@ -34,28 +40,45 @@ sudo apt-get update
 sudo apt-get install libignition-physics2-dev
 ```
 
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
+Note that our latest Dome release requires version **3**.
+
 **Build from source**
 
-Run the following to install dependencies
-```{.sh}
-sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-sudo apt-get build-dep -y ignition-physics2
-```
+1. Run the following to install dependencies
+  ```{.sh}
+  sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
+  sudo apt-get build-dep -y ignition-physics<#>-dev
+  ```
+  Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
 
-Clone the ign-physics repository from GitHub
-```{.sh}
-git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
-```
 
-Then build using CMake
-```{.sh}
-cd ign-physics
-mkdir build
-cd build
-cmake ..
-make
-sudo make install
-```
+2. Use gcc-8:
+  ```
+  sudo apt update
+  sudo apt-get -y install g++-8
+  sudo update-alternatives --install \
+    /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-8
+  ```
+
+3. Clone the repository
+  ```
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+  ```
+  Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
+
+
+4. Configure and build
+  ```
+  cd ign-physics; mkdir build; cd build; cmake ..; make
+  ```
+
+5. Optionally, install Ignition Physics
+  ```
+  sudo make install
+  ```
 
 ## macOS
 
@@ -81,6 +104,8 @@ Run the following commands:
 brew tap osrf/simulation
 brew install ignition-physics2
 ```
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
+Note that our latest Dome release requires version **3**.
 
 **Build from source using Homebrew**
 
@@ -90,10 +115,13 @@ brew tap osrf/simulation
 brew install ignition-physics2 --only-dependencies
 ```
 
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
+
 Clone the ign-physics repository from GitHub
 ```{.sh}
 git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
 ```
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
 
 Then build using CMake
 ```{.sh}
