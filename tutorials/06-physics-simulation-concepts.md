@@ -145,5 +145,10 @@ engine that simulates the dynamic model.
 
 To get more in-depth of what you can define the environment in the SDF file, please
 refer to this [SDF specification](http://sdformat.org/spec?ver=1.7&elem=sdf).
+
 For a comprehensive tutorial for constructing your robot model, please refer
 to [this tutorial](https://ignitionrobotics.org/docs/dome/building_robot).
+
+For manipulating or changing model parameters of existing SDF model
+on Ignition Gazebo, see [Understand the GUI tutorial](https://ignitionrobotics.org/docs/dome/gui)
+ and [Manipulating Models tutorial](https://ignitionrobotics.org/docs/dome/manipulating_models).
