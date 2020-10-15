@@ -65,7 +65,15 @@ Identity SDFFeatures::ConstructSdfWorld(
   // construct models
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
-    this->ConstructSdfModel(worldID, *_sdfWorld.ModelByIndex(i));
+    const ::sdf::Model *model = _sdfWorld.ModelByIndex(i);
+    if (model && model->ModelCount() == 0u)
+    {
+      this->ConstructSdfModel(worldID, *model);
+    }
+    else
+    {
+      this->ConstructSdfNestedModel(worldID, *model);
+    }
   }
 
   return worldID;
@@ -102,6 +110,71 @@ Identity SDFFeatures::ConstructSdfModel(
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
+  }
+
+  return modelIdentity;
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfNestedModel(
+  const Identity &_parentID,
+  const ::sdf::Model &_sdfModel)
+{
+  tpelib::Model *model = nullptr;
+  std::size_t parentId = 0u;
+
+  // check if parent is world
+  auto worldIt = this->worlds.find(_parentID.id);
+  if (worldIt != this->worlds.end())
+  {
+    auto world = worldIt->second->world;
+    if (world == nullptr)
+    {
+      ignwarn << "Parent world is a null" << std::endl;
+      return this->GenerateInvalidId();
+    }
+    parentId = world->GetId();
+    tpelib::Entity &ent = world->AddModel();
+    model = static_cast<tpelib::Model *>(&ent);
+  }
+  else
+  {
+    // check if parent is model
+    auto modelIt = this->models.find(_parentID.id);
+    if (modelIt != this->models.end())
+    {
+      auto parent = modelIt->second->model;
+      if (parent == nullptr)
+      {
+        ignwarn << "Parent model is a null" << std::endl;
+        return this->GenerateInvalidId();
+      }
+      parentId = parent->GetId();
+      tpelib::Entity &ent = parent->AddModel();
+      model = static_cast<tpelib::Model *>(&ent);
+    }
+  }
+  if (!model)
+    return this->GenerateInvalidId();
+
+  // Read sdf params
+  const std::string name = _sdfModel.Name();
+  const auto pose = ResolveSdfPose(_sdfModel.SemanticPose());
+
+  model->SetName(name);
+  model->SetPose(pose);
+  const auto modelIdentity = this->AddModel(parentId, *model);
+
+  // construct links
+  for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
+  {
+    this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
+  }
+
+  // construct nested models
+  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
+  {
+    this->ConstructSdfNestedModel(modelIdentity, *_sdfModel.ModelByIndex(i));
   }
 
   return modelIdentity;
