@@ -77,24 +77,64 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const Identity &_groupID,
   const PoseType &_pose)
 {
+  // The input _pose is the target world pose for the canonical link
+  // in the model! So we need to compute the world pose to set the model to
+  // so that the canonical link is placed at the specified _pose
+  tpelib::Link *link = nullptr;
   auto modelIt = this->models.find(_groupID.id);
-  auto linkIt = this->links.find(_groupID.id);
   if (modelIt != this->models.end())
   {
     if (modelIt->second != nullptr)
-      modelIt->second->model->SetPose(math::eigen3::convert(_pose));
-  }
-  else if (linkIt != this->links.end())
-  {
-    if (linkIt->second != nullptr)
-      linkIt->second->link->SetPose(math::eigen3::convert(_pose));
+    {
+      tpelib::Entity &linkEnt = modelIt->second->model->GetCanonicalLink();
+      link = dynamic_cast<tpelib::Link *>(&linkEnt);
+    }
   }
   else
+  {
+    auto linkIt = this->links.find(_groupID.id);
+    if (linkIt != this->links.end())
+    {
+      // assume canonical link
+      link = linkIt->second->link;
+    }
+  }
+
+  if (!link)
   {
     ignwarn << "No free group with id [" << _groupID.id << "] found."
       << std::endl;
     return;
   }
+
+  math::Pose3d targetWorldPose = math::eigen3::convert(_pose);
+  math::Pose3d linkWorldPose = link->GetWorldPose();
+  math::Pose3d tfChange = targetWorldPose * linkWorldPose.Inverse();
+
+  // get top level model
+  tpelib::Entity *parent = link->GetParent();
+  tpelib::Entity *model = nullptr;
+  while (parent && dynamic_cast<tpelib::Model *>(parent))
+  {
+    model = parent;
+    parent = model->GetParent();
+  }
+  if (!model)
+  {
+    ignerr << "No model for free group with [" << _groupID.id << "] found."
+      << std::endl;
+    return;
+  }
+
+  // compute model world pose base that moves the link to its target world pose
+  math::Pose3d modelWorldPose = model->GetWorldPose();
+  math::Pose3d targetModelWorldPose;
+  targetModelWorldPose.Pos() = targetWorldPose.Pos() - tfChange.Rot() *
+     (linkWorldPose.Pos() - modelWorldPose.Pos());
+  targetModelWorldPose.Rot() = tfChange.Rot() * modelWorldPose.Rot();
+
+  // set the model world pose
+  model->SetPose(targetModelWorldPose);
 }
 
 /////////////////////////////////////////////////

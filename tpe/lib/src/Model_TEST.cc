@@ -163,6 +163,39 @@ TEST(Model, BoundingBox)
   expectedBoxModelFrame = math::AxisAlignedBox(
       math::Vector3d(-2, -2, -2.5), math::Vector3d(2, 3, 3));
   EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
+
+  // add nested model with 1 link that has a cylinder collision shape
+  Entity &nestedModelEnt = model.AddModel();
+  nestedModelEnt.SetPose(math::Pose3d(1, 0, 0, 0, 0, 0));
+  EXPECT_EQ(math::AxisAlignedBox(), nestedModelEnt.GetBoundingBox());
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
+
+  Model *nestedModel = static_cast<Model *>(&nestedModelEnt);
+  Entity &nestedLinkEnt = nestedModel->AddLink();
+  nestedLinkEnt.SetPose(math::Pose3d(1, 0, 0, 0, 0, 0));
+  EXPECT_EQ(math::AxisAlignedBox(), nestedLinkEnt.GetBoundingBox());
+  EXPECT_EQ(math::AxisAlignedBox(), nestedModelEnt.GetBoundingBox());
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
+
+  Link *nestedLink = static_cast<Link *>(&nestedLinkEnt);
+  Entity &nestedCollisionEnt = nestedLink->AddCollision();
+  Collision *nestedCollision = static_cast<Collision *>(&nestedCollisionEnt);
+  CylinderShape cylinderShape;
+  cylinderShape.SetRadius(2.0);
+  cylinderShape.SetLength(2.0);
+  nestedCollision->SetShape(cylinderShape);
+
+  math::AxisAlignedBox expectedBoxNestedLinkFrame(
+      math::Vector3d(-2, -2, -1), math::Vector3d(2, 2, 1));
+  EXPECT_EQ(expectedBoxNestedLinkFrame, nestedLinkEnt.GetBoundingBox());
+
+  math::AxisAlignedBox expectedBoxNestedModelFrame(
+      math::Vector3d(-1, -2, -1), math::Vector3d(3, 2, 1));
+  EXPECT_EQ(expectedBoxNestedModelFrame, nestedModelEnt.GetBoundingBox());
+
+  expectedBoxModelFrame = math::AxisAlignedBox(
+      math::Vector3d(-2, -2, -2.5), math::Vector3d(4, 3, 3));
+  EXPECT_EQ(expectedBoxModelFrame, model.GetBoundingBox());
 }
 
 /////////////////////////////////////////////////
@@ -202,4 +235,91 @@ TEST(Model, CollideBitmask)
   EXPECT_EQ(0x09, collision3->GetCollideBitmask());
   EXPECT_EQ(0x09, linkEnt2.GetCollideBitmask());
   EXPECT_EQ(0x0D, model.GetCollideBitmask());
+
+  // add nested model and verify bitmask is empty
+  Entity &nestedModelEnt = model.AddModel();
+  EXPECT_EQ(0x00, nestedModelEnt.GetCollideBitmask());
+  EXPECT_EQ(0x0D, model.GetCollideBitmask());
+
+  // add nested link and verify bitmask is still empty
+  Model *nestedModel = static_cast<Model *>(&nestedModelEnt);
+  Entity &nestedLinkEnt = nestedModel->AddLink();
+  EXPECT_EQ(0x00, nestedLinkEnt.GetCollideBitmask());
+  EXPECT_EQ(0x00, nestedModelEnt.GetCollideBitmask());
+  EXPECT_EQ(0x0D, model.GetCollideBitmask());
+
+  // add a nested collision and verify the nested model has the same bitmask
+  // as the nested collision bitmask, and the top level model's bitmask now
+  // includes the nested collision's bitmask
+  Link *nestedLink = static_cast<Link *>(&nestedLinkEnt);
+  Entity &nestedCollisionEnt = nestedLink->AddCollision();
+  Collision *nestedCollision = static_cast<Collision *>(&nestedCollisionEnt);
+  nestedCollision->SetCollideBitmask(0x02);
+  EXPECT_EQ(0x02, nestedCollision->GetCollideBitmask());
+  EXPECT_EQ(0x02, nestedLinkEnt.GetCollideBitmask());
+  EXPECT_EQ(0x02, nestedModelEnt.GetCollideBitmask());
+  EXPECT_EQ(0x0F, model.GetCollideBitmask());
+}
+
+/////////////////////////////////////////////////
+TEST(Model, NestedModel)
+{
+  Model model;
+  EXPECT_EQ(0u, model.GetChildCount());
+
+  // add a child
+  Entity &nestedModelEnt = model.AddModel();
+  nestedModelEnt.SetName("model_1");
+  nestedModelEnt.SetPose(math::Pose3d(2, 3, 4, 0, 0, 1));
+  EXPECT_EQ(1u, model.GetChildCount());
+
+  std::size_t modelId = nestedModelEnt.GetId();
+  Entity ent = model.GetChildById(modelId);
+  EXPECT_EQ(modelId, ent.GetId());
+  EXPECT_EQ("model_1", ent.GetName());
+  EXPECT_EQ(math::Pose3d(2, 3, 4, 0, 0, 1), ent.GetPose());
+
+  Entity entByName = model.GetChildByName("model_1");
+  EXPECT_EQ("model_1", entByName.GetName());
+
+  Entity entByIdx = model.GetChildByIndex(0u);
+  EXPECT_EQ("model_1", entByIdx.GetName());
+
+  // test casting to model
+  Model *nestedModel = static_cast<Model *>(&nestedModelEnt);
+  EXPECT_NE(nullptr, nestedModel);
+  EXPECT_EQ(nestedModelEnt.GetId(), nestedModel->GetId());
+
+  // add another child
+  Entity &nestedModelEnt2 = model.AddModel();
+  EXPECT_EQ(2u, model.GetChildCount());
+
+  Entity ent2ByIdx = model.GetChildByIndex(1u);
+  EXPECT_EQ(nestedModelEnt2.GetId(), ent2ByIdx.GetId());
+
+  Model *nestedModel2 = static_cast<Model *>(&nestedModelEnt2);
+  EXPECT_NE(nullptr, nestedModel2);
+  EXPECT_EQ(nestedModelEnt2.GetId(), nestedModel2->GetId());
+
+  // test remove child by id
+  model.RemoveChildById(modelId);
+  EXPECT_EQ(1u, model.GetChildCount());
+
+  Entity nullEnt = model.GetChildById(modelId);
+  EXPECT_EQ(Entity::kNullEntity.GetId(), nullEnt.GetId());
+
+  // add nested link and verify it is the canonical link in the model tree
+  Entity &nestedLink = nestedModel2->AddLink();
+  EXPECT_EQ(nestedLink.GetId(), model.GetCanonicalLink().GetId());
+
+  // add link in top level model and verify the new link becomes the canonical
+  // link in the tree as preference is given to links in higher level
+  Entity &link = model.AddLink();
+  EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
+
+  // add a few more links in top level model and verify canonical link stays
+  // the same
+  model.AddLink();
+  model.AddLink();
+  EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
 }

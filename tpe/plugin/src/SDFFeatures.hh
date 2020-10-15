@@ -21,6 +21,7 @@
 #include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <ignition/physics/Implements.hh>
@@ -34,6 +35,7 @@ namespace tpeplugin {
 using SDFFeatureList = FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
+  sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfCollision
 >;
@@ -48,6 +50,10 @@ class SDFFeatures :
 
   public: Identity ConstructSdfModel(
     const Identity &_worldID,
+    const ::sdf::Model &_sdfModel) override;
+
+  public: Identity ConstructSdfNestedModel(
+    const Identity &_modelID,
     const ::sdf::Model &_sdfModel) override;
 
   public: Identity ConstructSdfLink(
