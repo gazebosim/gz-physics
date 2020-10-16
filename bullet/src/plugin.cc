@@ -33,15 +33,6 @@ class Plugin :
     public virtual Implements3d<BulletFeatures>,
     public virtual Base
 {
-  using Identity = ignition::physics::Identity;
-
-  public: Identity InitiateEngine(std::size_t /*_engineID*/) override
-  {
-    this->engineName = "HelloWorld";
-
-    return this->GenerateIdentity(0);
-  }
-
   public: std::size_t GetEngineIndex(const Identity &/*_id*/) const override
   {
     return 0;
