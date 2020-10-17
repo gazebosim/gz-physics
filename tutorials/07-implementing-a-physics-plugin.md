@@ -1,13 +1,14 @@
 \page createphysicsplugin "Implement a physics plugin"
 
-This tutorial guides how to develop a simple plugin that implements a 3D policy
-and includes a sample list of Features.
+This tutorial guides how to develop a simple plugin that implements a
+\ref ignition::physics::Implements3d "3D policy" and includes a sample list of
+\ref ignition::physics::Feature "Feature" Features.
 
 ## Prerequisites
 
-In the previous tutorial \ref installation "Installation", you have installed the
-Ignition Physics corresponding to the desired Ignition release. Note that the
-recommended Ignition release is Dome.
+In the previous tutorial \ref installation "Installation", you have installed
+the Ignition Physics corresponding to the desired Ignition release. Note that
+the recommended Ignition release is Dome.
 
 ## Write a simple physics plugin
 
@@ -49,8 +50,8 @@ implemented with a plugin.
 ```
 
 Next, let us define a namespace `mock` and implement our plugin in it.
-We will add a pre-defined feature `GetEngineInfo` to our plugin's
-`HelloWorldFeatureList` as follow:
+We will add a pre-defined feature \ref ignition::physics::GetEngineInfo "GetEngineInfo"
+to our plugin's `HelloWorldFeatureList` as follow:
 
 ```cpp
 struct HelloWorldFeatureList : ignition::physics::FeatureList<
@@ -60,9 +61,10 @@ struct HelloWorldFeatureList : ignition::physics::FeatureList<
 
 The plugin will be able to return its physics engine metadata.
 We will now implement our plugin class named `HelloWorldPlugin`
-using the defined `FeatureList` above. The class is inherited from
-\ref ignition::physics::Implements3d "Implements3d" to declare that our plugin's
-`HelloWorldFeatureList` will be in the 3D coordinate system.
+using the defined \ref ignition::physics::FeatureList `FeatureList` above.
+The class is inherited from \ref ignition::physics::Implements3d "Implements3d"
+to declare that our plugin's `HelloWorldFeatureList` will be in the 3D
+coordinate system.
 
 ```cpp
 class HelloWorldPlugin
@@ -97,8 +99,10 @@ physics engines inside member function `InitiateEngine` by simply setting
 this->engineName = "HelloWorld"
 ```
 and returning the engine object using \ref ignition::physics::Identity. Then, we
-define the metadata getters `GetEngineIndex` and `GetEngineName` for our plugin
-and that's it.
+define the metadata getters `GetEngineIndex` and `GetEngineName` for the
+feature \ref ignition::physics::GetEngineInfo "GetEngineInfo" (please look into
+corresponding public member functions defined in the subclasses). A list of common
+pre-defined features are stated [here](https://ignitionrobotics.org/api/physics/3.0/GetEntities_8hh.html).
 
 Finally, we only have to register our plugin in Ignition Physics as a physics
 engine by:
@@ -116,7 +120,7 @@ a plugin.
 - The third argument is the `FeatureList`, specifying all the features that this
 plugin provides, i.e. `HelloWorldFeatureList`
 
-### Setup CMakeLists.txt for building (Dome release)
+### Setup CMakeLists.txt for building (Version: Dome, ign-physics3)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `ign-plugin` and `ign-physics` dependencies for Dome release:
@@ -143,17 +147,24 @@ target_link_libraries(HelloWorldPlugin
 
 ### Compile the plugin
 
+Your current plugin folder should look like this:
+
+```bash
+$ ls ~/simple_plugin
+CMakeLists.txt  HelloWorldPlugin.cc  build
+```
+
 Now you can build the plugin by:
 
 ```bash
-cd build
+cd ~/simple_plugin/build
 cmake ..
 make
 ```
 
 This will generate the `HelloWorldPlugin` library under `build`.
 The exact name of the library file depends on the operating system
-such as `libHelloWorldPlugin.so` on Linux, `libHelloWorldPlugin.dylib` on macOS,
+such as `libHelloWorldPlugin.so` on Linux, `libHelloWorldPlugin.dylib` on MacOS,
 and `HelloWorldPlugin.dll` on Windows.
 
 ### Test loading the plugin on Linux
