@@ -12,7 +12,7 @@ plugin using \ref ignition::physics "Ignition Physics" API.
 
 ## Prerequisites
 
-In the previous tutorial \ref installation "Installation", you have installed the 
+In the previous tutorial \ref installation "Installation", you have installed the
 Ignition Physics corresponding to the desired Ignition release. Note that the
 recommended Ignition release is Dome.
 
@@ -38,7 +38,10 @@ At the top of the file `hello_world_loader.cc`, we include the headers that will
 be used in our code. After the `std` C++ libraries are the `Loader.hh` and
 `PluginPtr.hh`, which provides main functionalities for loading physics plugins
 and plugin pointers. Next includes from \ref ignition::physics are the tools for
-retrieving "Features" and "Entities" from physics plugins.
+retrieving \ref ignition::physics::Feature "Feature" and
+\ref ignition::physics::Entity "Entity" from physics plugins (please refer to
+\ref physicsplugin "Understanding the Physics Plugin" tutorial for their
+design concepts).
 
 ```cpp
 #include <iostream>
@@ -73,8 +76,12 @@ auto plugins = pl.LoadLib(pluginPath);
 ```
 
 Assuming the correct path, our loader will instantiate all plugins that are
-available in the path using @ref ignition::plugin::Loader::Instantiate member function. Then for each instantiated plugin, it will request an engine
-using @ref ignition::physics::RequestEngine3d<Features>::From function.
+available in the path using @ref ignition::plugin::Loader::Instantiate member
+function. Then for each instantiated plugin, using
+@ref ignition::physics::RequestEngine3d<Features>::From, it will request an
+engine implementing a \ref ignition::physics::FeaturePolicy "FeaturePolicy" (3D
+  in this case).
+.
 
 ```cpp
 for (const std::string &name : pluginNames)
@@ -88,7 +95,7 @@ for (const std::string &name : pluginNames)
 }
 ```
 
-### Example setup CMakeLists.txt file for Dome release
+### Setup CMakeLists.txt for building (Version: Dome, ign-physics3)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `ign-plugin` and `ign-physics` dependencies in Dome release:
@@ -113,9 +120,18 @@ target_link_libraries(hello_world_loader
   ignition-physics${IGN_PHYSICS_VER}::ignition-physics${IGN_PHYSICS_VER})
 ```
 
+For a comprehensive CMake tutorial, please take a look
+[here](https://cmake.org/cmake/help/latest/guide/tutorial/index.html).
+
 ## Build and run
 
 ### Compile the loader
+
+Your current loader folder should look like this:
+```bash
+$ ls ~/simple_loader
+CMakeLists.txt  hello_world_loader.cc  build
+```
 
 Now you can build the loader by:
 
@@ -131,8 +147,9 @@ and print the engine name.
 
 ### Load existing plugins
 
-For example, if you have the Ignition Physics plugin for DART compiled, find
-where it is installed with (you may need sudo right):
+For example, if you have the Ignition Physics plugin for
+[DART](https://dartsim.github.io/) compiled, find where it is installed with
+(you may need administrative rights: `sudo` on Linux platform):
 
 ```bash
 find / | grep libignition-physics-dartsim-plugin.so
@@ -152,7 +169,8 @@ Testing plugin: ignition::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ```
 
-At the time of writing, Ignition Physics is shipped with `DART` and `TPE`
+At the time of writing, Ignition Physics is shipped with
+[DART](https://dartsim.github.io/) and [TPE](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629)
 physics plugins installed. Following the above steps, you can load `TPE` by the
 library name `libignition-physics-tpe-plugin.so` or other custom plugins by
 their corresponding names.
