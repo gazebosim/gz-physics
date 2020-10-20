@@ -67,22 +67,57 @@ Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 void JointFeatures::SetJointPosition(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->ReferenceInterface<JointInfo>(_id)->joint->setPosition(_dof, _value);
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is finite. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (!std::isfinite(_value))
+  {
+    ignerr << "Invalid joint position value [" << _value << "] set on joint ["
+           << joint->getName() << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
+  joint->setPosition(_dof, _value);
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->ReferenceInterface<JointInfo>(_id)->joint->setVelocity(_dof, _value);
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is finite. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (!std::isfinite(_value))
+  {
+    ignerr << "Invalid joint velocity value [" << _value << "] set on joint ["
+           << joint->getName() << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
+  joint->setVelocity(_dof, _value);
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointAcceleration(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  this->ReferenceInterface<JointInfo>(_id)->joint->setAcceleration(_dof,
-                                                                   _value);
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is finite. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (!std::isfinite(_value))
+  {
+    ignerr << "Invalid joint acceleration value [" << _value
+           << "] set on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
+  joint->setAcceleration(_dof, _value);
 }
 
 /////////////////////////////////////////////////
@@ -90,6 +125,17 @@ void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is finite. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (!std::isfinite(_value))
+  {
+    ignerr << "Invalid joint force value [" << _value << "] set on joint ["
+           << joint->getName() << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
   if (joint->getActuatorType() != dart::dynamics::Joint::FORCE)
   {
     joint->setActuatorType(dart::dynamics::Joint::FORCE);
@@ -103,9 +149,9 @@ void JointFeatures::SetJointVelocityCommand(
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
-  // Take extra care that the value is finite since this value will be used in
-  // DART's constraint solver. A nan will cause the solver to fail, which will
-  // in turn cause collisions to fail
+  // Take extra care that the value is finite. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
   if (!std::isfinite(_value))
   {
     ignerr << "Invalid joint velocity value [" << _value
