@@ -142,8 +142,9 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
   }
 
   // Check that invalid velocity commands don't cause collisions to fail
-  const dart::dynamics::BodyNodePtr dartBaseLink = skeleton->getBodyNode("base");
-  ASSERT_NE(nullptr, dartBaseLink );
+  const dart::dynamics::BodyNodePtr dartBaseLink =
+      skeleton->getBodyNode("base");
+  ASSERT_NE(nullptr, dartBaseLink);
   for (std::size_t i = 0; i < 1000; ++i)
   {
     joint->SetVelocityCommand(0, std::numeric_limits<double>::quiet_NaN());
