@@ -19,6 +19,8 @@
 #include <ignition/physics/FeaturePolicy.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Register.hh>
+#include "EntityManagementFeatures.hh"
+#include "SDFFeatures.hh"
 #include "Base.hh"
 
 namespace ignition {
@@ -26,12 +28,16 @@ namespace physics {
 namespace bullet {
 
 struct BulletFeatures : FeatureList <
-  ignition::physics::GetEngineInfo
+  ignition::physics::GetEngineInfo,
+  SDFFeatureList,
+  EntityManagementFeatureList
 > { };
 
 class Plugin :
     public virtual Implements3d<BulletFeatures>,
-    public virtual Base
+    public virtual Base,
+    public virtual SDFFeatures,
+    public virtual EntityManagementFeatures
 {
   public: std::size_t GetEngineIndex(const Identity &/*_id*/) const override
   {
