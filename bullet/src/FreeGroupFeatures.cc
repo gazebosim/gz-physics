@@ -26,25 +26,28 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
-  const auto &model = this->models.at(this->links.at(_linkID)->model)->model;
+  const auto &link_it = this->links.find(_linkID);
 
-  // If there are no links at all in this model, then the FreeGroup functions
-  // will not work properly, so we'll just reject these cases.
-  if (model->getNumLinks() == 0)
-    return this->GenerateInvalidId();
-
-  // Reject also if the model has fixed base
-  if (model->hasFixedBase())
-    return this->GenerateInvalidId();
-
-  return _linkID;
+  if (link_it != this->links.end() && link_it->second != nullptr)
+    return this->GenerateIdentity(_linkID.id, link_it->second);
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
     const Identity &_groupID) const
 {
-  (void) _groupID;
+  / assume no canonical link for now
+  // assume groupID ~= modelID
+  const auto modelIt = this->models.find(_groupID.id);
+  if (modelIt != this->models.end() && modelIt->second != nullptr)
+  {
+    // assume canonical link is the first link in model
+    tpelib::Entity &link = modelIt->second->model->GetCanonicalLink();
+    auto linkPtr = std::make_shared<LinkInfo>();
+    linkPtr->link = static_cast<tpelib::Link *>(&link);
+    return this->GenerateIdentity(link.GetId(), linkPtr);
+  }
   return this->GenerateInvalidId();
 }
 
