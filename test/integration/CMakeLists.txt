@@ -5,6 +5,11 @@ if (NOT DART_FOUND)
   list(REMOVE_ITEM tests DoublePendulum.cc)
 endif()
 
+configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
+
+# set(THREADS_PREFER_PTHREAD_FLAG ON)
+# find_package(Threads REQUIRED)
+
 ign_build_tests(
   TYPE INTEGRATION
   SOURCES ${tests}
@@ -34,4 +39,12 @@ if (BUILD_TESTING)
     endforeach()
 
   endforeach()
+endif()
+
+if(TARGET INTEGRATION_ExamplesBuild_TEST)
+  add_dependencies(INTEGRATION_ExamplesBuild_TEST FAKE_INSTALL)
+  set(_env_vars)
+  list(APPEND _env_vars "CMAKE_PREFIX_PATH=${FAKE_INSTALL_PREFIX}:$ENV{CMAKE_PREFIX_PATH}")
+  set_tests_properties(INTEGRATION_ExamplesBuild_TEST PROPERTIES
+    ENVIRONMENT "${_env_vars}")
 endif()
