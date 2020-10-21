@@ -28,7 +28,6 @@ namespace physics {
 namespace bullet {
 
 struct BulletFeatures : FeatureList <
-  ignition::physics::GetEngineInfo,
   SDFFeatureList,
   EntityManagementFeatureList
 > { };
@@ -37,20 +36,7 @@ class Plugin :
     public virtual Implements3d<BulletFeatures>,
     public virtual Base,
     public virtual SDFFeatures,
-    public virtual EntityManagementFeatures
-{
-  public: std::size_t GetEngineIndex(const Identity &/*_id*/) const override
-  {
-    return 0;
-  }
-
-  public: const std::string &GetEngineName(const Identity &/*_id*/) const override
-  {
-    return this->engineName;
-  }
-
-  std::string engineName;
-};
+    public virtual EntityManagementFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 
