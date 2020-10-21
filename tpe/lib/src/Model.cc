@@ -102,20 +102,12 @@ Entity &Model::GetCanonicalLink()
   std::set<Model *> models;
   for (auto &it : this->GetChildren())
   {
-    // return the first link found as canonical link
-    if (dynamic_cast<Link *>(it.second.get()))
-    {
-      return *it.second;
-    }
     // if child is nested model, store it first and only return nested
     // links if there are no links in this model
-    else
+    Model *model = dynamic_cast<Model *>(it.second.get());
+    if (model)
     {
-      Model *model = dynamic_cast<Model *>(it.second.get());
-      if (model)
-      {
-        models.insert(model);
-      }
+      models.insert(model);
     }
   }
 
