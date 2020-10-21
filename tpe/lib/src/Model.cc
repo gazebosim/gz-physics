@@ -84,7 +84,7 @@ Entity &Model::AddModel()
 //////////////////////////////////////////////////
 void Model::SetCanonicalLink(const std::size_t linkId)
 {
-  this->dataPtr->canonicalLinkId = link.GetId();
+  this->dataPtr->canonicalLinkId = linkId;
 }
 
 //////////////////////////////////////////////////

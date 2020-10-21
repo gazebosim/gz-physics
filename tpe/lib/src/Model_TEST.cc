@@ -107,6 +107,11 @@ TEST(Model, Link)
   EXPECT_NE(nullptr, link2);
   EXPECT_EQ(linkEnt2.GetId(), link2->GetId());
 
+  // test canonical link
+  model.SetCanonicalLink(link->GetId());
+  EXPECT_NE(Entity::kNullEntity.GetId(), model.GetCanonicalLink().GetId());
+  EXPECT_EQ(link->GetId(), model.GetCanonicalLink().GetId());
+
   // test remove child by id
   model.RemoveChildById(linkId);
   EXPECT_EQ(1u, model.GetChildCount());

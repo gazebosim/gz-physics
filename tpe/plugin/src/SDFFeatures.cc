@@ -113,9 +113,9 @@ Identity SDFFeatures::ConstructSdfModel(
   }
 
   // set canonical link id
-  if (_sdfModel.CanonicalLink != nullptr)
+  if (_sdfModel.CanonicalLink() != nullptr)
   {
-    Entity &canonicalLink = model->GetChildByName(
+    tpelib::Entity &canonicalLink = model->GetChildByName(
                               _sdfModel.CanonicalLinkName());
     model->SetCanonicalLink(canonicalLink.GetId());
   }
