@@ -4,6 +4,7 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
+/////////////////////////////////////////////////
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
@@ -19,6 +20,32 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
     return this->GenerateInvalidId();
 
   return _modelID;
+}
+
+/////////////////////////////////////////////////
+Identity FreeGroupFeatures::FindFreeGroupForLink(
+    const Identity &_linkID) const
+{
+  const auto &model = this->models.at(this->links.at(_linkID)->model)->model;
+
+  // If there are no links at all in this model, then the FreeGroup functions
+  // will not work properly, so we'll just reject these cases.
+  if (model->getNumLinks() == 0)
+    return this->GenerateInvalidId();
+
+  // Reject also if the model has fixed base
+  if (model->hasFixedBase())
+    return this->GenerateInvalidId();
+
+  return _linkID;
+}
+
+/////////////////////////////////////////////////
+Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
+    const Identity &_groupID) const
+{
+  (void) _groupID;
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////

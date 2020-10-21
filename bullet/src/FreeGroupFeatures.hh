@@ -21,12 +21,9 @@ class FreeGroupFeatures
   // ----- FindFreeGroupFeature -----
   Identity FindFreeGroupForModel(const Identity &_modelID) const override;
 
-  Identity FindFreeGroupForLink(const Identity &/* _linkID */) const override
-      { return this->GenerateInvalidId(); };
+  Identity FindFreeGroupForLink(const Identity &_linkID) const override;
 
-  Identity GetFreeGroupCanonicalLink(
-      const Identity &/* _groupID */) const override
-      { return this->GenerateInvalidId(); };
+  Identity GetFreeGroupCanonicalLink(const Identity &_groupID) const override;
 
   // ----- SetFreeGroupWorldPose -----
   void SetFreeGroupWorldPose(
