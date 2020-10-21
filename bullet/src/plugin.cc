@@ -22,6 +22,7 @@
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
 #include "SDFFeatures.hh"
+#include "KinematicsFeatures.hh"
 #include "Base.hh"
 
 namespace ignition {
