@@ -1,7 +1,5 @@
 #include "FreeGroupFeatures.hh"
 
-#include <ignition/math/eigen3/Conversions.hh>
-
 namespace ignition {
 namespace physics {
 namespace bullet {
