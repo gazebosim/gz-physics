@@ -571,6 +571,16 @@ Identity SDFFeatures::ConstructSdfCollision(
       math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
     }
+
+    const auto &surfaceBounce = _collision.Element()
+                                    ->GetElement("surface")
+                                    ->GetElement("bounce");
+
+    if (surfaceBounce->HasElement("restitution_coefficient"))
+    {
+      aspect->setRestitutionCoeff(
+          surfaceBounce->Get<double>("restitution_coefficient"));
+    }
 #else
     // We are setting the friction coefficient of a collision element
     // to be the coefficient for the whole link. If there are multiple collision
