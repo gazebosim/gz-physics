@@ -112,6 +112,13 @@ Identity SDFFeatures::ConstructSdfModel(
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
   }
 
+  // set canonical link id
+  if (_sdfModel.CanonicalLink != nullptr)
+  {
+    Entity &canonicalLink = model->GetChildByName(
+                              _sdfModel.CanonicalLinkName());
+    model->SetCanonicalLink(canonicalLink.GetId());
+  }
   return modelIdentity;
 }
 

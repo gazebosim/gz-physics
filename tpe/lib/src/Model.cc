@@ -61,10 +61,6 @@ Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
 
-  // first link added is the canonical link
-  if (this->GetChildren().empty())
-    this->dataPtr->canonicalLinkId = linkId;
-
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
 
@@ -83,6 +79,12 @@ Entity &Model::AddModel()
   it->second->SetParent(this);
   this->ChildrenChanged();
   return *it->second.get();
+}
+
+//////////////////////////////////////////////////
+void Model::SetCanonicalLink(const std::size_t linkId)
+{
+  this->dataPtr->canonicalLinkId = link.GetId();
 }
 
 //////////////////////////////////////////////////
