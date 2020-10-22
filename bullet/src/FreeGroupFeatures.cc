@@ -37,16 +37,25 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
     const Identity &_groupID) const
 {
-  / assume no canonical link for now
-  // assume groupID ~= modelID
-  const auto modelIt = this->models.find(_groupID.id);
-  if (modelIt != this->models.end() && modelIt->second != nullptr)
+  //  Verify that link exists
+  const auto &link_it = this->links.find(_groupID);
+  if (link_it != this->links.end() && link_it->second != nullptr)
   {
-    // assume canonical link is the first link in model
-    tpelib::Entity &link = modelIt->second->model->GetCanonicalLink();
-    auto linkPtr = std::make_shared<LinkInfo>();
-    linkPtr->link = static_cast<tpelib::Link *>(&link);
-    return this->GenerateIdentity(link.GetId(), linkPtr);
+    auto &model = this->models.at(link_it->second->model)->model;
+    //  Search on that link's parents for the base
+    for (int link_num = 0; link_num < model->getNumLinks(); link_num++)
+    {
+      if (model->getParent(link_num) == -1)
+      {
+        //  TODO(lobotuerk) when joints are supported, fix canonical getter
+        // auto link = model->getLink(link_num);
+        // auto linkPtr = std::make_shared<LinkInfo>();
+        // linkPtr->linkIndex = link_num;
+        // linkPtr->name = link->m_linkName;
+        // linkPtr->
+        // return this->GenerateIdentity(_groupID.id, link_ptr);
+      }
+    }
   }
   return this->GenerateInvalidId();
 }
