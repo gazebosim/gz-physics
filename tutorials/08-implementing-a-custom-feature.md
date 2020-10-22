@@ -6,7 +6,7 @@ In the previous tutorial \ref installation "Installation", you have installed
 the Ignition Physics corresponding to the desired Ignition release. Note that
 the recommended Ignition release is Dome.
 
-## Physics engine as a plugin in Ignition Physics
+## Implement a custom feature in DART plugin
 
 In the last \ref createphysicsplugin "Implement a physics plugin" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
@@ -16,7 +16,7 @@ deeper into the structure of a physics engine plugin, for example, the available
 physics engine in `ign-physics` repository and how to define a custom
 \ref ignition::physics::Feature "Feature" for the plugin.
 
-### Folder structure
+### Folder structure of the plugins
 
 Below is the general structure of the `ign-physics` repository:
 
@@ -126,7 +126,7 @@ be inherited from
 and provided a list of the conflicting `Features`. The conflicting `Features`
 will not run at the same time when requested.
 
-### Define a custom feature
+### Define the custom feature
 
 With the requirements and restrictions above, we will implement an example
 custom `Feature` that retrieves a simulation world from `dartsim` physics engine.
@@ -190,7 +190,7 @@ class's member function `GetDartsimWorld` via
 \ref ignition::physics::Feature::Entity::Interface "Entity::Interface"
 convenience function for querying the feature `Implementation` object.
 
-### Implement the custom plugin
+### Implement the custom feature
 
 After defining the custom feature, please look into where it is added to a
 \ref ignition::physics::FeatureList "FeatureList" in
