@@ -24,7 +24,7 @@ execute_process(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/test_results
 include_directories(${PROJECT_SOURCE_DIR}/src ${GTEST_INCLUDE_DIRS})
 
 #============================================================================
-# Do a fake install of ign-math in order to test the examples.
+# Do a fake install of ign-physics in order to test the examples.
 #============================================================================
 set(FAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/fake/install")
 

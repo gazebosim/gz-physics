@@ -377,20 +377,35 @@ TEST(ExamplesBuild, Build)
   // Path to examples of the given type
   std::string examplesDir = std::string(PROJECT_SOURCE_PATH) + "/examples/";
 
-  // Create a temp build directory
-  std::string tmpBuildDir;
-  ASSERT_TRUE(createAndSwitchToTempDir(tmpBuildDir));
-  std::cout << "Build directory: " << tmpBuildDir<< std::endl;
+  DIR *dir = opendir(examplesDir.c_str());
+  if (dir)
+  {
+    struct dirent *p;
+    while ((p=readdir(dir)))
+    {
+      // Skip special files.
+      if (!std::strcmp(p->d_name, ".") || !std::strcmp(p->d_name, ".."))
+        continue;
 
-  char cmd[1024];
+      std::string exampleDir = examplesDir + std::string(p->d_name);
 
-  // cd build && cmake source
-  snprintf(cmd, sizeof(cmd), "cd %s && cmake %s && make",
-    tmpBuildDir.c_str(), examplesDir.c_str());
-  ASSERT_EQ(system(cmd), 0);
+      // Create a temp build directory
+      std::string tmpBuildDir;
+      ASSERT_TRUE(createAndSwitchToTempDir(tmpBuildDir));
+      std::cout << "Build directory: " << tmpBuildDir<< std::endl;
 
-  // Remove temp dir
-  removeAll(tmpBuildDir);
+      char cmd[1024];
+
+      // cd build && cmake source
+      snprintf(cmd, sizeof(cmd), "cd %s && cmake %s && make",
+        tmpBuildDir.c_str(), exampleDir.c_str());
+      ASSERT_EQ(system(cmd), 0);
+
+      // Remove temp dir
+      removeAll(tmpBuildDir);
+    }
+  }
+  closedir(dir);
 #endif
 }
 

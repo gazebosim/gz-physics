@@ -7,9 +7,6 @@ endif()
 
 configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
 
-# set(THREADS_PREFER_PTHREAD_FLAG ON)
-# find_package(Threads REQUIRED)
-
 ign_build_tests(
   TYPE INTEGRATION
   SOURCES ${tests}
