@@ -53,6 +53,14 @@ void SimulationFeatures::WorldForwardStep(
   // TODO(MXG): Parse input
   world->step();
   // TODO(MXG): Fill in output and state
+
+  // Compute ID to populate the joint forces
+  for (size_t i = 0; i < world->getNumSkeletons(); ++i) {
+    world->getSkeleton(i)->computeInverseDynamics(
+      /*_withExternalForces=*/true,
+      /*_withDampingForces=*/true,
+      /*_withSpringForces=*/true);
+  }
 }
 
 std::vector<SimulationFeatures::ContactInternal>
