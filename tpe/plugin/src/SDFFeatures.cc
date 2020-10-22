@@ -113,12 +113,19 @@ Identity SDFFeatures::ConstructSdfModel(
   }
 
   // set canonical link id
+  std::string canonicalLinkName = "";
   if (_sdfModel.CanonicalLink() != nullptr)
   {
-    tpelib::Entity &canonicalLink = model->GetChildByName(
-                              _sdfModel.CanonicalLinkName());
-    model->SetCanonicalLink(canonicalLink.GetId());
+    canonicalLinkName = _sdfModel.CanonicalLinkName();
   }
+  else
+  {
+    // set first link as canonical link
+    canonicalLinkName = *_sdfModel.LinkByIndex(0).Name();
+  }
+  tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
+  model->SetCanonicalLink(canonicalLink.GetId());
+
   return modelIdentity;
 }
 
