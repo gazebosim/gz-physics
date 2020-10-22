@@ -32,6 +32,7 @@
 
 #include <ignition/common/Console.hh>
 #include <ignition/physics/Implements.hh>
+#include <ignition/math/eigen3/Conversions.hh>
 
 namespace ignition {
 namespace physics {
@@ -72,6 +73,34 @@ struct LinkInfo
   Eigen::Isometry3d poseIsometry;
   Identity model;
 };
+
+inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
+{
+  return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
+                     mat(1, 0), mat(1, 1), mat(1, 2),
+                     mat(2, 0), mat(2, 1), mat(2, 2));
+}
+
+inline btVector3 convertVec(Eigen::Vector3d vec)
+{
+  return btVector3(vec(0), vec(1), vec(2));
+}
+
+inline Eigen::Matrix3d convert(btMatrix3x3 mat)
+{
+  Eigen::Matrix3d val;
+  val << mat[0][0], mat[0][1], mat[0][2],
+         mat[1][0], mat[1][1], mat[1][2],
+         mat[2][0], mat[2][1], mat[2][2];
+  return val;
+}
+
+inline Eigen::Vector3d convert(btVector3 vec)
+{
+  Eigen::Vector3d val;
+  val << vec[0], vec[1], vec[2];
+  return val;
+}
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
