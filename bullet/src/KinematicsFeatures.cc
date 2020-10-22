@@ -47,6 +47,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   btMatrix3x3 matChildToThis = btMatrix3x3().getIdentity();
   btVector3 rThisToChild = btVector3(0, 0, 0);
 
+  //  TODO(lobotuerk) uncomment once we support joints
   // while (linkIndex != -1)
   // {
   //   const auto &link = model->getLink(linkIndex);
