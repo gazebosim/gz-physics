@@ -24,6 +24,7 @@
 #include "SDFFeatures.hh"
 #include "KinematicsFeatures.hh"
 #include "Base.hh"
+#include "SimulationFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -33,7 +34,8 @@ struct BulletFeatures : FeatureList <
   SDFFeatureList,
   EntityManagementFeatureList,
   FreeGroupFeatureList,
-  KinematicsFeatureList
+  KinematicsFeatureList,
+  SimulationFeatureList
 > { };
 
 class Plugin :
@@ -42,7 +44,8 @@ class Plugin :
     public virtual SDFFeatures,
     public virtual EntityManagementFeatures,
     public virtual FreeGroupFeatures,
-    public virtual KinematicsFeatures { };
+    public virtual KinematicsFeatures,
+    public virtual SimulationFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 
