@@ -23,14 +23,15 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const auto linkID = _id.ID();
   const auto &linkInfo = this->links.at(linkID);
   const auto modelIdentity = linkInfo->model;
+  auto linkIndex = linkInfo->linkIndex;
   const auto &modelInfo = this->models.at(modelIdentity);
   const auto &model = modelInfo->model;
 
   // Get pose
   const btVector3 pos = model->localPosToWorld(
-      linkInfo->linkIndex, btVector3(0, 0, 0));
+      linkIndex, btVector3(0, 0, 0));
   const btMatrix3x3 mat =
-      model->localFrameToWorld(linkInfo->linkIndex,
+      model->localFrameToWorld(linkIndex,
                           btMatrix3x3::getIdentity());
 
   auto eigenMat = convert(mat);
@@ -45,39 +46,39 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   btVector3 omega = btVector3(0, 0, 0);
   btMatrix3x3 matChildToThis = btMatrix3x3().getIdentity();
   btVector3 rThisToChild = btVector3(0, 0, 0);
-  auto linkIndex = linkInfo->linkIndex;
-  while (linkIndex != -1)
-  {
-    const auto &link = model->getLink(linkIndex);
-    btScalar jointVel;
-    if (link.m_jointType == btMultibodyLink::eFixed)
-      jointVel = 0;
-    else if (link.m_jointType == btMultibodyLink::eRevolute)
-      jointVel = model->getJointVel(linkIndex);
-    else
-    {
-      // ignerr << "Unregistered joint type for frame velocity computation.\n";
-      return data;
-    }
 
-    // Get target link's velocities in current link frame
-    omega += jointVel * link.getAxisTop(0);
-    vel += jointVel * link.getAxisBottom(0) + omega.cross(
-      matChildToThis * rThisToChild);
-
-    // Express in parent frame
-    const auto matThisToParent = btMatrix3x3(
-      link.m_cachedRotParentToThis).inverse();
-    omega = matThisToParent * omega;
-    vel = matThisToParent * vel;
-
-    // Info for next computation
-    matChildToThis = matThisToParent;
-    rThisToChild = link.m_cachedRVector;
-
-    // Move on to parent
-    linkIndex = link.m_parent;
-  }
+  // while (linkIndex != -1)
+  // {
+  //   const auto &link = model->getLink(linkIndex);
+  //   btScalar jointVel;
+  //   if (link.m_jointType == btMultibodyLink::eFixed)
+  //     jointVel = 0;
+  //   else if (link.m_jointType == btMultibodyLink::eRevolute)
+  //     jointVel = model->getJointVel(linkIndex);
+  //   else
+  //   {
+  //     // ignerr << "Unregistered joint type for frame velocity computation.\n";
+  //     return data;
+  //   }
+  //
+  //   // Get target link's velocities in current link frame
+  //   omega += jointVel * link.getAxisTop(0);
+  //   vel += jointVel * link.getAxisBottom(0) + omega.cross(
+  //     matChildToThis * rThisToChild);
+  //
+  //   // Express in parent frame
+  //   const auto matThisToParent = btMatrix3x3(
+  //     link.m_cachedRotParentToThis).inverse();
+  //   omega = matThisToParent * omega;
+  //   vel = matThisToParent * vel;
+  //
+  //   // Info for next computation
+  //   matChildToThis = matThisToParent;
+  //   rThisToChild = link.m_cachedRVector;
+  //
+  //   // Move on to parent
+  //   linkIndex = link.m_parent;
+  // }
 
   // Add base velocities
   omega += model->getBaseOmega();
