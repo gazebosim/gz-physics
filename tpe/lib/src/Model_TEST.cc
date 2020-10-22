@@ -312,19 +312,4 @@ TEST(Model, NestedModel)
 
   Entity nullEnt = model.GetChildById(modelId);
   EXPECT_EQ(Entity::kNullEntity.GetId(), nullEnt.GetId());
-
-  // add nested link and verify it is the canonical link in the model tree
-  Entity &nestedLink = nestedModel2->AddLink();
-  EXPECT_EQ(nestedLink.GetId(), model.GetCanonicalLink().GetId());
-
-  // add link in top level model and verify the new link becomes the canonical
-  // link in the tree as preference is given to links in higher level
-  Entity &link = model.AddLink();
-  EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
-
-  // add a few more links in top level model and verify canonical link stays
-  // the same
-  model.AddLink();
-  model.AddLink();
-  EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
 }
