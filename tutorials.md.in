@@ -14,11 +14,7 @@ Ignition @IGN_DESIGNATION_CAP@ library and how to use the library effectively.
 5. \subpage pluginloading "Loading a Physics Plugin"
 
 7. \subpage createphysicsplugin "Implement a physics plugin"
-
-
-
-
-8. \subpage createphysicsplugin "Implement a physics plugin"
+8. \subpage createcustomfeature "Implement a custom feature"
 
 ## License
 
