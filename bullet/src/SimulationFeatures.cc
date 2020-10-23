@@ -15,6 +15,7 @@
  *
 */
 
+#include <ignition/common/Console.hh>
 #include "SimulationFeatures.hh"
 
 namespace ignition {
@@ -33,6 +34,26 @@ void SimulationFeatures::WorldForwardStep(
       _u.Query<std::chrono::steady_clock::duration>();
     std::chrono::duration<double> dt = *dtDur;
     worldInfo->world->stepSimulation(dt.count());
+
+    // Print for debug purposes the internals of the simulation
+    // Just for the world requested
+    this->internalTicksDivider= 0;
+    // Divide frequency for printing msgs to 10
+    if (this->internalTicksDivider == 10) {
+      for (const auto &model : this->models)
+      {
+	const auto &modelInfo = model.second;
+	if (modelInfo->world.id == _worldID.id)
+        {
+	  // Print X, Y, Z of the model
+	  auto basePos = modelInfo->model->getBasePos();
+	  igndbg << "XYZ " << modelInfo->name << ": "
+		 << basePos[0] << basePos[1] << basePos[3];
+	}
+      }
+      this->internalTicksDivider = 0;
+    }
+    this->internalTicksDivider++;
 }
 
 }

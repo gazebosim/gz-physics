@@ -149,6 +149,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, ModelInfoPtr> models;
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
 
+  public: int internalTicksDivider;
 };
 
 }
