@@ -48,11 +48,6 @@ Identity SDFFeatures::ConstructSdfModel(
 
   // Check if floating base
   bool fixedBase = isStatic;
-  const bool hasWorldLink = _sdfModel.LinkNameExists("world");
-  if (!hasWorldLink)
-  {
-    fixedBase = true;
-  }
 
   // Initialize model with zero links and increase the number as links are added
   const int numLinks = 0;
