@@ -31,6 +31,9 @@ class ignition::physics::tpelib::ModelPrivate
 {
   /// \brief Canonical link id;
   public: std::size_t canonicalLinkId = kNullEntityId;
+
+  /// \brief First inserted link id;
+  public: std::size_t firstLinkId = kNullEntityId;
 };
 
 using namespace ignition;
@@ -61,6 +64,9 @@ Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
 
+  if (this->GetChildren().empty())
+    this->dataPtr->firstLinkId = linkId;
+
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
 
@@ -84,7 +90,14 @@ Entity &Model::AddModel()
 //////////////////////////////////////////////////
 void Model::SetCanonicalLink(const std::size_t linkId)
 {
-  this->dataPtr->canonicalLinkId = linkId;
+  if (linkId != kNullEntityId)
+  {
+    this->dataPtr->canonicalLinkId = linkId;
+  }
+  else if (this->dataPtr->firstLinkId != kNullEntityId)
+  {
+    this->dataPtr->canonicalLinkId = this->dataPtr->firstLinkId;
+  }
 }
 
 //////////////////////////////////////////////////
@@ -94,7 +107,9 @@ Entity &Model::GetCanonicalLink()
   // todo(anyone) Prevent removal of canonical link in a model?
   Entity &linkEnt = this->GetChildById(this->dataPtr->canonicalLinkId);
   if (linkEnt.GetId() != kNullEntityId)
+  {
     return linkEnt;
+  }
 
   // todo(anyone) the code below does not guarantee that the link returned is
   // the first link defined in SDF since GetChildren returns a std::map, and
