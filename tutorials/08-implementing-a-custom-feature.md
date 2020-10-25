@@ -35,7 +35,7 @@ ign-physics
 └── CMakeLists.txt            CMake build script.
 ```
 
-As can be seen, there are two physics engines available (more detail
+As shown above, there are two physics engines available (more detail
 in \ref physicsplugin "Physics plugin tutorial"):
 - **DART**: `ignition-physics-dartsim-plugin`.
 - **TPE**: `ignition-physics-tpe-plugin`.
@@ -89,29 +89,35 @@ common "proxy objects" that are inherited from `Entity` class:
     Engine API. This class serves metadata for the physics engine (for example
     the \ref ignition::physics::GetEngineInfo "GetEngineInfo" feature).
     Every Engine feature **must** inherit this class.
-  - \ref ignition::physics::Feature::Joint "Joint": defines physics concept `Joint` behaviors (for example
-    the \ref ignition::physics::GetBasicJointState "GetBasicJointState"
+  - \ref ignition::physics::Feature::Joint "Joint": defines physics concept
+    `Joint` behaviors (for example the
+    \ref ignition::physics::GetBasicJointState "GetBasicJointState" feature).
+  - \ref ignition::physics::Feature::Link "Link": defines physics concept `Link`
+    structure.
+  - \ref ignition::physics::Feature::Model "Model": defines physics concept
+    `Model` structure (for example the
+    \ref ignition::physics::GetLinkFromModel "GetLinkFromModel" feature
+    including both `Link` and `Model` objects).
+  - \ref ignition::physics::Feature::Shape "Shape": defines physics concept
+    `Shape` structure (for example the
+    \ref ignition::physics::GetShapeKinematicProperties "GetShapeKinematicProperties"
     feature).
-  - \ref ignition::physics::Feature::Link "Link": defines physics concept `Link` structure.
-  - \ref ignition::physics::Feature::Model "Model": defines physics concept `Model` structure (for example
-    the \ref ignition::physics::GetLinkFromModel "GetLinkFromModel"
-    feature including both `Link` and `Model` objects).
-  - \ref ignition::physics::Feature::Shape "Shape": defines physics concept `Shape` structure (for example
-    the \ref ignition::physics::GetShapeKinematicProperties "GetShapeKinematicProperties"
-    feature).
-  - \ref ignition::physics::Feature::World "World": defines physics concept `Shape` structure (for example
+  - \ref ignition::physics::Feature::World "World": defines physics concept
+    `Shape` structure (for example
     the \ref ignition::physics::dartsim::RetrieveWorld "RetrieveWorld" feature
     in `dartsim` plugin).
 
-  Note that these object classes are not mutually exclusive and could be defined in conjunction together to describe the `Feature`. There are also other uncommon
-  objects defined depending on feature functionality, for example, the \ref ignition::physics::SetFreeGroupWorldPose::FreeGroup "FreeGroup"
+  Note that these object classes are not mutually exclusive and could be defined
+  in conjunction together to describe the `Feature`. There are also other
+  uncommon objects defined depending on feature functionality, for example, the
+  \ref ignition::physics::SetFreeGroupWorldPose::FreeGroup "FreeGroup"
   object in `SetFreeGroupWorldPose` feature. For more information about the
   physics concepts, please refer to
   \ref physicsconcepts "Ignition Physics simulation concepts" tutorial.
 - \ref ignition::physics::Feature::Implementation "Implementation" interfaces
 the actual physics engines API for the custom feature. It has
 \ref ignition::physics::Feature::Implementation::InitiateEngine "InitiateEngine"
- to trigger physics engine initiation to provide the required functionalities.
+to trigger physics engine initiation to provide the required functionalities.
 
 Moreover, we can define dependencies between custom `Features`:
 - By default, a blank feature will not require any other features.
@@ -173,7 +179,7 @@ dart::simulation::WorldPtr RetrieveWorld::World<PolicyT, FeaturesT>
 }
 ```
 
-As can be seen, after including the necessary library of `dartsim` and `ign-physics`,
+As seen above, after including the necessary library of `dartsim` and `ign-physics`,
 we define the `RetrieveWorld` custom feature inherited from the base
 \ref ignition::physics::Feature "Feature".
 
@@ -194,8 +200,20 @@ convenience function for querying the feature `Implementation` object.
 
 After defining the custom feature, please look into where it is added to a
 \ref ignition::physics::FeatureList "FeatureList" in
-[dartsim/src/CustomFeatures.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/CustomFeatures.hh)
-and implemented in [dartsim/src/CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/CustomFeatures.cc).
+[CustomFeatures.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/CustomFeatures.hh)
+and implemented in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/CustomFeatures.cc).
+These files are place as follows:
+```
+dartsim
+├── worlds                           
+├── src
+│    ├── CustomFeatures.hh
+│    ├── CustomFeatures.cc
+│    ├── ...                           
+├── include/ignition/physics/dartsim  
+└── CMakeLists.txt                 
+```
+
 We display them here for convenience:
 
 - `CustomFeatures.hh`:
@@ -263,8 +281,8 @@ dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
 }
 ```
 
-Here we simply implement the actual behavior of `GetDartsimWorld` to return the world pointer
-from `EntityStorage` object storing world pointers of `dartsim` in
+Here we simply implement the actual behavior of `GetDartsimWorld` to return the
+world pointer from `EntityStorage` object storing world pointers of `dartsim` in
 [Base](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/Base.hh) class.
 
 Finally, we add the implemented `CustomFeatures` "FeatureList" together with
