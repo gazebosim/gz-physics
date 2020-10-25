@@ -15,7 +15,7 @@ Ignition @IGN_DESIGNATION_CAP@ library and how to use the library effectively.
 
 7. \subpage createphysicsplugin "Implement a physics plugin"
 
-9. \subpage setupphysicsenginetpe "Advanced tutorial: Implement physics engine as a plugin"
+9. \subpage setupphysicsenginetpe "Use custom engine with Ignition Physics"
 
 ## License
 
