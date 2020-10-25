@@ -74,9 +74,9 @@ In this tutorial, we will show how to construct a simple simulation world using
 engine. For this purpose, we will implement the pre-defined
 \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
 and include this feature into an empty \ref ignition::physics::FeatureList "FeatureList"
-named `EntityManagementFeatures`. We first include the `EntityManagementFeatures`
-"FeatureList" in `plugin.cc` main file and register the example TPE physics
-plugin as follow:
+named `EntityManagementFeatureList` defined in `EntityManagementFeatures.hh`.
+We first include the `EntityManagementFeatureList` in `plugin.cc` main file
+and register the example TPE physics plugin as follow:
 
 ```cpp
 #include <ignition/physics/Register.hh>
@@ -90,7 +90,7 @@ namespace physics {
 namespace tpeplugin {
 
 struct TpePluginFeatures : FeatureList<
-  EntityManagementFeatureList,
+  EntityManagementFeatureList
 > { };
 
 class Plugin :
@@ -173,7 +173,7 @@ namespace physics {
 namespace tpeplugin {
 
 struct EntityManagementFeatureList : FeatureList<
-  ConstructEmptyWorldFeature,
+  ConstructEmptyWorldFeature
 > { };
 
 class EntityManagementFeatures :
@@ -211,9 +211,6 @@ custom feature with \ref ignition::physics::FeaturePolicy3d "FeaturePolicy3d"
 ##### EntityManagementFeatures.cc:
 
 ```cpp
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_GETENTITIESFEATURE_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_GETENTITIESFEATURE_HH_
-
 #include <string>
 #include "EntityManagementFeatures.hh"
 
@@ -229,8 +226,6 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   world->SetName(_name);
   return this->AddWorld(world);
 }
-
-#endif
 ```
 
 Here we show the overriding of `ConstructEmptyWorld` member function of
@@ -263,8 +258,9 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   ignition::plugin::PluginPtr tpe_plugin =
     loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
+  auto engine =
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
   auto world = engine->ConstructEmptyWorld("empty world");
-  EXPECT_EQ(1u, engine->GetWorldCount());
   ASSERT_NE(nullptr, world);
 }
 
