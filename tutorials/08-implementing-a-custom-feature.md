@@ -136,8 +136,8 @@ will not run at the same time when requested.
 
 With the requirements and restrictions above, we will implement an example
 custom `Feature` that retrieves a simulation world from `dartsim` physics engine.
-From [dartsim/include/ignition/physics/dartsim/World.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/include/ignition/physics/dartsim/World.hh)
-, we show it here for convenience:
+For example, we name it as [World.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/include/ignition/physics/dartsim/World.hh)
+and the its content is as follow:
 
 ```cpp
 #include <dart/simulation/World.hpp>
@@ -177,6 +177,16 @@ dart::simulation::WorldPtr RetrieveWorld::World<PolicyT, FeaturesT>
 }
 }
 }
+```
+
+The new defined feature file is placed in `dartsim/include/ignition/physics/dartsim`:
+```
+dartsim
+├── worlds                           
+├── src                       
+├── include/ignition/physics/dartsim
+│    ├──  World.hh
+└── CMakeLists.txt                 
 ```
 
 As seen above, after including the necessary library of `dartsim` and `ign-physics`,
