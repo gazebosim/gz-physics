@@ -41,14 +41,13 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 
   // Current implementation does not include collisions nor joints
   // Those should be removed here before removing the model
-
-  // Clean up links
-  for (const auto &linkEntry : this->links)
+  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it = this->links.begin();
+  while (it != this->links.end())
   {
-    const auto &linkInfo = linkEntry.second;
+    const auto &linkInfo = it->second;
     if (linkInfo->model.id == _modelID.id)
     {
-      this->links.erase(linkEntry.first);
+      it = this->links.erase(it);
     }
   }
 
