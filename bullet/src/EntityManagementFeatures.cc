@@ -36,28 +36,25 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   if (this->models.find(_modelID) == this->models.end()){
     return false;
   }
-
-  const auto &modelInfo = this->models.at(_modelID);
-
   // Current implementation does not include collisions nor joints
   // Those should be removed here before removing the model
 
   // Clean up links
-  for (const auto &linkEntry : this->links)
+  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it = this->links.begin();
+  while (it != this->links.end())
   {
-    const auto &linkInfo = linkEntry.second;
+    const auto &linkInfo = it->second;
     if (linkInfo->model.id == _modelID.id)
     {
-      this->links.erase(linkEntry.first);
+      it = this->links.erase(it);
+      continue;
     }
+    it++;
   }
 
-  // (To-DO blast545): test if its required to make an extra call to
-  // world->removeMultiBody(model) to remove it from the bullet system
-  // or is it enough just by deleting its pointed memory
-
   // Clean up model
-  delete modelInfo->model;
+  this->worlds.at(this->models.at(_modelID)->world)->world->removeMultiBody(this->models.at(_modelID)->model);
+  delete this->models.at(_modelID)->model;
   this->models.erase(_modelID);
 
   return true;
