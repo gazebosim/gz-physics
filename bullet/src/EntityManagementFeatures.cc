@@ -53,9 +53,10 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
 
   // Clean up model
-  this->worlds.at(this->models.at(_modelID)->world)->world->removeMultiBody(this->models.at(_modelID)->model);
-  delete this->models.at(_modelID)->model;
-  this->models.erase(_modelID);
+  auto model = this->models.at(_modelID.id);
+  this->worlds.at(model->world)->world->removeMultiBody(model->model);
+  delete this->models.at(_modelID.id)->model;
+  this->models.erase(_modelID.id);
 
   return true;
 }
@@ -91,7 +92,8 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   }
 
   // Clean up model
-  this->worlds.at(this->models.at(_modelIndex)->world)->world->removeMultiBody(this->models.at(_modelIndex)->model);
+  auto model = this->models.at(_modelIndex);
+  this->worlds.at(model->world)->world->removeMultiBody(model->model);
   delete this->models.at(_modelIndex)->model;
   this->models.erase(_modelIndex);
 
