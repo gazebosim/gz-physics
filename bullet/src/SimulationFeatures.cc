@@ -27,6 +27,7 @@ void SimulationFeatures::WorldForwardStep(
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & _u)
 {
+  // ignerr << "WorldForwardStep" << std::endl;
     const WorldInfoPtr &worldInfo = this->worlds.at(_worldID);
 
     auto *dtDur =

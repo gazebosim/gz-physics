@@ -14,6 +14,7 @@ namespace bullet {
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
+  ignerr << "ConstructEmptyWorld" << std::endl;
   // Create bullet empty multibody dynamics world
   auto collisionConfiguration = new btDefaultCollisionConfiguration();
   auto dispatcher = new btCollisionDispatcher(collisionConfiguration);
@@ -32,12 +33,11 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
+  ignerr << "RemoveModel " << _modelID.id << std::endl;
   // Check if the model exists
   if (this->models.find(_modelID) == this->models.end()){
     return false;
   }
-
-  const auto &modelInfo = this->models.at(_modelID);
 
   // Current implementation does not include collisions nor joints
   // Those should be removed here before removing the model
@@ -47,8 +47,11 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
     const auto &linkInfo = it->second;
     if (linkInfo->model.id == _modelID.id)
     {
+      ignerr << "Erasing links " <<  it->first << std::endl;
       it = this->links.erase(it);
+      continue;
     }
+    it++;
   }
 
   // (To-DO blast545): test if its required to make an extra call to
@@ -56,21 +59,30 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   // or is it enough just by deleting its pointed memory
 
   // Clean up model
-  delete modelInfo->model;
+  ignerr << "Removing BT" << std::endl;
+  this->worlds.at(this->models.at(_modelID)->world)->world->removeMultiBody(this->models.at(_modelID)->model);
+  ignerr << "deleting pointer" << this->models.at(_modelID)->model << std::endl;
+  delete this->models.at(_modelID)->model;   //  todo(Lobotuerk) causes "free(): invalid next size (fast)"
+  // Adding and removing objects one by one gets you "corrupted size vs. prev_size"
+  // Adding more than 3, deleting 1 and adding 1, gives you "malloc_consolidate(): invalid chunk size"
+  ignerr << "erasing from map models" << std::endl;
   this->models.erase(_modelID);
 
+  ignerr << "erased from map models" << std::endl;
   return true;
 }
 
 bool EntityManagementFeatures::ModelRemoved(
   const Identity &_modelID) const
 {
+  ignerr << "ModelRemoved" << std::endl;
   return this->models.find(_modelID) == this->models.end();
 }
 
 bool EntityManagementFeatures::RemoveModelByIndex(
   const Identity &/* _worldID */, std::size_t _modelIndex)
 {
+  ignerr << "RemoveModelByIndex" << std::endl;
   // Check if the model exists
   if (this->models.find(_modelIndex) == this->models.end()){
     return false;
@@ -107,6 +119,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 bool EntityManagementFeatures::RemoveModelByName(
   const Identity & _worldID, const std::string & _modelName )
 {
+  ignerr << "RemoveModelByName" << std::endl;
 
   // Check if there is a model with the requested name
   bool found = false;

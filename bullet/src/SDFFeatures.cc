@@ -10,6 +10,7 @@ Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
 {
+  ignerr << "ConstructSdfWorld" << std::endl;
   const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
@@ -59,6 +60,7 @@ Identity SDFFeatures::ConstructSdfModel(
                                        fixedBase,
                                        canSleep);
 
+  ignerr << "ConstructSdfModel" << model << std::endl;
   model->setBaseWorldTransform(baseTransform);
 
   model->setHasSelfCollision(selfCollide);
@@ -125,6 +127,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const auto linkIdentity = this->AddLink({name, linkIndex, linkMass,
                                   linkInertiaDiag, poseIsometry, _modelID});
 
+  ignerr << "ConstructSdfLink " << linkIdentity.id << std::endl;
   return linkIdentity;
 }
 

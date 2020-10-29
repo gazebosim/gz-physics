@@ -8,6 +8,7 @@ namespace bullet {
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
+  ignerr << "FindFreeGroupForModel" << std::endl;
   const auto &model = this->models.at(_modelID)->model;
 
   // If there are no links at all in this model, then the FreeGroup functions
@@ -26,6 +27,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
+  ignerr << "FindFreeGroupForLink" << std::endl;
   const auto &link_it = this->links.find(_linkID);
 
   if (link_it != this->links.end() && link_it->second != nullptr)
@@ -37,6 +39,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
     const Identity &_groupID) const
 {
+  ignerr << "GetFreeGroupCanonicalLink" << std::endl;
   (void) _groupID;
   //  TODO(lobotuerk) when joints are supported, fix canonical getter
   //  Verify that link exists
@@ -67,6 +70,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const PoseType &_pose)
 {
   // Convert pose
+  ignerr << "SetFreeGroupWorldPose" << std::endl;
   const auto poseTranslation = _pose.translation();
   const auto poseLinear = _pose.linear();
   btTransform baseTransform;

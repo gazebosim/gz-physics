@@ -9,6 +9,7 @@ namespace bullet {
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const FrameID &_id) const
 {
+  // ignerr << "FrameDataRelativeToWorld" << std::endl;
   FrameData3d data;
 
   // The feature system should never send us the world ID.
