@@ -33,7 +33,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   // Check if the model exists
-  if (this->models.find(_modelID) == this->models.end()){
+  if (this->models.find(_modelID.id) == this->models.end()){
     return false;
   }
   // Current implementation does not include collisions nor joints
@@ -67,36 +67,32 @@ bool EntityManagementFeatures::ModelRemoved(
 }
 
 bool EntityManagementFeatures::RemoveModelByIndex(
-  const Identity &/* _worldID */, std::size_t _modelIndex)
+  const Identity & _worldID, std::size_t _modelIndex)
 {
   // Check if the model exists
-  if (this->models.find(_modelIndex) == this->models.end()){
+  if (this->models.find(_modelIndex) == this->models.end() ||
+      this->models.at(_modelIndex)->world.id != _worldID.id) {
     return false;
   }
-
-  // Current method ignores the worldID, check if this causes
-  // an API problem with the gazebo simulator
-  const auto &modelInfo = this->models.at(_modelIndex);
-
   // Current implementation does not include collisions nor joints
   // Those should be removed here before removing the model
 
   // Clean up links
-  for (const auto &linkEntry : this->links)
+  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it = this->links.begin();
+  while (it != this->links.end())
   {
-    const auto &linkInfo = linkEntry.second;
+    const auto &linkInfo = it->second;
     if (linkInfo->model.id == _modelIndex)
     {
-      this->links.erase(linkEntry.first);
+      it = this->links.erase(it);
+      continue;
     }
+    it++;
   }
 
-  // (To-DO blast545): test if its required to make an extra call to
-  // world->removeMultiBody(model) to remove it from the bullet system
-  // or is it enough just by deleting its pointed memory
-
   // Clean up model
-  delete modelInfo->model;
+  this->worlds.at(this->models.at(_modelIndex)->world)->world->removeMultiBody(this->models.at(_modelIndex)->model);
+  delete this->models.at(_modelIndex)->model;
   this->models.erase(_modelIndex);
 
   return true;
