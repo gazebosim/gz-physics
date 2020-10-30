@@ -15,6 +15,7 @@
  *
 */
 
+#include <set>
 #include <string>
 
 #include <ignition/common/Profiler.hh>
@@ -25,24 +26,45 @@
 #include "Link.hh"
 #include "Model.hh"
 
+/// \brief Private data class for Model
+class ignition::physics::tpelib::ModelPrivate
+{
+  /// \brief Canonical link id;
+  public: std::size_t canonicalLinkId = kNullEntityId;
+};
+
 using namespace ignition;
 using namespace physics;
 using namespace tpelib;
 
 //////////////////////////////////////////////////
-Model::Model() : Entity()
+Model::Model()
+    : Entity(), dataPtr(new ModelPrivate)
 {
 }
 
 //////////////////////////////////////////////////
-Model::Model(std::size_t _id) : Entity(_id)
+Model::Model(std::size_t _id)
+    : Entity(_id), dataPtr(new ModelPrivate)
 {
+}
+
+//////////////////////////////////////////////////
+Model::~Model()
+{
+  delete this->dataPtr;
+  this->dataPtr = nullptr;
 }
 
 //////////////////////////////////////////////////
 Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
+
+  // first link added is the canonical link
+  if (this->GetChildren().empty())
+    this->dataPtr->canonicalLinkId = linkId;
+
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
 
@@ -52,12 +74,58 @@ Entity &Model::AddLink()
 }
 
 //////////////////////////////////////////////////
-Entity &Model::GetCanonicalLink()
+Entity &Model::AddModel()
 {
-  // return first link as canonical link
-  return *this->GetChildren().begin()->second;
+  std::size_t modelId = Entity::GetNextId();
+  const auto[it, success]  = this->GetChildren().insert(
+      {modelId, std::make_shared<Model>(modelId)});
+
+  it->second->SetParent(this);
+  this->ChildrenChanged();
+  return *it->second.get();
 }
 
+//////////////////////////////////////////////////
+Entity &Model::GetCanonicalLink()
+{
+  // return canonical link but make sure it exists
+  // todo(anyone) Prevent removal of canonical link in a model?
+  Entity &linkEnt = this->GetChildById(this->dataPtr->canonicalLinkId);
+  if (linkEnt.GetId() != kNullEntityId)
+    return linkEnt;
+
+  // todo(anyone) the code below does not guarantee that the link returned is
+  // the first link defined in SDF since GetChildren returns a std::map, and
+  // likewise the use of std::set, do not preserve order.
+  std::set<Model *> models;
+  for (auto &it : this->GetChildren())
+  {
+    // return the first link found as canonical link
+    if (dynamic_cast<Link *>(it.second.get()))
+    {
+      return *it.second;
+    }
+    // if child is nested model, store it first and only return nested
+    // links if there are no links in this model
+    else
+    {
+      Model *model = dynamic_cast<Model *>(it.second.get());
+      if (model)
+      {
+        models.insert(model);
+      }
+    }
+  }
+
+  for (auto m : models)
+  {
+    auto &link = m->GetCanonicalLink();
+    if (link.GetId() != kNullEntity.GetId())
+      return link;
+  }
+
+  return kNullEntity;
+}
 
 //////////////////////////////////////////////////
 void Model::SetLinearVelocity(const math::Vector3d _velocity)

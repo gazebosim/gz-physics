@@ -345,6 +345,14 @@ Identity SDFFeatures::ConstructSdfModel(
     const Identity &_worldID,
     const ::sdf::Model &_sdfModel)
 {
+  // check if parent is a world
+  if (!this->worlds.HasEntity(_worldID))
+  {
+    ignerr << "Unable to construct model: " << _sdfModel.Name() << ". "
+           << "Parent of model is not a world. " << std::endl;
+    return this->GenerateInvalidId();
+  }
+
   dart::dynamics::SkeletonPtr model =
       dart::dynamics::Skeleton::create(_sdfModel.Name());
 
