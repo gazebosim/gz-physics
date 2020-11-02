@@ -21,12 +21,13 @@
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
-#include <ignition/physics/FindFeatures.hh>
 #include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
 
 // Features
+#include <ignition/physics/FindFeatures.hh>
+#include <ignition/physics/GetBoundingBox.hh>
 #include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/RequestEngine.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
@@ -47,6 +48,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
   ignition::physics::tpeplugin::FreeGroupFeatureList,
   ignition::physics::GetContactsFromLastStepFeature,
   ignition::physics::LinkFrameSemantics,
+  ignition::physics::GetModelBoundingBox,
   ignition::physics::sdf::ConstructSdfWorld
 > { };
 
@@ -152,20 +154,20 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     EXPECT_EQ(2u, sphereLink->GetShapeCount());
     EXPECT_EQ(sphere2, sphereLink->GetShape(1));
 
-    auto ground = world->GetModel("box");
-    auto groundLink = ground->GetLink(0);
-    auto groundCollision = groundLink->GetShape(0);
-    auto boxShape = groundCollision->CastToBoxShape();
+    auto box = world->GetModel("box");
+    auto boxLink = box->GetLink(0);
+    auto boxCollision = boxLink->GetShape(0);
+    auto boxShape = boxCollision->CastToBoxShape();
     EXPECT_EQ(ignition::math::Vector3d(100, 100, 1),
               ignition::math::eigen3::convert(boxShape->GetSize()));
 
-    auto box2 = groundLink->AttachBoxShape(
+    auto box2 = boxLink->AttachBoxShape(
       "box2",
       ignition::math::eigen3::convert(
         ignition::math::Vector3d(1.2, 1.2, 1.2)),
       Eigen::Isometry3d::Identity());
-    EXPECT_EQ(2u, groundLink->GetShapeCount());
-    EXPECT_EQ(box2, groundLink->GetShape(1));
+    EXPECT_EQ(2u, boxLink->GetShapeCount());
+    EXPECT_EQ(box2, boxLink->GetShape(1));
 
     auto cylinder = world->GetModel("cylinder");
     auto cylinderLink = cylinder->GetLink(0);
@@ -182,10 +184,8 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     // Test the bounding boxes in the local frames
     auto sphereAABB =
       sphereCollision->GetAxisAlignedBoundingBox(*sphereCollision);
-
-    auto groundAABB =
-      groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
-
+    auto boxAABB =
+      boxCollision->GetAxisAlignedBoundingBox(*boxCollision);
     auto cylinderAABB =
       cylinderCollision->GetAxisAlignedBoundingBox(*cylinderCollision);
 
@@ -194,13 +194,30 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     EXPECT_EQ(ignition::math::Vector3d(1, 1, 1),
               ignition::math::eigen3::convert(sphereAABB).Max());
     EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.5),
-              ignition::math::eigen3::convert(groundAABB).Min());
+              ignition::math::eigen3::convert(boxAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(50, 50, 0.5),
-              ignition::math::eigen3::convert(groundAABB).Max());
+              ignition::math::eigen3::convert(boxAABB).Max());
     EXPECT_EQ(ignition::math::Vector3d(-0.5, -0.5, -0.55),
               ignition::math::eigen3::convert(cylinderAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(0.5, 0.5, 0.55),
               ignition::math::eigen3::convert(cylinderAABB).Max());
+
+    // check model AABB. By default, the AABBs are in world frame
+    auto sphereModelAABB = sphere->GetAxisAlignedBoundingBox();
+    auto boxModelAABB = box->GetAxisAlignedBoundingBox();
+    auto cylinderModelAABB = cylinder->GetAxisAlignedBoundingBox();
+    EXPECT_EQ(ignition::math::Vector3d(-1, 0.5, -0.5),
+              ignition::math::eigen3::convert(sphereModelAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(1, 2.5, 1.5),
+              ignition::math::eigen3::convert(sphereModelAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.1),
+              ignition::math::eigen3::convert(boxModelAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(50, 50, 1.1),
+              ignition::math::eigen3::convert(boxModelAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-3, -4.5, -1.5),
+              ignition::math::eigen3::convert(cylinderModelAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(3, 1.5, 2.5),
+              ignition::math::eigen3::convert(cylinderModelAABB).Max());
   }
 }
 
