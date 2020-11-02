@@ -26,6 +26,8 @@ namespace ignition {
 namespace physics {
 namespace sdf {
 
+/// \brief Construct a model entity from an sdf::Model DOM object. This
+/// feature is limited to constructing models that have no nested models.
 class ConstructSdfModel : public virtual Feature
 {
   public: template <typename PolicyT, typename FeaturesT>
@@ -53,7 +55,6 @@ auto ConstructSdfModel::World<PolicyT, FeaturesT>::ConstructModel(
         this->template Interface<ConstructSdfModel>()
               ->ConstructSdfModel(this->identity, _model));
 }
-
 }
 }
 }

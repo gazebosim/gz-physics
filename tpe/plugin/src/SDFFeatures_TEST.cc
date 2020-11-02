@@ -29,9 +29,11 @@
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
 
+#include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include "lib/src/Entity.hh"
@@ -40,8 +42,10 @@
 
 struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::tpeplugin::RetrieveWorld,
+    ignition::physics::GetModelFromWorld,
     ignition::physics::sdf::ConstructSdfLink,
     ignition::physics::sdf::ConstructSdfModel,
+    ignition::physics::sdf::ConstructSdfNestedModel,
     ignition::physics::sdf::ConstructSdfWorld
 > { };
 
@@ -351,6 +355,91 @@ TEST(SDFFeatures_TEST, CheckTpeData)
     EXPECT_EQ(ignition::math::Pose3d::Zero, link06.GetPose());
     EXPECT_EQ(0u, link06.GetChildCount());
   }
+}
+
+// Test that the tpe plugin loaded nested models correctly.
+TEST(SDFFeatures_TEST, NestedModel)
+{
+  World world = LoadWorld(TEST_WORLD_DIR"/nested_model.world");
+  auto tpeWorld = world.GetTpeLibWorld();
+  ASSERT_NE(nullptr, tpeWorld);
+
+  ASSERT_EQ(1u, tpeWorld->GetChildCount());
+
+  // check top level model
+  ignition::physics::tpelib::Entity &model =
+      tpeWorld->GetChildByName("model");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      model.GetId());
+  EXPECT_EQ("model", model.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, model.GetPose());
+  EXPECT_EQ(2u, model.GetChildCount());
+
+  ignition::physics::tpelib::Entity &link = model.GetChildByName("link");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      link.GetId());
+  EXPECT_EQ("link", link.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, link.GetPose());
+  EXPECT_EQ(1u, link.GetChildCount());
+
+  ignition::physics::tpelib::Entity &collision =
+      link.GetChildByName("collision");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      collision.GetId());
+  EXPECT_EQ("collision", collision.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, collision.GetPose());
+
+  // check nested model
+  ignition::physics::tpelib::Entity &nestedModel =
+      model.GetChildByName("nested_model");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      nestedModel.GetId());
+  EXPECT_EQ("nested_model", nestedModel.GetName());
+  EXPECT_EQ(ignition::math::Pose3d(1, 2, 2, 0, 0, 0), nestedModel.GetPose());
+  EXPECT_EQ(1u, nestedModel.GetChildCount());
+
+  ignition::physics::tpelib::Entity &nestedLink =
+      nestedModel.GetChildByName("nested_link");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      nestedLink.GetId());
+  EXPECT_EQ("nested_link", nestedLink.GetName());
+  EXPECT_EQ(ignition::math::Pose3d(3, 1, 1, 0, 0, 1.5707),
+      nestedLink.GetPose());
+  EXPECT_EQ(1u, nestedLink.GetChildCount());
+
+  ignition::physics::tpelib::Entity &nestedCollision =
+      nestedLink.GetChildByName("nested_collision");
+  ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+      nestedCollision.GetId());
+  EXPECT_EQ("nested_collision", nestedCollision.GetName());
+  EXPECT_EQ(ignition::math::Pose3d::Zero, nestedCollision.GetPose());
+}
+
+// Test ConstructModel function.
+TEST(SDFFeatures_TEST, ConstructModel)
+{
+  auto engine = LoadEngine();
+  ASSERT_NE(nullptr, engine);
+  sdf::World sdfWorld;
+  sdfWorld.SetName("default");
+  auto world = engine->ConstructWorld(sdfWorld);
+  EXPECT_NE(nullptr, world);
+
+  sdf::Model sdfModel;
+  sdfModel.SetName("model");
+  auto model = world->ConstructModel(sdfModel);
+  EXPECT_NE(nullptr, model);
+  EXPECT_EQ("model", model->GetName());
+
+  sdfModel.SetName("nested_model_by_world");
+  auto nestedModelByWorld = world->ConstructNestedModel(sdfModel);
+  EXPECT_NE(nullptr, nestedModelByWorld);
+  EXPECT_EQ("nested_model_by_world", nestedModelByWorld->GetName());
+
+  sdfModel.SetName("nested_model_by_model");
+  auto nestedModelByModel = model->ConstructNestedModel(sdfModel);
+  EXPECT_NE(nullptr, nestedModelByModel);
+  EXPECT_EQ("nested_model_by_model", nestedModelByModel->GetName());
 }
 
 int main(int argc, char *argv[])
