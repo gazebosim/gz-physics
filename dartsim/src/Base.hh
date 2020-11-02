@@ -338,6 +338,7 @@ class Base : public Implements3d<FeatureList<Feature>>
       this->links.RemoveEntity(bn);
     }
     this->models.RemoveEntity(skel);
+    this->skeletonsWithInverseDynamics.erase(skel);
     world->removeSkeleton(skel);
   }
 
@@ -347,6 +348,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, const dart::dynamics::Frame*> frames;
+  public: std::set<dart::dynamics::SkeletonPtr> skeletonsWithInverseDynamics;
 };
 
 }
