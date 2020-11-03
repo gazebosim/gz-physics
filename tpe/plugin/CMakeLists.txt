@@ -43,7 +43,7 @@ if (WIN32)
   # disable MSVC inherit via dominance warning
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250")
   INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
-      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned} 
+      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
       ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
