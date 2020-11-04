@@ -1,5 +1,10 @@
 ## Ignition Physics 1.x
 
+### Ignition Physics 1.10.0 (2020-11-04)
+
+1. Ignore invalid joint commands in the dartsim-plugin
+    * [Pull request 137](https://github.com/ignitionrobotics/ign-physics/pull/137)
+
 ### Ignition Physics 1.9.0 (2020-09-17)
 
 1. Support for slip compliance in the dartsim-plugin.
