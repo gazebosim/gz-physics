@@ -15,6 +15,10 @@
  *
 */
 
+#include "ShapeFeatures.hh"
+
+#include <memory>
+
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
@@ -23,7 +27,6 @@
 #include <dart/dynamics/SphereShape.hpp>
 
 #include "CustomMeshShape.hh"
-#include "ShapeFeatures.hh"
 
 namespace ignition {
 namespace physics {
