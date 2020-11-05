@@ -2,8 +2,14 @@
 
 ### Ignition Physics 1.10.0 (2020-11-04)
 
+1. Resolved codecheck issues
+    * [Pull request 154](https://github.com/ignitionrobotics/ign-physics/pull/154)
+
 1. Ignore invalid joint commands in the dartsim-plugin
     * [Pull request 137](https://github.com/ignitionrobotics/ign-physics/pull/137)
+
+1.  Fix CONFIG arg in ign_find_package(DART) call
+    * [Pull request 119](https://github.com/ignitionrobotics/ign-physics/pull/119)
 
 ### Ignition Physics 1.9.0 (2020-09-17)
 
