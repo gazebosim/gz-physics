@@ -88,7 +88,7 @@ Entity &Model::AddModel()
 }
 
 //////////////////////////////////////////////////
-void Model::SetCanonicalLink(const std::size_t linkId)
+void Model::SetCanonicalLink(std::size_t linkId)
 {
   if (linkId != kNullEntityId)
   {
@@ -109,21 +109,6 @@ Entity &Model::GetCanonicalLink()
   if (linkEnt.GetId() != kNullEntityId)
   {
     return linkEnt;
-  }
-
-  // todo(anyone) the code below does not guarantee that the link returned is
-  // the first link defined in SDF since GetChildren returns a std::map, and
-  // likewise the use of std::set, do not preserve order.
-  std::set<Model *> models;
-  for (auto &it : this->GetChildren())
-  {
-    // if child is nested model, store it first and only return nested
-    // links if there are no links in this model
-    Model *model = dynamic_cast<Model *>(it.second.get());
-    if (model)
-    {
-      models.insert(model);
-    }
   }
 
   for (auto m : models)
