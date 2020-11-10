@@ -54,7 +54,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 
   /// \brief Set the canonical link of model
   public: void SetCanonicalLink(
-    std::size_t linkId = kNullEntityId);
+    std::size_t linkId=kNullEntityId);
 
   /// \brief Get the canonical link of model
   /// \return Entity the canonical (first) link

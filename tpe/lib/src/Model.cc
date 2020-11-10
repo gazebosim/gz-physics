@@ -90,11 +90,8 @@ Entity &Model::AddModel()
 //////////////////////////////////////////////////
 void Model::SetCanonicalLink(std::size_t linkId)
 {
-  if (linkId != kNullEntityId)
-  {
-    this->dataPtr->canonicalLinkId = linkId;
-  }
-  else if (this->dataPtr->firstLinkId != kNullEntityId)
+  this->dataPtr->canonicalLinkId = linkId;
+  if (this->dataPtr->canonicalLinkId == kNullEntityId)
   {
     this->dataPtr->canonicalLinkId = this->dataPtr->firstLinkId;
   }
@@ -110,14 +107,22 @@ Entity &Model::GetCanonicalLink()
   {
     return linkEnt;
   }
-
-  for (auto m : models)
+  else
   {
-    auto &link = m->GetCanonicalLink();
-    if (link.GetId() != kNullEntity.GetId())
-      return link;
+    for (auto &child : this->GetChildren())
+    {
+      Entity childEnt = *(child.second);
+      Model *nestedModel = static_cast<Model *>(&childEnt);
+      if (nestedModel != nullptr)
+      {
+        Entity &ent = nestedModel->GetChildById(this->dataPtr->canonicalLinkId);
+        if (ent.GetId() != kNullEntityId)
+        {        
+          return ent;
+        }
+      }
+    }
   }
-
   return kNullEntity;
 }
 
