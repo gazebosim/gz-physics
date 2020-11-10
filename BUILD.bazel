@@ -1,55 +1,46 @@
 load(
-    "//ign_bazel:cmake_configure_file.bzl",
-    "cmake_configure_file",
-)
-load(
-    "//ign_bazel:generate_include_header.bzl",
+    "//ign_bazel:build_defs.bzl",
+    "IGNITION_FEATURES",
+    "IGNITION_ROOT",
+    "IGNITION_VISIBILITY",
     "generate_include_header",
-)
-load(
-    "//ign_bazel:ign_export_header.bzl",
+    "ign_config_header",
     "ign_export_header",
 )
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = IGNITION_VISIBILITY,
+    features = IGNITION_FEATURES,
+)
 
-RESOURCE_PATH = "~/.ignition"
+licenses(["notice"])
+
+exports_files(["LICENSE"])
+
 PROJECT_NAME = "ignition-physics"
+
 PROJECT_MAJOR = 2
+
 PROJECT_MINOR = 1
+
 PROJECT_PATCH = 0
-IGN_DESIGNATION_UPPER = "TEST"
-PHYSICS_ENGINE_INSTALL_DIR = "./ign_physics/"
 
 # Generates config.hh based on the version numbers in CMake code.
-cmake_configure_file(
+ign_config_header(
     name = "config",
     src = "include/ignition/physics/config.hh.in",
-    out = "include/ignition/physics/config.hh",
     cmakelists = ["CMakeLists.txt"],
-    defines = [
-        "PROJECT_VERSION_MAJOR=%d" % (PROJECT_MAJOR),
-        "PROJECT_VERSION_MINOR=%d" % (PROJECT_MINOR),
-        "PROJECT_VERSION_PATCH=%d" % (PROJECT_PATCH),
-        "PROJECT_MAJOR_VERSION=%d" % (PROJECT_MAJOR),
-        "PROJECT_MINOR_VERSION=%d" % (PROJECT_MINOR),
-        "PROJECT_PATCH_VERSION=%d" % (PROJECT_PATCH),
-        "PROJECT_VERSION=%d.%d" % (PROJECT_MAJOR, PROJECT_MINOR),
-        "PROJECT_VERSION_FULL=%d.%d.%d" % (PROJECT_MAJOR, PROJECT_MINOR, PROJECT_PATCH),  # noqa
-        "PROJECT_NAME_NO_VERSION=%s" % (PROJECT_NAME),
-        "PROJECT_NAME=%s" % (PROJECT_NAME),
-        "IGN_PROJECT_NAME=%s" % (PROJECT_NAME),
-        "IGN_RENDERING_RESOURCE_PATH=%s" % (RESOURCE_PATH),
-        "IGN_DESIGNATION_UPPER=%s" % (IGN_DESIGNATION_UPPER),
-        "IGNITION_PHYSICS_ENGINE_INSTALL_DIR=%s" % (PHYSICS_ENGINE_INSTALL_DIR),
+    extra_defines = [
+        "IGNITION_PHYSICS_ENGINE_INSTALL_DIR=foobar",
     ],
-    visibility = ["//visibility:private"],
+    project_name = PROJECT_NAME,
+    project_version = (PROJECT_MAJOR, PROJECT_MINOR, PROJECT_PATCH),
 )
 
 ign_export_header(
     name = "include/ignition/physics/Export.hh",
-    lib_name = "ignition-physics",
     export_base = "IGNITION_PHYSICS",
+    lib_name = "ignition-physics",
     visibility = ["//visibility:private"],
 )
 
@@ -145,12 +136,12 @@ test_sources = [
 ]
 
 sources = [
-   "src/CanReadData.cc",
-   "src/CanWriteData.cc",
-   "src/CompositeData.cc",
-   "src/DataStatusMask.cc",
-   "src/FrameID.cc",
-   "src/Identity.cc",
+    "src/CanReadData.cc",
+    "src/CanWriteData.cc",
+    "src/CompositeData.cc",
+    "src/DataStatusMask.cc",
+    "src/FrameID.cc",
+    "src/Identity.cc",
 ]
 
 generate_include_header(
@@ -170,33 +161,38 @@ public_headers = public_headers_no_gen + [
     "src/TestUtilities.hh",
 ]
 
-cc_binary(
-    name = "libignition-physics2.so",
-    srcs = sources + public_headers,
-    includes = ["include", "src"],
-    linkopts = ["-Wl,-soname,libignition-physics2.so"],
-    linkshared =  True,
-    visibility = [],
+cc_library(
+    name = "mesh",
+    hdrs = glob([
+        "mesh/include/ignition/physics/mesh/*.hh",
+        "mesh/include/ignition/physics/mesh/**/*.hh",
+    ]),
+    includes = ["mesh/include"],
+)
+
+cc_library(
+    name = "sdf",
+    hdrs = glob(["sdf/include/ignition/physics/sdf/*.hh"]),
+    includes = ["sdf/include"],
     deps = [
-        "//ign_common",
-        "//ign_common/graphics",
-        "//ign_common/events",
-        "//ign_plugin/loader",
-        "//ign_plugin/core:ign_plugin",
-        "//ign_math",
-        "//ign_bazel:utilities",
+        IGNITION_ROOT + "sdformat",
     ],
 )
 
 cc_library(
     name = "ign_physics",
-    srcs = ["libignition-physics2.so"],
+    srcs = sources,
     hdrs = public_headers,
     includes = ["include"],
     deps = [
-        "//ign_plugin/loader",
+        ":mesh",
+        ":sdf",
+        "@eigen3",
+        IGNITION_ROOT + "ign_bazel:utilities",
+        IGNITION_ROOT + "ign_common",
+        IGNITION_ROOT + "ign_math",
+        IGNITION_ROOT + "ign_plugin/loader",
     ],
-    visibility = ["//visibility:public"],
 )
 
 [cc_test(
@@ -204,16 +200,10 @@ cc_library(
     srcs = [src],
     deps = [
         ":ign_physics",
-	"//ign_common/events:events",
-	"//ign_common/graphics:graphics",
-        "//ign_physics/test:test_utils",
-        "//ign_math",
-        "//ign_bazel:utilities",
-        "//ign_plugin/core:ign_plugin",
-        "//ign_plugin/loader",
-        "@gtest//:gtest",
+        IGNITION_ROOT + "ign_physics/test:test_utils",
+        "@gtest",
         "@gtest//:gtest_main",
-    ]
+    ],
 ) for src in test_sources]
 
 exports_files(["resources"])

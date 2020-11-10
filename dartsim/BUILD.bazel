@@ -1,15 +1,21 @@
 load(
-    "//ign_bazel:cmake_configure_file.bzl",
-    "cmake_configure_file",
-)
-load(
-    "//ign_bazel:generate_include_header.bzl",
+    "//ign_bazel:build_defs.bzl",
+    "IGNITION_FEATURES",
+    "IGNITION_ROOT",
+    "IGNITION_VISIBILITY",
     "generate_include_header",
+    "ign_config_header",
+    "ign_export_header",
+)
+
+package(
+    default_visibility = IGNITION_VISIBILITY,
+    features = IGNITION_FEATURES,
 )
 
 test_sources = [
     "src/Base_TEST.cc",
-    #"src/Collisions_TEST.cc",
+    "src/Collisions_TEST.cc",
     "src/EntityManagement_TEST.cc",
     "src/JointFeatures_TEST.cc",
     "src/LinkFeatures_TEST.cc",
@@ -46,85 +52,58 @@ public_headers = [
     "include/ignition/physics/dartsim/World.hh",
 ]
 
-cc_binary(
-    name = "libignition-physics-dartsim-plugin.so",
-    srcs = sources + public_headers,
-    includes = ["include", "src"],
-    linkshared =  True,
-    visibility = ["//visibility:public"],
+cc_library(
+    name = "dartsim",
+    srcs = sources,
+    hdrs = public_headers,
+    includes = [
+        "include",
+        "src",
+    ],
     deps = [
-        "//ign_bazel:utilities",
-        "//ign_plugin/core:ign_plugin",
-        "//ign_plugin/register",
-        "//ign_physics",
-        "//ign_physics/sdf",
-        "//ign_physics/mesh",
-        "//ign_common",
-        "//ign_common/graphics",
-        "//ign_common/events",
-        "//ign_common/profiler",
-        "//ign_math",
-        "//ign_math/eigen3",
-        "//sdformat",
-        "@eigen3",
-        "//dart",
+        IGNITION_ROOT + "dart",
+        IGNITION_ROOT + "ign_common/graphics",
+        IGNITION_ROOT + "ign_common/profiler",
+        IGNITION_ROOT + "ign_math/eigen3",
+        IGNITION_ROOT + "ign_physics",
+        IGNITION_ROOT + "ign_plugin/register",
+        IGNITION_ROOT + "sdformat",
     ],
 )
 
-cc_library(
-    name = "dartsim",
-    hdrs = public_headers,
-    includes = ["include", "src"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":libignition-physics-dartsim-plugin.so",
-        "//ign_bazel:utilities",
-        "//ign_plugin/core:ign_plugin",
-        "//ign_plugin/register",
-        "//ign_physics",
-        "//ign_physics/sdf",
-        "//ign_physics/mesh",
-        "//ign_common",
-        "//ign_common/graphics",
-        "//ign_common/events",
-        "//ign_common/profiler",
-        "//ign_math",
-        "//ign_math/eigen3",
-        "//sdformat",
-        "@eigen3",
-        "//dart",
+cc_binary(
+    name = "libignition-physics-dartsim-plugin.so",
+    srcs = [":dartsim"],
+    includes = [
+        "include",
+        "src",
     ],
+    linkshared = True,
 )
 
 [cc_test(
     name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
-    srcs = [src],
-    deps = [
-        ":dartsim",
-        "//ign_physics/test:test_utils",
-        "//ign_bazel:utilities",
-        "//ign_plugin/core:ign_plugin",
-        "//ign_plugin/register",
-        "//ign_physics",
-        "//ign_physics/sdf",
-        "//ign_physics/mesh",
-        "//ign_common",
-        "//ign_common/graphics",
-        "//ign_common/events",
-        "//ign_common/profiler",
-        "//ign_math",
-        "//ign_math/eigen3",
-        "//sdformat",
-        "@eigen3",
-        "//dart",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main",
+    srcs = [
+        src,
+        "src/Base.hh",
     ],
-    data = [ "worlds", "//ign_physics:resources" ],
+    data = [
+        "worlds",
+        ":libignition-physics-dartsim-plugin.so",
+        "//ign_physics:resources",
+    ],
+    includes = ["src"],
     local_defines = [
         "tpe_plugin_LIB='\"\"'",
         "bullet_plugin_LIB='\"\"'",
         "TEST_WORLD_DIR='\"./ign_physics/dartsim/worlds/\"'",
         "IGNITION_PHYSICS_RESOURCE_DIR='\"./ign_physics/resources/\"'",
+    ],
+    deps = [
+        IGNITION_ROOT + "ign_physics",
+        IGNITION_ROOT + "ign_physics/test:test_utils",
+        ":dartsim",
+        "@gtest",
+        "@gtest//:gtest_main",
     ],
 ) for src in test_sources]
