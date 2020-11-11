@@ -117,7 +117,7 @@ Entity &Model::GetCanonicalLink()
       {
         Entity &ent = nestedModel->GetChildById(this->dataPtr->canonicalLinkId);
         if (ent.GetId() != kNullEntityId)
-        {        
+        {
           return ent;
         }
       }

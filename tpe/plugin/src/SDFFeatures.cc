@@ -194,7 +194,7 @@ Identity SDFFeatures::ConstructSdfNestedModel(
   {
     model->SetCanonicalLink();
   }
-  
+
   // construct nested models
   for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
   {
