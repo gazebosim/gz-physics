@@ -17,6 +17,10 @@
 
 #include "SDFFeatures.hh"
 
+#include <cmath>
+#include <limits>
+#include <memory>
+
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
@@ -31,8 +35,6 @@
 #include <dart/dynamics/UniversalJoint.hpp>
 #include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
-
-#include <cmath>
 
 #include <ignition/common/Console.hh>
 #include <ignition/math/eigen3/Conversions.hh>

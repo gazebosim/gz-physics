@@ -50,7 +50,7 @@ namespace ignition
       /// \brief This constructor will specify the parent frame and then forward
       /// the remaining arguments to the constructor of the underlying quantity.
       public: template <typename... Args>
-      RelativeQuantity(const FrameID &_parentID, Args&&... _args);
+      explicit RelativeQuantity(const FrameID &_parentID, Args&&... _args);
 
       /// \brief Implicit conversion constructor.
       public: RelativeQuantity(const Q &_rawValue);
