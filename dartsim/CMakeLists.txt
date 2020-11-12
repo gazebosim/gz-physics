@@ -7,6 +7,10 @@ ign_add_component(dartsim INTERFACE
 
 target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
 target_include_directories(${features} SYSTEM INTERFACE ${DART_INCLUDE_DIRS})
+if (MSVC)
+  # needed by DART, see https://github.com/dartsim/dart/issues/753
+  target_compile_options(${features} INTERFACE "/permissive-")
+endif()
 
 install(
   DIRECTORY include/
@@ -42,11 +46,15 @@ install(TARGETS ${dartsim_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${dartsim_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
 set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (WIN32)
-  # create_symlink requires cmake 3.13 on windows
-  cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+  # disable MSVC inherit via dominance warning
+  target_compile_options(${dartsim_plugin} PUBLIC "/wd4250")
+  INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
+      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
+      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
+else()
+  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
+  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
-INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 
 # Testing
 ign_build_tests(
