@@ -1,8 +1,6 @@
 \page physicsconcepts Ignition Physics simulation concepts
 
 This tutorial introduces simulation concepts that are used in Ignition Physics.
-As the SDFormat is used to describe simulation scenarios in Ignition, the
-Ignition Physics simulation concepts are described closely related to the SDFormat.
 
 ## Prerequisites
 
@@ -27,18 +25,25 @@ humanoid robot:
     contacts or physically unfeasible contact forces.
 
 Ignition adopts SDFormat structure to describe not only the visual element but
-also the dynamic physics aspects.
+also the dynamic physics aspects. To get more in-depth of what you can define
+the environment in the SDFormat file, please refer to this
+[SDFormat specification](http://sdformat.org/spec?ver=1.7&elem=sdf).
+For a comprehensive tutorial for constructing your robot model as SDFormat,
+please refer to [this tutorial](https://ignitionrobotics.org/docs/dome/building_robot).
+
 
 ## Physics concepts in Ignition Gazebo simulation
 
 First, please see [Understand the GUI tutorial](https://ignitionrobotics.org/docs/dome/gui)
 for an overview of Ignition Gazebo GUI. In this tutorial, we will show how to
-manipulate and visualize some physics aspects of the differential car model
-in Ignition Gazebo.
+manipulate and visualize some physics aspects using interesting
+models powered by Ignition Physics on Ignition Gazebo.
 
-### Manipulating the model
+### Differential Car
 
-Please download the differential car model to your home folder by:
+This model demonstrates how we can control simulated differential cars depending
+on physics engines and visualize the collision concept. Please download the
+Differential Car model to your home folder by:
 
 ```bash
 wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/diff_drive.sdf -P ~
@@ -50,43 +55,6 @@ We can now start our differential car simulation on Ignition Gazebo by:
 ign gazebo ~/diff_drive.sdf
 ```
 
-On the Ignition Gazebo GUI, manipulating the model is easy. In general, there
-are two ways to transform the model pose.
-
-#### Use Transform control
-
-For translation movement, we can enter into translate mode by clicking the
-second icon from the left in the top left toolbar, the Transform Control plugin,
-or by pressing the keyboard shortcut: T. The red arrow represents the x-axis,
-green the y-axis, and blue the z-axis. Click and hold on any of the arrows
-while moving your mouse to move the entity in that direction.
-
-We can hold down any one of the X, Y, or Z keys, or a combination of them, while
-clicking and dragging will constrain the model's movement along those axes as follow:
-
-<img src="https://user-images.githubusercontent.com/18066876/97185768-c018f780-17a0-11eb-9580-a662a578030f.gif"/>
-
-For rotation movement, we select the third icon from the left in the top left
-toolbar,  the Transform Control plugin, or by pressing the keyboard shortcut: R.
-The red circle represents roll, green is pitch, and blue is yaw. Click and hold
-on any of the circles while moving your mouse to rotate the entity around that axis.
-
-<img src="https://user-images.githubusercontent.com/18066876/97185874-e63e9780-17a0-11eb-955b-20200c3be4e4.gif"/>
-
-#### Input model pose on Component Inspector
-
-If exact pose input is required, we select the car model
-(e.g. `vehicle_blue`), then select the `Pose` drop down list. We can input the
-desired pose, for example `X: 0.0, Y: 1.0, Z: 2.0, Roll: 1.0, Pitch: 0.0, Yaw: 1.0`
-as follow:
-
-<img src="https://user-images.githubusercontent.com/18066876/97185954-fe161b80-17a0-11eb-8777-9e667889c468.gif"/>
-
-Regardless of the simulation is pausing or not, the car model will jump to the
-desired pose. For more detail about specifying pose, see this [tutorial](http://sdformat.org/tutorials?tut=specify_pose&cat=specification&).
-
-### Monitoring model pose
-
 To see the pose changing when the simulation running, we publish a
 \ref ignition::msgs::Twist "Twist" message to command the `vehicle_blue` car to
 move in a circle with 2 meters radius as follow:
@@ -95,9 +63,20 @@ move in a circle with 2 meters radius as follow:
 ign topic -t "/model/vehicle_blue/cmd_vel" -m ignition.msgs.Twist -p "linear: {x: 1.0}, angular: {z: 0.5}"
 ```
 
+Then please press the Play button to start the simulation.
 This command tells the car to move in its coordinate frame with velocity
-1.0 meter per second in the X-axis and angular velocity 0.5 radians per second in
-Z-axis. We can monitor the model pose by selecting the moving car and then
+1.0 meter per second in the X-axis and angular velocity of 0.5 radians per second in
+Z-axis.
+
+Note that the mechanism to move the car is different depending on the used physics
+engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim),
+the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/diff_drive/DiffDrive.cc#L333) code.
+Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe),
+TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/velocity_control/VelocityControl.cc#L117) code.
+
+#### Monitoring the model and its links pose
+
+We can monitor the model pose by selecting the moving car and then
 select the drop-down list `Pose`. Moreover, we could also read the model
 links' poses relative to their parent link by selecting the
 corresponding link on the model tree:
@@ -106,9 +85,10 @@ corresponding link on the model tree:
 
 Note that using the model tree as shown in the above gif, we can view the
 parameters and properties such as `visual` or `collision` of each link or joint
-in the model. For more detail about the kinematics of the model tree, see this [tutorial](http://sdformat.org/tutorials?tut=spec_model_kinematics&cat=specification&).
+in the model. For more detail about the kinematics of the model tree, see this
+[tutorial](http://sdformat.org/tutorials?tut=spec_model_kinematics&cat=specification&).
 
-### Visualizing collision
+#### Visualizing collision
 
 One of the most wonderful features of physics simulation is the capability to
 simulate collision. We can do a fun experiment like this: while the `vehicle_blue`
@@ -117,134 +97,145 @@ upcoming path. We will see the blue car will push the green car!
 
 <img src="https://user-images.githubusercontent.com/18066876/97190565-28b6a300-17a6-11eb-9ed5-0d6d50c15ad4.gif"/>
 
-To see where these collision parameters are set and how it works, please see
-this [tutorial](http://sdformat.org/tutorials?tut=spec_shapes&cat=specification&).
+To see where these collision parameters are set in SDFormat and how it works,
+please see this [tutorial](http://sdformat.org/tutorials?tut=spec_shapes&cat=specification&).
 
-## Physics concepts in SDFormat
+### Lift Drag
 
-In this section, we will go into detail about the model parameters and
-explain the physics concepts which correspond to SDFormat defining simulation.
+This model shows how joint force, torque, and pressure are supported in Ignition Physics.
+Please download the Lift Drag model to your home folder by:
 
-### SDFormat structure
-
-In general, an SDFormat file defining a simulation scenario has the following
-structure:
-
-```xml
-<?xml version="1.0" ?>
-<sdf version="1.7">
-  <world name="default">
-    <physics type="dartsim">
-      ...
-    </physics>
-
-    <scene>
-      ...
-    </scene>
-
-    <model name="box">
-      ...
-    </model>
-
-    <model name="sphere">
-      ...
-    </model>
-
-    <light name="spotlight">
-      ...
-    </light>
-  </world>
-</sdf>
+```bash
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/lift_drag.sdf -P ~
 ```
 
-The next level of the root element `sdf` specifying the SDFormat version
-is the `world` element, which encapsulates entire simulation scenarios
-description including these elements:
-- `physics`: specifies the type of physics engines for dynamic simulation (in
-  our case they are `TPE` or `dartsim`).
-- `scene`: specifies the view of the environment.
-- `model`: defines a complex robot structure or an object. Note there can be
-  multiple `model` inside `world` tag, which enables multi-body simulation.
-- `light`: describes light source in simulation scenarios.
+Like above, please start the Lift Drag model on Ignition Gazebo by:
 
-### Physics simulation concepts corresponding to the SDFormat
-
-Looking closer to the `model` tag, an example structure defining the above
-diffential driver car is described below with comments:
-
-```xml
-<model name="car">
-    <pose>0 0 0.5 0 0 0</pose> <!--specifies where the car pose in world frame-->
-    <static>false</static> <!--specifies whether the care is static (unmovable) or not-->
-
-    <link name="chassis"> <!--specifies a component of a car with physics properties-->
-      <inertial>
-        <mass>1.0</mass> <!--specifies the link mass-->
-        <inertia> <!--specifies the 3x3 rotational symmetric inertia matrix of the link -->
-          <ixx>0.016</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.016</iyy>
-          <iyz>0</iyz>
-          <izz>0.016</izz>
-        </inertia>
-      </inertial>
-      <visual name='visual'> <!--describes visual properties of the link for visualization-->
-        <geometry> <!--describes visual shape-->
-          <box> <!--could be box, cyclinder, sphere, polyline, heightmap, image, mesh, plane-->
-            <size>2.0 1.0 0.5</size>
-          </box>
-        </geometry>
-        <material>  <!--describes visual characteristics such as ambient, diffuse, specular-->
-          <ambient>0.0 1 0.0 1</ambient>
-          <diffuse>0.0 1 0.0 1 1</diffuse>
-          <specular>0.0 1 0.0 1</specular>
-        </material>
-      </visual>
-      <collision name='collision'> <!--describes collision properties of the link for physics simulation, could be different from visual properties-->
-        <geometry> <!--describes collision shape-->
-          <box>
-            <size>2.0 1.0 0.5</size>
-          </box>
-        </geometry>
-        <surface> <!--describes collision surface properties, such as contact softness and frictions, depending on supported physics engines-->
-          ...
-        </surface>
-      </collision>
-    </link>
-    <link name="right-wheel">
-      ...
-    </link>
-    ...
-
-    <!--the joint element specifies the joint connecting two links with kinematics and dynamics properties,
-    could be revolute, prismatic, fixed, ball, screw, universal-->
-    <joint name='right_wheel_joint' type='revolute'>
-      <pose relative_to='right_wheel'/> <!--specifies the joint pose relating to a link-->
-      <parent>chassis</parent> <!--specifies parent link that connects to a child link-->
-      <child>right_wheel</child> <!--specifies child link-->
-      <axis> <!--specifies axis of rotation for revolute joint or axis of translation for prismatic joint-->
-        <xyz expressed_in='__model__'>0 1 0</xyz> <!--x,y,z components of the normalized axis vector expressed in a frame-->
-        <limit> <!--specifies the limit of the joint-->
-          <lower>-1.79769e+308</lower>    <!--negative infinity-->
-          <upper>1.79769e+308</upper>     <!--positive infinity-->
-        </limit>
-      </axis>
-    </joint>
-
-    <plugin filename="libMyPlugin.so" name="my_plugin"/>
-</model>
+```bash
+ign gazebo ~/lift_drag.sdf
 ```
 
-Most of the physical properties are mentioned as comments above in the example
-car SDFormat model. In general, every model is a group of `link`s (can be just one
-link) connected with `joint`s. Note that a `model` element can be
-nested in another `model`. Finally, the `plugin` element could be defined in
-`world`, `model`, and `sensor` tags for dynamically loading a demanded physics
-engine that simulates the dynamic model.
+To see how the rotor lifts the cube due to wind force pressure, we publish a
+\ref ignition::msgs::Double "Double" message represeting the torque (Nm) applying to
+the rotor rod axis as follow:
 
-To get more in-depth of what you can define the environment in the SDFormat file,
-please refer to this [SDFormat specification](http://sdformat.org/spec?ver=1.7&elem=sdf).
+```bash
+ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m ignition.msgs.Double  -p "data: 0.7"
+```
 
-For a comprehensive tutorial for constructing your robot model, please refer
-to [this tutorial](https://ignitionrobotics.org/docs/dome/building_robot).
+Then please press Play button to start the simulation. We stops exerting torque by:
+
+```bash
+ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m ignition.msgs.Double  -p "data: 0.0"
+```
+
+You will see the cube drops due to no lift force from support torque on the rod,
+and the blades will stop after some time due to friction.
+
+<img src="https://user-images.githubusercontent.com/18066876/99107715-8d675f80-25e6-11eb-91f3-90f83bbc93e9.gif"/>
+
+The command applies a constant torque to the rotor rod, together with
+the mechanism to compute the upward/downward lift and drag force due to the
+wind pressure simulation supported by Ignition Physics, the cube is lifted.
+For more detail, please see the [LiftDrag.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/lift_drag/LiftDrag.cc)
+code.
+
+### Buoyancy
+
+This model shows how buoyancy is supported in Ignition Physics. This world
+contains the following three models:
+
+  1. submarine: A simple submarine model that floats in place.
+  2. submarine_sinking: A simple submarine model that is not buoyant and sinks.
+  3. submarine_buoyant: A simple submarine model that is buoyant and floats.
+
+Please download the Buoyancy model to your home folder by:
+
+```bash
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/buoyancy.sdf -P ~
+```
+
+Like above, please start the Buoyancy model on Ignition Gazebo by:
+
+```bash
+ign gazebo ~/buoyancy.sdf
+```
+
+After pressing the Play button, you will see the behaviors of the submarine as
+the above description.
+
+<img src="https://user-images.githubusercontent.com/18066876/99107675-7c1e5300-25e6-11eb-9b6c-2745c894c1ba.gif"/>
+
+As an overview, the buoyancy concept is realized by
+simulating fluid density and applying the force on the object in the fluid
+proportional to its volume. Hence, you can change the model buoyancy by modifying its
+inertia, please see [link specification](http://sdformat.org/spec?ver=1.7&elem=link).
+For more detail on simulating buoyancy, please see the
+[Buoyancy.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/buoyancy/Buoyancy.cc)
+code.
+
+### Pendulum
+
+This model demonstrates how simulated inertia and gravity affect the object
+movement by showing free swing of the pendulum. Please download the
+Pendulum model to your home folder by:
+
+```bash
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/video_record_dbl_pendulum.sdf -P ~
+```
+
+and start the Pendulum model on Ignition Gazebo by:
+
+```bash
+ign gazebo ~/video_record_dbl_pendulum.sdf
+```
+
+After pressing the Play button, you will see that the pendulum will oscillate around
+its main revolute joint forever due to lack of friction (it is undeclared in the
+SDFormat file).
+
+<img src="https://user-images.githubusercontent.com/18066876/99107609-69a41980-25e6-11eb-8792-7c348e07b4c0.gif"/>
+
+The oscillation period or the max angular speed of the joint
+will change if we modify the inertia of the rods. According to the demo below,
+you will see that gravity is defined as -9.8 m/s^2 on the Z-axis. Please refer to
+[link specification](http://sdformat.org/spec?ver=1.7&elem=link) for modifying
+the inertia and mass of the links.
+
+### Multicopter
+
+This model shows how Ignition Physics supports gravity, actuators and
+inertia to control object velocity.
+Please download the Multicopter model to your home folder by:
+
+```bash
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/multicopter_velocity_control.sdf -P ~
+```
+
+and start the Multicopter model on Ignition Gazebo by:
+
+```bash
+ign gazebo ~/multicopter_velocity_control.sdf
+```
+
+To control the multicopter to ascend and hover, we send a
+\ref ignition::msgs::Twist "Twist" message to command the `X3` multicopter
+ascending 0.1 m.s as follow:
+
+```bash
+ign topic -t "/X3/gazebo/command/twist" -m ignition.msgs.Twist -p "linear: {x:0 y: 0 z: 0.1} angular {z: 0}"
+```
+
+then hovering:
+
+```bash
+ign topic -t "/X3/gazebo/command/twist" -m ignition.msgs.Twist -p " "
+```
+
+<img src="https://user-images.githubusercontent.com/18066876/99107458-2f3a7c80-25e6-11eb-8cff-40fbc1036d1f.gif"/>
+
+Do the same for the `X4` multicopter. After pressing the Play button, you will see
+both of the multicopters will ascend, this demonstrates how the physics engine
+utilizes model kinematics and dynamics to support simulating complex model and
+its controller. For more detail about the multicopter controller, please see
+[MulticopterVelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/multicopter_control/MulticopterVelocityControl.cc).
