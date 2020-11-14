@@ -103,6 +103,9 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature sets the generalized Joint states such as
+    /// Position, Velocity, Acceleration of the Joint and the applied Force to
+    /// the Joint.
     class IGNITION_PHYSICS_VISIBLE SetBasicJointState : public virtual Feature
     {
       /// \brief The Joint API for setting basic joint state
