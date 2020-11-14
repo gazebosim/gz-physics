@@ -319,6 +319,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature sets the commanded value of generalized velocity of
+    /// this Joint.
     class IGNITION_PHYSICS_VISIBLE SetJointVelocityCommandFeature
         : public virtual Feature
     {
