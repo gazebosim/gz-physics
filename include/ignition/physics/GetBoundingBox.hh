@@ -32,6 +32,10 @@ namespace ignition
       GetShapeBoundingBox,
       GetShapeFromLink,
       LinkFrameSemantics>;
+
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the axis aligned bounding box for the
+    /// shapes attached to this link in the requested frame.
     class IGNITION_PHYSICS_VISIBLE GetLinkBoundingBox
         : public virtual
           FeatureWithRequirements<GetLinkBoundingBoxRequiredFeatures>
@@ -62,6 +66,10 @@ namespace ignition
       GetLinkBoundingBox,
       GetLinkFromModel,
       ModelFrameSemantics>;
+
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the axis aligned bounding box for the
+    /// links attached to this Model in the requested frame.
     class IGNITION_PHYSICS_VISIBLE GetModelBoundingBox
         : public virtual
           FeatureWithRequirements<GetModelBoundingBoxRequiredFeatures>
