@@ -54,7 +54,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the index-specified world pointer from the
+    /// \brief This feature retrieves the index-specified World pointer from the
     /// physics engine in use.
     class IGNITION_PHYSICS_VISIBLE GetWorldFromEngine : public virtual Feature
     {
@@ -134,8 +134,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the index-specified model pointer from the
-    /// index-specified simulation world.
+    /// \brief This feature retrieves the index-specified Model pointer from the
+    /// index-specified simulation World.
     class IGNITION_PHYSICS_VISIBLE GetModelFromWorld : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -214,8 +214,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the index-specified link pointer from the
-    /// index-specified model.
+    /// \brief This feature retrieves the index-specified Link pointer from the
+    /// index-specified Model.
     class IGNITION_PHYSICS_VISIBLE GetLinkFromModel : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -294,8 +294,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the index-specified joint pointer from the
-    /// index-specified model.
+    /// \brief This feature retrieves the index-specified Joint pointer from the
+    /// index-specified Model.
     class IGNITION_PHYSICS_VISIBLE GetJointFromModel : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -373,6 +373,9 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the index-specified Shape pointer from the
+    /// index-specified Link.
     class IGNITION_PHYSICS_VISIBLE GetShapeFromLink : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
