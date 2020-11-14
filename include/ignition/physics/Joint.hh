@@ -26,6 +26,10 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
+    /// \brief This feature retrieves the generalized Joint states such as
+    /// Position, Velocity, Acceleration of the Joint, applied Force to the
+    /// Joint and the transformation matrix from the Joint's parent Link to this
+    /// Joint's child Link based on its current position.
     class IGNITION_PHYSICS_VISIBLE GetBasicJointState : public virtual Feature
     {
       /// \brief The Joint API for getting basic joint state
@@ -178,6 +182,10 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature retrieves the generalized Joint properties such as
+    /// Degrees Of Freedom (DoF), the transformation matrix from the Joint's
+    /// parent Link to this Joint and the transformation matrix from this Joint
+    /// to its child Link.
     class IGNITION_PHYSICS_VISIBLE GetBasicJointProperties
         : public virtual Feature
     {
