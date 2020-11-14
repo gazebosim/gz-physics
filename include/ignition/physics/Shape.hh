@@ -133,7 +133,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the Shape's axis aligned bounding box in 
+    /// \brief This feature retrieves the Shape's axis aligned bounding box in
     /// the requested frame.
     class IGNITION_PHYSICS_VISIBLE GetShapeBoundingBox
         : public virtual FeatureWithRequirements<ShapeFrameSemantics>
@@ -255,6 +255,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature retrieves the Shape's slip compliance of the first
+    /// and second friction direction in the friction pyramid model.
     class IGNITION_PHYSICS_VISIBLE GetShapeFrictionPyramidSlipCompliance
         : public virtual Feature
     {
