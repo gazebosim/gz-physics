@@ -28,6 +28,8 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
+    /// \brief This feature retrieves the Shape kinematic properties such as the
+    /// the transform from the the Link frame to this Shape frame.
     class IGNITION_PHYSICS_VISIBLE GetShapeKinematicProperties
         : public virtual Feature
     {
@@ -87,6 +89,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature retrieves the Shape collision properties such as
+    /// the Shape surface friction coefficient and restitution coefficient.
     class IGNITION_PHYSICS_VISIBLE GetShapeCollisionProperties
         : public virtual Feature
     {
@@ -129,6 +133,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature retrieves the Shape's axis aligned bounding box in 
+    /// the requested frame.
     class IGNITION_PHYSICS_VISIBLE GetShapeBoundingBox
         : public virtual FeatureWithRequirements<ShapeFrameSemantics>
     {
