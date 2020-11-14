@@ -26,7 +26,8 @@ namespace ignition
 {
   namespace physics
   {
-    /// \brief This feature retrieves the physics engine name in use. 
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the physics engine name in use.
     class IGNITION_PHYSICS_VISIBLE GetEngineInfo : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -52,6 +53,9 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves world pointer from the physics engine in
+    /// use.
     class IGNITION_PHYSICS_VISIBLE GetWorldFromEngine : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
