@@ -54,8 +54,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves world pointer from the physics engine in
-    /// use.
+    /// \brief This feature retrieves the index-specified world pointer from the
+    /// physics engine in use.
     class IGNITION_PHYSICS_VISIBLE GetWorldFromEngine : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -133,6 +133,9 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the index-specified model pointer from the
+    /// index-specified simulation world.
     class IGNITION_PHYSICS_VISIBLE GetModelFromWorld : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
