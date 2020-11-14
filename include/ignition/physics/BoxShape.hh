@@ -80,6 +80,9 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature rigidly attachs a BoxShape to the specified
+    /// Link.
     class IGNITION_PHYSICS_VISIBLE AttachBoxShapeFeature
         : public virtual FeatureWithRequirements<BoxShapeCast>
     {

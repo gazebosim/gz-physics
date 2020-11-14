@@ -79,6 +79,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature rigidly attachs a SphereShape to the specified
+    /// Link.
     class IGNITION_PHYSICS_VISIBLE AttachSphereShapeFeature
         : public virtual FeatureWithRequirements<SphereShapeCast>
     {
@@ -92,6 +94,12 @@ namespace ignition
 
         public: using ShapePtrType = SphereShapePtr<PolicyT, FeaturesT>;
 
+        /// \brief Rigidly attach a SphereShape to this link.
+        /// \param[in] _radius
+        ///   The radius of the sphere.
+        /// \param[in] _pose
+        ///   The desired pose of the SphereShape relative to the Link frame.
+        /// \returns a ShapePtrType to the newly constructed SphereShape
         public: ShapePtrType AttachSphereShape(
             const std::string &_name,
             Scalar _radius = 1.0,
