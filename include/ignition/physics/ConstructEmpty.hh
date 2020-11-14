@@ -26,6 +26,8 @@ namespace ignition {
 namespace physics {
 
 /////////////////////////////////////////////////
+/// \brief This feature constructs an empty World entity and return its pointer
+/// from the current physics engine in use.
 class ConstructEmptyWorldFeature : public virtual Feature
 {
   public: template <typename PolicyT, typename FeaturesT>
@@ -33,6 +35,9 @@ class ConstructEmptyWorldFeature : public virtual Feature
   {
     public: using WorldPtrType = WorldPtr<PolicyT, FeaturesT>;
 
+    /// \brief Construct an empty World and attach a given name to it.
+    /// \return
+    ///   The WorldPtrType of the constructed World.
     public: WorldPtrType ConstructEmptyWorld(const std::string &_name);
   };
 
@@ -45,6 +50,8 @@ class ConstructEmptyWorldFeature : public virtual Feature
 };
 
 /////////////////////////////////////////////////
+/// \brief This feature constructs an empty Model entity and return its pointer
+/// from the index-specified World.
 class ConstructEmptyModelFeature : public virtual Feature
 {
   public: template <typename PolicyT, typename FeaturesT>
@@ -52,6 +59,9 @@ class ConstructEmptyModelFeature : public virtual Feature
   {
     public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
 
+    /// \brief Construct an empty Model and attach a given name to it.
+    /// \return
+    ///   The ModelPtrType of the constructed Model.
     public: ModelPtrType ConstructEmptyModel(const std::string &_name);
   };
 
@@ -64,6 +74,8 @@ class ConstructEmptyModelFeature : public virtual Feature
 };
 
 /////////////////////////////////////////////////
+/// \brief This feature constructs an empty Link entity and return its pointer
+/// from the index-specified Model.
 class ConstructEmptyLinkFeature : public virtual Feature
 {
   public: template <typename PolicyT, typename FeaturesT>
@@ -71,6 +83,9 @@ class ConstructEmptyLinkFeature : public virtual Feature
   {
     public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
 
+    /// \brief Construct an empty Link and attach a given name to it.
+    /// \return
+    ///   The LinkPtrType of the constructed Link.
     public: LinkPtrType ConstructEmptyLink(const std::string &_name);
   };
 
