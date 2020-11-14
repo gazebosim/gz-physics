@@ -213,6 +213,9 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the index-specified link pointer from the
+    /// index-specified model.
     class IGNITION_PHYSICS_VISIBLE GetLinkFromModel : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
