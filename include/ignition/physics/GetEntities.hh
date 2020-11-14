@@ -293,6 +293,9 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the index-specified joint pointer from the
+    /// index-specified model.
     class IGNITION_PHYSICS_VISIBLE GetJointFromModel : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
