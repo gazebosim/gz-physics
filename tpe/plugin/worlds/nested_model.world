@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="nested_model_world">
+    <model name="model">
+      <static>true</static>
+      <model name="nested_model">
+        <pose>1 2 2 0 0 0</pose>
+        <link name="nested_link">
+          <pose>3 1 1 0 0 1.5707</pose>
+          <collision name="nested_collision">
+            <geometry>
+              <sphere>
+                <radius>2</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1 2 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1 2 3</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

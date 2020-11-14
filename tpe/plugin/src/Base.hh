@@ -121,14 +121,14 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(worldId, worldPtr);
   }
 
-  public: inline Identity AddModel(std::size_t _worldId, tpelib::Model &_model)
+  public: inline Identity AddModel(std::size_t _parentId, tpelib::Model &_model)
   {
     auto modelPtr = std::make_shared<ModelInfo>();
     modelPtr->model = &_model;
     size_t modelId = _model.GetId();
     this->models.insert({modelId, modelPtr});
     // keep track of model's corresponding world
-    this->childIdToParentId.insert({modelId, _worldId});
+    this->childIdToParentId.insert({modelId, _parentId});
 
     return this->GenerateIdentity(modelId, modelPtr);
   }

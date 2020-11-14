@@ -15,10 +15,13 @@
  *
 */
 
+#include "CustomMeshShape.hh"
+
+#include <memory>
+#include <string>
+
 #include <ignition/common/Console.hh>
 #include <ignition/common/SubMesh.hh>
-
-#include "CustomMeshShape.hh"
 
 namespace ignition {
 namespace physics {

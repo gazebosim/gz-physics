@@ -253,6 +253,80 @@ namespace ignition
             const Identity &_shapeID) = 0;
       };
     };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE GetShapeFrictionPyramidSlipCompliance
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Get the slip compliance for the first friction direction
+        /// of a friction pyramid model.
+        /// \return
+        ///   The value of the slip compliance.
+        public: Scalar GetPrimarySlipCompliance() const;
+
+        /// \brief Get the slip compliance for the second friction direction
+        /// of a friction pyramid model.
+        /// \return
+        ///   The value of the slip compliance.
+        public: Scalar GetSecondarySlipCompliance() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        public: virtual Scalar GetShapeFrictionPyramidPrimarySlipCompliance(
+            const Identity &_shapeID) const = 0;
+
+        public: virtual Scalar GetShapeFrictionPyramidSecondarySlipCompliance(
+            const Identity &_shapeID) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE SetShapeFrictionPyramidSlipCompliance
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the slip compliance for the first friction direction
+        /// of a friction pyramid model.
+        /// \param[in] _value
+        ///   The value to set the slip compliance to.
+        /// \return
+        ///   True if the parameter was set successfully, false otherwise.
+        public: bool SetPrimarySlipCompliance(Scalar _value);
+
+        /// \brief Set the slip compliance for the second friction direction
+        /// of a friction pyramid model.
+        /// \param[in] _value
+        ///   The value to set the slip compliance to.
+        /// \return
+        ///   True if the parameter was set successfully, false otherwise.
+        public: bool SetSecondarySlipCompliance(Scalar _value);
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        public: virtual bool SetShapeFrictionPyramidPrimarySlipCompliance(
+            const Identity &_shapeID, Scalar _value) = 0;
+
+        public: virtual bool SetShapeFrictionPyramidSecondarySlipCompliance(
+            const Identity &_shapeID, Scalar _value) = 0;
+      };
+    };
   }
 }
 

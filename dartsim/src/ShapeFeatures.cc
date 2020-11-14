@@ -15,6 +15,10 @@
  *
 */
 
+#include "ShapeFeatures.hh"
+
+#include <memory>
+
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
@@ -23,7 +27,6 @@
 #include <dart/dynamics/SphereShape.hpp>
 
 #include "CustomMeshShape.hh"
-#include "ShapeFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -327,6 +330,82 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   const dart::math::BoundingBox &box = node->getShape()->getBoundingBox();
   return AlignedBox3d(box.getMin(), box.getMax());
 }
+
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+/////////////////////////////////////////////////
+double ShapeFeatures::GetShapeFrictionPyramidPrimarySlipCompliance(
+    const Identity &_shapeID) const
+{
+  auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  auto aspect = node->getDynamicsAspect();
+  if (nullptr == aspect)
+  {
+    ignerr
+      << "Attempt to get FrictionPyramidPrimarySlipCompliance for a "
+      << "ShapeNode that doesn't have a DynamicAspect. "
+      << "Returning default value of 0.0."
+      << std::endl;
+    return 0.0;
+  }
+  return aspect->getSlipCompliance();
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetShapeFrictionPyramidSecondarySlipCompliance(
+    const Identity &_shapeID) const
+{
+  auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  auto aspect = node->getDynamicsAspect();
+  if (nullptr == aspect)
+  {
+    ignerr
+      << "Attempt to get FrictionPyramidSecondarySlipCompliance for a "
+      << "ShapeNode that doesn't have a DynamicAspect. "
+      << "Returning default value of 0.0."
+      << std::endl;
+    return 0.0;
+  }
+  return aspect->getSecondarySlipCompliance();
+}
+
+/////////////////////////////////////////////////
+bool ShapeFeatures::SetShapeFrictionPyramidPrimarySlipCompliance(
+    const Identity &_shapeID, double _value)
+{
+  auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  auto aspect = node->getDynamicsAspect();
+  if (nullptr == aspect)
+  {
+    ignerr
+      << "Attempt to set FrictionPyramidPrimarySlipCompliance for a "
+      << "ShapeNode that doesn't have a DynamicAspect. "
+      << "The parameter has not been set."
+      << std::endl;
+    return false;
+  }
+  aspect->setSlipCompliance(_value);
+  return true;
+}
+
+/////////////////////////////////////////////////
+bool ShapeFeatures::SetShapeFrictionPyramidSecondarySlipCompliance(
+    const Identity &_shapeID, double _value)
+{
+  auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  auto aspect = node->getDynamicsAspect();
+  if (nullptr == aspect)
+  {
+    ignerr
+      << "Attempt to set FrictionPyramidSecondarySlipCompliance for a "
+      << "ShapeNode that doesn't have a DynamicAspect. "
+      << "The parameter has not been set."
+      << std::endl;
+    return false;
+  }
+  aspect->setSecondarySlipCompliance(_value);
+  return true;
+}
+#endif
 
 }
 }

@@ -126,6 +126,46 @@ namespace ignition
       this->template Interface<CollisionFilterMaskFeature>()
         ->RemoveCollisionFilterMask(this->identity);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::GetPrimarySlipCompliance() const
+    -> Scalar
+    {
+      return this->template Interface<GetShapeFrictionPyramidSlipCompliance>()
+          ->GetShapeFrictionPyramidPrimarySlipCompliance(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::GetSecondarySlipCompliance() const
+    -> Scalar
+    {
+      return this->template Interface<GetShapeFrictionPyramidSlipCompliance>()
+          ->GetShapeFrictionPyramidSecondarySlipCompliance(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool SetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::SetPrimarySlipCompliance(Scalar _value)
+    {
+      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+          ->SetShapeFrictionPyramidPrimarySlipCompliance(
+              this->identity, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool SetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
+    ::SetSecondarySlipCompliance(Scalar _value)
+    {
+      return this->template Interface<SetShapeFrictionPyramidSlipCompliance>()
+          ->SetShapeFrictionPyramidSecondarySlipCompliance(
+              this->identity, _value);
+    }
   }
 }
 
