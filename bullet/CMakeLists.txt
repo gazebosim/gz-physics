@@ -26,6 +26,7 @@ target_link_libraries(${bullet_plugin}
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${bullet_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+ADD_DEFINITIONS(-DBT_USE_DOUBLE_PRECISION)
 
 # The library created by `ign_add_component` includes the ign-physics version
 # (i.e. libignition-physics1-name-plugin.so), but for portability,

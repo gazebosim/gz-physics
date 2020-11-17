@@ -35,7 +35,7 @@ void SimulationFeatures::WorldForwardStep(
     // Print for debug purposes the internals of the simulation
     // Just for the world requested
     // Divide frequency for printing msgs to 50
-    if (this->internalTicksDivider >= 0) {
+    if (this->internalTicksDivider >= 50) {
       for (const auto &model : this->models)
       {
 	const auto &modelInfo = model.second;
@@ -43,18 +43,21 @@ void SimulationFeatures::WorldForwardStep(
         {
 	  // Print X, Y, Z of the model
 	  auto basePos = modelInfo->model->getBasePos();
+	  (void) basePos;
+	  /*
 	  igndbg << dt.count() << " - " << _worldID.id <<" - XYZ " << modelInfo->name << ": "
 		 << basePos[0] << " "
 		 << basePos[1] << " "
 		 << basePos[2] << ".\n";
+	  */
 	}
       }
       this->internalTicksDivider = 0;
     }
     this->internalTicksDivider++;
 
-    // const WorldInfoPtr &worldInfo = this->worlds.at(_worldID);
-    // worldInfo->world->stepSimulation(dt.count());
+    const WorldInfoPtr &worldInfo = this->worlds.at(_worldID);
+    worldInfo->world->stepSimulation(dt.count());
 }
 
 }
