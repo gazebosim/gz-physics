@@ -21,10 +21,22 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   }
 
   const auto linkID = _id.ID();
+
+  print_map(this->models);
+  igndbg << "====================== \n";
+  igndbg << "Request Link ID: " << linkID<< "\n";
+  print_map(this->links);
+  igndbg << "HERE \n";
+
   const auto &linkInfo = this->links.at(linkID);
   const auto modelIdentity = linkInfo->model;
   auto linkIndex = linkInfo->linkIndex;
   const auto &modelInfo = this->models.at(modelIdentity);
+  /*
+  igndbg << "Requested model Identity " << modelIdentity.id << "\n";
+  ignerr << "HERE2 \n";
+  ignerr << "HERE3 \n";
+  */
   const auto &model = modelInfo->model;
 
   // Get pose

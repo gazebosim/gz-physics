@@ -74,6 +74,15 @@ struct LinkInfo
   Identity model;
 };
 
+template<typename K, typename V>
+void print_map(std::unordered_map<K,V> const &m)
+{
+  igndbg << "mymap.size() is " << m.size() << "\n";
+  for (auto const& pair: m) {
+    igndbg << "{" << pair.first << ": " << pair.second << "}\n";
+  }
+}
+
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
 {
   return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
@@ -108,11 +117,13 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline std::size_t GetNextEntity()
   {
+    igndbg << "Get entity: " << entityCount << ".\n";
     return entityCount++;
   }
 
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
+    igndbg << "Init engine.\n";
     const auto id = this->GetNextEntity();
     assert(id == 0);
 
@@ -121,6 +132,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline Identity AddWorld(WorldInfo _worldInfo)
   {
+    igndbg << "Add world.\n";
     const auto id = this->GetNextEntity();
     this->worlds[id] = std::make_shared<WorldInfo>(_worldInfo);
     return this->GenerateIdentity(id, this->worlds.at(id));
@@ -128,6 +140,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline Identity AddModel(ModelInfo _modelInfo)
   {
+    igndbg << "Add model.\n";
     const auto id = this->GetNextEntity();
     this->models[id] = std::make_shared<ModelInfo>(_modelInfo);
 
@@ -136,6 +149,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline Identity AddLink(LinkInfo _linkInfo)
   {
+    igndbg << "Add link.\n";
     const auto id = this->GetNextEntity();
     this->links[id] = std::make_shared<LinkInfo>(_linkInfo);
 
@@ -149,6 +163,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, ModelInfoPtr> models;
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
 
+  public: int internalTicksDivider;
 };
 
 }

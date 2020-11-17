@@ -75,6 +75,7 @@ ign_find_package(DART
 # Find bullet for the bullet plugin wrapper
 ign_find_package(IgnBullet
   VERSION 2.87
+  #REQUIRED
   REQUIRED_BY bullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)

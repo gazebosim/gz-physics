@@ -1,7 +1,3 @@
-#include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
-#include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
-#include <btBulletDynamicsCommon.h>
-
 #include <string>
 
 #include "EntityManagementFeatures.hh"
@@ -32,6 +28,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
+  igndbg << "Remove model: " << _modelID.id << ".\n";
   // Check if the model exists
   if (this->models.find(_modelID.id) == this->models.end()){
     return false;
@@ -51,13 +48,16 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
     }
     it++;
   }
+  igndbg << "After remove model: .\n";
 
   // Clean up model
   auto model = this->models.at(_modelID.id);
   this->worlds.at(model->world)->world->removeMultiBody(model->model);
+  igndbg << "After bullet remove.\n";
   delete this->models.at(_modelID.id)->model;
+  igndbg << "After model delete.\n";
   this->models.erase(_modelID.id);
-
+  igndbg << "Removed model: " << _modelID.id << ".\n";
   return true;
 }
 
@@ -70,6 +70,7 @@ bool EntityManagementFeatures::ModelRemoved(
 bool EntityManagementFeatures::RemoveModelByIndex(
   const Identity & _worldID, std::size_t _modelIndex)
 {
+  igndbg << "Remove model???: " << _modelIndex << ".\n";
   // Check if the model exists
   if (this->models.find(_modelIndex) == this->models.end() ||
       this->models.at(_modelIndex)->world.id != _worldID.id) {
@@ -97,13 +98,14 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   delete this->models.at(_modelIndex)->model;
   this->models.erase(_modelIndex);
 
+  igndbg << "Remove model: " << _modelIndex << ".\n";
   return true;
 }
 
 bool EntityManagementFeatures::RemoveModelByName(
   const Identity & _worldID, const std::string & _modelName )
 {
-
+  igndbg << "Remove model???: " << _modelName << ".\n";
   // Check if there is a model with the requested name
   bool found = false;
   size_t index_id = 0;
