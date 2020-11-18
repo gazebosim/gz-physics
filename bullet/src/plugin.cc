@@ -20,37 +20,21 @@
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Register.hh>
 
+#include "Base.hh"
+#include "EntityManagementFeatures.hh"
+
 namespace ignition {
 namespace physics {
 namespace bullet {
 
 struct BulletFeatures : FeatureList <
-  ignition::physics::GetEngineInfo
+  EntityManagementFeatureList
 > { };
 
-class Plugin : public ignition::physics::Implements3d<BulletFeatures>
-{
-  using Identity = ignition::physics::Identity;
-
-  public: Identity InitiateEngine(std::size_t /*_engineID*/) override
-  {
-    this->engineName = "HelloWorld";
-
-    return this->GenerateIdentity(0);
-  }
-
-  public: std::size_t GetEngineIndex(const Identity &/*_id*/) const override
-  {
-    return 0;
-  }
-
-  public: const std::string &GetEngineName(const Identity &/*_id*/) const override
-  {
-    return this->engineName;
-  }
-
-  std::string engineName;
-};
+class Plugin :
+    public virtual Implements3d<BulletFeatures>,
+    public virtual Base,
+    public virtual EntityManagementFeatures {};
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 
