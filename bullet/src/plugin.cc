@@ -23,6 +23,7 @@
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
 #include "SimulationFeatures.hh"
+#include "SDFFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -30,14 +31,17 @@ namespace bullet {
 
 struct BulletFeatures : FeatureList <
   EntityManagementFeatureList,
-  SimulationFeatureList
+  SimulationFeatureList,
+  SDFFeatureList
 > { };
 
 class Plugin :
     public virtual Implements3d<BulletFeatures>,
     public virtual Base,
     public virtual EntityManagementFeatures,
-    public virtual SimulationFeatures {};
+    public virtual SimulationFeatures,
+    public virtual SDFFeatureList
+{};
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 

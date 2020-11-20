@@ -18,9 +18,7 @@
 #ifndef IGNITION_PHYSICS_BULLET_BASE_HH_
 #define IGNITION_PHYSICS_BULLET_BASE_HH_
 
-//MISSIN INCLUDES
 #include <btBulletDynamicsCommon.h>
-
 #include <Eigen/Geometry>
 
 #include <assert.h>
@@ -56,7 +54,6 @@ struct WorldInfo
 
 struct ModelInfo
 {
-  btRigidBody* model;
   std::string name;
   Identity world;
 };
@@ -64,10 +61,7 @@ struct ModelInfo
 struct LinkInfo
 {
   std::string name;
-  int linkIndex;
-  btScalar linkMass;
-  btVector3 linkInertiaDiag;
-  Eigen::Isometry3d poseIsometry;
+  btRigidBody* link;
   Identity model;
 };
 
