@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Open Source Robotics Foundation
+ * Copyright (C) 2019 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,35 @@
  *
 */
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FeaturePolicy.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Register.hh>
+#ifndef IGNITION_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
+#define IGNITION_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
+
+#include <vector>
+#include <ignition/physics/ForwardStep.hh>
 
 #include "Base.hh"
-#include "EntityManagementFeatures.hh"
-#include "SimulationFeatures.hh"
 
 namespace ignition {
 namespace physics {
 namespace bullet {
 
-struct BulletFeatures : FeatureList <
-  EntityManagementFeatureList,
-  SimulationFeatureList
-> { };
+using SimulationFeatureList = FeatureList<
+  ForwardStep
+>;
 
-class Plugin :
-    public virtual Implements3d<BulletFeatures>,
+class SimulationFeatures :
     public virtual Base,
-    public virtual EntityManagementFeatures,
-    public virtual SimulationFeatures {};
+    public virtual Implements3d<SimulationFeatureList>
+{
+  public: void WorldForwardStep(
+      const Identity &_worldID,
+      ForwardStep::Output &_h,
+      ForwardStep::State &_x,
+      const ForwardStep::Input &_u) override;
+};
 
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
+}
+}
+}
 
-}
-}
-}
+#endif
