@@ -28,8 +28,8 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the Shape kinematic properties such as the
-    /// the transform from the the Link frame to this Shape frame.
+    /// \brief This feature retrieves the shape kinematic properties such as the
+    /// the relative transform from the the link frame to this shape frame.
     class IGNITION_PHYSICS_VISIBLE GetShapeKinematicProperties
         : public virtual Feature
     {
@@ -89,8 +89,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the Shape collision properties such as
-    /// the Shape surface friction coefficient and restitution coefficient.
+    /// \brief This feature retrieves the shape collision properties such as
+    /// the shape surface friction coefficient and restitution coefficient.
     class IGNITION_PHYSICS_VISIBLE GetShapeCollisionProperties
         : public virtual Feature
     {
@@ -133,8 +133,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the Shape's axis aligned bounding box in
-    /// the requested frame.
+    /// \brief This feature retrieves the shape's axis aligned bounding box in
+    /// the requested frame. The default frame is the world frame.
     class IGNITION_PHYSICS_VISIBLE GetShapeBoundingBox
         : public virtual FeatureWithRequirements<ShapeFrameSemantics>
     {
@@ -255,7 +255,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature retrieves the Shape's slip compliance of the first
+    /// \brief This feature retrieves the shape's slip compliance of the first
     /// and second friction direction in the friction pyramid model.
     class IGNITION_PHYSICS_VISIBLE GetShapeFrictionPyramidSlipCompliance
         : public virtual Feature

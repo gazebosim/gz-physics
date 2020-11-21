@@ -35,7 +35,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature retrieves the axis aligned bounding box for the
-    /// shapes attached to this link in the requested frame.
+    /// shapes attached to this link in the requested frame. The default frame
+    /// is the world frame.
     class IGNITION_PHYSICS_VISIBLE GetLinkBoundingBox
         : public virtual
           FeatureWithRequirements<GetLinkBoundingBoxRequiredFeatures>
@@ -69,7 +70,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature retrieves the axis aligned bounding box for the
-    /// links attached to this Model in the requested frame.
+    /// model in the requested frame. The default frame is the world frame.
     class IGNITION_PHYSICS_VISIBLE GetModelBoundingBox
         : public virtual
           FeatureWithRequirements<GetModelBoundingBoxRequiredFeatures>
@@ -81,8 +82,8 @@ namespace ignition
         public: using AlignedBoxType =
             typename FromPolicy<PolicyT>::template Use<AlignedBox>;
 
-        /// \brief Get the axis aligned bounding box for the links attached
-        /// to this model in the requested frame.
+        /// \brief Get the axis aligned bounding box for the model
+        /// in the requested frame.
         /// \param[in] _referenceFrame
         ///   The desired frame for the bounding box. By default, this will be
         ///   the world frame.
