@@ -115,8 +115,9 @@ namespace ignition
     /// Link::SetWorldPose and similar functions for setting velocity
     /// regardless of the kinematic constraints on that link, this behavior
     /// for FreeGroup is not well defined and difficult to implement
-    /// with generalized coordinates. The FreeGroup::SetWorldPose function should
-    /// provide an analog to both `Link::SetWorldPose` and `Model::SetWorldPose`.
+    /// with generalized coordinates. The FreeGroup::SetWorldPose function
+    /// should provide an analog to both Link::SetWorldPose and
+    /// Model::SetWorldPose.
     class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldPose
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
