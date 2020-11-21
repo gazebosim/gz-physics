@@ -81,8 +81,9 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature rigidly attachs a BoxShape to the specified
-    /// Link.
+    /// \brief This feature constructs a new box shape and attaches the
+    /// desired pose in the link frame. The pose could be defined to be the box
+    /// center point or any corner in actual implementation.
     class IGNITION_PHYSICS_VISIBLE AttachBoxShapeFeature
         : public virtual FeatureWithRequirements<BoxShapeCast>
     {

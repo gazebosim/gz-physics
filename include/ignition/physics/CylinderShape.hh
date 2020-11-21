@@ -93,8 +93,9 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature rigidly attachs a CylinderShape to the specified
-    /// Link.
+    /// \brief This feature constructs a new cylinder shape and attaches the
+    /// desired pose in the link frame. The pose could be defined to be the
+    /// cylinder center point in actual implementation.
     class IGNITION_PHYSICS_VISIBLE AttachCylinderShapeFeature
         : public virtual FeatureWithRequirements<CylinderShapeCast>
     {

@@ -79,8 +79,9 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature rigidly attachs a SphereShape to the specified
-    /// Link.
+    /// \brief This feature constructs a new sphere shape and attaches the
+    /// desired pose in the link frame. The pose is defined as the
+    /// sphere center point in actual implementation.
     class IGNITION_PHYSICS_VISIBLE AttachSphereShapeFeature
         : public virtual FeatureWithRequirements<SphereShapeCast>
     {

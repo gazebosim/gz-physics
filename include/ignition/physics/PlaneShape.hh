@@ -115,8 +115,9 @@ namespace physics
   };
 
   /////////////////////////////////////////////////
-  /// \brief This feature rigidly attachs a PlaneShape to the specified
-  /// Link.
+  /// \brief \brief This feature constructs a new plane shape and attaches the
+  /// desired point, which the plane passes thorugh in the link frame. The
+  /// default point is at zero coordinate.
   class AttachPlaneShapeFeature
       : public virtual FeatureWithRequirements<PlaneShapeCast>
   {
