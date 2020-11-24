@@ -27,10 +27,10 @@ Identity SDFFeatures::ConstructSdfModel(
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const auto pose = _sdfModel.RawPose();
-  const bool isStatic = _sdfModel.Static();
-  const bool selfCollide = _sdfModel.SelfCollide();
+  // const bool isStatic = _sdfModel.Static();
+  // const bool selfCollide = _sdfModel.SelfCollide();
 
-  const auto &world = this->worlds.at(_worldID)->world;
+  // const auto &world = this->worlds.at(_worldID)->world;
   const auto modelIdentity = this->AddModel({name, _worldID});
 
   // Build links
@@ -55,7 +55,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const auto diagonalMoments = inertial.MassMatrix().DiagonalMoments();
 
   // Get link properties
-  const btScalar linkMass = mass;
+  // const btScalar linkMass = mass;
   const btVector3 linkInertiaDiag =
       convertVec(ignition::math::eigen3::convert(diagonalMoments));
 
