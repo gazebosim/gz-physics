@@ -56,6 +56,7 @@ struct ModelInfo
 {
   std::string name;
   Identity world;
+  std::vector<std::size_t> links = {};
 };
 
 struct LinkInfo
@@ -129,6 +130,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     const auto id = this->GetNextEntity();
     this->links[id] = std::make_shared<LinkInfo>(_linkInfo);
+
+    auto model = this->models.at(_linkInfo.model);
+    model->links.push_back(id);
 
     return this->GenerateIdentity(id, this->links.at(id));
   }
