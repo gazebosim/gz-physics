@@ -1,4 +1,3 @@
-//MISSIN INCLUDES
 #include <btBulletDynamicsCommon.h>
 
 #include <string>
@@ -43,18 +42,17 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
+    auto model = this->models.at(_modelID);
     if (linkInfo->model.id == _modelID.id)
     {
+      this->worlds.at(model->world)->world->removeRigidBody(linkInfo->link);
       it = this->links.erase(it);
       continue;
     }
     it++;
   }
 
-  // Clean up model
-  auto model = this->models.at(_modelID.id);
-  this->worlds.at(model->world)->world->removeRigidBody(model->model);
-  delete this->models.at(_modelID.id)->model;
+  // Clean up model, links are erased and the model is just a name to tie them together
   this->models.erase(_modelID.id);
 
   return true;
@@ -82,8 +80,10 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
+    auto model = this->models.at(_modelIndex);
     if (linkInfo->model.id == _modelIndex)
     {
+      this->worlds.at(model->world)->world->removeRigidBody(linkInfo->link);
       it = this->links.erase(it);
       continue;
     }
@@ -91,9 +91,6 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   }
 
   // Clean up model
-  auto model = this->models.at(_modelIndex);
-  this->worlds.at(model->world)->world->removeRigidBody(model->model);
-  delete this->models.at(_modelIndex)->model;
   this->models.erase(_modelIndex);
 
   return true;

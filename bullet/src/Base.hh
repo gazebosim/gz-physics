@@ -18,9 +18,7 @@
 #ifndef IGNITION_PHYSICS_BULLET_BASE_HH_
 #define IGNITION_PHYSICS_BULLET_BASE_HH_
 
-//MISSIN INCLUDES
 #include <btBulletDynamicsCommon.h>
-
 #include <Eigen/Geometry>
 
 #include <assert.h>
@@ -56,18 +54,15 @@ struct WorldInfo
 
 struct ModelInfo
 {
-  btRigidBody* model;
   std::string name;
   Identity world;
+  std::vector<std::size_t> links = {};
 };
 
 struct LinkInfo
 {
   std::string name;
-  int linkIndex;
-  btScalar linkMass;
-  btVector3 linkInertiaDiag;
-  Eigen::Isometry3d poseIsometry;
+  btRigidBody* link;
   Identity model;
 };
 
@@ -135,6 +130,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     const auto id = this->GetNextEntity();
     this->links[id] = std::make_shared<LinkInfo>(_linkInfo);
+
+    auto model = this->models.at(_linkInfo.model);
+    model->links.push_back(id);
 
     return this->GenerateIdentity(id, this->links.at(id));
   }
