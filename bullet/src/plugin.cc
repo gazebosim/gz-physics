@@ -40,7 +40,7 @@ class Plugin :
     public virtual Base,
     public virtual EntityManagementFeatures,
     public virtual SimulationFeatures,
-    public virtual SDFFeatureList
+    public virtual SDFFeatures
 {};
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
