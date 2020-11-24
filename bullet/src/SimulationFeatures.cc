@@ -15,31 +15,25 @@
  *
 */
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FeaturePolicy.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Register.hh>
-
-#include "Base.hh"
-#include "EntityManagementFeatures.hh"
 #include "SimulationFeatures.hh"
 
 namespace ignition {
 namespace physics {
 namespace bullet {
 
-struct BulletFeatures : FeatureList <
-  EntityManagementFeatureList,
-  SimulationFeatureList
-> { };
+void SimulationFeatures::WorldForwardStep(
+    const Identity &_worldID,
+    ForwardStep::Output & /*_h*/,
+    ForwardStep::State & /*_x*/,
+    const ForwardStep::Input & _u)
+{
+    const WorldInfoPtr &worldInfo = this->worlds.at(_worldID);
 
-class Plugin :
-    public virtual Implements3d<BulletFeatures>,
-    public virtual Base,
-    public virtual EntityManagementFeatures,
-    public virtual SimulationFeatures {};
-
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
+    auto *dtDur =
+      _u.Query<std::chrono::steady_clock::duration>();
+    std::chrono::duration<double> dt = *dtDur;
+    worldInfo->world->stepSimulation(dt.count());
+}
 
 }
 }
