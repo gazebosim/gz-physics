@@ -56,7 +56,8 @@ struct ModelInfo
 {
   std::string name;
   Identity world;
-  std::vector<std::size_t> links = {};
+  bool fixed;
+  std::vector<std::size_t> links = {};  
 };
 
 struct LinkInfo
