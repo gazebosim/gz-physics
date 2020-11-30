@@ -25,6 +25,7 @@
 #include "SimulationFeatures.hh"
 #include "SDFFeatures.hh"
 #include "KinematicsFeatures.hh"
+#include "FreeGroupFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -33,6 +34,7 @@ namespace bullet {
 struct BulletFeatures : FeatureList <
   EntityManagementFeatureList,
   SimulationFeatureList,
+  FreeGroupFeatureList,
   KinematicsFeatureList,
   SDFFeatureList
 > { };
@@ -42,6 +44,7 @@ class Plugin :
     public virtual Base,
     public virtual EntityManagementFeatures,
     public virtual SimulationFeatures,
+    public virtual FreeGroupFeatures,
     public virtual KinematicsFeatures,
     public virtual SDFFeatures
 {};
