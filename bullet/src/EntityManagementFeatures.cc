@@ -1,4 +1,4 @@
-#include <btBulletDynamicsCommon.h>
+// #include <btBulletDynamicsCommon.h>
 
 #include <string>
 
@@ -12,15 +12,21 @@ namespace bullet {
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
+  igndbg << "Construct empty world\n";
   // Create bullet empty multibody dynamics world
-  auto collisionConfiguration = new btDefaultCollisionConfiguration();
-  auto dispatcher = new btCollisionDispatcher(collisionConfiguration);
+  btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+  btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
   btBroadphaseInterface* broadphase = new btDbvtBroadphase();
 
-  auto solver = new btSequentialImpulseConstraintSolver;
-  auto world = new btDiscreteDynamicsWorld(
-      dispatcher, broadphase, solver, collisionConfiguration);
+  btConstraintSolver* solver;
+  btDiscreteDynamicsWorld* world;
 
+  btSequentialImpulseConstraintSolver* sol = new btSequentialImpulseConstraintSolver;
+  solver = sol;
+
+  igndbg << "Construct empty world\n";
+  world = new btDiscreteDynamicsWorld(
+      dispatcher, broadphase, solver, collisionConfiguration);
   world->getSolverInfo().m_globalCfm = 0;
 
   return this->AddWorld(
@@ -30,6 +36,9 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
+  ignwarn << "Using dummy feature RemoveModel.\n";
+  return true;
+
   // Check if the model exists
   if (this->models.find(_modelID.id) == this->models.end()){
     return false;
@@ -61,12 +70,17 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 bool EntityManagementFeatures::ModelRemoved(
   const Identity &_modelID) const
 {
+  ignwarn << "Using dummy feature ModelRemoved.\n";
+  return true;
   return this->models.find(_modelID) == this->models.end();
 }
 
 bool EntityManagementFeatures::RemoveModelByIndex(
   const Identity & _worldID, std::size_t _modelIndex)
 {
+  ignwarn << "Using dummy feature RemoveModelByIndex.\n";
+  return true;
+
   // Check if the model exists
   if (this->models.find(_modelIndex) == this->models.end() ||
       this->models.at(_modelIndex)->world.id != _worldID.id) {
@@ -99,6 +113,9 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 bool EntityManagementFeatures::RemoveModelByName(
   const Identity & _worldID, const std::string & _modelName )
 {
+
+  ignwarn << "Using dummy feature RemoveModelByName.\n";
+  return true;
 
   // Check if there is a model with the requested name
   bool found = false;

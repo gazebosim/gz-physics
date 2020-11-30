@@ -10,6 +10,7 @@ Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
 {
+  igndbg << "Construct SDF world.\n";
   const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
@@ -24,6 +25,7 @@ Identity SDFFeatures::ConstructSdfModel(
   const Identity &_worldID,
   const ::sdf::Model &_sdfModel)
 {
+  igndbg << "Construct SDF model.\n";
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const auto pose = _sdfModel.RawPose();
@@ -47,6 +49,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const Identity &_modelID,
   const ::sdf::Link &_sdfLink)
 {
+  igndbg << "Construct SDF link.\n";
   // Read sdf params
   const std::string name = _sdfLink.Name();
   const auto pose = _sdfLink.RawPose();

@@ -108,11 +108,13 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto id = this->GetNextEntity();
     assert(id == 0);
 
+    igndbg << "Initiate Engine.\n";
     return this->GenerateIdentity(0);
   }
 
   public: inline Identity AddWorld(WorldInfo _worldInfo)
   {
+    igndbg << "Add world.\n";
     const auto id = this->GetNextEntity();
     this->worlds[id] = std::make_shared<WorldInfo>(_worldInfo);
     return this->GenerateIdentity(id, this->worlds.at(id));
@@ -120,6 +122,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline Identity AddModel(ModelInfo _modelInfo)
   {
+    igndbg << "Add model.\n";
     const auto id = this->GetNextEntity();
     this->models[id] = std::make_shared<ModelInfo>(_modelInfo);
 
@@ -128,6 +131,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline Identity AddLink(LinkInfo _linkInfo)
   {
+    igndbg << "Add Link.\n";
     const auto id = this->GetNextEntity();
     this->links[id] = std::make_shared<LinkInfo>(_linkInfo);
 
