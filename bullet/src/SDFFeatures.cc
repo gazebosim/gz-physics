@@ -27,11 +27,11 @@ Identity SDFFeatures::ConstructSdfModel(
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const auto pose = _sdfModel.RawPose();
-  // const bool isStatic = _sdfModel.Static();
+  const bool isStatic = _sdfModel.Static();
   // const bool selfCollide = _sdfModel.SelfCollide();
 
   // const auto &world = this->worlds.at(_worldID)->world;
-  const auto modelIdentity = this->AddModel({name, _worldID});
+  const auto modelIdentity = this->AddModel({name, _worldID, isStatic});
 
   // Build links
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
@@ -66,7 +66,7 @@ Identity SDFFeatures::ConstructSdfLink(
   btTransform baseTransform;
   baseTransform.setOrigin(convertVec(poseTranslation));
   baseTransform.setBasis(convertMat(poseLinear));
-  
+
   // Create link
   // (TO-DO: do we want to use MotionState?)
   // First zero is motionState, the second one is the colision shape
@@ -75,7 +75,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   // Add it to the internal world:
   const auto _worldID = this->models.at(_modelID)->world;
-  const auto &world = this->worlds.at(_worldID)->world;  
+  const auto &world = this->worlds.at(_worldID)->world;
   world->addRigidBody(body);
 
   // Generate an identity for it
