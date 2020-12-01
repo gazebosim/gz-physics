@@ -13,8 +13,8 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
   // Create bullet empty multibody dynamics world
-  auto collisionConfiguration = new btDefaultCollisionConfiguration();
-  auto dispatcher = new btCollisionDispatcher(collisionConfiguration);
+  btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+  btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
   btBroadphaseInterface* broadphase = new btDbvtBroadphase();
 
   auto solver = new btSequentialImpulseConstraintSolver;
