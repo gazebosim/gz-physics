@@ -59,7 +59,6 @@ Identity SDFFeatures::ConstructSdfLink(
   const btVector3 linkInertiaDiag =
       convertVec(ignition::math::eigen3::convert(diagonalMoments));
 
-  // (TO-DO: do those calculation need to take into account in some way the base model?)
   math::Pose3d base_pose = this->models.at(_modelID)->pose;
   const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose);
   const auto poseTranslation = poseIsometry.translation();
