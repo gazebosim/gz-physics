@@ -39,17 +39,17 @@ for an overview of Ignition Gazebo GUI. In this tutorial, we will show how to
 manipulate and visualize some physics aspects using interesting
 models powered by Ignition Physics on Ignition Gazebo.
 
-### Differential Car
+### Differential Drive
 
-This model demonstrates how we can control simulated differential cars depending
-on physics engines and visualize the collision concept. Please download the
-Differential Car model to your home folder by:
+This demo world demonstrates how we can control simulated differential drive on
+cars depending on physics engines and visualize the collision concept. Please
+download the Differential Drive simulation world demo to your home folder by:
 
 ```bash
 wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/diff_drive.sdf -P ~
 ```
 
-We can now start our differential car simulation on Ignition Gazebo by:
+We can now start our differential drive simulation on Ignition Gazebo by:
 
 ```bash
 ign gazebo ~/diff_drive.sdf
@@ -65,8 +65,8 @@ ign topic -t "/model/vehicle_blue/cmd_vel" -m ignition.msgs.Twist -p "linear: {x
 
 Then please press the Play button to start the simulation.
 This command tells the car to move in its coordinate frame with velocity
-1.0 meter per second in the X-axis and angular velocity of 0.5 radians per second in
-Z-axis.
+1.0 meter per second in the X-axis and angular velocity of 0.5 radians per
+second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
 engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim),
@@ -102,14 +102,14 @@ please see this [tutorial](http://sdformat.org/tutorials?tut=spec_shapes&cat=spe
 
 ### Lift Drag
 
-This model shows how joint force, torque, and pressure are supported in Ignition Physics.
-Please download the Lift Drag model to your home folder by:
+This demo world shows how joint force, torque, and pressure are supported in
+Ignition Physics. Please download the Lift Drag demo to your home folder by:
 
 ```bash
 wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/lift_drag.sdf -P ~
 ```
 
-Like above, please start the Lift Drag model on Ignition Gazebo by:
+Like above, please start the Lift Drag demo world on Ignition Gazebo by:
 
 ```bash
 ign gazebo ~/lift_drag.sdf
@@ -142,20 +142,20 @@ code.
 
 ### Buoyancy
 
-This model shows how buoyancy is supported in Ignition Physics. This world
+This demo world shows how buoyancy is supported in Ignition Physics. This world
 contains the following three models:
 
   1. submarine: A simple submarine model that floats in place.
   2. submarine_sinking: A simple submarine model that is not buoyant and sinks.
   3. submarine_buoyant: A simple submarine model that is buoyant and floats.
 
-Please download the Buoyancy model to your home folder by:
+Please download the Buoyancy demo to your home folder by:
 
 ```bash
 wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/buoyancy.sdf -P ~
 ```
 
-Like above, please start the Buoyancy model on Ignition Gazebo by:
+Like above, please start the Buoyancy demo on Ignition Gazebo by:
 
 ```bash
 ign gazebo ~/buoyancy.sdf
@@ -176,15 +176,15 @@ code.
 
 ### Pendulum
 
-This model demonstrates how simulated inertia and gravity affect the object
+This demo world demonstrates how simulated inertia and gravity affect the object
 movement by showing free swing of the pendulum. Please download the
-Pendulum model to your home folder by:
+Pendulum demo to your home folder by:
 
 ```bash
 wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/video_record_dbl_pendulum.sdf -P ~
 ```
 
-and start the Pendulum model on Ignition Gazebo by:
+and start the Pendulum demo on Ignition Gazebo by:
 
 ```bash
 ign gazebo ~/video_record_dbl_pendulum.sdf
@@ -204,15 +204,15 @@ the inertia and mass of the links.
 
 ### Multicopter
 
-This model shows how Ignition Physics supports gravity, actuators and
+This demo world shows how Ignition Physics supports gravity, actuators and
 inertia to control object velocity.
-Please download the Multicopter model to your home folder by:
+Please download the Multicopter demo to your home folder by:
 
 ```bash
 wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/multicopter_velocity_control.sdf -P ~
 ```
 
-and start the Multicopter model on Ignition Gazebo by:
+and start the Multicopter demo on Ignition Gazebo by:
 
 ```bash
 ign gazebo ~/multicopter_velocity_control.sdf
