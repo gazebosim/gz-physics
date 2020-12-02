@@ -26,6 +26,9 @@ namespace ignition
 {
   namespace physics
   {
+    /////////////////////////////////////////////////
+    /// \brief This feature removes a Model entity from the index-specified
+    /// World.
     class IGNITION_PHYSICS_VISIBLE RemoveModelFromWorld : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
