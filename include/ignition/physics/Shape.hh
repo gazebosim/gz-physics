@@ -167,6 +167,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature sets the Shape collision properties such as
+    /// the Shape surface friction coefficient and restitution coefficient.
     class IGNITION_PHYSICS_VISIBLE SetShapeCollisionProperties
         : public virtual Feature
     {
@@ -284,6 +286,8 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature sets the Shape's slip compliance of the first
+    /// and second friction direction in the friction pyramid model.
     class IGNITION_PHYSICS_VISIBLE SetShapeFrictionPyramidSlipCompliance
         : public virtual Feature
     {
