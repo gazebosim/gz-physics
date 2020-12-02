@@ -136,7 +136,7 @@ namespace physics
       /// \param[in] _normal
       ///   Normal vector for the plane
       /// \param[in] _point
-      ///   The point that the plane passes through (hence defining the plane)
+      ///   The point that the plane passes through (the origin by default)
       /// \returns the PlaneShapePtr that was just created.
       public: PlaneShapePtr<PolicyT, FeaturesT> AttachPlaneShape(
           const std::string &_name,
