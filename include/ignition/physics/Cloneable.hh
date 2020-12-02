@@ -107,13 +107,13 @@ namespace ignition
       public: MakeCloneable& operator=(MakeCloneable &&_other);
 
       // Documentation inherited
-      public: std::unique_ptr<Cloneable> Clone() const override final;
+      public: std::unique_ptr<Cloneable> Clone() const final;
 
       // Documentation inherited
-      public: void Copy(const Cloneable &_other) override final;
+      public: void Copy(const Cloneable &_other) final;
 
       // Documentation inherited
-      public: void Copy(Cloneable &&_other) override final;
+      public: void Copy(Cloneable &&_other) final;
     };
   }
 }

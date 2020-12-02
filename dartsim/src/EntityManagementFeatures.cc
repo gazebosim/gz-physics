@@ -17,6 +17,9 @@
 
 #include "EntityManagementFeatures.hh"
 
+#include <memory>
+#include <string>
+
 #include <dart/config.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
@@ -24,8 +27,6 @@
 
 #include <dart/collision/CollisionFilter.hpp>
 #include <dart/collision/CollisionObject.hpp>
-
-#include <string>
 
 namespace ignition {
 namespace physics {
