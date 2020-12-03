@@ -162,6 +162,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     delete link->getCollisionShape();
     link->setCollisionShape(shape);
 
+    // We add the rigidbody to the world after it has collision, as
+    // non collision bodies don't get simulated on a dynamics world
     world->addRigidBody(link);
 
     return this->AddCollision({_collision.Name(), shape, _linkID,

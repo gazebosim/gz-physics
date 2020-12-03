@@ -45,8 +45,11 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &/* _worldID */) const override
-      { // TODO(lobotuerk): Implement contacts getter, could be like https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=2855
-         return std::vector<ContactInternal>(); };
+      {
+        // TODO(lobotuerk): Implement contacts getter, could be like https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=2855
+        ignerr << "Dummy GetContactsFromLastStep implementation";
+        return std::vector<ContactInternal>();
+      };
 };
 
 }
