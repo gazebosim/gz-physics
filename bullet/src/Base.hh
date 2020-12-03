@@ -68,6 +68,14 @@ struct LinkInfo
   Identity model;
 };
 
+struct CollisionInfo
+{
+  std::string name;
+  btCollisionShape* shape;
+  Identity link;
+  Identity model;
+};
+
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
 {
   return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
@@ -138,13 +146,22 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     return this->GenerateIdentity(id, this->links.at(id));
   }
+  public: inline Identity AddCollision(CollisionInfo _collisionInfo)
+  {
+   const auto id = this->GetNextEntity();
+   this->collisions[id] = std::make_shared<CollisionInfo>(_collisionInfo);
+
+   return this->GenerateIdentity(id, this->collisions.at(id));
+  }
 
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;
   public: using ModelInfoPtr = std::shared_ptr<ModelInfo>;
   public: using LinkInfoPtr  = std::shared_ptr<LinkInfo>;
+  public: using CollisionInfoPtr = std::shared_ptr<CollisionInfo>;
   public: std::unordered_map<std::size_t, WorldInfoPtr> worlds;
   public: std::unordered_map<std::size_t, ModelInfoPtr> models;
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
+  public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
 
   public: int internalTicksDivider = 0;
 

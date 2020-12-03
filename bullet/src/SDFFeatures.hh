@@ -5,6 +5,7 @@
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
+#include <ignition/physics/sdf/ConstructCollision.hh>
 
 #include <ignition/physics/Implements.hh>
 
@@ -17,6 +18,7 @@ namespace bullet {
 using SDFFeatureList = FeatureList<
   sdf::ConstructSdfLink,
   sdf::ConstructSdfModel,
+  sdf::ConstructSdfCollision,
   sdf::ConstructSdfWorld
 >;
 
@@ -35,6 +37,9 @@ class SDFFeatures :
   private: Identity ConstructSdfLink(
       const Identity &_modelID,
       const ::sdf::Link &_sdfLink) override;
+  private: Identity ConstructSdfCollision(
+      const Identity &_linkID,
+      const ::sdf::Collision &_collision) override;
 };
 
 }
