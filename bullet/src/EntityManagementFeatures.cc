@@ -36,21 +36,38 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
   // Current implementation does not include collisions nor joints
   // Those should be removed here before removing the model
+  auto model = this->models.at(_modelID);
+
+  // Clean up collisions
+  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it = this->collisions.begin();
+  while (collision_it != this->collisions.end())
+  {
+    const auto &collisionInfo = collision_it->second;
+    if (collisionInfo->model.id == _modelID.id)
+    {
+      delete collisionInfo->shape;
+      collision_it = this->collisions.erase(collision_it);
+      continue;
+    }
+    collision_it++;
+  }
 
   // Clean up links
   std::unordered_map<std::size_t, LinkInfoPtr>::iterator it = this->links.begin();
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
-    auto model = this->models.at(_modelID);
     if (linkInfo->model.id == _modelID.id)
     {
       this->worlds.at(model->world)->world->removeRigidBody(linkInfo->link);
+      delete linkInfo->link;
       it = this->links.erase(it);
       continue;
     }
     it++;
   }
+
+
 
   // Clean up model, links are erased and the model is just a name to tie them together
   this->models.erase(_modelID.id);
@@ -72,15 +89,30 @@ bool EntityManagementFeatures::RemoveModelByIndex(
       this->models.at(_modelIndex)->world.id != _worldID.id) {
     return false;
   }
-  // Current implementation does not include collisions nor joints
+  // Current implementation does not include joints
   // Those should be removed here before removing the model
+
+  auto model = this->models.at(_modelIndex);
+  // Clean up collisions
+  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it = this->collisions.begin();
+  while (collision_it != this->collisions.end())
+  {
+    const auto &collisionInfo = collision_it->second;
+    if (collisionInfo->model.id == _modelIndex)
+    {
+      delete collisionInfo->shape;
+      collision_it = this->collisions.erase(collision_it);
+      continue;
+    }
+    collision_it++;
+  }
 
   // Clean up links
   std::unordered_map<std::size_t, LinkInfoPtr>::iterator it = this->links.begin();
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
-    auto model = this->models.at(_modelIndex);
+
     if (linkInfo->model.id == _modelIndex)
     {
       this->worlds.at(model->world)->world->removeRigidBody(linkInfo->link);
