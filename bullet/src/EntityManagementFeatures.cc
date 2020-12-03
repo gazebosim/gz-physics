@@ -34,7 +34,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   if (this->models.find(_modelID.id) == this->models.end()){
     return false;
   }
-  // Current implementation does not include collisions nor joints
+  // Current implementation does not include joints
   // Those should be removed here before removing the model
   auto model = this->models.at(_modelID);
 
@@ -66,8 +66,6 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
     }
     it++;
   }
-
-
 
   // Clean up model, links are erased and the model is just a name to tie them together
   this->models.erase(_modelID.id);
