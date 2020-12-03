@@ -60,6 +60,9 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the CylinderShape properties such as
+    /// the cylinder radius and height.
     class IGNITION_PHYSICS_VISIBLE SetCylinderShapeProperties
         : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
