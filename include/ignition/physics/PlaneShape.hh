@@ -115,6 +115,9 @@ namespace physics
   };
 
   /////////////////////////////////////////////////
+  /// \brief \brief This feature constructs a new plane shape and attaches the
+  /// desired point, which the plane passes thorugh in the link frame. The
+  /// default point is at zero coordinate.
   class AttachPlaneShapeFeature
       : public virtual FeatureWithRequirements<PlaneShapeCast>
   {
@@ -132,8 +135,8 @@ namespace physics
       ///   Name to give to the PlaneShape
       /// \param[in] _normal
       ///   Normal vector for the plane
-      /// \param[in] _offset
-      ///   Offset of the plane
+      /// \param[in] _point
+      ///   The point that the plane passes through (the origin by default)
       /// \returns the PlaneShapePtr that was just created.
       public: PlaneShapePtr<PolicyT, FeaturesT> AttachPlaneShape(
           const std::string &_name,
