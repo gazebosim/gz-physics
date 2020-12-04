@@ -92,6 +92,10 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature constructs a new cylinder shape and attaches the
+    /// desired pose in the link frame. The pose could be defined to be the
+    /// cylinder center point in actual implementation.
     class IGNITION_PHYSICS_VISIBLE AttachCylinderShapeFeature
         : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
@@ -105,6 +109,14 @@ namespace ignition
 
         public: using ShapePtrType = CylinderShapePtr<PolicyT, FeaturesT>;
 
+        /// \brief Rigidly attach a CylinderShape to this link.
+        /// \param[in] _radius
+        ///   The radius of the cylinder.
+        /// \param[in] _height
+        ///   The height of the cylinder.
+        /// \param[in] _pose
+        ///   The desired pose of the CylinderShape relative to the Link frame.
+        /// \returns a ShapePtrType to the newly constructed CylinderShape
         public: ShapePtrType AttachCylinderShape(
             const std::string &_name = "cylinder",
             Scalar _radius = 1.0,
