@@ -42,7 +42,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // Build links
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
-    this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
+    this->FindOrConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
   }
 
   return modelIdentity;
@@ -170,6 +170,27 @@ Identity SDFFeatures::ConstructSdfCollision(
                                modelID});
   }
   return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::FindOrConstructSdfLink(
+  const Identity &_modelID,
+  const ::sdf::Link &_sdfLink)
+{
+  // Check if there is a model with the requested name
+  const std::string linkName = _sdfLink.Name();
+
+  for (const auto &link : this->links)
+  {
+    const auto &linkInfo = link.second;
+    if (linkInfo->name == linkName)
+    {
+      // A link was previously created with that name,
+      // Return an identity with it
+      return Identity(link.first, link.second);
+    }
+  }
+  return this->ConstructSdfLink(_modelID, _sdfLink);
 }
 
 }
