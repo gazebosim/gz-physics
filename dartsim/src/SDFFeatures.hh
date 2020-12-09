@@ -24,6 +24,7 @@
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructVisual.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
@@ -39,6 +40,7 @@ namespace dartsim {
 struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
+  sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfJoint,
   sdf::ConstructSdfCollision,
@@ -54,7 +56,11 @@ class SDFFeatures :
       const ::sdf::World &_sdfWorld) override;
 
   public: Identity ConstructSdfModel(
-      const Identity &_worldID,
+      const Identity &_parentID,
+      const ::sdf::Model &_sdfModel) override;
+
+  public: Identity ConstructSdfNestedModel(
+      const Identity &_parentID,
       const ::sdf::Model &_sdfModel) override;
 
   public: Identity ConstructSdfLink(
@@ -98,6 +104,10 @@ class SDFFeatures :
   private: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
       const std::string &_frame,
       const dart::dynamics::BodyNode *_child) const;
+  /// TODO(addisu) docs
+  private: Identity ConstructSdfModelImpl(std::size_t _parentID,
+                                          const ::sdf::Model &_sdfModel,
+                                          const std::string &_prefix);
 };
 
 }

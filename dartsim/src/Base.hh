@@ -256,6 +256,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->worlds.idToContainerID[id] = 0;
 
     _world->setName(_name);
+    this->frames[id] = dart::dynamics::Frame::World();
 
     return id;
   }
@@ -278,6 +279,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     world->addSkeleton(entry.model);
 
     this->models.idToContainerID[id] = _worldID;
+    this->frames[id] = _info.frame.get();
 
     assert(indexInContainerToID.size() == world->getNumSkeletons());
 
@@ -341,12 +343,40 @@ class Base : public Implements3d<FeatureList<Feature>>
     world->removeSkeleton(skel);
   }
 
+  public: std::string AddNestingPrefix(const std::string &_prefix,
+                                        const std::string &_name)
+  {
+    if (_prefix.empty())
+      return _name;
+
+    return _prefix + "::" + _name;
+  }
+
+  /// \brief Finds the parent skeleton of an entity in the world based on the
+  /// "::" delimited name of the entity. The name must have at least one "::",
+  /// otherwise, it will return a nullptr.
+  /// \param[in] _worldID Which world to search.
+  /// \param[in] _name Name of entity.
+  /// \return Pointer to skeleton if found, otherwise nullptr.
+  public: DartSkeletonPtr FindContainingSkeletonFromName(
+              const std::size_t _worldID, const std::string &_name)
+  {
+    const dart::simulation::WorldPtr &world = worlds[_worldID];
+    std::size_t index = _name.rfind("::");
+    if (std::string::npos != index)
+    {
+      return nullptr;
+    }
+
+    return world->getSkeleton(_name.substr(0, index));
+  }
+
   public: EntityStorage<DartWorldPtr, std::string> worlds;
   public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
-  public: std::unordered_map<std::size_t, const dart::dynamics::Frame*> frames;
+  public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
 };
 
 }

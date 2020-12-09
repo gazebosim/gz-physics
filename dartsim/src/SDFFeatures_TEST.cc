@@ -35,6 +35,7 @@
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <ignition/physics/dartsim/World.hh>
@@ -52,12 +53,14 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::sdf::ConstructSdfJoint,
     ignition::physics::sdf::ConstructSdfLink,
     ignition::physics::sdf::ConstructSdfModel,
+    ignition::physics::sdf::ConstructSdfNestedModel,
     ignition::physics::sdf::ConstructSdfWorld
 > { };
 
 using World = ignition::physics::World3d<TestFeatureList>;
 using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 
+/////////////////////////////////////////////////
 auto LoadEngine()
 {
   ignition::plugin::Loader loader;
@@ -71,6 +74,7 @@ auto LoadEngine()
   return engine;
 }
 
+/////////////////////////////////////////////////
 World LoadWorld(const std::string &_world)
 {
   auto engine = LoadEngine();
@@ -90,6 +94,7 @@ World LoadWorld(const std::string &_world)
   return *world;
 }
 
+/////////////////////////////////////////////////
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckDartsimData)
 {
@@ -183,6 +188,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   EXPECT_DOUBLE_EQ(-IGN_PI, screwJoint->getPitch());
 }
 
+/////////////////////////////////////////////////
 // Test that joint limits are working by running the simulation
 TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
@@ -265,6 +271,7 @@ auto CreateTestModel(WorldPtr _world, const std::string &_model,
   return std::make_tuple(model, joint0);
 }
 
+/////////////////////////////////////////////////
 // Test joints with world as parent or child
 TEST(SDFFeatures_TEST, WorldIsParentOrChild)
 {
@@ -301,6 +308,79 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
   }
 }
 
+/////////////////////////////////////////////////
+TEST(SDFFeatures_TEST, WorldWithNestedModel)
+{
+  World world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
+  EXPECT_EQ(2u, world.GetModelCount());
+
+  // dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  // ASSERT_NE(nullptr, dartWorld);
+
+  // ASSERT_EQ(1u, dartWorld->GetChildCount());
+
+  // check top level model
+  EXPECT_EQ("parent_model", world.GetModel(0)->GetName());
+  EXPECT_EQ("parent_model::nested_model", world.GetModel(1)->GetName());
+  auto parentModel = world.GetModel("parent_model");
+  ASSERT_NE(nullptr, parentModel);
+
+  auto nestedModel = world.GetModel("parent_model::nested_model");
+  ASSERT_NE(nullptr, nestedModel);
+
+  auto joint1 = parentModel->GetJoint("joint1");
+  ASSERT_NE(nullptr, joint1);
+
+  auto nestedJoint = nestedModel->GetJoint("joint1");
+  ASSERT_NE(nullptr, nestedJoint);
+
+  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+  //     model.GetId());
+  // EXPECT_EQ("model", model.GetName());
+  // EXPECT_EQ(ignition::math::Pose3d::Zero, model.GetPose());
+  // EXPECT_EQ(2u, model.GetChildCount());
+
+  // ignition::physics::tpelib::Entity &link = model.GetChildByName("link");
+  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+  //     link.GetId());
+  // EXPECT_EQ("link", link.GetName());
+  // EXPECT_EQ(ignition::math::Pose3d::Zero, link.GetPose());
+  // EXPECT_EQ(1u, link.GetChildCount());
+
+  // ignition::physics::tpelib::Entity &collision =
+  //     link.GetChildByName("collision");
+  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+  //     collision.GetId());
+  // EXPECT_EQ("collision", collision.GetName());
+  // EXPECT_EQ(ignition::math::Pose3d::Zero, collision.GetPose());
+
+  // // check nested model
+  // ignition::physics::tpelib::Entity &nestedModel =
+  //     model.GetChildByName("nested_model");
+  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+  //     nestedModel.GetId());
+  // EXPECT_EQ("nested_model", nestedModel.GetName());
+  // EXPECT_EQ(ignition::math::Pose3d(1, 2, 2, 0, 0, 0), nestedModel.GetPose());
+  // EXPECT_EQ(1u, nestedModel.GetChildCount());
+
+  // ignition::physics::tpelib::Entity &nestedLink =
+  //     nestedModel.GetChildByName("nested_link");
+  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+  //     nestedLink.GetId());
+  // EXPECT_EQ("nested_link", nestedLink.GetName());
+  // EXPECT_EQ(ignition::math::Pose3d(3, 1, 1, 0, 0, 1.5707),
+  //     nestedLink.GetPose());
+  // EXPECT_EQ(1u, nestedLink.GetChildCount());
+
+  // ignition::physics::tpelib::Entity &nestedCollision =
+  //     nestedLink.GetChildByName("nested_collision");
+  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
+  //     nestedCollision.GetId());
+  // EXPECT_EQ("nested_collision", nestedCollision.GetName());
+  // EXPECT_EQ(ignition::math::Pose3d::Zero, nestedCollision.GetPose());
+}
+
+/////////////////////////////////////////////////
 // Test that joint type falls back to fixed if the type is not supported
 TEST(SDFFeatures_TEST, FallbackToFixedJoint)
 {
@@ -323,6 +403,7 @@ TEST(SDFFeatures_TEST, FallbackToFixedJoint)
   }
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, LinkRelativeTo)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -353,6 +434,7 @@ TEST(SDFFeatures_FrameSemantics, LinkRelativeTo)
       expWorldPose, link2->getWorldTransform(), 1e-3));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -388,6 +470,7 @@ TEST(SDFFeatures_FrameSemantics, CollisionRelativeTo)
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -433,6 +516,7 @@ TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
       link2ExpPose, link2->getWorldTransform(), 1e-5));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -468,6 +552,7 @@ TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/world_frames.sdf");
