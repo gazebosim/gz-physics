@@ -117,8 +117,6 @@ Identity SDFFeatures::ConstructSdfModel(
   // After creating all the links, join the ones that have joints
   for (std::size_t i=0; i < _sdfModel.JointCount(); ++i)
   {
-    igndbg << "Loop adding joints.\n";
-
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
     if (!sdfJoint)
     {
