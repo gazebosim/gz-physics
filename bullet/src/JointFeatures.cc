@@ -17,8 +17,6 @@
 
 #include "JointFeatures.hh"
 
-#include <sdf/Joint.hh>
-
 namespace ignition {
 namespace physics {
 namespace bullet {
@@ -27,30 +25,15 @@ namespace bullet {
 double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
-  (void) _dof;
-  double result = 0;
-  if (this->joints.find(_id.id) != this->joints.end())
-  {
-    btHingeAccumulatedAngleConstraint* hinge =
-      static_cast<btHingeAccumulatedAngleConstraint*>(this->joints.at(_id.id)->joint);
-    if (hinge)
-    {
-      result = hinge->getAccumulatedHingeAngle();
-    }
-    // result -= this->angleOffset;
-  }
-  ignerr << "Position: " << _id.id << " -> " << result << std::endl;
-  return result;
+  ignwrn << "Dummy function GetJointPosition\n";
+  return 0.0;
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointVelocity(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
-  (void) _dof;
-  igndbg << "Dummy function GetJointVelocity\n";
+  ignwrn << "Dummy function GetJointVelocity\n";
   return 0.0;
 }
 
@@ -58,9 +41,7 @@ double JointFeatures::GetJointVelocity(
 double JointFeatures::GetJointAcceleration(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
-  (void) _dof;
-  ignwarn << "Dummy function GetJointAcceleration\n";
+  ignwrn << "Dummy function GetJointAcceleration\n";
   return 0.0;
 }
 
@@ -68,17 +49,14 @@ double JointFeatures::GetJointAcceleration(
 double JointFeatures::GetJointForce(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
-  (void) _dof;
-  ignwarn << "Dummy function GetJointForce\n";
+  ignwrn << "Dummy function GetJointForce\n";
   return 0.0;
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 {
-  (void) _id;
-  ignwarn << "Dummy function GetJointTransform\n";
+  ignwrn << "Dummy function GetJointTransform\n";
   return Pose3d();
 }
 
@@ -86,99 +64,55 @@ Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 void JointFeatures::SetJointPosition(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
-  (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy function SetJointPosition\n";
+  ignwrn << "Dummy function SetJointPosition\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
-  (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy SetJointVelocity\n";
+  ignwrn << "Dummy SetJointVelocity\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointAcceleration(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
-  (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy SetJointAcceleration\n";
+  ignwrn << "Dummy SetJointAcceleration\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
-  (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy SetJointForce\n";
+  ignwrn << "Dummy SetJointForce\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  // Only support available for single DoF joints
-  (void) _dof;
-  const auto &jointInfo = this->joints.at(_id.id);
-
-  // Take extra care that the value is finite. A nan can cause the DART
-  // constraint solver to fail, which will in turn either cause a crash or
-  // collisions to fail
-  if (!std::isfinite(_value))
-  {
-    ignerr << "Invalid joint velocity value [" << _value << "] set on joint ["
-           << jointInfo->name << " DOF " << _dof
-           << "]. The value will be ignored\n";
-    return;
-  }
-
-  // Check the type of joint and act accordignly
-  if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
-    btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
-    // This value was set arbitrarily
-    const float maxMotorImpulse = 10000.0f;
-    const float targetVelocity = _value * -1;
-    hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
-    this->links.at(jointInfo->childLinkId)->link->activate();
-    // ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
-  }
-  else {
-    // igndbg << "Sending command to not revolute joint\n";
-  }
+  ignwrn << "Dummy SetJointVelocityCommand\n";
 }
 
 /////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
-  (void) _id;
-  // TO-DO: Degrees of freedom may need to be saved in the JointInfo struct
-  // As bullet's constraints do not save this info
-  // igndbg << "Dummy GetJointDegreesOfFreedom\n";
-  return 1;
+  ignwrn << "Dummy GetJointDegreesOfFreedom\n";
+  return 0;
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
-  (void) _id;
-  ignwarn << "Dummy get joint transform from parent\n";
+  ignwrn << "Dummy get joint transform from parent\n";
   return Pose3d();
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
-  (void) _id;
-  ignwarn << "Dummy get joint transform to child\n";
+  ignwrn << "Dummy get joint transform to child\n";
   return Pose3d();
 }
 
@@ -186,48 +120,23 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 void JointFeatures::SetJointTransformFromParent(
     const Identity &_id, const Pose3d &_pose)
 {
-  (void) _id;
-  (void) _pose;
-  ignwarn << "Dummy set joint transform from parent\n";
+  ignwrn << "Dummy set joint transform from parent\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointTransformToChild(
     const Identity &_id, const Pose3d &_pose)
 {
-  (void) _id;
-  (void) _pose;
-  ignwarn << "Dummy set joint transform to child\n";
-}
-
-/////////////////////////////////////////////////
-Identity JointFeatures::CastToFixedJoint(
-  const Identity &_jointID) const
-{
-  (void) _jointID;
-  ignwarn << "Dummy CastToFixedJoint\n";
-  return this->GenerateInvalidId();
+  ignwrn << "Dummy set joint transform to child\n";
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachFixedJoint(
-  const Identity &_childID,
-  const BaseLink3dPtr &_parent,
-  const std::string &_name)
+    const Identity &_childID,
+    const BaseLink3dPtr &_parent,
+    const std::string &_name)
 {
-  (void) _childID;
-  (void) _parent;
-  (void) _name;
-  ignwarn << "Dummy AttachFixedJoint\n";
-  return this->GenerateInvalidId();
-}
-
-/////////////////////////////////////////////////
-Identity JointFeatures::CastToRevoluteJoint(
-    const Identity &_jointID) const
-{
-  (void) _jointID;
-  ignwarn << "Dummy CastToRevoluteJoint\n";
+  ignwrn << "Dummy AttachFixedJoint\n";
   return this->GenerateInvalidId();
 }
 
@@ -235,8 +144,7 @@ Identity JointFeatures::CastToRevoluteJoint(
 AngularVector3d JointFeatures::GetRevoluteJointAxis(
     const Identity &_jointID) const
 {
-  (void) _jointID;
-  ignwarn << "Dummy GetRevoluteJointAxis\n";
+  ignwrn << "Dummy GetRevoluteJointAxis\n";
   return AngularVector3d();
 }
 
@@ -244,23 +152,17 @@ AngularVector3d JointFeatures::GetRevoluteJointAxis(
 void JointFeatures::SetRevoluteJointAxis(
     const Identity &_jointID, const AngularVector3d &_axis)
 {
-  (void) _jointID;
-  (void) _axis;
-  ignwarn << "Dummy SetRevoluteJointAxis\n";
+  ignwrn << "Dummy SetRevoluteJointAxis\n";
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachRevoluteJoint(
-  const Identity &_childID,
-  const BaseLink3dPtr &_parent,
-  const std::string &_name,
-  const AngularVector3d &_axis)
+    const Identity &_childID,
+    const BaseLink3dPtr &_parent,
+    const std::string &_name,
+    const AngularVector3d &_axis)
 {
-  (void) _childID;
-  (void) _parent;
-  (void) _name;
-  (void) _axis;
-  ignwarn << "Dummy Attach RevoluteJoint\n";
+  ignwrn << "Dummy Attach RevoluteJoint\n";
   return this->GenerateInvalidId();
 }
 
