@@ -39,6 +39,27 @@ Identity SDFFeatures::ConstructSdfModel(
   // const auto &world = this->worlds.at(_worldID)->world;
   const auto modelIdentity = this->AddModel({name, _worldID, isStatic, pose});
 
+  // After creating all the links, join the ones that have joints
+  for (std::size_t i=0; i < _sdfModel.JointCount(); ++i)
+  {
+    const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
+    if (!sdfJoint)
+    {
+      ignerr << "The joint with index [" << i << "] in model ["
+             << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
+      continue;
+    }
+
+    // Find the child and parent rigid bodies
+    // dart::dynamics::BodyNode * const parent = this->FindOrConstructLink(
+    //       model, modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
+
+    // dart::dynamics::BodyNode * const child = this->FindOrConstructLink(
+    //       model, modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
+
+    // this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
+  }
+
   return modelIdentity;
 }
 
