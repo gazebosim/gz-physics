@@ -173,7 +173,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 }
 
 /////////////////////////////////////////////////
-Identity SDFFeatures::FindOrConstructSdfLink(
+std::size_t SDFFeatures::FindOrConstructSdfLink(
   const Identity &_modelID,
   const ::sdf::Link &_sdfLink)
 {
@@ -186,8 +186,8 @@ Identity SDFFeatures::FindOrConstructSdfLink(
     if (linkInfo->name == linkName)
     {
       // A link was previously created with that name,
-      // Return an identity with it
-      return Identity(link.first, link.second);
+      // Return its entity value
+      return link.first;
     }
   }
   return this->ConstructSdfLink(_modelID, _sdfLink);
