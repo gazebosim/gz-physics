@@ -39,12 +39,6 @@ Identity SDFFeatures::ConstructSdfModel(
   // const auto &world = this->worlds.at(_worldID)->world;
   const auto modelIdentity = this->AddModel({name, _worldID, isStatic, pose});
 
-  // Build links
-  for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
-  {
-    this->FindOrConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
-  }
-
   return modelIdentity;
 }
 
