@@ -40,6 +40,9 @@ class SDFFeatures :
   private: Identity ConstructSdfCollision(
       const Identity &_linkID,
       const ::sdf::Collision &_collision) override;
+  private: std::size_t FindOrConstructSdfLink(
+      const Identity &_modelID,
+      const ::sdf::Link &_sdfLink);
 };
 
 }
