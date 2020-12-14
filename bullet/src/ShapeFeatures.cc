@@ -34,12 +34,20 @@ Identity ShapeFeatures::AttachMeshShape(
 
   btTriangleMesh *mTriMesh = new btTriangleMesh();
 
-  // Scale the vertex data
   for (unsigned int j = 0;  j < numVertices; ++j)
   {
+    // Scale the vertex data
     vertices[j*3+0] = vertices[j*3+0] * _scale[0];
     vertices[j*3+1] = vertices[j*3+1] * _scale[1];
     vertices[j*3+2] = vertices[j*3+2] * _scale[2];
+
+    // Apply pose transformation to data
+    Eigen::Vector3d vect;
+    vect << vertices[j*3+0], vertices[j*3+1], vertices[j*3+2];
+    vect = _pose * vect;
+    vertices[j*3+0] = vect(0);
+    vertices[j*3+1] = vect(1);
+    vertices[j*3+2] = vect(2);
   }
 
   // Create the Bullet trimesh
@@ -64,6 +72,7 @@ Identity ShapeFeatures::AttachMeshShape(
     new btGImpactMeshShape(mTriMesh);
   gimpactMeshShape->updateBound();
 
+  // TODO(lobotuerk) Save collision if needed
   // collision->shape = gimpactMeshShape;
 
   delete [] vertices;
@@ -77,10 +86,9 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &world = worldInfo->world;
   delete link->getCollisionShape();
   link->setCollisionShape(gimpactMeshShape);
+
   btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
 
-  // We add the rigidbody to the world after it has collision, as
-  // non collision bodies don't get simulated on a dynamics world
   world->addRigidBody(link);
 
   return this->AddCollision({_name, gimpactMeshShape, _linkID,
