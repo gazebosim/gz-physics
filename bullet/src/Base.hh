@@ -67,8 +67,6 @@ struct LinkInfo
   btRigidBody* link;
   Identity model;
   math::Pose3d pose;
-  double mass;
-  btVector3 inertia;
 };
 
 struct CollisionInfo
@@ -99,8 +97,8 @@ struct JointInfo
   // Not sure atm if it's possible to have it to manage all derived classes
   btTypedConstraint* joint;
   // links associated with this constraint, not sure if needed
-  Identity link1;
-  Identity link2;
+  size_t childLinkId;
+  size_t parentLinkId;
 };
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)

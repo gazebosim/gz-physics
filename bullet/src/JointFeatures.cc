@@ -25,7 +25,9 @@ namespace bullet {
 double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
-  ignwrn << "Dummy function GetJointPosition\n";
+  (void) _id;
+  (void) _dof;
+  ignwarn << "Dummy function GetJointPosition\n";
   return 0.0;
 }
 
@@ -33,7 +35,9 @@ double JointFeatures::GetJointPosition(
 double JointFeatures::GetJointVelocity(
     const Identity &_id, const std::size_t _dof) const
 {
-  ignwrn << "Dummy function GetJointVelocity\n";
+  (void) _id;
+  (void) _dof;
+  ignwarn << "Dummy function GetJointVelocity\n";
   return 0.0;
 }
 
@@ -41,7 +45,9 @@ double JointFeatures::GetJointVelocity(
 double JointFeatures::GetJointAcceleration(
     const Identity &_id, const std::size_t _dof) const
 {
-  ignwrn << "Dummy function GetJointAcceleration\n";
+  (void) _id;
+  (void) _dof;
+  ignwarn << "Dummy function GetJointAcceleration\n";
   return 0.0;
 }
 
@@ -49,14 +55,17 @@ double JointFeatures::GetJointAcceleration(
 double JointFeatures::GetJointForce(
     const Identity &_id, const std::size_t _dof) const
 {
-  ignwrn << "Dummy function GetJointForce\n";
+  (void) _id;
+  (void) _dof;
+  ignwarn << "Dummy function GetJointForce\n";
   return 0.0;
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 {
-  ignwrn << "Dummy function GetJointTransform\n";
+  (void) _id;
+  ignwarn << "Dummy function GetJointTransform\n";
   return Pose3d();
 }
 
@@ -64,55 +73,73 @@ Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 void JointFeatures::SetJointPosition(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  ignwrn << "Dummy function SetJointPosition\n";
+  (void) _id;
+  (void) _dof;
+  (void) _value;
+  ignwarn << "Dummy function SetJointPosition\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  ignwrn << "Dummy SetJointVelocity\n";
+  (void) _id;
+  (void) _dof;
+  (void) _value;
+  ignwarn << "Dummy SetJointVelocity\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointAcceleration(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  ignwrn << "Dummy SetJointAcceleration\n";
+  (void) _id;
+  (void) _dof;
+  (void) _value;
+  ignwarn << "Dummy SetJointAcceleration\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  ignwrn << "Dummy SetJointForce\n";
+  (void) _id;
+  (void) _dof;
+  (void) _value;
+  ignwarn << "Dummy SetJointForce\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  ignwrn << "Dummy SetJointVelocityCommand\n";
+  (void) _id;
+  (void) _dof;
+  (void) _value;
+  ignwarn << "Dummy SetJointVelocityCommand\n";
 }
 
 /////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
-  ignwrn << "Dummy GetJointDegreesOfFreedom\n";
+  (void) _id;
+  ignwarn << "Dummy GetJointDegreesOfFreedom\n";
   return 0;
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
-  ignwrn << "Dummy get joint transform from parent\n";
+  (void) _id;
+  ignwarn << "Dummy get joint transform from parent\n";
   return Pose3d();
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
-  ignwrn << "Dummy get joint transform to child\n";
+  (void) _id;
+  ignwarn << "Dummy get joint transform to child\n";
   return Pose3d();
 }
 
@@ -120,23 +147,30 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 void JointFeatures::SetJointTransformFromParent(
     const Identity &_id, const Pose3d &_pose)
 {
-  ignwrn << "Dummy set joint transform from parent\n";
+  (void) _id;
+  (void) _pose;
+  ignwarn << "Dummy set joint transform from parent\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointTransformToChild(
     const Identity &_id, const Pose3d &_pose)
 {
-  ignwrn << "Dummy set joint transform to child\n";
+  (void) _id;
+  (void) _pose;
+  ignwarn << "Dummy set joint transform to child\n";
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachFixedJoint(
-    const Identity &_childID,
-    const BaseLink3dPtr &_parent,
-    const std::string &_name)
+  const Identity &_childID,
+  const BaseLink3dPtr &_parent,
+  const std::string &_name)
 {
-  ignwrn << "Dummy AttachFixedJoint\n";
+  (void) _childID;
+  (void) _parent;
+  (void) _name;
+  ignwarn << "Dummy AttachFixedJoint\n";
   return this->GenerateInvalidId();
 }
 
@@ -144,7 +178,8 @@ Identity JointFeatures::AttachFixedJoint(
 AngularVector3d JointFeatures::GetRevoluteJointAxis(
     const Identity &_jointID) const
 {
-  ignwrn << "Dummy GetRevoluteJointAxis\n";
+  (void) _jointID;
+  ignwarn << "Dummy GetRevoluteJointAxis\n";
   return AngularVector3d();
 }
 
@@ -152,17 +187,23 @@ AngularVector3d JointFeatures::GetRevoluteJointAxis(
 void JointFeatures::SetRevoluteJointAxis(
     const Identity &_jointID, const AngularVector3d &_axis)
 {
-  ignwrn << "Dummy SetRevoluteJointAxis\n";
+  (void) _jointID;
+  (void) _axis;
+  ignwarn << "Dummy SetRevoluteJointAxis\n";
 }
 
 /////////////////////////////////////////////////
 Identity JointFeatures::AttachRevoluteJoint(
-    const Identity &_childID,
-    const BaseLink3dPtr &_parent,
-    const std::string &_name,
-    const AngularVector3d &_axis)
+  const Identity &_childID,
+  const BaseLink3dPtr &_parent,
+  const std::string &_name,
+  const AngularVector3d &_axis)
 {
-  ignwrn << "Dummy Attach RevoluteJoint\n";
+  (void) _childID;
+  (void) _parent;
+  (void) _name;
+  (void) _axis;
+  ignwarn << "Dummy Attach RevoluteJoint\n";
   return this->GenerateInvalidId();
 }
 
