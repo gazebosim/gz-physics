@@ -35,15 +35,15 @@ struct JointFeatureList : FeatureList<
   GetBasicJointState,
   SetBasicJointState,
   GetBasicJointProperties,
+
   // SetJointTransformFromParentFeature,
   // SetJointTransformToChildFeature,
   // SetFreeJointRelativeTransformFeature,
 
   AttachFixedJointFeature,
-
   SetRevoluteJointProperties,
   GetRevoluteJointProperties,
-  AttachRevoluteJointFeature,
+  AttachRevoluteJointFeature
 
   // SetJointVelocityCommandFeature
 > { };
