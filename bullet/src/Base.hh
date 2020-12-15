@@ -84,8 +84,8 @@ struct JointInfo
   // Not sure atm if it's possible to have it to manage all derived classes
   btTypedConstraint* joint;
   // links associated with this constraint, not sure if needed
-  size_t childLinkId;
-  size_t parentLinkId;
+  std::size_t childLinkId;
+  std::size_t parentLinkId;
 };
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)

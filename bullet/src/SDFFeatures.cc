@@ -1,11 +1,13 @@
 #include "SDFFeatures.hh"
 #include <ignition/math/eigen3/Conversions.hh>
+#include <ignition/math/Helpers.hh>
 
 #include <sdf/Geometry.hh>
 #include <sdf/Box.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Plane.hh>
+#include <sdf/JointAxis.hh>
 
 namespace ignition {
 namespace physics {
@@ -308,7 +310,8 @@ Identity SDFFeatures::ConstructSdfJoint(
     axis = ignition::math::Vector3d::UnitZ;
   }
   else {
-    axis = _sdfJoint.Axis(0); // ??
+    // axis = _sdfJoint.Axis(0); // ??
+    axis = ignition::math::Vector3d::UnitZ;
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
@@ -325,8 +328,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   // pivotChild = this->anchorPos;
   // Assuming already that the joint only has one axis defined
   // pivotParent = _sdfJoint.Axis(0)->xyz;
-  pivotParent = ConvertJointAxis(sdfAxis, parentModelInfo, _T_joint);
-  pivotChild = ConvertJointAxis(sdfAxis, parentModelInfo, _T_joint);
+  pivotParent = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
+  pivotChild = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
 
   // Assumming at this part of the code already that both parent and child are defined
   // And none of those is world
@@ -338,20 +341,26 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Compute relative pose between joint anchor and inertial frame of parent.
   pose = this->links.at(parentId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  pivotParent -= pose.Pos();
+  //pivotParent -= convert(pose.Pos());
   // Rotate pivot offset and axis into body-fixed inertial frame of parent.
+
+  /*
   pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
   axisParent = pose.Rot().RotateVectorReverse(axis);
   axisParent = axisParent.Normalize();
+  */
 
   // Compute relative pose between joint anchor and inertial frame of child.
   pose = this->links.at(childId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  pivotChild -= pose.Pos();
+  //pivotChild -= pose.Pos();
   // Rotate pivot offset and axis into body-fixed inertial frame of child.
+
+  /*
   pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
   axisChild = pose.Rot().RotateVectorReverse(axis);
   axisChild = axisChild.Normalize();
+  */
 
   // At this part, save a reference to the object created, to delete it later
   // If both links exist, then create a joint between the two links.  
@@ -365,10 +374,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     true);
 
   // Generate an identity for it and return it
-  JointInfo jointInfo = {_sdfJoint.Name, joint, childId, parentId};
-    
-  const auto jointIdentity = this->AddJoint({_sdfJoint.Name, joint, childId, parentId});
-  return jointIdentity;
+  return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId});
 }
 
 /////////////////////////////////////////////////
@@ -396,76 +402,6 @@ std::size_t SDFFeatures::FindSdfLink(
     ignerr << "Model does not contain a link named [" << _sdfLinkName << "].\n";
     return this->GenerateInvalidId();
   }
-}
-
-/////////////////////////////////////////////////
-/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
-/// frame. If that fails, return the raw pose
-static Eigen::Isometry3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
-{
-  math::Pose3d pose;
-  ::sdf::Errors errors = _semPose.Resolve(pose);
-  if (!errors.empty())
-  {
-    if (!_semPose.RelativeTo().empty())
-    {
-      ignerr << "There was an error in SemanticPose::Resolve\n";
-      for (const auto &err : errors)
-      {
-        ignerr << err.Message() << std::endl;
-      }
-      ignerr << "There is no optimal fallback since the relative_to attribute["
-             << _semPose.RelativeTo() << "] of the pose is not empty. "
-             << "Falling back to using the raw Pose.\n";
-    }
-    pose = _semPose.RawPose();
-  }
-
-  return math::eigen3::convert(pose);
-}
-
-/////////////////////////////////////////////////
-// This function was taken directly from dartsim
-// Might need geometry fixes
-static Eigen::Vector3d ConvertJointAxis(
-    const ::sdf::JointAxis *_sdfAxis,
-    const ModelInfo &_modelInfo,
-    const Eigen::Isometry3d &_T_joint)
-{
-  (void) _modelInfo;
-  (void) _T_joint;
-  math::Vector3d resolvedAxis;
-  ::sdf::Errors errors = _sdfAxis->ResolveXyz(resolvedAxis);
-  if (errors.empty())
-    return math::eigen3::convert(resolvedAxis);
-
-  // Error while Resolving xyz. Fallback sdformat 1.6 behavior but treat
-  // xyz_expressed_in = "__model__" as the old use_parent_model_frame
-
-  const Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
-
-  if (_sdfAxis->XyzExpressedIn().empty())
-    return axis;
-
-  if (_sdfAxis->XyzExpressedIn() == "__model__")
-  {
-    ignwarn << "Xyz expressed in model frame is not currently supported, returning raw axis\n";
-    return axis;
-  }
-
-  // xyz expressed in a frame other than the joint frame or the parent model
-  // frame is not supported
-  ignerr << "There was an error in JointAxis::ResolveXyz\n";
-  for (const auto &err : errors)
-  {
-    ignerr << err.Message() << std::endl;
-  }
-  ignerr << "There is no optimal fallback since the expressed_in attribute["
-         << _sdfAxis->XyzExpressedIn() << "] of the axis's xyz is neither empty"
-         << "nor '__model__'. Falling back to using the raw xyz vector "
-         << "expressed in the joint frame.\n";
-
-  return axis;
 }
 
 }
