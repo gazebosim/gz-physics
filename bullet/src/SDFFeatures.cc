@@ -289,18 +289,15 @@ Identity SDFFeatures::ConstructSdfJoint(
   const ::sdf::JointType type = _sdfJoint.Type();
   if( type != ::sdf::JointType::REVOLUTE && type != ::sdf::JointType::FIXED ){
     ignerr << "Asked to construct a joint of sdf::JointType ["
-           << static_cast<int>(type) << "], but that is not supported yet. "
-	   << "Creating a FIXED joint instead\n";
+           << static_cast<int>(type) << "], but that is not supported yet.\n";
     return this->GenerateInvalidId();
   }
 
   // Get the parent and child ids
   const std::string parentLinkName = _sdfJoint.ParentLinkName();
-  // const ::sdf::Link * const sdfLinkParent = _sdfModel.LinkByName(parentLinkName);
   std::size_t parentId = this->FindSdfLink(_modelID, parentLinkName);
 
   const std::string childLinkName = _sdfJoint.ChildLinkName();
-  // const ::sdf::Link * const sdfLinkChild = _sdfModel.LinkByName(childLinkName);
   std::size_t childId = this->FindSdfLink(_modelID, childLinkName);
 
   // Check if chilId and parentId are valid values
@@ -321,10 +318,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   // IF fixed joint, use UnitZ, if revolute use the Axis given by the joint
   // Eigen::Vector3d axis;
   //ignition::math::Vector3d axis = ignition::math::Vector3d::UnitZ;
-  // const Eigen::Isometry3d T_joint =
-  //   _child->getWorldTransform() * ResolveSdfPose(_sdfJoint.SemanticPose());
-  const Eigen::Isometry3d T_joint = ResolveSdfPose(_sdfJoint.SemanticPose());
-
   ignition::math::Vector3d axis;
   if(type == ::sdf::JointType::FIXED ){
     axis = ignition::math::Vector3d::UnitZ;
@@ -340,14 +333,13 @@ Identity SDFFeatures::ConstructSdfJoint(
   math::Pose3d pose;
   const math::Pose3d base_pose = this->models.at(_modelID)->pose;
   // const Eigen::Isometry3d T_joint = _child->getWorldTransform() * ResolveSdfPose(_sdfJoint.SemanticPose());
+  const Eigen::Isometry3d T_joint = ResolveSdfPose(_sdfJoint.SemanticPose());
 
   // Initialize pivots to anchorPos, which is expressed in the
   // world coordinate frame.
   // anchorPos is the position of the joint in gazebo11, replacing with equivalent for ignition
   // pivotParent = this->anchorPos;
   // pivotChild = this->anchorPos;
-  // Assuming already that the joint only has one axis defined
-  // pivotParent = _sdfJoint.Axis(0)->xyz;
   pivotParent = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
   pivotChild = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
 
@@ -361,25 +353,26 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Compute relative pose between joint anchor and inertial frame of parent.
   pose = this->links.at(parentId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  //pivotParent -= convert(pose.Pos());
+  // pivotParent -= pose.Pos();
   // Rotate pivot offset and axis into body-fixed inertial frame of parent.
 
-  /*
-  pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
-  axisParent = pose.Rot().RotateVectorReverse(axis);
-  axisParent = axisParent.Normalize();
+  /* TO-DO: a block of code to solve parent's joint geometry
+    pivotParent -= convert(pose.Pos());
+    pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
+    axisParent = pose.Rot().RotateVectorReverse(axis);
+    axisParent = axisParent.Normalize();
   */
 
   // Compute relative pose between joint anchor and inertial frame of child.
   pose = this->links.at(childId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  //pivotChild -= pose.Pos();
+  // pivotChild -= pose.Pos();
   // Rotate pivot offset and axis into body-fixed inertial frame of child.
 
-  /*
-  pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
-  axisChild = pose.Rot().RotateVectorReverse(axis);
-  axisChild = axisChild.Normalize();
+  /* TO-DO: a block of code to solve child's joint geometry
+     pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
+     axisChild = pose.Rot().RotateVectorReverse(axis);
+     axisChild = axisChild.Normalize();
   */
 
   // At this part, save a reference to the object created, to delete it later
