@@ -100,7 +100,7 @@ Identity ShapeFeatures::AttachMeshShape(
 Identity ShapeFeatures::CastToMeshShape(
     const Identity &_shapeID) const
 {
-  ignerr << "CASTTOMESHSHAPE" << std::endl;
+  ignwarn << "Dummy implementation CastToMeshShape" << std::endl;
   (void) _shapeID;
   return this->GenerateInvalidId();
 }
