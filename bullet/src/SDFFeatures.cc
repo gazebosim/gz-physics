@@ -374,6 +374,11 @@ Identity SDFFeatures::ConstructSdfJoint(
     convertVec(axisParent),
     true);
 
+  const auto &modelInfo = this->models.at(_modelID);
+  const auto &world = this->worlds.at(modelInfo->world)->world;
+  world->addConstraint(joint, true);
+  joint->enableFeedback(true);
+
   // Generate an identity for it and return it
   return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId});
 }
