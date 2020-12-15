@@ -82,12 +82,6 @@ Identity SDFFeatures::ConstructSdfLink(
 
   // Generate an identity for it
   const auto linkIdentity = this->AddLink({name, body, _modelID});
-
-  for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
-  {
-    this->ConstructSdfCollision(linkIdentity, *_sdfLink.CollisionByIndex(i));
-  }
-
   return linkIdentity;
 }
 
@@ -152,7 +146,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &modelInfo = this->models.at(modelID);
     const auto &link = linkInfo->link;
     const auto &world = this->worlds.at(modelInfo->world)->world;
-    // btTransform transform;
+
     delete link->getCollisionShape();
     link->setCollisionShape(shape);
 
