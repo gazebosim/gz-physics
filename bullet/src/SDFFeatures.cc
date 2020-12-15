@@ -323,8 +323,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     axis = ignition::math::Vector3d::UnitZ;
   }
   else {
-    // axis = _sdfJoint.Axis(0); // ??
-    axis = ignition::math::Vector3d::UnitZ;
+    axis = _sdfJoint.Axis(0)->Xyz();
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
@@ -332,8 +331,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   Eigen::Vector3d pivotParent, pivotChild, axisParent, axisChild;
   math::Pose3d pose;
   const math::Pose3d base_pose = this->models.at(_modelID)->pose;
-  // const Eigen::Isometry3d T_joint = _child->getWorldTransform() * ResolveSdfPose(_sdfJoint.SemanticPose());
-  const Eigen::Isometry3d T_joint = ResolveSdfPose(_sdfJoint.SemanticPose());
+  const Eigen::Isometry3d T_joint = ignition::math::eigen3::convert(base_pose) * ResolveSdfPose(_sdfJoint.SemanticPose());
 
   // Initialize pivots to anchorPos, which is expressed in the
   // world coordinate frame.
@@ -353,30 +351,40 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Compute relative pose between joint anchor and inertial frame of parent.
   pose = this->links.at(parentId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  // pivotParent -= pose.Pos();
-  // Rotate pivot offset and axis into body-fixed inertial frame of parent.
+  pivotParent -= ignition::math::eigen3::convert(pose).translation();
 
-  /* TO-DO: a block of code to solve parent's joint geometry
-    pivotParent -= convert(pose.Pos());
-    pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
-    axisParent = pose.Rot().RotateVectorReverse(axis);
-    axisParent = axisParent.Normalize();
-  */
+  // Rotate pivot offset and axis into body-fixed inertial frame of parent.
+  math::Vector3 pivotParent_vect(pivotParent(0), pivotParent(1), pivotParent(2));
+  pivotParent_vect = pose.Rot().RotateVectorReverse(pivotParent_vect);
+  math::Vector3 axisParent_vect = pose.Rot().RotateVectorReverse(axis);
+  axisParent_vect = axisParent_vect.Normalize();
 
   // Compute relative pose between joint anchor and inertial frame of child.
   pose = this->links.at(childId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  // pivotChild -= pose.Pos();
+  pivotChild -= ignition::math::eigen3::convert(pose).translation();
   // Rotate pivot offset and axis into body-fixed inertial frame of child.
 
-  /* TO-DO: a block of code to solve child's joint geometry
-     pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
-     axisChild = pose.Rot().RotateVectorReverse(axis);
-     axisChild = axisChild.Normalize();
-  */
+  math::Vector3 pivotChild_vect(pivotChild(0), pivotChild(1), pivotChild(2));
+  pivotChild_vect = pose.Rot().RotateVectorReverse(pivotChild_vect);
+  math::Vector3 axisChild_vect = pose.Rot().RotateVectorReverse(axis);
+  axisChild_vect = axisChild_vect.Normalize();
 
   // At this part, save a reference to the object created, to delete it later
   // If both links exist, then create a joint between the two links.
+  pivotParent(0) = pivotParent_vect[0];
+  pivotParent(1) = pivotParent_vect[1];
+  pivotParent(2) = pivotParent_vect[2];
+  axisParent(0) = axisParent_vect[0];
+  axisParent(1) = axisParent_vect[1];
+  axisParent(2) = axisParent_vect[2];
+  pivotChild(0) = pivotChild_vect[0];
+  pivotChild(1) = pivotChild_vect[1];
+  pivotChild(2) = pivotChild_vect[2];
+  axisChild(0) = axisChild_vect[0];
+  axisChild(1) = axisChild_vect[1];
+  axisChild(2) = axisChild_vect[2];
+
   btTypedConstraint* joint = new btHingeConstraint(
     *this->links.at(childId)->link,
     *this->links.at(parentId)->link,
