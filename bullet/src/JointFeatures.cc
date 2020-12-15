@@ -162,6 +162,15 @@ void JointFeatures::SetJointTransformToChild(
 }
 
 /////////////////////////////////////////////////
+Identity JointFeatures::CastToFixedJoint(
+  const Identity &_jointID) const
+{
+  (void) _jointID;
+  ignwarn << "Dummy CastToFixedJoint\n";
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
 Identity JointFeatures::AttachFixedJoint(
   const Identity &_childID,
   const BaseLink3dPtr &_parent,
@@ -171,6 +180,15 @@ Identity JointFeatures::AttachFixedJoint(
   (void) _parent;
   (void) _name;
   ignwarn << "Dummy AttachFixedJoint\n";
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity JointFeatures::CastToRevoluteJoint(
+    const Identity &_jointID) const
+{
+  (void) _jointID;
+  ignwarn << "Dummy CastToRevoluteJoint\n";
   return this->GenerateInvalidId();
 }
 
