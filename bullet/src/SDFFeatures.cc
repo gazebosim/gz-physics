@@ -378,7 +378,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisChild(1) = axisChild_vect[1];
   axisChild(2) = axisChild_vect[2];
 
-  btTypedConstraint* joint = new btHingeConstraint(
+  btHingeConstraint* joint = new btHingeConstraint(
     *this->links.at(childId)->link,
     *this->links.at(parentId)->link,
     convertVec(pivotChild),
@@ -392,8 +392,12 @@ Identity SDFFeatures::ConstructSdfJoint(
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
 
+  const float maxMotorImpulse = 1.0f;
+  const float targetVelocity = 0.0;
+  joint->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
+
   // Generate an identity for it and return it
-  return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId});
+  return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});
 }
 
 /////////////////////////////////////////////////

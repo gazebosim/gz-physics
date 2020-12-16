@@ -17,6 +17,8 @@
 
 #include "JointFeatures.hh"
 
+#include <sdf/Joint.hh>
+
 namespace ignition {
 namespace physics {
 namespace bullet {
@@ -83,10 +85,33 @@ void JointFeatures::SetJointPosition(
 void JointFeatures::SetJointVelocity(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
+  // Only support available for single DoF joints
   (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy SetJointVelocity\n";
+  const auto &jointInfo = this->joints.at(_id);
+
+  // Take extra care that the value is finite. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (!std::isfinite(_value))
+  {
+    ignerr << "Invalid joint velocity value [" << _value << "] set on joint ["
+           << jointInfo->name << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
+
+  // Check the type of joint and act accordignly
+  if(jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
+    btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
+
+    // This value was set arbitrarily
+    const float maxMotorImpulse = 1.0f;
+    const float targetVelocity = _value;
+    hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
+  }
+  else {
+    igndbg << "Sending command to not revolute joint\n";
+  }
 }
 
 /////////////////////////////////////////////////

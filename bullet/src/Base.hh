@@ -86,6 +86,7 @@ struct JointInfo
   // links associated with this constraint, not sure if needed
   std::size_t childLinkId;
   std::size_t parentLinkId;
+  int constraintType;
 };
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
