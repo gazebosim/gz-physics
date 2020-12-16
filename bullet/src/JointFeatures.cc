@@ -27,7 +27,7 @@ double JointFeatures::GetJointPosition(
 {
   (void) _id;
   (void) _dof;
-  ignwarn << "Dummy function GetJointPosition\n";
+  igndbg << "Dummy function GetJointPosition\n";
   return 0.0;
 }
 
@@ -37,7 +37,7 @@ double JointFeatures::GetJointVelocity(
 {
   (void) _id;
   (void) _dof;
-  ignwarn << "Dummy function GetJointVelocity\n";
+  igndbg << "Dummy function GetJointVelocity\n";
   return 0.0;
 }
 
@@ -123,8 +123,10 @@ void JointFeatures::SetJointVelocityCommand(
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
   (void) _id;
-  ignwarn << "Dummy GetJointDegreesOfFreedom\n";
-  return 0;
+  // TO-DO: Degrees of freedom may need to be saved in the JointInfo struct
+  // As bullet's constraints do not save this info
+  igndbg << "Dummy GetJointDegreesOfFreedom\n";
+  return 1;
 }
 
 /////////////////////////////////////////////////
