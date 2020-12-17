@@ -250,6 +250,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     delete link->getCollisionShape();
     shape->setMargin(btScalar(0.001));
     link->setCollisionShape(shape);
+    link->setFriction(mu);
 
     auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
                                modelID, pose});
