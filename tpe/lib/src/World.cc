@@ -23,6 +23,7 @@
 #include <ignition/math/Pose3.hh>
 #include "World.hh"
 #include "Model.hh"
+#include "Link.hh"
 
 using namespace ignition;
 using namespace physics;
@@ -70,6 +71,15 @@ void World::Step()
       this->timeStep,
       model->GetLinearVelocity(),
       model->GetAngularVelocity());
+    auto &ents = model->GetChildren();
+    for (auto linkIt = ents.begin(); linkIt != ents.end(); ++linkIt)
+    {
+      auto link = std::dynamic_pointer_cast<Link>(linkIt->second);
+      link->UpdatePose(
+        this->timeStep,
+        link->GetLinearVelocity(),
+        link->GetAngularVelocity());
+    }
   }
 
   // check colliisions
