@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 
+#include <ignition/utilities/SuppressWarning.hh>
 #include <ignition/math/AxisAlignedBox.hh>
 #include <ignition/math/Pose3.hh>
 #include "ignition/physics/tpelib/Export.hh"
@@ -90,6 +91,15 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \param[in] _pose Pose of entity to set to
   public: virtual void SetPose(const math::Pose3d &_pose);
 
+  /// \brief Update pose of the entity
+  /// \param[in] _timeStep current world timestep
+  /// \param[in] _linearVelocity linear velocity
+  /// \param[in] _angularVelocity angular velocity
+  public: virtual void UpdatePose(
+    const double _timeStep,
+    const math::Vector3d _linearVelocity,
+    const math::Vector3d _angularVelocity);
+
   /// \brief Get the pose of the entity
   /// \return Pose of entity
   public: virtual math::Pose3d GetPose() const;
@@ -97,6 +107,22 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \brief Get the world pose of the entity
   /// \return World pose of entity
   public: virtual math::Pose3d GetWorldPose() const;
+
+  /// \brief Set the linear velocity of entity
+  /// \param[in] _velocity linear velocity
+  public: virtual void SetLinearVelocity(const math::Vector3d _velocity);
+
+  /// \brief Get the linear velocity of entity
+  /// \return linear velocity of entity
+  public: virtual math::Vector3d GetLinearVelocity() const;
+
+  /// \brief Set the angular velocity of entity
+  /// \param[in] _velocity angular velocity of entity
+  public: virtual void SetAngularVelocity(const math::Vector3d _velocity);
+
+  /// \brief Get the angular velocity of entity
+  /// \return angular velocity
+  public: virtual math::Vector3d GetAngularVelocity() const;
 
   /// \brief Get a child entity by id
   /// \param[in] _id Id of child entity
@@ -178,6 +204,14 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \brief Get the id of next entity
   /// \return size_t id of next entity
   protected: static std::size_t GetNextId();
+
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  /// \brief linear velocity of entity
+  protected: math::Vector3d linearVelocity;
+
+  /// \brief angular velocity of entity
+  protected: math::Vector3d angularVelocity;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 
   /// \brief Entity id counter
   private: static std::size_t nextId;

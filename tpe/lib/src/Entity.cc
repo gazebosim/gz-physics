@@ -149,6 +149,23 @@ math::Pose3d Entity::GetWorldPose() const
 }
 
 //////////////////////////////////////////////////
+void Entity::UpdatePose(
+  const double _timeStep,
+  const math::Vector3d _linearVelocity,
+  const math::Vector3d _angularVelocity)
+{
+  if (_linearVelocity == math::Vector3d::Zero &&
+      _angularVelocity == math::Vector3d::Zero)
+    return;
+
+  math::Pose3d currentPose = this->GetPose();
+  math::Pose3d nextPose(
+    currentPose.Pos() + _linearVelocity * _timeStep,
+    currentPose.Rot().Integrate(_angularVelocity, _timeStep));
+  this->SetPose(nextPose);
+}
+
+//////////////////////////////////////////////////
 void Entity::SetId(std::size_t _id)
 {
   this->dataPtr->id = _id;
@@ -158,6 +175,30 @@ void Entity::SetId(std::size_t _id)
 std::size_t Entity::GetId() const
 {
   return this->dataPtr->id;
+}
+
+//////////////////////////////////////////////////
+void Entity::SetLinearVelocity(const math::Vector3d _velocity)
+{
+  this->linearVelocity = _velocity;
+}
+
+//////////////////////////////////////////////////
+math::Vector3d Entity::GetLinearVelocity() const
+{
+  return this->linearVelocity;
+}
+
+//////////////////////////////////////////////////
+void Entity::SetAngularVelocity(const math::Vector3d _velocity)
+{
+  this->angularVelocity = _velocity;
+}
+
+//////////////////////////////////////////////////
+math::Vector3d Entity::GetAngularVelocity() const
+{
+  return this->angularVelocity;
 }
 
 //////////////////////////////////////////////////
