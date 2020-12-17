@@ -252,8 +252,20 @@ Identity SDFFeatures::ConstructSdfCollision(
     link->setCollisionShape(shape);
     link->setFriction(mu);
 
-    auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
-                               modelID, pose});
+    math::Pose3d base_pose = linkInfo->pose;
+    const auto pose = _collision.RawPose();
+    const auto poseIsometry = ignition::math::eigen3::convert(pose);
+    const auto poseTranslation = poseIsometry.translation();
+    const auto poseLinear = poseIsometry.linear();
+    btTransform baseTransform;
+    baseTransform.setOrigin(convertVec(poseTranslation));
+    baseTransform.setBasis(convertMat(poseLinear));
+    baseTransform = link->getWorldTransform() * baseTransform;
+    link->setWorldTransform(baseTransform);
+
+    // We add the rigidbody to the world after it has collision, as
+    // non collision bodies don't get simulated on a dynamics world
+    world->addRigidBody(link);
 
     // TODO(LOBOTUERK) We probably dont need this any more, whenever we refactor we should get rid of this
     // this->link_to_collision[_linkID] = identity;
@@ -335,7 +347,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Compute relative pose between joint anchor and inertial frame of parent.
   pose = this->links.at(parentId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  pivotParent -= ignition::math::eigen3::convert(pose).translation();
+  pivotParent -= ignition::math::eigen3::convert(pose.Pos());
 
   // Rotate pivot offset and axis into body-fixed inertial frame of parent.
   math::Vector3 pivotParent_vect(pivotParent(0), pivotParent(1), pivotParent(2));
@@ -346,7 +358,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Compute relative pose between joint anchor and inertial frame of child.
   pose = this->links.at(childId)->pose;
   // Subtract CoG position from anchor position, both in world frame.
-  pivotChild -= ignition::math::eigen3::convert(pose).translation();
+  pivotChild -= ignition::math::eigen3::convert(pose.Pos());
   // Rotate pivot offset and axis into body-fixed inertial frame of child.
 
   math::Vector3 pivotChild_vect(pivotChild(0), pivotChild(1), pivotChild(2));
@@ -395,7 +407,7 @@ std::size_t SDFFeatures::FindSdfLink(
   for (const auto &link : this->links)
   {
     const auto &linkInfo = link.second;
-    if (linkInfo->name == _sdfLinkName)
+    if (linkInfo->name == _sdfLinkName && linkInfo->model.id == _modelID.id)
     {
       // A link was previously created with that name,
       // Return its entity value
