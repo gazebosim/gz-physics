@@ -84,24 +84,9 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &link = linkInfo->link;
   const auto &worldInfo = this->worlds.at(modelInfo->world);
   const auto &world = worldInfo->world;
-  const auto &mass = linkInfo->mass;
-  const auto &inertia = linkInfo->inertia;
-
-  math::Pose3d base_pose = modelInfo->pose;
-  math::Pose3d link_pose = linkInfo->pose;
-  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * link_pose) * _pose;
-  const auto poseTranslation = poseIsometry.translation();
-  const auto poseLinear = poseIsometry.linear();
-  btTransform baseTransform;
-  baseTransform.setOrigin(convertVec(poseTranslation));
-  baseTransform.setBasis(convertMat(poseLinear));
-
+  delete link->getCollisionShape();
   gimpactMeshShape->setMargin(btScalar(0.001));
-
-  btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
-  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, gimpactMeshShape, inertia);
-  btRigidBody* body = new btRigidBody(rbInfo);
-  linkInfo->link = body;
+  link->setCollisionShape(gimpactMeshShape);
 
   btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
 
