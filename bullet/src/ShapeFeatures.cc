@@ -85,6 +85,7 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &worldInfo = this->worlds.at(modelInfo->world);
   const auto &world = worldInfo->world;
   delete link->getCollisionShape();
+  gimpactMeshShape->setMargin(btScalar(0.001));
   link->setCollisionShape(gimpactMeshShape);
 
   btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
