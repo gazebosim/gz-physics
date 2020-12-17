@@ -227,14 +227,14 @@ Identity SDFFeatures::ConstructSdfCollision(
   // TODO(lobotuerk) find if there's a  way to use friction and related
   // info in bullet dynamics
 
-  // const auto &surfaceElement = _collision.Element()->GetElement("surface");
-  //
-  // // Get friction
-  // const auto &odeFriction = surfaceElement->GetElement("friction")
-  //                             ->GetElement("ode");
-  // const auto mu = odeFriction->Get<btScalar>("mu");
-  //
-  // // Get restitution
+  const auto &surfaceElement = _collision.Element()->GetElement("surface");
+
+  // Get friction
+  const auto &odeFriction = surfaceElement->GetElement("friction")
+                              ->GetElement("ode");
+  const auto mu = odeFriction->Get<btScalar>("mu");
+
+  // Get restitution
   // const auto restitution = surfaceElement->GetElement("bounce")
   //                             ->Get<btScalar>("restitution_coefficient");
   if (shape != nullptr)
@@ -248,6 +248,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     delete link->getCollisionShape();
     shape->setMargin(btScalar(0.001));
     link->setCollisionShape(shape);
+    link->setFriction(mu);
 
     // We add the rigidbody to the world after it has collision, as
     // non collision bodies don't get simulated on a dynamics world
