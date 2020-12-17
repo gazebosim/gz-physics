@@ -43,19 +43,43 @@ Entity &Link::AddCollision()
   return *it->second.get();
 }
 
-// //////////////////////////////////////////////////
-// void Link::UpdatePose(
-//   const double _timeStep,
-//   const math::Vector3d _linearVelocity,
-//   const math::Vector3d _angularVelocity)
-// {
-//   if (_linearVelocity == math::Vector3d::Zero &&
-//       _angularVelocity == math::Vector3d::Zero)
-//     return;
+//////////////////////////////////////////////////
+void Link::SetLinearVelocity(const math::Vector3d _velocity)
+{
+  this->linearVelocity = _velocity;
+}
 
-//   math::Pose3d currentPose = this->GetPose();
-//   math::Pose3d nextPose(
-//     currentPose.Pos() + _linearVelocity * _timeStep,
-//     currentPose.Rot().Integrate(_angularVelocity, _timeStep));
-//   this->SetPose(nextPose);
-// }
+//////////////////////////////////////////////////
+math::Vector3d Link::GetLinearVelocity() const
+{
+  return this->linearVelocity;
+}
+
+//////////////////////////////////////////////////
+void Link::SetAngularVelocity(const math::Vector3d _velocity)
+{
+  this->angularVelocity = _velocity;
+}
+
+//////////////////////////////////////////////////
+math::Vector3d Link::GetAngularVelocity() const
+{
+  return this->angularVelocity;
+}
+
+//////////////////////////////////////////////////
+void Link::UpdatePose(
+  const double _timeStep,
+  const math::Vector3d _linearVelocity,
+  const math::Vector3d _angularVelocity)
+{
+  if (_linearVelocity == math::Vector3d::Zero &&
+      _angularVelocity == math::Vector3d::Zero)
+    return;
+
+  math::Pose3d currentPose = this->GetPose();
+  math::Pose3d nextPose(
+    currentPose.Pos() + _linearVelocity * _timeStep,
+    currentPose.Rot().Integrate(_angularVelocity, _timeStep));
+  this->SetPose(nextPose);
+}

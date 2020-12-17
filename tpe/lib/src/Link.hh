@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
+#include <ignition/utilities/SuppressWarning.hh>
+
 #include "ignition/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
@@ -42,6 +44,39 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
   /// \brief Add a collision
   /// \return Newly created Collision
   public: Entity &AddCollision();
+
+  /// \brief Set the linear velocity of link
+  /// \param[in] _velocity linear velocity
+  public: void SetLinearVelocity(const math::Vector3d _velocity);
+
+  /// \brief Get the linear velocity of link
+  /// \return linear velocity of link
+  public: math::Vector3d GetLinearVelocity() const;
+
+  /// \brief Set the angular velocity of link
+  /// \param[in] _velocity angular velocity
+  public: void SetAngularVelocity(const math::Vector3d _velocity);
+
+  /// \brief Get the angular velocity of link
+  /// \return angular velocity
+  public: math::Vector3d GetAngularVelocity() const;
+
+  /// \brief Update the pose of the entity
+  /// \param[in] _timeStep current world timestep
+  /// \param[in] _linearVelocity linear velocity
+  /// \param[in] _angularVelocity angular velocity
+  public: virtual void UpdatePose(
+    const double _timeStep,
+    const math::Vector3d _linearVelocity,
+    const math::Vector3d _angularVelocity);
+
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  /// \brief linear velocity of link
+  protected: math::Vector3d linearVelocity;
+
+  /// \brief angular velocity of link
+  protected: math::Vector3d angularVelocity;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 }

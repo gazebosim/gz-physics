@@ -126,47 +126,47 @@ Entity &Model::GetCanonicalLink()
   return kNullEntity;
 }
 
-// //////////////////////////////////////////////////
-// void Model::SetLinearVelocity(const math::Vector3d _velocity)
-// {
-//   this->linearVelocity = _velocity;
-// }
+//////////////////////////////////////////////////
+void Model::SetLinearVelocity(const math::Vector3d _velocity)
+{
+  this->linearVelocity = _velocity;
+}
 
-// //////////////////////////////////////////////////
-// math::Vector3d Model::GetLinearVelocity() const
-// {
-//   IGN_PROFILE("tpelib::Model::GetLinearVelocity");
-//   return this->linearVelocity;
-// }
+//////////////////////////////////////////////////
+math::Vector3d Model::GetLinearVelocity() const
+{
+  IGN_PROFILE("tpelib::Model::GetLinearVelocity");
+  return this->linearVelocity;
+}
 
-// //////////////////////////////////////////////////
-// void Model::SetAngularVelocity(const math::Vector3d _velocity)
-// {
-//   this->angularVelocity = _velocity;
-// }
+//////////////////////////////////////////////////
+void Model::SetAngularVelocity(const math::Vector3d _velocity)
+{
+  this->angularVelocity = _velocity;
+}
 
-// //////////////////////////////////////////////////
-// math::Vector3d Model::GetAngularVelocity() const
-// {
-//   IGN_PROFILE("tpelib::Model::GetAngularVelocity");
-//   return this->angularVelocity;
-// }
+//////////////////////////////////////////////////
+math::Vector3d Model::GetAngularVelocity() const
+{
+  IGN_PROFILE("tpelib::Model::GetAngularVelocity");
+  return this->angularVelocity;
+}
 
-// //////////////////////////////////////////////////
-// void Model::UpdatePose(
-//   const double _timeStep,
-//   const math::Vector3d _linearVelocity,
-//   const math::Vector3d _angularVelocity)
-// {
-//   IGN_PROFILE("tpelib::Model::UpdatePose");
+//////////////////////////////////////////////////
+void Model::UpdatePose(
+  const double _timeStep,
+  const math::Vector3d _linearVelocity,
+  const math::Vector3d _angularVelocity)
+{
+  IGN_PROFILE("tpelib::Model::UpdatePose");
 
-//   if (_linearVelocity == math::Vector3d::Zero &&
-//       _angularVelocity == math::Vector3d::Zero)
-//     return;
+  if (_linearVelocity == math::Vector3d::Zero &&
+      _angularVelocity == math::Vector3d::Zero)
+    return;
 
-//   math::Pose3d currentPose = this->GetPose();
-//   math::Pose3d nextPose(
-//     currentPose.Pos() + _linearVelocity * _timeStep,
-//     currentPose.Rot().Integrate(_angularVelocity, _timeStep));
-//   this->SetPose(nextPose);
-// }
+  math::Pose3d currentPose = this->GetPose();
+  math::Pose3d nextPose(
+    currentPose.Pos() + _linearVelocity * _timeStep,
+    currentPose.Rot().Integrate(_angularVelocity, _timeStep));
+  this->SetPose(nextPose);
+}
