@@ -88,6 +88,7 @@ void JointFeatures::SetJointVelocity(
   // Only support available for single DoF joints
   (void) _dof;
   const auto &jointInfo = this->joints.at(_id);
+  ignwarn << "Send joint velocity\n";
 
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
