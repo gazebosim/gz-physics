@@ -63,7 +63,10 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &modelID = linkInfo->model;
   const auto &modelInfo = this->models.at(modelID);
   const auto &worldInfo = this->worlds.at(modelInfo->world);
-  const auto &body = linkInfo->link;
+  const auto &world = worldInfo->world;
+  delete link->getCollisionShape();
+  gimpactMeshShape->setMargin(btScalar(0.001));
+  link->setCollisionShape(gimpactMeshShape);
 
   const auto poseIsometry = _pose;
   const auto poseTranslation = poseIsometry.translation();
