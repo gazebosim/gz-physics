@@ -87,6 +87,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const auto pose = ResolveSdfPose(_sdfModel.SemanticPose());
+  const bool is_static = _sdfModel.Static();
 
   auto it = this->worlds.find(_worldID.id);
   if (it == this->worlds.end())
@@ -104,6 +105,7 @@ Identity SDFFeatures::ConstructSdfModel(
   tpelib::Model *model = static_cast<tpelib::Model *>(&ent);
   model->SetName(name);
   model->SetPose(pose);
+  model->SetStatic(is_static);
   const auto modelIdentity = this->AddModel(world->GetId(), *model);
 
   // construct links

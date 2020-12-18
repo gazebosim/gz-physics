@@ -27,6 +27,9 @@ class ignition::physics::tpelib::EntityPrivate
   /// \brief Entity pose
   public: math::Pose3d pose;
 
+  /// \brief Indicate if the object is static
+  public: bool isStatic = false;
+
   /// \brief Entity Id
   public: std::size_t id = 0u;
 
@@ -146,6 +149,18 @@ math::Pose3d Entity::GetWorldPose() const
     return this->dataPtr->parent->GetWorldPose() * this->dataPtr->pose;
 
   return this->dataPtr->pose;
+}
+
+//////////////////////////////////////////////////
+void Entity::SetStatic(bool _static)
+{
+  this->dataPtr->isStatic = _static;
+}
+
+//////////////////////////////////////////////////
+std::size_t Entity::GetStatic() const
+{
+  return this->dataPtr->isStatic;
 }
 
 //////////////////////////////////////////////////
