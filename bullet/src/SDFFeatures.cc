@@ -387,7 +387,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   joint->enableFeedback(true);
 
   // Generate an identity for it and return it
-  return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId});
+  return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});
 }
 
 /////////////////////////////////////////////////
