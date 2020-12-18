@@ -219,6 +219,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   // Get friction
   const auto &odeFriction = surfaceElement->GetElement("friction")
                               ->GetElement("ode");
+
   const auto mu = odeFriction->Get<btScalar>("mu");
 
   // Get restitution
@@ -251,6 +252,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     btRigidBody* body = new btRigidBody(rbInfo);
     linkInfo->link = body;
 
+    body->setAnisotropicFriction(btVector3(mu, mu, mu),
+        btCollisionObject::CF_ANISOTROPIC_FRICTION);
     body->setFriction(mu);
 
     // We add the rigidbody to the world after it has collision, as
@@ -373,7 +376,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisChild(1) = axisChild_vect[1];
   axisChild(2) = axisChild_vect[2];
 
-  btTypedConstraint* joint = new btHingeConstraint(
+  btHingeConstraint* joint = new btHingeConstraint(
     *this->links.at(childId)->link,
     *this->links.at(parentId)->link,
     convertVec(pivotChild),
@@ -386,6 +389,10 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto &world = this->worlds.at(modelInfo->world)->world;
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
+
+  // // This value was set arbitrarily
+  // const float maxMotorImpulse = 100.0f;
+  // joint->enableAngularMotor(true, 0.0f, maxMotorImpulse);
 
   // Generate an identity for it and return it
   return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});

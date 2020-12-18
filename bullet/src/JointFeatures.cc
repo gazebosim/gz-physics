@@ -118,7 +118,7 @@ void JointFeatures::SetJointVelocityCommand(
   // (void) _id;
   // (void) _dof;
   // (void) _value;
- ignwarn << "Dummy SetJointVelocityCommand\n";
+ //ignwarn << "Dummy SetJointVelocityCommand\n";
 
   // Only support available for single DoF joints
   (void) _dof;
@@ -139,12 +139,15 @@ void JointFeatures::SetJointVelocityCommand(
   if(jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
     btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
 
-    // This value was set arbitrarily
-    const float maxMotorImpulse = 10000.0f;
-    const float targetVelocity = _value;
-    hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
+    // // This value was set arbitrarily
+    // const float maxMotorImpulse = 1000.0f;
+    // const float targetVelocity = _value;
+    // hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
 
-    ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
+    btVector3 axis(0,1,0);
+    this->links.at(jointInfo->childLinkId)->link->setAngularVelocity(_value * axis);
+
+    //ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
 
   }
   else {
