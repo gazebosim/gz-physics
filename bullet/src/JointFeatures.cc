@@ -17,6 +17,8 @@
 
 #include "JointFeatures.hh"
 
+#include <sdf/Joint.hh>
+
 namespace ignition {
 namespace physics {
 namespace bullet {
@@ -27,7 +29,7 @@ double JointFeatures::GetJointPosition(
 {
   (void) _id;
   (void) _dof;
-  igndbg << "Dummy function GetJointPosition\n";
+  // igndbg << "Dummy function GetJointPosition\n";
   return 0.0;
 }
 
@@ -37,7 +39,7 @@ double JointFeatures::GetJointVelocity(
 {
   (void) _id;
   (void) _dof;
-  igndbg << "Dummy function GetJointVelocity\n";
+  // igndbg << "Dummy function GetJointVelocity\n";
   return 0.0;
 }
 
@@ -47,7 +49,7 @@ double JointFeatures::GetJointAcceleration(
 {
   (void) _id;
   (void) _dof;
-  ignwarn << "Dummy function GetJointAcceleration\n";
+  // ignwarn << "Dummy function GetJointAcceleration\n";
   return 0.0;
 }
 
@@ -57,7 +59,7 @@ double JointFeatures::GetJointForce(
 {
   (void) _id;
   (void) _dof;
-  ignwarn << "Dummy function GetJointForce\n";
+  // ignwarn << "Dummy function GetJointForce\n";
   return 0.0;
 }
 
@@ -65,7 +67,7 @@ double JointFeatures::GetJointForce(
 Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 {
   (void) _id;
-  ignwarn << "Dummy function GetJointTransform\n";
+  // ignwarn << "Dummy function GetJointTransform\n";
   return Pose3d();
 }
 
@@ -76,7 +78,7 @@ void JointFeatures::SetJointPosition(
   (void) _id;
   (void) _dof;
   (void) _value;
-  ignwarn << "Dummy function SetJointPosition\n";
+  // ignwarn << "Dummy function SetJointPosition\n";
 }
 
 /////////////////////////////////////////////////
@@ -86,7 +88,7 @@ void JointFeatures::SetJointVelocity(
   (void) _id;
   (void) _dof;
   (void) _value;
-  ignwarn << "Dummy SetJointVelocity\n";
+  // ignwarn << "Dummy SetJointVelocity\n";
 }
 
 /////////////////////////////////////////////////
@@ -96,7 +98,7 @@ void JointFeatures::SetJointAcceleration(
   (void) _id;
   (void) _dof;
   (void) _value;
-  ignwarn << "Dummy SetJointAcceleration\n";
+  // ignwarn << "Dummy SetJointAcceleration\n";
 }
 
 /////////////////////////////////////////////////
@@ -106,17 +108,49 @@ void JointFeatures::SetJointForce(
   (void) _id;
   (void) _dof;
   (void) _value;
-  ignwarn << "Dummy SetJointForce\n";
+  // ignwarn << "Dummy SetJointForce\n";
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
+  // (void) _id;
+  // (void) _dof;
+  // (void) _value;
+ ignwarn << "Dummy SetJointVelocityCommand\n";
+
+  // Only support available for single DoF joints
   (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy SetJointVelocityCommand\n";
+  const auto &jointInfo = this->joints.at(_id);
+
+  // Take extra care that the value is finite. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (!std::isfinite(_value))
+  {
+    ignerr << "Invalid joint velocity value [" << _value << "] set on joint ["
+           << jointInfo->name << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
+
+  // Check the type of joint and act accordignly
+  if(jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
+    btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
+
+    // This value was set arbitrarily
+    const float maxMotorImpulse = 10000.0f;
+    const float targetVelocity = _value;
+    hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
+
+    ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
+
+  }
+  else {
+    // // igndbg << "Sending command to not revolute joint\n";
+  }
+
 }
 
 /////////////////////////////////////////////////
@@ -125,7 +159,7 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   (void) _id;
   // TO-DO: Degrees of freedom may need to be saved in the JointInfo struct
   // As bullet's constraints do not save this info
-  igndbg << "Dummy GetJointDegreesOfFreedom\n";
+  // igndbg << "Dummy GetJointDegreesOfFreedom\n";
   return 1;
 }
 
@@ -133,7 +167,7 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
   (void) _id;
-  ignwarn << "Dummy get joint transform from parent\n";
+  // ignwarn << "Dummy get joint transform from parent\n";
   return Pose3d();
 }
 
@@ -141,7 +175,7 @@ Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
   (void) _id;
-  ignwarn << "Dummy get joint transform to child\n";
+  // ignwarn << "Dummy get joint transform to child\n";
   return Pose3d();
 }
 
@@ -151,7 +185,7 @@ void JointFeatures::SetJointTransformFromParent(
 {
   (void) _id;
   (void) _pose;
-  ignwarn << "Dummy set joint transform from parent\n";
+  // ignwarn << "Dummy set joint transform from parent\n";
 }
 
 /////////////////////////////////////////////////
@@ -160,7 +194,7 @@ void JointFeatures::SetJointTransformToChild(
 {
   (void) _id;
   (void) _pose;
-  ignwarn << "Dummy set joint transform to child\n";
+  // ignwarn << "Dummy set joint transform to child\n";
 }
 
 /////////////////////////////////////////////////
@@ -168,7 +202,7 @@ Identity JointFeatures::CastToFixedJoint(
   const Identity &_jointID) const
 {
   (void) _jointID;
-  ignwarn << "Dummy CastToFixedJoint\n";
+  // ignwarn << "Dummy CastToFixedJoint\n";
   return this->GenerateInvalidId();
 }
 
@@ -181,7 +215,7 @@ Identity JointFeatures::AttachFixedJoint(
   (void) _childID;
   (void) _parent;
   (void) _name;
-  ignwarn << "Dummy AttachFixedJoint\n";
+  // ignwarn << "Dummy AttachFixedJoint\n";
   return this->GenerateInvalidId();
 }
 
@@ -190,7 +224,7 @@ Identity JointFeatures::CastToRevoluteJoint(
     const Identity &_jointID) const
 {
   (void) _jointID;
-  ignwarn << "Dummy CastToRevoluteJoint\n";
+  // ignwarn << "Dummy CastToRevoluteJoint\n";
   return this->GenerateInvalidId();
 }
 
@@ -199,7 +233,7 @@ AngularVector3d JointFeatures::GetRevoluteJointAxis(
     const Identity &_jointID) const
 {
   (void) _jointID;
-  ignwarn << "Dummy GetRevoluteJointAxis\n";
+  // ignwarn << "Dummy GetRevoluteJointAxis\n";
   return AngularVector3d();
 }
 
@@ -209,7 +243,7 @@ void JointFeatures::SetRevoluteJointAxis(
 {
   (void) _jointID;
   (void) _axis;
-  ignwarn << "Dummy SetRevoluteJointAxis\n";
+  // ignwarn << "Dummy SetRevoluteJointAxis\n";
 }
 
 /////////////////////////////////////////////////
@@ -223,7 +257,7 @@ Identity JointFeatures::AttachRevoluteJoint(
   (void) _parent;
   (void) _name;
   (void) _axis;
-  ignwarn << "Dummy Attach RevoluteJoint\n";
+  // ignwarn << "Dummy Attach RevoluteJoint\n";
   return this->GenerateInvalidId();
 }
 

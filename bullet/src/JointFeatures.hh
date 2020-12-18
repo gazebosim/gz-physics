@@ -43,9 +43,9 @@ struct JointFeatureList : FeatureList<
   AttachFixedJointFeature,
   SetRevoluteJointProperties,
   GetRevoluteJointProperties,
-  AttachRevoluteJointFeature
+  AttachRevoluteJointFeature,
 
-  // SetJointVelocityCommandFeature
+  SetJointVelocityCommandFeature
 > { };
 
 class JointFeatures :
