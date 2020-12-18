@@ -149,6 +149,18 @@ math::Pose3d Entity::GetWorldPose() const
 }
 
 //////////////////////////////////////////////////
+void Entity::SetId(std::size_t _id)
+{
+  this->dataPtr->id = _id;
+}
+
+//////////////////////////////////////////////////
+std::size_t Entity::GetId() const
+{
+  return this->dataPtr->id;
+}
+
+//////////////////////////////////////////////////
 Entity &Entity::GetChildById(std::size_t _id) const
 {
   auto it = this->dataPtr->children.find(_id);
