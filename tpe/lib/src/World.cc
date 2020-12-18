@@ -75,7 +75,6 @@ void World::Step()
     for (auto linkIt = ents.begin(); linkIt != ents.end(); ++linkIt)
     {
       auto link = std::dynamic_pointer_cast<Link>(linkIt->second);
-      std::cout << link->GetAngularVelocity()[2] << std::endl;
       link->UpdatePose(
         this->timeStep,
         link->GetLinearVelocity(),

@@ -175,7 +175,6 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     auto linkIt = this->links.find(_groupID.id);
     if (linkIt != this->links.end() && linkIt->second != nullptr)
     {
-      std::cout << "found link to set angular velocity" << std::endl;
       linkIt->second->link->SetAngularVelocity(
         math::eigen3::convert(_angularVelocity));
     }
