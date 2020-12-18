@@ -141,24 +141,43 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   const Identity &_groupID,
   const LinearVelocity &_linearVelocity)
 {
-  // assume no canonical link for now
-  // assume groupID ~= modelID
   auto it = this->models.find(_groupID.id);
   // set model linear velocity
   if (it != this->models.end() && it->second != nullptr)
+  {
     it->second->model->SetLinearVelocity(
       math::eigen3::convert(_linearVelocity));
+  }
+  else
+  {
+    auto linkIt = this->links.find(_groupID.id);
+    if (linkIt != this->links.end() && linkIt->second != nullptr)
+    {
+      linkIt->second->link->SetLinearVelocity(
+        math::eigen3::convert(_linearVelocity));
+    }
+  }
 }
 
 /////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   const Identity &_groupID, const AngularVelocity &_angularVelocity)
 {
-  // assume no canonical link for now
-  // assume groupID ~= modelID
   auto it = this->models.find(_groupID.id);
   // set model angular velocity
   if (it != this->models.end() && it->second != nullptr)
+  {
     it->second->model->SetAngularVelocity(
       math::eigen3::convert(_angularVelocity));
+  }
+  else
+  {
+    auto linkIt = this->links.find(_groupID.id);
+    if (linkIt != this->links.end() && linkIt->second != nullptr)
+    {
+      std::cout << "found link to set angular velocity" << std::endl;
+      linkIt->second->link->SetAngularVelocity(
+        math::eigen3::convert(_angularVelocity));
+    }
+  }
 }
