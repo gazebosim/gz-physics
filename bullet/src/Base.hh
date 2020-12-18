@@ -67,6 +67,8 @@ struct LinkInfo
   btRigidBody* link;
   Identity model;
   math::Pose3d pose;
+  btScalar mass;
+  btVector3 inertia;
 };
 
 struct CollisionInfo
@@ -76,18 +78,6 @@ struct CollisionInfo
   Identity link;
   Identity model;
   math::Pose3d pose;
-};
-
-struct JointInfo
-{
-  std::string name;
-  // Base class for all the constraint objects,
-  // Not sure atm if it's possible to have it to manage all derived classes
-  btTypedConstraint* joint;
-  // links associated with this constraint, not sure if needed
-  std::size_t childLinkId;
-  std::size_t parentLinkId;
-  int constraintType;
 };
 
 struct JointInfo
@@ -198,6 +188,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
+  public: std::unordered_map<std::size_t, std::size_t> link_to_collision;
 
   public: int internalTicksDivider = 0;
 

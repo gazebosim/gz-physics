@@ -157,15 +157,6 @@ Identity SDFFeatures::ConstructSdfLink(
   btVector3 linkInertiaDiag =
       convertVec(ignition::math::eigen3::convert(diagonalMoments));
 
-  const auto &modelInfo = this->models.at(_modelID);
-  math::Pose3d base_pose = modelInfo->pose;
-  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose);
-  const auto poseTranslation = poseIsometry.translation();
-  const auto poseLinear = poseIsometry.linear();
-  btTransform baseTransform;
-  baseTransform.setOrigin(convertVec(poseTranslation));
-  baseTransform.setBasis(convertMat(poseLinear));
-
   // Create link
   // (TO-DO: do we want to use MotionState?) 2nd part: Do motion state use the same transformation?
   if (this->models.at(_modelID)->fixed)
@@ -174,16 +165,8 @@ Identity SDFFeatures::ConstructSdfLink(
     linkInertiaDiag = btVector3(0,0,0);
   }
 
-  btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
-  btCollisionShape* collision_shape = new btCompoundShape();
-  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collision_shape, linkInertiaDiag);
-  btRigidBody* body = new btRigidBody(rbInfo);
-
-  const auto &world = this->worlds.at(modelInfo->world)->world;
-  world->addRigidBody(body);
-
   // Generate an identity for it
-  const auto linkIdentity = this->AddLink({name, body, _modelID, pose});
+  const auto linkIdentity = this->AddLink({name, nullptr, _modelID, pose, mass, linkInertiaDiag});
   return linkIdentity;
 }
 
@@ -246,29 +229,39 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &linkInfo = this->links.at(_linkID);
     const auto &body = linkInfo->link;
     const auto &modelID = linkInfo->model;
+    const auto &modelInfo = this->models.at(modelID);
+    const auto &link = linkInfo->link;
+    const auto &world = this->worlds.at(modelInfo->world)->world;
+    const auto &mass = linkInfo->mass;
+    const auto &inertia = linkInfo->inertia;
 
-    delete link->getCollisionShape();
-    shape->setMargin(btScalar(0.001));
-    link->setCollisionShape(shape);
-    link->setFriction(mu);
-
-    math::Pose3d base_pose = linkInfo->pose;
+    math::Pose3d base_pose = modelInfo->pose;
+    math::Pose3d link_pose = linkInfo->pose;
     const auto pose = _collision.RawPose();
-    const auto poseIsometry = ignition::math::eigen3::convert(pose);
+    const auto poseIsometry = ignition::math::eigen3::convert(base_pose * link_pose * pose);
     const auto poseTranslation = poseIsometry.translation();
     const auto poseLinear = poseIsometry.linear();
     btTransform baseTransform;
     baseTransform.setOrigin(convertVec(poseTranslation));
     baseTransform.setBasis(convertMat(poseLinear));
-    baseTransform = link->getWorldTransform() * baseTransform;
-    link->setWorldTransform(baseTransform);
+
+    shape->setMargin(btScalar(0.001));
+
+    btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, shape, inertia);
+    btRigidBody* body = new btRigidBody(rbInfo);
+    linkInfo->link = body;
+
+    body->setFriction(mu);
 
     // We add the rigidbody to the world after it has collision, as
     // non collision bodies don't get simulated on a dynamics world
-    world->addRigidBody(link);
+    world->addRigidBody(body);
 
-    // TODO(LOBOTUERK) We probably dont need this any more, whenever we refactor we should get rid of this
-    // this->link_to_collision[_linkID] = identity;
+    auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
+                               modelID, pose});
+
+    this->link_to_collision[_linkID] = identity;
     return identity;
   }
   return this->GenerateInvalidId();
@@ -345,7 +338,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // The following part of the code was taken from gazebo11 implementation almost without changes
 
   // Compute relative pose between joint anchor and inertial frame of parent.
-  pose = this->links.at(parentId)->pose;
+  pose = this->links.at(parentId)->pose * this->collisions.at(this->link_to_collision.at(parentId))->pose;
   // Subtract CoG position from anchor position, both in world frame.
   pivotParent -= ignition::math::eigen3::convert(pose.Pos());
 
@@ -356,7 +349,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisParent_vect = axisParent_vect.Normalize();
 
   // Compute relative pose between joint anchor and inertial frame of child.
-  pose = this->links.at(childId)->pose;
+  pose = this->links.at(childId)->pose * this->collisions.at(this->link_to_collision.at(childId))->pose;
   // Subtract CoG position from anchor position, both in world frame.
   pivotChild -= ignition::math::eigen3::convert(pose.Pos());
   // Rotate pivot offset and axis into body-fixed inertial frame of child.
