@@ -158,20 +158,26 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
     EXPECT_DOUBLE_EQ(0.0, axis[2]);
   }
 
-  const dart::dynamics::SkeletonPtr freeBody =
+  {
+    const dart::dynamics::SkeletonPtr freeBody =
       dartWorld->getSkeleton("free_body");
-  ASSERT_NE(nullptr, freeBody);
-  ASSERT_EQ(1u, freeBody->getNumBodyNodes());
-  const dart::dynamics::BodyNode *bn = freeBody->getBodyNode(0);
-  ASSERT_NE(nullptr, bn);
+    ASSERT_NE(nullptr, freeBody);
+    ASSERT_EQ(1u, freeBody->getNumBodyNodes());
+    const dart::dynamics::BodyNode *bn = freeBody->getBodyNode(0);
+    ASSERT_NE(nullptr, bn);
 
-  EXPECT_TRUE(dynamic_cast<const dart::dynamics::FreeJoint*>(
-                bn->getParentJoint()));
+    EXPECT_TRUE(dynamic_cast<const dart::dynamics::FreeJoint*>(
+          bn->getParentJoint()));
 
-  const Eigen::Vector3d translation = bn->getTransform().translation();
-  EXPECT_DOUBLE_EQ(0.0, translation[0]);
-  EXPECT_DOUBLE_EQ(10.0, translation[1]);
-  EXPECT_DOUBLE_EQ(10.0, translation[2]);
+    const Eigen::Vector3d translation = bn->getTransform().translation();
+    EXPECT_DOUBLE_EQ(0.0, translation[0]);
+    EXPECT_DOUBLE_EQ(10.0, translation[1]);
+    EXPECT_DOUBLE_EQ(10.0, translation[2]);
+
+    const dart::dynamics::ShapeNode *collision1 = bn->getShapeNode(0);
+    auto aspect = collision1->getDynamicsAspect();
+    EXPECT_EQ(0.8, aspect->getRestitutionCoeff());
+  }
 
   const dart::dynamics::SkeletonPtr screwJointTest =
       dartWorld->getSkeleton("screw_joint_test");
