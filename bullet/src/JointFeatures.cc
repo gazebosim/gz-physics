@@ -115,14 +115,9 @@ void JointFeatures::SetJointForce(
 void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  // (void) _id;
-  // (void) _dof;
-  // (void) _value;
- ignwarn << "Dummy SetJointVelocityCommand\n";
-
   // Only support available for single DoF joints
   (void) _dof;
-  const auto &jointInfo = this->joints.at(_id);
+  const auto &jointInfo = this->joints.at(_id.id);
 
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
@@ -136,21 +131,18 @@ void JointFeatures::SetJointVelocityCommand(
   }
 
   // Check the type of joint and act accordignly
-  if(jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
+  if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
     btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
-
     // This value was set arbitrarily
     const float maxMotorImpulse = 10000.0f;
-    const float targetVelocity = _value;
+    const float targetVelocity = _value * -1;
     hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
-
-    ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
-
+    this->links.at(jointInfo->childLinkId)->link->activate();
+    // ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
   }
   else {
-    // // igndbg << "Sending command to not revolute joint\n";
+    // igndbg << "Sending command to not revolute joint\n";
   }
-
 }
 
 /////////////////////////////////////////////////
