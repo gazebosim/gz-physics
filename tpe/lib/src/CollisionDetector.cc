@@ -126,7 +126,7 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
   {
     std::shared_ptr<Entity> e = it->second;
     // Skip if the entity is static
-    if (e->GetStatic() == true)
+    if (e->GetStatic())
       continue;
 
     math::AxisAlignedBox b = e->GetBoundingBox();

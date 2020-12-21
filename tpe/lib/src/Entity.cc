@@ -158,7 +158,7 @@ void Entity::SetStatic(bool _static)
 }
 
 //////////////////////////////////////////////////
-std::size_t Entity::GetStatic() const
+bool Entity::GetStatic() const
 {
   return this->dataPtr->isStatic;
 }
