@@ -176,7 +176,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
 
     const dart::dynamics::ShapeNode *collision1 = bn->getShapeNode(0);
     auto aspect = collision1->getDynamicsAspect();
-    EXPECT_EQ(0.8, aspect->getRestitutionCoeff());
+    EXPECT_DOUBLE_EQ(0.8, aspect->getRestitutionCoeff());
   }
 
   const dart::dynamics::SkeletonPtr screwJointTest =
