@@ -174,6 +174,9 @@ Identity SDFFeatures::ConstructSdfCollision(
       const Identity &_linkID,
       const ::sdf::Collision &_collision)
 {
+
+  bool isPlane = false;
+
   if (!_collision.Geom())
   {
     ignerr << "The geometry element of collision [" << _collision.Name() << "] "
@@ -209,6 +212,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto plane = geom->PlaneShape();
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
     shape = new btStaticPlaneShape(normal, 0);
+    isPlane = true;
   }
 
   // TODO(lobotuerk) find if there's a  way to use friction and related
@@ -219,7 +223,6 @@ Identity SDFFeatures::ConstructSdfCollision(
   // Get friction
   const auto &odeFriction = surfaceElement->GetElement("friction")
                               ->GetElement("ode");
-
   const auto mu = odeFriction->Get<btScalar>("mu");
 
   // Get restitution
@@ -252,8 +255,6 @@ Identity SDFFeatures::ConstructSdfCollision(
     btRigidBody* body = new btRigidBody(rbInfo);
     linkInfo->link = body;
 
-    body->setAnisotropicFriction(btVector3(mu, mu, mu),
-        btCollisionObject::CF_ANISOTROPIC_FRICTION);
     body->setFriction(mu);
 
     // We add the rigidbody to the world after it has collision, as
@@ -389,10 +390,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto &world = this->worlds.at(modelInfo->world)->world;
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
-
-  // // This value was set arbitrarily
-  // const float maxMotorImpulse = 100.0f;
-  // joint->enableAngularMotor(true, 0.0f, maxMotorImpulse);
 
   // Generate an identity for it and return it
   return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});

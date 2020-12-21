@@ -140,12 +140,10 @@ void JointFeatures::SetJointVelocityCommand(
     btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
 
     // // This value was set arbitrarily
-    // const float maxMotorImpulse = 1000.0f;
-    // const float targetVelocity = _value;
-    // hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
-
-    btVector3 axis(0,1,0);
-    this->links.at(jointInfo->childLinkId)->link->setAngularVelocity(_value * axis);
+    const float maxMotorImpulse = 10000.0f;
+    const float targetVelocity = _value;
+    hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
+    this->links.at(jointInfo->childLinkId)->link->activate();
 
     //ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
 
