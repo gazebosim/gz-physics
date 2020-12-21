@@ -233,6 +233,10 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &mass = linkInfo->mass;
     const auto &inertia = linkInfo->inertia;
 
+    if (!modelInfo->fixed && this->link_to_collision.find(_linkID.id) != this->link_to_collision.end()){
+      return this->GenerateInvalidId();
+    }
+
     math::Pose3d base_pose = modelInfo->pose;
     math::Pose3d link_pose = linkInfo->pose;
     const auto pose = _collision.RawPose();
@@ -243,14 +247,16 @@ Identity SDFFeatures::ConstructSdfCollision(
     baseTransform.setOrigin(convertVec(poseTranslation));
     baseTransform.setBasis(convertMat(poseLinear));
 
-    shape->setMargin(btScalar(0.001));
+    shape->setMargin(btScalar(0.0001));
 
     btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, shape, inertia);
     btRigidBody* body = new btRigidBody(rbInfo);
     linkInfo->link = body;
 
-    body->setFriction(mu);
+    body->setFriction(mu * 10);
+    body->setAnisotropicFriction(btVector3(1, 1, 1),
+    btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
     // We add the rigidbody to the world after it has collision, as
     // non collision bodies don't get simulated on a dynamics world
