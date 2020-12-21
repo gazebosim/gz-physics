@@ -112,6 +112,18 @@ Identity SDFFeatures::ConstructSdfModel(
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
   }
 
+  // set canonical link id
+  if (_sdfModel.CanonicalLink() != nullptr)
+  {
+    std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
+    tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
+    model->SetCanonicalLink(canonicalLink.GetId());
+  }
+  else
+  {
+    model->SetCanonicalLink();
+  }
+
   return modelIdentity;
 }
 
@@ -169,6 +181,18 @@ Identity SDFFeatures::ConstructSdfNestedModel(
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
+  }
+
+  // set canonical link id
+  if (_sdfModel.CanonicalLink() != nullptr)
+  {
+    std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
+    tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
+    model->SetCanonicalLink(canonicalLink.GetId());
+  }
+  else
+  {
+    model->SetCanonicalLink();
   }
 
   // construct nested models

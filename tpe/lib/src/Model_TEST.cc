@@ -107,6 +107,11 @@ TEST(Model, Link)
   EXPECT_NE(nullptr, link2);
   EXPECT_EQ(linkEnt2.GetId(), link2->GetId());
 
+  // test canonical link
+  model.SetCanonicalLink(link->GetId());
+  EXPECT_NE(Entity::kNullEntity.GetId(), model.GetCanonicalLink().GetId());
+  EXPECT_EQ(link->GetId(), model.GetCanonicalLink().GetId());
+
   // test remove child by id
   model.RemoveChildById(linkId);
   EXPECT_EQ(1u, model.GetChildCount());
@@ -308,18 +313,31 @@ TEST(Model, NestedModel)
   Entity nullEnt = model.GetChildById(modelId);
   EXPECT_EQ(Entity::kNullEntity.GetId(), nullEnt.GetId());
 
-  // add nested link and verify it is the canonical link in the model tree
-  Entity &nestedLink = nestedModel2->AddLink();
-  EXPECT_EQ(nestedLink.GetId(), model.GetCanonicalLink().GetId());
+  // test canonical link within nested model
+  Model m0;
+  m0.SetName("m0");
 
-  // add link in top level model and verify the new link becomes the canonical
-  // link in the tree as preference is given to links in higher level
-  Entity &link = model.AddLink();
-  EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
+  // add nested models m1 and m2
+  Entity &nestedModelEntm1 = m0.AddModel();
+  nestedModelEntm1.SetName("m1");
+  Model *m1 = static_cast<Model *>(&nestedModelEntm1);
+  Entity &nestedModelEntm2 = m0.AddModel();
+  nestedModelEntm2.SetName("m2");
+  Model *m2 = static_cast<Model *>(&nestedModelEntm2);
 
-  // add a few more links in top level model and verify canonical link stays
-  // the same
-  model.AddLink();
-  model.AddLink();
-  EXPECT_EQ(link.GetId(), model.GetCanonicalLink().GetId());
+  // add links to nested models
+  Entity &linkEnt1 = m1->AddLink();
+  linkEnt1.SetName("x");
+  EXPECT_EQ(1u, m1->GetChildCount());
+  Entity &linkEnt2 = m2->AddLink();
+  linkEnt2.SetName("y");
+  EXPECT_EQ(1u, m2->GetChildCount());
+
+  // set link y to be the canonical link of m0
+  m0.SetCanonicalLink(linkEnt2.GetId());
+  EXPECT_EQ(linkEnt2.GetId(), m0.GetCanonicalLink().GetId());
+
+  // Set link y to be default canonical link of m2
+  m2->SetCanonicalLink();
+  EXPECT_EQ(linkEnt2.GetId(), m2->GetCanonicalLink().GetId());
 }
