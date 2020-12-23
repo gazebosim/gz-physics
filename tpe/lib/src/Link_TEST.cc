@@ -48,11 +48,11 @@ TEST(Link, BasicAPI)
   EXPECT_EQ(math::Pose3d(10, -0.312675, 2.43845, 1.23686, 0.471978, 0.918989),
             linkEnt.GetWorldPose());
 
-  linkEnt.SetLinearVelocity(math::Vector3d(0, 0.1, 0));
-  EXPECT_EQ(math::Vector3d(0, 0.1, 0), linkEnt.GetLinearVelocity());
+  link.SetLinearVelocity(math::Vector3d(0, 0.1, 0));
+  EXPECT_EQ(math::Vector3d(0, 0.1, 0), link.GetLinearVelocity());
 
-  linkEnt.SetAngularVelocity(math::Vector3d(0.2, 0, 1));
-  EXPECT_EQ(math::Vector3d(0.2, 0, 1), linkEnt.GetAngularVelocity());
+  link.SetAngularVelocity(math::Vector3d(0.2, 0, 1));
+  EXPECT_EQ(math::Vector3d(0.2, 0, 1), link.GetAngularVelocity());
 
   Link link2;
   EXPECT_NE(link.GetId(), link2.GetId());
