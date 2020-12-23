@@ -127,7 +127,7 @@ Entity &Model::GetCanonicalLink()
 }
 
 //////////////////////////////////////////////////
-void Model::SetLinearVelocity(const math::Vector3d _velocity)
+void Model::SetLinearVelocity(const math::Vector3d &_velocity)
 {
   this->linearVelocity = _velocity;
 }
@@ -140,7 +140,7 @@ math::Vector3d Model::GetLinearVelocity() const
 }
 
 //////////////////////////////////////////////////
-void Model::SetAngularVelocity(const math::Vector3d _velocity)
+void Model::SetAngularVelocity(const math::Vector3d &_velocity)
 {
   this->angularVelocity = _velocity;
 }
@@ -155,8 +155,8 @@ math::Vector3d Model::GetAngularVelocity() const
 //////////////////////////////////////////////////
 void Model::UpdatePose(
   const double _timeStep,
-  const math::Vector3d _linearVelocity,
-  const math::Vector3d _angularVelocity)
+  const math::Vector3d &_linearVelocity,
+  const math::Vector3d &_angularVelocity)
 {
   IGN_PROFILE("tpelib::Model::UpdatePose");
 

@@ -47,7 +47,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
 
   /// \brief Set the linear velocity of link
   /// \param[in] _velocity linear velocity
-  public: void SetLinearVelocity(const &math::Vector3d _velocity);
+  public: void SetLinearVelocity(const math::Vector3d &_velocity);
 
   /// \brief Get the linear velocity of link
   /// \return linear velocity of link
@@ -55,7 +55,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
 
   /// \brief Set the angular velocity of link
   /// \param[in] _velocity angular velocity
-  public: void SetAngularVelocity(const &math::Vector3d _velocity);
+  public: void SetAngularVelocity(const math::Vector3d &_velocity);
 
   /// \brief Get the angular velocity of link
   /// \return angular velocity
@@ -67,8 +67,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
   /// \param[in] _angularVelocity angular velocity
   public: virtual void UpdatePose(
     const double _timeStep,
-    const math::Vector3d _linearVelocity,
-    const math::Vector3d _angularVelocity);
+    const math::Vector3d &_linearVelocity,
+    const math::Vector3d &_angularVelocity);
 
   IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of link

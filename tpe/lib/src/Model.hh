@@ -62,7 +62,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 
   /// \brief Set the linear velocity of model
   /// \param[in] _velocity linear velocity
-  public: void SetLinearVelocity(const math::Vector3d _velocity);
+  public: void SetLinearVelocity(const math::Vector3d &_velocity);
 
   /// \brief Get the linear velocity of model
   /// \return linear velocity of model
@@ -70,7 +70,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 
   /// \brief Set the angular velocity of model
   /// \param[in] _velocity angular velocity from world
-  public: void SetAngularVelocity(const math::Vector3d _velocity);
+  public: void SetAngularVelocity(const math::Vector3d &_velocity);
 
   /// \brief Get the angular velocity of model
   /// \return angular velocity
@@ -82,8 +82,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \param[in] _angularVelocity angular velocity
   public: virtual void UpdatePose(
     const double _timeStep,
-    const math::Vector3d _linearVelocity,
-    const math::Vector3d _angularVelocity);
+    const math::Vector3d &_linearVelocity,
+    const math::Vector3d &_angularVelocity);
 
   IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of model
