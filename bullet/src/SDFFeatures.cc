@@ -247,7 +247,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     baseTransform.setOrigin(convertVec(poseTranslation));
     baseTransform.setBasis(convertMat(poseLinear));
 
-    shape->setMargin(btScalar(0.0001));
+    // shape->setMargin(btScalar(0.0001));
 
     btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, shape, inertia);
@@ -393,7 +393,9 @@ Identity SDFFeatures::ConstructSdfJoint(
   joint->enableFeedback(true);
 
   // Generate an identity for it and return it
-  return this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});
+  auto identity = this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});
+  ignerr << "Created joint " << identity.id << std::endl;
+  return identity;
 }
 
 /////////////////////////////////////////////////
