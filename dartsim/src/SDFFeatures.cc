@@ -590,6 +590,15 @@ Identity SDFFeatures::ConstructSdfCollision(
     // TODO(addisu) Assign the coefficient to the shape node when support is
     // added in DART.
     bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+    const auto &surfaceBounce = _collision.Element()
+                                    ->GetElement("surface")
+                                    ->GetElement("bounce");
+
+    if (surfaceBounce->HasElement("restitution_coefficient"))
+    {
+      bn->setRestitutionCoeff(
+          surfaceBounce->Get<double>("restitution_coefficient"));
+    }
 #endif
     // TODO(anyone) add category_bitmask as well
     const auto bitmaskElement = _collision.Element()
