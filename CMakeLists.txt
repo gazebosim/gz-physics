@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics2 VERSION 2.2.0)
+project(ignition-physics2 VERSION 2.3.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -67,7 +67,7 @@ ign_find_package(DART
     collision-ode
     utils
     utils-urdf
-  CONFIG
+  EXTRA_ARGS CONFIG
   VERSION 6.9
   REQUIRED_BY dartsim
   PKGCONFIG dart

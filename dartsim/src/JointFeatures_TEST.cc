@@ -40,6 +40,7 @@
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
+#include <limits>
 #include <sdf/Model.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
@@ -58,6 +59,7 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::GetBasicJointState,
   physics::GetEntities,
   physics::RevoluteJointCast,
+  physics::SetBasicJointState,
   physics::SetJointVelocityCommandFeature,
   physics::sdf::ConstructSdfModel,
   physics::sdf::ConstructSdfWorld
@@ -105,6 +107,8 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
       dartWorld->getSkeleton(modelName);
   ASSERT_NE(nullptr, skeleton);
 
+  const auto *dartBaseLink = skeleton->getBodyNode("base");
+  ASSERT_NE(nullptr, dartBaseLink);
   const auto *dartJoint = skeleton->getJoint(jointName);
 
   // Default actuatore type
@@ -118,6 +122,15 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
   // Expect negative joint velocity after 1 step without joint command
   world->Step(output, state, input);
   EXPECT_LT(joint->GetVelocity(0), 0.0);
+
+  // Check that invalid velocity commands don't cause collisions to fail
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetForce(0, std::numeric_limits<double>::quiet_NaN());
+    // expect the position of the pendulum to stay aabove ground
+    world->Step(output, state, input);
+    EXPECT_NEAR(0.0, dartBaseLink->getWorldTransform().translation().z(), 1e-3);
+  }
 
   joint->SetVelocityCommand(0, 1);
   world->Step(output, state, input);
@@ -138,6 +151,15 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
     // expect joint to freeze in subsequent steps without SetVelocityCommand
     world->Step(output, state, input);
     EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-6);
+  }
+
+  // Check that invalid velocity commands don't cause collisions to fail
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetVelocityCommand(0, std::numeric_limits<double>::quiet_NaN());
+    // expect the position of the pendulum to stay aabove ground
+    world->Step(output, state, input);
+    EXPECT_NEAR(0.0, dartBaseLink->getWorldTransform().translation().z(), 1e-3);
   }
 }
 

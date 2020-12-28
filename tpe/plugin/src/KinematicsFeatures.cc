@@ -39,9 +39,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
 
+  // check if it's model
   auto modelIt = this->models.find(_id.ID());
-  auto linkIt = this->links.find(_id.ID());
-
   if (modelIt != this->models.end())
   {
     auto model = modelIt->second->model;
@@ -49,15 +48,30 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     data.linearVelocity = math::eigen3::convert(model->GetLinearVelocity());
     data.angularVelocity = math::eigen3::convert(model->GetAngularVelocity());
   }
-  else if (linkIt != this->links.end())
-  {
-    auto link = linkIt->second->link;
-    data.pose = math::eigen3::convert(link->GetWorldPose());
-  }
   else
   {
-    ignwarn << "Entity with id ["
-      << _id.ID() << "] is not found" << std::endl;
+    // check if it's link
+    auto linkIt = this->links.find(_id.ID());
+    if (linkIt != this->links.end())
+    {
+      auto link = linkIt->second->link;
+      data.pose = math::eigen3::convert(link->GetWorldPose());
+    }
+    else
+    {
+      // check if it's collision
+      auto colIt = this->collisions.find(_id.ID());
+      if (colIt != this->collisions.end())
+      {
+        auto collision = colIt->second->collision;
+        data.pose = math::eigen3::convert(collision->GetWorldPose());
+      }
+      else
+      {
+        ignwarn << "Entity with id ["
+          << _id.ID() << "] is not found" << std::endl;
+      }
+    }
   }
   return data;
 }

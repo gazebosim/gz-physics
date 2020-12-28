@@ -2,8 +2,16 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
+### Ignition Physics 2.3.0 (2020-09-29)
+
+1. Support for slip compliance in the dartsim-plugin.
+    * [Pull request 56](https://github.com/ignitionrobotics/ign-physics/pull/56)
+
 1. Enforce joint effort limit in dartsim-plugin
     * [Pull request 74](https://github.com/ignitionrobotics/ign-physics/pull/74)
+
+1. Support nested models in TPE
+    * [Pull request 86](https://github.com/ignitionrobotics/ign-physics/pull/86)
 
 ### Ignition Physics 2.2.0 (2020-07-30)
 
@@ -106,6 +114,17 @@
     * [BitBucket pull request 88](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/88)
 
 ## Ignition Physics 1.x
+
+### Ignition Physics 1.10.0 (2020-11-04)
+
+1. Resolved codecheck issues
+    * [Pull request 154](https://github.com/ignitionrobotics/ign-physics/pull/154)
+
+1. Ignore invalid joint commands in the dartsim-plugin
+    * [Pull request 137](https://github.com/ignitionrobotics/ign-physics/pull/137)
+
+1.  Fix CONFIG arg in ign_find_package(DART) call
+    * [Pull request 119](https://github.com/ignitionrobotics/ign-physics/pull/119)
 
 ### Ignition Physics 1.9.0 (2020-09-17)
 
