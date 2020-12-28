@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include <dart/config.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>

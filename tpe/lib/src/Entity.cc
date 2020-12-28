@@ -319,7 +319,7 @@ Entity *Entity::GetParent() const
 //////////////////////////////////////////////////
 bool Entity::PoseDirty() const
 {
-  return this->dataPtr->poseDirty = true;
+  return this->dataPtr->poseDirty;
 }
 
 //////////////////////////////////////////////////
