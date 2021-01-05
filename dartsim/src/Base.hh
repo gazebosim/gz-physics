@@ -33,6 +33,8 @@
 #include <ignition/common/Console.hh>
 #include <ignition/physics/Implements.hh>
 
+#include <sdf/Types.hh>
+
 namespace ignition {
 namespace physics {
 namespace dartsim {
@@ -343,32 +345,62 @@ class Base : public Implements3d<FeatureList<Feature>>
     world->removeSkeleton(skel);
   }
 
-  public: std::string AddNestingPrefix(const std::string &_prefix,
-                                        const std::string &_name)
+  static bool SkeletonNameEndsWithModelName(
+      const std::string &_skeletonName, const std::string &_modelName)
   {
-    if (_prefix.empty())
-      return _name;
+    if (_modelName.empty())
+      return true;
 
-    return _prefix + "::" + _name;
+    if (_skeletonName.size() < _modelName.size())
+      return false;
+
+    // If _modelName comes from a nested model, it might actually be shorter than
+    // _skeletonName. E.g -> _skeletonName = a::b::c, _modelName = b::c
+    const size_t compareStartPosition = _skeletonName.size() - _modelName.size();
+    return _skeletonName.compare(
+      compareStartPosition, _modelName.size(), _modelName) == 0;
   }
 
-  /// \brief Finds the parent skeleton of an entity in the world based on the
-  /// "::" delimited name of the entity. The name must have at least one "::",
-  /// otherwise, it will return a nullptr.
+  /// \brief Finds the skeleton in the world that matches the qualified name
+  /// If more than one match exists, it will return null
   /// \param[in] _worldID Which world to search.
   /// \param[in] _name Name of entity.
-  /// \return Pointer to skeleton if found, otherwise nullptr.
+  /// \return Pointer to skeleton if exactly one match was found, otherwise null
   public: DartSkeletonPtr FindContainingSkeletonFromName(
-              const std::size_t _worldID, const std::string &_name)
+      const dart::simulation::WorldPtr &_world, const std::string &_name)
   {
-    const dart::simulation::WorldPtr &world = worlds[_worldID];
-    std::size_t index = _name.rfind("::");
-    if (std::string::npos != index)
-    {
+    if (_world == nullptr)
       return nullptr;
+
+    if (_name == "world")
+      return nullptr;
+
+    const auto[skeletonName, entityName] = ::sdf::SplitName(_name);
+    std::vector<DartSkeletonPtr> matches;
+    for (size_t i = 0; i < _world->getNumSkeletons(); ++i)
+    {
+      auto candidateSkeleton = _world->getSkeleton(i);
+      if (SkeletonNameEndsWithModelName(
+        candidateSkeleton->getName(), skeletonName))
+      {
+        // There may be multiple skeletons that match the model name, only match
+        // those that contain a matching entity
+        auto * node = candidateSkeleton->getBodyNode(entityName);
+        if (nullptr != node)
+          matches.push_back(candidateSkeleton);
+      }
     }
 
-    return world->getSkeleton(_name.substr(0, index));
+    // It's possible there was more than 1 match
+    // (e.g. b::c matches both a::b::c and d::b::c)
+    if (matches.size() == 1)
+      return matches.front();
+    else if (matches.size() > 1)
+    {
+      ignerr << "Found " << matches.size() << " for " << _name << std::endl;
+      return nullptr;
+    }
+    return nullptr;
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;

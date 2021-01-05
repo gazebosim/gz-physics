@@ -49,11 +49,10 @@
         </visual>
       </link>
 
-      <!-- <joint name="joint1" type="fixed"> -->
-      <!--   <parent>link1</parent> -->
-      <!--   <child>nested_model::nested_link1</child> -->
-      <!-- </joint> -->
+      <joint name="joint1" type="fixed">
+         <parent>link1</parent>
+         <child>nested_model::nested_link1</child>
+      </joint>
     </model>
   </world>
 </sdf>
-

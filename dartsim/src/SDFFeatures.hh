@@ -104,10 +104,26 @@ class SDFFeatures :
   private: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
       const std::string &_frame,
       const dart::dynamics::BodyNode *_child) const;
-  /// TODO(addisu) docs
+
+  /// \brief Construct a dartsim entity from a sdf::model
+  /// \param[in] _parentID Id of parent
+  /// \param[in] _sdfModel sdf::Model to construct entity from
+  /// \param[in] _prefix prefix if model is nested
+  /// \return The entity identity if constructed otherwise an invalid identity
   private: Identity ConstructSdfModelImpl(std::size_t _parentID,
                                           const ::sdf::Model &_sdfModel,
                                           const std::string &_prefix);
+
+  /// \brief Find the dartsim BodyNode associated with the entity name
+  /// \param[in] _world Pointer to world to search through
+  /// \param[in] _jointModelName The name of the model associated with the joint
+  /// \param[in] _entityFullName The full name of the entity as specified in the
+  /// sdformat description
+  /// \returns The matched body node if exactly one match is found, otherwise
+  /// a nullptr
+  private: dart::dynamics::BodyNode *FindBodyNode(
+      dart::simulation::WorldPtr _world, const std::string _jointModelName,
+      const std::string &_entityFullName);
 };
 
 }

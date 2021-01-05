@@ -107,7 +107,13 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
+  EXPECT_EQ("double_pendulum_with_base", skeleton->getName());
+  for (int i = 0; i < skeleton->getNumBodyNodes(); ++i)
+  {
+    std::cout << skeleton->getBodyNode(i)->getName() << std::endl;
+  }
   ASSERT_EQ(3u, skeleton->getNumBodyNodes());
+
 
   auto verify = [](const dart::dynamics::DegreeOfFreedom * dof,
                    double initialPos, double damping, double friction,
@@ -314,10 +320,8 @@ TEST(SDFFeatures_TEST, WorldWithNestedModel)
   World world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
   EXPECT_EQ(2u, world.GetModelCount());
 
-  // dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
-  // ASSERT_NE(nullptr, dartWorld);
-
-  // ASSERT_EQ(1u, dartWorld->GetChildCount());
+  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
 
   // check top level model
   EXPECT_EQ("parent_model", world.GetModel(0)->GetName());
@@ -325,59 +329,25 @@ TEST(SDFFeatures_TEST, WorldWithNestedModel)
   auto parentModel = world.GetModel("parent_model");
   ASSERT_NE(nullptr, parentModel);
 
+  auto joint1 = parentModel->GetJoint("joint1");
+  EXPECT_NE(nullptr, joint1);
+
   auto nestedModel = world.GetModel("parent_model::nested_model");
   ASSERT_NE(nullptr, nestedModel);
 
-  auto joint1 = parentModel->GetJoint("joint1");
-  ASSERT_NE(nullptr, joint1);
+  auto nestedJoint = parentModel->GetJoint("nested_joint");
+  EXPECT_NE(nullptr, nestedJoint);
 
-  auto nestedJoint = nestedModel->GetJoint("joint1");
-  ASSERT_NE(nullptr, nestedJoint);
+  EXPECT_EQ(3u, parentModel->GetLinkCount());
+  EXPECT_EQ(0u, nestedModel->GetLinkCount());
+  auto nestedLink1 = parentModel->GetLink("nested_link1");
+  EXPECT_NE(nullptr, nestedLink1);
 
-  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
-  //     model.GetId());
-  // EXPECT_EQ("model", model.GetName());
-  // EXPECT_EQ(ignition::math::Pose3d::Zero, model.GetPose());
-  // EXPECT_EQ(2u, model.GetChildCount());
+  auto nestedLink2 = parentModel->GetLink("nested_link2");
+  EXPECT_NE(nullptr, nestedLink2);
 
-  // ignition::physics::tpelib::Entity &link = model.GetChildByName("link");
-  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
-  //     link.GetId());
-  // EXPECT_EQ("link", link.GetName());
-  // EXPECT_EQ(ignition::math::Pose3d::Zero, link.GetPose());
-  // EXPECT_EQ(1u, link.GetChildCount());
-
-  // ignition::physics::tpelib::Entity &collision =
-  //     link.GetChildByName("collision");
-  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
-  //     collision.GetId());
-  // EXPECT_EQ("collision", collision.GetName());
-  // EXPECT_EQ(ignition::math::Pose3d::Zero, collision.GetPose());
-
-  // // check nested model
-  // ignition::physics::tpelib::Entity &nestedModel =
-  //     model.GetChildByName("nested_model");
-  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
-  //     nestedModel.GetId());
-  // EXPECT_EQ("nested_model", nestedModel.GetName());
-  // EXPECT_EQ(ignition::math::Pose3d(1, 2, 2, 0, 0, 0), nestedModel.GetPose());
-  // EXPECT_EQ(1u, nestedModel.GetChildCount());
-
-  // ignition::physics::tpelib::Entity &nestedLink =
-  //     nestedModel.GetChildByName("nested_link");
-  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
-  //     nestedLink.GetId());
-  // EXPECT_EQ("nested_link", nestedLink.GetName());
-  // EXPECT_EQ(ignition::math::Pose3d(3, 1, 1, 0, 0, 1.5707),
-  //     nestedLink.GetPose());
-  // EXPECT_EQ(1u, nestedLink.GetChildCount());
-
-  // ignition::physics::tpelib::Entity &nestedCollision =
-  //     nestedLink.GetChildByName("nested_collision");
-  // ASSERT_NE(ignition::physics::tpelib::Entity::kNullEntity.GetId(),
-  //     nestedCollision.GetId());
-  // EXPECT_EQ("nested_collision", nestedCollision.GetName());
-  // EXPECT_EQ(ignition::math::Pose3d::Zero, nestedCollision.GetPose());
+  auto link1 = parentModel->GetLink("link1");
+  EXPECT_NE(nullptr, link1);
 }
 
 /////////////////////////////////////////////////
@@ -397,6 +367,7 @@ TEST(SDFFeatures_TEST, FallbackToFixedJoint)
   for (const auto &jointName : {"j0", "j1", "j2"})
   {
     const auto *joint = skeleton->getJoint(jointName);
+    ASSERT_NE(nullptr, joint) << " joint '" << jointName << "'doesn't exist in this skeleton";
     const auto *fixedJoint =
         dynamic_cast<const dart::dynamics::WeldJoint *>(joint);
     EXPECT_NE(nullptr, fixedJoint) << " joint type is: " << joint->getType();
