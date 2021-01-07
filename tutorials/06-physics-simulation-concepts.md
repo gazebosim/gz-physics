@@ -5,8 +5,7 @@ This tutorial introduces simulation concepts that are used in Ignition Physics.
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. Note that
-the recommended Ignition release is Dome.
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## Physics simulation versus animation
 
