@@ -219,7 +219,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto cylinder = geom->CylinderShape();
     const auto radius = cylinder->Radius();
     const auto halfLength = cylinder->Length()*0.5;
-    shape = new btCylinderShapeZ(btVector3(radius, 0, halfLength));
+    shape = new btCylinderShapeZ(btVector3(radius, radius, halfLength));
   }
   else if (geom->PlaneShape())
   {
@@ -247,6 +247,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &body = linkInfo->link;
     const auto &modelID = linkInfo->model;
 
+    // TODO(LOBOTUERK) figure out why this was here
     // if (!modelInfo->fixed){
     //   return this->GenerateInvalidId();
     // }
@@ -267,13 +268,10 @@ Identity SDFFeatures::ConstructSdfCollision(
 
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())->addChildShape(baseTransform, shape);
 
-    // We add the rigidbody to the world after it has collision, as
-    // non collision bodies don't get simulated on a dynamics world
-    // world->addRigidBody(body);
-
     auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
                                modelID, pose});
 
+    // TODO(LOBOTUERK) We probably dont need this any more, whenever we refactor we should get rid of this
     // this->link_to_collision[_linkID] = identity;
     return identity;
   }
@@ -330,72 +328,41 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Local variables used to compute pivots and axes in body-fixed frames
   // for the parent and child links.
-  Eigen::Vector3d pivotParent, pivotChild, axisParent, axisChild;
+  math::Vector3d pivotParent, pivotChild, axisParent, axisChild;
   math::Pose3d pose;
-  const math::Pose3d base_pose = this->models.at(_modelID)->pose;
-  // const Eigen::Isometry3d T_joint = ignition::math::eigen3::convert(base_pose) * ResolveSdfPose(_sdfJoint.SemanticPose());
 
-  // Initialize pivots to anchorPos, which is expressed in the
-  // world coordinate frame.
-  // anchorPos is the position of the joint in gazebo11, replacing with equivalent for ignition
-  pivotParent = ignition::math::eigen3::convert(_sdfJoint.RawPose().Pos() + this->links.at(childId)->pose.Pos());
-  pivotChild = ignition::math::eigen3::convert(_sdfJoint.RawPose().Pos() + this->links.at(childId)->pose.Pos());
-  // pivotParent = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
-  // pivotChild = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
+  pivotParent = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
+  pivotChild = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
 
-  // Assumming at this part of the code already that both parent and child are defined
-  // And none of those is world
-
-  // <<Consider: I think the pose has to be referenced to the base pose of the model>>
-  // const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose);
-  // The following part of the code was taken from gazebo11 implementation almost without changes
-
-  // Compute relative pose between joint anchor and inertial frame of parent.
-  // pose = this->links.at(parentId)->pose * this->collisions.at(this->link_to_collision.at(parentId))->pose;
   pose = this->links.at(parentId)->pose;
-  // Subtract CoG position from anchor position, both in world frame.
-  pivotParent -= ignition::math::eigen3::convert(pose.Pos());
 
-  // Rotate pivot offset and axis into body-fixed inertial frame of parent.
-  math::Vector3 pivotParent_vect(pivotParent(0), pivotParent(1), pivotParent(2));
-  pivotParent_vect = pose.Rot().RotateVectorReverse(pivotParent_vect);
-  math::Vector3 axisParent_vect = pose.Rot().RotateVectorReverse(axis);
-  axisParent_vect = axisParent_vect.Normalize();
+  pivotParent -= pose.Pos();
 
-  // Compute relative pose between joint anchor and inertial frame of child.
-  // pose = this->links.at(childId)->pose * this->collisions.at(this->link_to_collision.at(childId))->pose;
+  pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
+  axisParent = pose.Rot().RotateVectorReverse(axis);
+  axisParent = axisParent.Normalize();
+
   pose = this->links.at(childId)->pose;
-  // Subtract CoG position from anchor position, both in world frame.
-  pivotChild -= ignition::math::eigen3::convert(pose.Pos());
-  // Rotate pivot offset and axis into body-fixed inertial frame of child.
 
-  math::Vector3 pivotChild_vect(pivotChild(0), pivotChild(1), pivotChild(2));
-  pivotChild_vect = pose.Rot().RotateVectorReverse(pivotChild_vect);
-  math::Vector3 axisChild_vect = pose.Rot().RotateVectorReverse(axis);
-  axisChild_vect = axisChild_vect.Normalize();
+  pivotChild -= pose.Pos();
 
-  // At this part, save a reference to the object created, to delete it later
-  // If both links exist, then create a joint between the two links.
-  pivotParent(0) = pivotParent_vect[0];
-  pivotParent(1) = pivotParent_vect[1];
-  pivotParent(2) = pivotParent_vect[2];
-  axisParent(0) = axisParent_vect[0];
-  axisParent(1) = axisParent_vect[1];
-  axisParent(2) = axisParent_vect[2];
-  pivotChild(0) = pivotChild_vect[0];
-  pivotChild(1) = pivotChild_vect[1];
-  pivotChild(2) = pivotChild_vect[2];
-  axisChild(0) = axisChild_vect[0];
-  axisChild(1) = axisChild_vect[1];
-  axisChild(2) = axisChild_vect[2];
+  pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
+  axisChild = pose.Rot().RotateVectorReverse(axis);
+  axisChild = axisChild.Normalize();
+
+  // pivotChild *= this->models.at(_modelID)->pose;
+  // pivotParent *= this->models.at(_modelID)->pose;
+
+  ignerr << "pivotc " << pivotChild << std::endl;
+  ignerr << "pivotp " << pivotParent << std::endl;
 
   btTypedConstraint* joint = new btHingeConstraint(
     *this->links.at(childId)->link,
     *this->links.at(parentId)->link,
-    convertVec(pivotChild),
-    convertVec(pivotParent),
-    convertVec(axisChild),
-    convertVec(axisParent),
+    convertVec(ignition::math::eigen3::convert(pivotChild)),
+    convertVec(ignition::math::eigen3::convert(pivotParent)),
+    convertVec(ignition::math::eigen3::convert(axisChild)),
+    convertVec(ignition::math::eigen3::convert(axisParent)),
     true);
 
   const auto &modelInfo = this->models.at(_modelID);
