@@ -13,9 +13,7 @@ plugin using \ref ignition::physics "Ignition Physics" API.
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed the
-Ignition Physics corresponding to the desired Ignition release. Note that the
-recommended Ignition release is Dome.
-
+Ignition Physics corresponding to the desired Ignition release.
 ## Write a simple loader
 
 Please create a folder for the loader first:

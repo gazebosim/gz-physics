@@ -7,8 +7,7 @@ This tutorial guides how to develop a simple plugin that implements a
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. Note that
-the recommended Ignition release is Dome.
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## Write a simple physics plugin
 
