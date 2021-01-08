@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
 */
 
-#include "CustomMeshShape.hh"
+#include "CustomHeightmapShape.hh"
 
 #include <memory>
 #include <string>
@@ -40,7 +40,7 @@ unsigned int CheckNumVerticesPerFaces(
 
   const auto printWarning = [&](const std::string type_str)
   {
-    ignwarn << "[dartsim::CustomMeshShape] The dartsim plugin does not support "
+    ignwarn << "[dartsim::CustomHeightmapShape] The dartsim plugin does not support "
             << type_str << " meshes, requested by submesh [" << _submeshIndex
            << ":" << _inputSubmesh.Name() << "] in the input mesh [" << _path
            << "]. This submesh will be ignored.\n";
@@ -66,7 +66,7 @@ unsigned int CheckNumVerticesPerFaces(
   if (SubMesh::TRISTRIPS == type)
     return printWarning("tristrip");
 
-  ignwarn << "[dartsim::CustomMeshShape] One of the submeshes ["
+  ignwarn << "[dartsim::CustomHeightmapShape] One of the submeshes ["
           << _submeshIndex << ":" << _inputSubmesh.Name() << "] in the input "
           << "mesh [" << _path << "] has an unknown primitive type value ["
           << type << "]. This submesh will be ignored.\n";
@@ -96,10 +96,10 @@ unsigned int GetPrimitiveType(
 }
 
 /////////////////////////////////////////////////
-CustomMeshShape::CustomMeshShape(
-    const ignition::common::Mesh &_input,
+CustomHeightmapShape::CustomHeightmapShape(
+    const ignition::common::HeightmapData &_input,
     const Eigen::Vector3d &_scale)
-  : dart::dynamics::MeshShape(_scale, nullptr)
+  : dart::dynamics::HeightmapShape(_scale, nullptr)
 {
   // Create the root
   aiNode* node = new aiNode;

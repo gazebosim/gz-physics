@@ -26,6 +26,7 @@
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+#include <dart/dynamics/HeightmapShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
 #include <dart/dynamics/PrismaticJoint.hpp>
@@ -44,6 +45,7 @@
 #include <sdf/Collision.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Geometry.hh>
+#include <sdf/Heightmap.hh>
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
@@ -299,6 +301,17 @@ static ShapeAndTransform ConstructPlane(
 }
 
 /////////////////////////////////////////////////
+static ShapeAndTransform ConstructHeightmap(
+    const ::sdf::Heightmap & /*_heightmap*/)
+{
+  // TODO(MXG): Look into what kind of heightmap URI we get here. Will it just
+  // be a local file name, or do we need to resolve the URI?
+  ignerr << "Heightmap construction from an SDF has not been implemented yet "
+         << "for dartsim.\n";
+  return {nullptr};
+}
+
+/////////////////////////////////////////////////
 static ShapeAndTransform ConstructMesh(
     const ::sdf::Mesh & /*_mesh*/)
 {
@@ -323,6 +336,8 @@ static ShapeAndTransform ConstructGeometry(
     return ConstructPlane(*_geometry.PlaneShape());
   else if (_geometry.MeshShape())
     return ConstructMesh(*_geometry.MeshShape());
+  else if (_geometry.HeightmapShape())
+    return ConstructHeightmap(*_geometry.HeightmapShape());
 
   return {nullptr};
 }
