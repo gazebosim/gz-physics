@@ -56,7 +56,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat10
+ign_find_package(sdformat11
   REQUIRED_BY sdf dartsim tpe)
 
 #--------------------------------------

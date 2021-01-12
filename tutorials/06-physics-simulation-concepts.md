@@ -70,9 +70,9 @@ second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
 engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim),
-the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/diff_drive/DiffDrive.cc#L333) code.
+the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/diff_drive/DiffDrive.cc#L333) code.
 Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe),
-TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/velocity_control/VelocityControl.cc#L117) code.
+TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/velocity_control/VelocityControl.cc#L117) code.
 
 #### Monitoring the model and its links pose
 
@@ -137,7 +137,7 @@ and the blades will stop after some time due to friction.
 The command applies a constant torque to the rotor rod, together with
 the mechanism to compute the upward/downward lift and drag force due to the
 wind pressure simulation supported by Ignition Physics, the cube is lifted.
-For more detail, please see the [LiftDrag.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/lift_drag/LiftDrag.cc)
+For more detail, please see the [LiftDrag.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/lift_drag/LiftDrag.cc)
 code.
 
 ### Buoyancy
@@ -152,7 +152,7 @@ contains the following three models:
 Please download the Buoyancy demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/buoyancy.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo5/examples/worlds/buoyancy.sdf -P ~
 ```
 
 Like above, please start the Buoyancy demo on Ignition Gazebo by:
@@ -171,7 +171,7 @@ simulating fluid density and applying the force on the object in the fluid
 proportional to its volume. Hence, you can change the model buoyancy by modifying its
 inertia, please see [link specification](http://sdformat.org/spec?ver=1.7&elem=link).
 For more detail on simulating buoyancy, please see the
-[Buoyancy.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/buoyancy/Buoyancy.cc)
+[Buoyancy.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/buoyancy/Buoyancy.cc)
 code.
 
 ### Pendulum
@@ -209,7 +209,7 @@ inertia to control object velocity.
 Please download the Multicopter demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/multicopter_velocity_control.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo5/examples/worlds/multicopter_velocity_control.sdf -P ~
 ```
 
 and start the Multicopter demo on Ignition Gazebo by:
@@ -238,4 +238,4 @@ Do the same for the `X4` multicopter. After pressing the Play button, you will s
 both of the multicopters will ascend, this demonstrates how the physics engine
 utilizes model kinematics and dynamics to support simulating complex model and
 its controller. For more detail about the multicopter controller, please see
-[MulticopterVelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/multicopter_control/MulticopterVelocityControl.cc).
+[MulticopterVelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/multicopter_control/MulticopterVelocityControl.cc).
