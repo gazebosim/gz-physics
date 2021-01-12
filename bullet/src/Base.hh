@@ -66,6 +66,9 @@ struct LinkInfo
   std::string name;
   btRigidBody* link;
   Identity model;
+  math::Pose3d pose;
+  btScalar mass;
+  btVector3 inertia;
 };
 
 struct CollisionInfo
@@ -74,6 +77,19 @@ struct CollisionInfo
   btCollisionShape* shape;
   Identity link;
   Identity model;
+  math::Pose3d pose;
+};
+
+struct JointInfo
+{
+  std::string name;
+  // Base class for all the constraint objects,
+  // Not sure atm if it's possible to have it to manage all derived classes
+  btTypedConstraint* joint;
+  // links associated with this constraint, not sure if needed
+  std::size_t childLinkId;
+  std::size_t parentLinkId;
+  int constraintType;
 };
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
@@ -154,14 +170,26 @@ class Base : public Implements3d<FeatureList<Feature>>
    return this->GenerateIdentity(id, this->collisions.at(id));
   }
 
+  public: inline Identity AddJoint(JointInfo _jointInfo)
+  {
+    const auto id = this->GetNextEntity();
+    this->joints[id] = std::make_shared<JointInfo>(_jointInfo);
+
+    return this->GenerateIdentity(id, this->joints.at(id));
+  }
+
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;
   public: using ModelInfoPtr = std::shared_ptr<ModelInfo>;
   public: using LinkInfoPtr  = std::shared_ptr<LinkInfo>;
   public: using CollisionInfoPtr = std::shared_ptr<CollisionInfo>;
+  public: using JointInfoPtr  = std::shared_ptr<JointInfo>;
+
   public: std::unordered_map<std::size_t, WorldInfoPtr> worlds;
   public: std::unordered_map<std::size_t, ModelInfoPtr> models;
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
+  public: std::unordered_map<std::size_t, JointInfoPtr> joints;
+  public: std::unordered_map<std::size_t, std::size_t> link_to_collision;
 
   public: int internalTicksDivider = 0;
 
