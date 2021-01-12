@@ -29,9 +29,17 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   }
   const auto &linkInfo = this->links.at(linkID);
   const auto &model = linkInfo->link;
+  const auto &collisionID = this->link_to_collision.at(linkID);
+  const auto &pose = this->collisions.at(collisionID)->pose;
 
-  btTransform trans;
+  btTransform trans, collision_tf;
   model->getMotionState()->getWorldTransform(trans);
+  const auto poseIsometry = ignition::math::eigen3::convert(pose.Inverse());
+  const auto poseTranslation = poseIsometry.translation();
+  const auto poseLinear = poseIsometry.linear();
+  collision_tf.setOrigin(convertVec(poseTranslation));
+  collision_tf.setBasis(convertMat(poseLinear));
+  trans = trans * collision_tf;
   const btVector3 pos = trans.getOrigin();
   const btMatrix3x3 mat = trans.getBasis();
 
