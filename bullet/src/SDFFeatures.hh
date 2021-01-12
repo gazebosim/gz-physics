@@ -2,6 +2,7 @@
 #ifndef IGNITION_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
 #define IGNITION_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
 
+#include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
@@ -16,6 +17,7 @@ namespace physics {
 namespace bullet {
 
 using SDFFeatureList = FeatureList<
+  sdf::ConstructSdfJoint,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfModel,
   sdf::ConstructSdfCollision,
@@ -37,12 +39,18 @@ class SDFFeatures :
   private: Identity ConstructSdfLink(
       const Identity &_modelID,
       const ::sdf::Link &_sdfLink) override;
+
   private: Identity ConstructSdfCollision(
       const Identity &_linkID,
       const ::sdf::Collision &_collision) override;
-  private: std::size_t FindOrConstructSdfLink(
+
+  private: Identity ConstructSdfJoint(
       const Identity &_modelID,
-      const ::sdf::Link &_sdfLink);
+      const ::sdf::Joint &_sdfJoint) override;
+
+  private: std::size_t FindSdfLink(
+      const Identity &_modelID,
+      const std::string &_sdfLinkName);
 };
 
 }

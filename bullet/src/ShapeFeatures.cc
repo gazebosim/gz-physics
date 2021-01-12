@@ -42,12 +42,12 @@ Identity ShapeFeatures::AttachMeshShape(
     vertices[j*3+2] = vertices[j*3+2] * _scale[2];
 
     // Apply pose transformation to data
-    Eigen::Vector3d vect;
-    vect << vertices[j*3+0], vertices[j*3+1], vertices[j*3+2];
-    vect = _pose * vect;
-    vertices[j*3+0] = vect(0);
-    vertices[j*3+1] = vect(1);
-    vertices[j*3+2] = vect(2);
+    // Eigen::Vector3d vect;
+    // vect << vertices[j*3+0], vertices[j*3+1], vertices[j*3+2];
+    // vect = _pose * vect;
+    // vertices[j*3+0] = vect(0);
+    // vertices[j*3+1] = vect(1);
+    // vertices[j*3+2] = vect(2);
   }
 
   // Create the Bullet trimesh
@@ -84,15 +84,33 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &link = linkInfo->link;
   const auto &worldInfo = this->worlds.at(modelInfo->world);
   const auto &world = worldInfo->world;
-  delete link->getCollisionShape();
-  link->setCollisionShape(gimpactMeshShape);
+  const auto &mass = linkInfo->mass;
+  const auto &inertia = linkInfo->inertia;
+
+  math::Pose3d base_pose = modelInfo->pose;
+  math::Pose3d link_pose = linkInfo->pose;
+  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * link_pose) * _pose;
+  const auto poseTranslation = poseIsometry.translation();
+  const auto poseLinear = poseIsometry.linear();
+  btTransform baseTransform;
+  baseTransform.setOrigin(convertVec(poseTranslation));
+  baseTransform.setBasis(convertMat(poseLinear));
+
+  gimpactMeshShape->setMargin(btScalar(0.001));
+
+  btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
+  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, gimpactMeshShape, inertia);
+  btRigidBody* body = new btRigidBody(rbInfo);
+  linkInfo->link = body;
 
   btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
 
   world->addRigidBody(link);
+  auto identity = this->AddCollision({_name, gimpactMeshShape, _linkID,
+                             modelID, ignition::math::eigen3::convert(_pose)});
 
-  return this->AddCollision({_name, gimpactMeshShape, _linkID,
-                             modelID});
+  this->link_to_collision[_linkID] = identity;
+  return identity;
 
 }
 
