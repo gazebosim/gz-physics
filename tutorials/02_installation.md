@@ -41,7 +41,6 @@ sudo apt-get install libignition-physics2-dev
 ```
 
 Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
-Note that our latest Dome release requires version **3**.
 
 **Build from source**
 
@@ -105,7 +104,6 @@ brew tap osrf/simulation
 brew install ignition-physics2
 ```
 Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
-Note that our latest Dome release requires version **3**.
 
 **Build from source using Homebrew**
 
