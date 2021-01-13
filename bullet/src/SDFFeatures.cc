@@ -323,7 +323,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     axis = ignition::math::Vector3d::UnitZ;
   }
   else {
-    axis = _sdfJoint.Axis(0)->Xyz();
+    axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot() * _sdfJoint.Axis(0)->Xyz() * -1;
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
@@ -350,20 +350,13 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisChild = pose.Rot().RotateVectorReverse(axis);
   axisChild = axisChild.Normalize();
 
-  // pivotChild *= this->models.at(_modelID)->pose;
-  // pivotParent *= this->models.at(_modelID)->pose;
-
-  ignerr << "pivotc " << pivotChild << std::endl;
-  ignerr << "pivotp " << pivotParent << std::endl;
-
   btTypedConstraint* joint = new btHingeConstraint(
     *this->links.at(childId)->link,
     *this->links.at(parentId)->link,
     convertVec(ignition::math::eigen3::convert(pivotChild)),
     convertVec(ignition::math::eigen3::convert(pivotParent)),
     convertVec(ignition::math::eigen3::convert(axisChild)),
-    convertVec(ignition::math::eigen3::convert(axisParent)),
-    true);
+    convertVec(ignition::math::eigen3::convert(axisParent)));
 
   const auto &modelInfo = this->models.at(_modelID);
   const auto &world = this->worlds.at(modelInfo->world)->world;
@@ -372,7 +365,6 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Generate an identity for it and return it
   auto identity = this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});
-  ignerr << "Created joint " << identity.id << std::endl;
   return identity;
 }
 
