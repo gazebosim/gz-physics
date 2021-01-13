@@ -50,6 +50,10 @@ TEST(Model, BasicAPI)
   model.UpdatePose(0.1, model.GetLinearVelocity(), model.GetAngularVelocity());
   EXPECT_EQ(model.GetPose(), model.GetWorldPose());
 
+  EXPECT_FALSE(model.GetStatic());
+  model.SetStatic(true);
+  EXPECT_TRUE(model.GetStatic());
+
   Model model2;
   EXPECT_NE(model.GetId(), model2.GetId());
 
