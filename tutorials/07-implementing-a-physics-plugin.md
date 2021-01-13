@@ -7,8 +7,7 @@ This tutorial guides how to develop a simple plugin that implements a
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. Note that
-the recommended Ignition release is Dome.
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## Write a simple physics plugin
 
@@ -36,7 +35,7 @@ plugin, e.g. \ref ignition::physics::GetEngineInfo "GetEngineInfo".
 metadata about the coordinate system (e.g. 2 or 3 dimensions) and numeric system
 (e.g. float, int) that the `Features` will be implemented accordingly.
 - `GetEntities.hh` header: to retrieve the pre-defined list of features in
-Ignition Physics. Please refer to this [API Reference](https://ignitionrobotics.org/api/physics/3.0/GetEntities_8hh.html)
+Ignition Physics. Please refer to this [API Reference](https://ignitionrobotics.org/api/physics/2.0/GetEntities_8hh.html)
 for a list of features defined in `GetEntities.hh` and \ref physicsplugin
 "Understanding the Physics Plugin" tutorial for an example list of common features
 implemented with a plugin.
@@ -102,7 +101,7 @@ and returning the engine object using \ref ignition::physics::Identity. Then, we
 define the metadata getters `GetEngineIndex` and `GetEngineName` for the
 feature \ref ignition::physics::GetEngineInfo "GetEngineInfo" (please look into
 corresponding public member functions defined in the subclasses). A list of common
-pre-defined features are stated [here](https://ignitionrobotics.org/api/physics/3.0/GetEntities_8hh.html).
+pre-defined features are stated [here](https://ignitionrobotics.org/api/physics/2.0/GetEntities_8hh.html).
 
 Finally, we only have to register our plugin in Ignition Physics as a physics
 engine by:
@@ -120,16 +119,16 @@ a plugin.
 - The third argument is the `FeatureList`, specifying all the features that this
 plugin provides, i.e. `HelloWorldFeatureList`
 
-### Setup CMakeLists.txt for building (Version: Dome, ign-physics3)
+### Setup CMakeLists.txt for building (Version: Citadel, ign-physics2)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies for Dome release:
+lines for finding `ign-plugin` and `ign-physics` dependencies for Citadel release:
 
 ```cmake
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(IGN_PLUGIN_VER 1)
 find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
-set(IGN_PHYSICS_VER 3)
+set(IGN_PHYSICS_VER 2)
 find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
 ```
 

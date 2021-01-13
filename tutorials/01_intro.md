@@ -78,8 +78,6 @@ to \ref physicsplugin
 - Extend contact data with force, normal, and penetration depth.
 - Add Base and EntityManagement to `tpeplugin`
 
-**Ignition Physics 3.x**
-
 ### Future roadmap
 
 Ignition Physics evolves closely with the Ignition ecosystem.

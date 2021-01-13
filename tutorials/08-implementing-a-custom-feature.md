@@ -3,8 +3,7 @@
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. Note that
-the recommended Ignition release is Dome.
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## Implement a custom feature in DART plugin
 
@@ -293,10 +292,10 @@ dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
 
 Here we simply implement the actual behavior of `GetDartsimWorld` to return the
 world pointer from `EntityStorage` object storing world pointers of `dartsim` in
-[Base](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/Base.hh) class.
+[Base](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/Base.hh) class.
 
 Finally, we add the implemented `CustomFeatures` "FeatureList" together with
 other \ref ignition::physics::FeatureList "FeatureList" to final `DartsimFeatures`
-"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/plugin.cc)
+"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/plugin.cc)
 (please see \ref createphysicsplugin "Implement a physics plugin" for
 registering the plugin to Ignition Physics).

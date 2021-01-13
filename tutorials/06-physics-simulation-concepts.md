@@ -5,8 +5,7 @@ This tutorial introduces simulation concepts that are used in Ignition Physics.
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. Note that
-the recommended Ignition release is Dome.
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## Physics simulation versus animation
 
@@ -29,12 +28,12 @@ also the dynamic physics aspects. To get more in-depth of what you can define
 the environment in the SDFormat file, please refer to this
 [SDFormat specification](http://sdformat.org/spec?ver=1.7&elem=sdf).
 For a comprehensive tutorial for constructing your robot model as SDFormat,
-please refer to [this tutorial](https://ignitionrobotics.org/docs/dome/building_robot).
+please refer to [this tutorial](https://ignitionrobotics.org/docs/citadel/building_robot).
 
 
 ## Physics concepts in Ignition Gazebo simulation
 
-First, please see [Understand the GUI tutorial](https://ignitionrobotics.org/docs/dome/gui)
+First, please see [Understand the GUI tutorial](https://ignitionrobotics.org/docs/citadel/gui)
 for an overview of Ignition Gazebo GUI. In this tutorial, we will show how to
 manipulate and visualize some physics aspects using interesting
 models powered by Ignition Physics on Ignition Gazebo.
