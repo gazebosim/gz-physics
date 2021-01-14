@@ -246,6 +246,18 @@
       <pose>0.0  10.0  10.0  0.0  0.0  0.0</pose>
       <link name="link">
         <pose>0.0  0.0  0.0  0.0  0.0  0.0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>1.0</radius>
+            </sphere>
+          </geometry>
+          <surface>
+            <bounce>
+              <restitution_coefficient>0.8</restitution_coefficient>
+            </bounce>
+          </surface>
+        </collision>
       </link>
     </model>
 
