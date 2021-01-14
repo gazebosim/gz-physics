@@ -127,9 +127,12 @@ sudo make install
 
 ## Windows
 
+Currently, on Windows, DART is not supported, pending resolution of [dartsim/dart#1522](https://github.com/dartsim/dart/issues/1522) and [conda-forge/dartsim-feedstock#2](https://github.com/conda-forge/dartsim-feedstock/issues/2).
+Only [Trivial Physics Engine (TPE)](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629) is supported at the moment.
+
 ### Prerequisites
 
-First, follow the [ign-cmake](https://github.com/ignitionrobotics/ign-cmake) tutorial for installing Conda, Visual Studio, CMake, etc., prerequisites, and creating a Conda environment.
+First, follow the [ign-cmake](https://github.com/ignitionrobotics/ign-cmake) tutorial for installing Conda, Visual Studio, CMake, and other prerequisites, and also for creating a Conda environment.
 
 Navigate to ``condabin`` if necessary to use the ``conda`` command (i.e., if Conda is not in your `PATH` environment variable. You can find the location of ``condabin`` in Anaconda Prompt, ``where conda``).
 
