@@ -138,7 +138,7 @@ command-line tools:
 Currently, on Windows, DART is not supported, pending resolution of [dartsim/dart#1522](https://github.com/dartsim/dart/issues/1522) and [conda-forge/dartsim-feedstock#2](https://github.com/conda-forge/dartsim-feedstock/issues/2).
 Only [Trivial Physics Engine (TPE)](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629) is supported at the moment.
 
-### Prerequisites
+## Prerequisites
 
 First, follow the [ign-cmake](https://github.com/ignitionrobotics/ign-cmake) tutorial for installing Conda, Visual Studio, CMake, and other prerequisites, and also for creating a Conda environment.
 
