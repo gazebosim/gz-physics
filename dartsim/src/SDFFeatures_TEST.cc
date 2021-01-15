@@ -110,7 +110,6 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
                    double upper, double maxForce, double maxVelocity)
   {
     EXPECT_DOUBLE_EQ(initialPos, dof->getPosition());
-    EXPECT_DOUBLE_EQ(initialPos, dof->getInitialPosition());
     EXPECT_DOUBLE_EQ(damping, dof->getDampingCoefficient());
     EXPECT_DOUBLE_EQ(friction, dof->getCoulombFriction());
     EXPECT_DOUBLE_EQ(springRest, dof->getRestPosition());

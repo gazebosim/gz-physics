@@ -117,7 +117,6 @@ static void CopyStandardJointAxisProperties(
     const int _index, Properties &_properties,
     const ::sdf::JointAxis *_sdfAxis)
 {
-  _properties.mInitialPositions[_index] = _sdfAxis->InitialPosition();
   _properties.mDampingCoefficients[_index] = _sdfAxis->Damping();
   _properties.mFrictions[_index] = _sdfAxis->Friction();
   _properties.mRestPositions[_index] = _sdfAxis->SpringReference();
