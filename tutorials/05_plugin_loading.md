@@ -95,7 +95,7 @@ for (const std::string &name : pluginNames)
 }
 ```
 
-### Setup CMakeLists.txt for building (Version: Dome, ign-physics3)
+### Setup CMakeLists.txt for building (Version: Dome, ign-physics4)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `ign-plugin` and `ign-physics` dependencies in Dome release:

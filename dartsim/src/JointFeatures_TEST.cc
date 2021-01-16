@@ -512,8 +512,8 @@ TEST_F(JointFeaturesFixture, JointAttachDetachSpawnedModel)
     sdf::Root root;
     sdf::Errors errors = root.LoadSdfString(model1Str);
     ASSERT_TRUE(errors.empty()) << errors.front();
-    ASSERT_NE(nullptr, root.ModelByIndex(0));
-    world->ConstructModel(*root.ModelByIndex(0));
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
   }
 
   world->Step(output, state, input);
@@ -522,8 +522,8 @@ TEST_F(JointFeaturesFixture, JointAttachDetachSpawnedModel)
     sdf::Root root;
     sdf::Errors errors = root.LoadSdfString(model2Str);
     ASSERT_TRUE(errors.empty()) << errors.front();
-    ASSERT_NE(nullptr, root.ModelByIndex(0));
-    world->ConstructModel(*root.ModelByIndex(0));
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
   }
 
   const std::string modelName1{"M1"};
