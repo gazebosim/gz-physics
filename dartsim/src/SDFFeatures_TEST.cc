@@ -104,11 +104,13 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   ASSERT_NE(nullptr, skeleton);
   ASSERT_EQ(3u, skeleton->getNumBodyNodes());
 
-  auto verify = [](const dart::dynamics::DegreeOfFreedom * dof, double damping,
-                   double friction, double springRest, double stiffness,
-                   double lower, double upper, double maxForce,
-                   double maxVelocity)
+  auto verify = [](const dart::dynamics::DegreeOfFreedom * dof,
+                   double initialPos, double damping, double friction,
+                   double springRest, double stiffness, double lower,
+                   double upper, double maxForce, double maxVelocity)
   {
+    EXPECT_DOUBLE_EQ(initialPos, dof->getPosition());
+    EXPECT_DOUBLE_EQ(initialPos, dof->getInitialPosition());
     EXPECT_DOUBLE_EQ(damping, dof->getDampingCoefficient());
     EXPECT_DOUBLE_EQ(friction, dof->getCoulombFriction());
     EXPECT_DOUBLE_EQ(springRest, dof->getRestPosition());
@@ -124,12 +126,12 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   // Test that things were parsed correctly. These values are either stated or
   // implied in the test.world SDF file.
   verify(skeleton->getJoint(1)->getDof(0),
-         3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
+         1.5706796, 3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
          std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity());
 
   verify(skeleton->getJoint(2)->getDof(0),
-         3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
+         -0.429462, 3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
          std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity());
 

@@ -117,6 +117,20 @@ static void CopyStandardJointAxisProperties(
     const int _index, Properties &_properties,
     const ::sdf::JointAxis *_sdfAxis)
 {
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  // TODO(anyone): stop using this deprecated function
+  _properties.mInitialPositions[_index] = _sdfAxis->InitialPosition();
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#else
+# pragma warning(pop)
+#endif
   _properties.mDampingCoefficients[_index] = _sdfAxis->Damping();
   _properties.mFrictions[_index] = _sdfAxis->Friction();
   _properties.mRestPositions[_index] = _sdfAxis->SpringReference();
