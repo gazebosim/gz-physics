@@ -14,17 +14,6 @@ Identity ShapeFeatures::AttachMeshShape(
     const Pose3d &_pose,
     const LinearVector3d &_scale)
 {
-  (void) _pose;
-
-  for (auto collision_it : this->collisions)
-  {
-    auto &collisionInfo = collision_it.second;
-    if (collisionInfo->link.id == _linkID.id)
-    {
-      return this->GenerateInvalidId();
-    }
-  }
-
   double *vertices = nullptr;
   int *indices = nullptr;
   _mesh.FillArrays(&vertices, &indices);
@@ -40,14 +29,6 @@ Identity ShapeFeatures::AttachMeshShape(
     vertices[j*3+0] = vertices[j*3+0] * _scale[0];
     vertices[j*3+1] = vertices[j*3+1] * _scale[1];
     vertices[j*3+2] = vertices[j*3+2] * _scale[2];
-
-    // Apply pose transformation to data
-    // Eigen::Vector3d vect;
-    // vect << vertices[j*3+0], vertices[j*3+1], vertices[j*3+2];
-    // vect = _pose * vect;
-    // vertices[j*3+0] = vect(0);
-    // vertices[j*3+1] = vect(1);
-    // vertices[j*3+2] = vect(2);
   }
 
   // Create the Bullet trimesh
@@ -81,35 +62,23 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &linkInfo = this->links.at(_linkID);
   const auto &modelID = linkInfo->model;
   const auto &modelInfo = this->models.at(modelID);
-  const auto &link = linkInfo->link;
   const auto &worldInfo = this->worlds.at(modelInfo->world);
-  const auto &world = worldInfo->world;
-  const auto &mass = linkInfo->mass;
-  const auto &inertia = linkInfo->inertia;
+  const auto &body = linkInfo->link;
 
-  math::Pose3d base_pose = modelInfo->pose;
-  math::Pose3d link_pose = linkInfo->pose;
-  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * link_pose) * _pose;
+  const auto poseIsometry = _pose;
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
   baseTransform.setOrigin(convertVec(poseTranslation));
   baseTransform.setBasis(convertMat(poseLinear));
 
-  gimpactMeshShape->setMargin(btScalar(0.001));
+  // gimpactMeshShape->setMargin(btScalar(0.001));
 
-  btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
-  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, gimpactMeshShape, inertia);
-  btRigidBody* body = new btRigidBody(rbInfo);
-  linkInfo->link = body;
-
+  dynamic_cast<btCompoundShape *>(body->getCollisionShape())->addChildShape(baseTransform, gimpactMeshShape);
   btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
 
-  world->addRigidBody(link);
   auto identity = this->AddCollision({_name, gimpactMeshShape, _linkID,
                              modelID, ignition::math::eigen3::convert(_pose)});
-
-  this->link_to_collision[_linkID] = identity;
   return identity;
 
 }
