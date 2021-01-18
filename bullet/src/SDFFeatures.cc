@@ -157,6 +157,15 @@ Identity SDFFeatures::ConstructSdfLink(
   btVector3 linkInertiaDiag =
       convertVec(ignition::math::eigen3::convert(diagonalMoments));
 
+  const auto &modelInfo = this->models.at(_modelID);
+  math::Pose3d base_pose = modelInfo->pose;
+  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose);
+  const auto poseTranslation = poseIsometry.translation();
+  const auto poseLinear = poseIsometry.linear();
+  btTransform baseTransform;
+  baseTransform.setOrigin(convertVec(poseTranslation));
+  baseTransform.setBasis(convertMat(poseLinear));
+
   // Create link
   // (TO-DO: do we want to use MotionState?) 2nd part: Do motion state use the same transformation?
   if (this->models.at(_modelID)->fixed)
@@ -165,8 +174,16 @@ Identity SDFFeatures::ConstructSdfLink(
     linkInertiaDiag = btVector3(0,0,0);
   }
 
+  btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
+  btCollisionShape* collision_shape = new btCompoundShape();
+  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collision_shape, linkInertiaDiag);
+  btRigidBody* body = new btRigidBody(rbInfo);
+
+  const auto &world = this->worlds.at(modelInfo->world)->world;
+  world->addRigidBody(body);
+
   // Generate an identity for it
-  const auto linkIdentity = this->AddLink({name, nullptr, _modelID, pose, mass, linkInertiaDiag});
+  const auto linkIdentity = this->AddLink({name, body, _modelID, pose, mass, linkInertiaDiag});
   return linkIdentity;
 }
 
@@ -202,7 +219,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto cylinder = geom->CylinderShape();
     const auto radius = cylinder->Radius();
     const auto halfLength = cylinder->Length()*0.5;
-    shape = new btCylinderShapeZ(btVector3(radius, 0, halfLength));
+    shape = new btCylinderShapeZ(btVector3(radius, radius, halfLength));
   }
   else if (geom->PlaneShape())
   {
@@ -227,20 +244,16 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (shape != nullptr)
   {
     const auto &linkInfo = this->links.at(_linkID);
+    const auto &body = linkInfo->link;
     const auto &modelID = linkInfo->model;
-    const auto &modelInfo = this->models.at(modelID);
-    const auto &world = this->worlds.at(modelInfo->world)->world;
-    const auto &mass = linkInfo->mass;
-    const auto &inertia = linkInfo->inertia;
 
-    if (!modelInfo->fixed && this->link_to_collision.find(_linkID.id) != this->link_to_collision.end()){
-      return this->GenerateInvalidId();
-    }
+    // TODO(LOBOTUERK) figure out why this was here
+    // if (!modelInfo->fixed){
+    //   return this->GenerateInvalidId();
+    // }
 
-    math::Pose3d base_pose = modelInfo->pose;
-    math::Pose3d link_pose = linkInfo->pose;
     const auto pose = _collision.RawPose();
-    const auto poseIsometry = ignition::math::eigen3::convert(base_pose * link_pose * pose);
+    const auto poseIsometry = ignition::math::eigen3::convert(pose);
     const auto poseTranslation = poseIsometry.translation();
     const auto poseLinear = poseIsometry.linear();
     btTransform baseTransform;
@@ -249,23 +262,17 @@ Identity SDFFeatures::ConstructSdfCollision(
 
     // shape->setMargin(btScalar(0.0001));
 
-    btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, shape, inertia);
-    btRigidBody* body = new btRigidBody(rbInfo);
-    linkInfo->link = body;
-
     body->setFriction(mu * 10);
     body->setAnisotropicFriction(btVector3(1, 1, 1),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
-    // We add the rigidbody to the world after it has collision, as
-    // non collision bodies don't get simulated on a dynamics world
-    world->addRigidBody(body);
+    dynamic_cast<btCompoundShape *>(body->getCollisionShape())->addChildShape(baseTransform, shape);
 
     auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
                                modelID, pose});
 
-    this->link_to_collision[_linkID] = identity;
+    // TODO(LOBOTUERK) We probably dont need this any more, whenever we refactor we should get rid of this
+    // this->link_to_collision[_linkID] = identity;
     return identity;
   }
   return this->GenerateInvalidId();
@@ -316,76 +323,40 @@ Identity SDFFeatures::ConstructSdfJoint(
     axis = ignition::math::Vector3d::UnitZ;
   }
   else {
-    axis = _sdfJoint.Axis(0)->Xyz();
+    axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot() * _sdfJoint.Axis(0)->Xyz() * -1;
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
   // for the parent and child links.
-  Eigen::Vector3d pivotParent, pivotChild, axisParent, axisChild;
+  math::Vector3d pivotParent, pivotChild, axisParent, axisChild;
   math::Pose3d pose;
-  const math::Pose3d base_pose = this->models.at(_modelID)->pose;
-  // const Eigen::Isometry3d T_joint = ignition::math::eigen3::convert(base_pose) * ResolveSdfPose(_sdfJoint.SemanticPose());
 
-  // Initialize pivots to anchorPos, which is expressed in the
-  // world coordinate frame.
-  // anchorPos is the position of the joint in gazebo11, replacing with equivalent for ignition
-  pivotParent = ignition::math::eigen3::convert(_sdfJoint.RawPose().Pos() + this->links.at(childId)->pose.Pos());
-  pivotChild = ignition::math::eigen3::convert(_sdfJoint.RawPose().Pos() + this->links.at(childId)->pose.Pos());
-  // pivotParent = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
-  // pivotChild = ConvertJointAxis(_sdfJoint.Axis(0), parentModelInfo, T_joint);
+  pivotParent = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
+  pivotChild = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
 
-  // Assumming at this part of the code already that both parent and child are defined
-  // And none of those is world
+  pose = this->links.at(parentId)->pose;
 
-  // <<Consider: I think the pose has to be referenced to the base pose of the model>>
-  // const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose);
-  // The following part of the code was taken from gazebo11 implementation almost without changes
+  pivotParent -= pose.Pos();
 
-  // Compute relative pose between joint anchor and inertial frame of parent.
-  pose = this->links.at(parentId)->pose * this->collisions.at(this->link_to_collision.at(parentId))->pose;
-  // Subtract CoG position from anchor position, both in world frame.
-  pivotParent -= ignition::math::eigen3::convert(pose.Pos());
+  pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
+  axisParent = pose.Rot().RotateVectorReverse(axis);
+  axisParent = axisParent.Normalize();
 
-  // Rotate pivot offset and axis into body-fixed inertial frame of parent.
-  math::Vector3 pivotParent_vect(pivotParent(0), pivotParent(1), pivotParent(2));
-  pivotParent_vect = pose.Rot().RotateVectorReverse(pivotParent_vect);
-  math::Vector3 axisParent_vect = pose.Rot().RotateVectorReverse(axis);
-  axisParent_vect = axisParent_vect.Normalize();
+  pose = this->links.at(childId)->pose;
 
-  // Compute relative pose between joint anchor and inertial frame of child.
-  pose = this->links.at(childId)->pose * this->collisions.at(this->link_to_collision.at(childId))->pose;
-  // Subtract CoG position from anchor position, both in world frame.
-  pivotChild -= ignition::math::eigen3::convert(pose.Pos());
-  // Rotate pivot offset and axis into body-fixed inertial frame of child.
+  pivotChild -= pose.Pos();
 
-  math::Vector3 pivotChild_vect(pivotChild(0), pivotChild(1), pivotChild(2));
-  pivotChild_vect = pose.Rot().RotateVectorReverse(pivotChild_vect);
-  math::Vector3 axisChild_vect = pose.Rot().RotateVectorReverse(axis);
-  axisChild_vect = axisChild_vect.Normalize();
-
-  // At this part, save a reference to the object created, to delete it later
-  // If both links exist, then create a joint between the two links.
-  pivotParent(0) = pivotParent_vect[0];
-  pivotParent(1) = pivotParent_vect[1];
-  pivotParent(2) = pivotParent_vect[2];
-  axisParent(0) = axisParent_vect[0];
-  axisParent(1) = axisParent_vect[1];
-  axisParent(2) = axisParent_vect[2];
-  pivotChild(0) = pivotChild_vect[0];
-  pivotChild(1) = pivotChild_vect[1];
-  pivotChild(2) = pivotChild_vect[2];
-  axisChild(0) = axisChild_vect[0];
-  axisChild(1) = axisChild_vect[1];
-  axisChild(2) = axisChild_vect[2];
+  pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
+  axisChild = pose.Rot().RotateVectorReverse(axis);
+  axisChild = axisChild.Normalize();
 
   btTypedConstraint* joint = new btHingeConstraint(
     *this->links.at(childId)->link,
     *this->links.at(parentId)->link,
-    convertVec(pivotChild),
-    convertVec(pivotParent),
-    convertVec(axisChild),
-    convertVec(axisParent),
-    true);
+    convertVec(ignition::math::eigen3::convert(pivotChild)),
+    convertVec(ignition::math::eigen3::convert(pivotParent)),
+    convertVec(ignition::math::eigen3::convert(axisChild)),
+    convertVec(ignition::math::eigen3::convert(axisParent)));
 
   const auto &modelInfo = this->models.at(_modelID);
   const auto &world = this->worlds.at(modelInfo->world)->world;
@@ -394,7 +365,6 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Generate an identity for it and return it
   auto identity = this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});
-  ignerr << "Created joint " << identity.id << std::endl;
   return identity;
 }
 

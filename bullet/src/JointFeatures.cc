@@ -40,7 +40,7 @@ double JointFeatures::GetJointPosition(
     }
     // result -= this->angleOffset;
   }
-  ignerr << "Position: " << _id.id << " -> " << result << std::endl;
+  // ignerr << "Position: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
