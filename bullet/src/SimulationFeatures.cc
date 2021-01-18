@@ -32,7 +32,7 @@ void SimulationFeatures::WorldForwardStep(
     auto *dtDur =
       _u.Query<std::chrono::steady_clock::duration>();
     std::chrono::duration<double> dt = *dtDur;
-    worldInfo->world->stepSimulation(dt.count());
+    worldInfo->world->stepSimulation(dt.count(), 1, dt.count());
 }
 
 }
