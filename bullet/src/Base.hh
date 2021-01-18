@@ -90,6 +90,7 @@ struct JointInfo
   std::size_t childLinkId;
   std::size_t parentLinkId;
   int constraintType;
+  ignition::math::Vector3d axis;
 };
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)

@@ -178,6 +178,7 @@ Identity SDFFeatures::ConstructSdfLink(
   btCollisionShape* collision_shape = new btCompoundShape();
   btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collision_shape, linkInertiaDiag);
   btRigidBody* body = new btRigidBody(rbInfo);
+  body->setActivationState(DISABLE_DEACTIVATION);
 
   const auto &world = this->worlds.at(modelInfo->world)->world;
   world->addRigidBody(body);
@@ -323,7 +324,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     axis = ignition::math::Vector3d::UnitZ;
   }
   else {
-    axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot() * _sdfJoint.Axis(0)->Xyz() * -1;
+    axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot() * _sdfJoint.Axis(0)->Xyz();
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
@@ -350,7 +351,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisChild = pose.Rot().RotateVectorReverse(axis);
   axisChild = axisChild.Normalize();
 
-  btTypedConstraint* joint = new btHingeConstraint(
+  btHingeConstraint* joint = new btHingeConstraint(
     *this->links.at(childId)->link,
     *this->links.at(parentId)->link,
     convertVec(ignition::math::eigen3::convert(pivotChild)),
@@ -362,9 +363,11 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto &world = this->worlds.at(modelInfo->world)->world;
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
+  double friction = _sdfJoint.Axis(0)->Friction();
+  joint->enableAngularMotor(true, 0.0, friction);
 
   // Generate an identity for it and return it
-  auto identity = this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type)});
+  auto identity = this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type), _sdfJoint.Axis(0)->Xyz()});
   return identity;
 }
 
