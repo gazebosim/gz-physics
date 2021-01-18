@@ -67,7 +67,7 @@ struct LinkInfo
   btRigidBody* link;
   Identity model;
   math::Pose3d pose;
-  btScalar mass;
+  double mass;
   btVector3 inertia;
 };
 
