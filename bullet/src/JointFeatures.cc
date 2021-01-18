@@ -143,13 +143,9 @@ void JointFeatures::SetJointVelocityCommand(
 
   // Check the type of joint and act accordignly
   if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
-    btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
-    // This value was set arbitrarily
-    const float maxMotorImpulse = 10000.0f;
-    const float targetVelocity = _value * -1;
-    hinge->enableAngularMotor(true, targetVelocity, maxMotorImpulse);
-    this->links.at(jointInfo->childLinkId)->link->activate();
-    // ignerr << "MOTOR ENABLED : " << targetVelocity << std::endl;
+    // btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
+    btVector3 angular_vel = convertVec(ignition::math::eigen3::convert(jointInfo->axis * _value));
+    this->links.at(jointInfo->childLinkId)->link->setAngularVelocity(angular_vel);
   }
   else {
     // igndbg << "Sending command to not revolute joint\n";
