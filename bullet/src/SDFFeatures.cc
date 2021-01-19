@@ -359,6 +359,13 @@ Identity SDFFeatures::ConstructSdfJoint(
     convertVec(ignition::math::eigen3::convert(axisChild)),
     convertVec(ignition::math::eigen3::convert(axisParent)));
 
+  // Limit movement for fixed joints
+  if(type == ::sdf::JointType::FIXED) {
+    btHingeConstraint *hingeJoint = dynamic_cast<btHingeConstraint *>(joint);
+    btScalar offset = hingeJoint->getHingeAngle();
+    hingeJoint->setLimit(offset, offset);
+  }
+
   const auto &modelInfo = this->models.at(_modelID);
   const auto &world = this->worlds.at(modelInfo->world)->world;
   world->addConstraint(joint, true);
