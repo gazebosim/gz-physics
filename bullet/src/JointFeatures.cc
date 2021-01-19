@@ -265,9 +265,12 @@ void JointFeatures::SetJointVelocityCommand(
 
   // Check the type of joint and act accordignly
   if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
-    // btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
-    btVector3 angular_vel = convertVec(ignition::math::eigen3::convert(jointInfo->axis * _value));
-    this->links.at(jointInfo->childLinkId)->link->setAngularVelocity(angular_vel);
+    const auto &link = this->links.at(jointInfo->childLinkId)->link;
+    btTransform trans;
+    link->getMotionState()->getWorldTransform(trans);
+    btVector3 motion = quatRotate(trans.getRotation(), convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
+    btVector3 angular_vel = motion * _value;
+    link->setAngularVelocity(angular_vel);
   }
   else {
     // igndbg << "Sending command to not revolute joint\n";
