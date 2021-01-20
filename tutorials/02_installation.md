@@ -194,3 +194,50 @@ This assumes you have created and activated a Conda environment while installing
   ```
   cmake --install . --config Release
   ```
+
+# Documentation
+
+API and tutorials can be found at [https://ignitionrobotics.org/libs/physics](https://ignitionrobotics.org/libs/physics).
+
+You can also generate the documentation from a clone of this repository by following these steps.
+
+1. You will need Doxygen. On Ubuntu Doxygen can be installed using
+  ```
+  sudo apt-get install doxygen
+  ```
+
+2. Clone the repository
+  ```
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
+  ```
+
+3. Configure and build the documentation.
+  ```
+  cd ign-physics
+  mkdir build
+  cd build
+  cmake ..
+  make doc
+  ```
+
+4. View the documentation by running the following command from the build directory.
+  ```
+  firefox doxygen/html/index.html
+  ```
+
+# Testing
+
+Follow these steps to run tests and static code analysis in your clone of this repository.
+
+1. Follow the [source install instruction](#source-install).
+
+2. Run tests.
+  ```
+  make test
+  ```
+
+3. Static code checker.
+  ```
+  make codecheck
+  ```
+
