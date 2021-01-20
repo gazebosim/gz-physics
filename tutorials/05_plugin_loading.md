@@ -27,7 +27,7 @@ cd simple_loader
 Then download the example loader into your current directory by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/main/examples/hello_world_loader/hello_world_loader.cc
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/ign-physics2/examples/hello_world_loader/hello_world_loader.cc
 ```
 
 ### Examine the code
