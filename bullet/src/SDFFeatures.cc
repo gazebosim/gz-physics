@@ -361,9 +361,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Limit movement for fixed joints
   if(type == ::sdf::JointType::FIXED) {
-    btHingeConstraint *hingeJoint = dynamic_cast<btHingeConstraint *>(joint);
-    btScalar offset = hingeJoint->getHingeAngle();
-    hingeJoint->setLimit(offset, offset);
+    btScalar offset = joint->getHingeAngle();
+    joint->setLimit(offset, offset);
   }
 
   const auto &modelInfo = this->models.at(_modelID);
