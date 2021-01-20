@@ -27,20 +27,34 @@ namespace bullet {
 double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
   (void) _dof;
-  double result = 0;
+  double result = ignition::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
-    btHingeAccumulatedAngleConstraint* hinge =
-      static_cast<btHingeAccumulatedAngleConstraint*>(this->joints.at(_id.id)->joint);
-    if (hinge)
+    const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+    const int jointType = jointInfo->constraintType;
+    // Check the type of joint and act accordignly
+    if (jointInfo->constraintType ==
+        static_cast<int>(::sdf::JointType::REVOLUTE))
     {
-      result = hinge->getAccumulatedHingeAngle();
+      btHingeAccumulatedAngleConstraint* hinge =
+        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+      if (hinge)
+      {
+        result = hinge->getAccumulatedHingeAngle();
+        // result -= this->angleOffset;
+      }
+      else
+      {
+        ignerr << "Corrupted joint at index:" << _id.id << "\n";
+      }
     }
-    // result -= this->angleOffset;
+    else
+    {
+      ignerr << "Not a valid constrating type: " << jointType << "\n";
+    }
   }
-  // ignerr << "Position: " << _id.id << " -> " << result << std::endl;
+  igndbg << "Position: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -48,30 +62,171 @@ double JointFeatures::GetJointPosition(
 double JointFeatures::GetJointVelocity(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
   (void) _dof;
-  igndbg << "Dummy function GetJointVelocity\n";
-  return 0.0;
+  double result = ignition::math::NAN_D;
+  if (this->joints.find(_id.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+    const int jointType = jointInfo->constraintType;
+    if (jointInfo->constraintType ==
+        static_cast<int>(::sdf::JointType::REVOLUTE))
+    {
+      btHingeAccumulatedAngleConstraint* hinge =
+        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+      if (hinge)
+      {
+        result = 0.0;
+        // Get the axis of the joint
+        btVector3 vec =
+          hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+          hinge->getFrameOffsetA().getBasis().getColumn(2);
+
+        math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+
+        if (this->links.find(jointInfo->childLinkId) != this->links.end())
+        {
+          btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+          btVector3 aux = childLink->getAngularVelocity();
+          math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
+          // result +=
+          // globalAxis.Dot(convertVec(childLink->getAngularVelocity()));
+          result += globalAxis.Dot(angularVelocity);
+        }
+        if (this->links.find(jointInfo->parentLinkId) != this->links.end())
+        {
+          btRigidBody *parentLink =
+            this->links.at(jointInfo->parentLinkId)->link;
+          btVector3 aux = parentLink->getAngularVelocity();
+          math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
+          // result -=
+          // globalAxis.Dot(convertVec(parentLink->getAngularVelocity()));
+          result -= globalAxis.Dot(angularVelocity);
+        }
+      }
+      else
+      {
+        ignerr << "Corrupted joint at index:" << _id.id << "\n";
+      }
+    }
+    else
+    {
+      ignerr << "Not a valid constrating type: " << jointType << "\n";
+    }
+  }
+  igndbg << "Joint Velocity: " << _id.id << " -> " << result << std::endl;
+  return result;
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointAcceleration(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
   (void) _dof;
-  ignwarn << "Dummy function GetJointAcceleration\n";
-  return 0.0;
+  double result = ignition::math::NAN_D;
+  if (this->joints.find(_id.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+    const int jointType = jointInfo->constraintType;
+    if (jointInfo->constraintType ==
+        static_cast<int>(::sdf::JointType::REVOLUTE))
+    {
+      btHingeAccumulatedAngleConstraint* hinge =
+        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+      if (hinge)
+      {
+        result = 0.0;
+        // Get the axis of the joint
+        btVector3 vec =
+          hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+          hinge->getFrameOffsetA().getBasis().getColumn(2);
+
+        math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+
+        if (this->links.find(jointInfo->childLinkId) != this->links.end())
+        {
+          btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+          btVector3 aux = childLink->getTotalTorque();
+          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+
+          // TODO(blast545): divide inertia
+          result += globalAxis.Dot(angularTorque);
+        }
+        if (this->links.find(jointInfo->parentLinkId) != this->links.end())
+        {
+          btRigidBody *parentLink =
+            this->links.at(jointInfo->parentLinkId)->link;
+          btVector3 aux = parentLink->getTotalTorque();
+          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+          result -= globalAxis.Dot(angularTorque);
+        }
+      }
+      else
+      {
+        ignerr << "Corrupted joint at index:" << _id.id << "\n";
+      }
+    }
+    else
+    {
+      ignerr << "Not a valid constrating type: " << jointType << "\n";
+    }
+  }
+  igndbg << "Joint Acceleration: " << _id.id << " -> " << result << std::endl;
+  return result;
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
     const Identity &_id, const std::size_t _dof) const
 {
-  (void) _id;
   (void) _dof;
-  ignwarn << "Dummy function GetJointForce\n";
-  return 0.0;
+  double result = ignition::math::NAN_D;
+  if (this->joints.find(_id.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+    const int jointType = jointInfo->constraintType;
+    if (jointInfo->constraintType ==
+        static_cast<int>(::sdf::JointType::REVOLUTE))
+    {
+      btHingeAccumulatedAngleConstraint* hinge =
+        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+      if (hinge)
+      {
+        result = 0.0;
+        // Get the axis of the joint
+        btVector3 vec =
+          hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+          hinge->getFrameOffsetA().getBasis().getColumn(2);
+
+        math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+
+        if (this->links.find(jointInfo->childLinkId) != this->links.end())
+        {
+          btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+          btVector3 aux = childLink->getTotalTorque();
+          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+          result += globalAxis.Dot(angularTorque);
+        }
+        if (this->links.find(jointInfo->parentLinkId) != this->links.end())
+        {
+          btRigidBody *parentLink =
+            this->links.at(jointInfo->parentLinkId)->link;
+          btVector3 aux = parentLink->getTotalTorque();
+          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+          result -= globalAxis.Dot(angularTorque);
+        }
+      }
+      else
+      {
+        ignerr << "Corrupted joint at index:" << _id.id << "\n";
+      }
+    }
+    else
+    {
+      ignerr << "Not a valid constrating type: " << jointType << "\n";
+    }
+  }
+  igndbg << "Joint Torque: " << _id.id << " -> " << result << std::endl;
+  return result;
 }
 
 /////////////////////////////////////////////////
@@ -143,9 +298,12 @@ void JointFeatures::SetJointVelocityCommand(
 
   // Check the type of joint and act accordignly
   if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
-    // btHingeConstraint * hinge = dynamic_cast<btHingeConstraint *> (jointInfo->joint);
-    btVector3 angular_vel = convertVec(ignition::math::eigen3::convert(jointInfo->axis * _value));
-    this->links.at(jointInfo->childLinkId)->link->setAngularVelocity(angular_vel);
+    const auto &link = this->links.at(jointInfo->childLinkId)->link;
+    btTransform trans;
+    link->getMotionState()->getWorldTransform(trans);
+    btVector3 motion = quatRotate(trans.getRotation(), convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
+    btVector3 angular_vel = motion * _value;
+    link->setAngularVelocity(angular_vel);
   }
   else {
     // igndbg << "Sending command to not revolute joint\n";
