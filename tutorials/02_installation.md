@@ -37,10 +37,11 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 
 ```{.sh}
 sudo apt-get update
-sudo apt-get install libignition-physics2-dev
+sudo apt-get install libignition-physics<#>-dev
 ```
 
-Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
+Note that our latest Dome release requires version **3**.
 
 **Build from source**
 
@@ -49,7 +50,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
   sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
   sudo apt-get build-dep -y ignition-physics<#>-dev
   ```
-  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+  Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
 
 
 2. Use gcc-8:
@@ -66,7 +67,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
   ```
   git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
   ```
-  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+  Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
 
 
 4. Configure and build
@@ -101,25 +102,26 @@ Run the following commands:
 
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics2
+brew install ignition-physics<#>
 ```
-Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
+Note that our latest Dome release requires version **3**.
 
 **Build from source using Homebrew**
 
 Run the following to install dependencies
 ```{.sh}
 brew tap osrf/simulation
-brew install ignition-physics2 --only-dependencies
+brew install ignition-physics<#> --only-dependencies
 ```
 
-Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
 
 Clone the ign-physics repository from GitHub
 ```{.sh}
-git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
+git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
 ```
-Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+Be sure to replace `<#>` with a number value, such as `1`, `2` or `3`, depending on which version you need.
 
 Then build using CMake
 ```{.sh}
