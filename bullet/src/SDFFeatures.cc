@@ -252,10 +252,10 @@ Identity SDFFeatures::ConstructSdfJoint(
     return this->GenerateInvalidId();
   }
 
-  // Handle the case where either parent or child is the world
+  // Handle the case where either child is the world, not supported
   const std::size_t worldId = this->models.at(_modelID)->world;
-  if (parentId == worldId || childId == worldId){
-    ignwarn << "Not implemented joints using world as parent/child\n";
+  if (childId == worldId){
+    ignwarn << "Not implemented joints using world as child\n";
     return this->GenerateInvalidId();
   }
 
@@ -276,32 +276,37 @@ Identity SDFFeatures::ConstructSdfJoint(
   math::Vector3d pivotParent, pivotChild, axisParent, axisChild;
   math::Pose3d pose;
 
-  pivotParent = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
+  if (parentId != worldId) {
+    pivotParent = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
+    pose = this->links.at(parentId)->pose;
+    pivotParent -= pose.Pos();
+    pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
+    axisParent = pose.Rot().RotateVectorReverse(axis);
+    axisParent = axisParent.Normalize();
+  }
+
   pivotChild = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
-
-  pose = this->links.at(parentId)->pose;
-
-  pivotParent -= pose.Pos();
-
-  pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
-  axisParent = pose.Rot().RotateVectorReverse(axis);
-  axisParent = axisParent.Normalize();
-
   pose = this->links.at(childId)->pose;
-
   pivotChild -= pose.Pos();
-
   pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
   axisChild = pose.Rot().RotateVectorReverse(axis);
   axisChild = axisChild.Normalize();
 
-  btHingeConstraint* joint = new btHingeConstraint(
-    *this->links.at(childId)->link,
-    *this->links.at(parentId)->link,
-    convertVec(ignition::math::eigen3::convert(pivotChild)),
-    convertVec(ignition::math::eigen3::convert(pivotParent)),
-    convertVec(ignition::math::eigen3::convert(axisChild)),
-    convertVec(ignition::math::eigen3::convert(axisParent)));
+  if (parentId != worldId) {
+    btHingeConstraint* joint = new btHingeConstraint(
+      *this->links.at(childId)->link,
+      *this->links.at(parentId)->link,
+      convertVec(ignition::math::eigen3::convert(pivotChild)),
+      convertVec(ignition::math::eigen3::convert(pivotParent)),
+      convertVec(ignition::math::eigen3::convert(axisChild)),
+      convertVec(ignition::math::eigen3::convert(axisParent)));
+  }
+  else {
+    btHingeConstraint* joint = new btHingeConstraint(
+      *this->links.at(childId)->link,
+      convertVec(ignition::math::eigen3::convert(pivotChild)),
+      convertVec(ignition::math::eigen3::convert(axisChild)));
+  }
 
   // Limit movement for fixed joints
   if(type == ::sdf::JointType::FIXED) {
