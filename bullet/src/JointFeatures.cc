@@ -271,10 +271,38 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
   (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy SetJointForce\n";
+  if (this->joints.find(_id.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+    const int jointType = jointInfo->constraintType;
+    if (jointType == static_cast<int>(::sdf::JointType::REVOLUTE))
+    {
+      btHingeAccumulatedAngleConstraint* hinge =
+        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+      if (hinge)
+      {
+	// z-axis of constraint frame
+	btVector3 hingeAxisLocalA =
+	  hinge->getFrameOffsetA().getBasis().getColumn(2);
+	btVector3 hingeAxisLocalB =
+	  hinge->getFrameOffsetB().getBasis().getColumn(2);
+
+	btVector3 hingeAxisWorldA =
+	  hinge->getRigidBodyA().getWorldTransform().getBasis() *
+	  hingeAxisLocalA;
+	btVector3 hingeAxisWorldB =
+	  hinge->getRigidBodyB().getWorldTransform().getBasis() *
+	  hingeAxisLocalB;
+
+	btVector3 hingeTorqueA = _value * hingeAxisWorldA;
+	btVector3 hingeTorqueB = _value * hingeAxisWorldB;
+
+	hinge->getRigidBodyA().applyTorque(hingeTorqueA);
+	hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
+      }
+    }
+  }
 }
 
 /////////////////////////////////////////////////
