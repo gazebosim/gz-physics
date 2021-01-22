@@ -240,4 +240,3 @@ Follow these steps to run tests and static code analysis in your clone of this r
   ```
   make codecheck
   ```
-
