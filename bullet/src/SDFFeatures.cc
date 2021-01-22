@@ -319,11 +319,15 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto &world = this->worlds.at(modelInfo->world)->world;
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
-  double friction = _sdfJoint.Axis(0)->Friction();
-  joint->enableAngularMotor(true, 0.0, friction);
+
+  if (_sdfJoint.Axis(0) != nullptr) {
+    double friction = _sdfJoint.Axis(0)->Friction();
+    joint->enableAngularMotor(true, 0.0, friction);
+  }
 
   // Generate an identity for it and return it
-  auto identity = this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type), _sdfJoint.Axis(0)->Xyz()});
+  auto identity =
+    this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type), axis});
   return identity;
 }
 
