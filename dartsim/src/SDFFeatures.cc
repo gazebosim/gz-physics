@@ -24,7 +24,9 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
+#include <dart/dynamics/CapsuleShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
+#include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
@@ -42,7 +44,9 @@
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
+#include <sdf/Capsule.hh>
 #include <sdf/Cylinder.hh>
+#include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
@@ -258,11 +262,27 @@ static ShapeAndTransform ConstructBox(
 }
 
 /////////////////////////////////////////////////
+static ShapeAndTransform ConstructCapsule(
+    const ::sdf::Capsule &_capsule)
+{
+  return {std::make_shared<dart::dynamics::CapsuleShape>(
+        _capsule.Radius(), _capsule.Length())};
+}
+
+/////////////////////////////////////////////////
 static ShapeAndTransform ConstructCylinder(
     const ::sdf::Cylinder &_cylinder)
 {
   return {std::make_shared<dart::dynamics::CylinderShape>(
         _cylinder.Radius(), _cylinder.Length())};
+}
+
+/////////////////////////////////////////////////
+static ShapeAndTransform ConstructEllipsoid(
+    const ::sdf::Ellipsoid &_ellipsoid)
+{
+  return {std::make_shared<dart::dynamics::EllipsoidShape>(
+          math::eigen3::convert(_ellipsoid.Radii()))};
 }
 
 /////////////////////////////////////////////////
@@ -314,8 +334,12 @@ static ShapeAndTransform ConstructGeometry(
 {
   if (_geometry.BoxShape())
     return ConstructBox(*_geometry.BoxShape());
+  else if (_geometry.CapsuleShape())
+    return ConstructCapsule(*_geometry.CapsuleShape());
   else if (_geometry.CylinderShape())
     return ConstructCylinder(*_geometry.CylinderShape());
+  else if (_geometry.EllipsoidShape())
+    return ConstructEllipsoid(*_geometry.EllipsoidShape());
   else if (_geometry.SphereShape())
     return ConstructSphere(*_geometry.SphereShape());
   else if (_geometry.PlaneShape())

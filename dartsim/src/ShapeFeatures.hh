@@ -22,7 +22,9 @@
 
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/BoxShape.hh>
+#include <ignition/physics/CapsuleShape.hh>
 #include <ignition/physics/CylinderShape.hh>
+#include <ignition/physics/EllipsoidShape.hh>
 #include <ignition/physics/mesh/MeshShape.hh>
 #include <ignition/physics/PlaneShape.hh>
 #include <ignition/physics/SphereShape.hh>
@@ -48,9 +50,17 @@ struct ShapeFeatureList : FeatureList<
 //  SetBoxShapeProperties,
   AttachBoxShapeFeature,
 
+  GetCapsuleShapeProperties,
+  //  SetCapsulerShapeProperties,
+  AttachCapsuleShapeFeature,
+
   GetCylinderShapeProperties,
 //  SetCylinderShapeProperties,
   AttachCylinderShapeFeature,
+
+  GetEllipsoidShapeProperties,
+  //  SetCapsulerShapeProperties,
+  AttachEllipsoidShapeFeature,
 
   GetSphereShapeProperties,
 //  SetSphereShapeProperties,
@@ -89,6 +99,22 @@ class ShapeFeatures :
       const LinearVector3d &_size,
       const Pose3d &_pose) override;
 
+  // ----- Capsule Features -----
+  public: Identity CastToCapsuleShape(
+      const Identity &_shapeID) const override;
+
+  public: double GetCapsuleShapeRadius(
+      const Identity &_capsuleID) const override;
+
+  public: double GetCapsuleShapeHeight(
+      const Identity &_capsuleID) const override;
+
+  public: Identity AttachCapsuleShape(
+      const Identity &_linkID,
+      const std::string &_name,
+      double _radius,
+      double _height,
+      const Pose3d &_pose) override;
 
   // ----- Cylinder Features -----
   public: Identity CastToCylinderShape(
@@ -107,6 +133,18 @@ class ShapeFeatures :
       double _height,
       const Pose3d &_pose) override;
 
+  // ----- Ellipsoid Features -----
+  public: Identity CastToEllipsoidShape(
+      const Identity &_shapeID) const override;
+
+  public: Vector3d GetEllipsoidShapeRadii(
+      const Identity &_ellipsoidID) const override;
+
+  public: Identity AttachEllipsoidShape(
+      const Identity &_linkID,
+      const std::string &_name,
+      const Vector3d _radius,
+      const Pose3d &_pose) override;
 
   // ----- Sphere Features -----
   public: Identity CastToSphereShape(

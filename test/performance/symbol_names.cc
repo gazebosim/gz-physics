@@ -21,11 +21,27 @@
 #include <ignition/physics/FeaturePolicy.hh>
 
 #include <ignition/physics/BoxShape.hh>
+#include <ignition/physics/CapsuleShape.hh>
 #include <ignition/physics/CylinderShape.hh>
+#include <ignition/physics/EllipsoidShape.hh>
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/Link.hh>
 #include <ignition/physics/RevoluteJoint.hh>
+
+
+/////////////////////////////////////////////////
+struct CapsuleFeaturesClass : ignition::physics::FeatureList<
+    ignition::physics::GetCapsuleShapeProperties,
+    ignition::physics::SetCapsuleShapeProperties,
+    ignition::physics::AttachCapsuleShapeFeature
+> { };
+
+using CapsuleFeaturesAlias = ignition::physics::FeatureList<
+    ignition::physics::GetCapsuleShapeProperties,
+    ignition::physics::SetCapsuleShapeProperties,
+    ignition::physics::AttachCapsuleShapeFeature
+>;
 
 /////////////////////////////////////////////////
 struct CylinderFeaturesClass : ignition::physics::FeatureList<
@@ -38,6 +54,19 @@ using CylinderFeaturesAlias = ignition::physics::FeatureList<
     ignition::physics::GetCylinderShapeProperties,
     ignition::physics::SetCylinderShapeProperties,
     ignition::physics::AttachCylinderShapeFeature
+>;
+
+/////////////////////////////////////////////////
+struct EllipsoidFeaturesClass : ignition::physics::FeatureList<
+    ignition::physics::GetEllipsoidShapeProperties,
+    ignition::physics::SetEllipsoidShapeProperties,
+    ignition::physics::AttachEllipsoidShapeFeature
+> { };
+
+using EllipsoidFeaturesAlias = ignition::physics::FeatureList<
+    ignition::physics::GetEllipsoidShapeProperties,
+    ignition::physics::SetEllipsoidShapeProperties,
+    ignition::physics::AttachEllipsoidShapeFeature
 >;
 
 /////////////////////////////////////////////////
@@ -66,13 +95,17 @@ using BoxFeaturesAlias = ignition::physics::FeatureList<
 
 /////////////////////////////////////////////////
 struct FeatureSetClass : ignition::physics::FeatureList<
+    CapsuleFeaturesClass,
     CylinderFeaturesClass,
+    EllipsoidFeaturesClass,
     JointFeaturesClass,
     BoxFeaturesClass
 > { };
 
 using FeatureSetAlias = ignition::physics::FeatureList<
+    CapsuleFeaturesAlias,
     CylinderFeaturesAlias,
+    EllipsoidFeaturesAlias,
     JointFeaturesAlias,
     BoxFeaturesAlias
 >;
