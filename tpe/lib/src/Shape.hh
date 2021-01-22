@@ -53,6 +53,12 @@ enum class IGNITION_PHYSICS_TPELIB_VISIBLE ShapeType
 
   /// \brief A mesh shape.
   MESH = 5,
+
+  /// \brief A capsule shape.
+  CAPSULE = 4,
+
+  /// \brief A ellipsoid shape.
+  ELLIPSOID = 5,
 };
 
 
@@ -121,6 +127,49 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
 };
 
 /// \brief Cylinder geometry
+class IGNITION_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
+{
+  /// \brief Constructor
+  public: CapsuleShape();
+
+  /// \brief Copy Constructor
+  /// \param[in] _other shape to copy from
+  public: CapsuleShape(const CapsuleShape &_other);
+
+  /// \brief Destructor
+  public: ~CapsuleShape() = default;
+
+  /// \brief Assignment operator
+  /// \param[in] _other shape to copy from
+  public: Shape &operator=(const Shape &_other);
+
+  /// \brief Get capsule radius
+  /// \return capsule radius
+  public: double GetRadius() const;
+
+  /// \brief Set capsule radius
+  /// \param[in] _radius Cylinder radius
+  public: void SetRadius(double _radius);
+
+  /// \brief Get capsule length
+  /// \return Cylinder length
+  public: double GetLength() const;
+
+  /// \brief Set capsule length
+  /// \param[in] _length Cylinder length
+  public: void SetLength(double _length);
+
+  // Documentation inherited
+  protected: virtual void UpdateBoundingBox() override;
+
+  /// \brief Cylinder radius
+  private: double radius = 0.0;
+
+  /// \brief Cylinder length
+  private: double length = 0.0;
+};
+
+/// \brief Cylinder geometry
 class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
 {
   /// \brief Constructor
@@ -161,6 +210,38 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
 
   /// \brief Cylinder length
   private: double length = 0.0;
+};
+
+/// \brief Ellipsoid geometry
+class IGNITION_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
+{
+  /// \brief Constructor
+  public: EllipsoidShape();
+
+  /// \brief Copy Constructor
+  /// \param[in] _other shape to copy from
+  public: EllipsoidShape(const EllipsoidShape &_other);
+
+  /// \brief Destructor
+  public: ~EllipsoidShape() = default;
+
+  /// \brief Assignment operator
+  /// \param[in] _other shape to copy from
+  public: Shape &operator=(const Shape &_other);
+
+  /// \brief Get ellipsoid radius
+  /// \return ellipsoid radius
+  public: math::Vector3d GetRadii() const;
+
+  /// \brief Set ellipsoid radius
+  /// \param[in] _radius ellipsoid radius
+  public: void SetRadii(math::Vector3d _radii);
+
+  // Documentation inherited
+  protected: virtual void UpdateBoundingBox() override;
+
+  /// \brief ellipsoid radius
+  private: math::Vector3d radii = math::Vector3d::Zero;
 };
 
 /// \brief Sphere geometry
