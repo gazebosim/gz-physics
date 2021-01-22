@@ -1,8 +1,8 @@
-\page physicsplugin Understanding the Physics Plugin
+\page physicsplugins Understand Physics Plugin
 
 This is an introduction to different physics engines and how they are integrated into the Ignition Physics library.
 
-## Ignition Physics
+## Ignition physics
 
 The \ref ignition::physics "Ignition Physics" library integrates external physics engines into the Ignition Simulation eco-system.
 It allows users to select from multiple supported physics engines based on their simulation needs.
@@ -11,9 +11,7 @@ It is also possible to integrate your own selected physics engine by writing a c
 
 To get a more in-depth understanding of how the physics plugin works in Ignition, we will start with some high level concepts and definitions.
 
-<!-- TODO: add tutorial on how to write your own physics plugin -->
-
-### High Level Concept
+### High level concept
 
 Conceptually, the physics plugin can be viewed from two sides of its interface: user vs. implementation.
 
@@ -52,7 +50,7 @@ The implementation of the physics plugin revolves around four key elements.
     FeatureLists can be constructed in hierarchies, e.g. a `FeatureList` can be passed into another `FeatureList`, and the set of all features in the new list will be the sum.
 
 
-### FeatureList Definitions
+### FeatureList definitions
 
 This list of `FeatureLists` is specific to the implementation of `Dartsim` and `TPE-plugin`.
 Users do not need to organize their own plugin implementations this way.
@@ -79,14 +77,14 @@ Dart ([Dynamic Animation and Robotics Toolkit](https://dartsim.github.io/)) is a
 It is the default physics engine used in Ignition Simulation.
 The source code for Dartsim plugin can be found in [Ignition Physics repository](https://github.com/ignitionrobotics/ign-physics/tree/master) under `dartsim` directory.
 
-TPE ([Trivial Physics Engine](<!-- add repo link after merged-->)) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
+TPE ([Trivial Physics Engine](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/tpe) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
 It supports higher-order fleet dynamics without real physics (eg. gravity, force, constraint etc.) and multi-machine synchronization.
 Ignition support for TPE targets [Citadel](https://ignitionrobotics.org/docs/citadel) and onward releases.
 The source code for TPE plugin can be found in [Ignition Physics repository](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2) under `tpe/plugin` directory
 
 The following is a list of features supported by each physics engine to help users select one that fits their needs.
 
-#### Entity Comparison
+#### Entity comparison
 
 The following is a table of `Entity` names used in Ignition Physics plugin interface, Dart and TPE.
 Entities are arranged in top-down hierarchical order.
@@ -102,7 +100,7 @@ Entities are arranged in top-down hierarchical order.
 | Shape  | Shape  | Collision |
 | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder/Mesh etc. |
 
-#### Feature Comparison
+#### Feature comparison
 
 The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
 

@@ -1,17 +1,17 @@
 \page installation Installation
 
 These instructions are for installing only Ignition Physics.
-If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://ignitionrobotics.org/docs/latest/install).
+If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://ignitionrobotics.org/docs/citadel/install).
 
-We recommend following the Binary Installation instructions to get up and running as quickly and painlessly as possible.
+We recommend following the [binary installation](#Binary-installation) instructions to get up and running as quickly and painlessly as possible.
 
-The Source Installation instructions should be used if you need the very latest software improvements, you need to modify the code, or you plan to make a contribution.
+The [source installation](#Source-installation) instructions are generally recommended for developers who want access to the latest features, develop your own feature or make a contribution to our [codebase](https://github.com/ignitionrobotics/ign-physics/).
 
 # Ubuntu
 
 ## Prerequisites
 
-Ignition Physics uses several c++17 features which are not available in the
+Ignition Physics uses several C++17 features which are not available in the
 version of gcc supplied with Ubuntu Xenial, so Ubuntu Bionic or later
 is required.
 
@@ -37,19 +37,16 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 On Ubuntu systems, `apt-get` can be used to install `ignition-plugin`:
 ```
 sudo apt-get update
-sudo apt-get install libignition-physics<#>-dev
+sudo apt-get install libignition-physics2-dev
 ```
-
-Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 ## Source Installation
 
 1. Install dependencies
   ```
   sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-  sudo apt-get build-dep -y ignition-physics<#>-dev
+  sudo apt-get build-dep -y ignition-physics2-dev
   ```
-  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 2. Use gcc-8
   ```
@@ -63,9 +60,8 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 3. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
   ```
-  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 4. Configure and build
   ```
@@ -88,7 +84,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 Ignition Physics and several of its dependencies can be installed on macOS
 with [Homebrew](http://brew.sh/) using the [osrf/simulation
 tap](https://github.com/osrf/homebrew-simulation). Ignition Physics uses
-several c++17 features which are not available in macOS High Sierra (10.13)
+several C++17 features which are not available in macOS High Sierra (10.13)
 and earlier, so macOS Mojave (10.14) with XCode 10.1 are the minimum
 system requirements.
 
@@ -116,7 +112,7 @@ command-line tools:
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
   ```
 
 3. Configure and build
@@ -153,11 +149,8 @@ conda activate ign-ws
 ## Binary Installation
 
 ```
-conda install libignition-physics<#> --channel conda-forge
+conda install libignition-physics2 --channel conda-forge
 ```
-
-Be sure to replace `<#>` with a number value, such as 1 or 2, depending on
-which version you need.
 
 ## Source Installation
 
@@ -170,14 +163,13 @@ This assumes you have created and activated a Conda environment while installing
   conda search libignition-physics* --channel conda-forge --info
   ```
 
-  Install dependencies, replacing `<#>` with the desired versions:
   ```
-  conda install libignition-cmake<#> libignition-common<#> libignition-math<#> libignition-plugin<#> libsdformat<#> --channel conda-forge
+  conda install libignition-cmake2 libignition-common2 libignition-math6 libignition-plugin1 libsdformat9 --channel conda-forge
   ```
 
 2. Navigate to where you would like to build the library, and clone the repository.
   ```
-  # Optionally, append `-b ign-physics#` (replace # with a number) to check out a specific version
+  # Optionally, append `-b ign-physics2` to check out a specific version
   git clone https://github.com/ignitionrobotics/ign-physics.git
   ```
 
