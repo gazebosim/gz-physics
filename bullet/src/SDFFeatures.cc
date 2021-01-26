@@ -238,6 +238,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   const auto &odeFriction = surfaceElement->GetElement("friction")
                               ->GetElement("ode");
   const auto mu = odeFriction->Get<btScalar>("mu");
+  const auto mu2 = odeFriction->Get<btScalar>("mu2");
 
   // Get restitution
   // const auto restitution = surfaceElement->GetElement("bounce")
@@ -263,8 +264,8 @@ Identity SDFFeatures::ConstructSdfCollision(
 
     // shape->setMargin(btScalar(0.0001));
 
-    body->setFriction(mu * 10);
-    body->setAnisotropicFriction(btVector3(1, 1, 1),
+    body->setFriction(1);
+    body->setAnisotropicFriction(btVector3(mu, mu2, 1),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())->addChildShape(baseTransform, shape);
