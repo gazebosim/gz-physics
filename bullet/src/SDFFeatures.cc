@@ -292,9 +292,9 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisChild = pose.Rot().RotateVectorReverse(axis);
   axisChild = axisChild.Normalize();
 
-  btHingeConstraint* joint;
+  btHingeAccumulatedAngleConstraint* joint;
   if (parentId != worldId) {
-    joint = new btHingeConstraint(
+    joint = new btHingeAccumulatedAngleConstraint(
       *this->links.at(childId)->link,
       *this->links.at(parentId)->link,
       convertVec(ignition::math::eigen3::convert(pivotChild)),
@@ -303,7 +303,7 @@ Identity SDFFeatures::ConstructSdfJoint(
       convertVec(ignition::math::eigen3::convert(axisParent)));
   }
   else {
-    joint = new btHingeConstraint(
+    joint = new btHingeAccumulatedAngleConstraint(
       *this->links.at(childId)->link,
       convertVec(ignition::math::eigen3::convert(pivotChild)),
       convertVec(ignition::math::eigen3::convert(axisChild)));
