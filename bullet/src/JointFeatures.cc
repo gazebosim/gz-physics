@@ -281,7 +281,9 @@ void JointFeatures::SetJointForce(
       {
 	// Limit the max torque applied to avoid abrupt changes in the
 	// angular position of the joint and losing the angle reference
-	const double thresholdValue = max(min(_value, 0.2)), -0.2);
+	// TO-DO (blast545): this limitation should be based on angular speed
+	// as this breaks the PID controller when setting high values
+	const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
 
 	// z-axis of constraint frame
 	btVector3 hingeAxisLocalA =
