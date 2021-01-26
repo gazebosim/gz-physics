@@ -114,6 +114,7 @@ Identity SDFFeatures::ConstructSdfLink(
     rbInfo(mass, myMotionState, collisionShape, linkInertiaDiag);
   btRigidBody* body = new btRigidBody(rbInfo);
   body->setActivationState(DISABLE_DEACTIVATION);
+  body->setFlags(BT_ENABLE_GYROPSCOPIC_FORCE);
 
   const auto &world = this->worlds.at(modelInfo->world)->world;
 
@@ -328,7 +329,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto &world = this->worlds.at(modelInfo->world)->world;
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
-
   /* TO-DO(Lobotuerk): find how to implement axis friction properly for bullet*/
   if (_sdfJoint.Axis(0) != nullptr)
   {
@@ -339,6 +339,10 @@ Identity SDFFeatures::ConstructSdfJoint(
   else
   {
     joint->enableAngularMotor(true, 0.0, 0.0);
+  }
+  if (type == ::sdf::JointType::FIXED) {
+    btScalar offset = joint->getHingeAngle();
+    joint->setLimit(offset, offset);
   }
 
   // Generate an identity for it and return it

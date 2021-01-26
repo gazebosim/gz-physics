@@ -105,14 +105,15 @@ double JointFeatures::GetJointVelocity(
       }
       else
       {
-        ignerr << "Corrupted joint at index:" << _id.id << "\n";
+        // ignerr << "Corrupted joint at index:" << _id.id << "\n";
       }
     }
     else
     {
-      ignerr << "Not a valid constrating type: " << jointType << "\n";
+      // ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
+  // igndbg << "Joint Velocity: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -269,7 +270,6 @@ void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   (void) _dof;
-
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -314,6 +314,7 @@ void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   // Only support available for single DoF joints
+  // ignerr << "Sending command to not revolute joint " <<_id.id << " " << _value << std::endl;
   (void) _dof;
   const auto &jointInfo = this->joints.at(_id.id);
 

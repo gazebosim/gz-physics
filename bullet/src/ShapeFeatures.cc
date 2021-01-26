@@ -81,6 +81,8 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &modelInfo = this->models.at(modelID);
   const auto &worldInfo = this->worlds.at(modelInfo->world);
   const auto &body = linkInfo->link;
+  body->setAnisotropicFriction(btVector3(1, 1, 1),
+  btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
   const auto poseIsometry = _pose;
   const auto poseTranslation = poseIsometry.translation();
