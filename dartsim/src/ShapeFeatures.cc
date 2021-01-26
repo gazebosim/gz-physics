@@ -27,6 +27,7 @@
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 
+#include "CustomHeightmapShape.hh"
 #include "CustomMeshShape.hh"
 
 namespace ignition {

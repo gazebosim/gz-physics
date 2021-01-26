@@ -98,9 +98,15 @@ unsigned int GetPrimitiveType(
 /////////////////////////////////////////////////
 CustomHeightmapShape::CustomHeightmapShape(
     const ignition::common::HeightmapData &_input,
-    const Eigen::Vector3d &_scale)
-  : dart::dynamics::HeightmapShape(_scale, nullptr)
+    const Eigen::Vector3d &_size,
+    const int _subSampling)
+  : dart::dynamics::HeightmapShape()
 {
+  std::vector<float> heights;
+  const bool flipY = false;
+  const int vertSize = (_input.GetWidth() * _subSampling) - _subSampling + 1;
+  ignition::math::Vector3d scale(_size(0) / vertSize, _size(1) / vertSize, 1.0);
+  _input.FillHeightMap(_subSampling, vertSize, _size, scale, flipY, heights);
   // Create the root
   aiNode* node = new aiNode;
 
