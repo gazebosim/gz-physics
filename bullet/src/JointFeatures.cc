@@ -54,7 +54,6 @@ double JointFeatures::GetJointPosition(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Position: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -113,7 +112,6 @@ double JointFeatures::GetJointVelocity(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Joint Velocity: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -170,7 +168,6 @@ double JointFeatures::GetJointAcceleration(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Joint Acceleration: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -225,7 +222,6 @@ double JointFeatures::GetJointForce(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Joint Torque: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -273,14 +269,6 @@ void JointFeatures::SetJointForce(
 {
   (void) _dof;
 
-  double internal_value = _value;
-  if(internal_value>0.2) {
-    internal_value = 0.2;
-  }
-  else if(internal_value < -0.2) {
-    internal_value = -0.2;
-  }
-
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -291,6 +279,10 @@ void JointFeatures::SetJointForce(
         static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
       if (hinge)
       {
+	// Limit the max torque applied to avoid abrupt changes in the
+	// angular position of the joint and losing the angle reference
+	const double thresholdValue = max(min(_value, 0.2)), -0.2);
+
 	// z-axis of constraint frame
 	btVector3 hingeAxisLocalA =
 	  hinge->getFrameOffsetA().getBasis().getColumn(2);
@@ -304,17 +296,14 @@ void JointFeatures::SetJointForce(
 	  hinge->getRigidBodyB().getWorldTransform().getBasis() *
 	  hingeAxisLocalB;
 
-	btVector3 hingeTorqueA = internal_value * hingeAxisWorldA;
-	btVector3 hingeTorqueB = internal_value * hingeAxisWorldB;
-	// btVector3 hingeTorqueA = _value * hingeAxisWorldA;
-	// btVector3 hingeTorqueB = _value * hingeAxisWorldB;
+	btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
+	btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
 
 	hinge->getRigidBodyA().applyTorque(hingeTorqueA);
 	hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
       }
     }
   }
-  igndbg << "Joint Torque: " << _id.id << " -> " << _value << std::endl;
 }
 
 /////////////////////////////////////////////////
