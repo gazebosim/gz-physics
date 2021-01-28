@@ -54,7 +54,6 @@ double JointFeatures::GetJointPosition(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Position: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -113,7 +112,6 @@ double JointFeatures::GetJointVelocity(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Joint Velocity: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -170,7 +168,6 @@ double JointFeatures::GetJointAcceleration(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Joint Acceleration: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -225,7 +222,6 @@ double JointFeatures::GetJointForce(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
-  igndbg << "Joint Torque: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
@@ -271,10 +267,45 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  (void) _id;
   (void) _dof;
-  (void) _value;
-  ignwarn << "Dummy SetJointForce\n";
+
+  if (this->joints.find(_id.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+    const int jointType = jointInfo->constraintType;
+    if (jointType == static_cast<int>(::sdf::JointType::REVOLUTE))
+    {
+      btHingeAccumulatedAngleConstraint* hinge =
+        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+      if (hinge)
+      {
+	// Limit the max torque applied to avoid abrupt changes in the
+	// angular position of the joint and losing the angle reference
+	// TO-DO (blast545): this limitation should be based on angular speed
+	// as this breaks the PID controller when setting high values
+	const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
+
+	// z-axis of constraint frame
+	btVector3 hingeAxisLocalA =
+	  hinge->getFrameOffsetA().getBasis().getColumn(2);
+	btVector3 hingeAxisLocalB =
+	  hinge->getFrameOffsetB().getBasis().getColumn(2);
+
+	btVector3 hingeAxisWorldA =
+	  hinge->getRigidBodyA().getWorldTransform().getBasis() *
+	  hingeAxisLocalA;
+	btVector3 hingeAxisWorldB =
+	  hinge->getRigidBodyB().getWorldTransform().getBasis() *
+	  hingeAxisLocalB;
+
+	btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
+	btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
+
+	hinge->getRigidBodyA().applyTorque(hingeTorqueA);
+	hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
+      }
+    }
+  }
 }
 
 /////////////////////////////////////////////////
