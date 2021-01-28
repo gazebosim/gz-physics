@@ -3,9 +3,9 @@
 These instructions are for installing only Ignition Physics.
 If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://ignitionrobotics.org/docs/citadel/install).
 
-We recommend following the [binary installation](#Binary-installation) instructions to get up and running as quickly and painlessly as possible.
+We recommend following the Binary Installation instructions to get up and running as quickly and painlessly as possible.
 
-The [source installation](#Source-installation) instructions are generally recommended for developers who want access to the latest features, develop your own feature or make a contribution to our [codebase](https://github.com/ignitionrobotics/ign-physics/).
+The Source Installation instructions are generally recommended for developers who want access to the latest features, develop your own feature or make a contribution to our [codebase](https://github.com/ignitionrobotics/ign-physics/).
 
 # Ubuntu
 
@@ -37,16 +37,18 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 On Ubuntu systems, `apt-get` can be used to install `ignition-plugin`:
 ```
 sudo apt-get update
-sudo apt-get install libignition-physics2-dev
+sudo apt-get install libignition-physics<#>-dev
 ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 ## Source Installation
 
 1. Install dependencies
   ```
   sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-  sudo apt-get build-dep -y ignition-physics2-dev
+  sudo apt-get build-dep -y ignition-physics<#>-dev
   ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 2. Use gcc-8
   ```
@@ -60,8 +62,9 @@ sudo apt-get install libignition-physics2-dev
 
 3. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
   ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 4. Configure and build
   ```
@@ -99,8 +102,9 @@ command-line tools:
 2. Run the following commands
   ```
   brew tap osrf/simulation
-  brew install ignition-physics2
+  brew install ignition-physics<#>
   ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 ## Source Installation
 
@@ -112,8 +116,9 @@ command-line tools:
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
   ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 3. Configure and build
   ```
@@ -169,7 +174,7 @@ This assumes you have created and activated a Conda environment while installing
 
 2. Navigate to where you would like to build the library, and clone the repository.
   ```
-  # Optionally, append `-b ign-physics2` to check out a specific version
+  # Optionally, append `-b ign-physics#` (replace # with a number) to check out a specific version
   git clone https://github.com/ignitionrobotics/ign-physics.git
   ```
 
