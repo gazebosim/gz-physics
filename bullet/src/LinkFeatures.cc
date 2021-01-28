@@ -9,14 +9,16 @@ void LinkFeatures::AddLinkExternalForceInWorld(
     const Identity &_id, const LinearVectorType &_force,
     const LinearVectorType &_position)
 {
+  // ignerr << "link " << this->links.at(_id.id)->name << std::endl;
   btRigidBody* link = this->links.at(_id.id)->link;
   btTransform trans;
   link->getMotionState()->getWorldTransform(trans);
-  btVector3 rel_pos = trans.inverse() * convertVec(_position);
-  // btVector3 force = trans.inverse() * convertVec(_force);
-  link->applyForce(convertVec(_force), rel_pos);
-  // link->applyCentralForce(convertVec(_force));
-  // ignerr << "force " << force[0] << " " << force[1] << " " << force[2] << std::endl;
+  // btVector3 rel_pos = convertVec(_position);
+  // ignerr << this->links.at(_id.id)->name << " rel_pos " << rel_pos[0] << " " << rel_pos[1] << " " << rel_pos[2] << std::endl;
+  btVector3 force = trans * convertVec(_force);
+  // link->applyForce(convertVec(_force), rel_pos);
+  link->applyCentralForce(force);
+  // ignerr << this->links.at(_id.id)->name << " force " << force[0] << " " << force[1] << " " << force[2] << std::endl;
 }
 
 /////////////////////////////////////////////////
