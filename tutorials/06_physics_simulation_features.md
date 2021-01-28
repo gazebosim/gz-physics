@@ -5,7 +5,7 @@ This tutorial introduces simulation concepts that are used in Ignition Physics.
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsengines "Use different physics engines"
+- \ref physicsengine "Use different physics engines"
 - [Understand the GUI tutorial](https://ignitionrobotics.org/docs/citadel/gui)
 
 ## Physics simulation features
@@ -42,7 +42,7 @@ wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo3/e
 Then run the simulation:
 
 ```bash
-# [Optional] first source the directory if installed by source 
+# [Optional] first source the directory if installed by source
 source ~/workspace/install/setup.bash
 
 # then run diff_drive demo with Dartsim
@@ -65,7 +65,7 @@ This command tells the car to move in its coordinate frame with velocity
 second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
-engine, see \ref physicsengine "Use different physics engine" for details on how to change physics engine used by simulation. 
+engine, see \ref physicsengine "Use different physics engine" for details on how to change physics engine used by simulation.
 
 Dartsim moves the car by applying force on the joints, whereas TPE directly set velocity on the model.
 

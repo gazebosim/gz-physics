@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsplugins "Understand physics plugin"
+- \ref physicsplugin "Understand physics plugin"
 - \ref physicsengine "Use different physics engines"
 - \ref loadplugin "Load physics plugin"
 - \ref implementcustomfeature "Implement custom feature"
@@ -11,7 +11,7 @@
 ## How to interface with physics engine
 
 In the previous
-\ref createcustomfeature "Implement custom feature" tutorial, we walked through how to
+\ref implementcustomfeature "Implement custom feature" tutorial, we walked through how to
 define and implement a custom feature using an already supported physics
 engine. This tutorial will explain step-by-step how to interface with any physics engine
 using Ignition Physics. We will use [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe) as an example in this tutorial.
@@ -26,7 +26,7 @@ Here's the plugin folder structure of TPE, within the Ignition Physics library.
 ign-physics
 ├── tpe
 │   ├── plugin                           Implementation of the plugin features interfacing the physics engines API
-│   │    ├── src                         
+│   │    ├── src
 │   │    |     ├── plugin.cc             Main file for the plugin declaration and plugin registering.
 │   │    |     ├── <FEATURES>.hh         The FeatureList header file.
 │   │    |     ├── <FEATURES>.cc         Implementation of the FeatureList using physics engine API
@@ -43,7 +43,7 @@ is placed inside Ignition Physics and hence there is a `lib` folder under `tpe`.
 
 We declare and implement the \ref ignition::physics::FeatureList "FeatureList"
 interfacing with the physics engine API inside `plugin\src` folder
-(please see \ref createcustomfeature "Implement a custom feature"
+(please see \ref implementcustomfeature "Implement custom feature"
 for the plugin feature requirements). Depending on design target, a \ref ignition::physics::FeatureList "FeatureList"
 is generally a packing of related \ref ignition::physics::Feature "Features".
 For example in TPE's [EntityManagementFeatures](https://github.com/ignitionrobotics/ign-physics/blob/main/tpe/plugin/src/EntityManagementFeatures.hh)
@@ -58,10 +58,10 @@ implemented as:
 the \ref ignition::physics::Feature "Features" member functions, using the
 physics engine API to realize the feature behavior. For a list of common
 pre-defined features in Ignition Physics, please refer to
-\ref physicsplugin "Understanding the Physics Plugin" tutorial.
+\ref physicsplugin "Understand physics plugin" tutorial.
 - `<FEATURES_TEST>.cc` for unit tests of the "FeatureList".
 
-Next, we will use a simplified TPE plugin example to explain important components needed to interface with any physics engine. All code examples used below can be found in [examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/examples) under the `simple_tpe_plugin` folder. 
+Next, we will use a simplified TPE plugin example to explain important components needed to interface with any physics engine. All code examples used below can be found in [examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/examples) under the `simple_tpe_plugin` folder.
 
 ### `plugin.cc`
 
@@ -105,10 +105,10 @@ Now the folder structure looks like this:
 tpe
 ├── lib
 ├── plugin
-│    ├── src                         
+│    ├── src
 │    |     ├── plugin.cc
 │    |     ├── Base.hh
-│    |     ├── EntityManagementFeatures.hh     
+│    |     ├── EntityManagementFeatures.hh
 │    |     ├── EntityManagementFeatures.cc
 │    |     ├── EntityManagement_TEST.cc
 │    ├── CMakeLists.txt
@@ -163,4 +163,4 @@ Please follow the previous tutorial \ref installation "Installation" to build
 `ign-physics` from source again for our new feature to be compiled.
 
 Now we can load the new physics plugin named `ignition-physics-tpe-plugin`
-to test it on Ignition Gazebo by following this \ref switchphysicsengines "Switching physics engines" tutorial.
+to test it on Ignition Gazebo by following this \ref physicsengine "Use different physics engines" tutorial.

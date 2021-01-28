@@ -13,11 +13,11 @@ plugin using \ref ignition::physics "Ignition Physics" API.
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsplugins "Understand physics plugin"
+- \ref physicsplugin "Understand physics plugin"
 
 ## Write a simple loader
 
-We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics2/examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/examples/hello_world_loader) folder. 
+We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics2/examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/examples/hello_world_loader) folder.
 
 First, create a workspace for the example plugin loader.
 

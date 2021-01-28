@@ -9,10 +9,10 @@ Ignition @IGN_DESIGNATION_CAP@ library and how to use the library effectively.
 
 1. \subpage introduction "Introduction"
 2. \subpage installation "Installation"
-3. \subpage physicsplugins "Understand physics plugin"
-4. \subpage physicsengines "Use different physics engines"
+3. \subpage physicsplugin "Understand physics plugin"
+4. \subpage physicsengine "Use different physics engines"
 5. \subpage loadplugin "Load physics plugin"
-6. \subpage physicsfeatures "Physics simulation features"
+6. \subpage physicsfeature "Physics simulation features"
 7. \subpage implementfeature "Implement physics feature"
 8. \subpage implementcustomfeature "Implement custom feature"
 9. \subpage usecustomengine "Use custom engine with Ignition Physics"

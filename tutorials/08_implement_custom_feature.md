@@ -3,17 +3,17 @@
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsplugins "Understand physics plugin"
+- \ref physicsplugin "Understand physics plugin"
 - \ref loadplugin "Load physics plugin"
 - \ref implementfeature "Implement physics feature"
 
 ## Implement a custom feature in DART plugin
 
-In the last \ref createphysicsplugin "Implement a physics plugin" tutorial, we
+In the last \ref implementfeature "Implement physics feature" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
 \ref ignition::physics "Ignition Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
-[DART](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim)
+[DART](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/dartsim)
 physics engine in `ign-physics` repository and how to define a custom
 \ref ignition::physics::Feature "Feature" for the plugin.
 
@@ -61,7 +61,7 @@ be added in a \ref ignition::physics::FeatureList "FeatureList"
 and implemented its functionalities in `src` folder.
 
 The `dartsim` plugin's \ref ignition::physics::FeatureList "FeatureList" could be
-found in \ref physicsplugin "Understanding the Physics Plugin" tutorial.
+found in \ref physicsplugin "Understand physics plugin" tutorial.
 
 ### Plugin and feature requirements
 
@@ -156,15 +156,15 @@ The newly defined feature template is placed in an `/include` folder shown in th
 
 ```
 dartsim
-├── worlds                           
-├── src                       
+├── worlds
+├── src
 ├── include/ignition/physics/dartsim
 │    ├──  World.hh
-└── CMakeLists.txt                 
+└── CMakeLists.txt
 ```
 
-We put this custom feature template in `dartsim`, and the next step is to 
-implement the `RetrieveWorld` feature function using Dartsim API. 
+We put this custom feature template in `dartsim`, and the next step is to
+implement the `RetrieveWorld` feature function using Dartsim API.
 
 ### Implement the custom feature
 
@@ -194,18 +194,18 @@ world pointer from `EntityStorage` object storing world pointers of `dartsim` in
 In the end, we add the implemented `CustomFeatures` "FeatureList" together with
 other \ref ignition::physics::FeatureList "FeatureList" to final `DartsimFeatures`
 "FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/plugin.cc)
-(please see \ref createphysicsplugin "Implement a physics plugin" for
+(please see \ref implementfeature "Implement physics feature" for
 registering the plugin to Ignition Physics).
 
 The folder structure is shown below:
 
 ```
 dartsim
-├── worlds                           
+├── worlds
 ├── src
 │    ├── CustomFeatures.hh
 │    ├── CustomFeatures.cc
-│    ├── ...                           
-├── include/ignition/physics/dartsim  
-└── CMakeLists.txt                 
+│    ├── ...
+├── include/ignition/physics/dartsim
+└── CMakeLists.txt
 ```

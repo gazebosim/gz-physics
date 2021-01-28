@@ -7,7 +7,7 @@ This tutorial shows how to develop a simple plugin that implements a
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsplugins "Understand physics plugin"
+- \ref physicsplugin "Understand physics plugin"
 - \ref loadplugin "Load physics plugin"
 
 ## Write a simple physics plugin
@@ -104,7 +104,7 @@ and `HelloWorldPlugin.dll` on Windows.
 
 ### Test loading the plugin on Linux
 
-Please first follow the \ref pluginloading "Loading a Physics Plugin" tutorial
+Please first follow the \ref loadplugin "Load physics plugin" tutorial
 to create a simple loader. Then we test our plugin using the loader as follow:
 
 ```bash
