@@ -108,7 +108,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
   EXPECT_EQ("double_pendulum_with_base", skeleton->getName());
-  for (int i = 0; i < skeleton->getNumBodyNodes(); ++i)
+  for (size_t i = 0; i < skeleton->getNumBodyNodes(); ++i)
   {
     std::cout << skeleton->getBodyNode(i)->getName() << std::endl;
   }
