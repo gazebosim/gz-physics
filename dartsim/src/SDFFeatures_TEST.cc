@@ -367,7 +367,8 @@ TEST(SDFFeatures_TEST, FallbackToFixedJoint)
   for (const auto &jointName : {"j0", "j1", "j2"})
   {
     const auto *joint = skeleton->getJoint(jointName);
-    ASSERT_NE(nullptr, joint) << " joint '" << jointName << "'doesn't exist in this skeleton";
+    ASSERT_NE(nullptr, joint)
+      << " joint '" << jointName << "'doesn't exist in this skeleton";
     const auto *fixedJoint =
         dynamic_cast<const dart::dynamics::WeldJoint *>(joint);
     EXPECT_NE(nullptr, fixedJoint) << " joint type is: " << joint->getType();

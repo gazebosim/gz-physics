@@ -662,7 +662,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   dart::dynamics::BodyNode * const child =
-    FindBodyNode(world,modelInfo.model->getName(), childLinkName);
+    FindBodyNode(world, modelInfo.model->getName(), childLinkName);
 
   if (nullptr == parent && _sdfJoint.ParentLinkName() != "world")
   {

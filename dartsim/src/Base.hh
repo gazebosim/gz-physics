@@ -354,9 +354,10 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (_skeletonName.size() < _modelName.size())
       return false;
 
-    // If _modelName comes from a nested model, it might actually be shorter than
-    // _skeletonName. E.g -> _skeletonName = a::b::c, _modelName = b::c
-    const size_t compareStartPosition = _skeletonName.size() - _modelName.size();
+    // If _modelName comes from a nested model, it might actually be shorter
+    // than _skeletonName. E.g -> _skeletonName = a::b::c, _modelName = b::c
+    const size_t compareStartPosition =
+      _skeletonName.size() - _modelName.size();
     return _skeletonName.compare(
       compareStartPosition, _modelName.size(), _modelName) == 0;
   }
