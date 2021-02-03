@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 #include <btBulletDynamicsCommon.h>
 
 #include <string>
@@ -19,19 +36,20 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 
   auto solver = new btSequentialImpulseConstraintSolver;
   auto world = new btDiscreteDynamicsWorld(
-      dispatcher, broadphase, solver, collisionConfiguration);
+    dispatcher, broadphase, solver, collisionConfiguration);
 
   world->getSolverInfo().m_globalCfm = 0;
 
   return this->AddWorld(
-      {world, _name, collisionConfiguration, dispatcher, broadphase, solver});
+    {world, _name, collisionConfiguration, dispatcher, broadphase, solver});
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   // Check if the model exists
-  if (this->models.find(_modelID.id) == this->models.end()){
+  if (this->models.find(_modelID.id) == this->models.end())
+  {
     return false;
   }
   // Current implementation does not include joints
@@ -39,7 +57,8 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   auto model = this->models.at(_modelID);
 
   // Clean up collisions
-  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it = this->collisions.begin();
+  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it =
+    this->collisions.begin();
   while (collision_it != this->collisions.end())
   {
     const auto &collisionInfo = collision_it->second;
@@ -74,17 +93,18 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 }
 
 bool EntityManagementFeatures::ModelRemoved(
-  const Identity &_modelID) const
+    const Identity &_modelID) const
 {
   return this->models.find(_modelID) == this->models.end();
 }
 
 bool EntityManagementFeatures::RemoveModelByIndex(
-  const Identity & _worldID, std::size_t _modelIndex)
+    const Identity & _worldID, std::size_t _modelIndex)
 {
   // Check if the model exists
   if (this->models.find(_modelIndex) == this->models.end() ||
-      this->models.at(_modelIndex)->world.id != _worldID.id) {
+      this->models.at(_modelIndex)->world.id != _worldID.id)
+  {
     return false;
   }
   // Current implementation does not include joints
@@ -92,7 +112,8 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 
   auto model = this->models.at(_modelIndex);
   // Clean up collisions
-  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it = this->collisions.begin();
+  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it =
+    this->collisions.begin();
   while (collision_it != this->collisions.end())
   {
     const auto &collisionInfo = collision_it->second;
@@ -127,7 +148,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 }
 
 bool EntityManagementFeatures::RemoveModelByName(
-  const Identity & _worldID, const std::string & _modelName )
+    const Identity & _worldID, const std::string & _modelName )
 {
 
   // Check if there is a model with the requested name
@@ -145,7 +166,8 @@ bool EntityManagementFeatures::RemoveModelByName(
     }
   }
 
-  if (found) {
+  if (found)
+  {
     // Use a not valid Identity, not used
     return this->RemoveModelByIndex(_worldID, index_id);
   }
