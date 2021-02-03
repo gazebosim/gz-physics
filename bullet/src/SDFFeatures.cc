@@ -46,8 +46,8 @@ Identity SDFFeatures::ConstructSdfWorld(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModel(
-  const Identity &_worldID,
-  const ::sdf::Model &_sdfModel)
+    const Identity &_worldID,
+    const ::sdf::Model &_sdfModel)
 {
   // Read sdf params
   const std::string name = _sdfModel.Name();
@@ -55,7 +55,6 @@ Identity SDFFeatures::ConstructSdfModel(
   const bool isStatic = _sdfModel.Static();
   // const bool selfCollide = _sdfModel.SelfCollide();
 
-  // const auto &world = this->worlds.at(_worldID)->world;
   const auto modelIdentity = this->AddModel({name, _worldID, isStatic, pose});
 
   // After creating all the links, join the ones that have joints
@@ -70,15 +69,6 @@ Identity SDFFeatures::ConstructSdfModel(
              << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
       continue;
     }
-
-    // Find the child and parent rigid bodies
-    // dart::dynamics::BodyNode * const parent = this->FindOrConstructLink(
-    //       model, modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
-
-    // dart::dynamics::BodyNode * const child = this->FindOrConstructLink(
-    //       model, modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
-
-    // this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
   }
 
   return modelIdentity;
@@ -86,20 +76,19 @@ Identity SDFFeatures::ConstructSdfModel(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfLink(
-  const Identity &_modelID,
-  const ::sdf::Link &_sdfLink)
+    const Identity &_modelID,
+    const ::sdf::Link &_sdfLink)
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
-  const auto pose = _sdfLink.RawPose();
-  const auto inertial = _sdfLink.Inertial();
+  const math::Pose3d pose = _sdfLink.RawPose();
+  const ignition::math::Inertiald inertial = _sdfLink.Inertial();
   auto mass = inertial.MassMatrix().Mass();
   const auto diagonalMoments = inertial.MassMatrix().DiagonalMoments();
 
   // Get link properties
-  // const btScalar linkMass = mass;
   btVector3 linkInertiaDiag =
-      convertVec(ignition::math::eigen3::convert(diagonalMoments));
+    convertVec(ignition::math::eigen3::convert(diagonalMoments));
 
   const auto &modelInfo = this->models.at(_modelID);
   math::Pose3d base_pose = modelInfo->pose;
@@ -119,8 +108,9 @@ Identity SDFFeatures::ConstructSdfLink(
   }
 
   btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
-  btCollisionShape* collision_shape = new btCompoundShape();
-  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collision_shape, linkInertiaDiag);
+  btCollisionShape* collisionShape = new btCompoundShape();
+  btRigidBody::btRigidBodyConstructionInfo
+    rbInfo(mass, myMotionState, collisionShape, linkInertiaDiag);
   btRigidBody* body = new btRigidBody(rbInfo);
   body->setActivationState(DISABLE_DEACTIVATION);
 
@@ -133,8 +123,8 @@ Identity SDFFeatures::ConstructSdfLink(
 }
 
 Identity SDFFeatures::ConstructSdfCollision(
-      const Identity &_linkID,
-      const ::sdf::Collision &_collision)
+    const Identity &_linkID,
+    const ::sdf::Collision &_collision)
 {
   if (!_collision.Geom())
   {
@@ -197,16 +187,15 @@ Identity SDFFeatures::ConstructSdfCollision(
     //   return this->GenerateInvalidId();
     // }
 
-    const auto pose = _collision.RawPose();
-    const auto poseIsometry = ignition::math::eigen3::convert(pose);
-    const auto poseTranslation = poseIsometry.translation();
+    const math::Pose3d pose = _collision.RawPose();
+    const Eigen::Isometry3d poseIsometry = ignition::math::eigen3::convert(pose);
+    const Eigen::Vector3d poseTranslation = poseIsometry.translation();
     const auto poseLinear = poseIsometry.linear();
     btTransform baseTransform;
     baseTransform.setOrigin(convertVec(poseTranslation));
     baseTransform.setBasis(convertMat(poseLinear));
 
     // shape->setMargin(btScalar(0.0001));
-
     body->setFriction(mu * 10);
     body->setAnisotropicFriction(btVector3(1, 1, 1),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
@@ -214,10 +203,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())->addChildShape(baseTransform, shape);
 
     auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
-                               modelID, pose});
-
-    // TODO(LOBOTUERK) We probably dont need this any more, whenever we refactor we should get rid of this
-    // this->link_to_collision[_linkID] = identity;
+      modelID, pose});
     return identity;
   }
   return this->GenerateInvalidId();
@@ -225,14 +211,15 @@ Identity SDFFeatures::ConstructSdfCollision(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfJoint(
-  const Identity &_modelID,
-  const ::sdf::Joint &_sdfJoint)
+    const Identity &_modelID,
+    const ::sdf::Joint &_sdfJoint)
 {
   // const auto &parentModelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
 
   // Check supported Joints
   const ::sdf::JointType type = _sdfJoint.Type();
-  if( type != ::sdf::JointType::REVOLUTE && type != ::sdf::JointType::FIXED ){
+  if( type != ::sdf::JointType::REVOLUTE && type != ::sdf::JointType::FIXED )
+  {
     ignerr << "Asked to construct a joint of sdf::JointType ["
            << static_cast<int>(type) << "], but that is not supported yet.\n";
     return this->GenerateInvalidId();
@@ -247,14 +234,16 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Check if chilId and parentId are valid values
   const auto invalidEntity = this->GenerateInvalidId().id;
-  if (parentId == invalidEntity || childId == invalidEntity) {
+  if (parentId == invalidEntity || childId == invalidEntity)
+  {
     ignerr << "There was a problem finding/creating parent/child links\n";
     return this->GenerateInvalidId();
   }
 
   // Handle the case where either child is the world, not supported
   const std::size_t worldId = this->models.at(_modelID)->world;
-  if (childId == worldId){
+  if (childId == worldId)
+  {
     ignwarn << "Not implemented joints using world as child\n";
     return this->GenerateInvalidId();
   }
@@ -264,10 +253,12 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Eigen::Vector3d axis;
   //ignition::math::Vector3d axis = ignition::math::Vector3d::UnitZ;
   ignition::math::Vector3d axis;
-  if(type == ::sdf::JointType::FIXED ){
+  if(type == ::sdf::JointType::FIXED )
+  {
     axis = ignition::math::Vector3d::UnitZ;
   }
-  else {
+  else
+  {
     axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot() * _sdfJoint.Axis(0)->Xyz();
   }
 
@@ -276,7 +267,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   math::Vector3d pivotParent, pivotChild, axisParent, axisChild;
   math::Pose3d pose;
 
-  if (parentId != worldId) {
+  if (parentId != worldId)
+  {
     pivotParent = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
     pose = this->links.at(parentId)->pose;
     pivotParent -= pose.Pos();
@@ -293,7 +285,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisChild = axisChild.Normalize();
 
   btHingeAccumulatedAngleConstraint* joint;
-  if (parentId != worldId) {
+  if (parentId != worldId)
+  {
     joint = new btHingeAccumulatedAngleConstraint(
       *this->links.at(childId)->link,
       *this->links.at(parentId)->link,
@@ -302,7 +295,8 @@ Identity SDFFeatures::ConstructSdfJoint(
       convertVec(ignition::math::eigen3::convert(axisChild)),
       convertVec(ignition::math::eigen3::convert(axisParent)));
   }
-  else {
+  else
+  {
     joint = new btHingeAccumulatedAngleConstraint(
       *this->links.at(childId)->link,
       convertVec(ignition::math::eigen3::convert(pivotChild)),
@@ -310,7 +304,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   // Limit movement for fixed joints
-  if(type == ::sdf::JointType::FIXED) {
+  if(type == ::sdf::JointType::FIXED)
+  {
     btScalar offset = joint->getHingeAngle();
     joint->setLimit(offset, offset);
   }
@@ -320,7 +315,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
 
-  if (_sdfJoint.Axis(0) != nullptr) {
+  if (_sdfJoint.Axis(0) != nullptr)
+  {
     double friction = _sdfJoint.Axis(0)->Friction();
     joint->enableAngularMotor(true, 0.0, friction);
   }
@@ -333,8 +329,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 std::size_t SDFFeatures::FindSdfLink(
-  const Identity &_modelID,
-  const std::string &_sdfLinkName)
+    const Identity &_modelID,
+    const std::string &_sdfLinkName)
 {
   for (const auto &link : this->links)
   {
@@ -348,11 +344,13 @@ std::size_t SDFFeatures::FindSdfLink(
   }
 
   // Link wasn't found, check if the requested link is "world"
-  if (_sdfLinkName == "world") {
+  if (_sdfLinkName == "world")
+  {
     // Return the ID of the parent world of the model
     return this->models.at(_modelID)->world;
   }
-  else{
+  else
+  {
     ignerr << "Model does not contain a link named [" << _sdfLinkName << "].\n";
     return this->GenerateInvalidId();
   }
