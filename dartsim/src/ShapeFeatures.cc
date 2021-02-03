@@ -28,6 +28,9 @@
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 
+#include <ignition/common/Mesh.hh>
+#include <ignition/common/MeshManager.hh>
+
 #include "CustomMeshShape.hh"
 
 namespace ignition {
@@ -220,11 +223,12 @@ Identity ShapeFeatures::AttachCylinderShape(
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToEllipsoidShape(const Identity &_shapeID) const
 {
+  std::cerr << "CastToEllipsoidShape" << '\n';
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
 
   const dart::dynamics::ShapePtr &shape = shapeInfo->node->getShape();
 
-  if (dynamic_cast<dart::dynamics::EllipsoidShape *>(shape.get()))
+  if (dynamic_cast<dart::dynamics::MeshShape *>(shape.get()))
     return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
 
   return this->GenerateInvalidId();
@@ -250,17 +254,26 @@ Identity ShapeFeatures::AttachEllipsoidShape(
     const Vector3d _radii,
     const Pose3d &_pose)
 {
-  auto ellipsoid = std::make_shared<dart::dynamics::EllipsoidShape>(
-        _radii);
+  ignerr << "AttachEllipsoidShape" << '\n';
+  common::MeshManager *meshMgr = common::MeshManager::Instance();
+  std::string ellipsoidMeshName = _name + "_ellipsoid_mesh"
+    + "_" + std::to_string(_radii[0])
+    + "_" + std::to_string(_radii[1])
+    + "_" + std::to_string(_radii[2]);
+  meshMgr->CreateEllipsoid(ellipsoidMeshName,
+    ignition::math::Vector3d(_radii[0], _radii[1], _radii[2]),
+    16, 16);
+  const ignition::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
 
-  auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
+  auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+
+  DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
                               dart::dynamics::DynamicsAspect>(
-          ellipsoid, bn->getName() + ":" + _name);
+          mesh, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
-
   const std::size_t shapeID = this->AddShape({sn, _name});
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }

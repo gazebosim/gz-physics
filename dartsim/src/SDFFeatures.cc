@@ -39,6 +39,8 @@
 #include <dart/dynamics/WeldJoint.hpp>
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/Mesh.hh>
+#include <ignition/common/MeshManager.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Helpers.hh>
 
@@ -57,6 +59,8 @@
 #include <sdf/Sphere.hh>
 #include <sdf/Visual.hh>
 #include <sdf/World.hh>
+
+#include "CustomMeshShape.hh"
 
 namespace ignition {
 namespace physics {
@@ -335,11 +339,41 @@ static ShapeAndTransform ConstructGeometry(
   if (_geometry.BoxShape())
     return ConstructBox(*_geometry.BoxShape());
   else if (_geometry.CapsuleShape())
-    return ConstructCapsule(*_geometry.CapsuleShape());
+  {
+    common::MeshManager *meshMgr = common::MeshManager::Instance();
+    std::string ellipsoidMeshName = std::string("capsule_mesh")
+      + "_" + std::to_string(_geometry.CapsuleShape()->Radius())
+      + "_" + std::to_string(_geometry.CapsuleShape()->Length());
+    meshMgr->CreateCapsule(
+      ellipsoidMeshName,
+      _geometry.CapsuleShape()->Radius(),
+      _geometry.CapsuleShape()->Length(),
+      6, 6);
+    const ignition::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
+
+    auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+    auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
+    return {mesh2};
+  }
   else if (_geometry.CylinderShape())
     return ConstructCylinder(*_geometry.CylinderShape());
   else if (_geometry.EllipsoidShape())
-    return ConstructEllipsoid(*_geometry.EllipsoidShape());
+  {
+    common::MeshManager *meshMgr = common::MeshManager::Instance();
+    std::string ellipsoidMeshName = std::string("ellipsoid_mesh")
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().X())
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().Y())
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().Z());
+    meshMgr->CreateEllipsoid(
+      ellipsoidMeshName,
+      _geometry.EllipsoidShape()->Radii(),
+      6, 12);
+    const ignition::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
+
+    auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+    auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
+    return {mesh2};
+  }
   else if (_geometry.SphereShape())
     return ConstructSphere(*_geometry.SphereShape());
   else if (_geometry.PlaneShape())

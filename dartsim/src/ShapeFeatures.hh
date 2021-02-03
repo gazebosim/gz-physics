@@ -59,7 +59,7 @@ struct ShapeFeatureList : FeatureList<
   AttachCylinderShapeFeature,
 
   GetEllipsoidShapeProperties,
-  //  SetCapsulerShapeProperties,
+  //  SetEllipsoidShapeProperties,
   AttachEllipsoidShapeFeature,
 
   GetSphereShapeProperties,
