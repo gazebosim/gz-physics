@@ -37,10 +37,10 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     void SetEllipsoidShapeProperties::EllipsoidShape<PolicyT, FeaturesT>
-    ::SetRadii(Dimensions _radius)
+    ::SetRadii(Dimensions _radii)
     {
       this->template Interface<SetEllipsoidShapeProperties>()
-          ->SetEllipsoidShapeRadius(this->identity, _radius);
+          ->SetEllipsoidShapeRadii(this->identity, _radii);
     }
 
     /////////////////////////////////////////////////
