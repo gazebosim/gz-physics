@@ -502,7 +502,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     }
 
     auto * const parent =
-      FindBodyNode(worlds[worldID], modelName, parentSdfLink->Name());
+      FindBodyNode(this->worlds[worldID], modelName, parentSdfLink->Name());
 
     if (nullptr == parent && parentSdfLink->Name() != "world")
     {
