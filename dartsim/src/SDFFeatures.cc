@@ -266,27 +266,11 @@ static ShapeAndTransform ConstructBox(
 }
 
 /////////////////////////////////////////////////
-static ShapeAndTransform ConstructCapsule(
-    const ::sdf::Capsule &_capsule)
-{
-  return {std::make_shared<dart::dynamics::CapsuleShape>(
-        _capsule.Radius(), _capsule.Length())};
-}
-
-/////////////////////////////////////////////////
 static ShapeAndTransform ConstructCylinder(
     const ::sdf::Cylinder &_cylinder)
 {
   return {std::make_shared<dart::dynamics::CylinderShape>(
         _cylinder.Radius(), _cylinder.Length())};
-}
-
-/////////////////////////////////////////////////
-static ShapeAndTransform ConstructEllipsoid(
-    const ::sdf::Ellipsoid &_ellipsoid)
-{
-  return {std::make_shared<dart::dynamics::EllipsoidShape>(
-          math::eigen3::convert(_ellipsoid.Radii()))};
 }
 
 /////////////////////////////////////////////////
@@ -340,6 +324,7 @@ static ShapeAndTransform ConstructGeometry(
     return ConstructBox(*_geometry.BoxShape());
   else if (_geometry.CapsuleShape())
   {
+    // TODO(anyone): Replace this code when Capsule is supported by DART
     common::MeshManager *meshMgr = common::MeshManager::Instance();
     std::string ellipsoidMeshName = std::string("capsule_mesh")
       + "_" + std::to_string(_geometry.CapsuleShape()->Radius())
@@ -349,7 +334,8 @@ static ShapeAndTransform ConstructGeometry(
       _geometry.CapsuleShape()->Radius(),
       _geometry.CapsuleShape()->Length(),
       6, 6);
-    const ignition::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
+    const ignition::common::Mesh * _mesh =
+      meshMgr->MeshByName(ellipsoidMeshName);
 
     auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
     auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
@@ -359,6 +345,7 @@ static ShapeAndTransform ConstructGeometry(
     return ConstructCylinder(*_geometry.CylinderShape());
   else if (_geometry.EllipsoidShape())
   {
+    // TODO(anyone): Replace this code when Ellipsoid is supported by DART
     common::MeshManager *meshMgr = common::MeshManager::Instance();
     std::string ellipsoidMeshName = std::string("ellipsoid_mesh")
       + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().X())
@@ -368,7 +355,8 @@ static ShapeAndTransform ConstructGeometry(
       ellipsoidMeshName,
       _geometry.EllipsoidShape()->Radii(),
       6, 12);
-    const ignition::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
+    const ignition::common::Mesh * _mesh =
+      meshMgr->MeshByName(ellipsoidMeshName);
 
     auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
     auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
