@@ -426,6 +426,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           ResolveSdfPose(_sdfModel.SemanticPose()));
 
   // Set canonical link name
+  // TODO(anyone) This may work correctly with nested models and will need to be
+  // updated once more than canonical link can exist in a nested model
+  // https://github.com/ignitionrobotics/ign-physics/issues/209
   auto [modelID, modelInfo] = this->AddModel( // NOLINT
       {model, modelFrame, _sdfModel.CanonicalLinkName()}, worldID);
 
