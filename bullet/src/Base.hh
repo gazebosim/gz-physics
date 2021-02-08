@@ -124,10 +124,16 @@ inline Eigen::Vector3d convert(btVector3 vec)
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: std::size_t entityCount = 0;
+  public: std::size_t collisionGroup = 1;
 
   public: inline std::size_t GetNextEntity()
   {
     return entityCount++;
+  }
+
+  public: inline std::size_t GetNextCollisionGroup()
+  {
+    return collisionGroup++;
   }
 
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
@@ -149,6 +155,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     const auto id = this->GetNextEntity();
     this->models[id] = std::make_shared<ModelInfo>(_modelInfo);
+
+    // A collision mask for each different model
+    this->collisionGroups[id] = 1 << GetNextCollisionGroup();
 
     return this->GenerateIdentity(id, this->models.at(id));
   }
@@ -190,6 +199,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
+  public: std::unordered_map<std::size_t, std::size_t> collisionGroups;
 
   public: int internalTicksDivider = 0;
 
