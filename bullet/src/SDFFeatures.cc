@@ -115,7 +115,12 @@ Identity SDFFeatures::ConstructSdfLink(
   body->setActivationState(DISABLE_DEACTIVATION);
 
   const auto &world = this->worlds.at(modelInfo->world)->world;
-  world->addRigidBody(body);
+
+  // Models collide with everything except themselves
+  const int modelCollisionGroup = 1 << this->collisionGroups.at(_modelID);
+  const int collisionMask = 0xFFFFFFFF & ~modelCollisionGroup;
+  world->addRigidBody(body, modelCollisionGroup, collisionMask);
+  //world->addRigidBody(body);
 
   // Generate an identity for it
   const auto linkIdentity = this->AddLink({name, body, _modelID, pose, mass, linkInertiaDiag});
