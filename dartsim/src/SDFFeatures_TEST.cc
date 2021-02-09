@@ -114,7 +114,6 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   }
   ASSERT_EQ(3u, skeleton->getNumBodyNodes());
 
-
   auto verify = [](const dart::dynamics::DegreeOfFreedom * dof,
                    double initialPos, double damping, double friction,
                    double springRest, double stiffness, double lower,
