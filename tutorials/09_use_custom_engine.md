@@ -42,7 +42,7 @@ already installed. In our case, [TPE](https://github.com/ignitionrobotics/ign-ph
 is placed inside Ignition Physics and hence there is a `lib` folder under `tpe`.
 
 We declare and implement the \ref ignition::physics::FeatureList "FeatureList"
-interfacing with the physics engine API inside `plugin\src` folder
+interfacing with the physics engine API inside `plugin/src` folder
 (please see \ref implementcustomfeature "Implement custom feature"
 for the plugin feature requirements). Depending on design target, a \ref ignition::physics::FeatureList "FeatureList"
 is generally a packing of related \ref ignition::physics::Feature "Features".
