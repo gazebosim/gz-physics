@@ -21,19 +21,19 @@
 #include "EntityManagementFeatures.hh"
 
 struct TestFeatureList : ignition::physics::FeatureList<
-  ignition::physics::tpeplugin::EntityManagementFeatureList
+  ignition::physics::simpleplugin::EntityManagementFeatureList
 > { };
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   ignition::plugin::Loader loader;
-  loader.LoadLib(tpe_plugin_LIB);
+  loader.LoadLib(simple_plugin_LIB);
 
-  ignition::plugin::PluginPtr tpe_plugin =
-    loader.Instantiate("ignition::physics::tpeplugin::Plugin");
+  ignition::plugin::PluginPtr simple_plugin =
+    loader.Instantiate("ignition::physics::simpleplugin::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(simple_plugin);
   auto world = engine->ConstructEmptyWorld("empty world");
   ASSERT_NE(nullptr, world);
 }

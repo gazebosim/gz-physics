@@ -15,18 +15,33 @@
  *
 */
 
-#include <string>
+#include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FeaturePolicy.hh>
+#include <ignition/physics/Register.hh>
+
 #include "EntityManagementFeatures.hh"
 
-using namespace ignition;
-using namespace physics;
-using namespace tpeplugin;
+namespace ignition {
+namespace physics {
+namespace simpleplugin {
 
-/////////////////////////////////////////////////
-Identity EntityManagementFeatures::ConstructEmptyWorld(
-  const Identity &, const std::string &_name)
-{
-  auto world = std::make_shared<tpelib::World>();
-  world->SetName(_name);
-  return this->AddWorld(world);
+  struct SimplePluginFeatures : FeatureList<
+    EntityManagementFeatureList
+  > { };
+
+  class Plugin :
+    public virtual EntityManagementFeatures,
+    public virtual Implements3d<SimplePluginFeatures>
+  {
+    using Identity = ignition::physics::Identity;
+    public: Identity InitiateEngine(std::size_t /*_engineID*/) override
+    {
+      return this->GenerateIdentity(0);
+    }
+  };
+
+  IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, SimplePluginFeatures)
+
+}
+}
 }

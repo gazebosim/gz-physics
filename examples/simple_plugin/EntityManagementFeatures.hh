@@ -15,28 +15,26 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_GETENTITIESFEATURE_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_GETENTITIESFEATURE_HH_
-
+//! [basic include]
 #include <string>
-#include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/Shape.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/RemoveEntities.hh>
 #include <ignition/physics/Implements.hh>
+//! [basic include]
 
-#include "Base.hh" // optionally depending on software design
+//! [include feature]
+#include <ignition/physics/ConstructEmpty.hh>
 
 namespace ignition {
 namespace physics {
-namespace tpeplugin {
+namespace simpleplugin {
 
 struct EntityManagementFeatureList : FeatureList<
   ConstructEmptyWorldFeature
 > { };
 
+//! [include feature]
+
+//! [override feature]
 class EntityManagementFeatures :
-  public virtual Base,
   public virtual Implements3d<EntityManagementFeatureList>
 {
   // ----- Construct empty entities -----
@@ -47,5 +45,4 @@ class EntityManagementFeatures :
 }
 }
 }
-
-#endif
+//! [override feature]
