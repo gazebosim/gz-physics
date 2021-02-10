@@ -30,7 +30,7 @@ ign-physics
 │   │    |     ├── plugin.cc             Main file for the plugin declaration and plugin registering.
 │   │    |     ├── <FEATURES>.hh         The FeatureList header file.
 │   │    |     ├── <FEATURES>.cc         Implementation of the FeatureList using physics engine API
-│   │    |     ├── <FEATURES_TEST>.cc    Tests
+│   │    |     └── <FEATURES_TEST>.cc    Tests
 │   │    ├── CMakeLists.txt              CMake build script for the plugin features.
 │   └── CMakeLists.txt                   CMake build script for the plugin.
 └── CMakeList.txt                        CMake build script for Ignition Physics library.
