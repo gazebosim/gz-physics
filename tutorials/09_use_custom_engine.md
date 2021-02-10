@@ -31,7 +31,7 @@ ign-physics
 │   │    |     ├── <FEATURES>.hh         The FeatureList header file.
 │   │    |     ├── <FEATURES>.cc         Implementation of the FeatureList using physics engine API
 │   │    |     └── <FEATURES_TEST>.cc    Tests
-│   │    ├── CMakeLists.txt              CMake build script for the plugin features.
+│   │    └── CMakeLists.txt              CMake build script for the plugin features.
 │   └── CMakeLists.txt                   CMake build script for the plugin.
 └── CMakeList.txt                        CMake build script for Ignition Physics library.
 ```
@@ -61,7 +61,16 @@ pre-defined features in Ignition Physics, please refer to
 \ref physicsplugin "Understand physics plugin" tutorial.
 - `<FEATURES_TEST>.cc` for unit tests of the "FeatureList".
 
-Next, we will use a simplified TPE plugin example to explain important components needed to interface with any physics engine. All code examples used below can be found in [examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/examples) under the `simple_tpe_plugin` folder.
+Next, we will use a simplified TPE plugin example to explain important components needed to interface with any physics engine. All code examples used below can be downloaded from [examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/examples) under the `simple_plugin` folder:
+
+```
+simple_plugin
+├── CMakeLists.txt
+├── plugin.cc
+├── EntityManagementFeatures.hh
+├── EntityManagementFeatures.cc
+└── EntityManagementFeatures_TEST.cc
+```
 
 ### `plugin.cc`
 
@@ -74,7 +83,7 @@ named `EntityManagementFeatureList` defined in `EntityManagementFeatures.hh`.
 We first include the `EntityManagementFeatureList` in `plugin.cc` main file
 and register the example TPE physics plugin as follow:
 
-\snippet examples/simple_tpe_plugin/plugin.cc
+\snippet examples/simple_plugin/plugin.cc
 
 Those are 3 things needed to be specified in `plugin.cc`:
 - Define the conclusive \ref ignition::physics::FeatureList "FeatureList" including
@@ -87,57 +96,52 @@ scalar type.
 ### Implement features with physics engine's API
 
 Now we would like to implement the `EntityManagementFeatures`.
-In the `plugin` folder, we will create two files `EntityManagementFeatures.hh` and
-`EntityManagementFeatures.cc` to implement \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
-in `EntityManagementFeatures` "FeatureList". We will use the provided
-[CMakeLists.txt](https://github.com/ignitionrobotics/ign-physics/blob/main/tpe/plugin/CMakeLists.txt)
-and [Base.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/tpe/plugin/src/Base.hh)
-in  `tpe/plugin` folder.
+In the `simple_plugin` folder, we will create two files `EntityManagementFeatures.hh` and
+`EntityManagementFeatures.cc` to implement a single feature \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
+in `EntityManagementFeatures` "FeatureList" using TPE API from `tpe/lib` in Ignition Physics library.
 
-```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/main/tpe/plugin/CMakeLists.txt -P <path-to-ign-physics>/tpe/plugin/
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/main/tpe/plugin/src/Base.hh -P <path-to-ign-physics>/tpe/plugin/src
-```
+Before we dive into the feature implementation, we need to understand how the features are defined.
 
-Now the folder structure looks like this:
+The \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
+is declared in a function template file `ign-physics/include/ignition/physics/ConstructEmpty.hh`:
 
-```
-tpe
-├── lib
-├── plugin
-│    ├── src
-│    |     ├── plugin.cc
-│    |     ├── Base.hh
-│    |     ├── EntityManagementFeatures.hh
-│    |     ├── EntityManagementFeatures.cc
-│    |     ├── EntityManagement_TEST.cc
-│    ├── CMakeLists.txt
-└── CMakeLists.txt
-```
+/snippet include/ignition/physics/ConstuctEmpty.hh ConstructEmptyWorld
 
-As an example, we will focus on implementing \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature" shown below:
+Ignition Physics library uses function templates to specify features that accept generic types.
+The use of templates makes it easier to implement features using different physics engine APIs,
+without having to repeat the entire code for a function.
 
-\snippet examples/simple_tpe_plugin/EntityManagementFeatures.hh
+The \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature" example here
+is implemented with TPE API, but a similar feature can also be implemented using DART API.
 
-Together with other (if existing) \ref ignition::physics::Feature "Features",
-the \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
-is included in `EntityManagementFeatureList` "FeatureList" to declare the related
-features for entity management purpose.
+In this case, we are implementing a feature that is already defined by Ignition Physics,
+thus we do not need to write our own template function, and can just include the template in our header file.
+
+But first, let's include the basics:
+
+\snippet examples/simple_plugin/EntityManagementFeatures.hh basic include
+
+Then, we include the specific feature template file and add it to the feature list:
+
+\snippet examples/simple_plugin/EntityManagementFeatures.hh include feature
+
+We also need to declare the feature function in the header file, but since the function is already declared
+in the template file we just included, we need to override the generic declaration instead:
+
+\snippet examples/simple_plugin/EntityManagementFeatures.hh override feature
 
 The `EntityManagementFeatures` "FeatureList" here inherits from:
 - (optionally) \ref ignition::physics::tpelib::Base "Base"
 class for foundation metadata definitions of Models, Joints, Links, and Shapes objects
 of TPE to provide easy access to [tpelib](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe/lib)
-structures in the TPE library. Note that we mention `Base` class here for
-completeness, `Base` class is not necessarily needed if there is a straightforward
-way to interface external physics engine class objects with `ign-physics` class objects.
+structures in the TPE library.
 - \ref ignition::physics::Implements3d "Implements3d" for implementing the
 custom feature with \ref ignition::physics::FeaturePolicy3d "FeaturePolicy3d"
 ("FeaturePolicy" of 3 dimensions and scalar type `double`).
 
 Then we can go ahead with the implementation of `ConstructEmptyWorldFeature`:
 
-\snippet examples/simple_tpe_plugin/EntityManagementFeatures.cc
+\snippet examples/simple_plugin/EntityManagementFeatures.cc
 
 Here we show the overriding of `ConstructEmptyWorld` member function of
 \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature",
@@ -150,7 +154,7 @@ Simple unit tests are good practice for sanity checks.
 While we won't go into detail, here is an example to test our new
 \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature":
 
-\snippet examples/simple_tpe_plugin/EntityManagementFeatures_TEST.cc
+\snippet examples/simple_plugin/EntityManagementFeatures_TEST.cc
 
 To get a more comprehensive view of how `EntityManagementFeatures` are constructed in TPE and Dartsim,
 feel free to take a look here:
