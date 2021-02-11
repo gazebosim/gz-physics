@@ -135,7 +135,7 @@ will not run at the same time when requested.
 
 With the requirements and restrictions above, we will implement an example
 custom `Feature` that retrieves a simulation world from `dartsim` physics engine.
-For example, we name it as [World.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/include/ignition/physics/dartsim/World.hh)
+For example, we name it as [World.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics3/dartsim/include/ignition/physics/dartsim/World.hh)
 and the its content is as follow:
 
 ```cpp
@@ -209,8 +209,8 @@ convenience function for querying the feature `Implementation` object.
 
 After defining the custom feature, please look into where it is added to a
 \ref ignition::physics::FeatureList "FeatureList" in
-[CustomFeatures.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/CustomFeatures.hh)
-and implemented in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/CustomFeatures.cc).
+[CustomFeatures.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics3/dartsim/src/CustomFeatures.hh)
+and implemented in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics3/dartsim/src/CustomFeatures.cc).
 These files are place as follows:
 ```
 dartsim
@@ -257,7 +257,7 @@ class CustomFeatures :
 The custom feature `RetrieveWorld` is added to `CustomFeatureList`, other custom
 features could also be added here.
 The `CustomFeatures` "FeatureList" here inherits from:
-- [Base](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/Base.hh)
+- [Base](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics3/dartsim/src/Base.hh)
 class for foundation definitions of Models, Joints, Links, and Shapes objects
 of `dartsim` interfacing to Ignition Physics API.
 - \ref ignition::physics::Implements3d "Implements3d" for implementing the
@@ -292,10 +292,10 @@ dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
 
 Here we simply implement the actual behavior of `GetDartsimWorld` to return the
 world pointer from `EntityStorage` object storing world pointers of `dartsim` in
-[Base](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/Base.hh) class.
+[Base](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics3/dartsim/src/Base.hh) class.
 
 Finally, we add the implemented `CustomFeatures` "FeatureList" together with
 other \ref ignition::physics::FeatureList "FeatureList" to final `DartsimFeatures`
-"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/src/plugin.cc)
+"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics3/dartsim/src/plugin.cc)
 (please see \ref createphysicsplugin "Implement a physics plugin" for
 registering the plugin to Ignition Physics).
