@@ -121,7 +121,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const int modelCollisionGroup = 1 << this->collisionGroups.at(_modelID);
   const int collisionMask = 0xFFFFFFFF & ~modelCollisionGroup;
   world->addRigidBody(body, modelCollisionGroup, collisionMask);
-  //world->addRigidBody(body);
+  // world->addRigidBody(body);
 
   // Generate an identity for it
   const auto linkIdentity = this->AddLink({name, body, _modelID, pose, mass,
@@ -264,7 +264,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Get axis unit vector (expressed in world frame).
   // IF fixed joint, use UnitZ, if revolute use the Axis given by the joint
   // Eigen::Vector3d axis;
-  //ignition::math::Vector3d axis = ignition::math::Vector3d::UnitZ;
+  // ignition::math::Vector3d axis = ignition::math::Vector3d::UnitZ;
   ignition::math::Vector3d axis;
   if(type == ::sdf::JointType::FIXED )
   {

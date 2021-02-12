@@ -17,6 +17,7 @@
 
 #include "JointFeatures.hh"
 
+#include <algorithm>
 #include <sdf/Joint.hh>
 
 namespace ignition {
@@ -337,8 +338,7 @@ void JointFeatures::SetJointVelocityCommand(
       convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
     btVector3 angular_vel = motion * _value;
     link->setAngularVelocity(angular_vel);
-  }
-  else {
+  } else {
     // igndbg << "Sending command to not revolute joint\n";
   }
 }
