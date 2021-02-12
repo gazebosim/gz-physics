@@ -100,11 +100,12 @@ Identity SDFFeatures::ConstructSdfLink(
   baseTransform.setBasis(convertMat(poseLinear));
 
   // Create link
-  // (TO-DO: do we want to use MotionState?) 2nd part: Do motion state use the same transformation?
+  // (TO-DO: do we want to use MotionState?)
+  //  2nd part: Do motion state use the same transformation?
   if (this->models.at(_modelID)->fixed)
   {
     mass = 0;
-    linkInertiaDiag = btVector3(0,0,0);
+    linkInertiaDiag = btVector3(0, 0, 0);
   }
 
   btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
@@ -123,7 +124,8 @@ Identity SDFFeatures::ConstructSdfLink(
   //world->addRigidBody(body);
 
   // Generate an identity for it
-  const auto linkIdentity = this->AddLink({name, body, _modelID, pose, mass, linkInertiaDiag});
+  const auto linkIdentity = this->AddLink({name, body, _modelID, pose, mass,
+    linkInertiaDiag});
   return linkIdentity;
 }
 
@@ -195,7 +197,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     // }
 
     const math::Pose3d pose = _collision.RawPose();
-    const Eigen::Isometry3d poseIsometry = ignition::math::eigen3::convert(pose);
+    const Eigen::Isometry3d poseIsometry =
+      ignition::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
     const auto poseLinear = poseIsometry.linear();
     btTransform baseTransform;
@@ -208,7 +211,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     body->setAnisotropicFriction(btVector3(mu, mu2, mu3),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
-    dynamic_cast<btCompoundShape *>(body->getCollisionShape())->addChildShape(baseTransform, shape);
+    dynamic_cast<btCompoundShape *>(body->getCollisionShape())
+      ->addChildShape(baseTransform, shape);
 
     auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
       modelID, pose});
@@ -222,7 +226,8 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
-  // const auto &parentModelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
+  // const auto &parentModelInfo =
+  //  *this->ReferenceInterface<ModelInfo>(_modelID);
 
   // Check supported Joints
   const ::sdf::JointType type = _sdfJoint.Type();
@@ -267,7 +272,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else
   {
-    axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot() * _sdfJoint.Axis(0)->Xyz();
+    axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot()
+       * _sdfJoint.Axis(0)->Xyz();
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
@@ -337,7 +343,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Generate an identity for it and return it
   auto identity =
-    this->AddJoint({_sdfJoint.Name(), joint, childId, parentId, static_cast<int>(type), axis});
+    this->AddJoint({_sdfJoint.Name(), joint, childId, parentId,
+                    static_cast<int>(type), axis});
   return identity;
 }
 

@@ -63,7 +63,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   btVector3 vel = model->getLinearVelocity();
 
   // Transform to world frame
-  // const auto matBaseToWorld = btMatrix3x3(model->getWorldToBaseRot()).inverse();
+  // const auto matBaseToWorld =
+  //   btMatrix3x3(model->getWorldToBaseRot()).inverse();
   // omega = matBaseToWorld * omega;
   // vel = matBaseToWorld * vel;
 

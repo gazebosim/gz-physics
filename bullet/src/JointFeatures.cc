@@ -279,30 +279,30 @@ void JointFeatures::SetJointForce(
         static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
       if (hinge)
       {
-	// Limit the max torque applied to avoid abrupt changes in the
-	// angular position of the joint and losing the angle reference
-	// TO-DO (blast545): this limitation should be based on angular speed
-	// as this breaks the PID controller when setting high values
-	const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
+        // Limit the max torque applied to avoid abrupt changes in the
+        // angular position of the joint and losing the angle reference
+        // TO-DO (blast545): this limitation should be based on angular speed
+        // as this breaks the PID controller when setting high values
+        const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
 
-	// z-axis of constraint frame
-	btVector3 hingeAxisLocalA =
-	  hinge->getFrameOffsetA().getBasis().getColumn(2);
-	btVector3 hingeAxisLocalB =
-	  hinge->getFrameOffsetB().getBasis().getColumn(2);
+        // z-axis of constraint frame
+        btVector3 hingeAxisLocalA =
+          hinge->getFrameOffsetA().getBasis().getColumn(2);
+        btVector3 hingeAxisLocalB =
+          hinge->getFrameOffsetB().getBasis().getColumn(2);
 
-	btVector3 hingeAxisWorldA =
-	  hinge->getRigidBodyA().getWorldTransform().getBasis() *
-	  hingeAxisLocalA;
-	btVector3 hingeAxisWorldB =
-	  hinge->getRigidBodyB().getWorldTransform().getBasis() *
-	  hingeAxisLocalB;
+        btVector3 hingeAxisWorldA =
+          hinge->getRigidBodyA().getWorldTransform().getBasis() *
+          hingeAxisLocalA;
+        btVector3 hingeAxisWorldB =
+          hinge->getRigidBodyB().getWorldTransform().getBasis() *
+          hingeAxisLocalB;
 
-	btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
-	btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
+        btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
+        btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
 
-	hinge->getRigidBodyA().applyTorque(hingeTorqueA);
-	hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
+        hinge->getRigidBodyA().applyTorque(hingeTorqueA);
+        hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
       }
     }
   }
@@ -328,11 +328,13 @@ void JointFeatures::SetJointVelocityCommand(
   }
 
   // Check the type of joint and act accordignly
-  if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE)) {
+  if (jointInfo->constraintType ==
+      static_cast<int>(::sdf::JointType::REVOLUTE)) {
     const auto &link = this->links.at(jointInfo->childLinkId)->link;
     btTransform trans;
     link->getMotionState()->getWorldTransform(trans);
-    btVector3 motion = quatRotate(trans.getRotation(), convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
+    btVector3 motion = quatRotate(trans.getRotation(),
+      convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
     btVector3 angular_vel = motion * _value;
     link->setAngularVelocity(angular_vel);
   }
