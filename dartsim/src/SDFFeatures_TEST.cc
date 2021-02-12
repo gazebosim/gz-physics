@@ -31,10 +31,12 @@
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
+#include <ignition/physics/RevoluteJoint.hh>
 
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include <ignition/physics/dartsim/World.hh>
@@ -52,12 +54,14 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::sdf::ConstructSdfJoint,
     ignition::physics::sdf::ConstructSdfLink,
     ignition::physics::sdf::ConstructSdfModel,
+    ignition::physics::sdf::ConstructSdfNestedModel,
     ignition::physics::sdf::ConstructSdfWorld
 > { };
 
 using World = ignition::physics::World3d<TestFeatureList>;
 using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 
+/////////////////////////////////////////////////
 auto LoadEngine()
 {
   ignition::plugin::Loader loader;
@@ -71,6 +75,7 @@ auto LoadEngine()
   return engine;
 }
 
+/////////////////////////////////////////////////
 World LoadWorld(const std::string &_world)
 {
   auto engine = LoadEngine();
@@ -79,6 +84,9 @@ World LoadWorld(const std::string &_world)
   sdf::Root root;
   const sdf::Errors &errors = root.Load(_world);
   EXPECT_EQ(0u, errors.size());
+  for (const auto error : errors) {
+    std::cout << error << std::endl;
+  }
 
   EXPECT_EQ(1u, root.WorldCount());
   const sdf::World *sdfWorld = root.WorldByIndex(0);
@@ -90,6 +98,7 @@ World LoadWorld(const std::string &_world)
   return *world;
 }
 
+/////////////////////////////////////////////////
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckDartsimData)
 {
@@ -102,6 +111,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
+  EXPECT_EQ("double_pendulum_with_base", skeleton->getName());
   ASSERT_EQ(3u, skeleton->getNumBodyNodes());
 
   auto verify = [](const dart::dynamics::DegreeOfFreedom * dof,
@@ -183,6 +193,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   EXPECT_DOUBLE_EQ(-IGN_PI, screwJoint->getPitch());
 }
 
+/////////////////////////////////////////////////
 // Test that joint limits are working by running the simulation
 TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
@@ -265,6 +276,7 @@ auto CreateTestModel(WorldPtr _world, const std::string &_model,
   return std::make_tuple(model, joint0);
 }
 
+/////////////////////////////////////////////////
 // Test joints with world as parent or child
 TEST(SDFFeatures_TEST, WorldIsParentOrChild)
 {
@@ -301,6 +313,86 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
   }
 }
 
+/////////////////////////////////////////////////
+TEST(SDFFeatures_TEST, WorldWithNestedModel)
+{
+  World world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
+  EXPECT_EQ(2u, world.GetModelCount());
+
+  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  // check top level model
+  EXPECT_EQ("parent_model", world.GetModel(0)->GetName());
+  EXPECT_EQ("parent_model::nested_model", world.GetModel(1)->GetName());
+  auto parentModel = world.GetModel("parent_model");
+  ASSERT_NE(nullptr, parentModel);
+
+  auto joint1 = parentModel->GetJoint("joint1");
+  EXPECT_NE(nullptr, joint1);
+
+  auto nestedModel = world.GetModel("parent_model::nested_model");
+  ASSERT_NE(nullptr, nestedModel);
+
+  auto nestedJoint = parentModel->GetJoint("nested_joint");
+  EXPECT_NE(nullptr, nestedJoint);
+
+  EXPECT_EQ(3u, parentModel->GetLinkCount());
+  EXPECT_EQ(0u, nestedModel->GetLinkCount());
+  auto nestedLink1 = parentModel->GetLink("nested_link1");
+  EXPECT_NE(nullptr, nestedLink1);
+
+  auto nestedLink2 = parentModel->GetLink("nested_link2");
+  EXPECT_NE(nullptr, nestedLink2);
+
+  auto link1 = parentModel->GetLink("link1");
+  EXPECT_NE(nullptr, link1);
+}
+
+/////////////////////////////////////////////////
+TEST(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
+{
+  World world =
+    LoadWorld(TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf");
+  EXPECT_EQ(2u, world.GetModelCount());
+
+  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  // check top level model
+  auto parentModel = world.GetModel("parent_model");
+  ASSERT_NE(nullptr, parentModel);
+  EXPECT_EQ("parent_model", parentModel->GetName());
+  EXPECT_EQ(1u, parentModel->GetJointCount());
+  EXPECT_EQ(1u, parentModel->GetLinkCount());
+
+  auto joint1 = parentModel->GetJoint(0);
+  ASSERT_NE(nullptr, joint1);
+  EXPECT_EQ(joint1->GetName(), "joint1");
+
+  auto link1 = parentModel->GetLink("link1");
+  EXPECT_NE(nullptr, link1);
+
+  auto nestedModel = world.GetModel("parent_model::nested_model");
+  ASSERT_NE(nullptr, nestedModel);
+  EXPECT_EQ("parent_model::nested_model", nestedModel->GetName());
+  EXPECT_EQ(2u, nestedModel->GetLinkCount());
+  EXPECT_EQ(2u, nestedModel->GetJointCount());
+
+  auto nestedJoint1 = nestedModel->GetJoint("nested_joint1");
+  EXPECT_NE(nullptr, nestedJoint1);
+
+  auto nestedJoint2 = nestedModel->GetJoint("nested_joint2");
+  EXPECT_NE(nullptr, nestedJoint2);
+
+  auto nestedLink1 = nestedModel->GetLink("nested_link1");
+  EXPECT_NE(nullptr, nestedLink1);
+
+  auto nestedLink2 = nestedModel->GetLink("nested_link2");
+  EXPECT_NE(nullptr, nestedLink2);
+}
+
+/////////////////////////////////////////////////
 // Test that joint type falls back to fixed if the type is not supported
 TEST(SDFFeatures_TEST, FallbackToFixedJoint)
 {
@@ -317,12 +409,15 @@ TEST(SDFFeatures_TEST, FallbackToFixedJoint)
   for (const auto &jointName : {"j0", "j1", "j2"})
   {
     const auto *joint = skeleton->getJoint(jointName);
+    ASSERT_NE(nullptr, joint)
+      << " joint '" << jointName << "'doesn't exist in this skeleton";
     const auto *fixedJoint =
         dynamic_cast<const dart::dynamics::WeldJoint *>(joint);
     EXPECT_NE(nullptr, fixedJoint) << " joint type is: " << joint->getType();
   }
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, LinkRelativeTo)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -353,6 +448,7 @@ TEST(SDFFeatures_FrameSemantics, LinkRelativeTo)
       expWorldPose, link2->getWorldTransform(), 1e-3));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -388,6 +484,7 @@ TEST(SDFFeatures_FrameSemantics, CollisionRelativeTo)
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -433,6 +530,7 @@ TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
       link2ExpPose, link2->getWorldTransform(), 1e-5));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
@@ -468,6 +566,7 @@ TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
+/////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 {
   World world = LoadWorld(TEST_WORLD_DIR"/world_frames.sdf");
