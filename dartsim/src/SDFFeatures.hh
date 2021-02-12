@@ -108,11 +108,9 @@ class SDFFeatures :
   /// \brief Construct a dartsim entity from a sdf::model
   /// \param[in] _parentID Id of parent
   /// \param[in] _sdfModel sdf::Model to construct entity from
-  /// \param[in] _prefix prefix if model is nested
   /// \return The entity identity if constructed otherwise an invalid identity
   private: Identity ConstructSdfModelImpl(std::size_t _parentID,
-                                          const ::sdf::Model &_sdfModel,
-                                          const std::string &_prefix);
+                                          const ::sdf::Model &_sdfModel);
 
   /// \brief Find the dartsim BodyNode associated with the entity name
   /// \param[in] _world Pointer to world to search through

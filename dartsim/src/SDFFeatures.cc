@@ -390,20 +390,20 @@ Identity SDFFeatures::ConstructSdfModel(
     const Identity &_parentID,
     const ::sdf::Model &_sdfModel)
 {
-  return this->ConstructSdfModelImpl(_parentID, _sdfModel, "");
+  return this->ConstructSdfModelImpl(_parentID, _sdfModel);
 }
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfNestedModel(const Identity &_parentID,
                                               const ::sdf::Model &_sdfModel)
 {
-  return this->ConstructSdfModelImpl(_parentID, _sdfModel, "");
+  return this->ConstructSdfModelImpl(_parentID, _sdfModel);
 }
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
-    const ::sdf::Model &_sdfModel, const std::string &)
+    const ::sdf::Model &_sdfModel)
 {
   auto worldID = _parentID;
   std::string modelName = _sdfModel.Name();
@@ -426,8 +426,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           ResolveSdfPose(_sdfModel.SemanticPose()));
 
   // Set canonical link name
-  // TODO(anyone) This may work correctly with nested models and will need to be
-  // updated once more than canonical link can exist in a nested model
+  // TODO(anyone) This may not work correctly with nested models and will need
+  // to be updated once multiple canonical links can exist in a nested model
   // https://github.com/ignitionrobotics/ign-physics/issues/209
   auto [modelID, modelInfo] = this->AddModel( // NOLINT
       {model, modelFrame, _sdfModel.CanonicalLinkName()}, worldID);
@@ -441,8 +441,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   // First, recursively construct nested models
   for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
   {
-    this->ConstructSdfModelImpl(modelID, *_sdfModel.ModelByIndex(i),
-                                modelName);
+    this->ConstructSdfModelImpl(modelID, *_sdfModel.ModelByIndex(i));
   }
   // then, construct all links
   for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
@@ -471,6 +470,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
+      for (const auto error : errors)
+      {
+        ignerr << error << std::endl;
+      }
       continue;
     }
     std::string childLinkName;
@@ -481,11 +484,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
+      for (const auto error : errors)
+      {
+        ignerr << error << std::endl;
+      }
       continue;
     }
 
     const ::sdf::Link *parentSdfLink = _sdfModel.LinkByName(parentLinkName);
-    if (nullptr == parentSdfLink)
+    if (nullptr == parentSdfLink && parentLinkName != "world")
     {
       ignerr << "The link [" << parentLinkName << "] of the parent frame ["
              << sdfJoint->ParentLinkName() << "] of joint [" << sdfJoint->Name()
@@ -505,9 +512,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     }
 
     auto * const parent =
-      FindBodyNode(this->worlds[worldID], modelName, parentSdfLink->Name());
+      FindBodyNode(this->worlds[worldID], modelName, parentLinkName);
 
-    if (nullptr == parent && parentSdfLink->Name() != "world")
+    if (nullptr == parent && parentLinkName != "world")
     {
       ignerr << "The parent [" << sdfJoint->ParentLinkName() << "] of joint ["
              << sdfJoint->Name() << "] in model [" << modelName
@@ -625,9 +632,9 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // If we get an error here, one of two things has occured:
   // 1. The Model _sdfJoint came from is invalid, i.e, had errors during
-  //    sdf::Root::Load and ConstructSdfJoint regardless of the errors.
-  //    Resolving for the parent link may fail for any number of reasons and
-  //    should be reported.
+  //    sdf::Root::Load and ConstructSdfJoint was called regardless of the
+  //    errors. Resolving for the parent link may fail for any number of reasons
+  //    and should be reported.
   // 2. ConstructSdfJoint is being called with an sdf::Joint that was
   //    constructed by the user instead of one obtained from an sdf::Model
   //    object. In this case, the joint does not have a valid frame graph and it
@@ -667,7 +674,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   dart::dynamics::BodyNode * const child =
     FindBodyNode(world, modelInfo.model->getName(), childLinkName);
 
-  if (nullptr == parent && _sdfJoint.ParentLinkName() != "world")
+  if (nullptr == parent && parentLinkName != "world")
   {
     ignerr << "The link of the parent frame [" << _sdfJoint.ParentLinkName()
            << "] with resolved link name [" << parentLinkName
