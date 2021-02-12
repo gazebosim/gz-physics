@@ -5,6 +5,7 @@ ign_create_core_library(SOURCES ${sources} CXX_STANDARD 17)
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
     ${ignition-math${IGN_MATH_VER}_LIBRARIES}
+    ignition-utils${IGN_UTILS_VER}::ignition-utils${IGN_UTILS_VER}
     ignition-plugin${IGN_PLUGIN_VER}::register)
 
 target_include_directories(${PROJECT_LIBRARY_TARGET_NAME}
