@@ -177,6 +177,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   const auto &odeFriction = surfaceElement->GetElement("friction")
                               ->GetElement("ode");
   const auto mu = odeFriction->Get<btScalar>("mu");
+  const auto mu2 = odeFriction->Get<btScalar>("mu2");
+  const auto mu3 = odeFriction->Get<btScalar>("mu3");
 
   // Get restitution
   // const auto restitution = surfaceElement->GetElement("bounce")
@@ -200,9 +202,10 @@ Identity SDFFeatures::ConstructSdfCollision(
     baseTransform.setOrigin(convertVec(poseTranslation));
     baseTransform.setBasis(convertMat(poseLinear));
 
+    // TODO(Blast545): Consider different approaches to set frictions
     // shape->setMargin(btScalar(0.0001));
-    body->setFriction(mu * 10);
-    body->setAnisotropicFriction(btVector3(1, 1, 1),
+    body->setFriction(1);
+    body->setAnisotropicFriction(btVector3(mu, mu2, mu3),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())->addChildShape(baseTransform, shape);
@@ -320,10 +323,16 @@ Identity SDFFeatures::ConstructSdfJoint(
   world->addConstraint(joint, true);
   joint->enableFeedback(true);
 
+  /* TO-DO(Lobotuerk): find how to implement axis friction properly for bullet*/
   if (_sdfJoint.Axis(0) != nullptr)
   {
     double friction = _sdfJoint.Axis(0)->Friction();
     joint->enableAngularMotor(true, 0.0, friction);
+    joint->setLimit(_sdfJoint.Axis(0)->Lower(), _sdfJoint.Axis(0)->Upper());
+  }
+  else
+  {
+    joint->enableAngularMotor(true, 0.0, 0.0);
   }
 
   // Generate an identity for it and return it
