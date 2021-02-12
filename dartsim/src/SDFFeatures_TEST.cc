@@ -31,6 +31,7 @@
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
+#include <ignition/physics/RevoluteJoint.hh>
 
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
@@ -83,6 +84,9 @@ World LoadWorld(const std::string &_world)
   sdf::Root root;
   const sdf::Errors &errors = root.Load(_world);
   EXPECT_EQ(0u, errors.size());
+  for (const auto error : errors) {
+    std::cout << error << std::endl;
+  }
 
   EXPECT_EQ(1u, root.WorldCount());
   const sdf::World *sdfWorld = root.WorldByIndex(0);
@@ -343,6 +347,49 @@ TEST(SDFFeatures_TEST, WorldWithNestedModel)
 
   auto link1 = parentModel->GetLink("link1");
   EXPECT_NE(nullptr, link1);
+}
+
+/////////////////////////////////////////////////
+TEST(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
+{
+  World world =
+    LoadWorld(TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf");
+  EXPECT_EQ(2u, world.GetModelCount());
+
+  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  // check top level model
+  auto parentModel = world.GetModel("parent_model");
+  ASSERT_NE(nullptr, parentModel);
+  EXPECT_EQ("parent_model", parentModel->GetName());
+  EXPECT_EQ(1u, parentModel->GetJointCount());
+  EXPECT_EQ(1u, parentModel->GetLinkCount());
+
+  auto joint1 = parentModel->GetJoint(0);
+  ASSERT_NE(nullptr, joint1);
+  EXPECT_EQ(joint1->GetName(), "joint1");
+
+  auto link1 = parentModel->GetLink("link1");
+  EXPECT_NE(nullptr, link1);
+
+  auto nestedModel = world.GetModel("parent_model::nested_model");
+  ASSERT_NE(nullptr, nestedModel);
+  EXPECT_EQ("parent_model::nested_model", nestedModel->GetName());
+  EXPECT_EQ(2u, nestedModel->GetLinkCount());
+  EXPECT_EQ(2u, nestedModel->GetJointCount());
+
+  auto nestedJoint1 = nestedModel->GetJoint("nested_joint1");
+  EXPECT_NE(nullptr, nestedJoint1);
+
+  auto nestedJoint2 = nestedModel->GetJoint("nested_joint2");
+  EXPECT_NE(nullptr, nestedJoint2);
+
+  auto nestedLink1 = nestedModel->GetLink("nested_link1");
+  EXPECT_NE(nullptr, nestedLink1);
+
+  auto nestedLink2 = nestedModel->GetLink("nested_link2");
+  EXPECT_NE(nullptr, nestedLink2);
 }
 
 /////////////////////////////////////////////////
