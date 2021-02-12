@@ -108,10 +108,6 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
   EXPECT_EQ("double_pendulum_with_base", skeleton->getName());
-  for (size_t i = 0; i < skeleton->getNumBodyNodes(); ++i)
-  {
-    std::cout << skeleton->getBodyNode(i)->getName() << std::endl;
-  }
   ASSERT_EQ(3u, skeleton->getNumBodyNodes());
 
   auto verify = [](const dart::dynamics::DegreeOfFreedom * dof,
