@@ -96,7 +96,8 @@ Identity ShapeFeatures::AttachMeshShape(
   btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
 
   auto identity = this->AddCollision(
-    {_name, gimpactMeshShape, _linkID, modelID, ignition::math::eigen3::convert(_pose)});
+    {_name, gimpactMeshShape, _linkID, modelID,
+      ignition::math::eigen3::convert(_pose)});
   return identity;
 
 }

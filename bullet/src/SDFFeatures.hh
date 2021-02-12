@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
 #define IGNITION_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
 
+#include <string>
+
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>

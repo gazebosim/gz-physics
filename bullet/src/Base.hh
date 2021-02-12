@@ -24,6 +24,8 @@
 #include <assert.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <ignition/common/Console.hh>
 #include <ignition/physics/Implements.hh>

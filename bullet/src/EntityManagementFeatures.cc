@@ -18,6 +18,7 @@
 #include <btBulletDynamicsCommon.h>
 
 #include <string>
+#include <unordered_map>
 
 #include "EntityManagementFeatures.hh"
 
@@ -30,8 +31,10 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
   // Create bullet empty multibody dynamics world
-  btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
-  btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
+  btDefaultCollisionConfiguration* collisionConfiguration =
+    new btDefaultCollisionConfiguration();
+  btCollisionDispatcher* dispatcher =
+    new btCollisionDispatcher(collisionConfiguration);
   btBroadphaseInterface* broadphase = new btDbvtBroadphase();
 
   auto solver = new btSequentialImpulseConstraintSolver;
@@ -72,7 +75,8 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
 
   // Clean up links
-  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it = this->links.begin();
+  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it =
+    this->links.begin();
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
@@ -86,7 +90,8 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
     it++;
   }
 
-  // Clean up model, links are erased and the model is just a name to tie them together
+  // Clean up model, links are erased and the model is just a name to tie
+  // them together
   this->models.erase(_modelID.id);
 
   return true;
@@ -127,7 +132,8 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   }
 
   // Clean up links
-  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it = this->links.begin();
+  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it =
+    this->links.begin();
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
