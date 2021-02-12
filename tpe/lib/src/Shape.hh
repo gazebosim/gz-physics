@@ -24,7 +24,7 @@
 #include <ignition/common/Mesh.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/utilities/SuppressWarning.hh>
+#include <ignition/utils/SuppressWarning.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
 

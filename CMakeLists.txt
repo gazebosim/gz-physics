@@ -51,6 +51,11 @@ ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all VERSION 1.1)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 #--------------------------------------
+# Find ignition-utils
+ign_find_package(ignition-utils1 REQUIRED COMPONENTS cli)
+set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
+
+#--------------------------------------
 # Find Eigen
 ign_find_package(EIGEN3 REQUIRED)
 

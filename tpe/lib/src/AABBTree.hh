@@ -22,7 +22,7 @@
 #include <set>
 
 #include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/utilities/SuppressWarning.hh>
+#include <ignition/utils/SuppressWarning.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
 

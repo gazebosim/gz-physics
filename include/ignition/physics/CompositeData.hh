@@ -22,7 +22,7 @@
 #include <map>
 #include <set>
 
-#include <ignition/utilities/SuppressWarning.hh>
+#include <ignition/utils/SuppressWarning.hh>
 
 #include "ignition/physics/Cloneable.hh"
 #include "ignition/physics/Export.hh"
