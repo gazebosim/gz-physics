@@ -45,8 +45,8 @@ cars depending on physics engines and visualize the collision concept. Please
 download the Differential Drive simulation world demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/diff_drive.sdf -P ~
-```
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/diff_drive.sdf -P ~
+``
 
 We can now start our differential drive simulation on Ignition Gazebo by:
 
@@ -70,7 +70,7 @@ second in Z-axis.
 Note that the mechanism to move the car is different depending on the used physics
 engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim),
 the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/diff_drive/DiffDrive.cc#L333) code.
-Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe),
+Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/tpe),
 TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/velocity_control/VelocityControl.cc#L117) code.
 
 #### Monitoring the model and its links pose
@@ -105,7 +105,7 @@ This demo world shows how joint force, torque, and pressure are supported in
 Ignition Physics. Please download the Lift Drag demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/lift_drag.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/lift_drag.sdf -P ~
 ```
 
 Like above, please start the Lift Drag demo world on Ignition Gazebo by:
@@ -180,7 +180,7 @@ movement by showing free swing of the pendulum. Please download the
 Pendulum demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/video_record_dbl_pendulum.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/video_record_dbl_pendulum.sdf -P ~
 ```
 
 and start the Pendulum demo on Ignition Gazebo by:

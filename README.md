@@ -28,10 +28,6 @@ designed to support simulation and rapid development of robot applications.
 
 [Usage](#usage)
 
-[Documentation](#documentation)
-
-[Testing](#testing)
-
 [Folder Structure](#folder-structure)
 
 [Code of Conduct](#code-of-conduct)
@@ -93,7 +89,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b master
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics3
     ```
 
 3. Configure and build the documentation.
