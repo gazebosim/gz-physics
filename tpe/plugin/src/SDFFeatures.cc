@@ -87,6 +87,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const auto pose = ResolveSdfPose(_sdfModel.SemanticPose());
+  const bool isStatic = _sdfModel.Static();
 
   auto it = this->worlds.find(_worldID.id);
   if (it == this->worlds.end())
@@ -104,12 +105,25 @@ Identity SDFFeatures::ConstructSdfModel(
   tpelib::Model *model = static_cast<tpelib::Model *>(&ent);
   model->SetName(name);
   model->SetPose(pose);
+  model->SetStatic(isStatic);
   const auto modelIdentity = this->AddModel(world->GetId(), *model);
 
   // construct links
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
+  }
+
+  // set canonical link id
+  if (_sdfModel.CanonicalLink() != nullptr)
+  {
+    std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
+    tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
+    model->SetCanonicalLink(canonicalLink.GetId());
+  }
+  else
+  {
+    model->SetCanonicalLink();
   }
 
   return modelIdentity;
@@ -169,6 +183,18 @@ Identity SDFFeatures::ConstructSdfNestedModel(
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
+  }
+
+  // set canonical link id
+  if (_sdfModel.CanonicalLink() != nullptr)
+  {
+    std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
+    tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
+    model->SetCanonicalLink(canonicalLink.GetId());
+  }
+  else
+  {
+    model->SetCanonicalLink();
   }
 
   // construct nested models

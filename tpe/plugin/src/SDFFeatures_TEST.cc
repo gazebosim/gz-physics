@@ -37,6 +37,7 @@
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
 #include "lib/src/Entity.hh"
+#include "lib/src/Model.hh"
 #include "lib/src/World.hh"
 #include "World.hh"
 
@@ -413,6 +414,12 @@ TEST(SDFFeatures_TEST, NestedModel)
       nestedCollision.GetId());
   EXPECT_EQ("nested_collision", nestedCollision.GetName());
   EXPECT_EQ(ignition::math::Pose3d::Zero, nestedCollision.GetPose());
+
+  // canonical link
+  ignition::physics::tpelib::Model *m =
+      static_cast<ignition::physics::tpelib::Model *>(&model);
+  ignition::physics::tpelib::Entity canLink = m->GetCanonicalLink();
+  EXPECT_EQ(link.GetId(), canLink.GetId());
 }
 
 // Test ConstructModel function.
