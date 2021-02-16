@@ -3,8 +3,7 @@
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. Note that
-the recommended Ignition release is Dome.
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## Implement a custom feature in DART plugin
 

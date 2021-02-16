@@ -31,6 +31,9 @@ class ignition::physics::tpelib::ModelPrivate
 {
   /// \brief Canonical link id;
   public: std::size_t canonicalLinkId = kNullEntityId;
+
+  /// \brief First inserted link id;
+  public: std::size_t firstLinkId = kNullEntityId;
 };
 
 using namespace ignition;
@@ -61,9 +64,8 @@ Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
 
-  // first link added is the canonical link
   if (this->GetChildren().empty())
-    this->dataPtr->canonicalLinkId = linkId;
+    this->dataPtr->firstLinkId = linkId;
 
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
@@ -86,44 +88,41 @@ Entity &Model::AddModel()
 }
 
 //////////////////////////////////////////////////
+void Model::SetCanonicalLink(std::size_t linkId)
+{
+  this->dataPtr->canonicalLinkId = linkId;
+  if (this->dataPtr->canonicalLinkId == kNullEntityId)
+  {
+    this->dataPtr->canonicalLinkId = this->dataPtr->firstLinkId;
+  }
+}
+
+//////////////////////////////////////////////////
 Entity &Model::GetCanonicalLink()
 {
   // return canonical link but make sure it exists
   // todo(anyone) Prevent removal of canonical link in a model?
   Entity &linkEnt = this->GetChildById(this->dataPtr->canonicalLinkId);
   if (linkEnt.GetId() != kNullEntityId)
-    return linkEnt;
-
-  // todo(anyone) the code below does not guarantee that the link returned is
-  // the first link defined in SDF since GetChildren returns a std::map, and
-  // likewise the use of std::set, do not preserve order.
-  std::set<Model *> models;
-  for (auto &it : this->GetChildren())
   {
-    // return the first link found as canonical link
-    if (dynamic_cast<Link *>(it.second.get()))
+    return linkEnt;
+  }
+  else
+  {
+    for (auto &child : this->GetChildren())
     {
-      return *it.second;
-    }
-    // if child is nested model, store it first and only return nested
-    // links if there are no links in this model
-    else
-    {
-      Model *model = dynamic_cast<Model *>(it.second.get());
-      if (model)
+      Entity childEnt = *(child.second);
+      Model *nestedModel = static_cast<Model *>(&childEnt);
+      if (nestedModel != nullptr)
       {
-        models.insert(model);
+        Entity &ent = nestedModel->GetChildById(this->dataPtr->canonicalLinkId);
+        if (ent.GetId() != kNullEntityId)
+        {
+          return ent;
+        }
       }
     }
   }
-
-  for (auto m : models)
-  {
-    auto &link = m->GetCanonicalLink();
-    if (link.GetId() != kNullEntity.GetId())
-      return link;
-  }
-
   return kNullEntity;
 }
 

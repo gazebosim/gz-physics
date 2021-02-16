@@ -13,9 +13,7 @@ plugin using \ref ignition::physics "Ignition Physics" API.
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed the
-Ignition Physics corresponding to the desired Ignition release. Note that the
-recommended Ignition release is Dome.
-
+Ignition Physics corresponding to the desired Ignition release.
 ## Write a simple loader
 
 Please create a folder for the loader first:
@@ -95,7 +93,7 @@ for (const std::string &name : pluginNames)
 }
 ```
 
-### Setup CMakeLists.txt for building (Version: Dome, ign-physics4)
+### Setup CMakeLists.txt for building (Version: Dome, ign-physics3)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `ign-plugin` and `ign-physics` dependencies in Dome release:
