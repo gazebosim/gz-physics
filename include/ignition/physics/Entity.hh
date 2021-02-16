@@ -273,14 +273,15 @@ namespace ignition
       /// \return A pointer to the implementation of FeatureT, or a nullptr if
       /// FeatureT is not available.
       protected: template <typename FeatureT>
-      typename FeatureT::template Implementation<Policy> *Interface();
+      typename FeatureT::template Implementation<PolicyT> *Interface();
 
       /// \brief Same as Interface(), but const-qualified so that const entities
       /// can request const-qualified interfaces from the implementation.
       /// \return A pointer to a const-qualified implementation of F, or a
       /// nullptr if F is not available.
-      protected: template <typename F>
-      const typename F::template Implementation<Policy> *Interface() const;
+      protected: template <typename FeatureT>
+      const typename FeatureT::template Implementation<PolicyT> *Interface()
+          const;
 
       /// \brief This is a pointer to the physics engine implementation, and it
       /// can be used by the object features to find the interfaces that they

@@ -763,6 +763,16 @@ Identity SDFFeatures::ConstructSdfCollision(
       math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
     }
+
+    const auto &surfaceBounce = _collision.Element()
+                                    ->GetElement("surface")
+                                    ->GetElement("bounce");
+
+    if (surfaceBounce->HasElement("restitution_coefficient"))
+    {
+      aspect->setRestitutionCoeff(
+          surfaceBounce->Get<double>("restitution_coefficient"));
+    }
 #else
     // We are setting the friction coefficient of a collision element
     // to be the coefficient for the whole link. If there are multiple collision
@@ -770,6 +780,15 @@ Identity SDFFeatures::ConstructSdfCollision(
     // TODO(addisu) Assign the coefficient to the shape node when support is
     // added in DART.
     bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+    const auto &surfaceBounce = _collision.Element()
+                                    ->GetElement("surface")
+                                    ->GetElement("bounce");
+
+    if (surfaceBounce->HasElement("restitution_coefficient"))
+    {
+      bn->setRestitutionCoeff(
+          surfaceBounce->Get<double>("restitution_coefficient"));
+    }
 #endif
     // TODO(anyone) add category_bitmask as well
     const auto bitmaskElement = _collision.Element()
