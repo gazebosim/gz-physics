@@ -32,6 +32,7 @@ double JointFeatures::GetJointPosition(
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+    // igndbg << "Child: " << jointInfo->childLinkId << " Father: " << jointInfo->parentLinkId << std::endl;
     const int jointType = jointInfo->constraintType;
     // Check the type of joint and act accordignly
     if (jointInfo->constraintType ==
@@ -55,6 +56,13 @@ double JointFeatures::GetJointPosition(
     }
   }
   igndbg << "Position: " << _id.id << " -> " << result << std::endl;
+  const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+  btTransform transP, transC;
+  this->links.at(jointInfo->parentLinkId)->link->getMotionState()->getWorldTransform(transP);
+  this->links.at(jointInfo->childLinkId)->link->getMotionState()->getWorldTransform(transC);
+  btScalar x, y, z;
+  (transP.inverse() * transC).getRotation().getEulerZYX(z,y,x);
+  igndbg << "TF: " << y << std::endl;
   return result;
 }
 
