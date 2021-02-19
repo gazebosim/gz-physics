@@ -78,6 +78,14 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   /// \return Name of entity
   public: virtual const std::string &GetNameRef() const;
 
+  /// \brief Set the static property
+  /// \param[in] _static static
+  public: virtual void SetStatic(bool _static);
+
+  /// \brief Get the static property
+  /// \return Static property
+  public: virtual bool GetStatic() const;
+
   /// \brief Set the id of the entity
   /// \param[in] _unique Id
   public: virtual void SetId(std::size_t _id);

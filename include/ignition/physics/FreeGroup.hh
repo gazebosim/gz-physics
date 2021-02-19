@@ -110,21 +110,29 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    /// While a physics engine with maximal coordinates can provide
+    /// \brief This features sets the FreeGroup pose in world frame. However,
+    /// while a physics engine with maximal coordinates can provide
     /// Link::SetWorldPose and similar functions for setting velocity
     /// regardless of the kinematic constraints on that link, this behavior
-    /// is not well defined and difficult to implement with generalized
-    /// coordinates. The FreeGroup::SetWorldPose function provides an
-    /// analog to both `Link::SetWorldPose` and `Model::SetWorldPose`.
+    /// for FreeGroup is not well defined and difficult to implement
+    /// with generalized coordinates. The FreeGroup::SetWorldPose function
+    /// should provide an analog to both Link::SetWorldPose and
+    /// Model::SetWorldPose.
     class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldPose
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
       public: template <typename PolicyT, typename FeaturesT>
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
         public: using PoseType =
             typename FromPolicy<PolicyT>::template Use<Pose>;
 
+        /// \brief Set this FreeGroup pose in world frame.
         public: void SetWorldPose(const PoseType &_pose);
       };
 
@@ -141,9 +149,16 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This features sets the FreeGroup linear and angular velocity in
+    /// world frame.
     class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldVelocity
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup linear and angular velocity in world frame. See
+      /// FindFreeGroupFeature class documentation for more detail.
       public: template <typename PolicyT, typename FeaturesT>
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
@@ -153,9 +168,11 @@ namespace ignition
         public: using AngularVelocity =
             typename FromPolicy<PolicyT>::template Use<AngularVector>;
 
+        /// \brief Set this FreeGroup linear velocity in world frame.
         public: void SetWorldLinearVelocity(
             const LinearVelocity &_linearVelocity);
 
+        /// \brief Set this FreeGroup angular velocity in world frame.
         public: void SetWorldAngularVelocity(
             const AngularVelocity &_angularVelocity);
       };
