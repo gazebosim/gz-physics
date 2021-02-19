@@ -153,8 +153,10 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
     auto linkIt = this->links.find(_groupID.id);
     if (linkIt != this->links.end() && linkIt->second != nullptr)
     {
+      math::Pose3d linkWorldPose = linkIt->second->link->GetWorldPose();
       linkIt->second->link->SetLinearVelocity(
-        math::eigen3::convert(_linearVelocity));
+        linkWorldPose.Rot().Inverse() *
+        math::eigen3::convert( _linearVelocity));
     }
   }
 }
@@ -175,7 +177,9 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     auto linkIt = this->links.find(_groupID.id);
     if (linkIt != this->links.end() && linkIt->second != nullptr)
     {
+      math::Pose3d linkWorldPose = linkIt->second->link->GetWorldPose();
       linkIt->second->link->SetAngularVelocity(
+        linkWorldPose.Rot().Inverse() *
         math::eigen3::convert(_angularVelocity));
     }
   }
