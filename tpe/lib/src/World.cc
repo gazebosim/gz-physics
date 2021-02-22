@@ -74,11 +74,15 @@ void World::Step()
     auto &ents = model->GetChildren();
     for (auto linkIt = ents.begin(); linkIt != ents.end(); ++linkIt)
     {
+      // if child of model is link
       auto link = std::dynamic_pointer_cast<Link>(linkIt->second);
-      link->UpdatePose(
-        this->timeStep,
-        link->GetLinearVelocity(),
-        link->GetAngularVelocity());
+      if (link)
+      {
+        link->UpdatePose(
+          this->timeStep,
+          link->GetLinearVelocity(),
+          link->GetAngularVelocity());
+      }
     }
   }
 
