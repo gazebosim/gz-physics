@@ -330,7 +330,7 @@ static ShapeAndTransform ConstructGeometry(
 }  // namespace
 
 dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
-    dart::simulation::WorldPtr _world, const std::string _jointModelName,
+    dart::simulation::WorldPtr _world, const std::string &_jointModelName,
     const std::string &_entityFullName)
 {
   const auto[modelAbsoluteName, localName] =
@@ -470,7 +470,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
-      for (const auto error : errors)
+      for (const auto &error : errors)
       {
         ignerr << error << std::endl;
       }
@@ -484,7 +484,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
-      for (const auto error : errors)
+      for (const auto &error : errors)
       {
         ignerr << error << std::endl;
       }
@@ -523,7 +523,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     }
 
     auto * const child =
-      FindBodyNode(worlds[worldID], modelName, childSdfLink->Name());
+      FindBodyNode(worlds[worldID], modelName, childLinkName);
     if (nullptr == child)
     {
       ignerr << "The child of joint [" << sdfJoint->Name() << "] in model ["

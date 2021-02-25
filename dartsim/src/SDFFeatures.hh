@@ -120,7 +120,7 @@ class SDFFeatures :
   /// \returns The matched body node if exactly one match is found, otherwise
   /// a nullptr
   private: dart::dynamics::BodyNode *FindBodyNode(
-      dart::simulation::WorldPtr _world, const std::string _jointModelName,
+      dart::simulation::WorldPtr _world, const std::string &_jointModelName,
       const std::string &_entityFullName);
 };
 

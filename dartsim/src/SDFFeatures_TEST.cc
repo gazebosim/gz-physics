@@ -327,7 +327,7 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
 TEST(SDFFeatures_TEST, WorldWithNestedModel)
 {
   World world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
-  EXPECT_EQ(2u, world.GetModelCount());
+  EXPECT_EQ(4u, world.GetModelCount());
 
   dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);

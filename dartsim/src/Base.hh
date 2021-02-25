@@ -398,7 +398,12 @@ class Base : public Implements3d<FeatureList<Feature>>
       return matches.front();
     else if (matches.size() > 1)
     {
-      ignerr << "Found " << matches.size() << " for " << _name << std::endl;
+      ignerr << "Found " << matches.size() << "skeletons that contain " << _name
+             << ":" << std::endl;
+      for (const auto &match : matches)
+      {
+        ignerr << match->getName() << "\n";
+      }
       return nullptr;
     }
     return nullptr;

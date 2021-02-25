@@ -53,6 +53,15 @@
          <parent>link1</parent>
          <child>nested_model::nested_link1</child>
       </joint>
+
+      <!-- Use duplicate link names for testing that these don't collide
+      with the links in the models above -->
+      <model name="nested_model2">
+        <link name="nested_link1"/>
+      </model>
+      <model name="nested_model3">
+        <link name="link1"/>
+      </model>
     </model>
   </world>
 </sdf>
