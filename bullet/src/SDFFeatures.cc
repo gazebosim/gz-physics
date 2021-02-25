@@ -335,21 +335,23 @@ Identity SDFFeatures::ConstructSdfJoint(
   joint->enableFeedback(true);
 
   /* TO-DO(Lobotuerk): find how to implement axis friction properly for bullet*/
+  double damping = 0;
   if (_sdfJoint.Axis(0) != nullptr)
   {
     double friction = _sdfJoint.Axis(0)->Friction();
+    damping = _sdfJoint.Axis(0)->Damping();
     joint->enableAngularMotor(true, 0.0, friction);
     joint->setLimit(_sdfJoint.Axis(0)->Lower(), _sdfJoint.Axis(0)->Upper());
-  }
-  else
-  {
-    joint->enableAngularMotor(true, 0.0, 0.0);
   }
 
   // Generate an identity for it and return it
   auto identity =
     this->AddJoint({_sdfJoint.Name(), joint, childId, parentId,
-                    static_cast<int>(type), axis});
+                    static_cast<int>(type), axis, damping});
+  if (damping != 0)
+  {
+    this->damping_joints.push_back(identity);
+  }
   return identity;
 }
 

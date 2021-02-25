@@ -93,6 +93,7 @@ struct JointInfo
   std::size_t parentLinkId;
   int constraintType;
   ignition::math::Vector3d axis;
+  double damping;
 };
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
@@ -202,6 +203,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
   public: std::unordered_map<std::size_t, std::size_t> collisionGroups;
+  public: std::vector<std::size_t> damping_joints;
 
   public: int internalTicksDivider = 0;
 
