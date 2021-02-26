@@ -113,6 +113,7 @@ double JointFeatures::GetJointVelocity(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
+  igndbg << "Joint Velocity: " << _id.id << " -> " << result << std::endl;
   return result;
 }
 
