@@ -28,7 +28,7 @@ namespace dartsim {
 /// \brief This class creates a custom derivative of dartsim's HeightmapShape class
 /// which allows an ignition::common::Heightmap to be converted into a HeightmapShape that
 /// can be used by dartsim.
-class CustomHeightmapShape : public dart::dynamics::HeightmapShape
+class CustomHeightmapShape : public dart::dynamics::HeightmapShape<double>
 {
   public: CustomHeightmapShape(
       const ignition::common::HeightmapData &_input,

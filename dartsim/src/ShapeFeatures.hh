@@ -57,9 +57,9 @@ struct ShapeFeatureList : FeatureList<
 //  SetSphereShapeProperties,
   AttachSphereShapeFeature,
 
-  mesh::GetHeightMapShapeProperties,
-//  mesh::SetHeightMapShapeProperties,
-  mesh::AttachHeightMapShapeFeature,
+  heightmap::GetHeightmapShapeProperties,
+//  heightmap::SetHeightmapShapeProperties,
+  heightmap::AttachHeightmapShapeFeature,
 
   mesh::GetMeshShapeProperties,
 //  mesh::SetMeshShapeProperties,
