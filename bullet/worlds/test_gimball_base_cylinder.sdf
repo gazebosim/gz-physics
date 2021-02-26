@@ -1,0 +1,131 @@
+<?xml version="1.0" ?>
+<!--
+  Cylinder test physics, taken from marble_husky_sensor_config_1
+
+  Expected behavior: cylinder falls to the ground, eventually stops moving.
+  It may bounce a bit before stopping based on restitution/friction characteristics
+-->
+<sdf version="1.6">
+  <world name="diff_drive">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="ignition::gazebo::systems::Physics">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="ignition::gazebo::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="ignition::gazebo::systems::SceneBroadcaster">
+    </plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="x1">
+      <pose>0 0 0.5 0 0 0</pose>
+      <static>0</static>
+
+      <link name="pan_gimbal_link">
+      <pose frame="">0.424 0 0.427 0 -0 0</pose>
+      <inertial>
+        <pose frame="">0 0 0 0 -0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+	  <ixx>0.000016875</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000016875</izz>	  
+        </inertia>
+      </inertial>
+      
+      <collision name="pan_gimbal_link_collision">
+      <pose frame="">0.0 0 0.0 0 -0 0</pose>
+
+      <geometry>
+        <cylinder>
+          <length>0.045</length>
+          <radius>0.014</radius>
+        </cylinder>
+      </geometry>
+
+      <surface>
+	<friction>
+            <ode>
+              <mu>0.5</mu>
+              <mu2>1</mu2>
+              <slip1>0.00062</slip1>
+              <slip2>0</slip2>
+              <fdir1>0 0 1</fdir1>
+            </ode>
+	</friction>
+        <contact>
+          <ode>
+            <kp>1e+07</kp>
+            <kd>1</kd>
+          </ode>
+        </contact>
+      </surface>
+      </collision>
+
+      <visual name="pan_gimbal_link_visual">
+        <pose frame="">0.0 0 0.0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.045</length>
+            <radius>0.014</radius>
+          </cylinder>
+        </geometry>
+      </visual>
+      
+      </link>
+      
+    </model>
+
+  </world>
+</sdf>

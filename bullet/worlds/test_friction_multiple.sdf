@@ -1,0 +1,658 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="shapes">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="ignition::gazebo::systems::Physics">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="ignition::gazebo::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="ignition::gazebo::systems::SceneBroadcaster">
+    </plugin>
+
+    <scene>
+      <ambient>1.0 1.0 1.0</ambient>
+      <background>0.8 0.8 0.8</background>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.8 0.8 0.8 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- <model name="tilted_plane"> -->
+    <!--   <static>true</static> -->
+    <!--   <link name="link"> -->
+    <!--     <collision name="collision"> -->
+    <!--       <geometry> -->
+    <!--         <plane> -->
+    <!--           <normal>0.173648178 0 0.984807753</normal> -->
+    <!--         </plane> -->
+    <!--       </geometry> -->
+    <!--     </collision> -->
+    <!--     <visual name="visual"> -->
+    <!--       <geometry> -->
+    <!--         <plane> -->
+    <!--           <normal>0.173648178 0 0.984807753</normal> -->
+    <!--           <size>100 100</size> -->
+    <!--         </plane> -->
+    <!--       </geometry> -->
+    <!--       <material> -->
+    <!--         <ambient>0. 0.8 0.8 1</ambient> -->
+    <!--         <diffuse>0. 0.8 0.8 1</diffuse> -->
+    <!--         <specular>0. 0.8 0.8 1</specular> -->
+    <!--       </material> -->
+    <!--     </visual> -->
+    <!--   </link> -->
+    <!-- </model> -->
+
+    <model name="tilted_box_fixed">
+      <pose>0 0 0 0.35 0 0</pose>
+      <static>true</static>
+      <link name="tilted_box_link">
+        <collision name="collision">
+	  <geometry>
+            <box>
+              <size>1000 1000 0.1</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+	  <geometry>
+            <box>
+              <size>1000 10000 0.1</size>
+            </box>
+	  </geometry>
+          <material>
+            <ambient>0. 0.8 0.8 1</ambient>
+            <diffuse>0. 0.8 0.8 1</diffuse>
+            <specular>0. 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="ground_plane">
+      <pose>0 0 -10 0 0 0</pose>
+      <static>true</static>
+      <link name="ground_plane_link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10000 10000</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0. 0.8 1</ambient>
+            <diffuse>0.8 0. 0.8 1</diffuse>
+            <specular>0.8 0. 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="box">
+      <pose>0 0 5 0 0 0</pose>
+      <link name="box_link">
+        <inertial>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="box_visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>1 0 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="box1">
+      <pose>3 0 5 0 0.78 0</pose>
+      <link name="box_link">
+        <inertial>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="box_visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>1 0 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="box2">
+      <pose>-3 0 5 0.78 0 0</pose>
+      <link name="box_link">
+        <inertial>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="box_visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>1 0 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="box3">
+      <pose>-4.5 0 5 0 0 0.78</pose>
+      <link name="box_link">
+        <inertial>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="box_visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>1 0 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="box4">
+      <pose>4.5 0 5 0 0 -0.78</pose>
+      <link name="box_link">
+        <inertial>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="box_visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>1 0 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder">
+      <pose>-1.5 0 5 0 0 0</pose>
+      <link name="cylinder_link">
+        <inertial>
+          <inertia>
+            <ixx>2</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>2</iyy>
+            <iyz>0</iyz>
+            <izz>2</izz>
+          </inertia>
+          <mass>2.0</mass>
+        </inertial>
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+	  <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="cylinder_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+            <specular>0 1 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder2">
+      <pose>-6 0 5 0.78 0 0</pose>
+      <link name="cylinder_link">
+        <inertial>
+          <inertia>
+            <ixx>2</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>2</iyy>
+            <iyz>0</iyz>
+            <izz>2</izz>
+          </inertia>
+          <mass>2.0</mass>
+        </inertial>
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+	  <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="cylinder_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+            <specular>0 1 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder3">
+      <pose>6 0 5 0 0.78 0</pose>
+      <link name="cylinder_link">
+        <inertial>
+          <inertia>
+            <ixx>2</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>2</iyy>
+            <iyz>0</iyz>
+            <izz>2</izz>
+          </inertia>
+          <mass>2.0</mass>
+        </inertial>
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+	  <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="cylinder_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+            <specular>0 1 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder4">
+      <pose>-7.5 0 5 1.58 0 1.58</pose>
+      <link name="cylinder_link">
+        <inertial>
+          <inertia>
+            <ixx>2</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>2</iyy>
+            <iyz>0</iyz>
+            <izz>2</izz>
+          </inertia>
+          <mass>2.0</mass>
+        </inertial>
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+	  <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="cylinder_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+            <specular>0 1 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cylinder5">
+      <pose>7.5 0 5 0 1.58 1.58</pose>
+      <link name="cylinder_link">
+        <inertial>
+          <inertia>
+            <ixx>2</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>2</iyy>
+            <iyz>0</iyz>
+            <izz>2</izz>
+          </inertia>
+          <mass>2.0</mass>
+        </inertial>
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+	  <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="cylinder_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.5</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+            <specular>0 1 0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sphere">
+      <pose>1.5 0 5 0 0 0</pose>
+      <link name="sphere_link">
+        <inertial>
+          <inertia>
+            <ixx>3</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>3</iyy>
+            <iyz>0</iyz>
+            <izz>3</izz>
+          </inertia>
+          <mass>3.0</mass>
+        </inertial>
+        <collision name="sphere_collision">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+	  <surface>
+              <friction>
+                  <ode>
+                      <mu>0.5</mu>
+                      <mu2>1</mu2>
+                      <slip1>0.00062</slip1>
+                      <slip2>0</slip2>
+                      <fdir1>0 0 1</fdir1>
+                  </ode>
+              </friction>
+          </surface>
+        </collision>
+
+        <visual name="sphere_visual">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0 0 1 1</ambient>
+            <diffuse>0 0 1 1</diffuse>
+            <specular>0 0 1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
