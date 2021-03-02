@@ -126,7 +126,7 @@ inline Eigen::Vector3d convert(btVector3 vec)
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: std::size_t entityCount = 0;
-  public: std::size_t collisionGroup = 1;
+  public: std::size_t collisionGroup = 6;
 
   public: inline std::size_t GetNextEntity()
   {
@@ -178,7 +178,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
    const auto id = this->GetNextEntity();
    this->collisions[id] = std::make_shared<CollisionInfo>(_collisionInfo);
-
    return this->GenerateIdentity(id, this->collisions.at(id));
   }
 
