@@ -118,11 +118,15 @@ Identity SDFFeatures::ConstructSdfLink(
   const auto &world = this->worlds.at(modelInfo->world)->world;
 
   // Models collide with everything except themselves
-  const int modelCollisionGroup = 1 << this->collisionGroups.at(_modelID);
-  const int collisionMask = 0xFFFFFFFF & ~modelCollisionGroup;
-  world->addRigidBody(body, modelCollisionGroup, collisionMask);
-  // world->addRigidBody(body);
+  // const int modelCollisionGroup = 1 << this->collisionGroups.at(_modelID);
+  // const int collisionMask = -1 ^ modelCollisionGroup;
+  // world->addRigidBody(body, modelCollisionGroup, collisionMask);
+  world->addRigidBody(body);
 
+  // bool isDynamic = !(body->isStaticObject() || body->isKinematicObject());
+  // int collisionFilterGroup = isDynamic ? 1 << this->collisionGroups.at(_modelID) : int(btBroadphaseProxy::StaticFilter);
+  // int collisionFilterMask = isDynamic ? int(btBroadphaseProxy::AllFilter) ^ collisionFilterGroup : int(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
+  // world->addRigidBody(body, collisionFilterGroup, collisionFilterMask);
   // Generate an identity for it
   const auto linkIdentity = this->AddLink({name, body, _modelID, pose, mass,
     linkInertiaDiag});
@@ -180,7 +184,7 @@ Identity SDFFeatures::ConstructSdfCollision(
                               ->GetElement("ode");
   const auto mu = odeFriction->Get<btScalar>("mu");
   const auto mu2 = odeFriction->Get<btScalar>("mu2");
-  const auto mu3 = odeFriction->Get<btScalar>("mu3");
+  // const auto mu3 = odeFriction->Get<btScalar>("mu3");
 
   // Get restitution
   // const auto restitution = surfaceElement->GetElement("bounce")
@@ -208,7 +212,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     // TODO(Blast545): Consider different approaches to set frictions
     // shape->setMargin(btScalar(0.0001));
     body->setFriction(1);
-    body->setAnisotropicFriction(btVector3(mu, mu2, mu3),
+    // body->setRollingFriction(0.25);
+    body->setAnisotropicFriction(btVector3(mu2, mu, 0),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())
