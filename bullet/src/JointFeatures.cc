@@ -146,8 +146,9 @@ double JointFeatures::GetJointAcceleration(
           btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
           btVector3 aux = childLink->getTotalTorque();
           math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
-
-          // TODO(blast545): divide inertia
+	  const btVector3 localInertia = childLink->getLocalInertia();
+	  math::Vector3 angularAcceleration(angularTorque[0]/localInertia[0],
+	    angularTorque[1]/localInertia[1], angularTorque[2]/localInertia[2]);
           result += globalAxis.Dot(angularTorque);
         }
         if (this->links.find(jointInfo->parentLinkId) != this->links.end())
@@ -156,6 +157,9 @@ double JointFeatures::GetJointAcceleration(
             this->links.at(jointInfo->parentLinkId)->link;
           btVector3 aux = parentLink->getTotalTorque();
           math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+	  const btVector3 localInertia = parentLink->getLocalInertia();
+	  math::Vector3 angularAcceleration(angularTorque[0]/localInertia[0],
+	    angularTorque[1]/localInertia[1], angularTorque[2]/localInertia[2]);
           result -= globalAxis.Dot(angularTorque);
         }
       }
