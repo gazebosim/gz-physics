@@ -142,7 +142,8 @@ class ShapeFeatures :
       const std::string &_name,
       const ignition::common::HeightmapData &_heightmapData,
       const Pose3d &_pose,
-      const LinearVector3d &_scale) override;
+      const LinearVector3d &_scale,
+      int _subSampling) override;
 
   // ----- Mesh Features -----
   public: Identity CastToMeshShape(

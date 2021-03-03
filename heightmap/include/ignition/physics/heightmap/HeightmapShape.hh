@@ -110,7 +110,8 @@ namespace heightmap
           const std::string &_name,
           const ignition::common::HeightmapData &_heightmapData,
           const PoseType &_pose = PoseType::Identity(),
-          const Dimensions &_scale = Dimensions::Ones());
+          const Dimensions &_scale = Dimensions::Ones(),
+          int _subSampling = 1);
     };
 
     public: template <typename PolicyT>
@@ -127,7 +128,8 @@ namespace heightmap
           const std::string &_name,
           const ignition::common::HeightmapData &_heightmapData,
           const PoseType &_pose,
-          const Dimensions &_scale) = 0;
+          const Dimensions &_scale,
+          int _subSampling) = 0;
     };
   };
 }

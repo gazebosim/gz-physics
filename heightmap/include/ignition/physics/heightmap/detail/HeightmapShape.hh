@@ -61,11 +61,13 @@ namespace heightmap
       const std::string &_name,
       const ignition::common::HeightmapData &_heightmapData,
       const PoseType &_pose,
-      const Dimensions &_scale) -> ShapePtrType
+      const Dimensions &_scale,
+      int _subSampling) -> ShapePtrType
   {
     return ShapePtrType(this->pimpl,
           this->template Interface<AttachHeightmapShapeFeature>()
-              ->AttachHeightmapShape(this->identity, _name, _heightmapData, _pose, _scale));
+              ->AttachHeightmapShape(this->identity, _name, _heightmapData, _pose,
+              _scale, _subSampling));
   }
 }
 }

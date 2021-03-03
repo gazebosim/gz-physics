@@ -250,9 +250,11 @@ Identity ShapeFeatures::AttachHeightmapShape(
     const std::string &_name,
     const ignition::common::HeightmapData &_heightmapData,
     const Pose3d &_pose,
-    const LinearVector3d &_scale)
+    const LinearVector3d &_scale,
+    int _subSampling)
 {
-  auto heightmap = std::make_shared<CustomHeightmapShape>(_heightmapData, _scale);
+  auto heightmap = std::make_shared<CustomHeightmapShape>(_heightmapData,
+      _scale, _subSampling);
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =

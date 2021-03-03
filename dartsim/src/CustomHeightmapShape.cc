@@ -19,6 +19,8 @@
 
 #include <memory>
 #include <string>
+#include <vector>
+#include <dart/dynamics/MeshShape.hpp>
 
 #include <ignition/common/Console.hh>
 #include <ignition/common/SubMesh.hh>
@@ -99,133 +101,133 @@ unsigned int GetPrimitiveType(
 CustomHeightmapShape::CustomHeightmapShape(
     const ignition::common::HeightmapData &_input,
     const Eigen::Vector3d &_size,
-    const int _subSampling)
-  : dart::dynamics::HeightmapShape()
+    int _subSampling)
+  : dart::dynamics::HeightmapShape<double>()
 {
-  std::vector<float> heights;
-  const bool flipY = false;
-  const int vertSize = (_input.GetWidth() * _subSampling) - _subSampling + 1;
-  ignition::math::Vector3d scale(_size(0) / vertSize, _size(1) / vertSize, 1.0);
-  _input.FillHeightMap(_subSampling, vertSize, _size, scale, flipY, heights);
-  // Create the root
-  aiNode* node = new aiNode;
+  // std::vector<float> heights;
+  // const bool flipY = false;
+  // const int vertSize = (_input.GetWidth() * _subSampling) - _subSampling + 1;
+  // ignition::math::Vector3d scale(_size(0) / vertSize, _size(1) / vertSize, 1.0);
+  // _input.FillHeightMap(_subSampling, vertSize, _size, scale, flipY, heights);
+  // // Create the root
+  // aiNode* node = new aiNode;
 
-  // Allocate space for pointer arrays
-  const unsigned int numSubMeshes = _input.SubMeshCount();
-  node->mNumMeshes = numSubMeshes;
-  node->mMeshes = new unsigned int[numSubMeshes];
-  for (unsigned int i = 0; i < numSubMeshes; ++i)
-    node->mMeshes[i] = i;
+  // // Allocate space for pointer arrays
+  // const unsigned int numSubMeshes = _input.SubMeshCount();
+  // node->mNumMeshes = numSubMeshes;
+  // node->mMeshes = new unsigned int[numSubMeshes];
+  // for (unsigned int i = 0; i < numSubMeshes; ++i)
+  //   node->mMeshes[i] = i;
 
-  aiScene *scene = new aiScene;
-  scene->mNumMeshes = numSubMeshes;
-  scene->mMeshes = new aiMesh*[numSubMeshes];
-  scene->mRootNode = node;
+  // aiScene *scene = new aiScene;
+  // scene->mNumMeshes = numSubMeshes;
+  // scene->mMeshes = new aiMesh*[numSubMeshes];
+  // scene->mRootNode = node;
 
-  // NOTE(MXG): We are ignoring materials and colors from the mesh, because
-  // gazebo will only use dartsim for physics, not for rendering.
-  scene->mMaterials = nullptr;
+  // // NOTE(MXG): We are ignoring materials and colors from the mesh, because
+  // // gazebo will only use dartsim for physics, not for rendering.
+  // scene->mMaterials = nullptr;
 
-  // Fill in submesh contents
-  for (unsigned int i = 0; i < numSubMeshes; ++i)
-  {
-    const ignition::common::SubMeshPtr &inputSubmesh =
-        _input.SubMeshByIndex(i).lock();
+  // // Fill in submesh contents
+  // for (unsigned int i = 0; i < numSubMeshes; ++i)
+  // {
+  //   const ignition::common::SubMeshPtr &inputSubmesh =
+  //       _input.SubMeshByIndex(i).lock();
 
-    scene->mMeshes[i] = nullptr;
+  //   scene->mMeshes[i] = nullptr;
 
-    if (!inputSubmesh)
-    {
-      ignerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i
-             << "] in the input mesh [" << _input.Path() << "] has expired!\n";
-      continue;
-    }
+  //   if (!inputSubmesh)
+  //   {
+  //     ignerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i
+  //            << "] in the input mesh [" << _input.Path() << "] has expired!\n";
+  //     continue;
+  //   }
 
-    std::unique_ptr<aiMesh> mesh = std::make_unique<aiMesh>();
-    mesh->mMaterialIndex = static_cast<unsigned int>(-1);
+  //   std::unique_ptr<aiMesh> mesh = std::make_unique<aiMesh>();
+  //   mesh->mMaterialIndex = static_cast<unsigned int>(-1);
 
-    const unsigned int numVertices = inputSubmesh->VertexCount();
-    if (inputSubmesh->NormalCount() != numVertices)
-    {
-      ignerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i << ":"
-             << inputSubmesh->Name() << "] in the input mesh [" << _input.Path()
-             << "] does not have a normal count ["
-             << inputSubmesh->NormalCount() << "] that matches its vertex "
-             << "count [" << numVertices << "]. This submesh will be "
-             << "ignored!\n";
-      continue;
-    }
+  //   const unsigned int numVertices = inputSubmesh->VertexCount();
+  //   if (inputSubmesh->NormalCount() != numVertices)
+  //   {
+  //     ignerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i << ":"
+  //            << inputSubmesh->Name() << "] in the input mesh [" << _input.Path()
+  //            << "] does not have a normal count ["
+  //            << inputSubmesh->NormalCount() << "] that matches its vertex "
+  //            << "count [" << numVertices << "]. This submesh will be "
+  //            << "ignored!\n";
+  //     continue;
+  //   }
 
-    mesh->mNumVertices = numVertices;
-    mesh->mVertices = new aiVector3D[numVertices];
-    mesh->mNormals = new aiVector3D[numVertices];
+  //   mesh->mNumVertices = numVertices;
+  //   mesh->mVertices = new aiVector3D[numVertices];
+  //   mesh->mNormals = new aiVector3D[numVertices];
 
-    const unsigned int numVerticesPerFace =
-        CheckNumVerticesPerFaces(*inputSubmesh, i, _input.Path());
-    if (0 == numVerticesPerFace)
-      continue;
+  //   const unsigned int numVerticesPerFace =
+  //       CheckNumVerticesPerFaces(*inputSubmesh, i, _input.Path());
+  //   if (0 == numVerticesPerFace)
+  //     continue;
 
-    mesh->mPrimitiveTypes = GetPrimitiveType(*inputSubmesh);
-    if (0 == mesh->mPrimitiveTypes)
-      continue;
+  //   mesh->mPrimitiveTypes = GetPrimitiveType(*inputSubmesh);
+  //   if (0 == mesh->mPrimitiveTypes)
+  //     continue;
 
-    const unsigned int numFaces = static_cast<unsigned int>(
-          static_cast<double>(inputSubmesh->IndexCount())
-          /static_cast<double>(numVerticesPerFace));
+  //   const unsigned int numFaces = static_cast<unsigned int>(
+  //         static_cast<double>(inputSubmesh->IndexCount())
+  //         /static_cast<double>(numVerticesPerFace));
 
-    // Fill in the contents of each submesh
-    mesh->mNumFaces = numFaces;
-    mesh->mFaces = new aiFace[numFaces];
-    unsigned int currentPrimitiveIndex = 0;
-    bool primitiveIndexOverflow = false;
-    for (unsigned int j = 0; j < numFaces; ++j)
-    {
-      mesh->mFaces[j].mNumIndices = numVerticesPerFace;
-      mesh->mFaces[j].mIndices = new unsigned int[numVerticesPerFace];
+  //   // Fill in the contents of each submesh
+  //   mesh->mNumFaces = numFaces;
+  //   mesh->mFaces = new aiFace[numFaces];
+  //   unsigned int currentPrimitiveIndex = 0;
+  //   bool primitiveIndexOverflow = false;
+  //   for (unsigned int j = 0; j < numFaces; ++j)
+  //   {
+  //     mesh->mFaces[j].mNumIndices = numVerticesPerFace;
+  //     mesh->mFaces[j].mIndices = new unsigned int[numVerticesPerFace];
 
-      for (unsigned int k = 0; k < numVerticesPerFace; ++k)
-      {
-        int vertexIndex = inputSubmesh->Index(currentPrimitiveIndex);
-        if (vertexIndex == -1)
-        {
-          ignwarn << "[dartsim::CustomMeshShape] The submesh [" << i << ":"
-                  << inputSubmesh->Name() << "] of mesh [" << _input.Path()
-                  << "] overflowed at primitive index ["
-                  << currentPrimitiveIndex << "]. Its expected number of "
-                  << "primitive indices is [" << _input.IndexCount()
-                  << "]. This submesh will be ignored.\n";
-          primitiveIndexOverflow = true;
-          break;
-        }
+  //     for (unsigned int k = 0; k < numVerticesPerFace; ++k)
+  //     {
+  //       int vertexIndex = inputSubmesh->Index(currentPrimitiveIndex);
+  //       if (vertexIndex == -1)
+  //       {
+  //         ignwarn << "[dartsim::CustomMeshShape] The submesh [" << i << ":"
+  //                 << inputSubmesh->Name() << "] of mesh [" << _input.Path()
+  //                 << "] overflowed at primitive index ["
+  //                 << currentPrimitiveIndex << "]. Its expected number of "
+  //                 << "primitive indices is [" << _input.IndexCount()
+  //                 << "]. This submesh will be ignored.\n";
+  //         primitiveIndexOverflow = true;
+  //         break;
+  //       }
 
-        mesh->mFaces[j].mIndices[k] = static_cast<unsigned int>(vertexIndex);
-        ++currentPrimitiveIndex;
-      }
+  //       mesh->mFaces[j].mIndices[k] = static_cast<unsigned int>(vertexIndex);
+  //       ++currentPrimitiveIndex;
+  //     }
 
-      if (primitiveIndexOverflow)
-        break;
-    }
+  //     if (primitiveIndexOverflow)
+  //       break;
+  //   }
 
-    if (primitiveIndexOverflow)
-      continue;
+  //   if (primitiveIndexOverflow)
+  //     continue;
 
-    for (unsigned int j = 0; j < numVertices; ++j)
-    {
-      const ignition::math::Vector3d &v = inputSubmesh->Vertex(j);
-      for (unsigned int k = 0; k < 3; ++k)
-        mesh->mVertices[j][k] = static_cast<ai_real>(v[k]);
+  //   for (unsigned int j = 0; j < numVertices; ++j)
+  //   {
+  //     const ignition::math::Vector3d &v = inputSubmesh->Vertex(j);
+  //     for (unsigned int k = 0; k < 3; ++k)
+  //       mesh->mVertices[j][k] = static_cast<ai_real>(v[k]);
 
-      const ignition::math::Vector3d &n = inputSubmesh->Normal(j);
-      for (unsigned int k = 0; k < 3; ++k)
-        mesh->mNormals[j][k] = static_cast<ai_real>(n[k]);
-    }
+  //     const ignition::math::Vector3d &n = inputSubmesh->Normal(j);
+  //     for (unsigned int k = 0; k < 3; ++k)
+  //       mesh->mNormals[j][k] = static_cast<ai_real>(n[k]);
+  //   }
 
-    scene->mMeshes[i] = mesh.release();
-  }
+  //   scene->mMeshes[i] = mesh.release();
+  // }
 
-  this->mMesh = scene;
-  this->mIsBoundingBoxDirty = true;
-  this->mIsVolumeDirty = true;
+  // this->mMesh = scene;
+  // this->mIsBoundingBoxDirty = true;
+  // this->mIsVolumeDirty = true;
 }
 
 }
