@@ -108,7 +108,7 @@ namespace heightmap
 
       public: ShapePtrType AttachHeightmapShape(
           const std::string &_name,
-          const ignition::common::HeightmapData &_heightmapData,
+          ignition::common::HeightmapData &_heightmapData,
           const PoseType &_pose = PoseType::Identity(),
           const Dimensions &_scale = Dimensions::Ones(),
           int _subSampling = 1);
@@ -126,7 +126,7 @@ namespace heightmap
       public: virtual Identity AttachHeightmapShape(
           const Identity &_linkID,
           const std::string &_name,
-          const ignition::common::HeightmapData &_heightmapData,
+          ignition::common::HeightmapData &_heightmapData,
           const PoseType &_pose,
           const Dimensions &_scale,
           int _subSampling) = 0;

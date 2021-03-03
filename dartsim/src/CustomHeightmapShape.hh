@@ -31,7 +31,7 @@ namespace dartsim {
 class CustomHeightmapShape : public dart::dynamics::HeightmapShape<double>
 {
   public: CustomHeightmapShape(
-      const ignition::common::HeightmapData &_input,
+      common::HeightmapData &_input,
       const Eigen::Vector3d &_size,
       const int _subSampling);
 };

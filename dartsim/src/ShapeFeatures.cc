@@ -248,7 +248,7 @@ LinearVector3d ShapeFeatures::GetHeightmapShapeScale(
 Identity ShapeFeatures::AttachHeightmapShape(
     const Identity &_linkID,
     const std::string &_name,
-    const ignition::common::HeightmapData &_heightmapData,
+    ignition::common::HeightmapData &_heightmapData,
     const Pose3d &_pose,
     const LinearVector3d &_scale,
     int _subSampling)

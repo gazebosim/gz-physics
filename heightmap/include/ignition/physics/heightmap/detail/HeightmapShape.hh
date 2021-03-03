@@ -59,7 +59,7 @@ namespace heightmap
   template <typename PolicyT, typename FeaturesT>
   auto AttachHeightmapShapeFeature::Link<PolicyT, FeaturesT>::AttachHeightmapShape(
       const std::string &_name,
-      const ignition::common::HeightmapData &_heightmapData,
+      ignition::common::HeightmapData &_heightmapData,
       const PoseType &_pose,
       const Dimensions &_scale,
       int _subSampling) -> ShapePtrType
