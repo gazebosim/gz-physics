@@ -205,7 +205,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     // shape->setMargin(btScalar(0.0001));
     body->setFriction(1);
     // body->setRollingFriction(0.25);
-    body->setAnisotropicFriction(btVector3(mu2, mu, 1),
+    body->setAnisotropicFriction(btVector3(mu, mu2, 1),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())
