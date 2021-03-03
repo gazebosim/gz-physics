@@ -1,4 +1,3 @@
-
 ign_add_component(heightmap INTERFACE
   GET_TARGET_NAME heightmap)
 

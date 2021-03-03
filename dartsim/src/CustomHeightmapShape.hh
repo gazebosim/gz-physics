@@ -25,11 +25,15 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-/// \brief This class creates a custom derivative of dartsim's HeightmapShape class
-/// which allows an ignition::common::Heightmap to be converted into a HeightmapShape that
-/// can be used by dartsim.
+/// \brief This class creates a custom derivative of dartsim's HeightmapShape
+/// class which allows an ignition::common::Heightmap to be converted into a
+/// HeightmapShape that can be used by dartsim.
 class CustomHeightmapShape : public dart::dynamics::HeightmapShape<double>
 {
+  /// \brief Constructor
+  /// \param[in] _input Holds heightmap data.
+  /// \param[in] _size Heightmap size in meters.
+  /// \param[in] _subSampling How much to subsample.
   public: CustomHeightmapShape(
       common::HeightmapData &_input,
       const Eigen::Vector3d &_size,

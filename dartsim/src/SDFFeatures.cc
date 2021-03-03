@@ -304,8 +304,6 @@ static ShapeAndTransform ConstructPlane(
 static ShapeAndTransform ConstructHeightmap(
     const ::sdf::Heightmap & /*_heightmap*/)
 {
-  // TODO(MXG): Look into what kind of heightmap URI we get here. Will it just
-  // be a local file name, or do we need to resolve the URI?
   ignerr << "Heightmap construction from an SDF has not been implemented yet "
          << "for dartsim.\n";
   return {nullptr};

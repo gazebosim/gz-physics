@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ namespace heightmap
       public: using Dimensions =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-      /// \brief Get the size of the triangle heightmap.
-      /// \returns the size of the triangle heightmap.
+      /// \brief Get the size of the heightmap.
+      /// \returns the size of the heightmap.
       public: Dimensions GetSize() const;
 
       /// \brief Get the scaling factor that is being applied to the heightmap.
@@ -67,31 +67,7 @@ namespace heightmap
   };
 
   /////////////////////////////////////////////////
-  class SetHeightmapShapeProperties
-      : public virtual FeatureWithRequirements<HeightmapShapeCast>
-  {
-    public: template <typename PolicyT, typename FeaturesT>
-    class HeightmapShape : public virtual Entity<PolicyT, FeaturesT>
-    {
-      public: using Dimensions =
-          typename FromPolicy<PolicyT>::template Use<LinearVector>;
-
-      public: void SetScale(const Dimensions &_dimensions);
-    };
-
-    public: template <typename PolicyT>
-    class Implementation : public virtual Feature::Implementation<PolicyT>
-    {
-      public: using Dimensions =
-          typename FromPolicy<PolicyT>::template Use<LinearVector>;
-
-      public: void SetHeightmapShapeScale(
-          const Identity &_heightmapID,
-          const Dimensions &_dimensions) = 0;
-    };
-  };
-
-  /////////////////////////////////////////////////
+  /// \brief Attach a heightmap shape to a link.
   class AttachHeightmapShapeFeature
       : public virtual FeatureWithRequirements<HeightmapShapeCast>
   {
@@ -106,11 +82,16 @@ namespace heightmap
 
       public: using ShapePtrType = HeightmapShapePtr<PolicyT, FeaturesT>;
 
+      /// \brief Attach a heightmap shape to a link.
+      /// \param[in] _name Shape's name.
+      /// \param[in] _pose Position in the world.
+      /// \param[in] _size Heightmap total size in meters.
+      /// \param[in] _subSampling Increase sampling to improve resolution.
       public: ShapePtrType AttachHeightmapShape(
           const std::string &_name,
           ignition::common::HeightmapData &_heightmapData,
-          const PoseType &_pose = PoseType::Identity(),
-          const Dimensions &_scale = Dimensions::Ones(),
+          const PoseType &_pose,
+          const Dimensions &_size,
           int _subSampling = 1);
     };
 

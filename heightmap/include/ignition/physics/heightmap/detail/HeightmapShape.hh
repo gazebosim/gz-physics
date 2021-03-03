@@ -48,26 +48,17 @@ namespace heightmap
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
-  void SetHeightmapShapeProperties::HeightmapShape<PolicyT, FeaturesT>::SetScale(
-      const Dimensions &_dimensions)
-  {
-    this->template Interface<SetHeightmapShapeProperties>()
-        ->SetHeightmapShapeScale(this->identity, _dimensions);
-  }
-
-  /////////////////////////////////////////////////
-  template <typename PolicyT, typename FeaturesT>
   auto AttachHeightmapShapeFeature::Link<PolicyT, FeaturesT>::AttachHeightmapShape(
       const std::string &_name,
       ignition::common::HeightmapData &_heightmapData,
       const PoseType &_pose,
-      const Dimensions &_scale,
+      const Dimensions &_size,
       int _subSampling) -> ShapePtrType
   {
     return ShapePtrType(this->pimpl,
           this->template Interface<AttachHeightmapShapeFeature>()
               ->AttachHeightmapShape(this->identity, _name, _heightmapData, _pose,
-              _scale, _subSampling));
+              _size, _subSampling));
   }
 }
 }

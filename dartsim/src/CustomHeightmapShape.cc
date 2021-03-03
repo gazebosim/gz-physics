@@ -17,14 +17,8 @@
 
 #include "CustomHeightmapShape.hh"
 
-#include <memory>
-#include <string>
 #include <vector>
-#include <dart/dynamics/MeshShape.hpp>
 #include <ignition/math/eigen3/Conversions.hh>
-
-#include <ignition/common/Console.hh>
-#include <ignition/common/SubMesh.hh>
 
 namespace ignition {
 namespace physics {
