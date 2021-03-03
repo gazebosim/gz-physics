@@ -318,9 +318,7 @@ void JointFeatures::SetJointVelocityCommand(
   (void) _dof;
   const auto &jointInfo = this->joints.at(_id.id);
 
-  // Take extra care that the value is finite. A nan can cause the DART
-  // constraint solver to fail, which will in turn either cause a crash or
-  // collisions to fail
+  // Take extra care that the value is finite
   if (!std::isfinite(_value))
   {
     ignerr << "Invalid joint velocity value [" << _value << "] set on joint ["
@@ -348,9 +346,8 @@ void JointFeatures::SetJointVelocityCommand(
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
   (void) _id;
-  // TO-DO: Degrees of freedom may need to be saved in the JointInfo struct
-  // As bullet's constraints do not save this info
-  // igndbg << "Dummy GetJointDegreesOfFreedom\n";
+  // Degrees of freedom may need to be saved in the JointInfo struct
+  // Currently supporting 1DoF joints
   return 1;
 }
 

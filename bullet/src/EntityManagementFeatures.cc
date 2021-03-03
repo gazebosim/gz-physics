@@ -112,9 +112,9 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   {
     return false;
   }
+
   // Current implementation does not include joints
   // Those should be removed here before removing the model
-
   auto model = this->models.at(_modelIndex);
   // Clean up collisions
   std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it =
@@ -156,7 +156,6 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 bool EntityManagementFeatures::RemoveModelByName(
     const Identity & _worldID, const std::string & _modelName )
 {
-
   // Check if there is a model with the requested name
   bool found = false;
   size_t index_id = 0;
@@ -174,7 +173,6 @@ bool EntityManagementFeatures::RemoveModelByName(
 
   if (found)
   {
-    // Use a not valid Identity, not used
     return this->RemoveModelByIndex(_worldID, index_id);
   }
 
