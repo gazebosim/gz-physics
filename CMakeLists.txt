@@ -35,10 +35,10 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find ignition-common
-ign_find_package(ignition-common3
+ign_find_package(ignition-common4
   COMPONENTS graphics profiler
   REQUIRED_BY mesh dartsim tpe tpelib)
-set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
+set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-math
@@ -49,6 +49,11 @@ set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 # Find ignition-plugin
 ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all VERSION 1.1)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
+
+#--------------------------------------
+# Find ignition-utils
+ign_find_package(ignition-utils1 REQUIRED COMPONENTS cli)
+set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
 
 #--------------------------------------
 # Find Eigen

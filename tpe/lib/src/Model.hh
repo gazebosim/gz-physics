@@ -18,7 +18,7 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_MODEL_HH_
 
-#include <ignition/utilities/SuppressWarning.hh>
+#include <ignition/utils/SuppressWarning.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
 
@@ -51,6 +51,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \brief Add a nested model
   /// \return Newly created nested model
   public: Entity &AddModel();
+
+  /// \brief Set the canonical link of model
+  public: void SetCanonicalLink(
+    std::size_t linkId = kNullEntityId);
 
   /// \brief Get the canonical link of model
   /// \return Entity the canonical (first) link
