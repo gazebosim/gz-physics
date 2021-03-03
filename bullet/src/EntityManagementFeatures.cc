@@ -55,9 +55,28 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   {
     return false;
   }
-  // Current implementation does not include joints
-  // Those should be removed here before removing the model
+
   auto model = this->models.at(_modelID);
+  auto bulletWorld = this->worlds.at(model->world)->world;
+
+  // Clean up joints, this section considers both links in the joint
+  // are part of the same world
+  std::unordered_map<std::size_t, JointInfoPtr>::iterator joint_it =
+    this->joints.begin();
+  while (joint_it != this->joints.end())
+  {
+    const auto &jointInfo = joint_it->second;
+    const auto &childLinkInfo = this->links[jointInfo->childLinkId];
+    if (childLinkInfo->model.id == _modelID.id)
+    {
+      btTypedConstraint* constraint = jointInfo->joint;
+      bulletWorld->removeConstraint(constraint);
+      delete constraint;
+      joint_it = this->joints.erase(joint_it);
+      continue;
+    }
+    joint_it++;
+  }
 
   // Clean up collisions
   std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it =
@@ -82,7 +101,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
     const auto &linkInfo = it->second;
     if (linkInfo->model.id == _modelID.id)
     {
-      this->worlds.at(model->world)->world->removeRigidBody(linkInfo->link);
+      bulletWorld->removeRigidBody(linkInfo->link);
       delete linkInfo->link;
       it = this->links.erase(it);
       continue;
@@ -113,9 +132,28 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     return false;
   }
 
-  // Current implementation does not include joints
-  // Those should be removed here before removing the model
   auto model = this->models.at(_modelIndex);
+  auto bulletWorld = this->worlds.at(model->world)->world;
+
+  // Clean up joints, this section considers both links in the joint
+  // are part of the same world
+  std::unordered_map<std::size_t, JointInfoPtr>::iterator joint_it =
+    this->joints.begin();
+  while (joint_it != this->joints.end())
+  {
+    const auto &jointInfo = joint_it->second;
+    const auto &childLinkInfo = this->links[jointInfo->childLinkId];
+    if (childLinkInfo->model.id == _modelIndex)
+    {
+      btTypedConstraint* constraint = jointInfo->joint;
+      bulletWorld->removeConstraint(constraint);
+      delete constraint;
+      joint_it = this->joints.erase(joint_it);
+      continue;
+    }
+    joint_it++;
+  }
+
   // Clean up collisions
   std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it =
     this->collisions.begin();
@@ -140,7 +178,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 
     if (linkInfo->model.id == _modelIndex)
     {
-      this->worlds.at(model->world)->world->removeRigidBody(linkInfo->link);
+      bulletWorld->removeRigidBody(linkInfo->link);
       it = this->links.erase(it);
       continue;
     }
