@@ -53,6 +53,7 @@ Identity SDFFeatures::ConstructSdfModel(
   const std::string name = _sdfModel.Name();
   const math::Pose3d pose = _sdfModel.RawPose();
   const bool isStatic = _sdfModel.Static();
+  // Links within a model will collide unless these are chained with a joint
   // const bool selfCollide = _sdfModel.SelfCollide();
 
   const auto modelIdentity = this->AddModel({name, _worldID, isStatic, pose});
@@ -99,9 +100,7 @@ Identity SDFFeatures::ConstructSdfLink(
   baseTransform.setOrigin(convertVec(poseTranslation));
   baseTransform.setBasis(convertMat(poseLinear));
 
-  // Create link
-  // (TO-DO: do we want to use MotionState?)
-  //  2nd part: Do motion state use the same transformation?
+  // Fixed links have 0 mass and inertia
   if (this->models.at(_modelID)->fixed)
   {
     mass = 0;
@@ -167,9 +166,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     shape = new btStaticPlaneShape(normal, 0);
   }
 
-  // TODO(lobotuerk) find if there's a  way to use friction and related
-  // info in bullet dynamics
-
+  // TODO(lobotuerk/blast545) Add additional friction parameters for bullet
+  // Currently supporting mu and mu2
   const auto &surfaceElement = _collision.Element()->GetElement("surface");
 
   // Get friction
@@ -178,7 +176,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   const auto mu = odeFriction->Get<btScalar>("mu");
   const auto mu2 = odeFriction->Get<btScalar>("mu2");
 
-  // Get restitution
+  // Restitution coefficient not tested
   // const auto restitution = surfaceElement->GetElement("bounce")
   //                             ->Get<btScalar>("restitution_coefficient");
   if (shape != nullptr)
@@ -186,11 +184,6 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &linkInfo = this->links.at(_linkID);
     const auto &body = linkInfo->link;
     const auto &modelID = linkInfo->model;
-
-    // TODO(LOBOTUERK) figure out why this was here
-    // if (!modelInfo->fixed){
-    //   return this->GenerateInvalidId();
-    // }
 
     const math::Pose3d pose = _collision.RawPose();
     const Eigen::Isometry3d poseIsometry =
@@ -201,10 +194,9 @@ Identity SDFFeatures::ConstructSdfCollision(
     baseTransform.setOrigin(convertVec(poseTranslation));
     baseTransform.setBasis(convertMat(poseLinear));
 
-    // TODO(Blast545): Consider different approaches to set frictions
     // shape->setMargin(btScalar(0.0001));
-    body->setFriction(1);
     // body->setRollingFriction(0.25);
+    body->setFriction(1);
     body->setAnisotropicFriction(btVector3(mu, mu2, 1),
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
@@ -223,9 +215,6 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
-  // const auto &parentModelInfo =
-  //  *this->ReferenceInterface<ModelInfo>(_modelID);
-
   // Check supported Joints
   const ::sdf::JointType type = _sdfJoint.Type();
   if( type != ::sdf::JointType::REVOLUTE && type != ::sdf::JointType::FIXED )
