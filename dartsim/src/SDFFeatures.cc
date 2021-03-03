@@ -326,16 +326,16 @@ static ShapeAndTransform ConstructGeometry(
   {
     // TODO(anyone): Replace this code when Capsule is supported by DART
     common::MeshManager *meshMgr = common::MeshManager::Instance();
-    std::string ellipsoidMeshName = std::string("capsule_mesh")
+    std::string capsuleMeshName = std::string("capsule_mesh")
       + "_" + std::to_string(_geometry.CapsuleShape()->Radius())
       + "_" + std::to_string(_geometry.CapsuleShape()->Length());
     meshMgr->CreateCapsule(
-      ellipsoidMeshName,
+      capsuleMeshName,
       _geometry.CapsuleShape()->Radius(),
       _geometry.CapsuleShape()->Length(),
       6, 6);
     const ignition::common::Mesh * _mesh =
-      meshMgr->MeshByName(ellipsoidMeshName);
+      meshMgr->MeshByName(capsuleMeshName);
 
     auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
     auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);

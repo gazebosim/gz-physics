@@ -223,7 +223,6 @@ Identity ShapeFeatures::AttachCylinderShape(
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToEllipsoidShape(const Identity &_shapeID) const
 {
-  std::cerr << "CastToEllipsoidShape" << '\n';
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
 
   const dart::dynamics::ShapePtr &shape = shapeInfo->node->getShape();
@@ -254,7 +253,6 @@ Identity ShapeFeatures::AttachEllipsoidShape(
     const Vector3d _radii,
     const Pose3d &_pose)
 {
-  ignerr << "AttachEllipsoidShape" << '\n';
   common::MeshManager *meshMgr = common::MeshManager::Instance();
   std::string ellipsoidMeshName = _name + "_ellipsoid_mesh"
     + "_" + std::to_string(_radii[0])
