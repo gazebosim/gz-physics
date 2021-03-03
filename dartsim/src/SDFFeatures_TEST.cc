@@ -76,7 +76,7 @@ auto LoadEngine()
 }
 
 /////////////////////////////////////////////////
-World LoadWorld(const std::string &_world)
+WorldPtr LoadWorld(const std::string &_world)
 {
   auto engine = LoadEngine();
   EXPECT_NE(nullptr, engine);
@@ -95,16 +95,17 @@ World LoadWorld(const std::string &_world)
   auto world = engine->ConstructWorld(*sdfWorld);
   EXPECT_NE(nullptr, world);
 
-  return *world;
+  return world;
 }
 
 /////////////////////////////////////////////////
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckDartsimData)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  ASSERT_NE(nullptr, world);
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   ASSERT_EQ(6u, dartWorld->getNumSkeletons());
@@ -207,12 +208,13 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
 // Test that joint limits are working by running the simulation
 TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  ASSERT_NE(nullptr, world);
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
-  const auto model = world.GetModel("joint_limit_test");
+  const auto model = world->GetModel("joint_limit_test");
   const dart::dynamics::SkeletonPtr skeleton =
       dartWorld->getSkeleton("joint_limit_test");
   ASSERT_NE(nullptr, skeleton);
@@ -326,22 +328,23 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
 /////////////////////////////////////////////////
 TEST(SDFFeatures_TEST, WorldWithNestedModel)
 {
-  World world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
-  EXPECT_EQ(4u, world.GetModelCount());
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
+  ASSERT_NE(nullptr, world);
+  EXPECT_EQ(4u, world->GetModelCount());
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   // check top level model
-  EXPECT_EQ("parent_model", world.GetModel(0)->GetName());
-  EXPECT_EQ("parent_model::nested_model", world.GetModel(1)->GetName());
-  auto parentModel = world.GetModel("parent_model");
+  EXPECT_EQ("parent_model", world->GetModel(0)->GetName());
+  EXPECT_EQ("parent_model::nested_model", world->GetModel(1)->GetName());
+  auto parentModel = world->GetModel("parent_model");
   ASSERT_NE(nullptr, parentModel);
 
   auto joint1 = parentModel->GetJoint("joint1");
   EXPECT_NE(nullptr, joint1);
 
-  auto nestedModel = world.GetModel("parent_model::nested_model");
+  auto nestedModel = world->GetModel("parent_model::nested_model");
   ASSERT_NE(nullptr, nestedModel);
 
   auto nestedJoint = parentModel->GetJoint("nested_joint");
@@ -362,15 +365,16 @@ TEST(SDFFeatures_TEST, WorldWithNestedModel)
 /////////////////////////////////////////////////
 TEST(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 {
-  World world =
+  WorldPtr world =
     LoadWorld(TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf");
-  EXPECT_EQ(2u, world.GetModelCount());
+  ASSERT_NE(nullptr, world);
+  EXPECT_EQ(2u, world->GetModelCount());
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   // check top level model
-  auto parentModel = world.GetModel("parent_model");
+  auto parentModel = world->GetModel("parent_model");
   ASSERT_NE(nullptr, parentModel);
   EXPECT_EQ("parent_model", parentModel->GetName());
   EXPECT_EQ(1u, parentModel->GetJointCount());
@@ -383,7 +387,7 @@ TEST(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
   auto link1 = parentModel->GetLink("link1");
   EXPECT_NE(nullptr, link1);
 
-  auto nestedModel = world.GetModel("parent_model::nested_model");
+  auto nestedModel = world->GetModel("parent_model::nested_model");
   ASSERT_NE(nullptr, nestedModel);
   EXPECT_EQ("parent_model::nested_model", nestedModel->GetName());
   EXPECT_EQ(2u, nestedModel->GetLinkCount());
@@ -406,9 +410,10 @@ TEST(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 // Test that joint type falls back to fixed if the type is not supported
 TEST(SDFFeatures_TEST, FallbackToFixedJoint)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  ASSERT_NE(nullptr, world);
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
@@ -430,10 +435,11 @@ TEST(SDFFeatures_TEST, FallbackToFixedJoint)
 /////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, LinkRelativeTo)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  ASSERT_NE(nullptr, world);
   const std::string modelName = "link_relative_to";
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
@@ -461,10 +467,11 @@ TEST(SDFFeatures_FrameSemantics, LinkRelativeTo)
 /////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  ASSERT_NE(nullptr, world);
   const std::string modelName = "collision_relative_to";
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
