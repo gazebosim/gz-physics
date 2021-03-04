@@ -113,7 +113,8 @@ WorldPtr LoadWorldWhole(const std::string &_world)
 }
 
 /////////////////////////////////////////////////
-static ignition::math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
+static ignition::math::Pose3d ResolveSdfPose(
+    const ::sdf::SemanticPose &_semPose)
 {
   ignition::math::Pose3d pose;
   ::sdf::Errors errors = _semPose.Resolve(pose);

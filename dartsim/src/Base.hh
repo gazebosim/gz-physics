@@ -329,7 +329,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: void RemoveModelImpl(const std::size_t _worldID,
                                const std::size_t _modelID)
   {
-    // TODO (addisu) Handle removal of nested models
+    // TODO(addisu) Handle removal of nested models
     const auto &world = this->worlds.at(_worldID);
     auto skel = this->models.at(_modelID)->model;
     // Remove the contents of the skeleton from local entity storage containers
