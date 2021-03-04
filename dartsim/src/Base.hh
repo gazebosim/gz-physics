@@ -288,7 +288,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     return std::forward_as_tuple(id, entry);
   }
 
-  public: inline std::size_t AddLink(DartBodyNode *_bn)
+  public: inline std::size_t AddLink(DartBodyNode *_bn,
+                                     const std::string &_fullName)
   {
     const std::size_t id = this->GetNextEntity();
     this->links.idToObject[id] = std::make_shared<LinkInfo>();
@@ -298,6 +299,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.idToObject[id]->name = _bn->getName();
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
+
+    this->linksByName[_fullName] = _bn;
 
     return id;
   }
@@ -326,6 +329,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: void RemoveModelImpl(const std::size_t _worldID,
                                const std::size_t _modelID)
   {
+    // TODO (addisu) Handle removal of nested models
     const auto &world = this->worlds.at(_worldID);
     auto skel = this->models.at(_modelID)->model;
     // Remove the contents of the skeleton from local entity storage containers
@@ -340,6 +344,8 @@ class Base : public Implements3d<FeatureList<Feature>>
         this->shapes.RemoveEntity(sn);
       }
       this->links.RemoveEntity(bn);
+      this->linksByName.erase(::sdf::JoinName(
+          world->getName(), ::sdf::JoinName(skel->getName(), bn->getName())));
     }
     this->models.RemoveEntity(skel);
     world->removeSkeleton(skel);
@@ -415,6 +421,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
+
+  /// \brief Map from the fully qualified link name (including the world name)
+  /// to the BodyNode object. This is useful for keeping track of BodyNodes even
+  /// as they move to other skeletons.
+  public: std::unordered_map<std::string, DartBodyNode*> linksByName;
 };
 
 }

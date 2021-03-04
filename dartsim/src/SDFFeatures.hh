@@ -112,16 +112,18 @@ class SDFFeatures :
   private: Identity ConstructSdfModelImpl(std::size_t _parentID,
                                           const ::sdf::Model &_sdfModel);
 
-  /// \brief Find the dartsim BodyNode associated with the entity name
-  /// \param[in] _world Pointer to world to search through
+  /// \brief Find the dartsim BodyNode associated with the link name
+  /// \param[in] _worldName Name of world that contains the link
   /// \param[in] _jointModelName The name of the model associated with the joint
-  /// \param[in] _entityFullName The full name of the entity as specified in the
-  /// sdformat description
+  /// \param[in] _linkRelativeName The relative name of the link as specified in
+  /// the sdformat description in the scope of the model identified by
+  /// _jointModelName
   /// \returns The matched body node if exactly one match is found, otherwise
   /// a nullptr
   private: dart::dynamics::BodyNode *FindBodyNode(
-      dart::simulation::WorldPtr _world, const std::string &_jointModelName,
-      const std::string &_entityFullName);
+               const std::string &_worldName,
+               const std::string &_jointModelName,
+               const std::string &_linkRelativeName);
 };
 
 }

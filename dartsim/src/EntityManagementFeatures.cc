@@ -653,7 +653,21 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
       model->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
         nullptr, prop_fj, prop_bn).second;
 
-  const std::size_t linkID = this->AddLink(bn);
+  auto worldIDIt = this->models.idToContainerID.find(_modelID);
+  if (worldIDIt == this->models.idToContainerID.end())
+  {
+    ignerr << "World of model [" << model->getName()
+           << "] could not be found when creating link [" << _name
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldIDIt->second);
+  const std::string fullName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(model->getName(), bn->getName()));
+
+  const std::size_t linkID = this->AddLink(bn, fullName);
   return this->GenerateIdentity(linkID, this->links.at(linkID));
 }
 

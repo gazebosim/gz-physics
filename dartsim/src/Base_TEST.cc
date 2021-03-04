@@ -65,7 +65,10 @@ TEST(BaseClass, RemoveModel)
       boxShape);
 
     auto res = base.AddModel({skel, frame, ""}, worldID);
-    base.AddLink(pair.second);
+    const std::string fullName = ::sdf::JoinName(
+        world->getName(),
+        ::sdf::JoinName(skel->getName(), pair.second->getName()));
+    base.AddLink(pair.second, fullName);
     base.AddJoint(pair.first);
     base.AddShape({sn, name + "_shape"});
 
@@ -80,6 +83,7 @@ TEST(BaseClass, RemoveModel)
 
   EXPECT_EQ(5u, base.models.size());
   EXPECT_EQ(5u, base.links.size());
+  EXPECT_EQ(5u, base.linksByName.size());
   EXPECT_EQ(5u, base.joints.size());
   EXPECT_EQ(5u, base.shapes.size());
 
@@ -93,6 +97,7 @@ TEST(BaseClass, RemoveModel)
   // Check that other resouces (links, shapes, etc) are also removed
   EXPECT_EQ(4u, base.models.size());
   EXPECT_EQ(4u, base.links.size());
+  EXPECT_EQ(4u, base.linksByName.size());
   EXPECT_EQ(4u, base.joints.size());
   EXPECT_EQ(4u, base.shapes.size());
 
@@ -126,6 +131,7 @@ TEST(BaseClass, RemoveModel)
     --curSize;
     EXPECT_EQ(curSize, base.models.size());
     EXPECT_EQ(curSize, base.links.size());
+    EXPECT_EQ(curSize, base.linksByName.size());
     EXPECT_EQ(curSize, base.joints.size());
     EXPECT_EQ(curSize, base.shapes.size());
     checkModelIndices();

@@ -33,6 +33,7 @@
 #include <ignition/physics/RequestEngine.hh>
 #include <ignition/physics/RevoluteJoint.hh>
 
+#include <ignition/physics/sdf/ConstructCollision.hh>
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
@@ -41,6 +42,10 @@
 
 #include <ignition/physics/dartsim/World.hh>
 
+#include <sdf/Collision.hh>
+#include <sdf/Joint.hh>
+#include <sdf/JointAxis.hh>
+#include <sdf/Link.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
@@ -51,6 +56,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::GetBasicJointState,
     ignition::physics::SetBasicJointState,
     ignition::physics::dartsim::RetrieveWorld,
+    ignition::physics::sdf::ConstructSdfCollision,
     ignition::physics::sdf::ConstructSdfJoint,
     ignition::physics::sdf::ConstructSdfLink,
     ignition::physics::sdf::ConstructSdfModel,
@@ -60,6 +66,8 @@ struct TestFeatureList : ignition::physics::FeatureList<
 
 using World = ignition::physics::World3d<TestFeatureList>;
 using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
+using ModelPtr = ignition::physics::Model3dPtr<TestFeatureList>;
+using LinkPtr = ignition::physics::Link3dPtr<TestFeatureList>;
 
 /////////////////////////////////////////////////
 auto LoadEngine()
@@ -75,8 +83,14 @@ auto LoadEngine()
   return engine;
 }
 
+enum class LoaderType
+{
+  Whole,
+  Piecemeal
+};
+
 /////////////////////////////////////////////////
-WorldPtr LoadWorld(const std::string &_world)
+WorldPtr LoadWorldWhole(const std::string &_world)
 {
   auto engine = LoadEngine();
   EXPECT_NE(nullptr, engine);
@@ -99,10 +113,188 @@ WorldPtr LoadWorld(const std::string &_world)
 }
 
 /////////////////////////////////////////////////
-// Test that the dartsim plugin loaded all the relevant information correctly.
-TEST(SDFFeatures_TEST, CheckDartsimData)
+static ignition::math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
 {
-  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  ignition::math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose);
+  EXPECT_TRUE(errors.empty()) << errors;
+  return pose;
+}
+
+static sdf::JointAxis ResolveJointAxis(const sdf::JointAxis &_unresolvedAxis)
+{
+  ignition::math::Vector3d axisXyz;
+  const sdf::Errors resolveAxisErrors = _unresolvedAxis.ResolveXyz(axisXyz);
+  EXPECT_TRUE (resolveAxisErrors.empty()) << resolveAxisErrors;
+
+  sdf::JointAxis resolvedAxis = _unresolvedAxis;
+
+  const sdf::Errors setXyzErrors = resolvedAxis.SetXyz(axisXyz);
+  EXPECT_TRUE(setXyzErrors.empty()) << setXyzErrors;
+
+  resolvedAxis.SetXyzExpressedIn("");
+  return resolvedAxis;
+}
+
+/////////////////////////////////////////////////
+/// Downstream applications, like ign-gazebo, use this way of world construction
+WorldPtr LoadWorldPiecemeal(const std::string &_world)
+{
+  auto engine = LoadEngine();
+  EXPECT_NE(nullptr, engine);
+  if (nullptr == engine)
+    return nullptr;
+
+  sdf::Root root;
+  const sdf::Errors &errors = root.Load(_world);
+  EXPECT_EQ(0u, errors.size()) << errors;
+
+  EXPECT_EQ(1u, root.WorldCount());
+  const sdf::World *sdfWorld = root.WorldByIndex(0);
+  EXPECT_NE(nullptr, sdfWorld);
+
+  sdf::World newWorld;
+  newWorld.SetName(sdfWorld->Name());
+  newWorld.SetGravity(sdfWorld->Gravity());
+  auto world = engine->ConstructWorld(newWorld);
+  if (nullptr == world)
+    return nullptr;
+
+  std::unordered_map<const sdf::Model *, ModelPtr> modelMap;
+  std::unordered_map<const sdf::Link *, LinkPtr> linkMap;
+
+  auto createModel = [&](const sdf::Model *_model,
+                         const sdf::Model *_parentModel = nullptr) {
+    sdf::Model newSdfModel;
+    newSdfModel.SetName(_model->Name());
+    newSdfModel.SetRawPose(ResolveSdfPose(_model->SemanticPose()));
+    newSdfModel.SetStatic(_model->Static());
+    newSdfModel.SetSelfCollide(_model->SelfCollide());
+
+    ModelPtr newModel;
+    if (nullptr != _parentModel)
+    {
+      auto it = modelMap.find(_parentModel);
+      ASSERT_TRUE(it != modelMap.end());
+      newModel = it->second->ConstructNestedModel(newSdfModel);
+    }
+    else
+    {
+      newModel = world->ConstructModel(newSdfModel);
+    }
+
+    EXPECT_NE(nullptr, newModel);
+    if (nullptr != newModel)
+    {
+      modelMap[_model] = newModel;
+    }
+  };
+
+  for (uint64_t i = 0; i < sdfWorld->ModelCount(); ++i)
+  {
+    const auto *model = sdfWorld->ModelByIndex(i);
+    createModel(model);
+    for (uint64_t nestedInd = 0; nestedInd < model->ModelCount(); ++nestedInd)
+    {
+      createModel(model->ModelByIndex(nestedInd), model);
+    }
+  }
+
+  for (auto [sdfModel, physModel] : modelMap)
+  {
+    for (uint64_t li = 0; li < sdfModel->LinkCount(); ++li)
+    {
+      const auto *link = sdfModel->LinkByIndex(li);
+      sdf::Link newSdfLink;
+      newSdfLink.SetName(link->Name());
+      newSdfLink.SetRawPose(ResolveSdfPose(link->SemanticPose()));
+      newSdfLink.SetInertial(link->Inertial());
+
+      auto newLink = physModel->ConstructLink(newSdfLink);
+      EXPECT_NE(nullptr, newLink);
+      if (nullptr == newLink)
+        return nullptr;
+
+      linkMap[link] = newLink;
+    }
+  }
+
+  for (auto [sdfLink, physLink] : linkMap)
+  {
+    for (uint64_t ci = 0; ci < sdfLink->CollisionCount(); ++ci)
+    {
+      physLink->ConstructCollision(*sdfLink->CollisionByIndex(ci));
+    }
+  }
+
+  for (auto [sdfModel, physModel] : modelMap)
+  {
+    for (uint64_t ji = 0; ji < sdfModel->JointCount(); ++ji)
+    {
+      const auto *sdfJoint = sdfModel->JointByIndex(ji);
+      std::string resolvedParentLinkName;
+      const auto resolveParentErrors =
+          sdfJoint->ResolveParentLink(resolvedParentLinkName);
+      EXPECT_TRUE(resolveParentErrors.empty()) << resolveParentErrors;
+
+      std::string resolvedChildLinkName;
+      const auto resolveChildErrors =
+        sdfJoint->ResolveChildLink(resolvedChildLinkName);
+      EXPECT_TRUE (resolveChildErrors.empty()) << resolveChildErrors;
+
+      sdf::Joint newSdfJoint;
+      newSdfJoint.SetName(sdfJoint->Name());
+      if (sdfJoint->Axis(0))
+      {
+        newSdfJoint.SetAxis(0, ResolveJointAxis(*sdfJoint->Axis(0)));
+      }
+      if (sdfJoint->Axis(1))
+      {
+        newSdfJoint.SetAxis(1, ResolveJointAxis(*sdfJoint->Axis(1)));
+      }
+      newSdfJoint.SetType(sdfJoint->Type());
+      newSdfJoint.SetRawPose(ResolveSdfPose(sdfJoint->SemanticPose()));
+      newSdfJoint.SetThreadPitch(sdfJoint->ThreadPitch());
+
+      newSdfJoint.SetParentLinkName(resolvedParentLinkName);
+      newSdfJoint.SetChildLinkName(resolvedChildLinkName);
+
+      physModel->ConstructJoint(newSdfJoint);
+    }
+  }
+
+  return world;
+}
+/////////////////////////////////////////////////
+WorldPtr LoadWorld(const std::string &_world,
+                   LoaderType _loader = LoaderType::Whole)
+{
+  switch(_loader)
+  {
+    case LoaderType::Whole:
+      return LoadWorldWhole(_world);
+    case LoaderType::Piecemeal:
+      return LoadWorldPiecemeal(_world);
+    default:
+      return LoadWorldWhole(_world);
+  }
+}
+
+/////////////////////////////////////////////////
+class SDFFeatures_TEST : public ::testing::TestWithParam<LoaderType>
+{
+};
+
+// Run with different load world functions
+INSTANTIATE_TEST_CASE_P(LoadWorld, SDFFeatures_TEST,
+                        ::testing::Values(LoaderType::Whole,
+                                          LoaderType::Piecemeal), );
+
+/////////////////////////////////////////////////
+// Test that the dartsim plugin loaded all the relevant information correctly.
+TEST_P(SDFFeatures_TEST, CheckDartsimData)
+{
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world", this->GetParam());
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -206,7 +398,7 @@ TEST(SDFFeatures_TEST, CheckDartsimData)
 
 /////////////////////////////////////////////////
 // Test that joint limits are working by running the simulation
-TEST(SDFFeatures_TEST, CheckJointLimitEnforcement)
+TEST_P(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
   WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world");
   ASSERT_NE(nullptr, world);
@@ -326,9 +518,10 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
 }
 
 /////////////////////////////////////////////////
-TEST(SDFFeatures_TEST, WorldWithNestedModel)
+TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 {
-  WorldPtr world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf",
+                             this->GetParam());
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(4u, world->GetModelCount());
 
@@ -363,10 +556,11 @@ TEST(SDFFeatures_TEST, WorldWithNestedModel)
 }
 
 /////////////////////////////////////////////////
-TEST(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
+TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 {
   WorldPtr world =
-    LoadWorld(TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf");
+      LoadWorld(TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf",
+                this->GetParam());
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(2u, world->GetModelCount());
 
@@ -408,9 +602,9 @@ TEST(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 
 /////////////////////////////////////////////////
 // Test that joint type falls back to fixed if the type is not supported
-TEST(SDFFeatures_TEST, FallbackToFixedJoint)
+TEST_P(SDFFeatures_TEST, FallbackToFixedJoint)
 {
-  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/test.world", this->GetParam());
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -504,10 +698,11 @@ TEST(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 /////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  ASSERT_NE(nullptr, world);
   const std::string modelName = "explicit_frames_with_links";
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
@@ -550,10 +745,11 @@ TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 /////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  ASSERT_NE(nullptr, world);
   const std::string modelName = "explicit_frames_with_collisions";
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
@@ -586,10 +782,11 @@ TEST(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 /////////////////////////////////////////////////
 TEST(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/world_frames.sdf");
+  WorldPtr world = LoadWorld(TEST_WORLD_DIR"/world_frames.sdf");
+  ASSERT_NE(nullptr, world);
   const std::string modelName = "M";
 
-  dart::simulation::WorldPtr dartWorld = world.GetDartsimWorld();
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
