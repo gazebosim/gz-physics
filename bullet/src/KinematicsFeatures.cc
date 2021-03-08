@@ -48,7 +48,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const auto &model = linkInfo->link;
 
   btTransform trans;
-  model->getMotionState()->getWorldTransform(trans);
+  trans = model->getWorldTransform();
   const btVector3 pos = trans.getOrigin();
   const btMatrix3x3 mat = trans.getBasis();
 

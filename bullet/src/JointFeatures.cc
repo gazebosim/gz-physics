@@ -113,6 +113,7 @@ double JointFeatures::GetJointVelocity(
       ignerr << "Not a valid constrating type: " << jointType << "\n";
     }
   }
+  // ignerr << "Velocity " << result << std::endl;
   return result;
 }
 
@@ -269,7 +270,8 @@ void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   (void) _dof;
-
+  // ignerr << "setForce " << _id.id << " " << _value << std::endl;
+  return;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -284,7 +286,7 @@ void JointFeatures::SetJointForce(
         // angular position of the joint and losing the angle reference
         // TO-DO (blast545): this limitation should be based on angular speed
         // as this breaks the PID controller when setting high values
-        const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
+        // const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
 
         // z-axis of constraint frame
         btVector3 hingeAxisLocalA =
@@ -299,11 +301,13 @@ void JointFeatures::SetJointForce(
           hinge->getRigidBodyB().getWorldTransform().getBasis() *
           hingeAxisLocalB;
 
-        btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
-        btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
+        btVector3 hingeTorqueA = _value * hingeAxisWorldA;
+        btVector3 hingeTorqueB = _value * hingeAxisWorldB;
 
         hinge->getRigidBodyA().applyTorque(hingeTorqueA);
         hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
+        // ignerr << "hingeTorqueA " << _id.id << " " << hingeTorqueA << std::endl;
+        // ignerr << "hingeTorqueB " << _id.id << " " << hingeTorqueB << std::endl;
       }
     }
   }

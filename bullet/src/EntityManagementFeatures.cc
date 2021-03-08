@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "EntityManagementFeatures.hh"
+#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
 namespace ignition {
 namespace physics {
@@ -41,7 +42,8 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   auto world = new btDiscreteDynamicsWorld(
     dispatcher, broadphase, solver, collisionConfiguration);
 
-  world->getSolverInfo().m_globalCfm = 0;
+  // world->getSolverInfo().m_globalCfm = 0;
+  btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
 
   return this->AddWorld(
     {world, _name, collisionConfiguration, dispatcher, broadphase, solver});

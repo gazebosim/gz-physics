@@ -48,21 +48,40 @@ void SimulationFeatures::UpdateJoints()
     {
       result = 0.0;
       // Get the axis of the joint
+      btTransform trans;
+      hinge->getRigidBodyA().getMotionState()->getWorldTransform(trans);
       btVector3 vec =
-        hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+        trans.getBasis() *
         hinge->getFrameOffsetA().getBasis().getColumn(2);
 
       math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+      // ignerr << "AXIS " << globalAxis << std::endl;
 
       if (this->links.find(jointInfo->childLinkId) != this->links.end())
       {
         btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
         btVector3 aux = childLink->getAngularVelocity();
         math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
-        ignerr << "childvelocity " << angularVelocity << std::endl;
+        // ignerr << "childvelocity " << angularVelocity << std::endl;
         // result +=
         // globalAxis.Dot(convertVec(childLink->getAngularVelocity()));
         result += globalAxis.Dot(angularVelocity);
+        // ignerr << "childvelocity " << globalAxis.Dot(angularVelocity) << std::endl;
+        // btTransform trans;
+        // childLink->getMotionState()->getWorldTransform(trans);
+        // const btVector3 pos = trans.getOrigin();
+        // const btMatrix3x3 mat = trans.getBasis();
+        //
+        // auto eigenMat = convert(mat);
+        // auto eigenVec = convert(pos);
+        //
+        // trans = childLink->getCenterOfMassTransform();
+        // const btVector3 pos2 = trans.getOrigin();
+        // const btMatrix3x3 mat2 = trans.getBasis();
+        // auto eigenMat2 = convert(mat2);
+        // auto eigenVec2 = convert(pos2);
+        // ignerr << "Diff " << eigenMat - eigenMat2 << "\n" << eigenVec - eigenVec2 << std::endl;
+
       }
       if (this->links.find(jointInfo->parentLinkId) != this->links.end())
       {
@@ -70,31 +89,38 @@ void SimulationFeatures::UpdateJoints()
           this->links.at(jointInfo->parentLinkId)->link;
         btVector3 aux = parentLink->getAngularVelocity();
         math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
-        ignerr << "parentvelocity " << angularVelocity << std::endl;
+        // ignerr << "parentvelocity " << angularVelocity << std::endl;
         // result -=
         // globalAxis.Dot(convertVec(parentLink->getAngularVelocity()));
         result -= globalAxis.Dot(angularVelocity);
+        // ignerr << "parentvelocity " << globalAxis.Dot(angularVelocity) << std::endl;
       }
+      // ignerr << "velocity " << jointId << " " << result << std::endl;
+      double damping_force = damping * result;
+      btVector3 hingeAxisLocalA =
+      hinge->getFrameOffsetA().getBasis().getColumn(2);
+      btVector3 hingeAxisLocalB =
+      hinge->getFrameOffsetB().getBasis().getColumn(2);
+
+      btVector3 hingeAxisWorldA =
+      hinge->getRigidBodyA().getWorldTransform().getBasis() *
+      hingeAxisLocalA;
+      btVector3 hingeAxisWorldB =
+      hinge->getRigidBodyB().getWorldTransform().getBasis() *
+      hingeAxisLocalB;
+
+      btVector3 hingeTorqueA = -damping_force * hingeAxisWorldA;
+      btVector3 hingeTorqueB = damping_force * hingeAxisWorldB;
+
+      // math::Vector3 torqueA(hingeTorqueA[0], hingeTorqueA[1], hingeTorqueA[2]);
+      // ignerr << "TorqueA  " << torqueA << std::endl;
+
+      // math::Vector3 torqueB(hingeTorqueB[0], hingeTorqueB[1], hingeTorqueB[2]);
+      // ignerr << "TorqueB  " << torqueB << std::endl;
+
+      hinge->getRigidBodyA().applyTorque(hingeTorqueA);
+      hinge->getRigidBodyB().applyTorque(hingeTorqueB);
     }
-    ignerr << "velocity " << result << std::endl;
-    double damping_force = damping * result;
-    btVector3 hingeAxisLocalA =
-    hinge->getFrameOffsetA().getBasis().getColumn(2);
-    btVector3 hingeAxisLocalB =
-    hinge->getFrameOffsetB().getBasis().getColumn(2);
-
-    btVector3 hingeAxisWorldA =
-    hinge->getRigidBodyA().getWorldTransform().getBasis() *
-    hingeAxisLocalA;
-    btVector3 hingeAxisWorldB =
-    hinge->getRigidBodyB().getWorldTransform().getBasis() *
-    hingeAxisLocalB;
-
-    btVector3 hingeTorqueA = damping_force * hingeAxisWorldA;
-    btVector3 hingeTorqueB = damping_force * hingeAxisWorldB;
-
-    // hinge->getRigidBodyA().applyTorque(hingeTorqueA);
-    // hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
   }
 }
 

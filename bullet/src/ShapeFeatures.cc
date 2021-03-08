@@ -17,7 +17,6 @@
 
 #include "ShapeFeatures.hh"
 #include <BulletCollision/Gimpact/btGImpactShape.h>
-#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
 namespace ignition {
 namespace physics {
@@ -79,7 +78,7 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &linkInfo = this->links.at(_linkID);
   const auto &modelID = linkInfo->model;
   const auto &modelInfo = this->models.at(modelID);
-  const auto &worldInfo = this->worlds.at(modelInfo->world);
+  // const auto &worldInfo = this->worlds.at(modelInfo->world);
   const auto &body = linkInfo->link;
 
   const auto poseIsometry = _pose;
@@ -93,7 +92,7 @@ Identity ShapeFeatures::AttachMeshShape(
 
   dynamic_cast<btCompoundShape *>(
     body->getCollisionShape())->addChildShape(baseTransform, gimpactMeshShape);
-  btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
+  // btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
 
   auto identity = this->AddCollision(
     {_name, gimpactMeshShape, _linkID, modelID,

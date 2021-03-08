@@ -119,7 +119,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   // Models collide with everything except themselves
   // const int modelCollisionGroup = 1 << this->collisionGroups.at(_modelID);
-  // const int collisionMask = -1 ^ modelCollisionGroup;
+  // const int collisionMask = 0xFFFFFFFF & ~modelCollisionGroup;
   // world->addRigidBody(body, modelCollisionGroup, collisionMask);
   world->addRigidBody(body);
 

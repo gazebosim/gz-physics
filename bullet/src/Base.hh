@@ -127,7 +127,7 @@ inline Eigen::Vector3d convert(btVector3 vec)
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: std::size_t entityCount = 0;
-  public: std::size_t collisionGroup = 6;
+  public: std::size_t collisionGroup = 1;
 
   public: inline std::size_t GetNextEntity()
   {
