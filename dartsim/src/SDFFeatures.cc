@@ -25,7 +25,11 @@
 #include <dart/collision/dart/DARTCollisionDetector.hpp>
 #include <dart/collision/fcl/FCLCollisionDetector.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
+#include <dart/constraint/BoxedLcpConstraintSolver.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/constraint/DantzigBoxedLcpSolver.hpp>
+#include <dart/constraint/PgsBoxedLcpSolver.hpp>
+#include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
@@ -37,7 +41,6 @@
 #include <dart/dynamics/ScrewJoint.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 #include <dart/dynamics/UniversalJoint.hpp>
-#include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
 #include <ignition/common/Console.hh>
@@ -374,39 +377,79 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   if (_sdfWorld.Element() &&
       _sdfWorld.Element()->HasElement("physics") &&
-      _sdfWorld.Element()->GetElement("physics")->HasElement("dart") &&
-      _sdfWorld.Element()->GetElement("physics")->GetElement("dart")
-          ->HasElement("collision_detector"))
+      _sdfWorld.Element()->GetElement("physics")->HasElement("dart"))
   {
-    auto collisionDetectorName = _sdfWorld.Element()->GetElement("physics")
-        ->GetElement("dart")->Get<std::string>("collision_detector");
+    auto dartElem = _sdfWorld.Element()->GetElement("physics")
+        ->GetElement("dart");
 
-    auto collisionDetector =
-        world->getConstraintSolver()->getCollisionDetector();
-    if (collisionDetectorName == "bullet")
+    if (dartElem->HasElement("collision_detector"))
     {
-      collisionDetector = dart::collision::BulletCollisionDetector::create();
-    }
-    else if (collisionDetectorName == "fcl")
-    {
-      collisionDetector = dart::collision::FCLCollisionDetector::create();
-    }
-    else if (collisionDetectorName == "ode")
-    {
-      collisionDetector = dart::collision::OdeCollisionDetector::create();
-    }
-    else if (collisionDetectorName == "dart")
-    {
-      collisionDetector = dart::collision::DARTCollisionDetector::create();
-    }
-    else
-    {
-      ignerr << "Collision detector [" << collisionDetectorName
-             << "] no supported, defaulting to ["
-             << collisionDetector->getType() << "]." << std::endl;
+      auto collisionDetectorName =
+          dartElem->Get<std::string>("collision_detector");
+
+      auto collisionDetector =
+          world->getConstraintSolver()->getCollisionDetector();
+      if (collisionDetectorName == "bullet")
+      {
+        collisionDetector = dart::collision::BulletCollisionDetector::create();
+      }
+      else if (collisionDetectorName == "fcl")
+      {
+        collisionDetector = dart::collision::FCLCollisionDetector::create();
+      }
+      else if (collisionDetectorName == "ode")
+      {
+        collisionDetector = dart::collision::OdeCollisionDetector::create();
+      }
+      else if (collisionDetectorName == "dart")
+      {
+        collisionDetector = dart::collision::DARTCollisionDetector::create();
+      }
+      else
+      {
+        ignerr << "Collision detector [" << collisionDetectorName
+               << "] no supported, defaulting to ["
+               << collisionDetector->getType() << "]." << std::endl;
+      }
+
+      world->getConstraintSolver()->setCollisionDetector(collisionDetector);
     }
 
-    world->getConstraintSolver()->setCollisionDetector(collisionDetector);
+    if (dartElem->HasElement("solver") &&
+        dartElem->GetElement("solver")->HasElement("solver_type"))
+    {
+      auto solverName =
+          dartElem->GetElement("solver")->Get<std::string>("solver_type");
+
+      auto solver =
+          dynamic_cast<dart::constraint::BoxedLcpConstraintSolver *>(
+          world->getConstraintSolver());
+      std::shared_ptr<dart::constraint::BoxedLcpSolver> boxedSolver;
+      if (solver)
+      {
+        if (solverName == "dantzig")
+        {
+          boxedSolver =
+              std::make_shared<dart::constraint::DantzigBoxedLcpSolver>();
+        }
+        else if (solverName == "pgs")
+        {
+          boxedSolver = std::make_shared<dart::constraint::PgsBoxedLcpSolver>();
+        }
+        else
+        {
+          ignerr << "Solver [" << solverName
+                 << "] no supported, defaulting to ["
+                 << solver->getBoxedLcpSolver()->getType() << "]." << std::endl;
+        }
+
+        if (boxedSolver != nullptr)
+          solver->setBoxedLcpSolver(boxedSolver);
+
+        ignmsg << "Using [" << solver->getBoxedLcpSolver()->getType()
+               << "] solver." << std::endl;
+      }
+    }
   }
   ignmsg << "Using [" << world->getConstraintSolver()->getCollisionDetector()
       ->getType() << "] collision detector" << std::endl;

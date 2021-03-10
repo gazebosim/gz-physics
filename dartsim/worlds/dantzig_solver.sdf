@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<sdf version="1.8">
+  <world name="empty">
+    <physics type="ignored">
+      <dart>
+        <solver>
+          <solver_type>dantzig</solver_type>
+        </solver>
+      </dart>
+    </physics>
+  </world>
+</sdf>
