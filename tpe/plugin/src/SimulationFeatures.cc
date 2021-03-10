@@ -15,13 +15,15 @@
  *
 */
 
-#include "SimulationFeatures.hh"
+#include <unordered_map>
 
 #include <ignition/common/Console.hh>
 #include <ignition/common/Profiler.hh>
 
+#include <ignition/math/Pose3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
+#include "SimulationFeatures.hh"
 
 using namespace ignition;
 using namespace physics;
@@ -92,7 +94,9 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
 
       // if the link's pose is new or has changed,
       // add the link to the output poses
-      if ((iter == prevLinkPoses.end()) || (iter->second != currPose))
+      if ((iter == prevLinkPoses.end()) ||
+          !iter->second.Pos().Equal(currPose.Pos(), 1e-6) ||
+          !iter->second.Rot().Equal(currPose.Rot(), 1e-6))
       {
         WorldPose wp;
         wp.pose = currPose;

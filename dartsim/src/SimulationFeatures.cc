@@ -15,13 +15,19 @@
  *
 */
 
+#include <unordered_map>
+
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/CollisionResult.hpp>
 
-#include "SimulationFeatures.hh"
+#include <ignition/common/Profiler.hh>
 
-#include "ignition/common/Profiler.hh"
+#include <ignition/math/Pose3.hh>
+#include <ignition/math/eigen3/Conversions.hh>
+
 #include "ignition/physics/GetContacts.hh"
+
+#include "SimulationFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -29,12 +35,13 @@ namespace dartsim {
 
 void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
-    ForwardStep::Output & /*_h*/,
+    ForwardStep::Output & _h,
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & _u)
 {
   IGN_PROFILE("SimulationFeatures::WorldForwardStep");
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
+  // TODO(adlarkin) sanity check to make sure world is not nullptr?
   auto *dtDur =
       _u.Query<std::chrono::steady_clock::duration>();
   const double tol = 1e-6;
@@ -52,7 +59,54 @@ void SimulationFeatures::WorldForwardStep(
 
   // TODO(MXG): Parse input
   world->step();
-  // TODO(MXG): Fill in output and state
+  this->WriteRequiredData(_h);
+  this->Write(_h.Get<JointPositions>());
+  // TODO(MXG): Fill in state
+}
+
+void SimulationFeatures::Write(JointPositions &/*_positions*/) const
+{
+  // TODO(adlarkin) implement this, if it's needed?
+}
+
+void SimulationFeatures::Write(WorldPoses &_poses) const
+{
+  // cache link poses from the previous iteration
+  // (using a static variable for now instead of a member variable
+  // since this method has to be const)
+  static std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
+
+  // remove link poses from the previous iteration
+  _poses.entries.clear();
+
+  for (const auto &link : this->links.idToObject)
+  {
+    const auto id = link.first;
+    const auto info = link.second;
+
+    // make sure the link exists
+    if (info && info->link)
+    {
+      WorldPose wp;
+      wp.pose = ignition::math::eigen3::convert(
+          info->link->getWorldTransform());
+      wp.pose.Pos() = ignition::math::eigen3::convert(
+          info->link->getCOM());
+      wp.body = id;
+
+      // if the link's pose is new or has changed,
+      // add the link to the output poses
+      auto iter = prevLinkPoses.find(id);
+      if ((iter == prevLinkPoses.end()) ||
+          !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
+          !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
+      {
+        _poses.entries.push_back(wp);
+      }
+
+      prevLinkPoses[id] = wp.pose;
+    }
+  }
 }
 
 std::vector<SimulationFeatures::ContactInternal>

@@ -18,10 +18,7 @@
 #ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
 #define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
 
-#include <unordered_map>
 #include <vector>
-
-#include <ignition/math/Pose3.hh>
 
 #include <ignition/physics/CanWriteData.hh>
 #include <ignition/physics/ForwardStep.hh>
