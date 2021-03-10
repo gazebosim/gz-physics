@@ -68,6 +68,7 @@ ign_find_package(sdformat11
 # Find dartsim for the dartsim plugin wrapper
 ign_find_package(DART
   COMPONENTS
+    collision-bullet
     collision-ode
     utils
     utils-urdf

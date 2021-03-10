@@ -21,6 +21,10 @@
 #include <limits>
 #include <memory>
 
+#include <dart/collision/bullet/BulletCollisionDetector.hpp>
+#include <dart/collision/dart/DARTCollisionDetector.hpp>
+#include <dart/collision/fcl/FCLCollisionDetector.hpp>
+#include <dart/collision/ode/OdeCollisionDetector.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
@@ -367,6 +371,45 @@ Identity SDFFeatures::ConstructSdfWorld(
   const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
 
   world->setGravity(ignition::math::eigen3::convert(_sdfWorld.Gravity()));
+
+  if (_sdfWorld.Element() &&
+      _sdfWorld.Element()->HasElement("physics") &&
+      _sdfWorld.Element()->GetElement("physics")->HasElement("dart") &&
+      _sdfWorld.Element()->GetElement("physics")->GetElement("dart")
+          ->HasElement("collision_detector"))
+  {
+    auto collisionDetectorName = _sdfWorld.Element()->GetElement("physics")
+        ->GetElement("dart")->Get<std::string>("collision_detector");
+
+    auto collisionDetector =
+        world->getConstraintSolver()->getCollisionDetector();
+    if (collisionDetectorName == "bullet")
+    {
+      collisionDetector = dart::collision::BulletCollisionDetector::create();
+    }
+    else if (collisionDetectorName == "fcl")
+    {
+      collisionDetector = dart::collision::FCLCollisionDetector::create();
+    }
+    else if (collisionDetectorName == "ode")
+    {
+      collisionDetector = dart::collision::OdeCollisionDetector::create();
+    }
+    else if (collisionDetectorName == "dart")
+    {
+      collisionDetector = dart::collision::DARTCollisionDetector::create();
+    }
+    else
+    {
+      ignerr << "Collision detector [" << collisionDetectorName
+             << "] no supported, defaulting to ["
+             << collisionDetector->getType() << "]." << std::endl;
+    }
+
+    world->getConstraintSolver()->setCollisionDetector(collisionDetector);
+  }
+  ignmsg << "Using [" << world->getConstraintSolver()->getCollisionDetector()
+      ->getType() << "] collision detector" << std::endl;
 
   // TODO(MXG): Add a Physics class to the SDFormat DOM and then parse that
   // information here. For now, we'll just use dartsim's default physics
