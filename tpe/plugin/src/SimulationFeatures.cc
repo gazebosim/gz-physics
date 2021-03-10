@@ -29,7 +29,7 @@ using namespace tpeplugin;
 
 void SimulationFeatures::WorldForwardStep(
   const Identity &_worldID,
-  ForwardStep::Output & /*_h*/,
+  ForwardStep::Output & _h,
   ForwardStep::State & /*_x*/,
   const ForwardStep::Input & _u)
 {
@@ -41,6 +41,8 @@ void SimulationFeatures::WorldForwardStep(
       << _worldID.id
       << "] not found."
       << std::endl;
+    // TODO(adlarkin) return here? de-referencing it below won't work
+    // if it == this->worlds.end()
   }
   std::shared_ptr<tpelib::World> world = it->second->world;
   auto *dtDur =
@@ -58,6 +60,49 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
   world->Step();
+  this->WriteRequiredData(_h);
+  this->Write(_h.Get<JointPositions>());
+}
+
+void SimulationFeatures::Write(JointPositions &/*_positions*/) const
+{
+  // TODO(adlarkin) implement this? Is this needed?
+}
+
+void SimulationFeatures::Write(WorldPoses &_poses) const
+{
+  // cache link poses from the previous iteration
+  // (using a static variable for now instead of a member variable
+  // since this method has to be const)
+  static std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
+
+  // remove link poses from the previous iteration
+  _poses.entries.clear();
+
+  for (const auto &link : this->links)
+  {
+    const auto id = link.first;
+    const auto info = link.second;
+
+    // make sure the link exists
+    if (info)
+    {
+      const auto currPose = info->link->GetPose();
+      auto iter = prevLinkPoses.find(id);
+
+      // if the link's pose is new or has changed,
+      // add the link to the output poses
+      if ((iter == prevLinkPoses.end()) || (iter->second != currPose))
+      {
+        WorldPose wp;
+        wp.pose = currPose;
+        wp.body = id;
+        _poses.entries.push_back(wp);
+      }
+
+      prevLinkPoses[id] = currPose;
+    }
+  }
 }
 
 std::vector<SimulationFeatures::ContactInternal>
