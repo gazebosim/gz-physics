@@ -217,6 +217,6 @@ bool EntityManagementFeatures::RemoveModelByName(
   return false;
 }
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition

@@ -111,6 +111,6 @@ Identity ShapeFeatures::CastToMeshShape(
   return this->GenerateInvalidId();
 }
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition

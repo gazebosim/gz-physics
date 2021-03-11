@@ -79,6 +79,6 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   }
 }
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition

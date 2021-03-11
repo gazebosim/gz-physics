@@ -48,8 +48,8 @@ class FreeGroupFeatures
       const PoseType &_pose) override;
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif

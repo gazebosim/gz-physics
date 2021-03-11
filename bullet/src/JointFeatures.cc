@@ -472,6 +472,6 @@ Identity JointFeatures::AttachRevoluteJoint(
   return this->GenerateInvalidId();
 }
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition

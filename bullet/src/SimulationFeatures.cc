@@ -35,6 +35,6 @@ void SimulationFeatures::WorldForwardStep(
     worldInfo->world->stepSimulation(dt.count(), 1, dt.count());
 }
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition

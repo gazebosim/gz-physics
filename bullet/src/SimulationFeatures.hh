@@ -52,8 +52,8 @@ class SimulationFeatures :
       };
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif

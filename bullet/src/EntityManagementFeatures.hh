@@ -58,8 +58,8 @@ class EntityManagementFeatures :
       const Identity &/*_engineID*/, const std::string &/* _name */) override;
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif
