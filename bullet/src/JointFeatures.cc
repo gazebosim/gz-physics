@@ -35,24 +35,25 @@ double JointFeatures::GetJointPosition(
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
     const int jointType = jointInfo->constraintType;
     // Check the type of joint and act accordignly
-    if (jointInfo->constraintType ==
-        static_cast<int>(::sdf::JointType::REVOLUTE))
+    switch(jointInfo->constraintType)
     {
-      btHingeAccumulatedAngleConstraint* hinge =
-        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
-      if (hinge)
+      case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
-        result = hinge->getAccumulatedHingeAngle();
-        // result -= this->angleOffset;
+        btHingeAccumulatedAngleConstraint* hinge = static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	if (hinge)
+        {
+          result = hinge->getAccumulatedHingeAngle();
+          // result -= this->angleOffset;
+        }
+	else
+	{
+	  ignerr << "Corrupted joint at index:" << _id.id << "\n";
+	}
       }
-      else
-      {
-        ignerr << "Corrupted joint at index:" << _id.id << "\n";
-      }
-    }
-    else
-    {
-      ignerr << "Not a valid constrating type: " << jointType << "\n";
+      break;
+    default:
+      ignwarn << "Not a valid getJointPosition type: " << jointType << "\n";
+      break;
     }
   }
   return result;
@@ -68,49 +69,51 @@ double JointFeatures::GetJointVelocity(
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
     const int jointType = jointInfo->constraintType;
-    if (jointInfo->constraintType ==
-        static_cast<int>(::sdf::JointType::REVOLUTE))
+    switch(jointInfo->constraintType)
     {
-      btHingeAccumulatedAngleConstraint* hinge =
-        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
-      if (hinge)
+      case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
-        result = 0.0;
-        // Get the axis of the joint
-        btVector3 vec =
-          hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
-          hinge->getFrameOffsetA().getBasis().getColumn(2);
-
-        math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
-
-        if (this->links.find(jointInfo->childLinkId) != this->links.end())
+	btHingeAccumulatedAngleConstraint* hinge =
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	if (hinge)
         {
-          btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
-          btVector3 aux = childLink->getAngularVelocity();
-          math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
-          // result +=
-          // globalAxis.Dot(convertVec(childLink->getAngularVelocity()));
-          result += globalAxis.Dot(angularVelocity);
-        }
-        if (this->links.find(jointInfo->parentLinkId) != this->links.end())
-        {
-          btRigidBody *parentLink =
-            this->links.at(jointInfo->parentLinkId)->link;
-          btVector3 aux = parentLink->getAngularVelocity();
-          math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
-          // result -=
-          // globalAxis.Dot(convertVec(parentLink->getAngularVelocity()));
-          result -= globalAxis.Dot(angularVelocity);
-        }
+	  result = 0.0;
+	  // Get the axis of the joint
+	  btVector3 vec =
+	    hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+	    hinge->getFrameOffsetA().getBasis().getColumn(2);
+
+	  math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+
+	  if (this->links.find(jointInfo->childLinkId) != this->links.end())
+	  {
+	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+	    btVector3 aux = childLink->getAngularVelocity();
+	    math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
+	    // result +=
+	    // globalAxis.Dot(convertVec(childLink->getAngularVelocity()));
+	    result += globalAxis.Dot(angularVelocity);
+	  }
+	  if (this->links.find(jointInfo->parentLinkId) != this->links.end())
+	  {
+	    btRigidBody *parentLink =
+	      this->links.at(jointInfo->parentLinkId)->link;
+	    btVector3 aux = parentLink->getAngularVelocity();
+	    math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
+	    // result -=
+	    // globalAxis.Dot(convertVec(parentLink->getAngularVelocity()));
+	    result -= globalAxis.Dot(angularVelocity);
+	  }
+	}
+	else
+	{
+	  ignerr << "Corrupted joint at index:" << _id.id << "\n";
+	}
       }
-      else
-      {
-        ignerr << "Corrupted joint at index:" << _id.id << "\n";
-      }
-    }
-    else
-    {
-      ignerr << "Not a valid constrating type: " << jointType << "\n";
+      break;
+      default:
+	ignwarn << "Not a valid getJointVelocity type: " << jointType << "\n";
+	break;
     }
   }
   return result;
@@ -126,51 +129,53 @@ double JointFeatures::GetJointAcceleration(
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
     const int jointType = jointInfo->constraintType;
-    if (jointInfo->constraintType ==
-        static_cast<int>(::sdf::JointType::REVOLUTE))
+    switch(jointInfo->constraintType)
     {
-      btHingeAccumulatedAngleConstraint* hinge =
-        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
-      if (hinge)
+      case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
-        result = 0.0;
-        // Get the axis of the joint
-        btVector3 vec =
-          hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
-          hinge->getFrameOffsetA().getBasis().getColumn(2);
+	btHingeAccumulatedAngleConstraint* hinge =
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	if (hinge)
+	{
+	  result = 0.0;
+	  // Get the axis of the joint
+	  btVector3 vec =
+	    hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+	    hinge->getFrameOffsetA().getBasis().getColumn(2);
 
-        math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+	  math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
 
-        if (this->links.find(jointInfo->childLinkId) != this->links.end())
-        {
-          btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
-          btVector3 aux = childLink->getTotalTorque();
-          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
-	  const btVector3 localInertia = childLink->getLocalInertia();
-	  math::Vector3 angularAcceleration(angularTorque[0]/localInertia[0],
-	    angularTorque[1]/localInertia[1], angularTorque[2]/localInertia[2]);
-          result += globalAxis.Dot(angularTorque);
-        }
-        if (this->links.find(jointInfo->parentLinkId) != this->links.end())
-        {
-          btRigidBody *parentLink =
-            this->links.at(jointInfo->parentLinkId)->link;
-          btVector3 aux = parentLink->getTotalTorque();
-          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
-	  const btVector3 localInertia = parentLink->getLocalInertia();
-	  math::Vector3 angularAcceleration(angularTorque[0]/localInertia[0],
-	    angularTorque[1]/localInertia[1], angularTorque[2]/localInertia[2]);
-          result -= globalAxis.Dot(angularTorque);
-        }
+	  if (this->links.find(jointInfo->childLinkId) != this->links.end())
+	  {
+	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+	    btVector3 aux = childLink->getTotalTorque();
+	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+	    const btVector3 localInertia = childLink->getLocalInertia();
+	    math::Vector3 angularAcceleration(angularTorque[0]/localInertia[0],
+	      angularTorque[1]/localInertia[1], angularTorque[2]/localInertia[2]);
+	    result += globalAxis.Dot(angularTorque);
+	  }
+	  if (this->links.find(jointInfo->parentLinkId) != this->links.end())
+	  {
+	    btRigidBody *parentLink =
+              this->links.at(jointInfo->parentLinkId)->link;
+	    btVector3 aux = parentLink->getTotalTorque();
+	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+	    const btVector3 localInertia = parentLink->getLocalInertia();
+	    math::Vector3 angularAcceleration(angularTorque[0]/localInertia[0],
+	      angularTorque[1]/localInertia[1], angularTorque[2]/localInertia[2]);
+	    result -= globalAxis.Dot(angularTorque);
+	  }
+	}
+	else
+	{
+	  ignerr << "Corrupted joint at index:" << _id.id << "\n";
+	}
       }
-      else
-      {
-        ignerr << "Corrupted joint at index:" << _id.id << "\n";
-      }
-    }
-    else
-    {
-      ignerr << "Not a valid constrating type: " << jointType << "\n";
+      break;
+    default:
+      ignwarn << "Not a valid getJointAcceleration type: " << jointType << "\n";
+      break;
     }
   }
   return result;
@@ -186,45 +191,47 @@ double JointFeatures::GetJointForce(
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
     const int jointType = jointInfo->constraintType;
-    if (jointInfo->constraintType ==
-        static_cast<int>(::sdf::JointType::REVOLUTE))
+    switch(jointInfo->constraintType)
     {
-      btHingeAccumulatedAngleConstraint* hinge =
-        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
-      if (hinge)
+      case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
-        result = 0.0;
-        // Get the axis of the joint
-        btVector3 vec =
-          hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
-          hinge->getFrameOffsetA().getBasis().getColumn(2);
+	btHingeAccumulatedAngleConstraint* hinge =
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	if (hinge)
+	{
+	  result = 0.0;
+	  // Get the axis of the joint
+	  btVector3 vec =
+	    hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+	    hinge->getFrameOffsetA().getBasis().getColumn(2);
 
-        math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+	  math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
 
-        if (this->links.find(jointInfo->childLinkId) != this->links.end())
-        {
-          btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
-          btVector3 aux = childLink->getTotalTorque();
-          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
-          result += globalAxis.Dot(angularTorque);
-        }
-        if (this->links.find(jointInfo->parentLinkId) != this->links.end())
-        {
-          btRigidBody *parentLink =
-            this->links.at(jointInfo->parentLinkId)->link;
-          btVector3 aux = parentLink->getTotalTorque();
-          math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
-          result -= globalAxis.Dot(angularTorque);
-        }
+	  if (this->links.find(jointInfo->childLinkId) != this->links.end())
+          {
+	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+	    btVector3 aux = childLink->getTotalTorque();
+	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+	    result += globalAxis.Dot(angularTorque);
+	  }
+	  if (this->links.find(jointInfo->parentLinkId) != this->links.end())
+	  {
+	    btRigidBody *parentLink =
+	      this->links.at(jointInfo->parentLinkId)->link;
+	    btVector3 aux = parentLink->getTotalTorque();
+	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
+	    result -= globalAxis.Dot(angularTorque);
+	  }
+	}
+	else
+	{
+	  ignerr << "Corrupted joint at index:" << _id.id << "\n";
+	}
       }
-      else
-      {
-        ignerr << "Corrupted joint at index:" << _id.id << "\n";
-      }
-    }
-    else
-    {
-      ignerr << "Not a valid constrating type: " << jointType << "\n";
+      break;
+    default:
+      ignwarn << "Not a valid getJointForce type: " << jointType << "\n";
+      break;
     }
   }
   return result;
@@ -278,37 +285,44 @@ void JointFeatures::SetJointForce(
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
     const int jointType = jointInfo->constraintType;
-    if (jointType == static_cast<int>(::sdf::JointType::REVOLUTE))
+    switch(jointInfo->constraintType)
     {
-      btHingeAccumulatedAngleConstraint* hinge =
-        static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
-      if (hinge)
+      case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
-        // Limit the max torque applied to avoid abrupt changes in the
-        // angular position of the joint and losing the angle reference
-        // TO-DO (blast545): this limitation should be based on angular speed
-        // as this breaks the PID controller when setting high values
-        const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
+	btHingeAccumulatedAngleConstraint* hinge =
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	if (hinge)
+	{
+	  // Limit the max torque applied to avoid abrupt changes in the
+	  // angular position of the joint and losing the angle reference
+	  // TO-DO (blast545): this limitation should be based on angular speed
+	  // as this breaks the PID controller when setting high values
+	  const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
 
-        // z-axis of constraint frame
-        btVector3 hingeAxisLocalA =
-          hinge->getFrameOffsetA().getBasis().getColumn(2);
-        btVector3 hingeAxisLocalB =
-          hinge->getFrameOffsetB().getBasis().getColumn(2);
+	  // z-axis of constraint frame
+	  btVector3 hingeAxisLocalA =
+	    hinge->getFrameOffsetA().getBasis().getColumn(2);
+	  btVector3 hingeAxisLocalB =
+	    hinge->getFrameOffsetB().getBasis().getColumn(2);
 
-        btVector3 hingeAxisWorldA =
-          hinge->getRigidBodyA().getWorldTransform().getBasis() *
-          hingeAxisLocalA;
-        btVector3 hingeAxisWorldB =
-          hinge->getRigidBodyB().getWorldTransform().getBasis() *
-          hingeAxisLocalB;
+	  btVector3 hingeAxisWorldA =
+	    hinge->getRigidBodyA().getWorldTransform().getBasis() *
+	    hingeAxisLocalA;
+	  btVector3 hingeAxisWorldB =
+	    hinge->getRigidBodyB().getWorldTransform().getBasis() *
+	    hingeAxisLocalB;
 
-        btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
-        btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
+	  btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
+	  btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
 
-        hinge->getRigidBodyA().applyTorque(hingeTorqueA);
-        hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
+	  hinge->getRigidBodyA().applyTorque(hingeTorqueA);
+	  hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
+	}
       }
+      break;
+    default:
+      ignwarn << "Not a valid setJointForce type: " << jointType << "\n";
+      break;
     }
   }
 }
@@ -331,8 +345,10 @@ void JointFeatures::SetJointVelocityCommand(
   }
 
   // Check the type of joint and act accordignly
-  if (jointInfo->constraintType ==
-      static_cast<int>(::sdf::JointType::REVOLUTE)) {
+  switch(jointInfo->constraintType)
+  {
+  case static_cast<int>(::sdf::JointType::REVOLUTE) :
+  {
     const auto &link = this->links.at(jointInfo->childLinkId)->link;
     btTransform trans;
     link->getMotionState()->getWorldTransform(trans);
@@ -340,8 +356,12 @@ void JointFeatures::SetJointVelocityCommand(
       convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
     btVector3 angular_vel = motion * _value;
     link->setAngularVelocity(angular_vel);
-  } else {
-    // igndbg << "Sending command to not revolute joint\n";
+  }
+  break;
+  default:
+    ignwarn << "Not a valid setJointVelocityCommand type: "
+	    << jointInfo->constraintType << "\n";
+    break;
   }
 }
 
