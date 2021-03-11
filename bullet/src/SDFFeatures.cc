@@ -363,6 +363,6 @@ std::size_t SDFFeatures::FindSdfLink(
   }
 }
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition

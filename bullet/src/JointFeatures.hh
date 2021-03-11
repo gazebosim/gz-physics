@@ -138,8 +138,8 @@ class JointFeatures :
       const double _value);
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif

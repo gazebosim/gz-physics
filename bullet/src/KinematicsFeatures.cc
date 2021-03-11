@@ -76,6 +76,6 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   return data;
 }
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition

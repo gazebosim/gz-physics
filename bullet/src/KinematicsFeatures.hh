@@ -38,8 +38,8 @@ class KinematicsFeatures :
   public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const;
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif

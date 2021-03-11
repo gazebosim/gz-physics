@@ -192,8 +192,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif

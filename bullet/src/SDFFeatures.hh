@@ -71,8 +71,8 @@ class SDFFeatures :
       const std::string &_sdfLinkName);
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif

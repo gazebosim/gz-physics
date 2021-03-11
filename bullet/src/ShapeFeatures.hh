@@ -46,8 +46,8 @@ class ShapeFeatures :
       const Identity &_shapeID) const override;
 };
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
 
 #endif

@@ -57,6 +57,6 @@ class Plugin :
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 
-}
-}
-}
+}  // namespace bullet
+}  // namespace physics
+}  // namespace ignition
