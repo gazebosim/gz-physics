@@ -61,8 +61,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 
   // Clean up joints, this section considers both links in the joint
   // are part of the same world
-  std::unordered_map<std::size_t, JointInfoPtr>::iterator joint_it =
-    this->joints.begin();
+  auto joint_it = this->joints.begin();
   while (joint_it != this->joints.end())
   {
     const auto &jointInfo = joint_it->second;
@@ -79,8 +78,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
 
   // Clean up collisions
-  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it =
-    this->collisions.begin();
+  auto collision_it = this->collisions.begin();
   while (collision_it != this->collisions.end())
   {
     const auto &collisionInfo = collision_it->second;
@@ -94,8 +92,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
 
   // Clean up links
-  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it =
-    this->links.begin();
+  auto it = this->links.begin();
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
@@ -137,8 +134,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 
   // Clean up joints, this section considers both links in the joint
   // are part of the same world
-  std::unordered_map<std::size_t, JointInfoPtr>::iterator joint_it =
-    this->joints.begin();
+  auto joint_it = this->joints.begin();
   while (joint_it != this->joints.end())
   {
     const auto &jointInfo = joint_it->second;
@@ -155,8 +151,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   }
 
   // Clean up collisions
-  std::unordered_map<std::size_t, CollisionInfoPtr>::iterator collision_it =
-    this->collisions.begin();
+  auto collision_it = this->collisions.begin();
   while (collision_it != this->collisions.end())
   {
     const auto &collisionInfo = collision_it->second;
@@ -170,8 +165,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   }
 
   // Clean up links
-  std::unordered_map<std::size_t, LinkInfoPtr>::iterator it =
-    this->links.begin();
+  auto it = this->links.begin();
   while (it != this->links.end())
   {
     const auto &linkInfo = it->second;
@@ -179,6 +173,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     if (linkInfo->model.id == _modelIndex)
     {
       bulletWorld->removeRigidBody(linkInfo->link);
+      delete linkInfo->link;
       it = this->links.erase(it);
       continue;
     }
