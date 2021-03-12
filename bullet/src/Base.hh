@@ -43,15 +43,20 @@ namespace bullet {
 ///    GenerateIdentity.
 /// 3) Hold explicit copies of raw pointers that can be deallocated
 
-// todo(anyone): Handle cleaning these pointers
+// TO-DO(): Consider using unique_ptrs instead of shared pointers
+// for Bullet internal objects
+
+// Note: For Bullet library it's important the order in which the elements
+// are destroyed. The current implementation relies on C++ destroying the
+// elements in the opposite order stated in the structure
 struct WorldInfo
 {
-  btDiscreteDynamicsWorld* world;
   std::string name;
-  btDefaultCollisionConfiguration* collisionConfiguration;
-  btCollisionDispatcher* dispatcher;
-  btBroadphaseInterface* broadphase;
-  btConstraintSolver* solver;
+  std::shared_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
+  std::shared_ptr<btCollisionDispatcher> dispatcher;
+  std::shared_ptr<btBroadphaseInterface> broadphase;
+  std::shared_ptr<btConstraintSolver> solver;
+  std::shared_ptr<btDiscreteDynamicsWorld> world;
 };
 
 struct ModelInfo
@@ -66,17 +71,19 @@ struct ModelInfo
 struct LinkInfo
 {
   std::string name;
-  btRigidBody* link;
   Identity model;
   math::Pose3d pose;
   double mass;
   btVector3 inertia;
+  std::shared_ptr<btDefaultMotionState> motionState;
+  std::shared_ptr<btCompoundShape> collisionShape;
+  std::shared_ptr<btRigidBody> link;
 };
 
 struct CollisionInfo
 {
   std::string name;
-  btCollisionShape* shape;
+  std::shared_ptr<btCollisionShape> shape;
   Identity link;
   Identity model;
   math::Pose3d pose;
@@ -86,9 +93,7 @@ struct JointInfo
 {
   std::string name;
   // Base class for all the constraint objects,
-  // Not sure atm if it's possible to have it to manage all derived classes
-  btTypedConstraint* joint;
-  // links associated with this constraint, not sure if needed
+  std::shared_ptr<btTypedConstraint> joint;
   std::size_t childLinkId;
   std::size_t parentLinkId;
   int constraintType;

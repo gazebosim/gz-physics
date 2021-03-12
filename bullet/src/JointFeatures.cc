@@ -39,7 +39,8 @@ double JointFeatures::GetJointPosition(
     {
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
-        btHingeAccumulatedAngleConstraint* hinge = static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+        btHingeAccumulatedAngleConstraint* hinge =
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
 	if (hinge)
         {
           result = hinge->getAccumulatedHingeAngle();
@@ -74,7 +75,7 @@ double JointFeatures::GetJointVelocity(
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
 	btHingeAccumulatedAngleConstraint* hinge =
-	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
 	if (hinge)
         {
 	  result = 0.0;
@@ -87,7 +88,7 @@ double JointFeatures::GetJointVelocity(
 
 	  if (this->links.find(jointInfo->childLinkId) != this->links.end())
 	  {
-	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link.get();
 	    btVector3 aux = childLink->getAngularVelocity();
 	    math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
 	    // result +=
@@ -97,7 +98,7 @@ double JointFeatures::GetJointVelocity(
 	  if (this->links.find(jointInfo->parentLinkId) != this->links.end())
 	  {
 	    btRigidBody *parentLink =
-	      this->links.at(jointInfo->parentLinkId)->link;
+	      this->links.at(jointInfo->parentLinkId)->link.get();
 	    btVector3 aux = parentLink->getAngularVelocity();
 	    math::Vector3 angularVelocity(aux[0], aux[1], aux[2]);
 	    // result -=
@@ -134,7 +135,7 @@ double JointFeatures::GetJointAcceleration(
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
 	btHingeAccumulatedAngleConstraint* hinge =
-	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
 	if (hinge)
 	{
 	  result = 0.0;
@@ -147,7 +148,7 @@ double JointFeatures::GetJointAcceleration(
 
 	  if (this->links.find(jointInfo->childLinkId) != this->links.end())
 	  {
-	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link.get();
 	    btVector3 aux = childLink->getTotalTorque();
 	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
 	    const btVector3 localInertia = childLink->getLocalInertia();
@@ -158,7 +159,7 @@ double JointFeatures::GetJointAcceleration(
 	  if (this->links.find(jointInfo->parentLinkId) != this->links.end())
 	  {
 	    btRigidBody *parentLink =
-              this->links.at(jointInfo->parentLinkId)->link;
+              this->links.at(jointInfo->parentLinkId)->link.get();
 	    btVector3 aux = parentLink->getTotalTorque();
 	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
 	    const btVector3 localInertia = parentLink->getLocalInertia();
@@ -196,7 +197,7 @@ double JointFeatures::GetJointForce(
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
 	btHingeAccumulatedAngleConstraint* hinge =
-	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
 	if (hinge)
 	{
 	  result = 0.0;
@@ -209,7 +210,7 @@ double JointFeatures::GetJointForce(
 
 	  if (this->links.find(jointInfo->childLinkId) != this->links.end())
           {
-	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link;
+	    btRigidBody *childLink = this->links.at(jointInfo->childLinkId)->link.get();
 	    btVector3 aux = childLink->getTotalTorque();
 	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
 	    result += globalAxis.Dot(angularTorque);
@@ -217,7 +218,7 @@ double JointFeatures::GetJointForce(
 	  if (this->links.find(jointInfo->parentLinkId) != this->links.end())
 	  {
 	    btRigidBody *parentLink =
-	      this->links.at(jointInfo->parentLinkId)->link;
+	      this->links.at(jointInfo->parentLinkId)->link.get();
 	    btVector3 aux = parentLink->getTotalTorque();
 	    math::Vector3 angularTorque(aux[0], aux[1], aux[2]);
 	    result -= globalAxis.Dot(angularTorque);
@@ -290,7 +291,7 @@ void JointFeatures::SetJointForce(
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
 	btHingeAccumulatedAngleConstraint* hinge =
-	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint);
+	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
 	if (hinge)
 	{
 	  // Limit the max torque applied to avoid abrupt changes in the
