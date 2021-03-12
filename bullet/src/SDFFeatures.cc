@@ -107,21 +107,23 @@ Identity SDFFeatures::ConstructSdfLink(
     linkInertiaDiag = btVector3(0, 0, 0);
   }
 
-  btDefaultMotionState* myMotionState = new btDefaultMotionState(baseTransform);
-  btCollisionShape* collisionShape = new btCompoundShape();
+  auto myMotionState = std::make_shared<btDefaultMotionState>(baseTransform);
+  auto collisionShape = std::make_shared<btCompoundShape>();
   btRigidBody::btRigidBodyConstructionInfo
-    rbInfo(mass, myMotionState, collisionShape, linkInertiaDiag);
-  btRigidBody* body = new btRigidBody(rbInfo);
-  body->setActivationState(DISABLE_DEACTIVATION);
+    rbInfo(mass, myMotionState.get(), collisionShape.get(), linkInertiaDiag);
+
+  auto body = std::make_shared<btRigidBody>(rbInfo);
+  body.get()->setActivationState(DISABLE_DEACTIVATION);
 
   const auto &world = this->worlds.at(modelInfo->world)->world;
 
   // Links collide with everything except elements sharing a joint
-  world->addRigidBody(body);
+  world->addRigidBody(body.get());
 
   // Generate an identity for it
-  const auto linkIdentity = this->AddLink({name, body, _modelID, pose, mass,
-    linkInertiaDiag});
+  const auto linkIdentity = this->AddLink({name, _modelID, pose, mass,
+    linkInertiaDiag, myMotionState, collisionShape, body});
+
   return linkIdentity;
 }
 
@@ -137,33 +139,33 @@ Identity SDFFeatures::ConstructSdfCollision(
   }
 
   const auto &geom = _collision.Geom();
-  btCollisionShape* shape = nullptr;
+  std::shared_ptr<btCollisionShape> shape;
 
   if (geom->BoxShape())
   {
     const auto box = geom->BoxShape();
     const auto size = math::eigen3::convert(box->Size());
     const auto halfExtents = convertVec(size)*0.5;
-    shape = new btBoxShape(halfExtents);
+    shape = std::make_shared<btBoxShape>(halfExtents);
   }
   else if (geom->SphereShape())
   {
     const auto sphere = geom->SphereShape();
     const auto radius = sphere->Radius();
-    shape = new btSphereShape(radius);
+    shape = std::make_shared<btSphereShape>(radius);
   }
   else if (geom->CylinderShape())
   {
     const auto cylinder = geom->CylinderShape();
     const auto radius = cylinder->Radius();
     const auto halfLength = cylinder->Length()*0.5;
-    shape = new btCylinderShapeZ(btVector3(radius, radius, halfLength));
+    shape = std::make_shared<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
   }
   else if (geom->PlaneShape())
   {
     const auto plane = geom->PlaneShape();
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
-    shape = new btStaticPlaneShape(normal, 0);
+    shape = std::make_shared<btStaticPlaneShape>(normal, 0);
   }
 
   // TODO(lobotuerk/blast545) Add additional friction parameters for bullet
@@ -201,7 +203,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())
-      ->addChildShape(baseTransform, shape);
+      ->addChildShape(baseTransform, shape.get());
 
     auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
       modelID, pose});
@@ -284,12 +286,12 @@ Identity SDFFeatures::ConstructSdfJoint(
   axisChild = pose.Rot().RotateVectorReverse(axis);
   axisChild = axisChild.Normalize();
 
-  btHingeAccumulatedAngleConstraint* joint;
+  std::shared_ptr<btHingeAccumulatedAngleConstraint> joint;
   if (parentId != worldId)
   {
-    joint = new btHingeAccumulatedAngleConstraint(
-      *this->links.at(childId)->link,
-      *this->links.at(parentId)->link,
+    joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
+      *this->links.at(childId)->link.get(),
+      *this->links.at(parentId)->link.get(),
       convertVec(ignition::math::eigen3::convert(pivotChild)),
       convertVec(ignition::math::eigen3::convert(pivotParent)),
       convertVec(ignition::math::eigen3::convert(axisChild)),
@@ -297,8 +299,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else
   {
-    joint = new btHingeAccumulatedAngleConstraint(
-      *this->links.at(childId)->link,
+    joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
+      *this->links.at(childId)->link.get(),
       convertVec(ignition::math::eigen3::convert(pivotChild)),
       convertVec(ignition::math::eigen3::convert(axisChild)));
   }
@@ -311,8 +313,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   const auto &modelInfo = this->models.at(_modelID);
-  const auto &world = this->worlds.at(modelInfo->world)->world;
-  world->addConstraint(joint, true);
+  const auto &world = this->worlds.at(modelInfo->world)->world.get();
+  world->addConstraint(joint.get(), true);
   joint->enableFeedback(true);
 
   /* TO-DO(Lobotuerk): find how to implement axis friction properly for bullet*/

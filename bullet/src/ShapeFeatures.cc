@@ -17,7 +17,6 @@
 
 #include "ShapeFeatures.hh"
 #include <BulletCollision/Gimpact/btGImpactShape.h>
-#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
 namespace ignition {
 namespace physics {
@@ -38,7 +37,7 @@ Identity ShapeFeatures::AttachMeshShape(
   unsigned int numVertices = _mesh.VertexCount();
   unsigned int numIndices = _mesh.IndexCount();
 
-  btTriangleMesh *mTriMesh = new btTriangleMesh();
+  const auto mTriMesh = std::make_shared<btTriangleMesh>(new btTriangleMesh());
 
   for (unsigned int j = 0;  j < numVertices; ++j)
   {
@@ -63,12 +62,12 @@ Identity ShapeFeatures::AttachMeshShape(
                   vertices[indices[j+2]*3+1],
                   vertices[indices[j+2]*3+2]);
 
-    mTriMesh->addTriangle(bv0, bv1, bv2);
+    mTriMesh.get()->addTriangle(bv0, bv1, bv2);
   }
 
-  btGImpactMeshShape *gimpactMeshShape =
-    new btGImpactMeshShape(mTriMesh);
-  gimpactMeshShape->updateBound();
+  auto gimpactMeshShape =
+    std::make_shared<btGImpactMeshShape>(mTriMesh.get());
+  gimpactMeshShape.get()->updateBound();
 
   // TODO(lobotuerk) Save collision if needed
   // collision->shape = gimpactMeshShape;
@@ -78,9 +77,7 @@ Identity ShapeFeatures::AttachMeshShape(
 
   const auto &linkInfo = this->links.at(_linkID);
   const auto &modelID = linkInfo->model;
-  const auto &modelInfo = this->models.at(modelID);
-  const auto &worldInfo = this->worlds.at(modelInfo->world);
-  const auto &body = linkInfo->link;
+  const auto &body = linkInfo->link.get();
 
   const auto poseIsometry = _pose;
   const auto poseTranslation = poseIsometry.translation();
@@ -89,11 +86,11 @@ Identity ShapeFeatures::AttachMeshShape(
   baseTransform.setOrigin(convertVec(poseTranslation));
   baseTransform.setBasis(convertMat(poseLinear));
 
+  /* TO-DO(Lobotuerk): figure out if this line is needed */
   // gimpactMeshShape->setMargin(btScalar(0.001));
 
   dynamic_cast<btCompoundShape *>(
-    body->getCollisionShape())->addChildShape(baseTransform, gimpactMeshShape);
-  btGImpactCollisionAlgorithm::registerAlgorithm(worldInfo->dispatcher);
+    body->getCollisionShape())->addChildShape(baseTransform, gimpactMeshShape.get());
 
   auto identity = this->AddCollision(
     {_name, gimpactMeshShape, _linkID, modelID,
