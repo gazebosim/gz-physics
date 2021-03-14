@@ -760,8 +760,18 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
     if (odeFriction->HasElement("fdir1"))
     {
-      math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
+      auto frictionDirectionElem = odeFriction->GetElement("fdir1");
+      math::Vector3d fdir1 = frictionDirectionElem->Get<math::Vector3d>();
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
+
+      const std::string kExpressedIn = "gazebo:expressed_in";
+      if (frictionDirectionElem->HasAttribute(kExpressedIn))
+      {
+        auto skeleton = bn->getSkeleton();
+        auto directionFrameBodyNode = skeleton->getBodyNode(
+          frictionDirectionElem->Get<std::string>(kExpressedIn));
+        aspect->setFirstFrictionDirectionFrame(directionFrameBodyNode);
+      }
     }
 
     const auto &surfaceBounce = _collision.Element()
