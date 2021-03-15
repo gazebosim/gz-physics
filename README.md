@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/master/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
-Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-bionic-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/ign-physics2/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
+Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics2-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics2-bionic-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics2-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics2-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Ignition Physics, a component of [Ignition
@@ -147,13 +147,12 @@ ign-physics
 ```
 # Contributing
 
-Please see
-[CONTRIBUTING.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CONTRIBUTING.md).
+Please see the [contribution guide](https://ignitionrobotics.org/docs/all/contributing).
 
 # Code of Conduct
 
 Please see
-[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CODE_OF_CONDUCT.md).
+[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/main/CODE_OF_CONDUCT.md).
 
 # Versioning
 
@@ -161,4 +160,4 @@ This library uses [Semantic Versioning](https://semver.org/). Additionally, this
 
 # License
 
-This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/master/LICENSE) file.
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/main/LICENSE) file.
