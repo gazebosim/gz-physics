@@ -21,14 +21,7 @@
 #include <limits>
 #include <memory>
 
-#include <dart/collision/bullet/BulletCollisionDetector.hpp>
-#include <dart/collision/dart/DARTCollisionDetector.hpp>
-#include <dart/collision/fcl/FCLCollisionDetector.hpp>
-#include <dart/collision/ode/OdeCollisionDetector.hpp>
-#include <dart/constraint/BoxedLcpConstraintSolver.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
-#include <dart/constraint/DantzigBoxedLcpSolver.hpp>
-#include <dart/constraint/PgsBoxedLcpSolver.hpp>
 #include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
