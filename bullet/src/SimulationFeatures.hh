@@ -43,6 +43,8 @@ class SimulationFeatures :
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
 
+  public: void UpdateJoints();
+
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &/* _worldID */) const override
       {
