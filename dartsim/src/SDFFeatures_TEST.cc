@@ -15,10 +15,6 @@
  *
 */
 
-#include <dart/collision/CollisionDetector.hpp>
-#include <dart/constraint/BoxedLcpConstraintSolver.hpp>
-#include <dart/constraint/BoxedLcpSolver.hpp>
-#include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/DegreeOfFreedom.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
@@ -30,7 +26,6 @@
 
 #include <tuple>
 
-#include <ignition/common/Console.hh>
 #include <ignition/plugin/Loader.hh>
 
 #include <ignition/physics/GetEntities.hh>
@@ -617,94 +612,8 @@ TEST(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
       expPose, link1->getWorldTransform(), 1e-5));
 }
 
-/////////////////////////////////////////////////
-TEST(SDFFeatures_TEST, CollisionDetector)
-{
-  {
-    World world = LoadWorld(TEST_WORLD_DIR "/empty.sdf");
-    auto dartWorld = world.GetDartsimWorld();
-    ASSERT_NE(nullptr, dartWorld);
-    EXPECT_EQ("ode", dartWorld->getConstraintSolver()->getCollisionDetector()
-        ->getType());
-  }
-  {
-    World world = LoadWorld(TEST_WORLD_DIR "/ode_detector.sdf");
-    auto dartWorld = world.GetDartsimWorld();
-    ASSERT_NE(nullptr, dartWorld);
-    EXPECT_EQ("ode", dartWorld->getConstraintSolver()->getCollisionDetector()
-        ->getType());
-  }
-  {
-    World world = LoadWorld(TEST_WORLD_DIR "/bullet_detector.sdf");
-    auto dartWorld = world.GetDartsimWorld();
-    ASSERT_NE(nullptr, dartWorld);
-    EXPECT_EQ("bullet", dartWorld->getConstraintSolver()->getCollisionDetector()
-        ->getType());
-  }
-  {
-    World world = LoadWorld(TEST_WORLD_DIR "/fcl_detector.sdf");
-    auto dartWorld = world.GetDartsimWorld();
-    ASSERT_NE(nullptr, dartWorld);
-    EXPECT_EQ("fcl", dartWorld->getConstraintSolver()->getCollisionDetector()
-        ->getType());
-  }
-  {
-    World world = LoadWorld(TEST_WORLD_DIR "/dart_detector.sdf");
-    auto dartWorld = world.GetDartsimWorld();
-    ASSERT_NE(nullptr, dartWorld);
-    EXPECT_EQ("dart", dartWorld->getConstraintSolver()->getCollisionDetector()
-        ->getType());
-  }
-  {
-    World world = LoadWorld(TEST_WORLD_DIR "/invalid_detector.sdf");
-    auto dartWorld = world.GetDartsimWorld();
-    ASSERT_NE(nullptr, dartWorld);
-    EXPECT_EQ("ode", dartWorld->getConstraintSolver()->getCollisionDetector()
-        ->getType());
-  }
-}
-
-/////////////////////////////////////////////////
-TEST(SDFFeatures_TEST, Solver)
-{
-  auto solverName = [](const std::string &_world) -> std::string
-  {
-    World world = LoadWorld(_world);
-    auto dartWorld = world.GetDartsimWorld();
-    EXPECT_NE(nullptr, dartWorld);
-    if (nullptr == dartWorld)
-      return std::string();
-
-    auto solver = dartWorld->getConstraintSolver();
-    EXPECT_NE(nullptr, solver);
-    if (nullptr == solver)
-      return std::string();
-
-    auto lcpSolver =
-          dynamic_cast<dart::constraint::BoxedLcpConstraintSolver *>(solver);
-    EXPECT_NE(nullptr, lcpSolver);
-    if (nullptr == lcpSolver)
-      return std::string();
-
-    auto boxedSolver = lcpSolver->getBoxedLcpSolver();
-    EXPECT_NE(nullptr, boxedSolver);
-    if (nullptr == boxedSolver)
-      return std::string();
-
-    return boxedSolver->getType();
-  };
-
-  EXPECT_EQ("DantzigBoxedLcpSolver", solverName(TEST_WORLD_DIR "/empty.sdf"));
-  EXPECT_EQ("DantzigBoxedLcpSolver",
-      solverName(TEST_WORLD_DIR "/dantzig_solver.sdf"));
-  EXPECT_EQ("PgsBoxedLcpSolver", solverName(TEST_WORLD_DIR "/pgs_solver.sdf"));
-  EXPECT_EQ("DantzigBoxedLcpSolver",
-      solverName(TEST_WORLD_DIR "/invalid_solver.sdf"));
-}
-
 int main(int argc, char *argv[])
 {
-  ignition::common::Console::SetVerbosity(4);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
