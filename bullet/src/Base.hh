@@ -73,6 +73,7 @@ struct LinkInfo
   std::string name;
   Identity model;
   math::Pose3d pose;
+  math::Pose3d inertialPose;
   double mass;
   btVector3 inertia;
   std::shared_ptr<btDefaultMotionState> motionState;
