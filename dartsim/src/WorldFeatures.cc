@@ -35,7 +35,7 @@ namespace physics {
 namespace dartsim {
 
 /////////////////////////////////////////////////
-void WorldFeatures::SetCollisionDetector(
+void WorldFeatures::SetWorldCollisionDetector(
     const Identity &_id, const std::string &_collisionDetector)
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
@@ -71,7 +71,7 @@ void WorldFeatures::SetCollisionDetector(
 }
 
 /////////////////////////////////////////////////
-const std::string &WorldFeatures::GetCollisionDetector(const Identity &_id)
+const std::string &WorldFeatures::GetWorldCollisionDetector(const Identity &_id)
     const
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
@@ -79,7 +79,8 @@ const std::string &WorldFeatures::GetCollisionDetector(const Identity &_id)
 }
 
 /////////////////////////////////////////////////
-void WorldFeatures::SetSolver(const Identity &_id, const std::string &_solver)
+void WorldFeatures::SetWorldSolver(const Identity &_id,
+    const std::string &_solver)
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
 
@@ -119,7 +120,7 @@ void WorldFeatures::SetSolver(const Identity &_id, const std::string &_solver)
 }
 
 /////////////////////////////////////////////////
-const std::string &WorldFeatures::GetSolver(const Identity &_id) const
+const std::string &WorldFeatures::GetWorldSolver(const Identity &_id) const
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
 

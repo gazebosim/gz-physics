@@ -35,19 +35,19 @@ class WorldFeatures :
     public virtual Implements3d<WorldFeatureList>
 {
   // Documentation inherited
-  public: void SetCollisionDetector(
+  public: void SetWorldCollisionDetector(
       const Identity &_id, const std::string &_collisionDetector) override;
 
   // Documentation inherited
-  public: const std::string &GetCollisionDetector(const Identity &_id) const
+  public: const std::string &GetWorldCollisionDetector(const Identity &_id)
+      const override;
+
+  // Documentation inherited
+  public: void SetWorldSolver(const Identity &_id, const std::string &_solver)
       override;
 
   // Documentation inherited
-  public: void SetSolver(const Identity &_id, const std::string &_solver)
-      override;
-
-  // Documentation inherited
-  public: const std::string &GetSolver(const Identity &_id) const override;
+  public: const std::string &GetWorldSolver(const Identity &_id) const override;
 };
 
 }

@@ -18,10 +18,9 @@
 #ifndef IGNITION_PHYSICS_WORLD_HH_
 #define IGNITION_PHYSICS_WORLD_HH_
 
+#include <string>
+
 #include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FrameID.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/Geometry.hh>
 
 namespace ignition
 {
@@ -36,7 +35,8 @@ namespace ignition
       {
         /// \brief Set the name of the collision detector to use.
         /// \param[in] _collisionDetector Name of collision detector.
-        public: void SetCollisionDetector(const std::string &_collisionDetector);
+        public: void SetCollisionDetector(
+            const std::string &_collisionDetector);
 
         /// \brief Get the name of the collision detector in use.
         /// \return Name of collision detector.
@@ -58,25 +58,25 @@ namespace ignition
         /// \brief Implementation API for setting the collision detector.
         /// \param[in] _id Identity of the world.
         /// \param[in] _collisionDetector Name of collision detector.
-        public: virtual void SetCollisionDetector(
+        public: virtual void SetWorldCollisionDetector(
             const Identity &_id, const std::string &_collisionDetector) = 0;
 
         /// \brief Implementation API for getting the collision detector.
         /// \param[in] _id Identity of the world.
         /// \return Name of collision detector.
-        public: virtual const std::string &GetCollisionDetector(
+        public: virtual const std::string &GetWorldCollisionDetector(
             const Identity &_id) const = 0;
 
         /// \brief Implementation API for setting the solver.
         /// \param[in] _id Identity of the world.
         /// \param[in] _collisionDetector Name of solver.
-        public: virtual void SetSolver(
+        public: virtual void SetWorldSolver(
             const Identity &_id, const std::string &_solver) = 0;
 
         /// \brief Implementation API for getting the solver.
         /// \param[in] _id Identity of the world.
         /// \return Name of solver.
-        public: virtual const std::string &GetSolver(
+        public: virtual const std::string &GetWorldSolver(
             const Identity &_id) const = 0;
       };
     };

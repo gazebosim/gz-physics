@@ -15,12 +15,12 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_DETAIL_LINK_HH_
-#define IGNITION_PHYSICS_DETAIL_LINK_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_WORLD_HH_
+#define IGNITION_PHYSICS_DETAIL_WORLD_HH_
+
+#include <string>
 
 #include <ignition/physics/World.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/RelativeQuantity.hh>
 
 namespace ignition
 {
@@ -32,7 +32,7 @@ void PhysicsOptions::World<PolicyT, FeaturesT>::SetCollisionDetector(
     const std::string &_collisionDetector)
 {
   this->template Interface<PhysicsOptions>()
-      ->SetCollisionDetector(this->identity, _collisionDetector);
+      ->SetWorldCollisionDetector(this->identity, _collisionDetector);
 }
 
 /////////////////////////////////////////////////
@@ -41,7 +41,7 @@ const std::string &PhysicsOptions::World<PolicyT, FeaturesT>::
     GetCollisionDetector() const
 {
   return this->template Interface<PhysicsOptions>()
-      ->GetCollisionDetector(this->identity);
+      ->GetWorldCollisionDetector(this->identity);
 }
 
 /////////////////////////////////////////////////
@@ -50,7 +50,7 @@ void PhysicsOptions::World<PolicyT, FeaturesT>::SetSolver(
     const std::string &_solver)
 {
   this->template Interface<PhysicsOptions>()
-      ->SetSolver(this->identity, _solver);
+      ->SetWorldSolver(this->identity, _solver);
 }
 
 /////////////////////////////////////////////////
@@ -59,7 +59,7 @@ const std::string &PhysicsOptions::World<PolicyT, FeaturesT>::
     GetSolver() const
 {
   return this->template Interface<PhysicsOptions>()
-      ->GetSolver(this->identity);
+      ->GetWorldSolver(this->identity);
 }
 
 }  // namespace physics

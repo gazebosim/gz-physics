@@ -280,5 +280,4 @@ TEST(CollisionDetector, CheckStaticCollisionFiltering)
 
   std::vector<Contact> contacts = cd.CheckCollisions(entities);
   EXPECT_TRUE(contacts.empty());
-
 }

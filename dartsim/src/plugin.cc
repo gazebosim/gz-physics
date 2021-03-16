@@ -44,7 +44,6 @@ struct DartsimFeatures : FeatureList<
   ShapeFeatureList,
   SimulationFeatureList,
   WorldFeatureList
-  // TODO(MXG): Implement more features
 > { };
 
 class Plugin :

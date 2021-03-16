@@ -69,6 +69,7 @@ Users do not need to organize their own plugin implementations this way.
 | SDFFeatures  | constructs entities from SDF file  |
 | ShapeFeatures  | retrieves `Shape` related properties like `BoundingBox`, `ShapeSize` etc. |
 | SimulationFeatures  | updates `World` and everything within by defined stepsize |
+| WorldFeatures  | sets options like solver and collision detector  |
 
 ### Dart vs. TPE
 
@@ -155,3 +156,4 @@ The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
 | mesh::AttachMeshShapeFeature | ✓ | ✓ |
 | ForwardStep | ✓ | ✓ |
 | GetContactsFromLastStepFeature | ✓ | ✕ |
+| PhysicsOptions | ✓  |
