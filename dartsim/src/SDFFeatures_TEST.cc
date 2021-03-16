@@ -544,16 +544,37 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   auto nestedJoint = parentModel->GetJoint("nested_joint");
   EXPECT_NE(nullptr, nestedJoint);
 
-  EXPECT_EQ(3u, parentModel->GetLinkCount());
-  EXPECT_EQ(0u, nestedModel->GetLinkCount());
-  auto nestedLink1 = parentModel->GetLink("nested_link1");
-  EXPECT_NE(nullptr, nestedLink1);
+  EXPECT_EQ(1u, parentModel->GetLinkCount());
+  EXPECT_NE(nullptr, parentModel->GetLink("link1"));
+  EXPECT_EQ(nullptr, parentModel->GetLink("nested_link1"));
+  EXPECT_EQ(nullptr, parentModel->GetLink("nested_link2"));
 
-  auto nestedLink2 = parentModel->GetLink("nested_link2");
-  EXPECT_NE(nullptr, nestedLink2);
+  ASSERT_EQ(2u, nestedModel->GetLinkCount());
+  auto nestedLink1 = nestedModel->GetLink("nested_link1");
+  ASSERT_NE(nullptr, nestedLink1);
+  EXPECT_EQ(0u, nestedLink1->GetIndex());
+  EXPECT_EQ(nestedLink1, nestedModel->GetLink(0));
 
-  auto link1 = parentModel->GetLink("link1");
-  EXPECT_NE(nullptr, link1);
+  auto nestedLink2 = nestedModel->GetLink("nested_link2");
+  ASSERT_NE(nullptr, nestedLink2);
+  EXPECT_EQ(1u, nestedLink2->GetIndex());
+  EXPECT_EQ(nestedLink2, nestedModel->GetLink(1));
+
+  auto nestedModelSkel = dartWorld->getSkeleton("parent_model::nested_model");
+  ASSERT_NE(nullptr, nestedModelSkel);
+  // nested_model::nested_link1 would have moved to the parent_model skeleton so
+  // we expect to not find it in the nested_model skeleton
+  EXPECT_EQ(nullptr, nestedModelSkel->getBodyNode("nested_link1"));
+
+  auto nestedModel2 = world->GetModel("parent_model::nested_model2");
+  ASSERT_NE(nullptr, nestedModel2);
+  EXPECT_EQ(1u, nestedModel2->GetLinkCount());
+  EXPECT_NE(nullptr, nestedModel2->GetLink("nested_link1"));
+
+  auto nestedModel3 = world->GetModel("parent_model::nested_model2");
+  ASSERT_NE(nullptr, nestedModel3);
+  EXPECT_EQ(1u, nestedModel3->GetLinkCount());
+  EXPECT_NE(nullptr, nestedModel3->GetLink("nested_link1"));
 }
 
 /////////////////////////////////////////////////

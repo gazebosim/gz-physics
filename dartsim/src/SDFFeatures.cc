@@ -534,7 +534,7 @@ Identity SDFFeatures::ConstructSdfLink(
     const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
-  const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
+  auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
@@ -590,7 +590,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::string fullName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
-  const std::size_t linkID = this->AddLink(bn, fullName);
+  const std::size_t linkID = this->AddLink(bn, fullName, _modelID);
   this->AddJoint(joint);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));

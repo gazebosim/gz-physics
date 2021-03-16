@@ -68,7 +68,7 @@ TEST(BaseClass, RemoveModel)
     const std::string fullName = ::sdf::JoinName(
         world->getName(),
         ::sdf::JoinName(skel->getName(), pair.second->getName()));
-    base.AddLink(pair.second, fullName);
+    base.AddLink(pair.second, fullName, std::get<0>(res));
     base.AddJoint(pair.first);
     base.AddShape({sn, name + "_shape"});
 
