@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_WORLDFEATURES_HH_
 #define IGNITION_PHYSICS_DARTSIM_SRC_WORLDFEATURES_HH_
 
+#include <string>
+
 #include <ignition/physics/World.hh>
 
 #include "Base.hh"

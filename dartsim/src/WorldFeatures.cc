@@ -15,6 +15,9 @@
  *
  */
 
+#include <memory>
+#include <string>
+
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
 #include <dart/collision/dart/DARTCollisionDetector.hpp>
 #include <dart/collision/fcl/FCLCollisionDetector.hpp>
