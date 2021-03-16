@@ -31,6 +31,32 @@ namespace physics {
 namespace bullet {
 
 /////////////////////////////////////////////////
+/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
+/// frame. If that fails, return the raw pose
+static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
+{
+  math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose);
+  if (!errors.empty())
+  {
+    if (!_semPose.RelativeTo().empty())
+    {
+      ignerr << "There was an error in SemanticPose::Resolve\n";
+      for (const auto &err : errors)
+      {
+        ignerr << err.Message() << std::endl;
+      }
+      ignerr << "There is no optimal fallback since the relative_to attribute["
+             << _semPose.RelativeTo() << "] of the pose is not empty. "
+             << "Falling back to using the raw Pose.\n";
+    }
+    pose = _semPose.RawPose();
+  }
+
+  return pose;
+}
+
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
@@ -51,7 +77,7 @@ Identity SDFFeatures::ConstructSdfModel(
 {
   // Read sdf params
   const std::string name = _sdfModel.Name();
-  const math::Pose3d pose = _sdfModel.RawPose();
+  const math::Pose3d pose = ResolveSdfPose(_sdfModel.SemanticPose());
   const bool isStatic = _sdfModel.Static();
   // Links within a model will collide unless these are chained with a joint
   // const bool selfCollide = _sdfModel.SelfCollide();
@@ -82,7 +108,7 @@ Identity SDFFeatures::ConstructSdfLink(
 {
   // Read sdf params
   const std::string name = _sdfLink.Name();
-  const math::Pose3d pose = _sdfLink.RawPose();
+  const math::Pose3d pose = ResolveSdfPose(_sdfLink.SemanticPose());
   const ignition::math::Inertiald inertial = _sdfLink.Inertial();
   auto mass = inertial.MassMatrix().Mass();
   const auto diagonalMoments = inertial.MassMatrix().DiagonalMoments();
@@ -187,7 +213,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &body = linkInfo->link;
     const auto &modelID = linkInfo->model;
 
-    const math::Pose3d pose = _collision.RawPose();
+    const math::Pose3d pose = ResolveSdfPose(_collision.SemanticPose());
     const Eigen::Isometry3d poseIsometry =
       ignition::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
@@ -260,7 +286,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else
   {
-    axis = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Rot()
+    axis = (ResolveSdfPose(_sdfJoint.SemanticPose()) + this->links.at(childId)->pose).Rot()
        * _sdfJoint.Axis(0)->Xyz();
   }
 
@@ -271,7 +297,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (parentId != worldId)
   {
-    pivotParent = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
+    pivotParent =
+      (ResolveSdfPose(_sdfJoint.SemanticPose()) + this->links.at(childId)->pose).Pos();
     pose = this->links.at(parentId)->pose;
     pivotParent -= pose.Pos();
     pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
@@ -279,7 +306,8 @@ Identity SDFFeatures::ConstructSdfJoint(
     axisParent = axisParent.Normalize();
   }
 
-  pivotChild = (_sdfJoint.RawPose() + this->links.at(childId)->pose).Pos();
+  pivotChild =
+    (ResolveSdfPose(_sdfJoint.SemanticPose()) + this->links.at(childId)->pose).Pos();
   pose = this->links.at(childId)->pose;
   pivotChild -= pose.Pos();
   pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
