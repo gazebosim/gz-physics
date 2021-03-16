@@ -215,7 +215,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &body = linkInfo->link;
     const auto &modelID = linkInfo->model;
 
-    const math::Pose3d pose = ResolveSdfPose(_collision.SemanticPose()) - linkInfo->inertialPose;
+    const math::Pose3d pose =
+      ResolveSdfPose(_collision.SemanticPose()) - linkInfo->inertialPose;
     const Eigen::Isometry3d poseIsometry =
       ignition::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
