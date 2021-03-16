@@ -142,7 +142,7 @@ TEST_P(SimulationFeatures_TEST, Falling)
 
   for (const auto &world : worlds)
   {
-    auto checkedOutput =StepWorld(world, true, 1000);
+    auto checkedOutput = StepWorld(world, true, 1000);
     EXPECT_TRUE(checkedOutput);
 
     auto link = world->GetModel(0)->GetLink(0);
