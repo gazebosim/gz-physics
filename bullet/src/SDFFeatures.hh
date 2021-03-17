@@ -66,8 +66,15 @@ class SDFFeatures :
       const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint) override;
 
-  private: std::size_t FindSdfLink(
+  private: Identity ConstructSdfJoint(
       const Identity &_modelID,
+      const ::sdf::Joint &_sdfJoint,
+      std::size_t parentId,
+      std::size_t childId);
+
+  private: std::size_t FindOrConstructLink(
+      const Identity &_modelID,
+      const ::sdf::Model &_sdfModel,
       const std::string &_sdfLinkName);
 };
 

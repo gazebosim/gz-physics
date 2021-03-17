@@ -67,6 +67,17 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   auto gravity = _sdfWorld.Gravity();
   worldInfo->world->setGravity(btVector3(gravity[0], gravity[1], gravity[2]));
+
+  for (std::size_t i=0; i < _sdfWorld.ModelCount(); ++i)
+  {
+    const ::sdf::Model *model = _sdfWorld.ModelByIndex(i);
+
+    if (!model)
+      continue;
+
+    this->ConstructSdfModel(worldID, *model);
+  }
+
   return worldID;
 }
 
@@ -75,6 +86,14 @@ Identity SDFFeatures::ConstructSdfModel(
     const Identity &_worldID,
     const ::sdf::Model &_sdfModel)
 {
+  // check if parent is a world
+  if (this->worlds.find(_worldID) == this->worlds.end())
+  {
+    ignerr << "Unable to construct model: " << _sdfModel.Name() << ". "
+           << "Parent of model is not a world. " << std::endl;
+    return this->GenerateInvalidId();
+  }
+
   // Read sdf params
   const std::string name = _sdfModel.Name();
   const math::Pose3d pose = ResolveSdfPose(_sdfModel.SemanticPose());
@@ -84,11 +103,15 @@ Identity SDFFeatures::ConstructSdfModel(
 
   const auto modelIdentity = this->AddModel({name, _worldID, isStatic, pose});
 
-  // After creating all the links, join the ones that have joints
+  // First, construct all links
+  for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
+  {
+    this->FindOrConstructLink(modelIdentity, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
+  }
+
+  // Next, join all links that have joints
   for (std::size_t i=0; i < _sdfModel.JointCount(); ++i)
   {
-    igndbg << "Loop adding joints.\n";
-
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
     if (!sdfJoint)
     {
@@ -96,6 +119,14 @@ Identity SDFFeatures::ConstructSdfModel(
              << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
       continue;
     }
+
+    const std::size_t parent = this->FindOrConstructLink(
+      modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
+
+    const std::size_t child = this->FindOrConstructLink(
+      modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
+
+    this->ConstructSdfJoint(modelIdentity, *sdfJoint, parent, child);
   }
 
   return modelIdentity;
@@ -149,6 +180,14 @@ Identity SDFFeatures::ConstructSdfLink(
   // Generate an identity for it
   const auto linkIdentity = this->AddLink({name, _modelID, pose, mass,
     linkInertiaDiag, myMotionState, collisionShape, body});
+
+  // Create associated collisions to this model
+  for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
+  {
+    const auto collision = _sdfLink.CollisionByIndex(i);
+    if (collision)
+      this->ConstructSdfCollision(linkIdentity, *collision);
+  }
 
   return linkIdentity;
 }
@@ -252,13 +291,25 @@ Identity SDFFeatures::ConstructSdfJoint(
     return this->GenerateInvalidId();
   }
 
+  // Dummy world to reuse FindOrConstructLink code
+  const ::sdf::Model dummyEmptyModel;
+
   // Get the parent and child ids
   const std::string parentLinkName = _sdfJoint.ParentLinkName();
-  std::size_t parentId = this->FindSdfLink(_modelID, parentLinkName);
+  std::size_t parentId = this->FindOrConstructLink(_modelID, dummyEmptyModel, parentLinkName);
 
   const std::string childLinkName = _sdfJoint.ChildLinkName();
-  std::size_t childId = this->FindSdfLink(_modelID, childLinkName);
+  std::size_t childId = this->FindOrConstructLink(_modelID, dummyEmptyModel, childLinkName);
 
+  return this->ConstructSdfJoint(_modelID, _sdfJoint, parentId, childId);
+}
+
+Identity SDFFeatures::ConstructSdfJoint(
+    const Identity &_modelID,
+    const ::sdf::Joint &_sdfJoint,
+    std::size_t parentId,
+    std::size_t childId)
+{
   // Check if chilId and parentId are valid values
   const auto invalidEntity = this->GenerateInvalidId().id;
   if (parentId == invalidEntity || childId == invalidEntity)
@@ -280,6 +331,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Eigen::Vector3d axis;
   // ignition::math::Vector3d axis = ignition::math::Vector3d::UnitZ;
   ignition::math::Vector3d axis;
+  const ::sdf::JointType type = _sdfJoint.Type();
   if(type == ::sdf::JointType::FIXED )
   {
     axis = ignition::math::Vector3d::UnitZ;
@@ -365,8 +417,9 @@ Identity SDFFeatures::ConstructSdfJoint(
 }
 
 /////////////////////////////////////////////////
-std::size_t SDFFeatures::FindSdfLink(
+std::size_t SDFFeatures::FindOrConstructLink(
     const Identity &_modelID,
+    const ::sdf::Model &_sdfModel,
     const std::string &_sdfLinkName)
 {
   for (const auto &link : this->links)
@@ -386,11 +439,16 @@ std::size_t SDFFeatures::FindSdfLink(
     // Return the ID of the parent world of the model
     return this->models.at(_modelID)->world;
   }
-  else
+
+  const ::sdf::Link * const sdfLink = _sdfModel.LinkByName(_sdfLinkName);
+  if (!sdfLink)
   {
-    ignerr << "Model does not contain a link named [" << _sdfLinkName << "].\n";
-    return this->GenerateInvalidId();
+    ignerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
+	   << "with the name [" << _sdfLinkName << "].\n";
+    return this->GenerateInvalidId().id;
   }
+
+  return this->ConstructSdfLink(_modelID, *sdfLink);
 }
 
 }  // namespace bullet
