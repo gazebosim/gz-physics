@@ -103,7 +103,7 @@ command-line tools:
 2. Run the following commands
   ```
   brew tap osrf/simulation
-  brew install ignition-physics2
+  brew install ignition-physics3
   ```
 
 ## Source Installation
@@ -111,7 +111,7 @@ command-line tools:
 1. Install dependencies
   ```
   brew tap osrf/simulation
-  brew install ignition-physics2 --only-dependencies
+  brew install ignition-physics3 --only-dependencies
   ```
 
 2. Clone the repository
@@ -208,7 +208,7 @@ You can also generate the documentation from a clone of this repository by follo
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics3
   ```
 
 3. Configure and build the documentation.

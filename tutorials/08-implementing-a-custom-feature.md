@@ -11,7 +11,7 @@ In the last \ref createphysicsplugin "Implement a physics plugin" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
 \ref ignition::physics "Ignition Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
-[DART](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim)
+[DART](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/dartsim)
 physics engine in `ign-physics` repository and how to define a custom
 \ref ignition::physics::Feature "Feature" for the plugin.
 
@@ -181,11 +181,11 @@ dart::simulation::WorldPtr RetrieveWorld::World<PolicyT, FeaturesT>
 The new defined feature file is placed in `dartsim/include/ignition/physics/dartsim`:
 ```
 dartsim
-├── worlds                           
-├── src                       
+├── worlds
+├── src
 ├── include/ignition/physics/dartsim
 │    ├──  World.hh
-└── CMakeLists.txt                 
+└── CMakeLists.txt
 ```
 
 As seen above, after including the necessary library of `dartsim` and `ign-physics`,
@@ -214,13 +214,13 @@ and implemented in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-p
 These files are place as follows:
 ```
 dartsim
-├── worlds                           
+├── worlds
 ├── src
 │    ├── CustomFeatures.hh
 │    ├── CustomFeatures.cc
-│    ├── ...                           
-├── include/ignition/physics/dartsim  
-└── CMakeLists.txt                 
+│    ├── ...
+├── include/ignition/physics/dartsim
+└── CMakeLists.txt
 ```
 
 We display them here for convenience:

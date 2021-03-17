@@ -68,7 +68,7 @@ This command tells the car to move in its coordinate frame with velocity
 second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
-engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim),
+engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/dartsim),
 the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/diff_drive/DiffDrive.cc#L333) code.
 Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/tpe),
 TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo4/src/systems/velocity_control/VelocityControl.cc#L117) code.
