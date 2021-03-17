@@ -155,5 +155,5 @@ The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
 | mesh::AttachMeshShapeFeature | ✓ | ✓ |
 | ForwardStep | ✓ | ✓ |
 | GetContactsFromLastStepFeature | ✓ | ✕ |
-| heightmap::GetHeightmapShapeProperties | ✓ | ✓ |
-| heightmap::AttachHeightmapShapeFeature | ✓ | ✓ |
+| heightmap::GetHeightmapShapeProperties | ✓ |  |
+| heightmap::AttachHeightmapShapeFeature | ✓ |  |
