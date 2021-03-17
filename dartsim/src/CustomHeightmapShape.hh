@@ -28,7 +28,9 @@ namespace dartsim {
 /// \brief This class creates a custom derivative of dartsim's HeightmapShape
 /// class which allows an ignition::common::Heightmap to be converted into a
 /// HeightmapShape that can be used by dartsim.
-class CustomHeightmapShape : public dart::dynamics::HeightmapShape<double>
+/// Using float precision because Bullet's collision detector doesn't support
+/// double. common::HeightmapData also holds floats.
+class CustomHeightmapShape : public dart::dynamics::HeightmapShape<float>
 {
   /// \brief Constructor
   /// \param[in] _input Holds heightmap data.

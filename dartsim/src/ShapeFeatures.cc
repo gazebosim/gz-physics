@@ -212,7 +212,7 @@ Identity ShapeFeatures::CastToHeightmapShape(
   const dart::dynamics::ShapePtr &shape =
       shapeInfo->node->getShape();
 
-  if (dynamic_cast<dart::dynamics::HeightmapShape<double> *>(shape.get()))
+  if (dynamic_cast<dart::dynamics::HeightmapShape<float> *>(shape.get()))
     return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
 
   return this->GenerateInvalidId();
@@ -224,8 +224,8 @@ LinearVector3d ShapeFeatures::GetHeightmapShapeSize(
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_heightmapID);
 
-  const dart::dynamics::HeightmapShape<double> *heightmap =
-      static_cast<dart::dynamics::HeightmapShape<double> *>(
+  const auto *heightmap =
+      static_cast<dart::dynamics::HeightmapShape<float> *>(
         shapeInfo->node->getShape().get());
 
   return heightmap->getBoundingBox().getMax() - heightmap->getBoundingBox().getMin();
@@ -237,11 +237,11 @@ LinearVector3d ShapeFeatures::GetHeightmapShapeScale(
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_heightmapID);
 
-  const dart::dynamics::HeightmapShape<double> *heightmap =
-      static_cast<dart::dynamics::HeightmapShape<double> *>(
+  const auto *heightmap =
+      static_cast<dart::dynamics::HeightmapShape<float> *>(
         shapeInfo->node->getShape().get());
 
-  return heightmap->getScale();
+  return heightmap->getScale().cast<double>();
 }
 
 /////////////////////////////////////////////////

@@ -29,7 +29,7 @@ CustomHeightmapShape::CustomHeightmapShape(
     common::HeightmapData &_input,
     const Eigen::Vector3d &_size,
     int _subSampling)
-  : dart::dynamics::HeightmapShape<double>()
+  : dart::dynamics::HeightmapShape<float>()
 {
   double heightmapSizeZ = _input.MaxElevation();
   const bool flipY = false;
@@ -49,9 +49,7 @@ CustomHeightmapShape::CustomHeightmapShape(
   _input.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,
       heightsFloat);
 
-  std::vector<double> heightsDouble(heightsFloat.begin(), heightsFloat.end());
-
-  this->setHeightField(vertSize, vertSize, heightsDouble);
+  this->setHeightField(vertSize, vertSize, heightsFloat);
   this->setScale(Vector3(scale.X(), scale.Y(), 1));
 }
 
