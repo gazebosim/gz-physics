@@ -47,6 +47,16 @@ auto ConstructEmptyModelFeature::World<PolicyT, FeaturesT>
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
+auto ConstructEmptyNestedModelFeature::Model<PolicyT, FeaturesT>
+::ConstructEmptyModel(const std::string &_name) -> ModelPtrType
+{
+  return ModelPtrType(this->pimpl,
+        this->template Interface<ConstructEmptyNestedModelFeature>()
+                      ->ConstructEmptyNestedModel(this->identity, _name));
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
 auto ConstructEmptyLinkFeature::Model<PolicyT, FeaturesT>
 ::ConstructEmptyLink(const std::string &_name) -> LinkPtrType
 {

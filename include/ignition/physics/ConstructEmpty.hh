@@ -74,6 +74,30 @@ class ConstructEmptyModelFeature : public virtual Feature
 };
 
 /////////////////////////////////////////////////
+/// \brief This feature constructs an empty nested model and return its pointer
+/// from the given world.
+class ConstructEmptyNestedModelFeature : public virtual Feature
+{
+  public: template <typename PolicyT, typename FeaturesT>
+  class Model : public virtual Feature::Model<PolicyT, FeaturesT>
+  {
+    public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+
+    /// \brief Construct an empty model and attach a given name to it.
+    /// \return
+    ///   The ModelPtrType of the constructed model.
+    public: ModelPtrType ConstructEmptyModel(const std::string &_name);
+  };
+
+  public: template <typename PolicyT>
+  class Implementation : public virtual Feature::Implementation<PolicyT>
+  {
+    public: virtual Identity ConstructEmptyNestedModel(
+        const Identity &_modelID, const std::string &_name) = 0;
+  };
+};
+
+/////////////////////////////////////////////////
 /// \brief This feature constructs an empty link and return its pointer
 /// from the given model.
 class ConstructEmptyLinkFeature : public virtual Feature

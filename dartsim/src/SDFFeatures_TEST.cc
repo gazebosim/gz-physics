@@ -531,14 +531,14 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 
   // check top level model
   EXPECT_EQ("parent_model", world->GetModel(0)->GetName());
-  EXPECT_EQ("parent_model::nested_model", world->GetModel(1)->GetName());
+  EXPECT_EQ("nested_model", world->GetModel(1)->GetName());
   auto parentModel = world->GetModel("parent_model");
   ASSERT_NE(nullptr, parentModel);
 
   auto joint1 = parentModel->GetJoint("joint1");
   EXPECT_NE(nullptr, joint1);
 
-  auto nestedModel = world->GetModel("parent_model::nested_model");
+  auto nestedModel = parentModel->GetModel("nested_model");
   ASSERT_NE(nullptr, nestedModel);
 
   auto nestedJoint = parentModel->GetJoint("nested_joint");
@@ -603,9 +603,9 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
   auto link1 = parentModel->GetLink("link1");
   EXPECT_NE(nullptr, link1);
 
-  auto nestedModel = world->GetModel("parent_model::nested_model");
+  auto nestedModel = parentModel->GetModel("nested_model");
   ASSERT_NE(nullptr, nestedModel);
-  EXPECT_EQ("parent_model::nested_model", nestedModel->GetName());
+  EXPECT_EQ("nested_model", nestedModel->GetName());
   EXPECT_EQ(2u, nestedModel->GetLinkCount());
   EXPECT_EQ(2u, nestedModel->GetJointCount());
 

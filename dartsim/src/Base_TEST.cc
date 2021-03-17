@@ -64,7 +64,7 @@ TEST(BaseClass, RemoveModel)
     auto sn = pair.second->createShapeNodeWith<dart::dynamics::CollisionAspect>(
       boxShape);
 
-    auto res = base.AddModel({skel, frame, ""}, worldID);
+    auto res = base.AddModel({skel, name, frame, ""}, worldID);
     const std::string fullName = ::sdf::JoinName(
         world->getName(),
         ::sdf::JoinName(skel->getName(), pair.second->getName()));

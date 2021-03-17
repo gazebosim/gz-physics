@@ -214,6 +214,56 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    /// \brief This feature retrieves the nested model pointer from the parent
+    /// model by specifying the model index and model index/name.
+    class IGNITION_PHYSICS_VISIBLE GetNestedModelFromModel
+        : public virtual FeatureWithRequirements<GetModelFromWorld>
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Model : public virtual Feature::Model<PolicyT, FeaturesT>
+      {
+        // typedefs for the type of Model that this Model can return
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
+
+        /// \brief Get the number of Models inside this Model.
+        public: std::size_t GetModelCount() const;
+
+        /// \brief Get a Model that exists within this Model.
+        /// \param[in] _index
+        ///   Index of the model within this model.
+        /// \return A model reference. If _index is GetModelCount() or higher,
+        /// this will be a nullptr.
+        public: ModelPtrType GetModel(std::size_t _index);
+
+        /// \sa GetModel(std::size_t)
+        public: ConstModelPtrType GetModel(std::size_t _index) const;
+
+        /// \brief Get a Model that exists within this Model.
+        /// \param[in] _name
+        ///   Name of the model within this model.
+        /// \return A model reference. If a model named _name does not exist in
+        /// this model, this will be a nullptr.
+        public: ModelPtrType GetModel(const std::string &_name);
+
+        /// \sa GetModel(const std::string &)
+        public: ConstModelPtrType GetModel(const std::string &_name) const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual std::size_t GetNestedModelCount(
+            const Identity &_modelID) const = 0;
+
+        public: virtual Identity GetNestedModel(
+            const Identity &_modelID, std::size_t _modelIndex) const = 0;
+
+        public: virtual Identity GetNestedModel(
+            const Identity &_modelID, const std::string &_modelName) const = 0;
+      };
+    };
+    /////////////////////////////////////////////////
     /// \brief This feature retrieves the link pointer from the model
     /// by specifying model index and link index/name.
     class IGNITION_PHYSICS_VISIBLE GetLinkFromModel : public virtual Feature
@@ -457,6 +507,7 @@ namespace ignition
       GetEngineInfo,
       GetWorldFromEngine,
       GetModelFromWorld,
+      GetNestedModelFromModel,
       GetLinkFromModel,
       GetJointFromModel,
       GetShapeFromLink

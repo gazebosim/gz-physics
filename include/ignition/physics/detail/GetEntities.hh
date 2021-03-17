@@ -216,6 +216,58 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    std::size_t
+    GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModelCount() const
+    {
+      return this->template Interface<GetNestedModelFromModel>()
+          ->GetNestedModelCount(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+        const std::size_t _index) -> ModelPtrType
+    {
+      return ModelPtrType(
+          this->pimpl,
+          this->template Interface<GetNestedModelFromModel>()->GetNestedModel(
+              this->identity, _index));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+        const std::size_t _index) const -> ConstModelPtrType
+    {
+      return ConstModelPtrType(
+          this->pimpl,
+          this->template Interface<GetNestedModelFromModel>()->GetNestedModel(
+              this->identity, _index));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+        const std::string &_name) -> ModelPtrType
+    {
+      return ModelPtrType(
+          this->pimpl,
+          this->template Interface<GetNestedModelFromModel>()->GetNestedModel(
+              this->identity, _name));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+        const std::string &_name) const -> ConstModelPtrType
+    {
+      return ConstModelPtrType(this->pimpl,
+          this->template Interface<GetNestedModelFromModel>()->GetNestedModel(
+              this->identity, _name));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     std::size_t GetLinkFromModel::Model<PolicyT, FeaturesT>::GetLinkCount()
         const
     {
