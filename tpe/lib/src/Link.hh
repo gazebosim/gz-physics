@@ -62,13 +62,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
   public: math::Vector3d GetAngularVelocity() const;
 
   /// \brief Update the pose of the entity
-  /// \param[in] _timeStep current world timestep
-  /// \param[in] _linearVelocity linear velocity
-  /// \param[in] _angularVelocity angular velocity
-  public: virtual void UpdatePose(
-    const double _timeStep,
-    const math::Vector3d &_linearVelocity,
-    const math::Vector3d &_angularVelocity);
+  /// \param[in] _timeStep current world timestep in seconds
+  public: virtual void UpdatePose(double _timeStep);
 
   IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of link

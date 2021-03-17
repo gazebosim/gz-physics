@@ -61,29 +61,24 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   public: Entity &GetCanonicalLink();
 
   /// \brief Set the linear velocity of model
-  /// \param[in] _velocity linear velocity
+  /// \param[in] _velocity linear velocity in meters per second
   public: void SetLinearVelocity(const math::Vector3d &_velocity);
 
   /// \brief Get the linear velocity of model
-  /// \return linear velocity of model
+  /// \return linear velocity of model in meters per second
   public: math::Vector3d GetLinearVelocity() const;
 
   /// \brief Set the angular velocity of model
-  /// \param[in] _velocity angular velocity from world
+  /// \param[in] _velocity angular velocity from world in radians per second
   public: void SetAngularVelocity(const math::Vector3d &_velocity);
 
   /// \brief Get the angular velocity of model
-  /// \return angular velocity
+  /// \return angular velocity in radians per second
   public: math::Vector3d GetAngularVelocity() const;
 
   /// \brief Update the pose of the entity
-  /// \param[in] _timeStep current world timestep
-  /// \param[in] _linearVelocity linear velocity
-  /// \param[in] _angularVelocity angular velocity
-  public: virtual void UpdatePose(
-    const double _timeStep,
-    const math::Vector3d &_linearVelocity,
-    const math::Vector3d &_angularVelocity);
+  /// \param[in] _timeStep current world timestep in seconds
+  public: virtual void UpdatePose(double _timeStep);
 
   IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of model

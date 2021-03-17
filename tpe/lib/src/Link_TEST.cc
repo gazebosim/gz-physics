@@ -35,8 +35,9 @@ TEST(Link, BasicAPI)
   link.SetName("link_1");
   EXPECT_EQ("link_1", link.GetName());
 
-  link.SetPose(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3));
-  EXPECT_EQ(math::Pose3d(1, 2, 3, 0.1, 0.2, 0.3), link.GetPose());
+  math::Pose3d link1Pose(1, 2, 3, 0.1, 0.2, 0.3);
+  link.SetPose(link1Pose);
+  EXPECT_EQ(link1Pose, link.GetPose());
 
   Model model;
   auto modelPose = math::Pose3d(10, 0, 2, 1, 0, 0);
@@ -44,15 +45,25 @@ TEST(Link, BasicAPI)
   Entity &linkEnt = model.AddLink();
   ASSERT_NE(nullptr, linkEnt.GetParent());
 
-  linkEnt.SetPose(math::Pose3d(0, 0.2, 0.5, 0, 1, 0));
+  math::Pose3d linkEntPose(0, 0.2, 0.5, 0, 1, 0);
+  linkEnt.SetPose(linkEntPose);
   EXPECT_EQ(math::Pose3d(10, -0.312675, 2.43845, 1.23686, 0.471978, 0.918989),
             linkEnt.GetWorldPose());
 
-  link.SetLinearVelocity(math::Vector3d(0, 0.1, 0));
-  EXPECT_EQ(math::Vector3d(0, 0.1, 0), link.GetLinearVelocity());
+  math::Vector3d linVel(0, 0.1, 0);
+  link.SetLinearVelocity(linVel);
+  EXPECT_EQ(linVel, link.GetLinearVelocity());
 
-  link.SetAngularVelocity(math::Vector3d(0.2, 0, 1));
-  EXPECT_EQ(math::Vector3d(0.2, 0, 1), link.GetAngularVelocity());
+  math::Vector3d angVel(0.2, 0, 1);
+  link.SetAngularVelocity(angVel);
+  EXPECT_EQ(angVel, link.GetAngularVelocity());
+
+  double timeStep = 0.1;
+  math::Pose3d expectedPose(
+    link1Pose.Pos() + linVel * timeStep,
+    link1Pose.Rot().Integrate(angVel, timeStep));
+  link.UpdatePose(timeStep);
+  EXPECT_EQ(expectedPose, link.GetPose());
 
   Link link2;
   EXPECT_NE(link.GetId(), link2.GetId());
