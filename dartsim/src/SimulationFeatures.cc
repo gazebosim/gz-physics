@@ -42,7 +42,6 @@ void SimulationFeatures::WorldForwardStep(
 {
   IGN_PROFILE("SimulationFeatures::WorldForwardStep");
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
-  // TODO(adlarkin) sanity check to make sure world is not nullptr?
   if (!world)
   {
     ignerr << "World with id [" << _worldID.id << "] not found." << std::endl;
