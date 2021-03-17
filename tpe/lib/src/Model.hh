@@ -57,7 +57,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   public: Entity &AddModel();
 
   /// \brief Get the number of nested models in the model
-  /// \return Number of nested mdoels in the model
+  /// \return Number of nested models in the model
   public: std::size_t GetModelCount() const;
 
   /// \brief Set the canonical link of model

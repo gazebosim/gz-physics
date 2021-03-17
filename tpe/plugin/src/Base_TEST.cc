@@ -158,24 +158,28 @@ TEST(BaseClass, AddEntities)
   // check indices
   std::size_t modelInd1 = base.idToIndexInContainer(modelId1);
   EXPECT_EQ(0u, modelInd1);
-  EXPECT_EQ(modelId1, base.indexInContainerToId(worldId, 0u));
+  EXPECT_EQ(modelId1,
+            base.indexInContainerToId(worldId, 0u, base.models).first);
   std::size_t modelInd2 = base.idToIndexInContainer(modelId2);
   EXPECT_EQ(1u, modelInd2);
-  EXPECT_EQ(modelId2, base.indexInContainerToId(worldId, 1u));
+  EXPECT_EQ(modelId2,
+            base.indexInContainerToId(worldId, 1u, base.models).first);
 
   std::size_t linkInd1 = base.idToIndexInContainer(linkId1);
   EXPECT_EQ(0u, linkInd1);
-  EXPECT_EQ(linkId1, base.indexInContainerToId(modelId1, 0u));
+  EXPECT_EQ(linkId1, base.indexInContainerToId(modelId1, 0u, base.links).first);
   std::size_t linkInd2 = base.idToIndexInContainer(linkId2);
   EXPECT_EQ(0u, linkInd2);
-  EXPECT_EQ(linkId2, base.indexInContainerToId(modelId2, 0u));
+  EXPECT_EQ(linkId2, base.indexInContainerToId(modelId2, 0u, base.links).first);
 
   std::size_t boxInd = base.idToIndexInContainer(boxId);
   EXPECT_EQ(0u, boxInd);
-  EXPECT_EQ(boxId, base.indexInContainerToId(linkId1, 0u));
+  EXPECT_EQ(boxId,
+            base.indexInContainerToId(linkId1, 0u, base.collisions).first);
   std::size_t cylinderInd = base.idToIndexInContainer(cylinderId);
   EXPECT_EQ(0u, cylinderInd);
-  EXPECT_EQ(cylinderId, base.indexInContainerToId(linkId2, 0u));
+  EXPECT_EQ(cylinderId,
+            base.indexInContainerToId(linkId2, 0u, base.collisions).first);
 }
 
 int main(int argc, char *argv[])
