@@ -23,6 +23,7 @@ Below is the general structure of the `ign-physics` repository:
 ign-physics
 ├── dartsim                   Files for dartsim plugin component.
 ├── tpe                       Files for tpe plugin component.
+├── heightmap                 Files for heightmap component.
 ├── include/ignition/physics  Header files.
 ├── mesh                      Files for mesh component.
 ├── resources                 Model and mesh resource files used by tests.
@@ -181,11 +182,11 @@ dart::simulation::WorldPtr RetrieveWorld::World<PolicyT, FeaturesT>
 The new defined feature file is placed in `dartsim/include/ignition/physics/dartsim`:
 ```
 dartsim
-├── worlds                           
-├── src                       
+├── worlds
+├── src
 ├── include/ignition/physics/dartsim
 │    ├──  World.hh
-└── CMakeLists.txt                 
+└── CMakeLists.txt
 ```
 
 As seen above, after including the necessary library of `dartsim` and `ign-physics`,
@@ -214,13 +215,13 @@ and implemented in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-p
 These files are place as follows:
 ```
 dartsim
-├── worlds                           
+├── worlds
 ├── src
 │    ├── CustomFeatures.hh
 │    ├── CustomFeatures.cc
-│    ├── ...                           
-├── include/ignition/physics/dartsim  
-└── CMakeLists.txt                 
+│    ├── ...
+├── include/ignition/physics/dartsim
+└── CMakeLists.txt
 ```
 
 We display them here for convenience:
