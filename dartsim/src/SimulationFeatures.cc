@@ -15,11 +15,15 @@
  *
 */
 
+#include <unordered_map>
+#include <utility>
+
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/CollisionResult.hpp>
 
 #include <ignition/common/Profiler.hh>
 
+#include <ignition/math/Pose3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
 #include "ignition/physics/GetContacts.hh"
@@ -76,6 +80,8 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
   // remove link poses from the previous iteration
   _poses.entries.clear();
 
+  std::unordered_map<std::size_t, math::Pose3d> newPoses;
+
   for (const auto &link : this->links.idToObject)
   {
     const auto id = link.first;
@@ -101,9 +107,15 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
         _poses.entries.push_back(wp);
       }
 
-      this->prevLinkPoses[id] = wp.pose;
+      newPoses[id] = wp.pose;
     }
   }
+
+  // Save the new poses so that they can be used to check for updates in the
+  // next iteration. Re-setting this->prevLinkPoses with the contents of
+  // newPoses ensures that we aren't caching data for links that were removed
+  this->prevLinkPoses.clear();
+  this->prevLinkPoses = std::move(newPoses);
 }
 
 std::vector<SimulationFeatures::ContactInternal>
