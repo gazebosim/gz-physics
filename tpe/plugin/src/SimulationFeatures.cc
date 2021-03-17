@@ -15,12 +15,9 @@
  *
 */
 
-#include <unordered_map>
-
 #include <ignition/common/Console.hh>
 #include <ignition/common/Profiler.hh>
 
-#include <ignition/math/Pose3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
 #include "SimulationFeatures.hh"
@@ -73,11 +70,6 @@ void SimulationFeatures::Write(JointPositions &/*_positions*/) const
 
 void SimulationFeatures::Write(WorldPoses &_poses) const
 {
-  // cache link poses from the previous iteration
-  // (using a static variable for now instead of a member variable
-  // since this method has to be const)
-  static std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
-
   // remove link poses from the previous iteration
   _poses.entries.clear();
 
@@ -90,11 +82,11 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
     if (info)
     {
       const auto currPose = info->link->GetPose();
-      auto iter = prevLinkPoses.find(id);
+      auto iter = this->prevLinkPoses.find(id);
 
       // if the link's pose is new or has changed,
       // add the link to the output poses
-      if ((iter == prevLinkPoses.end()) ||
+      if ((iter == this->prevLinkPoses.end()) ||
           !iter->second.Pos().Equal(currPose.Pos(), 1e-6) ||
           !iter->second.Rot().Equal(currPose.Rot(), 1e-6))
       {
@@ -104,7 +96,7 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
         _poses.entries.push_back(wp);
       }
 
-      prevLinkPoses[id] = currPose;
+      this->prevLinkPoses[id] = currPose;
     }
   }
 }

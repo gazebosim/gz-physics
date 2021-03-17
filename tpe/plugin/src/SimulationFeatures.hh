@@ -19,6 +19,9 @@
 #define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
 
 #include <vector>
+#include <unordered_map>
+
+#include <ignition/math/Pose3.hh>
 
 #include <ignition/physics/CanWriteData.hh>
 #include <ignition/physics/ForwardStep.hh>
@@ -57,6 +60,10 @@ class SimulationFeatures :
   /// \param[in] _id Model ID
   /// \return Collision entity
   private: tpelib::Entity &GetModelCollision(std::size_t _id) const;
+
+  /// \brief link poses from the previous iteration.
+  /// The key is the link's ID, and the value is the link's pose
+  private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
 };
 
 }

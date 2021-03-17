@@ -15,14 +15,11 @@
  *
 */
 
-#include <unordered_map>
-
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/CollisionResult.hpp>
 
 #include <ignition/common/Profiler.hh>
 
-#include <ignition/math/Pose3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
 #include "ignition/physics/GetContacts.hh"
@@ -71,11 +68,6 @@ void SimulationFeatures::Write(JointPositions &/*_positions*/) const
 
 void SimulationFeatures::Write(WorldPoses &_poses) const
 {
-  // cache link poses from the previous iteration
-  // (using a static variable for now instead of a member variable
-  // since this method has to be const)
-  static std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
-
   // remove link poses from the previous iteration
   _poses.entries.clear();
 
@@ -96,15 +88,15 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
 
       // if the link's pose is new or has changed,
       // add the link to the output poses
-      auto iter = prevLinkPoses.find(id);
-      if ((iter == prevLinkPoses.end()) ||
+      auto iter = this->prevLinkPoses.find(id);
+      if ((iter == this->prevLinkPoses.end()) ||
           !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
           !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
       {
         _poses.entries.push_back(wp);
       }
 
-      prevLinkPoses[id] = wp.pose;
+      this->prevLinkPoses[id] = wp.pose;
     }
   }
 }
