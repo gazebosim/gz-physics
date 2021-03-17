@@ -30,8 +30,8 @@ namespace heightmap
 {
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
-  auto GetHeightmapShapeProperties::HeightmapShape<PolicyT, FeaturesT>::GetSize() const
-  -> Dimensions
+  auto GetHeightmapShapeProperties::HeightmapShape<PolicyT, FeaturesT>::
+      GetSize() const -> Dimensions
   {
     return this->template Interface<GetHeightmapShapeProperties>()
         ->GetHeightmapShapeSize(this->identity);
@@ -39,16 +39,8 @@ namespace heightmap
 
   /////////////////////////////////////////////////
   template <typename PolicyT, typename FeaturesT>
-  auto GetHeightmapShapeProperties::HeightmapShape<PolicyT, FeaturesT>::GetScale() const
-  -> Dimensions
-  {
-    return this->template Interface<GetHeightmapShapeProperties>()
-        ->GetHeightmapShapeScale(this->identity);
-  }
-
-  /////////////////////////////////////////////////
-  template <typename PolicyT, typename FeaturesT>
-  auto AttachHeightmapShapeFeature::Link<PolicyT, FeaturesT>::AttachHeightmapShape(
+  auto AttachHeightmapShapeFeature::Link<PolicyT, FeaturesT>::
+      AttachHeightmapShape(
       const std::string &_name,
       ignition::common::HeightmapData &_heightmapData,
       const PoseType &_pose,

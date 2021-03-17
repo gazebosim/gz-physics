@@ -134,15 +134,12 @@ class ShapeFeatures :
   public: LinearVector3d GetHeightmapShapeSize(
       const Identity &_heightmapID) const override;
 
-  public: LinearVector3d GetHeightmapShapeScale(
-      const Identity &_heightmapID) const override;
-
   public: Identity AttachHeightmapShape(
       const Identity &_linkID,
       const std::string &_name,
       ignition::common::HeightmapData &_heightmapData,
       const Pose3d &_pose,
-      const LinearVector3d &_scale,
+      const LinearVector3d &_size,
       int _subSampling) override;
 
   // ----- Mesh Features -----

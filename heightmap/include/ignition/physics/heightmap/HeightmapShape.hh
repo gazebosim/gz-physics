@@ -43,13 +43,9 @@ namespace heightmap
       public: using Dimensions =
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-      /// \brief Get the size of the heightmap.
-      /// \returns the size of the heightmap.
+      /// \brief Get the size of the heightmap in meters.
+      /// \returns The size of the heightmap.
       public: Dimensions GetSize() const;
-
-      /// \brief Get the scaling factor that is being applied to the heightmap.
-      /// \returns the scaling factor that is being applied to the heightmap.
-      public: Dimensions GetScale() const;
     };
 
     public: template <typename PolicyT>
@@ -59,9 +55,6 @@ namespace heightmap
           typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
       public: virtual Dimensions GetHeightmapShapeSize(
-          const Identity &_heightmapID) const = 0;
-
-      public: virtual Dimensions GetHeightmapShapeScale(
           const Identity &_heightmapID) const = 0;
     };
   };
@@ -109,7 +102,7 @@ namespace heightmap
           const std::string &_name,
           ignition::common::HeightmapData &_heightmapData,
           const PoseType &_pose,
-          const Dimensions &_scale,
+          const Dimensions &_size,
           int _subSampling) = 0;
     };
   };

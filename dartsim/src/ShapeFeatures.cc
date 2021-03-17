@@ -232,29 +232,16 @@ LinearVector3d ShapeFeatures::GetHeightmapShapeSize(
 }
 
 /////////////////////////////////////////////////
-LinearVector3d ShapeFeatures::GetHeightmapShapeScale(
-    const Identity &_heightmapID) const
-{
-  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_heightmapID);
-
-  const auto *heightmap =
-      static_cast<dart::dynamics::HeightmapShape<float> *>(
-        shapeInfo->node->getShape().get());
-
-  return heightmap->getScale().cast<double>();
-}
-
-/////////////////////////////////////////////////
 Identity ShapeFeatures::AttachHeightmapShape(
     const Identity &_linkID,
     const std::string &_name,
     ignition::common::HeightmapData &_heightmapData,
     const Pose3d &_pose,
-    const LinearVector3d &_scale,
+    const LinearVector3d &_size,
     int _subSampling)
 {
   auto heightmap = std::make_shared<CustomHeightmapShape>(_heightmapData,
-      _scale, _subSampling);
+      _size, _subSampling);
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
