@@ -45,20 +45,20 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
   /// \return Newly created Collision
   public: Entity &AddCollision();
 
-  /// \brief Set the linear velocity of link
-  /// \param[in] _velocity linear velocity
+  /// \brief Set the linear velocity of link relative to parent
+  /// \param[in] _velocity linear velocity in meters per second
   public: void SetLinearVelocity(const math::Vector3d &_velocity);
 
-  /// \brief Get the linear velocity of link
-  /// \return linear velocity of link
+  /// \brief Get the linear velocity of link relative to parent
+  /// \return linear velocity of link in meters per second
   public: math::Vector3d GetLinearVelocity() const;
 
-  /// \brief Set the angular velocity of link
-  /// \param[in] _velocity angular velocity
+  /// \brief Set the angular velocity of link relative to parent
+  /// \param[in] _velocity angular velocity in radians per second
   public: void SetAngularVelocity(const math::Vector3d &_velocity);
 
-  /// \brief Get the angular velocity of link
-  /// \return angular velocity
+  /// \brief Get the angular velocity of link relative to parent
+  /// \return angular velocity in radians per second
   public: math::Vector3d GetAngularVelocity() const;
 
   /// \brief Update the pose of the entity

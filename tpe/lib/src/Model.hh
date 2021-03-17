@@ -60,19 +60,19 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \return Entity the canonical (first) link
   public: Entity &GetCanonicalLink();
 
-  /// \brief Set the linear velocity of model
+  /// \brief Set the linear velocity of model relative to parent
   /// \param[in] _velocity linear velocity in meters per second
   public: void SetLinearVelocity(const math::Vector3d &_velocity);
 
-  /// \brief Get the linear velocity of model
+  /// \brief Get the linear velocity of model relative to parent
   /// \return linear velocity of model in meters per second
   public: math::Vector3d GetLinearVelocity() const;
 
-  /// \brief Set the angular velocity of model
+  /// \brief Set the angular velocity of model relative to parent
   /// \param[in] _velocity angular velocity from world in radians per second
   public: void SetAngularVelocity(const math::Vector3d &_velocity);
 
-  /// \brief Get the angular velocity of model
+  /// \brief Get the angular velocity of model relative to parent
   /// \return angular velocity in radians per second
   public: math::Vector3d GetAngularVelocity() const;
 
