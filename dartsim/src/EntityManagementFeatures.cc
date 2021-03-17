@@ -17,6 +17,7 @@
 
 #include "EntityManagementFeatures.hh"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -121,7 +122,7 @@ static std::size_t GetWorldOfShapeNode(const EntityManagementFeatures *_emf,
   // Now find the skeleton's model
   const std::size_t modelID = _emf->models.objectToID.at(skelPtr);
   // And the world containing the model
-  return _emf->models.idToContainerID.at(modelID);
+  return _emf->GetWorldOfModelImpl(modelID);
 }
 
 /////////////////////////////////////////////////
@@ -198,14 +199,13 @@ std::size_t EntityManagementFeatures::GetModelCount(
 Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, const std::size_t _modelIndex) const
 {
-  const DartSkeletonPtr &model =
-      this->ReferenceInterface<DartWorld>(_worldID)->getSkeleton(_modelIndex);
+  const std::size_t modelID =
+      this->models.indexInContainerToID.at(_worldID)[_modelIndex];
 
   // If the model doesn't exist in "models", it means the containing entity has
   // been removed.
-  if (this->models.HasEntity(model))
+  if (this->models.HasEntity(modelID))
   {
-    const std::size_t modelID = this->models.IdentityOf(model);
     return this->GenerateIdentity(modelID, this->models.at(modelID));
   }
   else
@@ -255,16 +255,12 @@ std::size_t EntityManagementFeatures::GetModelIndex(
 Identity EntityManagementFeatures::GetWorldOfModel(
     const Identity &_modelID) const
 {
-  // If the model doesn't exist in "models", it it has been removed.
-  if (this->models.HasEntity(_modelID))
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  if (worldID != INVALID_ENTITY_ID )
   {
-    const std::size_t worldID = this->models.idToContainerID.at(_modelID);
     return this->GenerateIdentity(worldID, this->worlds.at(worldID));
   }
-  else
-  {
-    return this->GenerateInvalidId();
-  }
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -310,7 +306,7 @@ Identity EntityManagementFeatures::GetNestedModel(
 
   if (this->models.HasEntity(_modelID))
   {
-    auto worldID = this->models.idToContainerID.at(_modelID);
+    auto worldID = this->GetWorldOfModelImpl(_modelID);
     auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
     if (nullptr == nestedSkel)
     {
@@ -619,8 +615,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
   {
     auto filterPtr = GetFilterPtr(this, _worldID);
     filterPtr->RemoveSkeletonCollisions(model);
-    this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
-    return true;
+    return this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
   }
   return false;
 }
@@ -636,8 +631,7 @@ bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
   {
     auto filterPtr = GetFilterPtr(this, _worldID);
     filterPtr->RemoveSkeletonCollisions(model);
-    this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
-    return true;
+    return this->RemoveModelImpl(_worldID, this->models.IdentityOf(model));
   }
   return false;
 }
@@ -647,13 +641,13 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   if (this->models.HasEntity(_modelID))
   {
-    auto worldID = this->models.idToContainerID.at(_modelID);
+    auto worldID = this->GetWorldOfModelImpl(_modelID);
     auto model = this->models.at(_modelID)->model;
 
     auto filterPtr = GetFilterPtr(this, worldID);
     filterPtr->RemoveSkeletonCollisions(model);
-    this->RemoveModelImpl(this->models.idToContainerID.at(_modelID), _modelID);
-    return true;
+
+    return this->RemoveModelImpl(worldID, _modelID);
   }
   return false;
 }
@@ -664,6 +658,50 @@ bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
   return !this->models.HasEntity(_modelID);
 }
 
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByIndex(
+    const Identity &_modelID, std::size_t _modelIndex)
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_modelIndex >= modelInfo->nestedModels.size())
+  {
+    return this->GenerateInvalidId();
+  }
+  const auto nestedModelID = modelInfo->nestedModels[_modelIndex];
+  if (this->models.HasEntity(nestedModelID))
+  {
+    auto worldID = this->GetWorldOfModelImpl(nestedModelID);
+    auto model = this->models.at(nestedModelID)->model;
+    auto filterPtr = GetFilterPtr(this, worldID);
+    filterPtr->RemoveSkeletonCollisions(model);
+    return this->RemoveModelImpl(worldID, nestedModelID);
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
+                                                 const std::string &_modelName)
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const std::string fullName =
+      ::sdf::JoinName(modelInfo->model->getName(), _modelName);
+
+  if (this->models.HasEntity(_modelID))
+  {
+    auto worldID = this->GetWorldOfModelImpl(_modelID);
+    auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
+    if (nullptr == nestedSkel || !this->models.HasEntity(nestedSkel))
+    {
+      return false;
+    }
+    const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
+    auto filterPtr = GetFilterPtr(this, worldID);
+    filterPtr->RemoveSkeletonCollisions(nestedSkel);
+    return this->RemoveModelImpl(worldID, nestedModelID);
+  }
+  return false;
+}
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
@@ -705,7 +743,7 @@ Identity EntityManagementFeatures::ConstructEmptyNestedModel(
     const Identity &_modelID, const std::string &_name)
 {
   // find the world assocated with the model
-  auto worldID = this->models.idToContainerID.at(_modelID);
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
   const auto &skel = this->models.at(_modelID)->model;
   const std::string modelFullName = ::sdf::JoinName(skel->getName(), _name);
 
@@ -717,8 +755,8 @@ Identity EntityManagementFeatures::ConstructEmptyNestedModel(
         dart::dynamics::Frame::World(),
         modelFullName + "_frame");
 
-  auto [modelID, modelInfo] =
-      this->AddModel({model, _name, modelFrame, ""}, worldID);  // NOLINT
+  auto [modelID, modelInfo] = this->AddNestedModel(
+      {model, _name, modelFrame, ""}, _modelID, worldID);  // NOLINT
 
   return this->GenerateIdentity(modelID, this->models.at(modelID));
 }
@@ -739,8 +777,8 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
       model->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
         nullptr, prop_fj, prop_bn).second;
 
-  auto worldIDIt = this->models.idToContainerID.find(_modelID);
-  if (worldIDIt == this->models.idToContainerID.end())
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  if (worldID == INVALID_ENTITY_ID)
   {
     ignerr << "World of model [" << model->getName()
            << "] could not be found when creating link [" << _name
@@ -748,7 +786,7 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
     return this->GenerateInvalidId();
   }
 
-  auto world = this->worlds.at(worldIDIt->second);
+  auto world = this->worlds.at(worldID);
   const std::string fullName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(model->getName(), bn->getName()));

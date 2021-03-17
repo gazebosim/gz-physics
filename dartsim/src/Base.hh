@@ -278,17 +278,15 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     const dart::simulation::WorldPtr &world = worlds[_worldID];
 
-    const std::size_t indexInWorld = world->getNumSkeletons();
-    this->models.idToIndexInContainer[id] = indexInWorld;
     std::vector<std::size_t> &indexInContainerToID =
         this->models.indexInContainerToID[_worldID];
+    const std::size_t indexInWorld = indexInContainerToID.size();
+    this->models.idToIndexInContainer[id] = indexInWorld;
     indexInContainerToID.push_back(id);
     world->addSkeleton(entry.model);
 
     this->models.idToContainerID[id] = _worldID;
     this->frames[id] = _info.frame.get();
-
-    assert(indexInContainerToID.size() == world->getNumSkeletons());
 
     return std::forward_as_tuple(id, entry);
   }
@@ -297,8 +295,25 @@ class Base : public Implements3d<FeatureList<Feature>>
               const ModelInfo &_info, const std::size_t _parentID,
               const std::size_t _worldID)
   {
-    auto [id, entry] = this->AddModel(_info, _worldID);
-    this->models.at(_parentID)->nestedModels.push_back(id);
+    const std::size_t id = this->GetNextEntity();
+    this->models.idToObject[id] = std::make_shared<ModelInfo>(_info);
+    ModelInfo &entry = *this->models.idToObject[id];
+    this->models.objectToID[_info.model] = id;
+
+    const dart::simulation::WorldPtr &world = worlds[_worldID];
+
+    auto parentModelInfo = this->models.at(_parentID);
+    const std::size_t indexInModel =
+        parentModelInfo->nestedModels.size();
+    this->models.idToIndexInContainer[id] = indexInModel;
+    std::vector<std::size_t> &indexInContainerToID =
+        this->models.indexInContainerToID[_parentID];
+    indexInContainerToID.push_back(id);
+    world->addSkeleton(entry.model);
+
+    this->models.idToContainerID[id] = _parentID;
+    this->frames[id] = _info.frame.get();
+    parentModelInfo->nestedModels.push_back(id);
     return {id, entry};
   }
 
@@ -352,13 +367,19 @@ class Base : public Implements3d<FeatureList<Feature>>
     return id;
   }
 
-  public: void RemoveModelImpl(const std::size_t _worldID,
+  public: bool RemoveModelImpl(const std::size_t _worldID,
                                const std::size_t _modelID)
   {
-    // TODO(addisu) Handle removal of nested models
     const auto &world = this->worlds.at(_worldID);
-    auto skel = this->models.at(_modelID)->model;
+    auto modelInfo = this->models.at(_modelID);
+    auto skel = modelInfo->model;
     // Remove the contents of the skeleton from local entity storage containers
+    for (auto &nestedModel : modelInfo->nestedModels)
+    {
+      RemoveModelImpl(_worldID, nestedModel);
+    }
+    modelInfo->nestedModels.clear();
+
     for (auto &jt : skel->getJoints())
     {
       this->joints.RemoveEntity(jt);
@@ -373,8 +394,41 @@ class Base : public Implements3d<FeatureList<Feature>>
       this->linksByName.erase(::sdf::JoinName(
           world->getName(), ::sdf::JoinName(skel->getName(), bn->getName())));
     }
+
+    // If this is a nested model, remove an entry from the parent models
+    // "nestedModels" vector
+    auto parentID = this->models.idToContainerID.at(_modelID);
+    if (parentID != _worldID)
+    {
+      auto parentModelInfo = this->models.at(parentID);
+      const std::size_t modelIndex =
+          this->models.idToIndexInContainer.at(_modelID);
+      if (modelIndex >= parentModelInfo->nestedModels.size())
+        return false;
+      parentModelInfo->nestedModels.erase(
+          parentModelInfo->nestedModels.begin() + modelIndex);
+    }
     this->models.RemoveEntity(skel);
     world->removeSkeleton(skel);
+    return true;
+  }
+
+  public: inline std::size_t GetWorldOfModelImpl(
+              const std::size_t &_modelID) const
+  {
+    if (this->models.HasEntity(_modelID))
+    {
+      auto parentIt = this->models.idToContainerID.find(_modelID);
+      if (parentIt != this->models.idToContainerID.end())
+      {
+        if (this->worlds.HasEntity(parentIt->second))
+        {
+          return parentIt->second;
+        }
+        return this->GetWorldOfModelImpl(parentIt->second);
+      }
+    }
+    return this->GenerateInvalidId();
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;

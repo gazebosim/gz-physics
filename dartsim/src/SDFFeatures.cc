@@ -402,7 +402,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   // If this is a nested model, find the world assocated with the model
   if (isNested)
   {
-    worldID = this->models.idToContainerID.at(_parentID);
+    worldID = this->GetWorldOfModelImpl(_parentID);
     const auto &skel = this->models.at(_parentID)->model;
     modelName = ::sdf::JoinName(skel->getName(), _sdfModel.Name());
   }
@@ -589,8 +589,8 @@ Identity SDFFeatures::ConstructSdfLink(
 
   dart::dynamics::BodyNode * const bn = result.second;
 
-  auto worldIDIt = this->models.idToContainerID.find(_modelID);
-  if (worldIDIt == this->models.idToContainerID.end())
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  if (worldID == INVALID_ENTITY_ID)
   {
     ignerr << "World of model [" << modelInfo.model->getName()
            << "] could not be found when creating link [" << _sdfLink.Name()
@@ -598,7 +598,7 @@ Identity SDFFeatures::ConstructSdfLink(
     return this->GenerateInvalidId();
   }
 
-  auto world = this->worlds.at(worldIDIt->second);
+  auto world = this->worlds.at(worldID);
   const std::string fullName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
@@ -675,7 +675,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // name to identify the correct parent skeleton. If the corresponding body
   // node is found, an error will not be printed.
   //
-  const std::size_t worldID = this->models.idToContainerID.at(_modelID);
+  const std::size_t worldID = this->GetWorldOfModelImpl(_modelID);
   auto & world = this->worlds.at(worldID);
 
   std::string parentLinkName;
