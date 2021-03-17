@@ -228,7 +228,8 @@ LinearVector3d ShapeFeatures::GetHeightmapShapeSize(
       static_cast<dart::dynamics::HeightmapShape<float> *>(
         shapeInfo->node->getShape().get());
 
-  return heightmap->getBoundingBox().getMax() - heightmap->getBoundingBox().getMin();
+  return heightmap->getBoundingBox().getMax() -
+      heightmap->getBoundingBox().getMin();
 }
 
 /////////////////////////////////////////////////

@@ -49,8 +49,8 @@ namespace heightmap
   {
     return ShapePtrType(this->pimpl,
           this->template Interface<AttachHeightmapShapeFeature>()
-              ->AttachHeightmapShape(this->identity, _name, _heightmapData, _pose,
-              _size, _subSampling));
+              ->AttachHeightmapShape(this->identity, _name, _heightmapData,
+              _pose, _size, _subSampling));
   }
 }
 }
