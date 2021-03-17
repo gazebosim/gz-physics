@@ -40,8 +40,7 @@ void SimulationFeatures::WorldForwardStep(
       << _worldID.id
       << "] not found."
       << std::endl;
-    // TODO(adlarkin) return here? de-referencing it below won't work
-    // if it == this->worlds.end()
+    return;
   }
   std::shared_ptr<tpelib::World> world = it->second->world;
   auto *dtDur =

@@ -39,6 +39,11 @@ void SimulationFeatures::WorldForwardStep(
   IGN_PROFILE("SimulationFeatures::WorldForwardStep");
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
   // TODO(adlarkin) sanity check to make sure world is not nullptr?
+  if (!world)
+  {
+    ignerr << "World with id [" << _worldID.id << "] not found." << std::endl;
+    return;
+  }
   auto *dtDur =
       _u.Query<std::chrono::steady_clock::duration>();
   const double tol = 1e-6;
