@@ -173,10 +173,53 @@ Identity EntityManagementFeatures::GetWorldOfModel(
 }
 
 /////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+  const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->model->GetModelCount();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &_modelID, const std::size_t _modelIndex) const
+{
+  std::size_t modelId = this->indexInContainerToId(_modelID.id, _modelIndex);
+  auto it = this->models.find(modelId);
+  if (it != this->models.end() && it->second != nullptr)
+  {
+    return this->GenerateIdentity(modelId, it->second);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &_modelID, const std::string &_modelName) const
+{
+  auto modelInfo = this->ReferenceInterface<WorldInfo>(_modelID);
+  if (modelInfo != nullptr)
+  {
+    tpelib::Entity &modelEnt = modelInfo->world->GetChildByName(_modelName);
+    for (const auto &[parentModelId, nestedModelInfo]: this->models)
+    {
+      if (nestedModelInfo != nullptr)
+      {
+        std::string name = nestedModelInfo->model->GetName();
+        if (parentModelId == modelEnt.GetId() && name == modelEnt.GetName())
+        {
+          return this->GenerateIdentity(parentModelId, nestedModelInfo);
+        }
+      }
+    }
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkCount(
   const Identity &_modelID) const
 {
-  return this->ReferenceInterface<ModelInfo>(_modelID)->model->GetChildCount();
+  return this->ReferenceInterface<ModelInfo>(_modelID)->model->GetLinkCount();
 }
 
 /////////////////////////////////////////////////
@@ -402,6 +445,21 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
     modelEnt.SetName(_name);
     tpelib::Model *model = static_cast<tpelib::Model *>(&modelEnt);
     return this->AddModel(_worldID.id, *model);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyNestedModel(
+  const Identity &_modelID, const std::string &_name)
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo != nullptr)
+  {
+    auto &modelEnt = modelInfo->model->AddModel();
+    modelEnt.SetName(_name);
+    tpelib::Model *model = static_cast<tpelib::Model *>(&modelEnt);
+    return this->AddModel(_modelID.id, *model);
   }
   return this->GenerateInvalidId();
 }

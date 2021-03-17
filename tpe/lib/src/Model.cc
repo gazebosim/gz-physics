@@ -16,6 +16,7 @@
 */
 
 #include <set>
+#include <algorithm>
 #include <string>
 
 #include <ignition/common/Profiler.hh>
@@ -64,7 +65,7 @@ Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
 
-  if (this->GetChildren().empty())
+  if (this->GetLinkCount() == 0u)
     this->dataPtr->firstLinkId = linkId;
 
   const auto[it, success]  = this->GetChildren().insert(
@@ -73,6 +74,16 @@ Entity &Model::AddLink()
   it->second->SetParent(this);
   this->ChildrenChanged();
   return *it->second.get();
+}
+
+//////////////////////////////////////////////////
+std::size_t Model::GetLinkCount() const
+{
+  const auto &children = this->GetChildren();
+  return std::count_if(children.begin(), children.end(), [](auto _child)
+  {
+    return std::dynamic_pointer_cast<Link>(_child.second);
+  });
 }
 
 //////////////////////////////////////////////////
@@ -85,6 +96,16 @@ Entity &Model::AddModel()
   it->second->SetParent(this);
   this->ChildrenChanged();
   return *it->second.get();
+}
+
+//////////////////////////////////////////////////
+std::size_t Model::GetModelCount() const
+{
+  const auto &children = this->GetChildren();
+  return std::count_if(children.begin(), children.end(), [](auto _child)
+  {
+    return std::dynamic_pointer_cast<Model>(_child.second);
+  });
 }
 
 //////////////////////////////////////////////////
