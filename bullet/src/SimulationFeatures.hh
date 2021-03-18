@@ -20,7 +20,6 @@
 
 #include <vector>
 #include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetContacts.hh>
 
 #include "Base.hh"
 
@@ -29,8 +28,7 @@ namespace physics {
 namespace bullet {
 
 using SimulationFeatureList = FeatureList<
-  ForwardStep,
-  GetContactsFromLastStepFeature
+  ForwardStep
 >;
 
 class SimulationFeatures :
@@ -42,14 +40,6 @@ class SimulationFeatures :
       ForwardStep::Output &_h,
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
-
-  public: std::vector<ContactInternal> GetContactsFromLastStep(
-      const Identity &/* _worldID */) const override
-      {
-        // TODO(lobotuerk): Implement contacts getter, could be like https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=2855
-        ignerr << "Dummy GetContactsFromLastStep implementation";
-        return std::vector<ContactInternal>();
-      };
 };
 
 }  // namespace bullet
