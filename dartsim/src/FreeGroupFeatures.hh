@@ -42,7 +42,8 @@ class FreeGroupFeatures
 
   Identity FindFreeGroupForLink(const Identity &_linkID) const override;
 
-  Identity GetFreeGroupUnconstrainedLink(const Identity &_groupID) const override;
+  Identity GetFreeGroupUnconstrainedLink(
+      const Identity &_groupID) const override;
 
   struct FreeGroupInfo
   {
