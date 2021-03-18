@@ -77,13 +77,24 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
-        /// \brief The canonical link of this FreeGroup. Getting and setting
+        /// \brief The unconstrained link of this FreeGroup. Getting and setting
         /// properties (like poses and velocities) on the group will be done
         /// in terms of this link.
-        public: LinkPtr<PolicyT, FeaturesT> CanonicalLink();
+        public: LinkPtr<PolicyT, FeaturesT> UnconstrainedLink();
+
+        /// \brief const version of UnconstrainedLink()
+        public: ConstLinkPtr<PolicyT, FeaturesT> UnconstrainedLink() const;
+
+        /// \brief The unconstrained link of this FreeGroup. Getting and setting
+        /// properties (like poses and velocities) on the group will be done
+        /// in terms of this link.
+        /// DEPRECATED. Pleaes use UnconstrainedLink()
+        public: LinkPtr<PolicyT, FeaturesT> CanonicalLink() IGN_DEPRECATED(4.0);
 
         /// \brief const version of CanonicalLink()
-        public: ConstLinkPtr<PolicyT, FeaturesT> CanonicalLink() const;
+        /// DEPRECATED. Pleaes use UnconstrainedLink()
+        public: ConstLinkPtr<PolicyT, FeaturesT> CanonicalLink() const
+                IGN_DEPRECATED(4.0);
       };
 
       public: template <typename PolicyT>
@@ -95,7 +106,7 @@ namespace ignition
         public: virtual Identity FindFreeGroupForLink(
             const Identity &_linkID) const = 0;
 
-        public: virtual Identity GetFreeGroupCanonicalLink(
+        public: virtual Identity GetFreeGroupUnconstrainedLink(
             const Identity &_groupID) const = 0;
       };
     };

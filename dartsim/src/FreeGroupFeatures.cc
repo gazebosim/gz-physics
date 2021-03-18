@@ -82,7 +82,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 }
 
 /////////////////////////////////////////////////
-Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
+Identity FreeGroupFeatures::GetFreeGroupUnconstrainedLink(
     const Identity &_groupID) const
 {
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);

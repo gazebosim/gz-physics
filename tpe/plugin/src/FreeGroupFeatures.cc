@@ -54,7 +54,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 }
 
 /////////////////////////////////////////////////
-Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
+Identity FreeGroupFeatures::GetFreeGroupUnconstrainedLink(
   const Identity &_groupID) const
 {
   // assume no canonical link for now

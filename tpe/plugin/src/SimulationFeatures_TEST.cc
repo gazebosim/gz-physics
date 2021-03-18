@@ -21,6 +21,7 @@
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
+#include <ignition/utils/SuppressWarning.hh>
 #include <ignition/plugin/Loader.hh>
 
 // Features
@@ -235,7 +236,10 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
+    IGN_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
     ASSERT_NE(nullptr, freeGroup->CanonicalLink());
+    IGN_UTILS_WARN_RESUME__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->UnconstrainedLink());
 
     auto link = model->GetLink("sphere_link");
     auto freeGroupLink = link->FindFreeGroup();

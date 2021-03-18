@@ -67,11 +67,29 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     LinkPtr<PolicyT, FeaturesT>
-    FindFreeGroupFeature::FreeGroup<PolicyT, FeaturesT>::CanonicalLink()
+    FindFreeGroupFeature::FreeGroup<PolicyT, FeaturesT>::UnconstrainedLink()
     {
       return LinkPtr<PolicyT, FeaturesT>(this->pimpl,
         this->template Interface<FindFreeGroupFeature>()
-          ->GetFreeGroupCanonicalLink(this->identity));
+          ->GetFreeGroupUnconstrainedLink(this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    ConstLinkPtr<PolicyT, FeaturesT> FindFreeGroupFeature::FreeGroup<
+        PolicyT, FeaturesT>::UnconstrainedLink() const
+    {
+      return LinkPtr<PolicyT, FeaturesT>(this->pimpl,
+        this->template Interface<FindFreeGroupFeature>()
+          ->GetFreeGroupUnconstrainedLink(this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    LinkPtr<PolicyT, FeaturesT>
+    FindFreeGroupFeature::FreeGroup<PolicyT, FeaturesT>::CanonicalLink()
+    {
+      return this->UnconstrainedLink();
     }
 
     /////////////////////////////////////////////////
@@ -79,9 +97,7 @@ namespace ignition
     ConstLinkPtr<PolicyT, FeaturesT>
     FindFreeGroupFeature::FreeGroup<PolicyT, FeaturesT>::CanonicalLink() const
     {
-      return LinkPtr<PolicyT, FeaturesT>(this->pimpl,
-        this->template Interface<FindFreeGroupFeature>()
-          ->GetFreeGroupCanonicalLink(this->identity));
+      return this->UnconstrainedLink();
     }
 
     /////////////////////////////////////////////////

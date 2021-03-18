@@ -41,7 +41,8 @@ class FreeGroupFeatures :
 
   Identity FindFreeGroupForLink(const Identity &_linkID) const override;
 
-  Identity GetFreeGroupCanonicalLink(const Identity &_groupID) const override;
+  Identity GetFreeGroupUnconstrainedLink(
+      const Identity &_groupID) const override;
 
   void SetFreeGroupWorldPose(
     const Identity &_groupID,
