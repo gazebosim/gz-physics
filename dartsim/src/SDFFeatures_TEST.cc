@@ -155,6 +155,8 @@ WorldPtr LoadWorldPiecemeal(const std::string &_world)
   EXPECT_EQ(1u, root.WorldCount());
   const sdf::World *sdfWorld = root.WorldByIndex(0);
   EXPECT_NE(nullptr, sdfWorld);
+  if (nullptr == sdfWorld)
+    return nullptr;
 
   sdf::World newWorld;
   newWorld.SetName(sdfWorld->Name());
@@ -168,6 +170,7 @@ WorldPtr LoadWorldPiecemeal(const std::string &_world)
 
   auto createModel = [&](const sdf::Model *_model,
                          const sdf::Model *_parentModel = nullptr) {
+    ASSERT_NE(nullptr, _model);
     sdf::Model newSdfModel;
     newSdfModel.SetName(_model->Name());
     newSdfModel.SetRawPose(ResolveSdfPose(_model->SemanticPose()));
@@ -276,6 +279,7 @@ WorldPtr LoadWorldPiecemeal(const std::string &_world)
 
   return world;
 }
+
 /////////////////////////////////////////////////
 class SDFFeatures_TEST : public ::testing::TestWithParam<LoaderType>
 {
