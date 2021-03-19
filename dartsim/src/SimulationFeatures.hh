@@ -49,8 +49,6 @@ class SimulationFeatures :
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
 
-  public: void Write(JointPositions &_positions) const;
-
   public: void Write(WorldPoses &_poses) const;
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(

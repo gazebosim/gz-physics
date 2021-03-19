@@ -42,11 +42,6 @@ void SimulationFeatures::WorldForwardStep(
 {
   IGN_PROFILE("SimulationFeatures::WorldForwardStep");
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
-  if (!world)
-  {
-    ignerr << "World with id [" << _worldID.id << "] not found." << std::endl;
-    return;
-  }
   auto *dtDur =
       _u.Query<std::chrono::steady_clock::duration>();
   const double tol = 1e-6;
@@ -65,35 +60,25 @@ void SimulationFeatures::WorldForwardStep(
   // TODO(MXG): Parse input
   world->step();
   this->WriteRequiredData(_h);
-  this->Write(_h.Get<JointPositions>());
   // TODO(MXG): Fill in state
-}
-
-void SimulationFeatures::Write(JointPositions &/*_positions*/) const
-{
-  // TODO(adlarkin) implement this, if it's needed?
 }
 
 void SimulationFeatures::Write(WorldPoses &_poses) const
 {
   // remove link poses from the previous iteration
   _poses.entries.clear();
+  _poses.entries.reserve(this->links.size());
 
   std::unordered_map<std::size_t, math::Pose3d> newPoses;
 
-  for (const auto &link : this->links.idToObject)
+  for (const auto &[id, info] : this->links.idToObject)
   {
-    const auto id = link.first;
-    const auto info = link.second;
-
     // make sure the link exists
     if (info && info->link)
     {
       WorldPose wp;
       wp.pose = ignition::math::eigen3::convert(
           info->link->getWorldTransform());
-      wp.pose.Pos() = ignition::math::eigen3::convert(
-          info->link->getCOM());
       wp.body = id;
 
       // if the link's pose is new or has changed,
@@ -113,7 +98,6 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
   // Save the new poses so that they can be used to check for updates in the
   // next iteration. Re-setting this->prevLinkPoses with the contents of
   // newPoses ensures that we aren't caching data for links that were removed
-  this->prevLinkPoses.clear();
   this->prevLinkPoses = std::move(newPoses);
 }
 

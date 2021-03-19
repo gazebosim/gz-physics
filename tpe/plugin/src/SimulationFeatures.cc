@@ -63,26 +63,18 @@ void SimulationFeatures::WorldForwardStep(
   }
   world->Step();
   this->WriteRequiredData(_h);
-  this->Write(_h.Get<JointPositions>());
-}
-
-void SimulationFeatures::Write(JointPositions &/*_positions*/) const
-{
-  // TODO(adlarkin) implement this? Is this needed?
 }
 
 void SimulationFeatures::Write(WorldPoses &_poses) const
 {
   // remove link poses from the previous iteration
   _poses.entries.clear();
+  _poses.entries.reserve(this->links.size());
 
   std::unordered_map<std::size_t, math::Pose3d> newPoses;
 
-  for (const auto &link : this->links)
+  for (const auto &[id, info] : this->links)
   {
-    const auto id = link.first;
-    const auto info = link.second;
-
     // make sure the link exists
     if (info)
     {
@@ -108,7 +100,6 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
   // Save the new poses so that they can be used to check for updates in the
   // next iteration. Re-setting this->prevLinkPoses with the contents of
   // newPoses ensures that we aren't caching data for links that were removed
-  this->prevLinkPoses.clear();
   this->prevLinkPoses = std::move(newPoses);
 }
 
