@@ -3,7 +3,7 @@
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. 
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## How to adapt a physics engine as a plugin in Ignition Physics
 
@@ -12,7 +12,7 @@ know how to implement a dummy physics engine as a plugin and load it using
 \ref ignition::physics "Ignition Physics API". In
 \ref createcustomfeature "Implement a custom feature" tutorial, we know how to
 define and implement a custom feature in an existing
-[DART](https://github.com/ignitionrobotics/ign-physics/tree/master/dartsim) physics
+[DART](https://github.com/ignitionrobotics/ign-physics/tree/main/dartsim) physics
 plugin. This tutorial will explain step-by-step how to use any physics engine
 with Ignition Physics. We will use [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe)
 as an example for this tutorial.
@@ -27,10 +27,10 @@ is commented in detail:
 ```
 tpe
 ├── lib                              Main physics engine implementation.
-│    ├── src                         
+│    ├── src
 │    ├── CMakeLists.txt              CMake build script for physics engine implementation.
 ├── plugin                           Main implementation of the plugin features interfacing the physics engines API
-│    ├── src                         
+│    ├── src
 │    |     ├── plugin.cc             Main file for the plugin declaration and plugin registering.
 │    |     ├── <FEATURES>.hh         The FeatureList header file.
 │    |     ├── <FEATURES>.cc         Implementation of the FeatureList, which adapts to functions implemented in lib used in the FeatureList.
@@ -137,10 +137,10 @@ Now the folder structure looks like this:
 tpe
 ├── lib
 ├── plugin
-│    ├── src                         
+│    ├── src
 │    |     ├── plugin.cc
 │    |     ├── Base.hh
-│    |     ├── EntityManagementFeatures.hh     
+│    |     ├── EntityManagementFeatures.hh
 │    |     ├── EntityManagementFeatures.cc
 │    |     ├── EntityManagement_TEST.cc
 │    ├── CMakeLists.txt
