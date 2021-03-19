@@ -336,7 +336,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
   if (_linkRelativeName == "world")
     return nullptr;
 
-  const std::string fullName = ::sdf::JoinName(
+  const auto fullName = ::sdf::JoinName(
       _worldName, ::sdf::JoinName(_jointModelName, _linkRelativeName));
   auto it = this->linksByName.find(fullName);
   if (it != this->linksByName.end())
