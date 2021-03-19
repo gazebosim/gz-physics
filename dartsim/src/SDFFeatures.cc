@@ -764,7 +764,7 @@ Identity SDFFeatures::ConstructSdfCollision(
       math::Vector3d fdir1 = frictionDirectionElem->Get<math::Vector3d>();
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
 
-      const std::string kExpressedIn = "gazebo:expressed_in";
+      const std::string kExpressedIn = "ignition:expressed_in";
       if (frictionDirectionElem->HasAttribute(kExpressedIn))
       {
         auto skeleton = bn->getSkeleton();
