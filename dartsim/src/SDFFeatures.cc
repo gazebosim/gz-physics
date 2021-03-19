@@ -282,6 +282,14 @@ static ShapeAndTransform ConstructSphere(
 }
 
 /////////////////////////////////////////////////
+static ShapeAndTransform ConstructCapsule(
+    const ::sdf::Capsule &_capsule)
+{
+  return {std::make_shared<dart::dynamics::CapsuleShape>(
+        _capsule.Radius(), _capsule.Length())};
+}
+
+/////////////////////////////////////////////////
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
@@ -325,22 +333,7 @@ static ShapeAndTransform ConstructGeometry(
     return ConstructBox(*_geometry.BoxShape());
   else if (_geometry.CapsuleShape())
   {
-    // TODO(anyone): Replace this code when Capsule is supported by DART
-    common::MeshManager *meshMgr = common::MeshManager::Instance();
-    std::string capsuleMeshName = std::string("capsule_mesh")
-      + "_" + std::to_string(_geometry.CapsuleShape()->Radius())
-      + "_" + std::to_string(_geometry.CapsuleShape()->Length());
-    meshMgr->CreateCapsule(
-      capsuleMeshName,
-      _geometry.CapsuleShape()->Radius(),
-      _geometry.CapsuleShape()->Length(),
-      6, 6);
-    const ignition::common::Mesh * _mesh =
-      meshMgr->MeshByName(capsuleMeshName);
-
-    auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
-    auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
-    return {mesh2};
+    return ConstructCapsule(*_geometry.CapsuleShape());
   }
   else if (_geometry.CylinderShape())
     return ConstructCylinder(*_geometry.CylinderShape());
