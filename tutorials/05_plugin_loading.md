@@ -93,10 +93,10 @@ for (const std::string &name : pluginNames)
 }
 ```
 
-### Setup CMakeLists.txt for building (Version: Dome, ign-physics3)
+### Setup CMakeLists.txt for building (Version: Edifice, ign-physics4)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies in Dome release:
+lines for finding `ign-plugin` and `ign-physics` dependencies in Edifice release:
 
 ```cmake
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
@@ -104,7 +104,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(IGN_PLUGIN_VER 1)
 find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
 
-set(IGN_PHYSICS_VER 3)
+set(IGN_PHYSICS_VER 4)
 find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
 ```
 
