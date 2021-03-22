@@ -336,7 +336,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
   if (_linkRelativeName == "world")
     return nullptr;
 
-  const std::string fullName = ::sdf::JoinName(
+  const auto fullName = ::sdf::JoinName(
       _worldName, ::sdf::JoinName(_jointModelName, _linkRelativeName));
   auto it = this->linksByName.find(fullName);
   if (it != this->linksByName.end())
@@ -546,7 +546,7 @@ Identity SDFFeatures::ConstructSdfLink(
     const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
-  auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 

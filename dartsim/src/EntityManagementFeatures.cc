@@ -342,7 +342,7 @@ Identity EntityManagementFeatures::GetLink(
   if (_linkIndex >= modelInfo->links.size())
     return this->GenerateInvalidId();
 
-  auto linkInfo = modelInfo->links[_linkIndex];
+  const auto &linkInfo = modelInfo->links[_linkIndex];
 
   // If the link doesn't exist in "links", it means the containing entity has
   // been removed.
@@ -365,7 +365,7 @@ Identity EntityManagementFeatures::GetLink(
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
-  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   for (const auto &linkInfo : modelInfo->links)
   {
     if (_linkName == linkInfo->name)
@@ -381,8 +381,8 @@ Identity EntityManagementFeatures::GetLink(
       {
         // TODO(addisu) It's not clear what to do when `GetLink` is called on a
         // model that has been removed. Right now we are returning an invalid
-        // identity, but that could cause a segfault if the use doesn't check if
-        // returned value before using it.
+        // identity, but that could cause a segfault if the user doesn't check
+        // the returned value before using it.
         return this->GenerateInvalidId();
       }
     }

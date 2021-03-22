@@ -73,6 +73,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ("empty link", link->GetName());
   EXPECT_EQ(model, link->GetModel());
   EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
+  EXPECT_EQ(0u, link->GetIndex());
+  EXPECT_EQ(model, link->GetModel());
 
   auto joint = link->AttachRevoluteJoint(nullptr);
   EXPECT_NEAR((Eigen::Vector3d::UnitX() - joint->GetAxis()).norm(), 0.0, 1e-6);
@@ -82,6 +84,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR((Eigen::Vector3d::UnitZ() - joint->GetAxis()).norm(), 0.0, 1e-6);
 
   auto child = model->ConstructEmptyLink("child link");
+  EXPECT_EQ(2u, child->GetIndex());
+  EXPECT_EQ(model, child->GetModel());
 
   const std::string boxName = "box";
   const Eigen::Vector3d boxSize(0.1, 0.2, 0.3);
