@@ -534,7 +534,7 @@ Identity SDFFeatures::ConstructSdfLink(
     const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
-  auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 

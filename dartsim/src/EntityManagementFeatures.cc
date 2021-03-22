@@ -284,7 +284,7 @@ Identity EntityManagementFeatures::GetLink(
   if (_linkIndex >= modelInfo->links.size())
     return this->GenerateInvalidId();
 
-  auto linkInfo = modelInfo->links[_linkIndex];
+  const auto &linkInfo = modelInfo->links[_linkIndex];
 
   // If the link doesn't exist in "links", it means the containing entity has
   // been removed.

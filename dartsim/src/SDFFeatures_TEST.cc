@@ -585,10 +585,10 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   EXPECT_EQ(1u, nestedModel2->GetLinkCount());
   EXPECT_NE(nullptr, nestedModel2->GetLink("nested_link1"));
 
-  auto nestedModel3 = world->GetModel("parent_model::nested_model2");
+  auto nestedModel3 = world->GetModel("parent_model::nested_model3");
   ASSERT_NE(nullptr, nestedModel3);
   EXPECT_EQ(1u, nestedModel3->GetLinkCount());
-  EXPECT_NE(nullptr, nestedModel3->GetLink("nested_link1"));
+  EXPECT_NE(nullptr, nestedModel3->GetLink("link1"));
 }
 
 /////////////////////////////////////////////////
