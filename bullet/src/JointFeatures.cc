@@ -40,7 +40,7 @@ double JointFeatures::GetJointPosition(
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
         btHingeAccumulatedAngleConstraint* hinge =
-	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
+	  dynamic_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
 	if (hinge)
         {
           result = hinge->getAccumulatedHingeAngle();
@@ -75,7 +75,7 @@ double JointFeatures::GetJointVelocity(
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
       {
 	btHingeAccumulatedAngleConstraint* hinge =
-	  static_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
+	  dynamic_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
 	if (hinge)
         {
 	  result = 0.0;
