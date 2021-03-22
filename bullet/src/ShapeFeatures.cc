@@ -80,7 +80,7 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &body = linkInfo->link.get();
 
   auto poseWithInertia =
-    ignition::math::eigen3::convert(_pose) - linkInfo->inertialPose;
+    linkInfo->inertialPose.Inverse() * ignition::math::eigen3::convert(_pose);
   const auto poseIsometry = ignition::math::eigen3::convert(poseWithInertia);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();

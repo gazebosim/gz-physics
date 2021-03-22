@@ -121,7 +121,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   const auto &modelInfo = this->models.at(_modelID);
   math::Pose3d base_pose = modelInfo->pose;
-  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose);
+  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose * inertialPose);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
@@ -216,7 +216,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &modelID = linkInfo->model;
 
     const math::Pose3d pose =
-      ResolveSdfPose(_collision.SemanticPose()) - linkInfo->inertialPose;
+      linkInfo->inertialPose.Inverse() * ResolveSdfPose(_collision.SemanticPose());
     const Eigen::Isometry3d poseIsometry =
       ignition::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
