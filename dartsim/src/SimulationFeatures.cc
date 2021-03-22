@@ -81,17 +81,18 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
           info->link->getWorldTransform());
       wp.body = id;
 
-      // if the link's pose is new or has changed,
-      // add the link to the output poses
+      // If the link's pose is new or has changed, save this new pose and
+      // add it to the output poses. Otherwise, keep the existing link pose
       auto iter = this->prevLinkPoses.find(id);
       if ((iter == this->prevLinkPoses.end()) ||
           !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
           !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
       {
         _poses.entries.push_back(wp);
+        newPoses[id] = wp.pose;
       }
-
-      newPoses[id] = wp.pose;
+      else
+        newPoses[id] = iter->second;
     }
   }
 

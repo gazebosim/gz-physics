@@ -78,22 +78,23 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
     // make sure the link exists
     if (info)
     {
-      const auto currPose = info->link->GetPose();
+      const auto nextPose = info->link->GetPose();
       auto iter = this->prevLinkPoses.find(id);
 
-      // if the link's pose is new or has changed,
-      // add the link to the output poses
+      // If the link's pose is new or has changed, save this new pose and
+      // add it to the output poses. Otherwise, keep the existing link pose
       if ((iter == this->prevLinkPoses.end()) ||
-          !iter->second.Pos().Equal(currPose.Pos(), 1e-6) ||
-          !iter->second.Rot().Equal(currPose.Rot(), 1e-6))
+          !iter->second.Pos().Equal(nextPose.Pos(), 1e-6) ||
+          !iter->second.Rot().Equal(nextPose.Rot(), 1e-6))
       {
         WorldPose wp;
-        wp.pose = currPose;
+        wp.pose = nextPose;
         wp.body = id;
         _poses.entries.push_back(wp);
+        newPoses[id] = nextPose;
       }
-
-      newPoses[id] = currPose;
+      else
+        newPoses[id] = iter->second;
     }
   }
 
