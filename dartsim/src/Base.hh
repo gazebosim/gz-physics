@@ -49,12 +49,6 @@ namespace dartsim {
 ///    create a std::shared_ptr of the struct that wraps the corresponding DART
 ///    shared pointer.
 
-struct ModelInfo
-{
-  dart::dynamics::SkeletonPtr model;
-  dart::dynamics::SimpleFramePtr frame;
-  std::string canonicalLinkName;
-};
 
 struct LinkInfo
 {
@@ -63,6 +57,14 @@ struct LinkInfo
   /// moving the BodyNode to a new skeleton), so we store the Gazebo-specified
   /// name of the Link here.
   std::string name;
+};
+
+struct ModelInfo
+{
+  dart::dynamics::SkeletonPtr model;
+  dart::dynamics::SimpleFramePtr frame;
+  std::string canonicalLinkName;
+  std::vector<std::shared_ptr<LinkInfo>> links {};
 };
 
 struct JointInfo
@@ -100,14 +102,15 @@ struct EntityStorage
   /// \brief The key represents the parent ID. The value represents a vector of
   /// the objects' IDs. The key of the vector is the object's index within its
   /// container. This is used by World and Model objects, which don't know their
-  /// own indices within their containers.
+  /// own indices within their containers as well as Links, whose indices might
+  /// change when constructing joints.
   ///
   /// The container type for World is Engine.
   /// The container type for Model is World.
+  /// The container type for Link is Model.
   ///
-  /// Links and Joints are contained in Models, but Links and Joints know their
-  /// own indices within their Models, so we do not need to use this field for
-  /// either of those types.
+  /// Joints are contained in Models, but they know their own indices within
+  /// their Models, so we do not need to use this field for Joints
   IndexMap indexInContainerToID;
 
   /// \brief Map from an entity ID to its index within its container
@@ -289,18 +292,30 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: inline std::size_t AddLink(DartBodyNode *_bn,
-                                     const std::string &_fullName)
+        const std::string &_fullName, std::size_t _modelID)
   {
     const std::size_t id = this->GetNextEntity();
-    this->links.idToObject[id] = std::make_shared<LinkInfo>();
-    this->links.idToObject[id]->link = _bn;
+    auto linkInfo = std::make_shared<LinkInfo>();
+    this->links.idToObject[id] = linkInfo;
+    linkInfo->link = _bn;
     // The name of the BodyNode during creation is assumed to be the
     // Gazebo-specified name.
-    this->links.idToObject[id]->name = _bn->getName();
+    linkInfo->name = _bn->getName();
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
     this->linksByName[_fullName] = _bn;
+    this->models.at(_modelID)->links.push_back(linkInfo);
+
+    // Even though DART keeps track of the index of this BodyNode in the
+    // skeleton, the BodyNode may be moved to another skeleton when a joint is
+    // constructed. Thus, we store the original index here.
+    this->links.idToIndexInContainer[id] = _bn->getIndexInSkeleton();
+    std::vector<std::size_t> &indexInContainerToID =
+        this->links.indexInContainerToID[_modelID];
+    indexInContainerToID.push_back(id);
+
+    this->links.idToContainerID[id] = _modelID;
 
     return id;
   }
