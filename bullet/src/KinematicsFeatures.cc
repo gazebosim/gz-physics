@@ -57,7 +57,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   Eigen::Isometry3d poseIsometryBase;
   poseIsometryBase.linear() = convert(mat);
   poseIsometryBase.translation() = convert(pos);
-  poseIsometryBase = poseIsometry * poseIsometryBase;
+  poseIsometryBase =  poseIsometryBase * poseIsometry;
   data.pose.linear() = poseIsometryBase.linear();
   data.pose.translation() = poseIsometryBase.translation();
 
