@@ -301,8 +301,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   if (parentId != worldId)
   {
     pivotParent =
-      (ResolveSdfPose(_sdfJoint.SemanticPose()) + (this->links.at(parentId)->inertialPose.Inverse() * this->links.at(childId)->pose)).Pos();
-    pose = this->links.at(parentId)->inertialPose.Inverse() * this->links.at(parentId)->pose;
+      (ResolveSdfPose(_sdfJoint.SemanticPose()) * this->links.at(childId)->pose).Pos();
+    pose = this->links.at(parentId)->pose * this->links.at(parentId)->inertialPose;
     pivotParent -= pose.Pos();
     pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
     axisParent = pose.Rot().RotateVectorReverse(axis);
@@ -310,8 +310,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   pivotChild =
-    (ResolveSdfPose(_sdfJoint.SemanticPose()) + (this->links.at(childId)->inertialPose.Inverse() * this->links.at(childId)->pose)).Pos();
-  pose = this->links.at(childId)->inertialPose.Inverse() * this->links.at(childId)->pose;
+    (ResolveSdfPose(_sdfJoint.SemanticPose()) * this->links.at(childId)->pose).Pos();
+  pose = this->links.at(childId)->pose * this->links.at(childId)->inertialPose;
   pivotChild -= pose.Pos();
   pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
   axisChild = pose.Rot().RotateVectorReverse(axis);
