@@ -590,7 +590,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::string fullName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
-  const std::size_t linkID = this->AddLink(bn, fullName);
+  const std::size_t linkID = this->AddLink(bn, fullName, _modelID);
   this->AddJoint(joint);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
