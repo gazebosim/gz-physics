@@ -288,7 +288,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     return std::forward_as_tuple(id, entry);
   }
 
-  public: inline std::size_t AddLink(DartBodyNode *_bn)
+  public: inline std::size_t AddLink(DartBodyNode *_bn,
+                                     const std::string &_fullName)
   {
     const std::size_t id = this->GetNextEntity();
     this->links.idToObject[id] = std::make_shared<LinkInfo>();
@@ -298,6 +299,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.idToObject[id]->name = _bn->getName();
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
+
+    this->linksByName[_fullName] = _bn;
 
     return id;
   }
@@ -326,6 +329,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: void RemoveModelImpl(const std::size_t _worldID,
                                const std::size_t _modelID)
   {
+    // TODO(addisu) Handle removal of nested models
     const auto &world = this->worlds.at(_worldID);
     auto skel = this->models.at(_modelID)->model;
     // Remove the contents of the skeleton from local entity storage containers
@@ -340,68 +344,11 @@ class Base : public Implements3d<FeatureList<Feature>>
         this->shapes.RemoveEntity(sn);
       }
       this->links.RemoveEntity(bn);
+      this->linksByName.erase(::sdf::JoinName(
+          world->getName(), ::sdf::JoinName(skel->getName(), bn->getName())));
     }
     this->models.RemoveEntity(skel);
     world->removeSkeleton(skel);
-  }
-
-  static bool SkeletonNameEndsWithModelName(
-      const std::string &_skeletonName, const std::string &_modelName)
-  {
-    if (_modelName.empty())
-      return true;
-
-    if (_skeletonName.size() < _modelName.size())
-      return false;
-
-    // If _modelName comes from a nested model, it might actually be shorter
-    // than _skeletonName. E.g -> _skeletonName = a::b::c, _modelName = b::c
-    const size_t compareStartPosition =
-      _skeletonName.size() - _modelName.size();
-    return _skeletonName.compare(
-      compareStartPosition, _modelName.size(), _modelName) == 0;
-  }
-
-  /// \brief Finds the skeleton in the world that matches the qualified name
-  /// If more than one match exists, it will return null
-  /// \param[in] _worldID Which world to search.
-  /// \param[in] _name Name of entity.
-  /// \return Pointer to skeleton if exactly one match was found, otherwise null
-  public: DartSkeletonPtr FindContainingSkeletonFromName(
-      const dart::simulation::WorldPtr &_world, const std::string &_name)
-  {
-    if (_world == nullptr)
-      return nullptr;
-
-    if (_name == "world")
-      return nullptr;
-
-    const auto[skeletonName, entityName] = ::sdf::SplitName(_name);
-    std::vector<DartSkeletonPtr> matches;
-    for (size_t i = 0; i < _world->getNumSkeletons(); ++i)
-    {
-      auto candidateSkeleton = _world->getSkeleton(i);
-      if (SkeletonNameEndsWithModelName(
-        candidateSkeleton->getName(), skeletonName))
-      {
-        // There may be multiple skeletons that match the model name, only match
-        // those that contain a matching entity
-        auto * node = candidateSkeleton->getBodyNode(entityName);
-        if (nullptr != node)
-          matches.push_back(candidateSkeleton);
-      }
-    }
-
-    // It's possible there was more than 1 match
-    // (e.g. b::c matches both a::b::c and d::b::c)
-    if (matches.size() == 1)
-      return matches.front();
-    else if (matches.size() > 1)
-    {
-      ignerr << "Found " << matches.size() << " for " << _name << std::endl;
-      return nullptr;
-    }
-    return nullptr;
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
@@ -410,6 +357,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
+
+  /// \brief Map from the fully qualified link name (including the world name)
+  /// to the BodyNode object. This is useful for keeping track of BodyNodes even
+  /// as they move to other skeletons.
+  public: std::unordered_map<std::string, DartBodyNode*> linksByName;
 };
 
 }
