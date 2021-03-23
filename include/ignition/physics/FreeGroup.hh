@@ -91,12 +91,12 @@ namespace ignition
         /// setting properties (like poses and velocities) on the group will be
         /// done in terms of this link.
         /// DEPRECATED. Please use RootLink()
-        public: LinkPtr<PolicyT, FeaturesT> CanonicalLink() IGN_DEPRECATED(4.0);
+        public: LinkPtr<PolicyT, FeaturesT> IGN_DEPRECATED(4.0) CanonicalLink();
 
         /// \brief const version of CanonicalLink()
         /// DEPRECATED. Please use RootLink()
-        public: ConstLinkPtr<PolicyT, FeaturesT> CanonicalLink() const
-                IGN_DEPRECATED(4.0);
+        public: ConstLinkPtr<PolicyT, FeaturesT> IGN_DEPRECATED(4.0)
+                    CanonicalLink() const;
       };
 
       public: template <typename PolicyT>
