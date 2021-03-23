@@ -431,8 +431,7 @@ TEST_F(JointFeaturesFixture, LinkCountsInJointAttachDetach)
 
   auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
 
-  // After attaching we expect each model to have 1 link, but the current
-  // behavior is that there are 2 links in model1 and 0 in model2
+  // After attaching we expect each model to have 1 link
   EXPECT_EQ(1u, model1->GetLinkCount());
   EXPECT_EQ(1u, model2->GetLinkCount());
 

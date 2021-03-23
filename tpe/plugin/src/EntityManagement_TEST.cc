@@ -80,9 +80,9 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ(link, model->GetLink(0));
   EXPECT_EQ(link, model->GetLink("empty link"));
 
-  EXPECT_EQ(0u, model->GetModelCount());
-  auto nestedModel = model->ConstructEmptyModel("empty nested model");
-  EXPECT_EQ(1u, model->GetModelCount());
+  EXPECT_EQ(0u, model->GetNestedModelCount());
+  auto nestedModel = model->ConstructEmptyNestedModel("empty nested model");
+  EXPECT_EQ(1u, model->GetNestedModelCount());
   ASSERT_NE(nullptr, nestedModel);
   EXPECT_EQ(nestedModel, model->GetModel(0));
   EXPECT_EQ(nestedModel, model->GetModel("empty nested model"));

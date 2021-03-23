@@ -274,7 +274,7 @@ std::size_t EntityManagementFeatures::GetNestedModelCount(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::size_t _modelIndex) const
 {
-  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_modelIndex >= modelInfo->nestedModels.size())
   {
     return this->GenerateInvalidId();
@@ -299,7 +299,7 @@ Identity EntityManagementFeatures::GetNestedModel(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::string &_modelName) const
 {
-  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
 
   const std::string fullName =
       ::sdf::JoinName(modelInfo->model->getName(), _modelName);
@@ -321,6 +321,7 @@ Identity EntityManagementFeatures::GetNestedModel(
     return this->GenerateInvalidId();
   }
 }
+
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkCount(
     const Identity &_modelID) const
@@ -338,7 +339,7 @@ Identity EntityManagementFeatures::GetLink(
   if (_linkIndex >= modelInfo->links.size())
     return this->GenerateInvalidId();
 
-  auto linkInfo = modelInfo->links[_linkIndex];
+  const auto &linkInfo = modelInfo->links[_linkIndex];
 
   // If the link doesn't exist in "links", it means the containing entity has
   // been removed.
@@ -361,7 +362,7 @@ Identity EntityManagementFeatures::GetLink(
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
-  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   for (const auto &linkInfo : modelInfo->links)
   {
     if (_linkName == linkInfo->name)
@@ -377,8 +378,8 @@ Identity EntityManagementFeatures::GetLink(
       {
         // TODO(addisu) It's not clear what to do when `GetLink` is called on a
         // model that has been removed. Right now we are returning an invalid
-        // identity, but that could cause a segfault if the use doesn't check if
-        // returned value before using it.
+        // identity, but that could cause a segfault if the user doesn't check
+        // the returned value before using it.
         return this->GenerateInvalidId();
       }
     }

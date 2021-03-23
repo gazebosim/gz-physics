@@ -65,10 +65,19 @@ TEST(BaseClass, RemoveModel)
       boxShape);
 
     auto res = base.AddModel({skel, name, frame, ""}, worldID);
+    ASSERT_TRUE(base.models.HasEntity(std::get<0>(res)));
+    const auto &modelInfo = base.models.at(std::get<0>(res));
+    EXPECT_EQ(skel, modelInfo->model);
+
     const std::string fullName = ::sdf::JoinName(
         world->getName(),
         ::sdf::JoinName(skel->getName(), pair.second->getName()));
-    base.AddLink(pair.second, fullName, std::get<0>(res));
+    auto linkID = base.AddLink(pair.second, fullName, std::get<0>(res));
+    ASSERT_TRUE(base.links.HasEntity(linkID));
+    const auto &linkInfo = base.links.at(linkID);
+    EXPECT_EQ(pair.second->getName(), linkInfo->name);
+    EXPECT_EQ(pair.second, linkInfo->link);
+
     base.AddJoint(pair.first);
     base.AddShape({sn, name + "_shape"});
 
@@ -137,6 +146,43 @@ TEST(BaseClass, RemoveModel)
     checkModelIndices();
   }
   EXPECT_EQ(0u, curSize);
+}
+
+TEST(BaseClass, AddNestedModel)
+{
+  dartsim::Base base;
+  base.InitiateEngine(0);
+
+  dart::simulation::WorldPtr world = dart::simulation::World::create("default");
+
+  auto worldID = base.AddWorld(world, world->getName());
+  EXPECT_TRUE(base.worlds.HasEntity(worldID));
+  EXPECT_EQ(worldID, base.worlds.IdentityOf(world->getName()));
+  auto createSkel = [](const std::string &_skelName)
+  {
+    auto skel = dart::dynamics::Skeleton::create(_skelName);
+    auto frame = dart::dynamics::SimpleFrame::createShared(
+        dart::dynamics::Frame::World(), _skelName + "_frame");
+    return dartsim::ModelInfo{skel, _skelName, frame, ""};
+  };
+
+  const auto &[parentModelID, parentModelInfo] =
+      base.AddModel(createSkel("parent_model"), worldID);
+  EXPECT_EQ(0u, parentModelInfo.nestedModels.size());
+
+  const auto &[nestedModel1ID, nestedModel1Info] = base.AddNestedModel(
+      createSkel("parent_model::nested_model1"), parentModelID, worldID);
+  ASSERT_TRUE(base.models.HasEntity(nestedModel1ID));
+  EXPECT_EQ(nestedModel1Info.model, base.models.at(nestedModel1ID)->model);
+  ASSERT_EQ(1u, parentModelInfo.nestedModels.size());
+  EXPECT_EQ(nestedModel1ID, parentModelInfo.nestedModels[0]);
+
+  const auto &[nestedModel2ID, nestedModel2Info] = base.AddNestedModel(
+      createSkel("parent_model::nested_model2"), parentModelID, worldID);
+  ASSERT_TRUE(base.models.HasEntity(nestedModel2ID));
+  EXPECT_EQ(nestedModel2Info.model, base.models.at(nestedModel2ID)->model);
+  ASSERT_EQ(2u, parentModelInfo.nestedModels.size());
+  EXPECT_EQ(nestedModel2ID, parentModelInfo.nestedModels[1]);
 }
 
 int main(int argc, char *argv[])
