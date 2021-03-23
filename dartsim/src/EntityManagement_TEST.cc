@@ -240,32 +240,36 @@ TEST(EntityManagement_TEST, RemoveEntities)
 
   auto parentModel = world->ConstructEmptyModel("parent model");
   ASSERT_NE(nullptr, parentModel);
-  EXPECT_EQ(0u, parentModel->GetModelCount());
-  auto nestedModel1 = parentModel->ConstructEmptyModel("empty nested model1");
+  EXPECT_EQ(0u, parentModel->GetNestedModelCount());
+  auto nestedModel1 =
+      parentModel->ConstructEmptyNestedModel("empty nested model1");
   ASSERT_NE(nullptr, nestedModel1);
-  EXPECT_EQ(1u, parentModel->GetModelCount());
+  EXPECT_EQ(1u, parentModel->GetNestedModelCount());
 
   EXPECT_TRUE(parentModel->RemoveModel(0));
-  EXPECT_EQ(0u, parentModel->GetModelCount());
+  EXPECT_EQ(0u, parentModel->GetNestedModelCount());
   EXPECT_TRUE(nestedModel1->Removed());
 
-  auto nestedModel2 = parentModel->ConstructEmptyModel("empty nested model2");
+  auto nestedModel2 =
+      parentModel->ConstructEmptyNestedModel("empty nested model2");
   ASSERT_NE(nullptr, nestedModel2);
-  EXPECT_EQ(nestedModel2, parentModel->GetModel(0));
+  EXPECT_EQ(nestedModel2, parentModel->GetNestedModel(0));
   EXPECT_TRUE(parentModel->RemoveModel("empty nested model2"));
-  EXPECT_EQ(0u, parentModel->GetModelCount());
+  EXPECT_EQ(0u, parentModel->GetNestedModelCount());
   EXPECT_TRUE(nestedModel2->Removed());
 
-  auto nestedModel3 = parentModel->ConstructEmptyModel("empty nested model3");
+  auto nestedModel3 =
+      parentModel->ConstructEmptyNestedModel("empty nested model3");
   ASSERT_NE(nullptr, nestedModel3);
-  EXPECT_EQ(nestedModel3, parentModel->GetModel(0));
+  EXPECT_EQ(nestedModel3, parentModel->GetNestedModel(0));
   EXPECT_TRUE(nestedModel3->Remove());
-  EXPECT_EQ(0u, parentModel->GetModelCount());
+  EXPECT_EQ(0u, parentModel->GetNestedModelCount());
   EXPECT_TRUE(nestedModel3->Removed());
 
-  auto nestedModel4 = parentModel->ConstructEmptyModel("empty nested model4");
+  auto nestedModel4 =
+      parentModel->ConstructEmptyNestedModel("empty nested model4");
   ASSERT_NE(nullptr, nestedModel4);
-  EXPECT_EQ(nestedModel4, parentModel->GetModel(0));
+  EXPECT_EQ(nestedModel4, parentModel->GetNestedModel(0));
   // Remove the parent model and check that the nested model is removed as well
   EXPECT_TRUE(parentModel->Remove());
   EXPECT_TRUE(nestedModel4->Removed());
@@ -293,7 +297,8 @@ TEST(EntityManagement_TEST, ModelByIndexWithNestedModels)
   ASSERT_NE(nullptr, parentModel);
   EXPECT_EQ(1ul, parentModel->GetIndex());
 
-  auto nestedModel1 = parentModel->ConstructEmptyModel("empty nested model1");
+  auto nestedModel1 =
+      parentModel->ConstructEmptyNestedModel("empty nested model1");
   ASSERT_NE(nullptr, nestedModel1);
   EXPECT_EQ(0ul, nestedModel1->GetIndex());
 
