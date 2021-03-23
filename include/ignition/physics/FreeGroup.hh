@@ -77,13 +77,26 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
-        /// \brief The canonical link of this FreeGroup. Getting and setting
-        /// properties (like poses and velocities) on the group will be done
-        /// in terms of this link.
-        public: LinkPtr<PolicyT, FeaturesT> CanonicalLink();
+        /// \brief The root link of this FreeGroup. This link is the root of one
+        /// of the kinematic trees represented by this FreeGroup. Getting and
+        /// setting properties (like poses and velocities) on the group will be
+        /// done in terms of this link.
+        public: LinkPtr<PolicyT, FeaturesT> RootLink();
+
+        /// \brief const version of RootLink()
+        public: ConstLinkPtr<PolicyT, FeaturesT> RootLink() const;
+
+        /// \brief The root link of this FreeGroup. This link is the root of one
+        /// of the kinematic trees represented by this FreeGroup. Getting and
+        /// setting properties (like poses and velocities) on the group will be
+        /// done in terms of this link.
+        /// DEPRECATED. Please use RootLink()
+        public: LinkPtr<PolicyT, FeaturesT> IGN_DEPRECATED(4.0) CanonicalLink();
 
         /// \brief const version of CanonicalLink()
-        public: ConstLinkPtr<PolicyT, FeaturesT> CanonicalLink() const;
+        /// DEPRECATED. Please use RootLink()
+        public: ConstLinkPtr<PolicyT, FeaturesT> IGN_DEPRECATED(4.0)
+                    CanonicalLink() const;
       };
 
       public: template <typename PolicyT>
@@ -95,7 +108,7 @@ namespace ignition
         public: virtual Identity FindFreeGroupForLink(
             const Identity &_linkID) const = 0;
 
-        public: virtual Identity GetFreeGroupCanonicalLink(
+        public: virtual Identity GetFreeGroupRootLink(
             const Identity &_groupID) const = 0;
       };
     };

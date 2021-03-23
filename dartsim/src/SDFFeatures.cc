@@ -432,7 +432,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     {
       return this->AddModel(  // NOLINT
           {model, _sdfModel.Name(), modelFrame, _sdfModel.CanonicalLinkName()},
-          _parentID);
+          worldID);
     }
   }();
   model->setMobile(!_sdfModel.Static());

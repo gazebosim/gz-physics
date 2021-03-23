@@ -216,8 +216,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    std::size_t
-    GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModelCount() const
+    std::size_t GetNestedModelFromModel::Model<
+        PolicyT, FeaturesT>::GetNestedModelCount() const
     {
       return this->template Interface<GetNestedModelFromModel>()
           ->GetNestedModelCount(this->identity);
@@ -225,7 +225,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetNestedModel(
         const std::size_t _index) -> ModelPtrType
     {
       return ModelPtrType(
@@ -236,7 +236,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetNestedModel(
         const std::size_t _index) const -> ConstModelPtrType
     {
       return ConstModelPtrType(
@@ -247,7 +247,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetNestedModel(
         const std::string &_name) -> ModelPtrType
     {
       return ModelPtrType(
@@ -258,7 +258,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetModel(
+    auto GetNestedModelFromModel::Model<PolicyT, FeaturesT>::GetNestedModel(
         const std::string &_name) const -> ConstModelPtrType
     {
       return ConstModelPtrType(this->pimpl,

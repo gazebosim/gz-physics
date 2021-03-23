@@ -15,13 +15,20 @@
  *
 */
 
+#include <unordered_map>
+#include <utility>
+
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/CollisionResult.hpp>
 
-#include "SimulationFeatures.hh"
+#include <ignition/common/Profiler.hh>
 
-#include "ignition/common/Profiler.hh"
+#include <ignition/math/Pose3.hh>
+#include <ignition/math/eigen3/Conversions.hh>
+
 #include "ignition/physics/GetContacts.hh"
+
+#include "SimulationFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -29,7 +36,7 @@ namespace dartsim {
 
 void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
-    ForwardStep::Output & /*_h*/,
+    ForwardStep::Output & _h,
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & _u)
 {
@@ -52,7 +59,47 @@ void SimulationFeatures::WorldForwardStep(
 
   // TODO(MXG): Parse input
   world->step();
-  // TODO(MXG): Fill in output and state
+  this->WriteRequiredData(_h);
+  // TODO(MXG): Fill in state
+}
+
+void SimulationFeatures::Write(WorldPoses &_poses) const
+{
+  // remove link poses from the previous iteration
+  _poses.entries.clear();
+  _poses.entries.reserve(this->links.size());
+
+  std::unordered_map<std::size_t, math::Pose3d> newPoses;
+
+  for (const auto &[id, info] : this->links.idToObject)
+  {
+    // make sure the link exists
+    if (info && info->link)
+    {
+      WorldPose wp;
+      wp.pose = ignition::math::eigen3::convert(
+          info->link->getWorldTransform());
+      wp.body = id;
+
+      // If the link's pose is new or has changed, save this new pose and
+      // add it to the output poses. Otherwise, keep the existing link pose
+      auto iter = this->prevLinkPoses.find(id);
+      if ((iter == this->prevLinkPoses.end()) ||
+          !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
+          !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
+      {
+        _poses.entries.push_back(wp);
+        newPoses[id] = wp.pose;
+      }
+      else
+        newPoses[id] = iter->second;
+    }
+  }
+
+  // Save the new poses so that they can be used to check for updates in the
+  // next iteration. Re-setting this->prevLinkPoses with the contents of
+  // newPoses ensures that we aren't caching data for links that were removed
+  this->prevLinkPoses = std::move(newPoses);
 }
 
 std::vector<SimulationFeatures::ContactInternal>
