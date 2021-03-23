@@ -36,15 +36,8 @@ struct JointFeatureList : FeatureList<
   SetBasicJointState,
   GetBasicJointProperties,
 
-  // SetJointTransformFromParentFeature,
-  // SetJointTransformToChildFeature,
-  // SetFreeJointRelativeTransformFeature,
-
-  AttachFixedJointFeature,
-  SetRevoluteJointProperties,
   GetRevoluteJointProperties,
-  AttachRevoluteJointFeature,
-
+  FixedJointCast,
   SetJointVelocityCommandFeature
 > { };
 
@@ -104,16 +97,9 @@ class JointFeatures :
   public: void SetJointTransformToChild(
       const Identity &_id, const Pose3d &_pose);
 
-
   // ----- Fixed Joint -----
   public: Identity CastToFixedJoint(
       const Identity &_jointID) const;
-
-  public: Identity AttachFixedJoint(
-      const Identity &_childID,
-      const BaseLink3dPtr &_parent,
-      const std::string &_name);
-
 
   // ----- Revolute Joint -----
   public: Identity CastToRevoluteJoint(
@@ -121,16 +107,6 @@ class JointFeatures :
 
   public: AngularVector3d GetRevoluteJointAxis(
       const Identity &_jointID) const;
-
-  public: void SetRevoluteJointAxis(
-      const Identity &_jointID, const AngularVector3d &_axis);
-
-  public: Identity AttachRevoluteJoint(
-      const Identity &_childID,
-      const BaseLink3dPtr &_parent,
-      const std::string &_name,
-      const AngularVector3d &_axis);
-
 
   // ----- Joint Commands -----
   public: void SetJointVelocityCommand(
