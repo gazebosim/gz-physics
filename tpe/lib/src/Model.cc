@@ -191,3 +191,65 @@ void Model::UpdatePose(
     currentPose.Rot().Integrate(_angularVelocity, _timeStep));
   this->SetPose(nextPose);
 }
+
+//////////////////////////////////////////////////
+bool Model::RemoveModelById(std::size_t _id)
+{
+  auto it = std::find(this->dataPtr->nestedModelIds.begin(),
+                      this->dataPtr->nestedModelIds.end(), _id);
+  if (it != this->dataPtr->nestedModelIds.end())
+  {
+    this->dataPtr->nestedModelIds.erase(it);
+    return true;
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveLinkById(std::size_t _id)
+{
+  auto it = std::find(this->dataPtr->linkIds.begin(),
+                      this->dataPtr->linkIds.end(), _id);
+  if (it != this->dataPtr->linkIds.end())
+  {
+    this->dataPtr->linkIds.erase(it);
+    return true;
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveChildById(std::size_t _id)
+{
+  bool result = true;
+  Entity &ent = this->GetChildById(_id);
+  if (nullptr != dynamic_cast<Model *>(&ent))
+  {
+    result &= this->RemoveModelById(_id);
+  }
+  else
+  {
+    result &= this->RemoveLinkById(_id);
+  }
+  result &= Entity::RemoveChildById(_id);
+
+  return result;
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveChildByName(const std::string &_name)
+{
+  bool result = true;
+  Entity &ent = this->GetChildByName(_name);
+  if (nullptr != dynamic_cast<Model *>(&ent))
+  {
+    result &= this->RemoveModelById(ent.GetId());
+  }
+  else
+  {
+    result &= this->RemoveLinkById(ent.GetId());
+  }
+  result &= Entity::RemoveChildById(ent.GetId());
+
+  return false;
+}

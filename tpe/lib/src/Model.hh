@@ -93,6 +93,23 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
     const math::Vector3d _linearVelocity,
     const math::Vector3d _angularVelocity);
 
+  /// \brief Remove a model entity by id
+  /// \param[in] _id Id of model entity to remove
+  public: bool RemoveModelById(std::size_t _id);
+
+  /// \brief Remove a link entity by id
+  /// \param[in] _id Id of link entity to remove
+  public: bool RemoveLinkById(std::size_t _id);
+
+  /// \brief Remove a child entity by id
+  /// \param[in] _id Id of child entity to remove
+  public: bool RemoveChildById(std::size_t _id) override;
+
+  /// \brief Remove a child entity by name
+  /// \param[in] _name Name of child entity to remove
+  /// \return True if child entity was removed, false otherwise
+  public: bool RemoveChildByName(const std::string &_name) override;
+
   IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of model
   protected: math::Vector3d linearVelocity;
