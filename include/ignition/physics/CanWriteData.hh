@@ -74,7 +74,7 @@ namespace ignition
     /// CanWriteExpectedData while passing different Specifications to each, but
     /// you should be aware that WriteRequiredData will only handle the data
     /// required by the Specification that is given to CanWriteRequiredData.
-    /// Likewise, CanWriteExpectedData will only handle to the data expected by
+    /// Likewise, WriteExpectedData will only handle the data expected by
     /// the Specification that is given to CanWriteExpectedData.
     ///
     /// While you can technically inherit CanWriteRequiredData multiple times
