@@ -38,7 +38,7 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetCapsuleShapeProperties::CapsuleShape<PolicyT, FeaturesT>
-    ::GetHeight() const -> Scalar
+    ::GetLength() const -> Scalar
     {
       return this->template Interface<GetCapsuleShapeProperties>()
           ->GetCapsuleShapeHeight(this->identity);
@@ -56,10 +56,10 @@ namespace ignition
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     void SetCapsuleShapeProperties::CapsuleShape<PolicyT, FeaturesT>
-    ::SetHeight(Scalar _height)
+    ::SetLength(Scalar _length)
     {
       this->template Interface<SetCapsuleShapeProperties>()
-          ->SetCapsuleShapeHeight(this->identity, _height);
+          ->SetCapsuleShapeHeight(this->identity, _length);
     }
 
     /////////////////////////////////////////////////

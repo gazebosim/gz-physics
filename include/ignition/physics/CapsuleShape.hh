@@ -44,7 +44,7 @@ namespace ignition
         /// \brief Get the height (length along the local z-axis) of this
         /// CapsuleShape.
         /// \return the height of this CapsuleShape
-        public: Scalar GetHeight() const;
+        public: Scalar GetLength() const;
       };
 
       public: template <typename PolicyT>
@@ -79,7 +79,7 @@ namespace ignition
         /// \brief Set the height of this CapsuleShape
         /// \param[in] _height
         ///   The desired height of this CapsuleShape
-        public: void SetHeight(Scalar _height);
+        public: void SetLength(Scalar length);
       };
 
       public: template <typename PolicyT>
@@ -122,7 +122,7 @@ namespace ignition
         /// \returns a ShapePtrType to the newly constructed CapsuleShape
         public: ShapePtrType AttachCapsuleShape(
             const std::string &_name = "capsule",
-            Scalar _radius = 1.0,
+            Scalar _radius = 0.5,
             Scalar _height = 1.0,
             const PoseType &_pose = PoseType::Identity());
       };

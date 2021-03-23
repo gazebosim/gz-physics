@@ -109,7 +109,7 @@ namespace ignition
         /// \returns a ShapePtrType to the newly constructed EllipsoidShape
         public: ShapePtrType AttachEllipsoidShape(
             const std::string &_name = "ellipsoid",
-            Dimensions _radii = 1.0,
+            Dimensions _radii = Dimensions::Constant(1.0),
             const PoseType &_pose = PoseType::Identity());
       };
 
