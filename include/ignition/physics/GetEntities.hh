@@ -215,7 +215,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature retrieves the nested model pointer from the parent
-    /// model by specifying the model index and model index/name.
+    /// model by specifying the name or index of the nested model.
     class IGNITION_PHYSICS_VISIBLE GetNestedModelFromModel
         : public virtual FeatureWithRequirements<GetModelFromWorld>
     {
@@ -263,6 +263,7 @@ namespace ignition
             const Identity &_modelID, const std::string &_modelName) const = 0;
       };
     };
+
     /////////////////////////////////////////////////
     /// \brief This feature retrieves the link pointer from the model
     /// by specifying model index and link index/name.

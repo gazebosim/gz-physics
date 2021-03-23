@@ -278,7 +278,7 @@ std::size_t EntityManagementFeatures::GetNestedModelCount(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::size_t _modelIndex) const
 {
-  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_modelIndex >= modelInfo->nestedModels.size())
   {
     return this->GenerateInvalidId();
@@ -303,7 +303,7 @@ Identity EntityManagementFeatures::GetNestedModel(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::string &_modelName) const
 {
-  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
 
   const std::string fullName =
       ::sdf::JoinName(modelInfo->model->getName(), _modelName);
@@ -325,6 +325,7 @@ Identity EntityManagementFeatures::GetNestedModel(
     return this->GenerateInvalidId();
   }
 }
+
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkCount(
     const Identity &_modelID) const
