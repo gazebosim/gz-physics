@@ -37,7 +37,7 @@ Identity ShapeFeatures::AttachMeshShape(
   unsigned int numVertices = _mesh.VertexCount();
   unsigned int numIndices = _mesh.IndexCount();
 
-  const auto mTriMesh = std::make_shared<btTriangleMesh>(new btTriangleMesh());
+  const auto mTriMesh = std::make_shared<btTriangleMesh>();
 
   for (unsigned int j = 0;  j < numVertices; ++j)
   {
