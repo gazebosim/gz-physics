@@ -35,6 +35,12 @@ class ignition::physics::tpelib::ModelPrivate
 
   /// \brief First inserted link id;
   public: std::size_t firstLinkId = kNullEntityId;
+
+  /// \brief Links in the model
+  public: std::vector<std::size_t> linkIds;
+
+  /// \brief Nested models links
+  public: std::vector<std::size_t> nestedModelIds;
 };
 
 using namespace ignition;
@@ -70,6 +76,7 @@ Entity &Model::AddLink()
 
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
+  this->dataPtr->linkIds.push_back(linkId);
 
   it->second->SetParent(this);
   this->ChildrenChanged();
@@ -79,11 +86,7 @@ Entity &Model::AddLink()
 //////////////////////////////////////////////////
 std::size_t Model::GetLinkCount() const
 {
-  const auto &children = this->GetChildren();
-  return std::count_if(children.begin(), children.end(), [](auto _child)
-  {
-    return std::dynamic_pointer_cast<Link>(_child.second);
-  });
+  return this->dataPtr->linkIds.size();
 }
 
 //////////////////////////////////////////////////
@@ -92,6 +95,7 @@ Entity &Model::AddModel()
   std::size_t modelId = Entity::GetNextId();
   const auto[it, success]  = this->GetChildren().insert(
       {modelId, std::make_shared<Model>(modelId)});
+  this->dataPtr->nestedModelIds.push_back(modelId);
 
   it->second->SetParent(this);
   this->ChildrenChanged();
@@ -101,11 +105,7 @@ Entity &Model::AddModel()
 //////////////////////////////////////////////////
 std::size_t Model::GetModelCount() const
 {
-  const auto &children = this->GetChildren();
-  return std::count_if(children.begin(), children.end(), [](auto _child)
-  {
-    return std::dynamic_pointer_cast<Model>(_child.second);
-  });
+  return this->dataPtr->nestedModelIds.size();
 }
 
 //////////////////////////////////////////////////

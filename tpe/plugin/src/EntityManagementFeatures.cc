@@ -204,7 +204,7 @@ Identity EntityManagementFeatures::GetNestedModel(
     {
       if (nestedModelInfo != nullptr)
       {
-        std::string name = nestedModelInfo->model->GetName();
+        const std::string &name = nestedModelInfo->model->GetName();
         if (parentModelId == modelEnt.GetId() && name == modelEnt.GetName())
         {
           return this->GenerateIdentity(parentModelId, nestedModelInfo);
