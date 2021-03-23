@@ -552,6 +552,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   auto joint1 = parentModel->GetJoint("joint1");
   EXPECT_NE(nullptr, joint1);
 
+  EXPECT_EQ(3u, parentModel->GetNestedModelCount());
   auto nestedModel = parentModel->GetNestedModel("nested_model");
   ASSERT_NE(nullptr, nestedModel);
 

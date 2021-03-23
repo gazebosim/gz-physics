@@ -65,8 +65,16 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto nestedModel = model->ConstructEmptyNestedModel("empty nested model");
   ASSERT_NE(nullptr, nestedModel);
   EXPECT_EQ("empty nested model", nestedModel->GetName());
+  EXPECT_EQ(1u, model->GetNestedModelCount());
   EXPECT_EQ(world, nestedModel->GetWorld());
+  EXPECT_EQ(0u, model->GetIndex());
+  EXPECT_EQ(nestedModel, model->GetNestedModel(0));
+  EXPECT_EQ(nestedModel, model->GetNestedModel("empty nested model"));
   EXPECT_NE(nestedModel, nestedModel->ConstructEmptyNestedModel("dummy"));
+  // This should remain 1 since we're adding a nested model in `nestedModel` not
+  // in `model`.
+  EXPECT_EQ(1u, model->GetNestedModelCount());
+  EXPECT_EQ(1u, nestedModel->GetNestedModelCount());
 
   auto link = model->ConstructEmptyLink("empty link");
   ASSERT_NE(nullptr, link);

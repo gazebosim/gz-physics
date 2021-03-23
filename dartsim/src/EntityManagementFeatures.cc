@@ -718,8 +718,8 @@ Identity EntityManagementFeatures::ConstructEmptyNestedModel(
         dart::dynamics::Frame::World(),
         modelFullName + "_frame");
 
-  auto [modelID, modelInfo] =
-      this->AddModel({model, _name, modelFrame, ""}, worldID);  // NOLINT
+  auto [modelID, modelInfo] = this->AddNestedModel(
+      {model, _name, modelFrame, ""}, _modelID, worldID);  // NOLINT
 
   return this->GenerateIdentity(modelID, this->models.at(modelID));
 }
