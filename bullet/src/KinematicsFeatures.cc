@@ -52,11 +52,14 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const btVector3 pos = trans.getOrigin();
   const btMatrix3x3 mat = trans.getBasis();
 
-  auto eigenMat = convert(mat);
-  auto eigenVec = convert(pos);
-
-  data.pose.linear() = eigenMat;
-  data.pose.translation() = eigenVec;
+  const Eigen::Isometry3d poseIsometry =
+    ignition::math::eigen3::convert(linkInfo->inertialPose.Inverse());
+  Eigen::Isometry3d poseIsometryBase;
+  poseIsometryBase.linear() = convert(mat);
+  poseIsometryBase.translation() = convert(pos);
+  poseIsometryBase =  poseIsometryBase * poseIsometry;
+  data.pose.linear() = poseIsometryBase.linear();
+  data.pose.translation() = poseIsometryBase.translation();
 
   // Add base velocities
   btVector3 omega = model->getAngularVelocity();
