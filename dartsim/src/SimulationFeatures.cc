@@ -59,15 +59,15 @@ void SimulationFeatures::WorldForwardStep(
 
   // TODO(MXG): Parse input
   world->step();
-  this->WriteRequiredData(_h);
+  this->Write(_h.Get<ChangedWorldPoses>());
   // TODO(MXG): Fill in state
 }
 
-void SimulationFeatures::Write(WorldPoses &_poses) const
+void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {
   // remove link poses from the previous iteration
-  _poses.entries.clear();
-  _poses.entries.reserve(this->links.size());
+  _changedPoses.entries.clear();
+  _changedPoses.entries.reserve(this->links.size());
 
   std::unordered_map<std::size_t, math::Pose3d> newPoses;
 
@@ -88,7 +88,7 @@ void SimulationFeatures::Write(WorldPoses &_poses) const
           !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
           !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
       {
-        _poses.entries.push_back(wp);
+        _changedPoses.entries.push_back(wp);
         newPoses[id] = wp.pose;
       }
       else
