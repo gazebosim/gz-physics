@@ -369,9 +369,13 @@ void JointFeatures::SetJointVelocityCommand(
 /////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
-  (void) _id;
   // Degrees of freedom may need to be saved in the JointInfo struct
-  // Currently supporting 1DoF joints
+  // Currently supporting 1DoF revolute joints and fixed joints
+  const JointInfoPtr &jointInfo = this->joints.at(_id.id);
+  if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::FIXED))
+  {
+    return 0;
+  }
   return 1;
 }
 
@@ -395,8 +399,14 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 Identity JointFeatures::CastToFixedJoint(
   const Identity &_jointID) const
 {
-  (void) _jointID;
-  ignwarn << "Dummy CastToFixedJoint\n";
+  if (this->joints.find(_jointID.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_jointID.id);
+    if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::FIXED))
+    {
+      return this->GenerateIdentity(_jointID, this->Reference(_jointID));
+    }
+  }
   return this->GenerateInvalidId();
 }
 
@@ -404,8 +414,14 @@ Identity JointFeatures::CastToFixedJoint(
 Identity JointFeatures::CastToRevoluteJoint(
     const Identity &_jointID) const
 {
-  (void) _jointID;
-  ignwarn << "Dummy CastToRevoluteJoint\n";
+  if (this->joints.find(_jointID.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_jointID.id);
+    if (jointInfo->constraintType == static_cast<int>(::sdf::JointType::REVOLUTE))
+    {
+      return this->GenerateIdentity(_jointID, this->Reference(_jointID));
+    }
+  }
   return this->GenerateInvalidId();
 }
 
@@ -413,8 +429,21 @@ Identity JointFeatures::CastToRevoluteJoint(
 AngularVector3d JointFeatures::GetRevoluteJointAxis(
     const Identity &_jointID) const
 {
-  (void) _jointID;
-  ignwarn << "Dummy GetRevoluteJointAxis\n";
+  if (this->joints.find(_jointID.id) != this->joints.end())
+  {
+    const JointInfoPtr &jointInfo = this->joints.at(_jointID.id);
+    btHingeAccumulatedAngleConstraint* hinge =
+      dynamic_cast<btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
+    if (hinge)
+    {
+      btVector3 vec =
+	hinge->getRigidBodyA().getCenterOfMassTransform().getBasis() *
+	hinge->getFrameOffsetA().getBasis().getColumn(2);
+      //math::Vector3 globalAxis(vec[0], vec[1], vec[2]);
+      return AngularVector3d(vec[0], vec[1], vec[2]);
+    }
+  }
+  ignerr << "Error getting revolute Joint axis: " << _jointID.id << " \n";
   return AngularVector3d();
 }
 
