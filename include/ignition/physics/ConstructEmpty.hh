@@ -92,7 +92,7 @@ class ConstructEmptyNestedModelFeature : public virtual Feature
     ///   Name of the nested model.
     /// \return
     ///   The ModelPtrType of the constructed model.
-    public: ModelPtrType ConstructEmptyModel(const std::string &_name);
+    public: ModelPtrType ConstructEmptyNestedModel(const std::string &_name);
   };
 
   public: template <typename PolicyT>

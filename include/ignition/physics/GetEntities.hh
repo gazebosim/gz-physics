@@ -226,28 +226,29 @@ namespace ignition
         public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
         public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
 
-        /// \brief Get the number of Models inside this Model.
-        public: std::size_t GetModelCount() const;
+        /// \brief Get the number of nested Models inside this Model.
+        public: std::size_t GetNestedModelCount() const;
 
-        /// \brief Get a Model that exists within this Model.
+        /// \brief Get a nested Model that exists within this Model.
         /// \param[in] _index
         ///   Index of the model within this model.
-        /// \return A model reference. If _index is GetModelCount() or higher,
-        /// this will be a nullptr.
-        public: ModelPtrType GetModel(std::size_t _index);
+        /// \return A model reference. If _index is GetNestedModelCount() or
+        /// higher, this will be a nullptr.
+        public: ModelPtrType GetNestedModel(std::size_t _index);
 
-        /// \sa GetModel(std::size_t)
-        public: ConstModelPtrType GetModel(std::size_t _index) const;
+        /// \sa GetNestedModel(std::size_t)
+        public: ConstModelPtrType GetNestedModel(std::size_t _index) const;
 
-        /// \brief Get a Model that exists within this Model.
+        /// \brief Get a nested Model that exists within this Model.
         /// \param[in] _name
-        ///   Name of the model within this model.
-        /// \return A model reference. If a model named _name does not exist in
-        /// this model, this will be a nullptr.
-        public: ModelPtrType GetModel(const std::string &_name);
+        ///   Name of the nested model within this model.
+        /// \return A model reference. If a nested model named _name does not
+        /// exist in this model, this will be a nullptr.
+        public: ModelPtrType GetNestedModel(const std::string &_name);
 
-        /// \sa GetModel(const std::string &)
-        public: ConstModelPtrType GetModel(const std::string &_name) const;
+        /// \sa GetNestedModel(const std::string &)
+        public: ConstModelPtrType GetNestedModel(
+                    const std::string &_name) const;
       };
 
       public: template <typename PolicyT>

@@ -48,7 +48,7 @@ auto ConstructEmptyModelFeature::World<PolicyT, FeaturesT>
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 auto ConstructEmptyNestedModelFeature::Model<PolicyT, FeaturesT>
-::ConstructEmptyModel(const std::string &_name) -> ModelPtrType
+::ConstructEmptyNestedModel(const std::string &_name) -> ModelPtrType
 {
   return ModelPtrType(this->pimpl,
         this->template Interface<ConstructEmptyNestedModelFeature>()
