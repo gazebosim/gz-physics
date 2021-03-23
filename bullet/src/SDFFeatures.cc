@@ -141,8 +141,10 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::string name = _sdfLink.Name();
   const math::Pose3d pose = ResolveSdfPose(_sdfLink.SemanticPose());
   const ignition::math::Inertiald inertial = _sdfLink.Inertial();
-  auto mass = inertial.MassMatrix().Mass();
-  const auto diagonalMoments = inertial.MassMatrix().DiagonalMoments();
+  double mass = inertial.MassMatrix().Mass();
+  math::Pose3d inertialPose = inertial.Pose();
+  inertialPose.Rot() *= inertial.MassMatrix().PrincipalAxesOffset();
+  const auto diagonalMoments = inertial.MassMatrix().PrincipalMoments();
 
   // Get link properties
   btVector3 linkInertiaDiag =
@@ -150,7 +152,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   const auto &modelInfo = this->models.at(_modelID);
   math::Pose3d base_pose = modelInfo->pose;
-  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose);
+  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose * inertialPose);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
@@ -178,8 +180,8 @@ Identity SDFFeatures::ConstructSdfLink(
   world->addRigidBody(body.get());
 
   // Generate an identity for it
-  const auto linkIdentity = this->AddLink({name, _modelID, pose, mass,
-    linkInertiaDiag, myMotionState, collisionShape, body});
+  const auto linkIdentity = this->AddLink({name, _modelID, pose, inertialPose,
+    mass, linkInertiaDiag, myMotionState, collisionShape, body});
 
   // Create associated collisions to this model
   for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
@@ -252,7 +254,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &body = linkInfo->link;
     const auto &modelID = linkInfo->model;
 
-    const math::Pose3d pose = ResolveSdfPose(_collision.SemanticPose());
+    const math::Pose3d pose =
+      linkInfo->inertialPose.Inverse() * ResolveSdfPose(_collision.SemanticPose());
     const Eigen::Isometry3d poseIsometry =
       ignition::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
@@ -350,8 +353,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   if (parentId != worldId)
   {
     pivotParent =
-      (ResolveSdfPose(_sdfJoint.SemanticPose()) + this->links.at(childId)->pose).Pos();
-    pose = this->links.at(parentId)->pose;
+      (ResolveSdfPose(_sdfJoint.SemanticPose()) * this->links.at(childId)->pose).Pos();
+    pose = this->links.at(parentId)->pose * this->links.at(parentId)->inertialPose;
     pivotParent -= pose.Pos();
     pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
     axisParent = pose.Rot().RotateVectorReverse(axis);
@@ -359,8 +362,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   pivotChild =
-    (ResolveSdfPose(_sdfJoint.SemanticPose()) + this->links.at(childId)->pose).Pos();
-  pose = this->links.at(childId)->pose;
+    (ResolveSdfPose(_sdfJoint.SemanticPose()) * this->links.at(childId)->pose).Pos();
+  pose = this->links.at(childId)->pose * this->links.at(childId)->inertialPose;
   pivotChild -= pose.Pos();
   pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
   axisChild = pose.Rot().RotateVectorReverse(axis);
