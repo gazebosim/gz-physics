@@ -19,6 +19,11 @@
 #define IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
 
 #include <vector>
+#include <unordered_map>
+
+#include <ignition/math/Pose3.hh>
+
+#include <ignition/physics/CanWriteData.hh>
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
 
@@ -34,6 +39,7 @@ struct SimulationFeatureList : FeatureList<
 > { };
 
 class SimulationFeatures :
+    public CanWriteRequiredData<SimulationFeatures, ForwardStep::Output>,
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
@@ -43,8 +49,14 @@ class SimulationFeatures :
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
 
+  public: void Write(WorldPoses &_poses) const;
+
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
+
+  /// \brief link poses from the most recent pose change/update.
+  /// The key is the link's ID, and the value is the link's pose
+  private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
 };
 
 }

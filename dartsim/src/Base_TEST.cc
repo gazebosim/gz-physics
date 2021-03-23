@@ -65,7 +65,19 @@ TEST(BaseClass, RemoveModel)
       boxShape);
 
     auto res = base.AddModel({skel, frame, ""}, worldID);
-    base.AddLink(pair.second);
+    ASSERT_TRUE(base.models.HasEntity(std::get<0>(res)));
+    const auto &modelInfo = base.models.at(std::get<0>(res));
+    EXPECT_EQ(skel, modelInfo->model);
+
+    const std::string fullName = ::sdf::JoinName(
+        world->getName(),
+        ::sdf::JoinName(skel->getName(), pair.second->getName()));
+    auto linkID = base.AddLink(pair.second, fullName, std::get<0>(res));
+    ASSERT_TRUE(base.links.HasEntity(linkID));
+    const auto &linkInfo = base.links.at(linkID);
+    EXPECT_EQ(pair.second->getName(), linkInfo->name);
+    EXPECT_EQ(pair.second, linkInfo->link);
+
     base.AddJoint(pair.first);
     base.AddShape({sn, name + "_shape"});
 
@@ -80,6 +92,7 @@ TEST(BaseClass, RemoveModel)
 
   EXPECT_EQ(5u, base.models.size());
   EXPECT_EQ(5u, base.links.size());
+  EXPECT_EQ(5u, base.linksByName.size());
   EXPECT_EQ(5u, base.joints.size());
   EXPECT_EQ(5u, base.shapes.size());
 
@@ -93,6 +106,7 @@ TEST(BaseClass, RemoveModel)
   // Check that other resouces (links, shapes, etc) are also removed
   EXPECT_EQ(4u, base.models.size());
   EXPECT_EQ(4u, base.links.size());
+  EXPECT_EQ(4u, base.linksByName.size());
   EXPECT_EQ(4u, base.joints.size());
   EXPECT_EQ(4u, base.shapes.size());
 
@@ -126,6 +140,7 @@ TEST(BaseClass, RemoveModel)
     --curSize;
     EXPECT_EQ(curSize, base.models.size());
     EXPECT_EQ(curSize, base.links.size());
+    EXPECT_EQ(curSize, base.linksByName.size());
     EXPECT_EQ(curSize, base.joints.size());
     EXPECT_EQ(curSize, base.shapes.size());
     checkModelIndices();

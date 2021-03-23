@@ -272,22 +272,25 @@ std::size_t EntityManagementFeatures::GetLinkCount(
     const Identity &_modelID) const
 {
   return this->ReferenceInterface<ModelInfo>(_modelID)
-      ->model->getNumBodyNodes();
+      ->links.size();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::size_t _linkIndex) const
 {
-  DartBodyNode *const bn =
-      this->ReferenceInterface<ModelInfo>(_modelID)->model->getBodyNode(
-          _linkIndex);
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+
+  if (_linkIndex >= modelInfo->links.size())
+    return this->GenerateInvalidId();
+
+  const auto &linkInfo = modelInfo->links[_linkIndex];
 
   // If the link doesn't exist in "links", it means the containing entity has
   // been removed.
-  if (this->links.HasEntity(bn))
+  if (this->links.HasEntity(linkInfo->link))
   {
-    const std::size_t linkID = this->links.IdentityOf(bn);
+    const std::size_t linkID = this->links.IdentityOf(linkInfo->link);
     return this->GenerateIdentity(linkID, this->links.at(linkID));
   }
   else
@@ -304,25 +307,29 @@ Identity EntityManagementFeatures::GetLink(
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
-  DartBodyNode *const bn =
-      this->ReferenceInterface<ModelInfo>(_modelID)->model->getBodyNode(
-          _linkName);
-
-  // If the link doesn't exist in "links", it means the containing entity has
-  // been removed.
-  if (this->links.HasEntity(bn))
+  const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  for (const auto &linkInfo : modelInfo->links)
   {
-    const std::size_t linkID = this->links.IdentityOf(bn);
-    return this->GenerateIdentity(linkID, this->links.at(linkID));
+    if (_linkName == linkInfo->name)
+    {
+      // If the link doesn't exist in "links", it means the containing entity
+      // has been removed.
+      if (this->links.HasEntity(linkInfo->link))
+      {
+        const std::size_t linkID = this->links.IdentityOf(linkInfo->link);
+        return this->GenerateIdentity(linkID, this->links.at(linkID));
+      }
+      else
+      {
+        // TODO(addisu) It's not clear what to do when `GetLink` is called on a
+        // model that has been removed. Right now we are returning an invalid
+        // identity, but that could cause a segfault if the user doesn't check
+        // the returned value before using it.
+        return this->GenerateInvalidId();
+      }
+    }
   }
-  else
-  {
-    // TODO(addisu) It's not clear what to do when `GetLink` is called on a
-    // model that has been removed. Right now we are returning an invalid
-    // identity, but that could cause a segfault if the use doesn't check if
-    // returned value before using it.
-    return this->GenerateInvalidId();
-  }
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -393,22 +400,19 @@ const std::string &EntityManagementFeatures::GetLinkName(
 std::size_t EntityManagementFeatures::GetLinkIndex(
     const Identity &_linkID) const
 {
-  return this->ReferenceInterface<LinkInfo>(_linkID)
-      ->link->getIndexInSkeleton();
+  return this->links.idToIndexInContainer.at(_linkID);
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModelOfLink(
     const Identity &_linkID) const
 {
-  const DartSkeletonPtr &model =
-      this->ReferenceInterface<LinkInfo>(_linkID)->link->getSkeleton();
+  const std::size_t modelID = this->links.idToContainerID.at(_linkID);
 
   // If the model containing the link doesn't exist in "models", it means this
   // link belongs to a removed model.
-  if (this->models.HasEntity(model))
+  if (this->models.HasEntity(modelID))
   {
-    const std::size_t modelID = this->models.IdentityOf(model);
     return this->GenerateIdentity(modelID, this->models.at(modelID));
   }
   else
@@ -653,7 +657,21 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
       model->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
         nullptr, prop_fj, prop_bn).second;
 
-  const std::size_t linkID = this->AddLink(bn);
+  auto worldIDIt = this->models.idToContainerID.find(_modelID);
+  if (worldIDIt == this->models.idToContainerID.end())
+  {
+    ignerr << "World of model [" << model->getName()
+           << "] could not be found when creating link [" << _name
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldIDIt->second);
+  const std::string fullName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(model->getName(), bn->getName()));
+
+  const std::size_t linkID = this->AddLink(bn, fullName, _modelID);
   return this->GenerateIdentity(linkID, this->links.at(linkID));
 }
 
