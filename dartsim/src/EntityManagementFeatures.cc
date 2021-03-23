@@ -238,7 +238,7 @@ Identity EntityManagementFeatures::GetModel(
 const std::string &EntityManagementFeatures::GetModelName(
     const Identity &_modelID) const
 {
-  return this->ReferenceInterface<ModelInfo>(_modelID)->model->getName();
+  return this->ReferenceInterface<ModelInfo>(_modelID)->localName;
 }
 
 /////////////////////////////////////////////////
@@ -260,6 +260,65 @@ Identity EntityManagementFeatures::GetWorldOfModel(
   {
     const std::size_t worldID = this->models.idToContainerID.at(_modelID);
     return this->GenerateIdentity(worldID, this->worlds.at(worldID));
+  }
+  else
+  {
+    return this->GenerateInvalidId();
+  }
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->nestedModels.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::size_t _modelIndex) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_modelIndex >= modelInfo->nestedModels.size())
+  {
+    return this->GenerateInvalidId();
+  }
+
+  const auto nestedModelID = modelInfo->nestedModels[_modelIndex];
+
+  // If the model doesn't exist in "models", it means the containing entity has
+  // been removed.
+  if (this->models.HasEntity(nestedModelID))
+  {
+    return this->GenerateIdentity(nestedModelID,
+                                  this->models.at(nestedModelID));
+  }
+  else
+  {
+    return this->GenerateInvalidId();
+  }
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::string &_modelName) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+
+  const std::string fullName =
+      ::sdf::JoinName(modelInfo->model->getName(), _modelName);
+
+  if (this->models.HasEntity(_modelID))
+  {
+    auto worldID = this->models.idToContainerID.at(_modelID);
+    auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
+    if (nullptr == nestedSkel)
+    {
+      return this->GenerateInvalidId();
+    }
+    const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
+    return this->GenerateIdentity(nestedModelID,
+                                  this->models.at(nestedModelID));
   }
   else
   {
@@ -636,7 +695,31 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
         dart::dynamics::Frame::World(),
         _name + "_frame");
 
-  auto [modelID, modelInfo] = this->AddModel({model, modelFrame, ""}, _worldID); // NOLINT
+  auto [modelID, modelInfo] =
+      this->AddModel({model, _name, modelFrame, ""}, _worldID);  // NOLINT
+
+  return this->GenerateIdentity(modelID, this->models.at(modelID));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyNestedModel(
+    const Identity &_modelID, const std::string &_name)
+{
+  // find the world assocated with the model
+  auto worldID = this->models.idToContainerID.at(_modelID);
+  const auto &skel = this->models.at(_modelID)->model;
+  const std::string modelFullName = ::sdf::JoinName(skel->getName(), _name);
+
+  dart::dynamics::SkeletonPtr model =
+      dart::dynamics::Skeleton::create(modelFullName);
+
+  dart::dynamics::SimpleFramePtr modelFrame =
+      dart::dynamics::SimpleFrame::createShared(
+        dart::dynamics::Frame::World(),
+        modelFullName + "_frame");
+
+  auto [modelID, modelInfo] = this->AddNestedModel(
+      {model, _name, modelFrame, ""}, _modelID, worldID);  // NOLINT
 
   return this->GenerateIdentity(modelID, this->models.at(modelID));
 }

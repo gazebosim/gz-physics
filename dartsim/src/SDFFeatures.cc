@@ -437,8 +437,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 {
   auto worldID = _parentID;
   std::string modelName = _sdfModel.Name();
+  const bool isNested = this->models.HasEntity(_parentID);
   // If this is a nested model, find the world assocated with the model
-  if (this->models.HasEntity(_parentID))
+  if (isNested)
   {
     worldID = this->models.idToContainerID.at(_parentID);
     const auto &skel = this->models.at(_parentID)->model;
@@ -459,9 +460,20 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   // TODO(anyone) This may not work correctly with nested models and will need
   // to be updated once multiple canonical links can exist in a nested model
   // https://github.com/ignitionrobotics/ign-physics/issues/209
-  auto [modelID, modelInfo] = this->AddModel( // NOLINT
-      {model, modelFrame, _sdfModel.CanonicalLinkName()}, worldID);
-
+  auto [modelID, modelInfo] = [&] {
+    if (isNested)
+    {
+      return this->AddNestedModel(  // NOLINT
+          {model, _sdfModel.Name(), modelFrame, _sdfModel.CanonicalLinkName()},
+          _parentID, worldID);
+    }
+    else
+    {
+      return this->AddModel(  // NOLINT
+          {model, _sdfModel.Name(), modelFrame, _sdfModel.CanonicalLinkName()},
+          worldID);
+    }
+  }();
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
 
