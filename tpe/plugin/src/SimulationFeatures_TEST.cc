@@ -261,7 +261,7 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     IGN_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
     ASSERT_NE(nullptr, freeGroup->CanonicalLink());
     IGN_UTILS_WARN_RESUME__DEPRECATED_DECLARATION
-    ASSERT_NE(nullptr, freeGroup->UnconstrainedLink());
+    ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
     auto freeGroupLink = link->FindFreeGroup();

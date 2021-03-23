@@ -77,22 +77,24 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
-        /// \brief The unconstrained link of this FreeGroup. Getting and setting
-        /// properties (like poses and velocities) on the group will be done
-        /// in terms of this link.
-        public: LinkPtr<PolicyT, FeaturesT> UnconstrainedLink();
+        /// \brief The root link of this FreeGroup. This link is the root of one
+        /// of the kinematic trees represented by this FreeGroup. Getting and
+        /// setting properties (like poses and velocities) on the group will be
+        /// done in terms of this link.
+        public: LinkPtr<PolicyT, FeaturesT> RootLink();
 
-        /// \brief const version of UnconstrainedLink()
-        public: ConstLinkPtr<PolicyT, FeaturesT> UnconstrainedLink() const;
+        /// \brief const version of RootLink()
+        public: ConstLinkPtr<PolicyT, FeaturesT> RootLink() const;
 
-        /// \brief The unconstrained link of this FreeGroup. Getting and setting
-        /// properties (like poses and velocities) on the group will be done
-        /// in terms of this link.
-        /// DEPRECATED. Pleaes use UnconstrainedLink()
+        /// \brief The root link of this FreeGroup. This link is the root of one
+        /// of the kinematic trees represented by this FreeGroup. Getting and
+        /// setting properties (like poses and velocities) on the group will be
+        /// done in terms of this link.
+        /// DEPRECATED. Please use RootLink()
         public: LinkPtr<PolicyT, FeaturesT> CanonicalLink() IGN_DEPRECATED(4.0);
 
         /// \brief const version of CanonicalLink()
-        /// DEPRECATED. Pleaes use UnconstrainedLink()
+        /// DEPRECATED. Please use RootLink()
         public: ConstLinkPtr<PolicyT, FeaturesT> CanonicalLink() const
                 IGN_DEPRECATED(4.0);
       };
@@ -106,7 +108,7 @@ namespace ignition
         public: virtual Identity FindFreeGroupForLink(
             const Identity &_linkID) const = 0;
 
-        public: virtual Identity GetFreeGroupUnconstrainedLink(
+        public: virtual Identity GetFreeGroupRootLink(
             const Identity &_groupID) const = 0;
       };
     };

@@ -42,12 +42,11 @@ class FreeGroupFeatures
 
   Identity FindFreeGroupForLink(const Identity &_linkID) const override;
 
-  Identity GetFreeGroupUnconstrainedLink(
-      const Identity &_groupID) const override;
+  Identity GetFreeGroupRootLink(const Identity &_groupID) const override;
 
   struct FreeGroupInfo
   {
-    /// \brief Pointer to the unconstrained link
+    /// \brief Pointer to the root link
     DartBodyNode *link;
 
     /// \brief If the FreeGroup is wrapping an entire model, then this will

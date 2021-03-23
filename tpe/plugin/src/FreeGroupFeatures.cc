@@ -54,8 +54,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 }
 
 /////////////////////////////////////////////////
-Identity FreeGroupFeatures::GetFreeGroupUnconstrainedLink(
-  const Identity &_groupID) const
+Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
   // assume no canonical link for now
   // assume groupID ~= modelID
