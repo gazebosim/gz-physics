@@ -62,9 +62,11 @@ struct LinkInfo
 struct ModelInfo
 {
   dart::dynamics::SkeletonPtr model;
+  std::string localName;
   dart::dynamics::SimpleFramePtr frame;
   std::string canonicalLinkName;
   std::vector<std::shared_ptr<LinkInfo>> links {};
+  std::vector<std::size_t> nestedModels = {};
 };
 
 struct JointInfo
@@ -289,6 +291,15 @@ class Base : public Implements3d<FeatureList<Feature>>
     assert(indexInContainerToID.size() == world->getNumSkeletons());
 
     return std::forward_as_tuple(id, entry);
+  }
+
+  public: inline std::tuple<std::size_t, ModelInfo &> AddNestedModel(
+              const ModelInfo &_info, const std::size_t _parentID,
+              const std::size_t _worldID)
+  {
+    auto [id, entry] = this->AddModel(_info, _worldID);
+    this->models.at(_parentID)->nestedModels.push_back(id);
+    return {id, entry};
   }
 
   public: inline std::size_t AddLink(DartBodyNode *_bn,
