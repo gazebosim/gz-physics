@@ -392,42 +392,11 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointTransformFromParent(
-    const Identity &_id, const Pose3d &_pose)
-{
-  (void) _id;
-  (void) _pose;
-  ignwarn << "Dummy set joint transform from parent\n";
-}
-
-/////////////////////////////////////////////////
-void JointFeatures::SetJointTransformToChild(
-    const Identity &_id, const Pose3d &_pose)
-{
-  (void) _id;
-  (void) _pose;
-  ignwarn << "Dummy set joint transform to child\n";
-}
-
-/////////////////////////////////////////////////
 Identity JointFeatures::CastToFixedJoint(
   const Identity &_jointID) const
 {
   (void) _jointID;
   ignwarn << "Dummy CastToFixedJoint\n";
-  return this->GenerateInvalidId();
-}
-
-/////////////////////////////////////////////////
-Identity JointFeatures::AttachFixedJoint(
-  const Identity &_childID,
-  const BaseLink3dPtr &_parent,
-  const std::string &_name)
-{
-  (void) _childID;
-  (void) _parent;
-  (void) _name;
-  ignwarn << "Dummy AttachFixedJoint\n";
   return this->GenerateInvalidId();
 }
 
@@ -447,30 +416,6 @@ AngularVector3d JointFeatures::GetRevoluteJointAxis(
   (void) _jointID;
   ignwarn << "Dummy GetRevoluteJointAxis\n";
   return AngularVector3d();
-}
-
-/////////////////////////////////////////////////
-void JointFeatures::SetRevoluteJointAxis(
-    const Identity &_jointID, const AngularVector3d &_axis)
-{
-  (void) _jointID;
-  (void) _axis;
-  ignwarn << "Dummy SetRevoluteJointAxis\n";
-}
-
-/////////////////////////////////////////////////
-Identity JointFeatures::AttachRevoluteJoint(
-  const Identity &_childID,
-  const BaseLink3dPtr &_parent,
-  const std::string &_name,
-  const AngularVector3d &_axis)
-{
-  (void) _childID;
-  (void) _parent;
-  (void) _name;
-  (void) _axis;
-  ignwarn << "Dummy Attach RevoluteJoint\n";
-  return this->GenerateInvalidId();
 }
 
 }  // namespace bullet
