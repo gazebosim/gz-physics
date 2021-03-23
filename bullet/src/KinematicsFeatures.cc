@@ -45,10 +45,10 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
   const auto &linkInfo = this->links.at(linkID);
-  const auto &model = linkInfo->link;
+  const auto &rigidBody = linkInfo->link;
 
   btTransform trans;
-  model->getMotionState()->getWorldTransform(trans);
+  rigidBody->getMotionState()->getWorldTransform(trans);
   const btVector3 pos = trans.getOrigin();
   const btMatrix3x3 mat = trans.getBasis();
 
@@ -62,12 +62,12 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   data.pose.translation() = poseIsometryBase.translation();
 
   // Add base velocities
-  btVector3 omega = model->getAngularVelocity();
-  btVector3 vel = model->getLinearVelocity();
+  btVector3 omega = rigidBody->getAngularVelocity();
+  btVector3 vel = rigidBody->getLinearVelocity();
 
   // Transform to world frame
   // const auto matBaseToWorld =
-  //   btMatrix3x3(model->getWorldToBaseRot()).inverse();
+  //   btMatrix3x3(rigidBody->getWorldToBaseRot()).inverse();
   // omega = matBaseToWorld * omega;
   // vel = matBaseToWorld * vel;
 
