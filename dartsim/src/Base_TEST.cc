@@ -65,10 +65,19 @@ TEST(BaseClass, RemoveModel)
       boxShape);
 
     auto res = base.AddModel({skel, frame, ""}, worldID);
+    ASSERT_TRUE(base.models.HasEntity(std::get<0>(res)));
+    const auto &modelInfo = base.models.at(std::get<0>(res));
+    EXPECT_EQ(skel, modelInfo->model);
+
     const std::string fullName = ::sdf::JoinName(
         world->getName(),
         ::sdf::JoinName(skel->getName(), pair.second->getName()));
-    base.AddLink(pair.second, fullName);
+    auto linkID = base.AddLink(pair.second, fullName, std::get<0>(res));
+    ASSERT_TRUE(base.links.HasEntity(linkID));
+    const auto &linkInfo = base.links.at(linkID);
+    EXPECT_EQ(pair.second->getName(), linkInfo->name);
+    EXPECT_EQ(pair.second, linkInfo->link);
+
     base.AddJoint(pair.first);
     base.AddShape({sn, name + "_shape"});
 
