@@ -156,4 +156,5 @@ The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
 | mesh::AttachMeshShapeFeature | ✓ | ✓ |
 | ForwardStep | ✓ | ✓ |
 | GetContactsFromLastStepFeature | ✓ | ✕ |
-| PhysicsOptions | ✓  |
+| CollisionDetector | ✓  |
+| Solver | ✓  |

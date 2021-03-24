@@ -29,7 +29,8 @@ namespace physics {
 namespace dartsim {
 
 struct WorldFeatureList : FeatureList<
-  PhysicsOptions
+  CollisionDetector,
+  Solver
 > { };
 
 class WorldFeatures :

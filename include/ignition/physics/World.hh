@@ -27,9 +27,9 @@ namespace ignition
   namespace physics
   {
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE PhysicsOptions : public virtual Feature
+    class IGNITION_PHYSICS_VISIBLE CollisionDetector : public virtual Feature
     {
-      /// \brief The World API for setting physics options.
+      /// \brief The World API for setting the collision detector.
       public: template <typename PolicyT, typename FeaturesT>
       class World : public virtual Feature::World<PolicyT, FeaturesT>
       {
@@ -41,17 +41,9 @@ namespace ignition
         /// \brief Get the name of the collision detector in use.
         /// \return Name of collision detector.
         public: const std::string &GetCollisionDetector() const;
-
-        /// \brief Set the name of the solver to use.
-        /// \param[in] _solver Name of solver.
-        public: void SetSolver(const std::string &_solver);
-
-        /// \brief Get the name of the solver in use.
-        /// \return Name of solver.
-        public: const std::string &GetSolver() const;
       };
 
-      /// \private The implementation API for physics options.
+      /// \private The implementation API for the collision detector.
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
@@ -66,7 +58,29 @@ namespace ignition
         /// \return Name of collision detector.
         public: virtual const std::string &GetWorldCollisionDetector(
             const Identity &_id) const = 0;
+      };
+    };
 
+    /////////////////////////////////////////////////
+    class IGNITION_PHYSICS_VISIBLE Solver : public virtual Feature
+    {
+      /// \brief The World API for setting the solver.
+      public: template <typename PolicyT, typename FeaturesT>
+      class World : public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        /// \brief Set the name of the solver to use.
+        /// \param[in] _solver Name of solver.
+        public: void SetSolver(const std::string &_solver);
+
+        /// \brief Get the name of the solver in use.
+        /// \return Name of solver.
+        public: const std::string &GetSolver() const;
+      };
+
+      /// \private The implementation API for the solver.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
         /// \brief Implementation API for setting the solver.
         /// \param[in] _id Identity of the world.
         /// \param[in] _collisionDetector Name of solver.

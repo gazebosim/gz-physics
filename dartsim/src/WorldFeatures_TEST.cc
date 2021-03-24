@@ -34,7 +34,8 @@
 #include "test/Utils.hh"
 
 struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::PhysicsOptions,
+    ignition::physics::CollisionDetector,
+    ignition::physics::Solver,
     ignition::physics::ForwardStep,
     ignition::physics::sdf::ConstructSdfWorld,
     ignition::physics::GetEntities

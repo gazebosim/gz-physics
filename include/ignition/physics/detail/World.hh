@@ -28,37 +28,37 @@ namespace physics
 {
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-void PhysicsOptions::World<PolicyT, FeaturesT>::SetCollisionDetector(
+void CollisionDetector::World<PolicyT, FeaturesT>::SetCollisionDetector(
     const std::string &_collisionDetector)
 {
-  this->template Interface<PhysicsOptions>()
+  this->template Interface<CollisionDetector>()
       ->SetWorldCollisionDetector(this->identity, _collisionDetector);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-const std::string &PhysicsOptions::World<PolicyT, FeaturesT>::
+const std::string &CollisionDetector::World<PolicyT, FeaturesT>::
     GetCollisionDetector() const
 {
-  return this->template Interface<PhysicsOptions>()
+  return this->template Interface<CollisionDetector>()
       ->GetWorldCollisionDetector(this->identity);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-void PhysicsOptions::World<PolicyT, FeaturesT>::SetSolver(
+void Solver::World<PolicyT, FeaturesT>::SetSolver(
     const std::string &_solver)
 {
-  this->template Interface<PhysicsOptions>()
+  this->template Interface<Solver>()
       ->SetWorldSolver(this->identity, _solver);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-const std::string &PhysicsOptions::World<PolicyT, FeaturesT>::
+const std::string &Solver::World<PolicyT, FeaturesT>::
     GetSolver() const
 {
-  return this->template Interface<PhysicsOptions>()
+  return this->template Interface<Solver>()
       ->GetWorldSolver(this->identity);
 }
 
