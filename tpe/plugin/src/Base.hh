@@ -88,26 +88,38 @@ class Base : public Implements3d<FeatureList<Feature>>
     return -1;
   }
 
-  public: inline std::size_t indexInContainerToId(
-    const std::size_t _containerId, const std::size_t _index) const
+  public: template <typename EntityType>
+  inline std::pair<std::size_t, EntityType> indexInContainerToId(
+      const std::size_t _containerId,
+      const std::size_t _index,
+      const std::map<std::size_t, EntityType> &_idMap) const
   {
     std::size_t counter = 0;
     auto it = this->childIdToParentId.begin();
 
     while (counter <= _index && it != this->childIdToParentId.end())
     {
-      if (it->second == _containerId && counter == _index)
+      if (it->second == _containerId)
       {
-        return it->first;
-      }
-      else if (it->second == _containerId)
-      {
-        ++counter;
+        auto idMapIt = _idMap.find(it->first);
+        // only count if the entity is found in the idMap. This makes sure we're
+        // counting only the entities with the correct EntityType
+        if (idMapIt != _idMap.end())
+        {
+          if (counter == _index)
+          {
+            return *idMapIt;
+          }
+          else
+          {
+            ++counter;
+          }
+        }
       }
       ++it;
     }
     // return invalid id if entity not found
-    return -1;
+    return {INVALID_ENTITY_ID, nullptr};
   }
 
 

@@ -110,11 +110,11 @@ std::size_t EntityManagementFeatures::GetModelCount(
 Identity EntityManagementFeatures::GetModel(
   const Identity &_worldID, const std::size_t _modelIndex) const
 {
-  std::size_t modelId = this->indexInContainerToId(_worldID.id, _modelIndex);
-  auto it = this->models.find(modelId);
-  if (it != this->models.end() && it->second != nullptr)
+  const auto &[modelId, modelInfo] =
+      this->indexInContainerToId(_worldID.id, _modelIndex, this->models);
+  if (modelInfo != nullptr)
   {
-    return this->GenerateIdentity(modelId, it->second);
+    return this->GenerateIdentity(modelId, modelInfo);
   }
   return this->GenerateInvalidId();
 }
@@ -173,21 +173,58 @@ Identity EntityManagementFeatures::GetWorldOfModel(
 }
 
 /////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+  const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->model->GetModelCount();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &_modelID, const std::size_t _modelIndex) const
+{
+  const auto &[nestedModelId, nestedModelInfo] =
+      this->indexInContainerToId(_modelID.id, _modelIndex, this->models);
+  if (nestedModelInfo != nullptr)
+  {
+    return this->GenerateIdentity(nestedModelId, nestedModelInfo);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &_modelID, const std::string &_modelName) const
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo != nullptr)
+  {
+    tpelib::Entity &modelEnt = modelInfo->model->GetChildByName(_modelName);
+    auto it = this->models.find(modelEnt.GetId());
+    if (it != this->models.end() && it->second != nullptr)
+    {
+      return this->GenerateIdentity(it->first, it->second);
+    }
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkCount(
   const Identity &_modelID) const
 {
-  return this->ReferenceInterface<ModelInfo>(_modelID)->model->GetChildCount();
+  return this->ReferenceInterface<ModelInfo>(_modelID)->model->GetLinkCount();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetLink(
   const Identity &_modelID, const std::size_t _linkIndex) const
 {
-  std::size_t linkId = this->indexInContainerToId(_modelID.id, _linkIndex);
-  auto it = this->links.find(linkId);
-  if (it != this->links.end() && it->second != nullptr)
+  const auto &[linkId, linkInfo] =
+      this->indexInContainerToId(_modelID.id, _linkIndex, this->links);
+  if (linkInfo != nullptr)
   {
-    return this->GenerateIdentity(it->first, it->second);
+    return this->GenerateIdentity(linkId, linkInfo);
   }
   return this->GenerateInvalidId();
 }
@@ -256,11 +293,11 @@ std::size_t EntityManagementFeatures::GetShapeCount(
 Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, const std::size_t _shapeIndex) const
 {
-  std::size_t shapeId = this->indexInContainerToId(_linkID.id, _shapeIndex);
-  auto it = this->collisions.find(shapeId);
-  if (it != this->collisions.end() && it->second != nullptr)
+  const auto &[shapeId, shapeInfo] =
+      this->indexInContainerToId(_linkID.id, _shapeIndex, this->collisions);
+  if (shapeInfo != nullptr)
   {
-    return this->GenerateIdentity(it->first, it->second);
+    return this->GenerateIdentity(shapeId, shapeInfo);
   }
   return this->GenerateInvalidId();
 }
@@ -328,8 +365,9 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   if (worldInfo != nullptr)
   {
-    auto modelId = this->indexInContainerToId(_worldID.id, _modelIndex);
-    if (this->models.find(modelId) != this->models.end())
+    const auto [modelId, modelInfo] =
+        this->indexInContainerToId(_worldID.id, _modelIndex, this->models);
+    if (modelInfo != nullptr)
     {
       this->models.erase(modelId);
       this->childIdToParentId.erase(modelId);
@@ -402,6 +440,21 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
     modelEnt.SetName(_name);
     tpelib::Model *model = static_cast<tpelib::Model *>(&modelEnt);
     return this->AddModel(_worldID.id, *model);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyNestedModel(
+  const Identity &_modelID, const std::string &_name)
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo != nullptr)
+  {
+    auto &modelEnt = modelInfo->model->AddModel();
+    modelEnt.SetName(_name);
+    tpelib::Model *model = static_cast<tpelib::Model *>(&modelEnt);
+    return this->AddModel(_modelID.id, *model);
   }
   return this->GenerateInvalidId();
 }
