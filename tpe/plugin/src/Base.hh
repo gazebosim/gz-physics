@@ -119,7 +119,7 @@ class Base : public Implements3d<FeatureList<Feature>>
       ++it;
     }
     // return invalid id if entity not found
-    return {-1, nullptr};
+    return {INVALID_ENTITY_ID, nullptr};
   }
 
   public: inline Identity AddWorld(std::shared_ptr<tpelib::World> _world)

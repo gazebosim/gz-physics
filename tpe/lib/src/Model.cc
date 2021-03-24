@@ -16,7 +16,6 @@
 */
 
 #include <set>
-#include <algorithm>
 #include <string>
 
 #include <ignition/common/Profiler.hh>
@@ -39,7 +38,7 @@ class ignition::physics::tpelib::ModelPrivate
   /// \brief Links in the model
   public: std::vector<std::size_t> linkIds;
 
-  /// \brief Nested models links
+  /// \brief Nested models
   public: std::vector<std::size_t> nestedModelIds;
 };
 
