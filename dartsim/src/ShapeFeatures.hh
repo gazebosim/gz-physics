@@ -106,14 +106,14 @@ class ShapeFeatures :
   public: double GetCapsuleShapeRadius(
       const Identity &_capsuleID) const override;
 
-  public: double GetCapsuleShapeHeight(
+  public: double GetCapsuleShapeLength(
       const Identity &_capsuleID) const override;
 
   public: Identity AttachCapsuleShape(
       const Identity &_linkID,
       const std::string &_name,
       double _radius,
-      double _height,
+      double _length,
       const Pose3d &_pose) override;
 
   // ----- Cylinder Features -----

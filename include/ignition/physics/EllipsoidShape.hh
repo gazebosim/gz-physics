@@ -56,7 +56,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the EllipsoidShape properties such as
-    /// the ellipsoid radius and height.
+    /// the ellipsoid radii.
     class IGNITION_PHYSICS_VISIBLE SetEllipsoidShapeProperties
         : public virtual FeatureWithRequirements<EllipsoidShapeCast>
     {

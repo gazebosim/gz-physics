@@ -125,7 +125,7 @@ double ShapeFeatures::GetCapsuleShapeRadius(
 }
 
 /////////////////////////////////////////////////
-double ShapeFeatures::GetCapsuleShapeHeight(
+double ShapeFeatures::GetCapsuleShapeLength(
     const Identity &_capsuleID) const
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_capsuleID);
@@ -141,11 +141,11 @@ Identity ShapeFeatures::AttachCapsuleShape(
     const Identity &_linkID,
     const std::string &_name,
     const double _radius,
-    const double _height,
+    const double _length,
     const Pose3d &_pose)
 {
   auto capsule = std::make_shared<dart::dynamics::CapsuleShape>(
-        _radius, _height);
+        _radius, _length);
 
   auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
   dart::dynamics::ShapeNode *sn =

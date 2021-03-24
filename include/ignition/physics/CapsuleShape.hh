@@ -41,9 +41,9 @@ namespace ignition
         /// \return the radius of this CapsuleShape
         public: Scalar GetRadius() const;
 
-        /// \brief Get the height (length along the local z-axis) of this
-        /// CapsuleShape.
-        /// \return the height of this CapsuleShape
+        /// \brief Get the length along the local z-axis of this
+        /// CapsuleShape's cylinder.
+        /// \return the length of this CapsuleShape
         public: Scalar GetLength() const;
       };
 
@@ -55,14 +55,14 @@ namespace ignition
         public: virtual Scalar GetCapsuleShapeRadius(
             const Identity &_capsuleID) const = 0;
 
-        public: virtual Scalar GetCapsuleShapeHeight(
+        public: virtual Scalar GetCapsuleShapeLength(
             const Identity &_capsuleID) const = 0;
       };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the CapsuleShape properties such as
-    /// the capsule radius and height.
+    /// the capsule radius and length.
     class IGNITION_PHYSICS_VISIBLE SetCapsuleShapeProperties
         : public virtual FeatureWithRequirements<CapsuleShapeCast>
     {
@@ -76,9 +76,9 @@ namespace ignition
         ///   The desired radius of this CapsuleShape
         public: void SetRadius(Scalar _radius);
 
-        /// \brief Set the height of this CapsuleShape
-        /// \param[in] _height
-        ///   The desired height of this CapsuleShape
+        /// \brief Set the length of this CapsuleShape
+        /// \param[in] _length
+        ///   The desired length of this CapsuleShape
         public: void SetLength(Scalar length);
       };
 
@@ -90,8 +90,8 @@ namespace ignition
         public: virtual void SetCapsuleShapeRadius(
             const Identity &_capsuleID, Scalar _radius) = 0;
 
-        public: virtual void SetCapsuleShapeHeight(
-            const Identity &_capsuleID, Scalar _height) = 0;
+        public: virtual void SetCapsuleShapeLength(
+            const Identity &_capsuleID, Scalar _length) = 0;
       };
     };
 
@@ -115,15 +115,15 @@ namespace ignition
         /// \brief Rigidly attach a CapsuleShape to this link.
         /// \param[in] _radius
         ///   The radius of the capsule.
-        /// \param[in] _height
-        ///   The height of the capsule.
+        /// \param[in] _length
+        ///   The length of the capsule.
         /// \param[in] _pose
         ///   The desired pose of the CapsuleShape relative to the Link frame.
         /// \returns a ShapePtrType to the newly constructed CapsuleShape
         public: ShapePtrType AttachCapsuleShape(
             const std::string &_name = "capsule",
             Scalar _radius = 0.5,
-            Scalar _height = 1.0,
+            Scalar _length = 1.0,
             const PoseType &_pose = PoseType::Identity());
       };
 
@@ -139,7 +139,7 @@ namespace ignition
             const Identity &_linkID,
             const std::string &_name,
             Scalar _radius,
-            Scalar _height,
+            Scalar _length,
             const PoseType &_pose) = 0;
       };
     };

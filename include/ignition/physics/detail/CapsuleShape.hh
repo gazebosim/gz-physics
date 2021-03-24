@@ -41,7 +41,7 @@ namespace ignition
     ::GetLength() const -> Scalar
     {
       return this->template Interface<GetCapsuleShapeProperties>()
-          ->GetCapsuleShapeHeight(this->identity);
+          ->GetCapsuleShapeLength(this->identity);
     }
 
     /////////////////////////////////////////////////
@@ -59,7 +59,7 @@ namespace ignition
     ::SetLength(Scalar _length)
     {
       this->template Interface<SetCapsuleShapeProperties>()
-          ->SetCapsuleShapeHeight(this->identity, _length);
+          ->SetCapsuleShapeLength(this->identity, _length);
     }
 
     /////////////////////////////////////////////////
@@ -68,13 +68,13 @@ namespace ignition
     ::AttachCapsuleShape(
         const std::string &_name,
         Scalar _radius,
-        Scalar _height,
+        Scalar _length,
         const PoseType &_pose) -> ShapePtrType
     {
       return ShapePtrType(this->pimpl,
             this->template Interface<AttachCapsuleShapeFeature>()
                 ->AttachCapsuleShape(
-                            this->identity, _name, _radius, _height, _pose));
+                            this->identity, _name, _radius, _length, _pose));
     }
   }
 }
