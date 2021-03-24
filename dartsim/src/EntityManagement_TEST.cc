@@ -62,11 +62,27 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ(world, model->GetWorld());
   EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
 
+  auto nestedModel = model->ConstructEmptyNestedModel("empty nested model");
+  ASSERT_NE(nullptr, nestedModel);
+  EXPECT_EQ("empty nested model", nestedModel->GetName());
+  EXPECT_EQ(1u, model->GetNestedModelCount());
+  EXPECT_EQ(world, nestedModel->GetWorld());
+  EXPECT_EQ(0u, model->GetIndex());
+  EXPECT_EQ(nestedModel, model->GetNestedModel(0));
+  EXPECT_EQ(nestedModel, model->GetNestedModel("empty nested model"));
+  EXPECT_NE(nestedModel, nestedModel->ConstructEmptyNestedModel("dummy"));
+  // This should remain 1 since we're adding a nested model in `nestedModel` not
+  // in `model`.
+  EXPECT_EQ(1u, model->GetNestedModelCount());
+  EXPECT_EQ(1u, nestedModel->GetNestedModelCount());
+
   auto link = model->ConstructEmptyLink("empty link");
   ASSERT_NE(nullptr, link);
   EXPECT_EQ("empty link", link->GetName());
   EXPECT_EQ(model, link->GetModel());
   EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
+  EXPECT_EQ(0u, link->GetIndex());
+  EXPECT_EQ(model, link->GetModel());
 
   auto joint = link->AttachRevoluteJoint(nullptr);
   EXPECT_NEAR((Eigen::Vector3d::UnitX() - joint->GetAxis()).norm(), 0.0, 1e-6);
@@ -76,6 +92,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR((Eigen::Vector3d::UnitZ() - joint->GetAxis()).norm(), 0.0, 1e-6);
 
   auto child = model->ConstructEmptyLink("child link");
+  EXPECT_EQ(2u, child->GetIndex());
+  EXPECT_EQ(model, child->GetModel());
 
   const std::string boxName = "box";
   const Eigen::Vector3d boxSize(0.1, 0.2, 0.3);

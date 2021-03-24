@@ -21,6 +21,7 @@
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
+#include <ignition/utils/SuppressWarning.hh>
 #include <ignition/plugin/Loader.hh>
 
 // Features
@@ -90,16 +91,37 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
   return worlds;
 }
 
-void StepWorld(const TestWorldPtr &_world, const std::size_t _num_steps = 1)
+/// \brief Step forward in a world
+/// \param[in] _world The world to step in
+/// \param[in] _firstTime Whether this is the very first time this world is
+/// being stepped in (true) or not (false)
+/// \param[in] _numSteps The number of steps to take in _world
+/// \return true if the forward step output was checked, false otherwise
+bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
+    const std::size_t _numSteps = 1)
 {
   ignition::physics::ForwardStep::Input input;
   ignition::physics::ForwardStep::State state;
   ignition::physics::ForwardStep::Output output;
 
-  for (size_t i = 0; i < _num_steps; ++i)
+  bool checkedOutput = false;
+  for (size_t i = 0; i < _numSteps; ++i)
   {
     _world->Step(output, state, input);
+
+    // If link poses have changed, this should have been written to output.
+    // Link poses are considered "changed" if they are new, so if this is the
+    // very first step in a world, all of the link data is new and output
+    // should not be empty
+    if (_firstTime && (i == 0))
+    {
+      EXPECT_FALSE(
+          output.Get<ignition::physics::ChangedWorldPoses>().entries.empty());
+      checkedOutput = true;
+    }
   }
+
+  return checkedOutput;
 }
 
 class SimulationFeatures_TEST
@@ -119,7 +141,8 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
 
   for (const auto &world : worlds)
   {
-    StepWorld(world, 1000);
+    auto checkedOutput = StepWorld(world, true, 1000);
+    EXPECT_TRUE(checkedOutput);
 
     auto model = world->GetModel(0);
     ASSERT_NE(nullptr, model);
@@ -235,7 +258,10 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
+    IGN_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
     ASSERT_NE(nullptr, freeGroup->CanonicalLink());
+    IGN_UTILS_WARN_RESUME__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
     auto freeGroupLink = link->FindFreeGroup();
@@ -269,7 +295,8 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
     auto filteredBox = world->GetModel("box_filtered");
     auto collidingBox = world->GetModel("box_colliding");
 
-    StepWorld(world);
+    auto checkedOutput = StepWorld(world, true);
+    EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
     // Only box_colliding should collide with box_base
     EXPECT_EQ(1u, contacts.size());
@@ -281,7 +308,8 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
     // Also test the getter
     EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
     // Step and make sure there are no collisions
-    StepWorld(world);
+    checkedOutput = StepWorld(world, false);
+    EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
 
@@ -289,7 +317,8 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
     // Equivalent to 0xFF
     collidingShape->RemoveCollisionFilterMask();
     filteredShape->RemoveCollisionFilterMask();
-    StepWorld(world);
+    checkedOutput = StepWorld(world, false);
+    EXPECT_FALSE(checkedOutput);
     // Expect box_filtered and box_colliding to collide with box_base
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(2u, contacts.size());
@@ -317,7 +346,8 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     auto box = world->GetModel("box");
 
     // step and get contacts
-    StepWorld(world, 1);
+    auto checkedOutput = StepWorld(world, true);
+    EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
 
     // large box in the middle should be intersecting with sphere and cylinder
@@ -366,7 +396,8 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
         ignition::math::Pose3d(0, 100, 0.5, 0, 0, 0)));
 
     // step and get contacts
-    StepWorld(world, 1);
+    checkedOutput = StepWorld(world, false);
+    EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
 
     // large box in the middle should be intersecting with cylinder
@@ -401,7 +432,8 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
         ignition::math::Pose3d(0, -100, 0.5, 0, 0, 0)));
 
     // step and get contacts
-    StepWorld(world, 1);
+    checkedOutput = StepWorld(world, false);
+    EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
 
     // no entities should be colliding

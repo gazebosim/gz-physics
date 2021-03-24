@@ -13,6 +13,15 @@ release will remove the deprecated code.
 
 1. Depends on sdformat11.
 
+1. `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupCanonicalLink` 
+   has been replaced by `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupRootLink`.
+
+### Deprecations
+
+1. **physics/FreeGroup.hh**
+    + **Deprecation:** `Identity ignition::physics::FreeGroup::CanonicalLink(const Identity &_groupID)`
+    + **Replacement:** `Identity ignition::physics::FreeGroup::RootLink(const Identity &_groupID)`
+
 ## Ignition Physics 2.X to 3.X
 
 ### Modifications

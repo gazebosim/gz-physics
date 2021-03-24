@@ -49,6 +49,15 @@ namespace ignition
       std::string annotation;
     };
 
+    /// \brief ChangedWorldPoses has the same definition as WorldPoses.
+    /// This type provides a way to keep track of which poses have changed in a
+    /// simulation step.
+    struct ChangedWorldPoses
+    {
+      std::vector<WorldPose> entries;
+      std::string annotation;
+    };
+
     struct Point
     {
       ignition::math::Vector3d point;
@@ -150,7 +159,7 @@ namespace ignition
 
       public: using Output = SpecifyData<
           RequireData<WorldPoses>,
-          ExpectData<Contacts, JointPositions> >;
+          ExpectData<ChangedWorldPoses, Contacts, JointPositions> >;
 
       public: using State = CompositeData;
 

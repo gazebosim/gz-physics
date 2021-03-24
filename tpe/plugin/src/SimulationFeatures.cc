@@ -15,13 +15,16 @@
  *
 */
 
-#include "SimulationFeatures.hh"
+#include <unordered_map>
+#include <utility>
 
 #include <ignition/common/Console.hh>
 #include <ignition/common/Profiler.hh>
 
+#include <ignition/math/Pose3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
+#include "SimulationFeatures.hh"
 
 using namespace ignition;
 using namespace physics;
@@ -29,7 +32,7 @@ using namespace tpeplugin;
 
 void SimulationFeatures::WorldForwardStep(
   const Identity &_worldID,
-  ForwardStep::Output & /*_h*/,
+  ForwardStep::Output & _h,
   ForwardStep::State & /*_x*/,
   const ForwardStep::Input & _u)
 {
@@ -41,6 +44,7 @@ void SimulationFeatures::WorldForwardStep(
       << _worldID.id
       << "] not found."
       << std::endl;
+    return;
   }
   std::shared_ptr<tpelib::World> world = it->second->world;
   auto *dtDur =
@@ -58,6 +62,46 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
   world->Step();
+  this->Write(_h.Get<ChangedWorldPoses>());
+}
+
+void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
+{
+  // remove link poses from the previous iteration
+  _changedPoses.entries.clear();
+  _changedPoses.entries.reserve(this->links.size());
+
+  std::unordered_map<std::size_t, math::Pose3d> newPoses;
+
+  for (const auto &[id, info] : this->links)
+  {
+    // make sure the link exists
+    if (info)
+    {
+      const auto nextPose = info->link->GetPose();
+      auto iter = this->prevLinkPoses.find(id);
+
+      // If the link's pose is new or has changed, save this new pose and
+      // add it to the output poses. Otherwise, keep the existing link pose
+      if ((iter == this->prevLinkPoses.end()) ||
+          !iter->second.Pos().Equal(nextPose.Pos(), 1e-6) ||
+          !iter->second.Rot().Equal(nextPose.Rot(), 1e-6))
+      {
+        WorldPose wp;
+        wp.pose = nextPose;
+        wp.body = id;
+        _changedPoses.entries.push_back(wp);
+        newPoses[id] = nextPose;
+      }
+      else
+        newPoses[id] = iter->second;
+    }
+  }
+
+  // Save the new poses so that they can be used to check for updates in the
+  // next iteration. Re-setting this->prevLinkPoses with the contents of
+  // newPoses ensures that we aren't caching data for links that were removed
+  this->prevLinkPoses = std::move(newPoses);
 }
 
 std::vector<SimulationFeatures::ContactInternal>

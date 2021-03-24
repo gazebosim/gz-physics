@@ -82,8 +82,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 }
 
 /////////////////////////////////////////////////
-Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
-    const Identity &_groupID) const
+Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   return this->GenerateIdentity(this->links.IdentityOf(info.link));
