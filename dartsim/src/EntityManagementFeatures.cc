@@ -238,7 +238,7 @@ Identity EntityManagementFeatures::GetModel(
 const std::string &EntityManagementFeatures::GetModelName(
     const Identity &_modelID) const
 {
-  return this->ReferenceInterface<ModelInfo>(_modelID)->model->getName();
+  return this->ReferenceInterface<ModelInfo>(_modelID)->localName;
 }
 
 /////////////////////////////////////////////////
@@ -268,26 +268,88 @@ Identity EntityManagementFeatures::GetWorldOfModel(
 }
 
 /////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->nestedModels.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::size_t _modelIndex) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_modelIndex >= modelInfo->nestedModels.size())
+  {
+    return this->GenerateInvalidId();
+  }
+
+  const auto nestedModelID = modelInfo->nestedModels[_modelIndex];
+
+  // If the model doesn't exist in "models", it means the containing entity has
+  // been removed.
+  if (this->models.HasEntity(nestedModelID))
+  {
+    return this->GenerateIdentity(nestedModelID,
+                                  this->models.at(nestedModelID));
+  }
+  else
+  {
+    return this->GenerateInvalidId();
+  }
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::string &_modelName) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+
+  const std::string fullName =
+      ::sdf::JoinName(modelInfo->model->getName(), _modelName);
+
+  if (this->models.HasEntity(_modelID))
+  {
+    auto worldID = this->models.idToContainerID.at(_modelID);
+    auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
+    if (nullptr == nestedSkel)
+    {
+      return this->GenerateInvalidId();
+    }
+    const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
+    return this->GenerateIdentity(nestedModelID,
+                                  this->models.at(nestedModelID));
+  }
+  else
+  {
+    return this->GenerateInvalidId();
+  }
+}
+
+/////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkCount(
     const Identity &_modelID) const
 {
   return this->ReferenceInterface<ModelInfo>(_modelID)
-      ->model->getNumBodyNodes();
+      ->links.size();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::size_t _linkIndex) const
 {
-  DartBodyNode *const bn =
-      this->ReferenceInterface<ModelInfo>(_modelID)->model->getBodyNode(
-          _linkIndex);
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+
+  if (_linkIndex >= modelInfo->links.size())
+    return this->GenerateInvalidId();
+
+  const auto &linkInfo = modelInfo->links[_linkIndex];
 
   // If the link doesn't exist in "links", it means the containing entity has
   // been removed.
-  if (this->links.HasEntity(bn))
+  if (this->links.HasEntity(linkInfo->link))
   {
-    const std::size_t linkID = this->links.IdentityOf(bn);
+    const std::size_t linkID = this->links.IdentityOf(linkInfo->link);
     return this->GenerateIdentity(linkID, this->links.at(linkID));
   }
   else
@@ -304,25 +366,29 @@ Identity EntityManagementFeatures::GetLink(
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
-  DartBodyNode *const bn =
-      this->ReferenceInterface<ModelInfo>(_modelID)->model->getBodyNode(
-          _linkName);
-
-  // If the link doesn't exist in "links", it means the containing entity has
-  // been removed.
-  if (this->links.HasEntity(bn))
+  const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  for (const auto &linkInfo : modelInfo->links)
   {
-    const std::size_t linkID = this->links.IdentityOf(bn);
-    return this->GenerateIdentity(linkID, this->links.at(linkID));
+    if (_linkName == linkInfo->name)
+    {
+      // If the link doesn't exist in "links", it means the containing entity
+      // has been removed.
+      if (this->links.HasEntity(linkInfo->link))
+      {
+        const std::size_t linkID = this->links.IdentityOf(linkInfo->link);
+        return this->GenerateIdentity(linkID, this->links.at(linkID));
+      }
+      else
+      {
+        // TODO(addisu) It's not clear what to do when `GetLink` is called on a
+        // model that has been removed. Right now we are returning an invalid
+        // identity, but that could cause a segfault if the user doesn't check
+        // the returned value before using it.
+        return this->GenerateInvalidId();
+      }
+    }
   }
-  else
-  {
-    // TODO(addisu) It's not clear what to do when `GetLink` is called on a
-    // model that has been removed. Right now we are returning an invalid
-    // identity, but that could cause a segfault if the use doesn't check if
-    // returned value before using it.
-    return this->GenerateInvalidId();
-  }
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -393,22 +459,19 @@ const std::string &EntityManagementFeatures::GetLinkName(
 std::size_t EntityManagementFeatures::GetLinkIndex(
     const Identity &_linkID) const
 {
-  return this->ReferenceInterface<LinkInfo>(_linkID)
-      ->link->getIndexInSkeleton();
+  return this->links.idToIndexInContainer.at(_linkID);
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModelOfLink(
     const Identity &_linkID) const
 {
-  const DartSkeletonPtr &model =
-      this->ReferenceInterface<LinkInfo>(_linkID)->link->getSkeleton();
+  const std::size_t modelID = this->links.idToContainerID.at(_linkID);
 
   // If the model containing the link doesn't exist in "models", it means this
   // link belongs to a removed model.
-  if (this->models.HasEntity(model))
+  if (this->models.HasEntity(modelID))
   {
-    const std::size_t modelID = this->models.IdentityOf(model);
     return this->GenerateIdentity(modelID, this->models.at(modelID));
   }
   else
@@ -632,7 +695,31 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
         dart::dynamics::Frame::World(),
         _name + "_frame");
 
-  auto [modelID, modelInfo] = this->AddModel({model, modelFrame, ""}, _worldID); // NOLINT
+  auto [modelID, modelInfo] =
+      this->AddModel({model, _name, modelFrame, ""}, _worldID);  // NOLINT
+
+  return this->GenerateIdentity(modelID, this->models.at(modelID));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyNestedModel(
+    const Identity &_modelID, const std::string &_name)
+{
+  // find the world assocated with the model
+  auto worldID = this->models.idToContainerID.at(_modelID);
+  const auto &skel = this->models.at(_modelID)->model;
+  const std::string modelFullName = ::sdf::JoinName(skel->getName(), _name);
+
+  dart::dynamics::SkeletonPtr model =
+      dart::dynamics::Skeleton::create(modelFullName);
+
+  dart::dynamics::SimpleFramePtr modelFrame =
+      dart::dynamics::SimpleFrame::createShared(
+        dart::dynamics::Frame::World(),
+        modelFullName + "_frame");
+
+  auto [modelID, modelInfo] = this->AddNestedModel(
+      {model, _name, modelFrame, ""}, _modelID, worldID);  // NOLINT
 
   return this->GenerateIdentity(modelID, this->models.at(modelID));
 }
@@ -653,7 +740,21 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
       model->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
         nullptr, prop_fj, prop_bn).second;
 
-  const std::size_t linkID = this->AddLink(bn);
+  auto worldIDIt = this->models.idToContainerID.find(_modelID);
+  if (worldIDIt == this->models.idToContainerID.end())
+  {
+    ignerr << "World of model [" << model->getName()
+           << "] could not be found when creating link [" << _name
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldIDIt->second);
+  const std::string fullName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(model->getName(), bn->getName()));
+
+  const std::size_t linkID = this->AddLink(bn, fullName, _modelID);
   return this->GenerateIdentity(linkID, this->links.at(linkID));
 }
 
