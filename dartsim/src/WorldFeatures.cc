@@ -26,7 +26,6 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/constraint/DantzigBoxedLcpSolver.hpp>
 #include <dart/constraint/PgsBoxedLcpSolver.hpp>
-#include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/simulation/World.hpp>
 
 #include <ignition/common/Console.hh>
@@ -63,7 +62,7 @@ void WorldFeatures::SetWorldCollisionDetector(
   else
   {
     ignerr << "Collision detector [" << _collisionDetector
-           << "] no supported, defaulting to ["
+           << "] is not supported, defaulting to ["
            << collisionDetector->getType() << "]." << std::endl;
   }
 
@@ -111,7 +110,7 @@ void WorldFeatures::SetWorldSolver(const Identity &_id,
   else
   {
     ignerr << "Solver [" << _solver
-           << "] no supported, defaulting to ["
+           << "] is not supported, defaulting to ["
            << solver->getBoxedLcpSolver()->getType() << "]." << std::endl;
   }
 
