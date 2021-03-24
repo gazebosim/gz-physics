@@ -1,0 +1,122 @@
+/*
+ * Copyright (C) 2021 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 3.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+#include <gtest/gtest.h>
+
+#include <ignition/common/Console.hh>
+#include <ignition/physics/FindFeatures.hh>
+#include <ignition/plugin/Loader.hh>
+#include <ignition/physics/RequestEngine.hh>
+
+#include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/FrameSemantics.hh>
+#include <ignition/physics/GetBoundingBox.hh>
+#include <ignition/physics/World.hh>
+#include <ignition/physics/sdf/ConstructWorld.hh>
+
+#include <sdf/Root.hh>
+#include <sdf/World.hh>
+
+#include "test/Utils.hh"
+
+struct TestFeatureList : ignition::physics::FeatureList<
+    ignition::physics::CollisionDetector,
+    ignition::physics::Solver,
+    ignition::physics::ForwardStep,
+    ignition::physics::sdf::ConstructSdfWorld,
+    ignition::physics::GetEntities
+> { };
+
+using namespace ignition;
+
+using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
+using TestWorldPtr = physics::World3dPtr<TestFeatureList>;
+
+//////////////////////////////////////////////////
+class WorldFeaturesFixture : public ::testing::Test
+{
+  protected: void SetUp() override
+  {
+    ignition::plugin::Loader loader;
+    loader.LoadLib(dartsim_plugin_LIB);
+
+    ignition::plugin::PluginPtr dartsim =
+        loader.Instantiate("ignition::physics::dartsim::Plugin");
+
+    this->engine =
+        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+    ASSERT_NE(nullptr, this->engine);
+  }
+  protected: TestEnginePtr engine;
+};
+
+//////////////////////////////////////////////////
+TestWorldPtr LoadWorld(
+    const TestEnginePtr &_engine,
+    const std::string &_sdfFile)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(_sdfFile);
+  EXPECT_TRUE(errors.empty());
+  const sdf::World *sdfWorld = root.WorldByIndex(0);
+  return _engine->ConstructWorld(*sdfWorld);
+}
+
+//////////////////////////////////////////////////
+TEST_F(WorldFeaturesFixture, CollisionDetector)
+{
+  auto world = LoadWorld(this->engine, TEST_WORLD_DIR "/empty.sdf");
+  EXPECT_EQ("ode", world->GetCollisionDetector());
+
+  world->SetCollisionDetector("banana");
+  EXPECT_EQ("ode", world->GetCollisionDetector());
+
+  world->SetCollisionDetector("bullet");
+  EXPECT_EQ("bullet", world->GetCollisionDetector());
+
+  world->SetCollisionDetector("fcl");
+  EXPECT_EQ("fcl", world->GetCollisionDetector());
+
+  world->SetCollisionDetector("ode");
+  EXPECT_EQ("ode", world->GetCollisionDetector());
+
+  world->SetCollisionDetector("dart");
+  EXPECT_EQ("dart", world->GetCollisionDetector());
+}
+
+//////////////////////////////////////////////////
+TEST_F(WorldFeaturesFixture, Solver)
+{
+  auto world = LoadWorld(this->engine, TEST_WORLD_DIR "/empty.sdf");
+  EXPECT_EQ("DantzigBoxedLcpSolver", world->GetSolver());
+
+  world->SetSolver("banana");
+  EXPECT_EQ("DantzigBoxedLcpSolver", world->GetSolver());
+
+  world->SetSolver("dantzig");
+  EXPECT_EQ("DantzigBoxedLcpSolver", world->GetSolver());
+
+  world->SetSolver("pgs");
+  EXPECT_EQ("PgsBoxedLcpSolver", world->GetSolver());
+}
+
+/////////////////////////////////////////////////
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
