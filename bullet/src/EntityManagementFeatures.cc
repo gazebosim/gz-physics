@@ -17,6 +17,7 @@
 
 #include <btBulletDynamicsCommon.h>
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -32,15 +33,16 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
   // Create bullet empty multibody dynamics world
-  const auto collisionConfiguration = std::make_shared<btDefaultCollisionConfiguration>();
+  const auto collisionConfiguration =
+    std::make_shared<btDefaultCollisionConfiguration>();
   const auto dispatcher =
     std::make_shared<btCollisionDispatcher>(collisionConfiguration.get());
-  //const auto broadphase = std::shared_ptr<btBroadphaseInterface>(new btDbvtBroadphase());
   const auto broadphase = std::make_shared<btDbvtBroadphase>();
   const auto solver =
     std::make_shared<btSequentialImpulseConstraintSolver>();
   const auto world = std::make_shared<btDiscreteDynamicsWorld>(
-    dispatcher.get(), broadphase.get(), solver.get(), collisionConfiguration.get());
+    dispatcher.get(), broadphase.get(), solver.get(),
+    collisionConfiguration.get());
 
   /* TO-DO(Lobotuerk): figure out what this line does*/
   world->getSolverInfo().m_globalCfm = 0;
