@@ -783,7 +783,15 @@ Identity SDFFeatures::ConstructSdfCollision(
         auto skeleton = bn->getSkeleton();
         auto directionFrameBodyNode = skeleton->getBodyNode(
           frictionDirectionElem->Get<std::string>(kExpressedIn));
-        aspect->setFirstFrictionDirectionFrame(directionFrameBodyNode);
+        if (nullptr != directionFrameBodyNode)
+        {
+          aspect->setFirstFrictionDirectionFrame(directionFrameBodyNode);
+        }
+        else
+        {
+          ignwarn << "Failed to get body node for [" << _collision.Name()
+                  << "], not setting friction direction frame." << std::endl;
+        }
       }
     }
 
