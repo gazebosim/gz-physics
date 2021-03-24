@@ -341,8 +341,13 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else
   {
+    // Resolve Axis XYZ. If it fails, use xyz function instead
+    math::Vector3d resolvedAxis;
+    ::sdf::Errors errors = _sdfJoint.Axis(0)->ResolveXyz(resolvedAxis);
+    if (!errors.empty())
+      resolvedAxis = _sdfJoint.Axis(0)->Xyz();
     axis = (ResolveSdfPose(_sdfJoint.SemanticPose()) + this->links.at(childId)->pose).Rot()
-       * _sdfJoint.Axis(0)->Xyz();
+       * resolvedAxis;
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
