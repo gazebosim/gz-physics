@@ -208,8 +208,8 @@ class Base : public Implements3d<FeatureList<Feature>>
         result &= this->RemoveModelImpl(modelEnt->GetId());
       }
     }
-    result &= this->models.erase(_modelID) > 0;
-    result &= this->childIdToParentId.erase(_modelID);
+    result &= this->models.erase(_modelID) == 1;
+    result &= this->childIdToParentId.erase(_modelID) == 1;
     result &= parentEntity->RemoveChildById(_modelID);
     return result;
   }
