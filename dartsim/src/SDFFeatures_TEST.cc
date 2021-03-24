@@ -861,6 +861,27 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
       expPose, link1->getWorldTransform(), 1e-5));
 }
 
+/////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, Shapes)
+{
+  auto world = this->LoadWorld(TEST_WORLD_DIR"/shapes.sdf");
+  ASSERT_NE(nullptr, world);
+
+  auto dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  ASSERT_EQ(5u, dartWorld->getNumSkeletons());
+
+  int count{0};
+  for (auto name : {"box", "cylinder", "sphere", "capsule", "ellipsoid"})
+  {
+    const auto skeleton = dartWorld->getSkeleton(count++);
+    ASSERT_NE(nullptr, skeleton);
+    EXPECT_EQ(name, skeleton->getName());
+    ASSERT_EQ(1u, skeleton->getNumBodyNodes());
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

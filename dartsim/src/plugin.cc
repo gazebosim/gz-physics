@@ -27,6 +27,7 @@
 #include "SimulationFeatures.hh"
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
+#include "WorldFeatures.hh"
 
 namespace ignition {
 namespace physics {
@@ -41,8 +42,8 @@ struct DartsimFeatures : FeatureList<
   LinkFeatureList,
   SDFFeatureList,
   ShapeFeatureList,
-  SimulationFeatureList
-  // TODO(MXG): Implement more features
+  SimulationFeatureList,
+  WorldFeatureList
 > { };
 
 class Plugin :
@@ -55,7 +56,8 @@ class Plugin :
     public virtual LinkFeatures,
     public virtual SDFFeatures,
     public virtual ShapeFeatures,
-    public virtual SimulationFeatures { };
+    public virtual SimulationFeatures,
+    public virtual WorldFeatures { };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
 
