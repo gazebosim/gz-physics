@@ -98,8 +98,8 @@ Identity ShapeFeatures::AttachMeshShape(
     baseTransform, gimpactMeshShape.get());
 
   auto identity = this->AddCollision(
-    {_name, gimpactMeshShape, _linkID, modelID,
-      ignition::math::eigen3::convert(_pose)});
+    _linkID, {_name, gimpactMeshShape, _linkID, modelID,
+    ignition::math::eigen3::convert(_pose)});
   return identity;
 
 }
