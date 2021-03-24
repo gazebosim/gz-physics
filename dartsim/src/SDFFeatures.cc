@@ -826,8 +826,26 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
     if (odeFriction->HasElement("fdir1"))
     {
-      math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
+      auto frictionDirectionElem = odeFriction->GetElement("fdir1");
+      math::Vector3d fdir1 = frictionDirectionElem->Get<math::Vector3d>();
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
+
+      const std::string kExpressedIn = "ignition:expressed_in";
+      if (frictionDirectionElem->HasAttribute(kExpressedIn))
+      {
+        auto skeleton = bn->getSkeleton();
+        auto directionFrameBodyNode = skeleton->getBodyNode(
+          frictionDirectionElem->Get<std::string>(kExpressedIn));
+        if (nullptr != directionFrameBodyNode)
+        {
+          aspect->setFirstFrictionDirectionFrame(directionFrameBodyNode);
+        }
+        else
+        {
+          ignwarn << "Failed to get body node for [" << _collision.Name()
+                  << "], not setting friction direction frame." << std::endl;
+        }
+      }
     }
 
     const auto &surfaceBounce = _collision.Element()
