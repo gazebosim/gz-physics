@@ -24,7 +24,9 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
+#include <dart/dynamics/CapsuleShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
+#include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
@@ -37,12 +39,16 @@
 #include <dart/dynamics/WeldJoint.hpp>
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/Mesh.hh>
+#include <ignition/common/MeshManager.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Helpers.hh>
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
+#include <sdf/Capsule.hh>
 #include <sdf/Cylinder.hh>
+#include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
@@ -54,6 +60,8 @@
 #include <sdf/Types.hh>
 #include <sdf/Visual.hh>
 #include <sdf/World.hh>
+
+#include "CustomMeshShape.hh"
 
 namespace ignition {
 namespace physics {
@@ -274,6 +282,14 @@ static ShapeAndTransform ConstructSphere(
 }
 
 /////////////////////////////////////////////////
+static ShapeAndTransform ConstructCapsule(
+    const ::sdf::Capsule &_capsule)
+{
+  return {std::make_shared<dart::dynamics::CapsuleShape>(
+        _capsule.Radius(), _capsule.Length())};
+}
+
+/////////////////////////////////////////////////
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
@@ -315,8 +331,31 @@ static ShapeAndTransform ConstructGeometry(
 {
   if (_geometry.BoxShape())
     return ConstructBox(*_geometry.BoxShape());
+  else if (_geometry.CapsuleShape())
+  {
+    return ConstructCapsule(*_geometry.CapsuleShape());
+  }
   else if (_geometry.CylinderShape())
     return ConstructCylinder(*_geometry.CylinderShape());
+  else if (_geometry.EllipsoidShape())
+  {
+    // TODO(anyone): Replace this code when Ellipsoid is supported by DART
+    common::MeshManager *meshMgr = common::MeshManager::Instance();
+    std::string ellipsoidMeshName = std::string("ellipsoid_mesh")
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().X())
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().Y())
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().Z());
+    meshMgr->CreateEllipsoid(
+      ellipsoidMeshName,
+      _geometry.EllipsoidShape()->Radii(),
+      6, 12);
+    const ignition::common::Mesh * _mesh =
+      meshMgr->MeshByName(ellipsoidMeshName);
+
+    auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+    auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
+    return {mesh2};
+  }
   else if (_geometry.SphereShape())
     return ConstructSphere(*_geometry.SphereShape());
   else if (_geometry.PlaneShape())
@@ -398,8 +437,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 {
   auto worldID = _parentID;
   std::string modelName = _sdfModel.Name();
+  const bool isNested = this->models.HasEntity(_parentID);
   // If this is a nested model, find the world assocated with the model
-  if (this->models.HasEntity(_parentID))
+  if (isNested)
   {
     worldID = this->models.idToContainerID.at(_parentID);
     const auto &skel = this->models.at(_parentID)->model;
@@ -420,9 +460,20 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   // TODO(anyone) This may not work correctly with nested models and will need
   // to be updated once multiple canonical links can exist in a nested model
   // https://github.com/ignitionrobotics/ign-physics/issues/209
-  auto [modelID, modelInfo] = this->AddModel( // NOLINT
-      {model, modelFrame, _sdfModel.CanonicalLinkName()}, worldID);
-
+  auto [modelID, modelInfo] = [&] {
+    if (isNested)
+    {
+      return this->AddNestedModel(  // NOLINT
+          {model, _sdfModel.Name(), modelFrame, _sdfModel.CanonicalLinkName()},
+          _parentID, worldID);
+    }
+    else
+    {
+      return this->AddModel(  // NOLINT
+          {model, _sdfModel.Name(), modelFrame, _sdfModel.CanonicalLinkName()},
+          worldID);
+    }
+  }();
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
 
@@ -727,6 +778,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
+    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+           << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
 
@@ -859,6 +912,8 @@ Identity SDFFeatures::ConstructSdfVisual(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
+    ignerr << "The geometry element of visual [" << _visual.Name() << "] "
+           << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
 

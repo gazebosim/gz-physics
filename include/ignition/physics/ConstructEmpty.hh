@@ -26,7 +26,7 @@ namespace ignition {
 namespace physics {
 
 /////////////////////////////////////////////////
-/// \brief This feature constructs an empty world and return its pointer
+/// \brief This feature constructs an empty world and returns its pointer
 /// from the current physics engine in use.
 class ConstructEmptyWorldFeature : public virtual Feature
 {
@@ -36,6 +36,8 @@ class ConstructEmptyWorldFeature : public virtual Feature
     public: using WorldPtrType = WorldPtr<PolicyT, FeaturesT>;
 
     /// \brief Construct an empty world and attach a given name to it.
+    /// \param[in] _name
+    ///   Name of the world.
     /// \return
     ///   The WorldPtrType of the constructed world.
     public: WorldPtrType ConstructEmptyWorld(const std::string &_name);
@@ -50,7 +52,7 @@ class ConstructEmptyWorldFeature : public virtual Feature
 };
 
 /////////////////////////////////////////////////
-/// \brief This feature constructs an empty model and return its pointer
+/// \brief This feature constructs an empty model and returns its pointer
 /// from the given world.
 class ConstructEmptyModelFeature : public virtual Feature
 {
@@ -60,6 +62,8 @@ class ConstructEmptyModelFeature : public virtual Feature
     public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
 
     /// \brief Construct an empty model and attach a given name to it.
+    /// \param[in] _name
+    ///   Name of the model.
     /// \return
     ///   The ModelPtrType of the constructed model.
     public: ModelPtrType ConstructEmptyModel(const std::string &_name);
@@ -74,7 +78,33 @@ class ConstructEmptyModelFeature : public virtual Feature
 };
 
 /////////////////////////////////////////////////
-/// \brief This feature constructs an empty link and return its pointer
+/// \brief This feature constructs an empty nested model and returns its pointer
+/// from the given world.
+class ConstructEmptyNestedModelFeature : public virtual Feature
+{
+  public: template <typename PolicyT, typename FeaturesT>
+  class Model : public virtual Feature::Model<PolicyT, FeaturesT>
+  {
+    public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+
+    /// \brief Construct an empty model and attach a given name to it.
+    /// \param[in] _name
+    ///   Name of the nested model.
+    /// \return
+    ///   The ModelPtrType of the constructed model.
+    public: ModelPtrType ConstructEmptyNestedModel(const std::string &_name);
+  };
+
+  public: template <typename PolicyT>
+  class Implementation : public virtual Feature::Implementation<PolicyT>
+  {
+    public: virtual Identity ConstructEmptyNestedModel(
+        const Identity &_modelID, const std::string &_name) = 0;
+  };
+};
+
+/////////////////////////////////////////////////
+/// \brief This feature constructs an empty link and returns its pointer
 /// from the given model.
 class ConstructEmptyLinkFeature : public virtual Feature
 {
@@ -84,6 +114,8 @@ class ConstructEmptyLinkFeature : public virtual Feature
     public: using LinkPtrType = LinkPtr<PolicyT, FeaturesT>;
 
     /// \brief Construct an empty link and attach a given name to it.
+    /// \param[in] _name
+    ///   Name of the link.
     /// \return
     ///   The LinkPtrType of the constructed link.
     public: LinkPtrType ConstructEmptyLink(const std::string &_name);

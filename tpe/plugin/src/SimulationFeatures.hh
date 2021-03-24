@@ -26,6 +26,7 @@
 #include <ignition/physics/CanWriteData.hh>
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
+#include <ignition/physics/SpecifyData.hh>
 
 #include "Base.hh"
 
@@ -39,7 +40,8 @@ struct SimulationFeatureList : FeatureList<
 > { };
 
 class SimulationFeatures :
-  public CanWriteRequiredData<SimulationFeatures, ForwardStep::Output>,
+  public CanWriteExpectedData<SimulationFeatures,
+    ExpectData<ChangedWorldPoses>>,
   public virtual Base,
   public virtual Implements3d<SimulationFeatureList>
 {
@@ -49,7 +51,7 @@ class SimulationFeatures :
     ForwardStep::State &_x,
     const ForwardStep::Input &_u) override;
 
-  public: void Write(WorldPoses &_poses) const;
+  public: void Write(ChangedWorldPoses &_changedPoses) const;
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
     const Identity &_worldID) const override;
