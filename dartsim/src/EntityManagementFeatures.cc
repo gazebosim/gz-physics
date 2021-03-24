@@ -661,19 +661,19 @@ bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveNestedModelByIndex(
-    const Identity &_modelID, std::size_t _modelIndex)
+    const Identity &_modelID, std::size_t _nestedModelIndex)
 {
   auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
-  if (_modelIndex >= modelInfo->nestedModels.size())
+  if (_nestedModelIndex >= modelInfo->nestedModels.size())
   {
     return this->GenerateInvalidId();
   }
-  const auto nestedModelID = modelInfo->nestedModels[_modelIndex];
+  const auto nestedModelID = modelInfo->nestedModels[_nestedModelIndex];
   if (this->models.HasEntity(nestedModelID))
   {
-    auto worldID = this->GetWorldOfModelImpl(nestedModelID);
-    auto model = this->models.at(nestedModelID)->model;
-    auto filterPtr = GetFilterPtr(this, worldID);
+    const auto worldID = this->GetWorldOfModelImpl(nestedModelID);
+    const auto model = this->models.at(nestedModelID)->model;
+    const auto filterPtr = GetFilterPtr(this, worldID);
     filterPtr->RemoveSkeletonCollisions(model);
     return this->RemoveModelImpl(worldID, nestedModelID);
   }
@@ -697,7 +697,7 @@ bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
       return false;
     }
     const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
-    auto filterPtr = GetFilterPtr(this, worldID);
+    const auto filterPtr = GetFilterPtr(this, worldID);
     filterPtr->RemoveSkeletonCollisions(nestedSkel);
     return this->RemoveModelImpl(worldID, nestedModelID);
   }
@@ -733,7 +733,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
         dart::dynamics::Frame::World(),
         _name + "_frame");
 
-  auto [modelID, modelInfo] =
+  const auto [modelID, modelInfo] =
       this->AddModel({model, _name, modelFrame, ""}, _worldID);  // NOLINT
 
   return this->GenerateIdentity(modelID, this->models.at(modelID));
@@ -741,11 +741,11 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyNestedModel(
-    const Identity &_modelID, const std::string &_name)
+    const Identity &_parentModelID, const std::string &_name)
 {
   // find the world assocated with the model
-  auto worldID = this->GetWorldOfModelImpl(_modelID);
-  const auto &skel = this->models.at(_modelID)->model;
+  auto worldID = this->GetWorldOfModelImpl(_parentModelID);
+  const auto &skel = this->models.at(_parentModelID)->model;
   const std::string modelFullName = ::sdf::JoinName(skel->getName(), _name);
 
   dart::dynamics::SkeletonPtr model =
@@ -757,7 +757,7 @@ Identity EntityManagementFeatures::ConstructEmptyNestedModel(
         modelFullName + "_frame");
 
   auto [modelID, modelInfo] = this->AddNestedModel(
-      {model, _name, modelFrame, ""}, _modelID, worldID);  // NOLINT
+      {model, _name, modelFrame, ""}, _parentModelID, worldID);  // NOLINT
 
   return this->GenerateIdentity(modelID, this->models.at(modelID));
 }
