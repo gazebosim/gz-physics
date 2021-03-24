@@ -116,7 +116,7 @@ bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
     if (_firstTime && (i == 0))
     {
       EXPECT_FALSE(
-          output.Get<ignition::physics::WorldPoses>().entries.empty());
+          output.Get<ignition::physics::ChangedWorldPoses>().entries.empty());
       checkedOutput = true;
     }
   }
