@@ -17,7 +17,6 @@
 
 #include "EntityManagementFeatures.hh"
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
