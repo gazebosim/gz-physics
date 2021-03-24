@@ -26,6 +26,8 @@
 #include <sdf/Plane.hh>
 #include <sdf/JointAxis.hh>
 
+#include <memory>
+
 namespace ignition {
 namespace physics {
 namespace bullet {
@@ -106,7 +108,8 @@ Identity SDFFeatures::ConstructSdfModel(
   // First, construct all links
   for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
   {
-    this->FindOrConstructLink(modelIdentity, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
+    this->FindOrConstructLink(
+      modelIdentity, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
   }
 
   // Next, join all links that have joints
@@ -152,7 +155,8 @@ Identity SDFFeatures::ConstructSdfLink(
 
   const auto &modelInfo = this->models.at(_modelID);
   math::Pose3d base_pose = modelInfo->pose;
-  const auto poseIsometry = ignition::math::eigen3::convert(base_pose * pose * inertialPose);
+  const auto poseIsometry =
+    ignition::math::eigen3::convert(base_pose * pose * inertialPose);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
@@ -226,7 +230,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto cylinder = geom->CylinderShape();
     const auto radius = cylinder->Radius();
     const auto halfLength = cylinder->Length()*0.5;
-    shape = std::make_shared<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
+    shape =
+      std::make_shared<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
   }
   else if (geom->PlaneShape())
   {
@@ -255,7 +260,8 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto &modelID = linkInfo->model;
 
     const math::Pose3d pose =
-      linkInfo->inertialPose.Inverse() * ResolveSdfPose(_collision.SemanticPose());
+      linkInfo->inertialPose.Inverse() *
+      ResolveSdfPose(_collision.SemanticPose());
     const Eigen::Isometry3d poseIsometry =
       ignition::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
@@ -299,10 +305,12 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Get the parent and child ids
   const std::string parentLinkName = _sdfJoint.ParentLinkName();
-  std::size_t parentId = this->FindOrConstructLink(_modelID, dummyEmptyModel, parentLinkName);
+  std::size_t parentId =
+    this->FindOrConstructLink(_modelID, dummyEmptyModel, parentLinkName);
 
   const std::string childLinkName = _sdfJoint.ChildLinkName();
-  std::size_t childId = this->FindOrConstructLink(_modelID, dummyEmptyModel, childLinkName);
+  std::size_t childId =
+    this->FindOrConstructLink(_modelID, dummyEmptyModel, childLinkName);
 
   return this->ConstructSdfJoint(_modelID, _sdfJoint, parentId, childId);
 }
@@ -346,7 +354,9 @@ Identity SDFFeatures::ConstructSdfJoint(
     ::sdf::Errors errors = _sdfJoint.Axis(0)->ResolveXyz(resolvedAxis);
     if (!errors.empty())
       resolvedAxis = _sdfJoint.Axis(0)->Xyz();
-    axis = (ResolveSdfPose(_sdfJoint.SemanticPose()) + this->links.at(childId)->pose).Rot()
+    axis =
+      (ResolveSdfPose(_sdfJoint.SemanticPose()) +
+       this->links.at(childId)->pose).Rot()
        * resolvedAxis;
   }
 
@@ -358,8 +368,10 @@ Identity SDFFeatures::ConstructSdfJoint(
   if (parentId != worldId)
   {
     pivotParent =
-      (ResolveSdfPose(_sdfJoint.SemanticPose()) * this->links.at(childId)->pose).Pos();
-    pose = this->links.at(parentId)->pose * this->links.at(parentId)->inertialPose;
+      (ResolveSdfPose(_sdfJoint.SemanticPose()) *
+       this->links.at(childId)->pose).Pos();
+    pose =
+      this->links.at(parentId)->pose * this->links.at(parentId)->inertialPose;
     pivotParent -= pose.Pos();
     pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
     axisParent = pose.Rot().RotateVectorReverse(axis);
@@ -367,7 +379,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
 
   pivotChild =
-    (ResolveSdfPose(_sdfJoint.SemanticPose()) * this->links.at(childId)->pose).Pos();
+    (ResolveSdfPose(_sdfJoint.SemanticPose()) *
+     this->links.at(childId)->pose).Pos();
   pose = this->links.at(childId)->pose * this->links.at(childId)->inertialPose;
   pivotChild -= pose.Pos();
   pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
@@ -420,7 +433,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Generate an identity for it and return it
   auto identity =
     this->AddJoint({_sdfJoint.Name(), joint, childId, parentId,
-                    static_cast<int>(type), axis});
+    static_cast<int>(type), axis});
   return identity;
 }
 
@@ -452,7 +465,7 @@ std::size_t SDFFeatures::FindOrConstructLink(
   if (!sdfLink)
   {
     ignerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
-	   << "with the name [" << _sdfLinkName << "].\n";
+           << "with the name [" << _sdfLinkName << "].\n";
     return this->GenerateInvalidId().id;
   }
 

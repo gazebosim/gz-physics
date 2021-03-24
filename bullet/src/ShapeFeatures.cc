@@ -18,6 +18,8 @@
 #include "ShapeFeatures.hh"
 #include <BulletCollision/Gimpact/btGImpactShape.h>
 
+#include <memory>
+
 namespace ignition {
 namespace physics {
 namespace bullet {
@@ -92,7 +94,8 @@ Identity ShapeFeatures::AttachMeshShape(
   // gimpactMeshShape->setMargin(btScalar(0.001));
 
   dynamic_cast<btCompoundShape *>(
-    body->getCollisionShape())->addChildShape(baseTransform, gimpactMeshShape.get());
+    body->getCollisionShape())->addChildShape(
+    baseTransform, gimpactMeshShape.get());
 
   auto identity = this->AddCollision(
     {_name, gimpactMeshShape, _linkID, modelID,
