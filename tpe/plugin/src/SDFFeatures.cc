@@ -291,6 +291,11 @@ Identity SDFFeatures::ConstructSdfCollision(
     shape.SetRadius(sphereSdf->Radius());
     collision->SetShape(shape);
   }
+  else
+  {
+    ignwarn << "Geometry type not supported for collision [" << name << "]."
+            << std::endl;
+  }
   // \todo(anyone) add mesh. currently mesh has to be loaded externally
   // and passed in as argument as there is no logic for searching resources
   // in ign-physics
