@@ -142,7 +142,7 @@ TEST(EntityManagement_TEST, RemoveEntities)
   ASSERT_NE(nullptr, nestedModel1);
   EXPECT_EQ(1u, parentModel->GetNestedModelCount());
 
-  EXPECT_TRUE(parentModel->RemoveModel(0));
+  EXPECT_TRUE(parentModel->RemoveNestedModel(0));
   EXPECT_EQ(0u, parentModel->GetNestedModelCount());
   EXPECT_TRUE(nestedModel1->Removed());
 
@@ -150,7 +150,7 @@ TEST(EntityManagement_TEST, RemoveEntities)
       parentModel->ConstructEmptyNestedModel("empty nested model2");
   ASSERT_NE(nullptr, nestedModel2);
   EXPECT_EQ(nestedModel2, parentModel->GetNestedModel(0));
-  EXPECT_TRUE(parentModel->RemoveModel("empty nested model2"));
+  EXPECT_TRUE(parentModel->RemoveNestedModel("empty nested model2"));
   EXPECT_EQ(0u, parentModel->GetNestedModelCount());
   EXPECT_TRUE(nestedModel2->Removed());
 

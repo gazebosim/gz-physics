@@ -62,7 +62,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    bool RemoveNestedModelFromModel::Model<PolicyT, FeaturesT>::RemoveModel(
+    bool
+    RemoveNestedModelFromModel::Model<PolicyT, FeaturesT>::RemoveNestedModel(
         const std::size_t _index)
     {
       return this->template Interface<RemoveNestedModelFromModel>()
@@ -71,7 +72,8 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    bool RemoveNestedModelFromModel::Model<PolicyT, FeaturesT>::RemoveModel(
+    bool
+    RemoveNestedModelFromModel::Model<PolicyT, FeaturesT>::RemoveNestedModel(
         const std::string &_name)
     {
       return this->template Interface<RemoveNestedModelFromModel>()
