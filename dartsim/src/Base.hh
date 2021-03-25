@@ -376,7 +376,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     // Remove the contents of the skeleton from local entity storage containers
     for (auto &nestedModel : modelInfo->nestedModels)
     {
-      RemoveModelImpl(_worldID, nestedModel);
+      this->RemoveModelImpl(_worldID, nestedModel);
     }
     modelInfo->nestedModels.clear();
 

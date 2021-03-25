@@ -198,8 +198,14 @@ std::size_t EntityManagementFeatures::GetModelCount(
 Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, const std::size_t _modelIndex) const
 {
-  const std::size_t modelID =
-      this->models.indexInContainerToID.at(_worldID)[_modelIndex];
+  const auto &indexInContainerToID =
+      this->models.indexInContainerToID.at(_worldID);
+
+  if (_modelIndex >= indexInContainerToID.size())
+  {
+    return this->GenerateInvalidId();
+  }
+  const std::size_t modelID = indexInContainerToID[_modelIndex];
 
   // If the model doesn't exist in "models", it means the containing entity has
   // been removed.

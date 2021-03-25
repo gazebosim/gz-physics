@@ -85,13 +85,13 @@ namespace ignition
       public: template <typename PolicyT, typename FeaturesT>
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
       {
-        /// \brief Remove a nested Model that exists within this World.
+        /// \brief Remove a Model that is nested within this Model.
         /// \param[in] _index
         ///   Index of the model within this world.
         /// \return True if the model was found and removed.
         public: bool RemoveNestedModel(std::size_t _index);
 
-        /// \brief Remove a nested Model that exists within this World.
+        /// \brief Remove a Model that is nested within this Model.
         /// \param[in] _name
         ///   Name of the model within this world.
         /// \return True if the model was found and removed.

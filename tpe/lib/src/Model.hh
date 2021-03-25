@@ -103,6 +103,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
 
   /// \brief Remove a child entity by id
   /// \param[in] _id Id of child entity to remove
+  /// \return True if the entity was found and removed
   public: bool RemoveChildById(std::size_t _id) override;
 
   /// \brief Remove a child entity by name
