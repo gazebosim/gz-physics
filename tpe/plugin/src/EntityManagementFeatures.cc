@@ -416,9 +416,7 @@ bool EntityManagementFeatures::RemoveNestedModelByIndex(
         this->indexInContainerToId(_modelID.id, _modelIndex, this->models);
     if (nestedModelInfo != nullptr)
     {
-      this->models.erase(nestedModelId);
-      this->childIdToParentId.erase(nestedModelId);
-      return modelInfo->model->RemoveChildById(nestedModelId);
+      return this->RemoveModelFromParent(nestedModelId, modelInfo->model);
     }
   }
   return false;
@@ -433,9 +431,7 @@ bool EntityManagementFeatures::RemoveNestedModelByName(
   {
     std::size_t nestedModelId =
       modelInfo->model->GetChildByName(_modelName).GetId();
-    this->models.erase(nestedModelId);
-    this->childIdToParentId.erase(nestedModelId);
-    return modelInfo->model->RemoveChildById(nestedModelId);
+    return this->RemoveModelFromParent(nestedModelId, modelInfo->model);
   }
   return false;
 }

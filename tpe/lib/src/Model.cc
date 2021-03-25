@@ -220,35 +220,32 @@ bool Model::RemoveLinkById(std::size_t _id)
 //////////////////////////////////////////////////
 bool Model::RemoveChildById(std::size_t _id)
 {
-  bool result = true;
   Entity &ent = this->GetChildById(_id);
-  if (nullptr != dynamic_cast<Model *>(&ent))
-  {
-    result &= this->RemoveModelById(_id);
-  }
-  else
-  {
-    result &= this->RemoveLinkById(_id);
-  }
-  result &= Entity::RemoveChildById(_id);
-
-  return result;
+  return this->RemoveChildEntityBasedOnType(&ent);
 }
 
 //////////////////////////////////////////////////
 bool Model::RemoveChildByName(const std::string &_name)
 {
-  bool result = true;
   Entity &ent = this->GetChildByName(_name);
-  if (nullptr != dynamic_cast<Model *>(&ent))
+  return this->RemoveChildEntityBasedOnType(&ent);
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveChildEntityBasedOnType(const Entity *_ent)
+{
+  if (nullptr == _ent)
+    return false;
+
+  bool result = true;
+  if (nullptr != dynamic_cast<const Model *>(_ent))
   {
-    result &= this->RemoveModelById(ent.GetId());
+    result &= this->RemoveModelById(_ent->GetId());
   }
   else
   {
-    result &= this->RemoveLinkById(ent.GetId());
+    result &= this->RemoveLinkById(_ent->GetId());
   }
-  result &= Entity::RemoveChildById(ent.GetId());
-
-  return false;
+  result &= Entity::RemoveChildById(_ent->GetId());
+  return result;
 }

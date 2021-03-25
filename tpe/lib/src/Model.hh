@@ -93,14 +93,11 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
     const math::Vector3d _linearVelocity,
     const math::Vector3d _angularVelocity);
 
-  /// \brief Remove a model entity by id
-  /// \param[in] _id Id of model entity to remove
-  public: bool RemoveModelById(std::size_t _id);
-
-  /// \brief Remove a link entity by id
-  /// \param[in] _id Id of link entity to remove
-  public: bool RemoveLinkById(std::size_t _id);
-
+  /// \brief Removes a child entity (either a link or model) from the
+  /// appropriate child entity containers
+  /// \param[in] _ent Pointer to entity
+  /// \return True if the entity was found and removed
+  public: bool RemoveChildEntityBasedOnType(const Entity *_ent);
   /// \brief Remove a child entity by id
   /// \param[in] _id Id of child entity to remove
   /// \return True if the entity was found and removed
@@ -118,6 +115,14 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \brief angular velocity of model
   protected: math::Vector3d angularVelocity;
   IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+
+  /// \brief Remove a model entity by id
+  /// \param[in] _id Id of model entity to remove
+  private: bool RemoveModelById(std::size_t _id);
+
+  /// \brief Remove a link entity by id
+  /// \param[in] _id Id of link entity to remove
+  private: bool RemoveLinkById(std::size_t _id);
 
   /// \brief Pointer to private data class
   private: ModelPrivate *dataPtr = nullptr;
