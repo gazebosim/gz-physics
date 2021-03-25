@@ -1,3 +1,78 @@
+## Ignition Physics 4.x
+
+### Ignition Physics 4.x.x (20XX-XX-XX)
+
+### Ignition Physics 4.0.0 (20XX-XX-XX)
+
+1. Remove nested models
+    * [Pull request #230](https://github.com/ignitionrobotics/ign-physics/pull/230)
+
+1. Add dart-bullet dependency to CI
+    * [Pull request #239](https://github.com/ignitionrobotics/ign-physics/pull/239)
+
+1. [tpe] Add empty nested model construction and nested model entity management
+    * [Pull request #229](https://github.com/ignitionrobotics/ign-physics/pull/229)
+
+1. dartsim: fdir1 expressed_in frame from SDFormat
+    * [Pull request #224](https://github.com/ignitionrobotics/ign-physics/pull/224)
+
+1. Set collision detector and solver for DART
+    * [Pull request #225](https://github.com/ignitionrobotics/ign-physics/pull/225)
+
+1. Added ellipsoid and capsule to dartsim
+    * [Pull request #202](https://github.com/ignitionrobotics/ign-physics/pull/202)
+
+1. Add "ChangedWorldPose" to ForwardStep::Output's expected data
+    * [Pull request #238](https://github.com/ignitionrobotics/ign-physics/pull/238)
+
+1. [dartsim] Add empty nested model construction and nested model entity management
+    * [Pull request #228](https://github.com/ignitionrobotics/ign-physics/pull/228)
+
+1. Rename CanonicalLink to RootLink
+    * [Pull request #234](https://github.com/ignitionrobotics/ign-physics/pull/234)
+
+1. write modified link data to output in physics step
+    * [Pull request #223](https://github.com/ignitionrobotics/ign-physics/pull/223)
+
+1. [dartsim] Ensure Link and Model APIs continue to work after joint creation in DART
+    * [Pull request #227](https://github.com/ignitionrobotics/ign-physics/pull/227)
+
+1. [dartsim] Fix joint construction errors due to link name duplication or BodyNodes moving to other skeletons
+    * [Pull request #220](https://github.com/ignitionrobotics/ign-physics/pull/220)
+
+1. Infrastructure
+    * [Pull request #221](https://github.com/ignitionrobotics/ign-physics/pull/221)
+    * [Pull request #215](https://github.com/ignitionrobotics/ign-physics/pull/215)
+    * [Pull request #133](https://github.com/ignitionrobotics/ign-physics/pull/133)
+    * [Pull request #116](https://github.com/ignitionrobotics/ign-physics/pull/116)
+
+1. Bump in edifice: ign-common4
+    * [Pull request #205](https://github.com/ignitionrobotics/ign-physics/pull/205)
+
+1. Constructing nested models for dartsim
+    * [Pull request #189](https://github.com/ignitionrobotics/ign-physics/pull/189)
+
+1. Depend on ignition-utils1 cli component
+    * [Pull request #213](https://github.com/ignitionrobotics/ign-physics/pull/213)
+    * [Pull request #217](https://github.com/ignitionrobotics/ign-physics/pull/217)
+
+1. Bump in edifice: sdformat11
+    * [Pull request #191](https://github.com/ignitionrobotics/ign-physics/pull/191)
+
+1. Documentation
+    * [Pull request #164](https://github.com/ignitionrobotics/ign-physics/pull/164)
+    * [Pull request #163](https://github.com/ignitionrobotics/ign-physics/pull/163)
+    * [Pull request #162](https://github.com/ignitionrobotics/ign-physics/pull/162)
+    * [Pull request #165](https://github.com/ignitionrobotics/ign-physics/pull/165)
+    * [Pull request #120](https://github.com/ignitionrobotics/ign-physics/pull/120)
+    * [Pull request #144](https://github.com/ignitionrobotics/ign-physics/pull/144)
+    * [Pull request #131](https://github.com/ignitionrobotics/ign-physics/pull/131)
+    * [Pull request #128](https://github.com/ignitionrobotics/ign-physics/pull/128)
+    * [Pull request #115](https://github.com/ignitionrobotics/ign-physics/pull/115)
+    * [Pull request #104](https://github.com/ignitionrobotics/ign-physics/pull/104)
+    * [Pull request #105](https://github.com/ignitionrobotics/ign-physics/pull/105)
+    * [Pull request #106](https://github.com/ignitionrobotics/ign-physics/pull/106)
+
 ## Ignition Physics 3.x
 
 ### Ignition Physics 3.x.x (20XX-XX-XX)
