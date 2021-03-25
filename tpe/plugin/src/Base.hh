@@ -122,7 +122,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     return {INVALID_ENTITY_ID, nullptr};
   }
 
-
   public: inline Identity AddWorld(std::shared_ptr<tpelib::World> _world)
   {
     size_t worldId = _world->GetId();
@@ -168,6 +167,60 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->childIdToParentId.insert({collisionId, _linkId});
 
     return this->GenerateIdentity(collisionId, collisionPtr);
+  }
+
+  public: bool RemoveModelImpl(std::size_t _modelID)
+  {
+    auto parentIt = this->childIdToParentId.find(_modelID);
+    if (parentIt == this->childIdToParentId.end())
+      return false;
+
+    auto modelInfoIt = this->models.find(_modelID);
+    if (modelInfoIt == this->models.end())
+      return false;
+
+    tpelib::Entity *parentEntity = nullptr;
+    auto worldIt = this->worlds.find(parentIt->second);
+    if (worldIt != this->worlds.end())
+      parentEntity = worldIt->second->world.get();
+
+    if (nullptr == parentEntity)
+    {
+      // If the parent entity is not a world, try a parent model of a nested
+      // model
+      auto modelIt = this->models.find(parentIt->second);
+      if (modelIt != this->models.end())
+        parentEntity = modelIt->second->model;
+    }
+
+    if (nullptr == parentEntity)
+      return false;
+
+    bool result = true;
+    for (std::size_t i = 0; i < modelInfoIt->second->model->GetChildCount();
+         ++i)
+    {
+      // Get a reference so we can dynamic cast
+      auto &ent = modelInfoIt->second->model->GetChildByIndex(i);
+      auto modelEnt = dynamic_cast<tpelib::Model *>(&ent);
+      if (modelEnt)
+      {
+        result &= this->RemoveModelImpl(modelEnt->GetId());
+      }
+    }
+    result &= this->RemoveModelFromParent(_modelID, parentEntity);
+    return result;
+  }
+
+  public: bool RemoveModelFromParent(std::size_t _modelID,
+                                     tpelib::Entity *_parentEntity)
+  {
+    if (nullptr == _parentEntity)
+      return false;
+    bool result = this->models.erase(_modelID) == 1;
+    result &= this->childIdToParentId.erase(_modelID) == 1;
+    result &= _parentEntity->RemoveChildById(_modelID);
+    return result;
   }
 
   public: std::map<std::size_t, std::shared_ptr<WorldInfo>> worlds;

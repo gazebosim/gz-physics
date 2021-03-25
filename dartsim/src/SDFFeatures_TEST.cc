@@ -545,7 +545,6 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 
   // check top level model
   EXPECT_EQ("parent_model", world->GetModel(0)->GetName());
-  EXPECT_EQ("nested_model", world->GetModel(1)->GetName());
   auto parentModel = world->GetModel("parent_model");
   ASSERT_NE(nullptr, parentModel);
 

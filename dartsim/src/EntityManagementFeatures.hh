@@ -147,6 +147,12 @@ class EntityManagementFeatures :
 
   public: bool ModelRemoved(const Identity &_modelID) const override;
 
+  public: bool RemoveNestedModelByIndex(
+     const Identity &_modelID, std::size_t _modelIndex) override;
+
+  public: bool RemoveNestedModelByName(
+      const Identity &_modelID, const std::string &_modelName) override;
+
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       const Identity &_engineID, const std::string &_name) override;

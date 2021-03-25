@@ -369,9 +369,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
         this->indexInContainerToId(_worldID.id, _modelIndex, this->models);
     if (modelInfo != nullptr)
     {
-      this->models.erase(modelId);
-      this->childIdToParentId.erase(modelId);
-      return worldInfo->world->RemoveChildById(modelId);
+      this->RemoveModelImpl(modelId);
     }
   }
   return false;
@@ -386,9 +384,7 @@ bool EntityManagementFeatures::RemoveModelByName(
   {
     std::size_t modelId =
       worldInfo->world->GetChildByName(_modelName).GetId();
-    this->models.erase(modelId);
-    this->childIdToParentId.erase(modelId);
-    return worldInfo->world->RemoveChildById(modelId);
+    this->RemoveModelImpl(modelId);
   }
   return false;
 }
@@ -396,18 +392,7 @@ bool EntityManagementFeatures::RemoveModelByName(
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
-  auto it = this->childIdToParentId.find(_modelID.id);
-  if (it != this->childIdToParentId.end())
-  {
-    auto worldIt = this->worlds.find(it->second);
-    if (worldIt != this->worlds.end() && worldIt->second != nullptr)
-    {
-      this->models.erase(_modelID.id);
-      this->childIdToParentId.erase(_modelID.id);
-      return worldIt->second->world->RemoveChildById(_modelID.id);
-    }
-  }
-  return false;
+  return this->RemoveModelImpl(_modelID.id);
 }
 
 /////////////////////////////////////////////////
@@ -417,6 +402,37 @@ bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
     && this->childIdToParentId.find(_modelID.id) ==
       this->childIdToParentId.end())
         return true;
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByIndex(
+  const Identity &_modelID, std::size_t _modelIndex)
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo != nullptr)
+  {
+    const auto &[nestedModelId, nestedModelInfo] =
+        this->indexInContainerToId(_modelID.id, _modelIndex, this->models);
+    if (nestedModelInfo != nullptr)
+    {
+      return this->RemoveModelFromParent(nestedModelId, modelInfo->model);
+    }
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByName(
+  const Identity &_modelID, const std::string &_modelName)
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo != nullptr)
+  {
+    std::size_t nestedModelId =
+      modelInfo->model->GetChildByName(_modelName).GetId();
+    return this->RemoveModelFromParent(nestedModelId, modelInfo->model);
+  }
   return false;
 }
 

@@ -238,9 +238,8 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       {
         // Assume that the original and the current skeletons are in the same
         // world.
-        auto worldId =
-          this->models
-          .idToContainerID[this->models.IdentityOf(joint->getSkeleton())];
+        auto worldId = this->GetWorldOfModelImpl(
+            this->models.IdentityOf(joint->getSkeleton()));
         auto dartWorld = this->worlds.at(worldId);
         std::string modelName = oldName.substr(0, originalNameIndex - 1);
         skeleton = dartWorld->getSkeleton(modelName);
