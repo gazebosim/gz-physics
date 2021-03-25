@@ -88,6 +88,7 @@ struct CollisionInfo
   Identity link;
   Identity model;
   math::Pose3d pose;
+  bool isMesh;
 };
 
 struct JointInfo

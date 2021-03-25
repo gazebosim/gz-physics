@@ -99,7 +99,7 @@ Identity ShapeFeatures::AttachMeshShape(
 
   auto identity = this->AddCollision(
     _linkID, {_name, gimpactMeshShape, _linkID, modelID,
-    ignition::math::eigen3::convert(_pose)});
+    ignition::math::eigen3::convert(_pose), true});
   return identity;
 
 }
@@ -108,8 +108,10 @@ Identity ShapeFeatures::AttachMeshShape(
 Identity ShapeFeatures::CastToMeshShape(
     const Identity &_shapeID) const
 {
-  ignwarn << "Dummy implementation CastToMeshShape" << std::endl;
-  (void) _shapeID;
+  if (this->collisions.at(_shapeID)->isMesh)
+  {
+    return _shapeID;
+  }
   return this->GenerateInvalidId();
 }
 

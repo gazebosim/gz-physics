@@ -283,7 +283,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 
     auto identity =
       this->AddCollision(
-      _linkID, {_collision.Name(), shape, _linkID, modelID, pose});
+      _linkID, {_collision.Name(), shape, _linkID, modelID, pose, false});
     return identity;
   }
   return this->GenerateInvalidId();
@@ -358,8 +358,8 @@ Identity SDFFeatures::ConstructSdfJoint(
     if (!errors.empty())
       resolvedAxis = _sdfJoint.Axis(0)->Xyz();
     axis =
-      (ResolveSdfPose(_sdfJoint.SemanticPose()) +
-       this->links.at(childId)->pose).Rot()
+      (this->links.at(childId)->pose *
+       ResolveSdfPose(_sdfJoint.SemanticPose())).Rot()
        * resolvedAxis;
   }
 
