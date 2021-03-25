@@ -99,6 +99,10 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
 /// Utility functions
 /////////////////////////////////////////////////
+/// TODO (addisu): There's a lot of code duplication in model removal code, such
+/// as RemoveModelByIndex, where we call GetFilterPtr followed by
+/// RemoveSkeletonCollisions(model). To de-duplicate this, move this logic into
+/// RemoveModelImpl. To do that, we need to move GetFilterPtr into Base.hh.
 static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
     const EntityManagementFeatures* _emf, std::size_t _worldID)
 {
