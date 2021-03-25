@@ -71,10 +71,10 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   // omega = matBaseToWorld * omega;
   // vel = matBaseToWorld * vel;
 
-  data.linearVelocity = convert(vel);
-  data.angularVelocity =  ignition::math::eigen3::convert(
+  data.linearVelocity = convert(vel) + ignition::math::eigen3::convert(
     linkInfo->inertialPose.Pos().Cross(
       ignition::math::eigen3::convert(convert(omega))));
+  data.angularVelocity = convert(omega);
 
   // \todo(anyone) compute frame accelerations
 
