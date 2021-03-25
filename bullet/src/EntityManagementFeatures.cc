@@ -78,13 +78,13 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity & _worldID, std::size_t _modelIndex)
 {
   // Check if the model exists
-  if (this->models.find(_modelIndex) == this->models.end() ||
-      this->models.at(_modelIndex)->world.id != _worldID.id)
+  auto _modelEntity = indexInContainerToId(_worldID, _modelIndex);
+  if (this->models.find(_modelEntity) == this->models.end())
   {
     return false;
   }
 
-  auto model = this->models.at(_modelIndex);
+  auto model = this->models.at(_modelEntity);
   auto bulletWorld = this->worlds.at(model->world)->world;
 
   // Clean up joints, this section considers both links in the joint
@@ -135,7 +135,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   }
 
   // Clean up model
-  this->models.erase(_modelIndex);
+  this->models.erase(_modelEntity);
   this->childIdToParentId.erase(_modelIndex);
 
   return true;
