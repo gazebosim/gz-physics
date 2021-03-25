@@ -63,8 +63,9 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
 
   auto worldID = this->models.at(_modelID)->world;
+  auto modelIndex = idToIndexInContainer(_modelID);
 
-  return this->RemoveModelByIndex(worldID, _modelID.id);
+  return this->RemoveModelByIndex(worldID, modelIndex);
 }
 
 bool EntityManagementFeatures::ModelRemoved(
@@ -77,13 +78,13 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity & _worldID, std::size_t _modelIndex)
 {
   // Check if the model exists
-  if (this->models.find(_modelIndex) == this->models.end() ||
-      this->models.at(_modelIndex)->world.id != _worldID.id)
+  auto _modelEntity = indexInContainerToId(_worldID, _modelIndex);
+  if (this->models.find(_modelEntity) == this->models.end())
   {
     return false;
   }
 
-  auto model = this->models.at(_modelIndex);
+  auto model = this->models.at(_modelEntity);
   auto bulletWorld = this->worlds.at(model->world)->world;
 
   // Clean up joints, this section considers both links in the joint
@@ -96,6 +97,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     if (childLinkInfo->model.id == _modelIndex)
     {
       bulletWorld->removeConstraint(jointInfo->joint.get());
+      this->childIdToParentId.erase(joint_it->first);
       joint_it = this->joints.erase(joint_it);
       continue;
     }
@@ -109,6 +111,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     const auto &collisionInfo = collision_it->second;
     if (collisionInfo->model.id == _modelIndex)
     {
+      this->childIdToParentId.erase(collision_it->first);
       collision_it = this->collisions.erase(collision_it);
       continue;
     }
@@ -124,6 +127,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     if (linkInfo->model.id == _modelIndex)
     {
       bulletWorld->removeRigidBody(linkInfo->link.get());
+      this->childIdToParentId.erase(it->first);
       it = this->links.erase(it);
       continue;
     }
@@ -131,7 +135,8 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   }
 
   // Clean up model
-  this->models.erase(_modelIndex);
+  this->models.erase(_modelEntity);
+  this->childIdToParentId.erase(_modelIndex);
 
   return true;
 }
@@ -141,7 +146,7 @@ bool EntityManagementFeatures::RemoveModelByName(
 {
   // Check if there is a model with the requested name
   bool found = false;
-  size_t index_id = 0;
+  size_t entity = 0;
   // We need a link to model relationship
   for (const auto &model : this->models)
   {
@@ -149,14 +154,15 @@ bool EntityManagementFeatures::RemoveModelByName(
     if (modelInfo->name == _modelName)
     {
       found = true;
-      index_id = model.first;
+      entity = model.first;
       break;
     }
   }
 
   if (found)
   {
-    return this->RemoveModelByIndex(_worldID, index_id);
+    auto modelIndex = idToIndexInContainer(entity);
+    return this->RemoveModelByIndex(_worldID, modelIndex);
   }
 
   return false;

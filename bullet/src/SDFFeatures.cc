@@ -103,7 +103,8 @@ Identity SDFFeatures::ConstructSdfModel(
   // Links within a model will collide unless these are chained with a joint
   // const bool selfCollide = _sdfModel.SelfCollide();
 
-  const auto modelIdentity = this->AddModel({name, _worldID, isStatic, pose});
+  const auto modelIdentity =
+    this->AddModel(_worldID, {name, _worldID, isStatic, pose});
 
   // First, construct all links
   for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
@@ -184,7 +185,8 @@ Identity SDFFeatures::ConstructSdfLink(
   world->addRigidBody(body.get());
 
   // Generate an identity for it
-  const auto linkIdentity = this->AddLink({name, _modelID, pose, inertialPose,
+  const auto linkIdentity =
+    this->AddLink(_modelID, {name, _modelID, pose, inertialPose,
     mass, linkInertiaDiag, myMotionState, collisionShape, body});
 
   // Create associated collisions to this model
@@ -279,8 +281,9 @@ Identity SDFFeatures::ConstructSdfCollision(
     dynamic_cast<btCompoundShape *>(body->getCollisionShape())
       ->addChildShape(baseTransform, shape.get());
 
-    auto identity = this->AddCollision({_collision.Name(), shape, _linkID,
-      modelID, pose});
+    auto identity =
+      this->AddCollision(
+      _linkID, {_collision.Name(), shape, _linkID, modelID, pose});
     return identity;
   }
   return this->GenerateInvalidId();

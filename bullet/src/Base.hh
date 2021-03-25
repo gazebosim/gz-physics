@@ -146,21 +146,67 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(0);
   }
 
+  public: inline std::size_t idToIndexInContainer(std::size_t _id) const
+  {
+    std::size_t index = 0;
+    auto it = this->childIdToParentId.find(_id);
+    if (it != this->childIdToParentId.end())
+    {
+      for (const auto &pair : this->childIdToParentId)
+      {
+        if (pair.first == _id && pair.second == it->second)
+        {
+          return index;
+        }
+        else if (pair.second == it->second)
+        {
+          ++index;
+        }
+      }
+    }
+    // return invalid index if not found in id map
+    return -1;
+  }
+
+  public: inline std::size_t indexInContainerToId(
+    const std::size_t _containerId, const std::size_t _index) const
+  {
+    std::size_t counter = 0;
+    auto it = this->childIdToParentId.begin();
+
+    while (counter <= _index && it != this->childIdToParentId.end())
+    {
+      if (it->second == _containerId && counter == _index)
+      {
+        return it->first;
+      }
+      else if (it->second == _containerId)
+      {
+        ++counter;
+      }
+      ++it;
+    }
+    // return invalid id if entity not found
+    return -1;
+  }
+
   public: inline Identity AddWorld(WorldInfo _worldInfo)
   {
     const auto id = this->GetNextEntity();
     this->worlds[id] = std::make_shared<WorldInfo>(_worldInfo);
+    this->childIdToParentId.insert({id, -1});
     return this->GenerateIdentity(id, this->worlds.at(id));
   }
 
-  public: inline Identity AddModel(ModelInfo _modelInfo)
+  public: inline Identity AddModel(std::size_t _worldId, ModelInfo _modelInfo)
   {
     const auto id = this->GetNextEntity();
     this->models[id] = std::make_shared<ModelInfo>(_modelInfo);
+    this->childIdToParentId.insert({id, _worldId});
     return this->GenerateIdentity(id, this->models.at(id));
   }
 
-  public: inline Identity AddLink(LinkInfo _linkInfo)
+  public: inline Identity AddLink(std::size_t _modelId, LinkInfo _linkInfo)
   {
     const auto id = this->GetNextEntity();
     this->links[id] = std::make_shared<LinkInfo>(_linkInfo);
@@ -168,12 +214,15 @@ class Base : public Implements3d<FeatureList<Feature>>
     auto model = this->models.at(_linkInfo.model);
     model->links.push_back(id);
 
+    this->childIdToParentId.insert({id, _modelId});
     return this->GenerateIdentity(id, this->links.at(id));
   }
-  public: inline Identity AddCollision(CollisionInfo _collisionInfo)
+  public: inline Identity AddCollision(
+    std::size_t _linkId, CollisionInfo _collisionInfo)
   {
    const auto id = this->GetNextEntity();
    this->collisions[id] = std::make_shared<CollisionInfo>(_collisionInfo);
+   this->childIdToParentId.insert({id, _linkId});
    return this->GenerateIdentity(id, this->collisions.at(id));
   }
 
@@ -196,6 +245,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
+
+  public: std::map<std::size_t, std::size_t> childIdToParentId;
 };
 
 }  // namespace bullet
