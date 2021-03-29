@@ -58,17 +58,19 @@ Ignition Physics provides the following functionality:
 * Plugin interface for loading physics engines with requested features
   at runtime.
 * Features for common aspects of rigid body dynamic simulation
-    - Construct model from SDFormat file.
-    - Collision shapes (such as box, sphere, cylinder, mesh, heightmap).
+    - Construct model from [SDFormat](sdformat.org/) file.
+    - Collision shapes (such as box, sphere, cylinder, capsule, ellipsoid, mesh, heightmap).
     - Joint types (such as revolute, prismatic, fixed, ball, screw, universal).
     - Step simulation, get/set state, apply inputs.
 * Reference implementation of physics plugin using
   [dartsim](http://dartsim.github.io/).
-* CompositeData structures for efficiently using native types in API.
+* A custom physics engine focused on fast kinematics of large environments, the
+  [Trivial Physics Engine](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629).
+* `CompositeData` structures for efficiently using native types in API.
 
 # Install
 
-See the [installation tutorial](https://ignitionrobotics.org/api/physics/3.0/installation.html).
+See the [installation tutorial](https://ignitionrobotics.org/api/physics/4.0/installation.html).
 
 # Usage
 
@@ -141,6 +143,9 @@ ign-physics
 │    ├── plugins              Plugins used in tests.
 │    ├── regression           Regression tests.
 │    └── static_assert        Tests involving compilation failures.
+├── tpe
+│    ├── lib                  Implementation of TPE engine.
+│    └── plugin               Files for TPE plugin component.
 ├── tutorials                 Tutorials, written in markdown.
 ├── Changelog.md              Changelog.
 └── CMakeLists.txt            CMake build script.
