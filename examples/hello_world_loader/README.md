@@ -7,15 +7,28 @@ plugins, according to a desired feature list.
 
 From the root of the `ign-physics` repository, do the following to build the example:
 
-~~~
+```bash
 cd examples/hello_world_loader
 mkdir build
 cd build
 cmake ..
+```
+
+### Ubuntu Or MacOS
+
+```bash
 make
-~~~
+```
 
 This will generate the `hello_world_loader` executable under `build`.
+
+### Windows
+
+```bash
+cmake --build . --config Release
+```
+
+This will generate the `hello_world_loader` executable under `build\Release`.
 
 ## Run
 
@@ -46,15 +59,24 @@ Testing plugin: ignition::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ~~~
 
-### Hello world plugin on Linux
+### Hello world plugin
 
 This loader should also be able to load the hello world plugin example.
 After you've followed the instructions to compile both the plugin and the
 loader, you can load the plugin like:
 
+#### On Linux
+
 ~~~
 cd examples/hello_world_loader/build
 ./hello_world_loader ../../hello_world_plugin/build/libHelloWorldPlugin.so
+~~~
+
+#### On Windows
+
+~~~
+cd examples/hello_world_loader/build
+.\Release\hello_world_loader.exe ..\..\hello_world_plugin\build\Release\HelloWorldPlugin.dll
 ~~~
 
 And see the following printed:
