@@ -58,7 +58,7 @@ Ignition Physics provides the following functionality:
 * Plugin interface for loading physics engines with requested features
   at runtime.
 * Features for common aspects of rigid body dynamic simulation
-    - Construct model from [SDFormat](sdformat.org/) file.
+    - Construct model from [SDFormat](http://sdformat.org/) file.
     - Collision shapes (such as box, sphere, cylinder, capsule, ellipsoid, mesh, heightmap).
     - Joint types (such as revolute, prismatic, fixed, ball, screw, universal).
     - Step simulation, get/set state, apply inputs.
