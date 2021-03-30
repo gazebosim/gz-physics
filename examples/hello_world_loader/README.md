@@ -75,7 +75,7 @@ cd examples/hello_world_loader/build
 #### On Windows
 
 ~~~
-cd examples/hello_world_loader/build
+cd examples\hello_world_loader\build
 .\Release\hello_world_loader.exe ..\..\hello_world_plugin\build\Release\HelloWorldPlugin.dll
 ~~~
 
