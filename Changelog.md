@@ -2,7 +2,7 @@
 
 ### Ignition Physics 4.x.x (20XX-XX-XX)
 
-### Ignition Physics 4.0.0 (20XX-XX-XX)
+### Ignition Physics 4.0.0 (2021-03-30)
 
 1. Remove nested models
     * [Pull request #230](https://github.com/ignitionrobotics/ign-physics/pull/230)
@@ -72,6 +72,8 @@
     * [Pull request #104](https://github.com/ignitionrobotics/ign-physics/pull/104)
     * [Pull request #105](https://github.com/ignitionrobotics/ign-physics/pull/105)
     * [Pull request #106](https://github.com/ignitionrobotics/ign-physics/pull/106)
+    * [Pull request #243](https://github.com/ignitionrobotics/ign-physics/pull/243)
+    * [Pull request #242](https://github.com/ignitionrobotics/ign-physics/pull/242)
 
 ## Ignition Physics 3.x
 
