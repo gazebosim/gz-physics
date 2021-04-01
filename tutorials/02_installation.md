@@ -103,7 +103,7 @@ command-line tools:
 2. Run the following commands
   ```
   brew tap osrf/simulation
-  brew install ignition-physics4
+  brew install ignition-physics5
   ```
 
 ## Source Installation
@@ -111,7 +111,7 @@ command-line tools:
 1. Install dependencies
   ```
   brew tap osrf/simulation
-  brew install ignition-physics4 --only-dependencies
+  brew install ignition-physics5 --only-dependencies
   ```
 
 2. Clone the repository

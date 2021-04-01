@@ -119,7 +119,7 @@ a plugin.
 - The third argument is the `FeatureList`, specifying all the features that this
 plugin provides, i.e. `HelloWorldFeatureList`
 
-### Setup CMakeLists.txt for building (Version: Edifice, ign-physics4)
+### Setup CMakeLists.txt for building (Version: ign-physics5)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `ign-plugin` and `ign-physics` dependencies for Edifice release:
@@ -128,7 +128,7 @@ lines for finding `ign-plugin` and `ign-physics` dependencies for Edifice releas
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(IGN_PLUGIN_VER 1)
 find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
-set(IGN_PHYSICS_VER 4)
+set(IGN_PHYSICS_VER 5)
 find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
 ```
 
