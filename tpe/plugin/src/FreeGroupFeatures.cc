@@ -63,6 +63,10 @@ Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
   if (modelIt != this->models.end() && modelIt->second != nullptr)
   {
     // assume canonical link is the first link in model
+    // note the canonical link of a free group is renamed to root link in
+    // ign-physics4. The canonical link / root link of a free group can be
+    // different from the canonical link of a model.
+    // Here we treat them the same and return the model's canonical link
     tpelib::Entity &link = modelIt->second->model->GetCanonicalLink();
     auto linkPtr = std::make_shared<LinkInfo>();
     linkPtr->link = static_cast<tpelib::Link *>(&link);

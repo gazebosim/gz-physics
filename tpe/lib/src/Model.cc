@@ -65,7 +65,10 @@ Entity &Model::AddLink()
   std::size_t linkId = Entity::GetNextId();
 
   if (this->GetChildren().empty())
+  {
     this->dataPtr->firstLinkId = linkId;
+    this->dataPtr->canonicalLinkId = linkId;
+  }
 
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
