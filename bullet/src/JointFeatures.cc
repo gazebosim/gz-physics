@@ -306,11 +306,9 @@ void JointFeatures::SetJointForce(
           btHingeAccumulatedAngleConstraint*>(jointInfo->joint.get());
         if (hinge)
         {
-          // Limit the max torque applied to avoid abrupt changes in the
-          // angular position of the joint and losing the angle reference
-          // TO-DO (blast545): this limitation should be based on angular speed
-          // as this breaks the PID controller when setting high values
-          const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
+          // TO-DO (blast545): Find how to address limitation caused by
+	  // https://pybullet.org/Bullet/BulletFull/btHingeConstraint_8cpp_source.html#l00318
+          //const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
 
           // z-axis of constraint frame
           btVector3 hingeAxisLocalA =
@@ -325,8 +323,8 @@ void JointFeatures::SetJointForce(
             hinge->getRigidBodyB().getWorldTransform().getBasis() *
             hingeAxisLocalB;
 
-          btVector3 hingeTorqueA = thresholdValue * hingeAxisWorldA;
-          btVector3 hingeTorqueB = thresholdValue * hingeAxisWorldB;
+          btVector3 hingeTorqueA = _value * hingeAxisWorldA;
+          btVector3 hingeTorqueB = _value * hingeAxisWorldB;
 
           hinge->getRigidBodyA().applyTorque(hingeTorqueA);
           hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
