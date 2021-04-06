@@ -20,13 +20,15 @@
 
 using namespace ignition;
 using namespace physics;
-using namespace simplelugin;
+using namespace simpleplugin;
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
   const Identity &, const std::string &_name)
 {
-  auto world = std::make_shared<tpelib::World>();
-  world->SetName(_name);
-  return this->AddWorld(world);
+// Needs feature
+//  auto world = std::make_shared<Entity>();
+//  world->SetName(_name);
+//  return this->AddWorld(world);
+  return this->GenerateInvalidId();
 }

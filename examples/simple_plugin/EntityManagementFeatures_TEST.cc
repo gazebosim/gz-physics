@@ -15,7 +15,8 @@
  *
 */
 
-#include <gtest/gtest.h>
+#include <iostream>
+
 #include <ignition/plugin/Loader.hh>
 #include <ignition/physics/RequestEngine.hh>
 #include "EntityManagementFeatures.hh"
@@ -24,7 +25,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
   ignition::physics::simpleplugin::EntityManagementFeatureList
 > { };
 
-TEST(EntityManagement_TEST, ConstructEmptyWorld)
+int main(int argc, char *argv[])
 {
   ignition::plugin::Loader loader;
   loader.LoadLib(simple_plugin_LIB);
@@ -35,11 +36,12 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto engine =
       ignition::physics::RequestEngine3d<TestFeatureList>::From(simple_plugin);
   auto world = engine->ConstructEmptyWorld("empty world");
-  ASSERT_NE(nullptr, world);
-}
 
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  if (nullptr != world)
+    std::cout << "Created empty world" << std::endl;
+  else
+    std::cout << "Failed to create empty world" << std::endl;
+
+// Needs feature
+//  std::cout << world->GetName() << std::endl;
 }
