@@ -128,7 +128,7 @@ double ShapeFeatures::GetCapsuleShapeRadius(
 }
 
 /////////////////////////////////////////////////
-double ShapeFeatures::GetCapsuleShapeHeight(
+double ShapeFeatures::GetCapsuleShapeLength(
   const Identity &_capsuleID) const
 {
   // assume _capsuleID ~= _collisionID

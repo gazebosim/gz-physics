@@ -79,7 +79,7 @@ class ShapeFeatures :
   public: double GetCapsuleShapeRadius(
     const Identity &_capsuleID) const override;
 
-  public: double GetCapsuleShapeHeight(
+  public: double GetCapsuleShapeLength(
     const Identity &_capsuleID) const override;
 
   public: Identity AttachCapsuleShape(
