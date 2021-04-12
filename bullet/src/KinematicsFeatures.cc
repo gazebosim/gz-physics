@@ -73,7 +73,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 
   data.linearVelocity = convert(vel) + ignition::math::eigen3::convert(
     ignition::math::eigen3::convert(convert(omega)).Cross(
-    ignition::math::eigen3::convert(data.pose).Rot() *
+    -ignition::math::eigen3::convert(data.pose).Rot() *
     linkInfo->inertialPose.Pos()));
   data.angularVelocity = convert(omega);
 
