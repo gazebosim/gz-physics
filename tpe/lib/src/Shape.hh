@@ -55,10 +55,10 @@ enum class IGNITION_PHYSICS_TPELIB_VISIBLE ShapeType
   MESH = 5,
 
   /// \brief A capsule shape.
-  CAPSULE = 4,
+  CAPSULE = 6,
 
   /// \brief A ellipsoid shape.
-  ELLIPSOID = 5,
+  ELLIPSOID = 7,
 };
 
 
