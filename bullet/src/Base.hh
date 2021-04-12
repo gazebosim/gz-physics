@@ -247,6 +247,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
 
+  // childIdToParentId needs to be an ordered map so this iteration proceeds
+  // in ascending order of the keys of that map. Do not change.
   public: std::map<std::size_t, std::size_t> childIdToParentId;
 };
 
