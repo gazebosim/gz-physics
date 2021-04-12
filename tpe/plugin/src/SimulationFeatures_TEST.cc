@@ -204,6 +204,19 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     EXPECT_EQ(2u, cylinderLink->GetShapeCount());
     EXPECT_EQ(cylinder2, cylinderLink->GetShape(1));
 
+    auto ellipsoid = world->GetModel("ellipsoid");
+    auto ellipsoidLink = ellipsoid->GetLink(0);
+    auto ellipsoidCollision = ellipsoidLink->GetShape(0);
+    auto ellipsoidShape = ellipsoidCollision->CastToEllipsoidShape();
+    EXPECT_EQ(
+      ignition::math::Vector3d(0.2, 0.3, 0.5),
+      ignition::math::eigen3::convert(ellipsoidShape->GetRadii()));
+
+    auto ellipsoid2 = ellipsoidLink->AttachCylinderShape(
+      "ellipsoid2", 3.0, 4.0, Eigen::Isometry3d::Identity());
+    EXPECT_EQ(2u, ellipsoidLink->GetShapeCount());
+    EXPECT_EQ(ellipsoid2, ellipsoidLink->GetShape(1));
+
     // Test the bounding boxes in the local frames
     auto sphereAABB =
       sphereCollision->GetAxisAlignedBoundingBox(*sphereCollision);
@@ -211,6 +224,8 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
       boxCollision->GetAxisAlignedBoundingBox(*boxCollision);
     auto cylinderAABB =
       cylinderCollision->GetAxisAlignedBoundingBox(*cylinderCollision);
+    auto ellipsoidAABB =
+      ellipsoidCollision->GetAxisAlignedBoundingBox(*ellipsoidCollision);
 
     EXPECT_EQ(ignition::math::Vector3d(-1, -1, -1),
               ignition::math::eigen3::convert(sphereAABB).Min());
@@ -224,11 +239,16 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
               ignition::math::eigen3::convert(cylinderAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(0.5, 0.5, 0.55),
               ignition::math::eigen3::convert(cylinderAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-0.2, -0.3, -0.5),
+              ignition::math::eigen3::convert(ellipsoidAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(0.2, 0.3, 0.5),
+              ignition::math::eigen3::convert(ellipsoidAABB).Max());
 
     // check model AABB. By default, the AABBs are in world frame
     auto sphereModelAABB = sphere->GetAxisAlignedBoundingBox();
     auto boxModelAABB = box->GetAxisAlignedBoundingBox();
     auto cylinderModelAABB = cylinder->GetAxisAlignedBoundingBox();
+    auto ellipsoidModelAABB = ellipsoid->GetAxisAlignedBoundingBox();
     EXPECT_EQ(ignition::math::Vector3d(-1, 0.5, -0.5),
               ignition::math::eigen3::convert(sphereModelAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(1, 2.5, 1.5),
@@ -241,6 +261,10 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
               ignition::math::eigen3::convert(cylinderModelAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(3, 1.5, 2.5),
               ignition::math::eigen3::convert(cylinderModelAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-3, -8, 3),
+              ignition::math::eigen3::convert(ellipsoidModelAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(3, -2, 7),
+              ignition::math::eigen3::convert(ellipsoidModelAABB).Max());
   }
 }
 

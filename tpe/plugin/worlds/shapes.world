@@ -96,5 +96,36 @@
         </visual>
       </link>
     </model>
+
+    <model name="ellipsoid">
+      <pose>0 -5 5 0 0 0</pose>
+      <link name="ellipsoid_link">
+        <inertial>
+          <inertia>
+            <ixx>0.068</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.058</iyy>
+            <iyz>0</iyz>
+            <izz>0.026</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="ellipsoid_collision">
+          <geometry>
+            <ellipsoid>
+              <radii>0.2 0.3 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="ellipsoid_visual">
+          <geometry>
+            <ellipsoid>
+              <radii>0.2 0.3 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>
