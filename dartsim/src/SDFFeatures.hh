@@ -24,6 +24,7 @@
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructVisual.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 
@@ -39,6 +40,7 @@ namespace dartsim {
 struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
+  sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfJoint,
   sdf::ConstructSdfCollision,
@@ -54,7 +56,11 @@ class SDFFeatures :
       const ::sdf::World &_sdfWorld) override;
 
   public: Identity ConstructSdfModel(
-      const Identity &_worldID,
+      const Identity &_parentID,
+      const ::sdf::Model &_sdfModel) override;
+
+  public: Identity ConstructSdfNestedModel(
+      const Identity &_parentID,
       const ::sdf::Model &_sdfModel) override;
 
   public: Identity ConstructSdfLink(
@@ -98,6 +104,26 @@ class SDFFeatures :
   private: Eigen::Isometry3d ResolveSdfJointReferenceFrame(
       const std::string &_frame,
       const dart::dynamics::BodyNode *_child) const;
+
+  /// \brief Construct a dartsim entity from a sdf::model
+  /// \param[in] _parentID Id of parent
+  /// \param[in] _sdfModel sdf::Model to construct entity from
+  /// \return The entity identity if constructed otherwise an invalid identity
+  private: Identity ConstructSdfModelImpl(std::size_t _parentID,
+                                          const ::sdf::Model &_sdfModel);
+
+  /// \brief Find the dartsim BodyNode associated with the link name
+  /// \param[in] _worldName Name of world that contains the link
+  /// \param[in] _jointModelName The name of the model associated with the joint
+  /// \param[in] _linkRelativeName The relative name of the link as specified in
+  /// the sdformat description in the scope of the model identified by
+  /// _jointModelName
+  /// \returns The matched body node if exactly one match is found, otherwise
+  /// a nullptr
+  private: dart::dynamics::BodyNode *FindBodyNode(
+               const std::string &_worldName,
+               const std::string &_jointModelName,
+               const std::string &_linkRelativeName);
 };
 
 }

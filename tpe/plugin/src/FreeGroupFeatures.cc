@@ -36,12 +36,11 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   auto it = this->models.find(_modelID.id);
   if (it == this->models.end() || it->second == nullptr)
     return this->GenerateInvalidId();
-  auto modelPtr = it->second;
   // if there are no links in this model, then the FreeGroup functions
   // will not work properly; need to reject this case.
-  if (modelPtr->model->GetChildCount() == 0)
+  if (it->second->model->GetChildCount() == 0)
     return this->GenerateInvalidId();
-  return _modelID;
+  return this->GenerateIdentity(_modelID.id, it->second);
 }
 
 /////////////////////////////////////////////////
@@ -55,8 +54,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 }
 
 /////////////////////////////////////////////////
-Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
-  const Identity &_groupID) const
+Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
   // assume no canonical link for now
   // assume groupID ~= modelID
@@ -69,7 +67,7 @@ Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
     linkPtr->link = static_cast<tpelib::Link *>(&link);
     return this->GenerateIdentity(link.GetId(), linkPtr);
   }
-  return this->GenerateInvalidId();
+  return this->GenerateIdentity(_groupID.id, this->links.at(_groupID.id));
 }
 
 /////////////////////////////////////////////////

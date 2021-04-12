@@ -21,7 +21,7 @@
 #include <memory>
 #include <utility>
 
-#include <ignition/utilities/SuppressWarning.hh>
+#include <ignition/utils/SuppressWarning.hh>
 
 #include "ignition/physics/CompositeData.hh"
 

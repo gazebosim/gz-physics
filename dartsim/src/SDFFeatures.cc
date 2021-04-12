@@ -24,7 +24,9 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
+#include <dart/dynamics/CapsuleShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
+#include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
@@ -37,12 +39,16 @@
 #include <dart/dynamics/WeldJoint.hpp>
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/Mesh.hh>
+#include <ignition/common/MeshManager.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Helpers.hh>
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
+#include <sdf/Capsule.hh>
 #include <sdf/Cylinder.hh>
+#include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
@@ -51,8 +57,11 @@
 #include <sdf/Mesh.hh>
 #include <sdf/Model.hh>
 #include <sdf/Sphere.hh>
+#include <sdf/Types.hh>
 #include <sdf/Visual.hh>
 #include <sdf/World.hh>
+
+#include "CustomMeshShape.hh"
 
 namespace ignition {
 namespace physics {
@@ -273,6 +282,14 @@ static ShapeAndTransform ConstructSphere(
 }
 
 /////////////////////////////////////////////////
+static ShapeAndTransform ConstructCapsule(
+    const ::sdf::Capsule &_capsule)
+{
+  return {std::make_shared<dart::dynamics::CapsuleShape>(
+        _capsule.Radius(), _capsule.Length())};
+}
+
+/////////////////////////////////////////////////
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
@@ -314,8 +331,31 @@ static ShapeAndTransform ConstructGeometry(
 {
   if (_geometry.BoxShape())
     return ConstructBox(*_geometry.BoxShape());
+  else if (_geometry.CapsuleShape())
+  {
+    return ConstructCapsule(*_geometry.CapsuleShape());
+  }
   else if (_geometry.CylinderShape())
     return ConstructCylinder(*_geometry.CylinderShape());
+  else if (_geometry.EllipsoidShape())
+  {
+    // TODO(anyone): Replace this code when Ellipsoid is supported by DART
+    common::MeshManager *meshMgr = common::MeshManager::Instance();
+    std::string ellipsoidMeshName = std::string("ellipsoid_mesh")
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().X())
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().Y())
+      + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().Z());
+    meshMgr->CreateEllipsoid(
+      ellipsoidMeshName,
+      _geometry.EllipsoidShape()->Radii(),
+      6, 12);
+    const ignition::common::Mesh * _mesh =
+      meshMgr->MeshByName(ellipsoidMeshName);
+
+    auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+    auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
+    return {mesh2};
+  }
   else if (_geometry.SphereShape())
     return ConstructSphere(*_geometry.SphereShape());
   else if (_geometry.PlaneShape())
@@ -325,6 +365,26 @@ static ShapeAndTransform ConstructGeometry(
 
   return {nullptr};
 }
+
+}  // namespace
+
+dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
+    const std::string &_worldName, const std::string &_jointModelName,
+    const std::string &_linkRelativeName)
+{
+  if (_linkRelativeName == "world")
+    return nullptr;
+
+  const auto fullName = ::sdf::JoinName(
+      _worldName, ::sdf::JoinName(_jointModelName, _linkRelativeName));
+  auto it = this->linksByName.find(fullName);
+  if (it != this->linksByName.end())
+  {
+    return it->second;
+  }
+  ignerr << "Could not find link " << _linkRelativeName << " in model "
+         << _jointModelName << std::endl;
+  return nullptr;
 }
 
 /////////////////////////////////////////////////
@@ -342,14 +402,14 @@ Identity SDFFeatures::ConstructSdfWorld(
   // information here. For now, we'll just use dartsim's default physics
   // parameters.
 
-  for (std::size_t i=0; i < _sdfWorld.ModelCount(); ++i)
+  for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
     const ::sdf::Model *model = _sdfWorld.ModelByIndex(i);
 
     if (!model)
       continue;
 
-    this->ConstructSdfModel(worldID, *model);
+    this->ConstructSdfNestedModel(worldID, *model);
   }
 
   return worldID;
@@ -357,43 +417,80 @@ Identity SDFFeatures::ConstructSdfWorld(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModel(
-    const Identity &_worldID,
+    const Identity &_parentID,
     const ::sdf::Model &_sdfModel)
 {
-  // check if parent is a world
-  if (!this->worlds.HasEntity(_worldID))
+  return this->ConstructSdfModelImpl(_parentID, _sdfModel);
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfNestedModel(const Identity &_parentID,
+                                              const ::sdf::Model &_sdfModel)
+{
+  return this->ConstructSdfModelImpl(_parentID, _sdfModel);
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfModelImpl(
+    std::size_t _parentID,
+    const ::sdf::Model &_sdfModel)
+{
+  auto worldID = _parentID;
+  std::string modelName = _sdfModel.Name();
+  const bool isNested = this->models.HasEntity(_parentID);
+  // If this is a nested model, find the world assocated with the model
+  if (isNested)
   {
-    ignerr << "Unable to construct model: " << _sdfModel.Name() << ". "
-           << "Parent of model is not a world. " << std::endl;
-    return this->GenerateInvalidId();
+    worldID = this->GetWorldOfModelImpl(_parentID);
+    const auto &skel = this->models.at(_parentID)->model;
+    modelName = ::sdf::JoinName(skel->getName(), _sdfModel.Name());
   }
 
+  dart::dynamics::Frame *parentFrame = this->frames.at(_parentID);
+
   dart::dynamics::SkeletonPtr model =
-      dart::dynamics::Skeleton::create(_sdfModel.Name());
+      dart::dynamics::Skeleton::create(modelName);
 
   dart::dynamics::SimpleFramePtr modelFrame =
       dart::dynamics::SimpleFrame::createShared(
-        dart::dynamics::Frame::World(),
-        _sdfModel.Name()+"_frame",
-        ResolveSdfPose(_sdfModel.SemanticPose()));
+          parentFrame, modelName + "::__model__",
+          ResolveSdfPose(_sdfModel.SemanticPose()));
 
   // Set canonical link name
-  auto [modelID, modelInfo] = this->AddModel( // NOLINT
-      {model, modelFrame, _sdfModel.CanonicalLinkName()}, _worldID);
-
+  // TODO(anyone) This may not work correctly with nested models and will need
+  // to be updated once multiple canonical links can exist in a nested model
+  // https://github.com/ignitionrobotics/ign-physics/issues/209
+  auto [modelID, modelInfo] = [&] {
+    if (isNested)
+    {
+      return this->AddNestedModel(  // NOLINT
+          {model, _sdfModel.Name(), modelFrame, _sdfModel.CanonicalLinkName()},
+          _parentID, worldID);
+    }
+    else
+    {
+      return this->AddModel(  // NOLINT
+          {model, _sdfModel.Name(), modelFrame, _sdfModel.CanonicalLinkName()},
+          worldID);
+    }
+  }();
   model->setMobile(!_sdfModel.Static());
   model->setSelfCollisionCheck(_sdfModel.SelfCollide());
 
   auto modelIdentity =
       this->GenerateIdentity(modelID, this->models.at(modelID));
 
-  // First, construct all links
+  // First, recursively construct nested models
+  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
+  {
+    this->ConstructSdfModelImpl(modelID, *_sdfModel.ModelByIndex(i));
+  }
+  // then, construct all links
   for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
   {
     this->FindOrConstructLink(
           model, modelIdentity, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
   }
-
 
   // Next, join all links that have joints
   for (std::size_t i=0; i < _sdfModel.JointCount(); ++i)
@@ -406,11 +503,76 @@ Identity SDFFeatures::ConstructSdfModel(
       continue;
     }
 
-    dart::dynamics::BodyNode * const parent = this->FindOrConstructLink(
-          model, modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
+    // Resolve parent and child frames to links
+    std::string parentLinkName;
+    ::sdf::Errors errors = sdfJoint->ResolveParentLink(parentLinkName);
+    if (!errors.empty())
+    {
+      ignerr << "The link of the parent frame [" << sdfJoint->ParentLinkName()
+             << "] of joint [" << sdfJoint->Name() << "] in model ["
+             << modelName
+             << "] could not be resolved. The joint will not be constructed\n";
+      for (const auto &error : errors)
+      {
+        ignerr << error << std::endl;
+      }
+      continue;
+    }
+    std::string childLinkName;
+    errors = sdfJoint->ResolveChildLink(childLinkName);
+    if (!errors.empty())
+    {
+      ignerr << "The link of the child frame [" << sdfJoint->ChildLinkName()
+             << "] of joint [" << sdfJoint->Name() << "] in model ["
+             << modelName
+             << "] could not be resolved. The joint will not be constructed\n";
+      for (const auto &error : errors)
+      {
+        ignerr << error << std::endl;
+      }
+      continue;
+    }
 
-    dart::dynamics::BodyNode * const child = this->FindOrConstructLink(
-          model, modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
+    const ::sdf::Link *parentSdfLink = _sdfModel.LinkByName(parentLinkName);
+    if (nullptr == parentSdfLink && parentLinkName != "world")
+    {
+      ignerr << "The link [" << parentLinkName << "] of the parent frame ["
+             << sdfJoint->ParentLinkName() << "] of joint [" << sdfJoint->Name()
+             << "] in model [" << modelName
+             << "] could not be resolved. The joint will not be constructed\n";
+      continue;
+    }
+
+    const ::sdf::Link *childSdfLink = _sdfModel.LinkByName(childLinkName);
+    if (nullptr == childSdfLink)
+    {
+      ignerr << "The link [" << childLinkName << "] of the child frame ["
+             << sdfJoint->ChildLinkName() << "] of joint [" << sdfJoint->Name()
+             << "] in model [" << modelName
+             << "] could not be resolved. The joint will not be constructed\n";
+      continue;
+    }
+
+    auto * const parent =
+      FindBodyNode(this->worlds[worldID]->getName(), modelName, parentLinkName);
+
+    if (nullptr == parent && parentLinkName != "world")
+    {
+      ignerr << "The parent [" << sdfJoint->ParentLinkName() << "] of joint ["
+             << sdfJoint->Name() << "] in model [" << modelName
+             << "] was not found. The joint will not be constructed\n";
+      continue;
+    }
+
+    auto * const child =
+      FindBodyNode(worlds[worldID]->getName(), modelName, childLinkName);
+    if (nullptr == child)
+    {
+      ignerr << "The child of joint [" << sdfJoint->Name() << "] in model ["
+             << modelName
+             << "] was not found. The joint will not be constructed\n";
+      continue;
+    }
 
     this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
   }
@@ -466,7 +628,20 @@ Identity SDFFeatures::ConstructSdfLink(
 
   dart::dynamics::BodyNode * const bn = result.second;
 
-  const std::size_t linkID = this->AddLink(bn);
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  if (worldID == INVALID_ENTITY_ID)
+  {
+    ignerr << "World of model [" << modelInfo.model->getName()
+           << "] could not be found when creating link [" << _sdfLink.Name()
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldID);
+  const std::string fullName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
+  const std::size_t linkID = this->AddLink(bn, fullName, _modelID);
   this->AddJoint(joint);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
@@ -509,11 +684,77 @@ Identity SDFFeatures::ConstructSdfJoint(
     const ::sdf::Joint &_sdfJoint)
 {
   const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
+
+  if (_sdfJoint.ChildLinkName() == "world")
+  {
+    ignerr << "Asked to create a joint with the world as the child in model "
+           << "[" << modelInfo.model->getName() << "]. This is currently not "
+           << "supported\n";
+
+    return this->GenerateInvalidId();
+  }
+
+  // If we get an error here, one of two things has occured:
+  // 1. The Model _sdfJoint came from is invalid, i.e, had errors during
+  //    sdf::Root::Load and ConstructSdfJoint was called regardless of the
+  //    errors. Resolving for the parent link may fail for any number of reasons
+  //    and should be reported.
+  // 2. ConstructSdfJoint is being called with an sdf::Joint that was
+  //    constructed by the user instead of one obtained from an sdf::Model
+  //    object. In this case, the joint does not have a valid frame graph and it
+  //    cannot be used to resolve for the parent link name. However, this can
+  //    still be a valid use case for ign-gazebo that sends DOM objects
+  //    piecemeal with all links and poses resolved.
+  // Since (1) is an error that should be reported and (2) might be a valid use
+  // case, the solution is, when an error is encountered, we first assume (2)
+  // and set the parent and child link names to whatever returned from
+  // sdf::Joint::ParentLinkName() and sdf::Joint::ChildLinkName respectively.
+  // Then we check if a body node with the same relative name exists in DART. If
+  // the link is nested inside a child model, it will be necessary to split the
+  // name to identify the correct parent skeleton. If the corresponding body
+  // node is found, an error will not be printed.
+  //
+  const std::size_t worldID = this->GetWorldOfModelImpl(_modelID);
+  auto & world = this->worlds.at(worldID);
+
+  std::string parentLinkName;
+  const auto resolveParentErrors = _sdfJoint.ResolveParentLink(parentLinkName);
+  if (!resolveParentErrors.empty()) {
+    // It's possible this wasn't created from an sdf::Model object, like
+    // SDFFeatures_TEST.WorldIsParentOrChild. Try using raw ParentLinkName() in
+    // that case
+    parentLinkName = _sdfJoint.ParentLinkName();
+  }
+
   dart::dynamics::BodyNode * const parent =
-      modelInfo.model->getBodyNode(_sdfJoint.ParentLinkName());
+    FindBodyNode(world->getName(), modelInfo.model->getName(), parentLinkName);
+
+  std::string childLinkName;
+  const auto childResolveErrors = _sdfJoint.ResolveChildLink(childLinkName);
+  if (!childResolveErrors.empty()) {
+    childLinkName = _sdfJoint.ChildLinkName();
+  }
 
   dart::dynamics::BodyNode * const child =
-      modelInfo.model->getBodyNode(_sdfJoint.ChildLinkName());
+    FindBodyNode(world->getName(), modelInfo.model->getName(), childLinkName);
+
+  if (nullptr == parent && parentLinkName != "world")
+  {
+    ignerr << "The link of the parent frame [" << _sdfJoint.ParentLinkName()
+           << "] with resolved link name [" << parentLinkName
+           << "] of joint [" << _sdfJoint.Name()
+           << "] could not be resolved. The joint will not be constructed\n";
+    return this->GenerateInvalidId();
+  }
+  if (nullptr == child)
+  {
+    ignerr << "The link of the child frame [" << _sdfJoint.ChildLinkName()
+           << "] with resolved link name [" << childLinkName
+           << "] of joint [" << _sdfJoint.Name() << "] in model ["
+           << modelInfo.model->getName()
+           << "] could not be resolved. The joint will not be constructed\n";
+    return this->GenerateInvalidId();
+  }
 
   return ConstructSdfJoint(modelInfo, _sdfJoint, parent, child);
 }
@@ -537,6 +778,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
+    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+           << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
 
@@ -583,8 +826,36 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
     if (odeFriction->HasElement("fdir1"))
     {
-      math::Vector3d fdir1 = odeFriction->Get<math::Vector3d>("fdir1");
+      auto frictionDirectionElem = odeFriction->GetElement("fdir1");
+      math::Vector3d fdir1 = frictionDirectionElem->Get<math::Vector3d>();
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
+
+      const std::string kExpressedIn = "ignition:expressed_in";
+      if (frictionDirectionElem->HasAttribute(kExpressedIn))
+      {
+        auto skeleton = bn->getSkeleton();
+        auto directionFrameBodyNode = skeleton->getBodyNode(
+          frictionDirectionElem->Get<std::string>(kExpressedIn));
+        if (nullptr != directionFrameBodyNode)
+        {
+          aspect->setFirstFrictionDirectionFrame(directionFrameBodyNode);
+        }
+        else
+        {
+          ignwarn << "Failed to get body node for [" << _collision.Name()
+                  << "], not setting friction direction frame." << std::endl;
+        }
+      }
+    }
+
+    const auto &surfaceBounce = _collision.Element()
+                                    ->GetElement("surface")
+                                    ->GetElement("bounce");
+
+    if (surfaceBounce->HasElement("restitution_coefficient"))
+    {
+      aspect->setRestitutionCoeff(
+          surfaceBounce->Get<double>("restitution_coefficient"));
     }
 #else
     // We are setting the friction coefficient of a collision element
@@ -593,6 +864,15 @@ Identity SDFFeatures::ConstructSdfCollision(
     // TODO(addisu) Assign the coefficient to the shape node when support is
     // added in DART.
     bn->setFrictionCoeff(odeFriction->Get<double>("mu"));
+    const auto &surfaceBounce = _collision.Element()
+                                    ->GetElement("surface")
+                                    ->GetElement("bounce");
+
+    if (surfaceBounce->HasElement("restitution_coefficient"))
+    {
+      bn->setRestitutionCoeff(
+          surfaceBounce->Get<double>("restitution_coefficient"));
+    }
 #endif
     // TODO(anyone) add category_bitmask as well
     const auto bitmaskElement = _collision.Element()
@@ -632,6 +912,8 @@ Identity SDFFeatures::ConstructSdfVisual(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
+    ignerr << "The geometry element of visual [" << _visual.Name() << "] "
+           << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
 

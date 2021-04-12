@@ -37,6 +37,7 @@ struct EntityManagementFeatureList : FeatureList<
   RemoveEntities,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,
+  ConstructEmptyNestedModelFeature,
   ConstructEmptyLinkFeature,
   CollisionFilterMaskFeature
 > { };
@@ -80,6 +81,15 @@ class EntityManagementFeatures :
   public: std::size_t GetModelIndex(const Identity &_modelID) const override;
 
   public: Identity GetWorldOfModel(const Identity &_modelID) const override;
+
+  public: std::size_t GetNestedModelCount(
+    const Identity &_modelID) const override;
+
+  public: Identity GetNestedModel(
+    const Identity &_modelID, std::size_t _modelIndex) const override;
+
+  public: Identity GetNestedModel(
+    const Identity &_modelID, const std::string &_modelName) const override;
 
   public: std::size_t GetLinkCount(const Identity &_modelID) const override;
 
@@ -137,12 +147,21 @@ class EntityManagementFeatures :
 
   public: bool ModelRemoved(const Identity &_modelID) const override;
 
+  public: bool RemoveNestedModelByIndex(
+     const Identity &_modelID, std::size_t _modelIndex) override;
+
+  public: bool RemoveNestedModelByName(
+      const Identity &_modelID, const std::string &_modelName) override;
+
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       const Identity &_engineID, const std::string &_name) override;
 
   public: Identity ConstructEmptyModel(
       const Identity &_worldID, const std::string &_name) override;
+
+  public: Identity ConstructEmptyNestedModel(
+      const Identity &_modelID, const std::string &_name) override;
 
   public: Identity ConstructEmptyLink(
       const Identity &_modelID, const std::string &_name) override;

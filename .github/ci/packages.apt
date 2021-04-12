@@ -1,8 +1,10 @@
 libbenchmark-dev
 libeigen3-dev
 libignition-cmake2-dev
-libignition-common3-dev
+libignition-common4-dev
 libignition-math6-dev
 libignition-math6-eigen3-dev
 libignition-plugin-dev
+libignition-utils1-cli-dev
+libignition-utils1-dev
 libsdformat11-dev

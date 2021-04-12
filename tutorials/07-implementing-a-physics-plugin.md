@@ -7,8 +7,7 @@ This tutorial guides how to develop a simple plugin that implements a
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release. Note that
-the recommended Ignition release is Dome.
+the Ignition Physics corresponding to the desired Ignition release.
 
 ## Write a simple physics plugin
 
@@ -120,16 +119,16 @@ a plugin.
 - The third argument is the `FeatureList`, specifying all the features that this
 plugin provides, i.e. `HelloWorldFeatureList`
 
-### Setup CMakeLists.txt for building (Version: Dome, ign-physics4)
+### Setup CMakeLists.txt for building (Version: Edifice, ign-physics4)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies for Dome release:
+lines for finding `ign-plugin` and `ign-physics` dependencies for Edifice release:
 
 ```cmake
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(IGN_PLUGIN_VER 1)
 find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
-set(IGN_PHYSICS_VER 3)
+set(IGN_PHYSICS_VER 4)
 find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
 ```
 

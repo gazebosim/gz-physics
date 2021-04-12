@@ -33,6 +33,8 @@
 #include <ignition/common/Console.hh>
 #include <ignition/physics/Implements.hh>
 
+#include <sdf/Types.hh>
+
 namespace ignition {
 namespace physics {
 namespace dartsim {
@@ -47,12 +49,6 @@ namespace dartsim {
 ///    create a std::shared_ptr of the struct that wraps the corresponding DART
 ///    shared pointer.
 
-struct ModelInfo
-{
-  dart::dynamics::SkeletonPtr model;
-  dart::dynamics::SimpleFramePtr frame;
-  std::string canonicalLinkName;
-};
 
 struct LinkInfo
 {
@@ -61,6 +57,16 @@ struct LinkInfo
   /// moving the BodyNode to a new skeleton), so we store the Gazebo-specified
   /// name of the Link here.
   std::string name;
+};
+
+struct ModelInfo
+{
+  dart::dynamics::SkeletonPtr model;
+  std::string localName;
+  dart::dynamics::SimpleFramePtr frame;
+  std::string canonicalLinkName;
+  std::vector<std::shared_ptr<LinkInfo>> links {};
+  std::vector<std::size_t> nestedModels = {};
 };
 
 struct JointInfo
@@ -98,14 +104,15 @@ struct EntityStorage
   /// \brief The key represents the parent ID. The value represents a vector of
   /// the objects' IDs. The key of the vector is the object's index within its
   /// container. This is used by World and Model objects, which don't know their
-  /// own indices within their containers.
+  /// own indices within their containers as well as Links, whose indices might
+  /// change when constructing joints.
   ///
   /// The container type for World is Engine.
   /// The container type for Model is World.
+  /// The container type for Link is Model.
   ///
-  /// Links and Joints are contained in Models, but Links and Joints know their
-  /// own indices within their Models, so we do not need to use this field for
-  /// either of those types.
+  /// Joints are contained in Models, but they know their own indices within
+  /// their Models, so we do not need to use this field for Joints
   IndexMap indexInContainerToID;
 
   /// \brief Map from an entity ID to its index within its container
@@ -256,6 +263,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->worlds.idToContainerID[id] = 0;
 
     _world->setName(_name);
+    this->frames[id] = dart::dynamics::Frame::World();
 
     return id;
   }
@@ -270,30 +278,70 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     const dart::simulation::WorldPtr &world = worlds[_worldID];
 
-    const std::size_t indexInWorld = world->getNumSkeletons();
-    this->models.idToIndexInContainer[id] = indexInWorld;
     std::vector<std::size_t> &indexInContainerToID =
         this->models.indexInContainerToID[_worldID];
+    const std::size_t indexInWorld = indexInContainerToID.size();
+    this->models.idToIndexInContainer[id] = indexInWorld;
     indexInContainerToID.push_back(id);
     world->addSkeleton(entry.model);
 
     this->models.idToContainerID[id] = _worldID;
-
-    assert(indexInContainerToID.size() == world->getNumSkeletons());
+    this->frames[id] = _info.frame.get();
 
     return std::forward_as_tuple(id, entry);
   }
 
-  public: inline std::size_t AddLink(DartBodyNode *_bn)
+  public: inline std::tuple<std::size_t, ModelInfo &> AddNestedModel(
+              const ModelInfo &_info, const std::size_t _parentID,
+              const std::size_t _worldID)
   {
     const std::size_t id = this->GetNextEntity();
-    this->links.idToObject[id] = std::make_shared<LinkInfo>();
-    this->links.idToObject[id]->link = _bn;
+    this->models.idToObject[id] = std::make_shared<ModelInfo>(_info);
+    ModelInfo &entry = *this->models.idToObject[id];
+    this->models.objectToID[_info.model] = id;
+
+    const dart::simulation::WorldPtr &world = worlds[_worldID];
+
+    auto parentModelInfo = this->models.at(_parentID);
+    const std::size_t indexInModel =
+        parentModelInfo->nestedModels.size();
+    this->models.idToIndexInContainer[id] = indexInModel;
+    std::vector<std::size_t> &indexInContainerToID =
+        this->models.indexInContainerToID[_parentID];
+    indexInContainerToID.push_back(id);
+    world->addSkeleton(entry.model);
+
+    this->models.idToContainerID[id] = _parentID;
+    this->frames[id] = _info.frame.get();
+    parentModelInfo->nestedModels.push_back(id);
+    return {id, entry};
+  }
+
+  public: inline std::size_t AddLink(DartBodyNode *_bn,
+        const std::string &_fullName, std::size_t _modelID)
+  {
+    const std::size_t id = this->GetNextEntity();
+    auto linkInfo = std::make_shared<LinkInfo>();
+    this->links.idToObject[id] = linkInfo;
+    linkInfo->link = _bn;
     // The name of the BodyNode during creation is assumed to be the
     // Gazebo-specified name.
-    this->links.idToObject[id]->name = _bn->getName();
+    linkInfo->name = _bn->getName();
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
+
+    this->linksByName[_fullName] = _bn;
+    this->models.at(_modelID)->links.push_back(linkInfo);
+
+    // Even though DART keeps track of the index of this BodyNode in the
+    // skeleton, the BodyNode may be moved to another skeleton when a joint is
+    // constructed. Thus, we store the original index here.
+    this->links.idToIndexInContainer[id] = _bn->getIndexInSkeleton();
+    std::vector<std::size_t> &indexInContainerToID =
+        this->links.indexInContainerToID[_modelID];
+    indexInContainerToID.push_back(id);
+
+    this->links.idToContainerID[id] = _modelID;
 
     return id;
   }
@@ -319,12 +367,19 @@ class Base : public Implements3d<FeatureList<Feature>>
     return id;
   }
 
-  public: void RemoveModelImpl(const std::size_t _worldID,
+  public: bool RemoveModelImpl(const std::size_t _worldID,
                                const std::size_t _modelID)
   {
     const auto &world = this->worlds.at(_worldID);
-    auto skel = this->models.at(_modelID)->model;
+    auto modelInfo = this->models.at(_modelID);
+    auto skel = modelInfo->model;
     // Remove the contents of the skeleton from local entity storage containers
+    for (auto &nestedModel : modelInfo->nestedModels)
+    {
+      this->RemoveModelImpl(_worldID, nestedModel);
+    }
+    modelInfo->nestedModels.clear();
+
     for (auto &jt : skel->getJoints())
     {
       this->joints.RemoveEntity(jt);
@@ -336,9 +391,44 @@ class Base : public Implements3d<FeatureList<Feature>>
         this->shapes.RemoveEntity(sn);
       }
       this->links.RemoveEntity(bn);
+      this->linksByName.erase(::sdf::JoinName(
+          world->getName(), ::sdf::JoinName(skel->getName(), bn->getName())));
+    }
+
+    // If this is a nested model, remove an entry from the parent models
+    // "nestedModels" vector
+    auto parentID = this->models.idToContainerID.at(_modelID);
+    if (parentID != _worldID)
+    {
+      auto parentModelInfo = this->models.at(parentID);
+      const std::size_t modelIndex =
+          this->models.idToIndexInContainer.at(_modelID);
+      if (modelIndex >= parentModelInfo->nestedModels.size())
+        return false;
+      parentModelInfo->nestedModels.erase(
+          parentModelInfo->nestedModels.begin() + modelIndex);
     }
     this->models.RemoveEntity(skel);
     world->removeSkeleton(skel);
+    return true;
+  }
+
+  public: inline std::size_t GetWorldOfModelImpl(
+              const std::size_t &_modelID) const
+  {
+    if (this->models.HasEntity(_modelID))
+    {
+      auto parentIt = this->models.idToContainerID.find(_modelID);
+      if (parentIt != this->models.idToContainerID.end())
+      {
+        if (this->worlds.HasEntity(parentIt->second))
+        {
+          return parentIt->second;
+        }
+        return this->GetWorldOfModelImpl(parentIt->second);
+      }
+    }
+    return this->GenerateInvalidId();
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
@@ -346,7 +436,12 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
-  public: std::unordered_map<std::size_t, const dart::dynamics::Frame*> frames;
+  public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
+
+  /// \brief Map from the fully qualified link name (including the world name)
+  /// to the BodyNode object. This is useful for keeping track of BodyNodes even
+  /// as they move to other skeletons.
+  public: std::unordered_map<std::string, DartBodyNode*> linksByName;
 };
 
 }

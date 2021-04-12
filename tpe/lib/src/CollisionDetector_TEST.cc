@@ -241,3 +241,43 @@ TEST(CollisionDetector, CheckCollisions)
   contacts = cd.CheckCollisions(entities, true);
   EXPECT_EQ(1u, contacts.size());
 }
+
+/////////////////////////////////////////////////
+TEST(CollisionDetector, CheckStaticCollisionFiltering)
+{
+  // set up entities for testing collision filtering between static objects
+
+  // model A
+  std::shared_ptr<Model> modelA(new Model);
+  modelA->SetStatic(true);
+  Entity &linkAEnt = modelA->AddLink();
+  Link *linkA = static_cast<Link *>(&linkAEnt);
+  Entity &collisionAEnt = linkA->AddCollision();
+  Collision *collisionA = static_cast<Collision *>(&collisionAEnt);
+  BoxShape boxShapeA;
+  boxShapeA.SetSize(ignition::math::Vector3d(4, 4, 4));
+  collisionA->SetShape(boxShapeA);
+
+  // model B
+  std::shared_ptr<Model> modelB(new Model);
+  modelB->SetStatic(true);
+  Entity &linkBEnt = modelB->AddLink();
+  Link *linkB = static_cast<Link *>(&linkBEnt);
+  Entity &collisionBEnt = linkB->AddCollision();
+  Collision *collisionB = static_cast<Collision *>(&collisionBEnt);
+  BoxShape boxShapeB;
+  boxShapeB.SetSize(ignition::math::Vector3d(4, 4, 4));
+  collisionB->SetShape(boxShapeB);
+
+  // check collisions
+  CollisionDetector cd;
+  std::map<std::size_t, std::shared_ptr<Entity>> entities;
+  // verify that no contacts are reported if the models are static
+  modelA->SetPose(math::Pose3d(1, 1, 1, 0, 0, 0));
+  modelB->SetPose(math::Pose3d(0, 0, 0, 0, 0, 0));
+  entities[modelA->GetId()] = modelA;
+  entities[modelB->GetId()] = modelB;
+
+  std::vector<Contact> contacts = cd.CheckCollisions(entities);
+  EXPECT_TRUE(contacts.empty());
+}

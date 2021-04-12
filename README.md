@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/master/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
-Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-bionic-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-master-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-master-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/main/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
+Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-main-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-main-bionic-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-main-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-main-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Ignition Physics, a component of [Ignition
@@ -27,10 +27,6 @@ designed to support simulation and rapid development of robot applications.
 [Install](#install)
 
 [Usage](#usage)
-
-[Documentation](#documentation)
-
-[Testing](#testing)
 
 [Folder Structure](#folder-structure)
 
@@ -62,21 +58,23 @@ Ignition Physics provides the following functionality:
 * Plugin interface for loading physics engines with requested features
   at runtime.
 * Features for common aspects of rigid body dynamic simulation
-    - Construct model from SDFormat file.
-    - Collision shapes (such as box, sphere, cylinder, mesh, heightmap).
+    - Construct model from [SDFormat](http://sdformat.org/) file.
+    - Collision shapes (such as box, sphere, cylinder, capsule, ellipsoid, mesh, heightmap).
     - Joint types (such as revolute, prismatic, fixed, ball, screw, universal).
     - Step simulation, get/set state, apply inputs.
 * Reference implementation of physics plugin using
   [dartsim](http://dartsim.github.io/).
-* CompositeData structures for efficiently using native types in API.
+* A custom physics engine focused on fast kinematics of large environments, the
+  [Trivial Physics Engine](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629).
+* `CompositeData` structures for efficiently using native types in API.
 
 # Install
 
-See the [installation tutorial](https://ignitionrobotics.org/api/physics/3.0/installation.html).
+See the [installation tutorial](https://ignitionrobotics.org/api/physics/4.0/installation.html).
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/master/examples/).
+Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/main/examples/).
 
 # Documentation
 
@@ -93,7 +91,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b master
+    git clone https://github.com/ignitionrobotics/ign-physics -b main
     ```
 
 3. Configure and build the documentation.
@@ -145,19 +143,21 @@ ign-physics
 │    ├── plugins              Plugins used in tests.
 │    ├── regression           Regression tests.
 │    └── static_assert        Tests involving compilation failures.
+├── tpe
+│    ├── lib                  Implementation of TPE engine.
+│    └── plugin               Files for TPE plugin component.
 ├── tutorials                 Tutorials, written in markdown.
 ├── Changelog.md              Changelog.
 └── CMakeLists.txt            CMake build script.
 ```
 # Contributing
 
-Please see
-[CONTRIBUTING.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CONTRIBUTING.md).
+Please see the [contribution guide](https://ignitionrobotics.org/docs/all/contributing).
 
 # Code of Conduct
 
 Please see
-[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/master/CODE_OF_CONDUCT.md).
+[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/main/CODE_OF_CONDUCT.md).
 
 # Versioning
 
@@ -165,4 +165,4 @@ This library uses [Semantic Versioning](https://semver.org/). Additionally, this
 
 # License
 
-This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/master/LICENSE) file.
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/main/LICENSE) file.
