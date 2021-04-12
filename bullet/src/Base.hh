@@ -26,6 +26,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <map>
 
 #include <ignition/common/Console.hh>
 #include <ignition/physics/Implements.hh>
