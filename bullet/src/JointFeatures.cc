@@ -308,7 +308,7 @@ void JointFeatures::SetJointForce(
         {
           // TO-DO (blast545): Find how to address limitation caused by
           // https://pybullet.org/Bullet/BulletFull/btHingeConstraint_8cpp_source.html#l00318
-          // const double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
+          // double thresholdValue = std::max(std::min(_value, 0.1), -0.1);
 
           // z-axis of constraint frame
           btVector3 hingeAxisLocalA =
