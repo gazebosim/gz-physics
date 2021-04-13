@@ -35,7 +35,7 @@ pipelines:
             libdart6-dev
             libdart6-utils-urdf-dev
             libbenchmark-dev
-            libsdformat11-dev
+            libsdformat12-dev
           # libsdformat (uncomment if a specific branch is needed)
           #- apt install -y
           #  libtinyxml-dev
