@@ -43,11 +43,11 @@ class EntityManagementFeatures :
 
   // ----- Remove entities -----
   public: bool RemoveModelByIndex(
-      const Identity &/* _worldID */, std::size_t _modelIndex) override;
+      const Identity &_worldID, std::size_t _modelIndex) override;
 
   public: bool RemoveModelByName(
-      const Identity &/* _worldID */,
-      const std::string &/* _modelName */) override;
+      const Identity &_worldID,
+      const std::string &_modelName) override;
 
   public: bool RemoveModel(const Identity &_modelID) override;
 
@@ -55,7 +55,7 @@ class EntityManagementFeatures :
 
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
-      const Identity &/*_engineID*/, const std::string &/* _name */) override;
+      const Identity &_engineID, const std::string & _name) override;
 };
 
 }  // namespace bullet
