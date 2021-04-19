@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,7 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
-/// \brief The structs WorldInfo are used
-/// for three reasons:
+/// \brief The Info structs are used for three reasons:
 /// 1) Holding extra information such as the name
 ///    that will be different from the underlying engine
 /// 2) Wrap shared pointers to Bullet entities to use as parameters to
