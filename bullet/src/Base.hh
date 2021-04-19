@@ -64,6 +64,7 @@ struct ModelInfo
 {
   std::string name;
   Identity world;
+  // cppcheck-suppress unusedStructMember
   bool fixed;
   math::Pose3d pose;
   std::vector<std::size_t> links = {};
@@ -75,6 +76,7 @@ struct LinkInfo
   Identity model;
   math::Pose3d pose;
   math::Pose3d inertialPose;
+  // cppcheck-suppress unusedStructMember
   double mass;
   btVector3 inertia;
   std::shared_ptr<btDefaultMotionState> motionState;
@@ -89,6 +91,7 @@ struct CollisionInfo
   Identity link;
   Identity model;
   math::Pose3d pose;
+  // cppcheck-suppress unusedStructMember
   bool isMesh;
 };
 
@@ -97,8 +100,11 @@ struct JointInfo
   std::string name;
   // Base class for all the constraint objects,
   std::shared_ptr<btTypedConstraint> joint;
+  // cppcheck-suppress unusedStructMember
   std::size_t childLinkId;
+  // cppcheck-suppress unusedStructMember
   std::size_t parentLinkId;
+  // cppcheck-suppress unusedStructMember
   int constraintType;
   ignition::math::Vector3d axis;
 };
@@ -150,10 +156,10 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline std::size_t idToIndexInContainer(std::size_t _id) const
   {
-    std::size_t index = 0;
     auto it = this->childIdToParentId.find(_id);
     if (it != this->childIdToParentId.end())
     {
+      std::size_t index = 0;
       for (const auto &pair : this->childIdToParentId)
       {
         if (pair.first == _id && pair.second == it->second)
