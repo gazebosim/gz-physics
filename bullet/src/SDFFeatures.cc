@@ -155,9 +155,9 @@ Identity SDFFeatures::ConstructSdfLink(
     convertVec(ignition::math::eigen3::convert(diagonalMoments));
 
   const auto &modelInfo = this->models.at(_modelID);
-  math::Pose3d base_pose = modelInfo->pose;
+  math::Pose3d basePose = modelInfo->pose;
   const auto poseIsometry =
-    ignition::math::eigen3::convert(base_pose * pose * inertialPose);
+    ignition::math::eigen3::convert(basePose * pose * inertialPose);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
@@ -354,13 +354,16 @@ Identity SDFFeatures::ConstructSdfJoint(
   {
     // Resolve Axis XYZ. If it fails, use xyz function instead
     math::Vector3d resolvedAxis;
-    ::sdf::Errors errors = _sdfJoint.Axis(0)->ResolveXyz(resolvedAxis);
-    if (!errors.empty())
-      resolvedAxis = _sdfJoint.Axis(0)->Xyz();
-    axis =
-      (this->links.at(childId)->pose *
-       ResolveSdfPose(_sdfJoint.SemanticPose())).Rot()
-       * resolvedAxis;
+    if(_sdfJoint.Axis(0))
+    {
+      ::sdf::Errors errors = _sdfJoint.Axis(0)->ResolveXyz(resolvedAxis);
+      if (!errors.empty())
+        resolvedAxis = _sdfJoint.Axis(0)->Xyz();
+      axis =
+        (this->links.at(childId)->pose *
+         ResolveSdfPose(_sdfJoint.SemanticPose())).Rot()
+         * resolvedAxis;
+    }
   }
 
   // Local variables used to compute pivots and axes in body-fixed frames
