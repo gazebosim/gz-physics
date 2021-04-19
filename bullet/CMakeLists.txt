@@ -41,7 +41,7 @@ INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSIC
 
 # Testing
 ign_build_tests(
-  TYPE UNIT
+  TYPE UNIT_bullet
   SOURCES ${test_sources}
   LIB_DEPS
     ${features}
