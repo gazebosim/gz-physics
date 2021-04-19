@@ -47,71 +47,62 @@ class JointFeatures :
 {
   // ----- Get Basic Joint State -----
   public: double GetJointPosition(
-      const Identity &_id, const std::size_t _dof) const;
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointVelocity(
-      const Identity &_id, const std::size_t _dof) const;
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointAcceleration(
-      const Identity &_id, const std::size_t _dof) const;
+      const Identity &_id, const std::size_t _dof) const override;
 
   public: double GetJointForce(
-      const Identity &_id, const std::size_t _dof) const;
+      const Identity &_id, const std::size_t _dof) const override;
 
-  public: Pose3d GetJointTransform(const Identity &_id) const;
+  public: Pose3d GetJointTransform(const Identity &_id) const override;
 
 
   // ----- Set Basic Joint State -----
   public: void SetJointPosition(
       const Identity &_id, const std::size_t _dof,
-      const double _value);
+      const double _value) override;
 
   public: void SetJointVelocity(
       const Identity &_id, const std::size_t _dof,
-      const double _value);
+      const double _value) override;
 
   public: void SetJointAcceleration(
       const Identity &_id, const std::size_t _dof,
-      const double _value);
+      const double _value) override;
 
   public: void SetJointForce(
       const Identity &_id, const std::size_t _dof,
-      const double _value);
-
+      const double _value) override;
 
   // ----- Get Basic Joint Properties -----
   public: std::size_t GetJointDegreesOfFreedom(
-      const Identity &_id) const;
+      const Identity &_id) const override;
 
   public: Pose3d GetJointTransformFromParent(
-      const Identity &_id) const;
+      const Identity &_id) const override;
 
   public: Pose3d GetJointTransformToChild(
-      const Identity &_id) const;
-
-
-  // ----- Set Basic Joint Properties -----
-  public: void SetJointTransformFromParent(
-      const Identity &_id, const Pose3d &_pose);
-
-  public: void SetJointTransformToChild(
-      const Identity &_id, const Pose3d &_pose);
+      const Identity &_id) const override;
 
   // ----- Fixed Joint -----
   public: Identity CastToFixedJoint(
-      const Identity &_jointID) const;
+      const Identity &_jointID) const override;
 
   // ----- Revolute Joint -----
   public: Identity CastToRevoluteJoint(
-      const Identity &_jointID) const;
+      const Identity &_jointID) const override;
 
   public: AngularVector3d GetRevoluteJointAxis(
-      const Identity &_jointID) const;
+      const Identity &_jointID) const override;
 
   // ----- Joint Commands -----
   public: void SetJointVelocityCommand(
       const Identity &_id, const std::size_t _dof,
-      const double _value);
+      const double _value) override;
 };
 
 }  // namespace bullet
