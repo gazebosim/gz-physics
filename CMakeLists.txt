@@ -13,8 +13,7 @@ find_package(ignition-cmake2 2.1.0 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project(VERSION_SUFFIX pre1)
-
+ign_configure_project(VERSION_SUFFIX)
 
 #============================================================================
 # Set project-specific options
@@ -68,6 +67,7 @@ ign_find_package(sdformat11
 # Find dartsim for the dartsim plugin wrapper
 ign_find_package(DART
   COMPONENTS
+    collision-bullet
     collision-ode
     utils
     utils-urdf

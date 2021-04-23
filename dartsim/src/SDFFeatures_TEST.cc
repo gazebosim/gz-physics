@@ -545,7 +545,6 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 
   // check top level model
   EXPECT_EQ("parent_model", world->GetModel(0)->GetName());
-  EXPECT_EQ("nested_model", world->GetModel(1)->GetName());
   auto parentModel = world->GetModel("parent_model");
   ASSERT_NE(nullptr, parentModel);
 
@@ -860,6 +859,27 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 
   EXPECT_TRUE(ignition::physics::test::Equal(
       expPose, link1->getWorldTransform(), 1e-5));
+}
+
+/////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, Shapes)
+{
+  auto world = this->LoadWorld(TEST_WORLD_DIR"/shapes.sdf");
+  ASSERT_NE(nullptr, world);
+
+  auto dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  ASSERT_EQ(5u, dartWorld->getNumSkeletons());
+
+  int count{0};
+  for (auto name : {"box", "cylinder", "sphere", "capsule", "ellipsoid"})
+  {
+    const auto skeleton = dartWorld->getSkeleton(count++);
+    ASSERT_NE(nullptr, skeleton);
+    EXPECT_EQ(name, skeleton->getName());
+    ASSERT_EQ(1u, skeleton->getNumBodyNodes());
+  }
 }
 
 int main(int argc, char *argv[])

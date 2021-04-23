@@ -7,13 +7,24 @@ Ignition Physics.
 
 From the root of the `ign-physics` repository, do the following to build the example:
 
-~~~
+```bash
 cd examples/hello_world_plugin
 mkdir build
 cd build
 cmake ..
+```
+
+### Ubuntu Or MacOS
+
+```bash
 make
-~~~
+```
+
+### Windows
+
+```bash
+cmake --build . --config Release
+```
 
 This will generate the `HelloWorldPlugin` library under `build`.
 The exact name of the library file depends on the operating system
@@ -25,4 +36,3 @@ and `HelloWorldPlugin.dll` on Windows.
 The resulting plugin can be loaded by any plugin loader that requests the
 features implemented by the plugin. See an example loader at
 `examples/hello_world_loader`.
-

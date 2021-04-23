@@ -59,6 +59,26 @@ namespace ignition
       return this->template Interface<RemoveModelFromWorld>()
               ->ModelRemoved(this->identity);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool
+    RemoveNestedModelFromModel::Model<PolicyT, FeaturesT>::RemoveNestedModel(
+        const std::size_t _index)
+    {
+      return this->template Interface<RemoveNestedModelFromModel>()
+          ->RemoveNestedModelByIndex(this->identity, _index);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool
+    RemoveNestedModelFromModel::Model<PolicyT, FeaturesT>::RemoveNestedModel(
+        const std::string &_name)
+    {
+      return this->template Interface<RemoveNestedModelFromModel>()
+                          ->RemoveNestedModelByName(this->identity, _name);
+    }
   }
 }
 

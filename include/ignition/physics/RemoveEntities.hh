@@ -76,8 +76,42 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature removes a nested Model entity from the
+    /// specified parent Model.
+    class IGNITION_PHYSICS_VISIBLE RemoveNestedModelFromModel
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Model : public virtual Feature::Model<PolicyT, FeaturesT>
+      {
+        /// \brief Remove a Model that is nested within this Model.
+        /// \param[in] _index
+        ///   Index of the model within this world.
+        /// \return True if the model was found and removed.
+        public: bool RemoveNestedModel(std::size_t _index);
+
+        /// \brief Remove a Model that is nested within this Model.
+        /// \param[in] _name
+        ///   Name of the model within this world.
+        /// \return True if the model was found and removed.
+        public: bool RemoveNestedModel(const std::string &_name);
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual bool RemoveNestedModelByIndex(
+            const Identity &_modelID, std::size_t _modelIndex) = 0;
+
+        public: virtual bool RemoveNestedModelByName(
+            const Identity &_modelID, const std::string &_modelName) = 0;
+      };
+    };
+
     using RemoveEntities = FeatureList<
-      RemoveModelFromWorld
+      RemoveModelFromWorld,
+      RemoveNestedModelFromModel
     >;
   }
 }

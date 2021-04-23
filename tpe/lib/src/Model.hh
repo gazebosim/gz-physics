@@ -48,9 +48,17 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \return Newly created Link
   public: Entity &AddLink();
 
+  /// \brief Get the number of links in the model
+  /// \return Number of links in the model
+  public: std::size_t GetLinkCount() const;
+
   /// \brief Add a nested model
   /// \return Newly created nested model
   public: Entity &AddModel();
+
+  /// \brief Get the number of nested models in the model
+  /// \return Number of nested models in the model
+  public: std::size_t GetModelCount() const;
 
   /// \brief Set the canonical link of model
   public: void SetCanonicalLink(
@@ -85,6 +93,21 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
     const math::Vector3d _linearVelocity,
     const math::Vector3d _angularVelocity);
 
+  /// \brief Removes a child entity (either a link or model) from the
+  /// appropriate child entity containers
+  /// \param[in] _ent Pointer to entity
+  /// \return True if the entity was found and removed
+  public: bool RemoveChildEntityBasedOnType(const Entity *_ent);
+  /// \brief Remove a child entity by id
+  /// \param[in] _id Id of child entity to remove
+  /// \return True if the entity was found and removed
+  public: bool RemoveChildById(std::size_t _id) override;
+
+  /// \brief Remove a child entity by name
+  /// \param[in] _name Name of child entity to remove
+  /// \return True if child entity was removed, false otherwise
+  public: bool RemoveChildByName(const std::string &_name) override;
+
   IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of model
   protected: math::Vector3d linearVelocity;
@@ -92,6 +115,14 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \brief angular velocity of model
   protected: math::Vector3d angularVelocity;
   IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+
+  /// \brief Remove a model entity by id
+  /// \param[in] _id Id of model entity to remove
+  private: bool RemoveModelById(std::size_t _id);
+
+  /// \brief Remove a link entity by id
+  /// \param[in] _id Id of link entity to remove
+  private: bool RemoveLinkById(std::size_t _id);
 
   /// \brief Pointer to private data class
   private: ModelPrivate *dataPtr = nullptr;

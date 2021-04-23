@@ -34,6 +34,12 @@ class ignition::physics::tpelib::ModelPrivate
 
   /// \brief First inserted link id;
   public: std::size_t firstLinkId = kNullEntityId;
+
+  /// \brief Links in the model
+  public: std::vector<std::size_t> linkIds;
+
+  /// \brief Nested models
+  public: std::vector<std::size_t> nestedModelIds;
 };
 
 using namespace ignition;
@@ -64,15 +70,22 @@ Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
 
-  if (this->GetChildren().empty())
+  if (this->GetLinkCount() == 0u)
     this->dataPtr->firstLinkId = linkId;
 
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
+  this->dataPtr->linkIds.push_back(linkId);
 
   it->second->SetParent(this);
   this->ChildrenChanged();
   return *it->second.get();
+}
+
+//////////////////////////////////////////////////
+std::size_t Model::GetLinkCount() const
+{
+  return this->dataPtr->linkIds.size();
 }
 
 //////////////////////////////////////////////////
@@ -81,10 +94,17 @@ Entity &Model::AddModel()
   std::size_t modelId = Entity::GetNextId();
   const auto[it, success]  = this->GetChildren().insert(
       {modelId, std::make_shared<Model>(modelId)});
+  this->dataPtr->nestedModelIds.push_back(modelId);
 
   it->second->SetParent(this);
   this->ChildrenChanged();
   return *it->second.get();
+}
+
+//////////////////////////////////////////////////
+std::size_t Model::GetModelCount() const
+{
+  return this->dataPtr->nestedModelIds.size();
 }
 
 //////////////////////////////////////////////////
@@ -169,4 +189,63 @@ void Model::UpdatePose(
     currentPose.Pos() + _linearVelocity * _timeStep,
     currentPose.Rot().Integrate(_angularVelocity, _timeStep));
   this->SetPose(nextPose);
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveModelById(std::size_t _id)
+{
+  auto it = std::find(this->dataPtr->nestedModelIds.begin(),
+                      this->dataPtr->nestedModelIds.end(), _id);
+  if (it != this->dataPtr->nestedModelIds.end())
+  {
+    this->dataPtr->nestedModelIds.erase(it);
+    return true;
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveLinkById(std::size_t _id)
+{
+  auto it = std::find(this->dataPtr->linkIds.begin(),
+                      this->dataPtr->linkIds.end(), _id);
+  if (it != this->dataPtr->linkIds.end())
+  {
+    this->dataPtr->linkIds.erase(it);
+    return true;
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveChildById(std::size_t _id)
+{
+  Entity &ent = this->GetChildById(_id);
+  return this->RemoveChildEntityBasedOnType(&ent);
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveChildByName(const std::string &_name)
+{
+  Entity &ent = this->GetChildByName(_name);
+  return this->RemoveChildEntityBasedOnType(&ent);
+}
+
+//////////////////////////////////////////////////
+bool Model::RemoveChildEntityBasedOnType(const Entity *_ent)
+{
+  if (nullptr == _ent)
+    return false;
+
+  bool result = true;
+  if (nullptr != dynamic_cast<const Model *>(_ent))
+  {
+    result &= this->RemoveModelById(_ent->GetId());
+  }
+  else
+  {
+    result &= this->RemoveLinkById(_ent->GetId());
+  }
+  result &= Entity::RemoveChildById(_ent->GetId());
+  return result;
 }
