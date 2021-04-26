@@ -32,7 +32,7 @@ namespace ignition
     /// \brief Struct which contains information about a data type within the
     /// CompositeData.
     /// \private
-    struct IGNITION_PHYSICS_VISIBLE CompositeData::DataEntry
+    struct IGNITION_PHYSICS_HIDDEN CompositeData::DataEntry
     {
       /// \brief Default constructor
       public: DataEntry();

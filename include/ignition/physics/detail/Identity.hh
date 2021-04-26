@@ -37,7 +37,7 @@ namespace ignition
       /////////////////////////////////////////////////
       /// \brief This base class is used by plugin implementations to generate
       /// identities for entities.
-      class IGNITION_PHYSICS_VISIBLE Implementation
+      class IGNITION_PHYSICS_HIDDEN Implementation
       {
         /// \brief An implementation class should call this function whenever it
         /// wants to generate an identity for an Entity.
@@ -70,7 +70,7 @@ namespace ignition
     /// separate class in order to have tight control over how Entities can be
     /// instantiated; in particular, an Identity can only be created by a
     /// plugin implementation, so users cannot create invalid Entities.
-    class IGNITION_PHYSICS_VISIBLE Identity
+    class IGNITION_PHYSICS_HIDDEN Identity
     {
       /// \brief Convert to true if this Identity refers to a valid entity (i.e.
       /// its id field is not INVALID_ENTITY_ID).
