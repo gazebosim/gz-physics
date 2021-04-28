@@ -173,7 +173,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
 
   /// \brief Get number of children
   /// \return Map of child id's to child entities
-  protected: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren()
+  public: std::map<std::size_t, std::shared_ptr<Entity>> &GetChildren()
       const;
 
   /// \brief Update the entity bounding box
