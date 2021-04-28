@@ -18,6 +18,8 @@
 #include "CustomHeightmapShape.hh"
 
 #include <vector>
+#include <ignition/common/Console.hh>
+#include <ignition/common/ImageHeightmap.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
 namespace ignition {
@@ -26,7 +28,7 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 CustomHeightmapShape::CustomHeightmapShape(
-    common::HeightmapData &_input,
+    const common::HeightmapData &_input,
     const Eigen::Vector3d &_size,
     int _subSampling)
   : dart::dynamics::HeightmapShape<float>()
@@ -45,8 +47,22 @@ CustomHeightmapShape::CustomHeightmapShape(
 
   auto sizeIgn = ignition::math::eigen3::convert(_size);
 
+  // We need to make a copy here in order to use the non-const FillHeightMap
+  // function
+  common::ImageHeightmap copyData;
+  try
+  {
+    const auto &imageData = dynamic_cast<const common::ImageHeightmap &>(_input);
+    copyData.Load(imageData.Filename());
+  }
+  catch(const std::bad_cast &)
+  {
+    ignerr << "Only image heightmaps are supported at the moment." << std::endl;
+    return;
+  }
+
   std::vector<float> heightsFloat;
-  _input.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,
+  copyData.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,
       heightsFloat);
 
   this->setHeightField(vertSize, vertSize, heightsFloat);

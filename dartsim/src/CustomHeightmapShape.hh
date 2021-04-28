@@ -37,7 +37,7 @@ class CustomHeightmapShape : public dart::dynamics::HeightmapShape<float>
   /// \param[in] _size Heightmap size in meters.
   /// \param[in] _subSampling How much to subsample.
   public: CustomHeightmapShape(
-      common::HeightmapData &_input,
+      const common::HeightmapData &_input,
       const Eigen::Vector3d &_size,
       const int _subSampling);
 };

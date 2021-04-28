@@ -175,7 +175,7 @@ class ShapeFeatures :
   public: Identity AttachHeightmapShape(
       const Identity &_linkID,
       const std::string &_name,
-      ignition::common::HeightmapData &_heightmapData,
+      const common::HeightmapData &_heightmapData,
       const Pose3d &_pose,
       const LinearVector3d &_size,
       int _subSampling) override;

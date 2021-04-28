@@ -82,7 +82,7 @@ namespace heightmap
       /// \param[in] _subSampling Increase sampling to improve resolution.
       public: ShapePtrType AttachHeightmapShape(
           const std::string &_name,
-          ignition::common::HeightmapData &_heightmapData,
+          const common::HeightmapData &_heightmapData,
           const PoseType &_pose,
           const Dimensions &_size,
           int _subSampling = 1);
@@ -100,7 +100,7 @@ namespace heightmap
       public: virtual Identity AttachHeightmapShape(
           const Identity &_linkID,
           const std::string &_name,
-          ignition::common::HeightmapData &_heightmapData,
+          const common::HeightmapData &_heightmapData,
           const PoseType &_pose,
           const Dimensions &_size,
           int _subSampling) = 0;
