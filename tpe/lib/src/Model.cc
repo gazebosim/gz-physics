@@ -65,7 +65,10 @@ Entity &Model::AddLink()
   std::size_t linkId = Entity::GetNextId();
 
   if (this->GetChildren().empty())
+  {
     this->dataPtr->firstLinkId = linkId;
+    this->dataPtr->canonicalLinkId = linkId;
+  }
 
   const auto[it, success]  = this->GetChildren().insert(
       {linkId, std::make_shared<Link>(linkId)});
@@ -127,7 +130,7 @@ Entity &Model::GetCanonicalLink()
 }
 
 //////////////////////////////////////////////////
-void Model::SetLinearVelocity(const math::Vector3d _velocity)
+void Model::SetLinearVelocity(const math::Vector3d &_velocity)
 {
   this->linearVelocity = _velocity;
 }
@@ -140,7 +143,7 @@ math::Vector3d Model::GetLinearVelocity() const
 }
 
 //////////////////////////////////////////////////
-void Model::SetAngularVelocity(const math::Vector3d _velocity)
+void Model::SetAngularVelocity(const math::Vector3d &_velocity)
 {
   this->angularVelocity = _velocity;
 }
@@ -153,20 +156,17 @@ math::Vector3d Model::GetAngularVelocity() const
 }
 
 //////////////////////////////////////////////////
-void Model::UpdatePose(
-  const double _timeStep,
-  const math::Vector3d _linearVelocity,
-  const math::Vector3d _angularVelocity)
+void Model::UpdatePose(double _timeStep)
 {
   IGN_PROFILE("tpelib::Model::UpdatePose");
 
-  if (_linearVelocity == math::Vector3d::Zero &&
-      _angularVelocity == math::Vector3d::Zero)
+  if (this->linearVelocity == math::Vector3d::Zero &&
+      this->angularVelocity == math::Vector3d::Zero)
     return;
 
   math::Pose3d currentPose = this->GetPose();
   math::Pose3d nextPose(
-    currentPose.Pos() + _linearVelocity * _timeStep,
-    currentPose.Rot().Integrate(_angularVelocity, _timeStep));
+    currentPose.Pos() + this->linearVelocity * _timeStep,
+    currentPose.Rot().Integrate(this->angularVelocity, _timeStep));
   this->SetPose(nextPose);
 }
