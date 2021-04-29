@@ -27,9 +27,9 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
-using SimulationFeatureList = FeatureList<
+struct SimulationFeatureList : ignition::physics::FeatureList<
   ForwardStep
->;
+> { };
 
 class SimulationFeatures :
     public virtual Base,

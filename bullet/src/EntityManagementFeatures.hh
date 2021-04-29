@@ -31,10 +31,10 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
-using EntityManagementFeatureList = FeatureList<
+struct EntityManagementFeatureList : ignition::physics::FeatureList<
   RemoveEntities,
   ConstructEmptyWorldFeature
->;
+> { };
 
 class EntityManagementFeatures :
     public virtual Base,

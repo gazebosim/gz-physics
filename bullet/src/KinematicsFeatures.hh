@@ -27,9 +27,9 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
-using KinematicsFeatureList = FeatureList<
+struct KinematicsFeatureList : ignition::physics::FeatureList<
   LinkFrameSemantics
->;
+> { };
 
 class KinematicsFeatures :
     public virtual Base,

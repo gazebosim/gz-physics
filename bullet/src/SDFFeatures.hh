@@ -34,13 +34,13 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
-using SDFFeatureList = FeatureList<
+struct SDFFeatureList : ignition::physics::FeatureList<
   sdf::ConstructSdfJoint,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfModel,
   sdf::ConstructSdfCollision,
   sdf::ConstructSdfWorld
->;
+> { };
 
 class SDFFeatures :
     public virtual EntityManagementFeatures,

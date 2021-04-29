@@ -27,9 +27,9 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
-using ShapeFeatureList = FeatureList<
+struct ShapeFeatureList : ignition::physics::FeatureList<
   mesh::AttachMeshShapeFeature
->;
+> { };
 
 class ShapeFeatures :
     public virtual Base,

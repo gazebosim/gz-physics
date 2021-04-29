@@ -26,10 +26,10 @@ namespace ignition {
 namespace physics {
 namespace bullet {
 
-using FreeGroupFeatureList = FeatureList<
+struct FreeGroupFeatureList : ignition::physics::FeatureList<
   FindFreeGroupFeature,
   SetFreeGroupWorldPose
->;
+> { };
 
 class FreeGroupFeatures
     : public virtual Base,
