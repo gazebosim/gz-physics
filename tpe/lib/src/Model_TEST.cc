@@ -47,7 +47,7 @@ TEST(Model, BasicAPI)
   model.SetAngularVelocity(math::Vector3d(1.0, 1.0, 1.0));
   EXPECT_EQ(math::Vector3d(1.0, 1.0, 1.0), model.GetAngularVelocity());
 
-  model.UpdatePose(0.1, model.GetLinearVelocity(), model.GetAngularVelocity());
+  model.UpdatePose(0.1);
   EXPECT_EQ(model.GetPose(), model.GetWorldPose());
 
   EXPECT_FALSE(model.GetStatic());
@@ -66,8 +66,7 @@ TEST(Model, BasicAPI)
   math::Pose3d expectedPose(
     originalPose.Pos() + math::Vector3d(0.1, 0.1, 0.1) * timeStep,
     originalPose.Rot().Integrate(math::Vector3d(1.0, 0, 0), timeStep));
-  model2.UpdatePose(
-    timeStep, model2.GetLinearVelocity(), model2.GetAngularVelocity());
+  model2.UpdatePose(timeStep);
   EXPECT_EQ(expectedPose, model2.GetPose());
 }
 
