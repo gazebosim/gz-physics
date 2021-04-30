@@ -283,7 +283,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 
     auto identity =
       this->AddCollision(
-      _linkID, {_collision.Name(), shape, _linkID, modelID, pose, false});
+      _linkID, {_collision.Name(), shape, _linkID, modelID, pose, false, nullptr});
     return identity;
   }
   return this->GenerateInvalidId();

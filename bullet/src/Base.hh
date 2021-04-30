@@ -92,6 +92,7 @@ struct CollisionInfo
   math::Pose3d pose;
   // cppcheck-suppress unusedStructMember
   bool isMesh;
+  std::shared_ptr<btTriangleMesh> mesh;
 };
 
 struct JointInfo
