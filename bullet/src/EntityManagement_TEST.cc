@@ -24,10 +24,15 @@
 #include <ignition/physics/RequestEngine.hh>
 
 #include "EntityManagementFeatures.hh"
+#include "JointFeatures.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::bullet::EntityManagementFeatureList
-> { };
+// ToDo(Lobotuerk): Once more tests are added into this plugin, delete line 35
+// and uncomment 31~33 adding another feature list to clear the warn.
+// struct TestFeatureList : ignition::physics::FeatureList<
+//     ignition::physics::bullet::EntityManagementFeatureList
+// > { };
+
+using TestFeatureList = ignition::physics::bullet::EntityManagementFeatureList;
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
