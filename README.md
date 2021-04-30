@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/main/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
-Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-main-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-main-bionic-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-main-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-main-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/ign-physics4/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
+Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics4-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics4-bionic-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics4-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics4-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Ignition Physics, a component of [Ignition
@@ -74,7 +74,7 @@ See the [installation tutorial](https://ignitionrobotics.org/api/physics/4.0/ins
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/main/examples/).
+Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/ign-physics4/examples/).
 
 # Documentation
 
@@ -91,7 +91,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b main
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics4
     ```
 
 3. Configure and build the documentation.

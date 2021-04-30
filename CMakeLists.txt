@@ -13,7 +13,8 @@ find_package(ignition-cmake2 2.1.0 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project(VERSION_SUFFIX)
+ign_configure_project()
+
 
 #============================================================================
 # Set project-specific options

@@ -85,6 +85,62 @@
 
 ### Ignition Physics 3.x.x (20XX-XX-XX)
 
+### Ignition Physics 3.2.0 (2021-04-28)
+
+1. Infrastructure
+    * [Pull request #221](https://github.com/ignitionrobotics/ign-physics/pull/221)
+    * [Pull request #215](https://github.com/ignitionrobotics/ign-physics/pull/215)
+    * [Pull request #211](https://github.com/ignitionrobotics/ign-physics/pull/211)
+    * [Pull request #210](https://github.com/ignitionrobotics/ign-physics/pull/210)
+
+1. Linters
+    * [Pull request #201](https://github.com/ignitionrobotics/ign-physics/pull/201)
+    * [Pull request #154](https://github.com/ignitionrobotics/ign-physics/pull/154)
+
+1. Documentation
+    * [Pull request #164](https://github.com/ignitionrobotics/ign-physics/pull/164)
+    * [Pull request #163](https://github.com/ignitionrobotics/ign-physics/pull/163)
+    * [Pull request #187](https://github.com/ignitionrobotics/ign-physics/pull/187)
+    * [Pull request #162](https://github.com/ignitionrobotics/ign-physics/pull/162)
+    * [Pull request #120](https://github.com/ignitionrobotics/ign-physics/pull/120)
+    * [Pull request #144](https://github.com/ignitionrobotics/ign-physics/pull/144)
+    * [Pull request #131](https://github.com/ignitionrobotics/ign-physics/pull/131)
+    * [Pull request #128](https://github.com/ignitionrobotics/ign-physics/pull/128)
+    * [Pull request #115](https://github.com/ignitionrobotics/ign-physics/pull/115)
+    * [Pull request #104](https://github.com/ignitionrobotics/ign-physics/pull/104)
+    * [Pull request #105](https://github.com/ignitionrobotics/ign-physics/pull/105)
+    * [Pull request #106](https://github.com/ignitionrobotics/ign-physics/pull/106)
+
+1. Add Windows installation
+    * [Pull request #194](https://github.com/ignitionrobotics/ign-physics/pull/194)
+
+1. dartsim-plugin windows build fixes
+    * [Pull request #148](https://github.com/ignitionrobotics/ign-physics/pull/148)
+
+1. [TPE] Skip computing collisions for static objects
+    * [Pull request #181](https://github.com/ignitionrobotics/ign-physics/pull/181)
+
+1. [TPE] Update link pose and velocity
+    * [Pull request #179](https://github.com/ignitionrobotics/ign-physics/pull/179)
+
+1. [TPE] Fix poseDirty getter
+    * [Pull request #182](https://github.com/ignitionrobotics/ign-physics/pull/182)
+
+1. Add restitution coefficient support for bouncing
+    * [Pull request #139](https://github.com/ignitionrobotics/ign-physics/pull/139)
+
+1. Fix compilation with gcc 10.2.0
+    * [Pull request #185](https://github.com/ignitionrobotics/ign-physics/pull/185)
+
+1. Support setting canonical link
+    * [Pull request #142](https://github.com/ignitionrobotics/ign-physics/pull/142)
+
+1. Ignore invalid joint commands
+    * [Pull request #137](https://github.com/ignitionrobotics/ign-physics/pull/137)
+
+1. Fix CONFIG arg in ign_find_package(DART) call
+    * [Pull request #119](https://github.com/ignitionrobotics/ign-physics/pull/119)
+
 ### Ignition Physics 3.1.0 (2020-10-18)
 
 1. Support for slip compliance in the dartsim-plugin.
@@ -119,6 +175,48 @@
 ## Ignition Physics 2.x
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
+
+### Ignition Physics 2.4.0 (2021-04-14)
+
+1. [TPE] Update link pose and velocity
+    * [Pull request #179](https://github.com/ignitionrobotics/ign-physics/pull/179)
+
+1. Infrastructure
+    * [Pull request #221](https://github.com/ignitionrobotics/ign-physics/pull/221)
+    * [Pull request #211](https://github.com/ignitionrobotics/ign-physics/pull/211)
+    * [Pull request #130](https://github.com/ignitionrobotics/ign-physics/pull/130)
+    * [Pull request #118](https://github.com/ignitionrobotics/ign-physics/pull/118)
+
+1. Documentation
+    * [Pull request #187](https://github.com/ignitionrobotics/ign-physics/pull/187)
+    * [Pull request #194](https://github.com/ignitionrobotics/ign-physics/pull/194)
+
+1. TPE: Skip computing collisions for static objects
+    * [Pull request #181](https://github.com/ignitionrobotics/ign-physics/pull/181)
+
+1. Add restitution coefficient support for bouncing
+    * [Pull request #139](https://github.com/ignitionrobotics/ign-physics/pull/139)
+
+1. Fix compilation with gcc 10.2.0
+    * [Pull request #185](https://github.com/ignitionrobotics/ign-physics/pull/185)
+
+1. Fix TPE poseDirty getter
+    * [Pull request #182](https://github.com/ignitionrobotics/ign-physics/pull/182)
+
+1. Support setting canonical link
+    * [Pull request #142](https://github.com/ignitionrobotics/ign-physics/pull/142)
+
+1. Resolved codecheck issues
+    * [Pull request #154](https://github.com/ignitionrobotics/ign-physics/pull/154)
+
+1. Ignore invalid joint commands
+    * [Pull request #137](https://github.com/ignitionrobotics/ign-physics/pull/137)
+
+1. Support getting shape AABB in world frame
+    * [Pull request #127](https://github.com/ignitionrobotics/ign-physics/pull/127)
+
+1. Fix CONFIG arg in `ign_find_package(DART)` call
+    * [Pull request #119](https://github.com/ignitionrobotics/ign-physics/pull/119)
 
 ### Ignition Physics 2.3.0 (2020-09-29)
 

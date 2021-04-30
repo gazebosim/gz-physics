@@ -69,9 +69,9 @@ second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
 engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/main/dartsim),
-the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo6/src/systems/diff_drive/DiffDrive.cc#L333) code.
+the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/main/src/systems/diff_drive/DiffDrive.cc#L333) code.
 Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe),
-TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo6/src/systems/velocity_control/VelocityControl.cc#L117) code.
+TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/main/src/systems/velocity_control/VelocityControl.cc#L117) code.
 
 #### Monitoring the model and its links pose
 
@@ -136,7 +136,7 @@ and the blades will stop after some time due to friction.
 The command applies a constant torque to the rotor rod, together with
 the mechanism to compute the upward/downward lift and drag force due to the
 wind pressure simulation supported by Ignition Physics, the cube is lifted.
-For more detail, please see the [LiftDrag.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo6/src/systems/lift_drag/LiftDrag.cc)
+For more detail, please see the [LiftDrag.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/main/src/systems/lift_drag/LiftDrag.cc)
 code.
 
 ### Buoyancy
