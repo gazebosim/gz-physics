@@ -20,7 +20,7 @@ Ignition Physics extensibility and modularity.
 For a big picture of the Ignition Physics operation in Ignition ecosystem, see
 the abstract diagram below:
 
-<img src="https://user-images.githubusercontent.com/18066876/94801505-6bbf6980-03e6-11eb-97e5-e5f0dc68229f.png"/>
+@image html img/ign-libraries.png
 
 In general, `ign-gazebo` is the main simulation library, in which its
 functionalities are powered by many component libraries.
@@ -28,9 +28,7 @@ For example, its graphical drawing is supported by `ign-rendering` or simulated
 sensors that are defined and implemented in `ign-sensors`.
 In particular, this library `ign-physics` provides an abstract interface to
 physics engines, which simulates dynamic transformations and interactions of
-objects in `ign-gazebo`.
-The communication between these libraries at runtime is provided by
-`ign-transport` and `ign-msgs`.
+objects in `ign-gazebo`. The libraries are connected by C++ code.
 
 Ignition Physics uses a plugin architecture where each physics engine is
 implemented as a plugin that can be loaded at runtime.
@@ -64,6 +62,7 @@ to \ref physicsplugin
 ### Features logs
 
 **Ignition Physics 1.x**
+
 - Initial release
 - Define base concepts: Entity, FeaturePolicy, Feature and FeatureList.
 - Add features for `dartsim` physics engines (more detail in \ref physicsplugin).
@@ -71,8 +70,9 @@ to \ref physicsplugin
 - Enforce joint effort limit in `dartsim-plugin`.
 
 **Ignition Physics 2.x**
-- Support sdformat 1.7 frame semantics.
-- Support compiling against dart 6.9.
+
+- Support SDFormat 1.7 frame semantics.
+- Support compiling against DART 6.9.
 - Trivial Physics Engine (TPE)- partial implementation
 - Add features for TPE physics engines (more detail in \ref physicsplugin).
 - Extend contact data with force, normal, and penetration depth.
