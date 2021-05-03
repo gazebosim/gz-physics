@@ -2,6 +2,15 @@
 
 ### Ignition Physics 4.x.x (20XX-XX-XX)
 
+### Ignition Physics 4.1.0 (2021-05-01)
+
+1. [TPE] Update link pose and velocity
+    * [Pull request #179](https://github.com/ignitionrobotics/ign-physics/pull/179)
+
+1. Infrastructure
+    * [Pull request #221](https://github.com/ignitionrobotics/ign-physics/pull/221)
+    * [Pull request #215](https://github.com/ignitionrobotics/ign-physics/pull/215)
+
 ### Ignition Physics 4.0.0 (2021-03-30)
 
 1. Remove nested models
