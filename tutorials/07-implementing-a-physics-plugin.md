@@ -1,4 +1,4 @@
-\page implementfeature "Implement physics feature"
+\page createphysicsplugin Implement physics feature
 
 This tutorial shows how to develop a simple plugin that implements a
 \ref ignition::physics::Implements3d "3D policy" and includes a sample list of
