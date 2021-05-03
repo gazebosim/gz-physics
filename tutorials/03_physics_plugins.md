@@ -75,7 +75,7 @@ Users do not need to organize their own plugin implementations this way.
 
 Dart ([Dynamic Animation and Robotics Toolkit](https://dartsim.github.io/)) is an open source library that provides data structures and algorithms for kinematic and dynamic applications in robotics and computer animation.
 It is the default physics engine used in Ignition Simulation.
-The source code for Dartsim plugin can be found in [Ignition Physics repository](https://github.com/ignitionrobotics/ign-physics/tree/master) under `dartsim` directory.
+The source code for Dartsim plugin can be found in [Ignition Physics repository](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2) under `dartsim` directory.
 
 TPE ([Trivial Physics Engine](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/tpe) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
 It supports higher-order fleet dynamics without real physics (eg. gravity, force, constraint etc.) and multi-machine synchronization.

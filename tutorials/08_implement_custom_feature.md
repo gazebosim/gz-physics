@@ -158,8 +158,11 @@ The newly defined feature template is placed in an `/include` folder shown in th
 dartsim
 ├── worlds
 ├── src
+│    ├── CustomFeatures.hh
+│    ├── CustomFeatures.cc
+│    └── ...
 ├── include/ignition/physics/dartsim
-│    ├──  World.hh
+│    └──  World.hh
 └── CMakeLists.txt
 ```
 

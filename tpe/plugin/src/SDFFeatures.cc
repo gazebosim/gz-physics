@@ -114,16 +114,19 @@ Identity SDFFeatures::ConstructSdfModel(
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
   }
 
-  // set canonical link id
-  if (_sdfModel.CanonicalLink() != nullptr)
+  if (_sdfModel.LinkCount() > 0u)
   {
-    std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
-    tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
-    model->SetCanonicalLink(canonicalLink.GetId());
-  }
-  else
-  {
-    model->SetCanonicalLink();
+    // set canonical link id
+    if (_sdfModel.CanonicalLink() != nullptr)
+    {
+      std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
+      tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
+      model->SetCanonicalLink(canonicalLink.GetId());
+    }
+    else
+    {
+      model->SetCanonicalLink();
+    }
   }
 
   return modelIdentity;
@@ -185,16 +188,19 @@ Identity SDFFeatures::ConstructSdfNestedModel(
     this->ConstructSdfLink(modelIdentity, *_sdfModel.LinkByIndex(i));
   }
 
-  // set canonical link id
-  if (_sdfModel.CanonicalLink() != nullptr)
+  if (_sdfModel.LinkCount() > 0u)
   {
-    std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
-    tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
-    model->SetCanonicalLink(canonicalLink.GetId());
-  }
-  else
-  {
-    model->SetCanonicalLink();
+    // set canonical link id
+    if (_sdfModel.CanonicalLink() != nullptr)
+    {
+      std::string canonicalLinkName = _sdfModel.CanonicalLinkName();
+      tpelib::Entity &canonicalLink = model->GetChildByName(canonicalLinkName);
+      model->SetCanonicalLink(canonicalLink.GetId());
+    }
+    else
+    {
+      model->SetCanonicalLink();
+    }
   }
 
   // construct nested models
