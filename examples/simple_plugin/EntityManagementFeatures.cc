@@ -26,9 +26,6 @@ using namespace simpleplugin;
 Identity EntityManagementFeatures::ConstructEmptyWorld(
   const Identity &, const std::string &_name)
 {
-// Needs feature
-//  auto world = std::make_shared<Entity>();
-//  world->SetName(_name);
-//  return this->AddWorld(world);
-  return this->GenerateInvalidId();
+  // Generate dummy identity
+  return this->GenerateIdentity(0);
 }

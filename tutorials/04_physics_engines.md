@@ -1,3 +1,3 @@
-\page physicsengine "Use different physics engines"
+\page physicsengine Use different physics engines
 
-See [Physics engine](https://ignitionrobotics.org/api/gazebo/3.1/physics.html) in Ign-gazebo tutorial.
+See [Physics engines tutorial](https://ignitionrobotics.org/api/gazebo/3.8/physics.html) in Ignition Gazebo.

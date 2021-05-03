@@ -1,4 +1,4 @@
-\page usecustomengine "Use custom engine with Ignition Physics"
+\page setupphysicsenginetpe Use a custom engine with Ignition Physics
 
 ## Prerequisites
 
@@ -103,9 +103,7 @@ in `EntityManagementFeatures` "FeatureList" using TPE API from `tpe/lib` in Igni
 Before we dive into the feature implementation, we need to understand how the features are defined.
 
 The \ref ignition::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
-is declared in a function template file `ign-physics/include/ignition/physics/ConstructEmpty.hh`:
-
-/snippet include/ignition/physics/ConstuctEmpty.hh ConstructEmptyWorld
+is declared in a function template file `ign-physics/include/ignition/physics/ConstructEmpty.hh`.
 
 Ignition Physics library uses function templates to specify features that accept generic types.
 The use of templates makes it easier to implement features using different physics engine APIs,

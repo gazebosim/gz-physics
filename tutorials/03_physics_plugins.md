@@ -1,4 +1,4 @@
-\page physicsplugin Understand Physics Plugin
+\page physicsplugin Understandng the Physics Plugin
 
 This is an introduction to different physics engines and how they are integrated into the Ignition Physics library.
 
@@ -151,5 +151,5 @@ The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
 | AttachSphereShapeFeature | ✓ | ✓ |
 | mesh::GetMeshShapeProperties | ✓ | ✓ |
 | mesh::AttachMeshShapeFeature | ✓ | ✓ |
-| ForwardStep | ✓ | ✓ | ✓ |
+| ForwardStep | ✓ | ✓
 | GetContactsFromLastStepFeature | ✓ | ✕ |

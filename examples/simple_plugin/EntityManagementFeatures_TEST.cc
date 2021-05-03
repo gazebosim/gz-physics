@@ -21,27 +21,40 @@
 #include <ignition/physics/RequestEngine.hh>
 #include "EntityManagementFeatures.hh"
 
+// Simple executable that loads the simple plugin and constructs a world.
+
 struct TestFeatureList : ignition::physics::FeatureList<
   ignition::physics::simpleplugin::EntityManagementFeatureList
 > { };
 
 int main(int argc, char *argv[])
 {
+  // Load the custom plugin
   ignition::plugin::Loader loader;
   loader.LoadLib(simple_plugin_LIB);
 
-  ignition::plugin::PluginPtr simple_plugin =
+  auto simplePlugin =
     loader.Instantiate("ignition::physics::simpleplugin::Plugin");
 
+  // Get the engine pointer
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(simple_plugin);
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(simplePlugin);
+
+  if (nullptr == engine)
+  {
+    std::cerr << "Something went wrong, the engine is null" << std::endl;
+    return -1;
+  }
+
   auto world = engine->ConstructEmptyWorld("empty world");
 
-  if (nullptr != world)
-    std::cout << "Created empty world" << std::endl;
-  else
-    std::cout << "Failed to create empty world" << std::endl;
+  if (nullptr == world)
+  {
+    std::cerr << "Failed to create empty world" << std::endl;
+    return -1;
+  }
 
-// Needs feature
-//  std::cout << world->GetName() << std::endl;
+  std::cout << "Created empty world!" << std::endl;
+
+  return 0;
 }

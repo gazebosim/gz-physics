@@ -1,4 +1,4 @@
-\page loadplugin Load Physics Plugin
+\page pluginloading Plugin Loading
 
 This tutorial shows how to create an executable that loads physics engine
 plugins on Ubuntu, according to the desired feature list.
@@ -44,7 +44,7 @@ retrieving \ref ignition::physics::Feature "Feature" and
 \ref physicsplugin "Understand Physics Plugin" tutorial for their
 design concepts).
 
-/snippet examples/hello_world_loader/hello_world_loader.cc include statements
+\snippet examples/hello_world_loader/hello_world_loader.cc include statements
 
 Next, in the main function, the loader requires users to provide a path for
 desired plugins to be loaded. The plugin names are retrieved by
@@ -58,15 +58,16 @@ engine implementing a \ref ignition::physics::FeaturePolicy "FeaturePolicy" (3D
   in this case).
 .
 
-/snippet examples/hello_world_loader/hello_world_loader.cc main
+\snippet examples/hello_world_loader/hello_world_loader.cc main
 
 ### Setup CMakeLists.txt for CMake build
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies in Citadel release.After that, add the executable pointing to our file and add linking library so
+lines for finding `ign-plugin` and `ign-physics` dependencies in Citadel release.
+After that, add the executable pointing to our file and add linking library so
 that `cmake` can compile it.
 
-/snippet examples/hello_world_loader/CMakeLists.txt
+\include examples/hello_world_loader/CMakeLists.txt
 
 If you find CMake syntax difficult to understand, take a look at the official tutorial [here](https://cmake.org/cmake/help/latest/guide/tutorial/index.html).
 

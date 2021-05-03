@@ -49,7 +49,7 @@ class ConstructEmptyWorldFeature : public virtual Feature
         const Identity &_engineID, const std::string &_name) = 0;
   };
 };
-//! [COnstructEmptyWorld]
+//! [ConstructEmptyWorld]
 
 /////////////////////////////////////////////////
 /// \brief This feature constructs an empty model and return its pointer

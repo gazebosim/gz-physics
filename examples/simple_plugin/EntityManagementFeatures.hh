@@ -37,7 +37,9 @@ struct EntityManagementFeatureList : FeatureList<
 class EntityManagementFeatures :
   public virtual Implements3d<EntityManagementFeatureList>
 {
-  // ----- Construct empty entities -----
+  /// \brief Construct an empty dummy world.
+  /// \param[in] _engineID Identity for the engine.
+  /// \param[in] _name Name of the world.
   public: Identity ConstructEmptyWorld(
     const Identity &_engineID, const std::string &_name) override;
 };

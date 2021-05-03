@@ -1,4 +1,4 @@
-\page createcustomfeature "Implement custom feature"
+\page createcustomfeature Implement a custom feature
 
 ## Prerequisites
 
