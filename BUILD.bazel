@@ -19,7 +19,7 @@ exports_files(["LICENSE"])
 
 PROJECT_NAME = "ignition-physics"
 
-PROJECT_MAJOR = 2
+PROJECT_MAJOR = 4
 
 PROJECT_MINOR = 1
 
@@ -44,105 +44,14 @@ ign_export_header(
     visibility = ["//visibility:private"],
 )
 
-public_headers_no_gen = [
-    "include/ignition/physics/BoxShape.hh",
-    "include/ignition/physics/CanReadData.hh",
-    "include/ignition/physics/CanWriteData.hh",
-    "include/ignition/physics/Cloneable.hh",
-    "include/ignition/physics/CompositeData.hh",
-    "include/ignition/physics/ConstructEmpty.hh",
-    "include/ignition/physics/CylinderShape.hh",
-    "include/ignition/physics/DataStatusMask.hh",
-    "include/ignition/physics/DeclareJointType.hh",
-    "include/ignition/physics/DeclareShapeType.hh",
-    "include/ignition/physics/Entity.hh",
-    "include/ignition/physics/Feature.hh",
-    "include/ignition/physics/FeatureList.hh",
-    "include/ignition/physics/FeaturePolicy.hh",
-    "include/ignition/physics/FindFeatures.hh",
-    "include/ignition/physics/FixedJoint.hh",
-    "include/ignition/physics/ForwardStep.hh",
-    "include/ignition/physics/FrameData.hh",
-    "include/ignition/physics/FrameID.hh",
-    "include/ignition/physics/FrameSemantics.hh",
-    "include/ignition/physics/FreeGroup.hh",
-    "include/ignition/physics/FreeJoint.hh",
-    "include/ignition/physics/Geometry.hh",
-    "include/ignition/physics/GetBoundingBox.hh",
-    "include/ignition/physics/GetContacts.hh",
-    "include/ignition/physics/GetEntities.hh",
-    "include/ignition/physics/Implements.hh",
-    "include/ignition/physics/Joint.hh",
-    "include/ignition/physics/Link.hh",
-    "include/ignition/physics/OperateOnSpecifiedData.hh",
-    "include/ignition/physics/PlaneShape.hh",
-    "include/ignition/physics/PrismaticJoint.hh",
-    "include/ignition/physics/Register.hh",
-    "include/ignition/physics/RegisterMore.hh",
-    "include/ignition/physics/RelativeQuantity.hh",
-    "include/ignition/physics/RemoveEntities.hh",
-    "include/ignition/physics/RequestEngine.hh",
-    "include/ignition/physics/RequestFeatures.hh",
-    "include/ignition/physics/RevoluteJoint.hh",
-    "include/ignition/physics/Shape.hh",
-    "include/ignition/physics/SpecifyData.hh",
-    "include/ignition/physics/SphereShape.hh",
-    "include/ignition/physics/TemplateHelpers.hh",
-    "include/ignition/physics/detail/BoxShape.hh",
-    "include/ignition/physics/detail/CanReadData.hh",
-    "include/ignition/physics/detail/CanWriteData.hh",
-    "include/ignition/physics/detail/Cloneable.hh",
-    "include/ignition/physics/detail/CompositeData.hh",
-    "include/ignition/physics/detail/ConstructEmpty.hh",
-    "include/ignition/physics/detail/CylinderShape.hh",
-    "include/ignition/physics/detail/DeclareDerivedType.hh",
-    "include/ignition/physics/detail/Entity.hh",
-    "include/ignition/physics/detail/FeatureList.hh",
-    "include/ignition/physics/detail/FindFeatures.hh",
-    "include/ignition/physics/detail/FixedJoint.hh",
-    "include/ignition/physics/detail/FrameData.hh",
-    "include/ignition/physics/detail/FrameSemantics.hh",
-    "include/ignition/physics/detail/FreeGroup.hh",
-    "include/ignition/physics/detail/FreeJoint.hh",
-    "include/ignition/physics/detail/GetBoundingBox.hh",
-    "include/ignition/physics/detail/GetContacts.hh",
-    "include/ignition/physics/detail/GetEntities.hh",
-    "include/ignition/physics/detail/Identity.hh",
-    "include/ignition/physics/detail/InspectFeatures.hh",
-    "include/ignition/physics/detail/Joint.hh",
-    "include/ignition/physics/detail/Link.hh",
-    "include/ignition/physics/detail/OperateOnSpecifiedData.hh",
-    "include/ignition/physics/detail/PlaneShape.hh",
-    "include/ignition/physics/detail/PrismaticJoint.hh",
-    "include/ignition/physics/detail/PrivateSpecifyData.hh",
-    "include/ignition/physics/detail/Register.hh",
-    "include/ignition/physics/detail/RelativeQuantity.hh",
-    "include/ignition/physics/detail/RemoveEntities.hh",
-    "include/ignition/physics/detail/RequestEngine.hh",
-    "include/ignition/physics/detail/RequestFeatures.hh",
-    "include/ignition/physics/detail/RevoluteJoint.hh",
-    "include/ignition/physics/detail/Shape.hh",
-    "include/ignition/physics/detail/SpecifyData.hh",
-    "include/ignition/physics/detail/SphereShape.hh",
-]
+public_headers_no_gen = glob([
+    "include/ignition/physics/*.hh",
+    "include/ignition/physics/detail/*.hh"
+])
 
-test_sources = [
-    "src/Cloneable_TEST.cc",
-    "src/CompositeData_TEST.cc",
-    "src/FeatureList_TEST.cc",
-    "src/Feature_TEST.cc",
-    "src/FindFeatures_TEST.cc",
-    "src/SpecifyData_TEST.cc",
-]
+sources = glob(["src/*.cc"], exclude=["src/*_TEST.cc"])
 
-sources = [
-    "src/CanReadData.cc",
-    "src/CanWriteData.cc",
-    "src/CompositeData.cc",
-    "src/DataStatusMask.cc",
-    "src/FrameID.cc",
-    "src/Identity.cc",
-]
+test_sources = glob(["src/*_TEST.cc"])
 
 generate_include_header(
     name = "physicshh_genrule",

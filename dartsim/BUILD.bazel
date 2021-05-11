@@ -13,42 +13,11 @@ package(
     features = IGNITION_FEATURES,
 )
 
-test_sources = [
-    "src/Base_TEST.cc",
-    "src/Collisions_TEST.cc",
-    "src/EntityManagement_TEST.cc",
-    "src/JointFeatures_TEST.cc",
-    "src/LinkFeatures_TEST.cc",
-    "src/SDFFeatures_TEST.cc",
-    "src/SimulationFeatures_TEST.cc",
-]
+sources = glob(["src/*.cc", "src/*.hh"], exclude=["src/*_TEST.cc"])
 
-sources = [
-    "src/CustomFeatures.cc",
-    "src/CustomMeshShape.cc",
-    "src/EntityManagementFeatures.cc",
-    "src/FreeGroupFeatures.cc",
-    "src/JointFeatures.cc",
-    "src/KinematicsFeatures.cc",
-    "src/LinkFeatures.cc",
-    "src/plugin.cc",
-    "src/SDFFeatures.cc",
-    "src/ShapeFeatures.cc",
-    "src/SimulationFeatures.cc",
-]
+test_sources = glob(["src/*_TEST.cc"], exclude=["src/SDFFeatures_TEST.cc"])
 
 public_headers = [
-    "src/Base.hh",
-    "src/CustomFeatures.hh",
-    "src/CustomMeshShape.hh",
-    "src/EntityManagementFeatures.hh",
-    "src/FreeGroupFeatures.hh",
-    "src/JointFeatures.hh",
-    "src/KinematicsFeatures.hh",
-    "src/LinkFeatures.hh",
-    "src/SDFFeatures.hh",
-    "src/ShapeFeatures.hh",
-    "src/SimulationFeatures.hh",
     "include/ignition/physics/dartsim/World.hh",
 ]
 
