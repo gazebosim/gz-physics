@@ -282,8 +282,8 @@ Identity SDFFeatures::ConstructSdfCollision(
       ->addChildShape(baseTransform, shape.get());
 
     auto identity =
-      this->AddCollision(
-      _linkID, {_collision.Name(), shape, _linkID, modelID, pose, false, nullptr});
+      this->AddCollision(_linkID, {
+      _collision.Name(), shape, _linkID, modelID, pose, false, nullptr});
     return identity;
   }
   return this->GenerateInvalidId();
