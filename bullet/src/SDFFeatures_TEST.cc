@@ -120,24 +120,11 @@ TEST(SDFFeatures_TEST, WorldIsParentOrChild)
         CreateTestModel(world, "test0", std::nullopt, std::nullopt);
     EXPECT_EQ(nullptr, joint);
   }
-  /*
-  {
-    const auto &[model, joint] = CreateTestModel(world, "test1", parent, child);
-    EXPECT_NE(nullptr, joint);
-    }
-  */
   {
     const auto &[model, joint] =
         CreateTestModel(world, "test2", std::nullopt, child);
     EXPECT_NE(nullptr, joint);
   }
-  /*
-  {
-    const auto &[model, joint] =
-        CreateTestModel(world, "test3", parent, std::nullopt);
-    EXPECT_EQ(nullptr, joint);
-   }
-  */
 }
 
 int main(int argc, char *argv[])

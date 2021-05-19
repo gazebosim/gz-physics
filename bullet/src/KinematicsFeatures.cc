@@ -65,12 +65,6 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   btVector3 omega = rigidBody->getAngularVelocity();
   btVector3 vel = rigidBody->getLinearVelocity();
 
-  // Transform to world frame
-  // const auto matBaseToWorld =
-  //   btMatrix3x3(rigidBody->getWorldToBaseRot()).inverse();
-  // omega = matBaseToWorld * omega;
-  // vel = matBaseToWorld * vel;
-
   data.linearVelocity = convert(vel) + ignition::math::eigen3::convert(
     ignition::math::eigen3::convert(convert(omega)).Cross(
     -ignition::math::eigen3::convert(data.pose).Rot() *
