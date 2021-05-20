@@ -37,7 +37,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 # Find ignition-common
 ign_find_package(ignition-common3
   COMPONENTS graphics profiler
-  REQUIRED_BY mesh dartsim tpe tpelib)
+  REQUIRED_BY mesh dartsim tpe tpelib bullet)
 set(IGN_COMMON_VER ${ignition-common3_VERSION_MAJOR})
 
 #--------------------------------------
@@ -57,7 +57,7 @@ ign_find_package(EIGEN3 REQUIRED)
 #--------------------------------------
 # Find SDFormat for the SDF features
 ign_find_package(sdformat10
-  REQUIRED_BY sdf dartsim tpe)
+  REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
@@ -72,6 +72,13 @@ ign_find_package(DART
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
 
+#--------------------------------------
+# Find bullet for the bullet plugin wrapper
+ign_find_package(IgnBullet
+  VERSION 2.87
+  REQUIRED_BY bullet
+  PKGCONFIG bullet
+  PKGCONFIG_VER_COMPARISON >=)
 
 message(STATUS "-------------------------------------------\n")
 
@@ -86,7 +93,7 @@ set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf mesh dartsim tpe)
+  COMPONENTS sdf mesh dartsim tpe bullet)
 
 
 #============================================================================
