@@ -21,8 +21,17 @@
 #include <vector>
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
+#include <ignition/physics/ContactJointProperties.hh>
 
 #include "Base.hh"
+
+namespace dart
+{
+namespace collision
+{
+class Contact;
+}
+}
 
 namespace ignition {
 namespace physics {
@@ -30,13 +39,22 @@ namespace dartsim {
 
 struct SimulationFeatureList : FeatureList<
   ForwardStep,
-  GetContactsFromLastStepFeature
+  GetContactsFromLastStepFeature,
+  SetContactJointPropertiesCallbackFeature
 > { };
+
+class SimulationFeaturesPrivate;
 
 class SimulationFeatures :
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
+  public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
+    ::ContactInternal;
+
+  public: SimulationFeatures();
+  public: ~SimulationFeatures() override;
+
   public: void WorldForwardStep(
       const Identity &_worldID,
       ForwardStep::Output &_h,
@@ -45,7 +63,20 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
+
+  public: void AddContactJointPropertiesCallback(
+      const Identity &_worldID,
+      const std::string &_callbackID,
+      SurfaceParamsCallback _callback) override;
+
+  public: bool RemoveContactJointPropertiesCallback(
+      const Identity &_worldID, const std::string &_callbackID) override;
+
+  private: std::unique_ptr<SimulationFeaturesPrivate> dataPtr;
+  private: friend class SimulationFeaturesPrivate;
 };
+
+
 
 }
 }
