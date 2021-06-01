@@ -161,6 +161,60 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    void SetJointPositionLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetMinPositionCommand(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointPositionLimitsCommandFeature>()
+          ->SetJointMinPositionCommand(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointPositionLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetMaxPositionCommand(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointPositionLimitsCommandFeature>()
+          ->SetJointMaxPositionCommand(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointVelocityLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetMinVelocityCommand(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointVelocityLimitsCommandFeature>()
+          ->SetJointMinVelocityCommand(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointVelocityLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetMaxVelocityCommand(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointVelocityLimitsCommandFeature>()
+          ->SetJointMaxVelocityCommand(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointEffortLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetMinEffortCommand(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointEffortLimitsCommandFeature>()
+          ->SetJointMinEffortCommand(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointEffortLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
+    SetMaxEffortCommand(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointEffortLimitsCommandFeature>()
+          ->SetJointMaxEffortCommand(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void DetachJointFeature::Joint<PolicyT, FeaturesT>::Detach()
     {
       this->template Interface<DetachJointFeature>()

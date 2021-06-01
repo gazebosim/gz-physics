@@ -62,7 +62,10 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::SetBasicJointState,
   physics::SetJointVelocityCommandFeature,
   physics::sdf::ConstructSdfModel,
-  physics::sdf::ConstructSdfWorld
+  physics::sdf::ConstructSdfWorld,
+  physics::SetJointPositionLimitsCommandFeature,
+  physics::SetJointVelocityLimitsCommandFeature,
+  physics::SetJointEffortLimitsCommandFeature
 >;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
@@ -104,7 +107,7 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
-      dartWorld->getSkeleton(modelName);
+    dartWorld->getSkeleton(modelName);
   ASSERT_NE(nullptr, skeleton);
 
   const auto *dartBaseLink = skeleton->getBodyNode("base");
@@ -161,6 +164,467 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
     world->Step(output, state, input);
     EXPECT_NEAR(0.0, dartBaseLink->getWorldTransform().translation().z(), 1e-3);
   }
+}
+
+TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinPositionCommand(0, pos - 0.1);
+  joint->SetMaxPositionCommand(0, pos + 0.1);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-3);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos - 0.1, joint->GetPosition(0), 1e-3);
+
+  joint->SetMinPositionCommand(0, pos - 0.5);
+  joint->SetMaxPositionCommand(0, pos + 0.5);
+
+  for (std::size_t i = 0; i < 300; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.5, joint->GetPosition(0), 1e-2);
+
+  for (std::size_t i = 0; i < 300; ++i)
+  {
+    joint->SetForce(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos - 0.5, joint->GetPosition(0), 1e-2);
+
+  joint->SetMinPositionCommand(0, -math::INF_D);
+  joint->SetMaxPositionCommand(0, math::INF_D);
+  joint->SetPosition(0, pos);
+
+  for (std::size_t i = 0; i < 300; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos + 0.5, joint->GetPosition(0));
+}
+
+TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  joint->SetMinVelocityCommand(0, -0.25);
+  joint->SetMaxVelocityCommand(0, 0.5);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.5, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, -1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.25, joint->GetVelocity(0), 1e-6);
+
+  // set minimum velocity above zero
+  joint->SetMinVelocityCommand(0, 0.25);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 0);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.25, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    // make sure the minimum velocity is kept even without velocity commands
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.25, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinVelocityCommand(0, -0.25);
+  joint->SetPosition(0, 0);
+  joint->SetVelocity(0, 0);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 0);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinVelocityCommand(0, -math::INF_D);
+  joint->SetMaxVelocityCommand(0, math::INF_D);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(0.5, joint->GetVelocity(0));
+}
+
+TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinEffortCommand(0, -1e-6);
+  joint->SetMaxEffortCommand(0, 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-3);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-3);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffortCommand(0, -80);
+  joint->SetMaxEffortCommand(0, 80);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos, joint->GetPosition(0));
+  EXPECT_LT(0, joint->GetVelocity(0));
+
+  joint->SetMinEffortCommand(0, -math::INF_D);
+  joint->SetMaxEffortCommand(0, math::INF_D);
+  joint->SetPosition(0, 0);
+  joint->SetVelocity(0, 0);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos, joint->GetPosition(0));
+  EXPECT_LT(0, joint->GetVelocity(0));
+}
+
+TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinPositionCommand(0, pos - 0.1);
+  joint->SetMaxPositionCommand(0, pos + 0.1);
+  joint->SetMinVelocityCommand(0, -0.25);
+  joint->SetMaxVelocityCommand(0, 0.5);
+  joint->SetMinEffortCommand(0, -1e-6);
+  joint->SetMaxEffortCommand(0, 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffortCommand(0, -500);
+  joint->SetMaxEffortCommand(0, 1000);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  // 0.05 because we go 0.1 s with max speed 0.5
+  EXPECT_NEAR(pos + 0.05, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0.5, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 200; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetPosition(0, pos);
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+
+  joint->SetMinVelocityCommand(0, -1);
+  joint->SetMaxVelocityCommand(0, 1);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(1, joint->GetVelocity(0), 1e-6);
+
+  joint->SetPosition(0, pos);
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+
+  joint->SetMinPositionCommand(0, -1e6);
+  joint->SetMaxPositionCommand(0, 1e6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos + 0.1, joint->GetPosition(0));
+  EXPECT_NEAR(1, joint->GetVelocity(0), 1e-6);
+}
+
+// TODO(anyone): position limits do not work very well with velocity control
+// bug https://github.com/dartsim/dart/issues/1583
+#if 0
+TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  const std::string modelName{"simple_joint_test"};
+  const std::string jointName{"j1"};
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+
+  auto model = world->GetModel(modelName);
+  auto joint = model->GetJoint(jointName);
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinPositionCommand(0, pos - 0.1);
+  joint->SetMaxPositionCommand(0, pos + 0.1);
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+
+    if (i % 500 == 499)
+    {
+      EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
+      EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+    }
+  }
+}
+#endif
+
+TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  joint->SetMinVelocityCommand(0, -0.1);
+  joint->SetMaxVelocityCommand(0, 0.1);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.1, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, 0.1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.1, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, -0.025);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.025, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinVelocityCommand(0, -math::INF_D);
+  joint->SetMaxVelocityCommand(0, math::INF_D);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(1, joint->GetVelocity(0), 1e-6);
+}
+
+TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  joint->SetMinEffortCommand(0, -1e-6);
+  joint->SetMaxEffortCommand(0, 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffortCommand(0, -80);
+  joint->SetMaxEffortCommand(0, 80);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-1, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffortCommand(0, -math::INF_D);
+  joint->SetMaxEffortCommand(0, math::INF_D);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-100, joint->GetVelocity(0), 1e-6);
+}
+
+TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  // Test joint velocity command
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  joint->SetMinVelocityCommand(0, -0.5);
+  joint->SetMaxVelocityCommand(0, 0.5);
+  joint->SetMinEffortCommand(0, -1e-6);
+  joint->SetMaxEffortCommand(0, 1e-6);
+
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffortCommand(0, -1e6);
+  joint->SetMaxEffortCommand(0, 1e6);
+
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetVelocityCommand(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.5, joint->GetVelocity(0), 1e-6);
 }
 
 // Test detaching joints.
