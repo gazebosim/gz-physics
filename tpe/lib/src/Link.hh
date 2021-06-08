@@ -39,7 +39,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
   public: explicit Link(std::size_t _id);
 
   /// \brief Destructor
-  public: ~Link() = default;
+  public: virtual ~Link() = default;
 
   /// \brief Add a collision
   /// \return Newly created Collision
