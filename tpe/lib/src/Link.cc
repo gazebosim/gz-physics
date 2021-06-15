@@ -42,3 +42,41 @@ Entity &Link::AddCollision()
   this->ChildrenChanged();
   return *it->second.get();
 }
+
+//////////////////////////////////////////////////
+void Link::SetLinearVelocity(const math::Vector3d &_velocity)
+{
+  this->linearVelocity = _velocity;
+}
+
+//////////////////////////////////////////////////
+math::Vector3d Link::GetLinearVelocity() const
+{
+  return this->linearVelocity;
+}
+
+//////////////////////////////////////////////////
+void Link::SetAngularVelocity(const math::Vector3d &_velocity)
+{
+  this->angularVelocity = _velocity;
+}
+
+//////////////////////////////////////////////////
+math::Vector3d Link::GetAngularVelocity() const
+{
+  return this->angularVelocity;
+}
+
+//////////////////////////////////////////////////
+void Link::UpdatePose(double _timeStep)
+{
+  if (this->linearVelocity == math::Vector3d::Zero &&
+      this->angularVelocity == math::Vector3d::Zero)
+    return;
+
+  math::Pose3d currentPose = this->GetPose();
+  math::Pose3d nextPose(
+    currentPose.Pos() + this->linearVelocity * _timeStep,
+    currentPose.Rot().Integrate(this->angularVelocity, _timeStep));
+  this->SetPose(nextPose);
+}

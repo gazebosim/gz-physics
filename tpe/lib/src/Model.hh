@@ -68,30 +68,25 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \return Entity the canonical (first) link
   public: Entity &GetCanonicalLink();
 
-  /// \brief Set the linear velocity of model
-  /// \param[in] _velocity linear velocity
-  public: void SetLinearVelocity(const math::Vector3d _velocity);
+  /// \brief Set the linear velocity of model relative to parent
+  /// \param[in] _velocity linear velocity in meters per second
+  public: void SetLinearVelocity(const math::Vector3d &_velocity);
 
-  /// \brief Get the linear velocity of model
-  /// \return linear velocity of model
+  /// \brief Get the linear velocity of model relative to parent
+  /// \return linear velocity of model in meters per second
   public: math::Vector3d GetLinearVelocity() const;
 
-  /// \brief Set the angular velocity of model
-  /// \param[in] _velocity angular velocity from world
-  public: void SetAngularVelocity(const math::Vector3d _velocity);
+  /// \brief Set the angular velocity of model relative to parent
+  /// \param[in] _velocity angular velocity from world in radians per second
+  public: void SetAngularVelocity(const math::Vector3d &_velocity);
 
-  /// \brief Get the angular velocity of model
-  /// \return angular velocity
+  /// \brief Get the angular velocity of model relative to parent
+  /// \return angular velocity in radians per second
   public: math::Vector3d GetAngularVelocity() const;
 
   /// \brief Update the pose of the entity
-  /// \param[in] _timeStep current world timestep
-  /// \param[in] _linearVelocity linear velocity
-  /// \param[in] _angularVelocity angular velocity
-  public: virtual void UpdatePose(
-    const double _timeStep,
-    const math::Vector3d _linearVelocity,
-    const math::Vector3d _angularVelocity);
+  /// \param[in] _timeStep current world timestep in seconds
+  public: virtual void UpdatePose(double _timeStep);
 
   /// \brief Removes a child entity (either a link or model) from the
   /// appropriate child entity containers

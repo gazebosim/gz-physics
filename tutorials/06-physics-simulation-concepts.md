@@ -45,8 +45,8 @@ cars depending on physics engines and visualize the collision concept. Please
 download the Differential Drive simulation world demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/diff_drive.sdf -P ~
-```
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo4/examples/worlds/diff_drive.sdf -P ~
+``
 
 We can now start our differential drive simulation on Ignition Gazebo by:
 
@@ -68,10 +68,10 @@ This command tells the car to move in its coordinate frame with velocity
 second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
-engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/main/dartsim),
-the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/diff_drive/DiffDrive.cc#L333) code.
-Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe),
-TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/velocity_control/VelocityControl.cc#L117) code.
+engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics4/dartsim),
+the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/diff_drive/DiffDrive.cc#L392-L422) code.
+Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics4/tpe),
+TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/velocity_control/VelocityControl.cc#L205-L215) code.
 
 #### Monitoring the model and its links pose
 
@@ -105,7 +105,7 @@ This demo world shows how joint force, torque, and pressure are supported in
 Ignition Physics. Please download the Lift Drag demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/lift_drag.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo5/examples/worlds/lift_drag.sdf -P ~
 ```
 
 Like above, please start the Lift Drag demo world on Ignition Gazebo by:
@@ -151,7 +151,7 @@ contains the following three models:
 Please download the Buoyancy demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/buoyancy.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo5/examples/worlds/buoyancy.sdf -P ~
 ```
 
 Like above, please start the Buoyancy demo on Ignition Gazebo by:
@@ -170,7 +170,7 @@ simulating fluid density and applying the force on the object in the fluid
 proportional to its volume. Hence, you can change the model buoyancy by modifying its
 inertia, please see [link specification](http://sdformat.org/spec?ver=1.7&elem=link).
 For more detail on simulating buoyancy, please see the
-[Buoyancy.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/main/src/systems/buoyancy/Buoyancy.cc)
+[Buoyancy.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/buoyancy/Buoyancy.cc)
 code.
 
 ### Pendulum
@@ -180,7 +180,7 @@ movement by showing free swing of the pendulum. Please download the
 Pendulum demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/video_record_dbl_pendulum.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo5/examples/worlds/video_record_dbl_pendulum.sdf -P ~
 ```
 
 and start the Pendulum demo on Ignition Gazebo by:
@@ -208,7 +208,7 @@ inertia to control object velocity.
 Please download the Multicopter demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/multicopter_velocity_control.sdf -P ~
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/ign-gazebo5/examples/worlds/multicopter_velocity_control.sdf -P ~
 ```
 
 and start the Multicopter demo on Ignition Gazebo by:
@@ -237,4 +237,4 @@ Do the same for the `X4` multicopter. After pressing the Play button, you will s
 both of the multicopters will ascend, this demonstrates how the physics engine
 utilizes model kinematics and dynamics to support simulating complex model and
 its controller. For more detail about the multicopter controller, please see
-[MulticopterVelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/main/src/systems/multicopter_control/MulticopterVelocityControl.cc).
+[MulticopterVelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/multicopter_control/MulticopterVelocityControl.cc).
