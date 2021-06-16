@@ -208,7 +208,7 @@ You can also generate the documentation from a clone of this repository by follo
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b main
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics4
   ```
 
 3. Configure and build the documentation.
