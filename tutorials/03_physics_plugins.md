@@ -4,7 +4,7 @@ This is an introduction to different physics engines and how they are integrated
 
 ## Ignition Physics
 
-The \ref ignition::physics "Ignition Physics" library integrates external physics engines into the Ignition eco-system.
+The \ref ignition::physics "Ignition Physics" library integrates external physics engines into the Ignition Simulation eco-system.
 It allows users to select from multiple supported physics engines based on their simulation needs.
 Its plugin interface loads physics engines with requested features at runtime.
 It is also possible to integrate your own selected physics engine by writing a compatible plugin interface.
