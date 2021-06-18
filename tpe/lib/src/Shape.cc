@@ -235,7 +235,7 @@ math::Vector3d EllipsoidShape::GetRadii() const
 }
 
 //////////////////////////////////////////////////
-void EllipsoidShape::SetRadii(math::Vector3d _radii)
+void EllipsoidShape::SetRadii(const math::Vector3d &_radii)
 {
   this->radii = _radii;
   this->dirty = true;

@@ -126,7 +126,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
   IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
-/// \brief Cylinder geometry
+/// \brief Capsule geometry
 class IGNITION_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
 {
   /// \brief Constructor
@@ -152,7 +152,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
   public: void SetRadius(double _radius);
 
   /// \brief Get capsule length
-  /// \return Cylinder length
+  /// \return Capsule length
   public: double GetLength() const;
 
   /// \brief Set capsule length
@@ -162,10 +162,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
 
-  /// \brief Cylinder radius
+  /// \brief Capsule radius
   private: double radius = 0.0;
 
-  /// \brief Cylinder length
+  /// \brief Capsule length
   private: double length = 0.0;
 };
 
@@ -235,7 +235,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
 
   /// \brief Set ellipsoid radius
   /// \param[in] _radius ellipsoid radius
-  public: void SetRadii(math::Vector3d _radii);
+  public: void SetRadii(const math::Vector3d &_radii);
 
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
