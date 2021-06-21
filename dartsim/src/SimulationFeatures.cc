@@ -15,6 +15,10 @@
  *
 */
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/CollisionResult.hpp>
 #include <dart/constraint/ContactConstraint.hpp>

@@ -18,7 +18,9 @@
 #ifndef IGNITION_PHYSICS_CONTACTJOINTPROPERTIES_HH_
 #define IGNITION_PHYSICS_CONTACTJOINTPROPERTIES_HH_
 
+#include <string>
 #include <vector>
+
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/Geometry.hh>

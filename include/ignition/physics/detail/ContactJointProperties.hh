@@ -18,8 +18,10 @@
 #ifndef IGNITION_PHYSICS_DETAIL_CONTACTJOINTPROPERTIES_HH_
 #define IGNITION_PHYSICS_DETAIL_CONTACTJOINTPROPERTIES_HH_
 
+#include <string>
 #include <utility>
 #include <vector>
+
 #include <ignition/physics/ContactJointProperties.hh>
 
 namespace ignition

@@ -18,7 +18,10 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
 #define IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
 
+#include <memory>
+#include <string>
 #include <vector>
+
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
 #include <ignition/physics/ContactJointProperties.hh>
