@@ -69,9 +69,9 @@ second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
 engine. Using [dartsim](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics4/dartsim),
-the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/diff_drive/DiffDrive.cc#L333) code.
+the car is moved by applying force on the joints, please see [DiffDrive.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/diff_drive/DiffDrive.cc#L392-L422) code.
 Using [TPE](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics4/tpe),
-TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/velocity_control/VelocityControl.cc#L117) code.
+TPE directly sets model velocity in [VelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo5/src/systems/velocity_control/VelocityControl.cc#L205-L215) code.
 
 #### Monitoring the model and its links pose
 
