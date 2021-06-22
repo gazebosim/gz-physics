@@ -562,7 +562,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
     if (odeFriction->HasElement("slip1"))
     {
-      aspect->setSlipCompliance(odeFriction->Get<double>("slip1"));
+      aspect->setPrimarySlipCompliance(odeFriction->Get<double>("slip1"));
     }
     if (odeFriction->HasElement("slip2"))
     {
