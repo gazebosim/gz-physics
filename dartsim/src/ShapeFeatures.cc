@@ -347,7 +347,7 @@ double ShapeFeatures::GetShapeFrictionPyramidPrimarySlipCompliance(
       << std::endl;
     return 0.0;
   }
-  return aspect->getSlipCompliance();
+  return aspect->getPrimarySlipCompliance();
 }
 
 /////////////////////////////////////////////////
@@ -383,7 +383,7 @@ bool ShapeFeatures::SetShapeFrictionPyramidPrimarySlipCompliance(
       << std::endl;
     return false;
   }
-  aspect->setSlipCompliance(_value);
+  aspect->setPrimarySlipCompliance(_value);
   return true;
 }
 
