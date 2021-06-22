@@ -26,6 +26,7 @@ namespace ignition {
 namespace physics {
 
 /////////////////////////////////////////////////
+//! [ConstructEmptyWorld]
 /// \brief This feature constructs an empty world and returns its pointer
 /// from the current physics engine in use.
 class ConstructEmptyWorldFeature : public virtual Feature
@@ -50,6 +51,7 @@ class ConstructEmptyWorldFeature : public virtual Feature
         const Identity &_engineID, const std::string &_name) = 0;
   };
 };
+//! [ConstructEmptyWorld]
 
 /////////////////////////////////////////////////
 /// \brief This feature constructs an empty model and returns its pointer
