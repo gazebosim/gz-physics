@@ -240,8 +240,10 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
 
+  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief ellipsoid radius
   private: math::Vector3d radii = math::Vector3d::Zero;
+  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 /// \brief Sphere geometry
