@@ -24,35 +24,8 @@
             </geometry>
           </collision>
         </link>
-        <joint name="nested_joint" type="revolute">
-          <parent>nested_link1</parent>
-          <child>nested_link2</child>
-          <axis>
-            <xyz expressed_in="nested_link1">1 0 0</xyz>
-          </axis>
-        </joint>
       </model>
-      <link name="link1">
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>1 2 3</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>1 2 3</size>
-            </box>
-          </geometry>
-        </visual>
-      </link>
-
-      <joint name="joint1" type="fixed">
-         <parent>link1</parent>
-         <child>nested_model::nested_link1</child>
-      </joint>
+      <link name="link1"/>
 
       <!-- Use duplicate link names for testing that these don't collide
       with the links in the models above -->

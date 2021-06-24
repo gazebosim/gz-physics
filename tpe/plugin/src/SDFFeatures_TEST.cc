@@ -366,6 +366,7 @@ TEST(SDFFeatures_TEST, NestedModel)
   ASSERT_NE(nullptr, tpeWorld);
 
   ASSERT_EQ(1u, tpeWorld->GetChildCount());
+  EXPECT_EQ(1u, world.GetModelCount());
 
   // check top level model
   ignition::physics::tpelib::Entity &model =
