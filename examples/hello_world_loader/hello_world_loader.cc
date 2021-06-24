@@ -15,6 +15,8 @@
  *
 */
 
+////////////////////////////////////////////////////////////////////
+//! [include statements]
 #include <iostream>
 
 #include <ignition/plugin/Loader.hh>
@@ -28,7 +30,10 @@
 using Features = ignition::physics::FeatureList<
     ignition::physics::GetEngineInfo
 >;
+//! [include statements]
 
+////////////////////////////////////////////////////////////////////
+//! [main]
 int main(int argc, char **argv)
 {
   // User should provide path to plugin library
@@ -62,3 +67,4 @@ int main(int argc, char **argv)
     std::cout << "  engine name: " << engine->GetName() << std::endl;
   }
 }
+//! [main]
