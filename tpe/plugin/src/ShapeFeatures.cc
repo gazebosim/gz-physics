@@ -151,7 +151,7 @@ Identity ShapeFeatures::AttachCapsuleShape(
   const Identity &_linkID,
   const std::string &_name,
   const double _radius,
-  const double _height,
+  const double _length,
   const Pose3d &_pose)
 {
   auto it = this->links.find(_linkID);
@@ -164,7 +164,7 @@ Identity ShapeFeatures::AttachCapsuleShape(
 
     tpelib::CapsuleShape capsuleshape;
     capsuleshape.SetRadius(_radius);
-    capsuleshape.SetLength(_height);
+    capsuleshape.SetLength(_length);
     collision.SetShape(capsuleshape);
 
     return this->AddCollision(_linkID, collision);

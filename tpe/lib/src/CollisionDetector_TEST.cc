@@ -330,6 +330,38 @@ TEST(CollisionDetector, CheckCollisions)
       (contacts[0].entity2 != modelD->GetId()));
   EXPECT_TRUE((contacts[0].entity1 == modelE->GetId()) ||
       (contacts[0].entity2 == modelE->GetId()));
+
+  // collision between model D and B but not model A, C, E
+  modelA->SetPose(math::Pose3d(100, 0, 0, 0, 0, 0));
+  modelB->SetPose(math::Pose3d(0, 0, 0, 0, 0, 0));
+  modelC->SetPose(math::Pose3d(-100, 0, 0, 0, 0, 0));
+  modelD->SetPose(math::Pose3d(5, 0, 0, 0, 0, 0));
+  modelE->SetPose(math::Pose3d(200, 0, 0, 0, 0, 0));
+  contacts = cd.CheckCollisions(entities);
+  EXPECT_EQ(8u, contacts.size());
+
+  for (const auto &c : contacts)
+  {
+    EXPECT_TRUE(c.entity1 != modelA->GetId() && c.entity2 != modelA->GetId());
+    EXPECT_TRUE(c.entity1 == modelB->GetId() || c.entity2 == modelB->GetId());
+    EXPECT_TRUE(c.entity1 != modelC->GetId() && c.entity2 != modelC->GetId());
+    EXPECT_TRUE(c.entity1 == modelD->GetId() || c.entity2 == modelD->GetId());
+    EXPECT_TRUE(c.entity1 != modelE->GetId() && c.entity2 != modelE->GetId());
+    EXPECT_NE(c.entity1, c.entity2);
+  }
+  // check single contact point
+  contacts = cd.CheckCollisions(entities, true);
+  EXPECT_EQ(1u, contacts.size());
+  EXPECT_TRUE((contacts[0].entity1 != modelA->GetId()) &&
+      (contacts[0].entity2 != modelA->GetId()));
+  EXPECT_TRUE((contacts[0].entity1 == modelB->GetId()) ||
+      (contacts[0].entity2 == modelB->GetId()));
+  EXPECT_TRUE((contacts[0].entity1 != modelC->GetId()) &&
+      (contacts[0].entity2 != modelC->GetId()));
+  EXPECT_TRUE((contacts[0].entity1 == modelD->GetId()) ||
+      (contacts[0].entity2 == modelD->GetId()));
+  EXPECT_TRUE((contacts[0].entity1 != modelE->GetId()) &&
+      (contacts[0].entity2 != modelE->GetId()));
 }
 
 /////////////////////////////////////////////////
