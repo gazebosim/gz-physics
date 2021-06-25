@@ -818,7 +818,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
     if (odeFriction->HasElement("slip1"))
     {
-      aspect->setSlipCompliance(odeFriction->Get<double>("slip1"));
+      aspect->setPrimarySlipCompliance(odeFriction->Get<double>("slip1"));
     }
     if (odeFriction->HasElement("slip2"))
     {
@@ -1140,6 +1140,11 @@ Identity SDFFeatures::ConstructSdfJoint(
   joint->setTransformFromParentBodyNode(parent_T_prejoint_final);
 
   const std::size_t jointID = this->AddJoint(joint);
+  // Increment BodyNode version since the child could be moved to a new skeleton
+  // when a joint is created.
+  // TODO(azeey) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after Joint::moveTo.
+  _child->incrementVersion();
 
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }

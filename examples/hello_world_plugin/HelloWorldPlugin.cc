@@ -15,18 +15,26 @@
  *
 */
 
+////////////////////////////////////////////////////////////
+//! [include statements]
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FeaturePolicy.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Register.hh>
+//! [include statements]
 
 namespace mock
 {
+  ////////////////////////////////////////////////////////
+  //! [feature list]
   // List of all features that this plugin will implement
   struct HelloWorldFeatureList : ignition::physics::FeatureList<
       ignition::physics::GetEngineInfo
   > { };
+  //! [feature list]
 
+  ////////////////////////////////////////////////////////
+  //! [implementation]
   // The plugin class, which implements a 3D policy
   class HelloWorldPlugin
       : public ignition::physics::Implements3d<HelloWorldFeatureList>
@@ -52,10 +60,14 @@ namespace mock
 
     std::string engineName;
   };
+  //! [implementation]
 
+  ////////////////////////////////////////////////////////
+  //! [register]
   // Register plugin
   IGN_PHYSICS_ADD_PLUGIN(
       HelloWorldPlugin,
       ignition::physics::FeaturePolicy3d,
       HelloWorldFeatureList)
+  //! [register]
 }
