@@ -46,6 +46,28 @@ TEST(Shape, BoxShape)
 }
 
 /////////////////////////////////////////////////
+TEST(Shape, CapsuleShape)
+{
+  CapsuleShape shape;
+  EXPECT_EQ(ShapeType::CAPSULE, shape.GetType());
+  math::AxisAlignedBox empty = shape.GetBoundingBox();
+  EXPECT_EQ(math::Vector3d::Zero, empty.Center());
+  EXPECT_EQ(math::Vector3d::Zero, empty.Size());
+
+  double radius = 0.6;
+  double length = 2.8;
+  shape.SetRadius(radius);
+  EXPECT_NEAR(radius, shape.GetRadius(), 1e-6);
+  shape.SetLength(length);
+  EXPECT_NEAR(length, shape.GetLength(), 1e-6);
+  math::AxisAlignedBox bbox = shape.GetBoundingBox();
+  EXPECT_EQ(math::Vector3d::Zero, bbox.Center());
+  EXPECT_EQ(math::Vector3d(1.2, 1.2, 4.0), bbox.Size());
+  EXPECT_EQ(math::Vector3d(-0.6, -0.6, -2.0), bbox.Min());
+  EXPECT_EQ(math::Vector3d(0.6, 0.6, 2.0), bbox.Max());
+}
+
+/////////////////////////////////////////////////
 TEST(Shape, CylinderShape)
 {
   CylinderShape shape;
@@ -65,6 +87,25 @@ TEST(Shape, CylinderShape)
   EXPECT_EQ(math::Vector3d(1.2, 1.2, 2.8), bbox.Size());
   EXPECT_EQ(math::Vector3d(-0.6, -0.6, -1.4), bbox.Min());
   EXPECT_EQ(math::Vector3d(0.6, 0.6, 1.4), bbox.Max());
+}
+
+/////////////////////////////////////////////////
+TEST(Shape, EllipsoidShape)
+{
+  EllipsoidShape shape;
+  EXPECT_EQ(ShapeType::ELLIPSOID, shape.GetType());
+  math::AxisAlignedBox empty = shape.GetBoundingBox();
+  EXPECT_EQ(math::Vector3d::Zero, empty.Center());
+  EXPECT_EQ(math::Vector3d::Zero, empty.Size());
+
+  math::Vector3d radii(0.5, 0.6, 0.7);
+  shape.SetRadii(radii);
+  EXPECT_EQ(radii, shape.GetRadii());
+  math::AxisAlignedBox bbox = shape.GetBoundingBox();
+  EXPECT_EQ(math::Vector3d::Zero, bbox.Center());
+  EXPECT_EQ(math::Vector3d(1.0, 1.2, 1.4), bbox.Size());
+  EXPECT_EQ(math::Vector3d(-0.5, -0.6, -0.7), bbox.Min());
+  EXPECT_EQ(math::Vector3d(0.5, 0.6, 0.7), bbox.Max());
 }
 
 /////////////////////////////////////////////////

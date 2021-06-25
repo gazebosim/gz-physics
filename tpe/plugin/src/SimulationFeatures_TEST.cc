@@ -204,6 +204,33 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     EXPECT_EQ(2u, cylinderLink->GetShapeCount());
     EXPECT_EQ(cylinder2, cylinderLink->GetShape(1));
 
+    auto ellipsoid = world->GetModel("ellipsoid");
+    auto ellipsoidLink = ellipsoid->GetLink(0);
+    auto ellipsoidCollision = ellipsoidLink->GetShape(0);
+    auto ellipsoidShape = ellipsoidCollision->CastToEllipsoidShape();
+    EXPECT_EQ(
+      ignition::math::Vector3d(0.2, 0.3, 0.5),
+      ignition::math::eigen3::convert(ellipsoidShape->GetRadii()));
+
+    auto ellipsoid2 = ellipsoidLink->AttachEllipsoidShape(
+      "ellipsoid2",
+      ignition::math::eigen3::convert(ignition::math::Vector3d(0.2, 0.3, 0.5)),
+      Eigen::Isometry3d::Identity());
+    EXPECT_EQ(2u, ellipsoidLink->GetShapeCount());
+    EXPECT_EQ(ellipsoid2, ellipsoidLink->GetShape(1));
+
+    auto capsule = world->GetModel("capsule");
+    auto capsuleLink = capsule->GetLink(0);
+    auto capsuleCollision = capsuleLink->GetShape(0);
+    auto capsuleShape = capsuleCollision->CastToCapsuleShape();
+    EXPECT_NEAR(0.2, capsuleShape->GetRadius(), 1e-6);
+    EXPECT_NEAR(0.6, capsuleShape->GetLength(), 1e-6);
+
+    auto capsule2 = capsuleLink->AttachCapsuleShape(
+      "capsule2", 0.2, 0.6, Eigen::Isometry3d::Identity());
+    EXPECT_EQ(2u, capsuleLink->GetShapeCount());
+    EXPECT_EQ(capsule2, capsuleLink->GetShape(1));
+
     // Test the bounding boxes in the local frames
     auto sphereAABB =
       sphereCollision->GetAxisAlignedBoundingBox(*sphereCollision);
@@ -211,6 +238,10 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
       boxCollision->GetAxisAlignedBoundingBox(*boxCollision);
     auto cylinderAABB =
       cylinderCollision->GetAxisAlignedBoundingBox(*cylinderCollision);
+    auto ellipsoidAABB =
+      ellipsoidCollision->GetAxisAlignedBoundingBox(*ellipsoidCollision);
+    auto capsuleAABB =
+      capsuleCollision->GetAxisAlignedBoundingBox(*capsuleCollision);
 
     EXPECT_EQ(ignition::math::Vector3d(-1, -1, -1),
               ignition::math::eigen3::convert(sphereAABB).Min());
@@ -224,11 +255,21 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
               ignition::math::eigen3::convert(cylinderAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(0.5, 0.5, 0.55),
               ignition::math::eigen3::convert(cylinderAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-0.2, -0.3, -0.5),
+              ignition::math::eigen3::convert(ellipsoidAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(0.2, 0.3, 0.5),
+              ignition::math::eigen3::convert(ellipsoidAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-0.2, -0.2, -0.5),
+              ignition::math::eigen3::convert(capsuleAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(0.2, 0.2, 0.5),
+              ignition::math::eigen3::convert(capsuleAABB).Max());
 
     // check model AABB. By default, the AABBs are in world frame
     auto sphereModelAABB = sphere->GetAxisAlignedBoundingBox();
     auto boxModelAABB = box->GetAxisAlignedBoundingBox();
     auto cylinderModelAABB = cylinder->GetAxisAlignedBoundingBox();
+    auto ellipsoidModelAABB = ellipsoid->GetAxisAlignedBoundingBox();
+    auto capsuleModelAABB = capsule->GetAxisAlignedBoundingBox();
     EXPECT_EQ(ignition::math::Vector3d(-1, 0.5, -0.5),
               ignition::math::eigen3::convert(sphereModelAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(1, 2.5, 1.5),
@@ -241,6 +282,14 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
               ignition::math::eigen3::convert(cylinderModelAABB).Min());
     EXPECT_EQ(ignition::math::Vector3d(3, 1.5, 2.5),
               ignition::math::eigen3::convert(cylinderModelAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-0.2, -5.3, 0.2),
+              ignition::math::eigen3::convert(ellipsoidModelAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(0.2, -4.7, 1.2),
+              ignition::math::eigen3::convert(ellipsoidModelAABB).Max());
+    EXPECT_EQ(ignition::math::Vector3d(-0.2, -3.2, 0),
+              ignition::math::eigen3::convert(capsuleModelAABB).Min());
+    EXPECT_EQ(ignition::math::Vector3d(0.2, -2.8, 1),
+              ignition::math::eigen3::convert(capsuleModelAABB).Max());
   }
 }
 
@@ -343,6 +392,14 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     auto cylinderFreeGroup = cylinder->FindFreeGroup();
     EXPECT_NE(nullptr, cylinderFreeGroup);
 
+    auto capsule = world->GetModel("capsule");
+    auto capsuleFreeGroup = capsule->FindFreeGroup();
+    EXPECT_NE(nullptr, capsuleFreeGroup);
+
+    auto ellipsoid = world->GetModel("ellipsoid");
+    auto ellipsoidFreeGroup = ellipsoid->FindFreeGroup();
+    EXPECT_NE(nullptr, ellipsoidFreeGroup);
+
     auto box = world->GetModel("box");
 
     // step and get contacts
@@ -350,10 +407,13 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
 
-    // large box in the middle should be intersecting with sphere and cylinder
-    EXPECT_EQ(2u, contacts.size());
+    // large box in the middle should be intersecting with sphere, cylinder,
+    // capsule and ellipsoid
+    EXPECT_EQ(4u, contacts.size());
     unsigned int contactBoxSphere = 0u;
     unsigned int contactBoxCylinder = 0u;
+    unsigned int contactBoxCapsule = 0u;
+    unsigned int contactBoxEllipsoid = 0u;
 
     for (auto &contact : contacts)
     {
@@ -382,6 +442,22 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
         EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
+      else if ((m1->GetName() == "box" && m2->GetName() == "capsule") ||
+          (m1->GetName() == "capsule" && m2->GetName() == "box"))
+      {
+        contactBoxCapsule++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -3, 0.5);
+        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
+      else if ((m1->GetName() == "box" && m2->GetName() == "ellipsoid") ||
+          (m1->GetName() == "ellipsoid" && m2->GetName() == "box"))
+      {
+        contactBoxEllipsoid++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -5, 0.6);
+        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
       else
       {
         FAIL() << "There should not be contacts between: "
@@ -390,6 +466,8 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     }
     EXPECT_EQ(1u, contactBoxSphere);
     EXPECT_EQ(1u, contactBoxCylinder);
+    EXPECT_EQ(1u, contactBoxCapsule);
+    EXPECT_EQ(1u, contactBoxEllipsoid);
 
     // move sphere away
     sphereFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
@@ -400,10 +478,13 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
 
-    // large box in the middle should be intersecting with cylinder
-    EXPECT_EQ(1u, contacts.size());
+    // large box in the middle should be intersecting with cylinder, capsule,
+    // ellipsoid
+    EXPECT_EQ(3u, contacts.size());
 
     contactBoxCylinder = 0u;
+    contactBoxCapsule = 0u;
+    contactBoxEllipsoid = 0u;
     for (auto contact : contacts)
     {
       const auto &contactPoint = contact.Get<::ContactPoint>();
@@ -417,19 +498,48 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       auto m2 = c2->GetLink()->GetModel();
       if ((m1->GetName() == "box" && m2->GetName() == "cylinder") ||
           (m1->GetName() == "cylinder" && m2->GetName() == "box"))
+      {
         contactBoxCylinder++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, -1.5, 0.5);
+        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
+      else if ((m1->GetName() == "box" && m2->GetName() == "capsule") ||
+          (m1->GetName() == "capsule" && m2->GetName() == "box"))
+      {
+        contactBoxCapsule++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -3, 0.5);
+        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
+      else if ((m1->GetName() == "box" && m2->GetName() == "ellipsoid") ||
+          (m1->GetName() == "ellipsoid" && m2->GetName() == "box"))
+      {
+        contactBoxEllipsoid++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -5, 0.6);
+        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
       else
+      {
         FAIL() << "There should only be contacts between box and cylinder";
-
-      Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, -1.5, 0.5);
-      EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
-          contactPoint.point, 1e-6));
+      }
     }
     EXPECT_EQ(1u, contactBoxCylinder);
+    EXPECT_EQ(1u, contactBoxCapsule);
+    EXPECT_EQ(1u, contactBoxEllipsoid);
 
     // move cylinder away
     cylinderFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
         ignition::math::Pose3d(0, -100, 0.5, 0, 0, 0)));
+
+    // move capsule away
+    capsuleFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
+        ignition::math::Pose3d(0, -100, 100, 0, 0, 0)));
+
+    // move ellipsoid away
+    ellipsoidFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
+        ignition::math::Pose3d(0, -100, -100, 0, 0, 0)));
 
     // step and get contacts
     checkedOutput = StepWorld(world, false);

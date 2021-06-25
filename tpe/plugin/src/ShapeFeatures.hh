@@ -22,7 +22,9 @@
 
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/BoxShape.hh>
+#include <ignition/physics/CapsuleShape.hh>
 #include <ignition/physics/CylinderShape.hh>
+#include <ignition/physics/EllipsoidShape.hh>
 #include <ignition/physics/mesh/MeshShape.hh>
 #include <ignition/physics/SphereShape.hh>
 
@@ -37,8 +39,14 @@ struct ShapeFeatureList : FeatureList<
   AttachBoxShapeFeature,
   GetShapeBoundingBox,
 
+  GetCapsuleShapeProperties,
+  AttachCapsuleShapeFeature,
+
   GetCylinderShapeProperties,
   AttachCylinderShapeFeature,
+
+  GetEllipsoidShapeProperties,
+  AttachEllipsoidShapeFeature,
 
   GetSphereShapeProperties,
   AttachSphereShapeFeature,
@@ -64,6 +72,22 @@ class ShapeFeatures :
     const LinearVector3d &_size,
     const Pose3d &_pose) override;
 
+  // ----- Capsule Features -----
+  public: Identity CastToCapsuleShape(
+    const Identity &_shapeID) const override;
+
+  public: double GetCapsuleShapeRadius(
+    const Identity &_capsuleID) const override;
+
+  public: double GetCapsuleShapeLength(
+    const Identity &_capsuleID) const override;
+
+  public: Identity AttachCapsuleShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    double _radius,
+    double _height,
+    const Pose3d &_pose) override;
 
   // ----- Cylinder Features -----
   public: Identity CastToCylinderShape(
@@ -82,6 +106,18 @@ class ShapeFeatures :
     double _height,
     const Pose3d &_pose) override;
 
+  // ----- Capsule Features -----
+  public: Identity CastToEllipsoidShape(
+    const Identity &_shapeID) const override;
+
+  public: Vector3d GetEllipsoidShapeRadii(
+    const Identity &_capsuleID) const override;
+
+  public: Identity AttachEllipsoidShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    Vector3d _radii,
+    const Pose3d &_pose) override;
 
   // ----- Sphere Features -----
   public: Identity CastToSphereShape(
