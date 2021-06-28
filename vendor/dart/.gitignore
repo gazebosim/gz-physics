@@ -1,0 +1,32 @@
+build/
+syntax: glob
+*.swp
+*.swo
+CPack*
+CTest*
+Testing/
+TAGS
+.DS_Store
+.cproject
+.project
+.vscode
+*.orig
+*.idb
+*.pdb
+*.ncb
+*.suo
+*.htm
+*.user
+*.dep
+*.manifest
+*.rsp
+*~
+.idea/*
+/nbproject/
+/doxygen/html/
+docs/readthedocs/site
+data/screencap/*
+
+# Python
+dist/
+*.egg-info

@@ -1,0 +1,43 @@
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+
+name: C/C++ CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+  schedule:
+    # Run every day at 02:00
+    - cron: "0 2 * * 0-6"
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+  DART_DEV_IMAGE: osrf/ubuntu_i386
+  # Different from dart upstream since probably their dart image contains
+  # development tools. Here we run install.sh
+  UBUNTU_BUILD_CMD: |
+    docker run \
+      -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+      --env-file ./.ci/docker/env.list \
+      $DART_DEV_IMAGE:$DOCKER_TAG \
+      /bin/sh -c "cd $GITHUB_WORKSPACE && ./.ci/install.sh && ./.ci/script.sh"
+
+jobs:
+  xenial_i386_gcc_release:
+    name: Ubuntu 16.04 [i386|GCC|Release]
+    runs-on: ubuntu-20.04
+    env:
+      DOCKER_TAG: xenial
+      COMPILER: gcc
+      BUILD_TYPE: Release
+      BUILD_DARTPY: OFF
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Pull dev container
+        run: docker pull ${{ env.DART_DEV_IMAGE }}:${{ env.DOCKER_TAG }}
+      - name: Build
+        run: ${{ env.UBUNTU_BUILD_CMD }}

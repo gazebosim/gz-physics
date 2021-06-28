@@ -1,0 +1,5 @@
+usr/include/dart/collision/ode/*
+usr/lib/*/libdart-collision-ode.so
+usr/share/dart/cmake/dart_collision-odeTargets.cmake
+usr/share/dart/cmake/dart_collision-odeTargets-*.cmake
+usr/share/dart/cmake/dart_collision-odeComponent.cmake

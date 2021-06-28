@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -ex
+
+# Sanity checks for required environment variables.
+if [ -z "$BUILD_TYPE" ]; then
+  echo "Error: Environment variable BUILD_TYPE is unset."
+  exit 1
+fi
+
+if [ -z "$BUILD_DARTPY" ]; then
+  echo "Info: Environment variable BUILD_DARTPY is unset. Using OFF by default."
+  BUILD_DARTPY=OFF
+fi
+
+if [ -z "$BUILD_DOCS" ]; then
+  echo "Info: Environment variable BUILD_DOCS is unset. Using OFF by default."
+  BUILD_DOCS=OFF
+fi
+
+if [ -z "$COMPILER" ]; then
+  echo "Info: Environment variable COMPILER is unset. Using gcc by default."
+  COMPILER=gcc
+fi
+
+if [ -z "$CODECOV" ]; then
+  echo "Info: Environment variable CODECOV is unset. Using OFF by default."
+  CODECOV=OFF
+fi
+
+if [ -z "$BUILD_DIR" ]; then
+  echo "Error: Environment variable BUILD_DIR is unset. Using $PWD by default."
+  BUILD_DIR=$PWD
+fi
+
+# Set number of threads for parallel build
+# Ref: https://unix.stackexchange.com/a/129401
+if [ "$OSTYPE" = "linux-gnu" ]; then
+  num_threads=$(nproc)
+elif [ "$OSTYPE" = "darwin" ]; then
+  num_threads=$(sysctl -n hw.logicalcpu)
+else
+  num_threads=1
+  echo "$OSTYPE is not supported to detect the number of logical CPU cores."
+fi
+while getopts ":j:" opt; do
+  case $opt in
+  j)
+    num_threads="$OPTARG"
+    ;;
+  \?)
+    echo "Invalid option -$OPTARG" >&2
+    ;;
+  esac
+done
+
+# Set compilers
+if [ "$COMPILER" = "gcc" ]; then
+  export CC=gcc
+  export CXX=g++
+elif [ "$COMPILER" = "clang" ]; then
+  export CC=clang
+  export CXX=clang++
+else
+  echo "Info: Compiler isn't specified. Using the system default."
+fi
+
+# Build API documentation and exit
+if [ $BUILD_DOCS = "ON" ]; then
+  . "${BUILD_DIR}/.ci/travis/build_docs.sh"
+  exit 0
+fi
+
+# Run CMake
+mkdir build && cd build
+if [ "$OSTYPE" = "linux-gnu" ]; then
+  install_prefix_option="-DCMAKE_INSTALL_PREFIX=/usr/"
+fi
+cmake .. \
+  -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+  -DDART_BUILD_DARTPY=$BUILD_DARTPY \
+  -DDART_VERBOSE=ON \
+  -DDART_TREAT_WARNINGS_AS_ERRORS=ON \
+  -DDART_BUILD_EXTRAS=ON \
+  -DDART_CODECOV=$CODECOV \
+  ${install_prefix_option}
+
+# Check format
+if [ "$OSTYPE" = "linux-gnu" ] && [ $(lsb_release -sc) = "bionic" ]; then
+  make check-format
+fi
+
+# DART: build, test, and install
+make -j$num_threads all tutorials examples tests
+ctest --output-on-failure -j$num_threads
+make -j$num_threads install
+
+# dartpy: build, test, and install
+if [ "$BUILD_DARTPY" = "ON" ]; then
+  make -j$num_threads dartpy
+  make pytest
+  make -j$num_threads install-dartpy
+fi
+
+# Codecov
+if [ "$CODECOV" = "ON" ]; then
+  make -j$num_threads codecov
+fi
+
+# DART: build an C++ example using installed DART
+cd $BUILD_DIR/examples/hello_world
+mkdir build && cd build
+cmake ..
+make -j$num_threads
+
+# dartpy: run a Python example using installed dartpy
+if [ "$BUILD_DARTPY" = "ON" ]; then
+  cd $BUILD_DIR/python/examples/hello_world
+  python3 main.py
+fi
