@@ -66,17 +66,10 @@ ign_find_package(sdformat11
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
-ign_find_package(DART
-  COMPONENTS
-    collision-bullet
-    collision-ode
-    utils
-    utils-urdf
-  EXTRA_ARGS CONFIG
-  VERSION 6.9
-  REQUIRED_BY dartsim
-  PKGCONFIG dart
-  PKGCONFIG_VER_COMPARISON >=)
+set(DART_VENDOR_ROOT "${CMAKE_SOURCE_DIR}/vendor/dart")
+set(DART_VENDOR_INCLUDE_DIRS "${DART_VENDOR_ROOT}")
+add_subdirectory(${DART_VENDOR_ROOT})
+
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper

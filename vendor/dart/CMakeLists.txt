@@ -39,7 +39,8 @@ set(DART_ADDITIONAL_DOCUMENTATION_INSTALL_PATH
 )
 
 set(CMAKE_DEBUG_POSTFIX "d")
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(VENDOR_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}/vendor/dart")
+set(CMAKE_MODULE_PATH "${VENDOR_CMAKE_SOURCE_DIR}/cmake")
 
 include(DARTMacros)
 
@@ -282,58 +283,6 @@ add_subdirectory(dart)
 
 set(DART_IN_SOURCE_BUILD TRUE)
 
-if(TARGET dart AND NOT DART_BUILD_DARTPY)
-
-  # Add a "tests" target to build unit tests.
-  enable_testing()
-  if(MSVC)
-    # add_subdirectory(unittests)
-  else()
-    add_subdirectory(unittests EXCLUDE_FROM_ALL)
-  endif()
-
-  # Add example subdirectories and an "examples" target.
-  if(MSVC)
-    # add_subdirectory(examples)
-  else()
-    add_subdirectory(examples EXCLUDE_FROM_ALL)
-    get_property(examples GLOBAL PROPERTY DART_EXAMPLES)
-    add_custom_target(examples DEPENDS ${examples})
-  endif()
-
-  if(DART_VERBOSE)
-    message(STATUS "")
-    message(STATUS "[ Examples ]")
-    foreach(example ${examples})
-      message(STATUS "Adding example: ${example}")
-    endforeach(example ${examples})
-  else(DART_VERBOSE)
-    list(LENGTH examples examples_length)
-    message(STATUS "Adding ${examples_length} examples")
-  endif(DART_VERBOSE)
-
-  # Add a "tutorials" target to build tutorials.
-  if(MSVC)
-    # add_subdirectory(tutorials)
-  else()
-    add_subdirectory(tutorials EXCLUDE_FROM_ALL)
-    get_property(tutorials GLOBAL PROPERTY DART_TUTORIALS)
-    add_custom_target(tutorials DEPENDS ${tutorials})
-  endif()
-
-  if(DART_VERBOSE)
-    message(STATUS "")
-    message(STATUS "[ Tutorials ]")
-    foreach(tutorial ${tutorials})
-      message(STATUS "Adding tutorial: ${tutorial}")
-    endforeach(tutorial ${tutorials})
-  else(DART_VERBOSE)
-    list(LENGTH tutorials tutorials_length)
-    message(STATUS "Adding ${tutorials_length} tutorials")
-  endif(DART_VERBOSE)
-
-endif()
-
 if (DART_BUILD_DARTPY)
   add_subdirectory(python)
 endif()
@@ -371,7 +320,7 @@ get_property(PACKAGE_INCLUDE_DIRS GLOBAL
 
 # Generate the DART CMake Config and version files
 include(CMakePackageConfigHelpers)
-set(DART_CONFIG_IN ${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME_UPPERCASE}Config.cmake.in)
+set(DART_CONFIG_IN ${VENDOR_CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME_UPPERCASE}Config.cmake.in)
 set(DART_CONFIG_OUT ${CMAKE_BINARY_DIR}/${PROJECT_NAME_UPPERCASE}Config.cmake)
 set(DART_VERSION_OUT ${CMAKE_BINARY_DIR}/cmake/${PROJECT_NAME_UPPERCASE}ConfigVersion.cmake)
 if(DART_VERBOSE)
@@ -397,7 +346,7 @@ if(NOT DART_BUILD_DARTPY)
 endif()
 
 # Generate the DART pkg-config
-set(PC_CONFIG_IN ${CMAKE_SOURCE_DIR}/cmake/dart.pc.in)
+set(PC_CONFIG_IN ${VENDOR_CMAKE_SOURCE_DIR}/cmake/dart.pc.in)
 set(PC_CONFIG_OUT ${CMAKE_BINARY_DIR}/cmake/dart.pc)
 if(DART_VERBOSE)
   message(STATUS ${PC_CONFIG_OUT})
@@ -446,7 +395,7 @@ endif()
 # Add an "uninstall" target
 # Ref: http://www.cmake.org/Wiki/CMake_FAQ#Can_I_do_.22make_uninstall.22_with_CMake.3F
 configure_file("${PROJECT_SOURCE_DIR}/cmake/uninstall_target.cmake.in" "${PROJECT_BINARY_DIR}/uninstall_target.cmake" IMMEDIATE @ONLY)
-add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${PROJECT_BINARY_DIR}/uninstall_target.cmake")
+add_custom_target(uninstall_dart "${CMAKE_COMMAND}" -P "${PROJECT_BINARY_DIR}/uninstall_target.cmake")
 
 #===============================================================================
 # Code Formatting
@@ -499,79 +448,6 @@ else()
   if(DART_VERBOSE)
     message(STATUS "Looking for clang-format - NOT found, please install clang-format to enable automatic code formatting")
   endif()
-
-endif()
-
-#===============================================================================
-# API Document using Doxygen
-# References:
-#   http://mementocodex.wordpress.com/2013/01/19/how-to-generate-code-documentation-with-doxygen-and-cmake-a-slightly-improved-approach/
-#   http://www.cmake.org/pipermail/cmake/2007-February/012796.html
-#===============================================================================
-if(DOXYGEN_FOUND)
-
-  set(DOXYGEN_DOXYFILE_IN      "${PROJECT_SOURCE_DIR}/doxygen/Doxyfile.in"    )
-  set(DOXYGEN_DOXYFILE         "${PROJECT_BINARY_DIR}/doxygen/Doxyfile"       )
-  set(DOXYGEN_HTML_INDEX       "${PROJECT_BINARY_DIR}/doxygen/html/index.html")
-  set(DOXYGEN_OUTPUT_ROOT      "${PROJECT_BINARY_DIR}/doxygen/html"           )
-  set(DOXYGEN_GENERATE_TAGFILE "${DOXYGEN_OUTPUT_ROOT}/${PROJECT_NAME}.tag"   )
-  set(DOXYGEN_INCLUDE_PATH     "${PROJECT_SOURCE_DIR}"                        )
-  set(DOXYGEN_INPUT_ROOT       "${PROJECT_SOURCE_DIR}/dart"                   )
-  set(DOXYGEN_EXTRA_INPUTS     "${PROJECT_SOURCE_DIR}/doxygen/mainpage.dox"   )
-  set(DOXYGEN_EXCLUDE          "${PROJECT_SOURCE_DIR}/dart/external"          )
-  set(DOXYGEN_STRIP_FROM_PATH  "${CMAKE_CURRENT_SOURCE_DIR}"                  )
-
-  # Generate a Doxyfile. This uses the variables:
-  #
-  # - DOXYGEN_OUTPUT_ROOT
-  # - DOXYGEN_GENERATE_TAGFILE
-  # - DOXYGEN_EXTRA_INPUTS
-  # - DOXYGEN_INPUT_ROOT
-  # - DOXYGEN_EXCLUDE
-  # - DOXYGEN_STRIP_FROM_PATH
-  configure_file(${DOXYGEN_DOXYFILE_IN} ${DOXYGEN_DOXYFILE} @ONLY)
-  file(
-    COPY "${PROJECT_SOURCE_DIR}/doxygen/DART logo.png"
-    DESTINATION ${DOXYGEN_OUTPUT_ROOT}
-  )
-  add_custom_command(
-    OUTPUT ${DOXYGEN_HTML_INDEX}
-    COMMAND ${CMAKE_COMMAND} -E echo_append "Building API Documentation..."
-    COMMAND ${DOXYGEN_EXECUTABLE} -u ${DOXYGEN_DOXYFILE}
-    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_DOXYFILE}
-    # Strip path prefix from all paths in dart.tag
-    COMMAND ${CMAKE_COMMAND} -E echo "Stripping paths from"
-        "${DOXYGEN_GENERATE_TAGFILE}"
-    COMMAND sed -i s:${DOXYGEN_STRIP_FROM_PATH}::g ${DOXYGEN_GENERATE_TAGFILE}
-    # Strip all doxygen="path" HTML tags
-    COMMAND ${CMAKE_COMMAND} -E echo "Stripping Doxygen HTML tags"
-    COMMAND find "${DOXYGEN_OUTPUT_ROOT}" -type f -name "*.html"
-        -exec sed -i 's: doxygen=\"[^\"]*\"::g' {} \\$<SEMICOLON>
-    COMMAND ${CMAKE_COMMAND} -E echo "Done."
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/doxygen
-    DEPENDS ${DOXYGEN_DOXYFILE}
-  )
-  # add_custom_target(docs ALL DEPENDS ${DOXYGEN_HTML_INDEX})
-  add_custom_target(docs DEPENDS ${DOXYGEN_HTML_INDEX})
-  add_custom_target(
-    docs_forced
-    COMMAND ${CMAKE_COMMAND} -E echo_append "Building API Documentation..."
-    COMMAND ${DOXYGEN_EXECUTABLE} -u ${DOXYGEN_DOXYFILE}
-    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_DOXYFILE}
-    COMMAND ${CMAKE_COMMAND} -E echo "Done."
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/doxygen
-  )
-
-  # Add the "view_docs" target that opens the generated API documentation.
-  if(APPLE)
-    set(OPEN_COMMAND "open")
-  else()
-    set(OPEN_COMMAND "xdg-open")
-  endif()
-
-  add_custom_target(view_docs "${OPEN_COMMAND}" "${DOXYGEN_HTML_INDEX}"
-    DEPENDS "${DOXYGEN_HTML_INDEX}"
-    COMMENT "Opening documentation in a web browser.")
 
 endif()
 
