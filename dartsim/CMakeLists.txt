@@ -5,8 +5,14 @@ ign_add_component(dartsim INTERFACE
   DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
-target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
-target_include_directories(${features} SYSTEM INTERFACE ${DART_INCLUDE_DIRS})
+target_link_libraries(${features} INTERFACE ${DART_VENDOR_LIBRARIES})
+target_include_directories(${features} INTERFACE
+    $<BUILD_INTERFACE:${DART_VENDOR_INCLUDE_DIRS}>
+    $<BUILD_INTERFACE:${BULLET_INCLUDE_DIRS}>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+    $<INSTALL_INTERFACE:${IGN_INCLUDE_INSTALL_DIR_FULL}/vendor/dart>
+)
+
 if (MSVC)
   # needed by DART, see https://github.com/dartsim/dart/issues/753
   target_compile_options(${features} INTERFACE "/permissive-")
@@ -24,6 +30,8 @@ ign_add_component(${engine_name}
   SOURCES ${sources}
   DEPENDS_ON_COMPONENTS dartsim
   GET_TARGET_NAME dartsim_plugin)
+
+add_dependencies(${PROJECT_LIBRARY_TARGET_NAME}-dartsim-plugin dart)
 
 target_link_libraries(${dartsim_plugin}
   PUBLIC
@@ -54,6 +62,7 @@ if (WIN32)
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
   INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+  INSTALL(TARGETS dart DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
 
 # Testing
