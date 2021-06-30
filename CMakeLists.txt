@@ -66,17 +66,43 @@ ign_find_package(sdformat11
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
-ign_find_package(DART
-  COMPONENTS
-    collision-bullet
-    collision-ode
-    utils
-    utils-urdf
-  EXTRA_ARGS CONFIG
-  VERSION 6.9
-  REQUIRED_BY dartsim
-  PKGCONFIG dart
-  PKGCONFIG_VER_COMPARISON >=)
+
+option(USE_VENDOR_DART "Use internal Open Robotics fork of vendor" BOOL)
+if(USE_VENDOR_DART)
+    include(ExternalProject)
+
+    set(DART_VENDOR_INSTALL_DIR ${CMAKE_BINARY_DIR}/vendor/dart/install)
+
+    find_package(Bullet COMPONENTS BulletMath BulletCollision MODULE QUIET)
+    set(DART_VENDOR_INCLUDE_DIRS "${DART_VENDOR_INSTALL_DIR}/include")
+    set(DART_VENDOR_LIBRARIES "dart")
+    # list(APPEND DART_VENDOR_INCLUDE_DIRS "${BULLET_INCLUDE_DIRS}")
+
+    # INTERFACE_LINK_LIBRARIES "${BULLET_LIBRARIES}"
+
+    ExternalProject_Add(dart
+      DOWNLOAD_COMMAND ""
+      UPDATE_COMMAND ""
+      PREFIX ${CMAKE_BINARY_DIR}/vendor/dart
+      INSTALL_DIR ${DART_VENDOR_INSTALL_DIR}
+      SOURCE_DIR ${CMAKE_SOURCE_DIR}/vendor/dart
+      # Seems a bug since INSTALL_DIR and SOURCE_DIR should handle it
+      # https://gitlab.kitware.com/cmake/cmake/-/issues/18790
+      CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${DART_VENDOR_INSTALL_DIR}
+    )
+else()
+    ign_find_package(DART
+      COMPONENTS
+	collision-bullet
+	collision-ode
+	utils
+	utils-urdf
+      EXTRA_ARGS CONFIG
+      VERSION 6.9
+      REQUIRED_BY dartsim
+      PKGCONFIG dart
+      PKGCONFIG_VER_COMPARISON >=)
+endif()
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
