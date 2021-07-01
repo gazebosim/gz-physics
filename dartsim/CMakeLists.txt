@@ -5,7 +5,7 @@ ign_add_component(dartsim INTERFACE
   DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
-target_link_libraries(${features} INTERFACE ${DART_VENDOR_LIBRARIES})
+target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
 target_include_directories(${features} INTERFACE
     $<BUILD_INTERFACE:${DART_VENDOR_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${BULLET_INCLUDE_DIRS}>
@@ -32,6 +32,9 @@ ign_add_component(${engine_name}
   GET_TARGET_NAME dartsim_plugin)
 
 add_dependencies(${PROJECT_LIBRARY_TARGET_NAME}-dartsim-plugin dart)
+if(USE_VENDOR_DART)
+  add_dependencies(${PROJECT_LIBRARY_TARGET_NAME}-dartsim-plugin dart_project)
+endif()
 
 target_link_libraries(${dartsim_plugin}
   PUBLIC
@@ -43,10 +46,22 @@ target_link_libraries(${dartsim_plugin}
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
     ignition-common${IGN_COMMON_VER}::profiler
+    ${DART_VENDOR_LIBRARIES}
 )
+
+if(USE_VENDOR_DART)
+  install(FILES ${DART_VENDOR_LIBRARY_PATH}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR})
+  install(FILES ${DART_ODEL_VENDOR_LIBRARY_PATH}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR})
+endif()
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${dartsim_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+if(USE_VENDOR_DART)
+  install(FILES ${DART_VENDOR_LIBRARY_PATH} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+  install(FILES ${DART_ODEL_VENDOR_LIBRARY_PATH} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+endif()
 
 # The library created by `ign_add_component` includes the ign-physics version
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
@@ -62,7 +77,6 @@ if (WIN32)
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
   INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
-  INSTALL(TARGETS dart DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
 
 # Testing
