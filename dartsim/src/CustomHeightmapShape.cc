@@ -68,7 +68,6 @@ CustomHeightmapShape::CustomHeightmapShape(
   this->setHeightField(vertSize, vertSize, heightsFloat);
   this->setScale(Vector3(scale.X(), scale.Y(), 1));
 }
-
 }
 }
 }

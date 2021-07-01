@@ -41,7 +41,6 @@ class CustomHeightmapShape : public dart::dynamics::HeightmapShape<float>
       const Eigen::Vector3d &_size,
       const int _subSampling);
 };
-
 }
 }
 }

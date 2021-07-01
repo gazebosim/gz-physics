@@ -77,6 +77,7 @@ namespace heightmap
 
       /// \brief Attach a heightmap shape to a link.
       /// \param[in] _name Shape's name.
+      /// \param[in] _heightmapData Contains the 3D data for the heigthtmap.
       /// \param[in] _pose Position in the world.
       /// \param[in] _size Heightmap total size in meters.
       /// \param[in] _subSampling Increase sampling to improve resolution.

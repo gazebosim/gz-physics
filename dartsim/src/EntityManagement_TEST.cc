@@ -21,6 +21,7 @@
 
 #include <ignition/common/ImageHeightmap.hh>
 #include <ignition/common/MeshManager.hh>
+#include <ignition/common/Filesystem.hh>
 
 #include <ignition/math/eigen3/Conversions.hh>
 
@@ -168,7 +169,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto meshLink = model->ConstructEmptyLink("mesh_link");
   meshLink->AttachFixedJoint(child, "fixed");
 
-  const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
+  const std::string meshFilename = ignition::common::joinPaths(
+      IGNITION_PHYSICS_RESOURCE_DIR, "chassis.dae");
   auto &meshManager = *ignition::common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 
@@ -206,7 +208,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto heightmapLink = model->ConstructEmptyLink("heightmap_link");
   heightmapLink->AttachFixedJoint(child, "heightmap_joint");
 
-  auto heightmapFilename = IGNITION_PHYSICS_RESOURCE_DIR "/heightmap_bowl.png";
+  auto heightmapFilename = ignition::common::joinPaths(
+      IGNITION_PHYSICS_RESOURCE_DIR, "heightmap_bowl.png");
   ignition::common::ImageHeightmap data;
   EXPECT_GE(0, data.Load(heightmapFilename));
 
