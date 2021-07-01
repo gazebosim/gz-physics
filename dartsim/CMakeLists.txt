@@ -91,6 +91,10 @@ ign_build_tests(
   TEST_LIST tests)
 
 foreach(test ${tests})
+   if(USE_VENDOR_DART)
+     set_tests_properties(${test} PROPERTIES
+	 ENVIRONMENT "LD_LIBRARY_PATH=${DART_VENDOR_LIBRARY_DIR}")
+  endif()
 
   target_compile_definitions(${test} PRIVATE
     "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\""
