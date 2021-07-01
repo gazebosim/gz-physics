@@ -46,7 +46,6 @@ target_link_libraries(${dartsim_plugin}
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
     ignition-common${IGN_COMMON_VER}::profiler
-    ${DART_VENDOR_LIBRARIES}
 )
 
 if(USE_VENDOR_DART)
