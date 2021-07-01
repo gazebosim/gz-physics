@@ -69,18 +69,24 @@ if(USE_VENDOR_DART)
     set(DART_VENDOR_INSTALL_DIR ${CMAKE_BINARY_DIR}/vendor/dart/install)
     set(DART_VENDOR_INCLUDE_DIRS "${DART_VENDOR_INSTALL_DIR}/include")
     set(DART_VENDOR_LIBRARY_DIR "${DART_VENDOR_INSTALL_DIR}/lib")
+    # Three libraries needed
     set(DART_VENDOR_LIBRARY_PATH 
 	"${DART_VENDOR_LIBRARY_DIR}/libdart.so.6.10.0")
-    set(DART_ODEL_VENDOR_LIBRARY_PATH
-	"${DART_VENDOR_LIBRARY_DIR}/libdart-external-odelcpsolver.so.6.10.0")
     add_library(dart SHARED IMPORTED)
     set_target_properties(dart PROPERTIES
 	IMPORTED_LOCATION ${DART_VENDOR_LIBRARY_PATH})
+    set(DART_ODEL_VENDOR_LIBRARY_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart-external-odelcpsolver.so.6.10.0")
     add_library(dart_external_odelcpsolver SHARED IMPORTED)
     set_target_properties(dart_external_odelcpsolver PROPERTIES
 	IMPORTED_LOCATION ${DART_ODEL_VENDOR_LIBRARY_PATH})
-    set(DART_LIBRARIES "dart")
-    list(APPEND DART_LIBRARIES "dart_external_odelcpsolver")
+    set(DART_COLLISION_VENDOR_LIBRARY_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart-collision-ode.so.6.10.0")
+    add_library(dart_collision_ode SHARED IMPORTED)
+    set_target_properties(dart_collision_ode PROPERTIES
+	IMPORTED_LOCATION ${DART_COLLISION_VENDOR_LIBRARY_PATH})
+
+    set(DART_LIBRARIES dart dart_external_odelcpsolver dart_collision_ode)
 
     ExternalProject_Add(dart_project
       DOWNLOAD_COMMAND ""
