@@ -90,7 +90,7 @@ if(USE_VENDOR_DART)
       SOURCE_DIR ${CMAKE_SOURCE_DIR}/vendor/dart
       # Seems a bug since INSTALL_DIR and SOURCE_DIR should handle it
       # https://gitlab.kitware.com/cmake/cmake/-/issues/18790
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DART_VENDOR_INSTALL_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DART_VENDOR_INSTALL_DIR} -DENABLE_TESTING:BOOL=False
     )
 else()
     ign_find_package(DART
