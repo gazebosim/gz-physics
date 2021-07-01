@@ -79,13 +79,15 @@ TestWorldPtr LoadWorld(
 {
   sdf::Root root;
   const sdf::Errors errors = root.Load(_sdfFile);
-  EXPECT_TRUE(errors.empty());
+  EXPECT_TRUE(errors.empty()) << errors;
   const sdf::World *sdfWorld = root.WorldByIndex(0);
   // Make a copy of the world so we can set the gravity property
   // TODO(addisu) Add a world property feature to set gravity instead of this
   // hack
   sdf::World worldCopy;
   worldCopy.Load(sdfWorld->Element());
+  auto graphErrors = worldCopy.ValidateGraphs();
+  EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
 
   worldCopy.SetGravity(math::eigen3::convert(_gravity));
   return _engine->ConstructWorld(worldCopy);
