@@ -68,9 +68,21 @@ if(USE_VENDOR_DART)
 
     set(DART_VENDOR_INSTALL_DIR ${CMAKE_BINARY_DIR}/vendor/dart/install)
     set(DART_VENDOR_INCLUDE_DIRS "${DART_VENDOR_INSTALL_DIR}/include")
-    set(DART_VENDOR_LIBRARIES "dart")
+    set(DART_VENDOR_LIBRARY_DIR "${DART_VENDOR_INSTALL_DIR}/lib")
+    set(DART_VENDOR_LIBRARY_PATH 
+	"${DART_VENDOR_LIBRARY_DIR}/libdart.so.6.10.0")
+    set(DART_ODEL_VENDOR_LIBRARY_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart-external-odelcpsolver.so.6.10.0")
+    add_library(dart SHARED IMPORTED)
+    set_target_properties(dart PROPERTIES
+	IMPORTED_LOCATION ${DART_VENDOR_LIBRARY_PATH})
+    add_library(dart_external_odelcpsolver SHARED IMPORTED)
+    set_target_properties(dart_external_odelcpsolver PROPERTIES
+	IMPORTED_LOCATION ${DART_ODEL_VENDOR_LIBRARY_PATH})
+    set(DART_LIBRARIES "dart")
+    list(APPEND DART_LIBRARIES "dart_external_odelcpsolver")
 
-    ExternalProject_Add(dart
+    ExternalProject_Add(dart_project
       DOWNLOAD_COMMAND ""
       UPDATE_COMMAND ""
       PREFIX ${CMAKE_BINARY_DIR}/vendor/dart
@@ -78,7 +90,7 @@ if(USE_VENDOR_DART)
       SOURCE_DIR ${CMAKE_SOURCE_DIR}/vendor/dart
       # Seems a bug since INSTALL_DIR and SOURCE_DIR should handle it
       # https://gitlab.kitware.com/cmake/cmake/-/issues/18790
-      CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${DART_VENDOR_INSTALL_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DART_VENDOR_INSTALL_DIR}
     )
 else()
     ign_find_package(DART
@@ -100,8 +112,6 @@ ign_find_package(IgnBullet
   REQUIRED_BY bullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
-
-message(STATUS "-------------------------------------------\n")
 
 set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
