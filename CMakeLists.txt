@@ -98,6 +98,8 @@ if(USE_VENDOR_DART)
       # https://gitlab.kitware.com/cmake/cmake/-/issues/18790
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DART_VENDOR_INSTALL_DIR}
     )
+
+    add_definitions(-DDART_VERSION=6.10.0)
 else()
     ign_find_package(DART
       COMPONENTS
