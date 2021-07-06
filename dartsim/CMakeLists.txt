@@ -6,12 +6,16 @@ ign_add_component(dartsim INTERFACE
   GET_TARGET_NAME features)
 
 target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
-target_include_directories(${features} INTERFACE
+
+if(USE_VENDOR_DART)
+  target_include_directories(${features} INTERFACE
     $<BUILD_INTERFACE:${DART_VENDOR_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${BULLET_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-    $<INSTALL_INTERFACE:${IGN_INCLUDE_INSTALL_DIR_FULL}/vendor/dart>
-)
+    $<INSTALL_INTERFACE:${IGN_INCLUDE_INSTALL_DIR_FULL}/vendor/dart>)
+else()
+  target_include_directories(${features} SYSTEM INTERFACE ${DART_INCLUDE_DIRS})
+endif()
 
 if (MSVC)
   # needed by DART, see https://github.com/dartsim/dart/issues/753
