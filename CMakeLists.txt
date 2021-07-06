@@ -64,16 +64,18 @@ ign_find_package(sdformat10
 
 # respect user explicit values and also provide a default value for Ubuntu Focal
 # to make ground vehicles to work properly
-set(DEFAULT_VENDOR_DART:BOOL OFF)
+set(DEFAULT_VENDOR_DART OFF)
 if(NOT DEFINED USE_VENDOR_DART)
+    find_program(LSB_RELEASE_EXEC lsb_release)
+
     if(LSB_RELEASE_EXEC)
       execute_process(COMMAND ${LSB_RELEASE_EXEC} -rs
-	  OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
-	  OUTPUT_STRIP_TRAILING_WHITESPACE)
-      if (LSB_RELEASE_ID_SHORT == "20.04")
-        message(STATUS "DETECTED Ubuntu 20.04, default USE_VENDOR_DART set to ON"
-                       "to make ground vehicles to work properly")
-	set(DEFAULT_VENDOR_DART:BOOL ON)
+        OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+      if(LSB_RELEASE_ID_SHORT STREQUAL  "20.04")
+        message(STATUS "DETECTED Ubuntu 20.04, default USE_VENDOR_DART set to "
+                       "ON to make ground vehicles to work properly")
+        set(DEFAULT_VENDOR_DART ON)
       endif()
   endif()
 endif()
