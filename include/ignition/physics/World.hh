@@ -83,7 +83,7 @@ namespace ignition
       {
         /// \brief Implementation API for setting the solver.
         /// \param[in] _id Identity of the world.
-        /// \param[in] _collisionDetector Name of solver.
+        /// \param[in] _solver Name of solver.
         public: virtual void SetWorldSolver(
             const Identity &_id, const std::string &_solver) = 0;
 
