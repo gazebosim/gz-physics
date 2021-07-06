@@ -48,18 +48,23 @@ target_link_libraries(${dartsim_plugin}
     ignition-common${IGN_COMMON_VER}::profiler
 )
 
-if(USE_VENDOR_DART)
-  install(FILES ${DART_VENDOR_LIBRARY_PATH}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR})
-  install(FILES ${DART_ODEL_VENDOR_LIBRARY_PATH}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR})
-endif()
-
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${dartsim_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+
 if(USE_VENDOR_DART)
-  install(FILES ${DART_VENDOR_LIBRARY_PATH} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
-  install(FILES ${DART_ODEL_VENDOR_LIBRARY_PATH} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+  # Set RPATH/RUNPATH to point to engine install dir. This makes possible
+  # to find embedded dart libraries withotu interfere with oter system directories
+  set_target_properties(${dartsim_plugin} PROPERTIES
+      INSTALL_RPATH ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+
+  foreach(lib ${DART_VENDOR_LIBRARY_PATH} ${DART_VENDOR_LIBRARY_LINK_PATH}
+	      ${DART_COLLISION_VENDOR_LIBRARY_PATH} ${DART_COLLISION_VENDOR_LIBRARY_LINK_PATH}
+	      ${DART_ODEL_VENDOR_LIBRARY_PATH} ${DART_ODEL_VENDOR_LIBRARY_LINK_PATH})
+	  #      install(FILES ${lib}
+	  # DESTINATION ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR})
+      install(FILES ${lib}
+	DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+  endforeach()
 endif()
 
 # The library created by `ign_add_component` includes the ign-physics version
