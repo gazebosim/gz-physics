@@ -73,7 +73,12 @@ namespace mock
 
         for (std::size_t i=0; i < robot->getNumJoints(); ++i)
         {
+// From upstream 6.10.0 or OSRF 6.10.0~osrf19~2021-06-10
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+          this->robot->getJoint(i)->setLimitEnforcement(false);
+#else
           this->robot->getJoint(i)->setPositionLimitEnforced(false);
+#endif
           this->robot->getJoint(i)->setDampingCoefficient(0, 0);
         }
 

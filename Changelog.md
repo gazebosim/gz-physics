@@ -2,6 +2,20 @@
 
 ### Ignition Physics 3.x.x (20XX-XX-XX)
 
+### Ignition Physics 3.3.0 (2021-06-18)
+
+1. Fix DART deprecation warning
+    * [Pull request #263](https://github.com/ignitionrobotics/ign-physics/pull/263)
+
+1. Integrate Bullet engine
+    * [Pull request #208](https://github.com/ignitionrobotics/ign-physics/pull/208)
+
+1. Remove `tools/code_check` and update codecov
+    * [Pull request #257](https://github.com/ignitionrobotics/ign-physics/pull/257)
+
+1. [Citadel] Update tutorials
+    * [Pull request #204](https://github.com/ignitionrobotics/ign-physics/pull/204)
+
 ### Ignition Physics 3.2.0 (2021-04-28)
 
 1. Infrastructure
