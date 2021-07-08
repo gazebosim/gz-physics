@@ -37,7 +37,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 # Find ignition-common
 ign_find_package(ignition-common4
   COMPONENTS graphics profiler
-  REQUIRED_BY mesh dartsim tpe tpelib bullet)
+  REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
 
 #--------------------------------------
@@ -99,7 +99,7 @@ set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf mesh dartsim tpe bullet)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet)
 
 
 #============================================================================

@@ -19,7 +19,9 @@
 
 #include <ignition/plugin/Loader.hh>
 
+#include <ignition/common/ImageHeightmap.hh>
 #include <ignition/common/MeshManager.hh>
+#include <ignition/common/Filesystem.hh>
 
 #include <ignition/math/eigen3/Conversions.hh>
 
@@ -167,7 +169,8 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto meshLink = model->ConstructEmptyLink("mesh_link");
   meshLink->AttachFixedJoint(child, "fixed");
 
-  const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
+  const std::string meshFilename = ignition::common::joinPaths(
+      IGNITION_PHYSICS_RESOURCE_DIR, "chassis.dae");
   auto &meshManager = *ignition::common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 
@@ -201,6 +204,32 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(meshShapeScaledSize[0], 0.2553, 1e-4);
   EXPECT_NEAR(meshShapeScaledSize[1], 0.3831, 1e-4);
   EXPECT_NEAR(meshShapeScaledSize[2], 0.0489, 1e-4);
+
+  auto heightmapLink = model->ConstructEmptyLink("heightmap_link");
+  heightmapLink->AttachFixedJoint(child, "heightmap_joint");
+
+  auto heightmapFilename = ignition::common::joinPaths(
+      IGNITION_PHYSICS_RESOURCE_DIR, "heightmap_bowl.png");
+  ignition::common::ImageHeightmap data;
+  EXPECT_EQ(0, data.Load(heightmapFilename));
+
+  const ignition::math::Vector3d size({129, 129, 10});
+  auto heightmapShape = heightmapLink->AttachHeightmapShape("heightmap", data,
+      ignition::math::eigen3::convert(pose),
+      ignition::math::eigen3::convert(size));
+
+  EXPECT_NEAR(size.X(), heightmapShape->GetSize()[0], 1e-6);
+  EXPECT_NEAR(size.Y(), heightmapShape->GetSize()[1], 1e-6);
+  EXPECT_NEAR(size.Z(), heightmapShape->GetSize()[2], 1e-6);
+
+  auto heightmapShapeGeneric = heightmapLink->GetShape("heightmap");
+  ASSERT_NE(nullptr, heightmapShapeGeneric);
+  EXPECT_EQ(nullptr, heightmapShapeGeneric->CastToBoxShape());
+  auto heightmapShapeRecast = heightmapShapeGeneric->CastToHeightmapShape();
+  ASSERT_NE(nullptr, heightmapShapeRecast);
+  EXPECT_NEAR(size.X(), heightmapShapeRecast->GetSize()[0], 1e-6);
+  EXPECT_NEAR(size.Y(), heightmapShapeRecast->GetSize()[1], 1e-6);
+  EXPECT_NEAR(size.Z(), heightmapShapeRecast->GetSize()[2], 1e-6);
 }
 
 TEST(EntityManagement_TEST, RemoveEntities)

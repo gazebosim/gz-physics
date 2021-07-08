@@ -25,6 +25,7 @@ Below is the general structure of the `ign-physics` repository:
 ign-physics
 ├── dartsim                   Files for dartsim plugin component.
 ├── tpe                       Files for tpe plugin component.
+├── heightmap                 Files for heightmap component.
 ├── include/ignition/physics  Header files.
 ├── mesh                      Files for mesh component.
 ├── resources                 Model and mesh resource files used by tests.
