@@ -96,6 +96,83 @@ Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
 }
 
 /////////////////////////////////////////////////
+Identity ShapeFeatures::CastToCapsuleShape(const Identity &_shapeID) const
+{
+  auto it = this->collisions.find(_shapeID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::CapsuleShape*>(shape))
+      return this->GenerateIdentity(_shapeID, it->second);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetCapsuleShapeRadius(
+  const Identity &_capsuleID) const
+{
+  // assume _capsuleID ~= _collisionID
+  auto it = this->collisions.find(_capsuleID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *capsule = static_cast<tpelib::CapsuleShape*>(shape);
+      return capsule->GetRadius();
+    }
+  }
+  // return invalid radius if no collision found
+  return -1.0;
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetCapsuleShapeLength(
+  const Identity &_capsuleID) const
+{
+  // assume _capsuleID ~= _collisionID
+  auto it = this->collisions.find(_capsuleID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *capsule = static_cast<tpelib::CapsuleShape*>(shape);
+      return capsule->GetLength();
+    }
+  }
+  // return invalid height if no collision found
+  return -1.0;
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachCapsuleShape(
+  const Identity &_linkID,
+  const std::string &_name,
+  const double _radius,
+  const double _length,
+  const Pose3d &_pose)
+{
+  auto it = this->links.find(_linkID);
+  if (it != this->links.end() && it->second != nullptr)
+  {
+    auto &collision = static_cast<tpelib::Collision&>(
+      it->second->link->AddCollision());
+    collision.SetName(_name);
+    collision.SetPose(math::eigen3::convert(_pose));
+
+    tpelib::CapsuleShape capsuleshape;
+    capsuleshape.SetRadius(_radius);
+    capsuleshape.SetLength(_length);
+    collision.SetShape(capsuleshape);
+
+    return this->AddCollision(_linkID, collision);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
 double ShapeFeatures::GetCylinderShapeRadius(
   const Identity &_cylinderID) const
 {
@@ -153,6 +230,62 @@ Identity ShapeFeatures::AttachCylinderShape(
     cylindershape.SetRadius(_radius);
     cylindershape.SetLength(_height);
     collision.SetShape(cylindershape);
+
+    return this->AddCollision(_linkID, collision);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToEllipsoidShape(const Identity &_shapeID) const
+{
+  auto it = this->collisions.find(_shapeID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::EllipsoidShape*>(shape))
+      return this->GenerateIdentity(_shapeID, it->second);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Vector3d ShapeFeatures::GetEllipsoidShapeRadii(
+  const Identity &_capsuleID) const
+{
+  // assume _capsuleID ~= _collisionID
+  auto it = this->collisions.find(_capsuleID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *capsule = static_cast<tpelib::EllipsoidShape*>(shape);
+      return math::eigen3::convert(capsule->GetRadii());
+    }
+  }
+  // return invalid radius if no collision found
+  return math::eigen3::convert(math::Vector3d(-1.0, -1.0, -1.0));
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachEllipsoidShape(
+  const Identity &_linkID,
+  const std::string &_name,
+  Vector3d _radii,
+  const Pose3d &_pose)
+{
+  auto it = this->links.find(_linkID);
+  if (it != this->links.end() && it->second != nullptr)
+  {
+    auto &collision = static_cast<tpelib::Collision&>(
+      it->second->link->AddCollision());
+    collision.SetName(_name);
+    collision.SetPose(math::eigen3::convert(_pose));
+
+    tpelib::EllipsoidShape capsuleshape;
+    capsuleshape.SetRadii(math::eigen3::convert(_radii));
+    collision.SetShape(capsuleshape);
 
     return this->AddCollision(_linkID, collision);
   }
