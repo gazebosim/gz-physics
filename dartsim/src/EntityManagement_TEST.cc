@@ -221,6 +221,15 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(size.X(), heightmapShape->GetSize()[0], 1e-6);
   EXPECT_NEAR(size.Y(), heightmapShape->GetSize()[1], 1e-6);
   EXPECT_NEAR(size.Z(), heightmapShape->GetSize()[2], 1e-6);
+
+  auto heightmapShapeGeneric = heightmapLink->GetShape("heightmap");
+  ASSERT_NE(nullptr, heightmapShapeGeneric);
+  EXPECT_EQ(nullptr, heightmapShapeGeneric->CastToBoxShape());
+  auto heightmapShapeRecast = heightmapShapeGeneric->CastToHeightmapShape();
+  ASSERT_NE(nullptr, heightmapShapeRecast);
+  EXPECT_NEAR(size.X(), heightmapShapeRecast->GetSize()[0], 1e-6);
+  EXPECT_NEAR(size.Y(), heightmapShapeRecast->GetSize()[1], 1e-6);
+  EXPECT_NEAR(size.Z(), heightmapShapeRecast->GetSize()[2], 1e-6);
 }
 
 TEST(EntityManagement_TEST, RemoveEntities)
