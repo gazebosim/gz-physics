@@ -52,8 +52,8 @@ CustomHeightmapShape::CustomHeightmapShape(
   common::ImageHeightmap copyData;
   try
   {
-    const auto &imageData = dynamic_cast<const common::ImageHeightmap &>(_input);
-    copyData.Load(imageData.Filename());
+    const auto &image = dynamic_cast<const common::ImageHeightmap &>(_input);
+    copyData.Load(image.Filename());
   }
   catch(const std::bad_cast &)
   {
