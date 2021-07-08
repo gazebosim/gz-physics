@@ -211,7 +211,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto heightmapFilename = ignition::common::joinPaths(
       IGNITION_PHYSICS_RESOURCE_DIR, "heightmap_bowl.png");
   ignition::common::ImageHeightmap data;
-  EXPECT_GE(0, data.Load(heightmapFilename));
+  EXPECT_EQ(0, data.Load(heightmapFilename));
 
   const ignition::math::Vector3d size({129, 129, 10});
   auto heightmapShape = heightmapLink->AttachHeightmapShape("heightmap", data,
