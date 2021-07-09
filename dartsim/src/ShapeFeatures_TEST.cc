@@ -98,25 +98,6 @@ class ShapeFeaturesFixture : public ::testing::Test
   protected: TestEnginePtr engine;
 };
 
-TestWorldPtr LoadWorld(
-    const TestEnginePtr &_engine,
-    const std::string &_sdfFile,
-    const Eigen::Vector3d &_gravity = Eigen::Vector3d{0, 0, -9.8})
-{
-  sdf::Root root;
-  const sdf::Errors errors = root.Load(_sdfFile);
-  EXPECT_TRUE(errors.empty());
-  const sdf::World *sdfWorld = root.WorldByIndex(0);
-  // Make a copy of the world so we can set the gravity property
-  // TODO(addisu) Add a world property feature to set gravity instead of this
-  // hack
-  sdf::World worldCopy;
-  worldCopy.Load(sdfWorld->Element());
-
-  worldCopy.SetGravity(math::eigen3::convert(_gravity));
-  return _engine->ConstructWorld(worldCopy);
-}
-
 // A predicate-formatter for asserting that two vectors are approximately equal.
 class AssertVectorApprox
 {
