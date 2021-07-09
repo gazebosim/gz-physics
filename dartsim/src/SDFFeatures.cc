@@ -126,20 +126,6 @@ static void CopyStandardJointAxisProperties(
     const int _index, Properties &_properties,
     const ::sdf::JointAxis *_sdfAxis)
 {
-#ifndef _WIN32
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-  // TODO(anyone): stop using this deprecated function
-  _properties.mInitialPositions[_index] = _sdfAxis->InitialPosition();
-#ifndef _WIN32
-# pragma GCC diagnostic pop
-#else
-# pragma warning(pop)
-#endif
   _properties.mDampingCoefficients[_index] = _sdfAxis->Damping();
   _properties.mFrictions[_index] = _sdfAxis->Friction();
   _properties.mRestPositions[_index] = _sdfAxis->SpringReference();
@@ -1114,30 +1100,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   const Eigen::Isometry3d parent_T_prejoint_init = T_parent.inverse() * T_joint;
   joint->setTransformFromParentBodyNode(parent_T_prejoint_init);
   joint->setTransformFromChildBodyNode(child_T_postjoint);
-
-  // This is the transform inside the joint produced by whatever the current
-  // joint position happens to be.
-  const Eigen::Isometry3d T_child_parent_postjoint =
-      _parent ? _child->getTransform(_parent) : _child->getTransform();
-
-  const Eigen::Isometry3d prejoint_T_postjoint =
-      parent_T_prejoint_init.inverse()
-      * T_child_parent_postjoint
-      * child_T_postjoint;
-
-  // This is the corrected transform needed to get the child link to its
-  // correct pose (as specified by the loaded SDF) for the current initial
-  // position
-  const Eigen::Isometry3d T_parent_postjoint =
-      _parent ? _parent->getWorldTransform() : Eigen::Isometry3d::Identity();
-
-  const Eigen::Isometry3d parent_T_prejoint_final =
-      T_parent_postjoint.inverse()
-      * T_child
-      * child_T_postjoint
-      * prejoint_T_postjoint.inverse();
-
-  joint->setTransformFromParentBodyNode(parent_T_prejoint_final);
 
   const std::size_t jointID = this->AddJoint(joint);
 
