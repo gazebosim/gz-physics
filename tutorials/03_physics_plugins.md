@@ -158,3 +158,5 @@ The following is a table of implemented `Features` of Dartsim and TPE-Plugin.
 | GetContactsFromLastStepFeature | ✓ | ✕ |
 | CollisionDetector | ✓  |
 | Solver | ✓  |
+| heightmap::GetHeightmapShapeProperties | ✓ |  |
+| heightmap::AttachHeightmapShapeFeature | ✓ |  |
