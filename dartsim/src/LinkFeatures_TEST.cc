@@ -30,6 +30,7 @@
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/GetBoundingBox.hh>
 #include <ignition/physics/Link.hh>
+#include <ignition/physics/World.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
@@ -42,6 +43,7 @@
 struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::AddLinkExternalForceTorque,
     ignition::physics::ForwardStep,
+    ignition::physics::Gravity,
     ignition::physics::sdf::ConstructSdfWorld,
     ignition::physics::sdf::ConstructSdfModel,
     ignition::physics::sdf::ConstructSdfLink,
@@ -81,16 +83,15 @@ TestWorldPtr LoadWorld(
   const sdf::Errors errors = root.Load(_sdfFile);
   EXPECT_TRUE(errors.empty()) << errors;
   const sdf::World *sdfWorld = root.WorldByIndex(0);
-  // Make a copy of the world so we can set the gravity property
-  // TODO(addisu) Add a world property feature to set gravity instead of this
-  // hack
-  sdf::World worldCopy;
-  worldCopy.Load(sdfWorld->Element());
-  auto graphErrors = worldCopy.ValidateGraphs();
+  EXPECT_NE(nullptr, sdfWorld);
+
+  auto graphErrors = sdfWorld->ValidateGraphs();
   EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
 
-  worldCopy.SetGravity(math::eigen3::convert(_gravity));
-  return _engine->ConstructWorld(worldCopy);
+  TestWorldPtr world = _engine->ConstructWorld(*sdfWorld);
+  EXPECT_NE(nullptr, world);
+  world->SetGravity(_gravity);
+  return world;
 }
 
 // A predicate-formatter for asserting that two vectors are approximately equal.
