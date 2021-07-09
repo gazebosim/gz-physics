@@ -122,6 +122,12 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
 {
   auto world = LoadWorld(this->engine, TEST_WORLD_DIR "/empty.sdf",
                          Eigen::Vector3d::Zero());
+  {
+    AssertVectorApprox vectorPredicate(1e-10);
+    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                        world->GetGravity(physics::FrameID::World()));
+  }
+
   // Add a sphere
   sdf::Model modelSDF;
   modelSDF.SetName("sphere");
