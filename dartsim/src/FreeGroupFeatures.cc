@@ -50,15 +50,12 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 
   for (const auto &nestedModel : modelInfo->nestedModels)
   {
-    // Check if any of the nested models have valid free groups by recursively
-    // calling FindFreeGroupForModel on all nested models that either have
-    // BodyNodes or nested models. A nested model that doesn't have any
-    // BodyNodes or nested models should not exist per the SDFormat spec.
-    // However, BodyNodes may be moved out of a skeleton when creating joints
-    // leaving the skeleton without any BodyNodes. In this case, we skip the
-    // skeleton because the free group of the BodyNodes it used to contain will
-    // be determined when calling FindFreeGroupForModel for the model that now
-    // contains them after the move.
+    // Check that each nested model with BodyNodes or nested models has valid
+    // free groups by recursively calling FindFreeGroupForModel. Nested models
+    // without BodyNodes or their own nested models are disallowed by the
+    // SDFormat spec, yet may occur if all BodyNodes are moved out of a skeleton
+    // when creating joints. In this case, skip such a skeleton instead of
+    // returning an error.
     auto nestedModelInfo = this->models.at(nestedModel);
     if (nestedModelInfo->model->getNumBodyNodes() > 0 ||
         nestedModelInfo->nestedModels.size() > 0)
@@ -137,7 +134,7 @@ FreeGroupFeatures::FreeGroupInfo FreeGroupFeatures::GetCanonicalInfo(
       {
         auto freeGroupInfo =
           this->GetCanonicalInfo(this->GenerateIdentity(nestedModel));
-        if (freeGroupInfo.model != nullptr || freeGroupInfo.link != nullptr)
+        if (freeGroupInfo.link != nullptr)
           return freeGroupInfo;
       }
 

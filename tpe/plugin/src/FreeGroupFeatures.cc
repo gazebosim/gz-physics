@@ -36,7 +36,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   auto it = this->models.find(_modelID.id);
   if (it == this->models.end() || it->second == nullptr)
     return this->GenerateInvalidId();
-  // if there are no links or nested modelsin this model, then the FreeGroup
+  // if there are no links or nested models in this model, then the FreeGroup
   // functions will not work properly; need to reject this case.
   if (it->second->model->GetChildCount() == 0)
     return this->GenerateInvalidId();
