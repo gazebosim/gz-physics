@@ -59,9 +59,7 @@ CollisionDetector::CollisionDetector()
 }
 
 //////////////////////////////////////////////////
-CollisionDetector::~CollisionDetector()
-{
-}
+CollisionDetector::~CollisionDetector() = default;
 
 //////////////////////////////////////////////////
 std::vector<Contact> CollisionDetector::CheckCollisions(

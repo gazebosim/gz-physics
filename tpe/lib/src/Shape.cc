@@ -57,18 +57,6 @@ BoxShape::BoxShape() : Shape()
 }
 
 //////////////////////////////////////////////////
-BoxShape::BoxShape(const BoxShape &_other)
-  : Shape()
-{
-  *this = _other;
-}
-
-//////////////////////////////////////////////////
-BoxShape::~BoxShape()
-{
-}
-
-//////////////////////////////////////////////////
 Shape &BoxShape::operator=(const Shape &_other)
 {
   auto other = static_cast<const BoxShape *>(&_other);
@@ -101,13 +89,6 @@ void BoxShape::UpdateBoundingBox()
 CylinderShape::CylinderShape() : Shape()
 {
   this->type = ShapeType::CYLINDER;
-}
-
-//////////////////////////////////////////////////
-CylinderShape::CylinderShape(const CylinderShape &_other)
-  : Shape()
-{
-  *this = _other;
 }
 
 //////////////////////////////////////////////////
@@ -159,13 +140,6 @@ SphereShape::SphereShape() : Shape()
 }
 
 //////////////////////////////////////////////////
-SphereShape::SphereShape(const SphereShape &_other)
-  : Shape()
-{
-  *this = _other;
-}
-
-//////////////////////////////////////////////////
 Shape &SphereShape::operator=(const Shape &_other)
 {
   auto other = static_cast<const SphereShape *>(&_other);
@@ -197,13 +171,6 @@ void SphereShape::UpdateBoundingBox()
 MeshShape::MeshShape() : Shape()
 {
   this->type = ShapeType::MESH;
-}
-
-//////////////////////////////////////////////////
-MeshShape::MeshShape(const MeshShape &_other)
-  : Shape()
-{
-  *this = _other;
 }
 
 //////////////////////////////////////////////////
@@ -245,5 +212,3 @@ void MeshShape::UpdateBoundingBox()
   this->bbox = math::AxisAlignedBox(
       this->scale * this->meshAABB.Min(), this->scale * this->meshAABB.Max());
 }
-
-

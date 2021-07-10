@@ -53,9 +53,7 @@ AABBTree::AABBTree()
 }
 
 //////////////////////////////////////////////////
-AABBTree::~AABBTree()
-{
-}
+AABBTree::~AABBTree() = default;
 
 //////////////////////////////////////////////////
 void AABBTree::AddNode(std::size_t _id, const math::AxisAlignedBox &_aabb)

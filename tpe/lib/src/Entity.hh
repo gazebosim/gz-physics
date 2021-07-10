@@ -60,7 +60,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
   protected: explicit Entity(std::size_t _id);
 
   /// \brief Destructor
-  public: ~Entity();
+  public: virtual ~Entity();
 
   /// \brief Assignment operator
   /// \param[in] _other Other entity to copy from

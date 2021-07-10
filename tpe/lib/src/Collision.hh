@@ -47,7 +47,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
   public: Collision(const Collision &_other);
 
   /// \brief Destructor
-  public: ~Collision();
+  public: virtual ~Collision();
 
   /// \brief Assignment operator
   /// \param[in] _other collision
