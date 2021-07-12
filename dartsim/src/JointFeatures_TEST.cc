@@ -63,9 +63,9 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::SetJointVelocityCommandFeature,
   physics::sdf::ConstructSdfModel,
   physics::sdf::ConstructSdfWorld,
-  physics::SetJointPositionLimitsCommandFeature,
-  physics::SetJointVelocityLimitsCommandFeature,
-  physics::SetJointEffortLimitsCommandFeature
+  physics::SetJointPositionLimitsFeature,
+  physics::SetJointVelocityLimitsFeature,
+  physics::SetJointEffortLimitsFeature
 >;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
@@ -184,8 +184,8 @@ TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithForceControl)
 
   auto pos = joint->GetPosition(0);
 
-  joint->SetMinPositionCommand(0, pos - 0.1);
-  joint->SetMaxPositionCommand(0, pos + 0.1);
+  joint->SetMinPosition(0, pos - 0.1);
+  joint->SetMaxPosition(0, pos + 0.1);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -201,8 +201,8 @@ TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithForceControl)
   }
   EXPECT_NEAR(pos - 0.1, joint->GetPosition(0), 1e-3);
 
-  joint->SetMinPositionCommand(0, pos - 0.5);
-  joint->SetMaxPositionCommand(0, pos + 0.5);
+  joint->SetMinPosition(0, pos - 0.5);
+  joint->SetMaxPosition(0, pos + 0.5);
 
   for (std::size_t i = 0; i < 300; ++i)
   {
@@ -218,8 +218,8 @@ TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithForceControl)
   }
   EXPECT_NEAR(pos - 0.5, joint->GetPosition(0), 1e-2);
 
-  joint->SetMinPositionCommand(0, -math::INF_D);
-  joint->SetMaxPositionCommand(0, math::INF_D);
+  joint->SetMinPosition(0, -math::INF_D);
+  joint->SetMaxPosition(0, math::INF_D);
   joint->SetPosition(0, pos);
 
   for (std::size_t i = 0; i < 300; ++i)
@@ -246,8 +246,8 @@ TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithForceControl)
 
   world->Step(output, state, input);
 
-  joint->SetMinVelocityCommand(0, -0.25);
-  joint->SetMaxVelocityCommand(0, 0.5);
+  joint->SetMinVelocity(0, -0.25);
+  joint->SetMaxVelocity(0, 0.5);
 
   for (std::size_t i = 0; i < 10; ++i)
   {
@@ -264,7 +264,7 @@ TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithForceControl)
   EXPECT_NEAR(-0.25, joint->GetVelocity(0), 1e-6);
 
   // set minimum velocity above zero
-  joint->SetMinVelocityCommand(0, 0.25);
+  joint->SetMinVelocity(0, 0.25);
 
   for (std::size_t i = 0; i < 10; ++i)
   {
@@ -280,7 +280,7 @@ TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithForceControl)
   }
   EXPECT_NEAR(0.25, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinVelocityCommand(0, -0.25);
+  joint->SetMinVelocity(0, -0.25);
   joint->SetPosition(0, 0);
   joint->SetVelocity(0, 0);
 
@@ -291,8 +291,8 @@ TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithForceControl)
   }
   EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinVelocityCommand(0, -math::INF_D);
-  joint->SetMaxVelocityCommand(0, math::INF_D);
+  joint->SetMinVelocity(0, -math::INF_D);
+  joint->SetMaxVelocity(0, math::INF_D);
 
   for (std::size_t i = 0; i < 10; ++i)
   {
@@ -320,8 +320,8 @@ TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithForceControl)
 
   auto pos = joint->GetPosition(0);
 
-  joint->SetMinEffortCommand(0, -1e-6);
-  joint->SetMaxEffortCommand(0, 1e-6);
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -339,8 +339,8 @@ TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithForceControl)
   EXPECT_NEAR(pos, joint->GetPosition(0), 1e-3);
   EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinEffortCommand(0, -80);
-  joint->SetMaxEffortCommand(0, 80);
+  joint->SetMinEffort(0, -80);
+  joint->SetMaxEffort(0, 80);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -350,8 +350,8 @@ TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithForceControl)
   EXPECT_LT(pos, joint->GetPosition(0));
   EXPECT_LT(0, joint->GetVelocity(0));
 
-  joint->SetMinEffortCommand(0, -math::INF_D);
-  joint->SetMaxEffortCommand(0, math::INF_D);
+  joint->SetMinEffort(0, -math::INF_D);
+  joint->SetMaxEffort(0, math::INF_D);
   joint->SetPosition(0, 0);
   joint->SetVelocity(0, 0);
 
@@ -382,12 +382,12 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithForceControl)
 
   auto pos = joint->GetPosition(0);
 
-  joint->SetMinPositionCommand(0, pos - 0.1);
-  joint->SetMaxPositionCommand(0, pos + 0.1);
-  joint->SetMinVelocityCommand(0, -0.25);
-  joint->SetMaxVelocityCommand(0, 0.5);
-  joint->SetMinEffortCommand(0, -1e-6);
-  joint->SetMaxEffortCommand(0, 1e-6);
+  joint->SetMinPosition(0, pos - 0.1);
+  joint->SetMaxPosition(0, pos + 0.1);
+  joint->SetMinVelocity(0, -0.25);
+  joint->SetMaxVelocity(0, 0.5);
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -405,8 +405,8 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithForceControl)
   EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
   EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinEffortCommand(0, -500);
-  joint->SetMaxEffortCommand(0, 1000);
+  joint->SetMinEffort(0, -500);
+  joint->SetMaxEffort(0, 1000);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -428,8 +428,8 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithForceControl)
   joint->SetPosition(0, pos);
   EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
 
-  joint->SetMinVelocityCommand(0, -1);
-  joint->SetMaxVelocityCommand(0, 1);
+  joint->SetMinVelocity(0, -1);
+  joint->SetMaxVelocity(0, 1);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -442,8 +442,8 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithForceControl)
   joint->SetPosition(0, pos);
   EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
 
-  joint->SetMinPositionCommand(0, -1e6);
-  joint->SetMaxPositionCommand(0, 1e6);
+  joint->SetMinPosition(0, -1e6);
+  joint->SetMaxPosition(0, 1e6);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -456,8 +456,8 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithForceControl)
 
 // TODO(anyone): position limits do not work very well with velocity control
 // bug https://github.com/dartsim/dart/issues/1583
-#if 0
-TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithVelocityControl)
+// resolved in DART 6.11.0
+TEST_F(JointFeaturesFixture, DISABLED_JointSetPositionLimitsWithVelocityControl)
 {
   sdf::Root root;
   const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
@@ -479,8 +479,8 @@ TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithVelocityControl)
 
   auto pos = joint->GetPosition(0);
 
-  joint->SetMinPositionCommand(0, pos - 0.1);
-  joint->SetMaxPositionCommand(0, pos + 0.1);
+  joint->SetMinPosition(0, pos - 0.1);
+  joint->SetMaxPosition(0, pos + 0.1);
   for (std::size_t i = 0; i < 1000; ++i)
   {
     joint->SetVelocityCommand(0, 1);
@@ -493,7 +493,6 @@ TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithVelocityControl)
     }
   }
 }
-#endif
 
 TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithVelocityControl)
 {
@@ -509,8 +508,8 @@ TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithVelocityControl)
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
 
-  joint->SetMinVelocityCommand(0, -0.1);
-  joint->SetMaxVelocityCommand(0, 0.1);
+  joint->SetMinVelocity(0, -0.1);
+  joint->SetMaxVelocity(0, 0.1);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -533,8 +532,15 @@ TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithVelocityControl)
   }
   EXPECT_NEAR(-0.025, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinVelocityCommand(0, -math::INF_D);
-  joint->SetMaxVelocityCommand(0, math::INF_D);
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.1, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinVelocity(0, -math::INF_D);
+  joint->SetMaxVelocity(0, math::INF_D);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -558,8 +564,8 @@ TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithVelocityControl)
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
 
-  joint->SetMinEffortCommand(0, -1e-6);
-  joint->SetMaxEffortCommand(0, 1e-6);
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -568,8 +574,8 @@ TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithVelocityControl)
   }
   EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinEffortCommand(0, -80);
-  joint->SetMaxEffortCommand(0, 80);
+  joint->SetMinEffort(0, -80);
+  joint->SetMaxEffort(0, 80);
 
   for (std::size_t i = 0; i < 100; ++i)
   {
@@ -578,8 +584,8 @@ TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithVelocityControl)
   }
   EXPECT_NEAR(-1, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinEffortCommand(0, -math::INF_D);
-  joint->SetMaxEffortCommand(0, math::INF_D);
+  joint->SetMinEffort(0, -math::INF_D);
+  joint->SetMaxEffort(0, math::INF_D);
 
   for (std::size_t i = 0; i < 10; ++i)
   {
@@ -604,10 +610,10 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithVelocityControl)
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
 
-  joint->SetMinVelocityCommand(0, -0.5);
-  joint->SetMaxVelocityCommand(0, 0.5);
-  joint->SetMinEffortCommand(0, -1e-6);
-  joint->SetMaxEffortCommand(0, 1e-6);
+  joint->SetMinVelocity(0, -0.5);
+  joint->SetMaxVelocity(0, 0.5);
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
 
   for (std::size_t i = 0; i < 1000; ++i)
   {
@@ -616,8 +622,8 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithVelocityControl)
   }
   EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
 
-  joint->SetMinEffortCommand(0, -1e6);
-  joint->SetMaxEffortCommand(0, 1e6);
+  joint->SetMinEffort(0, -1e6);
+  joint->SetMaxEffort(0, 1e6);
 
   for (std::size_t i = 0; i < 1000; ++i)
   {

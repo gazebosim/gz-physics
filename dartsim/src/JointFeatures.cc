@@ -185,7 +185,7 @@ void JointFeatures::SetJointVelocityCommand(
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMinPositionCommand(
+void JointFeatures::SetJointMinPosition(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
@@ -206,7 +206,7 @@ void JointFeatures::SetJointMinPositionCommand(
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMaxPositionCommand(
+void JointFeatures::SetJointMaxPosition(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
@@ -221,13 +221,13 @@ void JointFeatures::SetJointMaxPositionCommand(
            << "]. The command will be ignored\n";
     return;
   }
-  joint->setPositionLimitEnforced(true);
+  joint->setLimitEnforcement(true);
   // We do not check min/max mismatch, we leave that to DART.
   joint->setPositionUpperLimit(_dof, _value);
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMinVelocityCommand(
+void JointFeatures::SetJointMinVelocity(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
@@ -242,13 +242,13 @@ void JointFeatures::SetJointMinVelocityCommand(
            << "]. The command will be ignored\n";
     return;
   }
-  joint->setPositionLimitEnforced(true);
+  joint->setLimitEnforcement(true);
   // We do not check min/max mismatch, we leave that to DART.
   joint->setVelocityLowerLimit(_dof, _value);
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMaxVelocityCommand(
+void JointFeatures::SetJointMaxVelocity(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
@@ -263,13 +263,13 @@ void JointFeatures::SetJointMaxVelocityCommand(
            << "]. The command will be ignored\n";
     return;
   }
-  joint->setPositionLimitEnforced(true);
+  joint->setLimitEnforcement(true);
   // We do not check min/max mismatch, we leave that to DART.
   joint->setVelocityUpperLimit(_dof, _value);
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMinEffortCommand(
+void JointFeatures::SetJointMinEffort(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
@@ -289,7 +289,7 @@ void JointFeatures::SetJointMinEffortCommand(
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMaxEffortCommand(
+void JointFeatures::SetJointMaxEffort(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;

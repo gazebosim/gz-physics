@@ -161,56 +161,56 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointPositionLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
-    SetMinPositionCommand(const std::size_t _dof, const Scalar _value)
+    void SetJointPositionLimitsFeature::Joint<PolicyT, FeaturesT>::
+    SetMinPosition(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointPositionLimitsCommandFeature>()
-          ->SetJointMinPositionCommand(this->identity, _dof, _value);
+      this->template Interface<SetJointPositionLimitsFeature>()
+        ->SetJointMinPosition(this->identity, _dof, _value);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointPositionLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
-    SetMaxPositionCommand(const std::size_t _dof, const Scalar _value)
+    void SetJointPositionLimitsFeature::Joint<PolicyT, FeaturesT>::
+    SetMaxPosition(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointPositionLimitsCommandFeature>()
-          ->SetJointMaxPositionCommand(this->identity, _dof, _value);
+      this->template Interface<SetJointPositionLimitsFeature>()
+        ->SetJointMaxPosition(this->identity, _dof, _value);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointVelocityLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
-    SetMinVelocityCommand(const std::size_t _dof, const Scalar _value)
+    void SetJointVelocityLimitsFeature::Joint<PolicyT, FeaturesT>::
+    SetMinVelocity(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointVelocityLimitsCommandFeature>()
-          ->SetJointMinVelocityCommand(this->identity, _dof, _value);
+      this->template Interface<SetJointVelocityLimitsFeature>()
+        ->SetJointMinVelocity(this->identity, _dof, _value);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointVelocityLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
-    SetMaxVelocityCommand(const std::size_t _dof, const Scalar _value)
+    void SetJointVelocityLimitsFeature::Joint<PolicyT, FeaturesT>::
+    SetMaxVelocity(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointVelocityLimitsCommandFeature>()
-          ->SetJointMaxVelocityCommand(this->identity, _dof, _value);
+      this->template Interface<SetJointVelocityLimitsFeature>()
+        ->SetJointMaxVelocity(this->identity, _dof, _value);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointEffortLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
-    SetMinEffortCommand(const std::size_t _dof, const Scalar _value)
+    void SetJointEffortLimitsFeature::Joint<PolicyT, FeaturesT>::
+    SetMinEffort(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointEffortLimitsCommandFeature>()
-          ->SetJointMinEffortCommand(this->identity, _dof, _value);
+      this->template Interface<SetJointEffortLimitsFeature>()
+        ->SetJointMinEffort(this->identity, _dof, _value);
     }
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointEffortLimitsCommandFeature::Joint<PolicyT, FeaturesT>::
-    SetMaxEffortCommand(const std::size_t _dof, const Scalar _value)
+    void SetJointEffortLimitsFeature::Joint<PolicyT, FeaturesT>::
+    SetMaxEffort(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointEffortLimitsCommandFeature>()
-          ->SetJointMaxEffortCommand(this->identity, _dof, _value);
+      this->template Interface<SetJointEffortLimitsFeature>()
+        ->SetJointMaxEffort(this->identity, _dof, _value);
     }
 
     /////////////////////////////////////////////////

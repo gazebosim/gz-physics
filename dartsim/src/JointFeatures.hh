@@ -53,9 +53,9 @@ struct JointFeatureList : FeatureList<
   AttachPrismaticJointFeature,
 
   SetJointVelocityCommandFeature,
-  SetJointPositionLimitsCommandFeature,
-  SetJointVelocityLimitsCommandFeature,
-  SetJointEffortLimitsCommandFeature
+  SetJointPositionLimitsFeature,
+  SetJointVelocityLimitsFeature,
+  SetJointEffortLimitsFeature
 > { };
 
 class JointFeatures :
@@ -175,27 +175,27 @@ class JointFeatures :
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
-  public: void SetJointMinPositionCommand(
+  public: void SetJointMinPosition(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
-  public: void SetJointMaxPositionCommand(
+  public: void SetJointMaxPosition(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
-  public: void SetJointMinVelocityCommand(
+  public: void SetJointMinVelocity(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
-  public: void SetJointMaxVelocityCommand(
+  public: void SetJointMaxVelocity(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
-  public: void SetJointMinEffortCommand(
+  public: void SetJointMinEffort(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
 
-  public: void SetJointMaxEffortCommand(
+  public: void SetJointMaxEffort(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
 };

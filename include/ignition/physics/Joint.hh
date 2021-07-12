@@ -369,7 +369,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the min and max generalized position of this
     /// Joint.
-    class IGNITION_PHYSICS_VISIBLE SetJointPositionLimitsCommandFeature
+    class IGNITION_PHYSICS_VISIBLE SetJointPositionLimitsFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting position limits of a joint.
@@ -378,24 +378,26 @@ namespace ignition
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        /// \brief Set the minimum allowed value of the generalized coordinate within this joint.
+        /// \brief Set the minimum allowed value of the generalized coordinate
+        /// within this joint.
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
-        ///   The minimum allowed value of the generalized coordinate. Units depend on the underlying
-        ///   joint type.
-        public: void SetMinPositionCommand(
+        ///   The minimum allowed value of the generalized coordinate. Units
+        ///   depend on the underlying joint type.
+        public: void SetMinPosition(
             const std::size_t _dof, const Scalar _value);
 
-        /// \brief Set the maximum allowed value of the generalized coordinate within this joint.
+        /// \brief Set the maximum allowed value of the generalized coordinate
+        /// within this joint.
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
-        ///   The maximum allowed value of the generalized coordinate. Units depend on the underlying
-        ///   joint type.
-        public: void SetMaxPositionCommand(
+        ///   The maximum allowed value of the generalized coordinate. Units
+        ///   depend on the underlying joint type.
+        public: void SetMaxPosition(
             const std::size_t _dof, const Scalar _value);
       };
 
@@ -406,11 +408,11 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         // See Joint::SetMinPositionCommand above
-        public: virtual void SetJointMinPositionCommand(
+        public: virtual void SetJointMinPosition(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetMaxPositionCommand above
-        public: virtual void SetJointMaxPositionCommand(
+        public: virtual void SetJointMaxPosition(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
@@ -418,7 +420,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the min and max value of generalized velocity
     /// of this Joint.
-    class IGNITION_PHYSICS_VISIBLE SetJointVelocityLimitsCommandFeature
+    class IGNITION_PHYSICS_VISIBLE SetJointVelocityLimitsFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting velocity limits of a joint. These
@@ -436,7 +438,7 @@ namespace ignition
         /// \param[in] _value
         ///   The minimum generalized velocity. Units depend on the underlying
         ///   joint type.
-        public: void SetMinVelocityCommand(
+        public: void SetMinVelocity(
             const std::size_t _dof, const Scalar _value);
 
         /// \brief Set the maximum value of generalized velocity of a specific
@@ -447,7 +449,7 @@ namespace ignition
         /// \param[in] _value
         ///   The maximum generalized velocity. Units depend on the underlying
         ///   joint type.
-        public: void SetMaxVelocityCommand(
+        public: void SetMaxVelocity(
             const std::size_t _dof, const Scalar _value);
       };
 
@@ -458,18 +460,18 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         // See Joint::SetMinVelocityCommand above
-        public: virtual void SetJointMinVelocityCommand(
+        public: virtual void SetJointMinVelocity(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetMaxVelocityCommand above
-        public: virtual void SetJointMaxVelocityCommand(
+        public: virtual void SetJointMaxVelocity(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the min and max value of effort of this Joint.
-    class IGNITION_PHYSICS_VISIBLE SetJointEffortLimitsCommandFeature
+    class IGNITION_PHYSICS_VISIBLE SetJointEffortLimitsFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting effort limits of a joint. These
@@ -487,8 +489,7 @@ namespace ignition
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
         ///   The minimum effort. Units depend on the underlying joint type.
-        public: void SetMinEffortCommand(
-            const std::size_t _dof, const Scalar _value);
+        public: void SetMinEffort(const std::size_t _dof, const Scalar _value);
 
         /// \brief Set the maximum value of effort of a specific generalized
         /// coordinate within this joint.
@@ -497,8 +498,7 @@ namespace ignition
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
         ///   The maximum effort. Units depend on the underlying joint type.
-        public: void SetMaxEffortCommand(
-            const std::size_t _dof, const Scalar _value);
+        public: void SetMaxEffort(const std::size_t _dof, const Scalar _value);
       };
 
       /// \private The implementation API for setting effort limit commands
@@ -508,11 +508,11 @@ namespace ignition
         public: using Scalar = typename PolicyT::Scalar;
 
         // See Joint::SetMinEffortCommand above
-        public: virtual void SetJointMinEffortCommand(
+        public: virtual void SetJointMinEffort(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
 
         // See Joint::SetMaxEffortCommand above
-        public: virtual void SetJointMaxEffortCommand(
+        public: virtual void SetJointMaxEffort(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
