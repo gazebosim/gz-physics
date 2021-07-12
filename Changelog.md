@@ -2,7 +2,7 @@
 
 ### Ignition Physics 3.x.x (20XX-XX-XX)
 
-### Ignition Physics 3.3.0 (2021-06-22)
+### Ignition Physics 3.3.0 (2021-07-12)
 
 1. Use slip compliance API's available in upstream dartsim release
     * [Pull request #265](https://github.com/ignitionrobotics/ign-physics/pull/265)
