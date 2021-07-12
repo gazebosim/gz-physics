@@ -378,22 +378,22 @@ namespace ignition
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        /// \brief Set the minimum generalized coordinate within this joint.
+        /// \brief Set the minimum allowed value of the generalized coordinate within this joint.
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
-        ///   The minimum generalized coordinate. Units depend on the underlying
+        ///   The minimum allowed value of the generalized coordinate. Units depend on the underlying
         ///   joint type.
         public: void SetMinPositionCommand(
             const std::size_t _dof, const Scalar _value);
 
-        /// \brief Set the maximum generalized coordinate within this joint.
+        /// \brief Set the maximum allowed value of the generalized coordinate within this joint.
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
-        ///   The maximum generalized coordinate. Units depend on the underlying
+        ///   The maximum allowed value of the generalized coordinate. Units depend on the underlying
         ///   joint type.
         public: void SetMaxPositionCommand(
             const std::size_t _dof, const Scalar _value);

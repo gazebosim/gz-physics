@@ -200,7 +200,7 @@ void JointFeatures::SetJointMinPositionCommand(
            << "]. The command will be ignored\n";
     return;
   }
-  joint->setPositionLimitEnforced(true);
+  joint->setLimitEnforcement(true);
   // We do not check min/max mismatch, we leave that to DART.
   joint->setPositionLowerLimit(_dof, _value);
 }
