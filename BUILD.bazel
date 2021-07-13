@@ -71,6 +71,15 @@ public_headers = public_headers_no_gen + [
 ]
 
 cc_library(
+    name = "heightmap",
+    hdrs = glob([
+        "heightmap/include/ignition/physics/heightmap/*.hh",
+        "heightmap/include/ignition/physics/heightmap/**/*.hh",
+    ]),
+    includes = ["heightmap/include"],
+)
+
+cc_library(
     name = "mesh",
     hdrs = glob([
         "mesh/include/ignition/physics/mesh/*.hh",
@@ -94,6 +103,7 @@ cc_library(
     hdrs = public_headers,
     includes = ["include"],
     deps = [
+        ":heightmap",
         ":mesh",
         ":sdf",
         "@eigen3",
