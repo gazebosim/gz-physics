@@ -34,53 +34,6 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
-class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
-{
-  public: dart::constraint::ContactSurfaceParams createParams(
-    const dart::collision::Contact& _contact,
-    size_t _numContactsOnCollisionObject) const override;
-
-  public: dart::constraint::ContactConstraintPtr createConstraint(
-    dart::collision::Contact& _contact,
-    size_t _numContactsOnCollisionObject,
-    double _timeStep) const override;
-
-  public: typedef SetContactJointPropertiesCallbackFeature Feature;
-  public: typedef Feature::Implementation<FeaturePolicy3d> Impl;
-
-  public: Impl::SurfaceParamsCallback surfaceParamsCallback;
-
-  public: std::function<
-    std::optional<Impl::ContactImpl>(const dart::collision::Contact&)
-  > convertContact;
-
-  public: mutable typename Feature::ContactSurfaceParams<FeaturePolicy3d>
-    lastIgnParams;
-};
-using IgnContactSurfaceHandlerPtr = std::shared_ptr<IgnContactSurfaceHandler>;
-
-class SimulationFeaturesPrivate
-{
-  public: explicit SimulationFeaturesPrivate(SimulationFeatures* _main);
-
-  public: std::optional<SimulationFeatures::ContactInternal> convertContact(
-    const dart::collision::Contact& _contact) const;
-
-  public: std::unordered_map<
-    std::string, IgnContactSurfaceHandlerPtr> contactSurfaceHandlers;
-
-  private: SimulationFeatures* main;
-};
-
-SimulationFeatures::SimulationFeatures()
-  : dataPtr(std::make_unique<SimulationFeaturesPrivate>(this))
-{
-}
-
-SimulationFeatures::~SimulationFeatures()
-{
-}
-
 void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
     ForwardStep::Output & /*_h*/,
@@ -118,7 +71,7 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 
   for (const auto &dtContact : colResult.getContacts())
   {
-    auto contact = this->dataPtr->convertContact(dtContact);
+    auto contact = this->convertContact(dtContact);
     if (contact)
       outContacts.push_back(contact.value());
   }
@@ -135,10 +88,10 @@ void SimulationFeatures::AddContactJointPropertiesCallback(
   auto handler = std::make_shared<IgnContactSurfaceHandler>();
   handler->surfaceParamsCallback = _callback;
   handler->convertContact = [this](const dart::collision::Contact& _contact) {
-    return this->dataPtr->convertContact(_contact);
+    return this->convertContact(_contact);
   };
 
-  this->dataPtr->contactSurfaceHandlers[_callbackID] = handler;
+  this->contactSurfaceHandlers[_callbackID] = handler;
   world->getConstraintSolver()->setContactSurfaceHandler(handler);
 }
 
@@ -147,11 +100,11 @@ bool SimulationFeatures::RemoveContactJointPropertiesCallback(
 {
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
 
-  if (this->dataPtr->contactSurfaceHandlers.find(_callbackID) !=
-    this->dataPtr->contactSurfaceHandlers.end())
+  if (this->contactSurfaceHandlers.find(_callbackID) !=
+    this->contactSurfaceHandlers.end())
   {
-    const auto handler = this->dataPtr->contactSurfaceHandlers[_callbackID];
-    this->dataPtr->contactSurfaceHandlers.erase(_callbackID);
+    const auto handler = this->contactSurfaceHandlers[_callbackID];
+    this->contactSurfaceHandlers.erase(_callbackID);
     return world->getConstraintSolver()->removeContactSurfaceHandler(handler);
   }
   else
@@ -163,7 +116,7 @@ bool SimulationFeatures::RemoveContactJointPropertiesCallback(
 }
 
 std::optional<SimulationFeatures::ContactInternal>
-SimulationFeaturesPrivate::convertContact(
+SimulationFeatures::convertContact(
   const dart::collision::Contact& _contact) const
 {
   auto *dtCollObj1 = _contact.collisionObject1;
@@ -172,13 +125,13 @@ SimulationFeaturesPrivate::convertContact(
   auto *dtShapeFrame1 = dtCollObj1->getShapeFrame();
   auto *dtShapeFrame2 = dtCollObj2->getShapeFrame();
 
-  if (this->main->shapes.HasEntity(dtShapeFrame1->asShapeNode()) &&
-      this->main->shapes.HasEntity(dtShapeFrame2->asShapeNode()))
+  if (this->shapes.HasEntity(dtShapeFrame1->asShapeNode()) &&
+      this->shapes.HasEntity(dtShapeFrame2->asShapeNode()))
   {
     std::size_t shape1ID =
-      this->main->shapes.IdentityOf(dtShapeFrame1->asShapeNode());
+      this->shapes.IdentityOf(dtShapeFrame1->asShapeNode());
     std::size_t shape2ID =
-      this->main->shapes.IdentityOf(dtShapeFrame2->asShapeNode());
+      this->shapes.IdentityOf(dtShapeFrame2->asShapeNode());
 
     CompositeData extraData;
 
@@ -191,18 +144,13 @@ SimulationFeaturesPrivate::convertContact(
 
 
     return SimulationFeatures::ContactInternal {
-      this->main->GenerateIdentity(shape1ID, this->main->shapes.at(shape1ID)),
-      this->main->GenerateIdentity(shape2ID, this->main->shapes.at(shape2ID)),
+      this->GenerateIdentity(shape1ID, this->shapes.at(shape1ID)),
+      this->GenerateIdentity(shape2ID, this->shapes.at(shape2ID)),
       _contact.point, extraData
     };
   }
 
   return std::nullopt;
-}
-
-SimulationFeaturesPrivate::SimulationFeaturesPrivate(SimulationFeatures* _main)
-  : main(_main)
-{
 }
 
 dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
@@ -232,28 +180,25 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
   pIgn.Get<F::ContactSurfaceMotionVelocity<P>>().contactSurfaceMotionVelocity =
     pDart.mContactSurfaceMotionVelocity;
 
-  if (this->surfaceParamsCallback)
+  auto contactInternal = this->convertContact(_contact);
+  if (contactInternal)
   {
-    auto contactInternal = this->convertContact(_contact);
-    if (contactInternal)
-    {
-      this->surfaceParamsCallback(contactInternal.value(),
-                                  _numContactsOnCollisionObject, pIgn);
+    this->surfaceParamsCallback(contactInternal.value(),
+                                _numContactsOnCollisionObject, pIgn);
 
-      pDart.mFrictionCoeff = pIgn.Get<F::FrictionCoeff<P>>().frictionCoeff;
-      pDart.mSecondaryFrictionCoeff =
-        pIgn.Get<F::SecondaryFrictionCoeff<P>>().secondaryFrictionCoeff;
-      pDart.mSlipCompliance = pIgn.Get<F::SlipCompliance<P>>().slipCompliance;
-      pDart.mSecondarySlipCompliance =
-        pIgn.Get<F::SecondarySlipCompliance<P>>().secondarySlipCompliance;
-      pDart.mRestitutionCoeff =
-        pIgn.Get<F::RestitutionCoeff<P>>().restitutionCoeff;
-      pDart.mFirstFrictionalDirection =
-        pIgn.Get<F::FirstFrictionalDirection<P>>().firstFrictionalDirection;
-      pDart.mContactSurfaceMotionVelocity =
-        pIgn.Get<F::ContactSurfaceMotionVelocity<P>>().
-          contactSurfaceMotionVelocity;
-    }
+    pDart.mFrictionCoeff = pIgn.Get<F::FrictionCoeff<P>>().frictionCoeff;
+    pDart.mSecondaryFrictionCoeff =
+      pIgn.Get<F::SecondaryFrictionCoeff<P>>().secondaryFrictionCoeff;
+    pDart.mSlipCompliance = pIgn.Get<F::SlipCompliance<P>>().slipCompliance;
+    pDart.mSecondarySlipCompliance =
+      pIgn.Get<F::SecondarySlipCompliance<P>>().secondarySlipCompliance;
+    pDart.mRestitutionCoeff =
+      pIgn.Get<F::RestitutionCoeff<P>>().restitutionCoeff;
+    pDart.mFirstFrictionalDirection =
+      pIgn.Get<F::FirstFrictionalDirection<P>>().firstFrictionalDirection;
+    pDart.mContactSurfaceMotionVelocity =
+      pIgn.Get<F::ContactSurfaceMotionVelocity<P>>().
+        contactSurfaceMotionVelocity;
   }
 
   this->lastIgnParams = pIgn;

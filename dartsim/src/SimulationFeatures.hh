@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include <dart/constraint/ContactSurface.hpp>
+
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
 #include <ignition/physics/ContactJointProperties.hh>
@@ -46,7 +48,30 @@ struct SimulationFeatureList : FeatureList<
   SetContactJointPropertiesCallbackFeature
 > { };
 
-class SimulationFeaturesPrivate;
+class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
+{
+  public: dart::constraint::ContactSurfaceParams createParams(
+    const dart::collision::Contact& _contact,
+    size_t _numContactsOnCollisionObject) const override;
+
+  public: dart::constraint::ContactConstraintPtr createConstraint(
+    dart::collision::Contact& _contact,
+    size_t _numContactsOnCollisionObject,
+    double _timeStep) const override;
+
+  public: typedef SetContactJointPropertiesCallbackFeature Feature;
+  public: typedef Feature::Implementation<FeaturePolicy3d> Impl;
+
+  public: Impl::SurfaceParamsCallback surfaceParamsCallback;
+
+  public: std::function<
+  std::optional<Impl::ContactImpl>(const dart::collision::Contact&)
+  > convertContact;
+
+  public: mutable typename Feature::ContactSurfaceParams<FeaturePolicy3d>
+  lastIgnParams;
+};
+using IgnContactSurfaceHandlerPtr = std::shared_ptr<IgnContactSurfaceHandler>;
 
 class SimulationFeatures :
     public virtual Base,
@@ -55,8 +80,8 @@ class SimulationFeatures :
   public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
     ::ContactInternal;
 
-  public: SimulationFeatures();
-  public: ~SimulationFeatures() override;
+  public: SimulationFeatures() = default;
+  public: ~SimulationFeatures() override = default;
 
   public: void WorldForwardStep(
       const Identity &_worldID,
@@ -75,8 +100,11 @@ class SimulationFeatures :
   public: bool RemoveContactJointPropertiesCallback(
       const Identity &_worldID, const std::string &_callbackID) override;
 
-  private: std::unique_ptr<SimulationFeaturesPrivate> dataPtr;
-  private: friend class SimulationFeaturesPrivate;
+  private: std::optional<ContactInternal> convertContact(
+    const dart::collision::Contact& _contact) const;
+
+  private: std::unordered_map<
+    std::string, IgnContactSurfaceHandlerPtr> contactSurfaceHandlers;
 };
 
 
