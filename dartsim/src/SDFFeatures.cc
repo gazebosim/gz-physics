@@ -28,6 +28,7 @@
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+#include <dart/dynamics/HeightmapShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
 #include <dart/dynamics/PrismaticJoint.hpp>
@@ -50,6 +51,7 @@
 #include <sdf/Cylinder.hh>
 #include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
+#include <sdf/Heightmap.hh>
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
@@ -315,6 +317,15 @@ static ShapeAndTransform ConstructPlane(
 }
 
 /////////////////////////////////////////////////
+static ShapeAndTransform ConstructHeightmap(
+    const ::sdf::Heightmap & /*_heightmap*/)
+{
+  ignerr << "Heightmap construction from an SDF has not been implemented yet "
+         << "for dartsim.\n";
+  return {nullptr};
+}
+
+/////////////////////////////////////////////////
 static ShapeAndTransform ConstructMesh(
     const ::sdf::Mesh & /*_mesh*/)
 {
@@ -362,6 +373,8 @@ static ShapeAndTransform ConstructGeometry(
     return ConstructPlane(*_geometry.PlaneShape());
   else if (_geometry.MeshShape())
     return ConstructMesh(*_geometry.MeshShape());
+  else if (_geometry.HeightmapShape())
+    return ConstructHeightmap(*_geometry.HeightmapShape());
 
   return {nullptr};
 }
@@ -818,7 +831,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     }
     if (odeFriction->HasElement("slip1"))
     {
-      aspect->setSlipCompliance(odeFriction->Get<double>("slip1"));
+      aspect->setPrimarySlipCompliance(odeFriction->Get<double>("slip1"));
     }
     if (odeFriction->HasElement("slip2"))
     {
@@ -1140,6 +1153,11 @@ Identity SDFFeatures::ConstructSdfJoint(
   joint->setTransformFromParentBodyNode(parent_T_prejoint_final);
 
   const std::size_t jointID = this->AddJoint(joint);
+  // Increment BodyNode version since the child could be moved to a new skeleton
+  // when a joint is created.
+  // TODO(azeey) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after Joint::moveTo.
+  _child->incrementVersion();
 
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }

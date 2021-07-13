@@ -75,11 +75,23 @@ void Collision::SetShape(const Shape &_shape)
     const BoxShape *typedShape = static_cast<const BoxShape *>(&_shape);
     this->dataPtr->shape.reset(new BoxShape(*typedShape));
   }
+  else if (_shape.GetType() == ShapeType::CAPSULE)
+  {
+    const CapsuleShape *typedShape =
+      static_cast<const CapsuleShape *>(&_shape);
+    this->dataPtr->shape.reset(new CapsuleShape(*typedShape));
+  }
   else if (_shape.GetType() == ShapeType::CYLINDER)
   {
     const CylinderShape *typedShape =
       static_cast<const CylinderShape *>(&_shape);
     this->dataPtr->shape.reset(new CylinderShape(*typedShape));
+  }
+  else if (_shape.GetType() == ShapeType::ELLIPSOID)
+  {
+    const EllipsoidShape *typedShape =
+      static_cast<const EllipsoidShape *>(&_shape);
+    this->dataPtr->shape.reset(new EllipsoidShape(*typedShape));
   }
   else if (_shape.GetType() == ShapeType::SPHERE)
   {

@@ -2,7 +2,7 @@
 # This component expresses custom features of the dartsim plugin, which can
 # expose native dartsim data types.
 ign_add_component(dartsim INTERFACE
-  DEPENDS_ON_COMPONENTS sdf mesh
+  DEPENDS_ON_COMPONENTS sdf heightmap mesh
   GET_TARGET_NAME features)
 
 target_link_libraries(${features} INTERFACE ${DART_LIBRARIES})
@@ -29,6 +29,7 @@ target_link_libraries(${dartsim_plugin}
   PUBLIC
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+    ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ignition-math${IGN_MATH_VER}::eigen3
@@ -65,6 +66,7 @@ ign_build_tests(
     ignition-plugin${IGN_PLUGIN_VER}::loader
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+    ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
   TEST_LIST tests)
 
