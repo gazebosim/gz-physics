@@ -16,6 +16,7 @@
 */
 
 #include <ignition/common/Console.hh>
+#include <stdexcept>
 #include "KinematicsFeatures.hh"
 
 namespace ignition {
@@ -31,21 +32,14 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   // The feature system should never send us the world ID.
   if (_id.IsWorld())
   {
-    ignerr << "Given a FrameID belonging to the world. This should not be "
-           << "possible! Please report this bug!\n";
-    assert(false);
+    throw std::runtime_error("Given a FrameID belonging to the world. This should not be possible! Please report this bug!");
     return data;
   }
 
   const auto linkID = _id.ID();
 
-  if (this->links.find(linkID) == this->links.end())
-  {
-    ignerr << "Given a FrameID not belonging to a link.\n";
-    return data;
-  }
-  const auto &linkInfo = this->links.at(linkID);
-  const auto &rigidBody = linkInfo->link;
+  auto link = std::get<Link*>(this->entities.at(linkID));
+  auto rigidBody = link->body.get();
 
   btTransform trans;
   trans = rigidBody->getCenterOfMassTransform();
@@ -53,7 +47,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const btMatrix3x3 mat = trans.getBasis();
 
   const Eigen::Isometry3d poseIsometry =
-    ignition::math::eigen3::convert(linkInfo->inertialPose.Inverse());
+    ignition::math::eigen3::convert(link->sdfInertialPose.Inverse());
   Eigen::Isometry3d poseIsometryBase;
   poseIsometryBase.linear() = convert(mat);
   poseIsometryBase.translation() = convert(pos);
@@ -68,7 +62,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   data.linearVelocity = convert(vel) + ignition::math::eigen3::convert(
     ignition::math::eigen3::convert(convert(omega)).Cross(
     -ignition::math::eigen3::convert(data.pose).Rot() *
-    linkInfo->inertialPose.Pos()));
+    link->sdfInertialPose.Pos()));
   data.angularVelocity = convert(omega);
 
   // \todo(anyone) compute frame accelerations

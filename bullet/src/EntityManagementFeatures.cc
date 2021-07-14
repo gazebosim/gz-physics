@@ -22,7 +22,7 @@
 #include <unordered_map>
 
 #include "EntityManagementFeatures.hh"
-#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
+
 
 namespace ignition {
 namespace physics {
@@ -32,51 +32,48 @@ namespace bullet {
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
-  // Create bullet empty multibody dynamics world
-  const auto collisionConfiguration =
-    std::make_shared<btDefaultCollisionConfiguration>();
-  const auto dispatcher =
-    std::make_shared<btCollisionDispatcher>(collisionConfiguration.get());
-  const auto broadphase = std::make_shared<btDbvtBroadphase>();
-  const auto solver =
-    std::make_shared<btSequentialImpulseConstraintSolver>();
-  const auto world = std::make_shared<btDiscreteDynamicsWorld>(
-    dispatcher.get(), broadphase.get(), solver.get(),
-    collisionConfiguration.get());
+  auto newWorld = std::make_unique<World>(_name);
 
-  /* TO-DO(Lobotuerk): figure out what this line does*/
-  world->getSolverInfo().m_globalCfm = 0;
-
-  btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
-
-  return this->AddWorld(
-    {_name, collisionConfiguration, dispatcher, broadphase, solver, world});
+  return this->AddWorld(std::move(newWorld));
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
-  // Check if the model exists
-  if (this->models.find(_modelID.id) == this->models.end())
-  {
-    return false;
-  }
-
-  auto worldID = this->models.at(_modelID)->world;
-  auto modelIndex = idToIndexInContainer(_modelID);
-
-  return this->RemoveModelByIndex(worldID, modelIndex);
+  auto* modelToRemove = std::get<Model*>(this->entities.at(_modelID));
+  auto& models = std::get<World*>(this->containers.at(_modelID))->models;
+  auto sizeBefore =  models.size();
+  models.erase(std::remove_if(models.begin(), models.end(), [&] (auto& model) -> bool
+                { return model.get() == modelToRemove; }), models.end());
+  return models.size() != sizeBefore;
 }
 
+/////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(
     const Identity &_modelID) const
 {
-  return this->models.find(_modelID) == this->models.end();
+  auto* modelRemoved = std::get<Model*>(this->entities.at(_modelID));
+  auto& models = std::get<World*>(this->containers.at(_modelID))->models;
+  auto it = std::find_if(models.cbegin(), models.cend(), [&] (auto& model) -> bool
+    { return model.get() == modelRemoved; });
+  return it == models.cend();
 }
 
+/////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity & _worldID, std::size_t _modelIndex)
 {
+  auto& models = std::get<World*>(this->entities.at(_worldID))->models;
+
+  if (_modelIndex >= models.size()) {
+    return false;
+  }
+
+  models.erase(models.begin()+_modelIndex);
+
+  return true;
+}
+/*
   // Check if the model exists
   auto _modelEntity = indexInContainerToId(_worldID, _modelIndex);
   if (this->models.find(_modelEntity) == this->models.end())
@@ -137,35 +134,60 @@ bool EntityManagementFeatures::RemoveModelByIndex(
   // Clean up model
   this->models.erase(_modelEntity);
   this->childIdToParentId.erase(_modelIndex);
+*/
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelByName(
+    const Identity & _worldID, const std::string & _modelName )
+{
+  auto& models = std::get<World*>(this->entities.at(_worldID))->models;
+
+  auto it = std::find_if(models.begin(), models.end(), [&] (auto& model) -> bool
+    { return model->name == _modelName; });
+  
+  if (it == models.end()) {
+    return false;
+  }
+
+  models.erase(it);
 
   return true;
 }
 
-bool EntityManagementFeatures::RemoveModelByName(
-    const Identity & _worldID, const std::string & _modelName )
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByIndex(
+    const Identity &_modelID, std::size_t _nestedModelIndex)
 {
-  // Check if there is a model with the requested name
-  bool found = false;
-  size_t entity = 0;
-  // We need a link to model relationship
-  for (const auto &model : this->models)
-  {
-    const auto &modelInfo = model.second;
-    if (modelInfo->name == _modelName)
-    {
-      found = true;
-      entity = model.first;
-      break;
-    }
+  auto model = std::get<Model*>(this->entities.at(_modelID));
+  auto& nestedModels = model->models;
+
+  if (_nestedModelIndex >= nestedModels.size()) {
+    return false;
   }
 
-  if (found)
-  {
-    auto modelIndex = idToIndexInContainer(entity);
-    return this->RemoveModelByIndex(_worldID, modelIndex);
+  nestedModels.erase(nestedModels.begin()+_nestedModelIndex);
+
+  return true;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
+                                                       const std::string &_modelName)
+{
+  auto model = std::get<Model*>(this->entities.at(_modelID));
+  auto& nestedModels = model->models;
+
+  auto it = std::find_if(nestedModels.begin(), nestedModels.end(), [&] (auto& nestedModel) -> bool
+    { return nestedModel->name == _modelName; });
+  
+  if (it == nestedModels.end()) {
+    // The model to remove as not found
+    return false;
   }
 
-  return false;
+  nestedModels.erase(it);
+
+  return true;
 }
 
 }  // namespace bullet

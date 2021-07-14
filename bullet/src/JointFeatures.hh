@@ -35,6 +35,7 @@ struct JointFeatureList : FeatureList<
   GetBasicJointState,
   SetBasicJointState,
   GetBasicJointProperties,
+  DetachJointFeature,
 
   GetRevoluteJointProperties,
   FixedJointCast,
@@ -87,6 +88,9 @@ class JointFeatures :
 
   public: Pose3d GetJointTransformToChild(
       const Identity &_id) const override;
+
+    // ----- Detach Joint -----
+  public: void DetachJoint(const Identity &_jointId) override;
 
   // ----- Fixed Joint -----
   public: Identity CastToFixedJoint(

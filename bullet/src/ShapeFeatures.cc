@@ -16,8 +16,11 @@
 */
 
 #include "ShapeFeatures.hh"
+#include "Base.hh"
 #include <BulletCollision/Gimpact/btGImpactShape.h>
 
+#include <LinearMath/btVector3.h>
+#include <ignition/math/Pose3.hh>
 #include <memory>
 
 namespace ignition {
@@ -39,7 +42,7 @@ Identity ShapeFeatures::AttachMeshShape(
   unsigned int numVertices = _mesh.VertexCount();
   unsigned int numIndices = _mesh.IndexCount();
 
-  const auto mTriMesh = std::make_shared<btTriangleMesh>();
+  auto mTriMesh = std::make_unique<btTriangleMesh>();
 
   for (unsigned int j = 0;  j < numVertices; ++j)
   {
@@ -64,12 +67,8 @@ Identity ShapeFeatures::AttachMeshShape(
                   vertices[indices[j+2]*3+1],
                   vertices[indices[j+2]*3+2]);
 
-    mTriMesh.get()->addTriangle(bv0, bv1, bv2);
+    mTriMesh->addTriangle(bv0, bv1, bv2);
   }
-
-  auto gimpactMeshShape =
-    std::make_shared<btGImpactMeshShape>(mTriMesh.get());
-  gimpactMeshShape.get()->updateBound();
 
   // TODO(lobotuerk) Save collision if needed
   // collision->shape = gimpactMeshShape;
@@ -77,15 +76,14 @@ Identity ShapeFeatures::AttachMeshShape(
   delete [] vertices;
   delete [] indices;
 
-  const auto &linkInfo = this->links.at(_linkID);
-  const auto &modelID = linkInfo->model;
-  const auto &body = linkInfo->link.get();
+  auto link = std::get<Link *>(this->entities.at(_linkID));
+  auto body = link->body.get();
 
   auto poseWithInertia =
-    linkInfo->inertialPose.Inverse() * ignition::math::eigen3::convert(_pose);
-  const auto poseIsometry = ignition::math::eigen3::convert(poseWithInertia);
-  const auto poseTranslation = poseIsometry.translation();
-  const auto poseLinear = poseIsometry.linear();
+    link->sdfInertialPose.Inverse() * ignition::math::eigen3::convert(_pose);
+  auto poseIsometry = ignition::math::eigen3::convert(poseWithInertia);
+  auto poseTranslation = poseIsometry.translation();
+  auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
   baseTransform.setOrigin(convertVec(poseTranslation));
   baseTransform.setBasis(convertMat(poseLinear));
@@ -93,13 +91,10 @@ Identity ShapeFeatures::AttachMeshShape(
   /* TO-DO(Lobotuerk): figure out if this line is needed */
   // gimpactMeshShape->setMargin(btScalar(0.001));
 
-  dynamic_cast<btCompoundShape *>(
-    body->getCollisionShape())->addChildShape(
-    baseTransform, gimpactMeshShape.get());
+  auto collision =
+      std::make_unique<Collision>(_name, body, true, nullptr, std::move(mTriMesh), baseTransform);
 
-  auto identity = this->AddCollision(
-    _linkID, {_name, gimpactMeshShape, _linkID, modelID,
-    ignition::math::eigen3::convert(_pose), true, mTriMesh});
+  auto identity = this->AddCollision(_linkID, std::move(collision));
   return identity;
 
 }
@@ -108,10 +103,60 @@ Identity ShapeFeatures::AttachMeshShape(
 Identity ShapeFeatures::CastToMeshShape(
     const Identity &_shapeID) const
 {
-  if (this->collisions.at(_shapeID)->isMesh)
+  auto collision = std::get<Collision *>(this->entities.at(_shapeID));
+  if (collision->isMesh)
   {
     return _shapeID;
   }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachBoxShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const LinearVector3d &_size,
+    const Pose3d &_pose)
+{
+  btVector3 halfExtents(_size(0) / 2.0,
+                        _size(1) / 2.0,
+                        _size(2) / 2.0);
+
+  auto box = std::make_unique<btBoxShape>(halfExtents);
+
+  auto link = std::get<Link *>(this->entities.at(_linkID));
+  auto body = link->body.get();
+
+  auto poseWithInertia =
+    link->sdfInertialPose.Inverse() * ignition::math::eigen3::convert(_pose);
+  auto poseIsometry = ignition::math::eigen3::convert(poseWithInertia);
+  auto poseTranslation = poseIsometry.translation();
+  auto poseLinear = poseIsometry.linear();
+  btTransform baseTransform;
+  baseTransform.setOrigin(convertVec(poseTranslation));
+  baseTransform.setBasis(convertMat(poseLinear));
+
+  bool isMesh = false;
+  auto collision =
+      std::make_unique<Collision>(_name, body, isMesh, std::move(box), nullptr, baseTransform);
+
+  auto identity = this->AddCollision(_linkID, std::move(collision));
+
+  return identity;
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToBoxShape(const Identity &_shapeID) const
+{
+  auto collision = std::get<Collision *>(this->entities.at(_shapeID));
+
+  auto shape = collision->shape.get();
+
+  if (dynamic_cast<btBoxShape*>(shape))
+  {
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
+  }
+
   return this->GenerateInvalidId();
 }
 

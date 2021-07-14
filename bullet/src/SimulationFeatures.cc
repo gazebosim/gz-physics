@@ -22,17 +22,23 @@ namespace physics {
 namespace bullet {
 
 void SimulationFeatures::WorldForwardStep(
-    const Identity &_worldID,
+    const Identity & /*_worldID*/,
     ForwardStep::Output & /*_h*/,
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & _u)
 {
-    const WorldInfoPtr &worldInfo = this->worlds.at(_worldID);
-
     auto *dtDur =
       _u.Query<std::chrono::steady_clock::duration>();
     std::chrono::duration<double> dt = *dtDur;
-    worldInfo->world->stepSimulation(dt.count(), 1, dt.count());
+    this->world->btWorld->stepSimulation(dt.count(), 1, dt.count());
+}
+
+std::vector<SimulationFeatures::ContactInternal> SimulationFeatures::GetContactsFromLastStep(
+      const Identity &_worldID) const
+{
+    (void) _worldID;
+    std::vector<SimulationFeatures::ContactInternal> outContacts;
+    return outContacts;
 }
 
 }  // namespace bullet

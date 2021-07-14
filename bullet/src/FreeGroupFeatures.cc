@@ -25,11 +25,11 @@ namespace bullet {
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
-  const auto &model = this->models.at(_modelID);
+  auto model = std::get<Model*>(this->entities.at(_modelID));
 
   // If there are no links at all in this model, then the FreeGroup functions
   // will not work properly, so we'll just reject these cases.
-  if (model->links.size() == 0)
+  if (model->links.empty())
     return this->GenerateInvalidId();
 
   // Reject also if the model has fixed base
@@ -43,15 +43,18 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
+  (void) _linkID;
+  /*
   const auto &link_it = this->links.find(_linkID);
 
   if (link_it != this->links.end() && link_it->second != nullptr)
     return this->GenerateIdentity(_linkID.id, link_it->second);
+    */
   return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
-Identity FreeGroupFeatures::GetFreeGroupCanonicalLink(
+Identity FreeGroupFeatures::GetFreeGroupRootLink(
     const Identity &_groupID) const
 {
   (void) _groupID;
@@ -72,10 +75,10 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   baseTransform.setBasis(convertMat(poseLinear));
 
   // Set base transform
-  const auto &model = this->models.at(_groupID);
-  for (auto link : model->links)
+    auto model = std::get<Model*>(this->entities.at(_groupID));
+  for (auto& link : model->links)
   {
-    this->links.at(link)->link->setCenterOfMassTransform(baseTransform);
+    link->body->setCenterOfMassTransform(baseTransform);
   }
 }
 

@@ -26,6 +26,7 @@
 #include <ignition/physics/Implements.hh>
 
 #include "Base.hh"
+#include <ignition/physics/Shape.hh>
 
 namespace ignition {
 namespace physics {
@@ -48,6 +49,12 @@ class EntityManagementFeatures :
   public: bool RemoveModelByName(
       const Identity &_worldID,
       const std::string &_modelName) override;
+
+  public: bool RemoveNestedModelByIndex(
+     const Identity &_modelID, std::size_t _modelIndex) override;
+
+  public: bool RemoveNestedModelByName(
+      const Identity &_modelID, const std::string &_modelName) override;
 
   public: bool RemoveModel(const Identity &_modelID) override;
 
