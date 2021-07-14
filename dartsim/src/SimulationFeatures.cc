@@ -167,18 +167,13 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P> pIgn;
 
-  pIgn.Get<F::FrictionCoeff<P>>().frictionCoeff = pDart.mFrictionCoeff;
-  pIgn.Get<F::SecondaryFrictionCoeff<P>>().secondaryFrictionCoeff =
-    pDart.mSecondaryFrictionCoeff;
-  pIgn.Get<F::SlipCompliance<P>>().slipCompliance = pDart.mSlipCompliance;
-  pIgn.Get<F::SecondarySlipCompliance<P>>().secondarySlipCompliance =
-    pDart.mSecondarySlipCompliance;
-  pIgn.Get<F::RestitutionCoeff<P>>().restitutionCoeff =
-    pDart.mRestitutionCoeff;
-  pIgn.Get<F::FirstFrictionalDirection<P>>().firstFrictionalDirection =
-    pDart.mFirstFrictionalDirection;
-  pIgn.Get<F::ContactSurfaceMotionVelocity<P>>().contactSurfaceMotionVelocity =
-    pDart.mContactSurfaceMotionVelocity;
+  pIgn.frictionCoeff = pDart.mFrictionCoeff;
+  pIgn.secondaryFrictionCoeff = pDart.mSecondaryFrictionCoeff;
+  pIgn.slipCompliance = pDart.mSlipCompliance;
+  pIgn.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
+  pIgn.restitutionCoeff = pDart.mRestitutionCoeff;
+  pIgn.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
+  pIgn.contactSurfaceMotionVelocity = pDart.mContactSurfaceMotionVelocity;
 
   auto contactInternal = this->convertContact(_contact);
   if (contactInternal)
@@ -186,19 +181,44 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     this->surfaceParamsCallback(contactInternal.value(),
                                 _numContactsOnCollisionObject, pIgn);
 
-    pDart.mFrictionCoeff = pIgn.Get<F::FrictionCoeff<P>>().frictionCoeff;
-    pDart.mSecondaryFrictionCoeff =
-      pIgn.Get<F::SecondaryFrictionCoeff<P>>().secondaryFrictionCoeff;
-    pDart.mSlipCompliance = pIgn.Get<F::SlipCompliance<P>>().slipCompliance;
-    pDart.mSecondarySlipCompliance =
-      pIgn.Get<F::SecondarySlipCompliance<P>>().secondarySlipCompliance;
-    pDart.mRestitutionCoeff =
-      pIgn.Get<F::RestitutionCoeff<P>>().restitutionCoeff;
-    pDart.mFirstFrictionalDirection =
-      pIgn.Get<F::FirstFrictionalDirection<P>>().firstFrictionalDirection;
-    pDart.mContactSurfaceMotionVelocity =
-      pIgn.Get<F::ContactSurfaceMotionVelocity<P>>().
-        contactSurfaceMotionVelocity;
+    if (pIgn.frictionCoeff)
+      pDart.mFrictionCoeff = pIgn.frictionCoeff.value();
+    if (pIgn.secondaryFrictionCoeff)
+      pDart.mSecondaryFrictionCoeff = pIgn.secondaryFrictionCoeff.value();
+    if (pIgn.slipCompliance)
+      pDart.mSlipCompliance = pIgn.slipCompliance.value();
+    if (pIgn.secondarySlipCompliance)
+      pDart.mSecondarySlipCompliance = pIgn.secondarySlipCompliance.value();
+    if (pIgn.restitutionCoeff)
+      pDart.mRestitutionCoeff = pIgn.restitutionCoeff.value();
+    if (pIgn.firstFrictionalDirection)
+      pDart.mFirstFrictionalDirection = pIgn.firstFrictionalDirection.value();
+    if (pIgn.contactSurfaceMotionVelocity)
+      pDart.mContactSurfaceMotionVelocity =
+        pIgn.contactSurfaceMotionVelocity.value();
+
+    static bool warnedRollingFrictionCoeff = false;
+    if (!warnedRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
+    {
+      ignwarn << "DART doesn't support rolling friction setting" << std::endl;
+      warnedRollingFrictionCoeff = true;
+    }
+
+    static bool warnedSecondaryRollingFrictionCoeff = false;
+    if (!warnedSecondaryRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
+    {
+      ignwarn << "DART doesn't support secondary rolling friction setting"
+              << std::endl;
+      warnedSecondaryRollingFrictionCoeff = true;
+    }
+
+    static bool warnedNormalRollingFrictionCoeff = false;
+    if (!warnedNormalRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
+    {
+      ignwarn << "DART doesn't support normal rolling friction setting"
+              << std::endl;
+      warnedNormalRollingFrictionCoeff = true;
+    }
   }
 
   this->lastIgnParams = pIgn;
@@ -220,21 +240,18 @@ IgnContactSurfaceHandler::createConstraint(
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P>& p = this->lastIgnParams;
 
-  if (this->lastIgnParams.Has<F::ErrorReductionParameter<P>>())
-    constraint->setErrorReductionParameter(
-      p.Get<F::ErrorReductionParameter<P>>().errorReductionParameter);
+  if (this->lastIgnParams.errorReductionParameter)
+    constraint->setErrorReductionParameter(p.errorReductionParameter.value());
 
-  if (this->lastIgnParams.Has<F::MaxErrorAllowance<P>>())
-    constraint->setErrorAllowance(
-      p.Get<F::MaxErrorAllowance<P>>().maxErrorAllowance);
+  if (this->lastIgnParams.maxErrorAllowance)
+    constraint->setErrorAllowance(p.maxErrorAllowance.value());
 
-  if (this->lastIgnParams.Has<F::MaxErrorReductionVelocity<P>>())
+  if (this->lastIgnParams.maxErrorReductionVelocity)
     constraint->setMaxErrorReductionVelocity(
-      p.Get<F::MaxErrorReductionVelocity<P>>().maxErrorReductionVelocity);
+      p.maxErrorReductionVelocity.value());
 
-  if (this->lastIgnParams.Has<F::ConstraintForceMixing<P>>())
-    constraint->setConstraintForceMixing(
-      p.Get<F::ConstraintForceMixing<P>>().constraintForceMixing);
+  if (this->lastIgnParams.constraintForceMixing)
+    constraint->setConstraintForceMixing(p.constraintForceMixing.value());
 
   return constraint;
 }

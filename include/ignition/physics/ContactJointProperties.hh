@@ -37,90 +37,25 @@ namespace physics
 class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
-  public: template <typename PolicyT> struct FrictionCoeff
+  public: template <typename PolicyT> struct ContactSurfaceParams
   {
-    typename PolicyT::Scalar frictionCoeff;
-  };
-
-  public: template <typename PolicyT> struct SecondaryFrictionCoeff
-  {
-    typename PolicyT::Scalar secondaryFrictionCoeff;
-  };
-
-  public: template <typename PolicyT> struct RollingFrictionCoeff
-  {
-    typename PolicyT::Scalar rollingFrictionCoeff;
-  };
-
-  public: template <typename PolicyT> struct SecondaryRollingFrictionCoeff
-  {
-    typename PolicyT::Scalar secondaryRollingFrictionCoeff;
-  };
-
-  public: template <typename PolicyT> struct NormalRollingFrictionCoeff
-  {
-    typename PolicyT::Scalar normalRollingFrictionCoeff;
-  };
-
-  public: template <typename PolicyT> struct SlipCompliance
-  {
-    typename PolicyT::Scalar slipCompliance;
-  };
-
-  public: template <typename PolicyT> struct SecondarySlipCompliance
-  {
-    typename PolicyT::Scalar secondarySlipCompliance;
-  };
-
-  public: template <typename PolicyT> struct RestitutionCoeff
-  {
-    typename PolicyT::Scalar restitutionCoeff;
-  };
-
-  public: template <typename PolicyT> struct FirstFrictionalDirection
-  {
-    typename FromPolicy<PolicyT>::template Use<Vector> firstFrictionalDirection;
-  };
-
-  public: template <typename PolicyT> struct ContactSurfaceMotionVelocity
-  {
-    typename FromPolicy<PolicyT>::template Use<Vector>
+    std::optional<typename PolicyT::Scalar> frictionCoeff;
+    std::optional<typename PolicyT::Scalar> secondaryFrictionCoeff;
+    std::optional<typename PolicyT::Scalar> rollingFrictionCoeff;
+    std::optional<typename PolicyT::Scalar> secondaryRollingFrictionCoeff;
+    std::optional<typename PolicyT::Scalar> normalRollingFrictionCoeff;
+    std::optional<typename PolicyT::Scalar> slipCompliance;
+    std::optional<typename PolicyT::Scalar> secondarySlipCompliance;
+    std::optional<typename PolicyT::Scalar> restitutionCoeff;
+    std::optional<typename FromPolicy<PolicyT>::template Use<Vector>>
+      firstFrictionalDirection;
+    std::optional<typename FromPolicy<PolicyT>::template Use<Vector>>
       contactSurfaceMotionVelocity;
+    std::optional<typename PolicyT::Scalar> errorReductionParameter;
+    std::optional<typename PolicyT::Scalar> maxErrorReductionVelocity;
+    std::optional<typename PolicyT::Scalar> maxErrorAllowance;
+    std::optional<typename PolicyT::Scalar> constraintForceMixing;
   };
-
-  public: template <typename PolicyT> struct ErrorReductionParameter
-  {
-    typename PolicyT::Scalar errorReductionParameter;
-  };
-
-  public: template <typename PolicyT> struct MaxErrorReductionVelocity
-  {
-    typename PolicyT::Scalar maxErrorReductionVelocity;
-  };
-
-  public: template <typename PolicyT> struct MaxErrorAllowance
-  {
-    typename PolicyT::Scalar maxErrorAllowance;
-  };
-
-  public: template <typename PolicyT> struct ConstraintForceMixing
-  {
-    typename PolicyT::Scalar constraintForceMixing;
-  };
-
-  public: template <typename PolicyT> using ContactSurfaceParams =
-    SpecifyData<ExpectData<
-      FrictionCoeff<PolicyT>, SecondaryFrictionCoeff<PolicyT>,
-      RollingFrictionCoeff<PolicyT>, SecondaryRollingFrictionCoeff<PolicyT>,
-      NormalRollingFrictionCoeff<PolicyT>,
-      SlipCompliance<PolicyT>, SecondarySlipCompliance<PolicyT>,
-      RestitutionCoeff<PolicyT>,
-      FirstFrictionalDirection<PolicyT>,
-      ContactSurfaceMotionVelocity<PolicyT>,
-      ErrorReductionParameter<PolicyT>,
-      MaxErrorReductionVelocity<PolicyT>,
-      MaxErrorAllowance<PolicyT>,
-      ConstraintForceMixing<PolicyT> > >;
 
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
