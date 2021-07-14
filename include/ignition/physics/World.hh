@@ -98,12 +98,6 @@ namespace ignition
             const LinearVectorType &_gravity,
             const FrameID &_forceInCoordinatesOf = FrameID::World());
 
-        /// \brief Get the World gravity vector as a Relative Gravity
-        /// (a quantity that contains information about the coordinates
-        /// in which it is expressed).
-        /// \return Relative Gravity vector.
-        public: RelativeGravityType GetGravity() const;
-
         /// \brief Get the World gravity vector. Optionally, you may specify
         /// the frame whose coordinates are used to express the gravity vector.
         /// The World frame is used as a default if no frame is specified.

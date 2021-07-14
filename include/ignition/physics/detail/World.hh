@@ -80,17 +80,6 @@ void Gravity::World<PolicyT, FeaturesT>::SetGravity(
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-auto Gravity::World<PolicyT, FeaturesT>::GetGravity() const
-    -> RelativeGravityType
-{
-  return RelativeGravityType(
-      FrameID::World(),
-      this->template Interface<Gravity>()
-          ->GetWorldGravity(this->identity));
-}
-
-/////////////////////////////////////////////////
-template <typename PolicyT, typename FeaturesT>
 auto Gravity::World<PolicyT, FeaturesT>::GetGravity(
     const FrameID &_inCoordinatesOf) const
     -> LinearVectorType

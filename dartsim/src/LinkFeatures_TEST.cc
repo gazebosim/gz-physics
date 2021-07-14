@@ -125,7 +125,7 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   {
     AssertVectorApprox vectorPredicate(1e-10);
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
-                        world->GetGravity(physics::FrameID::World()));
+                        world->GetGravity());
   }
 
   // Add a sphere
