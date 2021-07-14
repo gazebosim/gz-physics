@@ -124,14 +124,14 @@ namespace ignition
         /// \brief Implementation API for setting the gravity vector, which is
         /// expressed in the World frame..
         /// \param[in] _id Identity of the world.
-        /// \param[in] _gravity Name of gravity.
+        /// \param[in] _gravity Value of gravity.
         public: virtual void SetWorldGravity(
             const Identity &_id, const LinearVectorType &_gravity) = 0;
 
         /// \brief Implementation API for getting the gravity expressed in the
         /// world frame.
         /// \param[in] _id Identity of the world.
-        /// \return Name of gravity.
+        /// \return Value of gravity.
         public: virtual LinearVectorType GetWorldGravity(
             const Identity &_id) const = 0;
       };
