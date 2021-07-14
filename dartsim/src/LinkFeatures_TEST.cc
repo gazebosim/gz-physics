@@ -74,26 +74,6 @@ class LinkFeaturesFixture : public ::testing::Test
   protected: TestEnginePtr engine;
 };
 
-TestWorldPtr LoadWorld(
-    const TestEnginePtr &_engine,
-    const std::string &_sdfFile,
-    const Eigen::Vector3d &_gravity = Eigen::Vector3d{0, 0, -9.8})
-{
-  sdf::Root root;
-  const sdf::Errors errors = root.Load(_sdfFile);
-  EXPECT_TRUE(errors.empty()) << errors;
-  const sdf::World *sdfWorld = root.WorldByIndex(0);
-  EXPECT_NE(nullptr, sdfWorld);
-
-  auto graphErrors = sdfWorld->ValidateGraphs();
-  EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
-
-  TestWorldPtr world = _engine->ConstructWorld(*sdfWorld);
-  EXPECT_NE(nullptr, world);
-  world->SetGravity(_gravity);
-  return world;
-}
-
 // A predicate-formatter for asserting that two vectors are approximately equal.
 class AssertVectorApprox
 {
@@ -116,6 +96,31 @@ class AssertVectorApprox
 
   private: double tol;
 };
+
+TestWorldPtr LoadWorld(
+    const TestEnginePtr &_engine,
+    const std::string &_sdfFile,
+    const Eigen::Vector3d &_gravity = Eigen::Vector3d{0, 0, -9.8})
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(_sdfFile);
+  EXPECT_TRUE(errors.empty()) << errors;
+  const sdf::World *sdfWorld = root.WorldByIndex(0);
+  EXPECT_NE(nullptr, sdfWorld);
+
+  auto graphErrors = sdfWorld->ValidateGraphs();
+  EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
+
+  TestWorldPtr world = _engine->ConstructWorld(*sdfWorld);
+  EXPECT_NE(nullptr, world);
+  world->SetGravity(_gravity);
+
+  AssertVectorApprox vectorPredicate(1e-10);
+  EXPECT_PRED_FORMAT2(vectorPredicate, _gravity,
+                      world->GetGravity());
+
+  return world;
+}
 
 // Test setting force and torque.
 TEST_F(LinkFeaturesFixture, LinkForceTorque)
