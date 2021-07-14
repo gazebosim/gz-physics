@@ -47,7 +47,7 @@ const std::string &CollisionDetector::World<PolicyT, FeaturesT>::
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 void Gravity::World<PolicyT, FeaturesT>::SetGravity(
-    const RelativeGravityType &_gravity)
+    const RelativeForceType &_gravity)
 {
   // Resolve to world coordinates
   auto &impl = *this->template Interface<FrameSemantics>();
@@ -70,10 +70,10 @@ void Gravity::World<PolicyT, FeaturesT>::SetGravity(
     this->template Interface<Gravity>()
         ->SetWorldGravity(this->identity, _gravity);
   }
-  // Otherwise make a RelativeGravity object and call the other API
+  // Otherwise make a RelativeForce object and call the other API
   else
   {
-    RelativeGravityType gravityInRef(_inCoordinatesOf, _gravity);
+    RelativeForceType gravityInRef(_inCoordinatesOf, _gravity);
     this->SetGravity(gravityInRef);
   }
 }
@@ -94,7 +94,7 @@ auto Gravity::World<PolicyT, FeaturesT>::GetGravity(
 
   // Otherwise resolve to proper frame
   auto &impl = *this->template Interface<FrameSemantics>();
-  RelativeGravityType gravityInRef(FrameID::World(), gravityInWorld);
+  RelativeForceType gravityInRef(FrameID::World(), gravityInWorld);
   return detail::Resolve(impl, gravityInRef, FrameID::World(),
                          _inCoordinatesOf);
 }

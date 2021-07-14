@@ -78,15 +78,14 @@ namespace ignition
         public: using LinearVectorType =
             typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-        public: using RelativeGravityType = RelativeQuantity<
-            LinearVectorType, PolicyT::Dim,
-            detail::VectorSpace<typename PolicyT::Scalar, PolicyT::Dim>>;
+        public: using RelativeForceType =
+            typename FromPolicy<PolicyT>::template Use<RelativeForce>;
 
         /// \brief Set the World gravity vector.
         /// \param[in] _gravity The desired gravity as a Relative Gravity
         /// (a quantity that contains information about the coordinates
         /// in which it is expressed).
-        public: void SetGravity(const RelativeGravityType &_gravity);
+        public: void SetGravity(const RelativeForceType &_gravity);
 
         /// \brief Set the World gravity vector. Optionally, you may specify
         /// the frame whose coordinates are used to express the gravity vector.
