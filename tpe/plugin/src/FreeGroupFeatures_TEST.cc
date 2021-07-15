@@ -124,8 +124,8 @@ TEST(FreeGroupFeatures, NestedFreeGroup)
     auto freeGroup = model->FindFreeGroup();
     if (nullptr == freeGroup)
       return testing::AssertionFailure() << "Freegroup could not be found";
-    if (nullptr == freeGroup)
-      return testing::AssertionFailure() << "CanonicalLink could not be found";
+    if (nullptr == freeGroup->RootLink())
+      return testing::AssertionFailure() << "RootLink could not be found";
     return testing::AssertionSuccess();
   };
 
