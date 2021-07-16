@@ -81,6 +81,22 @@ const std::string &WorldFeatures::GetWorldCollisionDetector(const Identity &_id)
 }
 
 /////////////////////////////////////////////////
+void WorldFeatures::SetWorldGravity(
+    const Identity &_id, const LinearVectorType &_gravity)
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  world->setGravity(_gravity);
+}
+
+/////////////////////////////////////////////////
+WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
+    const Identity &_id) const
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  return world->getGravity();
+}
+
+/////////////////////////////////////////////////
 void WorldFeatures::SetWorldSolver(const Identity &_id,
     const std::string &_solver)
 {
