@@ -540,7 +540,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   WorldPtr world =
       this->LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
   ASSERT_NE(nullptr, world);
-  EXPECT_EQ(4u, world->GetModelCount());
+  EXPECT_EQ(2u, world->GetModelCount());
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
@@ -599,7 +599,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
   WorldPtr world = this->LoadWorld(
       TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf");
   ASSERT_NE(nullptr, world);
-  EXPECT_EQ(2u, world->GetModelCount());
+  EXPECT_EQ(1u, world->GetModelCount());
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);

@@ -30,9 +30,15 @@
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/RequestEngine.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
+#include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
+#include <ignition/physics/sdf/ConstructLink.hh>
+#include <ignition/physics/sdf/ConstructCollision.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
+#include <sdf/Model.hh>
+#include <sdf/Link.hh>
 
 #include <test/PhysicsPluginsList.hh>
 #include <test/Utils.hh>
@@ -41,19 +47,28 @@
 #include "FreeGroupFeatures.hh"
 #include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
+#include "World.hh"
 
 struct TestFeatureList : ignition::physics::FeatureList<
   ignition::physics::tpeplugin::SimulationFeatureList,
   ignition::physics::tpeplugin::ShapeFeatureList,
   ignition::physics::tpeplugin::EntityManagementFeatureList,
   ignition::physics::tpeplugin::FreeGroupFeatureList,
+  ignition::physics::tpeplugin::RetrieveWorld,
   ignition::physics::GetContactsFromLastStepFeature,
   ignition::physics::LinkFrameSemantics,
   ignition::physics::GetModelBoundingBox,
-  ignition::physics::sdf::ConstructSdfWorld
+  ignition::physics::sdf::ConstructSdfWorld,
+  ignition::physics::sdf::ConstructSdfModel,
+  ignition::physics::sdf::ConstructSdfNestedModel,
+  ignition::physics::sdf::ConstructSdfLink,
+  ignition::physics::sdf::ConstructSdfCollision
 > { };
 
+using TestEnginePtr = ignition::physics::Engine3dPtr<TestFeatureList>;
 using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
+using TestModelPtr = ignition::physics::Model3dPtr<TestFeatureList>;
+using TestLinkPtr = ignition::physics::Link3dPtr<TestFeatureList>;
 using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
 using ContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
 
@@ -88,6 +103,125 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
 
     worlds.insert(world);
   }
+  return worlds;
+}
+
+/////////////////////////////////////////////////
+static ignition::math::Pose3d ResolveSdfPose(
+    const ::sdf::SemanticPose &_semPose)
+{
+  ignition::math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose);
+  EXPECT_TRUE(errors.empty()) << errors;
+  return pose;
+}
+
+std::unordered_set<TestWorldPtr> LoadWorldsPiecemeal(
+    const std::string &_library, const std::string &_world)
+{
+  ignition::plugin::Loader loader;
+  loader.LoadLib(_library);
+
+  const std::set<std::string> pluginNames =
+    ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
+
+  EXPECT_EQ(1u, pluginNames.size());
+
+  std::unordered_set<TestWorldPtr> worlds;
+  for (const std::string &name : pluginNames)
+  {
+    ignition::plugin::PluginPtr plugin = loader.Instantiate(name);
+
+    igndbg << " -- Plugin name: " << name << std::endl;
+
+    auto engine =
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    EXPECT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors &errors = root.Load(_world);
+    EXPECT_EQ(0u, errors.size()) << errors;
+
+    EXPECT_EQ(1u, root.WorldCount());
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    EXPECT_NE(nullptr, sdfWorld);
+
+    sdf::World newWorld;
+    newWorld.SetName(sdfWorld->Name());
+    newWorld.SetGravity(sdfWorld->Gravity());
+    auto world = engine->ConstructWorld(newWorld);
+    if (nullptr == world)
+      continue;
+
+    std::unordered_map<const sdf::Model *, TestModelPtr> modelMap;
+    std::unordered_map<const sdf::Link *, TestLinkPtr> linkMap;
+
+    auto createModel = [&](const sdf::Model *_model,
+        const sdf::Model *_parentModel = nullptr) {
+      sdf::Model newSdfModel;
+      newSdfModel.SetName(_model->Name());
+      newSdfModel.SetRawPose(ResolveSdfPose(_model->SemanticPose()));
+      newSdfModel.SetStatic(_model->Static());
+      newSdfModel.SetSelfCollide(_model->SelfCollide());
+
+      TestModelPtr newModel;
+      if (nullptr != _parentModel)
+      {
+        auto it = modelMap.find(_parentModel);
+        ASSERT_TRUE(it != modelMap.end());
+        newModel = it->second->ConstructNestedModel(newSdfModel);
+      }
+      else
+      {
+        newModel = world->ConstructModel(newSdfModel);
+      }
+
+      EXPECT_NE(nullptr, newModel);
+      if (nullptr != newModel)
+      {
+        modelMap[_model] = newModel;
+      }
+    };
+
+    for (uint64_t i = 0; i < sdfWorld->ModelCount(); ++i)
+    {
+      const auto *model = sdfWorld->ModelByIndex(i);
+      createModel(model);
+      for (uint64_t nestedInd = 0; nestedInd < model->ModelCount(); ++nestedInd)
+      {
+        createModel(model->ModelByIndex(nestedInd), model);
+      }
+    }
+
+    for (auto [sdfModel, physModel] : modelMap)
+    {
+      for (uint64_t li = 0; li < sdfModel->LinkCount(); ++li)
+      {
+        const auto *link = sdfModel->LinkByIndex(li);
+        sdf::Link newSdfLink;
+        newSdfLink.SetName(link->Name());
+        newSdfLink.SetRawPose(ResolveSdfPose(link->SemanticPose()));
+        newSdfLink.SetInertial(link->Inertial());
+
+        auto newLink = physModel->ConstructLink(newSdfLink);
+        EXPECT_NE(nullptr, newLink);
+        if (nullptr == newLink)
+          return worlds;
+
+        linkMap[link] = newLink;
+      }
+    }
+
+    for (auto [sdfLink, physLink] : linkMap)
+    {
+      for (uint64_t ci = 0; ci < sdfLink->CollisionCount(); ++ci)
+      {
+        physLink->ConstructCollision(*sdfLink->CollisionByIndex(ci));
+      }
+    }
+    worlds.insert(world);
+  }
+
   return worlds;
 }
 
@@ -327,6 +461,57 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 2, 0, 0, 0),
               ignition::math::eigen3::convert(frameData.pose));
+  }
+}
+
+TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
+{
+  const std::string library = GetParam();
+  if (library.empty())
+    return;
+
+  auto worlds =
+      LoadWorldsPiecemeal(library, TEST_WORLD_DIR "/nested_model.world");
+
+  for (const auto &world : worlds)
+  {
+    auto tpeWorld = world->GetTpeLibWorld();
+    ASSERT_NE(nullptr, tpeWorld);
+
+    // model free group test
+    auto model = world->GetModel("model");
+    ASSERT_NE(nullptr, model);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    ASSERT_NE(nullptr, freeGroup->RootLink());
+
+    ignition::math::Pose3d newPose(1, 1, 0, 0, 0, 0);
+    freeGroup->SetWorldPose(ignition::math::eigen3::convert(newPose));
+
+    {
+      auto link = model->GetLink("link");
+      ASSERT_NE(nullptr, link);
+      auto frameData = link->FrameDataRelativeToWorld();
+      EXPECT_EQ(newPose,
+          ignition::math::eigen3::convert(frameData.pose));
+    }
+    {
+      auto nestedModel = model->GetNestedModel("nested_model");
+      ASSERT_NE(nullptr, nestedModel);
+      auto nestedLink = nestedModel->GetLink("nested_link");
+      ASSERT_NE(nullptr, nestedLink);
+
+      // Poses from SDF
+      ignition::math::Pose3d nestedModelPose(1, 2, 2, 0, 0, 0);
+      ignition::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, IGN_PI_2);
+
+      ignition::math::Pose3d nestedLinkExpectedPose =
+        newPose * nestedModelPose * nestedLinkPose;
+
+      EXPECT_EQ(nestedLinkExpectedPose,
+                ignition::math::eigen3::convert(
+                    nestedLink->FrameDataRelativeToWorld().pose));
+    }
   }
 }
 
