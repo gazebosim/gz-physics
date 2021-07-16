@@ -5,6 +5,16 @@ Deprecated code produces compile-time warnings. These warning serve as
 notification to users that their code should be upgraded. The next major
 release will remove the deprecated code.
 
+## Ignition Physics 4.1 to 4.2
+
+### Additions
+
+1. Bullet: new plugin implementation.
+
+1. Heightmap: Feature defined and implemented in dartsim.
+
+1. TPE: Capsule and Ellipsoid shapes added.
+
 ## Ignition Physics 3.X to 4.X
 
 ### Modifications
