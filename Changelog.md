@@ -2,7 +2,13 @@
 
 ### Ignition Physics 4.x.x (20XX-XX-XX)
 
-### Ignition Physics 4.2.0 (2021-07-XX)
+### Ignition Physics 4.2.0 (2021-07-16)
+
+1. Support FreeGroup features for nested models
+    * [Pull request #231](https://github.com/ignitionrobotics/ign-physics/pull/231)
+
+1. Add Gravity Feature, fix LinkFeatures_TEST
+    * [Pull request #275](https://github.com/ignitionrobotics/ign-physics/pull/275)
 
 1. Heightmaps 🏔️
     * [Pull request #218](https://github.com/ignitionrobotics/ign-physics/pull/218)

@@ -13,7 +13,7 @@ find_package(ignition-cmake2 2.8.0 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project(VERSION_SUFFIX pre1)
+ign_configure_project(VERSION_SUFFIX)
 
 
 #============================================================================
@@ -61,7 +61,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat11
+ign_find_package(sdformat11 VERSION 11.2.2
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
