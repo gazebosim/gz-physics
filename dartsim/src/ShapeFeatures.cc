@@ -23,6 +23,7 @@
 #include <dart/dynamics/CapsuleShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
+#include <dart/dynamics/HeightmapShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
 #include <dart/dynamics/Shape.hpp>
@@ -31,6 +32,7 @@
 #include <ignition/common/Mesh.hh>
 #include <ignition/common/MeshManager.hh>
 
+#include "CustomHeightmapShape.hh"
 #include "CustomMeshShape.hh"
 
 namespace ignition {
@@ -323,6 +325,58 @@ Identity ShapeFeatures::AttachSphereShape(
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
+//////////////////////////////////////////////////
+Identity ShapeFeatures::CastToHeightmapShape(
+    const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+
+  const dart::dynamics::ShapePtr &shape =
+      shapeInfo->node->getShape();
+
+  if (dynamic_cast<dart::dynamics::HeightmapShape<float> *>(shape.get()))
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d ShapeFeatures::GetHeightmapShapeSize(
+    const Identity &_heightmapID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_heightmapID);
+
+  const auto *heightmap =
+      static_cast<dart::dynamics::HeightmapShape<float> *>(
+        shapeInfo->node->getShape().get());
+
+  return heightmap->getBoundingBox().getMax() -
+      heightmap->getBoundingBox().getMin();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachHeightmapShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const common::HeightmapData &_heightmapData,
+    const Pose3d &_pose,
+    const LinearVector3d &_size,
+    int _subSampling)
+{
+  auto heightmap = std::make_shared<CustomHeightmapShape>(_heightmapData,
+      _size, _subSampling);
+
+  DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
+  dart::dynamics::ShapeNode *sn =
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          heightmap, bn->getName() + ":" + _name);
+
+  sn->setRelativeTransform(_pose);
+  const std::size_t shapeID = this->AddShape({sn, _name});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
+}
+
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToMeshShape(
     const Identity &_shapeID) const
@@ -469,7 +523,7 @@ double ShapeFeatures::GetShapeFrictionPyramidPrimarySlipCompliance(
       << std::endl;
     return 0.0;
   }
-  return aspect->getSlipCompliance();
+  return aspect->getPrimarySlipCompliance();
 }
 
 /////////////////////////////////////////////////
@@ -505,7 +559,7 @@ bool ShapeFeatures::SetShapeFrictionPyramidPrimarySlipCompliance(
       << std::endl;
     return false;
   }
-  aspect->setSlipCompliance(_value);
+  aspect->setPrimarySlipCompliance(_value);
   return true;
 }
 

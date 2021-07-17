@@ -12,22 +12,25 @@ plugin using \ref ignition::physics "Ignition Physics" API.
 
 ## Prerequisites
 
-In the previous tutorial \ref installation "Installation", you have installed the
-Ignition Physics corresponding to the desired Ignition release.
+- \ref installation "Installation"
+- \ref physicsplugin "Understand physics plugin"
+
 ## Write a simple loader
 
-Please create a folder for the loader first:
+We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics2/examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/examples/hello_world_loader) folder.
+
+First, create a workspace for the example plugin loader.
 
 ```bash
 cd ~
-mkdir -p ~/simple_loader/build
-cd simple_loader
+mkdir -p ~/hello_world_loader/build
+cd hello_world_loader
 ```
 
 Then download the example loader into your current directory by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/main/examples/hello_world_loader/hello_world_loader.cc
+wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/ign-physics4/examples/hello_world_loader/hello_world_loader.cc
 ```
 
 ### Examine the code
@@ -38,40 +41,14 @@ be used in our code. After the `std` C++ libraries are the `Loader.hh` and
 and plugin pointers. Next includes from \ref ignition::physics are the tools for
 retrieving \ref ignition::physics::Feature "Feature" and
 \ref ignition::physics::Entity "Entity" from physics plugins (please refer to
-\ref physicsplugin "Understanding the Physics Plugin" tutorial for their
+\ref physicsplugin "Understand Physics Plugin" tutorial for their
 design concepts).
 
-```cpp
-#include <iostream>
-
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/PluginPtr.hh>
-
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/RequestEngine.hh>
-
-using Features = ignition::physics::FeatureList<
-    ignition::physics::GetEngineInfo
->;
-```
+\snippet examples/hello_world_loader/hello_world_loader.cc include statements
 
 Next, in the main function, the loader requires users to provide a path for
 desired plugins to be loaded. The plugin names are retrieved by
 @ref ignition::plugin::Loader::LoadLib member function.
-
-```cpp
-if (argc <= 1)
-{
-  std::cerr << "Please provide the path to an engine plugin." << std::endl;
-  return 1;
-}
-
-std::string pluginPath = argv[1];
-
-ignition::plugin::Loader pl;
-auto plugins = pl.LoadLib(pluginPath);
-```
 
 Assuming the correct path, our loader will instantiate all plugins that are
 available in the path using @ref ignition::plugin::Loader::Instantiate member
@@ -81,53 +58,27 @@ engine implementing a \ref ignition::physics::FeaturePolicy "FeaturePolicy" (3D
   in this case).
 .
 
-```cpp
-for (const std::string &name : pluginNames)
-{
-  std::cout << "Testing plugin: " << name << std::endl;
-  ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
+\snippet examples/hello_world_loader/hello_world_loader.cc main
 
-  auto engine = ignition::physics::RequestEngine3d<Features>::From(plugin);
-
-  std::cout << "  engine name: " << engine->GetName() << std::endl;
-}
-```
-
-### Setup CMakeLists.txt for building (Version: ign-physics5)
+### Setup CMakeLists.txt for CMake build
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies in Edifice release:
-
-```cmake
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
-
-set(IGN_PLUGIN_VER 1)
-find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
-
-set(IGN_PHYSICS_VER 5)
-find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
-```
-
+lines for finding `ign-plugin` and `ign-physics` dependencies in Citadel release.
 After that, add the executable pointing to our file and add linking library so
-that `cmake` can compile it:
+that `cmake` can compile it.
 
-```cmake
-add_executable(hello_world_loader hello_world_loader.cc)
-target_link_libraries(hello_world_loader
-  ignition-plugin${IGN_PLUGIN_VER}::loader
-  ignition-physics${IGN_PHYSICS_VER}::ignition-physics${IGN_PHYSICS_VER})
-```
+\include examples/hello_world_loader/CMakeLists.txt
 
-For a comprehensive CMake tutorial, please take a look
-[here](https://cmake.org/cmake/help/latest/guide/tutorial/index.html).
+If you find CMake syntax difficult to understand, take a look at the official tutorial [here](https://cmake.org/cmake/help/latest/guide/tutorial/index.html).
 
 ## Build and run
 
 ### Compile the loader
 
-Your current loader folder should look like this:
+Your current loader folder should look like this
+
 ```bash
-$ ls ~/simple_loader
+$ ls ~/hello_world_loader
 CMakeLists.txt  hello_world_loader.cc  build
 ```
 
@@ -172,3 +123,4 @@ At the time of writing, Ignition Physics is shipped with
 physics plugins installed. Following the above steps, you can load `TPE` by the
 library name `libignition-physics-tpe-plugin.so` or other custom plugins by
 their corresponding names.
+

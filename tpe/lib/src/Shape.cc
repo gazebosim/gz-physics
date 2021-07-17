@@ -86,6 +86,61 @@ void BoxShape::UpdateBoundingBox()
 }
 
 //////////////////////////////////////////////////
+CapsuleShape::CapsuleShape() : Shape()
+{
+  this->type = ShapeType::CAPSULE;
+}
+
+//////////////////////////////////////////////////
+CapsuleShape::CapsuleShape(const CapsuleShape &_other)
+  : Shape()
+{
+  *this = _other;
+}
+
+//////////////////////////////////////////////////
+Shape &CapsuleShape::operator=(const Shape &_other)
+{
+  auto other = static_cast<const CapsuleShape *>(&_other);
+  this->radius = other->radius;
+  this->length = other->length;
+  return *this;
+}
+
+//////////////////////////////////////////////////
+double CapsuleShape::GetRadius() const
+{
+  return this->radius;
+}
+
+//////////////////////////////////////////////////
+void CapsuleShape::SetRadius(double _radius)
+{
+  this->radius = _radius;
+  this->dirty = true;
+}
+
+//////////////////////////////////////////////////
+double CapsuleShape::GetLength() const
+{
+  return this->length;
+}
+
+//////////////////////////////////////////////////
+void CapsuleShape::SetLength(double _length)
+{
+  this->length = _length;
+  this->dirty = true;
+}
+
+//////////////////////////////////////////////////
+void CapsuleShape::UpdateBoundingBox()
+{
+  math::Vector3d halfSize(this->radius, this->radius, this->length*0.5 + this->radius);
+  this->bbox = math::AxisAlignedBox(-halfSize, halfSize);
+}
+
+//////////////////////////////////////////////////
 CylinderShape::CylinderShape() : Shape()
 {
   this->type = ShapeType::CYLINDER;
@@ -130,6 +185,47 @@ void CylinderShape::SetLength(double _length)
 void CylinderShape::UpdateBoundingBox()
 {
   math::Vector3d halfSize(this->radius, this->radius, this->length*0.5);
+  this->bbox = math::AxisAlignedBox(-halfSize, halfSize);
+}
+
+//////////////////////////////////////////////////
+EllipsoidShape::EllipsoidShape() : Shape()
+{
+  this->type = ShapeType::ELLIPSOID;
+}
+
+//////////////////////////////////////////////////
+EllipsoidShape::EllipsoidShape(const EllipsoidShape &_other)
+  : Shape()
+{
+  *this = _other;
+}
+
+//////////////////////////////////////////////////
+Shape &EllipsoidShape::operator=(const Shape &_other)
+{
+  auto other = static_cast<const EllipsoidShape *>(&_other);
+  this->radii = other->radii;
+  return *this;
+}
+
+//////////////////////////////////////////////////
+math::Vector3d EllipsoidShape::GetRadii() const
+{
+  return this->radii;
+}
+
+//////////////////////////////////////////////////
+void EllipsoidShape::SetRadii(const math::Vector3d &_radii)
+{
+  this->radii = _radii;
+  this->dirty = true;
+}
+
+//////////////////////////////////////////////////
+void EllipsoidShape::UpdateBoundingBox()
+{
+  math::Vector3d halfSize(this->radii.X(), this->radii.Y(), this->radii.Z());
   this->bbox = math::AxisAlignedBox(-halfSize, halfSize);
 }
 

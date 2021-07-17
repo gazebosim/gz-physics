@@ -70,7 +70,7 @@ Entity &Model::AddLink()
 {
   std::size_t linkId = Entity::GetNextId();
 
-  if (this->GetChildren().empty())
+  if (this->GetLinkCount() == 0)
   {
     this->dataPtr->firstLinkId = linkId;
     this->dataPtr->canonicalLinkId = linkId;

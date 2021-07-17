@@ -1,17 +1,17 @@
 \page installation Installation
 
 These instructions are for installing only Ignition Physics.
-If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://ignitionrobotics.org/docs/latest/install).
+If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://ignitionrobotics.org/docs/dome/install).
 
 We recommend following the Binary Installation instructions to get up and running as quickly and painlessly as possible.
 
-The Source Installation instructions should be used if you need the very latest software improvements, you need to modify the code, or you plan to make a contribution.
+The Source Installation instructions are generally recommended for developers who want access to the latest features, develop your own feature or make a contribution to our [codebase](https://github.com/ignitionrobotics/ign-physics/).
 
 # Ubuntu
 
 ## Prerequisites
 
-Ignition Physics uses several c++17 features which are not available in the
+Ignition Physics uses several C++17 features which are not available in the
 version of gcc supplied with Ubuntu Xenial, so Ubuntu Bionic or later
 is required.
 
@@ -39,7 +39,6 @@ On Ubuntu systems, `apt-get` can be used to install `ignition-plugin`:
 sudo apt-get update
 sudo apt-get install libignition-physics<#>-dev
 ```
-
 Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 ## Source Installation
@@ -88,7 +87,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 Ignition Physics and several of its dependencies can be installed on macOS
 with [Homebrew](http://brew.sh/) using the [osrf/simulation
 tap](https://github.com/osrf/homebrew-simulation). Ignition Physics uses
-several c++17 features which are not available in macOS High Sierra (10.13)
+several C++17 features which are not available in macOS High Sierra (10.13)
 and earlier, so macOS Mojave (10.14) with XCode 10.1 are the minimum
 system requirements.
 
@@ -103,21 +102,23 @@ command-line tools:
 2. Run the following commands
   ```
   brew tap osrf/simulation
-  brew install ignition-physics5
+  brew install ignition-physics<#>
   ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 ## Source Installation
 
 1. Install dependencies
   ```
   brew tap osrf/simulation
-  brew install ignition-physics5 --only-dependencies
+  brew install ignition-physics<#> --only-dependencies
   ```
 
 2. Clone the repository
   ```
   git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
   ```
+Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
 3. Configure and build
   ```
@@ -208,7 +209,7 @@ You can also generate the documentation from a clone of this repository by follo
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics4
+  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
   ```
 
 3. Configure and build the documentation.

@@ -1,13 +1,15 @@
-\page createcustomfeature "Implement a custom feature"
+\page createcustomfeature Implement a custom feature
 
 ## Prerequisites
 
-In the previous tutorial \ref installation "Installation", you have installed
-the Ignition Physics corresponding to the desired Ignition release.
+- \ref installation "Installation"
+- \ref physicsplugin "Understand physics plugin"
+- \ref loadplugin "Load physics plugin"
+- \ref implementfeature "Implement physics feature"
 
 ## Implement a custom feature in DART plugin
 
-In the last \ref createphysicsplugin "Implement a physics plugin" tutorial, we
+In the last \ref implementfeature "Implement physics feature" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
 \ref ignition::physics "Ignition Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
@@ -23,6 +25,7 @@ Below is the general structure of the `ign-physics` repository:
 ign-physics
 ├── dartsim                   Files for dartsim plugin component.
 ├── tpe                       Files for tpe plugin component.
+├── heightmap                 Files for heightmap component.
 ├── include/ignition/physics  Header files.
 ├── mesh                      Files for mesh component.
 ├── resources                 Model and mesh resource files used by tests.
@@ -59,7 +62,7 @@ be added in a \ref ignition::physics::FeatureList "FeatureList"
 and implemented its functionalities in `src` folder.
 
 The `dartsim` plugin's \ref ignition::physics::FeatureList "FeatureList" could be
-found in \ref physicsplugin "Understanding the Physics Plugin" tutorial.
+found in \ref physicsplugin "Understand physics plugin" tutorial.
 
 ### Plugin and feature requirements
 
@@ -131,72 +134,17 @@ be inherited from
 and provided a list of the conflicting `Features`. The conflicting `Features`
 will not run at the same time when requested.
 
-### Define the custom feature
+### Define custom feature template
 
-With the requirements and restrictions above, we will implement an example
-custom `Feature` that retrieves a simulation world from `dartsim` physics engine.
-For example, we name it as [World.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics4/dartsim/include/ignition/physics/dartsim/World.hh)
-and the its content is as follow:
+With the requirements and restrictions above, we first need to define a feature template for the custom feature. In this case, this feature will be responsible for retrieving world pointer from the physics engine. The template is placed in [World.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/include/ignition/physics/dartsim/World.hh):
 
-```cpp
-#include <dart/simulation/World.hpp>
-#include <ignition/physics/FeatureList.hh>
+\snippet dartsim/include/ignition/physcis/dartsim/World.hh
 
-namespace ignition {
-namespace physics {
-namespace dartsim {
-
-/////////////////////////////////////////////////
-class RetrieveWorld : public virtual Feature
-{
-  public: template <typename PolicyT, typename FeaturesT>
-  class World : public virtual Feature::World<PolicyT, FeaturesT>
-  {
-    /// \brief Get the underlying dartsim world for this World object.
-    public: dart::simulation::WorldPtr GetDartsimWorld();
-  };
-
-  public: template <typename PolicyT>
-  class Implementation : public virtual Feature::Implementation<PolicyT>
-  {
-    public: virtual dart::simulation::WorldPtr GetDartsimWorld(
-        const Identity &_worldID) = 0;
-  };
-};
-
-/////////////////////////////////////////////////
-template <typename PolicyT, typename FeaturesT>
-dart::simulation::WorldPtr RetrieveWorld::World<PolicyT, FeaturesT>
-::GetDartsimWorld()
-{
-  return this->template Interface<RetrieveWorld>()
-      ->GetDartsimWorld(this->identity);
-}
-
-}
-}
-}
-```
-
-The new defined feature file is placed in `dartsim/include/ignition/physics/dartsim`:
-```
-dartsim
-├── worlds
-├── src
-├── include/ignition/physics/dartsim
-│    ├──  World.hh
-└── CMakeLists.txt
-```
-
-As seen above, after including the necessary library of `dartsim` and `ign-physics`,
-we define the `RetrieveWorld` custom feature inherited from the base
-\ref ignition::physics::Feature "Feature".
-
-As defined, the `RetrieveWorld` feature retrieves
-world pointer from physics engine, so it is natural to define `World` entity inherited
+The `RetrieveWorld` feature retrieves
+world pointer from physics engine, so we will use the `World` entity inherited
 from \ref ignition::physics::Feature::World "Feature::World" and declare the
-necessary member function `GetDartsimWorld`. Then we define the `Implementation`
-class having virtual member function for overriding in the actual implementation of
+member function `GetDartsimWorld`. Then we substantiate the virtual `Implementation`
+member function by overriding in the actual implementation of
 the custom feature `RetrieveWorld` later.
 
 Finally, we implement the `World`
@@ -205,13 +153,56 @@ class's member function `GetDartsimWorld` via
 \ref ignition::physics::Feature::Entity::Interface "Entity::Interface"
 convenience function for querying the feature `Implementation` object.
 
+The newly defined feature template is placed in an `/include` folder shown in the following structure:
+
+```
+dartsim
+├── worlds
+├── src
+│    ├── CustomFeatures.hh
+│    ├── CustomFeatures.cc
+│    └── ...
+├── include/ignition/physics/dartsim
+│    └──  World.hh
+└── CMakeLists.txt
+```
+
+We put this custom feature template in `dartsim`, and the next step is to
+implement the `RetrieveWorld` feature function using Dartsim API.
+
 ### Implement the custom feature
 
-After defining the custom feature, please look into where it is added to a
-\ref ignition::physics::FeatureList "FeatureList" in
-[CustomFeatures.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics4/dartsim/src/CustomFeatures.hh)
-and implemented in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics4/dartsim/src/CustomFeatures.cc).
-These files are place as follows:
+After defining the feature template, we can add it to a custom
+\ref ignition::physics::FeatureList "FeatureList":
+
+\snippet dartsim/src/CustomFeatures.hh
+
+The custom feature `RetrieveWorld` is added to `CustomFeatureList`, other custom
+features could also be added here.
+The `CustomFeatures` "FeatureList" here uses data structures and classes from:
+- [Base.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/Base.hh), which defines structures that contain information to create `Model`, `Joint`, `Link`, and `Shape` objects in Dartsim API.
+They act as an interface between Ignition Physics Library and the actual physics engine.
+- \ref ignition::physics::Implements3d "Implements3d" for implementing the
+custom feature with \ref ignition::physics::FeaturePolicy3d "FeaturePolicy3d"
+("FeaturePolicy" of 3 dimensions and scalar type `double`).
+
+We will then implement the actual function with Dartsim API in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/CustomFeatures.cc) to override the member function
+declared in the custom feature header file:
+
+\snippet dartsim/src/CustomFeatures.cc
+
+Here, we implement the behavior of `GetDartsimWorld` with Dartsim API to return the
+world pointer from `EntityStorage` object storing world pointers of `dartsim` in
+[Base](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/Base.hh) class.
+
+In the end, we add the implemented `CustomFeatures` "FeatureList" together with
+other \ref ignition::physics::FeatureList "FeatureList" to final `DartsimFeatures`
+"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/plugin.cc)
+(please see \ref implementfeature "Implement physics feature" for
+registering the plugin to Ignition Physics).
+
+The folder structure is shown below:
+
 ```
 dartsim
 ├── worlds
@@ -222,80 +213,3 @@ dartsim
 ├── include/ignition/physics/dartsim
 └── CMakeLists.txt
 ```
-
-We display them here for convenience:
-
-- `CustomFeatures.hh`:
-
-```cpp
-#include <ignition/physics/Implements.hh>
-#include <ignition/physics/dartsim/World.hh>
-#include "Base.hh"
-
-namespace ignition {
-namespace physics {
-namespace dartsim {
-
-using CustomFeatureList = FeatureList<
-  RetrieveWorld
->;
-
-class CustomFeatures :
-    public virtual Base,
-    public virtual Implements3d<CustomFeatureList>
-{
-  public: dart::simulation::WorldPtr GetDartsimWorld(
-      const Identity &_worldID) override;
-};
-
-}
-}
-}
-
-```
-
-The custom feature `RetrieveWorld` is added to `CustomFeatureList`, other custom
-features could also be added here.
-The `CustomFeatures` "FeatureList" here inherits from:
-- [Base](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics4/dartsim/src/Base.hh)
-class for foundation definitions of Models, Joints, Links, and Shapes objects
-of `dartsim` interfacing to Ignition Physics API.
-- \ref ignition::physics::Implements3d "Implements3d" for implementing the
-custom feature with \ref ignition::physics::FeaturePolicy3d "FeaturePolicy3d"
-("FeaturePolicy" of 3 dimensions and scalar type `double`).
-
-Based on the `CustomFeatureList`, we will override the corresponding member functions
-declared in each of the custom features. In this case, we have only the custom
-feature `RetrieveWorld` and its corresponding `Implementation::GetDartsimWorld`
-member function.
-
-- `CustomFeatures.cc`:
-
-```cpp
-#include "CustomFeatures.hh"
-
-namespace ignition {
-namespace physics {
-namespace dartsim {
-
-/////////////////////////////////////////////////
-dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
-    const Identity &_worldID)
-{
-  return this->worlds.at(_worldID);
-}
-
-}
-}
-}
-```
-
-Here we simply implement the actual behavior of `GetDartsimWorld` to return the
-world pointer from `EntityStorage` object storing world pointers of `dartsim` in
-[Base](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics4/dartsim/src/Base.hh) class.
-
-Finally, we add the implemented `CustomFeatures` "FeatureList" together with
-other \ref ignition::physics::FeatureList "FeatureList" to final `DartsimFeatures`
-"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics4/dartsim/src/plugin.cc)
-(please see \ref createphysicsplugin "Implement a physics plugin" for
-registering the plugin to Ignition Physics).

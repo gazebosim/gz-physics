@@ -30,6 +30,7 @@ namespace dartsim {
 
 struct WorldFeatureList : FeatureList<
   CollisionDetector,
+  Gravity,
   Solver
 > { };
 
@@ -44,6 +45,13 @@ class WorldFeatures :
   // Documentation inherited
   public: const std::string &GetWorldCollisionDetector(const Identity &_id)
       const override;
+
+  // Documentation inherited
+  public: void SetWorldGravity(
+      const Identity &_id, const LinearVectorType &_gravity) override;
+
+  // Documentation inherited
+  public: LinearVectorType GetWorldGravity(const Identity &_id) const override;
 
   // Documentation inherited
   public: void SetWorldSolver(const Identity &_id, const std::string &_solver)
