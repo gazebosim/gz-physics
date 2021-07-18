@@ -221,8 +221,6 @@
         <parent>base</parent>
         <child>upper_link</child>
         <axis>
-          <!-- TODO(anyone): stop using deprecated element -->
-          <initial_position>1.5706796</initial_position>
           <xyz>1.0 0 0</xyz>
           <dynamics>
             <damping>3.0</damping>
@@ -234,8 +232,6 @@
         <parent>upper_link</parent>
         <child>lower_link</child>
         <axis>
-          <!-- TODO(anyone): stop using deprecated element -->
-          <initial_position>-0.429462</initial_position>
           <xyz>1.0 0 0</xyz>
           <dynamics>
             <damping>3.0</damping>
