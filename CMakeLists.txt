@@ -8,12 +8,12 @@ project(ignition-physics5 VERSION 5.0.0)
 #============================================================================
 # Find ignition-cmake
 #============================================================================
-find_package(ignition-cmake2 2.1.0 REQUIRED)
+find_package(ignition-cmake2 2.8.0 REQUIRED)
 
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project()
+ign_configure_project(VERSION_SUFFIX)
 
 
 #============================================================================
@@ -37,7 +37,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 # Find ignition-common
 ign_find_package(ignition-common4
   COMPONENTS graphics profiler
-  REQUIRED_BY mesh dartsim tpe tpelib)
+  REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
 
 #--------------------------------------
@@ -62,7 +62,7 @@ ign_find_package(EIGEN3 REQUIRED)
 #--------------------------------------
 # Find SDFormat for the SDF features
 ign_find_package(sdformat12
-  REQUIRED_BY sdf dartsim tpe)
+  REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
@@ -78,6 +78,13 @@ ign_find_package(DART
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
 
+#--------------------------------------
+# Find bullet for the bullet plugin wrapper
+ign_find_package(IgnBullet
+  VERSION 2.87
+  REQUIRED_BY bullet
+  PKGCONFIG bullet
+  PKGCONFIG_VER_COMPARISON >=)
 
 message(STATUS "-------------------------------------------\n")
 
@@ -92,7 +99,7 @@ set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf mesh dartsim tpe)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet)
 
 
 #============================================================================
@@ -115,3 +122,5 @@ ign_create_docs(
     "${IGNITION-PLUGIN_DOXYGEN_TAGFILE} = ${IGNITION-PLUGIN_API_URL}"
     "${IGNITION-MATH_DOXYGEN_TAGFILE} = ${IGNITION-MATH_API_URL}"
   )
+
+file(COPY ${CMAKE_SOURCE_DIR}/tutorials/img/ DESTINATION ${CMAKE_BINARY_DIR}/doxygen/html/img/)

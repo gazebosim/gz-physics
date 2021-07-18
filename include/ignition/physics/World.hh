@@ -21,6 +21,7 @@
 #include <string>
 
 #include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FrameSemantics.hh>
 
 namespace ignition
 {
@@ -62,6 +63,74 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
+    using GravityRequiredFeatures = FeatureList<FrameSemantics>;
+
+    /////////////////////////////////////////////////
+    /// \brief Get and set the World's gravity vector in a specified frame.
+    class IGNITION_PHYSICS_VISIBLE Gravity
+        : public virtual
+          FeatureWithRequirements<GravityRequiredFeatures>
+    {
+      /// \brief The World API for getting and setting the gravity vector.
+      public: template <typename PolicyT, typename FeaturesT>
+      class World : public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        public: using LinearVectorType =
+            typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
+        public: using RelativeForceType =
+            typename FromPolicy<PolicyT>::template Use<RelativeForce>;
+
+        /// \brief Set the World gravity vector.
+        /// \param[in] _gravity The desired gravity as a Relative Gravity
+        /// (a quantity that contains information about the coordinates
+        /// in which it is expressed).
+        public: void SetGravity(const RelativeForceType &_gravity);
+
+        /// \brief Set the World gravity vector. Optionally, you may specify
+        /// the frame whose coordinates are used to express the gravity vector.
+        /// The World frame is used as a default if no frame is specified.
+        /// \param[in] _gravity Gravity vector.
+        /// \param[in] _inCoordinatesOf Frame whose coordinates are used
+        /// to express _gravity.
+        public: void SetGravity(
+            const LinearVectorType &_gravity,
+            const FrameID &_forceInCoordinatesOf = FrameID::World());
+
+        /// \brief Get the World gravity vector. Optionally, you may specify
+        /// the frame whose coordinates are used to express the gravity vector.
+        /// The World frame is used as a default if no frame is specified.
+        /// \param[in] _inCoordinatesOf Frame whose coordinates are used
+        /// to express _gravity.
+        /// \return Gravity vector in corrdinates of _inCoordinatesOf.
+        public: LinearVectorType GetGravity(
+            const FrameID &_forceInCoordinatesOf = FrameID::World()) const;
+      };
+
+      /// \private The implementation API for the gravity.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using LinearVectorType =
+            typename FromPolicy<PolicyT>::template Use<LinearVector>;
+
+        /// \brief Implementation API for setting the gravity vector, which is
+        /// expressed in the World frame..
+        /// \param[in] _id Identity of the world.
+        /// \param[in] _gravity Value of gravity.
+        public: virtual void SetWorldGravity(
+            const Identity &_id, const LinearVectorType &_gravity) = 0;
+
+        /// \brief Implementation API for getting the gravity expressed in the
+        /// world frame.
+        /// \param[in] _id Identity of the world.
+        /// \return Value of gravity.
+        public: virtual LinearVectorType GetWorldGravity(
+            const Identity &_id) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
     class IGNITION_PHYSICS_VISIBLE Solver : public virtual Feature
     {
       /// \brief The World API for setting the solver.
@@ -83,7 +152,7 @@ namespace ignition
       {
         /// \brief Implementation API for setting the solver.
         /// \param[in] _id Identity of the world.
-        /// \param[in] _collisionDetector Name of solver.
+        /// \param[in] _solver Name of solver.
         public: virtual void SetWorldSolver(
             const Identity &_id, const std::string &_solver) = 0;
 

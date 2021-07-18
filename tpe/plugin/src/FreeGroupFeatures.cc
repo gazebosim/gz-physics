@@ -36,8 +36,8 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   auto it = this->models.find(_modelID.id);
   if (it == this->models.end() || it->second == nullptr)
     return this->GenerateInvalidId();
-  // if there are no links in this model, then the FreeGroup functions
-  // will not work properly; need to reject this case.
+  // if there are no links or nested models in this model, then the FreeGroup
+  // functions will not work properly; need to reject this case.
   if (it->second->model->GetChildCount() == 0)
     return this->GenerateInvalidId();
   return this->GenerateIdentity(_modelID.id, it->second);
@@ -54,6 +54,39 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 }
 
 /////////////////////////////////////////////////
+/// Helper function to find a model's root link by recursively searching for it
+/// in nested models if the model has no links.
+static tpelib::Link *FindModelRootLink(tpelib::Model *_model)
+{
+  if (nullptr == _model)
+    return nullptr;
+
+  // assume no canonical link for now
+  if (_model->GetLinkCount() > 0)
+  {
+    // assume canonical link is the first link in model
+    // note the canonical link of a free group is renamed to root link in
+    // ign-physics4. The canonical link / root link of a free group can be
+    // different from the canonical link of a model.
+    // Here we treat them the same and return the model's canonical link
+    return static_cast<tpelib::Link *>(&_model->GetCanonicalLink());
+  }
+  else
+  {
+    // If the model doesn't have any links, we recursively search for the root
+    // link in the nested models.
+    for (size_t i = 0; i < _model->GetChildCount(); ++i)
+    {
+      auto *rootLink = FindModelRootLink(
+          static_cast<tpelib::Model *>(&_model->GetChildByIndex(i)));
+      if (nullptr != rootLink)
+        return rootLink;
+    }
+  }
+  return nullptr;
+}
+
+/////////////////////////////////////////////////
 Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
   // assume no canonical link for now
@@ -61,17 +94,22 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
   const auto modelIt = this->models.find(_groupID.id);
   if (modelIt != this->models.end() && modelIt->second != nullptr)
   {
-    // assume canonical link is the first link in model
-    // note the canonical link of a free group is renamed to root link in
-    // ign-physics4. The canonical link / root link of a free group can be
-    // different from the canonical link of a model.
-    // Here we treat them the same and return the model's canonical link
-    tpelib::Entity &link = modelIt->second->model->GetCanonicalLink();
-    auto linkPtr = std::make_shared<LinkInfo>();
-    linkPtr->link = static_cast<tpelib::Link *>(&link);
-    return this->GenerateIdentity(link.GetId(), linkPtr);
+    auto *rootLink = FindModelRootLink(modelIt->second->model);
+    if (nullptr != rootLink)
+    {
+      auto linkPtr = std::make_shared<LinkInfo>();
+      linkPtr->link = rootLink;
+      return this->GenerateIdentity(rootLink->GetId(), linkPtr);
+    }
+    else {
+      return this->GenerateInvalidId();
+    }
   }
-  return this->GenerateIdentity(_groupID.id, this->links.at(_groupID.id));
+  auto linkIt = this->links.find(_groupID.id);
+  if (linkIt != this->links.end())
+    return this->GenerateIdentity(_groupID.id, linkIt->second);
+  else
+    return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -88,8 +126,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   {
     if (modelIt->second != nullptr)
     {
-      tpelib::Entity &linkEnt = modelIt->second->model->GetCanonicalLink();
-      link = dynamic_cast<tpelib::Link *>(&linkEnt);
+      link = FindModelRootLink(modelIt->second->model);
     }
   }
   else

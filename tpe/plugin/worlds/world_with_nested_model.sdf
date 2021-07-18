@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="nested_model_world">
+    <model name="parent_model">
+      <model name="nested_model">
+        <pose>1 2 2  0 0 0</pose>
+        <link name="nested_link1">
+          <pose>3 1 1  0 0 1.5707</pose>
+          <collision name="nested_collision1">
+            <geometry>
+              <sphere>
+                <radius>2</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <link name="nested_link2">
+          <pose relative_to="nested_link1">0 1 0  1.5707 0 0</pose>
+          <collision name="nested_collision2">
+            <geometry>
+              <sphere>
+                <radius>2</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+      <link name="link1"/>
+
+      <!-- Use duplicate link names for testing that these don't collide
+      with the links in the models above -->
+      <model name="nested_model2">
+        <link name="nested_link1"/>
+      </model>
+      <model name="nested_model3">
+        <link name="link1"/>
+      </model>
+    </model>
+
+    <model name="parent_model2">
+      <model name="child_model">
+        <model name="grand_child_model">
+          <link name="link1"/>
+        </model>
+      </model>
+    </model>
+  </world>
+</sdf>

@@ -70,6 +70,7 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::RevoluteJointCast,
   physics::SetJointVelocityCommandFeature,
 #if DART_VERSION_AT_LEAST(6, 10, 0)
+  physics::GetShapeFrictionPyramidSlipCompliance,
   physics::SetShapeFrictionPyramidSlipCompliance,
 #endif
   physics::sdf::ConstructSdfModel,
@@ -96,25 +97,6 @@ class ShapeFeaturesFixture : public ::testing::Test
   }
   protected: TestEnginePtr engine;
 };
-
-TestWorldPtr LoadWorld(
-    const TestEnginePtr &_engine,
-    const std::string &_sdfFile,
-    const Eigen::Vector3d &_gravity = Eigen::Vector3d{0, 0, -9.8})
-{
-  sdf::Root root;
-  const sdf::Errors errors = root.Load(_sdfFile);
-  EXPECT_TRUE(errors.empty());
-  const sdf::World *sdfWorld = root.WorldByIndex(0);
-  // Make a copy of the world so we can set the gravity property
-  // TODO(addisu) Add a world property feature to set gravity instead of this
-  // hack
-  sdf::World worldCopy;
-  worldCopy.Load(sdfWorld->Element());
-
-  worldCopy.SetGravity(math::eigen3::convert(_gravity));
-  return _engine->ConstructWorld(worldCopy);
-}
 
 // A predicate-formatter for asserting that two vectors are approximately equal.
 class AssertVectorApprox
@@ -180,7 +162,11 @@ TEST_F(ShapeFeaturesFixture, PrimarySlipCompliance)
   const Eigen::Vector3d cmdForce{1, 0, 0};
   const double primarySlip = 0.5;
 
+  // expect 0.0 initial slip
+  EXPECT_DOUBLE_EQ(0.0, boxShape->GetPrimarySlipCompliance());
+
   boxShape->SetPrimarySlipCompliance(primarySlip);
+  EXPECT_DOUBLE_EQ(primarySlip, boxShape->GetPrimarySlipCompliance());
 
   const std::size_t numSteps = 10000;
   for (std::size_t i = 0; i < numSteps; ++i)
@@ -239,7 +225,11 @@ TEST_F(ShapeFeaturesFixture, SecondarySlipCompliance)
   const Eigen::Vector3d cmdForce{0, 1, 0};
   const double secondarySlip = 0.25;
 
+  // expect 0.0 initial slip
+  EXPECT_DOUBLE_EQ(0.0, boxShape->GetSecondarySlipCompliance());
+
   boxShape->SetSecondarySlipCompliance(secondarySlip);
+  EXPECT_DOUBLE_EQ(secondarySlip, boxShape->GetSecondarySlipCompliance());
 
   const std::size_t numSteps = 10000;
   for (std::size_t i = 0; i < numSteps; ++i)

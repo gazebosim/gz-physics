@@ -69,6 +69,20 @@ TEST(Collision, BoxShape)
 }
 
 /////////////////////////////////////////////////
+TEST(Collision, CapsuleShape)
+{
+  Collision collision;
+  CapsuleShape CapsuleShape;
+  CapsuleShape.SetRadius(2.0);
+  CapsuleShape.SetLength(3.0);
+  collision.SetShape(CapsuleShape);
+  auto result = collision.GetShape();
+  ASSERT_NE(nullptr, result);
+  EXPECT_EQ(ignition::math::Vector3d(2.0, 2.0, 3.5),
+      result->GetBoundingBox().Max());
+}
+
+/////////////////////////////////////////////////
 TEST(Collision, CylinderShape)
 {
   Collision collision;
@@ -81,6 +95,18 @@ TEST(Collision, CylinderShape)
   EXPECT_EQ(ignition::math::Vector3d(2.0, 2.0, 1.5),
       result->GetBoundingBox().Max());
 }
+
+/////////////////////////////////////////////////
+TEST(Collision, EllipsoidShape)
+{
+  Collision collision;
+  EllipsoidShape EllipsoidShape;
+  EllipsoidShape.SetRadii({1.0, 2.0, 1.3});
+  collision.SetShape(EllipsoidShape);
+  auto result = collision.GetShape();
+  ASSERT_NE(nullptr, result);
+  EXPECT_EQ(ignition::math::Vector3d(1.0, 2.0, 1.3),
+      result->GetBoundingBox().Max());}
 
 /////////////////////////////////////////////////
 TEST(Collision, SphereShape)

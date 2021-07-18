@@ -195,7 +195,11 @@ Identity EntityManagementFeatures::GetEngineOfWorld(
 std::size_t EntityManagementFeatures::GetModelCount(
     const Identity &_worldID) const
 {
-  return this->ReferenceInterface<DartWorld>(_worldID)->getNumSkeletons();
+  // dart::simulation::World::getNumSkeletons returns all the skeletons in the
+  // world, including nested ones. We use the size of the indexInContainerToID
+  // vector associated with the _worldID to determine the number of models
+  // that are direct children of the world.
+  return this->models.indexInContainerToID.at(_worldID).size();
 }
 
 /////////////////////////////////////////////////
