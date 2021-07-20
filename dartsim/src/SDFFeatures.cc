@@ -1107,8 +1107,6 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   joint->setName(_sdfJoint.Name());
 
-  // When initial positions are provided for joints, we need to correct the
-  // parent transform:
   const Eigen::Isometry3d child_T_postjoint = T_child.inverse() * T_joint;
   const Eigen::Isometry3d parent_T_prejoint_init = T_parent.inverse() * T_joint;
   joint->setTransformFromParentBodyNode(parent_T_prejoint_init);
