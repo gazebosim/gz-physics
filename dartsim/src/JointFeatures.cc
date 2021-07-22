@@ -200,7 +200,11 @@ void JointFeatures::SetJointMinPosition(
            << "]. The command will be ignored\n";
     return;
   }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
   joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
   // We do not check min/max mismatch, we leave that to DART.
   joint->setPositionLowerLimit(_dof, _value);
 }
@@ -221,7 +225,11 @@ void JointFeatures::SetJointMaxPosition(
            << "]. The command will be ignored\n";
     return;
   }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
   joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
   // We do not check min/max mismatch, we leave that to DART.
   joint->setPositionUpperLimit(_dof, _value);
 }
@@ -242,7 +250,11 @@ void JointFeatures::SetJointMinVelocity(
            << "]. The command will be ignored\n";
     return;
   }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
   joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
   // We do not check min/max mismatch, we leave that to DART.
   joint->setVelocityLowerLimit(_dof, _value);
 }
@@ -263,7 +275,11 @@ void JointFeatures::SetJointMaxVelocity(
            << "]. The command will be ignored\n";
     return;
   }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
   joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
   // We do not check min/max mismatch, we leave that to DART.
   joint->setVelocityUpperLimit(_dof, _value);
 }

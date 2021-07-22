@@ -230,6 +230,7 @@ TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithForceControl)
   EXPECT_LT(pos + 0.5, joint->GetPosition(0));
 }
 
+#if DART_VERSION_AT_LEAST(6, 10, 0)
 TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithForceControl)
 {
   sdf::Root root;
@@ -632,6 +633,7 @@ TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithVelocityControl)
   }
   EXPECT_NEAR(-0.5, joint->GetVelocity(0), 1e-6);
 }
+#endif
 
 // Test detaching joints.
 TEST_F(JointFeaturesFixture, JointDetach)
