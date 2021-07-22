@@ -366,6 +366,157 @@ namespace ignition
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the min and max generalized position of this
+    /// Joint.
+    class IGNITION_PHYSICS_VISIBLE SetJointPositionLimitsFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting position limits of a joint.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the minimum allowed value of the generalized coordinate
+        /// within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The minimum allowed value of the generalized coordinate. Units
+        ///   depend on the underlying joint type.
+        public: void SetMinPosition(
+            const std::size_t _dof, const Scalar _value);
+
+        /// \brief Set the maximum allowed value of the generalized coordinate
+        /// within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The maximum allowed value of the generalized coordinate. Units
+        ///   depend on the underlying joint type.
+        public: void SetMaxPosition(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting position limit commands
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetMinPositionCommand above
+        public: virtual void SetJointMinPosition(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+
+        // See Joint::SetMaxPositionCommand above
+        public: virtual void SetJointMaxPosition(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the min and max value of generalized velocity
+    /// of this Joint.
+    class IGNITION_PHYSICS_VISIBLE SetJointVelocityLimitsFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting velocity limits of a joint. These
+      /// limits apply to joints commanded via velocity or positional commands.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the minimum value of generalized velocity of a specific
+        /// generalized coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The minimum generalized velocity. Units depend on the underlying
+        ///   joint type.
+        public: void SetMinVelocity(
+            const std::size_t _dof, const Scalar _value);
+
+        /// \brief Set the maximum value of generalized velocity of a specific
+        /// generalized coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The maximum generalized velocity. Units depend on the underlying
+        ///   joint type.
+        public: void SetMaxVelocity(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting velocity limit commands
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetMinVelocityCommand above
+        public: virtual void SetJointMinVelocity(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+
+        // See Joint::SetMaxVelocityCommand above
+        public: virtual void SetJointMaxVelocity(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the min and max value of effort of this Joint.
+    class IGNITION_PHYSICS_VISIBLE SetJointEffortLimitsFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting effort limits of a joint. These
+      /// limits are applied to joints controlled via positional, velocity or
+      /// effort commands.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the minimum value of effort of a specific generalized
+        /// coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The minimum effort. Units depend on the underlying joint type.
+        public: void SetMinEffort(const std::size_t _dof, const Scalar _value);
+
+        /// \brief Set the maximum value of effort of a specific generalized
+        /// coordinate within this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The maximum effort. Units depend on the underlying joint type.
+        public: void SetMaxEffort(const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting effort limit commands
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetMinEffortCommand above
+        public: virtual void SetJointMinEffort(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+
+        // See Joint::SetMaxEffortCommand above
+        public: virtual void SetJointMaxEffort(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
     class IGNITION_PHYSICS_VISIBLE DetachJointFeature
         : public virtual Feature
     {
