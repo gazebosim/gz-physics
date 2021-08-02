@@ -1,6 +1,6 @@
 # More info:
 # https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
+*                     @azeey
 *                     @mxgrey
-include/*             @scpeters
-tutorials/*           @maryaB-osr
+*                     @scpeters
