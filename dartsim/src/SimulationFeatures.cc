@@ -205,7 +205,8 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     }
 
     static bool warnedSecondaryRollingFrictionCoeff = false;
-    if (!warnedSecondaryRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
+    if (!warnedSecondaryRollingFrictionCoeff &&
+      pIgn.secondaryRollingFrictionCoeff)
     {
       ignwarn << "DART doesn't support secondary rolling friction setting"
               << std::endl;
@@ -213,7 +214,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     }
 
     static bool warnedNormalRollingFrictionCoeff = false;
-    if (!warnedNormalRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
+    if (!warnedNormalRollingFrictionCoeff && pIgn.normalRollingFrictionCoeff)
     {
       ignwarn << "DART doesn't support normal rolling friction setting"
               << std::endl;
