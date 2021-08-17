@@ -92,7 +92,7 @@ void SimulationFeatures::AddContactJointPropertiesCallback(
   };
 
   this->contactSurfaceHandlers[_callbackID] = handler;
-  world->getConstraintSolver()->setContactSurfaceHandler(handler);
+  world->getConstraintSolver()->addContactSurfaceHandler(handler);
 }
 
 bool SimulationFeatures::RemoveContactJointPropertiesCallback(
