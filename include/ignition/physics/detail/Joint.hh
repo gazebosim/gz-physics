@@ -166,6 +166,15 @@ namespace ignition
       this->template Interface<DetachJointFeature>()
           ->DetachJoint(this->identity);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetJointConstraintWrench::Joint<PolicyT, FeaturesT>::
+    GetConstraintWrench() const -> Wrench
+    {
+      return this->template Interface<GetJointConstraintWrench>()
+          ->GetJointConstraintWrenchInJointFrame(this->identity);
+    }
   }
 }
 

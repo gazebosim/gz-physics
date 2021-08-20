@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_JOINT_HH_
 
 #include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/Geometry.hh>
 
 namespace ignition
@@ -382,6 +383,33 @@ namespace ignition
         public: virtual void DetachJoint(const Identity &_jointID) = 0;
       };
     };
+
+    class IGNITION_PHYSICS_VISIBLE GetJointConstraintWrench
+        : public virtual FeatureWithRequirements<JointFrameSemantics>
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Wrench = typename FromPolicy<
+                    PolicyT>::template Use<Wrench>;
+
+        /// \brief Get the constraint wrench at the Joint frame
+        public: Wrench GetConstraintWrench() const;
+
+        // public: Wrench GetConstraintWrench(const FrameID &_referenceFrame)
+        // const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Wrench = typename FromPolicy<
+                    PolicyT>::template Use<Wrench>;
+        public: virtual Wrench GetJointConstraintWrenchInJointFrame(
+                    const Identity &_jointID) const = 0;
+      };
+    };
+
   }
 }
 

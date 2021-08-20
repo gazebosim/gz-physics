@@ -52,7 +52,8 @@ struct JointFeatureList : FeatureList<
   GetPrismaticJointProperties,
   AttachPrismaticJointFeature,
 
-  SetJointVelocityCommandFeature
+  SetJointVelocityCommandFeature,
+  GetJointConstraintWrench
 > { };
 
 class JointFeatures :
@@ -171,6 +172,10 @@ class JointFeatures :
   public: void SetJointVelocityCommand(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
+
+  // ----- Constraint forces -----
+  public: Wrench3d GetJointConstraintWrenchInJointFrame(
+      const Identity &_id) const override;
 };
 
 }

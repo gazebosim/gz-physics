@@ -21,6 +21,7 @@
 #include <dart/dynamics/PrismaticJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
+#include <dart/math/Geometry.hpp>
 
 #include "JointFeatures.hh"
 
@@ -488,6 +489,21 @@ Identity JointFeatures::AttachPrismaticJoint(
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
+/////////////////////////////////////////////////
+Wrench3d JointFeatures::GetJointConstraintWrenchInJointFrame(
+    const Identity &_id) const
+{
+  auto &joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  const Eigen::Vector6d constraintWrenchInBody =
+      joint->getBodyConstraintWrench();
+  // C - Child body frame
+  // J - Joint frame
+  // X_CJ - Pose of joint in child body frame
+  const Eigen::Isometry3d X_CJ = joint->getTransformFromChildBodyNode();
+
+  return dart::math::dAdT(X_CJ, constraintWrenchInBody);
+}
 }
 }
 }
