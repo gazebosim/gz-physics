@@ -73,68 +73,6 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 
   return true;
 }
-/*
-  // Check if the model exists
-  auto _modelEntity = indexInContainerToId(_worldID, _modelIndex);
-  if (this->models.find(_modelEntity) == this->models.end())
-  {
-    return false;
-  }
-
-  auto model = this->models.at(_modelEntity);
-  auto bulletWorld = this->worlds.at(model->world)->world;
-
-  // Clean up joints, this section considers both links in the joint
-  // are part of the same world
-  auto joint_it = this->joints.begin();
-  while (joint_it != this->joints.end())
-  {
-    const auto &jointInfo = joint_it->second;
-    const auto &childLinkInfo = this->links[jointInfo->childLinkId];
-    if (childLinkInfo->model.id == _modelIndex)
-    {
-      bulletWorld->removeConstraint(jointInfo->joint.get());
-      this->childIdToParentId.erase(joint_it->first);
-      joint_it = this->joints.erase(joint_it);
-      continue;
-    }
-    joint_it++;
-  }
-
-  // Clean up collisions
-  auto collision_it = this->collisions.begin();
-  while (collision_it != this->collisions.end())
-  {
-    const auto &collisionInfo = collision_it->second;
-    if (collisionInfo->model.id == _modelIndex)
-    {
-      this->childIdToParentId.erase(collision_it->first);
-      collision_it = this->collisions.erase(collision_it);
-      continue;
-    }
-    collision_it++;
-  }
-
-  // Clean up links
-  auto it = this->links.begin();
-  while (it != this->links.end())
-  {
-    const auto &linkInfo = it->second;
-
-    if (linkInfo->model.id == _modelIndex)
-    {
-      bulletWorld->removeRigidBody(linkInfo->link.get());
-      this->childIdToParentId.erase(it->first);
-      it = this->links.erase(it);
-      continue;
-    }
-    it++;
-  }
-
-  // Clean up model
-  this->models.erase(_modelEntity);
-  this->childIdToParentId.erase(_modelIndex);
-*/
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByName(
