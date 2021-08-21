@@ -19,6 +19,7 @@
 
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+#include <ignition/common/Console.hh>
 
 namespace ignition {
 namespace physics {
@@ -28,13 +29,13 @@ namespace dartsim {
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
+  const auto modelInfo = this->models.at(_modelID);
   // Verify that the model qualifies as a FreeGroup
-  const dart::dynamics::ConstSkeletonPtr &skeleton =
-      this->models.at(_modelID)->model;
+  const dart::dynamics::ConstSkeletonPtr &skeleton = modelInfo->model;
 
   // If there are no bodies at all in this model, then the FreeGroup functions
   // will not work properly, so we'll just reject these cases.
-  if (skeleton->getNumBodyNodes() == 0)
+  if (skeleton->getNumBodyNodes() == 0 && modelInfo->nestedModels.size() == 0)
     return this->GenerateInvalidId();
 
   // Verify that all root joints are FreeJoints
@@ -44,6 +45,26 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
         != dart::dynamics::FreeJoint::getStaticType())
     {
       return this->GenerateInvalidId();
+    }
+  }
+
+  for (const auto &nestedModel : modelInfo->nestedModels)
+  {
+    // Check that each nested model with BodyNodes or nested models has valid
+    // free groups by recursively calling FindFreeGroupForModel. Nested models
+    // without BodyNodes or their own nested models are disallowed by the
+    // SDFormat spec, yet may occur if all BodyNodes are moved out of a skeleton
+    // when creating joints. In this case, skip such a skeleton instead of
+    // returning an error.
+    auto nestedModelInfo = this->models.at(nestedModel);
+    if (nestedModelInfo->model->getNumBodyNodes() > 0 ||
+        nestedModelInfo->nestedModels.size() > 0)
+    {
+      if (!this->FindFreeGroupForModel(
+              this->GenerateIdentity(nestedModel, nestedModelInfo)))
+      {
+        return this->GenerateInvalidId();
+      }
     }
   }
 
@@ -95,9 +116,31 @@ FreeGroupFeatures::FreeGroupInfo FreeGroupFeatures::GetCanonicalInfo(
   const auto model_it = this->models.idToObject.find(_groupID);
   if (model_it != this->models.idToObject.end())
   {
-    return FreeGroupInfo{
-      model_it->second->model->getRootBodyNode(),
-      model_it->second->model.get()};
+    const auto &modelInfo = model_it->second;
+    if (modelInfo->model->getNumBodyNodes() > 0)
+    {
+      return FreeGroupInfo{
+        modelInfo->model->getRootBodyNode(),
+          modelInfo->model.get()};
+    }
+    else
+    {
+      // If the skeleton doesn't have any BodyNodes, we recursively search for
+      // a root BodyNode in the first nested model that has a non-zero number of
+      // BodyNodes. Since all root joints have been verified to be FreeJoints in
+      // FindFreeGroupForModel, we are guaranteed that the BodyNode found in
+      // this way is the root link for the free group.
+      for (const auto &nestedModel : modelInfo->nestedModels)
+      {
+        auto freeGroupInfo =
+          this->GetCanonicalInfo(this->GenerateIdentity(nestedModel));
+        if (freeGroupInfo.link != nullptr)
+          return freeGroupInfo;
+      }
+
+      // Error
+      return {};
+    }
   }
 
   return FreeGroupInfo{this->links.at(_groupID)->link, nullptr};
@@ -111,21 +154,44 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+    if (nullptr != info.link)
+    {
+      static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
         ->setTransform(_pose);
+    }
+    else
+    {
+      ignerr << "No link for free group with id [" << _groupID.id
+             << "] found. SetFreeGroupWorldPose failed." << std::endl;
+    }
     return;
   }
 
-  const Eigen::Isometry3d tf_change =
+  const Eigen::Isometry3d tfChange =
       _pose * info.link->getWorldTransform().inverse();
 
   for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
   {
     auto *bn = info.model->getRootBodyNode(i);
-    const Eigen::Isometry3d new_tf = tf_change * bn->getTransform();
+    const Eigen::Isometry3d new_tf = tfChange * bn->getTransform();
 
     static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint())
         ->setTransform(new_tf);
+  }
+
+  auto modelInfo = this->models.at(_groupID);
+  for (const auto &nestedModel : modelInfo->nestedModels)
+  {
+    auto nestedModelIdentity = this->GenerateIdentity(nestedModel);
+    const FreeGroupInfo &nestedInfo = GetCanonicalInfo(nestedModelIdentity);
+    // If nestedInfo.link is a nullptr, we skip this model because means the
+    // BodyNodes in this skeleton have been moved to another skeleton and their
+    // pose update will be handled there.
+    if (nullptr != nestedInfo.link && nestedInfo.link != info.link)
+    {
+      this->SetFreeGroupWorldPose(nestedModelIdentity,
+          tfChange * nestedInfo.link->getTransform());
+    }
   }
 }
 

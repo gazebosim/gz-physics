@@ -3,17 +3,17 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics4 VERSION 4.1.0)
+project(ignition-physics4 VERSION 4.2.0)
 
 #============================================================================
 # Find ignition-cmake
 #============================================================================
-find_package(ignition-cmake2 2.1.0 REQUIRED)
+find_package(ignition-cmake2 2.8.0 REQUIRED)
 
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project()
+ign_configure_project(VERSION_SUFFIX)
 
 
 #============================================================================
@@ -37,7 +37,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 # Find ignition-common
 ign_find_package(ignition-common4
   COMPONENTS graphics profiler
-  REQUIRED_BY mesh dartsim tpe tpelib bullet)
+  REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
 
 #--------------------------------------
@@ -61,7 +61,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat11
+ign_find_package(sdformat11 VERSION 11.2.2
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
@@ -99,7 +99,7 @@ set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf mesh dartsim tpe bullet)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet)
 
 
 #============================================================================
@@ -122,3 +122,5 @@ ign_create_docs(
     "${IGNITION-PLUGIN_DOXYGEN_TAGFILE} = ${IGNITION-PLUGIN_API_URL}"
     "${IGNITION-MATH_DOXYGEN_TAGFILE} = ${IGNITION-MATH_API_URL}"
   )
+
+file(COPY ${CMAKE_SOURCE_DIR}/tutorials/img/ DESTINATION ${CMAKE_BINARY_DIR}/doxygen/html/img/)

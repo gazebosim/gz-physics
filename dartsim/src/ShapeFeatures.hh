@@ -25,6 +25,7 @@
 #include <ignition/physics/CapsuleShape.hh>
 #include <ignition/physics/CylinderShape.hh>
 #include <ignition/physics/EllipsoidShape.hh>
+#include <ignition/physics/heightmap/HeightmapShape.hh>
 #include <ignition/physics/mesh/MeshShape.hh>
 #include <ignition/physics/PlaneShape.hh>
 #include <ignition/physics/SphereShape.hh>
@@ -65,6 +66,10 @@ struct ShapeFeatureList : FeatureList<
   GetSphereShapeProperties,
 //  SetSphereShapeProperties,
   AttachSphereShapeFeature,
+
+  heightmap::GetHeightmapShapeProperties,
+//  heightmap::SetHeightmapShapeProperties,
+  heightmap::AttachHeightmapShapeFeature,
 
   mesh::GetMeshShapeProperties,
 //  mesh::SetMeshShapeProperties,
@@ -159,6 +164,21 @@ class ShapeFeatures :
       double _radius,
       const Pose3d &_pose) override;
 
+
+  // ----- Heightmap Features -----
+  public: Identity CastToHeightmapShape(
+      const Identity &_shapeID) const override;
+
+  public: LinearVector3d GetHeightmapShapeSize(
+      const Identity &_heightmapID) const override;
+
+  public: Identity AttachHeightmapShape(
+      const Identity &_linkID,
+      const std::string &_name,
+      const common::HeightmapData &_heightmapData,
+      const Pose3d &_pose,
+      const LinearVector3d &_size,
+      int _subSampling) override;
 
   // ----- Mesh Features -----
   public: Identity CastToMeshShape(

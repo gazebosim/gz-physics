@@ -63,5 +63,13 @@
         <link name="link1"/>
       </model>
     </model>
+
+    <model name="parent_model2">
+      <model name="child_model">
+        <model name="grand_child_model">
+          <link name="link1"/>
+        </model>
+      </model>
+    </model>
   </world>
 </sdf>

@@ -46,6 +46,61 @@ const std::string &CollisionDetector::World<PolicyT, FeaturesT>::
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
+void Gravity::World<PolicyT, FeaturesT>::SetGravity(
+    const RelativeForceType &_gravity)
+{
+  // Resolve to world coordinates
+  auto &impl = *this->template Interface<FrameSemantics>();
+  auto gravityInWorld =
+      detail::Resolve(impl, _gravity, FrameID::World(), FrameID::World());
+
+  this->template Interface<Gravity>()
+      ->SetWorldGravity(this->identity, gravityInWorld);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+void Gravity::World<PolicyT, FeaturesT>::SetGravity(
+    const LinearVectorType &_gravity,
+    const FrameID &_inCoordinatesOf)
+{
+  // Call SetWorldGravity directly if using world coordinates
+  if (_inCoordinatesOf == FrameID::World())
+  {
+    this->template Interface<Gravity>()
+        ->SetWorldGravity(this->identity, _gravity);
+  }
+  // Otherwise make a RelativeForce object and call the other API
+  else
+  {
+    RelativeForceType gravityInRef(_inCoordinatesOf, _gravity);
+    this->SetGravity(gravityInRef);
+  }
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+auto Gravity::World<PolicyT, FeaturesT>::GetGravity(
+    const FrameID &_inCoordinatesOf) const
+    -> LinearVectorType
+{
+  // Return quickly if using world coordinates
+  auto gravityInWorld = this->template Interface<Gravity>()
+                            ->GetWorldGravity(this->identity);
+  if (_inCoordinatesOf == FrameID::World())
+  {
+    return gravityInWorld;
+  }
+
+  // Otherwise resolve to proper frame
+  auto &impl = *this->template Interface<FrameSemantics>();
+  RelativeForceType gravityInRef(FrameID::World(), gravityInWorld);
+  return detail::Resolve(impl, gravityInRef, FrameID::World(),
+                         _inCoordinatesOf);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
 void Solver::World<PolicyT, FeaturesT>::SetSolver(
     const std::string &_solver)
 {

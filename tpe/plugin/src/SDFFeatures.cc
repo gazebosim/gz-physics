@@ -18,7 +18,9 @@
 #include "SDFFeatures.hh"
 
 #include <sdf/Box.hh>
+#include <sdf/Capsule.hh>
 #include <sdf/Cylinder.hh>
+#include <sdf/Ellipsoid.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
 #include <sdf/World.hh>
@@ -282,12 +284,27 @@ Identity SDFFeatures::ConstructSdfCollision(
     shape.SetSize(boxSdf->Size());
     collision->SetShape(shape);
   }
+  else if (geom->Type() == ::sdf::GeometryType::CAPSULE)
+  {
+    const auto capsuleSdf = geom->CapsuleShape();
+    tpelib::CapsuleShape shape;
+    shape.SetRadius(capsuleSdf->Radius());
+    shape.SetLength(capsuleSdf->Length());
+    collision->SetShape(shape);
+  }
   else if (geom->Type() == ::sdf::GeometryType::CYLINDER)
   {
     const auto cylinderSdf = geom->CylinderShape();
     tpelib::CylinderShape shape;
     shape.SetRadius(cylinderSdf->Radius());
     shape.SetLength(cylinderSdf->Length());
+    collision->SetShape(shape);
+  }
+  else if (geom->Type() == ::sdf::GeometryType::ELLIPSOID)
+  {
+    const auto ellipsoidSdf = geom->EllipsoidShape();
+    tpelib::EllipsoidShape shape;
+    shape.SetRadii(ellipsoidSdf->Radii());
     collision->SetShape(shape);
   }
   else if (geom->Type() == ::sdf::GeometryType::SPHERE)

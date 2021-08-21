@@ -57,8 +57,16 @@ namespace ignition
           }
 
           q = _quantity.RelativeToParent();
-          currentCoordinates = _impl.FrameDataRelativeToWorld(
-                _relativeTo).pose.linear();
+          if (_relativeTo.IsWorld())
+          {
+            // The World Frame has all zero fields
+            currentCoordinates = RotationType::Identity();
+          }
+          else
+          {
+            currentCoordinates = _impl.FrameDataRelativeToWorld(
+                  _relativeTo).pose.linear();
+          }
         }
         else
         {

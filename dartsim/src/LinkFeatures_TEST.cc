@@ -30,6 +30,7 @@
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/GetBoundingBox.hh>
 #include <ignition/physics/Link.hh>
+#include <ignition/physics/World.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
@@ -42,6 +43,7 @@
 struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::AddLinkExternalForceTorque,
     ignition::physics::ForwardStep,
+    ignition::physics::Gravity,
     ignition::physics::sdf::ConstructSdfWorld,
     ignition::physics::sdf::ConstructSdfModel,
     ignition::physics::sdf::ConstructSdfLink,
@@ -72,25 +74,6 @@ class LinkFeaturesFixture : public ::testing::Test
   protected: TestEnginePtr engine;
 };
 
-TestWorldPtr LoadWorld(
-    const TestEnginePtr &_engine,
-    const std::string &_sdfFile,
-    const Eigen::Vector3d &_gravity = Eigen::Vector3d{0, 0, -9.8})
-{
-  sdf::Root root;
-  const sdf::Errors errors = root.Load(_sdfFile);
-  EXPECT_TRUE(errors.empty());
-  const sdf::World *sdfWorld = root.WorldByIndex(0);
-  // Make a copy of the world so we can set the gravity property
-  // TODO(addisu) Add a world property feature to set gravity instead of this
-  // hack
-  sdf::World worldCopy;
-  worldCopy.Load(sdfWorld->Element());
-
-  worldCopy.SetGravity(math::eigen3::convert(_gravity));
-  return _engine->ConstructWorld(worldCopy);
-}
-
 // A predicate-formatter for asserting that two vectors are approximately equal.
 class AssertVectorApprox
 {
@@ -114,11 +97,42 @@ class AssertVectorApprox
   private: double tol;
 };
 
+TestWorldPtr LoadWorld(
+    const TestEnginePtr &_engine,
+    const std::string &_sdfFile,
+    const Eigen::Vector3d &_gravity = Eigen::Vector3d{0, 0, -9.8})
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(_sdfFile);
+  EXPECT_TRUE(errors.empty()) << errors;
+  const sdf::World *sdfWorld = root.WorldByIndex(0);
+  EXPECT_NE(nullptr, sdfWorld);
+
+  auto graphErrors = sdfWorld->ValidateGraphs();
+  EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
+
+  TestWorldPtr world = _engine->ConstructWorld(*sdfWorld);
+  EXPECT_NE(nullptr, world);
+  world->SetGravity(_gravity);
+
+  AssertVectorApprox vectorPredicate(1e-10);
+  EXPECT_PRED_FORMAT2(vectorPredicate, _gravity,
+                      world->GetGravity());
+
+  return world;
+}
+
 // Test setting force and torque.
 TEST_F(LinkFeaturesFixture, LinkForceTorque)
 {
   auto world = LoadWorld(this->engine, TEST_WORLD_DIR "/empty.sdf",
                          Eigen::Vector3d::Zero());
+  {
+    AssertVectorApprox vectorPredicate(1e-10);
+    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                        world->GetGravity());
+  }
+
   // Add a sphere
   sdf::Model modelSDF;
   modelSDF.SetName("sphere");

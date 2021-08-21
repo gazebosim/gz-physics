@@ -30,6 +30,7 @@
 
 #include <ignition/plugin/Loader.hh>
 
+#include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Joint.hh>
 #include <ignition/physics/RequestEngine.hh>
@@ -57,6 +58,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::GetEntities,
     ignition::physics::GetBasicJointState,
     ignition::physics::SetBasicJointState,
+    ignition::physics::LinkFrameSemantics,
     ignition::physics::dartsim::RetrieveWorld,
     ignition::physics::sdf::ConstructSdfCollision,
     ignition::physics::sdf::ConstructSdfJoint,
@@ -538,7 +540,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   WorldPtr world =
       this->LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
   ASSERT_NE(nullptr, world);
-  EXPECT_EQ(4u, world->GetModelCount());
+  EXPECT_EQ(2u, world->GetModelCount());
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
@@ -597,7 +599,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
   WorldPtr world = this->LoadWorld(
       TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf");
   ASSERT_NE(nullptr, world);
-  EXPECT_EQ(2u, world->GetModelCount());
+  EXPECT_EQ(1u, world->GetModelCount());
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
@@ -658,6 +660,56 @@ TEST_P(SDFFeatures_TEST, FallbackToFixedJoint)
     const auto *fixedJoint =
         dynamic_cast<const dart::dynamics::WeldJoint *>(joint);
     EXPECT_NE(nullptr, fixedJoint) << " joint type is: " << joint->getType();
+  }
+}
+
+/////////////////////////////////////////////////
+// Check that joints between links in different models work as expected
+TEST_P(SDFFeatures_TEST, JointsAcrossNestedModels)
+{
+  WorldPtr world = this->LoadWorld(
+      TEST_WORLD_DIR "/joint_across_nested_models.sdf");
+  ASSERT_NE(nullptr, world);
+
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  auto checkModel = [&world](const std::string &_modelName){
+    SCOPED_TRACE("checkModel " + _modelName);
+    // check top level model
+    auto parentModel = world->GetModel(_modelName);
+    ASSERT_NE(nullptr, parentModel);
+
+    auto link1 = parentModel->GetLink("link1");
+    ASSERT_NE(nullptr, link1);
+
+    auto nestedModel = parentModel->GetNestedModel("nested_model");
+    ASSERT_NE(nullptr, nestedModel);
+
+    auto link2 = nestedModel->GetLink("link2");
+    ASSERT_NE(nullptr, link2);
+
+    Eigen::Vector3d link1Pos =
+        link1->FrameDataRelativeToWorld().pose.translation();
+    Eigen::Vector3d link2Pos =
+        link2->FrameDataRelativeToWorld().pose.translation();
+    EXPECT_NEAR(0.25, link1Pos.z(), 1e-6);
+    EXPECT_NEAR(0.25, link2Pos.z(), 1e-6);
+  };
+
+  {
+    SCOPED_TRACE("Before step");
+    checkModel("M1");
+    checkModel("M2");
+  }
+  for (int i = 0; i < 1000; ++i)
+  {
+    dartWorld->step();
+  }
+  {
+    SCOPED_TRACE("After step");
+    checkModel("M1");
+    checkModel("M2");
   }
 }
 

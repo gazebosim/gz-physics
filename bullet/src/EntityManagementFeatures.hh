@@ -33,7 +33,7 @@ namespace physics {
 namespace bullet {
 
 struct EntityManagementFeatureList : ignition::physics::FeatureList<
-  RemoveEntities,
+  RemoveModelFromWorld,
   ConstructEmptyWorldFeature
 > { };
 
