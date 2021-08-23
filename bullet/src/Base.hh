@@ -13,251 +13,326 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
 #ifndef IGNITION_PHYSICS_BULLET_BASE_HH_
 #define IGNITION_PHYSICS_BULLET_BASE_HH_
 
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
+#include <LinearMath/btVector3.h>
 #include <btBulletDynamicsCommon.h>
-#include <Eigen/Geometry>
 
-#include <assert.h>
+#include <Eigen/Geometry>
+#include <algorithm>
+#include <ignition/common/Console.hh>
+#include <ignition/math/Pose3.hh>
+#include <ignition/math/Vector3.hh>
+#include <ignition/math/eigen3/Conversions.hh>
+#include <ignition/physics/Implements.hh>
+#include <ignition/physics/detail/Identity.hh>
 #include <memory>
+#include <sdf/Joint.hh>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <variant>
 #include <vector>
-#include <map>
 
-#include <ignition/common/Console.hh>
-#include <ignition/physics/Implements.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+///
+/// \brief The structs World, Model, Link, Joint and Collision are used to
+/// manage and store the required Bullet related objects (e.g. btRigidBody is
+/// the underlying Bullet object for a Link). An object of any of the types
+/// mentioned above is considered an Entity. We use the constructors/destructors
+/// of these Entities not only to initialize/clean their internal data
+/// structures, but also to perform the required computations to add/remove
+/// their related Bullet objects from the Bullet World.
+///
+/// An Entity is considered a Container if itself manages other Entities. For
+/// example, a Model is a Container for Link, Joints, and other (nested) Models.
+/// A Container keeps a dynamic array of `unique_ptrs` to its child entities,
+/// which means that deleting a Container Entity will automatically delete all
+/// its childs. The hierarchy can be described as:
+///
+/// | Entity      | Contains             |
+/// | -----------------------------------|
+/// | World       | Models               |
+/// | Model       | Links, Joints, Models|
+/// | Link        | Collisions           |
+/// | Joint       | -                    |
+/// | Colllision  | -                    |
+///
+/// For example, a possible Entities configuration could be represented visually
+/// as:
+///                          ┌───────┐
+///                          │ world │
+///              ┌───────────┴───────┴───────────┐
+///              │                               │
+///              ▼                               ▼
+///          ┌───────┐                       ┌───────┐
+///          │model_A│                       │model_B│
+///     ┌────┴───────┴────┐             ┌────┴───────┴────┐
+///     ▼        ▼        ▼             ▼                 ▼
+/// ┌──────┐ ┌──────┐ ┌───────┐     ┌───────┐          ┌──────┐
+/// │link_A│ │link_B│ │joint_A│     │model_C│          │link_C│
+/// └──────┘ └──────┘ └───────┘     └───────┘          └──────┘
+///                                     ▼                  ▼
+///                                 ┌────────┐       ┌───────────┐
+///                                 │ link_D │       │collision_A│
+///                                 └────────┘       └───────────┘
+///                                     ▼
+///                               ┌────────────┐
+///                               │collision_B │
+///                               └────────────┘
+///
+/// For fast O(1) access, we also mantain an index that maps each Entity ID to
+/// the Entity pointer.
+///
 
 namespace ignition {
 namespace physics {
 namespace bullet {
 
-/// \brief The Info structs are used for three reasons:
-/// 1) Holding extra information such as the name
-///    that will be different from the underlying engine
-/// 2) Wrap shared pointers to Bullet entities to use as parameters to
-///    GenerateIdentity.
-/// 3) Hold explicit copies of raw pointers that can be deallocated
+struct World;
+struct Model;
+struct Link;
+struct Joint;
+struct Collision;
 
-// TO-DO(): Consider using unique_ptrs instead of shared pointers
-// for Bullet internal objects
-
-// Note: For Bullet library it's important the order in which the elements
-// are destroyed. The current implementation relies on C++ destroying the
-// elements in the opposite order stated in the structure
-struct WorldInfo
-{
+/////////////////////////////////////////////////
+struct World {
+  explicit World(std::string _name);
   std::string name;
-  std::shared_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-  std::shared_ptr<btCollisionDispatcher> dispatcher;
-  std::shared_ptr<btBroadphaseInterface> broadphase;
-  std::shared_ptr<btConstraintSolver> solver;
-  std::shared_ptr<btDiscreteDynamicsWorld> world;
+  std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
+  std::unique_ptr<btCollisionDispatcher> dispatcher;
+  std::unique_ptr<btBroadphaseInterface> broadphase;
+  std::unique_ptr<btConstraintSolver> solver;
+  std::unique_ptr<btDiscreteDynamicsWorld> btWorld;
+  std::vector<std::unique_ptr<Model>> models;
 };
 
-struct ModelInfo
-{
+/////////////////////////////////////////////////
+struct Model {
+  Model(std::string _name,
+        const math::Pose3d& _sdfPose,
+        const math::Pose3d& _worldPose,
+        bool _static,
+        btDiscreteDynamicsWorld* _btWorld);
   std::string name;
-  Identity world;
-  // cppcheck-suppress unusedStructMember
+  math::Pose3d sdfPose;
+  math::Pose3d worldPose;
   bool fixed;
-  math::Pose3d pose;
-  std::vector<std::size_t> links = {};
+  btDiscreteDynamicsWorld* world;
+  std::vector<std::unique_ptr<Link>> links;
+  std::vector<std::unique_ptr<Joint>> joints;
+  std::vector<std::unique_ptr<Model>> models;
 };
 
-struct LinkInfo
-{
+/////////////////////////////////////////////////
+struct Link {
+  Link(std::string _name,
+       const math::Pose3d& _sdfPose,
+       const math::Pose3d& _sdfInertialPose,
+       btDiscreteDynamicsWorld* _btWorld,
+       const btTransform& _baseTransform,
+       double _mass,
+       const btVector3& _linkInertiaDiag);
+
+  ~Link();
+
   std::string name;
-  Identity model;
-  math::Pose3d pose;
-  math::Pose3d inertialPose;
-  // cppcheck-suppress unusedStructMember
-  double mass;
-  btVector3 inertia;
-  std::shared_ptr<btDefaultMotionState> motionState;
-  std::shared_ptr<btCompoundShape> collisionShape;
-  std::shared_ptr<btRigidBody> link;
+  math::Pose3d sdfPose;
+  math::Pose3d sdfInertialPose;
+  btDiscreteDynamicsWorld* world;
+  std::unique_ptr<btDefaultMotionState> motionState;
+  std::unique_ptr<btCompoundShape> collisionShape;
+  std::unique_ptr<btRigidBody> body;
+  std::vector<std::unique_ptr<Collision>> collisions;
 };
 
-struct CollisionInfo
-{
+/////////////////////////////////////////////////
+struct Collision {
+  Collision(std::string _name,
+            btRigidBody* _body,
+            bool _isMesh,
+            std::unique_ptr<btCollisionShape>&& _shape,
+            std::unique_ptr<btTriangleMesh>&& _mesh,
+            const btTransform& _localPose,
+            double _mu = .0,
+            double _mu2 = .0);
+
+  ~Collision();
+
   std::string name;
-  std::shared_ptr<btCollisionShape> shape;
-  Identity link;
-  Identity model;
-  math::Pose3d pose;
-  // cppcheck-suppress unusedStructMember
+  btRigidBody* body;
+  btTransform localPose;
   bool isMesh;
-  std::shared_ptr<btTriangleMesh> mesh;
+  std::unique_ptr<btGImpactMeshShape> gImpactMeshShape;
+  std::unique_ptr<btCollisionShape> shape;
+  std::unique_ptr<btTriangleMesh> mesh;
 };
 
-struct JointInfo
-{
+/////////////////////////////////////////////////
+struct Joint {
+  Joint(std::string _name,
+        btDiscreteDynamicsWorld* _world,
+        btRigidBody* _childBody,
+        btRigidBody* _parentBody,
+        const btVector3& _pivotChild,
+        const btVector3& _pivotParent,
+        const btVector3& _axisChild,
+        const btVector3& _axisParent,
+        ::sdf::JointType _type);
+
+  void SetPosition(double _value);
+  double GetPosition();
+
+  ~Joint();
+
   std::string name;
-  // Base class for all the constraint objects,
-  std::shared_ptr<btTypedConstraint> joint;
-  // cppcheck-suppress unusedStructMember
-  std::size_t childLinkId;
-  // cppcheck-suppress unusedStructMember
-  std::size_t parentLinkId;
-  // cppcheck-suppress unusedStructMember
-  int constraintType;
+  Model* model;
+  btDiscreteDynamicsWorld* world;
+  btRigidBody* childBody;
+  btRigidBody* parentBody;
+  ::sdf::JointType type;
   ignition::math::Vector3d axis;
+  std::unique_ptr<btTypedConstraint> constraint;
 };
 
-inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
-{
-  return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
-                     mat(1, 0), mat(1, 1), mat(1, 2),
-                     mat(2, 0), mat(2, 1), mat(2, 2));
+/////////////////////////////////////////////////
+class Base : public Implements3d<FeatureList<Feature>> {
+  using EntityPtr = std::variant<World*, Model*, Link*, Joint*, Collision*>;
+
+  /// \brief Only one world allowed
+ public:
+  std::unique_ptr<World> world;
+
+  /// \ brief The World ID
+ public:
+  std::size_t worldId;
+
+  /// \brief Hashmap for fast access to an Element given the ID
+ public:
+  std::unordered_map<std::size_t, EntityPtr> entities;
+
+  /// \brief Hashmap for fast access to a Container given its child ID
+ public:
+  std::unordered_map<std::size_t, EntityPtr> containers;
+
+  /// \brief Counter for generating IDs
+ private:
+  std::size_t entityCount = 0;
+
+  /// \brief Gets the next available ID
+ public:
+  inline std::size_t GetNextEntity() { return entityCount++; }
+
+  /// \brief Add a World Entity to this Base object.
+ public:
+  inline Identity InitiateEngine(std::size_t /*_engineID*/) override {
+    const auto id = this->GetNextEntity();
+    assert(id == 0);
+    return this->GenerateIdentity(0);
+  }
+
+  /// \brief Add a World Entity to this Base object.
+ public:
+  inline Identity AddWorld(std::unique_ptr<World>&& _world) {
+    auto id = this->GetNextEntity();
+    this->world = std::move(_world);
+    auto identity = this->GenerateIdentity(id, nullptr);
+    this->worldId = identity.id;
+    return identity;
+  }
+
+  /// \brief Add a Model Entity. It will be contained by the World Entity.
+ public:
+  inline Identity AddModel(std::unique_ptr<Model>&& _model) {
+    auto id = this->GetNextEntity();
+    this->world->models.push_back(std::move(_model));
+    const auto& modelPtr = world->models.back();
+    this->entities[id] = modelPtr.get();
+    this->containers[id] = this->world.get();
+    return this->GenerateIdentity(id, nullptr);
+  }
+
+  /// \brief Add a nested Model Entity contained by another Model
+ public:
+  inline Identity AddNestedModel(std::size_t _modelId,
+                                 std::unique_ptr<Model>&& _model) {
+    auto id = this->GetNextEntity();
+    auto model = std::get<Model*>(this->entities.at(_modelId));
+    model->models.push_back(std::move(_model));
+    const auto& nestedModelPtr = model->models.back();
+    this->entities[id] = nestedModelPtr.get();
+    this->containers[id] = model;
+    return this->GenerateIdentity(id, nullptr);
+  }
+
+  /// \brief Add a Link Entity
+ public:
+  inline Identity AddLink(std::size_t _modelId, std::unique_ptr<Link>&& _link) {
+    auto id = this->GetNextEntity();
+    auto model = std::get<Model*>(this->entities.at(_modelId));
+    model->links.push_back(std::move(_link));
+    const auto& linkPtr = model->links.back();
+    this->entities[id] = linkPtr.get();
+    this->containers[id] = model;
+    return this->GenerateIdentity(id, nullptr);
+  }
+
+  /// \brief Add a Collision Entity
+ public:
+  inline Identity AddCollision(std::size_t _linkId,
+                               std::unique_ptr<Collision>&& _collision) {
+    auto id = this->GetNextEntity();
+    auto link = std::get<Link*>(this->entities.at(_linkId));
+    link->collisions.push_back(std::move(_collision));
+    const auto& collisionPtr = link->collisions.back();
+    this->entities[id] = collisionPtr.get();
+    this->containers[id] = link;
+    return this->GenerateIdentity(id, nullptr);
+  }
+
+  /// \brief Add a Joint Entity
+ public:
+  inline Identity AddJoint(std::size_t _modelId,
+                           std::unique_ptr<Joint>&& _joint) {
+    auto id = this->GetNextEntity();
+    auto model = std::get<Model*>(this->entities.at(_modelId));
+    model->joints.push_back(std::move(_joint));
+    const auto& jointPtr = model->joints.back();
+    this->entities[id] = jointPtr.get();
+    this->containers[id] = model;
+    return this->GenerateIdentity(id, nullptr);
+  }
+};
+
+/////////////////////////////////////////////////
+inline btMatrix3x3 convertMat(Eigen::Matrix3d mat) {
+  return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2), mat(1, 0), mat(1, 1),
+                     mat(1, 2), mat(2, 0), mat(2, 1), mat(2, 2));
 }
 
-inline btVector3 convertVec(Eigen::Vector3d vec)
-{
+/////////////////////////////////////////////////
+inline btVector3 convertVec(Eigen::Vector3d vec) {
   return btVector3(vec(0), vec(1), vec(2));
 }
 
-inline Eigen::Matrix3d convert(btMatrix3x3 mat)
-{
+/////////////////////////////////////////////////
+inline Eigen::Matrix3d convert(btMatrix3x3 mat) {
   Eigen::Matrix3d val;
-  val << mat[0][0], mat[0][1], mat[0][2],
-         mat[1][0], mat[1][1], mat[1][2],
-         mat[2][0], mat[2][1], mat[2][2];
+  val << mat[0][0], mat[0][1], mat[0][2], mat[1][0], mat[1][1], mat[1][2],
+      mat[2][0], mat[2][1], mat[2][2];
   return val;
 }
 
-inline Eigen::Vector3d convert(btVector3 vec)
-{
+/////////////////////////////////////////////////
+inline Eigen::Vector3d convert(btVector3 vec) {
   Eigen::Vector3d val;
   val << vec[0], vec[1], vec[2];
   return val;
 }
-
-class Base : public Implements3d<FeatureList<Feature>>
-{
-  public: std::size_t entityCount = 0;
-
-  public: inline std::size_t GetNextEntity()
-  {
-    return entityCount++;
-  }
-
-  public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
-  {
-    const auto id = this->GetNextEntity();
-    assert(id == 0);
-
-    return this->GenerateIdentity(0);
-  }
-
-  public: inline std::size_t idToIndexInContainer(std::size_t _id) const
-  {
-    auto it = this->childIdToParentId.find(_id);
-    if (it != this->childIdToParentId.end())
-    {
-      std::size_t index = 0;
-      for (const auto &pair : this->childIdToParentId)
-      {
-        if (pair.first == _id && pair.second == it->second)
-        {
-          return index;
-        }
-        else if (pair.second == it->second)
-        {
-          ++index;
-        }
-      }
-    }
-    // return invalid index if not found in id map
-    return -1;
-  }
-
-  public: inline std::size_t indexInContainerToId(
-    const std::size_t _containerId, const std::size_t _index) const
-  {
-    std::size_t counter = 0;
-    auto it = this->childIdToParentId.begin();
-
-    while (counter <= _index && it != this->childIdToParentId.end())
-    {
-      if (it->second == _containerId && counter == _index)
-      {
-        return it->first;
-      }
-      else if (it->second == _containerId)
-      {
-        ++counter;
-      }
-      ++it;
-    }
-    // return invalid id if entity not found
-    return -1;
-  }
-
-  public: inline Identity AddWorld(WorldInfo _worldInfo)
-  {
-    const auto id = this->GetNextEntity();
-    this->worlds[id] = std::make_shared<WorldInfo>(_worldInfo);
-    this->childIdToParentId.insert({id, -1});
-    return this->GenerateIdentity(id, this->worlds.at(id));
-  }
-
-  public: inline Identity AddModel(std::size_t _worldId, ModelInfo _modelInfo)
-  {
-    const auto id = this->GetNextEntity();
-    this->models[id] = std::make_shared<ModelInfo>(_modelInfo);
-    this->childIdToParentId.insert({id, _worldId});
-    return this->GenerateIdentity(id, this->models.at(id));
-  }
-
-  public: inline Identity AddLink(std::size_t _modelId, LinkInfo _linkInfo)
-  {
-    const auto id = this->GetNextEntity();
-    this->links[id] = std::make_shared<LinkInfo>(_linkInfo);
-
-    auto model = this->models.at(_linkInfo.model);
-    model->links.push_back(id);
-
-    this->childIdToParentId.insert({id, _modelId});
-    return this->GenerateIdentity(id, this->links.at(id));
-  }
-  public: inline Identity AddCollision(
-    std::size_t _linkId, CollisionInfo _collisionInfo)
-  {
-   const auto id = this->GetNextEntity();
-   this->collisions[id] = std::make_shared<CollisionInfo>(_collisionInfo);
-   this->childIdToParentId.insert({id, _linkId});
-   return this->GenerateIdentity(id, this->collisions.at(id));
-  }
-
-  public: inline Identity AddJoint(JointInfo _jointInfo)
-  {
-    const auto id = this->GetNextEntity();
-    this->joints[id] = std::make_shared<JointInfo>(_jointInfo);
-
-    return this->GenerateIdentity(id, this->joints.at(id));
-  }
-
-  public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;
-  public: using ModelInfoPtr = std::shared_ptr<ModelInfo>;
-  public: using LinkInfoPtr  = std::shared_ptr<LinkInfo>;
-  public: using CollisionInfoPtr = std::shared_ptr<CollisionInfo>;
-  public: using JointInfoPtr  = std::shared_ptr<JointInfo>;
-
-  public: std::unordered_map<std::size_t, WorldInfoPtr> worlds;
-  public: std::unordered_map<std::size_t, ModelInfoPtr> models;
-  public: std::unordered_map<std::size_t, LinkInfoPtr> links;
-  public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
-  public: std::unordered_map<std::size_t, JointInfoPtr> joints;
-
-  // childIdToParentId needs to be an ordered map so this iteration proceeds
-  // in ascending order of the keys of that map. Do not change.
-  public: std::map<std::size_t, std::size_t> childIdToParentId;
-};
 
 }  // namespace bullet
 }  // namespace physics

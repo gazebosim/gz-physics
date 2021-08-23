@@ -22,12 +22,15 @@
 #include <string>
 
 #include "Base.hh"
+#include "ignition/physics/PlaneShape.hh"
+#include <ignition/physics/BoxShape.hh>
 
 namespace ignition {
 namespace physics {
 namespace bullet {
 
 struct ShapeFeatureList : ignition::physics::FeatureList<
+  AttachBoxShapeFeature,
   mesh::AttachMeshShapeFeature
 > { };
 
@@ -35,6 +38,12 @@ class ShapeFeatures :
     public virtual Base,
     public virtual Implements3d<ShapeFeatureList>
 {
+  public: Identity AttachBoxShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const LinearVector3d &_size,
+    const Pose3d &_pose) override;
+
   public: Identity AttachMeshShape(
       const Identity &_linkID,
       const std::string &_name,
@@ -43,6 +52,9 @@ class ShapeFeatures :
       const LinearVector3d &_scale) override;
 
   public: Identity CastToMeshShape(
+      const Identity &_shapeID) const override;
+
+  public: Identity CastToBoxShape(
       const Identity &_shapeID) const override;
 };
 
