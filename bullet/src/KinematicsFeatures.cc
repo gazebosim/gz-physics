@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
+
+#include "KinematicsFeatures.hh"
 
 #include <ignition/common/Console.hh>
-#include "KinematicsFeatures.hh"
+#include <stdexcept>
 
 namespace ignition {
 namespace physics {
@@ -24,28 +26,21 @@ namespace bullet {
 
 /////////////////////////////////////////////////
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
-    const FrameID &_id) const
-{
+    const FrameID& _id) const {
   FrameData3d data;
 
   // The feature system should never send us the world ID.
-  if (_id.IsWorld())
-  {
-    ignerr << "Given a FrameID belonging to the world. This should not be "
-           << "possible! Please report this bug!\n";
-    assert(false);
+  if (_id.IsWorld()) {
+    throw std::runtime_error(
+        "Given a FrameID belonging to the world. This should not be possible! "
+        "Please report this bug!");
     return data;
   }
 
   const auto linkID = _id.ID();
 
-  if (this->links.find(linkID) == this->links.end())
-  {
-    ignerr << "Given a FrameID not belonging to a link.\n";
-    return data;
-  }
-  const auto &linkInfo = this->links.at(linkID);
-  const auto &rigidBody = linkInfo->link;
+  auto link = std::get<Link*>(this->entities.at(linkID));
+  auto rigidBody = link->body.get();
 
   btTransform trans;
   trans = rigidBody->getCenterOfMassTransform();
@@ -53,11 +48,11 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const btMatrix3x3 mat = trans.getBasis();
 
   const Eigen::Isometry3d poseIsometry =
-    ignition::math::eigen3::convert(linkInfo->inertialPose.Inverse());
+      ignition::math::eigen3::convert(link->sdfInertialPose.Inverse());
   Eigen::Isometry3d poseIsometryBase;
   poseIsometryBase.linear() = convert(mat);
   poseIsometryBase.translation() = convert(pos);
-  poseIsometryBase =  poseIsometryBase * poseIsometry;
+  poseIsometryBase = poseIsometryBase * poseIsometry;
   data.pose.linear() = poseIsometryBase.linear();
   data.pose.translation() = poseIsometryBase.translation();
 
@@ -65,10 +60,12 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   btVector3 omega = rigidBody->getAngularVelocity();
   btVector3 vel = rigidBody->getLinearVelocity();
 
-  data.linearVelocity = convert(vel) + ignition::math::eigen3::convert(
-    ignition::math::eigen3::convert(convert(omega)).Cross(
-    -ignition::math::eigen3::convert(data.pose).Rot() *
-    linkInfo->inertialPose.Pos()));
+  data.linearVelocity =
+      convert(vel) +
+      ignition::math::eigen3::convert(
+          ignition::math::eigen3::convert(convert(omega))
+              .Cross(-ignition::math::eigen3::convert(data.pose).Rot() *
+                     link->sdfInertialPose.Pos()));
   data.angularVelocity = convert(omega);
 
   // \todo(anyone) compute frame accelerations

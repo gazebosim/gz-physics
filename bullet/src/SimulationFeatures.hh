@@ -22,13 +22,15 @@
 #include <ignition/physics/ForwardStep.hh>
 
 #include "Base.hh"
+#include "ignition/physics/GetContacts.hh"
 
 namespace ignition {
 namespace physics {
 namespace bullet {
 
 struct SimulationFeatureList : ignition::physics::FeatureList<
-  ForwardStep
+  ForwardStep,
+  GetContactsFromLastStepFeature
 > { };
 
 class SimulationFeatures :
@@ -40,6 +42,9 @@ class SimulationFeatures :
       ForwardStep::Output &_h,
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
+
+  public: std::vector<ContactInternal> GetContactsFromLastStep(
+      const Identity &_worldID) const override;
 };
 
 }  // namespace bullet

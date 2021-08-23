@@ -23,6 +23,7 @@
 #include <ignition/physics/sdf/ConstructJoint.hh>
 #include <ignition/physics/sdf/ConstructLink.hh>
 #include <ignition/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructCollision.hh>
 
@@ -38,6 +39,7 @@ struct SDFFeatureList : ignition::physics::FeatureList<
   sdf::ConstructSdfJoint,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfModel,
+  sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfCollision,
   sdf::ConstructSdfWorld
 > { };
@@ -54,6 +56,10 @@ class SDFFeatures :
       const Identity &_worldID,
       const ::sdf::Model &_sdfModel) override;
 
+  public: Identity ConstructSdfNestedModel(
+      const Identity &_parentID,
+      const ::sdf::Model &_sdfModel) override;
+
   private: Identity ConstructSdfLink(
       const Identity &_modelID,
       const ::sdf::Link &_sdfLink) override;
@@ -66,16 +72,8 @@ class SDFFeatures :
       const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint) override;
 
-  private: Identity ConstructSdfJoint(
-      const Identity &_modelID,
-      const ::sdf::Joint &_sdfJoint,
-      std::size_t parentId,
-      std::size_t childId);
-
-  private: std::size_t FindOrConstructLink(
-      const Identity &_modelID,
-      const ::sdf::Model &_sdfModel,
-      const std::string &_sdfLinkName);
+  private: Identity ConstructSdfModelImpl(const Identity &_parentID,
+                                          const ::sdf::Model &_sdfModel);
 };
 
 }  // namespace bullet
