@@ -108,7 +108,7 @@ TEST_F(KinematicsFeaturesFixture, JointFrameSemantics)
       F_WJ.pose.rotation() * X_JC.translation();
 
   F_WCexpected.pose = F_WJ.pose * X_JC;
-  // angular acceleration of the child link is the same as the joint, so we 
+  // angular acceleration of the child link is the same as the joint, so we
   // don't need to assign a new value.
 
   // Note that the joint's linear velocity and linear acceleration are zero, so
