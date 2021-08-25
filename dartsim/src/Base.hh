@@ -66,6 +66,7 @@ struct LinkInfo
 struct JointInfo
 {
   dart::dynamics::JointPtr joint;
+  dart::dynamics::SimpleFramePtr frame;
 };
 
 struct ShapeInfo
@@ -304,6 +305,13 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints.idToObject[id] = std::make_shared<JointInfo>();
     this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;
+    dart::dynamics::SimpleFramePtr jointFrame =
+        dart::dynamics::SimpleFrame::createShared(
+            _joint->getChildBodyNode(), _joint->getName() + "_frame",
+            _joint->getTransformFromChildBodyNode());
+
+    this->joints.idToObject[id]->frame = jointFrame;
+    this->frames[id] = this->joints.idToObject[id]->frame.get();
 
     return id;
   }
