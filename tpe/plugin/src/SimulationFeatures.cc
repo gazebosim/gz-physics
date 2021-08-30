@@ -98,6 +98,40 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     }
   }
 
+  // Iterate over models to make sure link velocities for moving models
+  // are calculated and sent
+  for (const auto &[id, info] : this->models)
+  {
+    // make sure the model exists
+    if (info)
+    {
+      if (info->model->GetStatic())
+        continue;
+      const auto nextPose = info->model->GetPose();
+      // Note, now prevLinkPoses also containes prevModelPoses
+      // Data structure has been kept to avoid breaking ABI
+      auto iter = this->prevLinkPoses.find(id);
+
+      // If the models's pose is new or has changed, calculate and add all
+      // the children links' poses to the output poses
+      if ((iter == this->prevLinkPoses.end()) ||
+          !iter->second.Pos().Equal(nextPose.Pos(), 1e-6) ||
+          !iter->second.Rot().Equal(nextPose.Rot(), 1e-6))
+      {
+        for (const auto &linkEnt : info->model->GetChildren())
+        {
+          WorldPose wp;
+          wp.pose = linkEnt.second->GetPose();
+          wp.body = linkEnt.second->GetId();
+          _changedPoses.entries.push_back(wp);
+          newPoses[id] = linkEnt.second->GetPose();
+        }
+      }
+      else
+        newPoses[id] = iter->second;
+    }
+  }
+
   // Save the new poses so that they can be used to check for updates in the
   // next iteration. Re-setting this->prevLinkPoses with the contents of
   // newPoses ensures that we aren't caching data for links that were removed
