@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <world name="string_pendulum.sdf">
+    <model name="pendulum">
+      <pose>0 0 1   0 0 0</pose>
+
+      <joint name="j0" type="fixed">
+        <parent>world</parent>
+        <child>support</child>
+      </joint>
+
+      <link name="support">
+        <inertial>
+          <mass>0.001</mass>
+        </inertial>
+      </link>
+
+      <joint name="pivot" type="revolute">
+        <!-- Rotate pivot so simulation starts with pendulum swinging  -->
+        <pose relative_to="support">0 0 0   0.7 0 0</pose>
+        <parent>support</parent>
+        <child>bob</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+        </axis>
+      </joint>
+
+      <link name="bob">
+        <pose relative_to="pivot">0 0 -1   0 0 0</pose>
+        <inertial>
+          <mass>6</mass>
+          <inertia>
+            <ixx>0.01</ixx>
+            <iyy>0.01</iyy>
+            <izz>0.01</izz>
+          </inertia>
+        </inertial>
+        <visual name="bob_vis">
+          <geometry>
+            <sphere>
+              <radius>0.1</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.0 0.8 0.0 1</ambient>
+            <diffuse>0.0 0.8 0.0 1</diffuse>
+          </material>
+        </visual>
+        <visual name="string_vis">
+          <pose>0 0 0.5   0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.0 1</ambient>
+            <diffuse>0.8 0.8 0.0 1</diffuse>
+          </material>
+        </visual>
+        <collision name="bob_col">
+          <geometry>
+            <sphere>
+              <radius>1</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>
+
