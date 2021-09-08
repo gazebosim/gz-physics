@@ -30,6 +30,7 @@ namespace dartsim {
 struct KinematicsFeatureList : FeatureList<
   LinkFrameSemantics,
   ShapeFrameSemantics,
+  JointFrameSemantics,
   FreeGroupFrameSemantics
 > { };
 
