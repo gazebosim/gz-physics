@@ -40,6 +40,16 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   }
 
   const dart::dynamics::Frame *frame = SelectFrame(_id);
+  // A missing frame ID indicates that frame semantics is not properly
+  // implemented for the type of frame represented by the ID.
+  if (nullptr == frame)
+  {
+    ignerr << "The frame ID " << _id.ID()
+           << " was not found in the list of known frames. This should not be "
+              "possible! Please report this bug!\n";
+    assert(false);
+    return data;
+  }
 
   data.pose = frame->getWorldTransform();
   data.linearVelocity = frame->getLinearVelocity();
@@ -62,7 +72,13 @@ const dart::dynamics::Frame *KinematicsFeatures::SelectFrame(
     return model_it->second->model->getRootBodyNode();
   }
 
-  return this->frames.at(_id.ID());
+  auto framesIt = this->frames.find(_id.ID());
+  if (framesIt == this->frames.end())
+  {
+    return nullptr;
+  }
+
+  return framesIt->second;
 }
 
 }
