@@ -61,9 +61,10 @@ class SimulationFeatures :
   /// \return Collision entity
   private: tpelib::Entity &GetModelCollision(std::size_t _id) const;
 
-  /// \brief link poses from the most recent pose change/update.
-  /// The key is the link's ID, and the value is the link's pose
-  private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
+  /// \brief entity poses from the most recent pose change/update.
+  /// The key is the entity's ID, and the value is the entity's pose
+  private: mutable std::unordered_map<std::size_t, math::Pose3d>
+     prevEntityPoses;
 };
 
 }

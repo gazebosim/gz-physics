@@ -317,7 +317,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
-  ASSERT_EQ(6u, dartWorld->getNumSkeletons());
+  ASSERT_EQ(7u, dartWorld->getNumSkeletons());
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
