@@ -40,8 +40,16 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity& _modelID) {
   auto* modelToRemove = std::get<Model*>(this->entities.at(_modelID));
-  auto& models = std::get<World*>(this->containers.at(_modelID))->models;
+  auto& models = std::get<World*>(this->container.at(_modelID))->models;
+  auto& rootModels = std::get<World*>(this->container.at(_modelID))->rootModels;
   auto sizeBefore = models.size();
+  // First, remove the root model
+  rootModels.erase(std::remove_if(rootModels.begin(), rootModels.end(),
+                              [&](auto& rootModel) -> bool {
+                                return rootModel.get() == modelToRemove->rootModel;
+                              }),
+               rootModels.end());
+  // Second, delete the model with all its nested models
   models.erase(std::remove_if(models.begin(), models.end(),
                               [&](auto& model) -> bool {
                                 return model.get() == modelToRemove;
@@ -53,7 +61,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity& _modelID) {
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity& _modelID) const {
   auto* modelRemoved = std::get<Model*>(this->entities.at(_modelID));
-  auto& models = std::get<World*>(this->containers.at(_modelID))->models;
+  auto& models = std::get<World*>(this->container.at(_modelID))->models;
   auto it = std::find_if(
       models.cbegin(), models.cend(),
       [&](auto& model) -> bool { return model.get() == modelRemoved; });
@@ -64,12 +72,23 @@ bool EntityManagementFeatures::ModelRemoved(const Identity& _modelID) const {
 bool EntityManagementFeatures::RemoveModelByIndex(const Identity& _worldID,
                                                   std::size_t _modelIndex) {
   auto& models = std::get<World*>(this->entities.at(_worldID))->models;
+  auto& rootModels = std::get<World*>(this->container.at(_worldID))->rootModels;
 
   if (_modelIndex >= models.size()) {
     return false;
   }
 
-  models.erase(models.begin() + _modelIndex);
+  auto modelToRemoveIter = models.begin() + _modelIndex;
+
+  // First, remove the root model
+  rootModels.erase(std::remove_if(rootModels.begin(), rootModels.end(),
+                              [&](auto& rootModel) -> bool {
+                                return rootModel.get() == (*modelToRemoveIter)->rootModel;
+                              }),
+               rootModels.end());
+
+  // Delete the model
+  models.erase(modelToRemoveIter);
 
   return true;
 }
@@ -80,15 +99,15 @@ bool EntityManagementFeatures::RemoveModelByName(
     const std::string& _modelName) {
   auto& models = std::get<World*>(this->entities.at(_worldID))->models;
 
-  auto it = std::find_if(
+  auto modelToRemoveIter = std::find_if(
       models.begin(), models.end(),
       [&](auto& model) -> bool { return model->name == _modelName; });
 
-  if (it == models.end()) {
+  if (modelToRemoveIter == models.end()) {
     return false;
   }
 
-  models.erase(it);
+  RemoveModelByIndex(_worldID, std::distance(models.begin(), modelToRemoveIter));
 
   return true;
 }
@@ -97,38 +116,44 @@ bool EntityManagementFeatures::RemoveModelByName(
 bool EntityManagementFeatures::RemoveNestedModelByIndex(
     const Identity& _modelID,
     std::size_t _nestedModelIndex) {
-  auto model = std::get<Model*>(this->entities.at(_modelID));
-  auto& nestedModels = model->models;
+  (void) _modelID;
+  (void) _nestedModelIndex;
+  return false;
+  // auto model = std::get<Model*>(this->entities.at(_modelID));
+  // auto& nestedModels = model->models;
 
-  if (_nestedModelIndex >= nestedModels.size()) {
-    return false;
-  }
+  // if (_nestedModelIndex >= nestedModels.size()) {
+  //   return false;
+  // }
 
-  nestedModels.erase(nestedModels.begin() + _nestedModelIndex);
+  // nestedModels.erase(nestedModels.begin() + _nestedModelIndex);
 
-  return true;
+  // return true;
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveNestedModelByName(
     const Identity& _modelID,
     const std::string& _modelName) {
-  auto model = std::get<Model*>(this->entities.at(_modelID));
-  auto& nestedModels = model->models;
+  (void) _modelID;
+  (void) _modelName;
+  return false;
+  // auto model = std::get<Model*>(this->entities.at(_modelID));
+  // auto& nestedModels = model->models;
 
-  auto it = std::find_if(nestedModels.begin(), nestedModels.end(),
-                         [&](auto& nestedModel) -> bool {
-                           return nestedModel->name == _modelName;
-                         });
+  // auto it = std::find_if(nestedModels.begin(), nestedModels.end(),
+  //                        [&](auto& nestedModel) -> bool {
+  //                          return nestedModel->name == _modelName;
+  //                        });
 
-  if (it == nestedModels.end()) {
-    // The model to remove was not found
-    return false;
-  }
+  // if (it == nestedModels.end()) {
+  //   // The model to remove was not found
+  //   return false;
+  // }
 
-  nestedModels.erase(it);
+  // nestedModels.erase(it);
 
-  return true;
+  // return true;
 }
 
 }  // namespace bullet

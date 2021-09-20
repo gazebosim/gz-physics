@@ -26,6 +26,7 @@
 #include <ignition/physics/sdf/ConstructNestedModel.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
 #include <ignition/physics/sdf/ConstructCollision.hh>
+#include <ignition/physics/sdf/ConstructMultibody.hh>
 
 #include <ignition/physics/Implements.hh>
 
@@ -41,7 +42,8 @@ struct SDFFeatureList : ignition::physics::FeatureList<
   sdf::ConstructSdfModel,
   sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfCollision,
-  sdf::ConstructSdfWorld
+  sdf::ConstructSdfWorld,
+  sdf::ConstructSdfMultibody
 > { };
 
 class SDFFeatures :
@@ -60,6 +62,8 @@ class SDFFeatures :
       const Identity &_parentID,
       const ::sdf::Model &_sdfModel) override;
 
+  public: void ConstructSdfMultibody(const Identity &_modelID) override;
+
   private: Identity ConstructSdfLink(
       const Identity &_modelID,
       const ::sdf::Link &_sdfLink) override;
@@ -74,6 +78,7 @@ class SDFFeatures :
 
   private: Identity ConstructSdfModelImpl(const Identity &_parentID,
                                           const ::sdf::Model &_sdfModel);
+
 };
 
 }  // namespace bullet

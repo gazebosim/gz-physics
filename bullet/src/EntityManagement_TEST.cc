@@ -24,7 +24,6 @@
 #include <ignition/physics/RequestEngine.hh>
 
 #include "EntityManagementFeatures.hh"
-#include "JointFeatures.hh"
 
 // ToDo(Lobotuerk): Once more tests are added into this plugin, delete line 35
 // and uncomment 31~33 adding another feature list to clear the warn.

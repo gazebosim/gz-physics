@@ -17,6 +17,8 @@
 
 #include "KinematicsFeatures.hh"
 
+#include <LinearMath/btVector3.h>
+
 #include <ignition/common/Console.hh>
 #include <stdexcept>
 
@@ -37,38 +39,32 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
 
-  const auto linkID = _id.ID();
-
+  auto linkID = _id.ID();
   auto link = std::get<Link*>(this->entities.at(linkID));
-  auto rigidBody = link->body.get();
 
-  btTransform trans;
-  trans = rigidBody->getCenterOfMassTransform();
-  const btVector3 pos = trans.getOrigin();
-  const btMatrix3x3 mat = trans.getBasis();
+  if (link->rootModel->multibody) {
+    auto& multibody = link->rootModel->multibody;
+    auto linkNumber = link->rootModel->vertexIdToLinkIndex.at(link->vertexId);
 
-  const Eigen::Isometry3d poseIsometry =
-      ignition::math::eigen3::convert(link->sdfInertialPose.Inverse());
-  Eigen::Isometry3d poseIsometryBase;
-  poseIsometryBase.linear() = convert(mat);
-  poseIsometryBase.translation() = convert(pos);
-  poseIsometryBase = poseIsometryBase * poseIsometry;
-  data.pose.linear() = poseIsometryBase.linear();
-  data.pose.translation() = poseIsometryBase.translation();
+    auto localPose =
+        link->rootModel->vertexIdToLinkPoseFromPivot.at(link->vertexId);
 
-  // Add base velocities
-  btVector3 omega = rigidBody->getAngularVelocity();
-  btVector3 vel = rigidBody->getLinearVelocity();
+    auto localPos =
+        convertVec(ignition::math::eigen3::convert(localPose.Pos()));
+    auto localRot = convertQuat(localPose.Rot());
 
-  data.linearVelocity =
-      convert(vel) +
-      ignition::math::eigen3::convert(
-          ignition::math::eigen3::convert(convert(omega))
-              .Cross(-ignition::math::eigen3::convert(data.pose).Rot() *
-                     link->sdfInertialPose.Pos()));
-  data.angularVelocity = convert(omega);
+    auto pos = multibody->localPosToWorld(linkNumber, localPos);
+    auto mat = multibody->localFrameToWorld(linkNumber, btMatrix3x3(localRot));
+    data.pose.translation() = convert(pos);
+    data.pose.linear() = convert(mat);
 
-  // \todo(anyone) compute frame accelerations
+  } else {
+    auto& body = link->rootModel->body;
+    auto pos = body->getCenterOfMassPosition();
+    auto mat = btMatrix3x3(body->getOrientation());
+    data.pose.translation() = convert(pos);
+    data.pose.linear() = convert(mat);
+  }
 
   return data;
 }

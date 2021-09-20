@@ -33,7 +33,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
     return this->GenerateInvalidId();
 
   // Reject also if the model has fixed base
-  if (model->fixed)
+  if (model->rootModel->isStatic)
     return this->GenerateInvalidId();
 
   return _modelID;
@@ -75,11 +75,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   baseTransform.setBasis(convertMat(poseLinear));
 
   // Set base transform
-    auto model = std::get<Model*>(this->entities.at(_groupID));
-  for (auto& link : model->links)
-  {
-    link->body->setCenterOfMassTransform(baseTransform);
-  }
+  auto model = std::get<Model*>(this->entities.at(_groupID));
 }
 
 }  // namespace bullet
