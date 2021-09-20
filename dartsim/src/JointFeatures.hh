@@ -55,7 +55,8 @@ struct JointFeatureList : FeatureList<
   SetJointVelocityCommandFeature,
   SetJointPositionLimitsFeature,
   SetJointVelocityLimitsFeature,
-  SetJointEffortLimitsFeature
+  SetJointEffortLimitsFeature,
+  GetJointTransmittedWrench
 > { };
 
 class JointFeatures :
@@ -198,6 +199,10 @@ class JointFeatures :
   public: void SetJointMaxEffort(
       const Identity &_id, const std::size_t _dof,
       const double _value) override;
+
+  // ----- Transmitted wrench -----
+  public: Wrench3d GetJointTransmittedWrenchInJointFrame(
+      const Identity &_id) const override;
 };
 
 }

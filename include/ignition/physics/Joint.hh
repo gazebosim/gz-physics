@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_JOINT_HH_
 
 #include <ignition/physics/FeatureList.hh>
+#include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/Geometry.hh>
 
 namespace ignition
@@ -533,6 +534,56 @@ namespace ignition
         public: virtual void DetachJoint(const Identity &_jointID) = 0;
       };
     };
+
+    class IGNITION_PHYSICS_VISIBLE GetJointTransmittedWrench
+        : public virtual FeatureWithRequirements<JointFrameSemantics>
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint
+          : public virtual JointFrameSemantics::Joint<PolicyT, FeaturesT>
+      {
+        public: using Wrench = typename FromPolicy<
+                    PolicyT>::template Use<Wrench>;
+
+        /// \brief Get the transmitted wrench at the Joint frame.
+        ///
+        /// The transmitted wrench is the force and torque
+        /// applied by the parent link on the child link, transmitted through
+        /// the joint. It is the sum of constraint forces from the joint,
+        /// applied joint force (set by the user using the Joint::SetForce API)
+        /// as well as forces due to joint friction, damping, and spring
+        /// stiffness.
+        public: Wrench GetTransmittedWrench() const;
+
+        /// \brief Get the transmitted wrench of this joint at the specified
+        /// reference frame and expressed in the specified coordinate frame.
+        ///
+        /// The transmitted wrench is the force and torque applied by the parent
+        /// link on the child link, transmitted through the joint. It is the sum
+        /// of constraint forces from the joint, applied joint force (set by the
+        /// user using the Joint::SetForce API) as well as forces due to joint
+        /// friction, damping, and spring stiffness.
+        /// \param[in] _relativeTo Reference frame whose origin specifies the
+        /// location where the linear force of the wrench is applied.
+        /// \param[in] _inCoordinatesOf Coordinate frame in which the wrench is
+        /// expressed. Unlike _relativeTo, the coordinate frame is only used
+        /// to apply a rotation to the individual vectors in the wrench. It does
+        /// not move the point where the force is applied.
+        public: Wrench GetTransmittedWrench(
+                    const FrameID &_relativeTo,
+                    const FrameID &_inCoordinatesOf) const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Wrench = typename FromPolicy<
+                    PolicyT>::template Use<Wrench>;
+        public: virtual Wrench GetJointTransmittedWrenchInJointFrame(
+                    const Identity &_jointID) const = 0;
+      };
+    };
+
   }
 }
 

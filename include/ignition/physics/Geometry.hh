@@ -57,6 +57,14 @@ namespace ignition
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AngularVector)
 
     template <typename Scalar, std::size_t Dim>
+    struct Wrench
+    {
+      AngularVector<Scalar, Dim> torque;
+      LinearVector<Scalar, Dim> force;
+    };
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Wrench)
+
+    template <typename Scalar, std::size_t Dim>
     using AlignedBox = Eigen::AlignedBox<Scalar, Dim>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AlignedBox)
 
