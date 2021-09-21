@@ -13,20 +13,15 @@
 1. Fix TPE Link velocity not being updated and Model velocity not having any effect.
     * [Pull request #289](https://github.com/ignitionrobotics/ign-physics/pull/289)
 
-1. 👩‍🌾 Remove bitbucket-pipelines.yml
-    * [Pull request #287](https://github.com/ignitionrobotics/ign-physics/pull/287)
-
 1. Make ignition-physics CMake config files relocatable
     * [Pull request #282](https://github.com/ignitionrobotics/ign-physics/pull/282)
 
 1. Added DART feature for setting joint limits dynamically.
     * [Pull request #260](https://github.com/ignitionrobotics/ign-physics/pull/260)
 
-1. Remove outdated comment #280
-    * [Pull request #280](https://github.com/ignitionrobotics/ign-physics/pull/280)
-
 1. Remove use of deprecated function sdf::JointAxis::InitialPosition
     * [Pull request #276](https://github.com/ignitionrobotics/ign-physics/pull/276)
+    * [Pull request #280](https://github.com/ignitionrobotics/ign-physics/pull/280)
 
 1. Clean up functions that trigger GCC9 warnings
     * [Pull request #261](https://github.com/ignitionrobotics/ign-physics/pull/261)
@@ -38,10 +33,9 @@
     * [Pull request #272](https://github.com/ignitionrobotics/ign-physics/pull/272)
     * [Pull request #254](https://github.com/ignitionrobotics/ign-physics/pull/254)
 
-1. Bumps in fortress : ign-physics5
+1. Infrastructure
+    * [Pull request #287](https://github.com/ignitionrobotics/ign-physics/pull/287)
     * [Pull request #246](https://github.com/ignitionrobotics/ign-physics/pull/246)
-
-1. Bump main to 5.0.0~pre1
     * [Pull request #245](https://github.com/ignitionrobotics/ign-physics/pull/245)
 
 ## Ignition Physics 4.x
