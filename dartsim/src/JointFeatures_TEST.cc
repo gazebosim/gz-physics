@@ -1160,17 +1160,17 @@ TEST_F(JointTransmittedWrenchFixture , PendulumAtZeroAngle)
 TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
 {
   namespace test = physics::test;
-  // Start pendulum at 90° (parallel to the ground) and stop when its around 40°
+  // Start pendulum at 90° (parallel to the ground) and stop at about 40°
   // so that we have non-trivial test expectations.
   this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
   this->Step(350);
 
   // Given the position (θ), velocity (ω), and acceleration (α) of the joint
-  // and distance from the joint to the COM (r), we can the reaction forces in
+  // and distance from the joint to the COM (r), the reaction forces in
   // the tangent direction (Ft) and normal direction (Fn) are given by:
   //
-  // Ft =  m * α * r - (m * g * sin(θ)) = m * (α * r - g * sin(θ))
-  // Fn =  m * ω² * r + (m * g * cos(θ)) = m * (ω² * r +  g * cos(θ))
+  // Ft =  m * α * r + (m * g * sin(θ)) = m * (α * r + g * sin(θ))
+  // Fn = -m * ω² * r - (m * g * cos(θ)) = -m * (ω² * r +  g * cos(θ))
   {
     const double theta = this->motorJoint->GetPosition(0);
     const double omega = this->motorJoint->GetVelocity(0);
@@ -1184,16 +1184,17 @@ TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
     auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
 
     const double armTangentForce =
-        kArmLinkMass * ((-alpha * kArmLength / 2.0) - (kGravity * sin(theta)));
+        kArmLinkMass * ((alpha * kArmLength / 2.0) + (kGravity * sin(theta)));
 
     const double motorLinkTangentForce =
-        -kSensorLinkMass * kGravity * sin(theta);
+        kSensorLinkMass * kGravity * sin(theta);
 
     const double armNormalForce =
-        kArmLinkMass *
+        -kArmLinkMass *
         ((std::pow(omega, 2) * kArmLength / 2.0) + (kGravity * cos(theta)));
 
-    const double motorLinkNormalForce = kSensorLinkMass * kGravity * cos(theta);
+    const double motorLinkNormalForce =
+        -kSensorLinkMass * kGravity * cos(theta);
 
     const double tangentForce = armTangentForce + motorLinkTangentForce;
     const double normalForce = armNormalForce + motorLinkNormalForce;
@@ -1201,7 +1202,7 @@ TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
     // The orientation of the joint frame is such that the normal force is
     // parallel to the x-axis and the tangent force is parallel to the y-axis.
     Wrench3d expectedWrenchAtMotorJointInJoint{
-        Vector3d::Zero(), {-normalForce, -tangentForce, 0}};
+        Vector3d::Zero(), {normalForce, tangentForce, 0}};
 
     EXPECT_TRUE(test::Equal(expectedWrenchAtMotorJointInJoint,
                             wrenchAtMotorJointInJoint, 1e-4));
@@ -1225,7 +1226,7 @@ TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
     EXPECT_TRUE(test::Equal(expectedWrenchAtMotorJointInWorld,
                             wrenchAtMotorJointInWorld, 1e-4));
 
-    // This moves the point of application as well change the coordinate frame
+    // This moves the point of application and changes the coordinate frame
     Wrench3d wrenchAtArmInArm = this->motorJoint->GetTransmittedWrench(
         armLink->GetFrameID(), armLink->GetFrameID());
 
@@ -1252,7 +1253,7 @@ TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
 TEST_F(JointTransmittedWrenchFixture, ValidateWrenchWithSecondaryJoint)
 {
   namespace test = physics::test;
-  // Start pendulum at 90° (parallel to the ground) and stop when its around 40°
+  // Start pendulum at 90° (parallel to the ground) and stop at about 40°
   // so that we have non-trivial test expectations.
   this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
   this->Step(350);
