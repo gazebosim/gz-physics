@@ -1342,7 +1342,7 @@ TEST_F(JointTransmittedWrenchFixture, JointLosses)
   }
 }
 
-// Check that the transmitted wrench is affected contact forces
+// Check that the transmitted wrench is affected by contact forces
 TEST_F(JointTransmittedWrenchFixture, ContactForces)
 {
   auto box = this->world->GetModel("box");
@@ -1373,14 +1373,14 @@ TEST_F(JointTransmittedWrenchFixture, ContactForces)
   // Fp_z = √(Fn² + Ft²) // Since all of the reaction force is in the world's
   // z-axis
   //
-  // ∑M_b = 0 = Fp * sin(θ) * (2*r) - m₁*g*sin(θ)*r - m₂*g*sin(θ)*(2*r)
+  // ∑M_b = 0 = -Fp_z * sin(θ) * (2*r) + m₁*g*sin(θ)*r + m₂*g*sin(θ)*(2*r)
   //
-  // Fp_z = 0.5 * g * ((m₁ + 2*m₂))
+  // Fp_z = 0.5 * g * (m₁ + 2*m₂)
   //
   // We can then compute the tangential (Ft) and normal (Fn) components as
   //
-  // Ft = Fp_z * sin(θ)
-  // Fn = Fp_z * cos(θ)
+  // Ft =  Fp_z * sin(θ)
+  // Fn = -Fp_z * cos(θ)
 
   const double reactionForceAtP =
       0.5 * kGravity * (kArmLinkMass + 2 * kSensorLinkMass);
