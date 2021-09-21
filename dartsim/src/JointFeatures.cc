@@ -645,6 +645,33 @@ Identity JointFeatures::AttachPrismaticJoint(
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
+/////////////////////////////////////////////////
+Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
+    const Identity &_id) const
+{
+  auto &joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  auto *childBn = joint->getChildBodyNode();
+  if (nullptr == childBn)
+  {
+    ignerr
+        << "Joint [" << joint->getName()
+        << "] does not have a child link. Unable to get transmitted wrench.\n";
+    return {};
+  }
+
+  const Eigen::Vector6d transmittedWrenchInBody = childBn->getBodyForce();
+  // C - Child body frame
+  // J - Joint frame
+  // X_CJ - Pose of joint in child body frame
+  const Eigen::Isometry3d X_CJ = joint->getTransformFromChildBodyNode();
+
+  const Eigen::Vector6d transmittedWrenchInJoint =
+      dart::math::dAdT(X_CJ, transmittedWrenchInBody);
+  Wrench3d wrenchOut;
+  wrenchOut.torque = transmittedWrenchInJoint.head<3>();
+  wrenchOut.force = transmittedWrenchInJoint.tail<3>();
+  return wrenchOut;
+}
 }
 }
 }

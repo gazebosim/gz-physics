@@ -19,6 +19,7 @@
 #define IGNITION_PHYSICS_DETAIL_JOINT_HH_
 
 #include <ignition/physics/Joint.hh>
+#include "ignition/physics/detail/FrameSemantics.hh"
 
 namespace ignition
 {
@@ -219,6 +220,30 @@ namespace ignition
     {
       this->template Interface<DetachJointFeature>()
           ->DetachJoint(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetJointTransmittedWrench::Joint<PolicyT, FeaturesT>::
+    GetTransmittedWrench() const -> Wrench
+    {
+      return this->template Interface<GetJointTransmittedWrench>()
+          ->GetJointTransmittedWrenchInJointFrame(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetJointTransmittedWrench::Joint<PolicyT, FeaturesT>::
+    GetTransmittedWrench(const FrameID &_relativeTo,
+                         const FrameID &_inCoordinatesOf) const -> Wrench
+    {
+      using RelativeWrench =
+          physics::RelativeWrench<typename PolicyT::Scalar, PolicyT::Dim>;
+
+      return detail::Resolve(
+          *this->template Interface<FrameSemantics>(),
+          RelativeWrench(this->GetFrameID(), this->GetTransmittedWrench()),
+          _relativeTo, _inCoordinatesOf);
     }
   }
 }
