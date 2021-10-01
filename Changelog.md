@@ -2,7 +2,7 @@
 
 ### Ignition Physics 5.x.x (20XX-XX-XX)
 
-### Ignition Physics 5.0.0 (20XX-XX-XX)
+### Ignition Physics 5.0.0 (2021-09-30)
 
 1. Add GetJointTransmittedWrench feature
     * [Pull request #283](https://github.com/ignitionrobotics/ign-physics/pull/283)

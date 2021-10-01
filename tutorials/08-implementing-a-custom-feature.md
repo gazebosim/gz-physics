@@ -13,7 +13,7 @@ In the last \ref implementfeature "Implement physics feature" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
 \ref ignition::physics "Ignition Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
-[DART](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics4/dartsim)
+[DART](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics5/dartsim)
 physics engine in `ign-physics` repository and how to define a custom
 \ref ignition::physics::Feature "Feature" for the plugin.
 
