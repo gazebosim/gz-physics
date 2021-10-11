@@ -21,9 +21,11 @@
 
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/CollisionResult.hpp>
-#include <dart/constraint/ContactConstraint.hpp>
-#include <dart/constraint/ContactSurface.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/constraint/ContactConstraint.hpp>
+#ifdef DART_HAS_CONTACT_SURFACE
+#include <dart/constraint/ContactSurface.hpp>
+#endif
 
 #include "SimulationFeatures.hh"
 
@@ -79,42 +81,6 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   return outContacts;
 }
 
-void SimulationFeatures::AddContactJointPropertiesCallback(
-  const Identity& _worldID, const std::string& _callbackID,
-  SurfaceParamsCallback _callback)
-{
-  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
-
-  auto handler = std::make_shared<IgnContactSurfaceHandler>();
-  handler->surfaceParamsCallback = _callback;
-  handler->convertContact = [this](const dart::collision::Contact& _contact) {
-    return this->convertContact(_contact);
-  };
-
-  this->contactSurfaceHandlers[_callbackID] = handler;
-  world->getConstraintSolver()->addContactSurfaceHandler(handler);
-}
-
-bool SimulationFeatures::RemoveContactJointPropertiesCallback(
-  const Identity& _worldID, const std::string& _callbackID)
-{
-  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
-
-  if (this->contactSurfaceHandlers.find(_callbackID) !=
-    this->contactSurfaceHandlers.end())
-  {
-    const auto handler = this->contactSurfaceHandlers[_callbackID];
-    this->contactSurfaceHandlers.erase(_callbackID);
-    return world->getConstraintSolver()->removeContactSurfaceHandler(handler);
-  }
-  else
-  {
-    ignerr << "Could not find the contact surface handler to be removed"
-           << std::endl;
-    return false;
-  }
-}
-
 std::optional<SimulationFeatures::ContactInternal>
 SimulationFeatures::convertContact(
   const dart::collision::Contact& _contact) const
@@ -151,6 +117,43 @@ SimulationFeatures::convertContact(
   }
 
   return std::nullopt;
+}
+
+#ifdef DART_HAS_CONTACT_SURFACE
+void SimulationFeatures::AddContactJointPropertiesCallback(
+  const Identity& _worldID, const std::string& _callbackID,
+  SurfaceParamsCallback _callback)
+{
+  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
+
+  auto handler = std::make_shared<IgnContactSurfaceHandler>();
+  handler->surfaceParamsCallback = _callback;
+  handler->convertContact = [this](const dart::collision::Contact& _contact) {
+    return this->convertContact(_contact);
+  };
+
+  this->contactSurfaceHandlers[_callbackID] = handler;
+  world->getConstraintSolver()->addContactSurfaceHandler(handler);
+}
+
+bool SimulationFeatures::RemoveContactJointPropertiesCallback(
+  const Identity& _worldID, const std::string& _callbackID)
+{
+  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
+
+  if (this->contactSurfaceHandlers.find(_callbackID) !=
+    this->contactSurfaceHandlers.end())
+  {
+    const auto handler = this->contactSurfaceHandlers[_callbackID];
+    this->contactSurfaceHandlers.erase(_callbackID);
+    return world->getConstraintSolver()->removeContactSurfaceHandler(handler);
+  }
+  else
+  {
+    ignerr << "Could not find the contact surface handler to be removed"
+           << std::endl;
+    return false;
+  }
 }
 
 dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
@@ -256,6 +259,7 @@ IgnContactSurfaceHandler::createConstraint(
 
   return constraint;
 }
+#endif
 
 }
 }

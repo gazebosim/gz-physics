@@ -23,7 +23,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include <dart/config.hpp>
+#if DART_VERSION_AT_LEAST(6, 10, 0)
 #include <dart/constraint/ContactSurface.hpp>
+#endif
 
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
@@ -45,10 +48,13 @@ namespace dartsim {
 
 struct SimulationFeatureList : FeatureList<
   ForwardStep,
-  GetContactsFromLastStepFeature,
-  SetContactJointPropertiesCallbackFeature
+#ifdef DART_HAS_CONTACT_SURFACE
+  SetContactJointPropertiesCallbackFeature,
+#endif
+  GetContactsFromLastStepFeature
 > { };
 
+#ifdef DART_HAS_CONTACT_SURFACE
 class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
 {
   public: dart::constraint::ContactSurfaceParams createParams(
@@ -72,7 +78,9 @@ class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
   public: mutable typename Feature::ContactSurfaceParams<FeaturePolicy3d>
   lastIgnParams;
 };
+
 using IgnContactSurfaceHandlerPtr = std::shared_ptr<IgnContactSurfaceHandler>;
+#endif
 
 class SimulationFeatures :
     public virtual Base,
@@ -93,6 +101,10 @@ class SimulationFeatures :
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
 
+  private: std::optional<ContactInternal> convertContact(
+    const dart::collision::Contact& _contact) const;
+
+#ifdef DART_HAS_CONTACT_SURFACE
   public: void AddContactJointPropertiesCallback(
       const Identity &_worldID,
       const std::string &_callbackID,
@@ -101,14 +113,10 @@ class SimulationFeatures :
   public: bool RemoveContactJointPropertiesCallback(
       const Identity &_worldID, const std::string &_callbackID) override;
 
-  private: std::optional<ContactInternal> convertContact(
-    const dart::collision::Contact& _contact) const;
-
   private: std::unordered_map<
     std::string, IgnContactSurfaceHandlerPtr> contactSurfaceHandlers;
+#endif
 };
-
-
 
 }
 }
