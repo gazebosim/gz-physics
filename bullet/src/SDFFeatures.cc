@@ -296,101 +296,139 @@ static void CreateJoint(RootModel* _rootModel,
 /////////////////////////////////////////////////
 static void CreateCollision(RootModel* _rootModel,
                             math::graph::VertexId _vertexId) {
-  auto iter = _rootModel->vertexIdToSdfCollisions.find(_vertexId);
-  if (iter == _rootModel->vertexIdToSdfCollisions.end()) {
-    // No collisions for this link
-    return;
-  }
-  auto& sdfCollisions = iter->second;
-
   auto linkIndex = _rootModel->vertexIdToLinkIndex.at(_vertexId);
 
-  for (auto& sdfCollision : sdfCollisions) {
-    auto* geom = sdfCollision.Geom();
+  auto iter = _rootModel->vertexIdToSdfCollisions.find(_vertexId);
+  if (iter != _rootModel->vertexIdToSdfCollisions.end()) {
+    auto& sdfCollisions = iter->second;
 
-    std::unique_ptr<btCollisionShape> shape;
+    for (auto& sdfCollision : sdfCollisions) {
+      // TODO(joxoby): handle multiple collitions
+      auto* geom = sdfCollision.Geom();
 
-    if (geom->BoxShape()) {
-      // Box
-      auto box = geom->BoxShape();
-      auto size = math::eigen3::convert(box->Size());
-      auto halfExtents = convertVec(size) * 0.5;
-      shape = std::make_unique<btBoxShape>(halfExtents);
-    } else if (geom->SphereShape()) {
-      // Sphere
-      auto sphere = geom->SphereShape();
-      auto radius = sphere->Radius();
-      shape = std::make_unique<btSphereShape>(radius);
-    } else if (geom->CylinderShape()) {
-      // Cylinder
-      auto cylinder = geom->CylinderShape();
-      auto radius = cylinder->Radius();
-      auto halfLength = cylinder->Length() * 0.5;
-      shape = std::make_unique<btCylinderShapeZ>(
-          btVector3(radius, radius, halfLength));
-    } else if (geom->PlaneShape()) {
-      // Plane
-      auto plane = geom->PlaneShape();
-      auto normal = convertVec(math::eigen3::convert(plane->Normal()));
-      shape = std::make_unique<btStaticPlaneShape>(normal, 0);
-    } else if (geom->CapsuleShape()) {
-      // Capsule
-      auto capsule = geom->CapsuleShape();
-      auto radius = capsule->Radius();
-      auto length = capsule->Length();
-      // TODO(joxoby): What's the definition of Length() ?
-      shape = std::make_unique<btCapsuleShape>(radius, length);
-    } else if (geom->EllipsoidShape()) {
-      // Ellipsoid
-      auto ellipsoid = geom->EllipsoidShape();
-      auto radii = ellipsoid->Radii();
-      // TODO(joxoby): Replace with a real ellipsoid
-      shape = std::make_unique<btSphereShape>(radii.Max());
-    } else {
-      // Should not reach here
-      // TODO(joxoby): add link name in error msg
-      ignerr << "Invalid collision shape for collision name "
-             << sdfCollision.Name();
-      continue;
-    }
+      std::unique_ptr<btCollisionShape> shape;
 
-    auto shapePtr = shape.get();
-    _rootModel->collisionShapes.push_back(std::move(shape));
-
-    // TODO(joxoby): store this a as unique ptr
-    if (_rootModel->multibody) {
-      auto btCollision =
-          new btMultiBodyLinkCollider(_rootModel->multibody.get(), linkIndex);
-      btCollision->setCollisionShape(shapePtr);
-
-      // Collison pose
-      // TODO(joxoby): Use the collision pose from the SDF
-      auto localPose = _rootModel->vertexIdToLinkPoseFromPivot.at(_vertexId);
-      auto localPos =
-          convertVec(ignition::math::eigen3::convert(localPose.Pos()));
-      auto localRot = convertQuat(localPose.Rot());
-      auto pos = _rootModel->multibody->localPosToWorld(linkIndex, localPos);
-      auto mat = _rootModel->multibody->localFrameToWorld(
-          linkIndex, btMatrix3x3(localRot));
-      btTransform tr(mat, pos);
-      btCollision->setWorldTransform(tr);
-
-      if (linkIndex == -1) {
-        _rootModel->multibody->setBaseCollider(btCollision);
+      if (geom->BoxShape()) {
+        // Box
+        auto box = geom->BoxShape();
+        auto size = math::eigen3::convert(box->Size());
+        auto halfExtents = convertVec(size) * 0.5;
+        shape = std::make_unique<btBoxShape>(halfExtents);
+      } else if (geom->SphereShape()) {
+        // Sphere
+        auto sphere = geom->SphereShape();
+        auto radius = sphere->Radius();
+        shape = std::make_unique<btSphereShape>(radius);
+      } else if (geom->CylinderShape()) {
+        // Cylinder
+        auto cylinder = geom->CylinderShape();
+        auto radius = cylinder->Radius();
+        auto halfLength = cylinder->Length() * 0.5;
+        shape = std::make_unique<btCylinderShapeZ>(
+            btVector3(radius, radius, halfLength));
+      } else if (geom->PlaneShape()) {
+        // Plane
+        auto plane = geom->PlaneShape();
+        auto normal = convertVec(math::eigen3::convert(plane->Normal()));
+        shape = std::make_unique<btStaticPlaneShape>(normal, 0);
+      } else if (geom->CapsuleShape()) {
+        // Capsule
+        auto capsule = geom->CapsuleShape();
+        auto radius = capsule->Radius();
+        auto length = capsule->Length();
+        // TODO(joxoby): What's the definition of Length() ?
+        shape = std::make_unique<btCapsuleShape>(radius, length);
+      } else if (geom->EllipsoidShape()) {
+        // Ellipsoid
+        auto ellipsoid = geom->EllipsoidShape();
+        auto radii = ellipsoid->Radii();
+        // TODO(joxoby): Replace with a real ellipsoid
+        shape = std::make_unique<btSphereShape>(radii.Max());
       } else {
-        _rootModel->multibody->getLink(linkIndex).m_collider = btCollision;
+        // Should not reach here
+        // TODO(joxoby): add link name in error msg
+        ignerr << "Invalid collision shape for collision name "
+               << sdfCollision.Name();
+        continue;
       }
-      // TODO(joxoby): More than one collision shape
-      // TODO(joxoby): 2, 1 + 2 ??
-      _rootModel->world->addCollisionObject(btCollision, 2, 1 + 2);
-    } else {
-      // auto pos = _rootModel->body->getCenterOfMassPosition();
-      // auto rot = _rootModel->body->getOrientation();
-      // btTransform tr(rot, pos);
-      _rootModel->body->setCollisionShape(shapePtr);
-      _rootModel->body->forceActivationState(DISABLE_DEACTIVATION);
-      _rootModel->body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
-      _rootModel->body->setFriction(1);
+
+      auto shapePtr = shape.get();
+      _rootModel->collisionShapes.push_back(std::move(shape));
+
+      // TODO(joxoby): store this a as unique ptr
+      if (_rootModel->multibody) {
+        auto btCollision =
+            new btMultiBodyLinkCollider(_rootModel->multibody.get(), linkIndex);
+        btCollision->setCollisionShape(shapePtr);
+
+        // Collison pose
+        // TODO(joxoby): Use the collision pose from the SDF
+        auto localPose = _rootModel->vertexIdToLinkPoseFromPivot.at(_vertexId);
+        auto localPos =
+            convertVec(ignition::math::eigen3::convert(localPose.Pos()));
+        auto localRot = convertQuat(localPose.Rot());
+        auto pos = _rootModel->multibody->localPosToWorld(linkIndex, localPos);
+        auto mat = _rootModel->multibody->localFrameToWorld(
+            linkIndex, btMatrix3x3(localRot));
+        btTransform tr(mat, pos);
+        btCollision->setWorldTransform(tr);
+
+        if (linkIndex == -1) {
+          _rootModel->multibody->setBaseCollider(btCollision);
+        } else {
+          _rootModel->multibody->getLink(linkIndex).m_collider = btCollision;
+        }
+        // TODO(joxoby): More than one collision shape
+        // TODO(joxoby): 2, 1 + 2 ??
+        _rootModel->world->addCollisionObject(btCollision, 1, 1 + 2);
+      } else {
+        // Model with just one link
+        _rootModel->body->setCollisionShape(shapePtr);
+        // _rootModel->body->forceActivationState(DISABLE_DEACTIVATION);
+        // _rootModel->body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
+      }
+    }
+  }
+
+  auto iter2 = _rootModel->vertexIdToMeshes.find(_vertexId);
+
+  if (iter2 != _rootModel->vertexIdToMeshes.end()) {
+    for (auto& meshWithPose : iter2->second) {
+
+      auto& mesh = meshWithPose.mesh;
+      auto& collisionPose = meshWithPose.pose;
+
+      auto gImpactMeshShape = new btGImpactMeshShape(mesh.get());
+      gImpactMeshShape->setMargin(0.001); // To avoid zero vector normalization
+      gImpactMeshShape->updateBound();
+
+      if (_rootModel->multibody) {
+        // TODO(joxoby): store this a unique ptr
+        auto btCollision =
+            new btMultiBodyLinkCollider(_rootModel->multibody.get(), linkIndex);
+        btCollision->setCollisionShape(gImpactMeshShape);
+
+        // Collison pose
+        auto localPose = _rootModel->vertexIdToLinkPoseFromPivot.at(_vertexId);
+        auto shapePose = ignition::math::eigen3::convert(localPose) * collisionPose;
+        auto localPos = convertVec(shapePose.translation());
+        auto localRot = convertMat(shapePose.linear());
+        auto pos = _rootModel->multibody->localPosToWorld(linkIndex, localPos);
+        auto mat = _rootModel->multibody->localFrameToWorld(linkIndex, btMatrix3x3(localRot));
+        btTransform tr(mat, pos);
+        btCollision->setWorldTransform(tr);
+
+        if (linkIndex == -1) {
+          _rootModel->multibody->setBaseCollider(btCollision);
+        } else {
+          _rootModel->multibody->getLink(linkIndex).m_collider = btCollision;
+        }
+        // TODO(joxoby): More than one collision shape
+        _rootModel->world->addCollisionObject(btCollision, 1, 1 + 2);
+      }
+      else {
+        _rootModel->body->setCollisionShape(gImpactMeshShape);
+      }
     }
   }
 }
@@ -456,16 +494,15 @@ void SDFFeatures::ConstructSdfMultibody(const Identity& _modelID) {
     }
 
     rootModel->multibody->finalizeMultiDof();
-    rootModel->world->addMultiBody(rootModel->multibody.get(), 2, 1 + 2);
+    rootModel->world->addMultiBody(rootModel->multibody.get());
   } else {
     auto motionState = new btDefaultMotionState(baseLinkPose);
-
     auto mass = isStatic ? .0 : baseMass;
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
         mass, motionState, nullptr, baseInertia);
     rootModel->body = std::make_unique<btRigidBody>(rbInfo);
     CreateCollision(rootModel, baseId);
-    rootModel->world->addRigidBody(rootModel->body.get(), 1, 1 + 2);
+    rootModel->world->addRigidBody(rootModel->body.get());
   }
 }
 

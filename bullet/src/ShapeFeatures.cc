@@ -37,81 +37,58 @@ Identity ShapeFeatures::AttachMeshShape(const Identity& _linkID,
                                         const ignition::common::Mesh& _mesh,
                                         const Pose3d& _pose,
                                         const LinearVector3d& _scale) {
-  // double* vertices = nullptr;
-  // int* indices = nullptr;
-  // _mesh.FillArrays(&vertices, &indices);
+  (void)_pose;
 
-  // unsigned int numVertices = _mesh.VertexCount();
-  // unsigned int numIndices = _mesh.IndexCount();
+  double* vertices = nullptr;
+  int* indices = nullptr;
+  _mesh.FillArrays(&vertices, &indices);
 
-  // // TODO(joxoby): unique ptr
-  // auto mTriMesh = new btTriangleMesh();
+  int numVertices = _mesh.VertexCount();
+  int numIndices = _mesh.IndexCount();
 
-  // for (unsigned int j = 0; j < numVertices; ++j) {
-  //   // Scale the vertex data
-  //   vertices[j * 3 + 0] = vertices[j * 3 + 0] * _scale[0];
-  //   vertices[j * 3 + 1] = vertices[j * 3 + 1] * _scale[1];
-  //   vertices[j * 3 + 2] = vertices[j * 3 + 2] * _scale[2];
-  // }
+  auto mTriMesh = std::make_unique<btTriangleMesh>();
 
-  // // Create the Bullet trimesh
-  // for (unsigned int j = 0; j < numIndices; j += 3) {
-  //   btVector3 bv0(vertices[indices[j] * 3 + 0], vertices[indices[j] * 3 + 1],
-  //                 vertices[indices[j] * 3 + 2]);
+  for (int j = 0; j < numVertices; j++) {
+    // Scale the vertex data
+    vertices[j * 3 + 0] *= _scale[0];
+    vertices[j * 3 + 1] *= _scale[1];
+    vertices[j * 3 + 2] *= _scale[2];
+  }
 
-  //   btVector3 bv1(vertices[indices[j + 1] * 3 + 0],
-  //                 vertices[indices[j + 1] * 3 + 1],
-  //                 vertices[indices[j + 1] * 3 + 2]);
+  // Create the Bullet trimesh
+  for (int j = 0; j < numIndices; j += 3) {
+    btVector3 bv0(vertices[indices[j] * 3 + 0],
+                  vertices[indices[j] * 3 + 1],
+                  vertices[indices[j] * 3 + 2]);
 
-  //   btVector3 bv2(vertices[indices[j + 2] * 3 + 0],
-  //                 vertices[indices[j + 2] * 3 + 1],
-  //                 vertices[indices[j + 2] * 3 + 2]);
+    btVector3 bv1(vertices[indices[j + 1] * 3 + 0],
+                  vertices[indices[j + 1] * 3 + 1],
+                  vertices[indices[j + 1] * 3 + 2]);
 
-  //   mTriMesh->addTriangle(bv0, bv1, bv2);
-  // }
+    btVector3 bv2(vertices[indices[j + 2] * 3 + 0],
+                  vertices[indices[j + 2] * 3 + 1],
+                  vertices[indices[j + 2] * 3 + 2]);
 
-  // // TODO(lobotuerk) Save collision if needed
-  // // collision->shape = gimpactMeshShape;
+    mTriMesh->addTriangle(bv0, bv1, bv2);
+  }
 
-  // delete[] vertices;
-  // delete[] indices;
+  // TODO(lobotuerk) Save collision if needed
+  // collision->shape = gimpactMeshShape;
 
-  // auto link = std::get<Link*>(this->entities.at(_linkID));
-  // auto rootModel = link->rootModel;
-  // auto linkIndex = rootModel->vertexIdToLinkIndex.at(link->vertexId);
+  delete[] vertices;
+  delete[] indices;
 
-  // /* TO-DO(Lobotuerk): figure out if this line is needed */
-  // // gimpactMeshShape->setMargin(btScalar(0.001));
+  auto link = std::get<Link*>(this->entities.at(_linkID));
+  auto rootModel = link->rootModel;
+  RootModel::MeshWithPose mp;
+  mp.mesh = std::move(mTriMesh);
+  mp.pose =_pose;
+  rootModel->vertexIdToMeshes[link->vertexId].push_back(std::move(mp));
 
-  // auto gImpactMeshShape = std::make_unique<btGImpactMeshShape>(mTriMesh);
-  // gImpactMeshShape->updateBound();
-
-  // // TODO(joxoby): store this a unique ptr
-  // auto btCollision =
-  //     new btMultiBodyLinkCollider(rootModel->multibody.get(), linkIndex);
-  // btCollision->setCollisionShape(gImpactMeshShape.get());
-
-  // // Collison pose
-  // // TODO(joxoby): Use the collision pose from the SDF
-  // auto localPose = rootModel->vertexIdToLinkPoseFromPivot.at(link->vertexId);
-  // auto shapePose = localPose;
-  // auto localPos = convertVec(ignition::math::eigen3::convert(shapePose.Pos()));
-  // auto localRot = convertQuat(shapePose.Rot());
-  // auto pos = rootModel->multibody->localPosToWorld(linkIndex, localPos);
-  // auto mat = rootModel->multibody->localFrameToWorld(linkIndex, btMatrix3x3(localRot));
-  // btTransform tr(mat, pos);
-  // btCollision->setWorldTransform(tr);
-
-  // if (linkIndex == -1) {
-  //   rootModel->multibody->setBaseCollider(btCollision);
-  // } else {
-  //   rootModel->multibody->getLink(linkIndex).m_collider = btCollision;
-  // }
-  // // TODO(joxoby): More than one collision shape
-  // // TODO(joxoby): 2, 1 + 2 ??
-  // rootModel->world->addCollisionObject(btCollision, 2, 1 + 2);
-
-  return GenerateInvalidId();
+  auto collision =
+      std::make_unique<Collision>(_name, rootModel, link->vertexId);
+  auto identity = AddCollision(_linkID, std::move(collision));
+  return identity;
 }
 
 /////////////////////////////////////////////////
@@ -124,6 +101,10 @@ Identity ShapeFeatures::AttachBoxShape(const Identity& _linkID,
                                        const std::string& _name,
                                        const LinearVector3d& _size,
                                        const Pose3d& _pose) {
+  (void)_linkID;
+  (void)_name;
+  (void)_size;
+  (void)_pose;
   // btVector3 halfExtents(_size(0) / 2.0, _size(1) / 2.0, _size(2) / 2.0);
 
   // auto box = std::make_unique<btBoxShape>(halfExtents);
@@ -132,7 +113,8 @@ Identity ShapeFeatures::AttachBoxShape(const Identity& _linkID,
   // auto body = link->body.get();
 
   // auto poseWithInertia =
-  //     link->sdfInertialPose.Inverse() * ignition::math::eigen3::convert(_pose);
+  //     link->sdfInertialPose.Inverse() *
+  //     ignition::math::eigen3::convert(_pose);
   // auto poseIsometry = ignition::math::eigen3::convert(poseWithInertia);
   // auto poseTranslation = poseIsometry.translation();
   // auto poseLinear = poseIsometry.linear();
@@ -151,7 +133,8 @@ Identity ShapeFeatures::AttachBoxShape(const Identity& _linkID,
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToBoxShape(const Identity& _shapeID) const {
-  auto collision = std::get<Collision*>(this->entities.at(_shapeID));
+  (void)_shapeID;
+  // auto collision = std::get<Collision*>(this->entities.at(_shapeID));
 
   // auto shape = collision->shape.get();
 

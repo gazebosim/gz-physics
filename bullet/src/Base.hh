@@ -18,6 +18,8 @@
 #ifndef IGNITION_PHYSICS_BULLET_BASE_HH_
 #define IGNITION_PHYSICS_BULLET_BASE_HH_
 
+#include "ignition/physics/Geometry.hh"
+#include "ignition/physics/Geometry.hh"
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <LinearMath/btQuaternion.h>
@@ -59,14 +61,6 @@ struct Link;
 struct Joint;
 struct Collision;
 
-template <class... Ts>
-struct overload : Ts... {
-  using Ts::operator()...;
-};
-
-template <class... Ts>
-overload(Ts...)->overload<Ts...>;
-
 /////////////////////////////////////////////////
 struct World {
   explicit World(std::string _name) : name(std::move(_name)) {
@@ -97,6 +91,12 @@ struct World {
 struct RootModel {
   RootModel(std::string _name, btMultiBodyDynamicsWorld* _world, bool _isStatic, const math::Pose3d& _sdfPose)
       : name(std::move(_name)), isStatic(_isStatic), sdfPose(_sdfPose), world(_world) {};
+
+  struct MeshWithPose {
+    std::unique_ptr<btTriangleMesh> mesh;
+    Pose3d pose;
+  };
+
   std::string name;
   bool isStatic;
   math::Pose3d sdfPose;
@@ -107,6 +107,7 @@ struct RootModel {
   std::unordered_map<math::graph::VertexId, int> vertexIdToLinkIndex;
   std::unordered_map<math::graph::EdgeId, int> edgeIdToJointIndex;
   std::unordered_map<math::graph::VertexId, std::vector<::sdf::Collision>> vertexIdToSdfCollisions;
+  std::unordered_map<math::graph::VertexId, std::vector<MeshWithPose>> vertexIdToMeshes;
   std::unordered_map<math::graph::VertexId, math::Pose3d> vertexIdToLinkPoseFromPivot;
 
   // Collision objects

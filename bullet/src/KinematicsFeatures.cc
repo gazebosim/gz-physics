@@ -60,10 +60,9 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 
   } else {
     auto& body = link->rootModel->body;
-    auto pos = body->getCenterOfMassPosition();
-    auto mat = btMatrix3x3(body->getOrientation());
-    data.pose.translation() = convert(pos);
-    data.pose.linear() = convert(mat);
+    auto pose = body->getWorldTransform();
+    data.pose.translation() = convert(pose.getOrigin());
+    data.pose.linear() = convert(pose.getBasis());
   }
 
   return data;
