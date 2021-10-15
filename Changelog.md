@@ -1,3 +1,8 @@
+## Ignition Physics 6.x
+
+### Ignition Physics 6.x.x (202X-XX-XX)
+
+
 ## Ignition Physics 5.x
 
 ### Ignition Physics 5.x.x (20XX-XX-XX)
