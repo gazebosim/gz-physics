@@ -1,4 +1,3 @@
-
 # This component expresses custom features of the dartsim plugin, which can
 # expose native dartsim data types.
 ign_add_component(dartsim INTERFACE
@@ -38,8 +37,7 @@ target_link_libraries(${dartsim_plugin}
 # was added to enable these customizations, to detect if the feature is 
 # available.
 include(CheckIncludeFileCXX)
-set(CMAKE_REQUIRED_INCLUDES ${DART_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_DEFINITIONS ${EIGEN3_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_INCLUDES "${DART_INCLUDE_DIRS};${EIGEN3_INCLUDE_DIRS}")
 set(CMAKE_REQUIRED_QUIET false)
 
 CHECK_INCLUDE_FILE_CXX(dart/constraint/ContactSurface.hpp DART_HAS_CONTACT_SURFACE_HEADER)
