@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <dart/config.hpp>
-#if DART_VERSION_AT_LEAST(6, 10, 0)
+#ifdef DART_HAS_CONTACT_SURFACE
 #include <dart/constraint/ContactSurface.hpp>
 #endif
 
