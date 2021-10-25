@@ -39,20 +39,21 @@ void SetContactJointPropertiesCallbackFeature::World<PolicyT, FeaturesT>::
   using Impl = Implementation<PolicyT>;
   using ContactInternal = typename Impl::ContactImpl;
 
-  auto pimpl = this->pimpl;
-  auto convertContact = [pimpl](const ContactInternal& _internal) -> Contact
+  auto pimplPtr = this->pimpl;
+  auto convertContact = [pimplPtr](const ContactInternal& _internal)
   {
     using ContactPoint =
       typename GetContactsFromLastStepFeature::World<PolicyT, FeaturesT>
         ::ContactPoint;
 
     ContactPoint contactPoint {
-      ShapePtrType(pimpl, _internal.collision1),
-      ShapePtrType(pimpl, _internal.collision2),
+      ShapePtrType(pimplPtr, _internal.collision1),
+      ShapePtrType(pimplPtr, _internal.collision2),
       _internal.point
     };
 
-    Contact contactOutput;
+    typename GetContactsFromLastStepFeature::World<PolicyT, FeaturesT>::Contact
+    contactOutput;
     contactOutput.template Get<ContactPoint>() = std::move(contactPoint);
 
     using ExtraContactData =

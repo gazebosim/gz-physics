@@ -81,6 +81,10 @@ foreach(test ${tests})
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 
+  if (DART_HAS_CONTACT_SURFACE_HEADER)
+    target_compile_definitions(${test} PRIVATE DART_HAS_CONTACT_SURFACE)
+  endif()
+
   # Helps when we want to build a single test after making changes to dartsim_plugin
   add_dependencies(${test} ${dartsim_plugin})
 endforeach()

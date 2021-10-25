@@ -65,12 +65,9 @@ class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
     public: using ShapePtrType = typename GetContactsFromLastStepFeature
       ::World<PolicyT, FeaturesT>::ShapePtrType;
 
-    public: using Contact = typename GetContactsFromLastStepFeature
-      ::World<PolicyT, FeaturesT>::Contact;
-
     /// \brief This callback is called for every detected contact point and
     /// allows customizing properties of the contact surface.
-    /// \param _contact[in] The contact object containint contact point,
+    /// \param _contact[in] The contact object containing contact point,
     ///                     normal, force etc.
     /// \param _numContactsOnCollision[in] Number of contact points on the same
     ///                                    collision object. This can be used
@@ -80,7 +77,8 @@ class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
     ///                               the callback can alter them.
     public: typedef std::function<
         void(
-          const Contact& /*_contact*/,
+          const typename GetContactsFromLastStepFeature::
+            World<PolicyT, FeaturesT>::Contact& /*_contact*/,
           size_t /*_numContactsOnCollision*/,
           ContactSurfaceParams<PolicyT>& /*_surfaceParams*/)
       > SurfaceParamsCallback;
