@@ -37,23 +37,70 @@ namespace physics
 class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
+  /// \brief This struct gets filled by the simulator and contains various
+  /// properties of a contact joint (surface, constraint). All of the values
+  /// are optional, which means that they are only filled if the physics engine
+  /// supports them. Some originally unfilled values may still be processed by
+  /// the physics engine if they are set - this just means there is no default
+  /// value for them.
   public: template <typename PolicyT> struct ContactSurfaceParams
   {
+    /// \brief Coefficient of friction along the 1st friction direction.
     std::optional<typename PolicyT::Scalar> frictionCoeff;
+
+    /// \brief Coefficient of friction along the 2nd friction direction.
     std::optional<typename PolicyT::Scalar> secondaryFrictionCoeff;
+
+    /// \brief Coefficient of rolling friction along the 1st friction direction.
     std::optional<typename PolicyT::Scalar> rollingFrictionCoeff;
+
+    /// \brief Coefficient of rolling friction along the 2nd friction direction.
     std::optional<typename PolicyT::Scalar> secondaryRollingFrictionCoeff;
+
+    /// \brief Coefficient of rolling friction along the contact normal.
     std::optional<typename PolicyT::Scalar> normalRollingFrictionCoeff;
+
+    /// \brief Force-dependent slip coefficient along the 1st friction
+    /// direction.
     std::optional<typename PolicyT::Scalar> slipCompliance;
+
+    /// \brief Force-dependent slip coefficient along the 2nd friction
+    /// direction.
     std::optional<typename PolicyT::Scalar> secondarySlipCompliance;
+
+    /// \brief Defines the bounciness of the contact. 0 is not bouncy. Values
+    /// between 0 and 1 are allowed.
     std::optional<typename PolicyT::Scalar> restitutionCoeff;
+
+    /// \brief The first frictional direction. It should be perpendicular to the
+    /// contact normal. The second frictional direction can be computed as a
+    /// vector perpendicular both to the normal and to the first direction.
     std::optional<typename FromPolicy<PolicyT>::template Use<Vector>>
       firstFrictionalDirection;
+
+    /// \brief Desired velocity of the colliding bodies in the contact point.
+    /// Setting this to non-zero asks the physics engine to add such forces
+    /// that can achieve that the colliding bodies have the specified velocity.
+    /// The X component specifies velocity along 1st friction direction.
+    /// The Y component specifies velocity along 2nd friction direction.
+    /// The Z component specifies velocity along the contact normal.
     std::optional<typename FromPolicy<PolicyT>::template Use<Vector>>
       contactSurfaceMotionVelocity;
+
+    /// \brief Joint error reduction parameter. This is the fraction of the
+    /// joint error that will be attempted to be corrected in each simulation
+    /// step. Allowed values are 0 to 1. Default is usually somewhere between.
     std::optional<typename PolicyT::Scalar> errorReductionParameter;
+
+    /// \brief Maximum velocity that can be used to reduce joint error.
     std::optional<typename PolicyT::Scalar> maxErrorReductionVelocity;
+
+    /// \brief Maximum joint error for which no error reduction is performed.
     std::optional<typename PolicyT::Scalar> maxErrorAllowance;
+
+    /// \brief Constraint force mixing. This should be a non-negative number.
+    /// If greater than 0, this number is added to the diagonal of the system
+    /// matrix making the contact softer and the solution more stable.
     std::optional<typename PolicyT::Scalar> constraintForceMixing;
   };
 
@@ -68,7 +115,9 @@ class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
     /// \brief This callback is called for every detected contact point and
     /// allows customizing properties of the contact surface.
     /// \param _contact[in] The contact object containing contact point,
-    ///                     normal, force etc.
+    ///                     normal, force etc. Please note that the force will
+    ///                     be always zero because the forward step has not yet
+    ///                     been run to compute the force.
     /// \param _numContactsOnCollision[in] Number of contact points on the same
     ///                                    collision object. This can be used
     ///                                    e.g. for force normalization.
