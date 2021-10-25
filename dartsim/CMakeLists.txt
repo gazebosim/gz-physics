@@ -37,6 +37,11 @@ target_link_libraries(${dartsim_plugin}
 # was added to enable these customizations, to detect if the feature is 
 # available.
 include(CheckIncludeFileCXX)
+if (MSVC)
+  set(CMAKE_REQUIRED_FLAGS "/std:c++14")
+else()
+  set(CMAKE_REQUIRED_FLAGS "-std=c++14")
+endif()
 set(CMAKE_REQUIRED_INCLUDES "${DART_INCLUDE_DIRS};${EIGEN3_INCLUDE_DIRS}")
 set(CMAKE_REQUIRED_QUIET false)
 
