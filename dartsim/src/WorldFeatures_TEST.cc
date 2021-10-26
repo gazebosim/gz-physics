@@ -143,7 +143,7 @@ TEST_F(WorldFeaturesFixture, Gravity)
   // initial link pose
   const Eigen::Vector3d initialLinkPosition(0, 0, 2);
   {
-    auto pos = link->FrameDataRelativeToWorld().pose.translation();
+    Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
     EXPECT_PRED_FORMAT2(vectorPredicate10,
                         initialLinkPosition,
                         pos);
@@ -186,7 +186,7 @@ TEST_F(WorldFeaturesFixture, Gravity)
 
   AssertVectorApprox vectorPredicate3(1e-3);
   {
-    auto pos = link->FrameDataRelativeToWorld().pose.translation();
+    Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
     EXPECT_PRED_FORMAT2(vectorPredicate3,
                         Eigen::Vector3d(0.5, 0, 2.5),
                         pos);
