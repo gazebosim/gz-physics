@@ -216,12 +216,12 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
       warnedSecondaryRollingFrictionCoeff = true;
     }
 
-    static bool warnedNormalRollingFrictionCoeff = false;
-    if (!warnedNormalRollingFrictionCoeff && pIgn.normalRollingFrictionCoeff)
+    static bool warnedTorsionalFrictionCoeff = false;
+    if (!warnedTorsionalFrictionCoeff && pIgn.torsionalFrictionCoeff)
     {
-      ignwarn << "DART doesn't support normal rolling friction setting"
+      ignwarn << "DART doesn't support torsional friction setting"
               << std::endl;
-      warnedNormalRollingFrictionCoeff = true;
+      warnedTorsionalFrictionCoeff = true;
     }
   }
 

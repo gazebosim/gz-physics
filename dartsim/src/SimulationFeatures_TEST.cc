@@ -342,7 +342,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       // not implemented in DART yet
       EXPECT_FALSE(_surfaceParams.secondaryRollingFrictionCoeff.has_value());
       // not implemented in DART yet
-      EXPECT_FALSE(_surfaceParams.normalRollingFrictionCoeff.has_value());
+      EXPECT_FALSE(_surfaceParams.torsionalFrictionCoeff.has_value());
       ASSERT_TRUE(_surfaceParams.slipCompliance.has_value());
       ASSERT_TRUE(_surfaceParams.secondarySlipCompliance.has_value());
       ASSERT_TRUE(_surfaceParams.restitutionCoeff.has_value());

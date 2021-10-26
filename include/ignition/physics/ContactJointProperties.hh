@@ -57,8 +57,8 @@ class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
     /// \brief Coefficient of rolling friction along the 2nd friction direction.
     std::optional<typename PolicyT::Scalar> secondaryRollingFrictionCoeff;
 
-    /// \brief Coefficient of rolling friction along the contact normal.
-    std::optional<typename PolicyT::Scalar> normalRollingFrictionCoeff;
+    /// \brief Coefficient of torsional friction.
+    std::optional<typename PolicyT::Scalar> torsionalFrictionCoeff;
 
     /// \brief Force-dependent slip coefficient along the 1st friction
     /// direction.
