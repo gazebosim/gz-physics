@@ -72,6 +72,8 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
   _changedPoses.entries.reserve(this->links.size());
 
   std::unordered_map<std::size_t, math::Pose3d> newPoses;
+  // Store the updated links to avoid duplicated entries in _changedPoses
+  std::unordered_set<std::size_t> updatedLinkIds;
 
   for (const auto &[id, info] : this->links)
   {
@@ -79,11 +81,11 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     if (info)
     {
       const auto nextPose = info->link->GetPose();
-      auto iter = this->prevLinkPoses.find(id);
+      auto iter = this->prevEntityPoses.find(id);
 
       // If the link's pose is new or has changed, save this new pose and
       // add it to the output poses. Otherwise, keep the existing link pose
-      if ((iter == this->prevLinkPoses.end()) ||
+      if ((iter == this->prevEntityPoses.end()) ||
           !iter->second.Pos().Equal(nextPose.Pos(), 1e-6) ||
           !iter->second.Rot().Equal(nextPose.Rot(), 1e-6))
       {
@@ -91,6 +93,7 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
         wp.pose = nextPose;
         wp.body = id;
         _changedPoses.entries.push_back(wp);
+        updatedLinkIds.insert(id);
         newPoses[id] = nextPose;
       }
       else
@@ -98,10 +101,50 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     }
   }
 
+  // Iterate over models to make sure link velocities for moving models
+  // are calculated and sent
+  for (const auto &[id, info] : this->models)
+  {
+    // make sure the model exists
+    if (info)
+    {
+      if (info->model->GetStatic())
+        continue;
+      const auto nextPose = info->model->GetPose();
+      // Note, now prevEntityPoses also contains prevModelPoses
+      // Data structure has been kept to avoid breaking ABI
+      auto iter = this->prevEntityPoses.find(id);
+
+      // If the models's pose is new or has changed, calculate and add all
+      // the children links' poses to the output poses
+      if ((iter == this->prevEntityPoses.end()) ||
+          !iter->second.Pos().Equal(nextPose.Pos(), 1e-6) ||
+          !iter->second.Rot().Equal(nextPose.Rot(), 1e-6))
+      {
+        for (const auto &linkEnt : info->model->GetChildren())
+        {
+          // Avoid pushing if the link was already updated in the previous loop
+          auto linkId = linkEnt.second->GetId();
+          if (updatedLinkIds.find(linkId) == updatedLinkIds.end())
+          {
+            WorldPose wp;
+            wp.pose = linkEnt.second->GetPose();
+            wp.body = linkId;
+            _changedPoses.entries.push_back(wp);
+            updatedLinkIds.insert(linkId);
+          }
+          newPoses[id] = linkEnt.second->GetPose();
+        }
+      }
+      else
+        newPoses[id] = iter->second;
+    }
+  }
+
   // Save the new poses so that they can be used to check for updates in the
-  // next iteration. Re-setting this->prevLinkPoses with the contents of
+  // next iteration. Re-setting this->prevEntityPoses with the contents of
   // newPoses ensures that we aren't caching data for links that were removed
-  this->prevLinkPoses = std::move(newPoses);
+  this->prevEntityPoses = std::move(newPoses);
 }
 
 std::vector<SimulationFeatures::ContactInternal>
