@@ -34,7 +34,7 @@
 #include <ignition/physics/GetEntities.hh>
 #include <ignition/physics/Shape.hh>
 #include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/ContactJointProperties.hh>
+#include <ignition/physics/ContactProperties.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
@@ -50,7 +50,7 @@ struct TestFeatureList : ignition::physics::FeatureList<
     ignition::physics::GetShapeBoundingBox,
     ignition::physics::CollisionFilterMaskFeature,
 #ifdef DART_HAS_CONTACT_SURFACE
-    ignition::physics::SetContactJointPropertiesCallbackFeature,
+    ignition::physics::SetContactPropertiesCallbackFeature,
 #endif
     ignition::physics::sdf::ConstructSdfWorld
 > { };
@@ -63,7 +63,7 @@ using TestExtraContactData = TestWorld::ExtraContactData;
 using TestContact = TestWorld::Contact;
 #ifdef DART_HAS_CONTACT_SURFACE
 using ContactSurfaceParams =
-  ignition::physics::SetContactJointPropertiesCallbackFeature::
+  ignition::physics::SetContactPropertiesCallbackFeature::
     ContactSurfaceParams<TestWorld::Policy>;
 #endif
 
@@ -367,7 +367,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       EXPECT_TRUE(ignition::physics::test::Equal(Eigen::Vector3d(0, 0, 0),
         _surfaceParams.contactSurfaceMotionVelocity.value(), 1e-6));
     };
-    world->AddContactJointPropertiesCallback("test", contactCallback);
+    world->AddContactPropertiesCallback("test", contactCallback);
 #endif
 
     // The first step already has contacts, but the contact force due to the
@@ -398,10 +398,10 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 
 #ifdef DART_HAS_CONTACT_SURFACE
     // removing a non-existing callback yields no error but returns false
-    EXPECT_FALSE(world->RemoveContactJointPropertiesCallback("foo"));
+    EXPECT_FALSE(world->RemoveContactPropertiesCallback("foo"));
 
     // removing an existing callback works and the callback is no longer called
-    EXPECT_TRUE(world->RemoveContactJointPropertiesCallback("test"));
+    EXPECT_TRUE(world->RemoveContactPropertiesCallback("test"));
 
     // Third step
     StepWorld(world);
@@ -424,7 +424,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       // the X value to denote the desired velocity along the friction direction
       _surfaceParams.contactSurfaceMotionVelocity->x() = 1.0;
     };
-    world->AddContactJointPropertiesCallback("test2", contactCallback2);
+    world->AddContactPropertiesCallback("test2", contactCallback2);
 
     numContactCallbackCalls = 0u;
     // Fourth step
@@ -450,7 +450,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       checkContact(contact, false);
     }
 
-    EXPECT_TRUE(world->RemoveContactJointPropertiesCallback("test2"));
+    EXPECT_TRUE(world->RemoveContactPropertiesCallback("test2"));
 #endif
   }
 }

@@ -120,7 +120,7 @@ SimulationFeatures::convertContact(
 }
 
 #ifdef DART_HAS_CONTACT_SURFACE
-void SimulationFeatures::AddContactJointPropertiesCallback(
+void SimulationFeatures::AddContactPropertiesCallback(
   const Identity& _worldID, const std::string& _callbackID,
   SurfaceParamsCallback _callback)
 {
@@ -136,7 +136,7 @@ void SimulationFeatures::AddContactJointPropertiesCallback(
   world->getConstraintSolver()->addContactSurfaceHandler(handler);
 }
 
-bool SimulationFeatures::RemoveContactJointPropertiesCallback(
+bool SimulationFeatures::RemoveContactPropertiesCallback(
   const Identity& _worldID, const std::string& _callbackID)
 {
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
@@ -166,7 +166,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
   if (!this->surfaceParamsCallback)
     return pDart;
 
-  typedef SetContactJointPropertiesCallbackFeature F;
+  typedef SetContactPropertiesCallbackFeature F;
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P> pIgn;
 
@@ -240,7 +240,7 @@ IgnContactSurfaceHandler::createConstraint(
   auto constraint = dart::constraint::ContactSurfaceHandler::createConstraint(
     _contact, _numContactsOnCollisionObject, _timeStep);
 
-  typedef SetContactJointPropertiesCallbackFeature F;
+  typedef SetContactPropertiesCallbackFeature F;
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P>& p = this->lastIgnParams;
 

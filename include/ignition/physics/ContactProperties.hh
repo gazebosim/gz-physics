@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_CONTACTJOINTPROPERTIES_HH_
-#define IGNITION_PHYSICS_CONTACTJOINTPROPERTIES_HH_
+#ifndef IGNITION_PHYSICS_CONTACTPROPERTIES_HH_
+#define IGNITION_PHYSICS_CONTACTPROPERTIES_HH_
 
 #include <string>
 #include <vector>
@@ -31,10 +31,10 @@ namespace ignition
 {
 namespace physics
 {
-/// \brief SetContactJointPropertiesCallbackFeature is a feature for setting the
+/// \brief SetContactPropertiesCallbackFeature is a feature for setting the
 /// properties of a contact joint after it is created but before it affects the
 /// forward step.
-class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
+class IGNITION_PHYSICS_VISIBLE SetContactPropertiesCallbackFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
   /// \brief This struct gets filled by the simulator and contains various
@@ -133,11 +133,11 @@ class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
       > SurfaceParamsCallback;
 
     /// \brief Add the callback.
-    public: void AddContactJointPropertiesCallback(
+    public: void AddContactPropertiesCallback(
       const std::string &_callbackID, SurfaceParamsCallback _callback);
 
     /// \brief Remove the callback.
-    public: bool RemoveContactJointPropertiesCallback(
+    public: bool RemoveContactPropertiesCallback(
       const std::string &_callbackID);
   };
 
@@ -152,13 +152,13 @@ class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
       > SurfaceParamsCallback;
 
     /// \brief Add the callback.
-    public: virtual void AddContactJointPropertiesCallback(
+    public: virtual void AddContactPropertiesCallback(
       const Identity &_worldID,
       const std::string &_callbackID,
       SurfaceParamsCallback _callback) = 0;
 
     /// \brief Remove the callback.
-    public: virtual bool RemoveContactJointPropertiesCallback(
+    public: virtual bool RemoveContactPropertiesCallback(
       const Identity &_worldID, const std::string &_callbackID) = 0;
   };
 };
@@ -166,6 +166,6 @@ class IGNITION_PHYSICS_VISIBLE SetContactJointPropertiesCallbackFeature
 }
 }
 
-#include "ignition/physics/detail/ContactJointProperties.hh"
+#include "ignition/physics/detail/ContactProperties.hh"
 
-#endif /* end of include guard: IGNITION_PHYSICS_CONTACTJOINTPROPERTIES_HH_ */
+#endif /* end of include guard: IGNITION_PHYSICS_CONTACTPROPERTIES_HH_ */

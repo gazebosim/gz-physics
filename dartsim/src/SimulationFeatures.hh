@@ -30,7 +30,7 @@
 
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
-#include <ignition/physics/ContactJointProperties.hh>
+#include <ignition/physics/ContactProperties.hh>
 
 #include "Base.hh"
 
@@ -49,7 +49,7 @@ namespace dartsim {
 struct SimulationFeatureList : FeatureList<
   ForwardStep,
 #ifdef DART_HAS_CONTACT_SURFACE
-  SetContactJointPropertiesCallbackFeature,
+  SetContactPropertiesCallbackFeature,
 #endif
   GetContactsFromLastStepFeature
 > { };
@@ -66,7 +66,7 @@ class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
     size_t _numContactsOnCollisionObject,
     double _timeStep) const override;
 
-  public: typedef SetContactJointPropertiesCallbackFeature Feature;
+  public: typedef SetContactPropertiesCallbackFeature Feature;
   public: typedef Feature::Implementation<FeaturePolicy3d> Impl;
 
   public: Impl::SurfaceParamsCallback surfaceParamsCallback;
@@ -105,12 +105,12 @@ class SimulationFeatures :
     const dart::collision::Contact& _contact) const;
 
 #ifdef DART_HAS_CONTACT_SURFACE
-  public: void AddContactJointPropertiesCallback(
+  public: void AddContactPropertiesCallback(
       const Identity &_worldID,
       const std::string &_callbackID,
       SurfaceParamsCallback _callback) override;
 
-  public: bool RemoveContactJointPropertiesCallback(
+  public: bool RemoveContactPropertiesCallback(
       const Identity &_worldID, const std::string &_callbackID) override;
 
   private: std::unordered_map<

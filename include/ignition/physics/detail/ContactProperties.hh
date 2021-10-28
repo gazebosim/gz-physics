@@ -15,14 +15,14 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_DETAIL_CONTACTJOINTPROPERTIES_HH_
-#define IGNITION_PHYSICS_DETAIL_CONTACTJOINTPROPERTIES_HH_
+#ifndef IGNITION_PHYSICS_DETAIL_CONTACTPROPERTIES_HH_
+#define IGNITION_PHYSICS_DETAIL_CONTACTPROPERTIES_HH_
 
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <ignition/physics/ContactJointProperties.hh>
+#include <ignition/physics/ContactProperties.hh>
 
 namespace ignition
 {
@@ -31,8 +31,8 @@ namespace physics
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-void SetContactJointPropertiesCallbackFeature::World<PolicyT, FeaturesT>::
-  AddContactJointPropertiesCallback(
+void SetContactPropertiesCallbackFeature::World<PolicyT, FeaturesT>::
+  AddContactPropertiesCallback(
     const std::string &_callbackID,
     SurfaceParamsCallback _callback)
 {
@@ -83,18 +83,18 @@ void SetContactJointPropertiesCallbackFeature::World<PolicyT, FeaturesT>::
       };
   }
 
-  this->template Interface<SetContactJointPropertiesCallbackFeature>()
-    ->AddContactJointPropertiesCallback(
+  this->template Interface<SetContactPropertiesCallbackFeature>()
+    ->AddContactPropertiesCallback(
       this->identity, _callbackID, callbackInternal);
 }
 
 /////////////////////////////////////////////////
 template<typename PolicyT, typename FeaturesT>
-bool SetContactJointPropertiesCallbackFeature::World<PolicyT, FeaturesT>::
-  RemoveContactJointPropertiesCallback(const std::string& _callbackID)
+bool SetContactPropertiesCallbackFeature::World<PolicyT, FeaturesT>::
+  RemoveContactPropertiesCallback(const std::string& _callbackID)
 {
-  return this->template Interface<SetContactJointPropertiesCallbackFeature>()->
-    RemoveContactJointPropertiesCallback(this->identity, _callbackID);
+  return this->template Interface<SetContactPropertiesCallbackFeature>()->
+    RemoveContactPropertiesCallback(this->identity, _callbackID);
 }
 
 }  // namespace physics
