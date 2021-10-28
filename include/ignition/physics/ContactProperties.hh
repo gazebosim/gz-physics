@@ -32,7 +32,7 @@ namespace ignition
 namespace physics
 {
 /// \brief SetContactPropertiesCallbackFeature is a feature for setting the
-/// properties of a contact joint after it is created but before it affects the
+/// properties of a contact after it is created but before it affects the
 /// forward step.
 class IGNITION_PHYSICS_VISIBLE SetContactPropertiesCallbackFeature
     : public virtual FeatureWithRequirements<ForwardStep>
@@ -107,8 +107,6 @@ class IGNITION_PHYSICS_VISIBLE SetContactPropertiesCallbackFeature
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
-    public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
-
     public: using ShapePtrType = typename GetContactsFromLastStepFeature
       ::World<PolicyT, FeaturesT>::ShapePtrType;
 
