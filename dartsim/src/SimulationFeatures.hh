@@ -18,11 +18,29 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
 #define IGNITION_PHYSICS_DARTSIM_SRC_SIMULATIONFEATURES_HH_
 
+#include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
+
+#include <dart/config.hpp>
+#ifdef DART_HAS_CONTACT_SURFACE
+#include <dart/constraint/ContactSurface.hpp>
+#endif
+
 #include <ignition/physics/ForwardStep.hh>
 #include <ignition/physics/GetContacts.hh>
+#include <ignition/physics/ContactProperties.hh>
 
 #include "Base.hh"
+
+namespace dart
+{
+namespace collision
+{
+class Contact;
+}
+}
 
 namespace ignition {
 namespace physics {
@@ -30,13 +48,50 @@ namespace dartsim {
 
 struct SimulationFeatureList : FeatureList<
   ForwardStep,
+#ifdef DART_HAS_CONTACT_SURFACE
+  SetContactPropertiesCallbackFeature,
+#endif
   GetContactsFromLastStepFeature
 > { };
+
+#ifdef DART_HAS_CONTACT_SURFACE
+class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
+{
+  public: dart::constraint::ContactSurfaceParams createParams(
+    const dart::collision::Contact& _contact,
+    size_t _numContactsOnCollisionObject) const override;
+
+  public: dart::constraint::ContactConstraintPtr createConstraint(
+    dart::collision::Contact& _contact,
+    size_t _numContactsOnCollisionObject,
+    double _timeStep) const override;
+
+  public: typedef SetContactPropertiesCallbackFeature Feature;
+  public: typedef Feature::Implementation<FeaturePolicy3d> Impl;
+
+  public: Impl::SurfaceParamsCallback surfaceParamsCallback;
+
+  public: std::function<
+  std::optional<Impl::ContactImpl>(const dart::collision::Contact&)
+  > convertContact;
+
+  public: mutable typename Feature::ContactSurfaceParams<FeaturePolicy3d>
+  lastIgnParams;
+};
+
+using IgnContactSurfaceHandlerPtr = std::shared_ptr<IgnContactSurfaceHandler>;
+#endif
 
 class SimulationFeatures :
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
+  public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
+    ::ContactInternal;
+
+  public: SimulationFeatures() = default;
+  public: ~SimulationFeatures() override = default;
+
   public: void WorldForwardStep(
       const Identity &_worldID,
       ForwardStep::Output &_h,
@@ -45,6 +100,22 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
+
+  private: std::optional<ContactInternal> convertContact(
+    const dart::collision::Contact& _contact) const;
+
+#ifdef DART_HAS_CONTACT_SURFACE
+  public: void AddContactPropertiesCallback(
+      const Identity &_worldID,
+      const std::string &_callbackID,
+      SurfaceParamsCallback _callback) override;
+
+  public: bool RemoveContactPropertiesCallback(
+      const Identity &_worldID, const std::string &_callbackID) override;
+
+  private: std::unordered_map<
+    std::string, IgnContactSurfaceHandlerPtr> contactSurfaceHandlers;
+#endif
 };
 
 }
