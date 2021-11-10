@@ -2,7 +2,10 @@
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
 
-### Ignition Physics 2.5.0 (2021-10-28)
+### Ignition Physics 2.5.0 (2021-11-09)
+
+1. Remove unused ign_auto_headers.hh.in
+    * [Pull request #305](https://github.com/ignitionrobotics/ign-physics/pull/305)
 
 1. Added DART feature for setting joint limits dynamically.
     * [Pull request #260](https://github.com/ignitionrobotics/ign-physics/pull/260)
