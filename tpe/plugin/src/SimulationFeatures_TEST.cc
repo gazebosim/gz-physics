@@ -70,7 +70,7 @@ using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 using TestModelPtr = ignition::physics::Model3dPtr<TestFeatureList>;
 using TestLinkPtr = ignition::physics::Link3dPtr<TestFeatureList>;
 using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
-using ContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
+using TestContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
 
 std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
@@ -613,7 +613,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 
     for (auto &contact : contacts)
     {
-      const auto &contactPoint = contact.Get<ContactPoint>();
+      const auto &contactPoint = contact.Get<TestContactPoint>();
       ASSERT_TRUE(contactPoint.collision1);
       ASSERT_TRUE(contactPoint.collision2);
       EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
@@ -683,7 +683,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     contactBoxEllipsoid = 0u;
     for (auto contact : contacts)
     {
-      const auto &contactPoint = contact.Get<::ContactPoint>();
+      const auto &contactPoint = contact.Get<::TestContactPoint>();
       ASSERT_TRUE(contactPoint.collision1);
       ASSERT_TRUE(contactPoint.collision2);
       EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
