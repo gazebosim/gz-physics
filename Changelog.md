@@ -2,6 +2,24 @@
 
 ### Ignition Physics 3.x.x (20XX-XX-XX)
 
+### Ignition Physics 3.4.0 (2021-11-11)
+
+1. Remove unused ign_auto_headers.hh.in
+    * [Pull request #305](https://github.com/ignitionrobotics/ign-physics/pull/305)
+
+1. Added DART feature for setting joint limits dynamically.
+    * [Pull request #260](https://github.com/ignitionrobotics/ign-physics/pull/260)
+
+1. Allow customization of contact surface properties
+    * [Pull request #267](https://github.com/ignitionrobotics/ign-physics/pull/267)
+
+1. [dartsim] Add support for joint frame semantics
+    * [Pull request #288](https://github.com/ignitionrobotics/ign-physics/pull/288)
+
+1. Infrastructure
+    * [Pull request #281](https://github.com/ignitionrobotics/ign-physics/pull/281)
+    * [Pull request #287](https://github.com/ignitionrobotics/ign-physics/pull/287)
+
 ### Ignition Physics 3.3.0 (2021-07-12)
 
 1. Use slip compliance API's available in upstream dartsim release
