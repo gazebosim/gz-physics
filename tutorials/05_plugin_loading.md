@@ -13,11 +13,11 @@ plugin using \ref ignition::physics "Ignition Physics" API.
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsplugin "Understand physics plugin"
+- \ref physicsplugin "Understanding the physics plugin"
 
 ## Write a simple loader
 
-We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics2/examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics3/examples/hello_world_loader) folder.
+We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics/examples](https://github.com/ignitionrobotics/ign-physics/tree/main/examples/hello_world_loader) folder.
 
 First, create a workspace for the example plugin loader.
 
@@ -41,7 +41,7 @@ be used in our code. After the `std` C++ libraries are the `Loader.hh` and
 and plugin pointers. Next includes from \ref ignition::physics are the tools for
 retrieving \ref ignition::physics::Feature "Feature" and
 \ref ignition::physics::Entity "Entity" from physics plugins (please refer to
-\ref physicsplugin "Understand Physics Plugin" tutorial for their
+\ref physicsplugin "Understanding the physics plugin" tutorial for their
 design concepts).
 
 \snippet examples/hello_world_loader/hello_world_loader.cc include statements
@@ -55,8 +55,7 @@ available in the path using @ref ignition::plugin::Loader::Instantiate member
 function. Then for each instantiated plugin, using
 @ref ignition::physics::RequestEngine3d<Features>::From, it will request an
 engine implementing a \ref ignition::physics::FeaturePolicy "FeaturePolicy" (3D
-  in this case).
-.
+ in this case).
 
 \snippet examples/hello_world_loader/hello_world_loader.cc main
 
@@ -67,7 +66,21 @@ lines for finding `ign-plugin` and `ign-physics` dependencies in Citadel release
 After that, add the executable pointing to our file and add linking library so
 that `cmake` can compile it.
 
-\include examples/hello_world_loader/CMakeLists.txt
+[//]: # (TODO: \include does not work with .txt extension for some reason, so manually pasting this file: \include examples/hello_world_loader/CMakeLists.txt)
+```cmake
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+
+set(IGN_PLUGIN_VER 1)
+find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
+
+set(IGN_PHYSICS_VER 6)
+find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
+
+add_executable(hello_world_loader hello_world_loader.cc)
+target_link_libraries(hello_world_loader
+  ignition-plugin${IGN_PLUGIN_VER}::loader
+  ignition-physics${IGN_PHYSICS_VER}::ignition-physics${IGN_PHYSICS_VER})
+```
 
 If you find CMake syntax difficult to understand, take a look at the official tutorial [here](https://cmake.org/cmake/help/latest/guide/tutorial/index.html).
 

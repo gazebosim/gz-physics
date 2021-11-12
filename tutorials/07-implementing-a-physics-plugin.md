@@ -7,8 +7,8 @@ This tutorial shows how to develop a simple plugin that implements a
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsplugin "Understand physics plugin"
-- \ref loadplugin "Load physics plugin"
+- \ref physicsplugin "Understanding the physics plugin"
+- \ref pluginloading "Loading physics plugins"
 
 ## Write a simple physics plugin
 
@@ -44,7 +44,7 @@ Next, we use a dummy namespace `mock` and list all the features we would like to
 
 The plugin will be able to return its physics engine metadata.
 We will now implement our plugin class named `HelloWorldPlugin`
-using the defined \ref ignition::physics::FeatureList `FeatureList` above.
+using the defined \ref ignition::physics::FeatureList "FeatureList" above.
 The class is inherited from \ref ignition::physics::Implements3d "Implements3d"
 to declare that the plugin's `HelloWorldFeatureList` will be in the 3D
 coordinate system.
@@ -53,11 +53,11 @@ coordinate system.
 
 Because we are not using a real physics engines, a dummy
 physics engines is defined inside member function `InitiateEngine` by simply setting the `engineName` to `HelloWorld`,
-and returning the engine object using \ref ignition::physics::Identity. Then, we
+and returning the engine object using `Identity`. Then, we
 define the metadata getters `GetEngineIndex` and `GetEngineName` for the
 feature \ref ignition::physics::GetEngineInfo "GetEngineInfo" (please look into
 corresponding public member functions defined in the subclasses). A list of other
-pre-defined features are can be found in the [`GetEntities` FeatureList](https://ignitionrobotics.org/api/physics/2.0/GetEntities_8hh.html).
+pre-defined features can be found in the [`GetEntities` FeatureList](https://ignitionrobotics.org/api/physics/2.0/GetEntities_8hh.html).
 
 Finally, we only have to register our plugin in Ignition Physics as a physics
 engine by:
@@ -76,7 +76,21 @@ plugin provides, i.e. `HelloWorldFeatureList`
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `ign-plugin` and `ign-physics` dependencies for the Fortress release:
 
-\snippet examples/hello_world_plugin/CMakeLists.txt
+[//]: # (TODO: \include does not work with .txt extension for some reason, so manually pasting this file: \include examples/hello_world_plugin/CMakeLists.txt)
+```cmake
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+
+set(IGN_PLUGIN_VER 1)
+find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
+
+set(IGN_PHYSICS_VER 6)
+find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
+
+add_library(HelloWorldPlugin SHARED HelloWorldPlugin.cc)
+target_link_libraries(HelloWorldPlugin
+  PRIVATE
+    ignition-physics${IGN_PHYSICS_VER}::ignition-physics${IGN_PHYSICS_VER})
+```
 
 ## Build and run
 
@@ -104,7 +118,7 @@ and `HelloWorldPlugin.dll` on Windows.
 
 ### Test loading the plugin on Linux
 
-Please first follow the \ref loadplugin "Load physics plugin" tutorial
+Please first follow the \ref pluginloading "Loading physics plugins" tutorial
 to create a simple loader. Then we test our plugin using the loader as follow:
 
 ```bash
