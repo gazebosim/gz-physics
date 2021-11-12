@@ -2,6 +2,26 @@
 
 ### Ignition Physics 5.x.x (20XX-XX-XX)
 
+### Ignition Physics 5.1.0 (2021-11-12)
+
+1. Remove unused ign_auto_headers.hh.in
+    * [Pull request #305](https://github.com/ignitionrobotics/ign-physics/pull/305)
+
+1. Added DART feature for setting joint limits dynamically.
+    * [Pull request #260](https://github.com/ignitionrobotics/ign-physics/pull/260)
+
+1. Allow customization of contact surface properties
+    * [Pull request #267](https://github.com/ignitionrobotics/ign-physics/pull/267)
+
+1. Avoid `auto` usage in Eigen expressions.
+    * [Pull request #301](https://github.com/ignitionrobotics/ign-physics/pull/301)
+
+1. Fix cmake script for bullet
+    * [Pull request #297](https://github.com/ignitionrobotics/ign-physics/pull/297)
+
+1. Improved README.md folder structure
+    * [Pull request #295](https://github.com/ignitionrobotics/ign-physics/pull/295)
+
 ### Ignition Physics 5.0.0 (2021-09-30)
 
 1. Add GetJointTransmittedWrench feature
