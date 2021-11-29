@@ -42,7 +42,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
   public: explicit Model(std::size_t _id);
 
   /// \brief Destructor
-  public: ~Model();
+  public: virtual ~Model();
 
   /// \brief Add a link
   /// \return Newly created Link

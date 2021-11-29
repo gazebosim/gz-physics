@@ -163,7 +163,165 @@ void JointFeatures::SetJointVelocityCommand(
   {
     joint->setActuatorType(dart::dynamics::Joint::SERVO);
   }
+  // warn about bug https://github.com/dartsim/dart/issues/1583
+  if ((joint->getPositionLowerLimit(_dof) > -1e16 ||
+       joint->getPositionUpperLimit(_dof) < 1e16 ) &&
+      (!std::isfinite(joint->getForceUpperLimit(_dof)) ||
+       !std::isfinite(joint->getForceLowerLimit(_dof))))
+  {
+    static bool informed = false;
+    if (!informed)
+    {
+      ignerr  << "Velocity control does not respect positional limits of "
+              << "joints if these joints do not have an effort limit. Please, "
+              << "set min and max effort for joint [" << joint->getName()
+              << "] to values about -1e6 and 1e6 (or higher if working with "
+              << "heavy links)." << std::endl;
+      informed = true;
+    }
+  }
+
   joint->setCommand(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinPosition(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    ignerr << "Invalid minimum joint position value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+  joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
+  // We do not check min/max mismatch, we leave that to DART.
+  joint->setPositionLowerLimit(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxPosition(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    ignerr << "Invalid maximum joint position value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+  joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
+  // We do not check min/max mismatch, we leave that to DART.
+  joint->setPositionUpperLimit(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinVelocity(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    ignerr << "Invalid minimum joint velocity value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+  joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
+  // We do not check min/max mismatch, we leave that to DART.
+  joint->setVelocityLowerLimit(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxVelocity(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    ignerr << "Invalid maximum joint velocity value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+  joint->setLimitEnforcement(true);
+#else
+  joint->setPositionLimitEnforced(true);
+#endif
+  // We do not check min/max mismatch, we leave that to DART.
+  joint->setVelocityUpperLimit(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinEffort(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    ignerr << "Invalid minimum joint effort value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+  // We do not check min/max mismatch, we leave that to DART.
+  joint->setForceLowerLimit(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxEffort(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    ignerr << "Invalid maximum joint effort value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+  // We do not check min/max mismatch, we leave that to DART.
+  joint->setForceUpperLimit(_dof, _value);
 }
 
 /////////////////////////////////////////////////
@@ -487,6 +645,33 @@ Identity JointFeatures::AttachPrismaticJoint(
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
+/////////////////////////////////////////////////
+Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
+    const Identity &_id) const
+{
+  auto &joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  auto *childBn = joint->getChildBodyNode();
+  if (nullptr == childBn)
+  {
+    ignerr
+        << "Joint [" << joint->getName()
+        << "] does not have a child link. Unable to get transmitted wrench.\n";
+    return {};
+  }
+
+  const Eigen::Vector6d transmittedWrenchInBody = childBn->getBodyForce();
+  // C - Child body frame
+  // J - Joint frame
+  // X_CJ - Pose of joint in child body frame
+  const Eigen::Isometry3d X_CJ = joint->getTransformFromChildBodyNode();
+
+  const Eigen::Vector6d transmittedWrenchInJoint =
+      dart::math::dAdT(X_CJ, transmittedWrenchInBody);
+  Wrench3d wrenchOut;
+  wrenchOut.torque = transmittedWrenchInJoint.head<3>();
+  wrenchOut.force = transmittedWrenchInJoint.tail<3>();
+  return wrenchOut;
+}
 }
 }
 }

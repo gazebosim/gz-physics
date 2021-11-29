@@ -142,6 +142,7 @@ namespace ignition
       template <typename, std::size_t> struct VectorSpace;
       template <typename, std::size_t> struct FrameSpace;
       template <typename, std::size_t> struct AABBSpace;
+      template <typename, std::size_t> struct WrenchSpace;
       // TODO(MXG): We can add more spaces to support other types like Moments
       // of Inertia, Jacobians, Spatial Velocities/Accelerations, Wrench+Point
       // pairs, and so on.
@@ -204,6 +205,12 @@ namespace ignition
     using RelativeFrameData = RelativeQuantity<
         FrameData<Scalar, Dim>, Dim, detail::FrameSpace<Scalar, Dim>>;
     IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeFrameData)
+
+    /////////////////////////////////////////////////
+    template <typename Scalar, std::size_t Dim>
+    using RelativeWrench = RelativeQuantity<
+        Wrench<Scalar, Dim>, Dim, detail::WrenchSpace<Scalar, Dim>>;
+    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeWrench)
   }
 }
 

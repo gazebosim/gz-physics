@@ -22,6 +22,7 @@
 #include <utility>
 
 #include <ignition/physics/RelativeQuantity.hh>
+#include "ignition/physics/Geometry.hh"
 
 namespace ignition
 {
@@ -828,6 +829,83 @@ namespace ignition
           return resultFrameData;
         }
       };
+
+      /////////////////////////////////////////////////
+      /// \brief WrenchSpace
+      template <typename _Scalar, std::size_t _Dim>
+      struct WrenchSpace
+      {
+        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Wrench<_Scalar, _Dim>)
+        using AngularVectorSpace = VectorSpace<_Scalar, (_Dim*(_Dim-1))/2>;
+        using LinearVectorSpace = VectorSpace<_Scalar, _Dim>;
+        using Op = Operator<_Scalar, _Dim>;
+
+        public: static Quantity ResolveToWorldFrame(
+            const Quantity &_wrench,
+            const FrameDataType &_parentFrame)
+        {
+          Quantity result;
+
+          result.torque = AngularVectorSpace::ResolveToWorldFrame(
+                              _wrench.torque, _parentFrame) +
+                          Op::Cross(_parentFrame.pose.translation(),
+                                    LinearVectorSpace::ResolveToWorldFrame(
+                                        _wrench.force, _parentFrame));
+
+          result.force = LinearVectorSpace::ResolveToWorldFrame(_wrench.force,
+                                                                _parentFrame);
+
+          return result;
+        }
+
+        public: static Quantity ResolveToTargetFrame(
+            const Quantity &_wrench,
+            const FrameDataType &_parentFrame,
+            const FrameDataType &_targetFrame)
+        {
+          Quantity result;
+
+          LinearVector3d momentArmInTarget =
+              (_targetFrame.pose.inverse() * _parentFrame.pose).translation();
+
+          result.torque =
+              AngularVectorSpace::ResolveToTargetFrame(
+                  _wrench.torque, _parentFrame, _targetFrame) +
+              Op::Cross(momentArmInTarget,
+                        LinearVectorSpace::ResolveToTargetFrame(
+                            _wrench.force, _parentFrame, _targetFrame));
+
+          result.force = LinearVectorSpace::ResolveToTargetFrame(
+              _wrench.force, _parentFrame, _targetFrame);
+          return result;
+        }
+
+        public: static Quantity ResolveToWorldCoordinates(
+            const Quantity &_wrench,
+            const RotationType &_currentCoordinates)
+        {
+          Quantity result;
+          result.torque = AngularVectorSpace::ResolveToWorldCoordinates(
+              _wrench.torque, _currentCoordinates);
+          result.force = LinearVectorSpace::ResolveToWorldCoordinates(
+              _wrench.force, _currentCoordinates);
+          return result;
+        }
+
+        public: static Quantity ResolveToTargetCoordinates(
+            const Quantity &_wrench,
+            const RotationType &_currentCoordinates,
+            const RotationType &_targetCoordinates)
+        {
+          Quantity result;
+          result.torque = AngularVectorSpace::ResolveToTargetCoordinates(
+              _wrench.torque, _currentCoordinates, _targetCoordinates);
+          result.force = LinearVectorSpace::ResolveToTargetCoordinates(
+              _wrench.force, _currentCoordinates, _targetCoordinates);
+          return result;
+        }
+      };
+
     }
   }
 }

@@ -70,7 +70,7 @@ using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
 using TestModelPtr = ignition::physics::Model3dPtr<TestFeatureList>;
 using TestLinkPtr = ignition::physics::Link3dPtr<TestFeatureList>;
 using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
-using ContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
+using TestContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
 
 std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
@@ -450,17 +450,28 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 
+    StepWorld(world, true);
+
     freeGroup->SetWorldPose(
       ignition::math::eigen3::convert(
         ignition::math::Pose3d(0, 0, 2, 0, 0, 0)));
     freeGroup->SetWorldLinearVelocity(
-      ignition::math::eigen3::convert(ignition::math::Vector3d(0.5, 0, 0.1)));
+      ignition::math::eigen3::convert(ignition::math::Vector3d(0.1, 0.2, 0.3)));
     freeGroup->SetWorldAngularVelocity(
-      ignition::math::eigen3::convert(ignition::math::Vector3d(0.1, 0.2, 0)));
+      ignition::math::eigen3::convert(ignition::math::Vector3d(0.4, 0.5, 0.6)));
 
     auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
     EXPECT_EQ(ignition::math::Pose3d(0, 0, 2, 0, 0, 0),
               ignition::math::eigen3::convert(frameData.pose));
+
+    // Step the world
+    StepWorld(world, false);
+    // Check that the first link's velocities are updated
+    frameData = model->GetLink(0)->FrameDataRelativeToWorld();
+    EXPECT_EQ(ignition::math::Vector3d(0.1, 0.2, 0.3),
+              ignition::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(ignition::math::Vector3d(0.4, 0.5, 0.6),
+              ignition::math::eigen3::convert(frameData.angularVelocity));
   }
 }
 
@@ -602,7 +613,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 
     for (auto &contact : contacts)
     {
-      const auto &contactPoint = contact.Get<ContactPoint>();
+      const auto &contactPoint = contact.Get<TestContactPoint>();
       ASSERT_TRUE(contactPoint.collision1);
       ASSERT_TRUE(contactPoint.collision2);
       EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
@@ -672,7 +683,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     contactBoxEllipsoid = 0u;
     for (auto contact : contacts)
     {
-      const auto &contactPoint = contact.Get<::ContactPoint>();
+      const auto &contactPoint = contact.Get<::TestContactPoint>();
       ASSERT_TRUE(contactPoint.collision1);
       ASSERT_TRUE(contactPoint.collision2);
       EXPECT_NE(contactPoint.collision1, contactPoint.collision2);

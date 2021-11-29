@@ -27,10 +27,13 @@
 #include <ignition/plugin/Loader.hh>
 #include <ignition/physics/RequestEngine.hh>
 
+#include <ignition/math/Angle.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
 // Features
+#include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/ForwardStep.hh>
+#include <ignition/physics/FreeGroup.hh>
 #include <ignition/physics/FreeJoint.hh>
 #include <ignition/physics/FixedJoint.hh>
 #include <ignition/physics/GetEntities.hh>
@@ -45,6 +48,7 @@
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
+#include "ignition/physics/Geometry.hh"
 #include "test/Utils.hh"
 
 using namespace ignition;
@@ -56,13 +60,20 @@ using TestFeatureList = ignition::physics::FeatureList<
   physics::SetJointTransformFromParentFeature,
   physics::ForwardStep,
   physics::FreeJointCast,
+  physics::SetFreeGroupWorldPose,
   physics::GetBasicJointState,
   physics::GetEntities,
+  physics::GetJointTransmittedWrench,
+  physics::JointFrameSemantics,
+  physics::LinkFrameSemantics,
   physics::RevoluteJointCast,
   physics::SetBasicJointState,
   physics::SetJointVelocityCommandFeature,
   physics::sdf::ConstructSdfModel,
-  physics::sdf::ConstructSdfWorld
+  physics::sdf::ConstructSdfWorld,
+  physics::SetJointPositionLimitsFeature,
+  physics::SetJointVelocityLimitsFeature,
+  physics::SetJointEffortLimitsFeature
 >;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
@@ -104,7 +115,7 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
   ASSERT_NE(nullptr, dartWorld);
 
   const dart::dynamics::SkeletonPtr skeleton =
-      dartWorld->getSkeleton(modelName);
+    dartWorld->getSkeleton(modelName);
   ASSERT_NE(nullptr, skeleton);
 
   const auto *dartBaseLink = skeleton->getBodyNode("base");
@@ -162,6 +173,475 @@ TEST_F(JointFeaturesFixture, JointSetCommand)
     EXPECT_NEAR(0.0, dartBaseLink->getWorldTransform().translation().z(), 1e-3);
   }
 }
+
+TEST_F(JointFeaturesFixture, JointSetPositionLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinPosition(0, pos - 0.1);
+  joint->SetMaxPosition(0, pos + 0.1);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-3);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos - 0.1, joint->GetPosition(0), 1e-3);
+
+  joint->SetMinPosition(0, pos - 0.5);
+  joint->SetMaxPosition(0, pos + 0.5);
+
+  for (std::size_t i = 0; i < 300; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.5, joint->GetPosition(0), 1e-2);
+
+  for (std::size_t i = 0; i < 300; ++i)
+  {
+    joint->SetForce(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos - 0.5, joint->GetPosition(0), 1e-2);
+
+  joint->SetMinPosition(0, -math::INF_D);
+  joint->SetMaxPosition(0, math::INF_D);
+  joint->SetPosition(0, pos);
+
+  for (std::size_t i = 0; i < 300; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos + 0.5, joint->GetPosition(0));
+}
+
+#if DART_VERSION_AT_LEAST(6, 10, 0)
+TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  joint->SetMinVelocity(0, -0.25);
+  joint->SetMaxVelocity(0, 0.5);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.5, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, -1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.25, joint->GetVelocity(0), 1e-6);
+
+  // set minimum velocity above zero
+  joint->SetMinVelocity(0, 0.25);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 0);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.25, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    // make sure the minimum velocity is kept even without velocity commands
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.25, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinVelocity(0, -0.25);
+  joint->SetPosition(0, 0);
+  joint->SetVelocity(0, 0);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 0);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinVelocity(0, -math::INF_D);
+  joint->SetMaxVelocity(0, math::INF_D);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(0.5, joint->GetVelocity(0));
+}
+
+TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-3);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-3);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffort(0, -80);
+  joint->SetMaxEffort(0, 80);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos, joint->GetPosition(0));
+  EXPECT_LT(0, joint->GetVelocity(0));
+
+  joint->SetMinEffort(0, -math::INF_D);
+  joint->SetMaxEffort(0, math::INF_D);
+  joint->SetPosition(0, 0);
+  joint->SetVelocity(0, 0);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos, joint->GetPosition(0));
+  EXPECT_LT(0, joint->GetVelocity(0));
+}
+
+TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithForceControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinPosition(0, pos - 0.1);
+  joint->SetMaxPosition(0, pos + 0.1);
+  joint->SetMinVelocity(0, -0.25);
+  joint->SetMaxVelocity(0, 0.5);
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffort(0, -500);
+  joint->SetMaxEffort(0, 1000);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  // 0.05 because we go 0.1 s with max speed 0.5
+  EXPECT_NEAR(pos + 0.05, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0.5, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 200; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetPosition(0, pos);
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+
+  joint->SetMinVelocity(0, -1);
+  joint->SetMaxVelocity(0, 1);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
+  EXPECT_NEAR(1, joint->GetVelocity(0), 1e-6);
+
+  joint->SetPosition(0, pos);
+  EXPECT_NEAR(pos, joint->GetPosition(0), 1e-2);
+
+  joint->SetMinPosition(0, -1e6);
+  joint->SetMaxPosition(0, 1e6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetForce(0, 1000);
+    world->Step(output, state, input);
+  }
+  EXPECT_LT(pos + 0.1, joint->GetPosition(0));
+  EXPECT_NEAR(1, joint->GetVelocity(0), 1e-6);
+}
+
+// TODO(anyone): position limits do not work very well with velocity control
+// bug https://github.com/dartsim/dart/issues/1583
+// resolved in DART 6.11.0
+TEST_F(JointFeaturesFixture, DISABLED_JointSetPositionLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  const std::string modelName{"simple_joint_test"};
+  const std::string jointName{"j1"};
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+
+  auto model = world->GetModel(modelName);
+  auto joint = model->GetJoint(jointName);
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  world->Step(output, state, input);
+
+  auto pos = joint->GetPosition(0);
+
+  joint->SetMinPosition(0, pos - 0.1);
+  joint->SetMaxPosition(0, pos + 0.1);
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+
+    if (i % 500 == 499)
+    {
+      EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
+      EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+    }
+  }
+}
+
+TEST_F(JointFeaturesFixture, JointSetVelocityLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  joint->SetMinVelocity(0, -0.1);
+  joint->SetMaxVelocity(0, 0.1);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.1, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, 0.1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0.1, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, -0.025);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.025, joint->GetVelocity(0), 1e-6);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.1, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinVelocity(0, -math::INF_D);
+  joint->SetMaxVelocity(0, math::INF_D);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(1, joint->GetVelocity(0), 1e-6);
+}
+
+TEST_F(JointFeaturesFixture, JointSetEffortLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffort(0, -80);
+  joint->SetMaxEffort(0, 80);
+
+  for (std::size_t i = 0; i < 100; ++i)
+  {
+    joint->SetVelocityCommand(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-1, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffort(0, -math::INF_D);
+  joint->SetMaxEffort(0, math::INF_D);
+
+  for (std::size_t i = 0; i < 10; ++i)
+  {
+    joint->SetVelocityCommand(0, -100);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-100, joint->GetVelocity(0), 1e-6);
+}
+
+TEST_F(JointFeaturesFixture, JointSetCombinedLimitsWithVelocityControl)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.Load(TEST_WORLD_DIR "test.world");
+  ASSERT_TRUE(errors.empty()) << errors.front();
+
+  auto world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+  auto model = world->GetModel("simple_joint_test");
+  auto joint = model->GetJoint("j1");
+
+  // Test joint velocity command
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+
+  joint->SetMinVelocity(0, -0.5);
+  joint->SetMaxVelocity(0, 0.5);
+  joint->SetMinEffort(0, -1e-6);
+  joint->SetMaxEffort(0, 1e-6);
+
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetVelocityCommand(0, 1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+
+  joint->SetMinEffort(0, -1e6);
+  joint->SetMaxEffort(0, 1e6);
+
+  for (std::size_t i = 0; i < 1000; ++i)
+  {
+    joint->SetVelocityCommand(0, -1);
+    world->Step(output, state, input);
+  }
+  EXPECT_NEAR(-0.5, joint->GetVelocity(0), 1e-6);
+}
+#endif
 
 // Test detaching joints.
 TEST_F(JointFeaturesFixture, JointDetach)
@@ -582,6 +1062,335 @@ TEST_F(JointFeaturesFixture, JointAttachDetachSpawnedModel)
   // Expect both bodies to remain in contact with the ground with zero velocity.
   EXPECT_NEAR(0.0, dartBody1->getLinearVelocity().z(), 1e-3);
   EXPECT_NEAR(0.0, dartBody2->getLinearVelocity().z(), 1e-3);
+}
+
+class JointTransmittedWrenchFixture : public JointFeaturesFixture
+{
+  public: using WorldPtr = physics::World3dPtr<TestFeatureList>;
+  public: using ModelPtr = physics::Model3dPtr<TestFeatureList>;
+  public: using JointPtr = physics::Joint3dPtr<TestFeatureList>;
+  public: using LinkPtr = physics::Link3dPtr<TestFeatureList>;
+  public: using Vector3d = physics::Vector3d;
+  public: using Wrench3d = physics::Wrench3d;
+
+  protected: void SetUp() override
+  {
+    JointFeaturesFixture::SetUp();
+    sdf::Root root;
+    const sdf::Errors errors =
+        root.Load(TEST_WORLD_DIR "pendulum_joint_wrench.sdf");
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    this->world = this->engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, this->world);
+
+    this->model = this->world->GetModel("pendulum");
+    ASSERT_NE(nullptr, this->model);
+    this->motorJoint = this->model->GetJoint("motor_joint");
+    ASSERT_NE(nullptr, this->motorJoint);
+    this->sensorJoint = this->model->GetJoint("sensor_joint");
+    ASSERT_NE(nullptr, this->sensorJoint);
+    this->armLink = this->model->GetLink("arm");
+    ASSERT_NE(nullptr, this->armLink);
+  }
+
+  public: void Step(int _iters)
+  {
+    for (int i = 0; i < _iters; ++i)
+    {
+      this->world->Step(this->output, this->state, this->input);
+    }
+  }
+
+  public: physics::ForwardStep::Output output;
+  public: physics::ForwardStep::State state;
+  public: physics::ForwardStep::Input input;
+  public: WorldPtr world;
+  public: ModelPtr model;
+  public: JointPtr motorJoint;
+  public: JointPtr sensorJoint;
+  public: LinkPtr armLink;
+
+  // From SDFormat file
+  static constexpr double kGravity = 9.8;
+  static constexpr double kArmLinkMass = 6.0;
+  static constexpr double kSensorLinkMass = 0.4;
+  // MOI in the z-axis
+  static constexpr double kSensorLinkMOI = 0.02;
+  static constexpr double kArmLength = 1.0;
+};
+
+TEST_F(JointTransmittedWrenchFixture , PendulumAtZeroAngle)
+{
+  namespace test = physics::test;
+
+  // Run a few steps for the constraint forces to stabilize
+  this->Step(10);
+
+  // Test wrench expressed in different frames
+  {
+    auto wrenchAtMotorJoint = this->motorJoint->GetTransmittedWrench();
+    Wrench3d expectedWrenchAtMotorJoint{
+        Vector3d::Zero(), {-kGravity * (kArmLinkMass + kSensorLinkMass), 0, 0}};
+
+    EXPECT_TRUE(
+        test::Equal(expectedWrenchAtMotorJoint, wrenchAtMotorJoint, 1e-4));
+  }
+  {
+    auto wrenchAtMotorJointInWorld = this->motorJoint->GetTransmittedWrench(
+        this->motorJoint->GetFrameID(), physics::FrameID::World());
+    Wrench3d expectedWrenchAtMotorJointInWorld{
+        Vector3d::Zero(), {0, 0, kGravity * (kArmLinkMass + kSensorLinkMass)}};
+
+    EXPECT_TRUE(test::Equal(expectedWrenchAtMotorJointInWorld,
+                            wrenchAtMotorJointInWorld, 1e-4));
+  }
+  {
+    auto wrenchAtMotorJointInArm = this->motorJoint->GetTransmittedWrench(
+        this->armLink->GetFrameID(), this->armLink->GetFrameID());
+    // The arm frame is rotated by 90° in the Y-axis of the joint frame.
+    Wrench3d expectedWrenchAtMotorJointInArm{
+        Vector3d::Zero(), {0, 0, kGravity * (kArmLinkMass + kSensorLinkMass)}};
+
+    EXPECT_TRUE(test::Equal(expectedWrenchAtMotorJointInArm,
+                            wrenchAtMotorJointInArm, 1e-4));
+  }
+}
+
+TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
+{
+  namespace test = physics::test;
+  // Start pendulum at 90° (parallel to the ground) and stop at about 40°
+  // so that we have non-trivial test expectations.
+  this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+  this->Step(350);
+
+  // Given the position (θ), velocity (ω), and acceleration (α) of the joint
+  // and distance from the joint to the COM (r), the reaction forces in
+  // the tangent direction (Ft) and normal direction (Fn) are given by:
+  //
+  // Ft =  m * α * r + (m * g * sin(θ)) = m * (α * r + g * sin(θ))
+  // Fn = -m * ω² * r - (m * g * cos(θ)) = -m * (ω² * r +  g * cos(θ))
+  {
+    const double theta = this->motorJoint->GetPosition(0);
+    const double omega = this->motorJoint->GetVelocity(0);
+    // In order to get the math to work out, we need to use the joint
+    // acceleration and transmitted wrench from the current time step with the
+    // joint position and velocity from the previous time step. That is, we need
+    // the position and velocity before they are integrated.
+    this->Step(1);
+    const double alpha = this->motorJoint->GetAcceleration(0);
+
+    auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
+
+    const double armTangentForce =
+        kArmLinkMass * ((alpha * kArmLength / 2.0) + (kGravity * sin(theta)));
+
+    const double motorLinkTangentForce =
+        kSensorLinkMass * kGravity * sin(theta);
+
+    const double armNormalForce =
+        -kArmLinkMass *
+        ((std::pow(omega, 2) * kArmLength / 2.0) + (kGravity * cos(theta)));
+
+    const double motorLinkNormalForce =
+        -kSensorLinkMass * kGravity * cos(theta);
+
+    const double tangentForce = armTangentForce + motorLinkTangentForce;
+    const double normalForce = armNormalForce + motorLinkNormalForce;
+
+    // The orientation of the joint frame is such that the normal force is
+    // parallel to the x-axis and the tangent force is parallel to the y-axis.
+    Wrench3d expectedWrenchAtMotorJointInJoint{
+        Vector3d::Zero(), {normalForce, tangentForce, 0}};
+
+    EXPECT_TRUE(test::Equal(expectedWrenchAtMotorJointInJoint,
+                            wrenchAtMotorJointInJoint, 1e-4));
+  }
+
+  // Test Wrench expressed in different frames
+  {
+    auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
+    // This is just a rotation of the wrench to be expressed in the world's
+    // coordinate frame
+    auto wrenchAtMotorJointInWorld = this->motorJoint->GetTransmittedWrench(
+        this->motorJoint->GetFrameID(), physics::FrameID::World());
+    // The joint frame is rotated by 90° along the world's y-axis
+    Eigen::Quaterniond R_WJ =
+        Eigen::AngleAxisd(IGN_PI_2, Eigen::Vector3d(0, 1, 0)) *
+        Eigen::AngleAxisd(this->motorJoint->GetPosition(0),
+                          Eigen::Vector3d(0, 0, 1));
+
+    Wrench3d expectedWrenchAtMotorJointInWorld{
+        Vector3d::Zero(), R_WJ * wrenchAtMotorJointInJoint.force};
+    EXPECT_TRUE(test::Equal(expectedWrenchAtMotorJointInWorld,
+                            wrenchAtMotorJointInWorld, 1e-4));
+
+    // This moves the point of application and changes the coordinate frame
+    Wrench3d wrenchAtArmInArm = this->motorJoint->GetTransmittedWrench(
+        armLink->GetFrameID(), armLink->GetFrameID());
+
+    // Notation: arm link (A), joint (J)
+    Eigen::Isometry3d X_AJ;
+    // Pose of joint (J) in arm link (A) as specified in the SDFormat file.
+    X_AJ = Eigen::AngleAxisd(IGN_PI_2, Eigen::Vector3d(0, 1, 0));
+    X_AJ.translation() = Vector3d(0, 0, kArmLength / 2.0);
+    Wrench3d expectedWrenchAtArmInArm;
+
+    expectedWrenchAtArmInArm.force =
+        X_AJ.linear() * wrenchAtMotorJointInJoint.force;
+
+    expectedWrenchAtArmInArm.torque =
+        X_AJ.linear() * wrenchAtMotorJointInJoint.torque +
+        X_AJ.translation().cross(expectedWrenchAtArmInArm.force);
+
+    EXPECT_TRUE(test::Equal(expectedWrenchAtArmInArm, wrenchAtArmInArm, 1e-4));
+  }
+}
+
+// Compare wrench at the motor joint with wrench from the sensor joint (a
+// fixed joint measuring only constraint forces).
+TEST_F(JointTransmittedWrenchFixture, ValidateWrenchWithSecondaryJoint)
+{
+  namespace test = physics::test;
+  // Start pendulum at 90° (parallel to the ground) and stop at about 40°
+  // so that we have non-trivial test expectations.
+  this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+  this->Step(350);
+  const double theta = this->motorJoint->GetPosition(0);
+  // In order to get the math to work out, we need to use the joint
+  // acceleration and transmitted wrench from the current time step with the
+  // joint position and velocity from the previous time step. That is, we need
+  // the position and velocity before they are integrated.
+  this->Step(1);
+  const double alpha = this->motorJoint->GetAcceleration(0);
+
+  auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
+  auto wrenchAtSensorInSensor = this->sensorJoint->GetTransmittedWrench();
+
+  // Since sensor_link has moment of inertia, the fixed joint will transmit a
+  // torque necessary to rotate the sensor. This is not detected by the motor
+  // joint because no force is transmitted along the revolute axis. On the
+  // other hand, the mass of sensor_link will contribute to the constraint
+  // forces on the motor joint, but these won't be detected by the sensor
+  // joint.
+  Vector3d expectedTorqueDiff{0, 0, kSensorLinkMOI * alpha};
+  Vector3d expectedForceDiff{-kSensorLinkMass * kGravity * cos(theta),
+                             kSensorLinkMass * kGravity * sin(theta), 0};
+
+  Vector3d torqueDiff =
+      wrenchAtMotorJointInJoint.torque - wrenchAtSensorInSensor.torque;
+  Vector3d forceDiff =
+      wrenchAtMotorJointInJoint.force - wrenchAtSensorInSensor.force;
+  EXPECT_TRUE(test::Equal(expectedTorqueDiff, torqueDiff, 1e-4));
+  EXPECT_TRUE(test::Equal(expectedForceDiff, forceDiff, 1e-4));
+}
+
+// Check that the transmitted wrench is affected by joint friction, stiffness
+// and damping
+TEST_F(JointTransmittedWrenchFixture, JointLosses)
+{
+  // Get DART joint pointer to set joint friction, damping, etc.
+  auto dartWorld = this->world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+  auto dartModel = dartWorld->getSkeleton(this->model->GetIndex());
+  ASSERT_NE(nullptr, dartModel);
+  auto dartJoint = dartModel->getJoint(this->motorJoint->GetIndex());
+  ASSERT_NE(nullptr, dartJoint);
+
+  // Joint friction
+  {
+    this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+    this->motorJoint->SetVelocity(0, 0);
+    const double kFrictionCoef = 0.5;
+    dartJoint->setCoulombFriction(0, kFrictionCoef);
+    this->Step(10);
+    auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
+    EXPECT_NEAR(kFrictionCoef, wrenchAtMotorJointInJoint.torque.z(), 1e-4);
+    dartJoint->setCoulombFriction(0, 0.0);
+  }
+
+  // Joint damping
+  {
+    this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+    this->motorJoint->SetVelocity(0, 0);
+    const double kDampingCoef = 0.2;
+    dartJoint->setDampingCoefficient(0, kDampingCoef);
+    this->Step(100);
+    const double omega = this->motorJoint->GetVelocity(0);
+    this->Step(1);
+    auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
+    EXPECT_NEAR(-omega * kDampingCoef, wrenchAtMotorJointInJoint.torque.z(),
+                1e-3);
+    dartJoint->setDampingCoefficient(0, 0.0);
+  }
+
+  // Joint stiffness
+  {
+    // Note: By default, the spring reference position is 0.
+    this->motorJoint->SetPosition(0, IGN_DTOR(30.0));
+    this->motorJoint->SetVelocity(0, 0);
+    const double kSpringStiffness = 0.7;
+    dartJoint->setSpringStiffness(0, kSpringStiffness);
+    this->Step(1);
+    const double theta = this->motorJoint->GetPosition(0);
+    this->Step(1);
+    auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
+    EXPECT_NEAR(-theta * kSpringStiffness, wrenchAtMotorJointInJoint.torque.z(),
+                1e-3);
+    dartJoint->setSpringStiffness(0, 0.0);
+  }
+}
+
+// Check that the transmitted wrench is affected by contact forces
+TEST_F(JointTransmittedWrenchFixture, ContactForces)
+{
+  auto box = this->world->GetModel("box");
+  ASSERT_NE(nullptr, box);
+  auto boxFreeGroup = box->FindFreeGroup();
+  ASSERT_NE(nullptr, boxFreeGroup);
+  physics::Pose3d X_WB(Eigen::Translation3d(0, 1, 1));
+  boxFreeGroup->SetWorldPose(X_WB);
+
+  this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+  // After this many steps, the pendulum is in contact with the box
+  this->Step(1000);
+  const double theta = this->motorJoint->GetPosition(0);
+  // Sanity check that the pendulum is at rest
+  EXPECT_NEAR(0.0, this->motorJoint->GetVelocity(0), 1e-3);
+
+  auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
+
+  // To compute the reaction forces, we consider the pivot on the contact point
+  // between the pendulum and the box and the fact that the sum of moments about
+  // the pivot is zero. We also note that all forces, including the reaction
+  // forces, are in the vertical (world's z-axis) direction.
+  //
+  // Notation:
+  // Fp_z: Reaction force at pendulum joint (pin) in the world's z-axis
+  // M_b: Moment about the contact point between box and pendulum
+  //
+  // Fp_z = √(Fn² + Ft²) // Since all of the reaction force is in the world's
+  // z-axis
+  //
+  // ∑M_b = 0 = -Fp_z * sin(θ) * (2*r) + m₁*g*sin(θ)*r + m₂*g*sin(θ)*(2*r)
+  //
+  // Fp_z = 0.5 * g * (m₁ + 2*m₂)
+  //
+  // We can then compute the tangential (Ft) and normal (Fn) components as
+  //
+  // Ft =  Fp_z * sin(θ)
+  // Fn = -Fp_z * cos(θ)
+
+  const double reactionForceAtP =
+      0.5 * kGravity * (kArmLinkMass + 2 * kSensorLinkMass);
+
+  Wrench3d expectedWrenchAtMotorJointInJoint{
+      Vector3d::Zero(),
+      {-reactionForceAtP * cos(theta), reactionForceAtP * sin(theta), 0}};
+
+  EXPECT_TRUE(physics::test::Equal(expectedWrenchAtMotorJointInJoint,
+                                   wrenchAtMotorJointInJoint, 1e-4));
 }
 
 /////////////////////////////////////////////////

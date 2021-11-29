@@ -217,6 +217,19 @@ namespace ignition
 
         return result;
       }
+
+      /////////////////////////////////////////////////
+      template <typename Scalar, std::size_t Dim>
+      bool Equal(const Wrench<Scalar, Dim> &_data1,
+                 const Wrench<Scalar, Dim> &_data2,
+                 const double _tolerance)
+      {
+        bool result = true;
+        result &= Equal(_data1.torque, _data2.torque, _tolerance, "torque");
+        result &= Equal(_data1.force, _data2.force, _tolerance, "force");
+
+        return result;
+      }
     }
   }
 }

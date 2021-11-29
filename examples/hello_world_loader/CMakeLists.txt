@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(IGN_PLUGIN_VER 1)
 find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
 
-set(IGN_PHYSICS_VER 4)
+set(IGN_PHYSICS_VER 5)
 find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
 
 add_executable(hello_world_loader hello_world_loader.cc)

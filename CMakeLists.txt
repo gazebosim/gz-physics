@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics4 VERSION 4.2.0)
+project(ignition-physics5 VERSION 5.1.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -14,7 +14,6 @@ find_package(ignition-cmake2 2.8.0 REQUIRED)
 # Configure the project
 #============================================================================
 ign_configure_project(VERSION_SUFFIX)
-
 
 #============================================================================
 # Set project-specific options
@@ -61,7 +60,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat11 VERSION 11.2.2
+ign_find_package(sdformat12
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------

@@ -71,10 +71,10 @@ a plugin.
 - The third argument is the `FeatureList`, specifying all the features that this
 plugin provides, i.e. `HelloWorldFeatureList`
 
-### Setup CMakeLists.txt for building (Version: Citadel, ign-physics2)
+### Setup CMakeLists.txt for building (Version: ign-physics5)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies for the Citadel release:
+lines for finding `ign-plugin` and `ign-physics` dependencies for the Fortress release:
 
 \snippet examples/hello_world_plugin/CMakeLists.txt
 
@@ -118,3 +118,4 @@ And you will see the engine info of our plugin:
 Testing plugin: mock::HelloWorldPlugin
   engine name: HelloWorld
 ```
+

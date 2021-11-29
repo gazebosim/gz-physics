@@ -56,6 +56,13 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     {
       auto link = linkIt->second->link;
       data.pose = math::eigen3::convert(link->GetWorldPose());
+      auto modelId = link->GetParent()->GetId();
+      auto modelPtr = this->models.find(modelId)->second->model;
+      math::Pose3d parentWorldPose = modelPtr->GetWorldPose();
+      data.linearVelocity = math::eigen3::convert(parentWorldPose.Rot().Inverse() *
+          link->GetLinearVelocity() + modelPtr->GetLinearVelocity());
+      data.angularVelocity = math::eigen3::convert(parentWorldPose.Rot().Inverse() *
+          link->GetAngularVelocity() + modelPtr->GetAngularVelocity());
     }
     else
     {

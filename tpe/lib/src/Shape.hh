@@ -69,7 +69,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
   public: Shape();
 
   /// \brief Destructor
-  public: ~Shape() = default;
+  public: virtual ~Shape() = default;
 
   /// \brief Get bounding box of shape
   /// \return Shape's bounding box
@@ -98,12 +98,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
   /// \brief Constructor
   public: BoxShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: BoxShape(const BoxShape &_other);
-
   /// \brief Destructor
-  public: ~BoxShape();
+  public: virtual ~BoxShape() = default;
 
   /// \brief Assignment operator
   /// \param[in] _other shape to copy from
@@ -175,12 +171,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
   /// \brief Constructor
   public: CylinderShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: CylinderShape(const CylinderShape &_other);
-
   /// \brief Destructor
-  public: ~CylinderShape() = default;
+  public: virtual ~CylinderShape() = default;
 
   /// \brief Assignment operator
   /// \param[in] _other shape to copy from
@@ -252,12 +244,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
   /// \brief Constructor
   public: SphereShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: SphereShape(const SphereShape &_other);
-
   /// \brief Destructor
-  public: ~SphereShape() = default;
+  public: virtual ~SphereShape() = default;
 
   /// \brief Assignment operator
   /// \param[in] _other shape to copy from
@@ -284,12 +272,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
   /// \brief Constructor
   public: MeshShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: MeshShape(const MeshShape &_other);
-
   /// \brief Destructor
-  public: ~MeshShape() = default;
+  public: virtual ~MeshShape() = default;
 
   /// \brief Assignment operator
   /// \param[in] _other shape to copy from
