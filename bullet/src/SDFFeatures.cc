@@ -248,9 +248,7 @@ static void CreateJoint(RootModel* _rootModel,
   // Parent link
   auto parentSdf = vertices.at(_parentId).get().Data();
   auto parentSdfPose = ResolveSdfPose(parentSdf.SemanticPose());
-  // auto parentInertial = parentSdf.Inertial().Pose();
   auto parentPose = _rootModel->sdfPose * parentSdfPose;
-  // auto parentCOMPose = parentPose * parentInertial;
 
   // Pivot pose
   auto jointSdfPose = ResolveSdfPose(jointSdf.SemanticPose());
@@ -259,14 +257,6 @@ static void CreateJoint(RootModel* _rootModel,
   auto parentComToThisPivotOffset =
       convertVec(ignition::math::eigen3::convert(pivotPoseInParentFrame.Pos()));
   auto rotParentToThis = convertQuat(pivotPoseInParentFrame.Rot().Inverse());
-
-  /*
-    X_WP,
-    p_Pp = X_PW * p_Wp = (X_WP)-1 * p_Wp;
-    p_pC = p_pW * X_WC
-    p_Wp = X_WC * p_Cp
-    p_pa = p_pC * p_Ca
-  */
 
   auto childCOMPoseFromPivot = pivotPose.Inverse() * childPose;
   _rootModel->vertexIdToLinkPoseFromPivot[_childId] =
