@@ -274,23 +274,25 @@ static void CreateJoint(RootModel* _rootModel,
   auto thisPivotToThisComOffset =
       convertVec(ignition::math::eigen3::convert(childCOMPoseFromPivot.Pos()));
 
+  auto& multibody = std::get<btMultiBody>(_rootModel->body);
+
   if (type == ::sdf::JointType::REVOLUTE) {
     auto axisVec = childCOMPoseFromPivot.Rot().RotateVector(
         jointSdfPose.Rot().RotateVector(jointSdf.Axis(0)->Xyz()));
     auto axis = convertVec(math::eigen3::convert(axisVec));
-    _rootModel->multibody->setupRevolute(
+    multibody.setupRevolute(
         childLinkIndex, childMass, childInertia, parentLinkIndex,
         rotParentToThis, axis, parentComToThisPivotOffset,
         thisPivotToThisComOffset, true);
   } else if (type == ::sdf::JointType::FIXED) {
-    _rootModel->multibody->setupFixed(childLinkIndex, childMass, childInertia,
+    multibody.setupFixed(childLinkIndex, childMass, childInertia,
                                       parentLinkIndex, rotParentToThis,
                                       parentComToThisPivotOffset,
                                       thisPivotToThisComOffset, true);
   } else {
     ignerr << "Joint type not supported\n";
   }
-  _rootModel->multibody->finalizeMultiDof();
+  multibody.finalizeMultiDof();
 }
 
 /////////////////////////////////////////////////
@@ -355,10 +357,11 @@ static void CreateCollision(RootModel* _rootModel,
       auto shapePtr = shape.get();
       _rootModel->collisionShapes.push_back(std::move(shape));
 
-      // TODO(joxoby): store this a as unique ptr
-      if (_rootModel->multibody) {
+      if (std::holds_alternative<btMultiBody>(_rootModel->body)) {
+        auto& multibody = std::get<btMultiBody>(_rootModel->body);
+        // TODO(joxoby): store this a as unique ptr
         auto btCollision =
-            new btMultiBodyLinkCollider(_rootModel->multibody.get(), linkIndex);
+            new btMultiBodyLinkCollider(&multibody, linkIndex);
         btCollision->setCollisionShape(shapePtr);
 
         // Collison pose
@@ -367,23 +370,24 @@ static void CreateCollision(RootModel* _rootModel,
         auto localPos =
             convertVec(ignition::math::eigen3::convert(localPose.Pos()));
         auto localRot = convertQuat(localPose.Rot());
-        auto pos = _rootModel->multibody->localPosToWorld(linkIndex, localPos);
-        auto mat = _rootModel->multibody->localFrameToWorld(
+        auto pos = multibody.localPosToWorld(linkIndex, localPos);
+        auto mat = multibody.localFrameToWorld(
             linkIndex, btMatrix3x3(localRot));
         btTransform tr(mat, pos);
         btCollision->setWorldTransform(tr);
 
         if (linkIndex == -1) {
-          _rootModel->multibody->setBaseCollider(btCollision);
+          multibody.setBaseCollider(btCollision);
         } else {
-          _rootModel->multibody->getLink(linkIndex).m_collider = btCollision;
+          multibody.getLink(linkIndex).m_collider = btCollision;
         }
         // TODO(joxoby): More than one collision shape
         // TODO(joxoby): 2, 1 + 2 ??
         _rootModel->world->addCollisionObject(btCollision, 1, 1 + 2);
       } else {
         // Model with just one link
-        _rootModel->body->setCollisionShape(shapePtr);
+        auto& body = std::get<btRigidBody>(_rootModel->body);
+        body.setCollisionShape(shapePtr);
         // _rootModel->body->forceActivationState(DISABLE_DEACTIVATION);
         // _rootModel->body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
       }
@@ -402,10 +406,11 @@ static void CreateCollision(RootModel* _rootModel,
       gImpactMeshShape->setMargin(0.001); // To avoid zero vector normalization
       gImpactMeshShape->updateBound();
 
-      if (_rootModel->multibody) {
+      if (std::holds_alternative<btMultiBody>(_rootModel->body)) {
+        auto& multibody = std::get<btMultiBody>(_rootModel->body);
         // TODO(joxoby): store this a unique ptr
         auto btCollision =
-            new btMultiBodyLinkCollider(_rootModel->multibody.get(), linkIndex);
+            new btMultiBodyLinkCollider(&multibody, linkIndex);
         btCollision->setCollisionShape(gImpactMeshShape);
 
         // Collison pose
@@ -413,21 +418,22 @@ static void CreateCollision(RootModel* _rootModel,
         auto shapePose = ignition::math::eigen3::convert(localPose) * collisionPose;
         auto localPos = convertVec(shapePose.translation());
         auto localRot = convertMat(shapePose.linear());
-        auto pos = _rootModel->multibody->localPosToWorld(linkIndex, localPos);
-        auto mat = _rootModel->multibody->localFrameToWorld(linkIndex, btMatrix3x3(localRot));
+        auto pos = multibody.localPosToWorld(linkIndex, localPos);
+        auto mat = multibody.localFrameToWorld(linkIndex, btMatrix3x3(localRot));
         btTransform tr(mat, pos);
         btCollision->setWorldTransform(tr);
 
         if (linkIndex == -1) {
-          _rootModel->multibody->setBaseCollider(btCollision);
+          multibody.setBaseCollider(btCollision);
         } else {
-          _rootModel->multibody->getLink(linkIndex).m_collider = btCollision;
+          multibody.getLink(linkIndex).m_collider = btCollision;
         }
         // TODO(joxoby): More than one collision shape
         _rootModel->world->addCollisionObject(btCollision, 1, 1 + 2);
       }
       else {
-        _rootModel->body->setCollisionShape(gImpactMeshShape);
+        auto& body = std::get<btRigidBody>(_rootModel->body);
+        body.setCollisionShape(gImpactMeshShape);
       }
     }
   }
@@ -439,7 +445,7 @@ void SDFFeatures::ConstructSdfMultibody(const Identity& _modelID) {
   auto rootModel = model->rootModel;
 
   // Return if the root model was already constructed for this model
-  if (rootModel->multibody or rootModel->body) {
+  if (!std::holds_alternative<std::monostate>(rootModel->body)) {
     return;
   }
 
@@ -473,11 +479,11 @@ void SDFFeatures::ConstructSdfMultibody(const Identity& _modelID) {
     }
 
     // Construct btMultiBody using base link
-    rootModel->multibody = std::make_unique<btMultiBody>(
+    auto& multibody = rootModel->body.emplace<btMultiBody>(
         nLinks - 1, baseMass, baseInertia, isStatic, canSleep);
 
     // Set the pose
-    rootModel->multibody->setBaseWorldTransform(baseLinkPose);
+    multibody.setBaseWorldTransform(baseLinkPose);
 
     // Setup all joints and child links
     auto edges = rootModel->skeleton.Edges();
@@ -493,16 +499,16 @@ void SDFFeatures::ConstructSdfMultibody(const Identity& _modelID) {
       CreateCollision(rootModel, vertexId);
     }
 
-    rootModel->multibody->finalizeMultiDof();
-    rootModel->world->addMultiBody(rootModel->multibody.get());
+    multibody.finalizeMultiDof();
+    rootModel->world->addMultiBody(&multibody);
   } else {
     auto motionState = new btDefaultMotionState(baseLinkPose);
     auto mass = isStatic ? .0 : baseMass;
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
         mass, motionState, nullptr, baseInertia);
-    rootModel->body = std::make_unique<btRigidBody>(rbInfo);
+    auto& body = rootModel->body.emplace<btRigidBody>(rbInfo);
     CreateCollision(rootModel, baseId);
-    rootModel->world->addRigidBody(rootModel->body.get());
+    rootModel->world->addRigidBody(&body);
   }
 }
 

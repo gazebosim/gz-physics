@@ -33,7 +33,8 @@ double JointFeatures::GetJointPosition(const Identity& _id,
                                        const std::size_t /* _dof */) const {
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  return joint->rootModel->multibody->getJointPos(jointIndex);
+  auto& multibody = std::get<btMultiBody>(joint->rootModel->body);
+  return multibody.getJointPos(jointIndex);
 }
 
 /////////////////////////////////////////////////
@@ -41,7 +42,8 @@ double JointFeatures::GetJointVelocity(const Identity& _id,
                                        const std::size_t /*_dof */) const {
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  return joint->rootModel->multibody->getJointVel(jointIndex);
+  auto& multibody = std::get<btMultiBody>(joint->rootModel->body);
+  return multibody.getJointVel(jointIndex);
 }
 
 /////////////////////////////////////////////////
@@ -55,7 +57,8 @@ double JointFeatures::GetJointForce(const Identity& _id,
                                     const std::size_t /*_dof*/) const {
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  return joint->rootModel->multibody->getJointTorque(jointIndex);
+  auto& multibody = std::get<btMultiBody>(joint->rootModel->body);
+  return multibody.getJointTorque(jointIndex);
 }
 
 /////////////////////////////////////////////////
@@ -72,7 +75,8 @@ void JointFeatures::SetJointPosition(const Identity& _id,
   (void) _dof;
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  joint->rootModel->multibody->setJointPos(jointIndex, _value);
+  auto& multibody = std::get<btMultiBody>(joint->rootModel->body);
+  multibody.setJointPos(jointIndex, _value);
 }
 
 /////////////////////////////////////////////////
@@ -82,7 +86,8 @@ void JointFeatures::SetJointVelocity(const Identity& _id,
   (void) _dof;
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  joint->rootModel->multibody->setJointVel(jointIndex, _value);
+  auto& multibody = std::get<btMultiBody>(joint->rootModel->body);
+  multibody.setJointVel(jointIndex, _value);
 }
 
 /////////////////////////////////////////////////
@@ -102,7 +107,8 @@ void JointFeatures::SetJointForce(const Identity& _id,
   (void) _dof;
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  joint->rootModel->multibody->addJointTorque(jointIndex, _value);
+  auto& multibody = std::get<btMultiBody>(joint->rootModel->body);
+  multibody.addJointTorque(jointIndex, _value);
 }
 
 /////////////////////////////////////////////////
@@ -112,7 +118,8 @@ void JointFeatures::SetJointVelocityCommand(const Identity& _id,
   (void) _dof;
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  joint->rootModel->multibody->setJointVel(jointIndex, _value);
+  auto& multibody = std::get<btMultiBody>(joint->rootModel->body);
+  multibody.setJointVel(jointIndex, _value);
 }
 
 /////////////////////////////////////////////////

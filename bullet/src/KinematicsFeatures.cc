@@ -42,8 +42,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   auto linkID = _id.ID();
   auto link = std::get<Link*>(this->entities.at(linkID));
 
-  if (link->rootModel->multibody) {
-    auto& multibody = link->rootModel->multibody;
+  if (std::holds_alternative<btMultiBody>(link->rootModel->body)) {
+    auto& multibody = std::get<btMultiBody>(link->rootModel->body);
     auto linkNumber = link->rootModel->vertexIdToLinkIndex.at(link->vertexId);
 
     auto localPose =
@@ -53,14 +53,14 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
         convertVec(ignition::math::eigen3::convert(localPose.Pos()));
     auto localRot = convertQuat(localPose.Rot());
 
-    auto pos = multibody->localPosToWorld(linkNumber, localPos);
-    auto mat = multibody->localFrameToWorld(linkNumber, btMatrix3x3(localRot));
+    auto pos = multibody.localPosToWorld(linkNumber, localPos);
+    auto mat = multibody.localFrameToWorld(linkNumber, btMatrix3x3(localRot));
     data.pose.translation() = convert(pos);
     data.pose.linear() = convert(mat);
 
   } else {
-    auto& body = link->rootModel->body;
-    auto pose = body->getWorldTransform();
+    auto& body = std::get<btRigidBody>(link->rootModel->body);
+    auto pose = body.getWorldTransform();
     data.pose.translation() = convert(pose.getOrigin());
     data.pose.linear() = convert(pose.getBasis());
   }

@@ -100,9 +100,14 @@ struct RootModel {
   std::string name;
   bool isStatic;
   math::Pose3d sdfPose;
+
+  // A model can either be single-link or multi-link. We represent a single-link model with
+  // an instance of btRigidBody and a multi-link model with an instance of btMultiBody.
+  // Since we don't know a priori what type of model this will be, the std::variant object
+  // is initialized with a std::monostate type.
+  std::variant<std::monostate, btMultiBody, btRigidBody> body;
+
   math::graph::DirectedGraph<::sdf::Link, ::sdf::Joint> skeleton;
-  std::unique_ptr<btMultiBody> multibody;
-  std::unique_ptr<btRigidBody> body;
   btMultiBodyDynamicsWorld* world;
   std::unordered_map<math::graph::VertexId, int> vertexIdToLinkIndex;
   std::unordered_map<math::graph::EdgeId, int> edgeIdToJointIndex;
