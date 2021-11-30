@@ -72,7 +72,6 @@ void JointFeatures::SetJointPosition(const Identity& _id,
   (void) _dof;
   auto joint = std::get<Joint*>(this->entities.at(_id));
   auto jointIndex = joint->rootModel->edgeIdToJointIndex.at(joint->edgeId);
-  // TODO(joxoby): negative value?
   joint->rootModel->multibody->setJointPos(jointIndex, _value);
 }
 

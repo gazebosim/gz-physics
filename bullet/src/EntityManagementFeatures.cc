@@ -118,17 +118,9 @@ bool EntityManagementFeatures::RemoveNestedModelByIndex(
     std::size_t _nestedModelIndex) {
   (void) _modelID;
   (void) _nestedModelIndex;
+  // Removing a nested model is not supported since it requires the deconstruction
+  // of a btMultiBody instance.
   return false;
-  // auto model = std::get<Model*>(this->entities.at(_modelID));
-  // auto& nestedModels = model->models;
-
-  // if (_nestedModelIndex >= nestedModels.size()) {
-  //   return false;
-  // }
-
-  // nestedModels.erase(nestedModels.begin() + _nestedModelIndex);
-
-  // return true;
 }
 
 /////////////////////////////////////////////////
@@ -137,23 +129,9 @@ bool EntityManagementFeatures::RemoveNestedModelByName(
     const std::string& _modelName) {
   (void) _modelID;
   (void) _modelName;
+  // Removing a nested model is not supported since it requires the deconstruction
+  // of a btMultiBody instance.
   return false;
-  // auto model = std::get<Model*>(this->entities.at(_modelID));
-  // auto& nestedModels = model->models;
-
-  // auto it = std::find_if(nestedModels.begin(), nestedModels.end(),
-  //                        [&](auto& nestedModel) -> bool {
-  //                          return nestedModel->name == _modelName;
-  //                        });
-
-  // if (it == nestedModels.end()) {
-  //   // The model to remove was not found
-  //   return false;
-  // }
-
-  // nestedModels.erase(it);
-
-  // return true;
 }
 
 }  // namespace bullet
