@@ -57,6 +57,7 @@ ign_find_package(EIGEN3 REQUIRED)
 # Find SDFormat for the SDF features
 ign_find_package(sdformat10
   REQUIRED_BY sdf dartsim tpe bullet)
+set(SDFORMAT_VER ${sdformat10_VERSION_MAJOR})
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
