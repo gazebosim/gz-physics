@@ -136,7 +136,6 @@ will not run at the same time when requested.
 
 With the requirements and restrictions above, we first need to define a feature template for the custom feature. In this case, this feature will be responsible for retrieving world pointer from the physics engine. The template is placed in [World.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/dartsim/include/ignition/physics/dartsim/World.hh):
 
-[//]: # (TODO: snippet does not render for some reason)
 \snippet dartsim/include/ignition/physics/dartsim/World.hh feature template
 
 The `RetrieveWorld` feature retrieves
@@ -174,7 +173,6 @@ implement the `RetrieveWorld` feature function using Dartsim API.
 After defining the feature template, we can add it to a custom
 \ref ignition::physics::FeatureList "FeatureList":
 
-[//]: # (TODO: snippet does not render for some reason)
 \snippet dartsim/src/CustomFeatures.hh add to list
 
 The custom feature `RetrieveWorld` is added to `CustomFeatureList`, other custom
@@ -189,7 +187,6 @@ custom feature with \ref ignition::physics::FeaturePolicy3d "FeaturePolicy3d"
 We will then implement the actual function with Dartsim API in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/CustomFeatures.cc) to override the member function
 declared in the custom feature header file:
 
-[//]: # (TODO: snippet does not render for some reason)
 \snippet dartsim/src/CustomFeatures.cc implementation
 
 Here, we implement the behavior of `GetDartsimWorld` with Dartsim API to return the
