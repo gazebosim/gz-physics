@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics3 VERSION 3.4.0)
+project(ignition-physics3 VERSION 3.4.1)
 
 #============================================================================
 # Find ignition-cmake
