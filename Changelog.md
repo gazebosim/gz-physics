@@ -1,6 +1,9 @@
 ## Ignition Physics 3.x
 
-### Ignition Physics 3.x.x (20XX-XX-XX)
+### Ignition Physics 3.4.1 (2021-12-20)
+
+1. Link to sdformat10 cmake target instead of legacy cmake variable
+    * [Pull request #314](https://github.com/ignitionrobotics/ign-physics/pull/314)
 
 ### Ignition Physics 3.4.0 (2021-11-11)
 
