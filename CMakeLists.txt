@@ -61,16 +61,85 @@ set(SDFORMAT_VER ${sdformat10_VERSION_MAJOR})
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
-ign_find_package(DART
-  COMPONENTS
-    collision-ode
-    utils
-    utils-urdf
-  EXTRA_ARGS CONFIG
-  VERSION 6.9
-  REQUIRED_BY dartsim
-  PKGCONFIG dart
-  PKGCONFIG_VER_COMPARISON >=)
+
+# respect user explicit values and also provide a default value for Ubuntu Focal
+# to make ground vehicles to work properly
+set(DEFAULT_VENDOR_DART OFF)
+if(NOT DEFINED USE_VENDOR_DART)
+    find_program(LSB_RELEASE_EXEC lsb_release)
+
+    if(LSB_RELEASE_EXEC)
+      execute_process(COMMAND ${LSB_RELEASE_EXEC} -rs
+        OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+      if(LSB_RELEASE_ID_SHORT STREQUAL  "20.04")
+        message(STATUS "DETECTED Ubuntu 20.04, default USE_VENDOR_DART set to "
+                       "ON to make ground vehicles to work properly")
+        set(DEFAULT_VENDOR_DART ON)
+      endif()
+  endif()
+endif()
+
+option(USE_VENDOR_DART "Use internal Open Robotics fork of DART" ${DEFAULT_VENDOR_DART})
+
+find_program(LSB_RELEASE_EXEC lsb_release)
+if(USE_VENDOR_DART)
+    include(ExternalProject)
+
+    set(DART_VENDOR_INSTALL_DIR ${CMAKE_BINARY_DIR}/vendor/dart/install)
+    set(DART_VENDOR_INCLUDE_DIRS "${DART_VENDOR_INSTALL_DIR}/include")
+    set(DART_VENDOR_LIBRARY_DIR "${DART_VENDOR_INSTALL_DIR}/lib")
+    # Three libraries needed
+    set(DART_VENDOR_LIBRARY_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart.so.6.10.0")
+    set(DART_VENDOR_LIBRARY_LINK_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart.so.6.10")
+    add_library(dart SHARED IMPORTED)
+    set_target_properties(dart PROPERTIES
+	IMPORTED_LOCATION ${DART_VENDOR_LIBRARY_PATH})
+
+    set(DART_ODEL_VENDOR_LIBRARY_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart-external-odelcpsolver.so.6.10.0")
+    set(DART_ODEL_VENDOR_LIBRARY_LINK_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart-external-odelcpsolver.so.6.10")
+    add_library(dart_external_odelcpsolver SHARED IMPORTED)
+    set_target_properties(dart_external_odelcpsolver PROPERTIES
+	IMPORTED_LOCATION ${DART_ODEL_VENDOR_LIBRARY_PATH})
+
+    set(DART_COLLISION_VENDOR_LIBRARY_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart-collision-ode.so.6.10.0")
+    set(DART_COLLISION_VENDOR_LIBRARY_LINK_PATH
+	"${DART_VENDOR_LIBRARY_DIR}/libdart-collision-ode.so.6.10")
+    add_library(dart_collision_ode SHARED IMPORTED)
+    set_target_properties(dart_collision_ode PROPERTIES
+	IMPORTED_LOCATION ${DART_COLLISION_VENDOR_LIBRARY_PATH})
+
+    set(DART_LIBRARIES dart dart_external_odelcpsolver dart_collision_ode)
+
+    ExternalProject_Add(dart_project
+      DOWNLOAD_COMMAND ""
+      UPDATE_COMMAND ""
+      PREFIX ${CMAKE_BINARY_DIR}/vendor/dart
+      INSTALL_DIR ${DART_VENDOR_INSTALL_DIR}
+      SOURCE_DIR ${CMAKE_SOURCE_DIR}/vendor/dart
+      # Seems a bug since INSTALL_DIR and SOURCE_DIR should handle it
+      # https://gitlab.kitware.com/cmake/cmake/-/issues/18790
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DART_VENDOR_INSTALL_DIR}
+    )
+
+    add_definitions(-DDART_VERSION=6.10.0)
+else()
+    ign_find_package(DART
+      COMPONENTS
+	collision-ode
+	utils
+	utils-urdf
+      EXTRA_ARGS CONFIG
+      VERSION 6.9
+      REQUIRED_BY dartsim
+      PKGCONFIG dart
+      PKGCONFIG_VER_COMPARISON >=)
+endif()
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
@@ -79,8 +148,6 @@ ign_find_package(IgnBullet
   REQUIRED_BY bullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
-
-message(STATUS "-------------------------------------------\n")
 
 set(IGNITION_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
