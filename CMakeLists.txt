@@ -34,15 +34,15 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find ignition-common
-ign_find_package(ignition-common4
+ign_find_package(ignition-common5
   COMPONENTS graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
-set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
+set(IGN_COMMON_VER ${ignition-common5_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-math
-ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3)
-set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
+ign_find_package(ignition-math7 REQUIRED COMPONENTS eigen3)
+set(IGN_MATH_VER ${ignition-math7_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-plugin
@@ -60,7 +60,7 @@ ign_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat12
+ign_find_package(sdformat13
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
