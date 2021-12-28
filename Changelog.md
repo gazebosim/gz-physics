@@ -7,6 +7,26 @@
 
 ### Ignition Physics 5.x.x (20XX-XX-XX)
 
+### Ignition Physics 5.1.0 (2021-11-12)
+
+1. Remove unused ign_auto_headers.hh.in
+    * [Pull request #305](https://github.com/ignitionrobotics/ign-physics/pull/305)
+
+1. Added DART feature for setting joint limits dynamically.
+    * [Pull request #260](https://github.com/ignitionrobotics/ign-physics/pull/260)
+
+1. Allow customization of contact surface properties
+    * [Pull request #267](https://github.com/ignitionrobotics/ign-physics/pull/267)
+
+1. Avoid `auto` usage in Eigen expressions.
+    * [Pull request #301](https://github.com/ignitionrobotics/ign-physics/pull/301)
+
+1. Fix cmake script for bullet
+    * [Pull request #297](https://github.com/ignitionrobotics/ign-physics/pull/297)
+
+1. Improved README.md folder structure
+    * [Pull request #295](https://github.com/ignitionrobotics/ign-physics/pull/295)
+
 ### Ignition Physics 5.0.0 (2021-09-30)
 
 1. Add GetJointTransmittedWrench feature
@@ -273,6 +293,34 @@
 ## Ignition Physics 2.x
 
 ### Ignition Physics 2.x.x (20XX-XX-XX)
+
+### Ignition Physics 2.5.0 (2021-11-09)
+
+1. Remove unused ign_auto_headers.hh.in
+    * [Pull request #305](https://github.com/ignitionrobotics/ign-physics/pull/305)
+
+1. Added DART feature for setting joint limits dynamically.
+    * [Pull request #260](https://github.com/ignitionrobotics/ign-physics/pull/260)
+
+1. Allow customization of contact surface properties
+    * [Pull request #267](https://github.com/ignitionrobotics/ign-physics/pull/267)
+
+1. [dartsim] Add support for joint frame semantics
+    * [Pull request #288](https://github.com/ignitionrobotics/ign-physics/pull/288)
+
+1. Use slip compliance API's available in upstream dartsim release
+    * [Pull request #265](https://github.com/ignitionrobotics/ign-physics/pull/265)
+
+1. Fix dart deprecation warning
+    * [Pull request #263](https://github.com/ignitionrobotics/ign-physics/pull/263)
+
+1. [Citadel] Update tutorials
+    * [Pull request #204](https://github.com/ignitionrobotics/ign-physics/pull/204)
+
+1. Infrastructure
+    * [Pull request #257](https://github.com/ignitionrobotics/ign-physics/pull/257)
+    * [Pull request #281](https://github.com/ignitionrobotics/ign-physics/pull/281)
+    * [Pull request #287](https://github.com/ignitionrobotics/ign-physics/pull/287)
 
 ### Ignition Physics 2.4.0 (2021-04-14)
 
