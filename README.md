@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/ign-physics5/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
-Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics5-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics5-bionic-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics5-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics5-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/ign-physics6/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
+Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-bionic-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Ignition Physics, a component of [Ignition
@@ -74,7 +74,7 @@ See the [installation tutorial](https://ignitionrobotics.org/api/physics/5.0/ins
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/ign-physics5/examples/).
+Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/ign-physics6/examples/).
 
 # Documentation
 
@@ -91,7 +91,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics5
+    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics6
     ```
 
 3. Configure and build the documentation.
