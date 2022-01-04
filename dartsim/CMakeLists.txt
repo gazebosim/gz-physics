@@ -1,4 +1,3 @@
-
 # This component expresses custom features of the dartsim plugin, which can
 # expose native dartsim data types.
 ign_add_component(dartsim INTERFACE
@@ -39,6 +38,26 @@ target_link_libraries(${dartsim_plugin}
     ignition-common${IGN_COMMON_VER}::profiler
 )
 
+# The ignition fork of DART contains additional code that allows customizing 
+# contact constraints. We check for the presence of "ContactSurface.hpp", which 
+# was added to enable these customizations, to detect if the feature is 
+# available.
+include(CheckIncludeFileCXX)
+if (MSVC)
+  set(CMAKE_REQUIRED_FLAGS "/std:c++14")
+else()
+  set(CMAKE_REQUIRED_FLAGS "-std=c++14")
+endif()
+set(CMAKE_REQUIRED_INCLUDES "${DART_INCLUDE_DIRS};${EIGEN3_INCLUDE_DIRS}")
+set(CMAKE_REQUIRED_QUIET false)
+
+CHECK_INCLUDE_FILE_CXX(dart/constraint/ContactSurface.hpp DART_HAS_CONTACT_SURFACE_HEADER)
+if (DART_HAS_CONTACT_SURFACE_HEADER)
+  target_compile_definitions(${dartsim_plugin} PRIVATE DART_HAS_CONTACT_SURFACE)
+else()
+  message(STATUS "The version of DART does not support Contact constraint customizations.")
+endif()
+
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${dartsim_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
 
@@ -78,6 +97,10 @@ foreach(test ${tests})
     "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\""
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
+
+  if (DART_HAS_CONTACT_SURFACE_HEADER)
+    target_compile_definitions(${test} PRIVATE DART_HAS_CONTACT_SURFACE)
+  endif()
 
   # Helps when we want to build a single test after making changes to dartsim_plugin
   add_dependencies(${test} ${dartsim_plugin})

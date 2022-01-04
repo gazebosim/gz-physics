@@ -76,21 +76,7 @@ plugin provides, i.e. `HelloWorldFeatureList`
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `ign-plugin` and `ign-physics` dependencies for the Fortress release:
 
-[//]: # (TODO: \include does not work with .txt extension for some reason, so manually pasting this file: \include examples/hello_world_plugin/CMakeLists.txt)
-```cmake
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
-
-set(IGN_PLUGIN_VER 1)
-find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
-
-set(IGN_PHYSICS_VER 6)
-find_package(ignition-physics${IGN_PHYSICS_VER} REQUIRED)
-
-add_library(HelloWorldPlugin SHARED HelloWorldPlugin.cc)
-target_link_libraries(HelloWorldPlugin
-  PRIVATE
-    ignition-physics${IGN_PHYSICS_VER}::ignition-physics${IGN_PHYSICS_VER})
-```
+\include examples/hello_world_plugin/CMakeLists.txt
 
 ## Build and run
 
