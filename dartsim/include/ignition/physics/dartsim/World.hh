@@ -45,6 +45,7 @@ class RetrieveWorld : public virtual Feature
 };
 
 /////////////////////////////////////////////////
+//! [feature template]
 template <typename PolicyT, typename FeaturesT>
 dart::simulation::WorldPtr RetrieveWorld::World<PolicyT, FeaturesT>
 ::GetDartsimWorld()
@@ -52,6 +53,7 @@ dart::simulation::WorldPtr RetrieveWorld::World<PolicyT, FeaturesT>
   return this->template Interface<RetrieveWorld>()
       ->GetDartsimWorld(this->identity);
 }
+//! [feature template]
 
 }
 }
