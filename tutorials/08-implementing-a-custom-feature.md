@@ -3,13 +3,13 @@
 ## Prerequisites
 
 - \ref installation "Installation"
-- \ref physicsplugin "Understand physics plugin"
-- \ref loadplugin "Load physics plugin"
-- \ref implementfeature "Implement physics feature"
+- \ref physicsplugin "Understanding the physics plugin"
+- \ref pluginloading "Loading physics plugins"
+- \ref createphysicsplugin "Implement a physics feature"
 
 ## Implement a custom feature in DART plugin
 
-In the last \ref implementfeature "Implement physics feature" tutorial, we
+In the last \ref createphysicsplugin "Implement a physics feature" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
 \ref ignition::physics "Ignition Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
@@ -36,8 +36,7 @@ ign-physics
 └── CMakeLists.txt            CMake build script.
 ```
 
-As shown above, there are two physics engines available (more detail
-in \ref physicsplugin "Physics plugin tutorial"):
+As shown above, there are two physics engines available:
 - **DART**: `ignition-physics-dartsim-plugin`.
 - **TPE**: `ignition-physics-tpe-plugin`.
 
@@ -60,8 +59,7 @@ functionality of the external physics engine can be defined as a header in
 be added in a \ref ignition::physics::FeatureList "FeatureList"
 and implemented its functionalities in `src` folder.
 
-The `dartsim` plugin's \ref ignition::physics::FeatureList "FeatureList" could be
-found in \ref physicsplugin "Understand physics plugin" tutorial.
+See the \ref physicsplugin "Understanding the physics plugin" tutorial for details on physics engines.
 
 ### Plugin and feature requirements
 
@@ -137,7 +135,7 @@ will not run at the same time when requested.
 
 With the requirements and restrictions above, we first need to define a feature template for the custom feature. In this case, this feature will be responsible for retrieving world pointer from the physics engine. The template is placed in [World.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/include/ignition/physics/dartsim/World.hh):
 
-\snippet dartsim/include/ignition/physcis/dartsim/World.hh
+\snippet dartsim/include/ignition/physics/dartsim/World.hh feature template
 
 The `RetrieveWorld` feature retrieves
 world pointer from physics engine, so we will use the `World` entity inherited
@@ -174,7 +172,7 @@ implement the `RetrieveWorld` feature function using Dartsim API.
 After defining the feature template, we can add it to a custom
 \ref ignition::physics::FeatureList "FeatureList":
 
-\snippet dartsim/src/CustomFeatures.hh
+\snippet dartsim/src/CustomFeatures.hh add to list
 
 The custom feature `RetrieveWorld` is added to `CustomFeatureList`, other custom
 features could also be added here.
@@ -188,7 +186,7 @@ custom feature with \ref ignition::physics::FeaturePolicy3d "FeaturePolicy3d"
 We will then implement the actual function with Dartsim API in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/CustomFeatures.cc) to override the member function
 declared in the custom feature header file:
 
-\snippet dartsim/src/CustomFeatures.cc
+\snippet dartsim/src/CustomFeatures.cc implementation
 
 Here, we implement the behavior of `GetDartsimWorld` with Dartsim API to return the
 world pointer from `EntityStorage` object storing world pointers of `dartsim` in
@@ -197,8 +195,8 @@ world pointer from `EntityStorage` object storing world pointers of `dartsim` in
 In the end, we add the implemented `CustomFeatures` "FeatureList" together with
 other \ref ignition::physics::FeatureList "FeatureList" to final `DartsimFeatures`
 "FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/plugin.cc)
-(please see \ref implementfeature "Implement physics feature" for
-registering the plugin to Ignition Physics).
+(please see the \ref createphysicsplugin "Implement a physics feature" tutorial
+for registering the plugin to Ignition Physics).
 
 The folder structure is shown below:
 
