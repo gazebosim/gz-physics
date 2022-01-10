@@ -28,9 +28,11 @@ namespace ignition {
 namespace physics {
 namespace dartsim {
 
+//! [add to list]
 using CustomFeatureList = FeatureList<
   RetrieveWorld
 >;
+//! [add to list]
 
 class CustomFeatures :
     public virtual Base,

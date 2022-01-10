@@ -26,7 +26,7 @@ For a comprehensive tutorial for constructing your robot model from SDFormat, re
 In this tutorial, we will show how to
 manipulate and visualize some physics aspects using demos on Ignition Gazebo.
 
-All demos can be found in [ign-gazebo3/examples/worlds](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo3/examples/worlds/) folder.
+All demos can be found in [ign-gazebo/examples/worlds](https://github.com/ignitionrobotics/ign-gazebo/blob/ign-gazebo3/examples/worlds/) folder.
 
 ### Differential drive
 
@@ -53,7 +53,7 @@ ign gazebo velocity_control.sdf --physics-engine ignition-physics-tpe-plugin # s
 ```
 
 To control the car movement, in a separate terminal window, we publish a
-\ref ignition::msgs::Twist "Twist" message using Ignition Transport library:
+Twist message using Ignition Transport library:
 
 ```bash
 ign topic -t "/model/vehicle_blue/cmd_vel" -m ignition.msgs.Twist -p "linear: {x: 1.0}, angular: {z: 0.5}"
@@ -65,7 +65,7 @@ This command tells the car to move in its coordinate frame with velocity
 second in Z-axis.
 
 Note that the mechanism to move the car is different depending on the used physics
-engine, see \ref physicsengine "Use different physics engine" for details on how to change physics engine used by simulation.
+engine, see \ref physicsengine "Use different physics engines" for details on how to change physics engine used by simulation.
 
 Dartsim moves the car by applying force on the joints, whereas TPE directly set velocity on the model.
 
@@ -76,7 +76,7 @@ select the drop-down list `Pose`. Moreover, we could also read the model
 links' poses relative to their parent link by selecting the
 corresponding link on the model tree:
 
-@image html img/diff_drive_link.gif
+@image html img/diff_drive_link.gif width=100%
 
 Note that using the model tree as shown in the above gif, we can view the
 parameters and properties such as `visual` or `collision` of each link or joint
@@ -89,7 +89,7 @@ Ignition Gazebo also simulates realistic collision effect. While the `vehicle_bl
 car is moving in a circle, we can move the `vehicle_green` to be on `vehicle_blue`'s
 upcoming path. The blue car will then push the green car in the following demo.
 
-@image html img/diff_drive_collision.gif
+@image html img/diff_drive_collision.gif width=100%
 
 To see where these collision parameters are set in SDFormat and how it works,
 please see this [SDFormat tutorial](http://sdformat.org/tutorials?tut=spec_shapes&cat=specification&).
@@ -110,7 +110,7 @@ ign gazebo lift_drag.sdf
 ```
 
 To see how the rotor lifts the cube due to wind force pressure, in a separate terminal window, we can publish a
-\ref ignition::msgs::Double "Double" message represeting the torque (Nm) applying to
+Double message represeting the torque (Nm) applying to
 the rotor rod axis:
 
 ```bash
@@ -126,7 +126,7 @@ ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m igniti
 You will see the cube drops due to no lift force from support torque on the rod,
 and the blades will stop after some time due to friction.
 
-@image html img/lift_drag_torque.gif
+@image html img/lift_drag_torque.gif width=100%
 
 Several simulation features come into effect in this demo. The lift and drag force is computed by taking the wind pressure, mass of the cude, and gravity into account, and the resulting force is exerted on multiple joints. Dartsim is used to power this demo.
 
@@ -153,7 +153,7 @@ ign gazebo buoyancy.sdf
 
 After pressing the Play button, demo will run as below:
 
-@image html img/buoyancy.gif
+@image html img/buoyancy.gif width=100%
 
 The buoyancy concept is implemented by
 simulating fluid density and applying the force on the object in the fluid
@@ -180,7 +180,7 @@ After pressing the Play button, you will see that the pendulum will oscillate ar
 its main revolute joint forever due to lack of friction (it is undeclared in the
 SDFormat file).
 
-@image html img/pendulum.gif
+@image html img/pendulum.gif width=100%
 
 The oscillation period or the max angular speed of the joint
 will change if we modify the inertia of the rods. According to the demo below,
@@ -205,7 +205,7 @@ ign gazebo multicopter_velocity_control.sdf
 ```
 
 To control the multicopter to ascend and hover, in a separate terminal window, send a
-\ref ignition::msgs::Twist "Twist" message to command the `X3` multicopter
+Twist message to command the `X3` multicopter
 ascending 0.1 m.s as follow:
 
 ```bash
@@ -218,7 +218,7 @@ then hovering:
 ign topic -t "/X3/gazebo/command/twist" -m ignition.msgs.Twist -p " "
 ```
 
-@image html img/hover.gif
+@image html img/hover.gif width=100%
 
 Do the same for the `X4` multicopter. After pressing the Play button, you will see
 both of the multicopters will ascend, this demonstrates how the physics engine

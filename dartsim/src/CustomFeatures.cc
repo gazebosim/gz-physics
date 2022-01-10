@@ -22,11 +22,13 @@ namespace physics {
 namespace dartsim {
 
 /////////////////////////////////////////////////
+//! [implementation]
 dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
     const Identity &_worldID)
 {
   return this->worlds.at(_worldID);
 }
+//! [implementation]
 
 }
 }
