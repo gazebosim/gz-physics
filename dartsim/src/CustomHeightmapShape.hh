@@ -19,7 +19,7 @@
 #define IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
 
 #include <dart/dynamics/HeightmapShape.hpp>
-#include <ignition/common/HeightmapData.hh>
+#include <ignition/common/geospatial/HeightmapData.hh>
 
 namespace ignition {
 namespace physics {

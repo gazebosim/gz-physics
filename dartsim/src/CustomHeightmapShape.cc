@@ -19,8 +19,8 @@
 
 #include <vector>
 #include <ignition/common/Console.hh>
-#include <ignition/common/Dem.hh>
-#include <ignition/common/ImageHeightmap.hh>
+#include <ignition/common/geospatial/Dem.hh>
+#include <ignition/common/geospatial/ImageHeightmap.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
 namespace ignition {
@@ -34,7 +34,7 @@ CustomHeightmapShape::CustomHeightmapShape(
     int _subSampling)
   : dart::dynamics::HeightmapShape<float>()
 {
-  float heightmapSizeZ = _input.MaxElevation();
+  float heightmapSizeZ = _input.MaxElevation() - _input.MinElevation();
   const bool flipY = false;
   const int vertSize = (_input.Width() * _subSampling) - _subSampling + 1;
 
@@ -50,36 +50,8 @@ CustomHeightmapShape::CustomHeightmapShape(
   auto sizeIgn = ignition::math::eigen3::convert(_size);
 
   std::vector<float> heightsFloat;
-
-  // We need to make a copy below in order to use the non-const FillHeightMap
-  // function
-
-  // DEM
-  auto demData = dynamic_cast<const common::Dem *>(&_input);
-  if (demData)
-  {
-    common::Dem copyData;
-    copyData.Load(_input.Filename());
-    copyData.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,
-        heightsFloat);
-  }
-  // Image
-  else
-  {
-    common::ImageHeightmap copyData;
-    try
-    {
-      copyData.Load(_input.Filename());
-    }
-    catch(const std::bad_cast &)
-    {
-      ignerr << "Only DEM and image heightmaps are supported." << std::endl;
-      return;
-    }
-
-    copyData.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,
-        heightsFloat);
-  }
+  _input.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,
+      heightsFloat);
 
   this->setHeightField(vertSize, vertSize, heightsFloat);
   this->setScale(Vector3(scale.X(), scale.Y(), 1));
