@@ -63,7 +63,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
   public: Shape();
 
   /// \brief Destructor
-  public: ~Shape() = default;
+  public: virtual ~Shape() = default;
 
   /// \brief Get bounding box of shape
   /// \return Shape's bounding box
@@ -92,16 +92,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
   /// \brief Constructor
   public: BoxShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: BoxShape(const BoxShape &_other);
-
   /// \brief Destructor
-  public: ~BoxShape();
-
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
+  public: virtual ~BoxShape() = default;
 
   /// \brief Set size of box
   /// \param[in] _size Size of box
@@ -126,16 +118,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
   /// \brief Constructor
   public: CylinderShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: CylinderShape(const CylinderShape &_other);
-
   /// \brief Destructor
-  public: ~CylinderShape() = default;
-
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
+  public: virtual ~CylinderShape() = default;
 
   /// \brief Get cylinder radius
   /// \return cylinder radius
@@ -169,16 +153,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
   /// \brief Constructor
   public: SphereShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: SphereShape(const SphereShape &_other);
-
   /// \brief Destructor
-  public: ~SphereShape() = default;
-
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
+  public: virtual ~SphereShape() = default;
 
   /// \brief Get sphere radius
   /// \return Sphere radius
@@ -201,16 +177,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
   /// \brief Constructor
   public: MeshShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: MeshShape(const MeshShape &_other);
-
   /// \brief Destructor
-  public: ~MeshShape() = default;
-
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
+  public: virtual ~MeshShape() = default;
 
   /// \brief Set mesh
   /// \param[in] _mesh Mesh object
