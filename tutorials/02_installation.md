@@ -11,9 +11,7 @@ The Source Installation instructions are generally recommended for developers wh
 
 ## Prerequisites
 
-Ignition Physics uses several C++17 features which are not available in the
-version of gcc supplied with Ubuntu Xenial, so Ubuntu Bionic or later
-is required.
+Ubuntu Focal or later.
 
 If you don't already have the `lsb-release` package installed, please do so now:
 ```
@@ -50,23 +48,13 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
   ```
   Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
-2. Use gcc-8
-  ```
-  sudo apt update
-  sudo apt-get -y install g++-8
-  sudo update-alternatives --install \
-    /usr/bin/gcc gcc /usr/bin/gcc-8 800 \
-    --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
-    --slave /usr/bin/gcov gcov /usr/bin/gcov-8
-  ```
-
-3. Clone the repository
+2. Clone the repository
   ```
   git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
   ```
   Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
-4. Configure and build
+3. Configure and build
   ```
   cd ign-physics
   mkdir build
@@ -75,7 +63,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
   make
   ```
 
-5. Optionally, install
+4. Optionally, install
   ```
   sudo make install
   ```

@@ -57,15 +57,6 @@ BoxShape::BoxShape() : Shape()
 }
 
 //////////////////////////////////////////////////
-Shape &BoxShape::operator=(const Shape &_other)
-{
-  auto other = static_cast<const BoxShape *>(&_other);
-  this->size = other->size;
-  this->type = ShapeType::BOX;
-  return *this;
-}
-
-//////////////////////////////////////////////////
 void BoxShape::SetSize(const math::Vector3d &_size)
 {
   this->size = _size;
@@ -89,22 +80,6 @@ void BoxShape::UpdateBoundingBox()
 CapsuleShape::CapsuleShape() : Shape()
 {
   this->type = ShapeType::CAPSULE;
-}
-
-//////////////////////////////////////////////////
-CapsuleShape::CapsuleShape(const CapsuleShape &_other)
-  : Shape()
-{
-  *this = _other;
-}
-
-//////////////////////////////////////////////////
-Shape &CapsuleShape::operator=(const Shape &_other)
-{
-  auto other = static_cast<const CapsuleShape *>(&_other);
-  this->radius = other->radius;
-  this->length = other->length;
-  return *this;
 }
 
 //////////////////////////////////////////////////
@@ -147,15 +122,6 @@ CylinderShape::CylinderShape() : Shape()
 }
 
 //////////////////////////////////////////////////
-Shape &CylinderShape::operator=(const Shape &_other)
-{
-  auto other = static_cast<const CylinderShape *>(&_other);
-  this->radius = other->radius;
-  this->length = other->length;
-  return *this;
-}
-
-//////////////////////////////////////////////////
 double CylinderShape::GetRadius() const
 {
   return this->radius;
@@ -195,21 +161,6 @@ EllipsoidShape::EllipsoidShape() : Shape()
 }
 
 //////////////////////////////////////////////////
-EllipsoidShape::EllipsoidShape(const EllipsoidShape &_other)
-  : Shape()
-{
-  *this = _other;
-}
-
-//////////////////////////////////////////////////
-Shape &EllipsoidShape::operator=(const Shape &_other)
-{
-  auto other = static_cast<const EllipsoidShape *>(&_other);
-  this->radii = other->radii;
-  return *this;
-}
-
-//////////////////////////////////////////////////
 math::Vector3d EllipsoidShape::GetRadii() const
 {
   return this->radii;
@@ -236,14 +187,6 @@ SphereShape::SphereShape() : Shape()
 }
 
 //////////////////////////////////////////////////
-Shape &SphereShape::operator=(const Shape &_other)
-{
-  auto other = static_cast<const SphereShape *>(&_other);
-  this->radius = other->radius;
-  return *this;
-}
-
-//////////////////////////////////////////////////
 double SphereShape::GetRadius() const
 {
   return this->radius;
@@ -267,15 +210,6 @@ void SphereShape::UpdateBoundingBox()
 MeshShape::MeshShape() : Shape()
 {
   this->type = ShapeType::MESH;
-}
-
-//////////////////////////////////////////////////
-Shape &MeshShape::operator=(const Shape &_other)
-{
-  auto other = static_cast<const MeshShape *>(&_other);
-  this->scale = other->scale;
-  this->meshAABB = other->meshAABB;
-  return *this;
 }
 
 //////////////////////////////////////////////////
