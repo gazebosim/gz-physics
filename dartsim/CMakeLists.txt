@@ -31,6 +31,7 @@ target_link_libraries(${dartsim_plugin}
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+    ignition-common${IGN_COMMON_VER}::geospatial
     ignition-math${IGN_MATH_VER}::eigen3
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
@@ -84,6 +85,7 @@ ign_build_tests(
     ${features}
     ignition-plugin${IGN_PLUGIN_VER}::loader
     ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+    ignition-common${IGN_COMMON_VER}::geospatial
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh

@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/common/HeightmapData.hh>
+#include <ignition/common/geospatial/HeightmapData.hh>
 
 #include <ignition/physics/DeclareShapeType.hh>
 #include <ignition/physics/Geometry.hh>

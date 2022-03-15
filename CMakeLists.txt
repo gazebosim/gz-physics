@@ -35,7 +35,7 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 #--------------------------------------
 # Find ignition-common
 ign_find_package(ignition-common5
-  COMPONENTS graphics profiler
+  COMPONENTS geospatial graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(IGN_COMMON_VER ${ignition-common5_VERSION_MAJOR})
 
