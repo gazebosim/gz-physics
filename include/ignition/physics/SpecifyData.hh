@@ -57,6 +57,9 @@ namespace ignition
       /// the newly copied MapData.
       public: ExpectData(const ExpectData &_other);
 
+      /// \brief Assignment operator.
+      public: ExpectData& operator=(const ExpectData &_other);
+
       /// TODO(anyone) Implement move constructor and assignment operator. Due
       /// to the multiple inheritence used to implement SpcifyData, care must be
       /// taken when implementing move constructs to avoid calling a move

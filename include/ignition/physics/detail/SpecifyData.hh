@@ -49,6 +49,16 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Expected>
+    ExpectData<Expected>& ExpectData<Expected>::operator=(
+        const ExpectData<Expected> &_other)
+    {
+      // Call base class assignment operator
+      this->CompositeData::operator=(_other);
+      return *this;
+    }
+
+    /////////////////////////////////////////////////
+    template <typename Expected>
     template <typename Data>
     Data &ExpectData<Expected>::Get()
     {
