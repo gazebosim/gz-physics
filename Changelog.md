@@ -67,6 +67,33 @@
 
 ### Ignition Physics 4.x.x (20XX-XX-XX)
 
+### Ignition Physics 4.3.0 (2021-11-11)
+
+1. Remove unused ign_auto_headers.hh.in
+    * [Pull request #305](https://github.com/ignitionrobotics/ign-physics/pull/305)
+
+1. Added DART feature for setting joint limits dynamically.
+    * [Pull request #260](https://github.com/ignitionrobotics/ign-physics/pull/260)
+
+1. Allow customization of contact surface properties
+    * [Pull request #267](https://github.com/ignitionrobotics/ign-physics/pull/267)
+
+1. Avoid `auto` usage in Eigen expressions.
+    * [Pull request #301](https://github.com/ignitionrobotics/ign-physics/pull/301)
+
+1. [dartsim] Add support for joint frame semantics
+    * [Pull request #288](https://github.com/ignitionrobotics/ign-physics/pull/288)
+
+1. Fix TPE Link velocity not being updated and Model velocity not having any effect.
+    * [Pull request #289](https://github.com/ignitionrobotics/ign-physics/pull/289)
+
+1. Infrastructure
+    * [Pull request #287](https://github.com/ignitionrobotics/ign-physics/pull/287)
+    * [Pull request #281](https://github.com/ignitionrobotics/ign-physics/pull/281)
+
+1. Make ignition-physics CMake config files relocatable
+    * [Pull request #282](https://github.com/ignitionrobotics/ign-physics/pull/282)
+
 ### Ignition Physics 4.2.0 (2021-07-16)
 
 1. Support FreeGroup features for nested models

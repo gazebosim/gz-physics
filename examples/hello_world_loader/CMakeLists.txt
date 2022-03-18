@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
+project(ign-physics-hello-world-loader)
+
 set(IGN_PLUGIN_VER 1)
 find_package(ignition-plugin${IGN_PLUGIN_VER} 1.1 REQUIRED COMPONENTS all)
 
