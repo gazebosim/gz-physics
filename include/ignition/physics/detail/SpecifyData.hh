@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <utility>
+#include <iostream>
 
 #include "ignition/physics/SpecifyData.hh"
 
@@ -41,10 +42,18 @@ namespace ignition
 
     /////////////////////////////////////////////////
     template <typename Expected>
-    ExpectData<Expected>::ExpectData(const ExpectData<Expected> &)
+    ExpectData<Expected>::ExpectData(const ExpectData<Expected> &_other)
         : ExpectData()
     {
-      // Do nothing
+      // Call CompositeData::Copy if it hasn't already been called. Note that
+      // when classed derived from ExpectData use compiler generated copy
+      // constructors, CompositeData's copy constructor is called before
+      // ExpectData's constructor. However, since ExpectData has a user defined
+      // copy constructor, copying objects of ExpectData type will not
+      // automatically call CompositeData's copy constructor.
+      if (this->EntryCount() != _other.EntryCount()){
+        this->Copy(_other);
+      }
     }
 
     /////////////////////////////////////////////////
