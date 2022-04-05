@@ -67,7 +67,7 @@ ign_find_package(DART
     collision-ode
     utils
     utils-urdf
-  EXTRA_ARGS CONFIG
+  CONFIG
   VERSION 6.9
   REQUIRED_BY dartsim
   PKGCONFIG dart
