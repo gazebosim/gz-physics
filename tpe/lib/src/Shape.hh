@@ -101,10 +101,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
   /// \brief Destructor
   public: virtual ~BoxShape() = default;
 
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
-
   /// \brief Set size of box
   /// \param[in] _size Size of box
   public: void SetSize(const math::Vector3d &_size);
@@ -128,16 +124,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
   /// \brief Constructor
   public: CapsuleShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: CapsuleShape(const CapsuleShape &_other);
-
   /// \brief Destructor
   public: ~CapsuleShape() = default;
-
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
 
   /// \brief Get capsule radius
   /// \return capsule radius
@@ -174,10 +162,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
   /// \brief Destructor
   public: virtual ~CylinderShape() = default;
 
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
-
   /// \brief Get cylinder radius
   /// \return cylinder radius
   public: double GetRadius() const;
@@ -210,16 +194,8 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
   /// \brief Constructor
   public: EllipsoidShape();
 
-  /// \brief Copy Constructor
-  /// \param[in] _other shape to copy from
-  public: EllipsoidShape(const EllipsoidShape &_other);
-
   /// \brief Destructor
   public: ~EllipsoidShape() = default;
-
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
 
   /// \brief Get ellipsoid radius
   /// \return ellipsoid radius
@@ -247,10 +223,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
   /// \brief Destructor
   public: virtual ~SphereShape() = default;
 
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
-
   /// \brief Get sphere radius
   /// \return Sphere radius
   public: double GetRadius() const;
@@ -274,10 +246,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
 
   /// \brief Destructor
   public: virtual ~MeshShape() = default;
-
-  /// \brief Assignment operator
-  /// \param[in] _other shape to copy from
-  public: Shape &operator=(const Shape &_other);
 
   /// \brief Set mesh
   /// \param[in] _mesh Mesh object
