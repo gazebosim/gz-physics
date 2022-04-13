@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
 project(ign-physics-hello-world-loader)
 
-find_package(ignition-plugin1 1.1 REQUIRED COMPONENTS all)
-set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
+find_package(ignition-plugin2 REQUIRED COMPONENTS all)
+set(IGN_PLUGIN_VER ${ignition-plugin2_VERSION_MAJOR})
 
 find_package(ignition-physics6 REQUIRED)
 set(IGN_PHYSICS_VER ${ignition-physics6_VERSION_MAJOR})

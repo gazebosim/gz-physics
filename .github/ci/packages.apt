@@ -4,7 +4,7 @@ libignition-cmake2-dev
 libignition-common5-dev
 libignition-math7-dev
 libignition-math7-eigen3-dev
-libignition-plugin-dev
-libignition-utils1-cli-dev
-libignition-utils1-dev
+libignition-plugin2-dev
+libignition-utils2-cli-dev
+libignition-utils2-dev
 libsdformat13-dev

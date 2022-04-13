@@ -46,13 +46,13 @@ set(IGN_MATH_VER ${ignition-math7_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-plugin
-ign_find_package(ignition-plugin1 REQUIRED COMPONENTS all VERSION 1.1)
-set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
+ign_find_package(ignition-plugin2 REQUIRED COMPONENTS all)
+set(IGN_PLUGIN_VER ${ignition-plugin2_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-utils
-ign_find_package(ignition-utils1 REQUIRED COMPONENTS cli)
-set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
+ign_find_package(ignition-utils2 REQUIRED COMPONENTS cli)
+set(IGN_UTILS_VER ${ignition-utils2_VERSION_MAJOR})
 
 #--------------------------------------
 # Find Eigen
