@@ -8,7 +8,7 @@ project(ignition-physics5 VERSION 5.1.0)
 #============================================================================
 # Find ignition-cmake
 #============================================================================
-find_package(ignition-cmake2 2.8.0 REQUIRED)
+find_package(ignition-cmake2 2.12.0 REQUIRED)
 
 #============================================================================
 # Configure the project
@@ -71,7 +71,7 @@ ign_find_package(DART
     collision-ode
     utils
     utils-urdf
-  EXTRA_ARGS CONFIG
+  CONFIG
   VERSION 6.9
   REQUIRED_BY dartsim
   PKGCONFIG dart
