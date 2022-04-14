@@ -18,7 +18,7 @@
 #ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 #define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
-#include <ignition/utilities/SuppressWarning.hh>
+#include <ignition/utils/SuppressWarning.hh>
 
 #include "ignition/physics/tpelib/Export.hh"
 
