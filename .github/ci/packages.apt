@@ -1,6 +1,6 @@
 libbenchmark-dev
 libeigen3-dev
-libignition-cmake2-dev
+libignition-cmake3-dev
 libignition-common5-dev
 libignition-math7-dev
 libignition-math7-eigen3-dev
