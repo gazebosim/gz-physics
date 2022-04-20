@@ -21,6 +21,7 @@
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/SimpleFrame.hpp>
 #include <dart/dynamics/Skeleton.hpp>
+#include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/simulation/World.hpp>
 
 #include <memory>
@@ -73,6 +74,15 @@ struct JointInfo
 {
   dart::dynamics::JointPtr joint;
   dart::dynamics::SimpleFramePtr frame;
+
+  enum JointType
+  {
+    JOINT,
+    CONSTRAINT
+  };
+
+  JointType type{JOINT};
+  dart::constraint::WeldJointConstraintPtr constraint;
 };
 
 struct ShapeInfo
@@ -221,6 +231,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using DartBodyNodePtr = dart::dynamics::BodyNodePtr;
   public: using DartJoint = dart::dynamics::Joint;
   public: using DartJointPtr = dart::dynamics::JointPtr;
+  public: using DartWeldJointConsPtr =dart::constraint::WeldJointConstraintPtr;
   public: using DartShapeNode = dart::dynamics::ShapeNode;
   public: using DartShapeNodePtr = std::shared_ptr<DartShapeNode>;
   public: using ModelInfoPtr = std::shared_ptr<ModelInfo>;
@@ -360,6 +371,24 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     this->joints.idToObject[id]->frame = jointFrame;
     this->frames[id] = this->joints.idToObject[id]->frame.get();
+
+    return id;
+  }
+
+  public: inline std::size_t AddJointConstraint(DartWeldJointConsPtr _joint)
+  {
+    const std::size_t id = this->GetNextEntity();
+    this->joints.idToObject[id] = std::make_shared<JointInfo>();
+    this->joints.idToObject[id]->constraint = _joint;
+    this->joints.idToObject[id]->type = JointInfo::JointType::CONSTRAINT;
+    //this->joints.objectToID[_joint] = id;
+    //dart::dynamics::SimpleFramePtr jointFrame =
+    //    dart::dynamics::SimpleFrame::createShared(
+    //        _joint->getChildBodyNode(), _joint->getName() + "_frame",
+    //        _joint->getTransformFromChildBodyNode());
+
+    //this->joints.idToObject[id]->frame = jointFrame;
+    //this->frames[id] = this->joints.idToObject[id]->frame.get();
 
     return id;
   }

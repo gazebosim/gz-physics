@@ -22,6 +22,8 @@
 #include <dart/dynamics/RevoluteJoint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
+#include <dart/constraint/ConstraintSolver.hpp>
+
 #include "JointFeatures.hh"
 
 namespace ignition {
@@ -466,7 +468,15 @@ Identity JointFeatures::AttachFixedJoint(
   {
     // child already has a parent joint
     // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    return this->GenerateInvalidId();
+    auto worldId = this->GetWorldOfModelImpl(
+        this->models.IdentityOf(bn->getSkeleton()));
+    auto dartWorld = this->worlds.at(worldId);
+
+    auto constraint =
+      std::make_shared<dart::constraint::WeldJointConstraint>(bn, parentBn);
+    dartWorld->getConstraintSolver()->addConstraint(constraint);
+    auto jointID = this->AddJointConstraint(constraint);
+    return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
 
   {
