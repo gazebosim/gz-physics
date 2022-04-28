@@ -885,7 +885,14 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
 }
 
 /////////////////////////////////////////////////
-// Attach two Joints to the same object. Tests the JointWeldConstraint.
+// Essentially what happens is there are two floating boxes and a box in the
+// middle that's resting. We start the system out by creating the two
+// fixed joints between the boxes resting on the big box. The middle box will
+// now have two parents. However there should be no movement as the middle box
+// will be holding the other two boxes that are floating in mid air. We run
+// this for 100 steps to make sure that there is no movement. This is because
+// the middle box is holding on to the two side boxes. Then we release the
+// joints the two boxes should fall away.
 TEST_F(JointFeaturesFixture, JointAttachMultiple)
 {
   sdf::Root root;
@@ -901,7 +908,6 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   const std::string modelName2{"M2"};
   const std::string modelName3{"M3"};
   const std::string bodyName{"link"};
-
 
   auto model1 = world->GetModel(modelName1);
   auto model2 = world->GetModel(modelName2);
@@ -944,6 +950,7 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
 
+  // Create the joints
   auto fixedJoint1 = model2Body->AttachFixedJoint(model1Body);
   auto fixedJoint2 = model2Body->AttachFixedJoint(model3Body);
 
@@ -966,8 +973,8 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   {
     world->Step(output, state, input);
 
-    // Expect the model1 to stay at rest (since it's on the ground) and model2
-    // to start falling
+    // Expect the model1 to stay at rest
+    // (since it's held in place by the joints)
     math::Vector3d body1LinearVelocity =
         math::eigen3::convert(dartBody1->getLinearVelocity());
     math::Vector3d body2LinearVelocity =
@@ -978,10 +985,13 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
     EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
     EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-7);
   }
+
+  // Detach the joints. M1 and M3 should fall as there is now nothing stopping 
+  // them from falling.
   fixedJoint1->Detach();
   fixedJoint2->Detach();
-  std::cout << "Detached joints" << std::endl;
-   for (std::size_t i = 0; i < numSteps; ++i)
+
+  for (std::size_t i = 0; i < numSteps; ++i)
   {
     world->Step(output, state, input);
 
