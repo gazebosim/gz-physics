@@ -904,6 +904,7 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
+  // M1 and M3 are floating boxes
   const std::string modelName1{"M1"};
   const std::string modelName2{"M2"};
   const std::string modelName3{"M3"};
@@ -986,7 +987,7 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
     EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-7);
   }
 
-  // Detach the joints. M1 and M3 should fall as there is now nothing stopping 
+  // Detach the joints. M1 and M3 should fall as there is now nothing stopping
   // them from falling.
   fixedJoint1->Detach();
   fixedJoint2->Detach();

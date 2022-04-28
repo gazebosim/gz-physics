@@ -24,6 +24,8 @@
 
 #include <dart/constraint/ConstraintSolver.hpp>
 
+#include <memory>
+
 #include "JointFeatures.hh"
 
 namespace ignition {
@@ -499,7 +501,6 @@ Identity JointFeatures::AttachFixedJoint(
   dartWorld->getConstraintSolver()->addConstraint(constraint);
   auto jointID = this->AddJointConstraint(constraint);
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
-  
 }
 
 /////////////////////////////////////////////////
