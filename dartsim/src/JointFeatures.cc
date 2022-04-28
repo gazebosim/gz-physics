@@ -329,19 +329,27 @@ void JointFeatures::SetJointMaxEffort(
 /////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
-  return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+    return 0;
+  return jointInfo->joint->getNumDofs();
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
-  return this->ReferenceInterface<JointInfo>(_id)
-      ->joint->getTransformFromParentBodyNode();
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+    return jointInfo->constraint->getRelativeTransform().inverse();
+  return jointInfo->joint->getTransformFromParentBodyNode();
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+    return jointInfo->constraint->getRelativeTransform();
   return this->ReferenceInterface<JointInfo>(_id)
       ->joint->getTransformFromChildBodyNode().inverse();
 }
@@ -350,33 +358,38 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 void JointFeatures::SetJointTransformFromParent(
     const Identity &_id, const Pose3d &_pose)
 {
-  this->ReferenceInterface<JointInfo>(_id)
-      ->joint->setTransformFromParentBodyNode(_pose);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+    jointInfo->constraint->setRelativeTransform(_pose.inverse());
+  else
+    jointInfo->joint->setTransformFromParentBodyNode(_pose);
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointTransformToChild(
     const Identity &_id, const Pose3d &_pose)
 {
-  this->ReferenceInterface<JointInfo>(_id)
-      ->joint->setTransformFromChildBodyNode(_pose.inverse());
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+    jointInfo->constraint->setRelativeTransform(_pose);
+  else
+    jointInfo->joint->setTransformFromChildBodyNode(_pose.inverse());
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::DetachJoint(const Identity &_jointId)
 {
-  auto &jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
-  if(->type == JointInfo::JointType::CONSTRAINT)
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
   {
-    auto worldId = this->GetWorldOfModelImpl(
-        this->models.IdentityOf(bn->getSkeleton()));
-    auto dartWorld = this->worlds.at(worldId);
-
     auto constraint = jointInfo->constraint;
+    auto worldId = this->GetWorldOfModelImpl(
+        this->models.IdentityOf(constraint->getBodyNode1()->getSkeleton()));
+    auto dartWorld = this->worlds.at(worldId);
     dartWorld->getConstraintSolver()->removeConstraint(constraint);
     return;
   }
-  auto joint = jointInfo->joint;
+  auto &joint = jointInfo->joint;
   if (joint->getType() == "FreeJoint")
   {
     // don't need to do anything, joint is already a FreeJoint
@@ -475,34 +488,18 @@ Identity JointFeatures::AttachFixedJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
-  if (bn->getParentJoint()->getType() != "FreeJoint")
-  {
-    // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    auto worldId = this->GetWorldOfModelImpl(
-        this->models.IdentityOf(bn->getSkeleton()));
-    auto dartWorld = this->worlds.at(worldId);
+  // child already has a parent joint
+  // TODO(scpeters): use a WeldJointConstraint between the two bodies
+  auto worldId = this->GetWorldOfModelImpl(
+      this->models.IdentityOf(bn->getSkeleton()));
+  auto dartWorld = this->worlds.at(worldId);
 
-    auto constraint =
-      std::make_shared<dart::constraint::WeldJointConstraint>(bn, parentBn);
-    dartWorld->getConstraintSolver()->addConstraint(constraint);
-    auto jointID = this->AddJointConstraint(constraint);
-    return this->GenerateIdentity(jointID, this->joints.at(jointID));
-  }
-
-  {
-    auto skeleton = bn->getSkeleton();
-    if (skeleton)
-    {
-      bn->setName(skeleton->getName() + '/' + linkInfo->name);
-    }
-  }
-  const std::size_t jointID = this->AddJoint(
-      bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
-  // TODO(addisu) Remove incrementVersion once DART has been updated to
-  // internally increment the BodyNode's version after moveTo.
-  bn->incrementVersion();
+  auto constraint =
+    std::make_shared<dart::constraint::WeldJointConstraint>(parentBn, bn);
+  dartWorld->getConstraintSolver()->addConstraint(constraint);
+  auto jointID = this->AddJointConstraint(constraint);
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
+  
 }
 
 /////////////////////////////////////////////////
