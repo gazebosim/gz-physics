@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_REQUESTFEATURES_HH_
-#define IGNITION_PHYSICS_REQUESTFEATURES_HH_
+#ifndef GZ_PHYSICS_REQUESTFEATURES_HH_
+#define GZ_PHYSICS_REQUESTFEATURES_HH_
 
 #include <set>
 #include <string>
 
-#include <ignition/physics/Entity.hh>
+#include <gz/physics/Entity.hh>
 
 namespace ignition
 {
@@ -70,6 +70,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/RequestFeatures.hh>
+#include <gz/physics/detail/RequestFeatures.hh>
 
 #endif

@@ -15,12 +15,12 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_REMOVEENTITIES_HH_
-#define IGNITION_PHYSICS_REMOVEENTITIES_HH_
+#ifndef GZ_PHYSICS_REMOVEENTITIES_HH_
+#define GZ_PHYSICS_REMOVEENTITIES_HH_
 
 #include <string>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace ignition
 {
@@ -116,6 +116,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/RemoveEntities.hh>
+#include <gz/physics/detail/RemoveEntities.hh>
 
 #endif

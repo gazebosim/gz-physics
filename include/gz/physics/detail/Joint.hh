@@ -15,11 +15,11 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_JOINT_HH_
-#define IGNITION_PHYSICS_DETAIL_JOINT_HH_
+#ifndef GZ_PHYSICS_DETAIL_JOINT_HH_
+#define GZ_PHYSICS_DETAIL_JOINT_HH_
 
-#include <ignition/physics/Joint.hh>
-#include "ignition/physics/detail/FrameSemantics.hh"
+#include <gz/physics/Joint.hh>
+#include "gz/physics/detail/FrameSemantics.hh"
 
 namespace ignition
 {

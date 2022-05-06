@@ -15,16 +15,16 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FRAMESEMANTICS_HH_
-#define IGNITION_PHYSICS_FRAMESEMANTICS_HH_
+#ifndef GZ_PHYSICS_FRAMESEMANTICS_HH_
+#define GZ_PHYSICS_FRAMESEMANTICS_HH_
 
 #include <memory>
 
-#include <ignition/physics/Feature.hh>
-#include <ignition/physics/Entity.hh>
-#include <ignition/physics/FrameID.hh>
-#include <ignition/physics/FrameData.hh>
-#include <ignition/physics/RelativeQuantity.hh>
+#include <gz/physics/Feature.hh>
+#include <gz/physics/Entity.hh>
+#include <gz/physics/FrameID.hh>
+#include <gz/physics/FrameData.hh>
+#include <gz/physics/RelativeQuantity.hh>
 
 namespace ignition
 {
@@ -209,6 +209,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FrameSemantics.hh>
+#include <gz/physics/detail/FrameSemantics.hh>
 
 #endif

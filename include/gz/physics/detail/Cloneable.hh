@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_CLONEABLE_HH_
-#define IGNITION_PHYSICS_DETAIL_CLONEABLE_HH_
+#ifndef GZ_PHYSICS_DETAIL_CLONEABLE_HH_
+#define GZ_PHYSICS_DETAIL_CLONEABLE_HH_
 
 #include <memory>
 #include <utility>
-#include "ignition/physics/Cloneable.hh"
+#include "gz/physics/Cloneable.hh"
 
 namespace ignition
 {

@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_COMPOSITEDATA_HH_
-#define IGNITION_PHYSICS_DETAIL_COMPOSITEDATA_HH_
+#ifndef GZ_PHYSICS_DETAIL_COMPOSITEDATA_HH_
+#define GZ_PHYSICS_DETAIL_COMPOSITEDATA_HH_
 
 #include <memory>
 #include <utility>
 
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/utils/SuppressWarning.hh>
 
-#include "ignition/physics/CompositeData.hh"
+#include "gz/physics/CompositeData.hh"
 
 namespace ignition
 {

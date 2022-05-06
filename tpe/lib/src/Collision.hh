@@ -20,7 +20,7 @@
 
 #include <ignition/math/AxisAlignedBox.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 #include "Shape.hh"

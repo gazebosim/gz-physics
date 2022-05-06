@@ -15,17 +15,17 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_COMPOSITEDATA_HH_
-#define IGNITION_PHYSICS_COMPOSITEDATA_HH_
+#ifndef GZ_PHYSICS_COMPOSITEDATA_HH_
+#define GZ_PHYSICS_COMPOSITEDATA_HH_
 
 #include <string>
 #include <map>
 #include <set>
 
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/utils/SuppressWarning.hh>
 
-#include "ignition/physics/Cloneable.hh"
-#include "ignition/physics/Export.hh"
+#include "gz/physics/Cloneable.hh"
+#include "gz/physics/Export.hh"
 
 namespace ignition
 {
@@ -60,7 +60,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -136,7 +136,7 @@ namespace ignition
       /// \code
       ///     #include <iostream>
       ///     #include <cassert>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -223,7 +223,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -305,7 +305,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -380,7 +380,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -476,7 +476,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -592,7 +592,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <cassert>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -652,7 +652,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <cassert>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -776,7 +776,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -840,7 +840,7 @@ namespace ignition
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace ignition::physics;
       ///
@@ -955,7 +955,7 @@ namespace ignition
       public: CompositeData &operator=(CompositeData &&_other);
 
       /// \brief Struct which contains information about a data type within the
-      /// CompositeData. See ignition/physics/detail/CompositeData.hh for the
+      /// CompositeData. See gz/physics/detail/CompositeData.hh for the
       /// definition. This class is public so that helper functions can use it
       /// without being friends of the class.
       /// \private
@@ -986,6 +986,6 @@ namespace ignition
   }
 }
 
-#include "ignition/physics/detail/CompositeData.hh"
+#include "gz/physics/detail/CompositeData.hh"
 
 #endif

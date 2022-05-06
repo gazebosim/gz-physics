@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FEATURELIST_HH_
-#define IGNITION_PHYSICS_FEATURELIST_HH_
+#ifndef GZ_PHYSICS_FEATURELIST_HH_
+#define GZ_PHYSICS_FEATURELIST_HH_
 
 #include <tuple>
 
-#include <ignition/physics/Feature.hh>
+#include <gz/physics/Feature.hh>
 
 namespace ignition
 {
@@ -109,6 +109,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FeatureList.hh>
+#include <gz/physics/detail/FeatureList.hh>
 
 #endif

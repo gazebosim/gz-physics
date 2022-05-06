@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FRAMESEMANTICS_HH_
-#define IGNITION_PHYSICS_DETAIL_FRAMESEMANTICS_HH_
+#ifndef GZ_PHYSICS_DETAIL_FRAMESEMANTICS_HH_
+#define GZ_PHYSICS_DETAIL_FRAMESEMANTICS_HH_
 
 #include <memory>
 
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/FrameSemantics.hh>
 
 namespace ignition
 {

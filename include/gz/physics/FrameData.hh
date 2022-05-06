@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FRAMEDATA_HH_
-#define IGNITION_PHYSICS_FRAMEDATA_HH_
+#ifndef GZ_PHYSICS_FRAMEDATA_HH_
+#define GZ_PHYSICS_FRAMEDATA_HH_
 
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace ignition
 {
@@ -86,6 +86,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FrameData.hh>
+#include <gz/physics/detail/FrameData.hh>
 
 #endif

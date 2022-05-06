@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_PLANESHAPE_HH_
-#define IGNITION_PHYSICS_PLANESHAPE_HH_
+#ifndef GZ_PHYSICS_PLANESHAPE_HH_
+#define GZ_PHYSICS_PLANESHAPE_HH_
 
 #include <string>
 
-#include <ignition/physics/DeclareShapeType.hh>
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/DeclareShapeType.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace ignition
 {
@@ -163,6 +163,6 @@ namespace physics
 }
 }
 
-#include <ignition/physics/detail/PlaneShape.hh>
+#include <gz/physics/detail/PlaneShape.hh>
 
-#endif  // IGNITION_PHYSICS_PLANESHAPE_HH_
+#endif  // GZ_PHYSICS_PLANESHAPE_HH_

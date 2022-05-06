@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
-#define IGNITION_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
+#ifndef GZ_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
+#define GZ_PHYSICS_DETAIL_RELATIVEQUANTITY_HH_
 
 #include <iostream>
 #include <utility>
 
-#include <ignition/physics/RelativeQuantity.hh>
-#include "ignition/physics/Geometry.hh"
+#include <gz/physics/RelativeQuantity.hh>
+#include "gz/physics/Geometry.hh"
 
 namespace ignition
 {

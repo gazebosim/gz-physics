@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_CLONEABLE_HH_
-#define IGNITION_PHYSICS_CLONEABLE_HH_
+#ifndef GZ_PHYSICS_CLONEABLE_HH_
+#define GZ_PHYSICS_CLONEABLE_HH_
 
 #include <memory>
 
@@ -118,6 +118,6 @@ namespace ignition
   }
 }
 
-#include "ignition/physics/detail/Cloneable.hh"
+#include "gz/physics/detail/Cloneable.hh"
 
 #endif

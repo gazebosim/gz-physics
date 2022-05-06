@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FINDFEATURES_HH_
-#define IGNITION_PHYSICS_FINDFEATURES_HH_
+#ifndef GZ_PHYSICS_FINDFEATURES_HH_
+#define GZ_PHYSICS_FINDFEATURES_HH_
 
 #include <set>
 #include <string>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace ignition
 {
@@ -66,6 +66,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FindFeatures.hh>
+#include <gz/physics/detail/FindFeatures.hh>
 
 #endif

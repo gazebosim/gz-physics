@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FRAMEID_HH_
-#define IGNITION_PHYSICS_FRAMEID_HH_
+#ifndef GZ_PHYSICS_FRAMEID_HH_
+#define GZ_PHYSICS_FRAMEID_HH_
 
 #include <memory>
 
-#include <ignition/physics/Export.hh>
-#include <ignition/physics/detail/Identity.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/physics/Export.hh>
+#include <gz/physics/detail/Identity.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 namespace ignition
 {

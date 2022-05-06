@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DATASTATUSMASK_HH_
-#define IGNITION_PHYSICS_DATASTATUSMASK_HH_
+#ifndef GZ_PHYSICS_DATASTATUSMASK_HH_
+#define GZ_PHYSICS_DATASTATUSMASK_HH_
 
-#include "ignition/physics/CompositeData.hh"
+#include "gz/physics/CompositeData.hh"
 
 namespace ignition
 {

@@ -15,11 +15,11 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_REGISTER_HH_
-#define IGNITION_PHYSICS_REGISTER_HH_
+#ifndef GZ_PHYSICS_REGISTER_HH_
+#define GZ_PHYSICS_REGISTER_HH_
 
-#include <ignition/physics/detail/Register.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/detail/Register.hh>
+#include <gz/physics/Implements.hh>
 
 // -------------------- Add a physics engine plugin ------------------------
 
@@ -39,8 +39,8 @@
 ///
 /// If your library has multiple translation units (.cpp files) and you want to
 /// register plugins in multiple translation units, use this
-/// ignition/physics/Register.hh header in ONE of the translation units, and
-/// then the ignition/physics/RegisterMore.hh header in all of the rest of the
+/// gz/physics/Register.hh header in ONE of the translation units, and
+/// then the gz/physics/RegisterMore.hh header in all of the rest of the
 /// translation units.
 #define IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT) \
   DETAIL_IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT)

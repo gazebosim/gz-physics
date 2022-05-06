@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_SPECIFYDATA_HH_
-#define IGNITION_PHYSICS_SPECIFYDATA_HH_
+#ifndef GZ_PHYSICS_SPECIFYDATA_HH_
+#define GZ_PHYSICS_SPECIFYDATA_HH_
 
-#include "ignition/physics/detail/PrivateSpecifyData.hh"
+#include "gz/physics/detail/PrivateSpecifyData.hh"
 
 namespace ignition
 {
@@ -357,6 +357,6 @@ namespace ignition
   }
 }
 
-#include "ignition/physics/detail/SpecifyData.hh"
+#include "gz/physics/detail/SpecifyData.hh"
 
 #endif

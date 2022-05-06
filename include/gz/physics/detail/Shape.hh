@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_SHAPE_HH_
-#define IGNITION_PHYSICS_DETAIL_SHAPE_HH_
+#ifndef GZ_PHYSICS_DETAIL_SHAPE_HH_
+#define GZ_PHYSICS_DETAIL_SHAPE_HH_
 
-#include <ignition/physics/Shape.hh>
+#include <gz/physics/Shape.hh>
 
 namespace ignition
 {

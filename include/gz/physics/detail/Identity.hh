@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_IDENTITY_HH_
-#define IGNITION_PHYSICS_DETAIL_IDENTITY_HH_
+#ifndef GZ_PHYSICS_DETAIL_IDENTITY_HH_
+#define GZ_PHYSICS_DETAIL_IDENTITY_HH_
 
 #include <cstddef>
 #include <memory>
 
-#include <ignition/physics/Export.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/physics/Export.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 namespace ignition
 {

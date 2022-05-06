@@ -15,11 +15,11 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_RELATIVEQUANTITY_HH_
-#define IGNITION_PHYSICS_RELATIVEQUANTITY_HH_
+#ifndef GZ_PHYSICS_RELATIVEQUANTITY_HH_
+#define GZ_PHYSICS_RELATIVEQUANTITY_HH_
 
-#include <ignition/physics/FrameID.hh>
-#include <ignition/physics/FrameData.hh>
+#include <gz/physics/FrameID.hh>
+#include <gz/physics/FrameData.hh>
 
 namespace ignition
 {
@@ -148,7 +148,7 @@ namespace ignition
       // pairs, and so on.
       //
       // Users can also define Spaces for their own types (see the header
-      // ignition/physics/detail/FrameSemantics.hpp for example implementations)
+      // gz/physics/detail/FrameSemantics.hpp for example implementations)
       // and use them seamlessly in the Frame Semantics infrastructure.
     }
 
@@ -214,6 +214,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/RelativeQuantity.hh>
+#include <gz/physics/detail/RelativeQuantity.hh>
 
 #endif

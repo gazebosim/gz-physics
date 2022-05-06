@@ -17,11 +17,11 @@
 
 //! [basic include]
 #include <string>
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 //! [basic include]
 
 //! [include feature]
-#include <ignition/physics/ConstructEmpty.hh>
+#include <gz/physics/ConstructEmpty.hh>
 
 namespace ignition {
 namespace physics {

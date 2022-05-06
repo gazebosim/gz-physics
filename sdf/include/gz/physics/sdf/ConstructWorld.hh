@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_SDF_CONSTRUCTWORLD_HH_
-#define IGNITION_PHYSICS_SDF_CONSTRUCTWORLD_HH_
+#ifndef GZ_PHYSICS_SDF_CONSTRUCTWORLD_HH_
+#define GZ_PHYSICS_SDF_CONSTRUCTWORLD_HH_
 
 #include <sdf/World.hh>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace ignition {
 namespace physics {

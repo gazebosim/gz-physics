@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
-#define IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
+#ifndef GZ_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
+#define GZ_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
 
 #include <memory>
 #include <utility>
 
-#include "ignition/physics/CompositeData.hh"
+#include "gz/physics/CompositeData.hh"
 
 #define IGNITION_PHYSICS_CONST_GET_ERROR \
   "Cannot use the const-qualified Get<Data>() function if " \
@@ -53,7 +53,7 @@ namespace ignition
 
       /// \brief This class implements the specialized functions for ExpectData.
       /// The implementations of these functions can be found in
-      /// ignition/physics/detail/SpecifyData.hh
+      /// gz/physics/detail/SpecifyData.hh
       template <typename Expected>
       class PrivateExpectData
       {

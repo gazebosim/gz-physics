@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
-#define IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
+#ifndef GZ_PHYSICS_MESH_MESHSHAPE_HH_
+#define GZ_PHYSICS_MESH_MESHSHAPE_HH_
 
 #include <string>
 
-#include <ignition/common/Mesh.hh>
+#include <gz/common/Mesh.hh>
 
-#include <ignition/physics/DeclareShapeType.hh>
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/DeclareShapeType.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace ignition
 {
@@ -134,6 +134,6 @@ namespace mesh
 }
 }
 
-#include <ignition/physics/mesh/detail/MeshShape.hh>
+#include <gz/physics/mesh/detail/MeshShape.hh>
 
-#endif  // IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
+#endif  // GZ_PHYSICS_MESH_MESHSHAPE_HH_

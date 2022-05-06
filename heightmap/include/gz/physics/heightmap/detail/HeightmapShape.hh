@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_HEIGHTMAP_DETAIL_HEIGHTMAPSHAPE_HH_
-#define IGNITION_PHYSICS_HEIGHTMAP_DETAIL_HEIGHTMAPSHAPE_HH_
+#ifndef GZ_PHYSICS_HEIGHTMAP_DETAIL_HEIGHTMAPSHAPE_HH_
+#define GZ_PHYSICS_HEIGHTMAP_DETAIL_HEIGHTMAPSHAPE_HH_
 
 #include <string>
 
-#include <ignition/physics/heightmap/HeightmapShape.hh>
+#include <gz/physics/heightmap/HeightmapShape.hh>
 
 namespace ignition
 {
@@ -56,4 +56,4 @@ namespace heightmap
 }
 }
 
-#endif  // IGNITION_PHYSICS_MESH_DETAIL_MESHSHAPE_HH_
+#endif  // GZ_PHYSICS_MESH_DETAIL_MESHSHAPE_HH_

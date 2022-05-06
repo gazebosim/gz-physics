@@ -24,7 +24,7 @@
 #include <ignition/math/AxisAlignedBox.hh>
 #include <ignition/utils/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 namespace ignition {
 namespace physics {

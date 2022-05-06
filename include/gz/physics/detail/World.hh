@@ -15,12 +15,12 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_DETAIL_WORLD_HH_
-#define IGNITION_PHYSICS_DETAIL_WORLD_HH_
+#ifndef GZ_PHYSICS_DETAIL_WORLD_HH_
+#define GZ_PHYSICS_DETAIL_WORLD_HH_
 
 #include <string>
 
-#include <ignition/physics/World.hh>
+#include <gz/physics/World.hh>
 
 namespace ignition
 {

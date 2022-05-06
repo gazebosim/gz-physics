@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_REQUESTENGINE_HH_
-#define IGNITION_PHYSICS_REQUESTENGINE_HH_
+#ifndef GZ_PHYSICS_REQUESTENGINE_HH_
+#define GZ_PHYSICS_REQUESTENGINE_HH_
 
 #include <memory>
 #include <set>
 #include <string>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace ignition
 {
@@ -100,6 +100,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/RequestEngine.hh>
+#include <gz/physics/detail/RequestEngine.hh>
 
 #endif

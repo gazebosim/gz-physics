@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_CANWRITEDATA_HH_
-#define IGNITION_PHYSICS_DETAIL_CANWRITEDATA_HH_
+#ifndef GZ_PHYSICS_DETAIL_CANWRITEDATA_HH_
+#define GZ_PHYSICS_DETAIL_CANWRITEDATA_HH_
 
-#include "ignition/physics/CanWriteData.hh"
+#include "gz/physics/CanWriteData.hh"
 
 namespace ignition
 {

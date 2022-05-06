@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
-#define IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
+#ifndef GZ_PHYSICS_DETAIL_INSPECTFEATURES_HH
+#define GZ_PHYSICS_DETAIL_INSPECTFEATURES_HH
 
 #include <set>
 #include <string>
 #include <tuple>
 
-#include <ignition/plugin/PluginPtr.hh>
+#include <gz/plugin/PluginPtr.hh>
 
 namespace ignition
 {
@@ -139,4 +139,4 @@ namespace ignition
   }
 }
 
-#endif  // IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
+#endif  // GZ_PHYSICS_DETAIL_INSPECTFEATURES_HH

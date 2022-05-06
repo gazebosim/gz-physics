@@ -23,7 +23,7 @@
 
 #include <ignition/utils/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 

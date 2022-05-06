@@ -15,16 +15,16 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_ENTITY_HH_
-#define IGNITION_PHYSICS_DETAIL_ENTITY_HH_
+#ifndef GZ_PHYSICS_DETAIL_ENTITY_HH_
+#define GZ_PHYSICS_DETAIL_ENTITY_HH_
 
 #include <memory>
 #include <tuple>
 #include <utility>
 
-#include <ignition/plugin/SpecializedPluginPtr.hh>
-#include <ignition/physics/Entity.hh>
-#include <ignition/physics/TemplateHelpers.hh>
+#include <gz/plugin/SpecializedPluginPtr.hh>
+#include <gz/physics/Entity.hh>
+#include <gz/physics/TemplateHelpers.hh>
 
 namespace ignition
 {

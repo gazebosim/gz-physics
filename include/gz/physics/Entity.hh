@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_ENTITY_HH_
-#define IGNITION_PHYSICS_ENTITY_HH_
+#ifndef GZ_PHYSICS_ENTITY_HH_
+#define GZ_PHYSICS_ENTITY_HH_
 
 #include <optional>
 #include <limits>
 #include <memory>
 
-#include <ignition/physics/Export.hh>
-#include <ignition/physics/detail/Identity.hh>
+#include <gz/physics/Export.hh>
+#include <gz/physics/detail/Identity.hh>
 
 namespace ignition
 {
@@ -301,6 +301,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/Entity.hh>
+#include <gz/physics/detail/Entity.hh>
 
 #endif

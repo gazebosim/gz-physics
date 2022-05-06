@@ -15,11 +15,11 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FREEJOINT_HH_
-#define IGNITION_PHYSICS_FREEJOINT_HH_
+#ifndef GZ_PHYSICS_FREEJOINT_HH_
+#define GZ_PHYSICS_FREEJOINT_HH_
 
-#include <ignition/physics/DeclareJointType.hh>
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/DeclareJointType.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace ignition
 {
@@ -57,6 +57,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FreeJoint.hh>
+#include <gz/physics/detail/FreeJoint.hh>
 
 #endif

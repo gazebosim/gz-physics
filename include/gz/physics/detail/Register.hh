@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_REGISTER_HH_
-#define IGNITION_PHYSICS_DETAIL_REGISTER_HH_
+#ifndef GZ_PHYSICS_DETAIL_REGISTER_HH_
+#define GZ_PHYSICS_DETAIL_REGISTER_HH_
 
 #include <tuple>
 
-#include <ignition/plugin/Register.hh>
-#include <ignition/physics/Feature.hh>
+#include <gz/plugin/Register.hh>
+#include <gz/physics/Feature.hh>
 
 namespace ignition
 {

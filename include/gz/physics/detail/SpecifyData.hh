@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_SPECIFYDATA_HH_
-#define IGNITION_PHYSICS_DETAIL_SPECIFYDATA_HH_
+#ifndef GZ_PHYSICS_DETAIL_SPECIFYDATA_HH_
+#define GZ_PHYSICS_DETAIL_SPECIFYDATA_HH_
 
 #include <memory>
 #include <utility>
 
-#include "ignition/physics/SpecifyData.hh"
+#include "gz/physics/SpecifyData.hh"
 
 namespace ignition
 {
@@ -512,7 +512,7 @@ namespace ignition
       };
     }
 
-    // Implementation. See ignition/physics/SpecifyData.hh for description.
+    // Implementation. See gz/physics/SpecifyData.hh for description.
     template <typename Specification, template<typename> class FindSpec>
     constexpr std::size_t CountUpperLimitOfSpecifiedData()
     {
@@ -523,14 +523,14 @@ namespace ignition
           FindSpec>::Count();
     }
 
-    // Implementation. See ignition/physics/SpecifyData.hh for description.
+    // Implementation. See gz/physics/SpecifyData.hh for description.
     template <typename Specification>
     constexpr std::size_t CountUpperLimitOfExpectedData()
     {
       return CountUpperLimitOfSpecifiedData<Specification, FindExpected>();
     }
 
-    // Implementation. See ignition/physics/SpecifyData.hh for description.
+    // Implementation. See gz/physics/SpecifyData.hh for description.
     template <typename Specification>
     constexpr std::size_t CountUpperLimitOfRequiredData()
     {

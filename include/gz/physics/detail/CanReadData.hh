@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_CANREADDATA_HH_
-#define IGNITION_PHYSICS_DETAIL_CANREADDATA_HH_
+#ifndef GZ_PHYSICS_DETAIL_CANREADDATA_HH_
+#define GZ_PHYSICS_DETAIL_CANREADDATA_HH_
 
-#include "ignition/physics/CanReadData.hh"
+#include "gz/physics/CanReadData.hh"
 #include <cassert>
 
 namespace ignition

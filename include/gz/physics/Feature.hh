@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FEATURE_HH_
-#define IGNITION_PHYSICS_FEATURE_HH_
+#ifndef GZ_PHYSICS_FEATURE_HH_
+#define GZ_PHYSICS_FEATURE_HH_
 
 #include <cstddef>
 #include <memory>
 #include <tuple>
 
-#include <ignition/physics/Export.hh>
-#include <ignition/physics/Entity.hh>
+#include <gz/physics/Export.hh>
+#include <gz/physics/Entity.hh>
 
 namespace ignition
 {

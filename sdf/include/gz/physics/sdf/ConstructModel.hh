@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_SDF_CONSTRUCTMODEL_HH_
-#define IGNITION_PHYSICS_SDF_CONSTRUCTMODEL_HH_
+#ifndef GZ_PHYSICS_SDF_CONSTRUCTMODEL_HH_
+#define GZ_PHYSICS_SDF_CONSTRUCTMODEL_HH_
 
 #include <sdf/Model.hh>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace ignition {
 namespace physics {

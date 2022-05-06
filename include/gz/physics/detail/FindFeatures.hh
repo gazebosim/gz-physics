@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FINDFEATURES_HH_
-#define IGNITION_PHYSICS_DETAIL_FINDFEATURES_HH_
+#ifndef GZ_PHYSICS_DETAIL_FINDFEATURES_HH_
+#define GZ_PHYSICS_DETAIL_FINDFEATURES_HH_
 
 #include <set>
 #include <string>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/detail/InspectFeatures.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/detail/InspectFeatures.hh>
 
 namespace ignition
 {

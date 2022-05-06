@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_GEOMETRY_HH_
-#define IGNITION_PHYSICS_GEOMETRY_HH_
+#ifndef GZ_PHYSICS_GEOMETRY_HH_
+#define GZ_PHYSICS_GEOMETRY_HH_
 
 #include <Eigen/Geometry>
 
