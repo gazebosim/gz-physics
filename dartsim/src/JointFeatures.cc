@@ -490,16 +490,32 @@ Identity JointFeatures::AttachFixedJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
-  // child already has a parent joint
-  // TODO(scpeters): use a WeldJointConstraint between the two bodies
-  auto worldId = this->GetWorldOfModelImpl(
-      this->models.IdentityOf(bn->getSkeleton()));
-  auto dartWorld = this->worlds.at(worldId);
+  if (bn->getParentJoint()->getType() != "FreeJoint")
+  {
+    // child already has a parent joint
+    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    auto worldId = this->GetWorldOfModelImpl(
+        this->models.IdentityOf(bn->getSkeleton()));
+    auto dartWorld = this->worlds.at(worldId);
 
-  auto constraint =
-    std::make_shared<dart::constraint::WeldJointConstraint>(parentBn, bn);
-  dartWorld->getConstraintSolver()->addConstraint(constraint);
-  auto jointID = this->AddJointConstraint(constraint);
+    auto constraint =
+      std::make_shared<dart::constraint::WeldJointConstraint>(parentBn, bn);
+    dartWorld->getConstraintSolver()->addConstraint(constraint);
+    auto jointID = this->AddJointConstraint(constraint);
+    return this->GenerateIdentity(jointID, this->joints.at(jointID));
+  }
+  {
+    auto skeleton = bn->getSkeleton();
+    if (skeleton)
+    {
+      bn->setName(skeleton->getName() + '/' + linkInfo->name);
+    }
+  }
+  const std::size_t jointID = this->AddJoint(
+      bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+  // TODO(addisu) Remove incrementVersion once DART has been updated to
+  // internally increment the BodyNode's version after moveTo.
+  bn->incrementVersion();
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 

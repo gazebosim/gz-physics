@@ -848,9 +848,8 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
         math::eigen3::convert(dartBody1->getLinearVelocity());
     math::Vector3d body2LinearVelocity =
         math::eigen3::convert(dartBody2->getLinearVelocity());
-    // TODO(arjo): Investigate the drop in tolerance
-    EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-5);
-    EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-5);
+    EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
+    EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
   }
 
   // now detach joint and expect model2 to start moving again
@@ -951,23 +950,33 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
 
-  // Create the joints
+  // Create the first joint. This should be a normal fixed joint.
+  const auto poseParent1 = dartBody1->getTransform();
+  const auto poseChild1 = dartBody2->getTransform();
+  auto poseParentChild1 = poseParent1.inverse() * poseChild1;
   auto fixedJoint1 = model2Body->AttachFixedJoint(model1Body);
+  fixedJoint1->SetTransformFromParent(poseParentChild1);
+
+  EXPECT_EQ(initialModel1Pose,
+            math::eigen3::convert(dartBody1->getWorldTransform()));
+  EXPECT_EQ(initialModel2Pose,
+            math::eigen3::convert(dartBody2->getWorldTransform()));
+  EXPECT_EQ(initialModel3Pose,
+            math::eigen3::convert(dartBody3->getWorldTransform()));
+
+  // Create the second joint. This should be a WeldJoint constraint
+  const auto poseParent2 = dartBody3->getTransform();
+  const auto poseChild2 = dartBody2->getTransform();
+  auto poseParentChild2 = poseParent2.inverse() * poseChild2;
   auto fixedJoint2 = model2Body->AttachFixedJoint(model3Body);
+  fixedJoint2->SetTransformFromParent(poseParentChild2);
 
-  {
-    const auto poseParent = dartBody1->getTransform();
-    const auto poseChild = dartBody2->getTransform();
-    auto poseParentChild = poseParent.inverse() * poseChild;
-    fixedJoint1->SetTransformFromParent(poseParentChild);
-  }
-
-  {
-    const auto poseParent = dartBody3->getTransform();
-    const auto poseChild = dartBody2->getTransform();
-    auto poseParentChild = poseParent.inverse() * poseChild;
-    fixedJoint2->SetTransformFromParent(poseParentChild);
-  }
+  EXPECT_EQ(initialModel1Pose,
+            math::eigen3::convert(dartBody1->getWorldTransform()));
+  EXPECT_EQ(initialModel2Pose,
+            math::eigen3::convert(dartBody2->getWorldTransform()));
+  EXPECT_EQ(initialModel3Pose,
+            math::eigen3::convert(dartBody3->getWorldTransform()));
 
   const std::size_t numSteps = 100;
   for (std::size_t i = 0; i < numSteps; ++i)
