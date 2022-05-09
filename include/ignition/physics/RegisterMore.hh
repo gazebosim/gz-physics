@@ -13,23 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
-#ifndef IGNITION_PHYSICS_REGISTERMORE_HH_
-#define IGNITION_PHYSICS_REGISTERMORE_HH_
-
-/// If your library already has a translation unit (.cpp file) containing
-/// \code
-///     #include <ignition/physics/Register.hh>
-/// \endcode
-///
-/// then any other translation units that want to register plugins should use
-/// \code
-///     #include <ignition/physics/RegisterMore.hh>
-/// \endcode
-///
-/// But at least one translation unit of your library must contain Register.hh.
-#define IGN_PLUGIN_REGISTER_MORE_TRANS_UNITS
-#include <ignition/physics/Register.hh>
-
-#endif
+#include <gz/physics/RegisterMore.hh>

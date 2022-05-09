@@ -19,12 +19,12 @@
 //! [include statements]
 #include <iostream>
 
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/PluginPtr.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/plugin/PluginPtr.hh>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/RequestEngine.hh>
 
 // The features that an engine must have to be loaded by this loader.
 using Features = ignition::physics::FeatureList<
