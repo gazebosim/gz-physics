@@ -466,9 +466,15 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
 Identity JointFeatures::CastToFixedJoint(
     const Identity &_jointID) const
 {
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+  {
+    // TODO(arjo): Handle constraint casts.
+    return this->GenerateInvalidId();
+  }
   dart::dynamics::WeldJoint *const weld =
       dynamic_cast<dart::dynamics::WeldJoint *>(
-          this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
+          jointInfo->joint.get());
 
   if (weld)
     return this->GenerateIdentity(_jointID, this->Reference(_jointID));
@@ -523,9 +529,15 @@ Identity JointFeatures::AttachFixedJoint(
 Identity JointFeatures::CastToFreeJoint(
     const Identity &_jointID) const
 {
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+  {
+    // TODO(arjo): Handle constraint casts.
+    return this->GenerateInvalidId();
+  }
   auto *const freeJoint =
       dynamic_cast<dart::dynamics::FreeJoint *>(
-          this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
+        jointInfo->joint.get());
 
   if (freeJoint)
     return this->GenerateIdentity(_jointID, this->Reference(_jointID));
@@ -546,9 +558,15 @@ void JointFeatures::SetFreeJointRelativeTransform(
 Identity JointFeatures::CastToRevoluteJoint(
     const Identity &_jointID) const
 {
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+  {
+    // TODO(arjo): Handle constraint casts.
+    return this->GenerateInvalidId();
+  }
   dart::dynamics::RevoluteJoint *const revolute =
       dynamic_cast<dart::dynamics::RevoluteJoint *>(
-          this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
+          jointInfo->joint.get());
 
   if (revolute)
     return this->GenerateIdentity(_jointID, this->Reference(_jointID));
@@ -615,9 +633,14 @@ Identity JointFeatures::AttachRevoluteJoint(
 Identity JointFeatures::CastToPrismaticJoint(
     const Identity &_jointID) const
 {
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
+  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
+  {
+    // TODO(arjo): Handle constraint casts.
+    return this->GenerateInvalidId();
+  }
   dart::dynamics::PrismaticJoint *prismatic =
-      dynamic_cast<dart::dynamics::PrismaticJoint*>(
-        this->ReferenceInterface<JointInfo>(_jointID)->joint.get());
+      dynamic_cast<dart::dynamics::PrismaticJoint*>(jointInfo->joint.get());
 
   if (prismatic)
     return this->GenerateIdentity(_jointID, this->Reference(_jointID));
