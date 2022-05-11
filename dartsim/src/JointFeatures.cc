@@ -499,7 +499,7 @@ Identity JointFeatures::AttachFixedJoint(
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
+    // use a WeldJointConstraint between the two bodies
     auto worldId = this->GetWorldOfModelImpl(
         this->models.IdentityOf(bn->getSkeleton()));
     auto dartWorld = this->worlds.at(worldId);
