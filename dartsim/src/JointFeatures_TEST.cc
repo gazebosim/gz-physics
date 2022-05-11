@@ -983,8 +983,8 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   {
     world->Step(output, state, input);
 
-    // Expect the model1 to stay at rest
-    // (since it's held in place by the joints)
+    // Expect all the bodies to be at rest.
+    // (since they're held in place by the joints)
     math::Vector3d body1LinearVelocity =
         math::eigen3::convert(dartBody1->getLinearVelocity());
     math::Vector3d body2LinearVelocity =
@@ -1005,8 +1005,8 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   {
     world->Step(output, state, input);
 
-    // Expect the model1 to stay at rest (since it's on the ground) and model2
-    // to start falling
+    // Expect the middle box to be still as it is already at rest.
+    // Expect the two side boxes to fall away.
     math::Vector3d body1LinearVelocity =
         math::eigen3::convert(dartBody1->getLinearVelocity());
     math::Vector3d body2LinearVelocity =

@@ -364,7 +364,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints.idToObject[id] = std::make_shared<JointInfo>();
     this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;
-     this->joints.idToObject[id]->type = JointInfo::JointType::JOINT;
+    this->joints.idToObject[id]->type = JointInfo::JointType::JOINT;
     dart::dynamics::SimpleFramePtr jointFrame =
         dart::dynamics::SimpleFrame::createShared(
             _joint->getChildBodyNode(), _joint->getName() + "_frame",
