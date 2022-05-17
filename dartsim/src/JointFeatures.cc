@@ -331,29 +331,21 @@ void JointFeatures::SetJointMaxEffort(
 /////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
-  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
-  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
-    return 0;
-  return jointInfo->joint->getNumDofs();
+  return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
-  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
-  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
-    return jointInfo->constraint->getRelativeTransform().inverse();
-  return jointInfo->joint->getTransformFromParentBodyNode();
+  return this->ReferenceInterface<JointInfo>(_id)
+    ->joint->getTransformFromParentBodyNode();
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
-  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
-  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
-    return jointInfo->constraint->getRelativeTransform();
   return this->ReferenceInterface<JointInfo>(_id)
-      ->joint->getTransformFromChildBodyNode().inverse();
+    ->joint->getTransformFromChildBodyNode().inverse();
 }
 
 /////////////////////////////////////////////////
@@ -467,11 +459,6 @@ Identity JointFeatures::CastToFixedJoint(
     const Identity &_jointID) const
 {
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
-  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
-  {
-    // TODO(arjo): Handle constraint casts.
-    return this->GenerateInvalidId();
-  }
   dart::dynamics::WeldJoint *const weld =
       dynamic_cast<dart::dynamics::WeldJoint *>(
           jointInfo->joint.get());
@@ -499,15 +486,25 @@ Identity JointFeatures::AttachFixedJoint(
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // use a WeldJointConstraint between the two bodies
+    // Create a phantom link and a joint to attach the child to the phantom
+    const auto &[joint, phantomBody] =
+      bn->getSkeleton()->createJointAndBodyNodePair<
+        dart::dynamics::WeldJoint,
+        dart::dynamics::BodyNode>(
+          bn, properties, dart::dynamics::BodyNode::AspectProperties());
+    const std::size_t jointID = this->AddJoint(joint);
+    phantomBody->setCollidable(false);
+
+    // use a WeldJointConstraint between the phantom joint and the link
     auto worldId = this->GetWorldOfModelImpl(
         this->models.IdentityOf(bn->getSkeleton()));
     auto dartWorld = this->worlds.at(worldId);
 
     auto constraint =
-      std::make_shared<dart::constraint::WeldJointConstraint>(parentBn, bn);
+      std::make_shared<dart::constraint::WeldJointConstraint>(
+        parentBn, phantomBody);
     dartWorld->getConstraintSolver()->addConstraint(constraint);
-    auto jointID = this->AddJointConstraint(constraint);
+    this->AddJointWeldConstraint(jointID, constraint, phantomBody);
     return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
   {
@@ -530,11 +527,6 @@ Identity JointFeatures::CastToFreeJoint(
     const Identity &_jointID) const
 {
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
-  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
-  {
-    // TODO(arjo): Handle constraint casts.
-    return this->GenerateInvalidId();
-  }
   auto *const freeJoint =
       dynamic_cast<dart::dynamics::FreeJoint *>(
         jointInfo->joint.get());
@@ -559,11 +551,6 @@ Identity JointFeatures::CastToRevoluteJoint(
     const Identity &_jointID) const
 {
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
-  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
-  {
-    // TODO(arjo): Handle constraint casts.
-    return this->GenerateInvalidId();
-  }
   dart::dynamics::RevoluteJoint *const revolute =
       dynamic_cast<dart::dynamics::RevoluteJoint *>(
           jointInfo->joint.get());
@@ -609,9 +596,26 @@ Identity JointFeatures::AttachRevoluteJoint(
 
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
-    // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    return this->GenerateInvalidId();
+    // Create a phantom link and a joint to attach the child to the phantom
+    const auto &[joint, phantomBody] =
+      bn->getSkeleton()->createJointAndBodyNodePair<
+        dart::dynamics::RevoluteJoint,
+        dart::dynamics::BodyNode>(
+          bn, properties, dart::dynamics::BodyNode::AspectProperties());
+    const std::size_t jointID = this->AddJoint(joint);
+    phantomBody->setCollidable(false);
+
+    // use a WeldJointConstraint between the phantom joint and the link
+    auto worldId = this->GetWorldOfModelImpl(
+        this->models.IdentityOf(bn->getSkeleton()));
+    auto dartWorld = this->worlds.at(worldId);
+
+    auto constraint =
+      std::make_shared<dart::constraint::WeldJointConstraint>(
+        parentBn, phantomBody);
+    dartWorld->getConstraintSolver()->addConstraint(constraint);
+    this->AddJointWeldConstraint(jointID, constraint, phantomBody);
+    return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
 
   {
@@ -634,11 +638,6 @@ Identity JointFeatures::CastToPrismaticJoint(
     const Identity &_jointID) const
 {
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
-  if (jointInfo->type == JointInfo::JointType::CONSTRAINT)
-  {
-    // TODO(arjo): Handle constraint casts.
-    return this->GenerateInvalidId();
-  }
   dart::dynamics::PrismaticJoint *prismatic =
       dynamic_cast<dart::dynamics::PrismaticJoint*>(jointInfo->joint.get());
 
@@ -683,9 +682,26 @@ Identity JointFeatures::AttachPrismaticJoint(
 
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
-    // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    return this->GenerateInvalidId();
+    // Create a phantom link and a joint to attach the child to the phantom
+    const auto &[joint, phantomBody] =
+      bn->getSkeleton()->createJointAndBodyNodePair<
+        dart::dynamics::PrismaticJoint,
+        dart::dynamics::BodyNode>(
+          bn, properties, dart::dynamics::BodyNode::AspectProperties());
+    const std::size_t jointID = this->AddJoint(joint);
+    phantomBody->setCollidable(false);
+
+    // use a WeldJointConstraint between the phantom joint and the link
+    auto worldId = this->GetWorldOfModelImpl(
+        this->models.IdentityOf(bn->getSkeleton()));
+    auto dartWorld = this->worlds.at(worldId);
+
+    auto constraint =
+      std::make_shared<dart::constraint::WeldJointConstraint>(
+        parentBn, phantomBody);
+    dartWorld->getConstraintSolver()->addConstraint(constraint);
+    this->AddJointWeldConstraint(jointID, constraint, phantomBody);
+    return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
 
   {

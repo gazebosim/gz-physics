@@ -978,6 +978,7 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   EXPECT_EQ(initialModel3Pose,
             math::eigen3::convert(dartBody3->getWorldTransform()));
 
+
   const std::size_t numSteps = 100;
   for (std::size_t i = 0; i < numSteps; ++i)
   {
@@ -995,12 +996,11 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
     EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
     EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-7);
   }
-
   // Detach the joints. M1 and M3 should fall as there is now nothing stopping
   // them from falling.
   fixedJoint1->Detach();
   fixedJoint2->Detach();
-
+ 
   for (std::size_t i = 0; i < numSteps; ++i)
   {
     world->Step(output, state, input);

@@ -74,6 +74,7 @@ struct JointInfo
 {
   dart::dynamics::JointPtr joint;
   dart::dynamics::SimpleFramePtr frame;
+  dart::dynamics::BodyNode *phantomBody{nullptr};
 
   enum JointType
   {
@@ -364,7 +365,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints.idToObject[id] = std::make_shared<JointInfo>();
     this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;
-    this->joints.idToObject[id]->type = JointInfo::JointType::JOINT;
     dart::dynamics::SimpleFramePtr jointFrame =
         dart::dynamics::SimpleFrame::createShared(
             _joint->getChildBodyNode(), _joint->getName() + "_frame",
@@ -376,23 +376,12 @@ class Base : public Implements3d<FeatureList<Feature>>
     return id;
   }
 
-  public: inline std::size_t AddJointConstraint(DartWeldJointConsPtr _joint)
+  public: inline void AddJointWeldConstraint(const std::size_t _id,
+    DartWeldJointConsPtr _joint, dart::dynamics::BodyNode* _phantomBody)
   {
-    const std::size_t id = this->GetNextEntity();
-    this->joints.idToObject[id] = std::make_shared<JointInfo>();
-    this->joints.idToObject[id]->constraint = _joint;
-    this->joints.idToObject[id]->type = JointInfo::JointType::CONSTRAINT;
-    // TODO(arjo): Refactor the joints.objectToId to support constraints.
-    // this->joints.objectToID[_joint] = id;
-    // dart::dynamics::SimpleFramePtr jointFrame =
-    //     dart::dynamics::SimpleFrame::createShared(
-    //         _joint->getChildBodyNode(), _joint->getName() + "_frame",
-    //         _joint->getTransformFromChildBodyNode());
-
-    // this->joints.idToObject[id]->frame = jointFrame;
-    // this->frames[id] = this->joints.idToObject[id]->frame.get();
-
-    return id;
+    this->joints.idToObject[_id]->constraint = _joint;
+    this->joints.idToObject[_id]->type = JointInfo::JointType::CONSTRAINT;
+    this->joints.idToObject[_id]->phantomBody = _phantomBody;
   }
 
   public: inline std::size_t AddShape(
