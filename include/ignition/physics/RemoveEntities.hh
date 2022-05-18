@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/RemoveEntities.hh>
+#include <ignition/physics/config.hh>

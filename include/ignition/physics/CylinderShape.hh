@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/CylinderShape.hh>
+#include <ignition/physics/config.hh>

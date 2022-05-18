@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/RevoluteJoint.hh>
+#include <ignition/physics/config.hh>

@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/FreeGroup.hh>
+#include <ignition/physics/config.hh>

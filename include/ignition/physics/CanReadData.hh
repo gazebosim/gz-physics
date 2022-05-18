@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/CanReadData.hh>
+#include <ignition/physics/config.hh>

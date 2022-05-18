@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/PlaneShape.hh>
+#include <ignition/physics/config.hh>

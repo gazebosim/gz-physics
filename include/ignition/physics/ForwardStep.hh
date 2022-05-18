@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/ForwardStep.hh>
+#include <ignition/physics/config.hh>

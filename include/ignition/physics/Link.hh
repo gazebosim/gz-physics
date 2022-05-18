@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/Link.hh>
+#include <ignition/physics/config.hh>

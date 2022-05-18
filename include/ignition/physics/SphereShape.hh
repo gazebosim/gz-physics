@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/SphereShape.hh>
+#include <ignition/physics/config.hh>

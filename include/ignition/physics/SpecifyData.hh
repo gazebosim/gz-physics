@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/SpecifyData.hh>
+#include <ignition/physics/config.hh>

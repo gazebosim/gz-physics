@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/ContactProperties.hh>
+#include <ignition/physics/config.hh>

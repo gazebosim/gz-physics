@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/ConstructEmpty.hh>
+#include <ignition/physics/config.hh>

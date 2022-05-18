@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/FixedJoint.hh>
+#include <ignition/physics/config.hh>

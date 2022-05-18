@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/DeclareJointType.hh>
+#include <ignition/physics/config.hh>

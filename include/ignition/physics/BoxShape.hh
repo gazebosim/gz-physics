@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/BoxShape.hh>
+#include <ignition/physics/config.hh>

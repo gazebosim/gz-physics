@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/RequestEngine.hh>
+#include <ignition/physics/config.hh>

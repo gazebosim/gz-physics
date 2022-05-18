@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/EllipsoidShape.hh>
+#include <ignition/physics/config.hh>
