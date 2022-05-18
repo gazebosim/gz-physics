@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_BULLET_BASE_HH_
-#define IGNITION_PHYSICS_BULLET_BASE_HH_
+#ifndef GZ_PHYSICS_BULLET_BASE_HH_
+#define GZ_PHYSICS_BULLET_BASE_HH_
 
 #include <btBulletDynamicsCommon.h>
 #include <Eigen/Geometry>

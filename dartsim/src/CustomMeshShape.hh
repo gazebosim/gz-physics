@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
 
 #include <dart/dynamics/MeshShape.hpp>
 #include <ignition/common/Mesh.hh>
@@ -39,4 +39,4 @@ class CustomMeshShape : public dart::dynamics::MeshShape
 }
 }
 
-#endif  // IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
+#endif  // GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_

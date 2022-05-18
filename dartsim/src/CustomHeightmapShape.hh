@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
 
 #include <dart/dynamics/HeightmapShape.hpp>
 #include <ignition/common/geospatial/HeightmapData.hh>
@@ -45,4 +45,4 @@ class CustomHeightmapShape : public dart::dynamics::HeightmapShape<float>
 }
 }
 
-#endif  // IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
+#endif  // GZ_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_

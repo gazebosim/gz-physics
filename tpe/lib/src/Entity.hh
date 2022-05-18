@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
 
 #include <cstddef>
 #include <map>
