@@ -15,4 +15,14 @@
  *
  */
 
+#ifndef IGNITION_PHYSICS__CONFIG_HH_
+#define IGNITION_PHYSICS__CONFIG_HH_
+
 #include <gz/physics/config.hh>
+
+namespace [[deprecated("Use gz namespace.")]]  ignition
+{
+  using namespace gz;
+}
+
+#endif
