@@ -5,6 +5,12 @@ Deprecated code produces compile-time warnings. These warning serve as
 notification to users that their code should be upgraded. The next major
 release will remove the deprecated code.
 
+## Ignition Physics 5.X to 6.X
+
+### Deprecation
+
+1. The `ignition` namespace is deprecated and will be removed in future versions.  Use `gz` instead.
+
 ## Ignition Physics 4.X to 5.X
 
 ### Modifications
