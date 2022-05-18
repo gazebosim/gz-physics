@@ -126,31 +126,31 @@ class MultiData
 
 /////////////////////////////////////////////////
 // Single-requirement CompositeData
-using RequireString = ignition::physics::RequireData<StringData>;
+using RequireString = gz::physics::RequireData<StringData>;
 
 // CompositeData with three requirements and two optional expectations
-using RequireStringBoolChar = ignition::physics::SpecifyData<
-          ignition::physics::RequireData<
+using RequireStringBoolChar = gz::physics::SpecifyData<
+          gz::physics::RequireData<
                 StringData,
                 BoolData,
                 CharData>,
-          ignition::physics::ExpectData<
+          gz::physics::ExpectData<
                 IntData,
                 FloatData> >;
 
 // CompositeData with two requirements and two optional expectations
-using RequireIntDouble = ignition::physics::SpecifyData<
-          ignition::physics::RequireData<
+using RequireIntDouble = gz::physics::SpecifyData<
+          gz::physics::RequireData<
                 DoubleData,
                 IntData>,
-          ignition::physics::ExpectData<
+          gz::physics::ExpectData<
                 StringData,
                 CharData> >;
 
 // A specification which is redundant, because StringData is specified as
 // required twice.
 using RedundantSpec =
-  ignition::physics::SpecifyData<RequireStringBoolChar, RequireString>;
+  gz::physics::SpecifyData<RequireStringBoolChar, RequireString>;
 
 /////////////////////////////////////////////////
 template <typename... DataTypes>
@@ -162,7 +162,7 @@ struct AddSomeData
 template <typename DataType>
 struct AddSomeData<DataType>
 {
-  static void To(ignition::physics::CompositeData &data)
+  static void To(gz::physics::CompositeData &data)
   {
     data.InsertOrAssign<DataType>();
   }
@@ -171,7 +171,7 @@ struct AddSomeData<DataType>
 template <typename DataType1, typename... OtherDataTypes>
 struct AddSomeData<DataType1, OtherDataTypes...>
 {
-  static void To(ignition::physics::CompositeData &data)
+  static void To(gz::physics::CompositeData &data)
   {
     data.InsertOrAssign<DataType1>();
     AddSomeData<OtherDataTypes...>::To(data);
@@ -180,9 +180,9 @@ struct AddSomeData<DataType1, OtherDataTypes...>
 
 /////////////////////////////////////////////////
 template <typename... DataTypes>
-ignition::physics::CompositeData CreateSomeData(bool resetQueries = false)
+gz::physics::CompositeData CreateSomeData(bool resetQueries = false)
 {
-  ignition::physics::CompositeData data;
+  gz::physics::CompositeData data;
   AddSomeData<DataTypes...>::To(data);
 
   if (resetQueries)

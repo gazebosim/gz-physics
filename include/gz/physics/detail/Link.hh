@@ -22,7 +22,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/RelativeQuantity.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -97,6 +97,6 @@ void AddLinkExternalForceTorque::Link<PolicyT, FeaturesT>::AddExternalTorque(
 }
 
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

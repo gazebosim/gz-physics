@@ -28,7 +28,7 @@
 
 #include "EntityManagementFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

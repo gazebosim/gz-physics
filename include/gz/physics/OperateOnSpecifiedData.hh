@@ -24,7 +24,7 @@
 #include "gz/physics/SpecifyData.hh"
 #include "gz/physics/DataStatusMask.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

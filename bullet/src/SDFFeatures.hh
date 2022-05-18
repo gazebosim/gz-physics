@@ -30,11 +30,11 @@
 
 #include "EntityManagementFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct SDFFeatureList : ignition::physics::FeatureList<
+struct SDFFeatureList : gz::physics::FeatureList<
   sdf::ConstructSdfJoint,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfModel,
@@ -80,6 +80,6 @@ class SDFFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

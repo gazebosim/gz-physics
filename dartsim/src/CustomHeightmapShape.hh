@@ -21,12 +21,12 @@
 #include <dart/dynamics/HeightmapShape.hpp>
 #include <ignition/common/geospatial/HeightmapData.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
 /// \brief This class creates a custom derivative of dartsim's HeightmapShape
-/// class which allows an ignition::common::Heightmap to be converted into a
+/// class which allows an gz::common::Heightmap to be converted into a
 /// HeightmapShape that can be used by dartsim.
 /// Using float precision because Bullet's collision detector doesn't support
 /// double. common::HeightmapData also holds floats.

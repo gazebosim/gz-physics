@@ -27,7 +27,7 @@
 #include "gz/physics/Cloneable.hh"
 #include "gz/physics/Export.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -62,7 +62,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -138,7 +138,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -225,7 +225,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -307,7 +307,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -382,7 +382,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyDataWithoutDefault
       ///     {
@@ -478,7 +478,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -594,7 +594,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -654,7 +654,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -778,7 +778,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData1
       ///     {
@@ -842,7 +842,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData1
       ///     {

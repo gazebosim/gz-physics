@@ -22,7 +22,7 @@
 
 #include <gz/physics/CylinderShape.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

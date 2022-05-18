@@ -17,7 +17,7 @@
 
 #include <ignition/physics/FrameID.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

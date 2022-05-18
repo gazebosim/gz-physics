@@ -40,9 +40,9 @@
 
 #include "test/Utils.hh"
 
-using namespace ignition;
+using namespace gz;
 
-using TestFeatureList = ignition::physics::FeatureList<
+using TestFeatureList = gz::physics::FeatureList<
   physics::ForwardStep,
   physics::GetEntities,
   physics::JointFrameSemantics,
@@ -57,14 +57,14 @@ class KinematicsFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    gz::plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
-        loader.Instantiate("ignition::physics::dartsim::Plugin");
+    gz::plugin::PluginPtr dartsim =
+        loader.Instantiate("gz::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;

@@ -54,9 +54,9 @@
 #include "test/Utils.hh"
 #include "ShapeFeatures.hh"
 
-using namespace ignition;
+using namespace gz;
 
-using TestFeatureList = ignition::physics::FeatureList<
+using TestFeatureList = gz::physics::FeatureList<
   physics::dartsim::RetrieveWorld,
   physics::AttachFixedJointFeature,
   physics::AddLinkExternalForceTorque,
@@ -85,14 +85,14 @@ class ShapeFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    gz::plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
-        loader.Instantiate("ignition::physics::dartsim::Plugin");
+    gz::plugin::PluginPtr dartsim =
+        loader.Instantiate("gz::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;
@@ -109,7 +109,7 @@ class AssertVectorApprox
               const char *_mExpr, const char *_nExpr, Eigen::Vector3d _m,
               Eigen::Vector3d _n)
   {
-    if (ignition::physics::test::Equal(_m, _n, this->tol))
+    if (gz::physics::test::Equal(_m, _n, this->tol))
       return ::testing::AssertionSuccess();
 
     return ::testing::AssertionFailure()
@@ -141,9 +141,9 @@ TEST_F(ShapeFeaturesFixture, PrimarySlipCompliance)
 
   AssertVectorApprox vectorPredicate(1e-4);
 
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
 
   // Check that link is at rest
   {
@@ -204,9 +204,9 @@ TEST_F(ShapeFeaturesFixture, SecondarySlipCompliance)
 
   AssertVectorApprox vectorPredicate(1e-4);
 
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
 
   // Check that link is at rest
   {

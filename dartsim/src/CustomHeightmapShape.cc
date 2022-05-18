@@ -23,7 +23,7 @@
 #include <ignition/common/geospatial/ImageHeightmap.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -47,7 +47,7 @@ CustomHeightmapShape::CustomHeightmapShape(
   else
     scale.Z(fabs(_size(2)) / heightmapSizeZ);
 
-  auto sizeIgn = ignition::math::eigen3::convert(_size);
+  auto sizeIgn = gz::math::eigen3::convert(_size);
 
   std::vector<float> heightsFloat;
   _input.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,

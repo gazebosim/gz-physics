@@ -24,7 +24,7 @@
 #include <gz/physics/RelativeQuantity.hh>
 #include "gz/physics/Geometry.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

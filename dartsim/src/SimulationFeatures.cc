@@ -38,7 +38,7 @@
 
 #include "SimulationFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -85,7 +85,7 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     if (info && info->link)
     {
       WorldPose wp;
-      wp.pose = ignition::math::eigen3::convert(
+      wp.pose = gz::math::eigen3::convert(
           info->link->getWorldTransform());
       wp.body = id;
 

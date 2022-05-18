@@ -35,7 +35,7 @@
 
 #include <sdf/Types.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

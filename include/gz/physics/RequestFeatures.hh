@@ -23,7 +23,7 @@
 
 #include <gz/physics/Entity.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -38,7 +38,7 @@ namespace ignition
       /// \brief Cast an entity to another entity pointer, with the requested
       /// set of features.
       /// \tparam PolicyT The feature policy, such as
-      /// `ignition::physics::FeaturePolicy3d`.
+      /// `gz::physics::FeaturePolicy3d`.
       /// \tparam FromFeatureList The list of features from the original entity.
       /// \tparam ToFeatureList The list of features of the resulting entity.
       /// \param[in] _from Entity to cast from.
@@ -54,7 +54,7 @@ namespace ignition
       /// \brief Check which features from the requested list are missing from
       /// the entity's plugin.
       /// \tparam PolicyT The feature policy, such as
-      /// `ignition::physics::FeaturePolicy3d`.
+      /// `gz::physics::FeaturePolicy3d`.
       /// \tparam FromFeatureList The current list of features from the entity.
       /// \param[in] _entity Entity to cast from.
       /// \return The names of all missing features. Will be empty if no

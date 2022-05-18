@@ -17,7 +17,7 @@
 
 #include "SimulationFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -37,4 +37,4 @@ void SimulationFeatures::WorldForwardStep(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

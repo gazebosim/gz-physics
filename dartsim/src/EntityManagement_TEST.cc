@@ -35,23 +35,23 @@
 #include "KinematicsFeatures.hh"
 #include "ShapeFeatures.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::dartsim::EntityManagementFeatureList,
-    ignition::physics::dartsim::JointFeatureList,
-    ignition::physics::dartsim::KinematicsFeatureList,
-    ignition::physics::dartsim::ShapeFeatureList
+struct TestFeatureList : gz::physics::FeatureList<
+    gz::physics::dartsim::EntityManagementFeatureList,
+    gz::physics::dartsim::JointFeatureList,
+    gz::physics::dartsim::KinematicsFeatureList,
+    gz::physics::dartsim::ShapeFeatureList
 > { };
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(dartsim_plugin_LIB);
 
-  ignition::plugin::PluginPtr dartsim =
-      loader.Instantiate("ignition::physics::dartsim::Plugin");
+  gz::plugin::PluginPtr dartsim =
+      loader.Instantiate("gz::physics::dartsim::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("empty world");
@@ -118,7 +118,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   prismatic->SetVelocity(0, zVel);
   prismatic->SetAcceleration(0, zAcc);
 
-  const ignition::physics::FrameData3d childData =
+  const gz::physics::FrameData3d childData =
       child->FrameDataRelativeToWorld();
 
   const Eigen::Vector3d childPosition = childData.pose.translation();
@@ -141,7 +141,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   childSpherePose.translate(Eigen::Vector3d(0.0, yPos, 0.0));
   auto sphere = child->AttachSphereShape("child sphere", 1.0, childSpherePose);
 
-  const ignition::physics::FrameData3d sphereData =
+  const gz::physics::FrameData3d sphereData =
       sphere->FrameDataRelativeToWorld();
 
   const Eigen::Vector3d spherePosition = sphereData.pose.translation();
@@ -159,7 +159,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_DOUBLE_EQ(0.0, sphereAcceleration.y());
   EXPECT_DOUBLE_EQ(zAcc, sphereAcceleration.z());
 
-  const ignition::physics::FrameData3d relativeSphereData =
+  const gz::physics::FrameData3d relativeSphereData =
       sphere->FrameDataRelativeTo(*child);
   const Eigen::Vector3d relativeSpherePosition =
       relativeSphereData.pose.translation();
@@ -170,9 +170,9 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto meshLink = model->ConstructEmptyLink("mesh_link");
   meshLink->AttachFixedJoint(child, "fixed");
 
-  const std::string meshFilename = ignition::common::joinPaths(
+  const std::string meshFilename = gz::common::joinPaths(
       IGNITION_PHYSICS_RESOURCE_DIR, "chassis.dae");
-  auto &meshManager = *ignition::common::MeshManager::Instance();
+  auto &meshManager = *gz::common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 
   auto meshShape = meshLink->AttachMeshShape("chassis", *mesh);
@@ -189,11 +189,11 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(meshShapeSize[1], 0.3831, 1e-4);
   EXPECT_NEAR(meshShapeSize[2], 0.1956, 1e-4);
 
-  const ignition::math::Pose3d pose(0, 0, 0.2, 0, 0, 0);
-  const ignition::math::Vector3d scale(0.5, 1.0, 0.25);
+  const gz::math::Pose3d pose(0, 0, 0.2, 0, 0, 0);
+  const gz::math::Vector3d scale(0.5, 1.0, 0.25);
   auto meshShapeScaled = meshLink->AttachMeshShape("small_chassis", *mesh,
-                          ignition::math::eigen3::convert(pose),
-                          ignition::math::eigen3::convert(scale));
+                          gz::math::eigen3::convert(pose),
+                          gz::math::eigen3::convert(scale));
   const auto meshShapeScaledSize = meshShapeScaled->GetSize();
 
   // Note: dartsim uses assimp for storing mesh data, and assimp by default uses
@@ -210,15 +210,15 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto heightmapLink = model->ConstructEmptyLink("heightmap_link");
   heightmapLink->AttachFixedJoint(child, "heightmap_joint");
 
-  auto heightmapFilename = ignition::common::joinPaths(
+  auto heightmapFilename = gz::common::joinPaths(
       IGNITION_PHYSICS_RESOURCE_DIR, "heightmap_bowl.png");
-  ignition::common::ImageHeightmap data;
+  gz::common::ImageHeightmap data;
   EXPECT_EQ(0, data.Load(heightmapFilename));
 
-  const ignition::math::Vector3d size({129, 129, 10});
+  const gz::math::Vector3d size({129, 129, 10});
   auto heightmapShape = heightmapLink->AttachHeightmapShape("heightmap", data,
-      ignition::math::eigen3::convert(pose),
-      ignition::math::eigen3::convert(size));
+      gz::math::eigen3::convert(pose),
+      gz::math::eigen3::convert(size));
 
   EXPECT_NEAR(size.X(), heightmapShape->GetSize()[0], 1e-6);
   EXPECT_NEAR(size.Y(), heightmapShape->GetSize()[1], 1e-6);
@@ -237,19 +237,19 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto demLink = model->ConstructEmptyLink("dem_link");
   demLink->AttachFixedJoint(child, "dem_joint");
 
-  auto demFilename = ignition::common::joinPaths(
+  auto demFilename = gz::common::joinPaths(
       IGNITION_PHYSICS_RESOURCE_DIR, "volcano.tif");
-  ignition::common::Dem dem;
+  gz::common::Dem dem;
   EXPECT_EQ(0, dem.Load(demFilename));
 
-  ignition::math::Vector3d sizeDem;
+  gz::math::Vector3d sizeDem;
   sizeDem.X(dem.WorldWidth());
   sizeDem.Y(dem.WorldHeight());
   sizeDem.Z(dem.MaxElevation() - dem.MinElevation());
 
   auto demShape = demLink->AttachHeightmapShape("dem", dem,
-      ignition::math::eigen3::convert(pose),
-      ignition::math::eigen3::convert(sizeDem));
+      gz::math::eigen3::convert(pose),
+      gz::math::eigen3::convert(sizeDem));
 
   // there is a loss in precision with large dems since heightmaps use floats
   EXPECT_NEAR(sizeDem.X(), demShape->GetSize()[0], 1e-3);
@@ -268,14 +268,14 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 
 TEST(EntityManagement_TEST, RemoveEntities)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(dartsim_plugin_LIB);
 
-  ignition::plugin::PluginPtr dartsim =
-      loader.Instantiate("ignition::physics::dartsim::Plugin");
+  gz::plugin::PluginPtr dartsim =
+      loader.Instantiate("gz::physics::dartsim::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("empty world");
@@ -340,14 +340,14 @@ TEST(EntityManagement_TEST, RemoveEntities)
 
 TEST(EntityManagement_TEST, ModelByIndexWithNestedModels)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(dartsim_plugin_LIB);
 
-  ignition::plugin::PluginPtr dartsim =
-      loader.Instantiate("ignition::physics::dartsim::Plugin");
+  gz::plugin::PluginPtr dartsim =
+      loader.Instantiate("gz::physics::dartsim::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("empty world");

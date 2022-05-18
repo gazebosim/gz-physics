@@ -24,7 +24,7 @@
 
 #include "Entity.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 

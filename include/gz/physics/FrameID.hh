@@ -24,7 +24,7 @@
 #include <gz/physics/detail/Identity.hh>
 #include <gz/utils/SuppressWarning.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

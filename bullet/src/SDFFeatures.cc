@@ -28,7 +28,7 @@
 
 #include <memory>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -144,7 +144,7 @@ Identity SDFFeatures::ConstructSdfLink(
   // Read sdf params
   const std::string name = _sdfLink.Name();
   const math::Pose3d pose = ResolveSdfPose(_sdfLink.SemanticPose());
-  const ignition::math::Inertiald inertial = _sdfLink.Inertial();
+  const gz::math::Inertiald inertial = _sdfLink.Inertial();
   double mass = inertial.MassMatrix().Mass();
   math::Pose3d inertialPose = inertial.Pose();
   inertialPose.Rot() *= inertial.MassMatrix().PrincipalAxesOffset();
@@ -152,12 +152,12 @@ Identity SDFFeatures::ConstructSdfLink(
 
   // Get link properties
   btVector3 linkInertiaDiag =
-    convertVec(ignition::math::eigen3::convert(diagonalMoments));
+    convertVec(gz::math::eigen3::convert(diagonalMoments));
 
   const auto &modelInfo = this->models.at(_modelID);
   math::Pose3d basePose = modelInfo->pose;
   const auto poseIsometry =
-    ignition::math::eigen3::convert(basePose * pose * inertialPose);
+    gz::math::eigen3::convert(basePose * pose * inertialPose);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
@@ -265,7 +265,7 @@ Identity SDFFeatures::ConstructSdfCollision(
       linkInfo->inertialPose.Inverse() *
       ResolveSdfPose(_collision.SemanticPose());
     const Eigen::Isometry3d poseIsometry =
-      ignition::math::eigen3::convert(pose);
+      gz::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
     const auto poseLinear = poseIsometry.linear();
     btTransform baseTransform;
@@ -343,12 +343,12 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Get axis unit vector (expressed in world frame).
   // IF fixed joint, use UnitZ, if revolute use the Axis given by the joint
   // Eigen::Vector3d axis;
-  // ignition::math::Vector3d axis = ignition::math::Vector3d::UnitZ;
-  ignition::math::Vector3d axis;
+  // gz::math::Vector3d axis = gz::math::Vector3d::UnitZ;
+  gz::math::Vector3d axis;
   const ::sdf::JointType type = _sdfJoint.Type();
   if(type == ::sdf::JointType::FIXED )
   {
-    axis = ignition::math::Vector3d::UnitZ;
+    axis = gz::math::Vector3d::UnitZ;
   }
   else
   {
@@ -399,17 +399,17 @@ Identity SDFFeatures::ConstructSdfJoint(
     joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
       *this->links.at(childId)->link.get(),
       *this->links.at(parentId)->link.get(),
-      convertVec(ignition::math::eigen3::convert(pivotChild)),
-      convertVec(ignition::math::eigen3::convert(pivotParent)),
-      convertVec(ignition::math::eigen3::convert(axisChild)),
-      convertVec(ignition::math::eigen3::convert(axisParent)));
+      convertVec(gz::math::eigen3::convert(pivotChild)),
+      convertVec(gz::math::eigen3::convert(pivotParent)),
+      convertVec(gz::math::eigen3::convert(axisChild)),
+      convertVec(gz::math::eigen3::convert(axisParent)));
   }
   else
   {
     joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
       *this->links.at(childId)->link.get(),
-      convertVec(ignition::math::eigen3::convert(pivotChild)),
-      convertVec(ignition::math::eigen3::convert(axisChild)));
+      convertVec(gz::math::eigen3::convert(pivotChild)),
+      convertVec(gz::math::eigen3::convert(axisChild)));
   }
 
   // Limit movement for fixed joints
@@ -480,4 +480,4 @@ std::size_t SDFFeatures::FindOrConstructLink(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

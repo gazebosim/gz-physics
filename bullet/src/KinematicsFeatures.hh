@@ -23,11 +23,11 @@
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct KinematicsFeatureList : ignition::physics::FeatureList<
+struct KinematicsFeatureList : gz::physics::FeatureList<
   LinkFrameSemantics
 > { };
 
@@ -41,6 +41,6 @@ class KinematicsFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

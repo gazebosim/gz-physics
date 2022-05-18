@@ -26,7 +26,7 @@
 #include <gz/physics/SpecifyData.hh>
 #include <gz/physics/FeatureList.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -38,7 +38,7 @@ namespace ignition
 
     struct WorldPose
     {
-      ignition::math::Pose3d pose;
+      gz::math::Pose3d pose;
 
       std::size_t body;
     };
@@ -60,7 +60,7 @@ namespace ignition
 
     struct Point
     {
-      ignition::math::Vector3d point;
+      gz::math::Vector3d point;
 
       std::size_t relativeTo;
       std::size_t inCoordinatesOf;
@@ -68,7 +68,7 @@ namespace ignition
 
     struct FreeVector
     {
-      ignition::math::Vector3d vec;
+      gz::math::Vector3d vec;
 
       std::size_t inCoordinatesOf;
     };

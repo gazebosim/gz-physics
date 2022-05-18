@@ -20,7 +20,7 @@
 
 #include "gz/physics/OperateOnSpecifiedData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

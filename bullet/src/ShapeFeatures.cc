@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -28,7 +28,7 @@ namespace bullet {
 Identity ShapeFeatures::AttachMeshShape(
     const Identity &_linkID,
     const std::string &_name,
-    const ignition::common::Mesh &_mesh,
+    const gz::common::Mesh &_mesh,
     const Pose3d &_pose,
     const LinearVector3d &_scale)
 {
@@ -82,8 +82,8 @@ Identity ShapeFeatures::AttachMeshShape(
   const auto &body = linkInfo->link.get();
 
   auto poseWithInertia =
-    linkInfo->inertialPose.Inverse() * ignition::math::eigen3::convert(_pose);
-  const auto poseIsometry = ignition::math::eigen3::convert(poseWithInertia);
+    linkInfo->inertialPose.Inverse() * gz::math::eigen3::convert(_pose);
+  const auto poseIsometry = gz::math::eigen3::convert(poseWithInertia);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
@@ -99,7 +99,7 @@ Identity ShapeFeatures::AttachMeshShape(
 
   auto identity = this->AddCollision(
     _linkID, {_name, gimpactMeshShape, _linkID, modelID,
-    ignition::math::eigen3::convert(_pose), true, mTriMesh});
+    gz::math::eigen3::convert(_pose), true, mTriMesh});
   return identity;
 
 }
@@ -117,4 +117,4 @@ Identity ShapeFeatures::CastToMeshShape(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

@@ -23,7 +23,7 @@
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/FrameSemantics.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

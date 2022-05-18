@@ -24,7 +24,7 @@
 #include "Link.hh"
 #include "Shape.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 
@@ -89,7 +89,7 @@ TEST(CollisionDetector, CheckCollisions)
   Entity &collisionAEnt = linkA->AddCollision();
   Collision *collisionA = static_cast<Collision *>(&collisionAEnt);
   BoxShape boxShapeA;
-  boxShapeA.SetSize(ignition::math::Vector3d(4, 4, 4));
+  boxShapeA.SetSize(gz::math::Vector3d(4, 4, 4));
   collisionA->SetShape(boxShapeA);
 
   // model B
@@ -377,7 +377,7 @@ TEST(CollisionDetector, CheckStaticCollisionFiltering)
   Entity &collisionAEnt = linkA->AddCollision();
   Collision *collisionA = static_cast<Collision *>(&collisionAEnt);
   BoxShape boxShapeA;
-  boxShapeA.SetSize(ignition::math::Vector3d(4, 4, 4));
+  boxShapeA.SetSize(gz::math::Vector3d(4, 4, 4));
   collisionA->SetShape(boxShapeA);
 
   // model B
@@ -388,7 +388,7 @@ TEST(CollisionDetector, CheckStaticCollisionFiltering)
   Entity &collisionBEnt = linkB->AddCollision();
   Collision *collisionB = static_cast<Collision *>(&collisionBEnt);
   BoxShape boxShapeB;
-  boxShapeB.SetSize(ignition::math::Vector3d(4, 4, 4));
+  boxShapeB.SetSize(gz::math::Vector3d(4, 4, 4));
   collisionB->SetShape(boxShapeB);
 
   // check collisions

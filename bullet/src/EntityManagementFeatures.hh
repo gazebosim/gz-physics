@@ -27,11 +27,11 @@
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct EntityManagementFeatureList : ignition::physics::FeatureList<
+struct EntityManagementFeatureList : gz::physics::FeatureList<
   RemoveModelFromWorld,
   ConstructEmptyWorldFeature
 > { };
@@ -60,6 +60,6 @@ class EntityManagementFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

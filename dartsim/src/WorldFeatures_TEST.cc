@@ -33,17 +33,17 @@
 
 #include "test/Utils.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::CollisionDetector,
-    ignition::physics::Gravity,
-    ignition::physics::LinkFrameSemantics,
-    ignition::physics::Solver,
-    ignition::physics::ForwardStep,
-    ignition::physics::sdf::ConstructSdfWorld,
-    ignition::physics::GetEntities
+struct TestFeatureList : gz::physics::FeatureList<
+    gz::physics::CollisionDetector,
+    gz::physics::Gravity,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::Solver,
+    gz::physics::ForwardStep,
+    gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::GetEntities
 > { };
 
-using namespace ignition;
+using namespace gz;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
 using TestWorldPtr = physics::World3dPtr<TestFeatureList>;
@@ -59,7 +59,7 @@ class AssertVectorApprox
               const char *_mExpr, const char *_nExpr, Eigen::Vector3d _m,
               Eigen::Vector3d _n)
   {
-    if (ignition::physics::test::Equal(_m, _n, this->tol))
+    if (gz::physics::test::Equal(_m, _n, this->tol))
       return ::testing::AssertionSuccess();
 
     return ::testing::AssertionFailure()
@@ -76,14 +76,14 @@ class WorldFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    gz::plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
-        loader.Instantiate("ignition::physics::dartsim::Plugin");
+    gz::plugin::PluginPtr dartsim =
+        loader.Instantiate("gz::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;
@@ -174,9 +174,9 @@ TEST_F(WorldFeaturesFixture, Gravity)
                       world->GetGravity());
 
   // Confirm that changed gravity direction affects pose of link
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
 
   const size_t numSteps = 1000;
   for (size_t i = 0; i < numSteps; ++i)

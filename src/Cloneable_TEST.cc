@@ -20,8 +20,8 @@
 #include "ignition/physics/Cloneable.hh"
 #include "utils/TestDataTypes.hh"
 
-using ignition::physics::Cloneable;
-using ignition::physics::MakeCloneable;
+using gz::physics::Cloneable;
+using gz::physics::MakeCloneable;
 
 /////////////////////////////////////////////////
 TEST(Cloneable_TEST, Construct)

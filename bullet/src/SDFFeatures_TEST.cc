@@ -35,28 +35,28 @@
 
 #include <test/Utils.hh>
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::GetBasicJointState,
-    ignition::physics::SetBasicJointState,
-    ignition::physics::sdf::ConstructSdfJoint,
-    ignition::physics::sdf::ConstructSdfLink,
-    ignition::physics::sdf::ConstructSdfModel,
-    ignition::physics::sdf::ConstructSdfWorld
+struct TestFeatureList : gz::physics::FeatureList<
+    gz::physics::GetBasicJointState,
+    gz::physics::SetBasicJointState,
+    gz::physics::sdf::ConstructSdfJoint,
+    gz::physics::sdf::ConstructSdfLink,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
-using World = ignition::physics::World3d<TestFeatureList>;
-using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
+using World = gz::physics::World3d<TestFeatureList>;
+using WorldPtr = gz::physics::World3dPtr<TestFeatureList>;
 
 auto LoadEngine()
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(bullet_plugin_LIB);
 
-  ignition::plugin::PluginPtr bullet =
-      loader.Instantiate("ignition::physics::bullet::Plugin");
+  gz::plugin::PluginPtr bullet =
+      loader.Instantiate("gz::physics::bullet::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(bullet);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(bullet);
   return engine;
 }
 

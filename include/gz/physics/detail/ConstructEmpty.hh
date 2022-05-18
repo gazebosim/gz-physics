@@ -22,7 +22,7 @@
 
 #include <gz/physics/ConstructEmpty.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 
 /////////////////////////////////////////////////

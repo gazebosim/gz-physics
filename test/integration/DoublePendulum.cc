@@ -28,15 +28,15 @@
 
 #include "../MockDoublePendulum.hh"
 
-using namespace ignition::physics;
+using namespace gz::physics;
 
 
-void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin);
+void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin);
 
 /////////////////////////////////////////////////
 TEST(DoublePendulum, Step)
 {
-  ignition::plugin::Loader pl;
+  gz::plugin::Loader pl;
   auto plugins = pl.LoadLib(MockDoublePendulum_LIB);
 
   auto pluginNames = FindFeatures3d<mock::MockDoublePendulumList>::From(pl);
@@ -44,13 +44,13 @@ TEST(DoublePendulum, Step)
   for (const std::string & name : pluginNames)
   {
     std::cout << "DoublePendulum: testing plugin: " << name << std::endl;
-    ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
+    gz::plugin::PluginPtr plugin = pl.Instantiate(name);
     EXPECT_FALSE(plugin.IsEmpty());
     DoublePendulum_TEST(plugin);
   }
 }
 
-void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
+void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
 {
   ASSERT_TRUE(_plugin);
 
@@ -59,17 +59,17 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
 
   auto world = engine->GetWorld(0);
 
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
-  ignition::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::Input input;
 
   const std::chrono::duration<double> dt(std::chrono::milliseconds(1));
-  ignition::physics::TimeStep &timeStep =
-      input.Get<ignition::physics::TimeStep>();
+  gz::physics::TimeStep &timeStep =
+      input.Get<gz::physics::TimeStep>();
   timeStep.dt = dt.count();
 
-  ignition::physics::GeneralizedParameters &efforts =
-      input.Get<ignition::physics::GeneralizedParameters>();
+  gz::physics::GeneralizedParameters &efforts =
+      input.Get<gz::physics::GeneralizedParameters>();
   efforts.dofs.push_back(0);
   efforts.dofs.push_back(1);
   efforts.forces.push_back(0.0);
@@ -78,11 +78,11 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   // No input on the first step, let's just see the output
   world->Step(output, state, input);
 
-  ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
-  const auto positions0 = output.Get<ignition::physics::JointPositions>();
+  ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
+  const auto positions0 = output.Get<gz::physics::JointPositions>();
 
-  ASSERT_TRUE(output.Has<ignition::physics::WorldPoses>());
-  const auto poses0 = output.Get<ignition::physics::WorldPoses>();
+  ASSERT_TRUE(output.Has<gz::physics::WorldPoses>());
+  const auto poses0 = output.Get<gz::physics::WorldPoses>();
 
   // the double pendulum is initially fully inverted
   // and angles are defined as zero in this state
@@ -96,11 +96,11 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   {
     if (worldPose.body == 0)
     {
-      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
+      EXPECT_EQ(worldPose.pose, gz::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
     }
     else if (worldPose.body == 1)
     {
-      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.2, 3.3, 0, 0, 0));
+      EXPECT_EQ(worldPose.pose, gz::math::Pose3d(0, 0.2, 3.3, 0, 0, 0));
     }
   }
 
@@ -110,13 +110,13 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   const double target11 = IGN_PI;
 
   // PID gains tuned in gazebo
-  ignition::math::PID pid0(100, 0, 10);
-  ignition::math::PID pid1(10, 0, 5);
+  gz::math::PID pid0(100, 0, 10);
+  gz::math::PID pid1(10, 0, 5);
   const std::chrono::duration<double> settleTime(std::chrono::seconds(4));
   unsigned int settleSteps = settleTime / dt;
   for (unsigned int i = 0; i < settleSteps; ++i)
   {
-    auto positions = output.Get<ignition::physics::JointPositions>();
+    auto positions = output.Get<gz::physics::JointPositions>();
     double error0 = positions.positions[positions.dofs[0]] - target10;
     double error1 = positions.positions[positions.dofs[1]] - target11;
 
@@ -127,31 +127,31 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   }
 
   // expect joints are near target positions
-  ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
-  auto positions1 = output.Get<ignition::physics::JointPositions>();
+  ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
+  auto positions1 = output.Get<gz::physics::JointPositions>();
   double angle10 = positions1.positions[positions1.dofs[0]];
   double angle11 = positions1.positions[positions1.dofs[1]];
   EXPECT_NEAR(target10, angle10, 1e-5);
   EXPECT_NEAR(target11, angle11, 1e-3);
 
-  ASSERT_TRUE(output.Has<ignition::physics::WorldPoses>());
-  const auto poses1 = output.Get<ignition::physics::WorldPoses>();
+  ASSERT_TRUE(output.Has<gz::physics::WorldPoses>());
+  const auto poses1 = output.Get<gz::physics::WorldPoses>();
   ASSERT_EQ(2u, poses1.entries.size());
   for (const auto & worldPose : poses1.entries)
   {
     if (worldPose.body == 0)
     {
-      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
+      EXPECT_EQ(worldPose.pose, gz::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
     }
     else if (worldPose.body == 1)
     {
       EXPECT_EQ(worldPose.pose,
-          ignition::math::Pose3d(0, 0.2, 2.4, 0, target11, 0));
+          gz::math::Pose3d(0, 0.2, 2.4, 0, target11, 0));
     }
   }
 
   // test recording the state and repeatability
-  ignition::physics::ForwardStep::State bookmark = state;
+  gz::physics::ForwardStep::State bookmark = state;
   std::vector<double> errorHistory0;
   std::vector<double> errorHistory1;
 
@@ -168,7 +168,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
 
   for (unsigned int i = 0; i < settleSteps; ++i)
   {
-    auto positions = output.Get<ignition::physics::JointPositions>();
+    auto positions = output.Get<gz::physics::JointPositions>();
     double error0 = positions.positions[positions.dofs[0]] - target20;
     double error1 = positions.positions[positions.dofs[1]] - target21;
     errorHistory0.push_back(error0);
@@ -181,16 +181,16 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   }
 
   // expect joints are near target positions again
-  ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
-  auto positions2 = output.Get<ignition::physics::JointPositions>();
+  ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
+  auto positions2 = output.Get<gz::physics::JointPositions>();
   double angle20 = positions2.positions[positions2.dofs[0]];
   double angle21 = positions2.positions[positions2.dofs[1]];
   EXPECT_NEAR(target20, angle20, 1e-4);
   EXPECT_NEAR(target21, angle21, 1e-3);
 
   // // Go back to the bookmarked state and run through the steps again.
-  // ignition::physics::SetState *setState =
-  //     _plugin->QueryInterface<ignition::physics::SetState>();
+  // gz::physics::SetState *setState =
+  //     _plugin->QueryInterface<gz::physics::SetState>();
   // ASSERT_TRUE(setState);
   // setState->SetStateTo(bookmark);
 
@@ -205,7 +205,7 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
 
   // for (unsigned int i = 0; i < settleSteps; ++i)
   // {
-  //   auto positions = output.Get<ignition::physics::JointPositions>();
+  //   auto positions = output.Get<gz::physics::JointPositions>();
   //   double error0 = positions.positions[positions.dofs[0]] - target20;
   //   double error1 = positions.positions[positions.dofs[1]] - target21;
   //   EXPECT_DOUBLE_EQ(error0, errorHistory0[i]);
@@ -218,8 +218,8 @@ void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
   // }
 
   // // expect joints are near target positions again
-  // ASSERT_TRUE(output.Has<ignition::physics::JointPositions>());
-  // auto positions3 = output.Get<ignition::physics::JointPositions>();
+  // ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
+  // auto positions3 = output.Get<gz::physics::JointPositions>();
   // double angle30 = positions3.positions[positions3.dofs[0]];
   // double angle31 = positions3.positions[positions3.dofs[1]];
   // EXPECT_DOUBLE_EQ(angle20, angle30);

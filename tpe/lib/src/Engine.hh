@@ -27,7 +27,7 @@
 
 #include "Entity.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -70,6 +70,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
 
 }  // namespace tpelib
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

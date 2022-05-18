@@ -22,7 +22,7 @@
 
 #include <gz/physics/EllipsoidShape.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

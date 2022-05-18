@@ -22,7 +22,7 @@
 
 #include <gz/physics/PlaneShape.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {

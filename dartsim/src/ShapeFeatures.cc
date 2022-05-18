@@ -35,7 +35,7 @@
 #include "CustomHeightmapShape.hh"
 #include "CustomMeshShape.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -261,9 +261,9 @@ Identity ShapeFeatures::AttachEllipsoidShape(
     + "_" + std::to_string(_radii[1])
     + "_" + std::to_string(_radii[2]);
   meshMgr->CreateEllipsoid(ellipsoidMeshName,
-    ignition::math::Vector3d(_radii[0], _radii[1], _radii[2]),
+    gz::math::Vector3d(_radii[0], _radii[1], _radii[2]),
     16, 16);
-  const ignition::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
+  const gz::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
 
   auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
 
@@ -422,7 +422,7 @@ LinearVector3d ShapeFeatures::GetMeshShapeScale(
 Identity ShapeFeatures::AttachMeshShape(
     const Identity &_linkID,
     const std::string &_name,
-    const ignition::common::Mesh &_mesh,
+    const gz::common::Mesh &_mesh,
     const Pose3d &_pose,
     const LinearVector3d &_scale)
 {

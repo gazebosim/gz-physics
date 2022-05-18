@@ -27,7 +27,7 @@
 
 namespace test
 {
-  class UnimplementedFeature : public virtual ignition::physics::Feature
+  class UnimplementedFeature : public virtual gz::physics::Feature
   {
     public: template <typename PolicyT>
     class Implementation : public virtual Feature::Implementation<PolicyT>
@@ -39,10 +39,10 @@ namespace test
   };
 }
 
-void PrimeTheLoader(ignition::plugin::Loader &_loader)
+void PrimeTheLoader(gz::plugin::Loader &_loader)
 {
   for (const std::string &library
-       : ignition::physics::test::g_PhysicsPluginLibraries)
+       : gz::physics::test::g_PhysicsPluginLibraries)
   {
     if (!library.empty())
       _loader.LoadLib(library);

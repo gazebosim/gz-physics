@@ -21,7 +21,7 @@
 #include <dart/dynamics/FreeJoint.hpp>
 #include <ignition/common/Console.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

@@ -19,7 +19,7 @@
 
 #include <ignition/physics/RequestEngine.hh>
 
-using namespace ignition::physics;
+using namespace gz::physics;
 
 class FeatureA : public virtual Feature { };
 class FeatureB : public virtual Feature { };
@@ -218,7 +218,7 @@ TEST(FeatureList_TEST, ConflictsAndRequirements)
 
   // This is a regression test. We need to make sure that this FeatureList
   // compiles.
-  ignition::physics::FeatureList<OnlyConflictWith1, TestRequiresFeatureA>();
+  gz::physics::FeatureList<OnlyConflictWith1, TestRequiresFeatureA>();
 }
 
 TEST(FeatureList_TEST, Hierarchy)

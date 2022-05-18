@@ -28,7 +28,7 @@
 
 #include "gz/physics/tpelib/Export.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -249,7 +249,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
 
   /// \brief Set mesh
   /// \param[in] _mesh Mesh object
-  public: void SetMesh(const ignition::common::Mesh &_mesh);
+  public: void SetMesh(const gz::common::Mesh &_mesh);
 
   /// \brief Get mesh scale
   /// \return Mesh scale

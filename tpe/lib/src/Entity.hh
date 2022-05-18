@@ -27,7 +27,7 @@
 #include <ignition/math/Pose3.hh>
 #include "gz/physics/tpelib/Export.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 

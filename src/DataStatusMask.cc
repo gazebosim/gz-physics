@@ -17,7 +17,7 @@
 
 #include "ignition/physics/DataStatusMask.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

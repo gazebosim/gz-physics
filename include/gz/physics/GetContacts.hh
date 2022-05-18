@@ -24,7 +24,7 @@
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/SpecifyData.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {

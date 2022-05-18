@@ -20,7 +20,7 @@
 
 #include <gz/physics/FreeJoint.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

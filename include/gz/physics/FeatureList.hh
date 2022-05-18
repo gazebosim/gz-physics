@@ -22,7 +22,7 @@
 
 #include <gz/physics/Feature.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

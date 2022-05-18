@@ -28,13 +28,13 @@
 /// 1. The first argument is the name of the class that wraps the physics engine
 ///    into a plugin.
 /// 2. The second argument is the Feature Policy for this plugin,
-///    e.g. ignition::physics::FeaturePolicy3d
+///    e.g. gz::physics::FeaturePolicy3d
 /// 3. The third argument is the Feature List, specifying all the features that
 ///    this plugin provides,
-///    e.g. ignition::physics::StandardFeatures
+///    e.g. gz::physics::StandardFeatures
 ///
 /// Note that the Feature Policy and Feature List should match the types that
-/// you pass to the ignition::physics::Implements<P, L> that your plugin class
+/// you pass to the gz::physics::Implements<P, L> that your plugin class
 /// inherits.
 ///
 /// If your library has multiple translation units (.cpp files) and you want to

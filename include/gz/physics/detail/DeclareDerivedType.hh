@@ -27,36 +27,36 @@
   using Derived ## P = Derived<FeaturePolicy ## P, FeaturesT>; \
   template <typename FeaturesT> \
   using Derived ## P ## Ptr = \
-    ::ignition::physics::EntityPtr<Derived<FeaturePolicy ## P, FeaturesT>>; \
+    ::gz::physics::EntityPtr<Derived<FeaturePolicy ## P, FeaturesT>>; \
   template <typename FeaturesT> \
   using Const ## Derived ## P ## Ptr = \
-    ::ignition::physics::EntityPtr<const Derived<FeaturePolicy##P, FeaturesT>>;
+    ::gz::physics::EntityPtr<const Derived<FeaturePolicy##P, FeaturesT>>;
 
 #define DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Base, Derived) \
-  struct Derived ## Cast : public virtual ::ignition::physics::Feature \
+  struct Derived ## Cast : public virtual ::gz::physics::Feature \
   { \
     IGN_PHYSICS_CREATE_SELECTOR(Derived) \
     class Derived ## Identifier { }; \
     \
     public: template <typename PolicyT, typename FeaturesT> \
     class Using : \
-      public virtual ::ignition::physics::detail::ExtractAPI< \
+      public virtual ::gz::physics::detail::ExtractAPI< \
         Select ## Derived, FeaturesT>:: \
             template type<PolicyT, FeaturesT>, \
-      public virtual ::ignition::physics::detail::ExtractAPI< \
-        ::ignition::physics::detail:: Select ## Base, FeaturesT>:: \
+      public virtual ::gz::physics::detail::ExtractAPI< \
+        ::gz::physics::detail:: Select ## Base, FeaturesT>:: \
             template type<PolicyT, FeaturesT> \
     { \
       public: using Identifier = Derived ## Identifier; \
       public: using UpcastIdentifiers = std::tuple< \
           Derived ## Identifier, \
           /* Allow this derived type to be upcast to plain base types */ \
-          ::ignition::physics::detail:: Base ## Identifier>; \
+          ::gz::physics::detail:: Base ## Identifier>; \
       public: using EntityBase = \
-          ::ignition::physics::Entity<PolicyT, FeaturesT>; \
+          ::gz::physics::Entity<PolicyT, FeaturesT>; \
     \
       public: Using(const std::shared_ptr<typename EntityBase::Pimpl> &_pimpl, \
-                    const ::ignition::physics::Identity &_identity) \
+                    const ::gz::physics::Identity &_identity) \
         : EntityBase(_pimpl, _identity) { } \
       public: Using() = default; \
       public: Using(const Using&) = default; \
@@ -77,12 +77,12 @@
   \
     template <typename PolicyT, typename FeaturesT> \
     class Base : \
-      public virtual ::ignition::physics::Feature:: Base <PolicyT, FeaturesT> \
+      public virtual ::gz::physics::Feature:: Base <PolicyT, FeaturesT> \
     { \
       public: using CastReturnType = \
-          ::ignition::physics::EntityPtr<Using<PolicyT, FeaturesT>>; \
+          ::gz::physics::EntityPtr<Using<PolicyT, FeaturesT>>; \
       public: using ConstCastReturnType = \
-          ::ignition::physics::EntityPtr<const Using<PolicyT, FeaturesT>>; \
+          ::gz::physics::EntityPtr<const Using<PolicyT, FeaturesT>>; \
       public: CastReturnType CastTo ## Derived() \
       { \
         return CastReturnType(this->pimpl, \
@@ -101,9 +101,9 @@
     \
     template <typename PolicyT> \
     class Implementation \
-      : public virtual ::ignition::physics::Feature::Implementation<PolicyT> \
+      : public virtual ::gz::physics::Feature::Implementation<PolicyT> \
     { \
-      public: virtual ::ignition::physics::Identity CastTo ## Derived( \
+      public: virtual ::gz::physics::Identity CastTo ## Derived( \
         const Identity &_id) const = 0; \
     }; \
   }; \
@@ -112,10 +112,10 @@
   using Derived = Derived ## Cast::Using<PolicyT, FeaturesT>; \
   template <typename PolicyT, typename FeaturesT> \
   using Derived ## Ptr = \
-      ::ignition::physics::EntityPtr<Derived<PolicyT, FeaturesT>>; \
+      ::gz::physics::EntityPtr<Derived<PolicyT, FeaturesT>>; \
   template <typename PolicyT, typename FeaturesT> \
   using Const ## Derived ## Ptr = \
-      ::ignition::physics::EntityPtr<const Derived<PolicyT, FeaturesT>>; \
+      ::gz::physics::EntityPtr<const Derived<PolicyT, FeaturesT>>; \
   DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3d) \
   DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 2d) \
   DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3f) \

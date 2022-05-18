@@ -27,7 +27,7 @@
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/SpecifyData.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {

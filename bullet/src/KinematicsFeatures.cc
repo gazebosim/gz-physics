@@ -18,7 +18,7 @@
 #include <ignition/common/Console.hh>
 #include "KinematicsFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -53,7 +53,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   const btMatrix3x3 mat = trans.getBasis();
 
   const Eigen::Isometry3d poseIsometry =
-    ignition::math::eigen3::convert(linkInfo->inertialPose.Inverse());
+    gz::math::eigen3::convert(linkInfo->inertialPose.Inverse());
   Eigen::Isometry3d poseIsometryBase;
   poseIsometryBase.linear() = convert(mat);
   poseIsometryBase.translation() = convert(pos);
@@ -65,9 +65,9 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   btVector3 omega = rigidBody->getAngularVelocity();
   btVector3 vel = rigidBody->getLinearVelocity();
 
-  data.linearVelocity = convert(vel) + ignition::math::eigen3::convert(
-    ignition::math::eigen3::convert(convert(omega)).Cross(
-    -ignition::math::eigen3::convert(data.pose).Rot() *
+  data.linearVelocity = convert(vel) + gz::math::eigen3::convert(
+    gz::math::eigen3::convert(convert(omega)).Cross(
+    -gz::math::eigen3::convert(data.pose).Rot() *
     linkInfo->inertialPose.Pos()));
   data.angularVelocity = convert(omega);
 
@@ -78,4 +78,4 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

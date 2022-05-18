@@ -26,7 +26,7 @@
 #include "CollisionDetector.hh"
 #include "Entity.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -85,6 +85,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
 
 }  // namespace tpelib
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

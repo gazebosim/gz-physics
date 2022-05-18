@@ -24,7 +24,7 @@
 #include <gz/physics/Export.hh>
 #include <gz/utils/SuppressWarning.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -109,8 +109,8 @@ namespace ignition
           const std::shared_ptr<void> &_ref);
 
       // These friends are the only classes allowed to create an identity
-      template <typename, typename> friend class ::ignition::physics::Entity;
-      friend class ::ignition::physics::detail::Implementation;
+      template <typename, typename> friend class ::gz::physics::Entity;
+      friend class ::gz::physics::detail::Implementation;
     };
   }
 }

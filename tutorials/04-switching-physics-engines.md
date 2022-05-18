@@ -67,7 +67,7 @@ For the example above, you can load it like this:
 ```{.xml}
 <plugin
   filename="ignition-gazebo-physics-system"
-  name="ignition::gazebo::systems::Physics">
+  name="gz::gazebo::systems::Physics">
   <engine>
     <filename>CustomEngine</filename>
   </engine>
@@ -86,15 +86,15 @@ ign gazebo --physics-engine CustomEngine
 ### From C++ API
 
 All features available through the command line are also available through
-[ignition::gazebo::ServerConfig](https://ignitionrobotics.org/api/gazebo/4.0/classignition_1_1gazebo_1_1ServerConfig.html).
+[gz::gazebo::ServerConfig](https://ignitionrobotics.org/api/gazebo/4.0/classignition_1_1gazebo_1_1ServerConfig.html).
 When instantiating a server programmatically, a physics engine can be passed to
 the constructor, for example:
 
 ```
-ignition::gazebo::ServerConfig serverConfig;
+gz::gazebo::ServerConfig serverConfig;
 serverConfig.SetPhysicsEngine("CustomEngine");
 
-ignition::gazebo::Server server(serverConfig);
+gz::gazebo::Server server(serverConfig);
 ```
 
 ## Troubleshooting

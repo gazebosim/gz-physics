@@ -23,11 +23,11 @@
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct SimulationFeatureList : ignition::physics::FeatureList<
+struct SimulationFeatureList : gz::physics::FeatureList<
   ForwardStep
 > { };
 
@@ -44,6 +44,6 @@ class SimulationFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

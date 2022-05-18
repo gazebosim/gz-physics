@@ -32,7 +32,7 @@
 #include <ignition/physics/Implements.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -106,7 +106,7 @@ struct JointInfo
   std::size_t parentLinkId;
   // cppcheck-suppress unusedStructMember
   int constraintType;
-  ignition::math::Vector3d axis;
+  gz::math::Vector3d axis;
 };
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
@@ -261,6 +261,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

@@ -40,19 +40,19 @@
 
 #include "test/Utils.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::AddLinkExternalForceTorque,
-    ignition::physics::ForwardStep,
-    ignition::physics::Gravity,
-    ignition::physics::sdf::ConstructSdfWorld,
-    ignition::physics::sdf::ConstructSdfModel,
-    ignition::physics::sdf::ConstructSdfLink,
-    ignition::physics::GetEntities,
-    ignition::physics::GetLinkBoundingBox,
-    ignition::physics::GetModelBoundingBox
+struct TestFeatureList : gz::physics::FeatureList<
+    gz::physics::AddLinkExternalForceTorque,
+    gz::physics::ForwardStep,
+    gz::physics::Gravity,
+    gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfLink,
+    gz::physics::GetEntities,
+    gz::physics::GetLinkBoundingBox,
+    gz::physics::GetModelBoundingBox
 > { };
 
-using namespace ignition;
+using namespace gz;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
 using TestWorldPtr = physics::World3dPtr<TestFeatureList>;
@@ -61,14 +61,14 @@ class LinkFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    gz::plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
-        loader.Instantiate("ignition::physics::dartsim::Plugin");
+    gz::plugin::PluginPtr dartsim =
+        loader.Instantiate("gz::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;
@@ -85,7 +85,7 @@ class AssertVectorApprox
               const char *_mExpr, const char *_nExpr, Eigen::Vector3d _m,
               Eigen::Vector3d _n)
   {
-    if (ignition::physics::test::Equal(_m, _n, this->tol))
+    if (gz::physics::test::Equal(_m, _n, this->tol))
       return ::testing::AssertionSuccess();
 
     return ::testing::AssertionFailure()
@@ -148,9 +148,9 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   linkSDF.SetInertial({massMatrix, math::Pose3d::Zero});
   auto link = model->ConstructLink(linkSDF);
 
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
 
   AssertVectorApprox vectorPredicate(1e-4);
 

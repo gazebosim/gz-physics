@@ -23,7 +23,7 @@
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Shape.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

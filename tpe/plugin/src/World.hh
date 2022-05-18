@@ -24,7 +24,7 @@
 
 #include "lib/src/World.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

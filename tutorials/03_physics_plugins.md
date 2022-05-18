@@ -4,7 +4,7 @@ This is an introduction to different physics engines and how they are integrated
 
 ## Ignition Physics
 
-The \ref ignition::physics "Ignition Physics" library integrates external physics engines into the Ignition Simulation eco-system.
+The \ref gz::physics "Ignition Physics" library integrates external physics engines into the Ignition Simulation eco-system.
 It allows users to select from multiple supported physics engines based on their simulation needs.
 Its plugin interface loads physics engines with requested features at runtime.
 It is also possible to integrate your own selected physics engine by writing a compatible plugin interface.
@@ -18,7 +18,7 @@ To get a more in-depth understanding of how the physics plugin works in Ignition
 Conceptually, the physics plugin can be viewed from two sides of its interface: user vs. implementation.
 
 Each physics engine provides access to different features implemented by the Ignition Physics engine.
-The interface is made possible through the \ref ignition::plugin "Ignition Plugin" library, which instantiates \ref ignition::physics::Feature "Features" in \ref ignition::physics::FeatureList "FeatureLists" and supplies pointers to the selected engine.
+The interface is made possible through the \ref gz::plugin "Ignition Plugin" library, which instantiates \ref gz::physics::Feature "Features" in \ref gz::physics::FeatureList "FeatureLists" and supplies pointers to the selected engine.
 This "user side interface" makes the Ignition Physics library "callable" from other Ignition libraries.
 
 The implementation side interface handles specific implementations of each `Feature`.
@@ -27,26 +27,26 @@ This interface is more internal facing, i.e. used mostly inside the Ignition Phy
 
 The implementation of the physics plugin revolves around four key elements.
 
-1. \ref ignition::physics::Entity "Entity"
+1. \ref gz::physics::Entity "Entity"
 
     This is the base class of all "proxy objects".
     The "proxy objects" are essentially interfaces into the actual objects which exist inside of the various physics engine implementations.
     The proxy objects contain the minimal amount of data (e.g. a unique identifier, a reference-counter for the implementation object, and a reference to the implementation interface that it needs) necessary to interface with the object inside of the implementation that it refers to.
 
-2. \ref ignition::physics::FeaturePolicy "FeaturePolicy"
+2. \ref gz::physics::FeaturePolicy "FeaturePolicy"
 
     FeaturePolicy is a "policy class" used to provide metadata to features about what kind of simulation engine they are going to be used in.
     Many physics simulations software libraries model 3-dimensional systems, though some (like Box2d) only consider 2-dimensional systems.
     A FeaturePolicy is used to customize Ignition Physics' APIs by the number of dimensions (2 or 3) and also the floating point scalar type (float or double).
     Dartsim and TPE reference implementations both use FeaturePolicy3d (3 dimensions, double).
 
-3. \ref ignition::physics::Feature "Feature"
+3. \ref gz::physics::Feature "Feature"
 
-    This class defines the concept of a `Feature`, examples like `GetWorldFromEngine`, \ref ignition::physics::GetEngineInfo "GetEngineInfo" etc.
+    This class defines the concept of a `Feature`, examples like `GetWorldFromEngine`, \ref gz::physics::GetEngineInfo "GetEngineInfo" etc.
     There is a pre-defined list of features in Ignition Physics.
     They are implemented by using external physics engines' APIs to fulfill simulation needs requested by Ignition.
 
-4. \ref ignition::physics::FeatureList "FeatureList"
+4. \ref gz::physics::FeatureList "FeatureList"
 
     This is the class that aggregates a list of features.
     FeatureLists can be constructed in hierarchies, e.g. a `FeatureList` can be passed into another `FeatureList`, and the set of all features in the new list will be the sum.

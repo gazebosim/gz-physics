@@ -23,7 +23,7 @@
 
 #include "AABBTree.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -41,7 +41,7 @@ class AABBTreePrivate
 }
 }
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

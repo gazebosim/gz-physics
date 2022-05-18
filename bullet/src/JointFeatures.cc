@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <sdf/Joint.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -29,7 +29,7 @@ double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -66,7 +66,7 @@ double JointFeatures::GetJointVelocity(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -128,7 +128,7 @@ double JointFeatures::GetJointAcceleration(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -196,7 +196,7 @@ double JointFeatures::GetJointForce(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -364,7 +364,7 @@ void JointFeatures::SetJointVelocityCommand(
     btTransform trans;
     link->getMotionState()->getWorldTransform(trans);
     btVector3 motion = quatRotate(trans.getRotation(),
-      convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
+      convertVec(gz::math::eigen3::convert(jointInfo->axis)));
     btVector3 angular_vel = motion * _value;
     link->setAngularVelocity(angular_vel);
   }
@@ -460,4 +460,4 @@ AngularVector3d JointFeatures::GetRevoluteJointAxis(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

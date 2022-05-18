@@ -25,7 +25,7 @@
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpeplugin;
 

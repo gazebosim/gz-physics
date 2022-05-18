@@ -29,7 +29,7 @@
 #include "ShapeFeatures.hh"
 #include "JointFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -59,4 +59,4 @@ IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

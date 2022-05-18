@@ -21,7 +21,7 @@
 #include <string>
 #include <gz/physics/GetEntities.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

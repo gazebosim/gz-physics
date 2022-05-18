@@ -8,7 +8,7 @@ plugins on Ubuntu, according to the desired feature list.
 Physics Plugin integrates external physics engines into the Ignition Physics.
 It allows users to select from multiple supported physics engines based on their
 simulation needs. This tutorial will describe how to load a compiled physics
-plugin using \ref ignition::physics "Ignition Physics" API.
+plugin using \ref gz::physics "Ignition Physics" API.
 
 ## Prerequisites
 
@@ -38,9 +38,9 @@ wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/ign-physics6
 At the top of the file `hello_world_loader.cc`, we include the headers that will
 be used in our code. After the `std` C++ libraries are the `Loader.hh` and
 `PluginPtr.hh`, which provides main functionalities for loading physics plugins
-and plugin pointers. Next includes from \ref ignition::physics are the tools for
-retrieving \ref ignition::physics::Feature "Feature" and
-\ref ignition::physics::Entity "Entity" from physics plugins (please refer to
+and plugin pointers. Next includes from \ref gz::physics are the tools for
+retrieving \ref gz::physics::Feature "Feature" and
+\ref gz::physics::Entity "Entity" from physics plugins (please refer to
 \ref physicsplugin "Understanding the physics plugin" tutorial for their
 design concepts).
 
@@ -48,13 +48,13 @@ design concepts).
 
 Next, in the main function, the loader requires users to provide a path for
 desired plugins to be loaded. The plugin names are retrieved by
-@ref ignition::plugin::Loader::LoadLib member function.
+@ref gz::plugin::Loader::LoadLib member function.
 
 Assuming the correct path, our loader will instantiate all plugins that are
-available in the path using @ref ignition::plugin::Loader::Instantiate member
+available in the path using @ref gz::plugin::Loader::Instantiate member
 function. Then for each instantiated plugin, using
-@ref ignition::physics::RequestEngine3d<Features>::From, it will request an
-engine implementing a \ref ignition::physics::FeaturePolicy "FeaturePolicy" (3D
+@ref gz::physics::RequestEngine3d<Features>::From, it will request an
+engine implementing a \ref gz::physics::FeaturePolicy "FeaturePolicy" (3D
  in this case).
 
 \snippet examples/hello_world_loader/hello_world_loader.cc main
@@ -113,7 +113,7 @@ the loader by:
 And you'll see the engine info:
 
 ```bash
-Testing plugin: ignition::physics::dartsim::Plugin
+Testing plugin: gz::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ```
 

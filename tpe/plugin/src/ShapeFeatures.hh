@@ -30,7 +30,7 @@
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 
@@ -146,7 +146,7 @@ class ShapeFeatures :
   public: Identity AttachMeshShape(
     const Identity &_linkID,
     const std::string &_name,
-    const ignition::common::Mesh &_mesh,
+    const gz::common::Mesh &_mesh,
     const Pose3d &_pose,
     const LinearVector3d &_scale) override;
 

@@ -22,7 +22,7 @@
 #include <ignition/math/Rand.hh>
 #include <ignition/physics/FrameData.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -44,7 +44,7 @@ namespace ignition
       struct Rotation
       {
         /// \brief Randomize the orientation of a 3D pose
-        static void Randomize(ignition::physics::Pose<Scalar, Dim> &_pose)
+        static void Randomize(gz::physics::Pose<Scalar, Dim> &_pose)
         {
           for (std::size_t i = 0; i < 3; ++i)
           {
@@ -84,7 +84,7 @@ namespace ignition
       struct Rotation<Scalar, 2>
       {
         /// \brief Randomize the orientation of a 2D pose
-        static void Randomize(ignition::physics::Pose<Scalar, 2> &_pose)
+        static void Randomize(gz::physics::Pose<Scalar, 2> &_pose)
         {
           _pose.rotate(Eigen::Rotation2D<Scalar>(
                          math::Rand::DblUniform(0, 2*IGN_PI)));

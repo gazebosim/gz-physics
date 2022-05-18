@@ -22,11 +22,11 @@
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct FreeGroupFeatureList : ignition::physics::FeatureList<
+struct FreeGroupFeatureList : gz::physics::FeatureList<
   FindFreeGroupFeature,
   SetFreeGroupWorldPose
 > { };
@@ -50,6 +50,6 @@ class FreeGroupFeatures
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

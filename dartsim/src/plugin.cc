@@ -29,7 +29,7 @@
 #include "FreeGroupFeatures.hh"
 #include "WorldFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

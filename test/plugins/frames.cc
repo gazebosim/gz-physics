@@ -27,11 +27,11 @@ namespace mock
 {
   template <typename PolicyT>
   class MockFrameSemanticsPlugin
-      : public ignition::physics::Implements<PolicyT, MockFrameSemanticsList>
+      : public gz::physics::Implements<PolicyT, MockFrameSemanticsList>
   {
-    using Identity = ignition::physics::Identity;
+    using Identity = gz::physics::Identity;
     public: using FrameData = typename
-        ignition::physics::FrameSemantics::Implementation<PolicyT>::FrameData;
+        gz::physics::FrameSemantics::Implementation<PolicyT>::FrameData;
 
     public: MockFrameSemanticsPlugin()
     {
@@ -109,7 +109,7 @@ namespace mock
     }
 
     public: FrameData FrameDataRelativeToWorld(
-        const ignition::physics::FrameID &_id) const override
+        const gz::physics::FrameID &_id) const override
     {
       return frames[_id.ID()];
     }
@@ -127,11 +127,11 @@ namespace mock
 
 #define REGISTER_FRAME_SEMANTICS_PLUGIN( X ) \
   class MockFrameSemanticsPlugin ## X : \
-    public MockFrameSemanticsPlugin<ignition::physics::FeaturePolicy ## X>{ }; \
+    public MockFrameSemanticsPlugin<gz::physics::FeaturePolicy ## X>{ }; \
   \
   IGN_PHYSICS_ADD_PLUGIN( \
     MockFrameSemanticsPlugin ## X, \
-    ignition::physics::FeaturePolicy ## X, \
+    gz::physics::FeaturePolicy ## X, \
     MockFrameSemanticsList)
 
   REGISTER_FRAME_SEMANTICS_PLUGIN(3d)

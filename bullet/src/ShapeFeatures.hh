@@ -23,11 +23,11 @@
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct ShapeFeatureList : ignition::physics::FeatureList<
+struct ShapeFeatureList : gz::physics::FeatureList<
   mesh::AttachMeshShapeFeature
 > { };
 
@@ -38,7 +38,7 @@ class ShapeFeatures :
   public: Identity AttachMeshShape(
       const Identity &_linkID,
       const std::string &_name,
-      const ignition::common::Mesh &_mesh,
+      const gz::common::Mesh &_mesh,
       const Pose3d &_pose,
       const LinearVector3d &_scale) override;
 
@@ -48,6 +48,6 @@ class ShapeFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif
