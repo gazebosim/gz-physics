@@ -20,7 +20,7 @@
 
 #include "MockCreateEntities.hh"
 
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/FrameSemantics.hh>
 
 namespace mock
 {

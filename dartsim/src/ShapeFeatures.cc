@@ -29,8 +29,8 @@
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 
-#include <ignition/common/Mesh.hh>
-#include <ignition/common/MeshManager.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/common/MeshManager.hh>
 
 #include "CustomHeightmapShape.hh"
 #include "CustomMeshShape.hh"

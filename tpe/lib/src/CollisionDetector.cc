@@ -18,7 +18,7 @@
 #include <set>
 #include <unordered_map>
 
-#include <ignition/common/Profiler.hh>
+#include <gz/common/Profiler.hh>
 
 #include "CollisionDetector.hh"
 #include "Utils.hh"

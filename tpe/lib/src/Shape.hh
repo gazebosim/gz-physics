@@ -21,10 +21,10 @@
 #include <string>
 #include <map>
 
-#include <ignition/common/Mesh.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 

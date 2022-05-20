@@ -19,7 +19,7 @@
 
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 namespace gz {
 namespace physics {

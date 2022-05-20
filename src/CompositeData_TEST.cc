@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include "ignition/physics/CompositeData.hh"
+#include "gz/physics/CompositeData.hh"
 #include "utils/TestDataTypes.hh"
 
 using gz::physics::CompositeData;

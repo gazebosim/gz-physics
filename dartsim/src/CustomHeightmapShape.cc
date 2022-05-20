@@ -18,10 +18,10 @@
 #include "CustomHeightmapShape.hh"
 
 #include <vector>
-#include <ignition/common/Console.hh>
-#include <ignition/common/geospatial/Dem.hh>
-#include <ignition/common/geospatial/ImageHeightmap.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/geospatial/Dem.hh>
+#include <gz/common/geospatial/ImageHeightmap.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 namespace gz {
 namespace physics {

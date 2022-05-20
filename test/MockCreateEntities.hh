@@ -20,8 +20,8 @@
 
 #include <memory>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/RelativeQuantity.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/RelativeQuantity.hh>
 
 namespace mock
 {

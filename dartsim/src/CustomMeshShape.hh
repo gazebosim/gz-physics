@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
 
 #include <dart/dynamics/MeshShape.hpp>
-#include <ignition/common/Mesh.hh>
+#include <gz/common/Mesh.hh>
 
 namespace gz {
 namespace physics {

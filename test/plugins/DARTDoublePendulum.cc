@@ -22,9 +22,9 @@
 #include <dart/utils/utils.hpp>
 #include <dart/utils/urdf/urdf.hpp>
 
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/common/Console.hh>
-#include <ignition/physics/Register.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/physics/Register.hh>
 
 #include "../MockDoublePendulum.hh"
 

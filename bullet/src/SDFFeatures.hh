@@ -20,13 +20,13 @@
 
 #include <string>
 
-#include <ignition/physics/sdf/ConstructJoint.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/sdf/ConstructJoint.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
 
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
 #include "EntityManagementFeatures.hh"
 

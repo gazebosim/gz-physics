@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_BULLET_SRC_SHAPEFEATURES_HH_
 #define GZ_PHYSICS_BULLET_SRC_SHAPEFEATURES_HH_
 
-#include <ignition/physics/mesh/MeshShape.hh>
+#include <gz/physics/mesh/MeshShape.hh>
 #include <string>
 
 #include "Base.hh"

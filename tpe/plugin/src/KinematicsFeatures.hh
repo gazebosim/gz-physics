@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_KINEMATICSFEATURES_HH_
 #define GZ_PHYSICS_TPE_PLUGIN_SRC_KINEMATICSFEATURES_HH_
 
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/FrameSemantics.hh>
 
 #include "Base.hh"
 

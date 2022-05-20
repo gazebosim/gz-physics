@@ -22,10 +22,10 @@
 #include <cmath>
 #include <string>
 
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/PluginPtr.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/math/Helpers.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/plugin/PluginPtr.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/math/Helpers.hh>
 
 #include "../Utils.hh"
 #include "../MockFrameSemantics.hh"

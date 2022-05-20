@@ -28,9 +28,9 @@
 #include <vector>
 #include <map>
 
-#include <ignition/common/Console.hh>
-#include <ignition/physics/Implements.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/physics/Implements.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 namespace gz {
 namespace physics {

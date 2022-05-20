@@ -16,7 +16,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <ignition/math/AxisAlignedBox.hh>
+#include <gz/math/AxisAlignedBox.hh>
 
 #include "Collision.hh"
 #include "CollisionDetector.hh"

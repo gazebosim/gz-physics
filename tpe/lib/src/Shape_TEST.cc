@@ -17,8 +17,8 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/Mesh.hh>
-#include <ignition/common/SubMesh.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/common/SubMesh.hh>
 
 #include "Shape.hh"
 

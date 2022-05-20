@@ -28,7 +28,7 @@
 #include <dart/constraint/PgsBoxedLcpSolver.hpp>
 #include <dart/simulation/World.hpp>
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "WorldFeatures.hh"
 

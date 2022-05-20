@@ -19,20 +19,20 @@
 
 #include <tuple>
 
-#include <ignition/common/Util.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/common/Util.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/plugin/Loader.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
-#include "ignition/physics/FrameSemantics.hh"
-#include "ignition/physics/FreeGroup.hh"
-#include "ignition/physics/GetEntities.hh"
-#include "ignition/physics/RequestEngine.hh"
-#include "ignition/physics/sdf/ConstructModel.hh"
-#include "ignition/physics/sdf/ConstructNestedModel.hh"
-#include "ignition/physics/sdf/ConstructWorld.hh"
+#include "gz/physics/FrameSemantics.hh"
+#include "gz/physics/FreeGroup.hh"
+#include "gz/physics/GetEntities.hh"
+#include "gz/physics/RequestEngine.hh"
+#include "gz/physics/sdf/ConstructModel.hh"
+#include "gz/physics/sdf/ConstructNestedModel.hh"
+#include "gz/physics/sdf/ConstructWorld.hh"
 #include "test/Utils.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<

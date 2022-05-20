@@ -28,14 +28,14 @@
 #include <dart/constraint/ContactSurface.hpp>
 #endif
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
-#include <ignition/physics/CanWriteData.hh>
+#include <gz/physics/CanWriteData.hh>
 
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetContacts.hh>
-#include <ignition/physics/ContactProperties.hh>
-#include <ignition/physics/SpecifyData.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetContacts.hh>
+#include <gz/physics/ContactProperties.hh>
+#include <gz/physics/SpecifyData.hh>
 
 #include "Base.hh"
 

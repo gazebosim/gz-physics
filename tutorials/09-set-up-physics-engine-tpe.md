@@ -78,7 +78,7 @@ We first include the `EntityManagementFeatureList` in `plugin.cc` main file
 and register the example TPE physics plugin as follow:
 
 ```cpp
-#include <ignition/physics/Register.hh>
+#include <gz/physics/Register.hh>
 
 #include "Base.hh"
 
@@ -159,11 +159,11 @@ below:
 #define GZ_PHYSICS_TPE_PLUGIN_SRC_GETENTITIESFEATURE_HH_
 
 #include <string>
-#include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/Shape.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/RemoveEntities.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/Shape.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/Implements.hh>
 
 #include "Base.hh" // optionally depending on software design
 
@@ -241,8 +241,8 @@ While we won't go into detail, here is an example to test our new
 
 ```cpp
 #include <gtest/gtest.h>
-#include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/physics/RequestEngine.hh>
 #include "EntityManagementFeatures.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<

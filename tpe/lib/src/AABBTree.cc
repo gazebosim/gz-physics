@@ -17,7 +17,7 @@
 
 #include <set>
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "aabb_tree/AABB.h"
 

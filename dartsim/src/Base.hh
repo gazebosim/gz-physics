@@ -30,8 +30,8 @@
 #include <utility>
 #include <vector>
 
-#include <ignition/common/Console.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/common/Console.hh>
+#include <gz/physics/Implements.hh>
 
 #include <sdf/Types.hh>
 

@@ -17,17 +17,17 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FeaturePolicy.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FeaturePolicy.hh>
 
-#include <ignition/physics/BoxShape.hh>
-#include <ignition/physics/CapsuleShape.hh>
-#include <ignition/physics/CylinderShape.hh>
-#include <ignition/physics/EllipsoidShape.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/Link.hh>
-#include <ignition/physics/RevoluteJoint.hh>
+#include <gz/physics/BoxShape.hh>
+#include <gz/physics/CapsuleShape.hh>
+#include <gz/physics/CylinderShape.hh>
+#include <gz/physics/EllipsoidShape.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/Link.hh>
+#include <gz/physics/RevoluteJoint.hh>
 
 
 /////////////////////////////////////////////////

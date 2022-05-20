@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
 
 #include <dart/dynamics/HeightmapShape.hpp>
-#include <ignition/common/geospatial/HeightmapData.hh>
+#include <gz/common/geospatial/HeightmapData.hh>
 
 namespace gz {
 namespace physics {

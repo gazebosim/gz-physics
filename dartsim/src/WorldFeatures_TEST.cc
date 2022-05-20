@@ -17,16 +17,16 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/Console.hh>
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/common/Console.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/physics/RequestEngine.hh>
 
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetBoundingBox.hh>
-#include <ignition/physics/World.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/GetBoundingBox.hh>
+#include <gz/physics/World.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>

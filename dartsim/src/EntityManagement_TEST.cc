@@ -17,18 +17,18 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
-#include <ignition/common/geospatial/Dem.hh>
-#include <ignition/common/geospatial/ImageHeightmap.hh>
-#include <ignition/common/MeshManager.hh>
-#include <ignition/common/Filesystem.hh>
+#include <gz/common/geospatial/Dem.hh>
+#include <gz/common/geospatial/ImageHeightmap.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/common/Filesystem.hh>
 
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-#include <ignition/physics/Joint.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/RevoluteJoint.hh>
+#include <gz/physics/Joint.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/RevoluteJoint.hh>
 
 #include "EntityManagementFeatures.hh"
 #include "JointFeatures.hh"

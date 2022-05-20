@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_TPE_LIB_SRC_LINK_HH_
 #define GZ_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 

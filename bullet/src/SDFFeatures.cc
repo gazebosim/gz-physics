@@ -16,8 +16,8 @@
 */
 
 #include "SDFFeatures.hh"
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/math/Helpers.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Helpers.hh>
 
 #include <sdf/Geometry.hh>
 #include <sdf/Box.hh>

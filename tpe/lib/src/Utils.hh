@@ -15,8 +15,8 @@
  *
 */
 
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/math/Pose3.hh>
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/math/Pose3.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 

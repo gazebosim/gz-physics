@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 

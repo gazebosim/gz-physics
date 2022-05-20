@@ -17,14 +17,14 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/math/PID.hh>
+#include <gz/math/PID.hh>
 
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/PluginPtr.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/plugin/PluginPtr.hh>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/RequestEngine.hh>
 
 #include "../MockDoublePendulum.hh"
 

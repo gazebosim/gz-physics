@@ -28,22 +28,22 @@
 
 #include <tuple>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Joint.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/RevoluteJoint.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/Joint.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/RevoluteJoint.hh>
 
-#include <ignition/physics/sdf/ConstructCollision.hh>
-#include <ignition/physics/sdf/ConstructJoint.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructNestedModel.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/sdf/ConstructJoint.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
 
-#include <ignition/physics/dartsim/World.hh>
+#include <gz/physics/dartsim/World.hh>
 
 #include <sdf/Collision.hh>
 #include <sdf/Joint.hh>

@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/World.hh>
+#include <gz/physics/World.hh>
 
 #include "Base.hh"
 

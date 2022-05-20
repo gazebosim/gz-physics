@@ -15,7 +15,7 @@
  *
 */
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 using namespace gz::physics;
 

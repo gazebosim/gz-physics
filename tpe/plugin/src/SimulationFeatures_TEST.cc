@@ -17,23 +17,23 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/Console.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-#include <ignition/utils/SuppressWarning.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/utils/SuppressWarning.hh>
+#include <gz/plugin/Loader.hh>
 
 // Features
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/GetBoundingBox.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructNestedModel.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/GetBoundingBox.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>

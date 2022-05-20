@@ -17,11 +17,11 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/RequestEngine.hh>
 
 #include "EntityManagementFeatures.hh"
 #include "JointFeatures.hh"

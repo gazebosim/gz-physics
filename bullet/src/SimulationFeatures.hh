@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
 
 #include <vector>
-#include <ignition/physics/ForwardStep.hh>
+#include <gz/physics/ForwardStep.hh>
 
 #include "Base.hh"
 

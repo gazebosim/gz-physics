@@ -19,10 +19,10 @@
 
 #include <map>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/ForwardStep.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/ForwardStep.hh>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
 #include "TestUtilities.hh"
 

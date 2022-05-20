@@ -20,8 +20,8 @@
 #define IGNITION_UNITTEST_EXPECTDATA_ACCESS
 
 #include "utils/TestDataTypes.hh"
-#include "ignition/physics/SpecifyData.hh"
-#include "ignition/math/Vector3.hh"
+#include "gz/physics/SpecifyData.hh"
+#include "gz/math/Vector3.hh"
 
 /////////////////////////////////////////////////
 TEST(SpecifyData, RequirementsAccessConstruction)

@@ -15,8 +15,8 @@
  *
 */
 
-#include <ignition/common/Console.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 #include "KinematicsFeatures.hh"
 

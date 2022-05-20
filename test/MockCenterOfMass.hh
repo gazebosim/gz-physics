@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_TEST_MOCKCENTEROFMASS_HH_
 #define GZ_PHYSICS_TEST_MOCKCENTEROFMASS_HH_
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 #include <Eigen/Geometry>
 
 namespace mock

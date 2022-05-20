@@ -21,8 +21,8 @@
 #include <memory>
 #include <set>
 
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 

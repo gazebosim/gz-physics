@@ -18,11 +18,11 @@
 #include <unordered_map>
 #include <utility>
 
-#include <ignition/common/Console.hh>
-#include <ignition/common/Profiler.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 #include "SimulationFeatures.hh"
 

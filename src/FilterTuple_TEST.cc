@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 class ClassA : public gz::physics::Feature { };
 class ClassB : public gz::physics::Feature { };

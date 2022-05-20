@@ -15,7 +15,7 @@
  *
 */
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "CustomFeatures.hh"
 
