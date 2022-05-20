@@ -121,7 +121,7 @@ TEST_P(Collisions_TEST, MeshAndPlane)
   if (library.empty())
     return;
 
-  const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
+  const std::string meshFilename = GZ_PHYSICS_RESOURCE_DIR "/chassis.dae";
   auto &meshManager = *gz::common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 

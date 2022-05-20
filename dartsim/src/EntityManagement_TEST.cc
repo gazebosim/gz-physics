@@ -171,7 +171,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   meshLink->AttachFixedJoint(child, "fixed");
 
   const std::string meshFilename = gz::common::joinPaths(
-      IGNITION_PHYSICS_RESOURCE_DIR, "chassis.dae");
+      GZ_PHYSICS_RESOURCE_DIR, "chassis.dae");
   auto &meshManager = *gz::common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 
@@ -211,7 +211,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   heightmapLink->AttachFixedJoint(child, "heightmap_joint");
 
   auto heightmapFilename = gz::common::joinPaths(
-      IGNITION_PHYSICS_RESOURCE_DIR, "heightmap_bowl.png");
+      GZ_PHYSICS_RESOURCE_DIR, "heightmap_bowl.png");
   gz::common::ImageHeightmap data;
   EXPECT_EQ(0, data.Load(heightmapFilename));
 
@@ -238,7 +238,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   demLink->AttachFixedJoint(child, "dem_joint");
 
   auto demFilename = gz::common::joinPaths(
-      IGNITION_PHYSICS_RESOURCE_DIR, "volcano.tif");
+      GZ_PHYSICS_RESOURCE_DIR, "volcano.tif");
   gz::common::Dem dem;
   EXPECT_EQ(0, dem.Load(demFilename));
 

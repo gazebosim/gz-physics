@@ -25,7 +25,7 @@ target_link_libraries(${bullet_plugin}
     ignition-math${IGN_MATH_VER}::eigen3)
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
-install(TARGETS ${bullet_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
 # Install redirection headers
 install(
@@ -41,14 +41,14 @@ if (WIN32)
   # disable MSVC inherit via dominance warning
   target_compile_options(${bullet_plugin} PUBLIC "/wd4250")
   INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
-      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
-      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
+      ${GZ_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
+      ${GZ_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
-  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
 EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
-INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
 # Testing
 ign_build_tests(
@@ -67,7 +67,7 @@ foreach(test ${tests})
   target_compile_definitions(${test} PRIVATE
     "bullet_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\""
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
-    "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
+    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
 
 endforeach()
 
