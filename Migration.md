@@ -11,6 +11,9 @@ release will remove the deprecated code.
 
 1. The `ignition` namespace is deprecated and will be removed in future versions.  Use `gz` instead.
 
+1. Header files under `ignition/...` are deprecated and will be removed in future versions.
+   Use `gz/...` instead.
+
 ## Ignition Physics 4.X to 5.X
 
 ### Modifications
@@ -35,7 +38,7 @@ release will remove the deprecated code.
 
 1. Depends on sdformat11.
 
-1. `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupCanonicalLink` 
+1. `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupCanonicalLink`
    has been replaced by `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupRootLink`.
 
 ### Deprecations
