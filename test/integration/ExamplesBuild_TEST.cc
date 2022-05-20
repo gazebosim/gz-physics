@@ -34,7 +34,7 @@
 
 
 // Helper functions copied from
-// https://github.com/ignitionrobotics/ign-common/raw/main/src/Filesystem_TEST.cc
+// https://github.com/gazebosim/gz-common/raw/main/src/Filesystem_TEST.cc
 
 #ifndef _WIN32
 #include <dirent.h>  // NOLINT(build/include_order)

@@ -2,14 +2,14 @@
 
 **Maintainer:** scpeters AT openrobotics DOT org
 
-[![GitHub open issues](https://img.shields.io/github/issues-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/issues)
-[![GitHub open pull requests](https://img.shields.io/github/issues-pr-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/pulls)
+[![GitHub open issues](https://img.shields.io/github/issues-raw/gazebosim/gz-physics.svg)](https://github.com/gazebosim/gz-physics/issues)
+[![GitHub open pull requests](https://img.shields.io/github/issues-pr-raw/gazebosim/gz-physics.svg)](https://github.com/gazebosim/gz-physics/pulls)
 [![Discourse topics](https://img.shields.io/discourse/https/community.gazebosim.org/topics.svg)](https://community.gazebosim.org)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/ign-physics6/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/ign-physics6/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics)
 Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-focal-amd64)
 Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
@@ -74,7 +74,7 @@ See the [installation tutorial](https://ignitionrobotics.org/api/physics/5.0/ins
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/ign-physics6/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/ign-physics6/examples/).
 
 # Documentation
 
@@ -91,7 +91,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics6
+    git clone https://github.com/gazebosim/gz-physics -b ign-physics6
     ```
 
 3. Configure and build the documentation.
@@ -160,7 +160,7 @@ Please see the [contribution guide](https://ignitionrobotics.org/docs/all/contri
 # Code of Conduct
 
 Please see
-[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/main/CODE_OF_CONDUCT.md).
+[CODE\_OF\_CONDUCT.md](https://github.com/gazebosim/gz-sim/blob/main/CODE_OF_CONDUCT.md).
 
 # Versioning
 
@@ -168,4 +168,4 @@ This library uses [Semantic Versioning](https://semver.org/). Additionally, this
 
 # License
 
-This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/main/LICENSE) file.
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/gazebosim/gz-physics/blob/main/LICENSE) file.

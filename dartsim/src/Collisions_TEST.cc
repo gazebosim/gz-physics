@@ -103,7 +103,7 @@ TestWorldPtr ConstructMeshPlaneWorld(
   // from the center of the link instead of lifting up the link or the model.
   // We're doing this because we don't currently have an API for moving models
   // or links around. See the conversation here for more:
-  // https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/46/page/1#comment-87592809
+  // https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/46/page/1#comment-87592809
   link->AttachMeshShape("mesh", _mesh, tf);
 
   model = world->ConstructEmptyModel("plane");

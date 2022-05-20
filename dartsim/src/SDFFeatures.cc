@@ -458,7 +458,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   // Set canonical link name
   // TODO(anyone) This may not work correctly with nested models and will need
   // to be updated once multiple canonical links can exist in a nested model
-  // https://github.com/ignitionrobotics/ign-physics/issues/209
+  // https://github.com/gazebosim/gz-physics/issues/209
   auto [modelID, modelInfo] = [&] {
     if (isNested)
     {

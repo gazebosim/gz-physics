@@ -14,7 +14,7 @@ In the previous
 \ref implementcustomfeature "Implement custom feature" tutorial, we walked through how to
 define and implement a custom feature using an already supported physics
 engine. This tutorial will explain step-by-step how to interface with any physics engine
-using Ignition Physics. We will use [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe) as an example in this tutorial.
+using Ignition Physics. We will use [TPE](https://github.com/gazebosim/gz-physics/tree/main/tpe) as an example in this tutorial.
 
 ### Structure of a physics plugin
 
@@ -38,7 +38,7 @@ ign-physics
 
 We link the external physics engine library
 in `CMakeLists.txt` of the plugin, assuming the physics engine library is
-already installed. In our case, [TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe)
+already installed. In our case, [TPE](https://github.com/gazebosim/gz-physics/tree/main/tpe)
 is placed inside Ignition Physics and hence there is a `lib` folder under `tpe`.
 
 We declare and implement the \ref gz::physics::FeatureList "FeatureList"
@@ -46,7 +46,7 @@ interfacing with the physics engine API inside `plugin/src` folder
 (please see \ref implementcustomfeature "Implement custom feature"
 for the plugin feature requirements). Depending on design target, a \ref gz::physics::FeatureList "FeatureList"
 is generally a packing of related \ref gz::physics::Feature "Features".
-For example in TPE's [EntityManagementFeatures](https://github.com/ignitionrobotics/ign-physics/blob/main/tpe/plugin/src/EntityManagementFeatures.hh)
+For example in TPE's [EntityManagementFeatures](https://github.com/gazebosim/gz-physics/blob/main/tpe/plugin/src/EntityManagementFeatures.hh)
 , there are \ref gz::physics::GetEngineInfo "GetEngineInfo",
 \ref gz::physics::GetWorldFromEngine "GetWorldFromEngine", etc. features
 defined in the "FeatureList" structure for entity management purpose.
@@ -61,7 +61,7 @@ pre-defined features in Ignition Physics, please refer to
 \ref physicsplugin "Understand physics plugin" tutorial.
 - `<FEATURES_TEST>.cc` for unit tests of the "FeatureList".
 
-Next, we will use a simplified TPE plugin example to explain important components needed to interface with any physics engine. All code examples used below can be downloaded from [examples](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/examples) under the `simple_plugin` folder:
+Next, we will use a simplified TPE plugin example to explain important components needed to interface with any physics engine. All code examples used below can be downloaded from [examples](https://github.com/gazebosim/gz-physics/tree/ign-physics2/examples) under the `simple_plugin` folder:
 
 ```
 simple_plugin
@@ -75,7 +75,7 @@ simple_plugin
 ### `plugin.cc`
 
 In this tutorial, we will show how to construct a simple simulation world using
-[TPE](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe) physics
+[TPE](https://github.com/gazebosim/gz-physics/tree/main/tpe) physics
 engine. For this purpose, we will implement the pre-defined
 \ref gz::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
 and include this feature into an empty \ref gz::physics::FeatureList "FeatureList"
@@ -131,7 +131,7 @@ in the template file we just included, we need to override the generic declarati
 The `EntityManagementFeatures` "FeatureList" here inherits from:
 - (optionally) \ref gz::physics::tpelib::Base "Base"
 class for foundation metadata definitions of Models, Joints, Links, and Shapes objects
-of TPE to provide easy access to [tpelib](https://github.com/ignitionrobotics/ign-physics/tree/main/tpe/lib)
+of TPE to provide easy access to [tpelib](https://github.com/gazebosim/gz-physics/tree/main/tpe/lib)
 structures in the TPE library.
 - \ref gz::physics::Implements3d "Implements3d" for implementing the
 custom feature with \ref gz::physics::FeaturePolicy3d "FeaturePolicy3d"
@@ -146,7 +146,7 @@ Here we show the overriding of `ConstructEmptyWorld` member function of
 this is where we use the physics engine API to implement this member function.
 We simply instantiate \ref gz::physics::tpelib::World "World" object, set
 the world name and call \ref gz::physics::tpelib::Base::AddWorld "AddWorld"
-function which was defined in [Base.hh](https://github.com/ignitionrobotics/ign-physics/blob/main/tpe/plugin/src/Base.hh).
+function which was defined in [Base.hh](https://github.com/gazebosim/gz-physics/blob/main/tpe/plugin/src/Base.hh).
 
 Simple unit tests are good practice for sanity checks.
 While we won't go into detail, here is an example to test our new
@@ -156,8 +156,8 @@ While we won't go into detail, here is an example to test our new
 
 To get a more comprehensive view of how `EntityManagementFeatures` are constructed in TPE and Dartsim,
 feel free to take a look here:
-- Dartsim: [EntityManagementFeatures.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/EntityManagementFeatures.cc)
-- TPE: [EntityManagementFeatures.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/tpe/plugin/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/tpe/plugin/src/EntityManagementFeatures.cc)
+- Dartsim: [EntityManagementFeatures.hh](https://github.com/gazebosim/gz-physics/blob/ign-physics2/dartsim/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/gazebosim/gz-physics/blob/ign-physics2/dartsim/src/EntityManagementFeatures.cc)
+- TPE: [EntityManagementFeatures.hh](https://github.com/gazebosim/gz-physics/blob/ign-physics2/tpe/plugin/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/gazebosim/gz-physics/blob/ign-physics2/tpe/plugin/src/EntityManagementFeatures.cc)
 
 ## Load and test
 

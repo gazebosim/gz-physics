@@ -5,7 +5,7 @@ If you're interested in using all the Ignition libraries, check out this [Igniti
 
 We recommend following the Binary Installation instructions to get up and running as quickly and painlessly as possible.
 
-The Source Installation instructions are generally recommended for developers who want access to the latest features, develop your own feature or make a contribution to our [codebase](https://github.com/ignitionrobotics/ign-physics/).
+The Source Installation instructions are generally recommended for developers who want access to the latest features, develop your own feature or make a contribution to our [codebase](https://github.com/gazebosim/gz-physics/).
 
 # Ubuntu
 
@@ -50,7 +50,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+  git clone https://github.com/gazebosim/gz-physics -b ign-physics<#>
   ```
   Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
@@ -104,7 +104,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+  git clone https://github.com/gazebosim/gz-physics -b ign-physics<#>
   ```
 Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
@@ -129,7 +129,7 @@ Only [Trivial Physics Engine (TPE)](https://community.gazebosim.org/t/announcing
 
 ## Prerequisites
 
-First, follow the [ign-cmake](https://github.com/ignitionrobotics/ign-cmake) tutorial for installing Conda, Visual Studio, CMake, and other prerequisites, and also for creating a Conda environment.
+First, follow the [ign-cmake](https://github.com/gazebosim/gz-cmake) tutorial for installing Conda, Visual Studio, CMake, and other prerequisites, and also for creating a Conda environment.
 
 Navigate to ``condabin`` if necessary to use the ``conda`` command (i.e., if Conda is not in your `PATH` environment variable. You can find the location of ``condabin`` in Anaconda Prompt, ``where conda``).
 
@@ -167,7 +167,7 @@ This assumes you have created and activated a Conda environment while installing
 2. Navigate to where you would like to build the library, and clone the repository.
   ```
   # Optionally, append `-b ign-physics#` (replace # with a number) to check out a specific version
-  git clone https://github.com/ignitionrobotics/ign-physics.git
+  git clone https://github.com/gazebosim/gz-physics.git
   ```
 
 3. Configure and build
@@ -197,7 +197,7 @@ You can also generate the documentation from a clone of this repository by follo
 
 2. Clone the repository
   ```
-  git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics<#>
+  git clone https://github.com/gazebosim/gz-physics -b ign-physics<#>
   ```
 
 3. Configure and build the documentation.
