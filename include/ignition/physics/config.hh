@@ -31,6 +31,10 @@
 
 #define IGNITION_PHYSICS_VERSION_HEADER GZ_PHYSICS_VERSION_HEADER
 
+namespace gz
+{
+}
+
 namespace ignition
 {
   #ifndef SUPPRESS_IGNITION_HEADER_DEPRECATION
