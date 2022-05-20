@@ -141,7 +141,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
 
   if (!link)
   {
-    ignwarn << "No free group with id [" << _groupID.id << "] found."
+    gzwarn << "No free group with id [" << _groupID.id << "] found."
       << std::endl;
     return;
   }
@@ -160,7 +160,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   }
   if (!model)
   {
-    ignerr << "No model for free group with [" << _groupID.id << "] found."
+    gzerr << "No model for free group with [" << _groupID.id << "] found."
       << std::endl;
     return;
   }

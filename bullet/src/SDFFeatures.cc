@@ -43,12 +43,12 @@ static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
   {
     if (!_semPose.RelativeTo().empty())
     {
-      ignerr << "There was an error in SemanticPose::Resolve\n";
+      gzerr << "There was an error in SemanticPose::Resolve\n";
       for (const auto &err : errors)
       {
-        ignerr << err.Message() << std::endl;
+        gzerr << err.Message() << std::endl;
       }
-      ignerr << "There is no optimal fallback since the relative_to attribute["
+      gzerr << "There is no optimal fallback since the relative_to attribute["
              << _semPose.RelativeTo() << "] of the pose is not empty. "
              << "Falling back to using the raw Pose.\n";
     }
@@ -91,7 +91,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // check if parent is a world
   if (this->worlds.find(_worldID) == this->worlds.end())
   {
-    ignerr << "Unable to construct model: " << _sdfModel.Name() << ". "
+    gzerr << "Unable to construct model: " << _sdfModel.Name() << ". "
            << "Parent of model is not a world. " << std::endl;
     return this->GenerateInvalidId();
   }
@@ -119,7 +119,7 @@ Identity SDFFeatures::ConstructSdfModel(
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
     if (!sdfJoint)
     {
-      ignerr << "The joint with index [" << i << "] in model ["
+      gzerr << "The joint with index [" << i << "] in model ["
              << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
       continue;
     }
@@ -206,7 +206,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   if (!_collision.Geom())
   {
-    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+    gzerr << "The geometry element of collision [" << _collision.Name() << "] "
            << "was a nullptr\n";
     return this->GenerateInvalidId();
   }
@@ -298,7 +298,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const ::sdf::JointType type = _sdfJoint.Type();
   if( type != ::sdf::JointType::REVOLUTE && type != ::sdf::JointType::FIXED )
   {
-    ignerr << "Asked to construct a joint of sdf::JointType ["
+    gzerr << "Asked to construct a joint of sdf::JointType ["
            << static_cast<int>(type) << "], but that is not supported yet.\n";
     return this->GenerateInvalidId();
   }
@@ -328,7 +328,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto invalidEntity = this->GenerateInvalidId().id;
   if (parentId == invalidEntity || childId == invalidEntity)
   {
-    ignerr << "There was a problem finding/creating parent/child links\n";
+    gzerr << "There was a problem finding/creating parent/child links\n";
     return this->GenerateInvalidId();
   }
 
@@ -336,7 +336,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const std::size_t worldId = this->models.at(_modelID)->world;
   if (childId == worldId)
   {
-    ignwarn << "Not implemented joints using world as child\n";
+    gzwarn << "Not implemented joints using world as child\n";
     return this->GenerateInvalidId();
   }
 
@@ -470,7 +470,7 @@ std::size_t SDFFeatures::FindOrConstructLink(
   const ::sdf::Link * const sdfLink = _sdfModel.LinkByName(_sdfLinkName);
   if (!sdfLink)
   {
-    ignerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
+    gzerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
            << "with the name [" << _sdfLinkName << "].\n";
     return this->GenerateInvalidId().id;
   }

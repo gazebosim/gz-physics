@@ -516,7 +516,7 @@ double ShapeFeatures::GetShapeFrictionPyramidPrimarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to get FrictionPyramidPrimarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "Returning default value of 0.0."
@@ -534,7 +534,7 @@ double ShapeFeatures::GetShapeFrictionPyramidSecondarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to get FrictionPyramidSecondarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "Returning default value of 0.0."
@@ -552,7 +552,7 @@ bool ShapeFeatures::SetShapeFrictionPyramidPrimarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to set FrictionPyramidPrimarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "The parameter has not been set."
@@ -571,7 +571,7 @@ bool ShapeFeatures::SetShapeFrictionPyramidSecondarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to set FrictionPyramidSecondarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "The parameter has not been set."

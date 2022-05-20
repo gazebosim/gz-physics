@@ -196,7 +196,7 @@ bool SimulationFeatures::RemoveContactPropertiesCallback(
   }
   else
   {
-    ignerr << "Could not find the contact surface handler to be removed"
+    gzerr << "Could not find the contact surface handler to be removed"
            << std::endl;
     return false;
   }
@@ -249,7 +249,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     static bool warnedRollingFrictionCoeff = false;
     if (!warnedRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
     {
-      ignwarn << "DART doesn't support rolling friction setting" << std::endl;
+      gzwarn << "DART doesn't support rolling friction setting" << std::endl;
       warnedRollingFrictionCoeff = true;
     }
 
@@ -257,7 +257,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     if (!warnedSecondaryRollingFrictionCoeff &&
       pIgn.secondaryRollingFrictionCoeff)
     {
-      ignwarn << "DART doesn't support secondary rolling friction setting"
+      gzwarn << "DART doesn't support secondary rolling friction setting"
               << std::endl;
       warnedSecondaryRollingFrictionCoeff = true;
     }
@@ -265,7 +265,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     static bool warnedTorsionalFrictionCoeff = false;
     if (!warnedTorsionalFrictionCoeff && pIgn.torsionalFrictionCoeff)
     {
-      ignwarn << "DART doesn't support torsional friction setting"
+      gzwarn << "DART doesn't support torsional friction setting"
               << std::endl;
       warnedTorsionalFrictionCoeff = true;
     }

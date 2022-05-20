@@ -31,7 +31,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   // The feature system should never send us the world ID.
   if (_id.IsWorld())
   {
-    ignerr << "Given a FrameID belonging to the world. This should not be "
+    gzerr << "Given a FrameID belonging to the world. This should not be "
            << "possible! Please report this bug!\n";
     assert(false);
     return data;
@@ -41,7 +41,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 
   if (this->links.find(linkID) == this->links.end())
   {
-    ignerr << "Given a FrameID not belonging to a link.\n";
+    gzerr << "Given a FrameID not belonging to a link.\n";
     return data;
   }
   const auto &linkInfo = this->links.at(linkID);

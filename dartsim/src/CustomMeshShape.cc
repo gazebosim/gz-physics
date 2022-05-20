@@ -40,7 +40,7 @@ unsigned int CheckNumVerticesPerFaces(
 
   const auto printWarning = [&](const std::string type_str)
   {
-    ignwarn << "[dartsim::CustomMeshShape] The dartsim plugin does not support "
+    gzwarn << "[dartsim::CustomMeshShape] The dartsim plugin does not support "
             << type_str << " meshes, requested by submesh [" << _submeshIndex
            << ":" << _inputSubmesh.Name() << "] in the input mesh [" << _path
            << "]. This submesh will be ignored.\n";
@@ -66,7 +66,7 @@ unsigned int CheckNumVerticesPerFaces(
   if (SubMesh::TRISTRIPS == type)
     return printWarning("tristrip");
 
-  ignwarn << "[dartsim::CustomMeshShape] One of the submeshes ["
+  gzwarn << "[dartsim::CustomMeshShape] One of the submeshes ["
           << _submeshIndex << ":" << _inputSubmesh.Name() << "] in the input "
           << "mesh [" << _path << "] has an unknown primitive type value ["
           << type << "]. This submesh will be ignored.\n";
@@ -130,7 +130,7 @@ CustomMeshShape::CustomMeshShape(
 
     if (!inputSubmesh)
     {
-      ignerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i
+      gzerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i
              << "] in the input mesh [" << _input.Path() << "] has expired!\n";
       continue;
     }
@@ -141,7 +141,7 @@ CustomMeshShape::CustomMeshShape(
     const unsigned int numVertices = inputSubmesh->VertexCount();
     if (inputSubmesh->NormalCount() != numVertices)
     {
-      ignerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i << ":"
+      gzerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i << ":"
              << inputSubmesh->Name() << "] in the input mesh [" << _input.Path()
              << "] does not have a normal count ["
              << inputSubmesh->NormalCount() << "] that matches its vertex "
@@ -182,7 +182,7 @@ CustomMeshShape::CustomMeshShape(
         int vertexIndex = inputSubmesh->Index(currentPrimitiveIndex);
         if (vertexIndex == -1)
         {
-          ignwarn << "[dartsim::CustomMeshShape] The submesh [" << i << ":"
+          gzwarn << "[dartsim::CustomMeshShape] The submesh [" << i << ":"
                   << inputSubmesh->Name() << "] of mesh [" << _input.Path()
                   << "] overflowed at primitive index ["
                   << currentPrimitiveIndex << "]. Its expected number of "

@@ -105,7 +105,7 @@ void Collision::SetShape(const Shape &_shape)
   }
   else
   {
-    ignwarn << "Failed to set shape." << std::endl;
+    gzwarn << "Failed to set shape." << std::endl;
   }
 }
 

@@ -40,7 +40,7 @@ void SimulationFeatures::WorldForwardStep(
   auto it = this->worlds.find(_worldID);
   if (it == this->worlds.end())
   {
-    ignerr << "World with id ["
+    gzerr << "World with id ["
       << _worldID.id
       << "] not found."
       << std::endl;

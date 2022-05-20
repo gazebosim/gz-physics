@@ -33,7 +33,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   // The feature system should never send us the world ID.
   if (_id.IsWorld())
   {
-    ignerr << "Given a FrameID belonging to the world. This should not be "
+    gzerr << "Given a FrameID belonging to the world. This should not be "
            << "possible! Please report this bug!\n";
     assert(false);
     return data;
@@ -44,7 +44,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   // implemented for the type of frame represented by the ID.
   if (nullptr == frame)
   {
-    ignerr << "The frame ID " << _id.ID()
+    gzerr << "The frame ID " << _id.ID()
            << " was not found in the list of known frames. This should not be "
               "possible! Please report this bug!\n";
     assert(false);

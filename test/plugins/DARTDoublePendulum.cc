@@ -104,7 +104,7 @@ namespace mock
       //  const DartState *state = x.Query<DartState>();
       //  if (!state)
       //  {
-      //    ignerr << "[gz::physics::dart::DARTDoublePendulum::"
+      //    gzerr << "[gz::physics::dart::DARTDoublePendulum::"
       //           << "SetState] The state provided does not contain a "
       //           << "DartState, which this plugins needs in order to go to a "
       //           << "specified state!\n";

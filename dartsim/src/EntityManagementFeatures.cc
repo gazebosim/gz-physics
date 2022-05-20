@@ -794,7 +794,7 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
   auto worldID = this->GetWorldOfModelImpl(_modelID);
   if (worldID == INVALID_ENTITY_ID)
   {
-    ignerr << "World of model [" << model->getName()
+    gzerr << "World of model [" << model->getName()
            << "] could not be found when creating link [" << _name
            << "]\n";
     return this->GenerateInvalidId();
