@@ -27,7 +27,7 @@ namespace gz
   {
     IGN_PHYSICS_DECLARE_JOINT_TYPE(FreeJoint)
 
-    class IGNITION_PHYSICS_VISIBLE SetFreeJointRelativeTransformFeature
+    class GZ_PHYSICS_VISIBLE SetFreeJointRelativeTransformFeature
         : public virtual FeatureWithRequirements<FreeJointCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

@@ -30,7 +30,7 @@ namespace physics
 {
 /// \brief GetContactsFromLastStepFeature is a feature for retrieving the list
 /// of contacts generated in the previous simulation step.
-class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
+class GZ_PHYSICS_VISIBLE GetContactsFromLastStepFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
   public: template <typename PolicyT>

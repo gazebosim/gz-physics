@@ -40,7 +40,7 @@ namespace tpelib {
 class CollisionDetectorPrivate;
 
 /// \brief A data structure to store contact properties
-class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
+class GZ_PHYSICS_TPELIB_VISIBLE Contact
 {
   /// \brief Id of frst collision entity
   public: std::size_t entity1 = kNullEntityId;
@@ -55,7 +55,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
 };
 
 /// \brief Collision Detector that checks collisions between a list of entities
-class IGNITION_PHYSICS_TPELIB_VISIBLE CollisionDetector
+class GZ_PHYSICS_TPELIB_VISIBLE CollisionDetector
 {
   /// \brief Constructor
   public: CollisionDetector();

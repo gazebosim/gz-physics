@@ -33,7 +33,7 @@ namespace tpelib {
 // forward declaration
 class AABBTreePrivate;
 
-class IGNITION_PHYSICS_TPELIB_VISIBLE AABBTree
+class GZ_PHYSICS_TPELIB_VISIBLE AABBTree
 {
   /// \brief Constructor
   public: AABBTree();

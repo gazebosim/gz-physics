@@ -35,7 +35,7 @@ namespace gz
     /// ignition-physics engines to provide users with easy ways to express
     /// kinematic quantities in terms of frames and compute their values in
     /// terms of arbitrary frames of reference.
-    class IGNITION_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
+    class GZ_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
     {
       // Forward declaration
       public: template <typename, typename> class Frame;
@@ -161,7 +161,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Link objects.
-    class IGNITION_PHYSICS_VISIBLE LinkFrameSemantics
+    class GZ_PHYSICS_VISIBLE LinkFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -170,7 +170,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Joint objects.
-    class IGNITION_PHYSICS_VISIBLE JointFrameSemantics
+    class GZ_PHYSICS_VISIBLE JointFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -178,7 +178,7 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE ShapeFrameSemantics
+    class GZ_PHYSICS_VISIBLE ShapeFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -187,7 +187,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Model objects.
-    class IGNITION_PHYSICS_VISIBLE ModelFrameSemantics
+    class GZ_PHYSICS_VISIBLE ModelFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -196,7 +196,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to all objects.
-    class IGNITION_PHYSICS_VISIBLE CompleteFrameSemantics
+    class GZ_PHYSICS_VISIBLE CompleteFrameSemantics
         : public virtual LinkFrameSemantics,
           public virtual JointFrameSemantics,
           public virtual ModelFrameSemantics

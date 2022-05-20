@@ -41,7 +41,7 @@ namespace gz
     /// link should be the root of that tree.
     /// If the FreeGroup contains multiple FreeGroups, the canonical link
     /// should be selected from one of the component FreeGroups.
-    class IGNITION_PHYSICS_VISIBLE FindFreeGroupFeature : public virtual Feature
+    class GZ_PHYSICS_VISIBLE FindFreeGroupFeature : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
@@ -91,11 +91,11 @@ namespace gz
         /// setting properties (like poses and velocities) on the group will be
         /// done in terms of this link.
         /// DEPRECATED. Please use RootLink()
-        public: LinkPtr<PolicyT, FeaturesT> IGN_DEPRECATED(4.0) CanonicalLink();
+        public: LinkPtr<PolicyT, FeaturesT> GZ_DEPRECATED(4.0) CanonicalLink();
 
         /// \brief const version of CanonicalLink()
         /// DEPRECATED. Please use RootLink()
-        public: ConstLinkPtr<PolicyT, FeaturesT> IGN_DEPRECATED(4.0)
+        public: ConstLinkPtr<PolicyT, FeaturesT> GZ_DEPRECATED(4.0)
                     CanonicalLink() const;
       };
 
@@ -114,7 +114,7 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE FreeGroupFrameSemantics
+    class GZ_PHYSICS_VISIBLE FreeGroupFrameSemantics
         : public virtual FeatureWithRequirements<
         FindFreeGroupFeature, FrameSemantics>
     {
@@ -131,7 +131,7 @@ namespace gz
     /// with generalized coordinates. The FreeGroup::SetWorldPose function
     /// should provide an analog to both Link::SetWorldPose and
     /// Model::SetWorldPose.
-    class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldPose
+    class GZ_PHYSICS_VISIBLE SetFreeGroupWorldPose
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
       /// \brief This class defines the FreeGroup concept, which represents a
@@ -164,7 +164,7 @@ namespace gz
     /////////////////////////////////////////////////
     /// \brief This features sets the FreeGroup linear and angular velocity in
     /// world frame.
-    class IGNITION_PHYSICS_VISIBLE SetFreeGroupWorldVelocity
+    class GZ_PHYSICS_VISIBLE SetFreeGroupWorldVelocity
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
       /// \brief This class defines the FreeGroup concept, which represents a

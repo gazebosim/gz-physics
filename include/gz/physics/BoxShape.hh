@@ -29,7 +29,7 @@ namespace gz
   {
     IGN_PHYSICS_DECLARE_SHAPE_TYPE(BoxShape)
 
-    class IGNITION_PHYSICS_VISIBLE GetBoxShapeProperties
+    class GZ_PHYSICS_VISIBLE GetBoxShapeProperties
       : public virtual FeatureWithRequirements<BoxShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -54,7 +54,7 @@ namespace gz
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE SetBoxShapeProperties
+    class GZ_PHYSICS_VISIBLE SetBoxShapeProperties
         : public virtual FeatureWithRequirements<BoxShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -84,7 +84,7 @@ namespace gz
     /// \brief This feature constructs a new box shape and attaches the
     /// desired pose in the link frame. The pose could be defined to be the box
     /// center point or any corner in actual implementation.
-    class IGNITION_PHYSICS_VISIBLE AttachBoxShapeFeature
+    class GZ_PHYSICS_VISIBLE AttachBoxShapeFeature
         : public virtual FeatureWithRequirements<BoxShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

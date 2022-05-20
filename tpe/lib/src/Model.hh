@@ -32,7 +32,7 @@ namespace tpelib {
 class ModelPrivate;
 
 /// \brief Model class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Model : public Entity
+class GZ_PHYSICS_TPELIB_VISIBLE Model : public Entity
 {
   /// \brief Constructor
   public: Model();

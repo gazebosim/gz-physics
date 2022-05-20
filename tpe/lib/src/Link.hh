@@ -29,7 +29,7 @@ namespace physics {
 namespace tpelib {
 
 /// \brief Link class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
+class GZ_PHYSICS_TPELIB_VISIBLE Link : public Entity
 {
   /// \brief Constructor
   public: Link();

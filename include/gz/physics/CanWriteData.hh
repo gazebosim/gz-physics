@@ -28,7 +28,7 @@ namespace gz
     /// object.
     /// \sa CanWriteExpectedData::WriteExpectedData()
     /// \sa CanWriteRequiredData::WriteRequiredData()
-    struct IGNITION_PHYSICS_VISIBLE WriteOptions
+    struct GZ_PHYSICS_VISIBLE WriteOptions
     {
       /// \brief If a data type is not already part of the CompositeData, then
       /// skip it instead of writing to it when this is true. When this is

@@ -40,7 +40,7 @@ namespace gz
 
     /// \brief The CompositeData class allows arbitrary data structures to be
     /// composed together, copied, and moved with type erasure.
-    class IGNITION_PHYSICS_VISIBLE CompositeData
+    class GZ_PHYSICS_VISIBLE CompositeData
     {
       /// \brief Default constructor. Creates an empty CompositeData object.
       public: CompositeData();
@@ -551,7 +551,7 @@ namespace gz
       bool Has() const;
 
       /// \brief Struct that describes the status of data.
-      struct IGNITION_PHYSICS_VISIBLE DataStatus
+      struct GZ_PHYSICS_VISIBLE DataStatus
       {
         /// \brief If the data exists in the CompositeData, this will be true,
         /// otherwise it is false.

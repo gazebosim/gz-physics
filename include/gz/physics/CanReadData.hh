@@ -30,7 +30,7 @@ namespace gz
     /// and CanReadExpectedData.
     /// \sa CanReadExpectedData::ReadExpectedData()
     /// \sa CanReadRequiredData::ReadRequiredData()
-    struct IGNITION_PHYSICS_VISIBLE ReadOptions
+    struct GZ_PHYSICS_VISIBLE ReadOptions
     {
       /// \brief If a type has already been queried, do not perform the read
       /// operation on it.

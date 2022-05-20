@@ -34,7 +34,7 @@ namespace tpelib {
 class World;
 
 /// \brief Engine class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Engine
+class GZ_PHYSICS_TPELIB_VISIBLE Engine
 {
   /// \brief Constructor
   public: Engine();

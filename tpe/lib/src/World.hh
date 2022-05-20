@@ -33,7 +33,7 @@ namespace tpelib {
 class Model;
 
 /// \brief World Class
-class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
+class GZ_PHYSICS_TPELIB_VISIBLE World : public Entity
 {
   /// \brief Constructor
   public: World();

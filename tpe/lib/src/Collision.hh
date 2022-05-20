@@ -33,7 +33,7 @@ namespace tpelib {
 class CollisionPrivate;
 
 /// \brief Collision class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
+class GZ_PHYSICS_TPELIB_VISIBLE Collision : public Entity
 {
   /// \brief Constructor
   public: Collision();

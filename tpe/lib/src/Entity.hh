@@ -38,7 +38,7 @@ class EntityPrivate;
 static const std::size_t kNullEntityId = math::MAX_UI64;
 
 /// \brief Entity class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Entity
+class GZ_PHYSICS_TPELIB_VISIBLE Entity
 {
   /// \brief Constructor
   public: Entity();

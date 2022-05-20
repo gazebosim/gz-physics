@@ -28,3 +28,5 @@ TEST(Deprecated, IgnitionNamespace)
 {
   ignition::physics::Feature feature;
 }
+
+#undef SUPPRESS_IGNITION_HEADER_DEPRECATION

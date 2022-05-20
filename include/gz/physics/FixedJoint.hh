@@ -28,7 +28,7 @@ namespace gz
   {
     IGN_PHYSICS_DECLARE_JOINT_TYPE(FixedJoint)
 
-    class IGNITION_PHYSICS_VISIBLE AttachFixedJointFeature
+    class GZ_PHYSICS_VISIBLE AttachFixedJointFeature
         : public virtual FeatureWithRequirements<FixedJointCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

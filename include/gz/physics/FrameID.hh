@@ -43,7 +43,7 @@ namespace gz
     /// be used to check whether the physics engine is performing reference
     /// counting. The behavior of a frame which has been removed from simulation
     /// but not deleted is undefined.
-    class IGNITION_PHYSICS_VISIBLE FrameID final
+    class GZ_PHYSICS_VISIBLE FrameID final
     {
       // Comparison operators
       public: bool operator ==(const FrameID &_other) const;

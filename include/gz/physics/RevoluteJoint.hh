@@ -29,7 +29,7 @@ namespace gz
   {
     IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint)
 
-    class IGNITION_PHYSICS_VISIBLE GetRevoluteJointProperties
+    class GZ_PHYSICS_VISIBLE GetRevoluteJointProperties
         : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       /// \brief The API for getting basic revolute joint properties
@@ -70,7 +70,7 @@ namespace gz
     /// \brief Provide the API for setting a revolute joint's axis. Not all
     /// physics engines are able to change properties during run-time, so some
     /// might support getting the joint axis but not setting it.
-    class IGNITION_PHYSICS_VISIBLE SetRevoluteJointProperties
+    class GZ_PHYSICS_VISIBLE SetRevoluteJointProperties
         : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       /// \brief The API for setting basic revolute joint properties
@@ -108,7 +108,7 @@ namespace gz
     /// \brief Provide the API for attaching a Link to another Link (or directly
     /// to the World) with a revolute joint. After calling AttachRevoluteJoint,
     /// the Link's parent joint will be a revolute joint.
-    class IGNITION_PHYSICS_VISIBLE AttachRevoluteJointFeature
+    class GZ_PHYSICS_VISIBLE AttachRevoluteJointFeature
         : public virtual FeatureWithRequirements<RevoluteJointCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
