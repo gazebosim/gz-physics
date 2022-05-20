@@ -26,7 +26,7 @@ namespace gz
 {
   namespace physics
   {
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(FreeGroup)
+    DETAIL_GZ_PHYSICS_DEFINE_ENTITY(FreeGroup)
 
     /////////////////////////////////////////////////
     /// \brief This feature provides an interface between the Model and Link

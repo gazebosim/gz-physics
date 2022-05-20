@@ -22,7 +22,7 @@
 #include <tuple>
 #include <utility>
 
-#define DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, P) \
+#define DETAIL_GZ_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, P) \
   template <typename FeaturesT> \
   using Derived ## P = Derived<FeaturePolicy ## P, FeaturesT>; \
   template <typename FeaturesT> \
@@ -32,7 +32,7 @@
   using Const ## Derived ## P ## Ptr = \
     ::gz::physics::EntityPtr<const Derived<FeaturePolicy##P, FeaturesT>>;
 
-#define DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Base, Derived) \
+#define DETAIL_GZ_PHYSICS_DECLARE_DERIVED_TYPE(Base, Derived) \
   struct Derived ## Cast : public virtual ::gz::physics::Feature \
   { \
     IGN_PHYSICS_CREATE_SELECTOR(Derived) \
@@ -116,9 +116,9 @@
   template <typename PolicyT, typename FeaturesT> \
   using Const ## Derived ## Ptr = \
       ::gz::physics::EntityPtr<const Derived<PolicyT, FeaturesT>>; \
-  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3d) \
-  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 2d) \
-  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3f) \
-  DETAIL_IGN_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 2f)
+  DETAIL_GZ_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3d) \
+  DETAIL_GZ_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 2d) \
+  DETAIL_GZ_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 3f) \
+  DETAIL_GZ_PHYSICS_PREDEFINE_DERIVED_POLICY(Derived, 2f)
 
 #endif

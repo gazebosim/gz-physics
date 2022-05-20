@@ -43,6 +43,6 @@
 /// then the gz/physics/RegisterMore.hh header in all of the rest of the
 /// translation units.
 #define IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT) \
-  DETAIL_IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT)
+  DETAIL_GZ_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT)
 
 #endif

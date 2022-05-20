@@ -617,7 +617,7 @@ namespace gz
 
 
 // Macros for generating EngineTemplate, LinkTemplate, etc
-#define DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, P) \
+#define DETAIL_GZ_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, P) \
   template <typename List> \
   using X ## P = X <::gz::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
@@ -632,7 +632,7 @@ namespace gz
     ::gz::physics::FeaturePolicy ## P>;
 
 
-#define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
+#define DETAIL_GZ_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
     IGN_PHYSICS_CREATE_SELECTOR(X) \
     /* Symbol used by X-types to identify other X-types */ \
@@ -671,10 +671,10 @@ namespace gz
   using ConstBase ## X ## Ptr = ::gz::physics::EntityPtr< \
     const X <PolicyT, ::gz::physics::FeatureList< \
         ::gz::physics::Feature>>>; \
-  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
-  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
-  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
-  DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2f)
+  DETAIL_GZ_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
+  DETAIL_GZ_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
+  DETAIL_GZ_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \
+  DETAIL_GZ_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2f)
 
 
     // This macro expands to create the templates:
@@ -690,12 +690,12 @@ namespace gz
     //
     // This is repeated for each of the built-in feature objects (e.g. Link,
     // Joint, Model).
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Engine)
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(World)
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Model)
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Link)
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Joint)
-    DETAIL_IGN_PHYSICS_DEFINE_ENTITY(Shape)
+    DETAIL_GZ_PHYSICS_DEFINE_ENTITY(Engine)
+    DETAIL_GZ_PHYSICS_DEFINE_ENTITY(World)
+    DETAIL_GZ_PHYSICS_DEFINE_ENTITY(Model)
+    DETAIL_GZ_PHYSICS_DEFINE_ENTITY(Link)
+    DETAIL_GZ_PHYSICS_DEFINE_ENTITY(Joint)
+    DETAIL_GZ_PHYSICS_DEFINE_ENTITY(Shape)
 
     namespace detail
     {

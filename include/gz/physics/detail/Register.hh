@@ -64,7 +64,7 @@ namespace gz
 // confusion with the gz::physics namespace. This is important because
 // users might call this macro within their own namespace scope, which can
 // create unexpected and confusing namespace hierarchies.
-#define DETAIL_IGN_PHYSICS_ADD_PLUGIN_HELPER( \
+#define DETAIL_GZ_PHYSICS_ADD_PLUGIN_HELPER( \
   UniqueID, PluginType, FeaturePolicyT, FeatureListT) \
   namespace detail_ignition_physics \
   { \
@@ -84,14 +84,14 @@ namespace gz
   }  /* namespace */ \
   }
 
-#define DETAIL_IGN_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \
+#define DETAIL_GZ_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \
   UniqueID, PluginType, FeaturePolicyT, FeatureListT) \
-  DETAIL_IGN_PHYSICS_ADD_PLUGIN_HELPER( \
+  DETAIL_GZ_PHYSICS_ADD_PLUGIN_HELPER( \
     UniqueID, PluginType, FeaturePolicyT, FeatureListT)
 
-#define DETAIL_IGN_PHYSICS_ADD_PLUGIN( \
+#define DETAIL_GZ_PHYSICS_ADD_PLUGIN( \
   PluginType, FeaturePolicyT, FeatureListT) \
-  DETAIL_IGN_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \
+  DETAIL_GZ_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \
   __COUNTER__, PluginType, FeaturePolicyT, FeatureListT)
 
 #endif

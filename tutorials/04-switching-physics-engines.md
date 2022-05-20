@@ -22,7 +22,7 @@ in \ref physicsplugin "Physics plugin tutorial"):
 - **TPE**: `ignition-physics-tpe-plugin`.
 
 If you've created a custom engine plugin, you can tell Ignition Gazebo where to
-find it by setting the `IGN_GAZEBO_PHYSICS_ENGINE_PATH` environment variable to
+find it by setting the `GZ_SIM_PHYSICS_ENGINE_PATH` environment variable to
 the directory where the plugin's shared library can be found.
 
 For example, if you've created the following physics engine shared library on Linux:
@@ -32,14 +32,14 @@ For example, if you've created the following physics engine shared library on Li
 You should set the variable as follows:
 
 ```bash
-export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines
+export GZ_SIM_PHYSICS_ENGINE_PATH=/home/physics_engines
 ```
 
 If you have several libraries installed in different paths, you can add more
 paths separated by a colon, for example:
 
 ```bash
-export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines:/home/more_engines
+export GZ_SIM_PHYSICS_ENGINE_PATH=/home/physics_engines:/home/more_engines
 ```
 
 For additional environment variables that Ignition Gazebo finds other plugins
@@ -101,7 +101,7 @@ gz::gazebo::Server server(serverConfig);
 These are common error messages that you may encounter:
 
 > Failed to find plugin [libCustomEngine.so]. Have you checked the
-IGN_GAZEBO_PHYSICS_ENGINE_PATH environment variable?
+GZ_SIM_PHYSICS_ENGINE_PATH environment variable?
 
 Ignition Gazebo can't find out where `libCustomEngine.so` is located.
 

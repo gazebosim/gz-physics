@@ -377,7 +377,7 @@ namespace gz
     }
 
     /////////////////////////////////////////////////
-    #define DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR(op) \
+    #define DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR(op) \
       template <typename EntityT> \
       template <typename OtherEntityT> \
       bool EntityPtr<EntityT>::operator op (\
@@ -389,12 +389,12 @@ namespace gz
         return (this->entity->EntityID() op _other.entity->EntityID()); \
       }
 
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( == ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( < ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( > ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( != ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( <= ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( >= ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( == ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( < ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( > ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( != ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( <= ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( >= ) // NOLINT
 
     /////////////////////////////////////////////////
     // Operators to compare with nullptr and nullopt

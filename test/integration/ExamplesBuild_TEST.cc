@@ -23,13 +23,13 @@
 #include "test_config.h"  // NOLINT(build/include)
 
 #ifdef _WIN32
-# define IGN_PATH_MAX _MAX_PATH
+# define GZ_PATH_MAX _MAX_PATH
 #elif defined(PATH_MAX)
-# define IGN_PATH_MAX PATH_MAX
+# define GZ_PATH_MAX PATH_MAX
 #elif defined(_XOPEN_PATH_MAX)
-# define IGN_PATH_MAX _XOPEN_PATH_MAX
+# define GZ_PATH_MAX _XOPEN_PATH_MAX
 #else
-# define IGN_PATH_MAX _POSIX_PATH_MAX
+# define GZ_PATH_MAX _POSIX_PATH_MAX
 #endif
 
 

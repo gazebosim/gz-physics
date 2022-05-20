@@ -50,6 +50,6 @@
 /// if their physics engine plugin wants to be able to provide CustomShapeType
 /// features.
 #define IGN_PHYSICS_DECLARE_SHAPE_TYPE(CustomShapeType) \
-  DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Shape, CustomShapeType)
+  DETAIL_GZ_PHYSICS_DECLARE_DERIVED_TYPE(Shape, CustomShapeType)
 
 #endif
