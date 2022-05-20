@@ -37,7 +37,7 @@ and print the engine name.
 
 ### DART plugin on Linux
 
-For example, if you have the Ignition Physics plugin for DART compiled, find
+For example, if you have the Gazebo Physics plugin for DART compiled, find
 where it's installed with:
 
 ~~~

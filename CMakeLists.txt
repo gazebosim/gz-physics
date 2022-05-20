@@ -21,7 +21,7 @@ ign_configure_project(
 # Set project-specific options
 #============================================================================
 
-option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
+option(ENABLE_PROFILER "Enable Gazebo Profiler" FALSE)
 
 if(ENABLE_PROFILER)
   add_definitions("-DIGN_PROFILER_ENABLE=1")

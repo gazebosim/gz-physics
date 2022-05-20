@@ -19,14 +19,14 @@
 
 #define SUPPRESS_IGNITION_HEADER_DEPRECATION
 
-#include <ignition/physics/Feature.hh>
+#include <ignition/physics/ForwardStep.hh>
 #include <ignition/utils/SuppressWarning.hh>
 
 /////////////////////////////////////////////////
 // Make sure the ignition namespace still works
 TEST(Deprecated, IgnitionNamespace)
 {
-  ignition::physics::Feature feature;
+  ignition::physics::WorldPose pose;
 }
 
 #undef SUPPRESS_IGNITION_HEADER_DEPRECATION

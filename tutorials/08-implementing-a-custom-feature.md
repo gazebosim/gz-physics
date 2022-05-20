@@ -11,7 +11,7 @@
 
 In the last \ref createphysicsplugin "Implement a physics feature" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
-\ref gz::physics "Ignition Physics API". In this tutorial, we will look
+\ref gz::physics "Gazebo Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
 [DART](https://github.com/gazebosim/gz-physics/tree/main/dartsim)
 physics engine in `ign-physics` repository and how to define a custom
@@ -65,7 +65,7 @@ See the \ref physicsplugin "Understanding the physics plugin" tutorial for detai
 ### Plugin and feature requirements
 
 In general, the minimum set of features that any physics engine plugin must
-implement to be supported by Ignition Gazebo is as below:
+implement to be supported by Gazebo is as below:
 - \ref gz::physics::FindFreeGroupFeature "FindFreeGroupFeature"
 - \ref gz::physics::SetFreeGroupWorldPose "SetFreeGroupWorldPose"
 - \ref gz::physics::FreeGroupFrameSemantics "FreeGroupFrameSemantics"
@@ -113,7 +113,7 @@ common "proxy objects" that are inherited from `Entity` class:
   \ref gz::physics::SetFreeGroupWorldPose::FreeGroup "FreeGroup"
   object in `SetFreeGroupWorldPose` feature. For more information about the
   physics concepts, please refer to
-  \ref physicsconcepts "Ignition Physics simulation concepts" tutorial.
+  \ref physicsconcepts "Gazebo Physics simulation concepts" tutorial.
 - \ref gz::physics::Feature::Implementation "Implementation" interfaces
 the actual physics engines API for the custom feature. It has
 \ref gz::physics::Feature::Implementation::InitiateEngine "InitiateEngine"
@@ -179,7 +179,7 @@ The custom feature `RetrieveWorld` is added to `CustomFeatureList`, other custom
 features could also be added here.
 The `CustomFeatures` "FeatureList" here uses data structures and classes from:
 - [Base.hh](https://github.com/gazebosim/gz-physics/blob/ign-physics2/dartsim/src/Base.hh), which defines structures that contain information to create `Model`, `Joint`, `Link`, and `Shape` objects in Dartsim API.
-They act as an interface between Ignition Physics Library and the actual physics engine.
+They act as an interface between Gazebo Physics Library and the actual physics engine.
 - \ref gz::physics::Implements3d "Implements3d" for implementing the
 custom feature with \ref gz::physics::FeaturePolicy3d "FeaturePolicy3d"
 ("FeaturePolicy" of 3 dimensions and scalar type `double`).
@@ -197,7 +197,7 @@ In the end, we add the implemented `CustomFeatures` "FeatureList" together with
 other \ref gz::physics::FeatureList "FeatureList" to final `DartsimFeatures`
 "FeatureList" as in [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/ign-physics2/dartsim/src/plugin.cc)
 (please see the \ref createphysicsplugin "Implement a physics feature" tutorial
-for registering the plugin to Ignition Physics).
+for registering the plugin to Gazebo Physics).
 
 The folder structure is shown below:
 

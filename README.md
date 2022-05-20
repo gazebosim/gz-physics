@@ -1,4 +1,4 @@
-# Ignition Physics : Physics classes and functions for robot applications
+# Gazebo Physics : Physics classes and functions for robot applications
 
 **Maintainer:** scpeters AT openrobotics DOT org
 
@@ -14,7 +14,7 @@ Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon
 Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
-Ignition Physics, a component of [Ignition
+Gazebo Physics, a component of [Ignition
 Robotics](https://ignitionrobotics.org), provides an abstract physics interface
 designed to support simulation and rapid development of robot applications.
 
@@ -43,7 +43,7 @@ designed to support simulation and rapid development of robot applications.
 Many physics simulation software libraries have been designed for different
 applications (gaming, robotics, science) and with different features
 (rigid or deformable contact, 2d or 3d).
-Ignition Physics is designed on the premise that there is not a single physics
+Gazebo Physics is designed on the premise that there is not a single physics
 engine that is universally best for all simulation contexts.
 It should be possible to support a different set of features
 for each physics engine according to its capabilities.
@@ -52,7 +52,7 @@ based on its context.
 
 # Features
 
-Ignition Physics provides the following functionality:
+Gazebo Physics provides the following functionality:
 
 * Granular definition of physics engine features as optional API's.
 * Plugin interface for loading physics engines with requested features
@@ -164,7 +164,7 @@ Please see
 
 # Versioning
 
-This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Ignition Robotics project](https://ignitionrobotics.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Ignition Robotics website](https://ignitionrobotics.org) for version and release information.
+This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Gazebo Robotics project](https://ignitionrobotics.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Gazebo Robotics website](https://ignitionrobotics.org) for version and release information.
 
 # License
 

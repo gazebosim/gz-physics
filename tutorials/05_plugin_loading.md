@@ -5,10 +5,10 @@ plugins on Ubuntu, according to the desired feature list.
 
 ## Overview
 
-Physics Plugin integrates external physics engines into the Ignition Physics.
+Physics Plugin integrates external physics engines into the Gazebo Physics.
 It allows users to select from multiple supported physics engines based on their
 simulation needs. This tutorial will describe how to load a compiled physics
-plugin using \ref gz::physics "Ignition Physics" API.
+plugin using \ref gz::physics "Gazebo Physics" API.
 
 ## Prerequisites
 
@@ -95,7 +95,7 @@ and print the engine name.
 
 ### Load existing plugins
 
-For example, if you have the Ignition Physics plugin for
+For example, if you have the Gazebo Physics plugin for
 [DART](https://dartsim.github.io/) compiled, find where it is installed with
 (you may need administrative rights: `sudo` on Linux platform):
 
@@ -117,7 +117,7 @@ Testing plugin: gz::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ```
 
-At the time of writing, Ignition Physics is shipped with
+At the time of writing, Gazebo Physics is shipped with
 [DART](https://dartsim.github.io/) and [TPE](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629)
 physics plugins installed. Following the above steps, you can load `TPE` by the
 library name `libignition-physics-tpe-plugin.so` or other custom plugins by

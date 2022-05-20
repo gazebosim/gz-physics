@@ -1,4 +1,4 @@
-\page setupphysicsenginetpe Use a custom engine with Ignition Physics
+\page setupphysicsenginetpe Use a custom engine with Gazebo Physics
 
 ## Prerequisites
 
@@ -14,13 +14,13 @@ In the previous
 \ref implementcustomfeature "Implement custom feature" tutorial, we walked through how to
 define and implement a custom feature using an already supported physics
 engine. This tutorial will explain step-by-step how to interface with any physics engine
-using Ignition Physics. We will use [TPE](https://github.com/gazebosim/gz-physics/tree/main/tpe) as an example in this tutorial.
+using Gazebo Physics. We will use [TPE](https://github.com/gazebosim/gz-physics/tree/main/tpe) as an example in this tutorial.
 
 ### Structure of a physics plugin
 
 Depending on what physics engine you would like to use,
 the folder structure could be slightly different from what's shown below.
-Here's the plugin folder structure of TPE, within the Ignition Physics library.
+Here's the plugin folder structure of TPE, within the Gazebo Physics library.
 
 ```
 ign-physics
@@ -33,13 +33,13 @@ ign-physics
 │   │    |     └── <FEATURES_TEST>.cc    Tests
 │   │    └── CMakeLists.txt              CMake build script for the plugin features.
 │   └── CMakeLists.txt                   CMake build script for the plugin.
-└── CMakeList.txt                        CMake build script for Ignition Physics library.
+└── CMakeList.txt                        CMake build script for Gazebo Physics library.
 ```
 
 We link the external physics engine library
 in `CMakeLists.txt` of the plugin, assuming the physics engine library is
 already installed. In our case, [TPE](https://github.com/gazebosim/gz-physics/tree/main/tpe)
-is placed inside Ignition Physics and hence there is a `lib` folder under `tpe`.
+is placed inside Gazebo Physics and hence there is a `lib` folder under `tpe`.
 
 We declare and implement the \ref gz::physics::FeatureList "FeatureList"
 interfacing with the physics engine API inside `plugin/src` folder
@@ -57,7 +57,7 @@ implemented as:
 - `<FEATURES>.cc` for the "FeatureList" implementation corresponding to each of
 the \ref gz::physics::Feature "Features" member functions, using the
 physics engine API to realize the feature behavior. For a list of common
-pre-defined features in Ignition Physics, please refer to
+pre-defined features in Gazebo Physics, please refer to
 \ref physicsplugin "Understand physics plugin" tutorial.
 - `<FEATURES_TEST>.cc` for unit tests of the "FeatureList".
 
@@ -98,21 +98,21 @@ scalar type.
 Now we would like to implement the `EntityManagementFeatures`.
 In the `simple_plugin` folder, we will create two files `EntityManagementFeatures.hh` and
 `EntityManagementFeatures.cc` to implement a single feature \ref gz::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
-in `EntityManagementFeatures` "FeatureList" using TPE API from `tpe/lib` in Ignition Physics library.
+in `EntityManagementFeatures` "FeatureList" using TPE API from `tpe/lib` in Gazebo Physics library.
 
 Before we dive into the feature implementation, we need to understand how the features are defined.
 
 The \ref gz::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
 is declared in a function template file `ign-physics/include/ignition/physics/ConstructEmpty.hh`.
 
-Ignition Physics library uses function templates to specify features that accept generic types.
+Gazebo Physics library uses function templates to specify features that accept generic types.
 The use of templates makes it easier to implement features using different physics engine APIs,
 without having to repeat the entire code for a function.
 
 The \ref gz::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature" example here
 is implemented with TPE API, but a similar feature can also be implemented using DART API.
 
-In this case, we are implementing a feature that is already defined by Ignition Physics,
+In this case, we are implementing a feature that is already defined by Gazebo Physics,
 thus we do not need to write our own template function, and can just include the template in our header file.
 
 But first, let's include the basics:
@@ -165,4 +165,4 @@ Please follow the previous tutorial \ref installation "Installation" to build
 `ign-physics` from source again for our new feature to be compiled.
 
 Now we can load the new physics plugin named `ignition-physics-tpe-plugin`
-to test it on Ignition Gazebo by following this \ref physicsengine "Use different physics engines" tutorial.
+to test it on Gazebo by following this \ref physicsengine "Use different physics engines" tutorial.

@@ -1,7 +1,7 @@
 # Engine plugin
 
 This example shows how to create a plugin that integrates a physics engine with
-Ignition Physics.
+Gazebo Physics.
 
 ## Build
 

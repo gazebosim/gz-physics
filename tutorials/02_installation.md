@@ -1,6 +1,6 @@
 \page installation Installation
 
-These instructions are for installing only Ignition Physics.
+These instructions are for installing only Gazebo Physics.
 If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://ignitionrobotics.org/docs/dome/install).
 
 We recommend following the Binary Installation instructions to get up and running as quickly and painlessly as possible.
@@ -72,9 +72,9 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 ## Prerequisites
 
-Ignition Physics and several of its dependencies can be installed on macOS
+Gazebo Physics and several of its dependencies can be installed on macOS
 with [Homebrew](http://brew.sh/) using the [osrf/simulation
-tap](https://github.com/osrf/homebrew-simulation). Ignition Physics uses
+tap](https://github.com/osrf/homebrew-simulation). Gazebo Physics uses
 several C++17 features which are not available in macOS High Sierra (10.13)
 and earlier, so macOS Mojave (10.14) with XCode 10.1 are the minimum
 system requirements.

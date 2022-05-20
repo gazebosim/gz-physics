@@ -1,13 +1,13 @@
-## Ignition Physics 6.x
+## Gazebo Physics 6.x
 
-### Ignition Physics 6.x.x (202X-XX-XX)
+### Gazebo Physics 6.x.x (202X-XX-XX)
 
 
-## Ignition Physics 5.x
+## Gazebo Physics 5.x
 
-### Ignition Physics 5.x.x (20XX-XX-XX)
+### Gazebo Physics 5.x.x (20XX-XX-XX)
 
-### Ignition Physics 5.1.0 (2021-11-12)
+### Gazebo Physics 5.1.0 (2021-11-12)
 
 1. Remove unused ign_auto_headers.hh.in
     * [Pull request #305](https://github.com/gazebosim/gz-physics/pull/305)
@@ -27,7 +27,7 @@
 1. Improved README.md folder structure
     * [Pull request #295](https://github.com/gazebosim/gz-physics/pull/295)
 
-### Ignition Physics 5.0.0 (2021-09-30)
+### Gazebo Physics 5.0.0 (2021-09-30)
 
 1. Add GetJointTransmittedWrench feature
     * [Pull request #283](https://github.com/gazebosim/gz-physics/pull/283)
@@ -63,11 +63,11 @@
     * [Pull request #246](https://github.com/gazebosim/gz-physics/pull/246)
     * [Pull request #245](https://github.com/gazebosim/gz-physics/pull/245)
 
-## Ignition Physics 4.x
+## Gazebo Physics 4.x
 
-### Ignition Physics 4.x.x (20XX-XX-XX)
+### Gazebo Physics 4.x.x (20XX-XX-XX)
 
-### Ignition Physics 4.3.0 (2021-11-11)
+### Gazebo Physics 4.3.0 (2021-11-11)
 
 1. Remove unused ign_auto_headers.hh.in
     * [Pull request #305](https://github.com/gazebosim/gz-physics/pull/305)
@@ -94,7 +94,7 @@
 1. Make ignition-physics CMake config files relocatable
     * [Pull request #282](https://github.com/gazebosim/gz-physics/pull/282)
 
-### Ignition Physics 4.2.0 (2021-07-16)
+### Gazebo Physics 4.2.0 (2021-07-16)
 
 1. Support FreeGroup features for nested models
     * [Pull request #231](https://github.com/gazebosim/gz-physics/pull/231)
@@ -127,7 +127,7 @@
     * [Pull request #204](https://github.com/gazebosim/gz-physics/pull/204)
     * [Pull request #259](https://github.com/gazebosim/gz-physics/pull/259)
 
-### Ignition Physics 4.1.0 (2021-05-01)
+### Gazebo Physics 4.1.0 (2021-05-01)
 
 1. [TPE] Update link pose and velocity
     * [Pull request #179](https://github.com/gazebosim/gz-physics/pull/179)
@@ -136,7 +136,7 @@
     * [Pull request #221](https://github.com/gazebosim/gz-physics/pull/221)
     * [Pull request #215](https://github.com/gazebosim/gz-physics/pull/215)
 
-### Ignition Physics 4.0.0 (2021-03-30)
+### Gazebo Physics 4.0.0 (2021-03-30)
 
 1. Remove nested models
     * [Pull request #230](https://github.com/gazebosim/gz-physics/pull/230)
@@ -209,11 +209,11 @@
     * [Pull request #243](https://github.com/gazebosim/gz-physics/pull/243)
     * [Pull request #242](https://github.com/gazebosim/gz-physics/pull/242)
 
-## Ignition Physics 3.x
+## Gazebo Physics 3.x
 
-### Ignition Physics 3.x.x (20XX-XX-XX)
+### Gazebo Physics 3.x.x (20XX-XX-XX)
 
-### Ignition Physics 3.3.0 (2021-07-12)
+### Gazebo Physics 3.3.0 (2021-07-12)
 
 1. Use slip compliance API's available in upstream dartsim release
     * [Pull request #265](https://github.com/gazebosim/gz-physics/pull/265)
@@ -230,7 +230,7 @@
 1. [Citadel] Update tutorials
     * [Pull request #204](https://github.com/gazebosim/gz-physics/pull/204)
 
-### Ignition Physics 3.2.0 (2021-04-28)
+### Gazebo Physics 3.2.0 (2021-04-28)
 
 1. Infrastructure
     * [Pull request #221](https://github.com/gazebosim/gz-physics/pull/221)
@@ -286,7 +286,7 @@
 1. Fix CONFIG arg in ign_find_package(DART) call
     * [Pull request #119](https://github.com/gazebosim/gz-physics/pull/119)
 
-### Ignition Physics 3.1.0 (2020-10-18)
+### Gazebo Physics 3.1.0 (2020-10-18)
 
 1. Support for slip compliance in the dartsim-plugin.
     * [Pull request 56](https://github.com/gazebosim/gz-physics/pull/56)
@@ -306,7 +306,7 @@
 1. Improve fork experience
     * [Pull request 130](https://github.com/gazebosim/gz-physics/pull/130)
 
-### Ignition Physics 3.0.0 (2020-09-30)
+### Gazebo Physics 3.0.0 (2020-09-30)
 
 1. Upgrade to libsdformat10
     * [Pull request 85](https://github.com/gazebosim/gz-physics/pull/85)
@@ -317,11 +317,11 @@
     * [Pull request 111](https://github.com/gazebosim/gz-physics/pull/111)
     * [Pull request 112](https://github.com/gazebosim/gz-physics/pull/112)
 
-## Ignition Physics 2.x
+## Gazebo Physics 2.x
 
-### Ignition Physics 2.x.x (20XX-XX-XX)
+### Gazebo Physics 2.x.x (20XX-XX-XX)
 
-### Ignition Physics 2.5.0 (2021-11-09)
+### Gazebo Physics 2.5.0 (2021-11-09)
 
 1. Remove unused ign_auto_headers.hh.in
     * [Pull request #305](https://github.com/gazebosim/gz-physics/pull/305)
@@ -349,7 +349,7 @@
     * [Pull request #281](https://github.com/gazebosim/gz-physics/pull/281)
     * [Pull request #287](https://github.com/gazebosim/gz-physics/pull/287)
 
-### Ignition Physics 2.4.0 (2021-04-14)
+### Gazebo Physics 2.4.0 (2021-04-14)
 
 1. [TPE] Update link pose and velocity
     * [Pull request #179](https://github.com/gazebosim/gz-physics/pull/179)
@@ -391,7 +391,7 @@
 1. Fix CONFIG arg in `ign_find_package(DART)` call
     * [Pull request #119](https://github.com/gazebosim/gz-physics/pull/119)
 
-### Ignition Physics 2.3.0 (2020-09-29)
+### Gazebo Physics 2.3.0 (2020-09-29)
 
 1. Support for slip compliance in the dartsim-plugin.
     * [Pull request 56](https://github.com/gazebosim/gz-physics/pull/56)
@@ -402,7 +402,7 @@
 1. Support nested models in TPE
     * [Pull request 86](https://github.com/gazebosim/gz-physics/pull/86)
 
-### Ignition Physics 2.2.0 (2020-07-30)
+### Gazebo Physics 2.2.0 (2020-07-30)
 
 1. Add Base and EntityManagement to tpeplugin
     * [Pull Request 32](https://github.com/gazebosim/gz-physics/pull/32)
@@ -437,7 +437,7 @@
 1. Add link offset to simulation
     * [Pull Request 83](https://github.com/gazebosim/gz-physics/pull/83)
 
-### Ignition Physics 2.1.0 (2020-05-07)
+### Gazebo Physics 2.1.0 (2020-05-07)
 
 1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
     * [BitBucket pull request 130](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/130)
@@ -487,7 +487,7 @@
 1. Restore detached BodyNodes to original skeleton
     * [Pull request 42](https://github.com/gazebosim/gz-physics/pull/42)
 
-### Ignition Physics 2.0.0 (2019-12-10)
+### Gazebo Physics 2.0.0 (2019-12-10)
 
 1. Support compiling against dart 6.9.
     * [BitBucket pull request 110](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/110)
@@ -502,9 +502,9 @@
     * [BitBucket pull request 93](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/93)
     * [BitBucket pull request 88](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/88)
 
-## Ignition Physics 1.x
+## Gazebo Physics 1.x
 
-### Ignition Physics 1.10.0 (2020-11-04)
+### Gazebo Physics 1.10.0 (2020-11-04)
 
 1. Resolved codecheck issues
     * [Pull request 154](https://github.com/gazebosim/gz-physics/pull/154)
@@ -515,7 +515,7 @@
 1.  Fix CONFIG arg in ign_find_package(DART) call
     * [Pull request 119](https://github.com/gazebosim/gz-physics/pull/119)
 
-### Ignition Physics 1.9.0 (2020-09-17)
+### Gazebo Physics 1.9.0 (2020-09-17)
 
 1. Support for slip compliance in the dartsim-plugin.
     * [Pull request 56](https://github.com/gazebosim/gz-physics/pull/56)
@@ -523,7 +523,7 @@
 1. Enforce joint effort limit in dartsim-plugin
     * [Pull request 74](https://github.com/gazebosim/gz-physics/pull/74)
 
-### Ignition Physics 1.8.0 (2020-05-08)
+### Gazebo Physics 1.8.0 (2020-05-08)
 
 1. Restore detached BodyNodes to original skeleton
     * [Pull request 42](https://github.com/gazebosim/gz-physics/pull/42)
@@ -534,12 +534,12 @@
 1. Add PlaneShape feature and implement in dartsim with test.
     * [BitBucket pull request 66](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/66)
 
-### Ignition Physics 1.7.0 (2020-04-13)
+### Gazebo Physics 1.7.0 (2020-04-13)
 
 1. Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
     * [BitBucket pull request 130](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/130)
 
-### Ignition Physics 1.6.0 (2020-03-18)
+### Gazebo Physics 1.6.0 (2020-03-18)
 
 1. Add Get Bounding Box features
     * [BitBucket pull request 122](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/122)
@@ -547,7 +547,7 @@
 1. Install plugins to unversioned files
     * [BitBucket pull request 121](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/121)
 
-### Ignition Physics 1.5.0 (2020-02-10)
+### Gazebo Physics 1.5.0 (2020-02-10)
 
 1. Clean up internal resources when a model gets removed
     * [BitBucket pull request 115](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/115)
@@ -555,7 +555,7 @@
 1. Add DetachJointFeature feature.
     * [BitBucket pull request 102](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/102)
 
-### Ignition Physics 1.4.0 (2019-08-27)
+### Gazebo Physics 1.4.0 (2019-08-27)
 
 1. Add SetJointVelocityCommand feature.
     * [BitBucket pull request 100](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/100)
@@ -563,12 +563,12 @@
 1. Add `IGN_PROFILER_ENABLE` cmake option for enabling the ign-common profiler.
     * [BitBucket pull request 96](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/96)
 
-### Ignition Physics 1.3.1 (2019-07-19)
+### Gazebo Physics 1.3.1 (2019-07-19)
 
 1. Set the time step from ForwardStep::Input in dartsim.
     * [BitBucket pull request 95](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/95)
 
-### Ignition Physics 1.3.0 (2019-07-18)
+### Gazebo Physics 1.3.0 (2019-07-18)
 
 1. Support for more friction pyramid parameters in dartsim.
     * [BitBucket pull request 94](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/94)
@@ -576,11 +576,11 @@
 1. Skip compilation of test plugins if `BUILD_TESTING` is false
     * [BitBucket pull request 92](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/92)
 
-### Ignition Physics 1.2.0 (2019-05-29)
+### Gazebo Physics 1.2.0 (2019-05-29)
 
 1. Change DART dependency to look for 6.9.0 instead of 6.7.2
 
-### Ignition Physics 1.1.0 (2019-05-20)
+### Gazebo Physics 1.1.0 (2019-05-20)
 
 1. Simple port of existing PERFORMANCE test as BENCHMARK
     * [BitBucket pull request 84](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/84)
@@ -607,11 +607,11 @@
 1. Remove workaround for console\_bridge linking on macOS
     * [BitBucket pull request 75](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/75)
 
-### Ignition Physics 1.0.1 (2019-03-05)
+### Gazebo Physics 1.0.1 (2019-03-05)
 
 1. Don't link core to ignition-common3, just the test plugin that uses it
     * [BitBucket pull request 74](https://osrf-migration.github.io/ignition-gh-pages/#!/gazebosim/gz-physics/pull-requests/74)
 
-### Ignition Physics 1.0.0 (2019-03-01)
+### Gazebo Physics 1.0.0 (2019-03-01)
 
 1. Initial release
