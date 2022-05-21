@@ -56,7 +56,7 @@ To control the car movement, in a separate terminal window, we publish a
 Twist message using Gazebo Transport library:
 
 ```bash
-ign topic -t "/model/vehicle_blue/cmd_vel" -m ignition.msgs.Twist -p "linear: {x: 1.0}, angular: {z: 0.5}"
+ign topic -t "/model/vehicle_blue/cmd_vel" -m gz.msgs.Twist -p "linear: {x: 1.0}, angular: {z: 0.5}"
 ```
 
 Then press the Play button to start the simulation.
@@ -114,13 +114,13 @@ Double message represeting the torque (Nm) applying to
 the rotor rod axis:
 
 ```bash
-ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m ignition.msgs.Double  -p "data: 0.7"
+ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m gz.msgs.Double  -p "data: 0.7"
 ```
 
 Then please press Play button to start the simulation.
 
 ```bash
-ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m ignition.msgs.Double  -p "data: 0.0"
+ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m gz.msgs.Double  -p "data: 0.0"
 ```
 
 You will see the cube drops due to no lift force from support torque on the rod,
@@ -209,13 +209,13 @@ Twist message to command the `X3` multicopter
 ascending 0.1 m.s as follow:
 
 ```bash
-ign topic -t "/X3/gazebo/command/twist" -m ignition.msgs.Twist -p "linear: {x:0 y: 0 z: 0.1} angular {z: 0}"
+ign topic -t "/X3/gazebo/command/twist" -m gz.msgs.Twist -p "linear: {x:0 y: 0 z: 0.1} angular {z: 0}"
 ```
 
 then hovering:
 
 ```bash
-ign topic -t "/X3/gazebo/command/twist" -m ignition.msgs.Twist -p " "
+ign topic -t "/X3/gazebo/command/twist" -m gz.msgs.Twist -p " "
 ```
 
 @image html img/hover.gif width=100%
