@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/sdf/ConstructVisual.hh>
+#include <ignition/physics/config.hh>

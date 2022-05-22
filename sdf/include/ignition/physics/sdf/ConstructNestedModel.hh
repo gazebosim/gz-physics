@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/sdf/ConstructNestedModel.hh>
+#include <ignition/physics/config.hh>

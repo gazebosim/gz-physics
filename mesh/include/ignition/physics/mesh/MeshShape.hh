@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/mesh/MeshShape.hh>
+#include <ignition/physics/config.hh>

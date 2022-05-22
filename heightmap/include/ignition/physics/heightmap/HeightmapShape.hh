@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/heightmap/HeightmapShape.hh>
+#include <ignition/physics/config.hh>
