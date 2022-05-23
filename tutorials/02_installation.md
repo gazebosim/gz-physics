@@ -1,7 +1,7 @@
 \page installation Installation
 
 These instructions are for installing only Gazebo Physics.
-If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://ignitionrobotics.org/docs/dome/install).
+If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://gazebosim.org/docs/dome/install).
 
 We recommend following the Binary Installation instructions to get up and running as quickly and painlessly as possible.
 
@@ -186,7 +186,7 @@ This assumes you have created and activated a Conda environment while installing
 
 # Documentation
 
-API and tutorials can be found at [https://ignitionrobotics.org/libs/physics](https://ignitionrobotics.org/libs/physics).
+API and tutorials can be found at [https://gazebosim.org/libs/physics](https://gazebosim.org/libs/physics).
 
 You can also generate the documentation from a clone of this repository by following these steps.
 

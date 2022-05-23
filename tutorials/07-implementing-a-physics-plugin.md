@@ -30,7 +30,7 @@ plugin, e.g. \ref gz::physics::GetEngineInfo "GetEngineInfo".
 metadata about the coordinate system (e.g. 2 or 3 dimensions) and numeric system
 (e.g. float, int) that the `Features` will be implemented accordingly.
 - `GetEntities.hh` header: to retrieve the pre-defined list of features in
-Gazebo Physics. Please refer to this [API Reference](https://ignitionrobotics.org/api/physics/2.0/GetEntities_8hh.html)
+Gazebo Physics. Please refer to this [API Reference](https://gazebosim.org/api/physics/2.0/GetEntities_8hh.html)
 for a list of features defined in `GetEntities.hh` and \ref physicsplugin
 "Understanding the Physics Plugin" tutorial for an example list of common features
 implemented with a plugin.
@@ -57,7 +57,7 @@ and returning the engine object using `Identity`. Then, we
 define the metadata getters `GetEngineIndex` and `GetEngineName` for the
 feature \ref gz::physics::GetEngineInfo "GetEngineInfo" (please look into
 corresponding public member functions defined in the subclasses). A list of other
-pre-defined features can be found in the [`GetEntities` FeatureList](https://ignitionrobotics.org/api/physics/2.0/GetEntities_8hh.html).
+pre-defined features can be found in the [`GetEntities` FeatureList](https://gazebosim.org/api/physics/2.0/GetEntities_8hh.html).
 
 Finally, we only have to register our plugin in Gazebo Physics as a physics
 engine by:

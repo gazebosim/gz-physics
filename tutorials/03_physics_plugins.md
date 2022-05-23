@@ -82,7 +82,7 @@ The source code for Dartsim plugin can be found in [Gazebo Physics repository](h
 
 TPE ([Trivial Physics Engine](https://github.com/gazebosim/gz-physics/tree/ign-physics6/tpe)) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
 It supports higher-order fleet dynamics without real physics (eg. gravity, force, constraint etc.) and multi-machine synchronization.
-Ignition support for TPE targets [Citadel](https://ignitionrobotics.org/docs/citadel) and onward releases.
+Ignition support for TPE targets [Citadel](https://gazebosim.org/docs/citadel) and onward releases.
 The source code for TPE plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/ign-physics6) under the `tpe/plugin` directory.
 
 The following is a list of features supported by each physics engine to help users select one that fits their needs.

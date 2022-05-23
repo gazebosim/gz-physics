@@ -15,7 +15,7 @@ Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/ico
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Gazebo Physics, a component of [Ignition
-Robotics](https://ignitionrobotics.org), provides an abstract physics interface
+Robotics](https://gazebosim.org), provides an abstract physics interface
 designed to support simulation and rapid development of robot applications.
 
 # Table of Contents
@@ -70,7 +70,7 @@ Gazebo Physics provides the following functionality:
 
 # Install
 
-See the [installation tutorial](https://ignitionrobotics.org/api/physics/5.0/installation.html).
+See the [installation tutorial](https://gazebosim.org/api/physics/5.0/installation.html).
 
 # Usage
 
@@ -78,7 +78,7 @@ Please refer to the [examples directory](https://github.com/gazebosim/gz-physics
 
 # Documentation
 
-API and tutorials can be found at [https://ignitionrobotics.org/libs/physics](https://ignitionrobotics.org/libs/physics).
+API and tutorials can be found at [https://gazebosim.org/libs/physics](https://gazebosim.org/libs/physics).
 
 You can also generate the documentation from a clone of this repository by following these steps.
 
@@ -155,7 +155,7 @@ ign-physics
 ```
 # Contributing
 
-Please see the [contribution guide](https://ignitionrobotics.org/docs/all/contributing).
+Please see the [contribution guide](https://gazebosim.org/docs/all/contributing).
 
 # Code of Conduct
 
@@ -164,7 +164,7 @@ Please see
 
 # Versioning
 
-This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Gazebo project](https://ignitionrobotics.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Gazebo website](https://ignitionrobotics.org) for version and release information.
+This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Gazebo project](https://gazebosim.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Gazebo website](https://gazebosim.org) for version and release information.
 
 # License
 

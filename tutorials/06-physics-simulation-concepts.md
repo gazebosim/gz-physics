@@ -6,7 +6,7 @@ This tutorial introduces simulation concepts that are used in Gazebo Physics.
 
 - \ref installation "Installation"
 - \ref physicsengine "Use different physics engines"
-- [Understand the GUI tutorial](https://ignitionrobotics.org/docs/fortress/gui)
+- [Understand the GUI tutorial](https://gazebosim.org/docs/fortress/gui)
 
 ## Physics simulation features
 
@@ -19,7 +19,7 @@ Here is a snapshot of simulation features supported by ign-physics:
 Ignition adopts SDFormat structure to describe visual elements and
 also the dynamic physics aspects. To get started on SDFormat 1.7, refer to this
 [SDFormat specification](http://sdformat.org/spec?ver=1.7&elem=sdf).
-For a comprehensive tutorial for constructing your robot model from SDFormat, refer to this [Building robot](https://ignitionrobotics.org/docs/fortress/building_robot) tutorial.
+For a comprehensive tutorial for constructing your robot model from SDFormat, refer to this [Building robot](https://gazebosim.org/docs/fortress/building_robot) tutorial.
 
 ## Physics concepts in Gazebo simulation
 
