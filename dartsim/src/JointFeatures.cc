@@ -381,8 +381,14 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
         this->models.IdentityOf(constraint->getBodyNode1()->getSkeleton()));
     auto dartWorld = this->worlds.at(worldId);
     dartWorld->getConstraintSolver()->removeConstraint(constraint);
+    if (jointInfo->phantomBody)
+    {
+      jointInfo->phantomBody->remove();
+      jointInfo->phantomBody = nullptr;
+    }
     return;
   }
+
   auto &joint = jointInfo->joint;
   if (joint->getType() == "FreeJoint")
   {
