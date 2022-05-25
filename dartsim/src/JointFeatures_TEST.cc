@@ -1000,7 +1000,7 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   // them from falling.
   fixedJoint1->Detach();
   fixedJoint2->Detach();
- 
+
   for (std::size_t i = 0; i < numSteps; ++i)
   {
     world->Step(output, state, input);
