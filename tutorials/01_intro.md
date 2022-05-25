@@ -83,4 +83,4 @@ to \ref physicsplugin
 ### Future roadmap
 
 Gazebo Physics evolves closely with the Ignition ecosystem.
-For a broader overview, please visit [Ignition's roadmap](https://gazebosim.org/about).
+For a broader overview, please visit [Gazebo's roadmap](https://gazebosim.org/about).
