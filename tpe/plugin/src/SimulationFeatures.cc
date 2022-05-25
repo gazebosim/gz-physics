@@ -56,7 +56,7 @@ void SimulationFeatures::WorldForwardStep(
     if (std::fabs(dt.count() - world->GetTimeStep()) > tol)
     {
       world->SetTimeStep(dt.count());
-      igndbg << "Simulation timestep set to: "
+      gzdbg << "Simulation timestep set to: "
         << world->GetTimeStep()
         << std::endl;
     }

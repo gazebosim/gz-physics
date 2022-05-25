@@ -89,7 +89,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
   {
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    igndbg << " -- Plugin name: " << name << std::endl;
+    gzdbg << " -- Plugin name: " << name << std::endl;
 
     auto engine =
       gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
@@ -132,7 +132,7 @@ std::unordered_set<TestWorldPtr> LoadWorldsPiecemeal(
   {
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    igndbg << " -- Plugin name: " << name << std::endl;
+    gzdbg << " -- Plugin name: " << name << std::endl;
 
     auto engine =
       gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
@@ -270,7 +270,7 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
   if (library.empty())
     return;
 
-  igndbg << "Testing library " << library << std::endl;
+  gzdbg << "Testing library " << library << std::endl;
   auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
 
   for (const auto &world : worlds)
