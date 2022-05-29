@@ -15,26 +15,26 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
 
 #include <string>
 #include <map>
 
-#include <ignition/common/Mesh.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
 /// \enum ShapeType
 /// \brief The set of shape types.
-enum class IGNITION_PHYSICS_TPELIB_VISIBLE ShapeType
+enum class GZ_PHYSICS_TPELIB_VISIBLE ShapeType
 {
   /// \brief Empty shape. This means no shape has been defined.
   EMPTY = 0,
@@ -63,7 +63,7 @@ enum class IGNITION_PHYSICS_TPELIB_VISIBLE ShapeType
 
 
 /// \brief Base shape geometry class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
+class GZ_PHYSICS_TPELIB_VISIBLE Shape
 {
   /// \brief Constructor
   public: Shape();
@@ -93,7 +93,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Shape
 };
 
 /// \brief Box geometry
-class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
+class GZ_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
 {
   /// \brief Constructor
   public: BoxShape();
@@ -119,7 +119,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
 };
 
 /// \brief Capsule geometry
-class IGNITION_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
+class GZ_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
 {
   /// \brief Constructor
   public: CapsuleShape();
@@ -154,7 +154,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
 };
 
 /// \brief Cylinder geometry
-class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
+class GZ_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
 {
   /// \brief Constructor
   public: CylinderShape();
@@ -189,7 +189,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
 };
 
 /// \brief Ellipsoid geometry
-class IGNITION_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
+class GZ_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
 {
   /// \brief Constructor
   public: EllipsoidShape();
@@ -215,7 +215,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
 };
 
 /// \brief Sphere geometry
-class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
+class GZ_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
 {
   /// \brief Constructor
   public: SphereShape();
@@ -239,7 +239,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE SphereShape : public Shape
 };
 
 /// \brief Mesh geometry
-class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
+class GZ_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
 {
   /// \brief Constructor
   public: MeshShape();
@@ -249,7 +249,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
 
   /// \brief Set mesh
   /// \param[in] _mesh Mesh object
-  public: void SetMesh(const ignition::common::Mesh &_mesh);
+  public: void SetMesh(const gz::common::Mesh &_mesh);
 
   /// \brief Get mesh scale
   /// \return Mesh scale

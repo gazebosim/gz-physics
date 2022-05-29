@@ -23,7 +23,7 @@ endforeach()
 if (DART_FOUND)
   target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
   target_compile_definitions(MockDoublePendulum PRIVATE
-    "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
+    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
   if (MSVC)
     # needed by DART, see https://github.com/dartsim/dart/issues/753
     target_compile_options(MockDoublePendulum PUBLIC "/permissive-")

@@ -5,10 +5,10 @@ plugins on Ubuntu, according to the desired feature list.
 
 ## Overview
 
-Physics Plugin integrates external physics engines into the Ignition Physics.
+Physics Plugin integrates external physics engines into the Gazebo Physics.
 It allows users to select from multiple supported physics engines based on their
 simulation needs. This tutorial will describe how to load a compiled physics
-plugin using \ref ignition::physics "Ignition Physics" API.
+plugin using \ref gz::physics "Gazebo Physics" API.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ plugin using \ref ignition::physics "Ignition Physics" API.
 
 ## Write a simple loader
 
-We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics/examples](https://github.com/ignitionrobotics/ign-physics/tree/main/examples/hello_world_loader) folder.
+We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics/examples](https://github.com/gazebosim/gz-physics/tree/main/examples/hello_world_loader) folder.
 
 First, create a workspace for the example plugin loader.
 
@@ -30,7 +30,7 @@ cd hello_world_loader
 Then download the example loader into your current directory by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/ign-physics6/examples/hello_world_loader/hello_world_loader.cc
+wget https://raw.githubusercontent.com/gazebosim/gz-physics/ign-physics6/examples/hello_world_loader/hello_world_loader.cc
 ```
 
 ### Examine the code
@@ -38,9 +38,9 @@ wget https://raw.githubusercontent.com/ignitionrobotics/ign-physics/ign-physics6
 At the top of the file `hello_world_loader.cc`, we include the headers that will
 be used in our code. After the `std` C++ libraries are the `Loader.hh` and
 `PluginPtr.hh`, which provides main functionalities for loading physics plugins
-and plugin pointers. Next includes from \ref ignition::physics are the tools for
-retrieving \ref ignition::physics::Feature "Feature" and
-\ref ignition::physics::Entity "Entity" from physics plugins (please refer to
+and plugin pointers. Next includes from \ref gz::physics are the tools for
+retrieving \ref gz::physics::Feature "Feature" and
+\ref gz::physics::Entity "Entity" from physics plugins (please refer to
 \ref physicsplugin "Understanding the physics plugin" tutorial for their
 design concepts).
 
@@ -48,13 +48,13 @@ design concepts).
 
 Next, in the main function, the loader requires users to provide a path for
 desired plugins to be loaded. The plugin names are retrieved by
-@ref ignition::plugin::Loader::LoadLib member function.
+@ref gz::plugin::Loader::LoadLib member function.
 
 Assuming the correct path, our loader will instantiate all plugins that are
-available in the path using @ref ignition::plugin::Loader::Instantiate member
+available in the path using @ref gz::plugin::Loader::Instantiate member
 function. Then for each instantiated plugin, using
-@ref ignition::physics::RequestEngine3d<Features>::From, it will request an
-engine implementing a \ref ignition::physics::FeaturePolicy "FeaturePolicy" (3D
+@ref gz::physics::RequestEngine3d<Features>::From, it will request an
+engine implementing a \ref gz::physics::FeaturePolicy "FeaturePolicy" (3D
  in this case).
 
 \snippet examples/hello_world_loader/hello_world_loader.cc main
@@ -95,7 +95,7 @@ and print the engine name.
 
 ### Load existing plugins
 
-For example, if you have the Ignition Physics plugin for
+For example, if you have the Gazebo Physics plugin for
 [DART](https://dartsim.github.io/) compiled, find where it is installed with
 (you may need administrative rights: `sudo` on Linux platform):
 
@@ -113,11 +113,11 @@ the loader by:
 And you'll see the engine info:
 
 ```bash
-Testing plugin: ignition::physics::dartsim::Plugin
+Testing plugin: gz::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ```
 
-At the time of writing, Ignition Physics is shipped with
+At the time of writing, Gazebo Physics is shipped with
 [DART](https://dartsim.github.io/) and [TPE](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629)
 physics plugins installed. Following the above steps, you can load `TPE` by the
 library name `libignition-physics-tpe-plugin.so` or other custom plugins by

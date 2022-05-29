@@ -22,14 +22,14 @@
 
 #include <gz/physics/FeatureList.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     /////////////////////////////////////////////////
     /// \brief This feature removes a Model entity from the index-specified
     /// World.
-    class IGNITION_PHYSICS_VISIBLE RemoveModelFromWorld : public virtual Feature
+    class GZ_PHYSICS_VISIBLE RemoveModelFromWorld : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
       class World : public virtual Feature::World<PolicyT, FeaturesT>
@@ -79,7 +79,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature removes a nested Model entity from the
     /// specified parent Model.
-    class IGNITION_PHYSICS_VISIBLE RemoveNestedModelFromModel
+    class GZ_PHYSICS_VISIBLE RemoveNestedModelFromModel
         : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>

@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/Register.hh>
+#include <ignition/physics/config.hh>

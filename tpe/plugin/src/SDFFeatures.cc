@@ -24,9 +24,9 @@
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
 #include <sdf/World.hh>
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 
@@ -42,12 +42,12 @@ static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
   {
     if (!_semPose.RelativeTo().empty())
     {
-      ignerr << "There was an error in SemanticPose::Resolve\n";
+      gzerr << "There was an error in SemanticPose::Resolve\n";
       for (const auto &err : errors)
       {
-        ignerr << err.Message() << std::endl;
+        gzerr << err.Message() << std::endl;
       }
-      ignerr << "There is no optimal fallback since the relative_to attribute["
+      gzerr << "There is no optimal fallback since the relative_to attribute["
              << _semPose.RelativeTo() << "] of the pose is not empty. "
              << "Falling back to using the raw Pose.\n";
     }
@@ -94,13 +94,13 @@ Identity SDFFeatures::ConstructSdfModel(
   auto it = this->worlds.find(_worldID.id);
   if (it == this->worlds.end())
   {
-    ignwarn << "World [" << _worldID.id << "] is not found." << std::endl;
+    gzwarn << "World [" << _worldID.id << "] is not found." << std::endl;
     return this->GenerateInvalidId();
   }
   auto world = it->second->world;
   if (world == nullptr)
   {
-    ignwarn << "World is a nullptr" << std::endl;
+    gzwarn << "World is a nullptr" << std::endl;
     return this->GenerateInvalidId();
   }
   tpelib::Entity &ent = world->AddModel();
@@ -149,7 +149,7 @@ Identity SDFFeatures::ConstructSdfNestedModel(
     auto world = worldIt->second->world;
     if (world == nullptr)
     {
-      ignwarn << "Parent world is a null" << std::endl;
+      gzwarn << "Parent world is a null" << std::endl;
       return this->GenerateInvalidId();
     }
     parentId = world->GetId();
@@ -165,7 +165,7 @@ Identity SDFFeatures::ConstructSdfNestedModel(
       auto parent = modelIt->second->model;
       if (parent == nullptr)
       {
-        ignwarn << "Parent model is a null" << std::endl;
+        gzwarn << "Parent model is a null" << std::endl;
         return this->GenerateInvalidId();
       }
       parentId = parent->GetId();
@@ -226,13 +226,13 @@ Identity SDFFeatures::ConstructSdfLink(
   auto it = this->models.find(_modelID);
   if (it == this->models.end())
   {
-    ignwarn << "Model [" << _modelID.id << "] is not found" << std::endl;
+    gzwarn << "Model [" << _modelID.id << "] is not found" << std::endl;
     return this->GenerateInvalidId();
   }
   auto model = it->second->model;
   if (model == nullptr)
   {
-    ignwarn << "Model is a nullptr" << std::endl;
+    gzwarn << "Model is a nullptr" << std::endl;
     return this->GenerateInvalidId();
   }
   tpelib::Entity &ent = model->AddLink();
@@ -263,13 +263,13 @@ Identity SDFFeatures::ConstructSdfCollision(
   auto it = this->links.find(_linkID);
   if (it == this->links.end())
   {
-    ignwarn << "Link [" << _linkID.id << "] is not found" << std::endl;
+    gzwarn << "Link [" << _linkID.id << "] is not found" << std::endl;
     return this->GenerateInvalidId();
   }
   auto link = it->second->link;
   if (link == nullptr)
   {
-    ignwarn << "Link is a nullptr" << std::endl;
+    gzwarn << "Link is a nullptr" << std::endl;
     return this->GenerateInvalidId();
   }
 
@@ -316,7 +316,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   }
   else
   {
-    ignwarn << "Geometry type not supported for collision [" << name << "]."
+    gzwarn << "Geometry type not supported for collision [" << name << "]."
             << std::endl;
   }
   // \todo(anyone) add mesh. currently mesh has to be loaded externally

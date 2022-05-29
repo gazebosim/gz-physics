@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/DeclareShapeType.hh>
+#include <ignition/physics/config.hh>

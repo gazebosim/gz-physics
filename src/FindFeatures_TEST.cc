@@ -19,10 +19,10 @@
 
 #include <map>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/ForwardStep.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/ForwardStep.hh>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
 #include "TestUtilities.hh"
 
@@ -32,18 +32,18 @@ TEST(FindFeatures_TEST, ForwardStep)
   // TODO(MXG): Add more plugins to this list as they are implemented
   const std::set<std::string> knownAcceptablePlugins =
   {
-    "ignition::physics::dartsim::Plugin"
+    "gz::physics::dartsim::Plugin"
   };
 
   using TestFeatures =
-    ignition::physics::FeatureList<ignition::physics::ForwardStep>;
+    gz::physics::FeatureList<gz::physics::ForwardStep>;
 
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   PrimeTheLoader(loader);
 
   const std::set<std::string> allPlugins = loader.AllPlugins();
   const std::set<std::string> foundPlugins =
-      ignition::physics::FindFeatures3d<TestFeatures>::From(loader);
+      gz::physics::FindFeatures3d<TestFeatures>::From(loader);
 
   for (const std::string &acceptable : knownAcceptablePlugins)
   {
@@ -57,13 +57,13 @@ TEST(FindFeatures_TEST, ForwardStep)
 TEST(FindFeatures_TEST, Unimplemented)
 {
   using TestFeatures =
-    ignition::physics::FeatureList<test::UnimplementedFeature>;
+    gz::physics::FeatureList<test::UnimplementedFeature>;
 
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   PrimeTheLoader(loader);
 
   const std::set<std::string> foundPlugins =
-      ignition::physics::FindFeatures3d<TestFeatures>::From(loader);
+      gz::physics::FindFeatures3d<TestFeatures>::From(loader);
 
   // No plugins should ever have implemented this spoofed feature list
   EXPECT_EQ(0u, foundPlugins.size());

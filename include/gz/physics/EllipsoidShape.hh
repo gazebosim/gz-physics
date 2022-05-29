@@ -23,13 +23,13 @@
 #include <gz/physics/DeclareShapeType.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     IGN_PHYSICS_DECLARE_SHAPE_TYPE(EllipsoidShape)
 
-    class IGNITION_PHYSICS_VISIBLE GetEllipsoidShapeProperties
+    class GZ_PHYSICS_VISIBLE GetEllipsoidShapeProperties
         : public virtual FeatureWithRequirements<EllipsoidShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -57,7 +57,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the EllipsoidShape properties such as
     /// the ellipsoid radii.
-    class IGNITION_PHYSICS_VISIBLE SetEllipsoidShapeProperties
+    class GZ_PHYSICS_VISIBLE SetEllipsoidShapeProperties
         : public virtual FeatureWithRequirements<EllipsoidShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -87,7 +87,7 @@ namespace ignition
     /// \brief This feature constructs a new ellipsoid shape and attaches the
     /// desired pose in the link frame. The pose could be defined to be the
     /// ellipsoid center point in actual implementation.
-    class IGNITION_PHYSICS_VISIBLE AttachEllipsoidShapeFeature
+    class GZ_PHYSICS_VISIBLE AttachEllipsoidShapeFeature
         : public virtual FeatureWithRequirements<EllipsoidShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

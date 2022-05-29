@@ -39,11 +39,11 @@
 #include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
-#include <ignition/common/Console.hh>
-#include <ignition/common/Mesh.hh>
-#include <ignition/common/MeshManager.hh>
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/math/Helpers.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Helpers.hh>
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
@@ -65,7 +65,7 @@
 
 #include "CustomMeshShape.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -81,12 +81,12 @@ static Eigen::Isometry3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
   {
     if (!_semPose.RelativeTo().empty())
     {
-      ignerr << "There was an error in SemanticPose::Resolve\n";
+      gzerr << "There was an error in SemanticPose::Resolve\n";
       for (const auto &err : errors)
       {
-        ignerr << err.Message() << std::endl;
+        gzerr << err.Message() << std::endl;
       }
-      ignerr << "There is no optimal fallback since the relative_to attribute["
+      gzerr << "There is no optimal fallback since the relative_to attribute["
              << _semPose.RelativeTo() << "] of the pose is not empty. "
              << "Falling back to using the raw Pose.\n";
     }
@@ -115,7 +115,7 @@ static double InvertThreadPitch(double _pitch)
 {
   if (math::equal(std::abs(_pitch), 0.0))
   {
-    ignerr << "Zero thread pitch is not allowed.\n";
+    gzerr << "Zero thread pitch is not allowed.\n";
     assert(false);
   }
 
@@ -164,7 +164,7 @@ static Eigen::Vector3d ConvertJointAxis(
   // Error while Resolving xyz. Fallback sdformat 1.6 behavior but treat
   // xyz_expressed_in = "__model__" as the old use_parent_model_frame
 
-  const Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
+  const Eigen::Vector3d axis = gz::math::eigen3::convert(_sdfAxis->Xyz());
 
   if (_sdfAxis->XyzExpressedIn().empty())
     return axis;
@@ -179,12 +179,12 @@ static Eigen::Vector3d ConvertJointAxis(
 
   // xyz expressed in a frame other than the joint frame or the parent model
   // frame is not supported
-  ignerr << "There was an error in JointAxis::ResolveXyz\n";
+  gzerr << "There was an error in JointAxis::ResolveXyz\n";
   for (const auto &err : errors)
   {
-    ignerr << err.Message() << std::endl;
+    gzerr << err.Message() << std::endl;
   }
-  ignerr << "There is no optimal fallback since the expressed_in attribute["
+  gzerr << "There is no optimal fallback since the expressed_in attribute["
          << _sdfAxis->XyzExpressedIn() << "] of the axis's xyz is neither empty"
          << "nor '__model__'. Falling back to using the raw xyz vector "
          << "expressed in the joint frame.\n";
@@ -306,7 +306,7 @@ static ShapeAndTransform ConstructPlane(
 static ShapeAndTransform ConstructHeightmap(
     const ::sdf::Heightmap & /*_heightmap*/)
 {
-  ignerr << "Heightmap construction from an SDF has not been implemented yet "
+  gzerr << "Heightmap construction from an SDF has not been implemented yet "
          << "for dartsim.\n";
   return {nullptr};
 }
@@ -317,7 +317,7 @@ static ShapeAndTransform ConstructMesh(
 {
   // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
   // a local file name, or do we need to resolve the URI?
-  ignerr << "Mesh construction from an SDF has not been implemented yet for "
+  gzerr << "Mesh construction from an SDF has not been implemented yet for "
          << "dartsim.\n";
   return {nullptr};
 }
@@ -346,7 +346,7 @@ static ShapeAndTransform ConstructGeometry(
       ellipsoidMeshName,
       _geometry.EllipsoidShape()->Radii(),
       6, 12);
-    const ignition::common::Mesh * _mesh =
+    const gz::common::Mesh * _mesh =
       meshMgr->MeshByName(ellipsoidMeshName);
 
     auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
@@ -381,7 +381,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
   {
     return it->second;
   }
-  ignerr << "Could not find link " << _linkRelativeName << " in model "
+  gzerr << "Could not find link " << _linkRelativeName << " in model "
          << _jointModelName << std::endl;
   return nullptr;
 }
@@ -395,7 +395,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
 
-  world->setGravity(ignition::math::eigen3::convert(_sdfWorld.Gravity()));
+  world->setGravity(gz::math::eigen3::convert(_sdfWorld.Gravity()));
 
   // TODO(MXG): Add a Physics class to the SDFormat DOM and then parse that
   // information here. For now, we'll just use dartsim's default physics
@@ -458,7 +458,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   // Set canonical link name
   // TODO(anyone) This may not work correctly with nested models and will need
   // to be updated once multiple canonical links can exist in a nested model
-  // https://github.com/ignitionrobotics/ign-physics/issues/209
+  // https://github.com/gazebosim/gz-physics/issues/209
   auto [modelID, modelInfo] = [&] {
     if (isNested)
     {
@@ -497,7 +497,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
     if (!sdfJoint)
     {
-      ignerr << "The joint with index [" << i << "] in model ["
+      gzerr << "The joint with index [" << i << "] in model ["
              << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
       continue;
     }
@@ -507,13 +507,13 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     ::sdf::Errors errors = sdfJoint->ResolveParentLink(parentLinkName);
     if (!errors.empty())
     {
-      ignerr << "The link of the parent frame [" << sdfJoint->ParentLinkName()
+      gzerr << "The link of the parent frame [" << sdfJoint->ParentLinkName()
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
       for (const auto &error : errors)
       {
-        ignerr << error << std::endl;
+        gzerr << error << std::endl;
       }
       continue;
     }
@@ -521,13 +521,13 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     errors = sdfJoint->ResolveChildLink(childLinkName);
     if (!errors.empty())
     {
-      ignerr << "The link of the child frame [" << sdfJoint->ChildLinkName()
+      gzerr << "The link of the child frame [" << sdfJoint->ChildLinkName()
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
       for (const auto &error : errors)
       {
-        ignerr << error << std::endl;
+        gzerr << error << std::endl;
       }
       continue;
     }
@@ -535,7 +535,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     const ::sdf::Link *parentSdfLink = _sdfModel.LinkByName(parentLinkName);
     if (nullptr == parentSdfLink && parentLinkName != "world")
     {
-      ignerr << "The link [" << parentLinkName << "] of the parent frame ["
+      gzerr << "The link [" << parentLinkName << "] of the parent frame ["
              << sdfJoint->ParentLinkName() << "] of joint [" << sdfJoint->Name()
              << "] in model [" << modelName
              << "] could not be resolved. The joint will not be constructed\n";
@@ -545,7 +545,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     const ::sdf::Link *childSdfLink = _sdfModel.LinkByName(childLinkName);
     if (nullptr == childSdfLink)
     {
-      ignerr << "The link [" << childLinkName << "] of the child frame ["
+      gzerr << "The link [" << childLinkName << "] of the child frame ["
              << sdfJoint->ChildLinkName() << "] of joint [" << sdfJoint->Name()
              << "] in model [" << modelName
              << "] could not be resolved. The joint will not be constructed\n";
@@ -557,7 +557,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
     if (nullptr == parent && parentLinkName != "world")
     {
-      ignerr << "The parent [" << sdfJoint->ParentLinkName() << "] of joint ["
+      gzerr << "The parent [" << sdfJoint->ParentLinkName() << "] of joint ["
              << sdfJoint->Name() << "] in model [" << modelName
              << "] was not found. The joint will not be constructed\n";
       continue;
@@ -567,7 +567,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       FindBodyNode(worlds[worldID]->getName(), modelName, childLinkName);
     if (nullptr == child)
     {
-      ignerr << "The child of joint [" << sdfJoint->Name() << "] in model ["
+      gzerr << "The child of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] was not found. The joint will not be constructed\n";
       continue;
@@ -588,11 +588,11 @@ Identity SDFFeatures::ConstructSdfLink(
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
-  const ignition::math::Inertiald &sdfInertia = _sdfLink.Inertial();
+  const gz::math::Inertiald &sdfInertia = _sdfLink.Inertial();
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
 
   // TODO(addisu) Resolve the pose of inertials when frame information is
-  // availabile for ignition::math::Inertial
+  // availabile for gz::math::Inertial
   const Eigen::Matrix3d R_inertial{
         math::eigen3::convert(sdfInertia.Pose().Rot())};
 
@@ -630,7 +630,7 @@ Identity SDFFeatures::ConstructSdfLink(
   auto worldID = this->GetWorldOfModelImpl(_modelID);
   if (worldID == INVALID_ENTITY_ID)
   {
-    ignerr << "World of model [" << modelInfo.model->getName()
+    gzerr << "World of model [" << modelInfo.model->getName()
            << "] could not be found when creating link [" << _sdfLink.Name()
            << "]\n";
     return this->GenerateInvalidId();
@@ -686,7 +686,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (_sdfJoint.ChildLinkName() == "world")
   {
-    ignerr << "Asked to create a joint with the world as the child in model "
+    gzerr << "Asked to create a joint with the world as the child in model "
            << "[" << modelInfo.model->getName() << "]. This is currently not "
            << "supported\n";
 
@@ -739,7 +739,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (nullptr == parent && parentLinkName != "world")
   {
-    ignerr << "The link of the parent frame [" << _sdfJoint.ParentLinkName()
+    gzerr << "The link of the parent frame [" << _sdfJoint.ParentLinkName()
            << "] with resolved link name [" << parentLinkName
            << "] of joint [" << _sdfJoint.Name()
            << "] could not be resolved. The joint will not be constructed\n";
@@ -747,7 +747,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   if (nullptr == child)
   {
-    ignerr << "The link of the child frame [" << _sdfJoint.ChildLinkName()
+    gzerr << "The link of the child frame [" << _sdfJoint.ChildLinkName()
            << "] with resolved link name [" << childLinkName
            << "] of joint [" << _sdfJoint.Name() << "] in model ["
            << modelInfo.model->getName()
@@ -765,7 +765,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   if (!_collision.Geom())
   {
-    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+    gzerr << "The geometry element of collision [" << _collision.Name() << "] "
            << "was a nullptr\n";
     return this->GenerateInvalidId();
   }
@@ -777,7 +777,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
-    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+    gzerr << "The geometry element of collision [" << _collision.Name() << "] "
            << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
@@ -841,7 +841,7 @@ Identity SDFFeatures::ConstructSdfCollision(
         }
         else
         {
-          ignwarn << "Failed to get body node for [" << _collision.Name()
+          gzwarn << "Failed to get body node for [" << _collision.Name()
                   << "], not setting friction direction frame." << std::endl;
         }
       }
@@ -899,7 +899,7 @@ Identity SDFFeatures::ConstructSdfVisual(
 {
   if (!_visual.Geom())
   {
-    ignerr << "The geometry element of visual [" << _visual.Name() << "] was a "
+    gzerr << "The geometry element of visual [" << _visual.Name() << "] was a "
            << "nullptr\n";
     return this->GenerateInvalidId();
   }
@@ -911,7 +911,7 @@ Identity SDFFeatures::ConstructSdfVisual(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
-    ignerr << "The geometry element of visual [" << _visual.Name() << "] "
+    gzerr << "The geometry element of visual [" << _visual.Name() << "] "
            << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
@@ -935,7 +935,7 @@ Identity SDFFeatures::ConstructSdfVisual(
   // intended for the physics?
   if (_visual.Material())
   {
-    const ignition::math::Color &color = _visual.Material()->Ambient();
+    const gz::math::Color &color = _visual.Material()->Ambient();
     node->getVisualAspect()->setColor(
           Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
   }
@@ -960,7 +960,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
   {
     if (_linkName != "world")
     {
-      ignerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
+      gzerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
              << "with the name [" << _linkName << "].\n";
     }
     return nullptr;
@@ -983,7 +983,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (worldChild)
   {
-    ignerr << "Asked to create a joint with the world as the child in model "
+    gzerr << "Asked to create a joint with the world as the child in model "
            << "[" << _modelInfo.model->getName() << "]. This is currently not "
            << "supported\n";
 
@@ -1011,7 +1011,7 @@ Identity SDFFeatures::ConstructSdfJoint(
         msg << "the child link ";
 
       msg << "could not be found in that model!\n";
-      ignerr << msg.str();
+      gzerr << msg.str();
 
       return this->GenerateInvalidId();
     }
@@ -1021,7 +1021,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     auto childsParentJoint = _child->getParentJoint();
     if (childsParentJoint->getType() != "FreeJoint")
     {
-      ignerr << "Asked to create a joint between links "
+      gzerr << "Asked to create a joint between links "
              << "[" << _parent->getName() << "] as parent and ["
              << _child->getName() << "] as child, but the child link already "
              << "has a parent joint of type [" << childsParentJoint->getType()
@@ -1031,7 +1031,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     else if (_parent && _parent->descendsFrom(_child))
     {
       // TODO(MXG): Add support for non-tree graph structures
-      ignerr << "Asked to create a closed kinematic chain between links "
+      gzerr << "Asked to create a closed kinematic chain between links "
              << "[" << _parent->getName() << "] and [" << _child->getName()
              << "], but that is not supported by the dartsim wrapper yet.\n";
       return this->GenerateInvalidId();
@@ -1095,7 +1095,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     // out an error message and fall back to a fixed joint
     if (::sdf::JointType::FIXED != type)
     {
-      ignerr << "Asked to construct a joint of sdf::JointType ["
+      gzerr << "Asked to construct a joint of sdf::JointType ["
              << static_cast<int>(type) << "], but that is not supported yet. "
              << "Creating a FIXED joint instead\n";
     }
@@ -1130,7 +1130,7 @@ Eigen::Isometry3d SDFFeatures::ResolveSdfLinkReferenceFrame(
   if (_frame.empty())
     return GetParentModelFrame(_modelInfo);
 
-  ignerr << "Requested a reference frame of [" << _frame << "] but currently "
+  gzerr << "Requested a reference frame of [" << _frame << "] but currently "
          << "only the model frame is supported as a reference frame for link "
          << "poses.\n";
 
@@ -1149,7 +1149,7 @@ Eigen::Isometry3d SDFFeatures::ResolveSdfJointReferenceFrame(
     return _child->getWorldTransform();
   }
 
-  ignerr << "Requested a reference frame of [" << _frame << "] but currently "
+  gzerr << "Requested a reference frame of [" << _frame << "] but currently "
          << "only the child link frame is supported as a reference frame for "
          << "joint poses.\n";
 

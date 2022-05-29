@@ -26,7 +26,7 @@
 #include <gz/physics/Entity.hh>
 #include <gz/physics/TemplateHelpers.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -145,7 +145,7 @@ namespace ignition
                         typename To::UpcastIdentifiers>::value>::value);
 
         static_assert(
-            ignition::physics::ConstCompatible<To, From>::value,
+            gz::physics::ConstCompatible<To, From>::value,
             "CANNOT CAST FROM A CONST-QUALIFIED ENTITY TO AN ENTITY WITHOUT A "
             "CONST-QUALIFIER.");
       };
@@ -377,7 +377,7 @@ namespace ignition
     }
 
     /////////////////////////////////////////////////
-    #define DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR(op) \
+    #define DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR(op) \
       template <typename EntityT> \
       template <typename OtherEntityT> \
       bool EntityPtr<EntityT>::operator op (\
@@ -389,12 +389,12 @@ namespace ignition
         return (this->entity->EntityID() op _other.entity->EntityID()); \
       }
 
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( == ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( < ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( > ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( != ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( <= ) // NOLINT
-    DETAIL_IGN_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( >= ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( == ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( < ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( > ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( != ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( <= ) // NOLINT
+    DETAIL_GZ_PHYSICS_ENTITY_PTR_IMPLEMENT_OPERATOR( >= ) // NOLINT
 
     /////////////////////////////////////////////////
     // Operators to compare with nullptr and nullopt
@@ -464,9 +464,9 @@ namespace std
   /// so that it can easily be used in STL objects like std::unordered_set and
   /// std::unordered_map
   template <typename EntityT>
-  struct hash<ignition::physics::EntityPtr<EntityT>>
+  struct hash<gz::physics::EntityPtr<EntityT>>
   {
-    size_t operator()(const ignition::physics::EntityPtr<EntityT> &ptr) const
+    size_t operator()(const gz::physics::EntityPtr<EntityT> &ptr) const
     {
       return ptr.Hash();
     }

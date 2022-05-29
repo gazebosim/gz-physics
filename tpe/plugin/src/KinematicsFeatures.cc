@@ -15,12 +15,12 @@
  *
 */
 
-#include <ignition/common/Console.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 #include "KinematicsFeatures.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpeplugin;
 
@@ -33,7 +33,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   // The feature system should never send us the world ID.
   if (_id.IsWorld())
   {
-    ignerr << "Given a FrameID belonging to the world. This should not be "
+    gzerr << "Given a FrameID belonging to the world. This should not be "
            << "possible! Please report this bug!\n";
     assert(false);
     return data;
@@ -75,7 +75,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       }
       else
       {
-        ignwarn << "Entity with id ["
+        gzwarn << "Entity with id ["
           << _id.ID() << "] is not found" << std::endl;
       }
     }

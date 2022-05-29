@@ -20,7 +20,7 @@
 
 #include "gz/physics/detail/PrivateSpecifyData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -214,7 +214,7 @@ namespace ignition
     /// RequireData and ExpectData. Example usage:
     ///
     /// \code
-    ///     using namespace ignition::physics;
+    ///     using namespace gz::physics;
     ///
     ///     using MyInputSpecifications = SpecifyData<
     ///         RequireData<

@@ -29,13 +29,13 @@
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 
-#include <ignition/common/Mesh.hh>
-#include <ignition/common/MeshManager.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/common/MeshManager.hh>
 
 #include "CustomHeightmapShape.hh"
 #include "CustomMeshShape.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -261,9 +261,9 @@ Identity ShapeFeatures::AttachEllipsoidShape(
     + "_" + std::to_string(_radii[1])
     + "_" + std::to_string(_radii[2]);
   meshMgr->CreateEllipsoid(ellipsoidMeshName,
-    ignition::math::Vector3d(_radii[0], _radii[1], _radii[2]),
+    gz::math::Vector3d(_radii[0], _radii[1], _radii[2]),
     16, 16);
-  const ignition::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
+  const gz::common::Mesh * _mesh = meshMgr->MeshByName(ellipsoidMeshName);
 
   auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
 
@@ -422,7 +422,7 @@ LinearVector3d ShapeFeatures::GetMeshShapeScale(
 Identity ShapeFeatures::AttachMeshShape(
     const Identity &_linkID,
     const std::string &_name,
-    const ignition::common::Mesh &_mesh,
+    const gz::common::Mesh &_mesh,
     const Pose3d &_pose,
     const LinearVector3d &_scale)
 {
@@ -516,7 +516,7 @@ double ShapeFeatures::GetShapeFrictionPyramidPrimarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to get FrictionPyramidPrimarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "Returning default value of 0.0."
@@ -534,7 +534,7 @@ double ShapeFeatures::GetShapeFrictionPyramidSecondarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to get FrictionPyramidSecondarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "Returning default value of 0.0."
@@ -552,7 +552,7 @@ bool ShapeFeatures::SetShapeFrictionPyramidPrimarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to set FrictionPyramidPrimarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "The parameter has not been set."
@@ -571,7 +571,7 @@ bool ShapeFeatures::SetShapeFrictionPyramidSecondarySlipCompliance(
   auto aspect = node->getDynamicsAspect();
   if (nullptr == aspect)
   {
-    ignerr
+    gzerr
       << "Attempt to set FrictionPyramidSecondarySlipCompliance for a "
       << "ShapeNode that doesn't have a DynamicAspect. "
       << "The parameter has not been set."

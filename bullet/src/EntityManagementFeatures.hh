@@ -15,23 +15,23 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_BULLET_SRC_GETENTITIESFEATURE_HH_
-#define IGNITION_PHYSICS_BULLET_SRC_GETENTITIESFEATURE_HH_
+#ifndef GZ_PHYSICS_BULLET_SRC_GETENTITIESFEATURE_HH_
+#define GZ_PHYSICS_BULLET_SRC_GETENTITIESFEATURE_HH_
 
 #include <string>
 
-#include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/RemoveEntities.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/Implements.hh>
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct EntityManagementFeatureList : ignition::physics::FeatureList<
+struct EntityManagementFeatureList : gz::physics::FeatureList<
   RemoveModelFromWorld,
   ConstructEmptyWorldFeature
 > { };
@@ -60,6 +60,6 @@ class EntityManagementFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

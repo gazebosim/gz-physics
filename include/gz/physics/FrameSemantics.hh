@@ -26,7 +26,7 @@
 #include <gz/physics/FrameData.hh>
 #include <gz/physics/RelativeQuantity.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -35,7 +35,7 @@ namespace ignition
     /// ignition-physics engines to provide users with easy ways to express
     /// kinematic quantities in terms of frames and compute their values in
     /// terms of arbitrary frames of reference.
-    class IGNITION_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
+    class GZ_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
     {
       // Forward declaration
       public: template <typename, typename> class Frame;
@@ -46,7 +46,7 @@ namespace ignition
       class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
       {
         public: using FrameData =
-            ignition::physics::FrameData<
+            gz::physics::FrameData<
               typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Resolve can take a RelativeQuantity (RQ) and compute its
@@ -100,7 +100,7 @@ namespace ignition
       class Frame : public virtual Entity<PolicyT, FeaturesT>
       {
         public: using FrameData =
-          ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+          gz::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Get a FrameID for this object
         public: FrameID GetFrameID() const;
@@ -134,7 +134,7 @@ namespace ignition
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: using FrameData =
-          ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+          gz::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Get the current 3D transformation of the specified frame with
         /// respect to the WorldFrame.
@@ -161,7 +161,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Link objects.
-    class IGNITION_PHYSICS_VISIBLE LinkFrameSemantics
+    class GZ_PHYSICS_VISIBLE LinkFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -170,7 +170,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Joint objects.
-    class IGNITION_PHYSICS_VISIBLE JointFrameSemantics
+    class GZ_PHYSICS_VISIBLE JointFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -178,7 +178,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE ShapeFrameSemantics
+    class GZ_PHYSICS_VISIBLE ShapeFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -187,7 +187,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to Model objects.
-    class IGNITION_PHYSICS_VISIBLE ModelFrameSemantics
+    class GZ_PHYSICS_VISIBLE ModelFrameSemantics
         : public virtual FrameSemantics
     {
       public: template <typename Policy, typename Features>
@@ -196,7 +196,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature will apply frame semantics to all objects.
-    class IGNITION_PHYSICS_VISIBLE CompleteFrameSemantics
+    class GZ_PHYSICS_VISIBLE CompleteFrameSemantics
         : public virtual LinkFrameSemantics,
           public virtual JointFrameSemantics,
           public virtual ModelFrameSemantics

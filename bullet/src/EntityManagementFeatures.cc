@@ -24,7 +24,7 @@
 #include "EntityManagementFeatures.hh"
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -170,4 +170,4 @@ bool EntityManagementFeatures::RemoveModelByName(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

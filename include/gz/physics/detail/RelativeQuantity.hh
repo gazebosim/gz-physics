@@ -24,7 +24,7 @@
 #include <gz/physics/RelativeQuantity.hh>
 #include "gz/physics/Geometry.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -477,7 +477,7 @@ namespace ignition
             const Quantity &_box,
             const RotationType &/*_currentCoordinates*/)
         {
-          // TODO(anyone): Replace with ignwarn when/if we add an ign console
+          // TODO(anyone): Replace with gzwarn when/if we add an ign console
           // dependency to ign-physics
           std::cerr << "[AABBSpace::ResolveToWorldCoordinates] Warning: "
                     << "Axis-aligned bounding boxes cannot undergo coordinate "
@@ -490,7 +490,7 @@ namespace ignition
             const RotationType &/*_currentCoordinates*/,
             const RotationType &/*_targetCoordinates*/)
         {
-          // TODO(anyone): Replace with ignwarn when/if we add an ign console
+          // TODO(anyone): Replace with gzwarn when/if we add an ign console
           // dependency to ign-physics
           std::cerr << "[AABBSpace::ResolveToTargetCoordinates] Warning: "
                     << "Axis-aligned bounding boxes cannot undergo coordinate "

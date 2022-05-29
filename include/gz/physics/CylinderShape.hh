@@ -23,13 +23,13 @@
 #include <gz/physics/DeclareShapeType.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     IGN_PHYSICS_DECLARE_SHAPE_TYPE(CylinderShape)
 
-    class IGNITION_PHYSICS_VISIBLE GetCylinderShapeProperties
+    class GZ_PHYSICS_VISIBLE GetCylinderShapeProperties
         : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -63,7 +63,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the CylinderShape properties such as
     /// the cylinder radius and height.
-    class IGNITION_PHYSICS_VISIBLE SetCylinderShapeProperties
+    class GZ_PHYSICS_VISIBLE SetCylinderShapeProperties
         : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -99,7 +99,7 @@ namespace ignition
     /// \brief This feature constructs a new cylinder shape and attaches the
     /// desired pose in the link frame. The pose could be defined to be the
     /// cylinder center point in actual implementation.
-    class IGNITION_PHYSICS_VISIBLE AttachCylinderShapeFeature
+    class GZ_PHYSICS_VISIBLE AttachCylinderShapeFeature
         : public virtual FeatureWithRequirements<CylinderShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

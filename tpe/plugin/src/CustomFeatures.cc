@@ -15,11 +15,11 @@
  *
 */
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "CustomFeatures.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpeplugin;
 
@@ -30,7 +30,7 @@ std::shared_ptr<tpelib::World> CustomFeatures::GetTpeLibWorld(
   auto it = this->worlds.find(_worldID);
   if (it == this->worlds.end())
   {
-    ignerr << "Unable to retrieve world ["
+    gzerr << "Unable to retrieve world ["
       << _worldID.id
       << "]"
       << std::endl;

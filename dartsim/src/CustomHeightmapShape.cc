@@ -18,12 +18,12 @@
 #include "CustomHeightmapShape.hh"
 
 #include <vector>
-#include <ignition/common/Console.hh>
-#include <ignition/common/geospatial/Dem.hh>
-#include <ignition/common/geospatial/ImageHeightmap.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/geospatial/Dem.hh>
+#include <gz/common/geospatial/ImageHeightmap.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -47,7 +47,7 @@ CustomHeightmapShape::CustomHeightmapShape(
   else
     scale.Z(fabs(_size(2)) / heightmapSizeZ);
 
-  auto sizeIgn = ignition::math::eigen3::convert(_size);
+  auto sizeIgn = gz::math::eigen3::convert(_size);
 
   std::vector<float> heightsFloat;
   _input.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,

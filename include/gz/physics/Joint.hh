@@ -22,7 +22,7 @@
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -31,7 +31,7 @@ namespace ignition
     /// position, velocity, acceleration of the joint, applied force to the
     /// joint and the transformation matrix from the joint's parent link to this
     /// joint's child link based on its current position.
-    class IGNITION_PHYSICS_VISIBLE GetBasicJointState : public virtual Feature
+    class GZ_PHYSICS_VISIBLE GetBasicJointState : public virtual Feature
     {
       /// \brief The Joint API for getting basic joint state
       public: template <typename PolicyT, typename FeaturesT>
@@ -111,7 +111,7 @@ namespace ignition
     /// \brief This feature sets the generalized joint states such as
     /// position, velocity, acceleration of the joint and the applied force to
     /// the joint.
-    class IGNITION_PHYSICS_VISIBLE SetBasicJointState : public virtual Feature
+    class GZ_PHYSICS_VISIBLE SetBasicJointState : public virtual Feature
     {
       /// \brief The Joint API for setting basic joint state
       public: template <typename PolicyT, typename FeaturesT>
@@ -190,7 +190,7 @@ namespace ignition
     /// Degrees Of Freedom (DoF), the transformation matrix from the joint's
     /// parent link to this joint and the transformation matrix from this joint
     /// to its child link.
-    class IGNITION_PHYSICS_VISIBLE GetBasicJointProperties
+    class GZ_PHYSICS_VISIBLE GetBasicJointProperties
         : public virtual Feature
     {
       /// \brief The Joint API for getting basic joint properties
@@ -251,7 +251,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetJointTransformFromParentFeature
+    class GZ_PHYSICS_VISIBLE SetJointTransformFromParentFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting the transform from the joint's parent
@@ -290,7 +290,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetJointTransformToChildFeature
+    class GZ_PHYSICS_VISIBLE SetJointTransformToChildFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting the transform to the joint's child
@@ -330,7 +330,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the commanded value of generalized velocity of
     /// this Joint.
-    class IGNITION_PHYSICS_VISIBLE SetJointVelocityCommandFeature
+    class GZ_PHYSICS_VISIBLE SetJointVelocityCommandFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting velocity commands (target velocity).
@@ -370,7 +370,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the min and max generalized position of this
     /// Joint.
-    class IGNITION_PHYSICS_VISIBLE SetJointPositionLimitsFeature
+    class GZ_PHYSICS_VISIBLE SetJointPositionLimitsFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting position limits of a joint.
@@ -421,7 +421,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the min and max value of generalized velocity
     /// of this Joint.
-    class IGNITION_PHYSICS_VISIBLE SetJointVelocityLimitsFeature
+    class GZ_PHYSICS_VISIBLE SetJointVelocityLimitsFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting velocity limits of a joint. These
@@ -472,7 +472,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the min and max value of effort of this Joint.
-    class IGNITION_PHYSICS_VISIBLE SetJointEffortLimitsFeature
+    class GZ_PHYSICS_VISIBLE SetJointEffortLimitsFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting effort limits of a joint. These
@@ -518,7 +518,7 @@ namespace ignition
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE DetachJointFeature
+    class GZ_PHYSICS_VISIBLE DetachJointFeature
         : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -535,7 +535,7 @@ namespace ignition
       };
     };
 
-    class IGNITION_PHYSICS_VISIBLE GetJointTransmittedWrench
+    class GZ_PHYSICS_VISIBLE GetJointTransmittedWrench
         : public virtual FeatureWithRequirements<JointFrameSemantics>
     {
       public: template <typename PolicyT, typename FeaturesT>

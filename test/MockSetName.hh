@@ -15,18 +15,18 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKSETNAME_HH_
-#define IGNITION_PHYSICS_TEST_MOCKSETNAME_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKSETNAME_HH_
+#define GZ_PHYSICS_TEST_MOCKSETNAME_HH_
 
 #include <string>
 
-#include <ignition/physics/Feature.hh>
+#include <gz/physics/Feature.hh>
 
 namespace mock
 {
-  struct MockSetName : public ignition::physics::Feature
+  struct MockSetName : public gz::physics::Feature
   {
-    using Identity = ignition::physics::Identity;
+    using Identity = gz::physics::Identity;
 
     template <typename PolicyT, typename FeaturesT>
     class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>

@@ -15,14 +15,14 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
 
-#include <ignition/physics/Link.hh>
+#include <gz/physics/Link.hh>
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

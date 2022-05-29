@@ -21,7 +21,7 @@
 #include <gz/physics/FrameID.hh>
 #include <gz/physics/FrameData.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

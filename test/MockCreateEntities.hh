@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKCREATEENTITY_HH_
-#define IGNITION_PHYSICS_TEST_MOCKCREATEENTITY_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKCREATEENTITY_HH_
+#define GZ_PHYSICS_TEST_MOCKCREATEENTITY_HH_
 
 #include <memory>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/RelativeQuantity.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/RelativeQuantity.hh>
 
 namespace mock
 {
@@ -29,18 +29,18 @@ namespace mock
   /// \brief A feature for creating and retrieving links from an engine. This
   /// is used by the mock Frame Semantics plugin so that we can test the
   /// Frame Semantics feature.
-  struct MockCreateEntities : public ignition::physics::Feature
+  struct MockCreateEntities : public gz::physics::Feature
   {
-    using Identity = ignition::physics::Identity;
+    using Identity = gz::physics::Identity;
 
     template <typename PolicyT, typename FeaturesT>
     class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
     {
       public: using FrameData =
-        ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+        gz::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
-      public: using LinkPtr = ignition::physics::LinkPtr<PolicyT, FeaturesT>;
-      public: using JointPtr = ignition::physics::JointPtr<PolicyT, FeaturesT>;
+      public: using LinkPtr = gz::physics::LinkPtr<PolicyT, FeaturesT>;
+      public: using JointPtr = gz::physics::JointPtr<PolicyT, FeaturesT>;
 
       /// \brief Create a link, giving it a name and data. The data is relative
       /// to the world frame.
@@ -65,7 +65,7 @@ namespace mock
     class Implementation : public virtual Feature::Implementation<PolicyT>
     {
       public: using FrameData =
-        ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+        gz::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
       public: virtual Identity CreateLink(
           const std::string &_linkName,

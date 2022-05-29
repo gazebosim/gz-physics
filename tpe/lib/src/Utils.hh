@@ -15,12 +15,12 @@
  *
 */
 
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/math/Pose3.hh>
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/math/Pose3.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -29,7 +29,7 @@ namespace tpelib {
   /// \param[in] _pose Transform to be applied
   /// \return New axis aligned box that surrounds the transformed version of
   /// the old box
-  IGNITION_PHYSICS_TPELIB_VISIBLE
+  GZ_PHYSICS_TPELIB_VISIBLE
   math::AxisAlignedBox transformAxisAlignedBox(
       const math::AxisAlignedBox &_box, const math::Pose3d &_pose);
 }

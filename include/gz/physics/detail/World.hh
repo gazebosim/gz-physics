@@ -22,7 +22,7 @@
 
 #include <gz/physics/World.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -118,6 +118,6 @@ const std::string &Solver::World<PolicyT, FeaturesT>::
 }
 
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

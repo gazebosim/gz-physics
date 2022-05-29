@@ -20,7 +20,7 @@
 
 #include "gz/physics/CompositeData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -30,7 +30,7 @@ namespace ignition
     /// It is used by OperateOnSpecifiedData at run-time.
     /// \sa CompositeData::DataStatus
     /// \sa OperateOnSpecifiedData
-    struct IGNITION_PHYSICS_VISIBLE DataStatusMask
+    struct GZ_PHYSICS_VISIBLE DataStatusMask
     {
       /// \brief Specify a condition as MUST be true, MUST_NOT be true,
       /// or EITHER.

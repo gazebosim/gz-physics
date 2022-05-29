@@ -15,20 +15,20 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SDFFEATURES_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SDFFEATURES_HH_
+#ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_SDFFEATURES_HH_
+#define GZ_PHYSICS_TPE_PLUGIN_SRC_SDFFEATURES_HH_
 
-#include <ignition/physics/sdf/ConstructCollision.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructNestedModel.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
 
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
 #include "EntityManagementFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

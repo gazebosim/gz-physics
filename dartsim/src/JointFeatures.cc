@@ -24,7 +24,7 @@
 
 #include "JointFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -74,7 +74,7 @@ void JointFeatures::SetJointPosition(
   // collisions to fail
   if (!std::isfinite(_value))
   {
-    ignerr << "Invalid joint position value [" << _value << "] set on joint ["
+    gzerr << "Invalid joint position value [" << _value << "] set on joint ["
            << joint->getName() << " DOF " << _dof
            << "]. The value will be ignored\n";
     return;
@@ -93,7 +93,7 @@ void JointFeatures::SetJointVelocity(
   // collisions to fail
   if (!std::isfinite(_value))
   {
-    ignerr << "Invalid joint velocity value [" << _value << "] set on joint ["
+    gzerr << "Invalid joint velocity value [" << _value << "] set on joint ["
            << joint->getName() << " DOF " << _dof
            << "]. The value will be ignored\n";
     return;
@@ -112,7 +112,7 @@ void JointFeatures::SetJointAcceleration(
   // collisions to fail
   if (!std::isfinite(_value))
   {
-    ignerr << "Invalid joint acceleration value [" << _value
+    gzerr << "Invalid joint acceleration value [" << _value
            << "] set on joint [" << joint->getName() << " DOF " << _dof
            << "]. The value will be ignored\n";
     return;
@@ -131,7 +131,7 @@ void JointFeatures::SetJointForce(
   // collisions to fail
   if (!std::isfinite(_value))
   {
-    ignerr << "Invalid joint force value [" << _value << "] set on joint ["
+    gzerr << "Invalid joint force value [" << _value << "] set on joint ["
            << joint->getName() << " DOF " << _dof
            << "]. The value will be ignored\n";
     return;
@@ -154,7 +154,7 @@ void JointFeatures::SetJointVelocityCommand(
   // collisions to fail
   if (!std::isfinite(_value))
   {
-    ignerr << "Invalid joint velocity value [" << _value
+    gzerr << "Invalid joint velocity value [" << _value
            << "] commanded on joint [" << joint->getName() << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -172,7 +172,7 @@ void JointFeatures::SetJointVelocityCommand(
     static bool informed = false;
     if (!informed)
     {
-      ignerr  << "Velocity control does not respect positional limits of "
+      gzerr  << "Velocity control does not respect positional limits of "
               << "joints if these joints do not have an effort limit. Please, "
               << "set min and max effort for joint [" << joint->getName()
               << "] to values about -1e6 and 1e6 (or higher if working with "
@@ -195,7 +195,7 @@ void JointFeatures::SetJointMinPosition(
   // collisions to fail
   if (std::isnan(_value))
   {
-    ignerr << "Invalid minimum joint position value [" << _value
+    gzerr << "Invalid minimum joint position value [" << _value
            << "] commanded on joint [" << joint->getName() << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -220,7 +220,7 @@ void JointFeatures::SetJointMaxPosition(
   // collisions to fail
   if (std::isnan(_value))
   {
-    ignerr << "Invalid maximum joint position value [" << _value
+    gzerr << "Invalid maximum joint position value [" << _value
            << "] commanded on joint [" << joint->getName() << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -245,7 +245,7 @@ void JointFeatures::SetJointMinVelocity(
   // collisions to fail
   if (std::isnan(_value))
   {
-    ignerr << "Invalid minimum joint velocity value [" << _value
+    gzerr << "Invalid minimum joint velocity value [" << _value
            << "] commanded on joint [" << joint->getName() << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -270,7 +270,7 @@ void JointFeatures::SetJointMaxVelocity(
   // collisions to fail
   if (std::isnan(_value))
   {
-    ignerr << "Invalid maximum joint velocity value [" << _value
+    gzerr << "Invalid maximum joint velocity value [" << _value
            << "] commanded on joint [" << joint->getName() << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -295,7 +295,7 @@ void JointFeatures::SetJointMinEffort(
   // collisions to fail
   if (std::isnan(_value))
   {
-    ignerr << "Invalid minimum joint effort value [" << _value
+    gzerr << "Invalid minimum joint effort value [" << _value
            << "] commanded on joint [" << joint->getName() << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -315,7 +315,7 @@ void JointFeatures::SetJointMaxEffort(
   // collisions to fail
   if (std::isnan(_value))
   {
-    ignerr << "Invalid maximum joint effort value [" << _value
+    gzerr << "Invalid maximum joint effort value [" << _value
            << "] commanded on joint [" << joint->getName() << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -408,7 +408,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       }
       if (nullptr == skeleton)
       {
-        ignerr << "Could not find the original skeleton of BodyNode "
+        gzerr << "Could not find the original skeleton of BodyNode "
                << "[" << oldName << "] when detaching joint "
                << "[" << joint->getName() << "]. Detached links may not work "
                << "as expected.\n";
@@ -653,7 +653,7 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   auto *childBn = joint->getChildBodyNode();
   if (nullptr == childBn)
   {
-    ignerr
+    gzerr
         << "Joint [" << joint->getName()
         << "] does not have a child link. Unable to get transmitted wrench.\n";
     return {};

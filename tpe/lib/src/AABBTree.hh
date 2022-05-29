@@ -15,25 +15,25 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
 
 #include <memory>
 #include <set>
 
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
 // forward declaration
 class AABBTreePrivate;
 
-class IGNITION_PHYSICS_TPELIB_VISIBLE AABBTree
+class GZ_PHYSICS_TPELIB_VISIBLE AABBTree
 {
   /// \brief Constructor
   public: AABBTree();

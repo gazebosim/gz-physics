@@ -19,37 +19,37 @@
 
 #include <test/PhysicsPluginsList.hh>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/plugin/Loader.hh>
 
 // Features
-#include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/FreeJoint.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/mesh/MeshShape.hh>
-#include <ignition/physics/PlaneShape.hh>
-#include <ignition/physics/FixedJoint.hh>
+#include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/FreeJoint.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/mesh/MeshShape.hh>
+#include <gz/physics/PlaneShape.hh>
+#include <gz/physics/FixedJoint.hh>
 
-#include <ignition/common/MeshManager.hh>
+#include <gz/common/MeshManager.hh>
 
-using TestFeatureList = ignition::physics::FeatureList<
-  ignition::physics::LinkFrameSemantics,
-  ignition::physics::ForwardStep,
-  ignition::physics::GetEntities,
-  ignition::physics::ConstructEmptyWorldFeature,
-  ignition::physics::ConstructEmptyModelFeature,
-  ignition::physics::ConstructEmptyLinkFeature,
-  ignition::physics::mesh::AttachMeshShapeFeature,
-  ignition::physics::AttachPlaneShapeFeature,
-  ignition::physics::SetFreeJointRelativeTransformFeature,
-  ignition::physics::AttachFixedJointFeature
+using TestFeatureList = gz::physics::FeatureList<
+  gz::physics::LinkFrameSemantics,
+  gz::physics::ForwardStep,
+  gz::physics::GetEntities,
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ConstructEmptyModelFeature,
+  gz::physics::ConstructEmptyLinkFeature,
+  gz::physics::mesh::AttachMeshShapeFeature,
+  gz::physics::AttachPlaneShapeFeature,
+  gz::physics::SetFreeJointRelativeTransformFeature,
+  gz::physics::AttachFixedJointFeature
 >;
 
-using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
-using TestEnginePtr = ignition::physics::Engine3dPtr<TestFeatureList>;
+using TestWorldPtr = gz::physics::World3dPtr<TestFeatureList>;
+using TestEnginePtr = gz::physics::Engine3dPtr<TestFeatureList>;
 
 using WorldConstructor = std::function<TestWorldPtr(const TestEnginePtr&)>;
 
@@ -57,21 +57,21 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
     const WorldConstructor &_constructor)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(_library);
 
   const std::set<std::string> pluginNames =
-      ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
+      gz::physics::FindFeatures3d<TestFeatureList>::From(loader);
 
   std::unordered_set<TestWorldPtr> worlds;
   for (const std::string &name : pluginNames)
   {
-    ignition::plugin::PluginPtr plugin = loader.Instantiate(name);
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
     std::cout << " -- Plugin name: " << name << std::endl;
 
     auto engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
     EXPECT_NE(nullptr, engine);
 
     worlds.insert(_constructor(engine));
@@ -86,11 +86,11 @@ class Collisions_TEST
 {};
 
 INSTANTIATE_TEST_CASE_P(PhysicsPlugins, Collisions_TEST,
-    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+    ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries),); // NOLINT
 
 TestWorldPtr ConstructMeshPlaneWorld(
-    const ignition::physics::Engine3dPtr<TestFeatureList> &_engine,
-    const ignition::common::Mesh &_mesh)
+    const gz::physics::Engine3dPtr<TestFeatureList> &_engine,
+    const gz::common::Mesh &_mesh)
 {
   auto world = _engine->ConstructEmptyWorld("world");
 
@@ -109,7 +109,7 @@ TestWorldPtr ConstructMeshPlaneWorld(
   model = world->ConstructEmptyModel("plane");
   link = model->ConstructEmptyLink("link");
 
-  link->AttachPlaneShape("plane", ignition::physics::LinearVector3d::UnitZ());
+  link->AttachPlaneShape("plane", gz::physics::LinearVector3d::UnitZ());
   link->AttachFixedJoint(nullptr);
 
   return world;
@@ -121,8 +121,8 @@ TEST_P(Collisions_TEST, MeshAndPlane)
   if (library.empty())
     return;
 
-  const std::string meshFilename = IGNITION_PHYSICS_RESOURCE_DIR "/chassis.dae";
-  auto &meshManager = *ignition::common::MeshManager::Instance();
+  const std::string meshFilename = GZ_PHYSICS_RESOURCE_DIR "/chassis.dae";
+  auto &meshManager = *gz::common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 
   std::cout << "Testing library " << library << std::endl;
@@ -138,9 +138,9 @@ TEST_P(Collisions_TEST, MeshAndPlane)
     EXPECT_NEAR(
           0.0, link->FrameDataRelativeToWorld().pose.translation()[2], 1e-6);
 
-    ignition::physics::ForwardStep::Output output;
-    ignition::physics::ForwardStep::State state;
-    ignition::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
     for (std::size_t i = 0; i < 1000; ++i)
     {
       world->Step(output, state, input);

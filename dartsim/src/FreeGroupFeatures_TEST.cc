@@ -19,50 +19,50 @@
 
 #include <tuple>
 
-#include <ignition/common/Util.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/common/Util.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/plugin/Loader.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
-#include "ignition/physics/FrameSemantics.hh"
-#include "ignition/physics/FreeGroup.hh"
-#include "ignition/physics/GetEntities.hh"
-#include "ignition/physics/RequestEngine.hh"
-#include "ignition/physics/sdf/ConstructModel.hh"
-#include "ignition/physics/sdf/ConstructNestedModel.hh"
-#include "ignition/physics/sdf/ConstructWorld.hh"
+#include "gz/physics/FrameSemantics.hh"
+#include "gz/physics/FreeGroup.hh"
+#include "gz/physics/GetEntities.hh"
+#include "gz/physics/RequestEngine.hh"
+#include "gz/physics/sdf/ConstructModel.hh"
+#include "gz/physics/sdf/ConstructNestedModel.hh"
+#include "gz/physics/sdf/ConstructWorld.hh"
 #include "test/Utils.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::sdf::ConstructSdfWorld,
-    ignition::physics::sdf::ConstructSdfModel,
-    ignition::physics::sdf::ConstructSdfNestedModel,
-    ignition::physics::GetWorldFromEngine,
-    ignition::physics::GetModelFromWorld,
-    ignition::physics::GetNestedModelFromModel,
-    ignition::physics::GetLinkFromModel,
-    ignition::physics::LinkFrameSemantics,
-    ignition::physics::FindFreeGroupFeature,
-    ignition::physics::SetFreeGroupWorldPose > { };
+struct TestFeatureList : gz::physics::FeatureList<
+    gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfNestedModel,
+    gz::physics::GetWorldFromEngine,
+    gz::physics::GetModelFromWorld,
+    gz::physics::GetNestedModelFromModel,
+    gz::physics::GetLinkFromModel,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::FindFreeGroupFeature,
+    gz::physics::SetFreeGroupWorldPose > { };
 
-using World = ignition::physics::World3d<TestFeatureList>;
-using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
-using ModelPtr = ignition::physics::Model3dPtr<TestFeatureList>;
-using LinkPtr = ignition::physics::Link3dPtr<TestFeatureList>;
+using World = gz::physics::World3d<TestFeatureList>;
+using WorldPtr = gz::physics::World3dPtr<TestFeatureList>;
+using ModelPtr = gz::physics::Model3dPtr<TestFeatureList>;
+using LinkPtr = gz::physics::Link3dPtr<TestFeatureList>;
 
 /////////////////////////////////////////////////
 auto LoadEngine()
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(dartsim_plugin_LIB);
 
-  ignition::plugin::PluginPtr dartsim =
-      loader.Instantiate("ignition::physics::dartsim::Plugin");
+  gz::plugin::PluginPtr dartsim =
+      loader.Instantiate("gz::physics::dartsim::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   return engine;
 }
 
@@ -94,7 +94,7 @@ ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
                                   const std::string &_absoluteName)
 {
   std::vector<std::string> names =
-      ignition::common::split(_absoluteName, sdf::kSdfScopeDelimiter);
+      gz::common::split(_absoluteName, sdf::kSdfScopeDelimiter);
   if (names.empty())
   {
     return nullptr;
@@ -140,7 +140,7 @@ TEST(FreeGroupFeatures, NestedFreeGroupSetWorldPose)
   WorldPtr world = LoadWorld(TEST_WORLD_DIR "world_with_nested_model.sdf");
   ASSERT_NE(nullptr, world);
 
-  ignition::math::Pose3d parentModelNewPose(0, 0, 2, 0, 0, 0);
+  gz::math::Pose3d parentModelNewPose(0, 0, 2, 0, 0, 0);
   {
     auto parentModel = world->GetModel("parent_model");
     ASSERT_NE(nullptr, parentModel);
@@ -148,13 +148,13 @@ TEST(FreeGroupFeatures, NestedFreeGroupSetWorldPose)
     ASSERT_NE(nullptr, freeGroup);
 
     freeGroup->SetWorldPose(
-        ignition::math::eigen3::convert(parentModelNewPose));
+        gz::math::eigen3::convert(parentModelNewPose));
 
     auto link1 = parentModel->GetLink("link1");
     ASSERT_NE(nullptr, link1);
     auto frameData = link1->FrameDataRelativeToWorld();
     EXPECT_EQ(parentModelNewPose,
-              ignition::math::eigen3::convert(frameData.pose));
+              gz::math::eigen3::convert(frameData.pose));
   }
   {
     auto nestedModel =
@@ -164,14 +164,14 @@ TEST(FreeGroupFeatures, NestedFreeGroupSetWorldPose)
     ASSERT_NE(nullptr, nestedLink1);
     auto frameData = nestedLink1->FrameDataRelativeToWorld();
     // Poses from SDF
-    ignition::math::Pose3d nestedModelPose(1, 2, 2, 0, 0, 0);
-    ignition::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, IGN_PI_2);
+    gz::math::Pose3d nestedModelPose(1, 2, 2, 0, 0, 0);
+    gz::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, IGN_PI_2);
 
-    ignition::math::Pose3d nestedLinkExpectedPose =
+    gz::math::Pose3d nestedLinkExpectedPose =
         parentModelNewPose * nestedModelPose * nestedLinkPose;
 
     EXPECT_EQ(nestedLinkExpectedPose,
-        ignition::math::eigen3::convert(frameData.pose));
+        gz::math::eigen3::convert(frameData.pose));
   }
   {
     auto parentModel = world->GetModel("parent_model2");
@@ -180,7 +180,7 @@ TEST(FreeGroupFeatures, NestedFreeGroupSetWorldPose)
     ASSERT_NE(nullptr, freeGroup);
 
     freeGroup->SetWorldPose(
-        ignition::math::eigen3::convert(parentModelNewPose));
+        gz::math::eigen3::convert(parentModelNewPose));
 
     auto grandChild = GetModelFromAbsoluteName(
         world, "parent_model2::child_model::grand_child_model");
@@ -189,6 +189,6 @@ TEST(FreeGroupFeatures, NestedFreeGroupSetWorldPose)
     ASSERT_NE(nullptr, link1);
     auto frameData = link1->FrameDataRelativeToWorld();
     EXPECT_EQ(parentModelNewPose,
-              ignition::math::eigen3::convert(frameData.pose));
+              gz::math::eigen3::convert(frameData.pose));
   }
 }

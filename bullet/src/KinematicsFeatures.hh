@@ -15,19 +15,19 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_BULLET_SRC_KINEMATICSFEATURES_HH_
-#define IGNITION_PHYSICS_BULLET_SRC_KINEMATICSFEATURES_HH_
+#ifndef GZ_PHYSICS_BULLET_SRC_KINEMATICSFEATURES_HH_
+#define GZ_PHYSICS_BULLET_SRC_KINEMATICSFEATURES_HH_
 
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/FreeGroup.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/FreeGroup.hh>
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct KinematicsFeatureList : ignition::physics::FeatureList<
+struct KinematicsFeatureList : gz::physics::FeatureList<
   LinkFrameSemantics
 > { };
 
@@ -41,6 +41,6 @@ class KinematicsFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

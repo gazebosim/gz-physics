@@ -17,7 +17,7 @@
 
 #include "FreeGroupFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -81,4 +81,4 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

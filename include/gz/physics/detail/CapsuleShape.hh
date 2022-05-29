@@ -22,7 +22,7 @@
 
 #include <gz/physics/CapsuleShape.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

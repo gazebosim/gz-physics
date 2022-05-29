@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
+#ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
+#define GZ_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
 
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
 #include <map>
 #include <memory>
@@ -31,7 +31,7 @@
 #include "lib/src/Collision.hh"
 #include "lib/src/Shape.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

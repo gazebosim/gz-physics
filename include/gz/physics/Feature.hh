@@ -25,7 +25,7 @@
 #include <gz/physics/Export.hh>
 #include <gz/physics/Entity.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

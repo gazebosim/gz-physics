@@ -27,7 +27,7 @@
 #include "gz/physics/Cloneable.hh"
 #include "gz/physics/Export.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -40,7 +40,7 @@ namespace ignition
 
     /// \brief The CompositeData class allows arbitrary data structures to be
     /// composed together, copied, and moved with type erasure.
-    class IGNITION_PHYSICS_VISIBLE CompositeData
+    class GZ_PHYSICS_VISIBLE CompositeData
     {
       /// \brief Default constructor. Creates an empty CompositeData object.
       public: CompositeData();
@@ -62,7 +62,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -138,7 +138,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -225,7 +225,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -307,7 +307,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -382,7 +382,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyDataWithoutDefault
       ///     {
@@ -478,7 +478,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -551,7 +551,7 @@ namespace ignition
       bool Has() const;
 
       /// \brief Struct that describes the status of data.
-      struct IGNITION_PHYSICS_VISIBLE DataStatus
+      struct GZ_PHYSICS_VISIBLE DataStatus
       {
         /// \brief If the data exists in the CompositeData, this will be true,
         /// otherwise it is false.
@@ -594,7 +594,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -654,7 +654,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -778,7 +778,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData1
       ///     {
@@ -842,7 +842,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <gz/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData1
       ///     {

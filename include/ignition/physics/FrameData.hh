@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/FrameData.hh>
+#include <ignition/physics/config.hh>

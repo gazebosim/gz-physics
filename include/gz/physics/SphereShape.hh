@@ -23,14 +23,14 @@
 #include <gz/physics/DeclareShapeType.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     IGN_PHYSICS_DECLARE_SHAPE_TYPE(SphereShape)
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE GetSphereShapeProperties
+    class GZ_PHYSICS_VISIBLE GetSphereShapeProperties
         : public virtual FeatureWithRequirements<SphereShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -54,7 +54,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE SetSphereShapeProperties
+    class GZ_PHYSICS_VISIBLE SetSphereShapeProperties
         : public virtual FeatureWithRequirements<SphereShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -82,7 +82,7 @@ namespace ignition
     /// \brief This feature constructs a new sphere shape and attaches the
     /// desired pose in the link frame. The pose is defined as the
     /// sphere center point in actual implementation.
-    class IGNITION_PHYSICS_VISIBLE AttachSphereShapeFeature
+    class GZ_PHYSICS_VISIBLE AttachSphereShapeFeature
         : public virtual FeatureWithRequirements<SphereShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

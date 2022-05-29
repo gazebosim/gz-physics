@@ -44,12 +44,12 @@
 /// Physics engine plugin developers must implement the virtual function
 ///
 /// \code
-/// ignition::physics::Identity CastToCustomShapeType(const Identity &_id) const
+/// gz::physics::Identity CastToCustomShapeType(const Identity &_id) const
 /// \endcode
 ///
 /// if their physics engine plugin wants to be able to provide CustomShapeType
 /// features.
 #define IGN_PHYSICS_DECLARE_SHAPE_TYPE(CustomShapeType) \
-  DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Shape, CustomShapeType)
+  DETAIL_GZ_PHYSICS_DECLARE_DERIVED_TYPE(Shape, CustomShapeType)
 
 #endif

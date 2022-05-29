@@ -18,15 +18,15 @@
 #include <unordered_map>
 #include <utility>
 
-#include <ignition/common/Console.hh>
-#include <ignition/common/Profiler.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 #include "SimulationFeatures.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpeplugin;
 
@@ -40,7 +40,7 @@ void SimulationFeatures::WorldForwardStep(
   auto it = this->worlds.find(_worldID);
   if (it == this->worlds.end())
   {
-    ignerr << "World with id ["
+    gzerr << "World with id ["
       << _worldID.id
       << "] not found."
       << std::endl;
@@ -56,7 +56,7 @@ void SimulationFeatures::WorldForwardStep(
     if (std::fabs(dt.count() - world->GetTimeStep()) > tol)
     {
       world->SetTimeStep(dt.count());
-      igndbg << "Simulation timestep set to: "
+      gzdbg << "Simulation timestep set to: "
         << world->GetTimeStep()
         << std::endl;
     }

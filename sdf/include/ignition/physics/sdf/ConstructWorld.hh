@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/sdf/ConstructWorld.hh>
+#include <ignition/physics/config.hh>

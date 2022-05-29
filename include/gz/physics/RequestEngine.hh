@@ -24,7 +24,7 @@
 
 #include <gz/physics/FeatureList.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

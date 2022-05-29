@@ -28,11 +28,11 @@
 #include <dart/constraint/PgsBoxedLcpSolver.hpp>
 #include <dart/simulation/World.hpp>
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "WorldFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -61,14 +61,14 @@ void WorldFeatures::SetWorldCollisionDetector(
   }
   else
   {
-    ignerr << "Collision detector [" << _collisionDetector
+    gzerr << "Collision detector [" << _collisionDetector
            << "] is not supported, defaulting to ["
            << collisionDetector->getType() << "]." << std::endl;
   }
 
   world->getConstraintSolver()->setCollisionDetector(collisionDetector);
 
-  ignmsg << "Using [" << world->getConstraintSolver()->getCollisionDetector()
+  gzmsg << "Using [" << world->getConstraintSolver()->getCollisionDetector()
       ->getType() << "] collision detector" << std::endl;
 }
 
@@ -108,7 +108,7 @@ void WorldFeatures::SetWorldSolver(const Identity &_id,
 
   if (!solver)
   {
-    ignwarn << "Failed to cast constraint solver to [BoxedLcpConstraintSolver]"
+    gzwarn << "Failed to cast constraint solver to [BoxedLcpConstraintSolver]"
             << std::endl;
     return;
   }
@@ -125,7 +125,7 @@ void WorldFeatures::SetWorldSolver(const Identity &_id,
   }
   else
   {
-    ignerr << "Solver [" << _solver
+    gzerr << "Solver [" << _solver
            << "] is not supported, defaulting to ["
            << solver->getBoxedLcpSolver()->getType() << "]." << std::endl;
   }
@@ -133,7 +133,7 @@ void WorldFeatures::SetWorldSolver(const Identity &_id,
   if (boxedSolver != nullptr)
     solver->setBoxedLcpSolver(boxedSolver);
 
-  ignmsg << "Using [" << solver->getBoxedLcpSolver()->getType()
+  gzmsg << "Using [" << solver->getBoxedLcpSolver()->getType()
          << "] solver." << std::endl;
 }
 

@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/dartsim-plugin/Export.hh>
+#include <ignition/physics/config.hh>

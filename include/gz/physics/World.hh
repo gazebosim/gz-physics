@@ -23,12 +23,12 @@
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/FrameSemantics.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE CollisionDetector : public virtual Feature
+    class GZ_PHYSICS_VISIBLE CollisionDetector : public virtual Feature
     {
       /// \brief The World API for setting the collision detector.
       public: template <typename PolicyT, typename FeaturesT>
@@ -67,7 +67,7 @@ namespace ignition
 
     /////////////////////////////////////////////////
     /// \brief Get and set the World's gravity vector in a specified frame.
-    class IGNITION_PHYSICS_VISIBLE Gravity
+    class GZ_PHYSICS_VISIBLE Gravity
         : public virtual
           FeatureWithRequirements<GravityRequiredFeatures>
     {
@@ -131,7 +131,7 @@ namespace ignition
     };
 
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE Solver : public virtual Feature
+    class GZ_PHYSICS_VISIBLE Solver : public virtual Feature
     {
       /// \brief The World API for setting the solver.
       public: template <typename PolicyT, typename FeaturesT>

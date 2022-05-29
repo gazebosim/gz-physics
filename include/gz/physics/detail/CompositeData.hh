@@ -25,14 +25,14 @@
 
 #include "gz/physics/CompositeData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     /// \brief Struct which contains information about a data type within the
     /// CompositeData.
     /// \private
-    struct IGNITION_PHYSICS_VISIBLE CompositeData::DataEntry
+    struct GZ_PHYSICS_VISIBLE CompositeData::DataEntry
     {
       /// \brief Default constructor
       public: DataEntry();

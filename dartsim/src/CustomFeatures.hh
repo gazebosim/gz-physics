@@ -18,13 +18,13 @@
 #ifndef IGNITION_PHYSICS_SRC_CUSTOMFEATURES_HH
 #define IGNITION_PHYSICS_SRC_CUSTOMFEATURES_HH
 
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
-#include <ignition/physics/dartsim/World.hh>
+#include <gz/physics/dartsim/World.hh>
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

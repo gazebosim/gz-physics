@@ -37,7 +37,7 @@ and print the engine name.
 
 ### DART plugin on Linux
 
-For example, if you have the Ignition Physics plugin for DART compiled, find
+For example, if you have the Gazebo Physics plugin for DART compiled, find
 where it's installed with:
 
 ~~~
@@ -55,7 +55,7 @@ cd examples/hello_world_loader/build
 And you'll see the engine info:
 
 ~~~
-Testing plugin: ignition::physics::dartsim::Plugin
+Testing plugin: gz::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ~~~
 

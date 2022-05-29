@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/sdf/ConstructModel.hh>
+#include <ignition/physics/config.hh>

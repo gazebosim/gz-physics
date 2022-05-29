@@ -22,7 +22,7 @@
 #include <vector>
 #include <gz/physics/GetContacts.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -68,6 +68,6 @@ auto GetContactsFromLastStepFeature::World<
 }
 
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

@@ -22,35 +22,35 @@
 #include <cmath>
 #include <string>
 
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/PluginPtr.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/math/Helpers.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/plugin/PluginPtr.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/math/Helpers.hh>
 
 #include "../Utils.hh"
 #include "../MockFrameSemantics.hh"
 
-using ignition::physics::FrameData;
-using ignition::physics::FrameID;
-using ignition::physics::RelativeFrameData;
-using ignition::physics::Pose;
-using ignition::physics::Vector;
-using ignition::physics::LinearVector;
-using ignition::physics::AngularVector;
-using ignition::physics::AlignedBox;
+using gz::physics::FrameData;
+using gz::physics::FrameID;
+using gz::physics::RelativeFrameData;
+using gz::physics::Pose;
+using gz::physics::Vector;
+using gz::physics::LinearVector;
+using gz::physics::AngularVector;
+using gz::physics::AlignedBox;
 
-using ignition::math::Rand;
-using namespace ignition::physics::test;
+using gz::math::Rand;
+using namespace gz::physics::test;
 
 /////////////////////////////////////////////////
-ignition::plugin::PluginPtr LoadMockFrameSemanticsPlugin(
+gz::plugin::PluginPtr LoadMockFrameSemanticsPlugin(
     const std::string &_suffix)
 {
-  ignition::plugin::Loader pl;
+  gz::plugin::Loader pl;
   auto plugins = pl.LoadLib(MockFrames_LIB);
   EXPECT_EQ(4u, plugins.size());
 
-  ignition::plugin::PluginPtr plugin =
+  gz::plugin::PluginPtr plugin =
       pl.Instantiate("mock::MockFrameSemanticsPlugin"+_suffix);
   EXPECT_FALSE(plugin.IsEmpty());
 
@@ -66,7 +66,7 @@ void TestRelativeFrames(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
+      gz::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using FrameData = FrameData<Scalar, Dim>;
@@ -128,13 +128,13 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
+      gz::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using FrameData = FrameData<Scalar, Dim>;
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
   using AlignedBox = AlignedBox<Scalar, Dim>;
-  using RelativeAlignedBox = ignition::physics::RelativeAlignedBox<Scalar, Dim>;
+  using RelativeAlignedBox = gz::physics::RelativeAlignedBox<Scalar, Dim>;
   using AngularVector = AngularVector<Scalar, Dim>;
   using Pose = Pose<Scalar, Dim>;
   using Vector = Vector<Scalar, Dim>;
@@ -156,7 +156,7 @@ void TestRelativeAlignedBox(const double _tolerance, const std::string &_suffix)
   {
     AngularVector yawAxis = AngularVector::Zero();
     yawAxis[yawAxis.rows()-1] = 1;
-    T_B.pose = Pose{ignition::physics::Rotate<Scalar>(yaw_B, yawAxis)};
+    T_B.pose = Pose{gz::physics::Rotate<Scalar>(yaw_B, yawAxis)};
   }
   T_B.pose.translation()[1] = dy_B;
 
@@ -261,14 +261,14 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
+      gz::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using FrameData = FrameData<Scalar, Dim>;
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
 
   using ConstJointPtr =
-    ignition::physics::ConstJointPtr<PolicyT, mock::MockFrameSemanticsList>;
+    gz::physics::ConstJointPtr<PolicyT, mock::MockFrameSemanticsList>;
 
   // We test FrameID in this unit test, because the FrameSemantics interface is
   // needed in order to produce FrameIDs.
@@ -279,7 +279,7 @@ void TestFrameID(const double _tolerance, const std::string &_suffix)
   EXPECT_TRUE(world.IsReferenceCounted());
 
   const FrameData dataA = RandomFrameData<Scalar, Dim>();
-  const ignition::physics::LinkPtr<PolicyT, mock::MockFrameSemanticsList> linkA
+  const gz::physics::LinkPtr<PolicyT, mock::MockFrameSemanticsList> linkA
       = fs->CreateLink("A", dataA);
 
   EXPECT_TRUE(Equal(dataA, linkA->FrameDataRelativeTo(world), _tolerance));
@@ -339,7 +339,7 @@ void TestRelativeQuantities(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
+      gz::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using RelativeFrameData = RelativeFrameData<Scalar, Dim>;
@@ -347,10 +347,10 @@ void TestRelativeQuantities(const double _tolerance, const std::string &_suffix)
   using LinearVector = LinearVector<Scalar, Dim>;
   using AngularVector = AngularVector<Scalar, Dim>;
   using Rotation = Rotation<Scalar, Dim>;
-  using RelativePose = ignition::physics::RelativePose<Scalar, Dim>;
-  using RelativePosition = ignition::physics::RelativePosition<Scalar, Dim>;
-  using RelativeForce = ignition::physics::RelativeForce<Scalar, Dim>;
-  using RelativeTorque = ignition::physics::RelativeTorque<Scalar, Dim>;
+  using RelativePose = gz::physics::RelativePose<Scalar, Dim>;
+  using RelativePosition = gz::physics::RelativePosition<Scalar, Dim>;
+  using RelativeForce = gz::physics::RelativeForce<Scalar, Dim>;
+  using RelativeTorque = gz::physics::RelativeTorque<Scalar, Dim>;
 
   const FrameID World = FrameID::World();
 
@@ -643,7 +643,7 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
 
   // Instantiate an engine that provides Frame Semantics.
   auto fs =
-      ignition::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
+      gz::physics::RequestEngine<PolicyT, mock::MockFrameSemanticsList>
         ::From(LoadMockFrameSemanticsPlugin(_suffix));
 
   using FrameData = FrameData<Scalar, Dim>;

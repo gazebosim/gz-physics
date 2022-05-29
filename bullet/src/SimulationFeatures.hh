@@ -15,19 +15,19 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
-#define IGNITION_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
+#ifndef GZ_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
+#define GZ_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
 
 #include <vector>
-#include <ignition/physics/ForwardStep.hh>
+#include <gz/physics/ForwardStep.hh>
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
-struct SimulationFeatureList : ignition::physics::FeatureList<
+struct SimulationFeatureList : gz::physics::FeatureList<
   ForwardStep
 > { };
 
@@ -44,6 +44,6 @@ class SimulationFeatures :
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

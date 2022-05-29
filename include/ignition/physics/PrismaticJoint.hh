@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/PrismaticJoint.hh>
+#include <ignition/physics/config.hh>

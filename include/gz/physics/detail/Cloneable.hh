@@ -22,7 +22,7 @@
 #include <utility>
 #include "gz/physics/Cloneable.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

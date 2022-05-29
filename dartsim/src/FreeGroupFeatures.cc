@@ -19,9 +19,9 @@
 
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -161,7 +161,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     }
     else
     {
-      ignerr << "No link for free group with id [" << _groupID.id
+      gzerr << "No link for free group with id [" << _groupID.id
              << "] found. SetFreeGroupWorldPose failed." << std::endl;
     }
     return;

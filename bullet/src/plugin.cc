@@ -15,10 +15,10 @@
  *
 */
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FeaturePolicy.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Register.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FeaturePolicy.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/Register.hh>
 
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
@@ -29,7 +29,7 @@
 #include "ShapeFeatures.hh"
 #include "JointFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -59,4 +59,4 @@ IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

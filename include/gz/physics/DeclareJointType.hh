@@ -44,12 +44,12 @@
 /// Physics engine plugin developers must implement the virtual function
 ///
 /// \code
-/// ignition::physics::Identity CastToCustomJointType(const Identity &_id) const
+/// gz::physics::Identity CastToCustomJointType(const Identity &_id) const
 /// \endcode
 ///
 /// if their physics engine plugin wants to be able to provide CustomJointType
 /// features.
 #define IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType) \
-  DETAIL_IGN_PHYSICS_DECLARE_DERIVED_TYPE(Joint, CustomJointType)
+  DETAIL_GZ_PHYSICS_DECLARE_DERIVED_TYPE(Joint, CustomJointType)
 
 #endif

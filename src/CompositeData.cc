@@ -17,9 +17,9 @@
 
 #include <cassert>
 
-#include "ignition/physics/CompositeData.hh"
+#include "gz/physics/CompositeData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

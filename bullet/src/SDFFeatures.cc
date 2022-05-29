@@ -16,8 +16,8 @@
 */
 
 #include "SDFFeatures.hh"
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/math/Helpers.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Helpers.hh>
 
 #include <sdf/Geometry.hh>
 #include <sdf/Box.hh>
@@ -28,7 +28,7 @@
 
 #include <memory>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -43,12 +43,12 @@ static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
   {
     if (!_semPose.RelativeTo().empty())
     {
-      ignerr << "There was an error in SemanticPose::Resolve\n";
+      gzerr << "There was an error in SemanticPose::Resolve\n";
       for (const auto &err : errors)
       {
-        ignerr << err.Message() << std::endl;
+        gzerr << err.Message() << std::endl;
       }
-      ignerr << "There is no optimal fallback since the relative_to attribute["
+      gzerr << "There is no optimal fallback since the relative_to attribute["
              << _semPose.RelativeTo() << "] of the pose is not empty. "
              << "Falling back to using the raw Pose.\n";
     }
@@ -91,7 +91,7 @@ Identity SDFFeatures::ConstructSdfModel(
   // check if parent is a world
   if (this->worlds.find(_worldID) == this->worlds.end())
   {
-    ignerr << "Unable to construct model: " << _sdfModel.Name() << ". "
+    gzerr << "Unable to construct model: " << _sdfModel.Name() << ". "
            << "Parent of model is not a world. " << std::endl;
     return this->GenerateInvalidId();
   }
@@ -119,7 +119,7 @@ Identity SDFFeatures::ConstructSdfModel(
     const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
     if (!sdfJoint)
     {
-      ignerr << "The joint with index [" << i << "] in model ["
+      gzerr << "The joint with index [" << i << "] in model ["
              << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
       continue;
     }
@@ -144,7 +144,7 @@ Identity SDFFeatures::ConstructSdfLink(
   // Read sdf params
   const std::string name = _sdfLink.Name();
   const math::Pose3d pose = ResolveSdfPose(_sdfLink.SemanticPose());
-  const ignition::math::Inertiald inertial = _sdfLink.Inertial();
+  const gz::math::Inertiald inertial = _sdfLink.Inertial();
   double mass = inertial.MassMatrix().Mass();
   math::Pose3d inertialPose = inertial.Pose();
   inertialPose.Rot() *= inertial.MassMatrix().PrincipalAxesOffset();
@@ -152,12 +152,12 @@ Identity SDFFeatures::ConstructSdfLink(
 
   // Get link properties
   btVector3 linkInertiaDiag =
-    convertVec(ignition::math::eigen3::convert(diagonalMoments));
+    convertVec(gz::math::eigen3::convert(diagonalMoments));
 
   const auto &modelInfo = this->models.at(_modelID);
   math::Pose3d basePose = modelInfo->pose;
   const auto poseIsometry =
-    ignition::math::eigen3::convert(basePose * pose * inertialPose);
+    gz::math::eigen3::convert(basePose * pose * inertialPose);
   const auto poseTranslation = poseIsometry.translation();
   const auto poseLinear = poseIsometry.linear();
   btTransform baseTransform;
@@ -206,7 +206,7 @@ Identity SDFFeatures::ConstructSdfCollision(
 {
   if (!_collision.Geom())
   {
-    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
+    gzerr << "The geometry element of collision [" << _collision.Name() << "] "
            << "was a nullptr\n";
     return this->GenerateInvalidId();
   }
@@ -265,7 +265,7 @@ Identity SDFFeatures::ConstructSdfCollision(
       linkInfo->inertialPose.Inverse() *
       ResolveSdfPose(_collision.SemanticPose());
     const Eigen::Isometry3d poseIsometry =
-      ignition::math::eigen3::convert(pose);
+      gz::math::eigen3::convert(pose);
     const Eigen::Vector3d poseTranslation = poseIsometry.translation();
     const auto poseLinear = poseIsometry.linear();
     btTransform baseTransform;
@@ -298,7 +298,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const ::sdf::JointType type = _sdfJoint.Type();
   if( type != ::sdf::JointType::REVOLUTE && type != ::sdf::JointType::FIXED )
   {
-    ignerr << "Asked to construct a joint of sdf::JointType ["
+    gzerr << "Asked to construct a joint of sdf::JointType ["
            << static_cast<int>(type) << "], but that is not supported yet.\n";
     return this->GenerateInvalidId();
   }
@@ -328,7 +328,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto invalidEntity = this->GenerateInvalidId().id;
   if (parentId == invalidEntity || childId == invalidEntity)
   {
-    ignerr << "There was a problem finding/creating parent/child links\n";
+    gzerr << "There was a problem finding/creating parent/child links\n";
     return this->GenerateInvalidId();
   }
 
@@ -336,19 +336,19 @@ Identity SDFFeatures::ConstructSdfJoint(
   const std::size_t worldId = this->models.at(_modelID)->world;
   if (childId == worldId)
   {
-    ignwarn << "Not implemented joints using world as child\n";
+    gzwarn << "Not implemented joints using world as child\n";
     return this->GenerateInvalidId();
   }
 
   // Get axis unit vector (expressed in world frame).
   // IF fixed joint, use UnitZ, if revolute use the Axis given by the joint
   // Eigen::Vector3d axis;
-  // ignition::math::Vector3d axis = ignition::math::Vector3d::UnitZ;
-  ignition::math::Vector3d axis;
+  // gz::math::Vector3d axis = gz::math::Vector3d::UnitZ;
+  gz::math::Vector3d axis;
   const ::sdf::JointType type = _sdfJoint.Type();
   if(type == ::sdf::JointType::FIXED )
   {
-    axis = ignition::math::Vector3d::UnitZ;
+    axis = gz::math::Vector3d::UnitZ;
   }
   else
   {
@@ -399,17 +399,17 @@ Identity SDFFeatures::ConstructSdfJoint(
     joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
       *this->links.at(childId)->link.get(),
       *this->links.at(parentId)->link.get(),
-      convertVec(ignition::math::eigen3::convert(pivotChild)),
-      convertVec(ignition::math::eigen3::convert(pivotParent)),
-      convertVec(ignition::math::eigen3::convert(axisChild)),
-      convertVec(ignition::math::eigen3::convert(axisParent)));
+      convertVec(gz::math::eigen3::convert(pivotChild)),
+      convertVec(gz::math::eigen3::convert(pivotParent)),
+      convertVec(gz::math::eigen3::convert(axisChild)),
+      convertVec(gz::math::eigen3::convert(axisParent)));
   }
   else
   {
     joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
       *this->links.at(childId)->link.get(),
-      convertVec(ignition::math::eigen3::convert(pivotChild)),
-      convertVec(ignition::math::eigen3::convert(axisChild)));
+      convertVec(gz::math::eigen3::convert(pivotChild)),
+      convertVec(gz::math::eigen3::convert(axisChild)));
   }
 
   // Limit movement for fixed joints
@@ -470,7 +470,7 @@ std::size_t SDFFeatures::FindOrConstructLink(
   const ::sdf::Link * const sdfLink = _sdfModel.LinkByName(_sdfLinkName);
   if (!sdfLink)
   {
-    ignerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
+    gzerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
            << "with the name [" << _sdfLinkName << "].\n";
     return this->GenerateInvalidId().id;
   }
@@ -480,4 +480,4 @@ std::size_t SDFFeatures::FindOrConstructLink(
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

@@ -23,13 +23,13 @@
 #include <gz/physics/DeclareShapeType.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     IGN_PHYSICS_DECLARE_SHAPE_TYPE(CapsuleShape)
 
-    class IGNITION_PHYSICS_VISIBLE GetCapsuleShapeProperties
+    class GZ_PHYSICS_VISIBLE GetCapsuleShapeProperties
         : public virtual FeatureWithRequirements<CapsuleShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -63,7 +63,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature sets the CapsuleShape properties such as
     /// the capsule radius and length.
-    class IGNITION_PHYSICS_VISIBLE SetCapsuleShapeProperties
+    class GZ_PHYSICS_VISIBLE SetCapsuleShapeProperties
         : public virtual FeatureWithRequirements<CapsuleShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>
@@ -99,7 +99,7 @@ namespace ignition
     /// \brief This feature constructs a new capsule shape and attaches the
     /// desired pose in the link frame. The pose could be defined to be the
     /// capsule center point in actual implementation.
-    class IGNITION_PHYSICS_VISIBLE AttachCapsuleShapeFeature
+    class GZ_PHYSICS_VISIBLE AttachCapsuleShapeFeature
         : public virtual FeatureWithRequirements<CapsuleShapeCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

@@ -12,10 +12,10 @@ Ignition @IGN_DESIGNATION_CAP@ library and how to use the library effectively.
 3. \subpage physicsplugin "Understanding the physics plugin"
 4. \subpage physicsengine "Use different physics engines"
 5. \subpage pluginloading "Loading physics plugins"
-6. \subpage physicsconcepts "Ignition Physics simulation concepts"
+6. \subpage physicsconcepts "Gazebo Physics simulation concepts"
 7. \subpage createphysicsplugin "Implement a physics feature"
 8. \subpage createcustomfeature "Implement a custom feature"
-9. \subpage setupphysicsenginetpe "Use custom engine with Ignition Physics"
+9. \subpage setupphysicsenginetpe "Use custom engine with Gazebo Physics"
 
 ## License
 

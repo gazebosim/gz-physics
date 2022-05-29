@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/DataStatusMask.hh>
+#include <ignition/physics/config.hh>

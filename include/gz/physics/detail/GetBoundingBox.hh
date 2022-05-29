@@ -20,7 +20,7 @@
 
 #include <gz/physics/GetBoundingBox.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

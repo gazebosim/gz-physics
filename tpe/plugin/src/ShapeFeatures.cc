@@ -15,13 +15,13 @@
  *
 */
 
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/math/Pose3.hh>
-#include <ignition/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/common/Console.hh>
 
 #include "ShapeFeatures.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpeplugin;
 
@@ -401,7 +401,7 @@ LinearVector3d ShapeFeatures::GetMeshShapeScale(
 Identity ShapeFeatures::AttachMeshShape(
   const Identity &_linkID,
   const std::string &_name,
-  const ignition::common::Mesh &_mesh,
+  const gz::common::Mesh &_mesh,
   const Pose3d &_pose,
   const LinearVector3d &_scale)
 {

@@ -17,7 +17,7 @@
 
 #include "Utils.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 

@@ -19,20 +19,20 @@
 
 #include <memory>
 
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Vector3.hh>
 
-#include <ignition/physics/sdf/ConstructCollision.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
 
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
 
 
-using namespace ignition::physics;
+using namespace gz::physics;
 
 TEST(BaseClass, AddEntities)
 {

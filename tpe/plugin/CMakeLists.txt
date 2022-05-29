@@ -32,7 +32,7 @@ target_link_libraries(${tpe_plugin}
 )
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
-install(TARGETS ${tpe_plugin} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+install(TARGETS ${tpe_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
 # The library created by `ign_add_component` includes the ign-physics version
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
@@ -43,11 +43,11 @@ if (WIN32)
   # disable MSVC inherit via dominance warning
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250")
   INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
-      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
-      ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
+      ${GZ_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
+      ${GZ_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
-  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR})
+  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
 
 ign_build_tests(
@@ -67,6 +67,6 @@ foreach(test ${tests})
   target_compile_definitions(${test} PRIVATE
     "tpe_plugin_LIB=\"$<TARGET_FILE:${tpe_plugin}>\""
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
-    "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
+    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
 
 endforeach()

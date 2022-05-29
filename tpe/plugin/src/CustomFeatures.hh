@@ -20,12 +20,12 @@
 
 #include <memory>
 
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
 #include "Base.hh"
 #include "World.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

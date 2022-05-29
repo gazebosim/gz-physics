@@ -22,7 +22,7 @@
 
 #include <gz/physics/FixedJoint.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

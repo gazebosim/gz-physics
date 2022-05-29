@@ -27,14 +27,14 @@
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/SpecifyData.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
 /// \brief SetContactPropertiesCallbackFeature is a feature for setting the
 /// properties of a contact after it is created but before it affects the
 /// forward step.
-class IGNITION_PHYSICS_VISIBLE SetContactPropertiesCallbackFeature
+class GZ_PHYSICS_VISIBLE SetContactPropertiesCallbackFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
   /// \brief This struct gets filled by the simulator and contains various

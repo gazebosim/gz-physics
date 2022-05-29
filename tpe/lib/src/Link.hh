@@ -15,21 +15,21 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
 /// \brief Link class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Link : public Entity
+class GZ_PHYSICS_TPELIB_VISIBLE Link : public Entity
 {
   /// \brief Constructor
   public: Link();

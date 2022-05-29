@@ -1,28 +1,28 @@
 \page switchphysicsengines Switching physics engines
 
-This tutorial describes how to switch between physics engines in Ignition Physics
-when using Ignition Gazebo.
-Ignition Physics enables Ignition Gazebo to choose flexibly what physics engine
+This tutorial describes how to switch between physics engines in Gazebo Physics
+when using Gazebo.
+Gazebo Physics enables Gazebo to choose flexibly what physics engine
 to use at runtime.
-By default, Ignition Gazebo uses the [DART](https://dartsim.github.io/) physics
+By default, Gazebo uses the [DART](https://dartsim.github.io/) physics
 engine.
 
 Downstream developers may also integrate other physics engines by creating new
-Ignition Physics engine plugins.
-See \ref tutorials "Ignition Physics'" tutorials to learn how to integrate a
+Gazebo Physics engine plugins.
+See \ref tutorials "Gazebo Physics'" tutorials to learn how to integrate a
 new engine.
 
-## How Ignition Gazebo finds physics engines
+## How Gazebo finds physics engines
 
-Ignition Gazebo automatically looks for all physics engine plugins that are
-installed with Ignition Physics.
+Gazebo automatically looks for all physics engine plugins that are
+installed with Gazebo Physics.
 At the time of writing, there are two physics engines available (more detail
 in \ref physicsplugin "Physics plugin tutorial"):
 - **DART**: `ignition-physics-dartsim-plugin`.
 - **TPE**: `ignition-physics-tpe-plugin`.
 
-If you've created a custom engine plugin, you can tell Ignition Gazebo where to
-find it by setting the `IGN_GAZEBO_PHYSICS_ENGINE_PATH` environment variable to
+If you've created a custom engine plugin, you can tell Gazebo where to
+find it by setting the `GZ_SIM_PHYSICS_ENGINE_PATH` environment variable to
 the directory where the plugin's shared library can be found.
 
 For example, if you've created the following physics engine shared library on Linux:
@@ -32,26 +32,26 @@ For example, if you've created the following physics engine shared library on Li
 You should set the variable as follows:
 
 ```bash
-export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines
+export GZ_SIM_PHYSICS_ENGINE_PATH=/home/physics_engines
 ```
 
 If you have several libraries installed in different paths, you can add more
 paths separated by a colon, for example:
 
 ```bash
-export IGN_GAZEBO_PHYSICS_ENGINE_PATH=/home/physics_engines:/home/more_engines
+export GZ_SIM_PHYSICS_ENGINE_PATH=/home/physics_engines:/home/more_engines
 ```
 
-For additional environment variables that Ignition Gazebo finds other plugins
+For additional environment variables that Gazebo finds other plugins
 or resources, you can see them by:
 
 ```bash
 ign gazebo -h
 ```
 
-## Pointing Ignition Gazebo to physics engines
+## Pointing Gazebo to physics engines
 
-There are a few different ways of telling Ignition Gazebo which engine to load.
+There are a few different ways of telling Gazebo which engine to load.
 
 In any way, the standard naming for your plugin's shared library is to have a
 `lib` prefix and the file extension.
@@ -60,14 +60,14 @@ the `CustomEngine` could also work.
 
 ### From SDF
 
-You can specify in Ignition Gazebo which engine to load from the SDF world file
+You can specify in Gazebo which engine to load from the SDF world file
 by giving the shared library name to the `Physics` plugin tag.
 For the example above, you can load it like this:
 
 ```{.xml}
 <plugin
   filename="ignition-gazebo-physics-system"
-  name="ignition::gazebo::systems::Physics">
+  name="gz::gazebo::systems::Physics">
   <engine>
     <filename>CustomEngine</filename>
   </engine>
@@ -86,26 +86,26 @@ ign gazebo --physics-engine CustomEngine
 ### From C++ API
 
 All features available through the command line are also available through
-[ignition::gazebo::ServerConfig](https://ignitionrobotics.org/api/gazebo/4.0/classignition_1_1gazebo_1_1ServerConfig.html).
+[gz::gazebo::ServerConfig](https://gazebosim.org/api/gazebo/4.0/classignition_1_1gazebo_1_1ServerConfig.html).
 When instantiating a server programmatically, a physics engine can be passed to
 the constructor, for example:
 
 ```
-ignition::gazebo::ServerConfig serverConfig;
+gz::gazebo::ServerConfig serverConfig;
 serverConfig.SetPhysicsEngine("CustomEngine");
 
-ignition::gazebo::Server server(serverConfig);
+gz::gazebo::Server server(serverConfig);
 ```
 
 ## Troubleshooting
 These are common error messages that you may encounter:
 
 > Failed to find plugin [libCustomEngine.so]. Have you checked the
-IGN_GAZEBO_PHYSICS_ENGINE_PATH environment variable?
+GZ_SIM_PHYSICS_ENGINE_PATH environment variable?
 
-Ignition Gazebo can't find out where `libCustomEngine.so` is located.
+Gazebo can't find out where `libCustomEngine.so` is located.
 
-If that's an engine you believe should be installed with Ignition Physics,
+If that's an engine you believe should be installed with Gazebo Physics,
 check if the relevant plugin is installed.
 
 If that's a 3rd party engine, find where the `.so` file is installed and add
@@ -120,7 +120,7 @@ permissions to access it, and that it's a physics engine plugin.
 [/home/physics_engines/libCustomEngine.so]
 
 This means that there are plugins on that library, but none of them satisfies
-the minimum requirement of features needed to run an Ignition Gazebo simulation.
+the minimum requirement of features needed to run a Gazebo simulation.
 Be sure to implement all the necessary features.
 
 > Failed to load a valid physics engine from [/home/physics_engines/libCustomEngine.so]

@@ -23,7 +23,7 @@
 
 #include "gz/physics/SpecifyData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -305,7 +305,7 @@ namespace ignition
 
     /// \brief Create a function which casts this to the relevant leaf specifier
     /// and then invokes the requested function on it.
-    #define DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH( \
+    #define DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH( \
       ReturnType, Function, Suffix, CastTo, Args) \
       ReturnType Function Suffix \
       { \
@@ -335,60 +335,60 @@ namespace ignition
       public: using RequiredData = void;
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           T&, Get, (), Expector, ())
 
       template <typename T, typename... Args>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           CompositeData::InsertResult<T>, InsertOrAssign, (Args&&... args),
           Expector, (std::forward<Args>(args)...))
 
       template <typename T, typename... Args>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           CompositeData::InsertResult<T>, Insert, (Args&&... args),
           Expector, (std::forward<Args>(args)...))
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           bool, Remove, (), Expector, ())
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           T*, Query,
           (const CompositeData::QueryMode mode =
                 CompositeData::QueryMode::NORMAL),
           Expector, (mode))
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           const T*, Query,
           (const CompositeData::QueryMode mode =
                 CompositeData::QueryMode::NORMAL) const,
           const Expector, (mode))
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           bool, Has,
           () const,
           const Expector, ())
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           CompositeData::DataStatus, StatusOf,
           () const,
           const Expector, ())
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           bool, Unquery, () const, const Expector, ())
 
       template <typename T, typename... Args>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           T&, MakeRequired, (Args&&... args), Expector,
           (std::forward<Args>(args)...))
 
       template <typename T>
-      DETAIL_IGN_PHYSICS_SPECIFYDATA_DISPATCH(
+      DETAIL_GZ_PHYSICS_SPECIFYDATA_DISPATCH(
           bool, Requires, () const, const Expector, ())
 
       template <typename T>

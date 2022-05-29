@@ -22,7 +22,7 @@
 
 #include <gz/physics/heightmap/HeightmapShape.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {

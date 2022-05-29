@@ -20,7 +20,7 @@
 
 #include <Eigen/Geometry>
 
-#define DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, Dim) \
+#define DETAIL_GZ_PHYSICS_MAKE_BOTH_PRECISIONS(Type, Dim) \
   using Type ## Dim ## d = Type<double, Dim>; \
   using Type ## Dim ## f = Type<float, Dim>;
 
@@ -30,10 +30,10 @@
 /// Type3d // 3-dimensional version of Type with double precision
 /// Type3f // 3-dimensional version of Type with float precision
 #define IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Type) \
-  DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 2) \
-  DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 3)
+  DETAIL_GZ_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 2) \
+  DETAIL_GZ_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 3)
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

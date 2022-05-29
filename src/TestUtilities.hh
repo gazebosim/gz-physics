@@ -15,19 +15,19 @@
  *
 */
 
-#ifndef SRC_IGNITION_PHYSICS_TESTUTILITIES_HH_
-#define SRC_IGNITION_PHYSICS_TESTUTILITIES_HH_
+#ifndef SRC_GZ_PHYSICS_TESTUTILITIES_HH_
+#define SRC_GZ_PHYSICS_TESTUTILITIES_HH_
 
 #include <string>
 
-#include <ignition/physics/Feature.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/physics/Feature.hh>
+#include <gz/plugin/Loader.hh>
 
 #include <test/PhysicsPluginsList.hh>
 
 namespace test
 {
-  class UnimplementedFeature : public virtual ignition::physics::Feature
+  class UnimplementedFeature : public virtual gz::physics::Feature
   {
     public: template <typename PolicyT>
     class Implementation : public virtual Feature::Implementation<PolicyT>
@@ -39,10 +39,10 @@ namespace test
   };
 }
 
-void PrimeTheLoader(ignition::plugin::Loader &_loader)
+void PrimeTheLoader(gz::plugin::Loader &_loader)
 {
   for (const std::string &library
-       : ignition::physics::test::g_PhysicsPluginLibraries)
+       : gz::physics::test::g_PhysicsPluginLibraries)
   {
     if (!library.empty())
       _loader.LoadLib(library);

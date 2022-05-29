@@ -17,33 +17,33 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/RequestEngine.hh>
 
 #include "EntityManagementFeatures.hh"
 #include "JointFeatures.hh"
 
 // ToDo(Lobotuerk): Once more tests are added into this plugin, delete line 35
 // and uncomment 31~33 adding another feature list to clear the warn.
-// struct TestFeatureList : ignition::physics::FeatureList<
-//     ignition::physics::bullet::EntityManagementFeatureList
+// struct TestFeatureList : gz::physics::FeatureList<
+//     gz::physics::bullet::EntityManagementFeatureList
 // > { };
 
-using TestFeatureList = ignition::physics::bullet::EntityManagementFeatureList;
+using TestFeatureList = gz::physics::bullet::EntityManagementFeatureList;
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(bullet_plugin_LIB);
 
-  ignition::plugin::PluginPtr bullet =
-      loader.Instantiate("ignition::physics::bullet::Plugin");
+  gz::plugin::PluginPtr bullet =
+      loader.Instantiate("gz::physics::bullet::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(bullet);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(bullet);
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("empty world");

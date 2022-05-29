@@ -22,9 +22,9 @@
 #include <dart/utils/utils.hpp>
 #include <dart/utils/urdf/urdf.hpp>
 
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/common/Console.hh>
-#include <ignition/physics/Register.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/physics/Register.hh>
 
 #include "../MockDoublePendulum.hh"
 
@@ -65,7 +65,7 @@ namespace mock
           lastId(0)
       {
         ::dart::utils::DartLoader loader;
-        this->robot = loader.parseSkeleton(IGNITION_PHYSICS_RESOURCE_DIR "/rrbot.xml");
+        this->robot = loader.parseSkeleton(GZ_PHYSICS_RESOURCE_DIR "/rrbot.xml");
         this->world->addSkeleton(this->robot);
 
         this->joint1 = this->robot->getJoint("joint1");
@@ -104,7 +104,7 @@ namespace mock
       //  const DartState *state = x.Query<DartState>();
       //  if (!state)
       //  {
-      //    ignerr << "[ignition::physics::dart::DARTDoublePendulum::"
+      //    gzerr << "[gz::physics::dart::DARTDoublePendulum::"
       //           << "SetState] The state provided does not contain a "
       //           << "DartState, which this plugins needs in order to go to a "
       //           << "specified state!\n";
@@ -142,7 +142,7 @@ namespace mock
       //    this->world->removeSkeleton(skel);
       //}
 
-      void WriteState(ignition::physics::ForwardStep::State &x)
+      void WriteState(gz::physics::ForwardStep::State &x)
       {
         DartState &state = x.Get<DartState>();
         state.states.clear();
@@ -156,7 +156,7 @@ namespace mock
         }
       }
 
-      void SetInputs(const ignition::physics::GeneralizedParameters *_efforts)
+      void SetInputs(const gz::physics::GeneralizedParameters *_efforts)
       {
         if (_efforts != nullptr)
         {
@@ -165,7 +165,7 @@ namespace mock
         }
       }
 
-      void SetTimeStep(const ignition::physics::TimeStep *_timeStep)
+      void SetTimeStep(const gz::physics::TimeStep *_timeStep)
       {
         if (_timeStep != nullptr)
         {
@@ -183,9 +183,9 @@ namespace mock
 
     class DARTDoublePendulum
         : public virtual mock::MockDoublePendulum,
-          public ignition::physics::Implements3d<MockDoublePendulumList>
+          public gz::physics::Implements3d<MockDoublePendulumList>
     {
-      using Identity = ignition::physics::Identity;
+      using Identity = gz::physics::Identity;
 
       public: DARTDoublePendulum()
         : dataPtr(new PrivateDARTDoublePendulum)
@@ -257,12 +257,12 @@ namespace mock
 
       public: void WorldForwardStep(
           const Identity &/*_worldId*/,
-          ignition::physics::ForwardStep::Output &_h,
-          ignition::physics::ForwardStep::State &_x,
-          const ignition::physics::ForwardStep::Input &_u) override
+          gz::physics::ForwardStep::Output &_h,
+          gz::physics::ForwardStep::State &_x,
+          const gz::physics::ForwardStep::Input &_u) override
       {
-        this->dataPtr->SetInputs(_u.Query<ignition::physics::GeneralizedParameters>());
-        this->dataPtr->SetTimeStep(_u.Query<ignition::physics::TimeStep>());
+        this->dataPtr->SetInputs(_u.Query<gz::physics::GeneralizedParameters>());
+        this->dataPtr->SetTimeStep(_u.Query<gz::physics::TimeStep>());
 
         this->dataPtr->Simulate();
 
@@ -270,12 +270,12 @@ namespace mock
 
         _h.ResetQueries();
         this->WriteRequiredData(_h);
-        this->Write(_h.Get<ignition::physics::JointPositions>());
+        this->Write(_h.Get<gz::physics::JointPositions>());
       }
 
       //public: void SetStateTo(const SetState::State &x) override;
 
-      public: void Write(ignition::physics::JointPositions &_positions) const override
+      public: void Write(gz::physics::JointPositions &_positions) const override
       {
         auto configuration = this->dataPtr->robot->getConfiguration(
                               ::dart::dynamics::Skeleton::CONFIG_POSITIONS);
@@ -292,7 +292,7 @@ namespace mock
         }
       }
 
-      public: void Write(ignition::physics::WorldPoses &_poses) const override
+      public: void Write(gz::physics::WorldPoses &_poses) const override
       {
         _poses.entries.clear();
         _poses.entries.reserve(this->dataPtr->mapToBodies.size());
@@ -309,9 +309,9 @@ namespace mock
             continue;
           }
 
-          ignition::physics::WorldPose wp;
-          wp.pose = ignition::math::eigen3::convert(bn->getWorldTransform());
-          wp.pose.Pos() = ignition::math::eigen3::convert(bn->getCOM());
+          gz::physics::WorldPose wp;
+          wp.pose = gz::math::eigen3::convert(bn->getWorldTransform());
+          wp.pose.Pos() = gz::math::eigen3::convert(bn->getCOM());
           wp.body = id;
 
           _poses.entries.push_back(wp);
@@ -324,7 +324,7 @@ namespace mock
       private: std::unique_ptr<PrivateDARTDoublePendulum> dataPtr;
     };
 
-    using FeaturePolicy3d = ignition::physics::FeaturePolicy3d;
+    using FeaturePolicy3d = gz::physics::FeaturePolicy3d;
     IGN_PHYSICS_ADD_PLUGIN(
         DARTDoublePendulum,
         FeaturePolicy3d,

@@ -15,17 +15,17 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
-#include <ignition/math/AxisAlignedBox.hh>
+#include <gz/math/AxisAlignedBox.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 #include "Shape.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -33,7 +33,7 @@ namespace tpelib {
 class CollisionPrivate;
 
 /// \brief Collision class
-class IGNITION_PHYSICS_TPELIB_VISIBLE Collision : public Entity
+class GZ_PHYSICS_TPELIB_VISIBLE Collision : public Entity
 {
   /// \brief Constructor
   public: Collision();

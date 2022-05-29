@@ -23,7 +23,7 @@
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Shape.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -37,7 +37,7 @@ namespace ignition
     /// \brief This feature retrieves the axis aligned bounding box for the
     /// shapes attached to this link in the requested frame. The default frame
     /// is the world frame.
-    class IGNITION_PHYSICS_VISIBLE GetLinkBoundingBox
+    class GZ_PHYSICS_VISIBLE GetLinkBoundingBox
         : public virtual
           FeatureWithRequirements<GetLinkBoundingBoxRequiredFeatures>
     {
@@ -71,7 +71,7 @@ namespace ignition
     /////////////////////////////////////////////////
     /// \brief This feature retrieves the axis aligned bounding box for the
     /// model in the requested frame. The default frame is the world frame.
-    class IGNITION_PHYSICS_VISIBLE GetModelBoundingBox
+    class GZ_PHYSICS_VISIBLE GetModelBoundingBox
         : public virtual
           FeatureWithRequirements<GetModelBoundingBoxRequiredFeatures>
     {

@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/FrameSemantics.hh>
+#include <ignition/physics/config.hh>

@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/sdf/ConstructCollision.hh>
+#include <ignition/physics/config.hh>

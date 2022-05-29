@@ -15,31 +15,31 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
-#define IGNITION_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
+#define GZ_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/CanWriteData.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/CanWriteData.hh>
 
 namespace mock
 {
-  using MockDoublePendulumList = ignition::physics::FeatureList<
-    ignition::physics::ForwardStep,
-    ignition::physics::GetEngineInfo,
-    ignition::physics::GetWorldFromEngine
+  using MockDoublePendulumList = gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetWorldFromEngine
   >;
 
   class MockDoublePendulum
-      : public ignition::physics::CanWriteRequiredData<
+      : public gz::physics::CanWriteRequiredData<
             MockDoublePendulum,
-            ignition::physics::ForwardStep::Output>
+            gz::physics::ForwardStep::Output>
   {
-    public: virtual void Write(ignition::physics::JointPositions &_positions) const = 0;
+    public: virtual void Write(gz::physics::JointPositions &_positions) const = 0;
 
     /// \brief Write poses for each link in inertial frame (at COM).
-    public: virtual void Write(ignition::physics::WorldPoses &_poses) const = 0;
+    public: virtual void Write(gz::physics::WorldPoses &_poses) const = 0;
 
     public: virtual ~MockDoublePendulum() = default;
   };

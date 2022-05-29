@@ -15,24 +15,24 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_SHAPEFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_SHAPEFEATURES_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_SHAPEFEATURES_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_SHAPEFEATURES_HH_
 
 #include <string>
 
-#include <ignition/physics/Shape.hh>
-#include <ignition/physics/BoxShape.hh>
-#include <ignition/physics/CapsuleShape.hh>
-#include <ignition/physics/CylinderShape.hh>
-#include <ignition/physics/EllipsoidShape.hh>
-#include <ignition/physics/heightmap/HeightmapShape.hh>
-#include <ignition/physics/mesh/MeshShape.hh>
-#include <ignition/physics/PlaneShape.hh>
-#include <ignition/physics/SphereShape.hh>
+#include <gz/physics/Shape.hh>
+#include <gz/physics/BoxShape.hh>
+#include <gz/physics/CapsuleShape.hh>
+#include <gz/physics/CylinderShape.hh>
+#include <gz/physics/EllipsoidShape.hh>
+#include <gz/physics/heightmap/HeightmapShape.hh>
+#include <gz/physics/mesh/MeshShape.hh>
+#include <gz/physics/PlaneShape.hh>
+#include <gz/physics/SphereShape.hh>
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -193,7 +193,7 @@ class ShapeFeatures :
   public: Identity AttachMeshShape(
       const Identity &_linkID,
       const std::string &_name,
-      const ignition::common::Mesh &_mesh,
+      const gz::common::Mesh &_mesh,
       const Pose3d &_pose,
       const LinearVector3d &_scale) override;
 

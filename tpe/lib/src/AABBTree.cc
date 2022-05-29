@@ -17,13 +17,13 @@
 
 #include <set>
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "aabb_tree/AABB.h"
 
 #include "AABBTree.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -41,7 +41,7 @@ class AABBTreePrivate
 }
 }
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 
@@ -78,7 +78,7 @@ bool AABBTree::RemoveNode(std::size_t _id)
   auto it = this->dataPtr->nodeIds.find(_id);
   if (it == this->dataPtr->nodeIds.end())
   {
-    ignerr << "Unable to remove node '" << _id << "'. "
+    gzerr << "Unable to remove node '" << _id << "'. "
            << "Node not found." << std::endl;
     return false;
   }
@@ -95,7 +95,7 @@ bool AABBTree::UpdateNode(std::size_t _id,
   auto it = this->dataPtr->nodeIds.find(_id);
   if (it == this->dataPtr->nodeIds.end())
   {
-    ignerr << "Unable to update node '" << _id << "'. "
+    gzerr << "Unable to update node '" << _id << "'. "
            << "Node not found." << std::endl;
     return false;
   }
@@ -128,7 +128,7 @@ std::set<std::size_t> AABBTree::Collisions(std::size_t _id) const
   auto it = this->dataPtr->nodeIds.find(_id);
   if (it == this->dataPtr->nodeIds.end())
   {
-    ignerr << "Unable to compute collisions for node '" << _id << "'. "
+    gzerr << "Unable to compute collisions for node '" << _id << "'. "
            << "Node not found." << std::endl;
     return result;
   }
@@ -144,7 +144,7 @@ math::AxisAlignedBox AABBTree::AABB(std::size_t _id) const
   auto it = this->dataPtr->nodeIds.find(_id);
   if (it == this->dataPtr->nodeIds.end())
   {
-    ignerr << "Unable to get AABB for node '" << _id << "'. "
+    gzerr << "Unable to get AABB for node '" << _id << "'. "
            << "Node not found." << std::endl;
     return math::AxisAlignedBox();
   }

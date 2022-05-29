@@ -29,16 +29,16 @@
 #include <dart/constraint/ContactSurface.hpp>
 #endif
 
-#include <ignition/common/Profiler.hh>
+#include <gz/common/Profiler.hh>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-#include "ignition/physics/GetContacts.hh"
+#include "gz/physics/GetContacts.hh"
 
 #include "SimulationFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 
@@ -60,7 +60,7 @@ void SimulationFeatures::WorldForwardStep(
     if (std::fabs(dt.count() - world->getTimeStep()) > tol)
     {
       world->setTimeStep(dt.count());
-      igndbg << "Simulation timestep set to: " << world->getTimeStep()
+      gzdbg << "Simulation timestep set to: " << world->getTimeStep()
              << std::endl;
     }
   }
@@ -85,7 +85,7 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     if (info && info->link)
     {
       WorldPose wp;
-      wp.pose = ignition::math::eigen3::convert(
+      wp.pose = gz::math::eigen3::convert(
           info->link->getWorldTransform());
       wp.body = id;
 
@@ -196,7 +196,7 @@ bool SimulationFeatures::RemoveContactPropertiesCallback(
   }
   else
   {
-    ignerr << "Could not find the contact surface handler to be removed"
+    gzerr << "Could not find the contact surface handler to be removed"
            << std::endl;
     return false;
   }
@@ -249,7 +249,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     static bool warnedRollingFrictionCoeff = false;
     if (!warnedRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
     {
-      ignwarn << "DART doesn't support rolling friction setting" << std::endl;
+      gzwarn << "DART doesn't support rolling friction setting" << std::endl;
       warnedRollingFrictionCoeff = true;
     }
 
@@ -257,7 +257,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     if (!warnedSecondaryRollingFrictionCoeff &&
       pIgn.secondaryRollingFrictionCoeff)
     {
-      ignwarn << "DART doesn't support secondary rolling friction setting"
+      gzwarn << "DART doesn't support secondary rolling friction setting"
               << std::endl;
       warnedSecondaryRollingFrictionCoeff = true;
     }
@@ -265,7 +265,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     static bool warnedTorsionalFrictionCoeff = false;
     if (!warnedTorsionalFrictionCoeff && pIgn.torsionalFrictionCoeff)
     {
-      ignwarn << "DART doesn't support torsional friction setting"
+      gzwarn << "DART doesn't support torsional friction setting"
               << std::endl;
       warnedTorsionalFrictionCoeff = true;
     }

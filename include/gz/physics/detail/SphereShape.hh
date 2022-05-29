@@ -22,7 +22,7 @@
 
 #include <gz/physics/SphereShape.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/dartsim/World.hh>
+#include <ignition/physics/config.hh>

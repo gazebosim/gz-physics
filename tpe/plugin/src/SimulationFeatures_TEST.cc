@@ -17,23 +17,23 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/Console.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-#include <ignition/utils/SuppressWarning.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/utils/SuppressWarning.hh>
+#include <gz/plugin/Loader.hh>
 
 // Features
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/GetBoundingBox.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructNestedModel.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/GetBoundingBox.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
@@ -49,50 +49,50 @@
 #include "SimulationFeatures.hh"
 #include "World.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-  ignition::physics::tpeplugin::SimulationFeatureList,
-  ignition::physics::tpeplugin::ShapeFeatureList,
-  ignition::physics::tpeplugin::EntityManagementFeatureList,
-  ignition::physics::tpeplugin::FreeGroupFeatureList,
-  ignition::physics::tpeplugin::RetrieveWorld,
-  ignition::physics::GetContactsFromLastStepFeature,
-  ignition::physics::LinkFrameSemantics,
-  ignition::physics::GetModelBoundingBox,
-  ignition::physics::sdf::ConstructSdfWorld,
-  ignition::physics::sdf::ConstructSdfModel,
-  ignition::physics::sdf::ConstructSdfNestedModel,
-  ignition::physics::sdf::ConstructSdfLink,
-  ignition::physics::sdf::ConstructSdfCollision
+struct TestFeatureList : gz::physics::FeatureList<
+  gz::physics::tpeplugin::SimulationFeatureList,
+  gz::physics::tpeplugin::ShapeFeatureList,
+  gz::physics::tpeplugin::EntityManagementFeatureList,
+  gz::physics::tpeplugin::FreeGroupFeatureList,
+  gz::physics::tpeplugin::RetrieveWorld,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::GetModelBoundingBox,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfNestedModel,
+  gz::physics::sdf::ConstructSdfLink,
+  gz::physics::sdf::ConstructSdfCollision
 > { };
 
-using TestEnginePtr = ignition::physics::Engine3dPtr<TestFeatureList>;
-using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
-using TestModelPtr = ignition::physics::Model3dPtr<TestFeatureList>;
-using TestLinkPtr = ignition::physics::Link3dPtr<TestFeatureList>;
-using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
-using TestContactPoint = ignition::physics::World3d<TestFeatureList>::ContactPoint;
+using TestEnginePtr = gz::physics::Engine3dPtr<TestFeatureList>;
+using TestWorldPtr = gz::physics::World3dPtr<TestFeatureList>;
+using TestModelPtr = gz::physics::Model3dPtr<TestFeatureList>;
+using TestLinkPtr = gz::physics::Link3dPtr<TestFeatureList>;
+using TestShapePtr = gz::physics::Shape3dPtr<TestFeatureList>;
+using TestContactPoint = gz::physics::World3d<TestFeatureList>::ContactPoint;
 
 std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
     const std::string &_world)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(_library);
 
   const std::set<std::string> pluginNames =
-    ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
+    gz::physics::FindFeatures3d<TestFeatureList>::From(loader);
 
   EXPECT_EQ(1u, pluginNames.size());
 
   std::unordered_set<TestWorldPtr> worlds;
   for (const std::string &name : pluginNames)
   {
-    ignition::plugin::PluginPtr plugin = loader.Instantiate(name);
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    igndbg << " -- Plugin name: " << name << std::endl;
+    gzdbg << " -- Plugin name: " << name << std::endl;
 
     auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
     EXPECT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -107,10 +107,10 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
 }
 
 /////////////////////////////////////////////////
-static ignition::math::Pose3d ResolveSdfPose(
+static gz::math::Pose3d ResolveSdfPose(
     const ::sdf::SemanticPose &_semPose)
 {
-  ignition::math::Pose3d pose;
+  gz::math::Pose3d pose;
   ::sdf::Errors errors = _semPose.Resolve(pose);
   EXPECT_TRUE(errors.empty()) << errors;
   return pose;
@@ -119,23 +119,23 @@ static ignition::math::Pose3d ResolveSdfPose(
 std::unordered_set<TestWorldPtr> LoadWorldsPiecemeal(
     const std::string &_library, const std::string &_world)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(_library);
 
   const std::set<std::string> pluginNames =
-    ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
+    gz::physics::FindFeatures3d<TestFeatureList>::From(loader);
 
   EXPECT_EQ(1u, pluginNames.size());
 
   std::unordered_set<TestWorldPtr> worlds;
   for (const std::string &name : pluginNames)
   {
-    ignition::plugin::PluginPtr plugin = loader.Instantiate(name);
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    igndbg << " -- Plugin name: " << name << std::endl;
+    gzdbg << " -- Plugin name: " << name << std::endl;
 
     auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+      gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
     EXPECT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -234,9 +234,9 @@ std::unordered_set<TestWorldPtr> LoadWorldsPiecemeal(
 bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
     const std::size_t _numSteps = 1)
 {
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
 
   bool checkedOutput = false;
   for (size_t i = 0; i < _numSteps; ++i)
@@ -250,7 +250,7 @@ bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
     if (_firstTime && (i == 0))
     {
       EXPECT_FALSE(
-          output.Get<ignition::physics::ChangedWorldPoses>().entries.empty());
+          output.Get<gz::physics::ChangedWorldPoses>().entries.empty());
       checkedOutput = true;
     }
   }
@@ -270,7 +270,7 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
   if (library.empty())
     return;
 
-  igndbg << "Testing library " << library << std::endl;
+  gzdbg << "Testing library " << library << std::endl;
   auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
 
   for (const auto &world : worlds)
@@ -283,8 +283,8 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
     auto link = model->GetLink(0);
     ASSERT_NE(nullptr, link);
     auto frameData = link->FrameDataRelativeToWorld();
-    EXPECT_EQ(ignition::math::Pose3d(0, 1.5, 0.5, 0, 0, 0),
-              ignition::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Pose3d(0, 1.5, 0.5, 0, 0, 0),
+              gz::math::eigen3::convert(frameData.pose));
   }
 }
 
@@ -315,13 +315,13 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     auto boxLink = box->GetLink(0);
     auto boxCollision = boxLink->GetShape(0);
     auto boxShape = boxCollision->CastToBoxShape();
-    EXPECT_EQ(ignition::math::Vector3d(100, 100, 1),
-              ignition::math::eigen3::convert(boxShape->GetSize()));
+    EXPECT_EQ(gz::math::Vector3d(100, 100, 1),
+              gz::math::eigen3::convert(boxShape->GetSize()));
 
     auto box2 = boxLink->AttachBoxShape(
       "box2",
-      ignition::math::eigen3::convert(
-        ignition::math::Vector3d(1.2, 1.2, 1.2)),
+      gz::math::eigen3::convert(
+        gz::math::Vector3d(1.2, 1.2, 1.2)),
       Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, boxLink->GetShapeCount());
     EXPECT_EQ(box2, boxLink->GetShape(1));
@@ -343,12 +343,12 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     auto ellipsoidCollision = ellipsoidLink->GetShape(0);
     auto ellipsoidShape = ellipsoidCollision->CastToEllipsoidShape();
     EXPECT_EQ(
-      ignition::math::Vector3d(0.2, 0.3, 0.5),
-      ignition::math::eigen3::convert(ellipsoidShape->GetRadii()));
+      gz::math::Vector3d(0.2, 0.3, 0.5),
+      gz::math::eigen3::convert(ellipsoidShape->GetRadii()));
 
     auto ellipsoid2 = ellipsoidLink->AttachEllipsoidShape(
       "ellipsoid2",
-      ignition::math::eigen3::convert(ignition::math::Vector3d(0.2, 0.3, 0.5)),
+      gz::math::eigen3::convert(gz::math::Vector3d(0.2, 0.3, 0.5)),
       Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, ellipsoidLink->GetShapeCount());
     EXPECT_EQ(ellipsoid2, ellipsoidLink->GetShape(1));
@@ -377,26 +377,26 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     auto capsuleAABB =
       capsuleCollision->GetAxisAlignedBoundingBox(*capsuleCollision);
 
-    EXPECT_EQ(ignition::math::Vector3d(-1, -1, -1),
-              ignition::math::eigen3::convert(sphereAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(1, 1, 1),
-              ignition::math::eigen3::convert(sphereAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.5),
-              ignition::math::eigen3::convert(boxAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(50, 50, 0.5),
-              ignition::math::eigen3::convert(boxAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-0.5, -0.5, -0.55),
-              ignition::math::eigen3::convert(cylinderAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(0.5, 0.5, 0.55),
-              ignition::math::eigen3::convert(cylinderAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-0.2, -0.3, -0.5),
-              ignition::math::eigen3::convert(ellipsoidAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(0.2, 0.3, 0.5),
-              ignition::math::eigen3::convert(ellipsoidAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-0.2, -0.2, -0.5),
-              ignition::math::eigen3::convert(capsuleAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(0.2, 0.2, 0.5),
-              ignition::math::eigen3::convert(capsuleAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-1, -1, -1),
+              gz::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(1, 1, 1),
+              gz::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-50, -50, -0.5),
+              gz::math::eigen3::convert(boxAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(50, 50, 0.5),
+              gz::math::eigen3::convert(boxAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-0.5, -0.5, -0.55),
+              gz::math::eigen3::convert(cylinderAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(0.5, 0.5, 0.55),
+              gz::math::eigen3::convert(cylinderAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-0.2, -0.3, -0.5),
+              gz::math::eigen3::convert(ellipsoidAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(0.2, 0.3, 0.5),
+              gz::math::eigen3::convert(ellipsoidAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-0.2, -0.2, -0.5),
+              gz::math::eigen3::convert(capsuleAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(0.2, 0.2, 0.5),
+              gz::math::eigen3::convert(capsuleAABB).Max());
 
     // check model AABB. By default, the AABBs are in world frame
     auto sphereModelAABB = sphere->GetAxisAlignedBoundingBox();
@@ -404,26 +404,26 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
     auto cylinderModelAABB = cylinder->GetAxisAlignedBoundingBox();
     auto ellipsoidModelAABB = ellipsoid->GetAxisAlignedBoundingBox();
     auto capsuleModelAABB = capsule->GetAxisAlignedBoundingBox();
-    EXPECT_EQ(ignition::math::Vector3d(-1, 0.5, -0.5),
-              ignition::math::eigen3::convert(sphereModelAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(1, 2.5, 1.5),
-              ignition::math::eigen3::convert(sphereModelAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.1),
-              ignition::math::eigen3::convert(boxModelAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(50, 50, 1.1),
-              ignition::math::eigen3::convert(boxModelAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-3, -4.5, -1.5),
-              ignition::math::eigen3::convert(cylinderModelAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(3, 1.5, 2.5),
-              ignition::math::eigen3::convert(cylinderModelAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-0.2, -5.3, 0.2),
-              ignition::math::eigen3::convert(ellipsoidModelAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(0.2, -4.7, 1.2),
-              ignition::math::eigen3::convert(ellipsoidModelAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-0.2, -3.2, 0),
-              ignition::math::eigen3::convert(capsuleModelAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(0.2, -2.8, 1),
-              ignition::math::eigen3::convert(capsuleModelAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-1, 0.5, -0.5),
+              gz::math::eigen3::convert(sphereModelAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(1, 2.5, 1.5),
+              gz::math::eigen3::convert(sphereModelAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-50, -50, -0.1),
+              gz::math::eigen3::convert(boxModelAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(50, 50, 1.1),
+              gz::math::eigen3::convert(boxModelAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-3, -4.5, -1.5),
+              gz::math::eigen3::convert(cylinderModelAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(3, 1.5, 2.5),
+              gz::math::eigen3::convert(cylinderModelAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-0.2, -5.3, 0.2),
+              gz::math::eigen3::convert(ellipsoidModelAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(0.2, -4.7, 1.2),
+              gz::math::eigen3::convert(ellipsoidModelAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-0.2, -3.2, 0),
+              gz::math::eigen3::convert(capsuleModelAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(0.2, -2.8, 1),
+              gz::math::eigen3::convert(capsuleModelAABB).Max());
   }
 }
 
@@ -453,25 +453,25 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     StepWorld(world, true);
 
     freeGroup->SetWorldPose(
-      ignition::math::eigen3::convert(
-        ignition::math::Pose3d(0, 0, 2, 0, 0, 0)));
+      gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 0, 2, 0, 0, 0)));
     freeGroup->SetWorldLinearVelocity(
-      ignition::math::eigen3::convert(ignition::math::Vector3d(0.1, 0.2, 0.3)));
+      gz::math::eigen3::convert(gz::math::Vector3d(0.1, 0.2, 0.3)));
     freeGroup->SetWorldAngularVelocity(
-      ignition::math::eigen3::convert(ignition::math::Vector3d(0.4, 0.5, 0.6)));
+      gz::math::eigen3::convert(gz::math::Vector3d(0.4, 0.5, 0.6)));
 
     auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-    EXPECT_EQ(ignition::math::Pose3d(0, 0, 2, 0, 0, 0),
-              ignition::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Pose3d(0, 0, 2, 0, 0, 0),
+              gz::math::eigen3::convert(frameData.pose));
 
     // Step the world
     StepWorld(world, false);
     // Check that the first link's velocities are updated
     frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-    EXPECT_EQ(ignition::math::Vector3d(0.1, 0.2, 0.3),
-              ignition::math::eigen3::convert(frameData.linearVelocity));
-    EXPECT_EQ(ignition::math::Vector3d(0.4, 0.5, 0.6),
-              ignition::math::eigen3::convert(frameData.angularVelocity));
+    EXPECT_EQ(gz::math::Vector3d(0.1, 0.2, 0.3),
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d(0.4, 0.5, 0.6),
+              gz::math::eigen3::convert(frameData.angularVelocity));
   }
 }
 
@@ -496,15 +496,15 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
     ASSERT_NE(nullptr, freeGroup);
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
-    ignition::math::Pose3d newPose(1, 1, 0, 0, 0, 0);
-    freeGroup->SetWorldPose(ignition::math::eigen3::convert(newPose));
+    gz::math::Pose3d newPose(1, 1, 0, 0, 0, 0);
+    freeGroup->SetWorldPose(gz::math::eigen3::convert(newPose));
 
     {
       auto link = model->GetLink("link");
       ASSERT_NE(nullptr, link);
       auto frameData = link->FrameDataRelativeToWorld();
       EXPECT_EQ(newPose,
-          ignition::math::eigen3::convert(frameData.pose));
+          gz::math::eigen3::convert(frameData.pose));
     }
     {
       auto nestedModel = model->GetNestedModel("nested_model");
@@ -513,14 +513,14 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
       ASSERT_NE(nullptr, nestedLink);
 
       // Poses from SDF
-      ignition::math::Pose3d nestedModelPose(1, 2, 2, 0, 0, 0);
-      ignition::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, IGN_PI_2);
+      gz::math::Pose3d nestedModelPose(1, 2, 2, 0, 0, 0);
+      gz::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, IGN_PI_2);
 
-      ignition::math::Pose3d nestedLinkExpectedPose =
+      gz::math::Pose3d nestedLinkExpectedPose =
         newPose * nestedModelPose * nestedLinkPose;
 
       EXPECT_EQ(nestedLinkExpectedPose,
-                ignition::math::eigen3::convert(
+                gz::math::eigen3::convert(
                     nestedLink->FrameDataRelativeToWorld().pose));
     }
   }
@@ -627,7 +627,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       {
         contactBoxSphere++;
         Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, 1.5, 0.5);
-        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
       else if ((m1->GetName() == "box" && m2->GetName() == "cylinder") ||
@@ -635,7 +635,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       {
         contactBoxCylinder++;
         Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, -1.5, 0.5);
-        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
       else if ((m1->GetName() == "box" && m2->GetName() == "capsule") ||
@@ -643,7 +643,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       {
         contactBoxCapsule++;
         Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -3, 0.5);
-        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
       else if ((m1->GetName() == "box" && m2->GetName() == "ellipsoid") ||
@@ -651,7 +651,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       {
         contactBoxEllipsoid++;
         Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -5, 0.6);
-        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
       else
@@ -666,8 +666,8 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     EXPECT_EQ(1u, contactBoxEllipsoid);
 
     // move sphere away
-    sphereFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
-        ignition::math::Pose3d(0, 100, 0.5, 0, 0, 0)));
+    sphereFreeGroup->SetWorldPose(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 100, 0.5, 0, 0, 0)));
 
     // step and get contacts
     checkedOutput = StepWorld(world, false);
@@ -697,7 +697,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       {
         contactBoxCylinder++;
         Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0, -1.5, 0.5);
-        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
       else if ((m1->GetName() == "box" && m2->GetName() == "capsule") ||
@@ -705,7 +705,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       {
         contactBoxCapsule++;
         Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -3, 0.5);
-        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
       else if ((m1->GetName() == "box" && m2->GetName() == "ellipsoid") ||
@@ -713,7 +713,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       {
         contactBoxEllipsoid++;
         Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -5, 0.6);
-        EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
       else
@@ -726,16 +726,16 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     EXPECT_EQ(1u, contactBoxEllipsoid);
 
     // move cylinder away
-    cylinderFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
-        ignition::math::Pose3d(0, -100, 0.5, 0, 0, 0)));
+    cylinderFreeGroup->SetWorldPose(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, -100, 0.5, 0, 0, 0)));
 
     // move capsule away
-    capsuleFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
-        ignition::math::Pose3d(0, -100, 100, 0, 0, 0)));
+    capsuleFreeGroup->SetWorldPose(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, -100, 100, 0, 0, 0)));
 
     // move ellipsoid away
-    ellipsoidFreeGroup->SetWorldPose(ignition::math::eigen3::convert(
-        ignition::math::Pose3d(0, -100, -100, 0, 0, 0)));
+    ellipsoidFreeGroup->SetWorldPose(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, -100, -100, 0, 0, 0)));
 
     // step and get contacts
     checkedOutput = StepWorld(world, false);
@@ -748,7 +748,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 }
 
 INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
-  ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+  ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries),); // NOLINT
 
 int main(int argc, char *argv[])
 {

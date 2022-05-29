@@ -16,3 +16,4 @@
  */
 
 #include <gz/physics/FeaturePolicy.hh>
+#include <ignition/physics/config.hh>

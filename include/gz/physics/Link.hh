@@ -23,12 +23,12 @@
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     /////////////////////////////////////////////////
-    class IGNITION_PHYSICS_VISIBLE AddLinkExternalForceTorque
+    class GZ_PHYSICS_VISIBLE AddLinkExternalForceTorque
       : public virtual FeatureWithRequirements<LinkFrameSemantics>
     {
       /// \brief The Link API for adding link force/torque

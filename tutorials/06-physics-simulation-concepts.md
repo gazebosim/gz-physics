@@ -1,12 +1,12 @@
 \page physicsconcepts Physics simulation concepts
 
-This tutorial introduces simulation concepts that are used in Ignition Physics.
+This tutorial introduces simulation concepts that are used in Gazebo Physics.
 
 ## Prerequisites
 
 - \ref installation "Installation"
 - \ref physicsengine "Use different physics engines"
-- [Understand the GUI tutorial](https://ignitionrobotics.org/docs/fortress/gui)
+- [Understand the GUI tutorial](https://gazebosim.org/docs/fortress/gui)
 
 ## Physics simulation features
 
@@ -19,14 +19,14 @@ Here is a snapshot of simulation features supported by ign-physics:
 Ignition adopts SDFormat structure to describe visual elements and
 also the dynamic physics aspects. To get started on SDFormat 1.7, refer to this
 [SDFormat specification](http://sdformat.org/spec?ver=1.7&elem=sdf).
-For a comprehensive tutorial for constructing your robot model from SDFormat, refer to this [Building robot](https://ignitionrobotics.org/docs/fortress/building_robot) tutorial.
+For a comprehensive tutorial for constructing your robot model from SDFormat, refer to this [Building robot](https://gazebosim.org/docs/fortress/building_robot) tutorial.
 
-## Physics concepts in Ignition Gazebo simulation
+## Physics concepts in Gazebo simulation
 
 In this tutorial, we will show how to
-manipulate and visualize some physics aspects using demos on Ignition Gazebo.
+manipulate and visualize some physics aspects using demos on Gazebo.
 
-All demos can be found in [ign-gazebo/examples/worlds](https://github.com/ignitionrobotics/ign-gazebo/blob/main/examples/worlds/) folder.
+All demos can be found in [ign-gazebo/examples/worlds](https://github.com/gazebosim/gz-sim/blob/main/examples/worlds/) folder.
 
 ### Differential drive
 
@@ -35,8 +35,8 @@ cars depending on physics engines and visualize the collision concept.
 To run the demo world, download the SDFormat file by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/diff_drive.sdf -P ~
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/velocity_control.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/diff_drive.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/velocity_control.sdf -P ~
 ```
 
 Then run the simulation:
@@ -53,10 +53,10 @@ ign gazebo velocity_control.sdf --physics-engine ignition-physics-tpe-plugin # s
 ```
 
 To control the car movement, in a separate terminal window, we publish a
-Twist message using Ignition Transport library:
+Twist message using Gazebo Transport library:
 
 ```bash
-ign topic -t "/model/vehicle_blue/cmd_vel" -m ignition.msgs.Twist -p "linear: {x: 1.0}, angular: {z: 0.5}"
+ign topic -t "/model/vehicle_blue/cmd_vel" -m gz.msgs.Twist -p "linear: {x: 1.0}, angular: {z: 0.5}"
 ```
 
 Then press the Play button to start the simulation.
@@ -85,7 +85,7 @@ in the model. For more detail about the kinematics of the model tree, see this
 
 #### Collision effect
 
-Ignition Gazebo also simulates realistic collision effect. While the `vehicle_blue`
+Gazebo also simulates realistic collision effect. While the `vehicle_blue`
 car is moving in a circle, we can move the `vehicle_green` to be on `vehicle_blue`'s
 upcoming path. The blue car will then push the green car in the following demo.
 
@@ -97,13 +97,13 @@ please see this [SDFormat tutorial](http://sdformat.org/tutorials?tut=spec_shape
 ### Lift Drag
 
 The Lift Drag demo world shows how joint force, torque, and pressure are supported in
-Ignition Physics. To run the demo, download by:
+Gazebo Physics. To run the demo, download by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/lift_drag.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/lift_drag.sdf -P ~
 ```
 
-Run demo in Ignition Gazebo by:
+Run demo in Gazebo by:
 
 ```bash
 ign gazebo lift_drag.sdf
@@ -114,13 +114,13 @@ Double message represeting the torque (Nm) applying to
 the rotor rod axis:
 
 ```bash
-ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m ignition.msgs.Double  -p "data: 0.7"
+ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m gz.msgs.Double  -p "data: 0.7"
 ```
 
 Then please press Play button to start the simulation.
 
 ```bash
-ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m ignition.msgs.Double  -p "data: 0.0"
+ign topic -t "/model/lift_drag_demo_model/joint/rod_1_joint/cmd_force" -m gz.msgs.Double  -p "data: 0.0"
 ```
 
 You will see the cube drops due to no lift force from support torque on the rod,
@@ -132,7 +132,7 @@ Several simulation features come into effect in this demo. The lift and drag for
 
 ### Buoyancy
 
-This demo world shows how buoyancy is supported in Ignition Physics. This world
+This demo world shows how buoyancy is supported in Gazebo Physics. This world
 contains the following three models:
 
   1. submarine: A simple submarine model that floats in place.
@@ -142,10 +142,10 @@ contains the following three models:
 To run the demo, download the Buoyancy demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/buoyancy.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/buoyancy.sdf -P ~
 ```
 
-Run demo on Ignition Gazebo by:
+Run demo on Gazebo by:
 
 ```bash
 ign gazebo buoyancy.sdf
@@ -167,10 +167,10 @@ movement by showing free swing of the pendulum. Download the
 Pendulum demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/video_record_dbl_pendulum.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/video_record_dbl_pendulum.sdf -P ~
 ```
 
-and start the Pendulum demo on Ignition Gazebo by:
+and start the Pendulum demo on Gazebo by:
 
 ```bash
 ign gazebo video_record_dbl_pendulum.sdf
@@ -190,15 +190,15 @@ the inertia and mass of the links.
 
 ### Multicopter
 
-This demo world shows how Ignition Physics supports gravity, actuators and
+This demo world shows how Gazebo Physics supports gravity, actuators and
 inertia to control object velocity.
 Download the Multicopter demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/ignitionrobotics/ign-gazebo/main/examples/worlds/multicopter_velocity_control.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/multicopter_velocity_control.sdf -P ~
 ```
 
-and start the Multicopter demo on Ignition Gazebo by:
+and start the Multicopter demo on Gazebo by:
 
 ```bash
 ign gazebo multicopter_velocity_control.sdf
@@ -209,13 +209,13 @@ Twist message to command the `X3` multicopter
 ascending 0.1 m.s as follow:
 
 ```bash
-ign topic -t "/X3/gazebo/command/twist" -m ignition.msgs.Twist -p "linear: {x:0 y: 0 z: 0.1} angular {z: 0}"
+ign topic -t "/X3/gazebo/command/twist" -m gz.msgs.Twist -p "linear: {x:0 y: 0 z: 0.1} angular {z: 0}"
 ```
 
 then hovering:
 
 ```bash
-ign topic -t "/X3/gazebo/command/twist" -m ignition.msgs.Twist -p " "
+ign topic -t "/X3/gazebo/command/twist" -m gz.msgs.Twist -p " "
 ```
 
 @image html img/hover.gif width=100%
@@ -224,5 +224,5 @@ Do the same for the `X4` multicopter. After pressing the Play button, you will s
 both of the multicopters will ascend, this demonstrates how the physics engine
 utilizes model kinematics and dynamics to support simulating complex model and
 its controller. For more details about the multicopter controller, please see
-[MulticopterVelocityControl.cc](https://github.com/ignitionrobotics/ign-gazebo/blob/main/src/systems/multicopter_control/MulticopterVelocityControl.cc).
+[MulticopterVelocityControl.cc](https://github.com/gazebosim/gz-sim/blob/main/src/systems/multicopter_control/MulticopterVelocityControl.cc).
 

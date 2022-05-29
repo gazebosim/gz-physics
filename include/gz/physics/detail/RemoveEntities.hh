@@ -21,7 +21,7 @@
 #include <string>
 #include <gz/physics/RemoveEntities.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

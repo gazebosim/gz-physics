@@ -22,27 +22,27 @@
 #include <string>
 #include <vector>
 
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/PluginPtr.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/plugin/PluginPtr.hh>
+#include <gz/physics/RequestEngine.hh>
 
-#include <ignition/physics/RevoluteJoint.hh>
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/RevoluteJoint.hh>
+#include <gz/physics/FrameSemantics.hh>
 
 #include "../MockJoints.hh"
 #include "../Utils.hh"
 
-using namespace ignition::physics;
-using namespace ignition::physics::test;
+using namespace gz::physics;
+using namespace gz::physics::test;
 
 /////////////////////////////////////////////////
-ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
+gz::plugin::PluginPtr LoadMockJointTypesPlugin(
     const std::string &_suffix)
 {
-  ignition::plugin::Loader pl;
+  gz::plugin::Loader pl;
   auto plugins = pl.LoadLib(MockJoints_LIB);
 
-  ignition::plugin::PluginPtr plugin =
+  gz::plugin::PluginPtr plugin =
       pl.Instantiate("mock::JointPlugin"+_suffix);
   EXPECT_FALSE(plugin.IsEmpty());
 

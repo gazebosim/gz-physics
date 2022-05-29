@@ -23,13 +23,13 @@
 #include <gz/physics/DeclareJointType.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
     IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint)
 
-    class IGNITION_PHYSICS_VISIBLE GetPrismaticJointProperties
+    class GZ_PHYSICS_VISIBLE GetPrismaticJointProperties
         : public virtual FeatureWithRequirements<PrismaticJointCast>
     {
       /// \brief The API for getting basic prismatic joint properties
@@ -65,7 +65,7 @@ namespace ignition
     /// \brief Provide the API for setting a prismatic joint's axis. Not all
     /// physics engines are able to change properties during run-time, so some
     /// might support getting the joint axis but not setting it.
-    class IGNITION_PHYSICS_VISIBLE SetPrismaticJointProperties
+    class GZ_PHYSICS_VISIBLE SetPrismaticJointProperties
         : public virtual FeatureWithRequirements<PrismaticJointCast>
     {
       /// \brief The API for setting basic prismatic joint properties
@@ -100,7 +100,7 @@ namespace ignition
     /// \brief Provide the API for attaching a Link to another Link (or directly
     /// to the World) with a prismatic joint. After calling AttachPrismaticJoint
     /// the Link's parent joint will be a prismatic joint.
-    class IGNITION_PHYSICS_VISIBLE AttachPrismaticJointFeature
+    class GZ_PHYSICS_VISIBLE AttachPrismaticJointFeature
         : public virtual FeatureWithRequirements<PrismaticJointCast>
     {
       public: template <typename PolicyT, typename FeaturesT>

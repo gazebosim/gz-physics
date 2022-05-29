@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <sdf/Joint.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace bullet {
 
@@ -29,7 +29,7 @@ double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -49,12 +49,12 @@ double JointFeatures::GetJointPosition(
         }
         else
         {
-          ignerr << "Corrupted joint at index:" << _id.id << "\n";
+          gzerr << "Corrupted joint at index:" << _id.id << "\n";
         }
       }
       break;
     default:
-      ignwarn << "Not a valid getJointPosition type: " << jointType << "\n";
+      gzwarn << "Not a valid getJointPosition type: " << jointType << "\n";
       break;
     }
   }
@@ -66,7 +66,7 @@ double JointFeatures::GetJointVelocity(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -111,12 +111,12 @@ double JointFeatures::GetJointVelocity(
         }
         else
         {
-          ignerr << "Corrupted joint at index:" << _id.id << "\n";
+          gzerr << "Corrupted joint at index:" << _id.id << "\n";
         }
       }
       break;
       default:
-        ignwarn << "Not a valid getJointVelocity type: " << jointType << "\n";
+        gzwarn << "Not a valid getJointVelocity type: " << jointType << "\n";
         break;
     }
   }
@@ -128,7 +128,7 @@ double JointFeatures::GetJointAcceleration(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -179,12 +179,12 @@ double JointFeatures::GetJointAcceleration(
         }
         else
         {
-          ignerr << "Corrupted joint at index:" << _id.id << "\n";
+          gzerr << "Corrupted joint at index:" << _id.id << "\n";
         }
       }
       break;
     default:
-      ignwarn << "Not a valid getJointAcceleration type: " << jointType << "\n";
+      gzwarn << "Not a valid getJointAcceleration type: " << jointType << "\n";
       break;
     }
   }
@@ -196,7 +196,7 @@ double JointFeatures::GetJointForce(
     const Identity &_id, const std::size_t _dof) const
 {
   (void) _dof;
-  double result = ignition::math::NAN_D;
+  double result = gz::math::NAN_D;
   if (this->joints.find(_id.id) != this->joints.end())
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
@@ -237,12 +237,12 @@ double JointFeatures::GetJointForce(
         }
         else
         {
-          ignerr << "Corrupted joint at index:" << _id.id << "\n";
+          gzerr << "Corrupted joint at index:" << _id.id << "\n";
         }
       }
       break;
     default:
-      ignwarn << "Not a valid getJointForce type: " << jointType << "\n";
+      gzwarn << "Not a valid getJointForce type: " << jointType << "\n";
       break;
     }
   }
@@ -253,7 +253,7 @@ double JointFeatures::GetJointForce(
 Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 {
   (void) _id;
-  ignwarn << "Dummy function GetJointTransform\n";
+  gzwarn << "Dummy function GetJointTransform\n";
   return Pose3d();
 }
 
@@ -264,7 +264,7 @@ void JointFeatures::SetJointPosition(
   (void) _id;
   (void) _dof;
   (void) _value;
-  ignwarn << "Dummy function SetJointPosition\n";
+  gzwarn << "Dummy function SetJointPosition\n";
 }
 
 /////////////////////////////////////////////////
@@ -274,7 +274,7 @@ void JointFeatures::SetJointVelocity(
   (void) _id;
   (void) _dof;
   (void) _value;
-  ignwarn << "Dummy SetJointVelocity\n";
+  gzwarn << "Dummy SetJointVelocity\n";
 }
 
 /////////////////////////////////////////////////
@@ -284,7 +284,7 @@ void JointFeatures::SetJointAcceleration(
   (void) _id;
   (void) _dof;
   (void) _value;
-  ignwarn << "Dummy SetJointAcceleration\n";
+  gzwarn << "Dummy SetJointAcceleration\n";
 }
 
 /////////////////////////////////////////////////
@@ -332,7 +332,7 @@ void JointFeatures::SetJointForce(
       }
       break;
     default:
-      ignwarn << "Not a valid setJointForce type: " << jointType << "\n";
+      gzwarn << "Not a valid setJointForce type: " << jointType << "\n";
       break;
     }
   }
@@ -349,7 +349,7 @@ void JointFeatures::SetJointVelocityCommand(
   // Take extra care that the value is finite
   if (!std::isfinite(_value))
   {
-    ignerr << "Invalid joint velocity value [" << _value << "] set on joint ["
+    gzerr << "Invalid joint velocity value [" << _value << "] set on joint ["
            << jointInfo->name << " DOF " << _dof
            << "]. The value will be ignored\n";
     return;
@@ -364,13 +364,13 @@ void JointFeatures::SetJointVelocityCommand(
     btTransform trans;
     link->getMotionState()->getWorldTransform(trans);
     btVector3 motion = quatRotate(trans.getRotation(),
-      convertVec(ignition::math::eigen3::convert(jointInfo->axis)));
+      convertVec(gz::math::eigen3::convert(jointInfo->axis)));
     btVector3 angular_vel = motion * _value;
     link->setAngularVelocity(angular_vel);
   }
   break;
   default:
-    ignwarn << "Not a valid setJointVelocityCommand type: "
+    gzwarn << "Not a valid setJointVelocityCommand type: "
             << jointInfo->constraintType << "\n";
     break;
   }
@@ -393,7 +393,7 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
   (void) _id;
-  ignwarn << "Dummy get joint transform from parent\n";
+  gzwarn << "Dummy get joint transform from parent\n";
   return Pose3d();
 }
 
@@ -401,7 +401,7 @@ Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
   (void) _id;
-  ignwarn << "Dummy get joint transform to child\n";
+  gzwarn << "Dummy get joint transform to child\n";
   return Pose3d();
 }
 
@@ -454,10 +454,10 @@ AngularVector3d JointFeatures::GetRevoluteJointAxis(
       return AngularVector3d(vec[0], vec[1], vec[2]);
     }
   }
-  ignerr << "Error getting revolute Joint axis: " << _jointID.id << " \n";
+  gzerr << "Error getting revolute Joint axis: " << _jointID.id << " \n";
   return AngularVector3d();
 }
 
 }  // namespace bullet
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz

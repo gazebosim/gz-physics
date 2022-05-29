@@ -5,13 +5,22 @@ Deprecated code produces compile-time warnings. These warning serve as
 notification to users that their code should be upgraded. The next major
 release will remove the deprecated code.
 
-## Ignition Physics 4.X to 5.X
+## Gazebo Physics 5.X to 6.X
+
+### Deprecation
+
+1. The `ignition` namespace is deprecated and will be removed in future versions.  Use `gz` instead.
+
+1. Header files under `ignition/...` are deprecated and will be removed in future versions.
+   Use `gz/...` instead.
+
+## Gazebo Physics 4.X to 5.X
 
 ### Modifications
 
 1. Depends on sdformat12.
 
-## Ignition Physics 4.1 to 4.2
+## Gazebo Physics 4.1 to 4.2
 
 ### Additions
 
@@ -21,7 +30,7 @@ release will remove the deprecated code.
 
 1. TPE: Capsule and Ellipsoid shapes added.
 
-## Ignition Physics 3.X to 4.X
+## Gazebo Physics 3.X to 4.X
 
 ### Modifications
 
@@ -29,7 +38,7 @@ release will remove the deprecated code.
 
 1. Depends on sdformat11.
 
-1. `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupCanonicalLink` 
+1. `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupCanonicalLink`
    has been replaced by `ignition::physics::FindFreeGroupFeature::Implementation::GetFreeGroupRootLink`.
 
 ### Deprecations
@@ -38,13 +47,13 @@ release will remove the deprecated code.
     + **Deprecation:** `Identity ignition::physics::FreeGroup::CanonicalLink(const Identity &_groupID)`
     + **Replacement:** `Identity ignition::physics::FreeGroup::RootLink(const Identity &_groupID)`
 
-## Ignition Physics 2.X to 3.X
+## Gazebo Physics 2.X to 3.X
 
 ### Modifications
 
 1. Depends on sdformat10.
 
-## Ignition Physics 1.X to 2.X
+## Gazebo Physics 1.X to 2.X
 
 ### Modifications
 

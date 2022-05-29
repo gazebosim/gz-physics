@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_FREEGROUPFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_FREEGROUPFEATURES_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_FREEGROUPFEATURES_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_FREEGROUPFEATURES_HH_
 
-#include <ignition/physics/FreeGroup.hh>
+#include <gz/physics/FreeGroup.hh>
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

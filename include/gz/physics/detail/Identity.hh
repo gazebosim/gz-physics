@@ -24,7 +24,7 @@
 #include <gz/physics/Export.hh>
 #include <gz/utils/SuppressWarning.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -37,7 +37,7 @@ namespace ignition
       /////////////////////////////////////////////////
       /// \brief This base class is used by plugin implementations to generate
       /// identities for entities.
-      class IGNITION_PHYSICS_VISIBLE Implementation
+      class GZ_PHYSICS_VISIBLE Implementation
       {
         /// \brief An implementation class should call this function whenever it
         /// wants to generate an identity for an Entity.
@@ -70,7 +70,7 @@ namespace ignition
     /// separate class in order to have tight control over how Entities can be
     /// instantiated; in particular, an Identity can only be created by a
     /// plugin implementation, so users cannot create invalid Entities.
-    class IGNITION_PHYSICS_VISIBLE Identity
+    class GZ_PHYSICS_VISIBLE Identity
     {
       /// \brief Convert to true if this Identity refers to a valid entity (i.e.
       /// its id field is not INVALID_ENTITY_ID).
@@ -109,8 +109,8 @@ namespace ignition
           const std::shared_ptr<void> &_ref);
 
       // These friends are the only classes allowed to create an identity
-      template <typename, typename> friend class ::ignition::physics::Entity;
-      friend class ::ignition::physics::detail::Implementation;
+      template <typename, typename> friend class ::gz::physics::Entity;
+      friend class ::gz::physics::detail::Implementation;
     };
   }
 }

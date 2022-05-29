@@ -15,16 +15,16 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 
@@ -32,7 +32,7 @@
 
 #include "AABBTree.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -40,7 +40,7 @@ namespace tpelib {
 class CollisionDetectorPrivate;
 
 /// \brief A data structure to store contact properties
-class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
+class GZ_PHYSICS_TPELIB_VISIBLE Contact
 {
   /// \brief Id of frst collision entity
   public: std::size_t entity1 = kNullEntityId;
@@ -55,7 +55,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE Contact
 };
 
 /// \brief Collision Detector that checks collisions between a list of entities
-class IGNITION_PHYSICS_TPELIB_VISIBLE CollisionDetector
+class GZ_PHYSICS_TPELIB_VISIBLE CollisionDetector
 {
   /// \brief Constructor
   public: CollisionDetector();

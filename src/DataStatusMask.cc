@@ -15,9 +15,9 @@
  *
 */
 
-#include "ignition/physics/DataStatusMask.hh"
+#include "gz/physics/DataStatusMask.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

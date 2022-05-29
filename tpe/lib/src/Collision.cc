@@ -15,12 +15,12 @@
  *
 */
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "Collision.hh"
 
 /// \brief Private data class for Collision
-class ignition::physics::tpelib::CollisionPrivate
+class gz::physics::tpelib::CollisionPrivate
 {
   /// \brief Collision's geometry shape
   public: std::shared_ptr<Shape> shape = nullptr;
@@ -29,7 +29,7 @@ class ignition::physics::tpelib::CollisionPrivate
   public: uint16_t collideBitmask = 0xFF;
 };
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 
@@ -105,7 +105,7 @@ void Collision::SetShape(const Shape &_shape)
   }
   else
   {
-    ignwarn << "Failed to set shape." << std::endl;
+    gzwarn << "Failed to set shape." << std::endl;
   }
 }
 
