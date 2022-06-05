@@ -18,7 +18,10 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_BASE_HH_
 #define IGNITION_PHYSICS_DARTSIM_BASE_HH_
 
+#include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/BodyNode.hpp>
+#include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/SimpleFrame.hpp>
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
@@ -32,6 +35,7 @@
 #include <vector>
 
 #include <ignition/common/Console.hh>
+#include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Inertial.hh>
 #include <ignition/physics/Implements.hh>
 
@@ -361,6 +365,58 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.idToContainerID[id] = _modelID;
 
     return id;
+  }
+
+  public: inline DartBodyNode* SplitAndWeldLink(LinkInfo *_link)
+  {
+    // First create a new body node with FreeJoint and a unique name based
+    // on the number of welded miror nodes.
+    dart::dynamics::BodyNode::Properties weldedBodyProperties;
+    {
+      std::size_t weldedBodyCount = _link->weldedNodes.size();
+      weldedBodyProperties.mName =
+          _link->name + "_welded_mirror_" + std::to_string(weldedBodyCount);
+    }
+    dart::dynamics::FreeJoint::Properties jointProperties;
+    jointProperties.mName = weldedBodyProperties.mName + "_FreeJoint";
+    DartSkeletonPtr skeleton = _link->link->getSkeleton();
+    auto pairJointBodyNode =
+      skeleton->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
+        nullptr, jointProperties, weldedBodyProperties);
+
+    // Weld the new body node to the original
+    auto weld = std::make_shared<dart::constraint::WeldJointConstraint>(
+        _link->link, pairJointBodyNode.second);
+    _link->weldedNodes.emplace_back(pairJointBodyNode.second, weld);
+    auto worldId = this->GetWorldOfModelImpl(models.objectToID[skeleton]);
+    auto dartWorld = this->worlds.at(worldId);
+    dartWorld->getConstraintSolver()->addConstraint(weld);
+
+    // Rebalance the link inertia between the original body node and its
+    // welded mirror nodes if inertial data is available.
+    if (_link->inertial)
+    {
+      std::size_t nodeCount = 1 + _link->weldedNodes.size();
+      const double mass = _link->inertial->MassMatrix().Mass() / nodeCount;
+      const math::Matrix3d moi = _link->inertial->Moi() * (1 / nodeCount);
+      const math::Vector3d cog = _link->inertial->Pose().Pos();
+
+      _link->link->setMass(mass);
+      _link->link->setMomentOfInertia(
+          moi(0, 0), moi(1, 1), moi(2, 2),
+          moi(0, 1), moi(0, 2), moi(1, 2));
+      _link->link->setLocalCOM(math::eigen3::convert(cog));
+      for (auto weldedNodePair : _link->weldedNodes)
+      {
+        weldedNodePair.first->setMass(mass);
+        weldedNodePair.first->setMomentOfInertia(
+            moi(0, 0), moi(1, 1), moi(2, 2),
+            moi(0, 1), moi(0, 2), moi(1, 2));
+        weldedNodePair.first->setLocalCOM(math::eigen3::convert(cog));
+      }
+    }
+
+    return pairJointBodyNode.second;
   }
 
   public: inline std::size_t AddJoint(DartJoint *_joint)
