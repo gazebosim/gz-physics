@@ -24,6 +24,7 @@
 #include <dart/simulation/World.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -31,6 +32,7 @@
 #include <vector>
 
 #include <ignition/common/Console.hh>
+#include <ignition/math/Inertial.hh>
 #include <ignition/physics/Implements.hh>
 
 #include <sdf/Types.hh>
@@ -57,6 +59,16 @@ struct LinkInfo
   /// moving the BodyNode to a new skeleton), so we store the Gazebo-specified
   /// name of the Link here.
   std::string name;
+  /// \brief To close kinematic loops, a body node may be divided into separate
+  /// nodes that are welded together using a WeldJointConstraint. The inertia
+  /// is divided evenly between these body nodes. This matches the approach
+  /// used in gazebo-classic.
+  std::vector< std::pair<
+      dart::dynamics::BodyNode *,
+      dart::constraint::WeldJointConstraintPtr> > weldedNodes;
+  /// \brief The total link inertia, which may be split between the `link` and
+  /// `weldedNodes` body nodes.
+  std::optional<math::Inertiald> inertial;
 };
 
 struct ModelInfo
@@ -319,7 +331,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: inline std::size_t AddLink(DartBodyNode *_bn,
-        const std::string &_fullName, std::size_t _modelID)
+        const std::string &_fullName, std::size_t _modelID,
+        std::optional<math::Inertiald> _inertial = std::nullopt)
   {
     const std::size_t id = this->GetNextEntity();
     auto linkInfo = std::make_shared<LinkInfo>();
@@ -328,6 +341,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     // The name of the BodyNode during creation is assumed to be the
     // Gazebo-specified name.
     linkInfo->name = _bn->getName();
+    // Inertial properties (if available) used when splitting nodes to close
+    // kinematic loops.
+    linkInfo->inertial = _inertial;
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
