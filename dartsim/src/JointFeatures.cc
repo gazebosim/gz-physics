@@ -455,7 +455,7 @@ Identity JointFeatures::AttachFixedJoint(
     const std::string &_name)
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
-  DartBodyNode *const bn = linkInfo->link.get();
+  DartBodyNode *bn = linkInfo->link.get();
   dart::dynamics::WeldJoint::Properties properties;
   properties.mName = _name;
 
@@ -465,8 +465,8 @@ Identity JointFeatures::AttachFixedJoint(
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    return this->GenerateInvalidId();
+    // split and weld the child body node, and attach to the new welded node
+    bn = SplitAndWeldLink(linkInfo);
   }
 
   {
