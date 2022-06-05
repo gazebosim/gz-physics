@@ -596,10 +596,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const Eigen::Matrix3d R_inertial{
         math::eigen3::convert(sdfInertia.Pose().Rot())};
 
-  const Eigen::Matrix3d I_link =
-      R_inertial
-      * math::eigen3::convert(sdfInertia.Moi())
-      * R_inertial.inverse();
+  const Eigen::Matrix3d I_link = math::eigen3::convert(sdfInertia.Moi());
 
   bodyProperties.mInertia.setMoment(I_link);
 
