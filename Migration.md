@@ -15,6 +15,7 @@ release will remove the deprecated code.
    Use `gz/...` instead.
 
 1. The following `IGN_` / `IGNITION_` prefixed macros are deprecated and will be removed in future versions.
+   Additionally, they will only be available when including the corresponding `ignition/...` header.
    Use the `GZ_` prefix instead.
    1. `IGN_PHYSICS_DECLARE_JOINT_TYPE`, `IGN_PHYSICS_DECLARE_SHAPE_TYPE`
 
