@@ -29,7 +29,7 @@
 /// Type2f // 2-dimensional version of Type with float precision
 /// Type3d // 3-dimensional version of Type with double precision
 /// Type3f // 3-dimensional version of Type with float precision
-#define IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Type) \
+#define GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(Type) \
   DETAIL_GZ_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 2) \
   DETAIL_GZ_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 3)
 
@@ -42,19 +42,19 @@ namespace gz
     /// float or scalar.
     template <typename Scalar, std::size_t Dim>
     using Pose = Eigen::Transform<Scalar, Dim, Eigen::Isometry>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Pose)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(Pose)
 
     template <typename Scalar, std::size_t Dim>
     using Vector = Eigen::Matrix<Scalar, Dim, 1>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Vector)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(Vector)
 
     template <typename Scalar, std::size_t Dim>
     using LinearVector = Vector<Scalar, Dim>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(LinearVector)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(LinearVector)
 
     template <typename Scalar, std::size_t Dim>
     using AngularVector = Vector<Scalar, (Dim*(Dim-1))/2>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AngularVector)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(AngularVector)
 
     template <typename Scalar, std::size_t Dim>
     struct Wrench
@@ -62,11 +62,11 @@ namespace gz
       AngularVector<Scalar, Dim> torque;
       LinearVector<Scalar, Dim> force;
     };
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Wrench)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(Wrench)
 
     template <typename Scalar, std::size_t Dim>
     using AlignedBox = Eigen::AlignedBox<Scalar, Dim>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(AlignedBox)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(AlignedBox)
 
     /////////////////////////////////////////////////
     /// \brief This struct is used to conveniently convert from a policy to a

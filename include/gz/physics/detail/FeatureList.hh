@@ -634,7 +634,7 @@ namespace gz
 
 #define DETAIL_GZ_PHYSICS_DEFINE_ENTITY(X) \
   namespace detail { \
-    IGN_PHYSICS_CREATE_SELECTOR(X) \
+    GZ_PHYSICS_CREATE_SELECTOR(X) \
     /* Symbol used by X-types to identify other X-types */ \
     struct X ## Identifier { }; \
   } \

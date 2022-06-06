@@ -77,9 +77,9 @@ class GZ_PHYSICS_TPELIB_VISIBLE AABBTree
   public: bool HasNode(std::size_t _id) const;
 
   /// \brief Pointer to the private data
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   private: std::unique_ptr<AABBTreePrivate> dataPtr;
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 }
 }

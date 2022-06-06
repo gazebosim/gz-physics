@@ -112,10 +112,10 @@ class GZ_PHYSICS_TPELIB_VISIBLE BoxShape : public Shape
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
 
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief Size of box
   private: math::Vector3d size;
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 /// \brief Capsule geometry
@@ -208,10 +208,10 @@ class GZ_PHYSICS_TPELIB_VISIBLE EllipsoidShape : public Shape
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
 
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief ellipsoid radius
   private: math::Vector3d radii = math::Vector3d::Zero;
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 /// \brief Sphere geometry
@@ -262,10 +262,10 @@ class GZ_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
   // Documentation inherited
   protected: virtual void UpdateBoundingBox() override;
 
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief Mesh scale
   private: math::Vector3d scale{1.0, 1.0, 1.0};
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 
   /// \brief Mesh object
   private: math::AxisAlignedBox meshAABB;

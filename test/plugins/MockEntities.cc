@@ -285,7 +285,7 @@ namespace mock
   class EntitiesPlugin3d
       : public EntitiesPlugin<gz::physics::FeaturePolicy3d> { };
 
-  IGN_PHYSICS_ADD_PLUGIN(
+  GZ_PHYSICS_ADD_PLUGIN(
       EntitiesPlugin3d,
       gz::physics::FeaturePolicy3d,
       MockFeatureList)
@@ -293,7 +293,7 @@ namespace mock
   class EntitiesPlugin2d
     : public EntitiesPlugin<gz::physics::FeaturePolicy2d> { };
 
-  IGN_PHYSICS_ADD_PLUGIN(
+  GZ_PHYSICS_ADD_PLUGIN(
       EntitiesPlugin2d,
       gz::physics::FeaturePolicy2d,
       MockFeatureList)

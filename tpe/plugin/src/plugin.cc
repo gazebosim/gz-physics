@@ -52,7 +52,7 @@ class Plugin :
   public virtual ShapeFeatures,
   public virtual SimulationFeatures { };
 
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpePluginFeatures)
+GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpePluginFeatures)
 
 }
 }

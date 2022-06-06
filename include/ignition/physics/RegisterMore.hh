@@ -17,3 +17,6 @@
 
 #include <gz/physics/RegisterMore.hh>
 #include <ignition/physics/config.hh>
+
+#define IGN_PHYSICS_REGISTER_MORE_TRANS_UNITS \
+  GZ_PHYSICS_REGISTER_MORE_TRANS_UNITS

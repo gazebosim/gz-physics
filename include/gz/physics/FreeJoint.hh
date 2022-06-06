@@ -25,7 +25,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(FreeJoint)
+    GZ_PHYSICS_DECLARE_JOINT_TYPE(FreeJoint)
 
     class GZ_PHYSICS_VISIBLE SetFreeJointRelativeTransformFeature
         : public virtual FeatureWithRequirements<FreeJointCast>

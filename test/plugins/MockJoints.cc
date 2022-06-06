@@ -315,7 +315,7 @@ namespace mock
   class JointPlugin3d
       : public JointPlugin<gz::physics::FeaturePolicy3d> { };
 
-  IGN_PHYSICS_ADD_PLUGIN(
+  GZ_PHYSICS_ADD_PLUGIN(
       JointPlugin3d,
       gz::physics::FeaturePolicy3d,
       MockJointList)
@@ -323,7 +323,7 @@ namespace mock
   class JointPlugin2d
       : public JointPlugin<gz::physics::FeaturePolicy2d> { };
 
-  IGN_PHYSICS_ADD_PLUGIN(
+  GZ_PHYSICS_ADD_PLUGIN(
       JointPlugin2d,
       gz::physics::FeaturePolicy2d,
       MockJointList)
@@ -331,7 +331,7 @@ namespace mock
   class JointPlugin3f
       : public JointPlugin<gz::physics::FeaturePolicy3f> { };
 
-  IGN_PHYSICS_ADD_PLUGIN(
+  GZ_PHYSICS_ADD_PLUGIN(
       JointPlugin3f,
       gz::physics::FeaturePolicy3f,
       MockJointList)
@@ -339,7 +339,7 @@ namespace mock
   class JointPlugin2f
       : public JointPlugin<gz::physics::FeaturePolicy2f> { };
 
-  IGN_PHYSICS_ADD_PLUGIN(
+  GZ_PHYSICS_ADD_PLUGIN(
       JointPlugin2f,
       gz::physics::FeaturePolicy2f,
       MockJointList)

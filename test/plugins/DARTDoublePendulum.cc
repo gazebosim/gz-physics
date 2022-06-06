@@ -325,7 +325,7 @@ namespace mock
     };
 
     using FeaturePolicy3d = gz::physics::FeaturePolicy3d;
-    IGN_PHYSICS_ADD_PLUGIN(
+    GZ_PHYSICS_ADD_PLUGIN(
         DARTDoublePendulum,
         FeaturePolicy3d,
         MockDoublePendulumList)

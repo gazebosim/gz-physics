@@ -119,7 +119,7 @@ static double InvertThreadPitch(double _pitch)
     assert(false);
   }
 
-  return -2.0 * IGN_PI / _pitch;
+  return -2.0 * GZ_PI / _pitch;
 }
 
 /////////////////////////////////////////////////

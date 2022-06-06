@@ -55,7 +55,7 @@ class Plugin :
     public virtual JointFeatures
 {};
 
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
+GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 
 }  // namespace bullet
 }  // namespace physics

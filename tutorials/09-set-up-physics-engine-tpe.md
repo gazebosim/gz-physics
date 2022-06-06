@@ -97,7 +97,7 @@ class Plugin :
   public virtual Base,
   public virtual EntityManagementFeatures { };
 
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpePluginFeatures)
+GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, TpePluginFeatures)
 
 }
 }
@@ -112,7 +112,7 @@ class (optionally depending on software design)
 and \ref gz::physics::Implements "Implements" class implementing
 \ref gz::physics::FeaturePolicy "FeaturePolicy" 2D or 3D and different
 scalar type.
-- Register the physics plugin using `IGN_PHYSICS_ADD_PLUGIN` macro (See
+- Register the physics plugin using `GZ_PHYSICS_ADD_PLUGIN` macro (See
   \ref createphysicsplugin "Implement a physics plugin" for more detail).
 
 ### Implement a feature using TPE's API

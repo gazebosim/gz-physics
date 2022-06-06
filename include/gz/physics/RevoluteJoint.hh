@@ -27,7 +27,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint)
+    GZ_PHYSICS_DECLARE_JOINT_TYPE(RevoluteJoint)
 
     class GZ_PHYSICS_VISIBLE GetRevoluteJointProperties
         : public virtual FeatureWithRequirements<RevoluteJointCast>

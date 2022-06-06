@@ -40,7 +40,7 @@ namespace simpleplugin {
     }
   };
 
-  IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, SimplePluginFeatures)
+  GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, SimplePluginFeatures)
 
 }
 }
