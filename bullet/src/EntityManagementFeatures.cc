@@ -168,6 +168,104 @@ bool EntityManagementFeatures::RemoveModelByName(
   return false;
 }
 
+const std::string &EntityManagementFeatures::GetEngineName(const Identity &) const
+{
+  static const std::string engineName = "bullet";
+  return engineName;
+}
+
+std::size_t EntityManagementFeatures::GetEngineIndex(const Identity &) const
+{
+  return 0;
+}
+
+std::size_t EntityManagementFeatures::GetWorldCount(const Identity &) const
+{
+  return worlds.size();
+}
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, std::size_t _worldIndex) const
+{
+}
+
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, const std::string &_worldName) const {}
+const std::string &EntityManagementFeatures::GetWorldName(
+    const Identity &_worldID) const {}
+
+std::size_t EntityManagementFeatures::GetWorldIndex(const Identity &_worldID) const {}
+
+Identity EntityManagementFeatures::GetEngineOfWorld(const Identity &_worldID) const {}
+
+std::size_t EntityManagementFeatures::GetModelCount(
+    const Identity &_worldID) const {}
+
+Identity EntityManagementFeatures::GetModel(
+    const Identity &_worldID, std::size_t _modelIndex) const {}
+
+Identity EntityManagementFeatures::GetModel(
+    const Identity &_worldID, const std::string &_modelName) const {}
+
+const std::string &EntityManagementFeatures::GetModelName(
+    const Identity &_modelID) const {}
+
+std::size_t EntityManagementFeatures::GetModelIndex(const Identity &_modelID) const {}
+
+Identity EntityManagementFeatures::GetWorldOfModel(const Identity &_modelID) const {}
+
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+  const Identity &_modelID) const {}
+
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &_modelID, std::size_t _modelIndex) const {}
+
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &_modelID, const std::string &_modelName) const {}
+
+std::size_t EntityManagementFeatures::GetLinkCount(const Identity &_modelID) const {}
+
+Identity EntityManagementFeatures::GetLink(
+    const Identity &_modelID, std::size_t _linkIndex) const {}
+
+Identity EntityManagementFeatures::GetLink(
+    const Identity &_modelID, const std::string &_linkName) const {}
+
+std::size_t EntityManagementFeatures::GetJointCount(const Identity &_modelID) const {}
+
+Identity EntityManagementFeatures::GetJoint(
+    const Identity &_modelID, std::size_t _jointIndex) const {}
+
+Identity EntityManagementFeatures::GetJoint(
+    const Identity &_modelID, const std::string &_jointName) const {}
+
+const std::string &EntityManagementFeatures::GetLinkName(
+    const Identity &_linkID) const {}
+
+std::size_t EntityManagementFeatures::GetLinkIndex(const Identity &_linkID) const {}
+
+Identity EntityManagementFeatures::GetModelOfLink(const Identity &_linkID) const {}
+
+std::size_t EntityManagementFeatures::GetShapeCount(const Identity &_linkID) const {}
+
+Identity EntityManagementFeatures::GetShape(
+    const Identity &_linkID, std::size_t _shapeIndex) const {}
+
+Identity EntityManagementFeatures::GetShape(
+    const Identity &_linkID, const std::string &_shapeName) const {}
+
+const std::string &EntityManagementFeatures::GetJointName(
+    const Identity &_jointID) const {}
+
+std::size_t EntityManagementFeatures::GetJointIndex(const Identity &_jointID) const {}
+
+Identity EntityManagementFeatures::GetModelOfJoint(const Identity &_jointID) const {}
+
+const std::string &EntityManagementFeatures::GetShapeName(
+    const Identity &_shapeID) const {}
+
+std::size_t EntityManagementFeatures::GetShapeIndex(const Identity &_shapeID) const {}
+
+Identity EntityManagementFeatures::GetLinkOfShape(const Identity &_shapeID) const {}
 }  // namespace bullet
 }  // namespace physics
 }  // namespace gz

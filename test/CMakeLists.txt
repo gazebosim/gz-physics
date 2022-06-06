@@ -9,6 +9,8 @@ include_directories (
   ${CMAKE_BINARY_DIR}/include
 )
 
+configure_file (test_integration_config.h.in ${PROJECT_BINARY_DIR}/test_integration_config.h)
+
 # Build gtest
 add_library(gtest STATIC gtest/src/gtest-all.cc)
 add_library(gtest_main STATIC gtest/src/gtest_main.cc)
@@ -47,6 +49,7 @@ ExternalProject_Add(
 add_subdirectory(benchmark)
 add_subdirectory(plugins)
 add_subdirectory(integration)
+add_subdirectory(new_integration)
 add_subdirectory(performance)
 add_subdirectory(regression)
 add_subdirectory(static_assert)
