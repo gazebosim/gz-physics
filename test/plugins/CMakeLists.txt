@@ -1,6 +1,6 @@
 if (DART_FOUND)
   add_library(MockDoublePendulum SHARED DARTDoublePendulum.cc)
-  target_link_libraries(MockDoublePendulum PRIVATE ignition-common${IGN_COMMON_VER}::core)
+  target_link_libraries(MockDoublePendulum PRIVATE gz-common${GZ_COMMON_VER}::core)
 endif()
 add_library(MockEntities SHARED MockEntities.cc)
 add_library(MockFrames SHARED frames.cc)

@@ -4,7 +4,7 @@ ign_add_component(mesh INTERFACE
 
 target_link_libraries(${mesh}
   INTERFACE
-    ignition-common${IGN_COMMON_VER}::graphics)
+    gz-common${GZ_COMMON_VER}::graphics)
 
 install(
   DIRECTORY include/

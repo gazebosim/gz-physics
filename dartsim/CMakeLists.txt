@@ -30,17 +30,17 @@ target_link_libraries(${dartsim_plugin}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    ignition-common${IGN_COMMON_VER}::geospatial
-    ignition-math${IGN_MATH_VER}::eigen3
+    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+    gz-common${GZ_COMMON_VER}::geospatial
+    gz-math${GZ_MATH_VER}::eigen3
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
-    ignition-common${IGN_COMMON_VER}::profiler
+    gz-common${GZ_COMMON_VER}::profiler
 )
 
-# The ignition fork of DART contains additional code that allows customizing 
-# contact constraints. We check for the presence of "ContactSurface.hpp", which 
-# was added to enable these customizations, to detect if the feature is 
+# The Gazebo fork of DART contains additional code that allows customizing
+# contact constraints. We check for the presence of "ContactSurface.hpp", which
+# was added to enable these customizations, to detect if the feature is
 # available.
 include(CheckIncludeFileCXX)
 if (MSVC)
@@ -62,7 +62,7 @@ endif()
 install(TARGETS ${dartsim_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
 # The library created by `ign_add_component` includes the ign-physics version
-# (i.e. libignition-physics1-name-plugin.so), but for portability,
+# (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${dartsim_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
 set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -83,9 +83,9 @@ ign_build_tests(
   SOURCES ${test_sources}
   LIB_DEPS
     ${features}
-    ignition-plugin${IGN_PLUGIN_VER}::loader
-    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    ignition-common${IGN_COMMON_VER}::geospatial
+    gz-plugin${GZ_PLUGIN_VER}::loader
+    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+    gz-common${GZ_COMMON_VER}::geospatial
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
