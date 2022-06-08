@@ -4,9 +4,9 @@ gz_create_core_library(SOURCES ${sources} CXX_STANDARD 17)
 
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
-    ${ignition-math${IGN_MATH_VER}_LIBRARIES}
-    ignition-utils${IGN_UTILS_VER}::ignition-utils${IGN_UTILS_VER}
-    ignition-plugin${IGN_PLUGIN_VER}::register
+    ${gz-math${GZ_MATH_VER}_LIBRARIES}
+    gz-utils${GZ_UTILS_VER}::gz-utils${GZ_UTILS_VER}
+    gz-plugin${GZ_PLUGIN_VER}::register
     Eigen3::Eigen)
 
 gz_build_tests(
@@ -15,5 +15,5 @@ gz_build_tests(
 
 if(TARGET UNIT_FindFeatures_TEST)
   target_link_libraries(UNIT_FindFeatures_TEST
-    ignition-plugin${IGN_PLUGIN_VER}::loader)
+    gz-plugin${GZ_PLUGIN_VER}::loader)
 endif()

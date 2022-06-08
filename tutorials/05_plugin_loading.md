@@ -100,14 +100,14 @@ For example, if you have the Gazebo Physics plugin for
 (you may need administrative rights: `sudo` on Linux platform):
 
 ```bash
-find / | grep libignition-physics-dartsim-plugin.so
+find / | grep libgz-physics-dartsim-plugin.so
 ```
 
 You may find more than one file. Choose one of them, and load it with
 the loader by:
 
 ```bash
-./hello_world_loader <path_to>/libignition-physics-dartsim-plugin.so
+./hello_world_loader <path_to>/libgz-physics-dartsim-plugin.so
 ```
 
 And you'll see the engine info:
@@ -120,6 +120,6 @@ Testing plugin: gz::physics::dartsim::Plugin
 At the time of writing, Gazebo Physics is shipped with
 [DART](https://dartsim.github.io/) and [TPE](https://community.gazebosim.org/t/announcing-new-physics-engine-tpe-trivial-physics-engine/629)
 physics plugins installed. Following the above steps, you can load `TPE` by the
-library name `libignition-physics-tpe-plugin.so` or other custom plugins by
+library name `libgz-physics-tpe-plugin.so` or other custom plugins by
 their corresponding names.
 
