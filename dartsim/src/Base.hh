@@ -372,6 +372,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     // First create a new body node with FreeJoint and a unique name based
     // on the number of welded miror nodes.
     dart::dynamics::BodyNode::Properties weldedBodyProperties;
+    weldedBodyProperties.mIsCollidable = false;
     {
       std::size_t weldedBodyCount = _link->weldedNodes.size();
       weldedBodyProperties.mName =

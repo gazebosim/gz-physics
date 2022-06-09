@@ -462,22 +462,30 @@ Identity JointFeatures::AttachFixedJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
+  std::string childLinkName = linkInfo->name;
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
     // split and weld the child body node, and attach to the new welded node
     bn = SplitAndWeldLink(linkInfo);
+    childLinkName = bn->getName();
   }
 
   {
     auto skeleton = bn->getSkeleton();
     if (skeleton)
     {
-      bn->setName(skeleton->getName() + '/' + linkInfo->name);
+      bn->setName(skeleton->getName() + '/' + childLinkName);
     }
   }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+  if (linkInfo->weldedNodes.size() > 0)
+  {
+    // weld constraint needs to be updated after moving to new skeleton
+    auto constraint = linkInfo->weldedNodes.back().second;
+    constraint->setRelativeTransform(Eigen::Isometry3d::Identity());
+  }
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();
