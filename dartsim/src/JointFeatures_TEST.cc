@@ -21,6 +21,7 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <iostream>
 
 #include <ignition/physics/FindFeatures.hh>
@@ -949,6 +950,11 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
   physics::ForwardStep::Output output;
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
+  // 1 ms time step
+  const double dt = 0.001;
+  auto dur = std::chrono::duration<double>(dt);
+  input.Get<std::chrono::steady_clock::duration>() =
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
 
   // Create the first joint. This should be a normal fixed joint.
   const auto poseParent1 = dartBody1->getTransform();
@@ -1013,9 +1019,9 @@ TEST_F(JointFeaturesFixture, JointAttachMultiple)
         math::eigen3::convert(dartBody2->getLinearVelocity());
     math::Vector3d body3LinearVelocity =
         math::eigen3::convert(dartBody3->getLinearVelocity());
-    EXPECT_GT(0, body1LinearVelocity.Z());
+    EXPECT_NEAR(dt * (i + 1) * -9.81, body1LinearVelocity.Z(), 1e-3);
     EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
-    EXPECT_GT(0, body3LinearVelocity.Z());
+    EXPECT_NEAR(dt * (i + 1) * -9.81, body3LinearVelocity.Z(), 1e-3);
   }
 }
 
