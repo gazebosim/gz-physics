@@ -417,6 +417,7 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
+    this->linkByWeldedNode[pairJointBodyNode.second] = _link;
     return pairJointBodyNode.second;
   }
 
@@ -523,6 +524,10 @@ class Base : public Implements3d<FeatureList<Feature>>
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even
   /// as they move to other skeletons.
   public: std::unordered_map<std::string, DartBodyNode*> linksByName;
+
+  /// \brief Map from welded body nodes to the LinkInfo for the original link
+  /// they are welded to. This is useful when detaching joints.
+  public: std::unordered_map<DartBodyNode*, LinkInfo*> linkByWeldedNode;
 };
 
 }

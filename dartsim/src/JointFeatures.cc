@@ -377,12 +377,24 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
           dart::dynamics::Frame::World(),
           dart::dynamics::Frame::World());
 
-  if (!this->links.HasEntity(child))
+  LinkInfo *childLinkInfo;
+  if (this->links.HasEntity(child))
   {
+    childLinkInfo = this->links.at(child).get();
+  }
+  else if (this->linkByWeldedNode.find(child) !=
+           this->linkByWeldedNode.end())
+  {
+    childLinkInfo = this->linkByWeldedNode.at(child);
+  }
+  else
+  {
+    ignerr << "Could not find LinkInfo for child link [" << child->getName()
+           << "] when detaching joint "
+           << "[" << joint->getName() << "]. Joint detaching failed."
+           << std::endl;
     return;
   }
-
-  auto childLinkInfo = this->links.at(child);
 
   dart::dynamics::SkeletonPtr skeleton;
   {
