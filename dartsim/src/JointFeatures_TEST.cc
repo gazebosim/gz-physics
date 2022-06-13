@@ -1313,7 +1313,7 @@ TEST_F(JointFeaturesFixture, JointAttachMultipleDetachM3First)
         math::eigen3::convert(dartBody1->getLinearVelocity());
     math::Vector3d body2LinearVelocity =
         math::eigen3::convert(dartBody2->getLinearVelocity());
-    EXPECT_NEAR(dt * (i + 1) * -9.81, body1LinearVelocity.Z(), 1e-3);
+    EXPECT_NEAR(dt * (i + 1) * -9.81, body1LinearVelocity.Z(), 2e-3);
     EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
   }
 }
