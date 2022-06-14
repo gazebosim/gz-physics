@@ -2,7 +2,7 @@
 <sdf version="1.6">
   <world name="default">
     <plugin
-      filename="libgz-sim-physics-system.so"
+      filename="gz-sim-physics-system"
       name="gz::gazebo::systems::v0::Physics">
     </plugin>
     <model name="sphere">
