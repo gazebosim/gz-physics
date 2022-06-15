@@ -167,7 +167,8 @@ bool EntityManagementFeatures::RemoveModelByName(
 
   return false;
 }
-const std::string &EntityManagementFeatures::GetEngineName(const Identity &) const
+const std::string &EntityManagementFeatures::GetEngineName(
+  const Identity &) const
 {
   static const std::string engineName = "bullet";
   return engineName;
