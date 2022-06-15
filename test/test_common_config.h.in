@@ -1,0 +1,57 @@
+#ifndef GZ_PHYSICS_TEST_CONFIG_HH_
+#define GZ_PHYSICS_TEST_CONFIG_HH_
+
+#define PROJECT_SOURCE_PATH "${PROJECT_SOURCE_DIR}"
+#define PROJECT_BUILD_PATH "${PROJECT_BINARY_DIR}"
+#define GZ_PHYSICS_TEST_PLUGIN_PATH "${CMAKE_BINARY_DIR}/lib"
+
+/// \brief Helper macro to instantiate gtest for different engines
+#define PHYSICS_ENGINE_VALUES ::testing::ValuesIn(\
+    gz::physics::TestValues())
+
+static const std::vector<const char *> kPhysicsEngineTestValues
+  {"bullet", "dartsim", "tpe"};
+
+#include <vector>
+#include <gz/common/Util.hh>
+
+namespace gz
+{
+  namespace physics
+  {
+    /// \brief Helper function used with INSTANTIATE_TEST_CASE_P.
+    struct PrintToStringParam
+    {
+      template<class T>
+      std::string operator()(const ::testing::TestParamInfo<T> &_info) const
+      {
+        return static_cast<std::string>(_info.param);
+      }
+    };
+
+    /// \brief Helper function used with ::testing::Values
+    /// Checks env variable for physics engine values to be used in tests.
+    /// If env variable exists, it overrides the default physics engine values
+    std::vector<const char *> TestValues()
+    {
+      std::string envTestValueStr;
+      if (!common::env("PHYSICS_ENGINE_VALUES", envTestValueStr))
+        return kPhysicsEngineTestValues;
+      static std::vector<std::string> physicsEngineEnvTestValues
+          = common::split(envTestValueStr, ",");
+      if (physicsEngineEnvTestValues.empty())
+      {
+        std::cerr << "Error parsing 'PHYSICS_ENGINE_VALUES'. "
+                  << "Using default test values" << std::endl;
+        return kPhysicsEngineTestValues;
+      }
+      std::vector<const char *> values;
+      values.resize(physicsEngineEnvTestValues.size());
+      for (unsigned int i = 0; i < physicsEngineEnvTestValues.size(); ++i)
+        values[i] = physicsEngineEnvTestValues[i].c_str();
+      return values;
+    }
+  }
+}
+
+#endif
