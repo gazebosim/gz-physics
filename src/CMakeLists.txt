@@ -1,6 +1,6 @@
-ign_get_libsources_and_unittests(sources gtest_sources)
+gz_get_libsources_and_unittests(sources gtest_sources)
 
-ign_create_core_library(SOURCES ${sources} CXX_STANDARD 17)
+gz_create_core_library(SOURCES ${sources} CXX_STANDARD 17)
 
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
@@ -9,7 +9,7 @@ target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
     ignition-plugin${IGN_PLUGIN_VER}::register
     Eigen3::Eigen)
 
-ign_build_tests(
+gz_build_tests(
   TYPE UNIT
   SOURCES ${gtest_sources})
 
