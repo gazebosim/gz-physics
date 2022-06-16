@@ -4,7 +4,7 @@ ign_create_core_library(SOURCES ${sources} CXX_STANDARD 17)
 
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
-    ${gz-math${GZ_MATH_VER}_LIBRARIES}
+    gz-math${GZ_MATH_VER}::gz-math${GZ_MATH_VER}
     gz-utils${GZ_UTILS_VER}::gz-utils${GZ_UTILS_VER}
     gz-plugin${GZ_PLUGIN_VER}::register
     Eigen3::Eigen)
