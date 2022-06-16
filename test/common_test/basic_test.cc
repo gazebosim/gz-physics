@@ -16,10 +16,9 @@
 */
 #include <gtest/gtest.h>
 
-#include "test_common_config.h"  // NOLINT(build/include)
-
 #include <gz/common/Filesystem.hh>
 #include <gz/common/Console.hh>
+#include <gz/common/Util.hh>
 #include <gz/plugin/Loader.hh>
 
 #include <gz/physics/GetEntities.hh>
@@ -34,25 +33,32 @@ class EntityManagementFeaturesTest:
   {
     gz::common::Console::SetVerbosity(4);
 
-    gz::plugin::Loader loader;
-    std::string pluginPath = gz::common::joinPaths(GZ_PHYSICS_TEST_PLUGIN_PATH,
-      std::string("libignition-physics6-") + std::string(GetParam()) +
-      std::string("-plugin.so"));
-    loader.LoadLib(pluginPath);
-
-    std::string physicsPluginName = GetParam();
-    if (std::string(GetParam()) == "tpe")
+    if (!gz::common::env("PHYSICS_ENGINE_NAME", physicsEngineName))
     {
-      physicsPluginName = GetParam() + std::string("plugin");
+      FAIL();
+    }
+    std::string libToTest;
+    if (!gz::common::env("LIB_TO_TEST", libToTest))
+    {
+      FAIL();
     }
 
+    gz::plugin::Loader loader;
+    loader.LoadLib(libToTest);
+
+    std::string physicsEnginePluginName = physicsEngineName;
+    if (physicsEngineName == "tpe")
+    {
+      physicsEnginePluginName = "tpeplugin";
+    }
     physicsPlugin =
-      loader.Instantiate(std::string("gz::physics::") +
-                         physicsPluginName +
-                         std::string("::Plugin"));
+        loader.Instantiate("gz::physics::" +
+                           physicsEnginePluginName +
+                           "::Plugin");
   }
 
   public: gz::plugin::PluginPtr physicsPlugin;
+  public: std::string physicsEngineName;
 };
 
 // The features that an engine must have to be loaded by this loader.
@@ -61,15 +67,11 @@ using Features = gz::physics::FeatureList<
 >;
 
 /////////////////////////////////////////////////
-TEST_P(EntityManagementFeaturesTest, ConstructEmptyWorld)
+TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
 {
   auto engine =
     gz::physics::RequestEngine3d<Features>::From(physicsPlugin);
 
   ASSERT_NE(nullptr, engine);
-  EXPECT_TRUE(engine->GetName().find(GetParam()) != std::string::npos);
+  EXPECT_TRUE(engine->GetName().find(physicsEngineName) != std::string::npos);
 }
-
-INSTANTIATE_TEST_CASE_P(EntityManagementFeatures, EntityManagementFeaturesTest,
-    PHYSICS_ENGINE_VALUES,
-    gz::physics::PrintToStringParam());
