@@ -21,6 +21,8 @@
 
 #include <sdf/Geometry.hh>
 #include <sdf/Box.hh>
+#include <sdf/Capsule.hh>
+#include <sdf/Ellipsoid.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Plane.hh>
@@ -240,6 +242,26 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto plane = geom->PlaneShape();
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
     shape = std::make_shared<btStaticPlaneShape>(normal, 0);
+  }
+  else if (geom->CapsuleShape())
+  {
+    const auto capsule = geom->CapsuleShape();
+    shape = std::make_shared<btCapsuleShapeZ>(
+      capsule->Radius(), capsule->Length());
+  }
+  else if (geom->EllipsoidShape())
+  {
+    btVector3 positions[1];
+    btScalar radius[1];
+    positions[0] = btVector3();
+    radius[0] = 1;
+
+    const auto ellipsoid = geom->EllipsoidShape();
+    const auto radii = ellipsoid->Radii();
+    shape = std::make_shared<btMultiSphereShape>(
+      positions, radius, 1);
+    std::dynamic_pointer_cast<btMultiSphereShape>(shape)->setLocalScaling(
+      btVector3(radii.X(), radii.Y(), radii.Z()));
   }
 
   // TODO(lobotuerk/blast545) Add additional friction parameters for bullet
