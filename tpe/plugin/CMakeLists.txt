@@ -34,7 +34,7 @@ target_link_libraries(${tpe_plugin}
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${tpe_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
-# The library created by `gz_add_component` includes the ign-physics version
+# The library created by `gz_add_component` includes the gz-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})

@@ -32,7 +32,7 @@ install(
   DIRECTORY include/
   DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
 
-# The library created by `gz_add_component` includes the ign-physics version
+# The library created by `gz_add_component` includes the gz-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${bullet_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
