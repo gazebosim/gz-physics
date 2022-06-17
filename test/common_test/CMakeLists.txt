@@ -7,12 +7,11 @@ set(tests
 link_directories(${PROJECT_BINARY_DIR}/test)
 
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
-  set(_env_vars)
-  add_test(NAME ${test_name}_${PHYSICS_ENGINE_NAME} COMMAND ${test_name})
-  list(APPEND _env_vars "LIB_TO_TEST=${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin${CMAKE_SHARED_LIBRARY_SUFFIX}")
-  set_tests_properties(${test_name}_${PHYSICS_ENGINE_NAME}
-    PROPERTIES
-      ENVIRONMENT "${_env_vars}")
+  add_test(NAME ${test_name}_${PHYSICS_ENGINE_NAME}
+    COMMAND
+      ${test_name}
+      ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
+  )
 endfunction()
 
 foreach(test ${tests})

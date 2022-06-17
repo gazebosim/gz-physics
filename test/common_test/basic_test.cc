@@ -34,23 +34,30 @@ class EntityManagementFeaturesTest:
   public testing::Test,
   public testing::WithParamInterface<const char *>
 {
+  public: static void init(int argc, char *argv[])
+  {
+    if (argc != 2)
+      FAIL() << "Please provide the path to an engine plugin.\n"
+             << "Usage COMMON_TEST_basic_test <physics engine path>\n";
+    libToTest = argv[1];
+  }
+
+  static std::string GetLibToTest()
+  {
+		return libToTest;
+	}
+
   // Documentation inherited
   public: void SetUp() override
   {
     gz::common::Console::SetVerbosity(4);
 
-    std::string libToTest;
-    if (!gz::common::env("LIB_TO_TEST", libToTest))
-    {
-      FAIL();
-    }
-
-    auto plugins = loader.LoadLib(libToTest);
+    auto plugins = loader.LoadLib(EntityManagementFeaturesTest::GetLibToTest());
 
     pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
     if (pluginNames.empty())
     {
-      FAIL() << "No plugins with required features found in " << libToTest;
+      FAIL() << "No plugins with required features found in " << GetLibToTest();
     }
   }
 
@@ -73,9 +80,12 @@ class EntityManagementFeaturesTest:
     return "";
   }
 
+  public: static std::string libToTest;
   public: gz::plugin::Loader loader;
   public: std::set<std::string> pluginNames;
 };
+
+std::string EntityManagementFeaturesTest::libToTest = std::string("");
 
 /////////////////////////////////////////////////
 TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
@@ -90,4 +100,11 @@ TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
     EXPECT_TRUE(engine->GetName().find(PhysicsEngineName(name)) !=
                 std::string::npos);
   }
+}
+
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  EntityManagementFeaturesTest::init(argc, argv);
+  return RUN_ALL_TESTS();
 }
