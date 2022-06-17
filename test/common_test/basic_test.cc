@@ -21,8 +21,14 @@
 #include <gz/common/Util.hh>
 #include <gz/plugin/Loader.hh>
 
+#include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RequestEngine.hh>
+
+// The features that an engine must have to be loaded by this loader.
+using Features = gz::physics::FeatureList<
+  gz::physics::GetEngineInfo
+>;
 
 class EntityManagementFeaturesTest:
   public testing::Test,
@@ -33,45 +39,55 @@ class EntityManagementFeaturesTest:
   {
     gz::common::Console::SetVerbosity(4);
 
-    if (!gz::common::env("PHYSICS_ENGINE_NAME", physicsEngineName))
-    {
-      FAIL();
-    }
     std::string libToTest;
     if (!gz::common::env("LIB_TO_TEST", libToTest))
     {
       FAIL();
     }
 
-    gz::plugin::Loader loader;
-    loader.LoadLib(libToTest);
+    auto plugins = loader.LoadLib(libToTest);
 
-    std::string physicsEnginePluginName = physicsEngineName;
-    if (physicsEngineName == "tpe")
+    pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
+    if (pluginNames.empty())
     {
-      physicsEnginePluginName = "tpeplugin";
+      FAIL() << "No plugins with required features found in " << libToTest;
     }
-    physicsPlugin =
-        loader.Instantiate("gz::physics::" +
-                           physicsEnginePluginName +
-                           "::Plugin");
   }
 
-  public: gz::plugin::PluginPtr physicsPlugin;
-  public: std::string physicsEngineName;
-};
+  /// \brief Get Physics Engine name based on the plugin name
+  /// \param[in] _name Plugin name
+  /// \return Name of the Physics Engine
+  std::string PhysicsEngineName(std::string _name)
+  {
+    std::vector<std::string> tokens = gz::common::split(_name, "::");
+    if (tokens.size() == 4)
+    {
+      std::string physicsEngineName = tokens[2];
+      std::string physicsEnginePluginName = physicsEngineName;
+      if (physicsEngineName == "tpeplugin")
+      {
+        physicsEnginePluginName = "tpe";
+      }
+      return physicsEnginePluginName;
+    }
+    return "";
+  }
 
-// The features that an engine must have to be loaded by this loader.
-using Features = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo
->;
+  public: gz::plugin::Loader loader;
+  public: std::set<std::string> pluginNames;
+};
 
 /////////////////////////////////////////////////
 TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
 {
-  auto engine =
-    gz::physics::RequestEngine3d<Features>::From(physicsPlugin);
+  for (const std::string &name : pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-  ASSERT_NE(nullptr, engine);
-  EXPECT_TRUE(engine->GetName().find(physicsEngineName) != std::string::npos);
+    auto engine = gz::physics::RequestEngine3d<Features>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+    EXPECT_TRUE(engine->GetName().find(PhysicsEngineName(name)) !=
+                std::string::npos);
+  }
 }
