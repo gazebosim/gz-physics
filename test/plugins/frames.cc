@@ -129,7 +129,7 @@ namespace mock
   class MockFrameSemanticsPlugin ## X : \
     public MockFrameSemanticsPlugin<gz::physics::FeaturePolicy ## X>{ }; \
   \
-  IGN_PHYSICS_ADD_PLUGIN( \
+  GZ_PHYSICS_ADD_PLUGIN( \
     MockFrameSemanticsPlugin ## X, \
     gz::physics::FeaturePolicy ## X, \
     MockFrameSemanticsList)

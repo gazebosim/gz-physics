@@ -27,7 +27,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(CapsuleShape)
+    GZ_PHYSICS_DECLARE_SHAPE_TYPE(CapsuleShape)
 
     class GZ_PHYSICS_VISIBLE GetCapsuleShapeProperties
         : public virtual FeatureWithRequirements<CapsuleShapeCast>

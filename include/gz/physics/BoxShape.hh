@@ -27,7 +27,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(BoxShape)
+    GZ_PHYSICS_DECLARE_SHAPE_TYPE(BoxShape)
 
     class GZ_PHYSICS_VISIBLE GetBoxShapeProperties
       : public virtual FeatureWithRequirements<BoxShapeCast>

@@ -87,7 +87,7 @@ namespace gz
       ///
       /// _Scalar should be the 1D primitive type which determines the numerical
       /// precision (i.e. double or float).
-      #define IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(...) \
+      #define GZ_PHYSICS_DEFINE_COORDINATE_SPACE(...) \
         public: using Quantity = __VA_ARGS__; \
         public: using Scalar = _Scalar; \
         public: using FrameDataType = FrameData<Scalar, _Dim>; \
@@ -102,7 +102,7 @@ namespace gz
       template <typename _Scalar, std::size_t _Dim>
       struct SESpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Pose<_Scalar, _Dim>)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(Pose<_Scalar, _Dim>)
 
         /// \brief Resolve the pose to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -150,7 +150,7 @@ namespace gz
       template <typename _Scalar, std::size_t _Dim, typename _Quantity>
       struct SOSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(_Quantity)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(_Quantity)
 
         /// \brief Resolve the rotation to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -199,7 +199,7 @@ namespace gz
       template <typename _Scalar, std::size_t _Dim>
       struct EuclideanSpace : public VectorSpace<_Scalar, _Dim>
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
 
         /// \brief Resolve the point to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -232,7 +232,7 @@ namespace gz
       template <typename _Scalar, std::size_t _Dim>
       struct VectorSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, _Dim>)
 
         /// \brief Resolve the vector to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -298,7 +298,7 @@ namespace gz
         // is a partially specialized template. The macro assumes the existence
         // of both "_Scalar" and "_Dim", so we define this enum as a workaround.
         private: enum { _Dim = 2 };
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, 1>)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(Vector<_Scalar, 1>)
 
         /// \brief Resolve the vector to the world frame
         public: static Quantity ResolveToWorldFrame(
@@ -440,7 +440,7 @@ namespace gz
       template <typename _Scalar, std::size_t _Dim>
       struct AABBSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(AlignedBox<_Scalar, _Dim>)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(AlignedBox<_Scalar, _Dim>)
 
         public: static Quantity ResolveToWorldFrame(
             const Quantity &_box,
@@ -506,7 +506,7 @@ namespace gz
       template <typename _Scalar, std::size_t _Dim>
       struct FrameSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(FrameData<_Scalar, _Dim>)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(FrameData<_Scalar, _Dim>)
 
         using LinearVectorType = LinearVector<_Scalar, _Dim>;
         using LinearVectorSpaceType = VectorSpace<_Scalar, _Dim>;
@@ -835,7 +835,7 @@ namespace gz
       template <typename _Scalar, std::size_t _Dim>
       struct WrenchSpace
       {
-        IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE(Wrench<_Scalar, _Dim>)
+        GZ_PHYSICS_DEFINE_COORDINATE_SPACE(Wrench<_Scalar, _Dim>)
         using AngularVectorSpace = VectorSpace<_Scalar, (_Dim*(_Dim-1))/2>;
         using LinearVectorSpace = VectorSpace<_Scalar, _Dim>;
         using Op = Operator<_Scalar, _Dim>;

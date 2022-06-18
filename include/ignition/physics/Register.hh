@@ -17,3 +17,6 @@
 
 #include <gz/physics/Register.hh>
 #include <ignition/physics/config.hh>
+
+#define IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT) \
+  GZ_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT)

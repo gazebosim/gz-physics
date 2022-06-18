@@ -441,9 +441,9 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
-    IGN_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
     ASSERT_NE(nullptr, freeGroup->CanonicalLink());
-    IGN_UTILS_WARN_RESUME__DEPRECATED_DECLARATION
+    GZ_UTILS_WARN_RESUME__DEPRECATED_DECLARATION
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
@@ -514,7 +514,7 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
 
       // Poses from SDF
       gz::math::Pose3d nestedModelPose(1, 2, 2, 0, 0, 0);
-      gz::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, IGN_PI_2);
+      gz::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, GZ_PI_2);
 
       gz::math::Pose3d nestedLinkExpectedPose =
         newPose * nestedModelPose * nestedLinkPose;

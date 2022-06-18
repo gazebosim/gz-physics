@@ -91,7 +91,7 @@ all required "FeatureLists" and `Base` class. In TPE case, it is `TpePluginFeatu
 - Define the dimension of the simulation, ex. \ref gz::physics::Implements "Implements" class implementing
 \ref gz::physics::FeaturePolicy "FeaturePolicy" 2D or 3D and different
 scalar type.
-- Register the physics plugin using `IGN_PHYSICS_ADD_PLUGIN` macro (See \ref implementphysicsplugin "Implement physics plugin" for more detail).
+- Register the physics plugin using `GZ_PHYSICS_ADD_PLUGIN` macro (See \ref implementphysicsplugin "Implement physics plugin" for more detail).
 
 ### Implement features with physics engine's API
 

@@ -31,7 +31,7 @@ namespace physics
 {
 namespace heightmap
 {
-  IGN_PHYSICS_DECLARE_SHAPE_TYPE(HeightmapShape)
+  GZ_PHYSICS_DECLARE_SHAPE_TYPE(HeightmapShape)
 
   /////////////////////////////////////////////////
   class GetHeightmapShapeProperties

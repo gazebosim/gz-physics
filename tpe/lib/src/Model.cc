@@ -158,7 +158,7 @@ void Model::SetLinearVelocity(const math::Vector3d &_velocity)
 //////////////////////////////////////////////////
 math::Vector3d Model::GetLinearVelocity() const
 {
-  IGN_PROFILE("tpelib::Model::GetLinearVelocity");
+  GZ_PROFILE("tpelib::Model::GetLinearVelocity");
   return this->linearVelocity;
 }
 
@@ -171,14 +171,14 @@ void Model::SetAngularVelocity(const math::Vector3d &_velocity)
 //////////////////////////////////////////////////
 math::Vector3d Model::GetAngularVelocity() const
 {
-  IGN_PROFILE("tpelib::Model::GetAngularVelocity");
+  GZ_PROFILE("tpelib::Model::GetAngularVelocity");
   return this->angularVelocity;
 }
 
 //////////////////////////////////////////////////
 void Model::UpdatePose(double _timeStep)
 {
-  IGN_PROFILE("tpelib::Model::UpdatePose");
+  GZ_PROFILE("tpelib::Model::UpdatePose");
 
   if (this->linearVelocity == math::Vector3d::Zero &&
       this->angularVelocity == math::Vector3d::Zero)

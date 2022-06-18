@@ -23,7 +23,7 @@
 
 #include "gz/physics/CompositeData.hh"
 
-#define IGNITION_PHYSICS_CONST_GET_ERROR \
+#define GZ_PHYSICS_CONST_GET_ERROR \
   "Cannot use the const-qualified Get<Data>() function if " \
   "the type Data is not required by your CompositeData " \
   "specification at compile time. You should use the " \
@@ -32,7 +32,7 @@
 // This preprocessor token should only be used by the unittest that is
 // responsible for checking that the specialized routines are being used to
 // access expected data.
-#ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+#ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
 bool usedExpectedDataAccess;
 #endif
 
@@ -67,7 +67,7 @@ namespace gz
         /// \brief Use a high-speed accessor for this Expected data type
         public: Expected &Get(ExpectData<Expected> *_data, type<Expected>)
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -99,7 +99,7 @@ namespace gz
         CompositeData::InsertResult<Expected> InsertOrAssign(
             ExpectData<Expected> *_data, type<Expected>, Args&&... args)
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -135,7 +135,7 @@ namespace gz
         CompositeData::InsertResult<Expected> Insert(
             ExpectData<Expected> *_data, type<Expected>, Args&&... args)
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -168,7 +168,7 @@ namespace gz
         /// \brief Use a high-speed accessor for this Expected data type
         public: bool Remove(ExpectData<Expected> *_data, type<Expected>)
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -201,7 +201,7 @@ namespace gz
         public: Expected *Query(ExpectData<Expected> *_data, type<Expected>,
                                 const CompositeData::QueryMode _mode)
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -231,7 +231,7 @@ namespace gz
             const ExpectData<Expected> *_data, type<Expected>,
             const CompositeData::QueryMode _mode) const
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -268,7 +268,7 @@ namespace gz
         public: CompositeData::DataStatus StatusOf(
             const ExpectData<Expected>*, type<Expected>) const
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -296,7 +296,7 @@ namespace gz
         public: bool Unquery(const ExpectData<Expected> *_data,
                              type<Expected>) const
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -326,7 +326,7 @@ namespace gz
         Expected &MakeRequired(ExpectData<Expected> *_data,
                                type<Expected>, Args &&..._args)
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -356,7 +356,7 @@ namespace gz
         /// \brief Use a high-speed accessor for this Expected data type
         public: bool Requires(const ExpectData<Expected>*, type<Expected>) const
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
@@ -417,7 +417,7 @@ namespace gz
             type<Data>) const
         {
           static_assert(std::is_same<Data, Required>::type,
-                        IGNITION_PHYSICS_CONST_GET_ERROR);
+                        GZ_PHYSICS_CONST_GET_ERROR);
 
           SetToQueried(_it, _data->CompositeData::numQueries);
 
@@ -430,7 +430,7 @@ namespace gz
             const CompositeData::MapOfData::iterator &_it,
             type<Required>) const
         {
-          #ifdef IGNITION_UNITTEST_EXPECTDATA_ACCESS
+          #ifdef GZ_UNITTEST_EXPECTDATA_ACCESS
           usedExpectedDataAccess = true;
           #endif
 
