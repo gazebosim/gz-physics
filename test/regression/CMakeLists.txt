@@ -1,6 +1,5 @@
+gz_get_sources(tests)
 
-ign_get_sources(tests)
-
-ign_build_tests(
+gz_build_tests(
   TYPE REGRESSION
   SOURCES ${tests})
