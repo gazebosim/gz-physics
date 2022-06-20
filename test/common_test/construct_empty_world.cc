@@ -20,37 +20,41 @@
 
 #include "../helpers/TestLibLoader.hh"
 
+#include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 
 // The features that an engine must have to be loaded by this loader.
 using Features = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo
+  gz::physics::GetEngineInfo,
+  gz::physics::GetEntities,
+  gz::physics::ConstructEmptyWorldFeature
 >;
 
-class EntityManagementFeaturesTest:
-  public gz::physics::TestLibLoader
+class ConstructEmptyWorldTest:
+public gz::physics::TestLibLoader
 {
   // Documentation inherited
   public: void SetUp() override
   {
     gz::common::Console::SetVerbosity(4);
 
-    auto plugins = loader.LoadLib(EntityManagementFeaturesTest::GetLibToTest());
+    auto plugins = loader.LoadLib(ConstructEmptyWorldTest::GetLibToTest());
 
     // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
     // FindFeatures
     pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
     if (pluginNames.empty())
     {
-      FAIL() << "No plugins with required features found in " << GetLibToTest();
+      std::cerr << "No plugins with required features found in "
+                << GetLibToTest() << std::endl;
     }
   }
 };
 
 /////////////////////////////////////////////////
-TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
+TEST_F(ConstructEmptyWorldTest, ConstructEmptyWorld)
 {
   for (const std::string &name : pluginNames)
   {
@@ -59,14 +63,18 @@ TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
 
     auto engine = gz::physics::RequestEngine3d<Features>::From(plugin);
     ASSERT_NE(nullptr, engine);
-    EXPECT_TRUE(engine->GetName().find(PhysicsEngineName(name)) !=
-                std::string::npos);
+
+    auto world = engine->ConstructEmptyWorld("empty world");
+    ASSERT_NE(nullptr, world);
+    EXPECT_EQ("empty world", world->GetName());
+    EXPECT_EQ(1u, engine->GetWorldCount());
+    EXPECT_EQ(engine, world->GetEngine());
   }
 }
 
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  EntityManagementFeaturesTest::init(argc, argv);
+  ConstructEmptyWorldTest::init(argc, argv);
   return RUN_ALL_TESTS();
 }
