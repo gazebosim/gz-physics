@@ -10,7 +10,7 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
   add_test(NAME ${test_name}_${PHYSICS_ENGINE_NAME}
     COMMAND
       ${test_name}
-      ${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
+      $<TARGET_FILE:${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin>
   )
 endfunction()
 

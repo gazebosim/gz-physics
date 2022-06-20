@@ -44,8 +44,8 @@ class EntityManagementFeaturesTest:
 
   static std::string GetLibToTest()
   {
-		return libToTest;
-	}
+    return libToTest;
+  }
 
   // Documentation inherited
   public: void SetUp() override
