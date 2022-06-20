@@ -272,8 +272,8 @@ WorldPtr LoadWorldPiecemeal(const std::string &_world)
       newSdfJoint.SetRawPose(ResolveSdfPose(sdfJoint->SemanticPose()));
       newSdfJoint.SetThreadPitch(sdfJoint->ThreadPitch());
 
-      newSdfJoint.SetParentLinkName(resolvedParentLinkName);
-      newSdfJoint.SetChildLinkName(resolvedChildLinkName);
+      newSdfJoint.SetParentName(resolvedParentLinkName);
+      newSdfJoint.SetChildName(resolvedChildLinkName);
 
       physModel->ConstructJoint(newSdfJoint);
     }
@@ -473,22 +473,22 @@ auto CreateTestModel(WorldPtr _world, const std::string &_model,
   {
     auto parent = model->ConstructLink(*_parentLink);
     EXPECT_NE(nullptr, parent);
-    sdfJoint.SetParentLinkName(_parentLink->Name());
+    sdfJoint.SetParentName(_parentLink->Name());
   }
   else
   {
-    sdfJoint.SetParentLinkName("world");
+    sdfJoint.SetParentName("world");
   }
 
   if (_childLink)
   {
     auto child = model->ConstructLink(*_childLink);
     EXPECT_NE(nullptr, child);
-    sdfJoint.SetChildLinkName(_childLink->Name());
+    sdfJoint.SetChildName(_childLink->Name());
   }
   else
   {
-    sdfJoint.SetChildLinkName("world");
+    sdfJoint.SetChildName("world");
   }
 
   auto joint0 = model->ConstructJoint(sdfJoint);
