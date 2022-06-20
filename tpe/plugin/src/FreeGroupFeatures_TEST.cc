@@ -165,7 +165,7 @@ TEST(FreeGroupFeatures, NestedFreeGroupSetWorldPose)
     auto frameData = nestedLink1->FrameDataRelativeToWorld();
     // Poses from SDF
     gz::math::Pose3d nestedModelPose(1, 2, 2, 0, 0, 0);
-    gz::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, IGN_PI_2);
+    gz::math::Pose3d nestedLinkPose(3, 1, 1, 0, 0, GZ_PI_2);
 
     gz::math::Pose3d nestedLinkExpectedPose =
         parentModelNewPose * nestedModelPose * nestedLinkPose;

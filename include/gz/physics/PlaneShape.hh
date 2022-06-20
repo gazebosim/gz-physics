@@ -27,7 +27,7 @@ namespace gz
 {
 namespace physics
 {
-  IGN_PHYSICS_DECLARE_SHAPE_TYPE(PlaneShape)
+  GZ_PHYSICS_DECLARE_SHAPE_TYPE(PlaneShape)
 
   /////////////////////////////////////////////////
   class GetPlaneShapeProperties

@@ -35,7 +35,7 @@
 #define DETAIL_GZ_PHYSICS_DECLARE_DERIVED_TYPE(Base, Derived) \
   struct Derived ## Cast : public virtual ::gz::physics::Feature \
   { \
-    IGN_PHYSICS_CREATE_SELECTOR(Derived) \
+    GZ_PHYSICS_CREATE_SELECTOR(Derived) \
     class Derived ## Identifier { }; \
     \
     public: template <typename PolicyT, typename FeaturesT> \

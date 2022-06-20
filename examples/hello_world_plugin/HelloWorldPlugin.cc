@@ -65,7 +65,7 @@ namespace mock
   ////////////////////////////////////////////////////////
   //! [register]
   // Register plugin
-  IGN_PHYSICS_ADD_PLUGIN(
+  GZ_PHYSICS_ADD_PLUGIN(
       HelloWorldPlugin,
       gz::physics::FeaturePolicy3d,
       HelloWorldFeatureList)

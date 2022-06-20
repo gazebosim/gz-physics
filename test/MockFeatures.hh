@@ -30,22 +30,22 @@ namespace mock
       MockCenterOfMass
   >;
 
-#define IGN_PHYSICS_MOCK_MACRO_HELPER( Type, X ) \
+#define GZ_PHYSICS_MOCK_MACRO_HELPER( Type, X ) \
   using Mock ## Type ## X = gz::physics:: Type ## X <MockFeatureList>; \
   using Mock ## Type ## X ## Ptr = \
       gz::physics::EntityPtr< Mock ## Type ## X >;
 
-#define IGN_PHYSICS_MOCK_MACRO(Type) \
-  IGN_PHYSICS_MOCK_MACRO_HELPER(Type, 3d) \
-  IGN_PHYSICS_MOCK_MACRO_HELPER(Type, 2d) \
-  IGN_PHYSICS_MOCK_MACRO_HELPER(Type, 3f) \
-  IGN_PHYSICS_MOCK_MACRO_HELPER(Type, 2f)
+#define GZ_PHYSICS_MOCK_MACRO(Type) \
+  GZ_PHYSICS_MOCK_MACRO_HELPER(Type, 3d) \
+  GZ_PHYSICS_MOCK_MACRO_HELPER(Type, 2d) \
+  GZ_PHYSICS_MOCK_MACRO_HELPER(Type, 3f) \
+  GZ_PHYSICS_MOCK_MACRO_HELPER(Type, 2f)
 
-  IGN_PHYSICS_MOCK_MACRO(Engine)
-  IGN_PHYSICS_MOCK_MACRO(World)
-  IGN_PHYSICS_MOCK_MACRO(Model)
-  IGN_PHYSICS_MOCK_MACRO(Link)
-  IGN_PHYSICS_MOCK_MACRO(Joint)
+  GZ_PHYSICS_MOCK_MACRO(Engine)
+  GZ_PHYSICS_MOCK_MACRO(World)
+  GZ_PHYSICS_MOCK_MACRO(Model)
+  GZ_PHYSICS_MOCK_MACRO(Link)
+  GZ_PHYSICS_MOCK_MACRO(Joint)
 }
 
 #endif

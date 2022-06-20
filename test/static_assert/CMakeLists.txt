@@ -1,5 +1,4 @@
-
-ign_get_sources(assert_tests)
+gz_get_sources(assert_tests)
 
 if(UNIX)
 

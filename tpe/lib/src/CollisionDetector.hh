@@ -48,10 +48,10 @@ class GZ_PHYSICS_TPELIB_VISIBLE Contact
   /// \brief Id of second collision entity
   public: std::size_t entity2 = kNullEntityId;
 
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief Point of contact in world frame;
   public: math::Vector3d point;
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 /// \brief Collision Detector that checks collisions between a list of entities
@@ -85,9 +85,9 @@ class GZ_PHYSICS_TPELIB_VISIBLE CollisionDetector
       bool _singleContact = false);
 
   /// \brief Pointer to private data
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   private: std::unique_ptr<CollisionDetectorPrivate> dataPtr;
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 }

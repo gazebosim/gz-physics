@@ -156,14 +156,14 @@ namespace gz
     template <typename Scalar, std::size_t Dim>
     using RelativePose = RelativeQuantity<
         Pose<Scalar, Dim>, Dim, detail::SESpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePose)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePose)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeRotationMatrix = RelativeQuantity<
         Eigen::Matrix<Scalar, Dim, Dim>, Dim,
         detail::SOSpace<Scalar, Dim, Eigen::Matrix<Scalar, Dim, Dim>>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeRotationMatrix)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeRotationMatrix)
 
     /////////////////////////////////////////////////
     template <typename Scalar>
@@ -179,38 +179,38 @@ namespace gz
     template <typename Scalar, std::size_t Dim>
     using RelativePosition = RelativeQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::EuclideanSpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePosition)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativePosition)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeForce = RelativeQuantity<
         LinearVector<Scalar, Dim>, Dim, detail::VectorSpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeForce)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeForce)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeTorque = RelativeQuantity<
         AngularVector<Scalar, Dim>, Dim,
         detail::VectorSpace<Scalar, (Dim*(Dim-1))/2>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeTorque)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeTorque)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeAlignedBox = RelativeQuantity<
         AlignedBox<Scalar, Dim>, Dim, detail::AABBSpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeAlignedBox)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeAlignedBox)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeFrameData = RelativeQuantity<
         FrameData<Scalar, Dim>, Dim, detail::FrameSpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeFrameData)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeFrameData)
 
     /////////////////////////////////////////////////
     template <typename Scalar, std::size_t Dim>
     using RelativeWrench = RelativeQuantity<
         Wrench<Scalar, Dim>, Dim, detail::WrenchSpace<Scalar, Dim>>;
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeWrench)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(RelativeWrench)
   }
 }
 

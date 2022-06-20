@@ -42,7 +42,7 @@
 /// gz/physics/Register.hh header in ONE of the translation units, and
 /// then the gz/physics/RegisterMore.hh header in all of the rest of the
 /// translation units.
-#define IGN_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT) \
+#define GZ_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT) \
   DETAIL_GZ_PHYSICS_ADD_PLUGIN(PluginType, FeaturePolicyT, FeatureListT)
 
 #endif

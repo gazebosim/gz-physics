@@ -1,5 +1,4 @@
-
-ign_add_component(sdf INTERFACE
+gz_add_component(sdf INTERFACE
   GET_TARGET_NAME sdf)
 
 target_link_libraries(${sdf} INTERFACE ${SDFormat_LIBRARIES})

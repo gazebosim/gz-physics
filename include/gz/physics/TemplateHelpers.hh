@@ -75,10 +75,10 @@ namespace gz
 /// to ignore features that don't define an API for the class of interest (X).
 /// When using this macro, pass in the name of the class that you want the
 /// selector to look for. If the class name is X, then this will create a
-/// selector named SelectX. E.g. IGN_PHYSICS_CREATE_SELECTOR(RevoluteJoint) will
+/// selector named SelectX. E.g. GZ_PHYSICS_CREATE_SELECTOR(RevoluteJoint) will
 /// create a class named SelectRevoluteJoint which can be passed to an
 /// Aggregator to extract the RevoluteJoint API from a list of features.
-#define IGN_PHYSICS_CREATE_SELECTOR(X) \
+#define GZ_PHYSICS_CREATE_SELECTOR(X) \
   template<typename InFeature> \
   struct Select ## X \
   { \

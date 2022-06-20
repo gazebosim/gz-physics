@@ -25,19 +25,19 @@ namespace gz
   namespace physics
   {
     /////////////////////////////////////////////////
-    #define IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES \
+    #define GZ_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES \
     template <typename Specification, \
             template<typename> class SpecFinder, \
             template<typename, typename, typename> class Operation, \
             class Performer>
 
-    #define IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX \
+    #define GZ_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX \
     void OperateOnSpecifiedData<Specification, SpecFinder, Operation, Performer>
 
     /////////////////////////////////////////////////
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename CompositeType>
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::Operate(
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::Operate(
         Performer *_performer, CompositeType &_data,
         const DataStatusMask &_mask, const bool _onlyCompile)
     {
@@ -53,9 +53,9 @@ namespace gz
     }
 
     /////////////////////////////////////////////////
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename Data, typename SubSpecification, typename CompositeType>
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         detail::type<Data>, detail::type<SubSpecification>,
         Performer *_performer, CompositeType &_data,
         const DataStatusMask &_mask,
@@ -95,9 +95,9 @@ namespace gz
     }
 
     /////////////////////////////////////////////////
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename SubSpecification, typename CompositeType>
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         detail::type<void>, detail::type<SubSpecification>,
         Performer *_performer, CompositeType &_data,
         const DataStatusMask &_mask, History &_history)
@@ -115,9 +115,9 @@ namespace gz
     }
 
     /////////////////////////////////////////////////
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_TEMPLATES
     template <typename CompositeType>
-    IGN_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
+    GZ_PHYSICS_OPERATEONSPECIFIEDDATA_PREFIX::SubOperate(
         detail::type<void>, detail::type<void>, Performer*,
         CompositeType&, const DataStatusMask&, History&)
     {

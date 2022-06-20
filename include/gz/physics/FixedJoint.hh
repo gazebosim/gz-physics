@@ -26,7 +26,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(FixedJoint)
+    GZ_PHYSICS_DECLARE_JOINT_TYPE(FixedJoint)
 
     class GZ_PHYSICS_VISIBLE AttachFixedJointFeature
         : public virtual FeatureWithRequirements<FixedJointCast>

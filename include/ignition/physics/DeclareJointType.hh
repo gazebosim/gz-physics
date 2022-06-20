@@ -17,3 +17,6 @@
 
 #include <gz/physics/DeclareJointType.hh>
 #include <ignition/physics/config.hh>
+
+#define IGN_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType) \
+  GZ_PHYSICS_DECLARE_JOINT_TYPE(CustomJointType)

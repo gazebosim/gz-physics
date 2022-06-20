@@ -136,7 +136,7 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   // Add a sphere
   sdf::Model modelSDF;
   modelSDF.SetName("sphere");
-  modelSDF.SetRawPose(math::Pose3d(0, 0, 2, 0, 0, IGN_PI));
+  modelSDF.SetRawPose(math::Pose3d(0, 0, 2, 0, 0, GZ_PI));
   auto model = world->ConstructModel(modelSDF);
 
   const double mass = 1.0;
@@ -182,7 +182,7 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
       physics::RelativeForce3d(physics::FrameID::World(), cmdForce),
       physics::RelativePosition3d(*link, Eigen::Vector3d::Zero()));
 
-  const Eigen::Vector3d cmdTorque{0, 0, 0.1 * IGN_PI};
+  const Eigen::Vector3d cmdTorque{0, 0, 0.1 * GZ_PI};
   link->AddExternalTorque(
       physics::RelativeTorque3d(physics::FrameID::World(), cmdTorque));
 
@@ -220,17 +220,17 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
       physics::RelativeForce3d(*link, cmdLocalForce),
       physics::RelativePosition3d(*link, Eigen::Vector3d::Zero()));
 
-  const Eigen::Vector3d cmdLocalTorque{0.1 * IGN_PI, 0, 0};
+  const Eigen::Vector3d cmdLocalTorque{0.1 * GZ_PI, 0, 0};
   link->AddExternalTorque(physics::RelativeTorque3d(*link, cmdLocalTorque));
 
   world->Step(output, state, input);
 
   {
     const Eigen::Vector3d expectedForce =
-        Eigen::AngleAxisd(IGN_PI, Eigen::Vector3d::UnitZ()) * cmdLocalForce;
+        Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ()) * cmdLocalForce;
 
     const Eigen::Vector3d expectedTorque =
-        Eigen::AngleAxisd(IGN_PI, Eigen::Vector3d::UnitZ()) * cmdLocalTorque;
+        Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ()) * cmdLocalTorque;
 
     const auto frameData = link->FrameDataRelativeToWorld();
 

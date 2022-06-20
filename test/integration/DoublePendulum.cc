@@ -107,7 +107,7 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   // set target with joint1 still inverted, but joint2 pointed down
   // this is also an equilibrium position
   const double target10 = 0.0;
-  const double target11 = IGN_PI;
+  const double target11 = GZ_PI;
 
   // PID gains tuned in gazebo
   gz::math::PID pid0(100, 0, 10);
@@ -159,7 +159,7 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   // so reset the PID's, zero the inputs and take one more Step
   // so the outputs will be computed.
   const double target20 = 0.0;
-  const double target21 = -IGN_PI;
+  const double target21 = -GZ_PI;
   pid0.Reset();
   pid1.Reset();
   efforts.forces[0] = 0;
