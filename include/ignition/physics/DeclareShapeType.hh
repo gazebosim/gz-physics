@@ -17,3 +17,6 @@
 
 #include <gz/physics/DeclareShapeType.hh>
 #include <ignition/physics/config.hh>
+
+#define IGN_PHYSICS_DECLARE_SHAPE_TYPE(CustomShapeType) \
+  GZ_PHYSICS_DECLARE_SHAPE_TYPE(CustomShapeType)

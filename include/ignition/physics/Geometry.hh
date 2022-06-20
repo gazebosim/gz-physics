@@ -17,3 +17,6 @@
 
 #include <gz/physics/Geometry.hh>
 #include <ignition/physics/config.hh>
+
+#define IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(Type) \
+  GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(Type)

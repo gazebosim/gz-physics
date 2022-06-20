@@ -658,7 +658,7 @@ void TestRelativeFrameData(const double _tolerance, const std::string &_suffix)
   // B: attachment of pipe to rolling support
   // C: wheel center
   // D: wheel-ground contact point
-  const Scalar pivotAngle = static_cast<Scalar>(30 * IGN_PI / 180);
+  const Scalar pivotAngle = static_cast<Scalar>(30 * GZ_PI / 180);
   const Scalar sinPivot = sin(pivotAngle);
   const Scalar cosPivot = cos(pivotAngle);
   const Scalar pivotHeight = 1;

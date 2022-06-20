@@ -27,7 +27,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint)
+    GZ_PHYSICS_DECLARE_JOINT_TYPE(PrismaticJoint)
 
     class GZ_PHYSICS_VISIBLE GetPrismaticJointProperties
         : public virtual FeatureWithRequirements<PrismaticJointCast>

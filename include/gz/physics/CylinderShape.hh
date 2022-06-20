@@ -27,7 +27,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(CylinderShape)
+    GZ_PHYSICS_DECLARE_SHAPE_TYPE(CylinderShape)
 
     class GZ_PHYSICS_VISIBLE GetCylinderShapeProperties
         : public virtual FeatureWithRequirements<CylinderShapeCast>

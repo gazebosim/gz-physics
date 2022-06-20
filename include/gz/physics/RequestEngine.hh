@@ -88,15 +88,15 @@ namespace gz
       static std::set<std::string> MissingFeatureNames(const PtrT &_pimpl);
     };
 
-#define IGN_PHYSICS_REQUEST_FEATURES_MACRO(X) \
+#define GZ_PHYSICS_REQUEST_FEATURES_MACRO(X) \
   template <typename FeatureList> \
   using RequestEngine ## X = \
       RequestEngine<FeaturePolicy ## X, FeatureList>;
 
-    IGN_PHYSICS_REQUEST_FEATURES_MACRO(3d)
-    IGN_PHYSICS_REQUEST_FEATURES_MACRO(2d)
-    IGN_PHYSICS_REQUEST_FEATURES_MACRO(3f)
-    IGN_PHYSICS_REQUEST_FEATURES_MACRO(2f)
+    GZ_PHYSICS_REQUEST_FEATURES_MACRO(3d)
+    GZ_PHYSICS_REQUEST_FEATURES_MACRO(2d)
+    GZ_PHYSICS_REQUEST_FEATURES_MACRO(3f)
+    GZ_PHYSICS_REQUEST_FEATURES_MACRO(2f)
   }
 }
 

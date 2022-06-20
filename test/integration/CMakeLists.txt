@@ -1,5 +1,4 @@
-
-ign_get_sources(tests)
+gz_get_sources(tests)
 
 if (NOT DART_FOUND)
   list(REMOVE_ITEM tests DoublePendulum.cc)
@@ -7,7 +6,7 @@ endif()
 
 configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
 
-ign_build_tests(
+gz_build_tests(
   TYPE INTEGRATION
   SOURCES ${tests}
   LIB_DEPS

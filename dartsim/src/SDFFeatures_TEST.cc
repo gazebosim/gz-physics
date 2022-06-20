@@ -408,7 +408,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
   const auto *screwJoint = dynamic_cast<const dart::dynamics::ScrewJoint*>(
       screwJointTest->getJoint(1));
   ASSERT_NE(nullptr, screwJoint);
-  EXPECT_DOUBLE_EQ(-IGN_PI, screwJoint->getPitch());
+  EXPECT_DOUBLE_EQ(-GZ_PI, screwJoint->getPitch());
 }
 
 /////////////////////////////////////////////////
@@ -744,7 +744,7 @@ TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
   // Expect the world pose of L2 to be 0 0 3 0 0 pi
   Eigen::Isometry3d expWorldPose =
       Eigen::Translation3d(0, 0, 3) *
-      Eigen::AngleAxisd(IGN_PI, Eigen::Vector3d::UnitZ());
+      Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ());
 
   dartWorld->step();
 

@@ -682,7 +682,7 @@ TEST_F(JointFeaturesFixture, JointDetach)
   EXPECT_EQ("RevoluteJoint", dartUpperLink->getParentJoint()->getType());
   EXPECT_EQ("RevoluteJoint", dartLowerLink->getParentJoint()->getType());
 
-  const math::Pose3d initialUpperLinkPose(1, 0, 2.1, -IGN_PI/2, 0, 0);
+  const math::Pose3d initialUpperLinkPose(1, 0, 2.1, -GZ_PI/2, 0, 0);
   const math::Pose3d initialLowerLinkPose(1.25, 1, 2.1, -2, 0, 0);
 
   EXPECT_EQ(initialUpperLinkPose,
@@ -1162,7 +1162,7 @@ TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
   namespace test = physics::test;
   // Start pendulum at 90° (parallel to the ground) and stop at about 40°
   // so that we have non-trivial test expectations.
-  this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+  this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
   this->Step(350);
 
   // Given the position (θ), velocity (ω), and acceleration (α) of the joint
@@ -1217,7 +1217,7 @@ TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
         this->motorJoint->GetFrameID(), physics::FrameID::World());
     // The joint frame is rotated by 90° along the world's y-axis
     Eigen::Quaterniond R_WJ =
-        Eigen::AngleAxisd(IGN_PI_2, Eigen::Vector3d(0, 1, 0)) *
+        Eigen::AngleAxisd(GZ_PI_2, Eigen::Vector3d(0, 1, 0)) *
         Eigen::AngleAxisd(this->motorJoint->GetPosition(0),
                           Eigen::Vector3d(0, 0, 1));
 
@@ -1233,7 +1233,7 @@ TEST_F(JointTransmittedWrenchFixture, PendulumInMotion)
     // Notation: arm link (A), joint (J)
     Eigen::Isometry3d X_AJ;
     // Pose of joint (J) in arm link (A) as specified in the SDFormat file.
-    X_AJ = Eigen::AngleAxisd(IGN_PI_2, Eigen::Vector3d(0, 1, 0));
+    X_AJ = Eigen::AngleAxisd(GZ_PI_2, Eigen::Vector3d(0, 1, 0));
     X_AJ.translation() = Vector3d(0, 0, kArmLength / 2.0);
     Wrench3d expectedWrenchAtArmInArm;
 
@@ -1255,7 +1255,7 @@ TEST_F(JointTransmittedWrenchFixture, ValidateWrenchWithSecondaryJoint)
   namespace test = physics::test;
   // Start pendulum at 90° (parallel to the ground) and stop at about 40°
   // so that we have non-trivial test expectations.
-  this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+  this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
   this->Step(350);
   const double theta = this->motorJoint->GetPosition(0);
   // In order to get the math to work out, we need to use the joint
@@ -1300,7 +1300,7 @@ TEST_F(JointTransmittedWrenchFixture, JointLosses)
 
   // Joint friction
   {
-    this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+    this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
     this->motorJoint->SetVelocity(0, 0);
     const double kFrictionCoef = 0.5;
     dartJoint->setCoulombFriction(0, kFrictionCoef);
@@ -1312,7 +1312,7 @@ TEST_F(JointTransmittedWrenchFixture, JointLosses)
 
   // Joint damping
   {
-    this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+    this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
     this->motorJoint->SetVelocity(0, 0);
     const double kDampingCoef = 0.2;
     dartJoint->setDampingCoefficient(0, kDampingCoef);
@@ -1328,7 +1328,7 @@ TEST_F(JointTransmittedWrenchFixture, JointLosses)
   // Joint stiffness
   {
     // Note: By default, the spring reference position is 0.
-    this->motorJoint->SetPosition(0, IGN_DTOR(30.0));
+    this->motorJoint->SetPosition(0, GZ_DTOR(30.0));
     this->motorJoint->SetVelocity(0, 0);
     const double kSpringStiffness = 0.7;
     dartJoint->setSpringStiffness(0, kSpringStiffness);
@@ -1352,7 +1352,7 @@ TEST_F(JointTransmittedWrenchFixture, ContactForces)
   physics::Pose3d X_WB(Eigen::Translation3d(0, 1, 1));
   boxFreeGroup->SetWorldPose(X_WB);
 
-  this->motorJoint->SetPosition(0, IGN_DTOR(90.0));
+  this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
   // After this many steps, the pendulum is in contact with the box
   this->Step(1000);
   const double theta = this->motorJoint->GetPosition(0);

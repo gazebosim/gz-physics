@@ -17,3 +17,6 @@
 
 #include <gz/physics/RequestEngine.hh>
 #include <ignition/physics/config.hh>
+
+#define IGN_PHYSICS_REQUEST_FEATURES_MACRO(X) \
+  GZ_PHYSICS_REQUEST_FEATURES_MACRO(X)

@@ -65,13 +65,13 @@ class GZ_PHYSICS_TPELIB_VISIBLE Link : public Entity
   /// \param[in] _timeStep current world timestep in seconds
   public: virtual void UpdatePose(double _timeStep);
 
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of link
   protected: math::Vector3d linearVelocity;
 
   /// \brief angular velocity of link
   protected: math::Vector3d angularVelocity;
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 };
 
 }

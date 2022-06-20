@@ -26,7 +26,7 @@ using namespace tpelib;
 /////////////////////////////////////////////////
 TEST(Utils, TransformAxisAlignedBox)
 {
-  math::Pose3d p(2, 3, 4, 0, IGN_PI * 0.5, 0);
+  math::Pose3d p(2, 3, 4, 0, GZ_PI * 0.5, 0);
   math::AxisAlignedBox box;
   math::AxisAlignedBox boxTransformed = transformAxisAlignedBox(box, p);
   EXPECT_EQ(math::AxisAlignedBox(), boxTransformed);
@@ -45,7 +45,7 @@ TEST(Utils, TransformAxisAlignedBox)
       math::Vector3d(3, 4, 5)), box2Transformed);
 
   // translate and rotate box2
-  math::Pose3d pose(2, 2, 2, 0, IGN_PI * 0.5, 0);
+  math::Pose3d pose(2, 2, 2, 0, GZ_PI * 0.5, 0);
   math::AxisAlignedBox box2TransformedRot =
       transformAxisAlignedBox(box2, pose);
   EXPECT_EQ(math::Vector3d(2, 2, 2), box2TransformedRot.Center());

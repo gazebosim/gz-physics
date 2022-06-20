@@ -17,3 +17,5 @@
 
 #include <gz/physics/TemplateHelpers.hh>
 #include <ignition/physics/config.hh>
+
+#define IGN_PHYSICS_CREATE_SELECTOR(X) GZ_PHYSICS_CREATE_SELECTOR(X)

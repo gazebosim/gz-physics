@@ -29,7 +29,7 @@
 /// \endcode
 ///
 /// But at least one translation unit of your library must contain Register.hh.
-#define IGN_PLUGIN_REGISTER_MORE_TRANS_UNITS
+#define GZ_PHYSICS_REGISTER_MORE_TRANS_UNITS
 #include <gz/physics/Register.hh>
 
 #endif

@@ -1,4 +1,4 @@
-ign_add_component(heightmap INTERFACE
+gz_add_component(heightmap INTERFACE
   GET_TARGET_NAME heightmap)
 
 target_link_libraries(${heightmap}

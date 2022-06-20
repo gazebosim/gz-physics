@@ -1,17 +1,17 @@
 # This component expresses custom features of the bullet plugin, which can
 # expose native bullet data types.
-ign_add_component(bullet INTERFACE
+gz_add_component(bullet INTERFACE
   DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
 link_directories(${BULLET_LIBRARY_DIRS})
 target_link_libraries(${features} INTERFACE IgnBullet::IgnBullet)
 
-ign_get_libsources_and_unittests(sources test_sources)
+gz_get_libsources_and_unittests(sources test_sources)
 
-# TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
+# TODO(MXG): Think about an gz_add_plugin(~) macro for ign-cmake
 set(engine_name bullet-plugin)
-ign_add_component(${engine_name}
+gz_add_component(${engine_name}
   SOURCES ${sources}
   DEPENDS_ON_COMPONENTS bullet
   GET_TARGET_NAME bullet_plugin)
@@ -32,7 +32,7 @@ install(
   DIRECTORY include/
   DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
 
-# The library created by `ign_add_component` includes the ign-physics version
+# The library created by `gz_add_component` includes the ign-physics version
 # (i.e. libignition-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${bullet_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -51,7 +51,7 @@ EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unvers
 INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
 # Testing
-ign_build_tests(
+gz_build_tests(
   TYPE UNIT_bullet
   SOURCES ${test_sources}
   LIB_DEPS

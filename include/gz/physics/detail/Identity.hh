@@ -95,9 +95,9 @@ namespace gz
       ///
       /// This reference is not allowed to change at any point in the lifetime
       /// of the engine object.
-      IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+      GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
       public: const std::shared_ptr<void> ref;
-      IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+      GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 
       /// \brief This is used by Entity so that it can default-construct. This
       /// should never actually be called.
