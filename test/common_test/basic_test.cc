@@ -16,8 +16,8 @@
 */
 #include <gtest/gtest.h>
 
-#include <gz/common/Filesystem.hh>
 #include <gz/common/Console.hh>
+#include <gz/common/Filesystem.hh>
 #include <gz/common/Util.hh>
 #include <gz/plugin/Loader.hh>
 
@@ -31,8 +31,7 @@ using Features = gz::physics::FeatureList<
 >;
 
 class EntityManagementFeaturesTest:
-  public testing::Test,
-  public testing::WithParamInterface<const char *>
+  public testing::Test
 {
   public: static void init(int argc, char *argv[])
   {
@@ -54,6 +53,8 @@ class EntityManagementFeaturesTest:
 
     auto plugins = loader.LoadLib(EntityManagementFeaturesTest::GetLibToTest());
 
+    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
+    // FindFeatures
     pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
     if (pluginNames.empty())
     {
