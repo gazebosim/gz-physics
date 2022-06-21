@@ -44,7 +44,8 @@ class EntityManagementFeaturesTest:
     pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
     if (pluginNames.empty())
     {
-      FAIL() << "No plugins with required features found in " << GetLibToTest();
+      std::cerr << "No plugins with required features found in " << GetLibToTest();
+      // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
     }
   }
 };

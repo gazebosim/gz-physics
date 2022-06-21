@@ -33,7 +33,7 @@ namespace physics
   {
     if (argc != 2)
       FAIL() << "Please provide the path to an engine plugin.\n"
-             << "Usage COMMON_TEST_basic_test <physics engine path>\n";
+             << "Usage " <<  argv[0] << " <physics engine path>\n";
     libToTest = argv[1];
   }
 
