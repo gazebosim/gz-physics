@@ -46,7 +46,7 @@ using Features = gz::physics::FeatureList<
 >;
 
 class ConstructEmptyWorldTest:
-public gz::physics::TestLibLoader
+  public testing::Test, public gz::physics::TestLibLoader
 {
   // Documentation inherited
   public: void SetUp() override
@@ -277,6 +277,7 @@ TEST_F(ConstructEmptyWorldTest, ModelByIndexWithNestedModels)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  ConstructEmptyWorldTest::init(argc, argv);
+  if (!ConstructEmptyWorldTest::init(argc, argv))
+    return -1;
   return RUN_ALL_TESTS();
 }

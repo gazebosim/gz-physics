@@ -20,9 +20,9 @@ foreach(test ${tests})
 
   target_link_libraries(${TEST_TYPE}_${test}
     PUBLIC
-      ignition-plugin${IGN_PLUGIN_VER}::loader
-      ignition-common5::ignition-common5
       ${PROJECT_LIBRARY_TARGET_NAME}
+      ignition-plugin${IGN_PLUGIN_VER}::loader
+      ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
       gtest
       gtest_main
       ${PROJECT_NAME}_test_lib_loader
