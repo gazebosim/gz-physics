@@ -507,7 +507,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     ::sdf::Errors errors = sdfJoint->ResolveParentLink(parentLinkName);
     if (!errors.empty())
     {
-      gzerr << "The link of the parent frame [" << sdfJoint->ParentLinkName()
+      gzerr << "The link of the parent frame [" << sdfJoint->ParentName()
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
@@ -521,7 +521,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     errors = sdfJoint->ResolveChildLink(childLinkName);
     if (!errors.empty())
     {
-      gzerr << "The link of the child frame [" << sdfJoint->ChildLinkName()
+      gzerr << "The link of the child frame [" << sdfJoint->ChildName()
              << "] of joint [" << sdfJoint->Name() << "] in model ["
              << modelName
              << "] could not be resolved. The joint will not be constructed\n";
@@ -536,7 +536,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (nullptr == parentSdfLink && parentLinkName != "world")
     {
       gzerr << "The link [" << parentLinkName << "] of the parent frame ["
-             << sdfJoint->ParentLinkName() << "] of joint [" << sdfJoint->Name()
+             << sdfJoint->ParentName() << "] of joint [" << sdfJoint->Name()
              << "] in model [" << modelName
              << "] could not be resolved. The joint will not be constructed\n";
       continue;
@@ -546,7 +546,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (nullptr == childSdfLink)
     {
       gzerr << "The link [" << childLinkName << "] of the child frame ["
-             << sdfJoint->ChildLinkName() << "] of joint [" << sdfJoint->Name()
+             << sdfJoint->ChildName() << "] of joint [" << sdfJoint->Name()
              << "] in model [" << modelName
              << "] could not be resolved. The joint will not be constructed\n";
       continue;
@@ -557,7 +557,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
     if (nullptr == parent && parentLinkName != "world")
     {
-      gzerr << "The parent [" << sdfJoint->ParentLinkName() << "] of joint ["
+      gzerr << "The parent [" << sdfJoint->ParentName() << "] of joint ["
              << sdfJoint->Name() << "] in model [" << modelName
              << "] was not found. The joint will not be constructed\n";
       continue;
@@ -684,7 +684,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 {
   const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
 
-  if (_sdfJoint.ChildLinkName() == "world")
+  if (_sdfJoint.ChildName() == "world")
   {
     gzerr << "Asked to create a joint with the world as the child in model "
            << "[" << modelInfo.model->getName() << "]. This is currently not "
@@ -707,7 +707,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // Since (1) is an error that should be reported and (2) might be a valid use
   // case, the solution is, when an error is encountered, we first assume (2)
   // and set the parent and child link names to whatever returned from
-  // sdf::Joint::ParentLinkName() and sdf::Joint::ChildLinkName respectively.
+  // sdf::Joint::ParentName() and sdf::Joint::ChildName respectively.
   // Then we check if a body node with the same relative name exists in DART. If
   // the link is nested inside a child model, it will be necessary to split the
   // name to identify the correct parent skeleton. If the corresponding body
@@ -720,9 +720,9 @@ Identity SDFFeatures::ConstructSdfJoint(
   const auto resolveParentErrors = _sdfJoint.ResolveParentLink(parentLinkName);
   if (!resolveParentErrors.empty()) {
     // It's possible this wasn't created from an sdf::Model object, like
-    // SDFFeatures_TEST.WorldIsParentOrChild. Try using raw ParentLinkName() in
+    // SDFFeatures_TEST.WorldIsParentOrChild. Try using raw ParentName() in
     // that case
-    parentLinkName = _sdfJoint.ParentLinkName();
+    parentLinkName = _sdfJoint.ParentName();
   }
 
   dart::dynamics::BodyNode * const parent =
@@ -731,7 +731,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   std::string childLinkName;
   const auto childResolveErrors = _sdfJoint.ResolveChildLink(childLinkName);
   if (!childResolveErrors.empty()) {
-    childLinkName = _sdfJoint.ChildLinkName();
+    childLinkName = _sdfJoint.ChildName();
   }
 
   dart::dynamics::BodyNode * const child =
@@ -739,7 +739,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (nullptr == parent && parentLinkName != "world")
   {
-    gzerr << "The link of the parent frame [" << _sdfJoint.ParentLinkName()
+    gzerr << "The link of the parent frame [" << _sdfJoint.ParentName()
            << "] with resolved link name [" << parentLinkName
            << "] of joint [" << _sdfJoint.Name()
            << "] could not be resolved. The joint will not be constructed\n";
@@ -747,7 +747,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   if (nullptr == child)
   {
-    gzerr << "The link of the child frame [" << _sdfJoint.ChildLinkName()
+    gzerr << "The link of the child frame [" << _sdfJoint.ChildName()
            << "] with resolved link name [" << childLinkName
            << "] of joint [" << _sdfJoint.Name() << "] in model ["
            << modelInfo.model->getName()
@@ -978,8 +978,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 {
   // if a specified link is named "world" but cannot be found, we'll assume the
   // joint is connected to the world
-  bool worldParent = (!_parent && _sdfJoint.ParentLinkName() == "world");
-  bool worldChild = (!_child && _sdfJoint.ChildLinkName() == "world");
+  bool worldParent = (!_parent && _sdfJoint.ParentName() == "world");
+  bool worldChild = (!_child && _sdfJoint.ChildName() == "world");
 
   if (worldChild)
   {
@@ -996,8 +996,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   {
     {
       std::stringstream msg;
-      msg << "Asked to create a joint from link [" << _sdfJoint.ParentLinkName()
-          << "] to link [" << _sdfJoint.ChildLinkName() << "] in the model "
+      msg << "Asked to create a joint from link [" << _sdfJoint.ParentName()
+          << "] to link [" << _sdfJoint.ChildName() << "] in the model "
           << "[" << _modelInfo.model->getName() << "], but ";
 
       if (!_parent && !worldParent)
