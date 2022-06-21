@@ -36,7 +36,7 @@ namespace gz
 {
 namespace physics
 {
-class TestLibLoader:
+class TestLibLoader_EXPORTS_API TestLibLoader :
   public testing::Test
 {
   /// brief Initialize command line arguments
