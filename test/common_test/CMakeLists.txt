@@ -3,6 +3,7 @@ set(TEST_TYPE "COMMON_TEST")
 set(tests
   basic_test
   construct_empty_world
+  simulation_features
 )
 
 link_directories(${PROJECT_BINARY_DIR}/test)
@@ -23,9 +24,14 @@ foreach(test ${tests})
       ignition-plugin${IGN_PLUGIN_VER}::loader
       ignition-common5::ignition-common5
       ${PROJECT_LIBRARY_TARGET_NAME}
+      ${PROJECT_LIBRARY_TARGET_NAME}-sdf
       gtest
       gtest_main
       ${PROJECT_NAME}_test_lib_loader
+  )
+
+  target_compile_definitions(${TEST_TYPE}_${test} PRIVATE
+    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
   )
 
   if (${BULLET_FOUND})
