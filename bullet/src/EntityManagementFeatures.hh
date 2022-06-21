@@ -32,6 +32,7 @@ namespace physics {
 namespace bullet {
 
 struct EntityManagementFeatureList : gz::physics::FeatureList<
+  GetEntities,
   RemoveModelFromWorld,
   ConstructEmptyWorldFeature
 > { };
@@ -56,6 +57,95 @@ class EntityManagementFeatures :
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       const Identity &_engineID, const std::string & _name) override;
+
+  // ----- Get entities -----
+  public: const std::string &GetEngineName(const Identity &) const override;
+  public: std::size_t GetEngineIndex(const Identity &) const override;
+
+  public: std::size_t GetWorldCount(const Identity &) const override;
+
+  public: Identity GetWorld(
+      const Identity &, std::size_t _worldIndex) const override;
+
+  public: Identity GetWorld(
+      const Identity &, const std::string &_worldName) const override;
+
+  public: const std::string &GetWorldName(
+      const Identity &_worldID) const override;
+
+  public: std::size_t GetWorldIndex(const Identity &_worldID) const override;
+
+  public: Identity GetEngineOfWorld(const Identity &_worldID) const override;
+
+  public: std::size_t GetModelCount(
+      const Identity &_worldID) const override;
+
+  public: Identity GetModel(
+      const Identity &_worldID, std::size_t _modelIndex) const override;
+
+  public: Identity GetModel(
+      const Identity &_worldID, const std::string &_modelName) const override;
+
+  public: const std::string &GetModelName(
+      const Identity &_modelID) const override;
+
+  public: std::size_t GetModelIndex(const Identity &_modelID) const override;
+
+  public: Identity GetWorldOfModel(const Identity &_modelID) const override;
+
+  public: std::size_t GetNestedModelCount(
+    const Identity &_modelID) const override;
+
+  public: Identity GetNestedModel(
+    const Identity &_modelID, std::size_t _modelIndex) const override;
+
+  public: Identity GetNestedModel(
+    const Identity &_modelID, const std::string &_modelName) const override;
+
+  public: std::size_t GetLinkCount(const Identity &_modelID) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, std::size_t _linkIndex) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, const std::string &_linkName) const override;
+
+  public: std::size_t GetJointCount(const Identity &_modelID) const override;
+
+  public: Identity GetJoint(
+      const Identity &_modelID, std::size_t _jointIndex) const override;
+
+  public: Identity GetJoint(
+      const Identity &_modelID, const std::string &_jointName) const override;
+
+  public: const std::string &GetLinkName(
+      const Identity &_linkID) const override;
+
+  public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
+
+  public: Identity GetModelOfLink(const Identity &_linkID) const override;
+
+  public: std::size_t GetShapeCount(const Identity &_linkID) const override;
+
+  public: Identity GetShape(
+      const Identity &_linkID, std::size_t _shapeIndex) const override;
+
+  public: Identity GetShape(
+      const Identity &_linkID, const std::string &_shapeName) const override;
+
+  public: const std::string &GetJointName(
+      const Identity &_jointID) const override;
+
+  public: std::size_t GetJointIndex(const Identity &_jointID) const override;
+
+  public: Identity GetModelOfJoint(const Identity &_jointID) const override;
+
+  public: const std::string &GetShapeName(
+      const Identity &_shapeID) const override;
+
+  public: std::size_t GetShapeIndex(const Identity &_shapeID) const override;
+
+  public: Identity GetLinkOfShape(const Identity &_shapeID) const override;
 };
 
 }  // namespace bullet
