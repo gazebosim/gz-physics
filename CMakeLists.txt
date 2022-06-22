@@ -83,7 +83,7 @@ ign_find_package(DART
 # Find bullet for the bullet plugin wrapper
 ign_find_package(IgnBullet
   VERSION 2.87
-  REQUIRED_BY bullet
+  REQUIRED_BY bullet bullet-featherstone
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
@@ -100,7 +100,7 @@ set(GZ_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf heightmap mesh dartsim tpe bullet)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone)
 
 
 #============================================================================
