@@ -49,7 +49,7 @@ class TestLibLoader_EXPORTS_API TestLibLoader
   /// \return Name of the Physics Engine
   std::string PhysicsEngineName(std::string _name);
 
-  protected: static std::string libToTest;
+  private: static std::string libToTest;
 };
 }
 }
