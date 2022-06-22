@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
+#include <gz/plugin/Loader.hh>
 
 #include "../helpers/TestLibLoader.hh"
 
@@ -30,7 +31,7 @@ using Features = gz::physics::FeatureList<
 >;
 
 class EntityManagementFeaturesTest:
-  public gz::physics::TestLibLoader
+  public testing::Test, public gz::physics::TestLibLoader
 {
   // Documentation inherited
   public: void SetUp() override
@@ -48,6 +49,9 @@ class EntityManagementFeaturesTest:
       // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
     }
   }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
 };
 
 /////////////////////////////////////////////////
@@ -68,6 +72,7 @@ TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  EntityManagementFeaturesTest::init(argc, argv);
+  if (!EntityManagementFeaturesTest::init(argc, argv))
+    return -1;
   return RUN_ALL_TESTS();
 }

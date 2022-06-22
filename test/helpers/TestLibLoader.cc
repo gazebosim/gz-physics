@@ -17,6 +17,7 @@
 
 #include "TestLibLoader.hh"
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -29,12 +30,16 @@ namespace gz
 {
 namespace physics
 {
-  void TestLibLoader::init(int argc, char *argv[])
+  bool TestLibLoader::init(int argc, char *argv[])
   {
     if (argc != 2)
-      FAIL() << "Please provide the path to an engine plugin.\n"
-             << "Usage " <<  argv[0] << " <physics engine path>\n";
+    {
+      std::cerr << "Please provide the path to an engine plugin.\n"
+                << "Usage " <<  argv[0] << " <physics engine path>\n";
+      return false;
+    }
     libToTest = argv[1];
+    return true;
   }
 
   std::string TestLibLoader::GetLibToTest()
