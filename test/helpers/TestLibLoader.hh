@@ -18,7 +18,6 @@
 #define GZ_PHYSICS_TESTLIBLOADER_HH_
 
 #include <string>
-#include <gz/plugin/Loader.hh>
 
 #ifndef _WIN32
 #  define TestLibLoader_EXPORTS_API
@@ -51,8 +50,6 @@ class TestLibLoader_EXPORTS_API TestLibLoader
   std::string PhysicsEngineName(std::string _name);
 
   protected: static std::string libToTest;
-  protected: gz::plugin::Loader loader;
-  protected: std::set<std::string> pluginNames;
 };
 }
 }

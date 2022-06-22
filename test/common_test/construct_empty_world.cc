@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
+#include <gz/plugin/Loader.hh>
 
 #include "../helpers/TestLibLoader.hh"
 
@@ -65,6 +66,9 @@ class ConstructEmptyWorldTest:
       // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
     }
   }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
 };
 
 /////////////////////////////////////////////////
