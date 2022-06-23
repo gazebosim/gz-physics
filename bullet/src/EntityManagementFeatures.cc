@@ -226,7 +226,9 @@ Identity EntityManagementFeatures::GetWorld(
   std::size_t worldEntity = 0;
   WorldInfoPtr worldPtr = nullptr;
 
-  for (auto itWorld = this->worlds.begin(); itWorld != this->worlds.end(); ++itWorld)
+  for (auto itWorld = this->worlds.begin();
+       itWorld != this->worlds.end();
+       ++itWorld)
   {
     if (index++ == _worldIndex)
     {
@@ -244,7 +246,9 @@ Identity EntityManagementFeatures::GetWorld(
 {
   std::size_t worldEntity = 0;
   WorldInfoPtr worldPtr = nullptr;
-  for (auto itWorld = this->worlds.begin(); itWorld != this->worlds.end(); ++itWorld)
+  for (auto itWorld = this->worlds.begin();
+       itWorld != this->worlds.end();
+       ++itWorld)
   {
     if (itWorld->second->name == _worldName)
     {
@@ -287,7 +291,9 @@ Identity EntityManagementFeatures::GetModel(
   std::size_t modelEntity = 0;
   ModelInfoPtr modelPtr = nullptr;
 
-  for (auto itModel = this->models.begin(); itModel != this->models.end(); ++itModel)
+  for (auto itModel = this->models.begin();
+       itModel != this->models.end();
+       ++itModel)
   {
     if (index++ == _modelIndex)
     {
@@ -305,7 +311,9 @@ Identity EntityManagementFeatures::GetModel(
 {
   std::size_t modelEntity = 0;
   ModelInfoPtr modelPtr = nullptr;
-  for (auto itModel = this->models.begin(); itModel != this->models.end(); ++itModel)
+  for (auto itModel = this->models.begin();
+       itModel != this->models.end();
+       ++itModel)
   {
     if (itModel->second->name == _modelName)
     {
@@ -355,7 +363,8 @@ std::size_t EntityManagementFeatures::GetModelIndex(
   return 0;
 }
 
-Identity EntityManagementFeatures::GetWorldOfModel(const Identity &_modelId) const
+Identity EntityManagementFeatures::GetWorldOfModel(
+  const Identity &_modelId) const
 {
   if (this->models.find(_modelId.id) == this->models.end())
   {
