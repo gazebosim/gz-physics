@@ -20,13 +20,21 @@
 
 #include "../helpers/TestLibLoader.hh"
 
+#include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 
 // The features that an engine must have to be loaded by this loader.
 using Features = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo
+  gz::physics::GetEngineInfo,
+  gz::physics::GetWorldFromEngine,
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ConstructEmptyModelFeature,
+  gz::physics::ConstructEmptyLinkFeature,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetShapeFromLink
 >;
 
 class EntityManagementFeaturesTest:
@@ -37,7 +45,7 @@ class EntityManagementFeaturesTest:
   {
     gz::common::Console::SetVerbosity(4);
 
-    auto plugins = loader.LoadLib(EntityManagementFeaturesTest::GetLibToTest());
+    loader.LoadLib(EntityManagementFeaturesTest::GetLibToTest());
 
     // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
     // FindFeatures
@@ -62,6 +70,39 @@ TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
     ASSERT_NE(nullptr, engine);
     EXPECT_TRUE(engine->GetName().find(PhysicsEngineName(name)) !=
                 std::string::npos);
+
+    auto world = engine->ConstructEmptyWorld("empty world");
+    ASSERT_NE(nullptr, world);
+
+    EXPECT_EQ(engine, world->GetEngine());
+    EXPECT_EQ(world, engine->GetWorld(0));
+    EXPECT_EQ(world, engine->GetWorld("empty world"));
+
+    auto model = world->ConstructEmptyModel("empty model");
+    EXPECT_EQ(1u, world->GetModelCount());
+    ASSERT_NE(nullptr, model);
+    EXPECT_EQ("empty model", model->GetName());
+    ASSERT_NE(model, world->ConstructEmptyModel("dummy"));
+    EXPECT_EQ(2u, world->GetModelCount());
+    EXPECT_EQ(0u, model->GetIndex());
+    EXPECT_EQ(0u, model->GetLinkCount());
+
+    EXPECT_EQ(world, model->GetWorld());
+    EXPECT_EQ(model, world->GetModel(0));
+    EXPECT_EQ(model, world->GetModel("empty model"));
+
+    auto link = model->ConstructEmptyLink("empty link");
+    EXPECT_EQ(1u, model->GetLinkCount());
+    ASSERT_NE(nullptr, link);
+    EXPECT_EQ("empty link", link->GetName());
+    ASSERT_NE(link, model->ConstructEmptyLink("dummy"));
+    EXPECT_EQ(2u, model->GetLinkCount());
+    EXPECT_EQ(0u, link->GetIndex());
+    EXPECT_EQ(0u, link->GetShapeCount());
+
+    EXPECT_EQ(model, link->GetModel());
+    EXPECT_EQ(link, model->GetLink(0));
+    EXPECT_EQ(link, model->GetLink("empty link"));
   }
 }
 

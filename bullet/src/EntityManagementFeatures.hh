@@ -34,7 +34,10 @@ namespace bullet {
 struct EntityManagementFeatureList : gz::physics::FeatureList<
   GetEntities,
   RemoveModelFromWorld,
-  ConstructEmptyWorldFeature
+  ConstructEmptyWorldFeature,
+  ConstructEmptyModelFeature,
+  ConstructEmptyLinkFeature,
+  GetModelFromWorld
 > { };
 
 class EntityManagementFeatures :
@@ -57,6 +60,12 @@ class EntityManagementFeatures :
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       const Identity &_engineID, const std::string & _name) override;
+
+  public: Identity ConstructEmptyModel(
+    const Identity &_worldID, const std::string &_name) override;
+
+  public: Identity ConstructEmptyLink(
+    const Identity &_modelID, const std::string &_name) override;
 
   // ----- Get entities -----
   public: const std::string &GetEngineName(const Identity &) const override;

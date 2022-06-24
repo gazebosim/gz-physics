@@ -82,6 +82,7 @@ TEST_F(ConstructEmptyWorldTest, ConstructEmptyWorld)
     ASSERT_NE(nullptr, world);
     auto model = world->ConstructEmptyModel("empty model");
     ASSERT_NE(nullptr, model);
+    EXPECT_EQ(world, model->GetWorld());
     auto modelAlias = world->GetModel(0);
 
     model->Remove();

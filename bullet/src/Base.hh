@@ -248,9 +248,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using CollisionInfoPtr = std::shared_ptr<CollisionInfo>;
   public: using JointInfoPtr  = std::shared_ptr<JointInfo>;
 
-  public: std::unordered_map<std::size_t, WorldInfoPtr> worlds;
-  public: std::unordered_map<std::size_t, ModelInfoPtr> models;
-  public: std::unordered_map<std::size_t, LinkInfoPtr> links;
+  public: std::map<std::size_t, WorldInfoPtr> worlds;
+  public: std::map<std::size_t, ModelInfoPtr> models;
+  public: std::map<std::size_t, LinkInfoPtr> links;
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
 

@@ -4,7 +4,9 @@ set(tests
   basic_test
   construct_empty_world
   free_joint_features
+  link_features
   simulation_features
+  world_features
 )
 
 link_directories(${PROJECT_BINARY_DIR}/test)
