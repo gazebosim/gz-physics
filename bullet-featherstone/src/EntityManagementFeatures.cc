@@ -53,8 +53,9 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   for (auto constraint_index : model->external_constraints)
   {
     const auto joint = this->joints.at(constraint_index);
-    assert(joint->constraint);
-    world->world->removeMultiBodyConstraint(joint->constraint.get());
+    const auto &constraint =
+      std::get<std::unique_ptr<btMultiBodyConstraint>>(joint->identifier);
+    world->world->removeMultiBodyConstraint(constraint.get());
     this->joints.erase(constraint_index);
   }
 

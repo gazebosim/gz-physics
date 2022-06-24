@@ -28,7 +28,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
 
   // Reject if the model has fixed base
-  if (model->fixed)
+  if (model->body->hasFixedBase())
     return this->GenerateInvalidId();
 
   return _modelID;
@@ -40,7 +40,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 {
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
   const auto *model = this->ReferenceInterface<ModelInfo>(link->model);
-  if (model->fixed)
+  if (model->body->hasFixedBase())
     return this->GenerateInvalidId();
 
   return link->model;

@@ -19,6 +19,8 @@
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Helpers.hh>
 
+#include <sdf/Link.hh>
+#include <sdf/Joint.hh>
 #include <sdf/Geometry.hh>
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
@@ -27,38 +29,15 @@
 #include <sdf/Cylinder.hh>
 #include <sdf/Plane.hh>
 #include <sdf/JointAxis.hh>
+#include <sdf/Surface.hh>
+
+#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 
 #include <memory>
 
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
-
-/////////////////////////////////////////////////
-/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
-/// frame. If that fails, return the raw pose
-static math::Pose3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
-{
-  math::Pose3d pose;
-  ::sdf::Errors errors = _semPose.Resolve(pose);
-  if (!errors.empty())
-  {
-    if (!_semPose.RelativeTo().empty())
-    {
-      gzerr << "There was an error in SemanticPose::Resolve\n";
-      for (const auto &err : errors)
-      {
-        gzerr << err.Message() << std::endl;
-      }
-      gzerr << "There is no optimal fallback since the relative_to attribute["
-             << _semPose.RelativeTo() << "] of the pose is not empty. "
-             << "Falling back to using the raw Pose.\n";
-    }
-    pose = _semPose.RawPose();
-  }
-
-  return pose;
-}
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
@@ -86,123 +65,405 @@ Identity SDFFeatures::ConstructSdfWorld(
 }
 
 /////////////////////////////////////////////////
+struct ParentInfo
+{
+  const ::sdf::Joint *joint;
+  const ::sdf::Model *model;
+};
+
+/////////////////////////////////////////////////
+struct Structure
+{
+  /// The root link of the model
+  const ::sdf::Link *root;
+  double mass;
+  btVector3 inertia;
+
+  /// Is the root link fixed
+  bool fixedBase;
+
+  /// Get the parent joint of the link
+  std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
+
+  /// This contains all the links except the root link
+  std::vector<const ::sdf::Link*> flatLinks;
+};
+
+/////////////////////////////////////////////////
+std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
+{
+  std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
+  const ::sdf::Link *root = nullptr;
+  bool fixed = false;
+  const std::string &rootModelName = _sdfModel.Name();
+
+  const auto checkModel =
+      [&root, &fixed, &parentOf, &rootModelName](
+      const ::sdf::Model &model) -> bool
+    {
+      for (std::size_t i = 0; i < model.JointCount(); ++i)
+      {
+        const auto *joint = model.JointByIndex(i);
+        const auto &parentLinkName = joint->ParentLinkName();
+        const auto *parent = model.LinkByName(parentLinkName);
+        const auto &childLinkName = joint->ChildLinkName();
+        const auto *child = model.LinkByName(childLinkName);
+
+        switch (joint->Type())
+        {
+          case ::sdf::JointType::FIXED:
+          case ::sdf::JointType::REVOLUTE:
+          case ::sdf::JointType::PRISMATIC:
+          case ::sdf::JointType::BALL:
+            break;
+          default:
+            gzerr << "Joint type [" << (std::size_t)(joint->Type())
+                  << "] is not supported by gz-physics-bullet-featherston\n";
+            return false;
+        }
+
+        if (child == parent)
+        {
+          gzerr << "The Link [" << parentLinkName << "] is being attached to "
+                << "itself by Joint [" << joint->Name() << "] in Model ["
+                << rootModelName << "]. That is not allowed.\n";
+          return false;
+        }
+
+        if (nullptr == parent && parentLinkName != "world")
+        {
+          gzerr << "The link [" << parentLinkName << "] cannot be found in "
+                << "Model [" << rootModelName << "], but joint ["
+                << joint->Name() << "] wants to use it as its parent link\n";
+          return false;
+        }
+        else if (nullptr == parent)
+        {
+          // This link is attached to the world, making it the root
+          if (nullptr != root)
+          {
+            // A root already exists for this model
+            gzerr << "Two root links were found for Model [" << rootModelName
+                  << "]: [" << root->Name() << "] and [" << childLinkName
+                  << "], but gz-physics-bullet-featherstone only supports one "
+                  << "root per Model.\n";
+            return false;
+          }
+
+          if (joint->Type() != ::sdf::JointType::FIXED)
+          {
+            gzerr << "Link [" << child->Name() << "] in Model ["
+                  << rootModelName << "] is being connected to the "
+                  << "world by Joint [" << joint->Name() << "] with a ["
+                  << (std::size_t)(joint->Type()) << "] joint type, but only "
+                  << "Fixed (" << (std::size_t)(::sdf::JointType::FIXED)
+                  << ") is supported by gz-physics-bullet-featherstone\n";
+            return false;
+          }
+
+          root = child;
+          fixed = true;
+        }
+
+        if (!parentOf.insert(
+          std::make_pair(child, ParentInfo{joint, &model})).second)
+        {
+          gzerr << "The Link [" << childLinkName << "] in Model ["
+                << rootModelName << "] has multiple parent joints. That is not "
+                << "supported by the gz-physics-bullet-featherstone plugin.\n";
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+  if (!checkModel(_sdfModel))
+    return std::nullopt;
+
+  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
+  {
+    if (!checkModel(*_sdfModel.ModelByIndex(i)))
+      return std::nullopt;
+  }
+
+  std::vector<const ::sdf::Link*> flatLinks;
+  std::unordered_map<const ::sdf::Link*, std::size_t> linkIndex;
+  const auto flattenLinks =
+      [&root, &parentOf, &rootModelName, &flatLinks, &linkIndex](
+      const ::sdf::Model &model) -> bool
+    {
+      for (std::size_t i = 0; i < model.LinkCount(); ++i)
+      {
+        const auto *link = model.LinkByIndex(i);
+        if (parentOf.count(link) == 0)
+        {
+          // This link must be the root. If a different link was already
+          // identified as the root then we have a conflict.
+          if (root && root != link)
+          {
+            gzerr << "Two root links were found for Model [" << rootModelName
+                  << "]: [" << root->Name() << "] and [" << link->Name()
+                  << "]. The Link [" << link->Name() << "] is implicitly a "
+                  << "root because it has no parent joint.\n";
+            return false;
+          }
+
+          root = link;
+          continue;
+        }
+
+        linkIndex[link] = linkIndex.size();
+        flatLinks.push_back(link);
+      }
+
+      return true;
+    };
+
+  if (!flattenLinks(_sdfModel))
+    return std::nullopt;
+
+  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
+  {
+    if (!flattenLinks(*_sdfModel.ModelByIndex(i)))
+      return std::nullopt;
+  }
+
+  // The documentation for bullet does not mention whether parent links must
+  // have a lower index than their child links, but the Featherstone Algorithm
+  // needs to crawl up and down the tree systematically, and so the flattened
+  // tree structures used by the algorithm usually do expect the parents to
+  // come before their children in the array, and do not work correctly if that
+  // ordering is not held. Out of an abundance of caution we will assume that
+  // ordering is necessary.
+  for (std::size_t i = 0; i < flatLinks.size(); ++i)
+  {
+    // Every element in flatLinks should have a parent if the earlier validation
+    // was done correctly.
+    const auto *parentJoint = parentOf.at(flatLinks[i]).joint;
+
+    const auto *parentLink =
+      _sdfModel.LinkByName(parentJoint->ParentLinkName());
+    const auto p_index_it = linkIndex.find(parentLink);
+    if (p_index_it == linkIndex.end())
+    {
+      // If the parent index cannot be found, that must mean the parent is the
+      // root link. In that case, this link can go anywhere in the tree, as long
+      // as it comes before its own children.
+      assert(parentLink == root);
+      continue;
+    }
+
+    auto &p_index = p_index_it->second;
+    if (i < p_index)
+    {
+      // The current link is in front of its parent link in the array. We must
+      // swap their places.
+      std::swap(flatLinks[i], flatLinks[p_index]);
+      p_index = i;
+      linkIndex[flatLinks[p_index]] = p_index;
+    }
+  }
+
+  const auto &M = root->Inertial().MassMatrix();
+  const auto mass = M.Mass();
+  btVector3 inertia(M.Ixx(), M.Iyy(), M.Izz());
+  for (const double &I : {M.Ixy(), M.Ixz(), M.Iyz()})
+  {
+    if (std::abs(I) > 1e-3)
+    {
+      gzerr << "The base link of the model is required to have a diagonal "
+            << "inertia matrix by gz-physics-bullet-featherstone, but the "
+            << "Model [" << _sdfModel.Name() << "] has a non-zero diagonal "
+            << "value: " << I << "\n";
+      return std::nullopt;
+    }
+  }
+
+  return Structure{root, mass, inertia, fixed, parentOf, flatLinks};
+}
+
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModel(
     const Identity &_worldID,
     const ::sdf::Model &_sdfModel)
 {
-  // check if parent is a world
-  if (this->worlds.find(_worldID) == this->worlds.end())
-  {
-    gzerr << "Unable to construct model: " << _sdfModel.Name() << ". "
-           << "Parent of model is not a world. " << std::endl;
+  const auto validation = ValidateModel(_sdfModel);
+  if (!validation.has_value())
     return this->GenerateInvalidId();
-  }
 
-  // Read sdf params
-  const std::string name = _sdfModel.Name();
-  const math::Pose3d pose = ResolveSdfPose(_sdfModel.SemanticPose());
+  const auto &structure = *validation;
   const bool isStatic = _sdfModel.Static();
-  // Links within a model will collide unless these are chained with a joint
-  // const bool selfCollide = _sdfModel.SelfCollide();
 
-  const auto modelIdentity =
-    this->AddModel(_worldID, {name, _worldID, isStatic, pose});
+  const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
 
-  // First, construct all links
-  for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i)
+  const auto rootInertialToLink =
+    gz::math::eigen3::convert(structure.root->Inertial().Pose()).inverse();
+  const auto modelID = this->AddModel(
+    _sdfModel.Name(), _worldID, rootInertialToLink,
+    std::make_unique<btMultiBody>(
+      structure.flatLinks.size(),
+      structure.mass,
+      structure.inertia,
+      structure.fixedBase || isStatic,
+      true));
+
+  const auto rootID =
+    this->AddLink(LinkInfo{
+      structure.root->Name(), std::nullopt, modelID, rootInertialToLink
+    });
+  const auto *model = this->ReferenceInterface<ModelInfo>(modelID);
+
+  std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
+  linkIDs.insert(std::make_pair(structure.root, rootID));
+  for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
   {
-    this->FindOrConstructLink(
-      modelIdentity, _sdfModel, _sdfModel.LinkByIndex(i)->Name());
-  }
+    const auto *link = structure.flatLinks[i];
+    const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
+          link->Inertial().Pose());
 
-  // Next, join all links that have joints
-  for (std::size_t i=0; i < _sdfModel.JointCount(); ++i)
-  {
-    const ::sdf::Joint *sdfJoint = _sdfModel.JointByIndex(i);
-    if (!sdfJoint)
+    const auto linkID = this->AddLink(
+      LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
+
+    linkIDs.insert(std::make_pair(link, linkID));
+    const auto &M = link->Inertial().MassMatrix();
+    const double mass = M.Mass();
+    const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
+    for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
     {
-      gzerr << "The joint with index [" << i << "] in model ["
-             << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
-      continue;
+      if (std::abs(I) > 1e-3)
+      {
+        gzerr << "Links are required to have a diagonal inertia matrix in "
+              << "gz-physics-bullet-featherstone, but Link [" << link->Name()
+              << "] in Model [" << model->name << "] has a non-zero off "
+              << "diagonal value in its inertia matrix\n";
+        return this->GenerateInvalidId();
+      }
     }
 
-    const std::size_t parent = this->FindOrConstructLink(
-      modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
+    const auto &parentInfo = structure.parentOf.at(link);
+    const auto *joint = parentInfo.joint;
+    const auto &parentLinkID = linkIDs.at(
+      parentInfo.model->LinkByName(joint->ParentLinkName()));
+    const auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
+      parentLinkID);
 
-    const std::size_t child = this->FindOrConstructLink(
-      modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
+    int parentIndex = -1;
+    if (parentLinkInfo->indexInModel.has_value())
+      parentIndex = *parentLinkInfo->indexInModel;
 
-    this->ConstructSdfJoint(modelIdentity, *sdfJoint, parent, child);
+    Eigen::Isometry3d poseParentComToJoint;
+    {
+      gz::math::Pose3d gzPoseParentToJoint;
+      const auto errors = joint->SemanticPose().Resolve(
+        gzPoseParentToJoint, joint->ParentLinkName());
+      if (!errors.empty())
+      {
+        gzerr << "An error occurred while resolving the transform of Joint ["
+              << joint->Name() << "] in Model [" << model->name << "]:\n";
+        for (const auto &error : errors)
+        {
+          gzerr << error << "\n";
+        }
+
+        return this->GenerateInvalidId();
+      }
+
+      poseParentComToJoint =
+        gz::math::eigen3::convert(gzPoseParentToJoint)
+        * parentLinkInfo->inertiaToLinkFrame;
+    }
+
+    Eigen::Isometry3d poseJointToChild;
+    {
+      gz::math::Pose3d gzPoseJointToChild;
+      const auto errors =
+        link->SemanticPose().Resolve(gzPoseJointToChild, joint->Name());
+      if (!errors.empty())
+      {
+        gzerr << "An error occured while resolving the transform of Link ["
+              << link->Name() << "]:\n";
+        for (const auto &error : errors)
+        {
+          gzerr << error << "\n";
+        }
+
+        return this->GenerateInvalidId();
+      }
+
+      poseJointToChild = gz::math::eigen3::convert(gzPoseJointToChild);
+    }
+
+    btQuaternion btRotParentComToJoint;
+    convertMat(poseParentComToJoint.linear())
+      .getRotation(btRotParentComToJoint);
+
+    btVector3 btPosParentComToJoint =
+      convertVec(poseParentComToJoint.translation());
+
+    btVector3 btJointToChildCom =
+      convertVec((poseJointToChild * linkToComTf).translation());
+
+    if (::sdf::JointType::FIXED == joint->Type())
+    {
+      model->body->setupFixed(
+        i, mass, inertia, parentIndex,
+        btRotParentComToJoint,
+        btPosParentComToJoint,
+        btJointToChildCom);
+    }
+    else if (::sdf::JointType::REVOLUTE == joint->Type())
+    {
+      const auto axis = joint->Axis()->Xyz();
+      model->body->setupRevolute(
+        i, mass, inertia, parentIndex,
+        btRotParentComToJoint,
+        btVector3(axis[0], axis[1], axis[2]),
+        btPosParentComToJoint,
+        btJointToChildCom,
+        true);
+    }
+    else if (::sdf::JointType::PRISMATIC == joint->Type())
+    {
+      const auto axis = joint->Axis()->Xyz();
+      model->body->setupPrismatic(
+        i, mass, inertia, parentIndex,
+        btRotParentComToJoint,
+        btVector3(axis[0], axis[1], axis[2]),
+        btPosParentComToJoint,
+        btJointToChildCom,
+        true);
+    }
+    else if (::sdf::JointType::BALL == joint->Type())
+    {
+      model->body->setupSpherical(
+        i, mass, inertia, parentIndex,
+        btRotParentComToJoint,
+        btPosParentComToJoint,
+        btJointToChildCom);
+    }
+    else
+    {
+      gzerr << "You have found a bug in gz-physics-bullet-featherstone. Joint "
+            << "type [" << (std::size_t)(joint->Type()) << "] should have been "
+            << "filtered out during model validation, but that filtering "
+            << "failed.\n";
+      return this->GenerateInvalidId();
+    }
+
+    for (std::size_t c = 0; c < link->CollisionCount(); ++c)
+    {
+      if (!this->AddSdfCollision(linkID, *link->CollisionByIndex(c)))
+        return this->GenerateInvalidId();
+    }
   }
 
-  return modelIdentity;
+  model->body->setHasSelfCollision(_sdfModel.SelfCollide());
+  return modelID;
 }
 
 /////////////////////////////////////////////////
-Identity SDFFeatures::ConstructSdfLink(
-    const Identity &_modelID,
-    const ::sdf::Link &_sdfLink)
-{
-  // Read sdf params
-  const std::string name = _sdfLink.Name();
-  const math::Pose3d pose = ResolveSdfPose(_sdfLink.SemanticPose());
-  const gz::math::Inertiald inertial = _sdfLink.Inertial();
-  double mass = inertial.MassMatrix().Mass();
-  math::Pose3d inertialPose = inertial.Pose();
-  inertialPose.Rot() *= inertial.MassMatrix().PrincipalAxesOffset();
-  const auto diagonalMoments = inertial.MassMatrix().PrincipalMoments();
-
-  // Get link properties
-  btVector3 linkInertiaDiag =
-    convertVec(gz::math::eigen3::convert(diagonalMoments));
-
-  const auto &modelInfo = this->models.at(_modelID);
-  math::Pose3d basePose = modelInfo->pose;
-  const auto poseIsometry =
-    gz::math::eigen3::convert(basePose * pose * inertialPose);
-  const auto poseTranslation = poseIsometry.translation();
-  const auto poseLinear = poseIsometry.linear();
-  btTransform baseTransform;
-  baseTransform.setOrigin(convertVec(poseTranslation));
-  baseTransform.setBasis(convertMat(poseLinear));
-
-  // Fixed links have 0 mass and inertia
-  if (this->models.at(_modelID)->fixed)
-  {
-    mass = 0;
-    linkInertiaDiag = btVector3(0, 0, 0);
-  }
-
-  auto myMotionState = std::make_shared<btDefaultMotionState>(baseTransform);
-  auto collisionShape = std::make_shared<btCompoundShape>();
-  btRigidBody::btRigidBodyConstructionInfo
-    rbInfo(mass, myMotionState.get(), collisionShape.get(), linkInertiaDiag);
-
-  auto body = std::make_shared<btRigidBody>(rbInfo);
-  body.get()->setActivationState(DISABLE_DEACTIVATION);
-
-  const auto &world = this->worlds.at(modelInfo->world)->world;
-
-  // Links collide with everything except elements sharing a joint
-  world->addRigidBody(body.get());
-
-  // Generate an identity for it
-  const auto linkIdentity =
-    this->AddLink(_modelID, {name, _modelID, pose, inertialPose,
-    mass, linkInertiaDiag, myMotionState, collisionShape, body});
-
-  // Create associated collisions to this model
-  for (std::size_t i = 0; i < _sdfLink.CollisionCount(); ++i)
-  {
-    const auto collision = _sdfLink.CollisionByIndex(i);
-    if (collision)
-      this->ConstructSdfCollision(linkIdentity, *collision);
-  }
-
-  return linkIdentity;
-}
-
-Identity SDFFeatures::ConstructSdfCollision(
+bool SDFFeatures::AddSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_collision)
 {
@@ -210,294 +471,175 @@ Identity SDFFeatures::ConstructSdfCollision(
   {
     gzerr << "The geometry element of collision [" << _collision.Name() << "] "
            << "was a nullptr\n";
-    return this->GenerateInvalidId();
+    return false;
   }
+
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto *model = this->ReferenceInterface<ModelInfo>(linkInfo->model);
 
   const auto &geom = _collision.Geom();
-  std::shared_ptr<btCollisionShape> shape;
+  std::unique_ptr<btCollisionShape> shape;
 
-  if (geom->BoxShape())
+  if (const auto *box = geom->BoxShape())
   {
-    const auto box = geom->BoxShape();
     const auto size = math::eigen3::convert(box->Size());
     const auto halfExtents = convertVec(size)*0.5;
-    shape = std::make_shared<btBoxShape>(halfExtents);
+    shape = std::make_unique<btBoxShape>(halfExtents);
   }
-  else if (geom->SphereShape())
+  else if (const auto *sphere = geom->SphereShape())
   {
-    const auto sphere = geom->SphereShape();
     const auto radius = sphere->Radius();
-    shape = std::make_shared<btSphereShape>(radius);
+    shape = std::make_unique<btSphereShape>(radius);
   }
-  else if (geom->CylinderShape())
+  else if (const auto *cylinder = geom->CylinderShape())
   {
-    const auto cylinder = geom->CylinderShape();
     const auto radius = cylinder->Radius();
     const auto halfLength = cylinder->Length()*0.5;
     shape =
-      std::make_shared<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
+      std::make_unique<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
   }
-  else if (geom->PlaneShape())
+  else if (const auto *plane = geom->PlaneShape())
   {
-    const auto plane = geom->PlaneShape();
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
-    shape = std::make_shared<btStaticPlaneShape>(normal, 0);
+    shape = std::make_unique<btStaticPlaneShape>(normal, 0);
   }
-  else if (geom->CapsuleShape())
+  else if (const auto *capsule = geom->CapsuleShape())
   {
-    const auto capsule = geom->CapsuleShape();
-    shape = std::make_shared<btCapsuleShapeZ>(
+    shape = std::make_unique<btCapsuleShapeZ>(
       capsule->Radius(), capsule->Length());
   }
-  else if (geom->EllipsoidShape())
+  else if (const auto *ellipsoid = geom->EllipsoidShape())
   {
     btVector3 positions[1];
     btScalar radius[1];
     positions[0] = btVector3();
     radius[0] = 1;
 
-    const auto ellipsoid = geom->EllipsoidShape();
     const auto radii = ellipsoid->Radii();
-    shape = std::make_shared<btMultiSphereShape>(
+    auto sphere = std::make_unique<btMultiSphereShape>(
       positions, radius, 1);
-    std::dynamic_pointer_cast<btMultiSphereShape>(shape)->setLocalScaling(
-      btVector3(radii.X(), radii.Y(), radii.Z()));
+    sphere->setLocalScaling(btVector3(radii.X(), radii.Y(), radii.Z()));
+    shape = std::move(sphere);
+  }
+  else
+  {
+    // TODO(MXG) Support mesh collisions
+    gzerr << "Unsupported collision geometry type ["
+          << (std::size_t)(geom->Type()) << "] for collision ["
+          << _collision.Name() << "] in Link [" << linkInfo->name
+          << "] of Model [" << model->name << "]\n";
+    return false;
   }
 
-  // TODO(lobotuerk/blast545) Add additional friction parameters for bullet
-  // Currently supporting mu and mu2
-  const auto &surfaceElement = _collision.Element()->GetElement("surface");
+  double mu = 1.0;
+  double mu2 = 1.0;
+  double restitution = 0.0;
+  double rollingFriction = 0.0;
+  if (const auto *surface = _collision.Surface())
+  {
+    if (const auto *friction = surface->Friction())
+    {
+      if (const auto *ode = friction->ODE())
+      {
+        mu = ode->Mu();
+        mu2 = ode->Mu2();
+      }
 
-  // Get friction
-  const auto &odeFriction = surfaceElement->GetElement("friction")
-                              ->GetElement("ode");
-  const auto mu = odeFriction->Get<btScalar>("mu");
-  const auto mu2 = odeFriction->Get<btScalar>("mu2");
+      if (const auto bullet = friction->Element()->GetElement("bullet"))
+      {
+        if (const auto f1 = bullet->GetElement("friction"))
+          mu = f1->Get<double>();
 
-  // Restitution coefficient not tested
-  // const auto restitution = surfaceElement->GetElement("bounce")
-  //                             ->Get<btScalar>("restitution_coefficient");
+        if (const auto f2 = bullet->GetElement("friction2"))
+          mu2 = f2->Get<double>();
+
+        // What is fdir1 for in the SDF's <bullet> spec?
+
+        if (const auto rolling = bullet->GetElement("rolling_friction"))
+          rollingFriction = rolling->Get<double>();
+      }
+    }
+
+    if (const auto bounce = surface->Element()->GetElement("bounce"))
+    {
+      if (const auto r = bounce->GetElement("restitution_coefficient"))
+        restitution = r->Get<double>();
+    }
+  }
+
   if (shape != nullptr)
   {
-    const auto &linkInfo = this->links.at(_linkID);
-    const auto &body = linkInfo->link;
-    const auto &modelID = linkInfo->model;
+    int linkIndexInModel = -1;
+    if (linkInfo->indexInModel.has_value())
+      linkIndexInModel = *linkInfo->indexInModel;
 
-    const math::Pose3d pose =
-      linkInfo->inertialPose.Inverse() *
-      ResolveSdfPose(_collision.SemanticPose());
-    const Eigen::Isometry3d poseIsometry =
-      gz::math::eigen3::convert(pose);
-    const Eigen::Vector3d poseTranslation = poseIsometry.translation();
-    const auto poseLinear = poseIsometry.linear();
-    btTransform baseTransform;
-    baseTransform.setOrigin(convertVec(poseTranslation));
-    baseTransform.setBasis(convertMat(poseLinear));
-
-    // shape->setMargin(btScalar(0.0001));
-    // body->setRollingFriction(0.25);
-    body->setFriction(1);
-    body->setAnisotropicFriction(btVector3(mu, mu2, 1),
-    btCollisionObject::CF_ANISOTROPIC_FRICTION);
-
-    dynamic_cast<btCompoundShape *>(body->getCollisionShape())
-      ->addChildShape(baseTransform, shape.get());
-
-    auto identity =
-      this->AddCollision(_linkID, {
-      _collision.Name(), shape, _linkID, modelID, pose, false, nullptr});
-    return identity;
-  }
-  return this->GenerateInvalidId();
-}
-
-/////////////////////////////////////////////////
-Identity SDFFeatures::ConstructSdfJoint(
-    const Identity &_modelID,
-    const ::sdf::Joint &_sdfJoint)
-{
-  // Check supported Joints
-  const ::sdf::JointType type = _sdfJoint.Type();
-  if( type != ::sdf::JointType::REVOLUTE && type != ::sdf::JointType::FIXED )
-  {
-    gzerr << "Asked to construct a joint of sdf::JointType ["
-           << static_cast<int>(type) << "], but that is not supported yet.\n";
-    return this->GenerateInvalidId();
-  }
-
-  // Dummy world to reuse FindOrConstructLink code
-  const ::sdf::Model dummyEmptyModel;
-
-  // Get the parent and child ids
-  const std::string parentLinkName = _sdfJoint.ParentLinkName();
-  std::size_t parentId =
-    this->FindOrConstructLink(_modelID, dummyEmptyModel, parentLinkName);
-
-  const std::string childLinkName = _sdfJoint.ChildLinkName();
-  std::size_t childId =
-    this->FindOrConstructLink(_modelID, dummyEmptyModel, childLinkName);
-
-  return this->ConstructSdfJoint(_modelID, _sdfJoint, parentId, childId);
-}
-
-Identity SDFFeatures::ConstructSdfJoint(
-    const Identity &_modelID,
-    const ::sdf::Joint &_sdfJoint,
-    std::size_t parentId,
-    std::size_t childId)
-{
-  // Check if chilId and parentId are valid values
-  const auto invalidEntity = this->GenerateInvalidId().id;
-  if (parentId == invalidEntity || childId == invalidEntity)
-  {
-    gzerr << "There was a problem finding/creating parent/child links\n";
-    return this->GenerateInvalidId();
-  }
-
-  // Handle the case where either child is the world, not supported
-  const std::size_t worldId = this->models.at(_modelID)->world;
-  if (childId == worldId)
-  {
-    gzwarn << "Not implemented joints using world as child\n";
-    return this->GenerateInvalidId();
-  }
-
-  // Get axis unit vector (expressed in world frame).
-  // IF fixed joint, use UnitZ, if revolute use the Axis given by the joint
-  // Eigen::Vector3d axis;
-  // gz::math::Vector3d axis = gz::math::Vector3d::UnitZ;
-  gz::math::Vector3d axis;
-  const ::sdf::JointType type = _sdfJoint.Type();
-  if(type == ::sdf::JointType::FIXED )
-  {
-    axis = gz::math::Vector3d::UnitZ;
-  }
-  else
-  {
-    // Resolve Axis XYZ. If it fails, use xyz function instead
-    math::Vector3d resolvedAxis;
-    if(_sdfJoint.Axis(0))
+    if (!linkInfo->collider)
     {
-      ::sdf::Errors errors = _sdfJoint.Axis(0)->ResolveXyz(resolvedAxis);
+      linkInfo->shape = std::make_unique<btCompoundShape>();
+
+      // NOTE: Bullet does not appear to support different surface properties
+      // for different shapes attached to the same link.
+      auto collider = std::make_unique<btMultiBodyLinkCollider>(
+        model->body.get(), linkIndexInModel);
+
+      collider->setRestitution(restitution);
+      collider->setRollingFriction(rollingFriction);
+      collider->setFriction(mu);
+      collider->setAnisotropicFriction(
+        btVector3(mu, mu2, 1),
+        btCollisionObject::CF_ANISOTROPIC_FRICTION);
+      linkInfo->collider = std::move(collider);
+
+      if (linkIndexInModel >= 0)
+      {
+        model->body->getLink(linkIndexInModel).m_collider =
+          linkInfo->collider.get();
+      }
+      else
+      {
+        model->body->setBaseCollider(linkInfo->collider.get());
+      }
+    }
+    else
+    {
+      // TODO(MXG): Maybe we should check if the new collider's properties
+      // match the existing collider and issue a warning if they don't.
+    }
+
+    Eigen::Isometry3d linkFrameToCollision;
+    {
+      gz::math::Pose3d gzLinkToCollision;
+      const auto errors =
+        _collision.SemanticPose().Resolve(gzLinkToCollision, linkInfo->name);
       if (!errors.empty())
-        resolvedAxis = _sdfJoint.Axis(0)->Xyz();
-      axis =
-        (this->links.at(childId)->pose *
-         ResolveSdfPose(_sdfJoint.SemanticPose())).Rot()
-         * resolvedAxis;
+      {
+        gzerr << "An error occurred while resolving the transform of the "
+              << "collider [" << _collision.Name() << "] in Link ["
+              << linkInfo->name << "] in Model [" << model->name << "]:\n";
+        for (const auto &error : errors)
+        {
+          gzerr << error << "\n";
+        }
+
+        return false;
+      }
+
+      linkFrameToCollision = gz::math::eigen3::convert(gzLinkToCollision);
     }
+
+    const btTransform btInertialToCollision =
+      convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
+
+    linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
+    this->AddCollision(
+      CollisionInfo{
+        _collision.Name(),
+        std::move(shape),
+        _linkID,
+        linkFrameToCollision});
   }
 
-  // Local variables used to compute pivots and axes in body-fixed frames
-  // for the parent and child links.
-  math::Vector3d pivotParent, pivotChild, axisParent, axisChild;
-  math::Pose3d pose;
-
-  if (parentId != worldId)
-  {
-    pivotParent =
-      (ResolveSdfPose(_sdfJoint.SemanticPose()) *
-       this->links.at(childId)->pose).Pos();
-    pose =
-      this->links.at(parentId)->pose * this->links.at(parentId)->inertialPose;
-    pivotParent -= pose.Pos();
-    pivotParent = pose.Rot().RotateVectorReverse(pivotParent);
-    axisParent = pose.Rot().RotateVectorReverse(axis);
-    axisParent = axisParent.Normalize();
-  }
-
-  pivotChild =
-    (ResolveSdfPose(_sdfJoint.SemanticPose()) *
-     this->links.at(childId)->pose).Pos();
-  pose = this->links.at(childId)->pose * this->links.at(childId)->inertialPose;
-  pivotChild -= pose.Pos();
-  pivotChild = pose.Rot().RotateVectorReverse(pivotChild);
-  axisChild = pose.Rot().RotateVectorReverse(axis);
-  axisChild = axisChild.Normalize();
-
-  std::shared_ptr<btHingeAccumulatedAngleConstraint> joint;
-  if (parentId != worldId)
-  {
-    joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
-      *this->links.at(childId)->link.get(),
-      *this->links.at(parentId)->link.get(),
-      convertVec(gz::math::eigen3::convert(pivotChild)),
-      convertVec(gz::math::eigen3::convert(pivotParent)),
-      convertVec(gz::math::eigen3::convert(axisChild)),
-      convertVec(gz::math::eigen3::convert(axisParent)));
-  }
-  else
-  {
-    joint = std::make_shared<btHingeAccumulatedAngleConstraint>(
-      *this->links.at(childId)->link.get(),
-      convertVec(gz::math::eigen3::convert(pivotChild)),
-      convertVec(gz::math::eigen3::convert(axisChild)));
-  }
-
-  // Limit movement for fixed joints
-  if(type == ::sdf::JointType::FIXED)
-  {
-    btScalar offset = joint->getHingeAngle();
-    joint->setLimit(offset, offset);
-  }
-
-  const auto &modelInfo = this->models.at(_modelID);
-  const auto &world = this->worlds.at(modelInfo->world)->world.get();
-  world->addConstraint(joint.get(), true);
-  joint->enableFeedback(true);
-
-  /* TO-DO(Lobotuerk): find how to implement axis friction properly for bullet*/
-  if (_sdfJoint.Axis(0) != nullptr)
-  {
-    double friction = _sdfJoint.Axis(0)->Friction();
-    joint->enableAngularMotor(true, 0.0, friction);
-    joint->setLimit(_sdfJoint.Axis(0)->Lower(), _sdfJoint.Axis(0)->Upper());
-  }
-  else
-  {
-    joint->enableAngularMotor(true, 0.0, 0.0);
-  }
-
-  // Generate an identity for it and return it
-  auto identity =
-    this->AddJoint({_sdfJoint.Name(), joint, childId, parentId,
-    static_cast<int>(type), axis});
-  return identity;
-}
-
-/////////////////////////////////////////////////
-std::size_t SDFFeatures::FindOrConstructLink(
-    const Identity &_modelID,
-    const ::sdf::Model &_sdfModel,
-    const std::string &_sdfLinkName)
-{
-  for (const auto &link : this->links)
-  {
-    const auto &linkInfo = link.second;
-    if (linkInfo->name == _sdfLinkName && linkInfo->model.id == _modelID.id)
-    {
-      // A link was previously created with that name,
-      // Return its entity value
-      return link.first;
-    }
-  }
-
-  // Link wasn't found, check if the requested link is "world"
-  if (_sdfLinkName == "world")
-  {
-    // Return the ID of the parent world of the model
-    return this->models.at(_modelID)->world;
-  }
-
-  const ::sdf::Link * const sdfLink = _sdfModel.LinkByName(_sdfLinkName);
-  if (!sdfLink)
-  {
-    gzerr << "Model [" << _sdfModel.Name() << "] does not contain a Link "
-           << "with the name [" << _sdfLinkName << "].\n";
-    return this->GenerateInvalidId().id;
-  }
-
-  return this->ConstructSdfLink(_modelID, *sdfLink);
+  return true;
 }
 
 }  // namespace bullet_featherstone

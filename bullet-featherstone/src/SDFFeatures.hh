@@ -20,13 +20,11 @@
 
 #include <string>
 
-#include <gz/physics/sdf/ConstructJoint.hh>
-#include <gz/physics/sdf/ConstructLink.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
-#include <gz/physics/sdf/ConstructCollision.hh>
-
 #include <gz/physics/Implements.hh>
+
+#include <sdf/Collision.hh>
 
 #include "EntityManagementFeatures.hh"
 
@@ -35,10 +33,7 @@ namespace physics {
 namespace bullet_featherstone {
 
 struct SDFFeatureList : gz::physics::FeatureList<
-  sdf::ConstructSdfJoint,
-  sdf::ConstructSdfLink,
   sdf::ConstructSdfModel,
-  sdf::ConstructSdfCollision,
   sdf::ConstructSdfWorld
 > { };
 
@@ -54,28 +49,9 @@ class SDFFeatures :
       const Identity &_worldID,
       const ::sdf::Model &_sdfModel) override;
 
-  private: Identity ConstructSdfLink(
-      const Identity &_modelID,
-      const ::sdf::Link &_sdfLink) override;
-
-  private: Identity ConstructSdfCollision(
+  public: bool AddSdfCollision(
       const Identity &_linkID,
-      const ::sdf::Collision &_collision) override;
-
-  private: Identity ConstructSdfJoint(
-      const Identity &_modelID,
-      const ::sdf::Joint &_sdfJoint) override;
-
-  private: Identity ConstructSdfJoint(
-      const Identity &_modelID,
-      const ::sdf::Joint &_sdfJoint,
-      std::size_t parentId,
-      std::size_t childId);
-
-  private: std::size_t FindOrConstructLink(
-      const Identity &_modelID,
-      const ::sdf::Model &_sdfModel,
-      const std::string &_sdfLinkName);
+      const ::sdf::Collision &_collision);
 };
 
 }  // namespace bullet_featherstone

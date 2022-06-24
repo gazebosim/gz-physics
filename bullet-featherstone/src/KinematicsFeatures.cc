@@ -26,53 +26,48 @@ namespace bullet_featherstone {
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const FrameID &_id) const
 {
-  FrameData3d data;
-
-  // The feature system should never send us the world ID.
-  if (_id.IsWorld())
+  const auto linkIt = this->links.find(_id.ID());
+  if (linkIt != this->links.end())
   {
-    gzerr << "Given a FrameID belonging to the world. This should not be "
-           << "possible! Please report this bug!\n";
-    assert(false);
-    return data;
+    const auto &linkInfo = linkIt->second;
+    const auto indexOpt = linkInfo->indexInModel;
+    const auto *model =
+      this->ReferenceInterface<ModelInfo>(linkInfo->model);
+
+    if (indexOpt.has_value())
+    {
+      const auto index = *indexOpt;
+      FrameData data;
+      data.pose.translation() = convert(
+        model->body->localPosToWorld(index, btVector3(0, 0, 0)));
+      data.pose.linear() = convert(
+        model->body->localFrameToWorld(index, btMatrix3x3::getIdentity()));
+
+      // Transform from bullet's inertia frame to Gazebo's link frame
+      data.pose = data.pose * linkInfo->inertiaToLinkFrame;
+
+      const auto &link = model->body->getLink(index);
+      data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
+      data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
+
+      return data;
+    }
+
+    // If indexOpt is nullopt then the link is the base link which will be
+    // calculated below.
   }
 
-  const auto linkID = _id.ID();
+  // If the Frame was not a Link then we can assume it's a Model because Free
+  // Groups are always Models underneath. If we ever support frame semantics for
+  // more than links, models, and free groups, then this implementation needs to
+  // change.
+  const auto *model = this->FrameInterface<ModelInfo>(_id);
 
-  if (this->links.find(linkID) == this->links.end())
-  {
-    gzerr << "Given a FrameID not belonging to a link.\n";
-    return data;
-  }
-  const auto &linkInfo = this->links.at(linkID);
-  const auto &rigidBody = linkInfo->link;
-
-  btTransform trans;
-  trans = rigidBody->getCenterOfMassTransform();
-  const btVector3 pos = trans.getOrigin();
-  const btMatrix3x3 mat = trans.getBasis();
-
-  const Eigen::Isometry3d poseIsometry =
-    gz::math::eigen3::convert(linkInfo->inertialPose.Inverse());
-  Eigen::Isometry3d poseIsometryBase;
-  poseIsometryBase.linear() = convert(mat);
-  poseIsometryBase.translation() = convert(pos);
-  poseIsometryBase =  poseIsometryBase * poseIsometry;
-  data.pose.linear() = poseIsometryBase.linear();
-  data.pose.translation() = poseIsometryBase.translation();
-
-  // Add base velocities
-  btVector3 omega = rigidBody->getAngularVelocity();
-  btVector3 vel = rigidBody->getLinearVelocity();
-
-  data.linearVelocity = convert(vel) + gz::math::eigen3::convert(
-    gz::math::eigen3::convert(convert(omega)).Cross(
-    -gz::math::eigen3::convert(data.pose).Rot() *
-    linkInfo->inertialPose.Pos()));
-  data.angularVelocity = convert(omega);
-
-  // \todo(anyone) compute frame accelerations
-
+  FrameData data;
+  data.pose = convert(model->body->getBaseWorldTransform())
+    * model->baseInertiaToLinkFrame;
+  data.linearVelocity = convert(model->body->getBaseVel());
+  data.linearAcceleration = convert(model->body->getBaseOmega());
   return data;
 }
 

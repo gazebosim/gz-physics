@@ -37,8 +37,8 @@ struct JointFeatureList : FeatureList<
   GetBasicJointProperties,
 
   GetRevoluteJointProperties,
-  FixedJointCast,
-  SetJointVelocityCommandFeature
+  GetPrismaticJointProperties,
+  FixedJointCast
 > { };
 
 class JointFeatures :
@@ -99,10 +99,16 @@ class JointFeatures :
   public: AngularVector3d GetRevoluteJointAxis(
       const Identity &_jointID) const override;
 
-  // ----- Joint Commands -----
-  public: void SetJointVelocityCommand(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+  // ----- Prismatic Joint -----
+  public: Identity CastToPrismaticJoint(
+      const Identity &_jointID) const override;
+
+  public: Eigen::Vector3d GetPrismaticJointAxis(
+      const Identity &_jointID) const override;
+
+  public: Identity CastToJointType(
+      const Identity &_jointID,
+      btMultibodyLink::eFeatherstoneJointType type) const;
 };
 
 }  // namespace bullet_featherstone

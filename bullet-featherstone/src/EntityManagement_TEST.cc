@@ -32,7 +32,8 @@
 //     gz::physics::bullet::EntityManagementFeatureList
 // > { };
 
-using TestFeatureList = gz::physics::bullet::EntityManagementFeatureList;
+using TestFeatureList =
+  gz::physics::bullet_featherstone::EntityManagementFeatureList;
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
@@ -40,7 +41,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   loader.LoadLib(bullet_plugin_LIB);
 
   gz::plugin::PluginPtr bullet =
-      loader.Instantiate("gz::physics::bullet::Plugin");
+      loader.Instantiate("gz::physics::bullet_featherstone::Plugin");
 
   auto engine =
       gz::physics::RequestEngine3d<TestFeatureList>::From(bullet);

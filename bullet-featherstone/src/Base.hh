@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_BASE_HH_
 #define GZ_PHYSICS_BULLET_FEATHERSTONE_BASE_HH_
 
+#include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <LinearMath/btVector3.h>
@@ -26,6 +27,7 @@
 #include <BulletDynamics/Featherstone/btMultiBody.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 #include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
+#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 
 #include <Eigen/Geometry>
 #include <algorithm>
@@ -76,16 +78,29 @@ struct ModelInfo
   std::string name;
   Identity world;
   std::size_t indexInWorld;
-  // cppcheck-suppress unusedStructMember
-  bool fixed;
-  math::Pose3d pose;
+  Eigen::Isometry3d baseInertiaToLinkFrame;
   std::unique_ptr<btMultiBody> body;
 
+  std::size_t rootLinkEntityId;
   std::vector<std::size_t> linkEntityIds;
 
   /// These are joints that connect this model to other models, e.g. fixed
   /// constraints.
   std::unordered_set<std::size_t> external_constraints;
+
+  ModelInfo(
+    std::string _name,
+    Identity _world,
+    Eigen::Isometry3d _baseInertiaToLinkFrame,
+    std::unique_ptr<btMultiBody> _body)
+    : name(std::move(_name)),
+      world(std::move(_world)),
+      baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
+      body(std::move(_body)),
+      rootLinkEntityId(INVALID_ENTITY_ID)
+  {
+    // Do nothing
+  }
 };
 
 /// Link information is embedded inside the model, so all we need to store here
@@ -93,19 +108,19 @@ struct ModelInfo
 struct LinkInfo
 {
   std::string name;
-  std::size_t indexInModel;
+  std::optional<std::size_t> indexInModel;
   Identity model;
+  Eigen::Isometry3d inertiaToLinkFrame;
+  std::unique_ptr<btMultiBodyLinkCollider> collider = nullptr;
+  std::unique_ptr<btCompoundShape> shape = nullptr;
 };
 
 struct CollisionInfo
 {
   std::string name;
-  std::unique_ptr<btCollisionShape> shape;
+  std::unique_ptr<btCollisionShape> collider;
   Identity link;
-  math::Pose3d relative_pose;
-  // cppcheck-suppress unusedStructMember
-  bool isMesh;
-  std::unique_ptr<btTriangleMesh> mesh;
+  Eigen::Isometry3d linkToCollision;
 };
 
 struct InternalJoint
@@ -131,7 +146,13 @@ struct JointInfo
   Identity parentLink;
   // cppcheck-suppress unusedStructMember
   int constraintType;
-  gz::math::Vector3d axis;
+
+  // These properties are difficult to back out of the bullet API, so we save
+  // them here. This violates the single-source-of-truth principle, but we do
+  // not currently support modifying the kinematics of a model after it is
+  // constructed.
+  Eigen::Isometry3d tf_from_parent;
+  Eigen::Isometry3d tf_to_child;
 };
 
 inline btMatrix3x3 convertMat(const Eigen::Matrix3d& mat)
@@ -169,9 +190,18 @@ inline Eigen::Vector3d convert(const btVector3& vec)
   return val;
 }
 
+inline Eigen::Isometry3d convert(const btTransform& tf)
+{
+  Eigen::Isometry3d output;
+  output.translation() = convert(tf.getOrigin());
+  output.linear() = convert(btMatrix3x3(tf.getRotation()));
+  return output;
+}
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
-  public: std::size_t entityCount = 0;
+  // Note: Entity ID 0 is reserved for the "engine"
+  public: std::size_t entityCount = 1;
 
   public: inline std::size_t GetNextEntity()
   {
@@ -180,9 +210,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
-    const auto id = this->GetNextEntity();
-    assert(id == 0);
-
     return this->GenerateIdentity(0);
   }
 
@@ -194,10 +221,17 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(id, world);
   }
 
-  public: inline Identity AddModel(ModelInfo _modelInfo)
+  public: inline Identity AddModel(
+    std::string _name,
+    Identity _worldID,
+    Eigen::Isometry3d _baseInertialToLinkFrame,
+    std::unique_ptr<btMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
-    auto model = std::make_shared<ModelInfo>(std::move(_modelInfo));
+    auto model = std::make_shared<ModelInfo>(
+      std::move(_name), std::move(_worldID),
+      std::move(_baseInertialToLinkFrame), std::move(_body));
+
     this->models[id] = model;
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
     world->world->addMultiBody(model->body.get());
@@ -212,6 +246,22 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto id = this->GetNextEntity();
     auto link = std::make_shared<LinkInfo>(std::move(_linkInfo));
     this->links[id] = link;
+
+    auto *model = this->ReferenceInterface<ModelInfo>(_linkInfo.model);
+    if (link->indexInModel.has_value())
+    {
+      // We expect the links to be added in order
+      assert(*link->indexInModel == model->linkEntityIds.size());
+      model->linkEntityIds.push_back(id);
+    }
+    else
+    {
+      // We are adding the root link. This means the model should not already
+      // have a root link
+      assert(model->rootLinkEntityId == INVALID_ENTITY_ID);
+      model->rootLinkEntityId = id;
+    }
+
     return this->GenerateIdentity(id, link);
   }
 
