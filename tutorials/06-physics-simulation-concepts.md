@@ -49,7 +49,7 @@ source ~/workspace/install/setup.bash
 ign gazebo diff_drive.sdf  # default Dartsim
 
 # or run demo with TPE
-ign gazebo velocity_control.sdf --physics-engine ignition-physics-tpe-plugin # specify TPE as physics engine
+ign gazebo velocity_control.sdf --physics-engine gz-physics-tpe-plugin # specify TPE as physics engine
 ```
 
 To control the car movement, in a separate terminal window, we publish a

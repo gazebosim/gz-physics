@@ -18,8 +18,8 @@ Gazebo automatically looks for all physics engine plugins that are
 installed with Gazebo Physics.
 At the time of writing, there are two physics engines available (more detail
 in \ref physicsplugin "Physics plugin tutorial"):
-- **DART**: `ignition-physics-dartsim-plugin`.
-- **TPE**: `ignition-physics-tpe-plugin`.
+- **DART**: `gz-physics-dartsim-plugin`.
+- **TPE**: `gz-physics-tpe-plugin`.
 
 If you've created a custom engine plugin, you can tell Gazebo where to
 find it by setting the `GZ_SIM_PHYSICS_ENGINE_PATH` environment variable to
@@ -66,8 +66,8 @@ For the example above, you can load it like this:
 
 ```{.xml}
 <plugin
-  filename="ignition-gazebo-physics-system"
-  name="gz::gazebo::systems::Physics">
+  filename="gz-sim-physics-system"
+  name="gz::sim::systems::Physics">
   <engine>
     <filename>CustomEngine</filename>
   </engine>
@@ -91,10 +91,10 @@ When instantiating a server programmatically, a physics engine can be passed to
 the constructor, for example:
 
 ```
-gz::gazebo::ServerConfig serverConfig;
+gz::sim::ServerConfig serverConfig;
 serverConfig.SetPhysicsEngine("CustomEngine");
 
-gz::gazebo::Server server(serverConfig);
+gz::sim::Server server(serverConfig);
 ```
 
 ## Troubleshooting

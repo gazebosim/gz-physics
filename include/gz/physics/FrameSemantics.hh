@@ -32,7 +32,7 @@ namespace gz
   {
     /////////////////////////////////////////////////
     /// \brief FrameSemantics is an Interface that can be provided by
-    /// ignition-physics engines to provide users with easy ways to express
+    /// gz-physics engines to provide users with easy ways to express
     /// kinematic quantities in terms of frames and compute their values in
     /// terms of arbitrary frames of reference.
     class GZ_PHYSICS_VISIBLE FrameSemantics : public virtual Feature
