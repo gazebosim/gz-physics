@@ -20,7 +20,7 @@ foreach(test ${tests})
   target_link_libraries(${TEST_TYPE}_${test}
     PUBLIC
       gz-plugin${GZ_PLUGIN_VER}::loader
-      gz-common5::gz-common5
+      gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
       ${PROJECT_LIBRARY_TARGET_NAME}
       gtest
       gtest_main
