@@ -370,11 +370,15 @@ class Base : public Implements3d<FeatureList<Feature>>
   private: static math::Inertiald DivideInertial(
                const math::Inertiald &_wholeInertial, std::size_t _count)
   {
+    if (_count == 1)
+    {
+      return _wholeInertial;
+    }
     math::Inertiald dividedInertial;
     math::MassMatrix3d dividedMassMatrix;
     dividedMassMatrix.SetMass(_wholeInertial.MassMatrix().Mass() /
                               static_cast<double>(_count));
-    dividedMassMatrix.SetMoi(_wholeInertial.Moi() *
+    dividedMassMatrix.SetMoi(_wholeInertial.MassMatrix().Moi() *
                              (1. / static_cast<double>(_count)));
     dividedInertial.SetMassMatrix(dividedMassMatrix);
     dividedInertial.SetPose(_wholeInertial.Pose());
@@ -467,20 +471,12 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     if (_link->inertial)
     {
-      std::size_t nodeCount = _link->weldedNodes.size();
-      if (nodeCount > 0)
+      std::size_t nodeCount = 1 + _link->weldedNodes.size();
+      const auto dividedInertial = DivideInertial(*_link->inertial, nodeCount);
+      AssignInertialToBody(dividedInertial, _link->link);
+      for (const auto &weldedNodePair : _link->weldedNodes)
       {
-        const auto dividedInertial =
-            DivideInertial(*_link->inertial, nodeCount);
-        AssignInertialToBody(dividedInertial, _link->link);
-        for (const auto &weldedNodePair : _link->weldedNodes)
-        {
-          AssignInertialToBody(dividedInertial, weldedNodePair.first);
-        }
-      }
-      else
-      {
-        AssignInertialToBody(*_link->inertial, _link->link);
+        AssignInertialToBody(dividedInertial, weldedNodePair.first);
       }
     }
   }
