@@ -26,6 +26,8 @@ release will remove the deprecated code.
    1. `IGNITION_PHYSICS_CONST_GET_ERROR` (hard-tocked, inside detail header)
    1. `IGNITION_UNITTEST_EXPECTDATA_ACCESS` (hard-tocked, inside test and detail headers)
    1. `IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE` (hard-tocked, inside detail header)
+1. The `ignition:expressed_in` SDF attribute is deprecated and will be removed.
+   Please use `gz:expressed_in` instead.
 
 ### Breaking Changes
 

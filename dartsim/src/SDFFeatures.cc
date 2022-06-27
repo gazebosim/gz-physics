@@ -829,7 +829,21 @@ Identity SDFFeatures::ConstructSdfCollision(
       math::Vector3d fdir1 = frictionDirectionElem->Get<math::Vector3d>();
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
 
-      const std::string kExpressedIn = "ignition:expressed_in";
+      std::string kExpressedIn = "gz:expressed_in";
+
+      // TODO(CH3): Deprecated. Remove on tock.
+      // Try deprecated ignition:expressed_in attribute
+      // if gz:expressed_in attribute is missing
+      if (!frictionDirectionElem->HasAttribute("gz:expressed_in"))
+      {
+        if (frictionDirectionElem->HasAttribute("ignition:expressed_in"))
+        {
+          gzwarn << "The `ignition:expressed_in` attribute is deprecated. "
+                 << "Please use `gz:expressed_in` instead." << std::endl;
+          kExpressedIn = "ignition:expressed_in";
+        }
+      }
+
       if (frictionDirectionElem->HasAttribute(kExpressedIn))
       {
         auto skeleton = bn->getSkeleton();
