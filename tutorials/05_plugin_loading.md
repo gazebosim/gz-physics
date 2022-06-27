@@ -17,7 +17,7 @@ plugin using \ref gz::physics "Gazebo Physics" API.
 
 ## Write a simple loader
 
-We will use a simplified physics plugin example for this tutorial. Source code can be found at [ign-physics/examples](https://github.com/gazebosim/gz-physics/tree/main/examples/hello_world_loader) folder.
+We will use a simplified physics plugin example for this tutorial. Source code can be found at [gz-physics/examples](https://github.com/gazebosim/gz-physics/tree/main/examples/hello_world_loader) folder.
 
 First, create a workspace for the example plugin loader.
 
@@ -62,7 +62,7 @@ engine implementing a \ref gz::physics::FeaturePolicy "FeaturePolicy" (3D
 ### Setup CMakeLists.txt for CMake build
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies in Citadel release.
+lines for finding `gz-plugin` and `gz-physics` dependencies in Citadel release.
 After that, add the executable pointing to our file and add linking library so
 that `cmake` can compile it.
 

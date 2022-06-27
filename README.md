@@ -14,7 +14,7 @@ Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon
 Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
-Gazebo Physics, a component of [Ignition
+Gazebo Physics, a component of [Gazebo
 Robotics](https://gazebosim.org), provides an abstract physics interface
 designed to support simulation and rapid development of robot applications.
 
@@ -97,7 +97,7 @@ You can also generate the documentation from a clone of this repository by follo
 3. Configure and build the documentation.
 
     ```
-    cd ign-physics; mkdir build; cd build; cmake ../; make doc
+    cd gz-physics; mkdir build; cd build; cmake ../; make doc
     ```
 
 4. View the documentation by running the following command from the build directory.

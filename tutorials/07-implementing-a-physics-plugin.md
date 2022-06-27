@@ -74,7 +74,7 @@ plugin provides, i.e. `HelloWorldFeatureList`
 ### Setup CMakeLists.txt for building (Version: ign-physics6)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
-lines for finding `ign-plugin` and `ign-physics` dependencies for the Fortress release:
+lines for finding `gz-plugin` and `gz-physics` dependencies for the Fortress release:
 
 \include examples/hello_world_plugin/CMakeLists.txt
 
