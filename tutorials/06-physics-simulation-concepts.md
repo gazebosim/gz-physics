@@ -16,7 +16,7 @@ Here is a snapshot of simulation features supported by ign-physics:
 - Kinematics; joint, arbitrary body shapes, various kinematic states like transmoration, velocity, acceleration etc., inverse kinematics
 - Dynamics: joint constraints, mass matrix, gravity, forces and frictions, closed-loop structures
 
-Ignition adopts SDFormat structure to describe visual elements and
+Gazebo adopts SDFormat structure to describe visual elements and
 also the dynamic physics aspects. To get started on SDFormat 1.7, refer to this
 [SDFormat specification](http://sdformat.org/spec?ver=1.7&elem=sdf).
 For a comprehensive tutorial for constructing your robot model from SDFormat, refer to this [Building robot](https://gazebosim.org/docs/fortress/building_robot) tutorial.
@@ -26,7 +26,7 @@ For a comprehensive tutorial for constructing your robot model from SDFormat, re
 In this tutorial, we will show how to
 manipulate and visualize some physics aspects using demos on Gazebo.
 
-All demos can be found in [ign-gazebo/examples/worlds](https://github.com/gazebosim/gz-sim/blob/main/examples/worlds/) folder.
+All demos can be found in [gz-sim/examples/worlds](https://github.com/gazebosim/gz-sim/blob/main/examples/worlds/) folder.
 
 ### Differential drive
 
@@ -46,10 +46,10 @@ Then run the simulation:
 source ~/workspace/install/setup.bash
 
 # then run diff_drive demo with Dartsim
-ign gazebo diff_drive.sdf  # default Dartsim
+gz sim diff_drive.sdf  # default Dartsim
 
 # or run demo with TPE
-ign gazebo velocity_control.sdf --physics-engine gz-physics-tpe-plugin # specify TPE as physics engine
+gz sim velocity_control.sdf --physics-engine gz-physics-tpe-plugin # specify TPE as physics engine
 ```
 
 To control the car movement, in a separate terminal window, we publish a
@@ -106,7 +106,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/lif
 Run demo in Gazebo by:
 
 ```bash
-ign gazebo lift_drag.sdf
+gz sim lift_drag.sdf
 ```
 
 To see how the rotor lifts the cube due to wind force pressure, in a separate terminal window, we can publish a
@@ -148,7 +148,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/buo
 Run demo on Gazebo by:
 
 ```bash
-ign gazebo buoyancy.sdf
+gz sim buoyancy.sdf
 ```
 
 After pressing the Play button, demo will run as below:
@@ -173,7 +173,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/vid
 and start the Pendulum demo on Gazebo by:
 
 ```bash
-ign gazebo video_record_dbl_pendulum.sdf
+gz sim video_record_dbl_pendulum.sdf
 ```
 
 After pressing the Play button, you will see that the pendulum will oscillate around
@@ -201,7 +201,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/mul
 and start the Multicopter demo on Gazebo by:
 
 ```bash
-ign gazebo multicopter_velocity_control.sdf
+gz sim multicopter_velocity_control.sdf
 ```
 
 To control the multicopter to ascend and hover, in a separate terminal window, send a
@@ -225,4 +225,3 @@ both of the multicopters will ascend, this demonstrates how the physics engine
 utilizes model kinematics and dynamics to support simulating complex model and
 its controller. For more details about the multicopter controller, please see
 [MulticopterVelocityControl.cc](https://github.com/gazebosim/gz-sim/blob/main/src/systems/multicopter_control/MulticopterVelocityControl.cc).
-
