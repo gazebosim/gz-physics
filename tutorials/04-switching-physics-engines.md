@@ -46,7 +46,7 @@ For additional environment variables that Gazebo finds other plugins
 or resources, you can see them by:
 
 ```bash
-ign gazebo -h
+gz sim -h
 ```
 
 ## Pointing Gazebo to physics engines
@@ -80,7 +80,7 @@ Alternatively, you can choose a plugin from the command line using the
 `--physics-engine` option, for example:
 
 ```bash
-ign gazebo --physics-engine CustomEngine
+gz sim --physics-engine CustomEngine
 ```
 
 ### From C++ API

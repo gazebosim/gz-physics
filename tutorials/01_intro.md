@@ -4,7 +4,7 @@ Next Tutorial: \ref installation
 
 ## Motivation
 
-Gazebo Physics (`ign-physics`) is a library component in Ignition, a set of
+Gazebo Physics (`gz-physics`) is a library component in Gazebo, a set of
 libraries designed to rapidly develop robot and simulation applications.
 The main goal of the library is to provide an abstraction layer to various
 physics engines, which gives end-users the ability to use multiple
@@ -17,18 +17,18 @@ Gazebo Physics extensibility and modularity.
 
 ## Overview
 
-For a big picture of the Gazebo Physics operation in Ignition ecosystem, see
+For a big picture of the Gazebo Physics operation in Gazebo ecosystem, see
 the abstract diagram below:
 
 @image html img/ign-libraries.png
 
-In general, `ign-gazebo` is the main simulation library, in which its
+In general, `gz-sim` is the main simulation library, in which its
 functionalities are powered by many component libraries.
-For example, its graphical drawing is supported by `ign-rendering` or simulated
-sensors that are defined and implemented in `ign-sensors`.
-In particular, this library `ign-physics` provides an abstract interface to
+For example, its graphical drawing is supported by `gz-rendering` or simulated
+sensors that are defined and implemented in `gz-sensors`.
+In particular, this library `gz-physics` provides an abstract interface to
 physics engines, which simulates dynamic transformations and interactions of
-objects in `ign-gazebo`. The libraries are connected by C++ code.
+objects in `gz-sim`. The libraries are connected by C++ code.
 
 Gazebo Physics uses a plugin architecture where each physics engine is
 implemented as a plugin that can be loaded at runtime.
@@ -82,5 +82,5 @@ to \ref physicsplugin
 
 ### Future roadmap
 
-Gazebo Physics evolves closely with the Ignition ecosystem.
+Gazebo Physics evolves closely with the Gazebo ecosystem.
 For a broader overview, please visit [Gazebo's roadmap](https://gazebosim.org/about).
