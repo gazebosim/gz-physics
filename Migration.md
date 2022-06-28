@@ -14,6 +14,10 @@ release will remove the deprecated code.
 1. Header files under `ignition/...` are deprecated and will be removed in future versions.
    Use `gz/...` instead.
 
+1. The shared libraries have `gz` where there used to be `ignition`, and also have their `lib` and `.so` prefixes and suffixes removed.
+  E.g. `libignition-XXX-system.so` -> `gz-XXX-system`.
+  1. Using the un-migrated version is still possible due to tick-tocks, but will be removed in future versions.
+
 1. The following `IGN_` / `IGNITION_` prefixed macros are deprecated and will be removed in future versions.
    Additionally, they will only be available when including the corresponding `ignition/...` header.
    Use the `GZ_` prefix instead.
