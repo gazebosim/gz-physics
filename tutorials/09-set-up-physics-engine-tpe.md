@@ -278,5 +278,5 @@ for more comprehensive unit tests.
 Please follow the previous tutorial \ref installation "Installation" to build
 `ign-physics` from source again for our new feature to be compiled.
 
-Now we can load the new physics plugin named `ignition-physics-tpe-plugin`
+Now we can load the new physics plugin named `gz-physics-tpe-plugin`
 to test it on Gazebo by following this \ref switchphysicsengines "Switching physics engines" tutorial.

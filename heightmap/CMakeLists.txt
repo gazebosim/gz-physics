@@ -3,7 +3,7 @@ gz_add_component(heightmap INTERFACE
 
 target_link_libraries(${heightmap}
   INTERFACE
-    ignition-common${IGN_COMMON_VER}::geospatial)
+    gz-common${GZ_COMMON_VER}::geospatial)
 
 install(
   DIRECTORY include/
