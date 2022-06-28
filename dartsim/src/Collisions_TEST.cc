@@ -85,8 +85,8 @@ class Collisions_TEST
       public ::testing::WithParamInterface<std::string>
 {};
 
-INSTANTIATE_TEST_CASE_P(PhysicsPlugins, Collisions_TEST,
-    ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+INSTANTIATE_TEST_SUITE_P(PhysicsPlugins, Collisions_TEST,
+    ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries));
 
 TestWorldPtr ConstructMeshPlaneWorld(
     const gz::physics::Engine3dPtr<TestFeatureList> &_engine,

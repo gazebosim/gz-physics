@@ -747,8 +747,8 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
   }
 }
 
-INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
-  ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+INSTANTIATE_TEST_SUITE_P(PhysicsPlugins, SimulationFeatures_TEST,
+  ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries));
 
 int main(int argc, char *argv[])
 {
