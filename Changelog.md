@@ -180,7 +180,7 @@
     * [Pull request #133](https://github.com/gazebosim/gz-physics/pull/133)
     * [Pull request #116](https://github.com/gazebosim/gz-physics/pull/116)
 
-1. Bump in edifice: ign-common4
+1. Bump in edifice: gz-common4
     * [Pull request #205](https://github.com/gazebosim/gz-physics/pull/205)
 
 1. Constructing nested models for dartsim

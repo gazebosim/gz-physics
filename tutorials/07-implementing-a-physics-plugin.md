@@ -71,7 +71,7 @@ a plugin.
 - The third argument is the `FeatureList`, specifying all the features that this
 plugin provides, i.e. `HelloWorldFeatureList`
 
-### Setup CMakeLists.txt for building (Version: ign-physics6)
+### Setup CMakeLists.txt for building (Version: gz-physics6)
 
 Now create a file named `CMakeLists.txt` with your favorite editor and add these
 lines for finding `gz-plugin` and `gz-physics` dependencies for the Fortress release:
