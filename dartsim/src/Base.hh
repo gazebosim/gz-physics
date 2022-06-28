@@ -367,6 +367,35 @@ class Base : public Implements3d<FeatureList<Feature>>
     return id;
   }
 
+  private: static math::Inertiald DivideInertial(
+               const math::Inertiald &_wholeInertial, std::size_t _count)
+  {
+    if (_count == 1)
+    {
+      return _wholeInertial;
+    }
+    math::Inertiald dividedInertial;
+    math::MassMatrix3d dividedMassMatrix;
+    dividedMassMatrix.SetMass(_wholeInertial.MassMatrix().Mass() /
+                              static_cast<double>(_count));
+    dividedMassMatrix.SetMoi(_wholeInertial.MassMatrix().Moi() *
+                             (1. / static_cast<double>(_count)));
+    dividedInertial.SetMassMatrix(dividedMassMatrix);
+    dividedInertial.SetPose(_wholeInertial.Pose());
+    return dividedInertial;
+  }
+
+  private: static void AssignInertialToBody(
+               const math::Inertiald &_inertial, DartBodyNode * _body)
+  {
+    const math::Matrix3d &moi = _inertial.Moi();
+    const math::Vector3d &com = _inertial.Pose().Pos();
+    _body->setMass(_inertial.MassMatrix().Mass());
+    _body->setMomentOfInertia(moi(0, 0), moi(1, 1), moi(2, 2), moi(0, 1),
+                              moi(0, 2), moi(1, 2));
+    _body->setLocalCOM(math::eigen3::convert(com));
+  }
+
   public: inline DartBodyNode* SplitAndWeldLink(LinkInfo *_link)
   {
     // First create a new body node with FreeJoint and a unique name based
@@ -398,27 +427,58 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (_link->inertial)
     {
       std::size_t nodeCount = 1 + _link->weldedNodes.size();
-      const double mass = _link->inertial->MassMatrix().Mass() / nodeCount;
-      const math::Matrix3d moi = _link->inertial->Moi() * (1 / nodeCount);
-      const math::Vector3d cog = _link->inertial->Pose().Pos();
-
-      _link->link->setMass(mass);
-      _link->link->setMomentOfInertia(
-          moi(0, 0), moi(1, 1), moi(2, 2),
-          moi(0, 1), moi(0, 2), moi(1, 2));
-      _link->link->setLocalCOM(math::eigen3::convert(cog));
-      for (auto weldedNodePair : _link->weldedNodes)
+      const auto dividedInertial = DivideInertial(*_link->inertial, nodeCount);
+      AssignInertialToBody(dividedInertial, _link->link);
+      for (const auto &weldedNodePair : _link->weldedNodes)
       {
-        weldedNodePair.first->setMass(mass);
-        weldedNodePair.first->setMomentOfInertia(
-            moi(0, 0), moi(1, 1), moi(2, 2),
-            moi(0, 1), moi(0, 2), moi(1, 2));
-        weldedNodePair.first->setLocalCOM(math::eigen3::convert(cog));
+        AssignInertialToBody(dividedInertial, weldedNodePair.first);
       }
     }
 
     this->linkByWeldedNode[pairJointBodyNode.second] = _link;
     return pairJointBodyNode.second;
+  }
+
+  public: void MergeLinkAndWeldedBody(LinkInfo *_link, DartBodyNode *child)
+  {
+    // Break the existing joint first.
+    child->moveTo<dart::dynamics::FreeJoint>(nullptr);
+    auto it = _link->weldedNodes.begin();
+    bool foundWeld = false;
+    for (; it != _link->weldedNodes.end(); ++it)
+    {
+      if (it->first == child)
+      {
+        auto worldId = this->GetWorldOfModelImpl(
+            this->models.objectToID[child->getSkeleton()]);
+        auto dartWorld = this->worlds.at(worldId);
+        dartWorld->getConstraintSolver()->removeConstraint(it->second);
+        // Okay to erase since we break afterward.
+        _link->weldedNodes.erase(it);
+        foundWeld = true;
+        break;
+      }
+    }
+
+    if (!foundWeld)
+    {
+      // We have not found a welded node associated with _link. This shouldn't
+      // happen.
+      ignerr << "Could not find welded body node for link " << _link->name
+             << ". Merging of link and welded body failed.";
+      return;
+    }
+
+    if (_link->inertial)
+    {
+      std::size_t nodeCount = 1 + _link->weldedNodes.size();
+      const auto dividedInertial = DivideInertial(*_link->inertial, nodeCount);
+      AssignInertialToBody(dividedInertial, _link->link);
+      for (const auto &weldedNodePair : _link->weldedNodes)
+      {
+        AssignInertialToBody(dividedInertial, weldedNodePair.first);
+      }
+    }
   }
 
   public: inline std::size_t AddJoint(DartJoint *_joint)

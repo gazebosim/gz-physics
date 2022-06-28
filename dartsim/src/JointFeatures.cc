@@ -386,6 +386,10 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
            this->linkByWeldedNode.end())
   {
     childLinkInfo = this->linkByWeldedNode.at(child);
+    this->MergeLinkAndWeldedBody(childLinkInfo, child);
+    this->linkByWeldedNode.erase(child);
+    child->remove();
+    return;
   }
   else
   {
