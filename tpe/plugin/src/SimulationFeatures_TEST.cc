@@ -749,9 +749,3 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 
 INSTANTIATE_TEST_SUITE_P(PhysicsPlugins, SimulationFeatures_TEST,
   ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries));
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

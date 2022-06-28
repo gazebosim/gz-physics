@@ -206,10 +206,3 @@ TEST(FeatureSystem, MockCenterOfMass2d)
   EXPECT_DOUBLE_EQ(expectedCom2[0], com2[0]);
   EXPECT_DOUBLE_EQ(expectedCom2[1], com2[1]);
 }
-
-/////////////////////////////////////////////////
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

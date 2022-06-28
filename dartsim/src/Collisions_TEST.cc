@@ -155,9 +155,3 @@ TEST_P(Collisions_TEST, MeshAndPlane)
           -1.91, link->FrameDataRelativeToWorld().pose.translation()[2], 0.05);
   }
 }
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

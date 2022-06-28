@@ -931,9 +931,3 @@ TEST_P(SDFFeatures_TEST, Shapes)
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
   }
 }
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
