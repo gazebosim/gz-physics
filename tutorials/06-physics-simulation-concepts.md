@@ -46,10 +46,10 @@ Then run the simulation:
 source ~/workspace/install/setup.bash
 
 # then run diff_drive demo with Dartsim
-ign gazebo diff_drive.sdf  # default Dartsim
+gz sim diff_drive.sdf  # default Dartsim
 
 # or run demo with TPE
-ign gazebo velocity_control.sdf --physics-engine gz-physics-tpe-plugin # specify TPE as physics engine
+gz sim velocity_control.sdf --physics-engine gz-physics-tpe-plugin # specify TPE as physics engine
 ```
 
 To control the car movement, in a separate terminal window, we publish a
@@ -106,7 +106,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/lif
 Run demo in Gazebo by:
 
 ```bash
-ign gazebo lift_drag.sdf
+gz sim lift_drag.sdf
 ```
 
 To see how the rotor lifts the cube due to wind force pressure, in a separate terminal window, we can publish a
@@ -148,7 +148,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/buo
 Run demo on Gazebo by:
 
 ```bash
-ign gazebo buoyancy.sdf
+gz sim buoyancy.sdf
 ```
 
 After pressing the Play button, demo will run as below:
@@ -173,7 +173,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/vid
 and start the Pendulum demo on Gazebo by:
 
 ```bash
-ign gazebo video_record_dbl_pendulum.sdf
+gz sim video_record_dbl_pendulum.sdf
 ```
 
 After pressing the Play button, you will see that the pendulum will oscillate around
@@ -201,7 +201,7 @@ wget https://raw.githubusercontent.com/gazebosim/gz-sim/main/examples/worlds/mul
 and start the Multicopter demo on Gazebo by:
 
 ```bash
-ign gazebo multicopter_velocity_control.sdf
+gz sim multicopter_velocity_control.sdf
 ```
 
 To control the multicopter to ascend and hover, in a separate terminal window, send a
