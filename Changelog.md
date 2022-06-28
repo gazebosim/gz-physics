@@ -283,7 +283,7 @@
 1. Ignore invalid joint commands
     * [Pull request #137](https://github.com/gazebosim/gz-physics/pull/137)
 
-1. Fix CONFIG arg in ign_find_package(DART) call
+1. Fix CONFIG arg in gz_find_package(DART) call
     * [Pull request #119](https://github.com/gazebosim/gz-physics/pull/119)
 
 ### Gazebo Physics 3.1.0 (2020-10-18)
@@ -297,7 +297,7 @@
 1. Support nested models in TPE
     * [Pull request 86](https://github.com/gazebosim/gz-physics/pull/86)
 
-1. Fix CONFIG arg in ign_find_package(DART) call
+1. Fix CONFIG arg in gz_find_package(DART) call
     * [Pull request 119](https://github.com/gazebosim/gz-physics/pull/119)
 
 1. Fix getting model bounding box in world frame in TPE
@@ -388,7 +388,7 @@
 1. Support getting shape AABB in world frame
     * [Pull request #127](https://github.com/gazebosim/gz-physics/pull/127)
 
-1. Fix CONFIG arg in `ign_find_package(DART)` call
+1. Fix CONFIG arg in `gz_find_package(DART)` call
     * [Pull request #119](https://github.com/gazebosim/gz-physics/pull/119)
 
 ### Gazebo Physics 2.3.0 (2020-09-29)
@@ -512,7 +512,7 @@
 1. Ignore invalid joint commands in the dartsim-plugin
     * [Pull request 137](https://github.com/gazebosim/gz-physics/pull/137)
 
-1.  Fix CONFIG arg in ign_find_package(DART) call
+1.  Fix CONFIG arg in gz_find_package(DART) call
     * [Pull request 119](https://github.com/gazebosim/gz-physics/pull/119)
 
 ### Gazebo Physics 1.9.0 (2020-09-17)

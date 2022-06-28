@@ -38,8 +38,8 @@ ign-physics
 ```
 
 As shown above, there are two physics engines available:
-- **DART**: `ignition-physics-dartsim-plugin`.
-- **TPE**: `ignition-physics-tpe-plugin`.
+- **DART**: `gz-physics-dartsim-plugin`.
+- **TPE**: `gz-physics-tpe-plugin`.
 
 and their plugin folders are placed just below the top level of `ign-physics`.
 

@@ -11,7 +11,7 @@ gz_build_tests(
   SOURCES ${tests}
   LIB_DEPS
     Eigen3::Eigen
-    ignition-plugin${IGN_PLUGIN_VER}::loader
+    gz-plugin${GZ_PLUGIN_VER}::loader
   TEST_LIST list)
 
 if (BUILD_TESTING)
