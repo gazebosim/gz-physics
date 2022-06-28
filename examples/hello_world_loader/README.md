@@ -5,7 +5,7 @@ plugins, according to a desired feature list.
 
 ## Build
 
-From the root of the `ign-physics` repository, do the following to build the example:
+From the root of the `gz-physics` repository, do the following to build the example:
 
 ```bash
 cd examples/hello_world_loader

@@ -702,7 +702,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   //    constructed by the user instead of one obtained from an sdf::Model
   //    object. In this case, the joint does not have a valid frame graph and it
   //    cannot be used to resolve for the parent link name. However, this can
-  //    still be a valid use case for ign-gazebo that sends DOM objects
+  //    still be a valid use case for gz-sim that sends DOM objects
   //    piecemeal with all links and poses resolved.
   // Since (1) is an error that should be reported and (2) might be a valid use
   // case, the solution is, when an error is encountered, we first assume (2)

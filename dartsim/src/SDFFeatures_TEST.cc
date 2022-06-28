@@ -142,7 +142,7 @@ static sdf::JointAxis ResolveJointAxis(const sdf::JointAxis &_unresolvedAxis)
 }
 
 /////////////////////////////////////////////////
-/// Downstream applications, like ign-gazebo, use this way of world construction
+/// Downstream applications, like gz-sim, use this way of world construction
 WorldPtr LoadWorldPiecemeal(const std::string &_world)
 {
   auto engine = LoadEngine();

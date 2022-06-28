@@ -66,7 +66,7 @@ static tpelib::Link *FindModelRootLink(tpelib::Model *_model)
   {
     // assume canonical link is the first link in model
     // note the canonical link of a free group is renamed to root link in
-    // ign-physics4. The canonical link / root link of a free group can be
+    // gz-physics4. The canonical link / root link of a free group can be
     // different from the canonical link of a model.
     // Here we treat them the same and return the model's canonical link
     return static_cast<tpelib::Link *>(&_model->GetCanonicalLink());
