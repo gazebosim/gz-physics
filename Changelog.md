@@ -560,7 +560,7 @@
 1. Add SetJointVelocityCommand feature.
     * [BitBucket pull request 100](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/100)
 
-1. Add `IGN_PROFILER_ENABLE` cmake option for enabling the ign-common profiler.
+1. Add `IGN_PROFILER_ENABLE` cmake option for enabling the gz-common profiler.
     * [BitBucket pull request 96](https://osrf-migration.github.io/ignition-gh-pages/#!/ignitionrobotics/ign-physics/pull-requests/96)
 
 ### Gazebo Physics 1.3.1 (2019-07-19)
