@@ -20,7 +20,6 @@ ExternalProject_Add(
 )
 
 add_subdirectory(gtest_vendor)
-
 add_subdirectory(benchmark)
 add_subdirectory(common_test)
 add_subdirectory(plugins)
