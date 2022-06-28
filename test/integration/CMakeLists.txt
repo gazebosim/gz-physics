@@ -12,6 +12,8 @@ gz_build_tests(
   LIB_DEPS
     Eigen3::Eigen
     gz-plugin${GZ_PLUGIN_VER}::loader
+  INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}/src
   TEST_LIST list)
 
 if (BUILD_TESTING)
