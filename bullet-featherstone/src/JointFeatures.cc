@@ -30,11 +30,15 @@ double JointFeatures::GetJointPosition(
 {
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (!identifier)
-    return gz::math::NAN_D;
+  if (identifier)
+  {
+    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+    return model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof];
+  }
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  return *model->body->getJointPosMultiDof(_dof);
+  // The base joint never really has a position. It is either a Free Joint or
+  // a Fixed Joint, but it doesn't track a "joint position" for Free Joint.
+  return 0.0;
 }
 
 /////////////////////////////////////////////////
@@ -43,11 +47,23 @@ double JointFeatures::GetJointVelocity(
 {
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (!identifier)
-    return gz::math::NAN_D;
+  if (identifier)
+  {
+    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+    return model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof];
+  }
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  return *model->body->getJointVelMultiDof(_dof);
+  if (std::get_if<RootJoint>(&joint->identifier))
+  {
+    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+
+    if (_dof < 3)
+      return model->body->getBaseVel()[_dof];
+    else if (_dof < 6)
+      return model->body->getBaseOmega()[_dof];
+  }
+
+  return gz::math::NAN_D;
 }
 
 /////////////////////////////////////////////////
@@ -63,11 +79,14 @@ double JointFeatures::GetJointForce(
 {
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (!identifier)
-    return gz::math::NAN_D;
+  if (identifier)
+  {
+    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+    return model->body->getJointTorqueMultiDof(
+          identifier->indexInBtModel)[_dof];
+  }
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  return *model->body->getJointTorqueMultiDof(_dof);
+  return gz::math::NAN_D;
 }
 
 /////////////////////////////////////////////////
@@ -87,8 +106,8 @@ void JointFeatures::SetJointPosition(
   if (!identifier)
     return;
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  model->body->getJointPosMultiDof(identifier->indexInModel)[_dof] = _value;
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -100,8 +119,8 @@ void JointFeatures::SetJointVelocity(
   if (!identifier)
     return;
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  model->body->getJointVelMultiDof(identifier->indexInModel)[_dof] = _value;
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -120,8 +139,8 @@ void JointFeatures::SetJointForce(
   if (!identifier)
     return;
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  model->body->getJointVelMultiDof(identifier->indexInModel)[_dof] = _value;
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -136,8 +155,8 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
     return 0;
   }
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  return model->body->getLink(identifier->indexInModel).m_dofCount;
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  return model->body->getLink(identifier->indexInBtModel).m_dofCount;
 }
 
 /////////////////////////////////////////////////
@@ -173,8 +192,8 @@ AngularVector3d JointFeatures::GetRevoluteJointAxis(
   // In order for this function to be called, gz-physics should have already
   // validated that it is a revolute joint inside of a model.
   const auto &identifier = std::get<InternalJoint>(joint->identifier);
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier.model);
-  const auto &link = model->body->getLink(identifier.indexInModel);
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  const auto &link = model->body->getLink(identifier.indexInBtModel);
   assert(link.m_jointType == btMultibodyLink::eRevolute);
 
   // According to the documentation in btMultibodyLink.h, m_axesTop[0] is the
@@ -197,8 +216,8 @@ Eigen::Vector3d JointFeatures::GetPrismaticJointAxis(
   // In order for this function to be called, gz-physics should have already
   // validated that it is a prismatic joint inside of a model.
   const auto &identifier = std::get<InternalJoint>(joint->identifier);
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier.model);
-  const auto &link = model->body->getLink(identifier.indexInModel);
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  const auto &link = model->body->getLink(identifier.indexInBtModel);
   assert(link.m_jointType == btMultibodyLink::ePrismatic);
 
   // According to the documentation in btMultibodyLink.h, m_axesBottom[0] is the
@@ -217,11 +236,14 @@ Identity JointFeatures::CastToJointType(
   {
     // Since we only support fixed constraints between models, we assume this is
     // a fixed joint.
-    return _jointID;
+    if (type == btMultibodyLink::eFixed)
+      return _jointID;
+    else
+      return this->GenerateInvalidId();
   }
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(identifier->model);
-  if (type == model->body->getLink(identifier->indexInModel).m_jointType)
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  if (type == model->body->getLink(identifier->indexInBtModel).m_jointType)
     return _jointID;
 
   return this->GenerateInvalidId();

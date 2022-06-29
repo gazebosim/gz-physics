@@ -29,6 +29,177 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetLinkCount(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->linkEntityIds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLink(
+  const Identity &_modelID, std::size_t _linkIndex) const
+{
+  const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_linkIndex >= model->linkEntityIds.size())
+    return this->GenerateInvalidId();
+
+  const auto linkID = model->linkEntityIds[_linkIndex];
+  return this->GenerateIdentity(linkID, this->links.at(linkID));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLink(
+    const Identity &_modelID, const std::string &_linkName) const
+{
+  // TODO(MXG): Consider using a hashmap with the link names as a key to speed
+  // this up
+  const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto it = model->linkNameToEntityId.find(_linkName);
+  if (it == model->linkNameToEntityId.end())
+  {
+    gzwarn << "Could not find [" << _linkName << "] in map:\n";
+    for (const auto &[n, i] : model->linkNameToEntityId)
+      gzwarn << " -- " << n << " : " << i << "\n";
+    gzwarn << std::endl;
+    return this->GenerateInvalidId();
+  }
+
+  return this->GenerateIdentity(it->second, this->links.at(it->second));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetLinkName(
+    const Identity &_linkID) const
+{
+  return this->ReferenceInterface<LinkInfo>(_linkID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetLinkIndex(
+    const Identity &_linkID) const
+{
+  // The root link does not have an index, so we give it an index of 0 and bump
+  // the rest up by one when providing an index to gazebo
+  const auto index = this->ReferenceInterface<LinkInfo>(_linkID)->indexInModel;
+  if (index.has_value())
+    return *index+1;
+
+  return 0;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModelOfLink(const Identity &_linkID) const
+{
+  return this->ReferenceInterface<LinkInfo>(_linkID)->model;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetJointCount(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->jointEntityIds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetJoint(
+  const Identity &_modelID,
+  std::size_t _jointIndex) const
+{
+  const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_jointIndex >= model->jointEntityIds.size())
+    return this->GenerateInvalidId();
+
+  const auto jointID = model->jointEntityIds[_jointIndex];
+  return this->GenerateIdentity(jointID, this->joints.at(jointID));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetJoint(
+  const Identity &_modelID,
+  const std::string &_jointName) const
+{
+  const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto it = model->jointNameToEntityId.find(_jointName);
+  if (it == model->jointNameToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->joints.at(it->second));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetJointName(
+  const Identity &_jointID) const
+{
+  return this->ReferenceInterface<JointInfo>(_jointID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetJointIndex(
+  const Identity &_jointID) const
+{
+  return this->ReferenceInterface<JointInfo>(_jointID)->indexInGzModel;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModelOfJoint(
+  const Identity &_jointID) const
+{
+  return this->ReferenceInterface<JointInfo>(_jointID)->model;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeCount(
+  const Identity &_linkID) const
+{
+  return this->ReferenceInterface<LinkInfo>(_linkID)->collisionEntityIds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+  const Identity &_linkID, std::size_t _shapeIndex) const
+{
+  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
+  if (_shapeIndex >= link->collisionEntityIds.size())
+    return this->GenerateInvalidId();
+
+  const auto shapeID = link->collisionEntityIds[_shapeIndex];
+  return this->GenerateIdentity(shapeID, this->collisions.at(shapeID));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+  const Identity &_linkID, const std::string &_shapeName) const
+{
+  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto it = link->collisionNameToEntityId.find(_shapeName);
+  if (it == link->collisionNameToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->collisions.at(it->second));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetShapeName(
+  const Identity &_shapeID) const
+{
+  return this->ReferenceInterface<CollisionInfo>(_shapeID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeIndex(
+  const Identity &_shapeID) const
+{
+  return this->ReferenceInterface<CollisionInfo>(_shapeID)->indexInLink;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLinkOfShape(
+  const Identity &_shapeID) const
+{
+  return this->ReferenceInterface<CollisionInfo>(_shapeID)->link;
+}
+
+/////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {

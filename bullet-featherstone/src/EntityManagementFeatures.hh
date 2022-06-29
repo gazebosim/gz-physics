@@ -33,13 +33,67 @@ namespace bullet_featherstone {
 
 struct EntityManagementFeatureList : gz::physics::FeatureList<
   RemoveModelFromWorld,
-  ConstructEmptyWorldFeature
+  ConstructEmptyWorldFeature,
+  GetLinkFromModel,
+  GetJointFromModel,
+  GetShapeFromLink
 > { };
 
 class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
+  // ----- GetLinkFromModel -----
+  public: std::size_t GetLinkCount(
+      const Identity &_modelID) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, std::size_t _linkIndex) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, const std::string &_linkName) const override;
+
+  public: const std::string &GetLinkName(
+      const Identity &_linkID) const override;
+
+  public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
+
+  public: Identity GetModelOfLink(const Identity &_linkID) const override;
+
+  // ----- GetJointFromModel -----
+  public: std::size_t GetJointCount(
+      const Identity &_modelID) const override;
+
+  public: Identity GetJoint(
+      const Identity &_modelID, std::size_t _jointIndex) const override;
+
+  public: Identity GetJoint(
+      const Identity &_modelID, const std::string &_jointName) const override;
+
+  public: const std::string &GetJointName(
+      const Identity &_jointID) const override;
+
+  public: std::size_t GetJointIndex(
+      const Identity &_jointID) const override;
+
+  public: Identity GetModelOfJoint(
+      const Identity &_jointID) const override;
+
+  // ----- GetShapeFromLink -----
+  public: std::size_t GetShapeCount(const Identity &_linkID) const override;
+
+  public: Identity GetShape(
+      const Identity &_linkID, std::size_t _shapeIndex) const override;
+
+  public: Identity GetShape(
+      const Identity &_linkID, const std::string &_shapeName) const override;
+
+  const std::string &GetShapeName(
+      const Identity &_shapeID) const override;
+
+  std::size_t GetShapeIndex(const Identity &_shapeID) const override;
+
+  Identity GetLinkOfShape(const Identity &_shapeID) const override;
 
   // ----- Remove entities -----
   public: bool RemoveModelByIndex(

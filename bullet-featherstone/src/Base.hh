@@ -81,8 +81,10 @@ struct ModelInfo
   Eigen::Isometry3d baseInertiaToLinkFrame;
   std::unique_ptr<btMultiBody> body;
 
-  std::size_t rootLinkEntityId;
   std::vector<std::size_t> linkEntityIds;
+  std::vector<std::size_t> jointEntityIds;
+  std::unordered_map<std::string, std::size_t> linkNameToEntityId;
+  std::unordered_map<std::string, std::size_t> jointNameToEntityId;
 
   /// These are joints that connect this model to other models, e.g. fixed
   /// constraints.
@@ -96,8 +98,7 @@ struct ModelInfo
     : name(std::move(_name)),
       world(std::move(_world)),
       baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
-      body(std::move(_body)),
-      rootLinkEntityId(INVALID_ENTITY_ID)
+      body(std::move(_body))
   {
     // Do nothing
   }
@@ -113,6 +114,8 @@ struct LinkInfo
   Eigen::Isometry3d inertiaToLinkFrame;
   std::unique_ptr<btMultiBodyLinkCollider> collider = nullptr;
   std::unique_ptr<btCompoundShape> shape = nullptr;
+  std::vector<std::size_t> collisionEntityIds = {};
+  std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
 };
 
 struct CollisionInfo
@@ -121,13 +124,15 @@ struct CollisionInfo
   std::unique_ptr<btCollisionShape> collider;
   Identity link;
   Eigen::Isometry3d linkToCollision;
+  std::size_t indexInLink = 0;
 };
 
 struct InternalJoint
 {
-  std::size_t indexInModel;
-  Identity model;
+  std::size_t indexInBtModel;
 };
+
+struct RootJoint {};
 
 struct JointInfo
 {
@@ -137,15 +142,14 @@ struct JointInfo
   // in the world.
   std::variant<
     std::monostate,
+    RootJoint,
     InternalJoint,
     std::unique_ptr<btMultiBodyConstraint>> identifier;
 
-  // cppcheck-suppress unusedStructMember
-  Identity childLink;
-  // cppcheck-suppress unusedStructMember
-  Identity parentLink;
-  // cppcheck-suppress unusedStructMember
-  int constraintType;
+  /// If the parent link is nullopt then the joint attaches its child to the
+  /// world
+  std::optional<std::size_t> parentLinkID;
+  Identity childLinkID;
 
   // These properties are difficult to back out of the bullet API, so we save
   // them here. This violates the single-source-of-truth principle, but we do
@@ -153,6 +157,10 @@ struct JointInfo
   // constructed.
   Eigen::Isometry3d tf_from_parent;
   Eigen::Isometry3d tf_to_child;
+
+  Identity model;
+  // This field gets set by AddJoint
+  std::size_t indexInGzModel = 0;
 };
 
 inline btMatrix3x3 convertMat(const Eigen::Matrix3d& mat)
@@ -248,19 +256,19 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links[id] = link;
 
     auto *model = this->ReferenceInterface<ModelInfo>(_linkInfo.model);
+    model->linkNameToEntityId[link->name] = id;
     if (link->indexInModel.has_value())
     {
       // We expect the links to be added in order
-      assert(*link->indexInModel == model->linkEntityIds.size());
-      model->linkEntityIds.push_back(id);
+      assert(*link->indexInModel+1 == model->linkEntityIds.size());
     }
     else
     {
       // We are adding the root link. This means the model should not already
       // have a root link
-      assert(model->rootLinkEntityId == INVALID_ENTITY_ID);
-      model->rootLinkEntityId = id;
+      assert(model->linkEntityIds.empty());
     }
+    model->linkEntityIds.push_back(id);
 
     return this->GenerateIdentity(id, link);
   }
@@ -270,6 +278,10 @@ class Base : public Implements3d<FeatureList<Feature>>
    const auto id = this->GetNextEntity();
    auto collision = std::make_shared<CollisionInfo>(std::move(_collisionInfo));
    this->collisions[id] = collision;
+   auto *link = this->ReferenceInterface<LinkInfo>(_collisionInfo.link);
+   collision->indexInLink = link->collisionEntityIds.size();
+   link->collisionEntityIds.push_back(id);
+   link->collisionNameToEntityId[collision->name] = id;
    return this->GenerateIdentity(id, collision);
   }
 
@@ -278,6 +290,12 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto id = this->GetNextEntity();
     auto joint = std::make_shared<JointInfo>(std::move(_jointInfo));
     this->joints[id] = joint;
+
+    auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+    joint->indexInGzModel = model->jointEntityIds.size();
+    model->jointEntityIds.push_back(id);
+    model->jointNameToEntityId[joint->name] = id;
+
     return this->GenerateIdentity(id, joint);
   }
 

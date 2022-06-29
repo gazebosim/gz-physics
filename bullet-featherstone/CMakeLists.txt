@@ -27,11 +27,6 @@ target_link_libraries(${bullet_plugin}
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
-# Install redirection headers
-install(
-  DIRECTORY include/
-  DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
-
 # The library created by `ign_add_component` includes the ign-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
