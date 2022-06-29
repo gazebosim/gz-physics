@@ -102,7 +102,7 @@ WorldPtr LoadWorldWhole(const std::string &_world)
   sdf::Root root;
   const sdf::Errors &errors = root.Load(_world);
   EXPECT_EQ(0u, errors.size());
-  for (const auto error : errors) {
+  for (const auto & error : errors) {
     std::cout << error << std::endl;
   }
 
