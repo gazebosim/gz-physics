@@ -374,10 +374,3 @@ TEST(EntityManagement_TEST, ModelByIndexWithNestedModels)
   ASSERT_NE(nullptr, model2Again);
   EXPECT_EQ(2ul, model2Again->GetIndex());
 }
-
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
