@@ -59,7 +59,7 @@ class Plugin :
     public virtual SimulationFeatures,
     public virtual WorldFeatures { };
 
-IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
+GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
 
 }
 }

@@ -27,12 +27,12 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const FrameID &_id) const
 {
   const auto linkIt = this->links.find(_id.ID());
+  const ModelInfo *model = nullptr;
   if (linkIt != this->links.end())
   {
     const auto &linkInfo = linkIt->second;
     const auto indexOpt = linkInfo->indexInModel;
-    const auto *model =
-      this->ReferenceInterface<ModelInfo>(linkInfo->model);
+    model = this->ReferenceInterface<ModelInfo>(linkInfo->model);
 
     if (indexOpt.has_value())
     {
@@ -50,24 +50,28 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
       data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
 
+      gzwarn << "BASE TRANSFORM OF " << linkInfo->name << ":\n" << data.pose.matrix() << std::endl;
       return data;
     }
 
     // If indexOpt is nullopt then the link is the base link which will be
     // calculated below.
   }
-
-  // If the Frame was not a Link then we can assume it's a Model because Free
-  // Groups are always Models underneath. If we ever support frame semantics for
-  // more than links, models, and free groups, then this implementation needs to
-  // change.
-  const auto *model = this->FrameInterface<ModelInfo>(_id);
+  else
+  {
+    // If the Frame was not a Link then we can assume it's a Model because Free
+    // Groups are always Models underneath. If we ever support frame semantics for
+    // more than links, models, and free groups, then this implementation needs to
+    // change.
+    model = this->FrameInterface<ModelInfo>(_id);
+  }
 
   FrameData data;
   data.pose = convert(model->body->getBaseWorldTransform())
     * model->baseInertiaToLinkFrame;
   data.linearVelocity = convert(model->body->getBaseVel());
   data.linearAcceleration = convert(model->body->getBaseOmega());
+  gzwarn << "BASE TRANSFORM OF " << model->name << ":\n" << data.pose.matrix() << std::endl;
   return data;
 }
 

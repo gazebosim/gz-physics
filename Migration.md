@@ -7,12 +7,34 @@ release will remove the deprecated code.
 
 ## Gazebo Physics 5.X to 6.X
 
-### Deprecation
+### Deprecations
 
 1. The `ignition` namespace is deprecated and will be removed in future versions.  Use `gz` instead.
 
 1. Header files under `ignition/...` are deprecated and will be removed in future versions.
    Use `gz/...` instead.
+
+1. The following `IGN_` / `IGNITION_` prefixed macros are deprecated and will be removed in future versions.
+   Additionally, they will only be available when including the corresponding `ignition/...` header.
+   Use the `GZ_` prefix instead.
+   1. `IGN_PHYSICS_DECLARE_JOINT_TYPE`, `IGN_PHYSICS_DECLARE_SHAPE_TYPE`
+   1. `IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS`
+   1. `IGN_PHYSICS_ADD_PLUGIN`
+   1. `IGN_PLUGIN_REGISTER_MORE_TRANS_UNITS` -> `GZ_**PHYSICS**_REGISTER_MORE_TRANS_UNITS`
+   1. `IGN_PHYSICS_REQUEST_FEATURES_MACRO`
+   1. `IGN_PHYSICS_CREATE_SELECTOR`
+   1. `IGNITION_PHYSICS_CONST_GET_ERROR` (hard-tocked, inside detail header)
+   1. `IGNITION_UNITTEST_EXPECTDATA_ACCESS` (hard-tocked, inside test and detail headers)
+   1. `IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE` (hard-tocked, inside detail header)
+
+### Breaking Changes
+
+* The project name has been changed to use the `gz-` prefix, you **must** use the `gz` prefix!
+  * This also means that any generated code that use the project name (e.g. CMake variables, in-source macros) would have to be migrated.
+  * Some non-exhaustive examples of this include:
+    * `GZ_<PROJECT>_<VISIBLE/HIDDEN>`
+    * CMake `-config` files
+    * Paths that depend on the project name
 
 ## Gazebo Physics 4.X to 5.X
 

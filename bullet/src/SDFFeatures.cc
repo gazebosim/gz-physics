@@ -127,10 +127,10 @@ Identity SDFFeatures::ConstructSdfModel(
     }
 
     const std::size_t parent = this->FindOrConstructLink(
-      modelIdentity, _sdfModel, sdfJoint->ParentLinkName());
+      modelIdentity, _sdfModel, sdfJoint->ParentName());
 
     const std::size_t child = this->FindOrConstructLink(
-      modelIdentity, _sdfModel, sdfJoint->ChildLinkName());
+      modelIdentity, _sdfModel, sdfJoint->ChildName());
 
     this->ConstructSdfJoint(modelIdentity, *sdfJoint, parent, child);
   }
@@ -329,11 +329,11 @@ Identity SDFFeatures::ConstructSdfJoint(
   const ::sdf::Model dummyEmptyModel;
 
   // Get the parent and child ids
-  const std::string parentLinkName = _sdfJoint.ParentLinkName();
+  const std::string parentLinkName = _sdfJoint.ParentName();
   std::size_t parentId =
     this->FindOrConstructLink(_modelID, dummyEmptyModel, parentLinkName);
 
-  const std::string childLinkName = _sdfJoint.ChildLinkName();
+  const std::string childLinkName = _sdfJoint.ChildName();
   std::size_t childId =
     this->FindOrConstructLink(_modelID, dummyEmptyModel, childLinkName);
 

@@ -13,7 +13,7 @@ find_package(gz-cmake3 REQUIRED)
 #============================================================================
 # Configure the project
 #============================================================================
-ign_configure_project(
+gz_configure_project(
   REPLACE_IGNITION_INCLUDE_PATH gz/physics
   VERSION_SUFFIX pre1)
 
@@ -24,9 +24,9 @@ ign_configure_project(
 option(ENABLE_PROFILER "Enable Gazebo Profiler" FALSE)
 
 if(ENABLE_PROFILER)
-  add_definitions("-DIGN_PROFILER_ENABLE=1")
+  add_definitions("-DGZ_PROFILER_ENABLE=1")
 else()
-  add_definitions("-DIGN_PROFILER_ENABLE=0")
+  add_definitions("-DGZ_PROFILER_ENABLE=0")
 endif()
 
 #============================================================================
@@ -36,38 +36,38 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find gz-common
-ign_find_package(gz-common5
+gz_find_package(gz-common5
   COMPONENTS geospatial graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
 
 #--------------------------------------
 # Find gz-math
-ign_find_package(gz-math7 REQUIRED COMPONENTS eigen3)
+gz_find_package(gz-math7 REQUIRED COMPONENTS eigen3)
 set(GZ_MATH_VER ${gz-math7_VERSION_MAJOR})
 
 #--------------------------------------
 # Find gz-plugin
-ign_find_package(gz-plugin2 REQUIRED COMPONENTS all)
+gz_find_package(gz-plugin2 REQUIRED COMPONENTS all)
 set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
 
 #--------------------------------------
 # Find gz-utils
-ign_find_package(gz-utils2 REQUIRED COMPONENTS cli)
+gz_find_package(gz-utils2 REQUIRED COMPONENTS cli)
 set(GZ_UTILS_VER ${gz-utils2_VERSION_MAJOR})
 
 #--------------------------------------
 # Find Eigen
-ign_find_package(EIGEN3 REQUIRED)
+gz_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-ign_find_package(sdformat13
+gz_find_package(sdformat13
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
-ign_find_package(DART
+gz_find_package(DART
   COMPONENTS
     collision-bullet
     collision-ode
@@ -81,9 +81,9 @@ ign_find_package(DART
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
-ign_find_package(IgnBullet
+gz_find_package(IgnBullet
   VERSION 2.87
-  REQUIRED_BY bullet bullet-featherstone
+  REQUIRED_BY bullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
@@ -93,20 +93,20 @@ set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 # Plugin install dirs
 set(GZ_PHYSICS_ENGINE_INSTALL_DIR
-  ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR}/ign-${IGN_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+  ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR}/gz-${IGN_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
 )
 
 #============================================================================
 # Configure the build
 #============================================================================
-ign_configure_build(QUIT_IF_BUILD_ERRORS
+gz_configure_build(QUIT_IF_BUILD_ERRORS
   COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone)
 
 
 #============================================================================
 # Create package information
 #============================================================================
-ign_create_packages()
+gz_create_packages()
 
 
 #============================================================================
@@ -115,13 +115,13 @@ ign_create_packages()
 configure_file(${CMAKE_SOURCE_DIR}/api.md.in ${CMAKE_BINARY_DIR}/api.md)
 configure_file(${CMAKE_SOURCE_DIR}/tutorials.md.in ${CMAKE_BINARY_DIR}/tutorials.md)
 
-ign_create_docs(
+gz_create_docs(
   API_MAINPAGE_MD "${CMAKE_BINARY_DIR}/api.md"
   TUTORIALS_MAINPAGE_MD "${CMAKE_BINARY_DIR}/tutorials.md"
   TAGFILES
-    "${IGNITION-COMMON_DOXYGEN_TAGFILE} = ${IGNITION-COMMON_API_URL}"
-    "${IGNITION-PLUGIN_DOXYGEN_TAGFILE} = ${IGNITION-PLUGIN_API_URL}"
-    "${IGNITION-MATH_DOXYGEN_TAGFILE} = ${IGNITION-MATH_API_URL}"
+    "${GZ-COMMON_DOXYGEN_TAGFILE} = ${GZ-COMMON_API_URL}"
+    "${GZ-PLUGIN_DOXYGEN_TAGFILE} = ${GZ-PLUGIN_API_URL}"
+    "${GZ-MATH_DOXYGEN_TAGFILE} = ${GZ-MATH_API_URL}"
   )
 
 file(COPY ${CMAKE_SOURCE_DIR}/tutorials/img/ DESTINATION ${CMAKE_BINARY_DIR}/doxygen/html/img/)

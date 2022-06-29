@@ -401,7 +401,7 @@ namespace gz
       template <typename T>
       const T &Get() const
       {
-        static_assert(AlwaysRequires<T>(), IGNITION_PHYSICS_CONST_GET_ERROR);
+        static_assert(AlwaysRequires<T>(), GZ_PHYSICS_CONST_GET_ERROR);
 
         using Requirer = typename detail::SelectRequirerIfAvailable<
                 T, Specification>::Requirer;

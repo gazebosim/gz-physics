@@ -27,7 +27,7 @@ namespace gz
 {
   namespace physics
   {
-    IGN_PHYSICS_DECLARE_SHAPE_TYPE(EllipsoidShape)
+    GZ_PHYSICS_DECLARE_SHAPE_TYPE(EllipsoidShape)
 
     class GZ_PHYSICS_VISIBLE GetEllipsoidShapeProperties
         : public virtual FeatureWithRequirements<EllipsoidShapeCast>

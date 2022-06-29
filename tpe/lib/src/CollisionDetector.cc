@@ -66,7 +66,7 @@ std::vector<Contact> CollisionDetector::CheckCollisions(
     const std::map<std::size_t, std::shared_ptr<Entity>> &_entities,
     bool _singleContact)
 {
-  IGN_PROFILE("tpelib::CollisionDetector::CheckCollisions");
+  GZ_PROFILE("tpelib::CollisionDetector::CheckCollisions");
 
   // contacts to be filled and returned
   std::vector<Contact> contacts;
@@ -182,7 +182,7 @@ bool CollisionDetector::GetIntersectionPoints(const math::AxisAlignedBox &_b1,
     const math::AxisAlignedBox &_b2,
     std::vector<math::Vector3d> &_points, bool _singleContact)
 {
-  IGN_PROFILE("CollisionDetector::GetIntersectionPoints");
+  GZ_PROFILE("CollisionDetector::GetIntersectionPoints");
   // fast intersection check
   if (_b1.Intersects(_b2))
   {

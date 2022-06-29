@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#define IGNITION_UNITTEST_EXPECTDATA_ACCESS
+#define GZ_UNITTEST_EXPECTDATA_ACCESS
 
 #include "gz/physics/SpecifyData.hh"
 #include "gz/physics/CanReadData.hh"

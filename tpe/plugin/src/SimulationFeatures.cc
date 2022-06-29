@@ -36,7 +36,7 @@ void SimulationFeatures::WorldForwardStep(
   ForwardStep::State & /*_x*/,
   const ForwardStep::Input & _u)
 {
-  IGN_PROFILE("SimulationFeatures::WorldForwardStep");
+  GZ_PROFILE("SimulationFeatures::WorldForwardStep");
   auto it = this->worlds.find(_worldID);
   if (it == this->worlds.end())
   {
@@ -150,7 +150,7 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
-  IGN_PROFILE("SimulationFeatures::GetContactFromLastStep");
+  GZ_PROFILE("SimulationFeatures::GetContactFromLastStep");
   std::vector<SimulationFeatures::ContactInternal> outContacts;
   auto const world = this->ReferenceInterface<WorldInfo>(_worldID)->world;
   const auto contacts = world->GetContacts();

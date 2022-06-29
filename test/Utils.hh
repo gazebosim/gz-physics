@@ -51,7 +51,7 @@ namespace gz
             Vector<Scalar, Dim> axis = Vector<Scalar, Dim>::Zero();
             axis[i] = 1.0;
             _pose.rotate(Eigen::AngleAxis<Scalar>(
-              static_cast<Scalar>(math::Rand::DblUniform(0, 2*IGN_PI)), axis));
+              static_cast<Scalar>(math::Rand::DblUniform(0, 2*GZ_PI)), axis));
           }
         }
 
@@ -87,7 +87,7 @@ namespace gz
         static void Randomize(gz::physics::Pose<Scalar, 2> &_pose)
         {
           _pose.rotate(Eigen::Rotation2D<Scalar>(
-                         math::Rand::DblUniform(0, 2*IGN_PI)));
+                         math::Rand::DblUniform(0, 2*GZ_PI)));
         }
 
         static bool Equal(

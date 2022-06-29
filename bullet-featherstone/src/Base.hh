@@ -254,6 +254,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto id = this->GetNextEntity();
     auto link = std::make_shared<LinkInfo>(std::move(_linkInfo));
     this->links[id] = link;
+    gzwarn << "ADDING LINK FOR [" << id << "]: " << link->name << std::endl;
 
     auto *model = this->ReferenceInterface<ModelInfo>(_linkInfo.model);
     model->linkNameToEntityId[link->name] = id;
@@ -282,6 +283,7 @@ class Base : public Implements3d<FeatureList<Feature>>
    collision->indexInLink = link->collisionEntityIds.size();
    link->collisionEntityIds.push_back(id);
    link->collisionNameToEntityId[collision->name] = id;
+
    return this->GenerateIdentity(id, collision);
   }
 

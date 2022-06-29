@@ -523,6 +523,17 @@ Identity SDFFeatures::ConstructSdfModel(
   }
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
+
+  model->body->finalizeMultiDof();
+
+  const Eigen::Isometry3d worldToRoot =
+    gz::math::eigen3::convert(structure.rootLink->RawPose());
+
+  model->body->setBaseWorldTransform(
+    convertTf(worldToRoot * rootInertialToLink.inverse()));
+  model->body->setBaseVel(btVector3(0, 0, 0));
+  model->body->setBaseOmega(btVector3(0, 0, 0));
+
   world->world->addMultiBody(model->body.get());
   return modelID;
 }
@@ -646,6 +657,7 @@ bool SDFFeatures::AddSdfCollision(
       // for different shapes attached to the same link.
       auto collider = std::make_unique<btMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
+      collider->setCollisionShape(linkInfo->shape.get());
 
       collider->setRestitution(restitution);
       collider->setRollingFriction(rollingFriction);
@@ -653,7 +665,9 @@ bool SDFFeatures::AddSdfCollision(
       collider->setAnisotropicFriction(
         btVector3(mu, mu2, 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
+
       linkInfo->collider = std::move(collider);
+      gzwarn << "ADDING COLLIDER FOR [" << linkInfo->name << "]: " << linkInfo->collider.get() << std::endl;
 
       if (linkIndexInModel >= 0)
       {
@@ -664,6 +678,9 @@ bool SDFFeatures::AddSdfCollision(
       {
         model->body->setBaseCollider(linkInfo->collider.get());
       }
+
+      auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+      world->world->addCollisionObject(linkInfo->collider.get());
     }
     else
     {

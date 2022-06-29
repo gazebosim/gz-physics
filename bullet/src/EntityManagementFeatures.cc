@@ -167,7 +167,207 @@ bool EntityManagementFeatures::RemoveModelByName(
 
   return false;
 }
+const std::string &EntityManagementFeatures::GetEngineName(
+  const Identity &) const
+{
+  static const std::string engineName = "bullet";
+  return engineName;
+}
 
+std::size_t EntityManagementFeatures::GetEngineIndex(const Identity &) const
+{
+  return 0;
+}
+
+std::size_t EntityManagementFeatures::GetWorldCount(const Identity &) const
+{
+  return worlds.size();
+}
+
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, std::size_t) const
+{
+    return this->GenerateIdentity(0);
+}
+
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, const std::string &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+const std::string &EntityManagementFeatures::GetWorldName(
+    const Identity &) const
+{
+  static const std::string worldName = "bullet";
+  return worldName;
+}
+
+std::size_t EntityManagementFeatures::GetWorldIndex(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetEngineOfWorld(const Identity &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+std::size_t EntityManagementFeatures::GetModelCount(
+    const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetModel(
+    const Identity &, std::size_t) const
+{
+  return this->GenerateIdentity(0);
+}
+
+Identity EntityManagementFeatures::GetModel(
+    const Identity &, const std::string &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+const std::string &EntityManagementFeatures::GetModelName(
+    const Identity &) const
+{
+  static const std::string modelName = "bulletModel";
+  return modelName;
+}
+
+std::size_t EntityManagementFeatures::GetModelIndex(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetWorldOfModel(const Identity &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+  const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &, std::size_t ) const
+{
+  return this->GenerateIdentity(0);
+}
+
+Identity EntityManagementFeatures::GetNestedModel(
+  const Identity &, const std::string &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+std::size_t EntityManagementFeatures::GetLinkCount(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetLink(
+    const Identity &, std::size_t) const
+{
+  return this->GenerateIdentity(0);
+}
+
+Identity EntityManagementFeatures::GetLink(
+    const Identity &, const std::string &) const
+
+{
+  return this->GenerateIdentity(0);
+}
+
+std::size_t EntityManagementFeatures::GetJointCount(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetJoint(
+    const Identity &, std::size_t ) const
+{
+  return this->GenerateIdentity(0);
+}
+
+Identity EntityManagementFeatures::GetJoint(
+    const Identity &, const std::string &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+const std::string &EntityManagementFeatures::GetLinkName(
+    const Identity &) const
+{
+  static const std::string linkName = "bulletLink";
+  return linkName;
+}
+
+std::size_t EntityManagementFeatures::GetLinkIndex(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetModelOfLink(const Identity &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+std::size_t EntityManagementFeatures::GetShapeCount(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetShape(
+    const Identity &, std::size_t) const
+{
+  return this->GenerateIdentity(0);
+}
+
+Identity EntityManagementFeatures::GetShape(
+    const Identity &, const std::string &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+const std::string &EntityManagementFeatures::GetJointName(
+    const Identity &) const
+{
+  static const std::string jointName = "bulletJoint";
+  return jointName;
+}
+
+std::size_t EntityManagementFeatures::GetJointIndex(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetModelOfJoint(const Identity &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+const std::string &EntityManagementFeatures::GetShapeName(
+    const Identity &) const
+{
+  static const std::string shapeName = "bulletShape";
+  return shapeName;
+}
+
+std::size_t EntityManagementFeatures::GetShapeIndex(const Identity &) const
+{
+  return 0;
+}
+
+Identity EntityManagementFeatures::GetLinkOfShape(const Identity &) const
+{
+  return this->GenerateIdentity(0);
+}
 }  // namespace bullet
 }  // namespace physics
 }  // namespace gz

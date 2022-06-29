@@ -68,7 +68,7 @@ namespace gz
       /// vectors to zero.
       public: void SetToZero();
     };
-    IGN_PHYSICS_MAKE_ALL_TYPE_COMBOS(FrameData)
+    GZ_PHYSICS_MAKE_ALL_TYPE_COMBOS(FrameData)
 
     template <typename Scalar, std::size_t Dim>
     std::ostream& operator <<(std::ostream& stream,

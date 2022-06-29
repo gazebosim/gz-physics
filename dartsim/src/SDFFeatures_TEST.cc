@@ -142,7 +142,7 @@ static sdf::JointAxis ResolveJointAxis(const sdf::JointAxis &_unresolvedAxis)
 }
 
 /////////////////////////////////////////////////
-/// Downstream applications, like ign-gazebo, use this way of world construction
+/// Downstream applications, like gz-sim, use this way of world construction
 WorldPtr LoadWorldPiecemeal(const std::string &_world)
 {
   auto engine = LoadEngine();
@@ -272,8 +272,8 @@ WorldPtr LoadWorldPiecemeal(const std::string &_world)
       newSdfJoint.SetRawPose(ResolveSdfPose(sdfJoint->SemanticPose()));
       newSdfJoint.SetThreadPitch(sdfJoint->ThreadPitch());
 
-      newSdfJoint.SetParentLinkName(resolvedParentLinkName);
-      newSdfJoint.SetChildLinkName(resolvedChildLinkName);
+      newSdfJoint.SetParentName(resolvedParentLinkName);
+      newSdfJoint.SetChildName(resolvedChildLinkName);
 
       physModel->ConstructJoint(newSdfJoint);
     }
@@ -408,7 +408,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
   const auto *screwJoint = dynamic_cast<const dart::dynamics::ScrewJoint*>(
       screwJointTest->getJoint(1));
   ASSERT_NE(nullptr, screwJoint);
-  EXPECT_DOUBLE_EQ(-IGN_PI, screwJoint->getPitch());
+  EXPECT_DOUBLE_EQ(-GZ_PI, screwJoint->getPitch());
 }
 
 /////////////////////////////////////////////////
@@ -473,22 +473,22 @@ auto CreateTestModel(WorldPtr _world, const std::string &_model,
   {
     auto parent = model->ConstructLink(*_parentLink);
     EXPECT_NE(nullptr, parent);
-    sdfJoint.SetParentLinkName(_parentLink->Name());
+    sdfJoint.SetParentName(_parentLink->Name());
   }
   else
   {
-    sdfJoint.SetParentLinkName("world");
+    sdfJoint.SetParentName("world");
   }
 
   if (_childLink)
   {
     auto child = model->ConstructLink(*_childLink);
     EXPECT_NE(nullptr, child);
-    sdfJoint.SetChildLinkName(_childLink->Name());
+    sdfJoint.SetChildName(_childLink->Name());
   }
   else
   {
-    sdfJoint.SetChildLinkName("world");
+    sdfJoint.SetChildName("world");
   }
 
   auto joint0 = model->ConstructJoint(sdfJoint);
@@ -744,7 +744,7 @@ TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
   // Expect the world pose of L2 to be 0 0 3 0 0 pi
   Eigen::Isometry3d expWorldPose =
       Eigen::Translation3d(0, 0, 3) *
-      Eigen::AngleAxisd(IGN_PI, Eigen::Vector3d::UnitZ());
+      Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ());
 
   dartWorld->step();
 

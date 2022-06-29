@@ -1,5 +1,4 @@
-
-ign_add_component(mesh INTERFACE
+gz_add_component(mesh INTERFACE
   GET_TARGET_NAME mesh)
 
 target_link_libraries(${mesh}

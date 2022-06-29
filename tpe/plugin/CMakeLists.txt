@@ -1,17 +1,17 @@
 # This component expresses custom features of the tpe plugin, which can
 # expose native tpe data types.
-ign_add_component(tpe INTERFACE
+gz_add_component(tpe INTERFACE
   DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
 target_link_libraries(${features} INTERFACE ${PROJECT_LIBRARY_TARGET_NAME}-tpelib)
 target_include_directories(${features} SYSTEM INTERFACE)
 
-ign_get_libsources_and_unittests(sources test_sources)
+gz_get_libsources_and_unittests(sources test_sources)
 
-# TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
+# TODO(MXG): Think about an gz_add_plugin(~) macro for ign-cmake
 set(engine_name tpe-plugin)
-ign_add_component(${engine_name}
+gz_add_component(${engine_name}
   SOURCES ${sources}
   DEPENDS_ON_COMPONENTS tpe
   GET_TARGET_NAME tpe_plugin)
@@ -34,7 +34,7 @@ target_link_libraries(${tpe_plugin}
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${tpe_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
-# The library created by `ign_add_component` includes the ign-physics version
+# The library created by `gz_add_component` includes the gz-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -50,7 +50,7 @@ else()
   INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
 
-ign_build_tests(
+gz_build_tests(
   TYPE UNIT_tpe
   SOURCES ${test_sources}
   LIB_DEPS

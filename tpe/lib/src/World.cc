@@ -61,7 +61,7 @@ double World::GetTimeStep() const
 /////////////////////////////////////////////////
 void World::Step()
 {
-  IGN_PROFILE("tpelib::World::Step");
+  GZ_PROFILE("tpelib::World::Step");
   // apply updates to each model
   auto &children = this->GetChildren();
   for (auto it = children.begin(); it != children.end(); ++it)

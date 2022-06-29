@@ -103,13 +103,13 @@ class GZ_PHYSICS_TPELIB_VISIBLE Model : public Entity
   /// \return True if child entity was removed, false otherwise
   public: bool RemoveChildByName(const std::string &_name) override;
 
-  IGN_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
   /// \brief linear velocity of model
   protected: math::Vector3d linearVelocity;
 
   /// \brief angular velocity of model
   protected: math::Vector3d angularVelocity;
-  IGN_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 
   /// \brief Remove a model entity by id
   /// \param[in] _id Id of model entity to remove

@@ -1,6 +1,6 @@
 # This component expresses custom features of the dartsim plugin, which can
 # expose native dartsim data types.
-ign_add_component(dartsim INTERFACE
+gz_add_component(dartsim INTERFACE
   DEPENDS_ON_COMPONENTS sdf heightmap mesh
   GET_TARGET_NAME features)
 
@@ -15,11 +15,11 @@ install(
   DIRECTORY include/
   DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
 
-ign_get_libsources_and_unittests(sources test_sources)
+gz_get_libsources_and_unittests(sources test_sources)
 
-# TODO(MXG): Think about an ign_add_plugin(~) macro for ign-cmake
+# TODO(MXG): Think about an gz_add_plugin(~) macro for ign-cmake
 set(engine_name dartsim-plugin)
-ign_add_component(${engine_name}
+gz_add_component(${engine_name}
   SOURCES ${sources}
   DEPENDS_ON_COMPONENTS dartsim
   GET_TARGET_NAME dartsim_plugin)
@@ -61,7 +61,7 @@ endif()
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${dartsim_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
-# The library created by `ign_add_component` includes the ign-physics version
+# The library created by `gz_add_component` includes the gz-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${dartsim_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -78,7 +78,7 @@ else()
 endif()
 
 # Testing
-ign_build_tests(
+gz_build_tests(
   TYPE UNIT
   SOURCES ${test_sources}
   LIB_DEPS

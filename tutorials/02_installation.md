@@ -1,7 +1,7 @@
 \page installation Installation
 
 These instructions are for installing only Gazebo Physics.
-If you're interested in using all the Ignition libraries, check out this [Ignition installation](https://gazebosim.org/docs/dome/install).
+If you're interested in using all the Gazebo libraries, check out this [Gazebo installation](https://gazebosim.org/docs/dome/install).
 
 We recommend following the Binary Installation instructions to get up and running as quickly and painlessly as possible.
 
@@ -32,7 +32,7 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 
 ## Binary Installation
 
-On Ubuntu systems, `apt-get` can be used to install `ignition-plugin`:
+On Ubuntu systems, `apt-get` can be used to install `gz-plugin`:
 ```
 sudo apt-get update
 sudo apt-get install libignition-physics<#>-dev
@@ -56,7 +56,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 3. Configure and build
   ```
-  cd ign-physics
+  cd gz-physics
   mkdir build
   cd build
   cmake ..
@@ -110,7 +110,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 3. Configure and build
   ```
-  cd ign-physics
+  cd gz-physics
   mkdir build
   cd build
   cmake ..
@@ -129,14 +129,14 @@ Only [Trivial Physics Engine (TPE)](https://community.gazebosim.org/t/announcing
 
 ## Prerequisites
 
-First, follow the [ign-cmake](https://github.com/gazebosim/gz-cmake) tutorial for installing Conda, Visual Studio, CMake, and other prerequisites, and also for creating a Conda environment.
+First, follow the [gz-cmake](https://github.com/gazebosim/gz-cmake) tutorial for installing Conda, Visual Studio, CMake, and other prerequisites, and also for creating a Conda environment.
 
 Navigate to ``condabin`` if necessary to use the ``conda`` command (i.e., if Conda is not in your `PATH` environment variable. You can find the location of ``condabin`` in Anaconda Prompt, ``where conda``).
 
 Create if necessary, and activate a Conda environment:
 ```
-conda create -n ign-ws
-conda activate ign-ws
+conda create -n gz-ws
+conda activate gz-ws
 ```
 
 ## Binary Installation
@@ -152,7 +152,7 @@ which version you need.
 
 This assumes you have created and activated a Conda environment while installing the Prerequisites.
 
-1. Install Ignition dependencies:
+1. Install Gazebo dependencies:
 
   You can view available versions and their dependencies:
   ```
@@ -172,7 +172,7 @@ This assumes you have created and activated a Conda environment while installing
 
 3. Configure and build
   ```
-  cd ign-physics
+  cd gz-physics
   mkdir build
   cd build
   cmake .. -DBUILD_TESTING=OFF  # Optionally, -DCMAKE_INSTALL_PREFIX=path\to\install
@@ -202,7 +202,7 @@ You can also generate the documentation from a clone of this repository by follo
 
 3. Configure and build the documentation.
   ```
-  cd ign-physics
+  cd gz-physics
   mkdir build
   cd build
   cmake ..

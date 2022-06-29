@@ -60,13 +60,13 @@ namespace gz
   }
 }
 
-// Dev Note (MXG): Using a namespace called detail_ignition_physics avoids
+// Dev Note (MXG): Using a namespace called detail_gz_physics avoids
 // confusion with the gz::physics namespace. This is important because
 // users might call this macro within their own namespace scope, which can
 // create unexpected and confusing namespace hierarchies.
 #define DETAIL_GZ_PHYSICS_ADD_PLUGIN_HELPER( \
   UniqueID, PluginType, FeaturePolicyT, FeatureListT) \
-  namespace detail_ignition_physics \
+  namespace detail_gz_physics \
   { \
   namespace \
   { \
