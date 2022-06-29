@@ -114,9 +114,3 @@ TEST(Feature_TEST, SimpleMock)
 
   EXPECT_EQ(3u, missing.size());
 }
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

@@ -449,9 +449,3 @@ TEST(SDFFeatures_TEST, ConstructModel)
   EXPECT_NE(nullptr, nestedModelByModel);
   EXPECT_EQ("nested_model_by_model", nestedModelByModel->GetName());
 }
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

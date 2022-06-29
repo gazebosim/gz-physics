@@ -239,9 +239,3 @@ TEST(FeatureList_TEST, Hierarchy)
   EXPECT_TRUE((detail::TupleContainsBase<Conflict1, Level3Tuple>::value));
   EXPECT_TRUE((detail::TupleContainsBase<Conflict2, Level3Tuple>::value));
 }
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
