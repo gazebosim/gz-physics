@@ -18,12 +18,16 @@
 #ifndef IGNITION_PHYSICS_DARTSIM_BASE_HH_
 #define IGNITION_PHYSICS_DARTSIM_BASE_HH_
 
+#include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/BodyNode.hpp>
+#include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/SimpleFrame.hpp>
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -31,6 +35,8 @@
 #include <vector>
 
 #include <ignition/common/Console.hh>
+#include <ignition/math/eigen3/Conversions.hh>
+#include <ignition/math/Inertial.hh>
 #include <ignition/physics/Implements.hh>
 
 #include <sdf/Types.hh>
@@ -57,6 +63,16 @@ struct LinkInfo
   /// moving the BodyNode to a new skeleton), so we store the Gazebo-specified
   /// name of the Link here.
   std::string name;
+  /// \brief To close kinematic loops, a body node may be divided into separate
+  /// nodes that are welded together using a WeldJointConstraint. The inertia
+  /// is divided evenly between these body nodes. This matches the approach
+  /// used in gazebo-classic.
+  std::vector< std::pair<
+      dart::dynamics::BodyNode *,
+      dart::constraint::WeldJointConstraintPtr> > weldedNodes;
+  /// \brief The total link inertia, which may be split between the `link` and
+  /// `weldedNodes` body nodes.
+  std::optional<math::Inertiald> inertial;
 };
 
 struct ModelInfo
@@ -319,7 +335,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: inline std::size_t AddLink(DartBodyNode *_bn,
-        const std::string &_fullName, std::size_t _modelID)
+        const std::string &_fullName, std::size_t _modelID,
+        std::optional<math::Inertiald> _inertial = std::nullopt)
   {
     const std::size_t id = this->GetNextEntity();
     auto linkInfo = std::make_shared<LinkInfo>();
@@ -328,6 +345,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     // The name of the BodyNode during creation is assumed to be the
     // Gazebo-specified name.
     linkInfo->name = _bn->getName();
+    // Inertial properties (if available) used when splitting nodes to close
+    // kinematic loops.
+    linkInfo->inertial = _inertial;
     this->links.objectToID[_bn] = id;
     this->frames[id] = _bn;
 
@@ -345,6 +365,120 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.idToContainerID[id] = _modelID;
 
     return id;
+  }
+
+  private: static math::Inertiald DivideInertial(
+               const math::Inertiald &_wholeInertial, std::size_t _count)
+  {
+    if (_count == 1)
+    {
+      return _wholeInertial;
+    }
+    math::Inertiald dividedInertial;
+    math::MassMatrix3d dividedMassMatrix;
+    dividedMassMatrix.SetMass(_wholeInertial.MassMatrix().Mass() /
+                              static_cast<double>(_count));
+    dividedMassMatrix.SetMoi(_wholeInertial.MassMatrix().Moi() *
+                             (1. / static_cast<double>(_count)));
+    dividedInertial.SetMassMatrix(dividedMassMatrix);
+    dividedInertial.SetPose(_wholeInertial.Pose());
+    return dividedInertial;
+  }
+
+  private: static void AssignInertialToBody(
+               const math::Inertiald &_inertial, DartBodyNode * _body)
+  {
+    const math::Matrix3d &moi = _inertial.Moi();
+    const math::Vector3d &com = _inertial.Pose().Pos();
+    _body->setMass(_inertial.MassMatrix().Mass());
+    _body->setMomentOfInertia(moi(0, 0), moi(1, 1), moi(2, 2), moi(0, 1),
+                              moi(0, 2), moi(1, 2));
+    _body->setLocalCOM(math::eigen3::convert(com));
+  }
+
+  public: inline DartBodyNode* SplitAndWeldLink(LinkInfo *_link)
+  {
+    // First create a new body node with FreeJoint and a unique name based
+    // on the number of welded miror nodes.
+    dart::dynamics::BodyNode::Properties weldedBodyProperties;
+    weldedBodyProperties.mIsCollidable = false;
+    {
+      std::size_t weldedBodyCount = _link->weldedNodes.size();
+      weldedBodyProperties.mName =
+          _link->name + "_welded_mirror_" + std::to_string(weldedBodyCount);
+    }
+    dart::dynamics::FreeJoint::Properties jointProperties;
+    jointProperties.mName = weldedBodyProperties.mName + "_FreeJoint";
+    DartSkeletonPtr skeleton = _link->link->getSkeleton();
+    auto pairJointBodyNode =
+      skeleton->createJointAndBodyNodePair<dart::dynamics::FreeJoint>(
+        nullptr, jointProperties, weldedBodyProperties);
+
+    // Weld the new body node to the original
+    auto weld = std::make_shared<dart::constraint::WeldJointConstraint>(
+        _link->link, pairJointBodyNode.second);
+    _link->weldedNodes.emplace_back(pairJointBodyNode.second, weld);
+    auto worldId = this->GetWorldOfModelImpl(models.objectToID[skeleton]);
+    auto dartWorld = this->worlds.at(worldId);
+    dartWorld->getConstraintSolver()->addConstraint(weld);
+
+    // Rebalance the link inertia between the original body node and its
+    // welded mirror nodes if inertial data is available.
+    if (_link->inertial)
+    {
+      std::size_t nodeCount = 1 + _link->weldedNodes.size();
+      const auto dividedInertial = DivideInertial(*_link->inertial, nodeCount);
+      AssignInertialToBody(dividedInertial, _link->link);
+      for (const auto &weldedNodePair : _link->weldedNodes)
+      {
+        AssignInertialToBody(dividedInertial, weldedNodePair.first);
+      }
+    }
+
+    this->linkByWeldedNode[pairJointBodyNode.second] = _link;
+    return pairJointBodyNode.second;
+  }
+
+  public: void MergeLinkAndWeldedBody(LinkInfo *_link, DartBodyNode *child)
+  {
+    // Break the existing joint first.
+    child->moveTo<dart::dynamics::FreeJoint>(nullptr);
+    auto it = _link->weldedNodes.begin();
+    bool foundWeld = false;
+    for (; it != _link->weldedNodes.end(); ++it)
+    {
+      if (it->first == child)
+      {
+        auto worldId = this->GetWorldOfModelImpl(
+            this->models.objectToID[child->getSkeleton()]);
+        auto dartWorld = this->worlds.at(worldId);
+        dartWorld->getConstraintSolver()->removeConstraint(it->second);
+        // Okay to erase since we break afterward.
+        _link->weldedNodes.erase(it);
+        foundWeld = true;
+        break;
+      }
+    }
+
+    if (!foundWeld)
+    {
+      // We have not found a welded node associated with _link. This shouldn't
+      // happen.
+      ignerr << "Could not find welded body node for link " << _link->name
+             << ". Merging of link and welded body failed.";
+      return;
+    }
+
+    if (_link->inertial)
+    {
+      std::size_t nodeCount = 1 + _link->weldedNodes.size();
+      const auto dividedInertial = DivideInertial(*_link->inertial, nodeCount);
+      AssignInertialToBody(dividedInertial, _link->link);
+      for (const auto &weldedNodePair : _link->weldedNodes)
+      {
+        AssignInertialToBody(dividedInertial, weldedNodePair.first);
+      }
+    }
   }
 
   public: inline std::size_t AddJoint(DartJoint *_joint)
@@ -450,6 +584,10 @@ class Base : public Implements3d<FeatureList<Feature>>
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even
   /// as they move to other skeletons.
   public: std::unordered_map<std::string, DartBodyNode*> linksByName;
+
+  /// \brief Map from welded body nodes to the LinkInfo for the original link
+  /// they are welded to. This is useful when detaching joints.
+  public: std::unordered_map<DartBodyNode*, LinkInfo*> linkByWeldedNode;
 };
 
 }
