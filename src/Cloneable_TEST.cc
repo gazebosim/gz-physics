@@ -171,9 +171,3 @@ TEST(Cloneable_TEST, Copy)
   copyTo->Copy(std::move(*moveFrom));
   EXPECT_EQ("movingFrom", copyToCasted->myString);
 }
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

@@ -621,10 +621,3 @@ TEST(CanReadWrite, WriteRequired)
     EXPECT_EQ("queried again", output.Get<StringData>().myString);
   }
 }
-
-/////////////////////////////////////////////////
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
