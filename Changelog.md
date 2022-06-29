@@ -1,6 +1,5 @@
 ## Ignition Physics 5.x
 
-
 ### Ignition Physics 5.x.x (20XX-XX-XX)
 
 ### Ignition Physics 5.2.0 (2022-06-29)
@@ -25,9 +24,6 @@
 
 1. Add Ubuntu Jammy CI
     * [Pull request #329](https://github.com/gazebosim/gz-physics/pull/329)
-
-1. Fix Apache license version
-    * [Pull request #325](https://github.com/gazebosim/gz-physics/pull/325)
 
 1. Fix Apache license version
     * [Pull request #325](https://github.com/gazebosim/gz-physics/pull/325)
