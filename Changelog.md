@@ -2,6 +2,35 @@
 
 ### Ignition Physics 5.x.x (20XX-XX-XX)
 
+### Ignition Physics 5.2.0 (2022-06-29)
+
+1. dartsim: support non-tree kinematics in AttachFixedJoint
+    * [Pull request #352](https://github.com/gazebosim/gz-physics/pull/352)
+
+1. Use SuppressWarning from ign-utils
+    * [Pull request #343](https://github.com/gazebosim/gz-physics/pull/343)
+
+1. Make CONFIG a CMake pass-through option for DART
+    * [Pull request #339](https://github.com/gazebosim/gz-physics/pull/339)
+
+1. Remove explicitly-defined copy constructor/operator
+    * [Pull request #328](https://github.com/gazebosim/gz-physics/pull/328)
+
+1. Fix ExpectData compiler warnings
+    * [Pull request #335](https://github.com/gazebosim/gz-physics/pull/335)
+
+1. Fix copying of ExpectData objects
+    * [Pull request #337](https://github.com/gazebosim/gz-physics/pull/337)
+
+1. Add Ubuntu Jammy CI
+    * [Pull request #329](https://github.com/gazebosim/gz-physics/pull/329)
+
+1. Fix Apache license version
+    * [Pull request #325](https://github.com/gazebosim/gz-physics/pull/325)
+
+1. Add project() to examples
+    * [Pull request #322](https://github.com/gazebosim/gz-physics/pull/322)
+
 ### Ignition Physics 5.1.0 (2021-11-12)
 
 1. Remove unused ign_auto_headers.hh.in
