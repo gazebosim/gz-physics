@@ -184,9 +184,3 @@ TEST(BaseClass, AddNestedModel)
   ASSERT_EQ(2u, parentModelInfo.nestedModels.size());
   EXPECT_EQ(nestedModel2ID, parentModelInfo.nestedModels[1]);
 }
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

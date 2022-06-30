@@ -225,11 +225,3 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   // EXPECT_DOUBLE_EQ(angle20, angle30);
   // EXPECT_DOUBLE_EQ(angle21, angle31);
 }
-
-
-/////////////////////////////////////////////////
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

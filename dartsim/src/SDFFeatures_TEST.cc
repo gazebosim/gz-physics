@@ -102,7 +102,7 @@ WorldPtr LoadWorldWhole(const std::string &_world)
   sdf::Root root;
   const sdf::Errors &errors = root.Load(_world);
   EXPECT_EQ(0u, errors.size());
-  for (const auto error : errors) {
+  for (const auto & error : errors) {
     std::cout << error << std::endl;
   }
 
@@ -303,9 +303,9 @@ class SDFFeatures_TEST : public ::testing::TestWithParam<LoaderType>
 };
 
 // Run with different load world functions
-INSTANTIATE_TEST_CASE_P(LoadWorld, SDFFeatures_TEST,
+INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole,
-                                          LoaderType::Piecemeal), );
+                                          LoaderType::Piecemeal));
 
 /////////////////////////////////////////////////
 // Test that the dartsim plugin loaded all the relevant information correctly.
@@ -717,9 +717,9 @@ class SDFFeatures_FrameSemantics: public SDFFeatures_TEST
 };
 
 // Run with different load world functions
-INSTANTIATE_TEST_CASE_P(LoadWorld, SDFFeatures_FrameSemantics,
+INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_FrameSemantics,
                         ::testing::Values(LoaderType::Whole,
-                                          LoaderType::Piecemeal), );
+                                          LoaderType::Piecemeal));
 
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
@@ -930,10 +930,4 @@ TEST_P(SDFFeatures_TEST, Shapes)
     EXPECT_EQ(name, skeleton->getName());
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
   }
-}
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }
