@@ -330,7 +330,7 @@ const std::string &EntityManagementFeatures::GetModelName(
     const Identity &_modelID) const
 {
   // Check if the model exists
-  if (this->models.find(_modelID.id) == this->models.end())
+  if (!this->models.count(_modelID.id))
   {
     static const std::string modelName = "";
     return modelName;
@@ -343,7 +343,7 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
   const Identity &_modelId) const
 {
-  if (this->models.find(_modelId.id) == this->models.end())
+  if (!this->models.count(_modelId.id))
   {
     return 0;
   }
@@ -366,9 +366,9 @@ std::size_t EntityManagementFeatures::GetModelIndex(
 Identity EntityManagementFeatures::GetWorldOfModel(
   const Identity &_modelId) const
 {
-  if (this->models.find(_modelId.id) == this->models.end())
+  if (!this->models.count(_modelId.id))
   {
-    return GenerateIdentity(0);
+    return this->GenerateInvalidId();
   }
 
   auto worldID = this->models.at(_modelId)->world;
@@ -385,13 +385,13 @@ std::size_t EntityManagementFeatures::GetNestedModelCount(
 Identity EntityManagementFeatures::GetNestedModel(
   const Identity &, std::size_t ) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 Identity EntityManagementFeatures::GetNestedModel(
   const Identity &, const std::string &) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 std::size_t EntityManagementFeatures::GetLinkCount(const Identity &) const
@@ -402,9 +402,9 @@ std::size_t EntityManagementFeatures::GetLinkCount(const Identity &) const
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, std::size_t _linkIndex) const
 {
-  if (this->models.find(_modelID.id) == this->models.end())
+  if (!this->models.count(_modelID.id))
   {
-    return GenerateIdentity(0);
+    return this->GenerateInvalidId();
   }
 
   std::size_t index = 0;
@@ -412,7 +412,7 @@ Identity EntityManagementFeatures::GetLink(
 
   for (const auto & link : model->links)
   {
-    if (this->links.find(link) != this->links.end())
+    if (this->links.count(link))
     {
       if (index++ == _linkIndex)
       {
@@ -421,21 +421,21 @@ Identity EntityManagementFeatures::GetLink(
       }
     }
   }
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
-  if (this->models.find(_modelID.id) == this->models.end())
+  if (!this->models.count(_modelID.id))
   {
-    return GenerateIdentity(0);
+    return this->GenerateInvalidId();
   }
 
   auto model = this->models.at(_modelID);
   for (const auto & link : model->links)
   {
-    if (this->links.find(link) != this->links.end())
+    if (this->links.count(link))
     {
         auto linkFound = this->links.at(link);
         if (linkFound->name == _linkName)
@@ -445,7 +445,7 @@ Identity EntityManagementFeatures::GetLink(
     }
   }
 
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 std::size_t EntityManagementFeatures::GetJointCount(const Identity &) const
@@ -456,19 +456,19 @@ std::size_t EntityManagementFeatures::GetJointCount(const Identity &) const
 Identity EntityManagementFeatures::GetJoint(
     const Identity &, std::size_t ) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 Identity EntityManagementFeatures::GetJoint(
     const Identity &, const std::string &) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 const std::string &EntityManagementFeatures::GetLinkName(
     const Identity &_linkId) const
 {
-  if (this->links.find(_linkId.id) == this->links.end())
+  if (!this->links.count(_linkId.id))
   {
     static const std::string linkName = "";
     return linkName;
@@ -481,7 +481,7 @@ const std::string &EntityManagementFeatures::GetLinkName(
 std::size_t EntityManagementFeatures::GetLinkIndex(
   const Identity &_linkId) const
 {
-  if (this->links.find(_linkId.id) == this->links.end())
+  if (!this->links.count(_linkId.id))
   {
     return 0;
   }
@@ -502,9 +502,9 @@ std::size_t EntityManagementFeatures::GetLinkIndex(
 Identity EntityManagementFeatures::GetModelOfLink(
   const Identity &_linkId) const
 {
-  if (this->links.find(_linkId.id) == this->links.end())
+  if (!this->links.count(_linkId.id))
   {
-    return GenerateIdentity(0);
+    return this->GenerateInvalidId();
   }
 
   auto modelID = this->links.at(_linkId)->model;
@@ -519,13 +519,13 @@ std::size_t EntityManagementFeatures::GetShapeCount(const Identity &) const
 Identity EntityManagementFeatures::GetShape(
     const Identity &, std::size_t) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 Identity EntityManagementFeatures::GetShape(
     const Identity &, const std::string &) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 const std::string &EntityManagementFeatures::GetJointName(
@@ -542,7 +542,7 @@ std::size_t EntityManagementFeatures::GetJointIndex(const Identity &) const
 
 Identity EntityManagementFeatures::GetModelOfJoint(const Identity &) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 
 const std::string &EntityManagementFeatures::GetShapeName(
@@ -559,7 +559,7 @@ std::size_t EntityManagementFeatures::GetShapeIndex(const Identity &) const
 
 Identity EntityManagementFeatures::GetLinkOfShape(const Identity &) const
 {
-  return this->GenerateIdentity(0);
+  return this->GenerateInvalidId();
 }
 }  // namespace bullet
 }  // namespace physics
