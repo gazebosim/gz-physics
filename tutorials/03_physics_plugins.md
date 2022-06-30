@@ -9,7 +9,7 @@ It allows users to select from multiple supported physics engines based on their
 Its plugin interface loads physics engines with requested features at runtime.
 It is also possible to integrate your own selected physics engine by writing a compatible plugin interface.
 
-To get a more in-depth understanding of how the physics plugin works in Ignition, we will start with some high level concepts and definitions.
+To get a more in-depth understanding of how the physics plugin works in Gazebo, we will start with some high level concepts and definitions.
 
 <!-- TODO: add tutorial on how to write your own physics plugin -->
 
@@ -19,7 +19,7 @@ Conceptually, the physics plugin can be viewed from two sides of its interface: 
 
 Each physics engine provides access to different features implemented by the Gazebo Physics engine.
 The interface is made possible through the \ref gz::plugin "Gazebo Plugin" library, which instantiates \ref gz::physics::Feature "Features" in \ref gz::physics::FeatureList "FeatureLists" and supplies pointers to the selected engine.
-This "user side interface" makes the Gazebo Physics library "callable" from other Ignition libraries.
+This "user side interface" makes the Gazebo Physics library "callable" from other Gazebo libraries.
 
 The implementation side interface handles specific implementations of each `Feature`.
 Depending on what external physics engine we are using (DART, TPE etc.), the interface might be different.
@@ -44,7 +44,7 @@ The implementation of the physics plugin revolves around four key elements.
 
     This class defines the concept of a `Feature`, examples like `GetWorldFromEngine`, \ref gz::physics::GetEngineInfo "GetEngineInfo" etc.
     There is a pre-defined list of features in Gazebo Physics.
-    They are implemented by using external physics engines' APIs to fulfill simulation needs requested by Ignition.
+    They are implemented by using external physics engines' APIs to fulfill simulation needs requested by Gazebo.
 
 4. \ref gz::physics::FeatureList "FeatureList"
 
@@ -82,7 +82,7 @@ The source code for Dartsim plugin can be found in [Gazebo Physics repository](h
 
 TPE ([Trivial Physics Engine](https://github.com/gazebosim/gz-physics/tree/ign-physics6/tpe)) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
 It supports higher-order fleet dynamics without real physics (eg. gravity, force, constraint etc.) and multi-machine synchronization.
-Ignition support for TPE targets [Citadel](https://gazebosim.org/docs/citadel) and onward releases.
+Gazebo support for TPE targets [Citadel](https://gazebosim.org/docs/citadel) and onward releases.
 The source code for TPE plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/ign-physics6) under the `tpe/plugin` directory.
 
 The following is a list of features supported by each physics engine to help users select one that fits their needs.

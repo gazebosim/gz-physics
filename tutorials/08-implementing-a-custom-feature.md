@@ -14,12 +14,12 @@ know how to implement a dummy physics engine as a plugin and load it using
 \ref gz::physics "Gazebo Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
 [DART](https://github.com/gazebosim/gz-physics/tree/main/dartsim)
-physics engine in `ign-physics` repository and how to define a custom
+physics engine in `gz-physics` repository and how to define a custom
 \ref gz::physics::Feature "Feature" for the plugin.
 
 ### Folder structure of the plugins
 
-Below is the general structure of the `ign-physics` repository:
+Below is the general structure of the `gz-physics` repository:
 
 ```
 ign-physics
@@ -41,7 +41,7 @@ As shown above, there are two physics engines available:
 - **DART**: `gz-physics-dartsim-plugin`.
 - **TPE**: `gz-physics-tpe-plugin`.
 
-and their plugin folders are placed just below the top level of `ign-physics`.
+and their plugin folders are placed just below the top level of `gz-physics`.
 
 Looking closer to a plugin folder, for example, the `dartsim` (DART) plugin:
 

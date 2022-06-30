@@ -85,8 +85,8 @@ class Collisions_TEST
       public ::testing::WithParamInterface<std::string>
 {};
 
-INSTANTIATE_TEST_CASE_P(PhysicsPlugins, Collisions_TEST,
-    ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+INSTANTIATE_TEST_SUITE_P(PhysicsPlugins, Collisions_TEST,
+    ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries));
 
 TestWorldPtr ConstructMeshPlaneWorld(
     const gz::physics::Engine3dPtr<TestFeatureList> &_engine,
@@ -154,10 +154,4 @@ TEST_P(Collisions_TEST, MeshAndPlane)
     EXPECT_NEAR(
           -1.91, link->FrameDataRelativeToWorld().pose.translation()[2], 0.05);
   }
-}
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }
