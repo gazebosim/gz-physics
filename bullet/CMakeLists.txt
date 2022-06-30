@@ -21,8 +21,8 @@ target_link_libraries(${bullet_plugin}
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
-    ignition-math${IGN_MATH_VER}::eigen3)
+    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+    gz-math${GZ_MATH_VER}::eigen3)
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
@@ -32,8 +32,8 @@ install(
   DIRECTORY include/
   DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
 
-# The library created by `gz_add_component` includes the ign-physics version
-# (i.e. libignition-physics1-name-plugin.so), but for portability,
+# The library created by `gz_add_component` includes the gz-physics version
+# (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${bullet_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
 set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -56,8 +56,8 @@ gz_build_tests(
   SOURCES ${test_sources}
   LIB_DEPS
     ${features}
-    ignition-plugin${IGN_PLUGIN_VER}::loader
-    ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+    gz-plugin${GZ_PLUGIN_VER}::loader
+    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
   TEST_LIST tests)

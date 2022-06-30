@@ -24,8 +24,8 @@ foreach(test ${tests})
 
   target_link_libraries(${TEST_TYPE}_${test}
     PUBLIC
-      ignition-plugin${IGN_PLUGIN_VER}::loader
-      ignition-common5::ignition-common5
+      gz-plugin${GZ_PLUGIN_VER}::loader
+      gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
       ${PROJECT_LIBRARY_TARGET_NAME}
       ${PROJECT_LIBRARY_TARGET_NAME}-sdf
       gtest

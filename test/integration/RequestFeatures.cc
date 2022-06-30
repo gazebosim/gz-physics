@@ -110,9 +110,3 @@ TEST(RequestFeatures_TEST, Casting)
       unavailableFeatureModel);
   EXPECT_FALSE(invalidModel);
 }
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

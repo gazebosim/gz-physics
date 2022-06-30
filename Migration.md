@@ -7,7 +7,7 @@ release will remove the deprecated code.
 
 ## Gazebo Physics 5.X to 6.X
 
-### Deprecation
+### Deprecations
 
 1. The `ignition` namespace is deprecated and will be removed in future versions.  Use `gz` instead.
 
@@ -27,6 +27,14 @@ release will remove the deprecated code.
    1. `IGNITION_UNITTEST_EXPECTDATA_ACCESS` (hard-tocked, inside test and detail headers)
    1. `IGNITION_PHYSICS_DEFINE_COORDINATE_SPACE` (hard-tocked, inside detail header)
 
+### Breaking Changes
+
+* The project name has been changed to use the `gz-` prefix, you **must** use the `gz` prefix!
+  * This also means that any generated code that use the project name (e.g. CMake variables, in-source macros) would have to be migrated.
+  * Some non-exhaustive examples of this include:
+    * `GZ_<PROJECT>_<VISIBLE/HIDDEN>`
+    * CMake `-config` files
+    * Paths that depend on the project name
 
 ## Gazebo Physics 4.X to 5.X
 

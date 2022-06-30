@@ -353,10 +353,3 @@ TEST_F(LinkFeaturesFixture, ModelAxisAlignedBoundingBox)
   EXPECT_PRED_FORMAT2(
       vectorPredicate, physics::Vector3d(2, 2, 1.0), bboxLinkFrame.max());
 }
-
-/////////////////////////////////////////////////
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
