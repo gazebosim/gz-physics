@@ -1392,10 +1392,3 @@ TEST_F(JointTransmittedWrenchFixture, ContactForces)
   EXPECT_TRUE(physics::test::Equal(expectedWrenchAtMotorJointInJoint,
                                    wrenchAtMotorJointInJoint, 1e-4));
 }
-
-/////////////////////////////////////////////////
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

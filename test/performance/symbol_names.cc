@@ -134,9 +134,3 @@ TEST(symbol_names, Length)
   auto engineAlias = gz::physics::RequestEngine3d<FeatureSetAlias>::From(
         gz::plugin::PluginPtr());
 }
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

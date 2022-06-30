@@ -208,10 +208,3 @@ TEST_F(WorldFeaturesFixture, Solver)
   world->SetSolver("pgs");
   EXPECT_EQ("PgsBoxedLcpSolver", world->GetSolver());
 }
-
-/////////////////////////////////////////////////
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

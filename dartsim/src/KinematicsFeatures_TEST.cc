@@ -124,11 +124,3 @@ TEST_F(KinematicsFeaturesFixture, JointFrameSemantics)
   EXPECT_TRUE(
       physics::test::Equal(F_WCexpected, childLinkFrameData, 1e-6));
 }
-
-/////////////////////////////////////////////////
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-

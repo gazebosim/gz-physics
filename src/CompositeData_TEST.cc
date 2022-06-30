@@ -579,10 +579,3 @@ TEST(CompositeData_TEST, Queries)
   EXPECT_NE(0u, all.count(typeid(IntData).name()));
   EXPECT_NE(0u, all.count(typeid(BoolData).name()));
 }
-
-/////////////////////////////////////////////////
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

@@ -54,7 +54,7 @@ class EntityManagementFeaturesTest:
     if (pluginNames.empty())
     {
       std::cerr << "No plugins with required features found in " << GetLibToTest();
-      // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
+      GTEST_SKIP();
     }
   }
 
