@@ -50,7 +50,6 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   auto gravity = _sdfWorld.Gravity();
   worldInfo->world->setGravity(btVector3(gravity[0], gravity[1], gravity[2]));
-  gzwarn << "CONSTRUCTING WORLD WITH " << _sdfWorld.ModelCount() << " MODELS" << std::endl;
 
   for (std::size_t i=0; i < _sdfWorld.ModelCount(); ++i)
   {
@@ -94,9 +93,6 @@ struct Structure
 /////////////////////////////////////////////////
 std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
 {
-  gzwarn << "VALIDATING MODEL [" << _sdfModel.Name() << "]"
-         << " | LinkCount: " << _sdfModel.LinkCount()
-         << " | JointCount: " << _sdfModel.JointCount() << std::endl;
   std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
   const ::sdf::Link *rootLink = nullptr;
   const ::sdf::Joint *rootJoint = nullptr;
@@ -110,12 +106,10 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       for (std::size_t i = 0; i < model.JointCount(); ++i)
       {
         const auto *joint = model.JointByIndex(i);
-        const auto &parentLinkName = joint->ParentLinkName();
+        const auto &parentLinkName = joint->ParentName();
         const auto *parent = model.LinkByName(parentLinkName);
-        const auto &childLinkName = joint->ChildLinkName();
+        const auto &childLinkName = joint->ChildName();
         const auto *child = model.LinkByName(childLinkName);
-
-        gzwarn  << "LOOKING AT JOINT [" << joint->Name() << "]" << std::endl;
 
         switch (joint->Type())
         {
@@ -126,7 +120,8 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
             break;
           default:
             gzerr << "Joint type [" << (std::size_t)(joint->Type())
-                  << "] is not supported by gz-physics-bullet-featherston\n";
+                  << "] is not supported by "
+                  << "gz-physics-bullet-featherstone-plugin\n";
             return false;
         }
 
@@ -153,8 +148,8 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
             // A root already exists for this model
             gzerr << "Two root links were found for Model [" << rootModelName
                   << "]: [" << rootLink->Name() << "] and [" << childLinkName
-                  << "], but gz-physics-bullet-featherstone only supports one "
-                  << "root per Model.\n";
+                  << "], but gz-physics-bullet-featherstone-plugin only "
+                  << "supports one root per Model.\n";
             return false;
           }
 
@@ -165,21 +160,19 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
                   << "world by Joint [" << joint->Name() << "] with a ["
                   << (std::size_t)(joint->Type()) << "] joint type, but only "
                   << "Fixed (" << (std::size_t)(::sdf::JointType::FIXED)
-                  << ") is supported by gz-physics-bullet-featherstone\n";
+                  << ") is supported by "
+                  << "gz-physics-bullet-featherstone-plugin\n";
             return false;
           }
 
           rootLink = child;
           rootJoint = joint;
           fixed = true;
-          gzwarn  << "FOUND FIXED ROOT: " << rootLink->Name() << std::endl;
 
           // Do not add the root link to the set of links that have parents
           continue;
         }
 
-        gzwarn << "INSERTING PARENT [" << joint->Name() << "] FOR CHILD ["
-               << child->Name() << "]" << std::endl;
         if (!parentOf.insert(
           std::make_pair(child, ParentInfo{joint, &model})).second)
         {
@@ -211,7 +204,6 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       for (std::size_t i = 0; i < model.LinkCount(); ++i)
       {
         const auto *link = model.LinkByIndex(i);
-        gzdbg << "Parsing link [" << i << "] of model [" << model.Name() << "]: " << link << std::endl;
         if (parentOf.count(link) == 0)
         {
           // This link must be the root. If a different link was already
@@ -229,8 +221,6 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
           continue;
         }
 
-        gzwarn << "PUSHING [" << link->Name() << "] INTO flatLinks WITH PARENT ["
-               << parentOf[link].joint->Name() << "]" << std::endl;
         linkIndex[link] = linkIndex.size();
         flatLinks.push_back(link);
       }
@@ -261,22 +251,13 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
     const auto *parentJoint = parentOf.at(flatLinks[i]).joint;
 
     const auto *parentLink =
-      _sdfModel.LinkByName(parentJoint->ParentLinkName());
+      _sdfModel.LinkByName(parentJoint->ParentName());
     const auto p_index_it = linkIndex.find(parentLink);
     if (p_index_it == linkIndex.end())
     {
       // If the parent index cannot be found, that must mean the parent is the
       // root link, so this link can go anywhere in the list as long as it is
       // before its own children.
-      gzwarn << "Link [" << flatLinks[i]->Name() << ":" << flatLinks[i] << "] has no parent inside flatLinks!" << std::endl;
-      if (rootLink)
-      {
-        gzwarn << "Root link is [" << rootLink->Name() << ":" << rootLink << "]" << std::endl;
-      }
-      else
-      {
-        gzwarn << "Root link is nullptr!" << std::endl;
-      }
       assert(parentLink == rootLink);
       continue;
     }
@@ -370,7 +351,6 @@ Identity SDFFeatures::ConstructSdfModel(
     const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
           link->Inertial().Pose());
 
-    gzwarn << "Calling AddLink for " << i << std::endl;
     const auto linkID = this->AddLink(
       LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
 
@@ -392,11 +372,8 @@ Identity SDFFeatures::ConstructSdfModel(
 
     const auto &parentInfo = structure.parentOf.at(link);
     const auto *joint = parentInfo.joint;
-    gzwarn << "Trying to get parent link named ["
-           << joint->ParentLinkName() << "] for child link ["
-           << joint->ChildLinkName() << "]" << std::endl;
     const auto &parentLinkID = linkIDs.at(
-      parentInfo.model->LinkByName(joint->ParentLinkName()));
+      parentInfo.model->LinkByName(joint->ParentName()));
     const auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
       parentLinkID);
 
@@ -409,7 +386,7 @@ Identity SDFFeatures::ConstructSdfModel(
     {
       gz::math::Pose3d gzPoseParentToJoint;
       const auto errors = joint->SemanticPose().Resolve(
-        gzPoseParentToJoint, joint->ParentLinkName());
+        gzPoseParentToJoint, joint->ParentName());
       if (!errors.empty())
       {
         gzerr << "An error occurred while resolving the transform of Joint ["
@@ -511,14 +488,16 @@ Identity SDFFeatures::ConstructSdfModel(
       gzerr << "You have found a bug in gz-physics-bullet-featherstone. Joint "
             << "type [" << (std::size_t)(joint->Type()) << "] should have been "
             << "filtered out during model validation, but that filtering "
-            << "failed.\n";
+            << "failed. Please report this to the gz-physics developers\n";
       return this->GenerateInvalidId();
     }
 
     for (std::size_t c = 0; c < link->CollisionCount(); ++c)
     {
-      if (!this->AddSdfCollision(linkID, *link->CollisionByIndex(c)))
-        return this->GenerateInvalidId();
+      // If we fail to add the collision, just keep building the model. It may
+      // need to be constructed outside of the SDF generation pipeline, e.g.
+      // with AttachHeightmap.
+      this->AddSdfCollision(linkID, *link->CollisionByIndex(c));
     }
   }
 
@@ -667,7 +646,6 @@ bool SDFFeatures::AddSdfCollision(
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
       linkInfo->collider = std::move(collider);
-      gzwarn << "ADDING COLLIDER FOR [" << linkInfo->name << "]: " << linkInfo->collider.get() << std::endl;
 
       if (linkIndexInModel >= 0)
       {

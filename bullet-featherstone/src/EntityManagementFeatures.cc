@@ -56,13 +56,7 @@ Identity EntityManagementFeatures::GetLink(
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
   const auto it = model->linkNameToEntityId.find(_linkName);
   if (it == model->linkNameToEntityId.end())
-  {
-    gzwarn << "Could not find [" << _linkName << "] in map:\n";
-    for (const auto &[n, i] : model->linkNameToEntityId)
-      gzwarn << " -- " << n << " : " << i << "\n";
-    gzwarn << std::endl;
     return this->GenerateInvalidId();
-  }
 
   return this->GenerateIdentity(it->second, this->links.at(it->second));
 }

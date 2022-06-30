@@ -49,8 +49,6 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       const auto &link = model->body->getLink(index);
       data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
       data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
-
-      gzwarn << "BASE TRANSFORM OF " << linkInfo->name << ":\n" << data.pose.matrix() << std::endl;
       return data;
     }
 
@@ -71,7 +69,6 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     * model->baseInertiaToLinkFrame;
   data.linearVelocity = convert(model->body->getBaseVel());
   data.linearAcceleration = convert(model->body->getBaseOmega());
-  gzwarn << "BASE TRANSFORM OF " << model->name << ":\n" << data.pose.matrix() << std::endl;
   return data;
 }
 

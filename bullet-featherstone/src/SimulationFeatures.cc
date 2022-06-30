@@ -28,16 +28,10 @@ void SimulationFeatures::WorldForwardStep(
     const ForwardStep::Input & _u)
 {
     const WorldInfoPtr &worldInfo = this->worlds.at(_worldID);
-    static std::size_t iters = 0;
-    gzwarn << "SIMULATION ITERATIONS: " << iters << std::endl;
-    ++iters;
-
     auto *dtDur =
       _u.Query<std::chrono::steady_clock::duration>();
     std::chrono::duration<double> dt = *dtDur;
-    worldInfo->world->clearForces();
     worldInfo->world->stepSimulation(dt.count(), 1, dt.count());
-    gzwarn << "FINISHED ITERATION" << std::endl;
 }
 
 }  // namespace bullet_featherstone
