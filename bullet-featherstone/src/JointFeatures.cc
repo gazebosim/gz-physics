@@ -140,7 +140,8 @@ void JointFeatures::SetJointForce(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] = _value;
+  model->body->getJointTorqueMultiDof(
+    identifier->indexInBtModel)[_dof] = _value;
 }
 
 /////////////////////////////////////////////////
