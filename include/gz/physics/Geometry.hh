@@ -37,7 +37,7 @@ namespace gz
 {
   namespace physics
   {
-    /// \brief This is used by ignition-physics to represent rigid body
+    /// \brief This is used by gz-physics to represent rigid body
     /// transforms in 2D or 3D simulations. The precision can be chosen as
     /// float or scalar.
     template <typename Scalar, std::size_t Dim>

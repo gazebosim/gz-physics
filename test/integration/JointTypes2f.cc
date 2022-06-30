@@ -28,9 +28,3 @@ TEST(JointTypes_TEST, TypeCasts2f)
 {
   TestJointTypeCasts<FeaturePolicy2f>("2f");
 }
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

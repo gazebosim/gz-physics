@@ -28,9 +28,3 @@ TEST(JointTypes_TEST, TypeCasts3d)
 {
   TestJointTypeCasts<FeaturePolicy3d>("3d");
 }
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

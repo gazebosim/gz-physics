@@ -49,9 +49,3 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto world = engine->ConstructEmptyWorld("empty world");
   ASSERT_NE(nullptr, world);
 }
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

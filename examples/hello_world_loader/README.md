@@ -5,7 +5,7 @@ plugins, according to a desired feature list.
 
 ## Build
 
-From the root of the `ign-physics` repository, do the following to build the example:
+From the root of the `gz-physics` repository, do the following to build the example:
 
 ```bash
 cd examples/hello_world_loader
@@ -41,7 +41,7 @@ For example, if you have the Gazebo Physics plugin for DART compiled, find
 where it's installed with:
 
 ~~~
-find / | grep libignition-physics-dartsim-plugin.so
+find / | grep libgz-physics-dartsim-plugin.so
 ~~~
 
 You may find more than one file. Choose one of them, and load it with
@@ -49,7 +49,7 @@ the example loader like this:
 
 ~~~
 cd examples/hello_world_loader/build
-./hello_world_loader <path_to>/libignition-physics-dartsim-plugin.so
+./hello_world_loader <path_to>/libgz-physics-dartsim-plugin.so
 ~~~
 
 And you'll see the engine info:
