@@ -40,6 +40,30 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
+/// frame. If that fails, return the raw pose
+static std::optional<Eigen::Isometry3d> ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
+{
+  math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose);
+  if (!errors.empty())
+  {
+    if (!_semPose.RelativeTo().empty())
+    {
+      gzerr << "There was an error in SemanticPose::Resolve:\n";
+      for (const auto &err : errors)
+      {
+        gzerr << err.Message() << std::endl;
+      }
+    }
+
+    return std::nullopt;
+  }
+
+  return math::eigen3::convert(pose);
+}
+
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
@@ -505,11 +529,20 @@ Identity SDFFeatures::ConstructSdfModel(
 
   model->body->finalizeMultiDof();
 
-  const Eigen::Isometry3d worldToRoot =
-    gz::math::eigen3::convert(structure.rootLink->RawPose());
 
-  model->body->setBaseWorldTransform(
-    convertTf(worldToRoot * rootInertialToLink.inverse()));
+  const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
+  if (!worldToModel)
+    return this->GenerateInvalidId();
+
+  const auto modelToRootLink =
+    ResolveSdfPose(structure.rootLink->SemanticPose());
+  if (!modelToRootLink)
+    return this->GenerateInvalidId();
+
+  const auto worldToRootCom =
+    *worldToModel * *modelToRootLink * rootInertialToLink.inverse();
+
+  model->body->setBaseWorldTransform(convertTf(worldToRootCom));
   model->body->setBaseVel(btVector3(0, 0, 0));
   model->body->setBaseOmega(btVector3(0, 0, 0));
 
