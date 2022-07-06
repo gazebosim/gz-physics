@@ -109,7 +109,7 @@ class SimulationFeaturesTest:
     {
       std::cerr << "No plugins with required features found in "
                 << GetLibToTest() << std::endl;
-      // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
+      GTEST_SKIP();
     }
   }
   public: std::set<std::string> pluginNames;
