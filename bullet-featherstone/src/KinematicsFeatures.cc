@@ -58,9 +58,9 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   else
   {
     // If the Frame was not a Link then we can assume it's a Model because Free
-    // Groups are always Models underneath. If we ever support frame semantics for
-    // more than links, models, and free groups, then this implementation needs to
-    // change.
+    // Groups are always Models underneath. If we ever support frame semantics
+    // for more than links, models, and free groups, then this implementation
+    // needs to change.
     model = this->FrameInterface<ModelInfo>(_id);
   }
 

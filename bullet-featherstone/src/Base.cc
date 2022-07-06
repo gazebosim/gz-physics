@@ -17,6 +17,8 @@
 
 #include "Base.hh"
 
+#include <utility>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -40,6 +42,6 @@ WorldInfo::WorldInfo(std::string name_)
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
 }
 
-} // namespace bullet_featherstone
-} // namespace physics
-} // namespace gz
+}  // namespace bullet_featherstone
+}  // namespace physics
+}  // namespace gz

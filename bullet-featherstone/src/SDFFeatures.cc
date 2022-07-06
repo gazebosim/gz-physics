@@ -34,6 +34,9 @@
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 
 #include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace gz {
 namespace physics {
@@ -42,7 +45,8 @@ namespace bullet_featherstone {
 /////////////////////////////////////////////////
 /// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
 /// frame. If that fails, return the raw pose
-static std::optional<Eigen::Isometry3d> ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
+static std::optional<Eigen::Isometry3d> ResolveSdfPose(
+  const ::sdf::SemanticPose &_semPose)
 {
   math::Pose3d pose;
   ::sdf::Errors errors = _semPose.Resolve(pose);

@@ -22,7 +22,6 @@
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <LinearMath/btVector3.h>
-#include <LinearMath/btVector3.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletDynamics/Featherstone/btMultiBody.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
@@ -36,6 +35,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 #include <variant>
 
