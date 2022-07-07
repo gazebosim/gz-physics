@@ -56,7 +56,7 @@ using ModelPtr = gz::physics::Model3dPtr<TestFeatureList>;
 using LinkPtr = gz::physics::Link3dPtr<TestFeatureList>;
 
 class FreeGroupFeaturesTest:
-public gz::physics::TestLibLoader
+  public testing::Test, public gz::physics::TestLibLoader
 {
   // Documentation inherited
   public: void SetUp() override
@@ -72,9 +72,12 @@ public gz::physics::TestLibLoader
     {
       std::cerr << "No plugins with required features found in "
                 << GetLibToTest() << std::endl;
-      // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
+      GTEST_SKIP();
     }
   }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
 };
 
 ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
