@@ -30,6 +30,7 @@ foreach(test ${tests})
 
   if (${BULLET_FOUND})
     configure_common_test("bullet" ${TEST_TYPE}_${test})
+    configure_common_test("bullet-featherstone" ${TEST_TYPE}_${test})
   endif()
   if (${DART_FOUND})
     configure_common_test("dartsim" ${TEST_TYPE}_${test})

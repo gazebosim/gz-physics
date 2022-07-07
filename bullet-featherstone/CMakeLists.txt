@@ -60,7 +60,7 @@ gz_build_tests(
 foreach(test ${tests})
 
   target_compile_definitions(${test} PRIVATE
-    "bullet_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\""
+    "bullet_featherstone_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\""
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
 
@@ -69,6 +69,6 @@ endforeach()
 if(TARGET UNIT_FindFeatures_TEST)
 
   target_compile_definitions(UNIT_FindFeatures_TEST PRIVATE
-    "bullet_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\"")
+    "bullet_featherstone_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\"")
 
 endif()

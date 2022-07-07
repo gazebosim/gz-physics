@@ -38,7 +38,7 @@ using TestFeatureList =
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   gz::plugin::Loader loader;
-  loader.LoadLib(bullet_plugin_LIB);
+  loader.LoadLib(bullet_featherstone_plugin_LIB);
 
   gz::plugin::PluginPtr bullet =
       loader.Instantiate("gz::physics::bullet_featherstone::Plugin");
