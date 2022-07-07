@@ -265,6 +265,162 @@ bool EntityManagementFeatures::RemoveModelByName(
     this->GenerateIdentity(it->second, this->models.at(it->second)));
 }
 
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetEngineName(
+  const Identity &) const
+{
+  static const std::string engineName = "bullet-featherstone";
+  return engineName;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetEngineIndex(const Identity &) const
+{
+  return 0;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetWorldCount(
+    const Identity &) const
+{
+  return worlds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &_engineID, std::size_t _worldIndex) const
+{
+  const auto *world = this->ReferenceInterface<WorldInfo>(_engineID);
+  if (_worldIndex >= world->modelIndexToEntityId.size())
+    return this->GenerateInvalidId();
+
+  const auto it = world->modelIndexToEntityId.find(_worldIndex);
+  if (it == world->modelIndexToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &_engineID, const std::string &_worldName) const
+{
+  // TODO(MXG): Consider using a hashmap with the link names as a key to speed
+  // this up
+  const auto *world = this->ReferenceInterface<WorldInfo>(_engineID);
+  const auto it = world->modelNameToEntityId.find(_worldName);
+  if (it == world->modelNameToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetWorldName(
+    const Identity &_worldID) const
+{
+  return this->ReferenceInterface<WorldInfo>(_worldID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetWorldIndex(
+    const Identity &_worldID) const
+{
+  return 0;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetEngineOfWorld(
+    const Identity &_worldID) const
+{
+  return this->GenerateIdentity(0);
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetModelCount(
+    const Identity &_worldID) const
+{
+  return this->models.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModel(
+    const Identity &_worldID, std::size_t _modelIndex) const
+{
+  const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
+  if (_modelIndex >= world->modelIndexToEntityId.size())
+    return this->GenerateInvalidId();
+
+  const auto it = world->modelIndexToEntityId.find(_modelIndex);
+  if (it == world->modelIndexToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModel(
+    const Identity &_worldID, const std::string &_modelName) const
+{
+  // TODO(MXG): Consider using a hashmap with the link names as a key to speed
+  // this up
+  const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
+  const auto it = world->modelNameToEntityId.find(_modelName);
+  if (it == world->modelNameToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetModelName(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetModelIndex(
+    const Identity &_modelID) const
+{
+  // The root link does not have an index, so we give it an index of 0 and bump
+  // the rest up by one when providing an index to gazebo
+  const auto index = this->ReferenceInterface<ModelInfo>(_modelID)->indexInWorld;
+  return index+1;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorldOfModel(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->world;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyModel(
+  const Identity &_worldID, const std::string &_name)
+{
+  return this->AddModel(
+    _name,
+    _worldID,
+    Eigen::Isometry3d(),
+    std::make_unique<btMultiBody>(
+      0,  // n_links
+      1,  // mass
+      btVector3(1, 1, 1),  // Inertia
+      false,  // fixed based
+      true));  // can_sleep
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::ConstructEmptyLink(
+    const Identity &_modelID, const std::string &_name)
+{
+  return this->AddLink(
+    LinkInfo{_name, std::nullopt, _modelID, Eigen::Isometry3d()});
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

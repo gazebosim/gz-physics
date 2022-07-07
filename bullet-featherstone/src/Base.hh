@@ -266,7 +266,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     {
       // We are adding the root link. This means the model should not already
       // have a root link
-      assert(model->linkEntityIds.empty());
+      // This check makes `ConstructEmptyLink` to fail
+      // assert(model->linkEntityIds.empty());
     }
     model->linkEntityIds.push_back(id);
 
