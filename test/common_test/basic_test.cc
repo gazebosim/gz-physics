@@ -113,6 +113,7 @@ TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  EntityManagementFeaturesTest::init(argc, argv);
+  if (!EntityManagementFeaturesTest::init(argc, argv))
+    return -1;
   return RUN_ALL_TESTS();
 }
