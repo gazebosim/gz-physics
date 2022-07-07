@@ -17,9 +17,9 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
-#include <gz/common/Filesystem.hh>
-#include <gz/common/Util.hh>
 #include <gz/plugin/Loader.hh>
+
+#include "../helpers/TestLibLoader.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
@@ -31,21 +31,8 @@ using Features = gz::physics::FeatureList<
 >;
 
 class EntityManagementFeaturesTest:
-  public testing::Test
+  public testing::Test, public gz::physics::TestLibLoader
 {
-  public: static void init(int argc, char *argv[])
-  {
-    if (argc != 2)
-      FAIL() << "Please provide the path to an engine plugin.\n"
-             << "Usage COMMON_TEST_basic_test <physics engine path>\n";
-    libToTest = argv[1];
-  }
-
-  static std::string GetLibToTest()
-  {
-    return libToTest;
-  }
-
   // Documentation inherited
   public: void SetUp() override
   {
@@ -58,35 +45,14 @@ class EntityManagementFeaturesTest:
     pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
     if (pluginNames.empty())
     {
-      FAIL() << "No plugins with required features found in " << GetLibToTest();
+      std::cerr << "No plugins with required features found in " << GetLibToTest();
+      GTEST_SKIP();
     }
   }
 
-  /// \brief Get Physics Engine name based on the plugin name
-  /// \param[in] _name Plugin name
-  /// \return Name of the Physics Engine
-  std::string PhysicsEngineName(std::string _name)
-  {
-    std::vector<std::string> tokens = gz::common::split(_name, "::");
-    if (tokens.size() == 4)
-    {
-      std::string physicsEngineName = tokens[2];
-      std::string physicsEnginePluginName = physicsEngineName;
-      if (physicsEngineName == "tpeplugin")
-      {
-        physicsEnginePluginName = "tpe";
-      }
-      return physicsEnginePluginName;
-    }
-    return "";
-  }
-
-  public: static std::string libToTest;
-  public: gz::plugin::Loader loader;
   public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
 };
-
-std::string EntityManagementFeaturesTest::libToTest = std::string("");
 
 /////////////////////////////////////////////////
 TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
@@ -106,6 +72,7 @@ TEST_F(EntityManagementFeaturesTest, ConstructEmptyWorld)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  EntityManagementFeaturesTest::init(argc, argv);
+  if (!EntityManagementFeaturesTest::init(argc, argv))
+    return -1;
   return RUN_ALL_TESTS();
 }
