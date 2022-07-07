@@ -386,7 +386,8 @@ std::size_t EntityManagementFeatures::GetModelIndex(
 {
   // The root link does not have an index, so we give it an index of 0 and bump
   // the rest up by one when providing an index to gazebo
-  const auto index = this->ReferenceInterface<ModelInfo>(_modelID)->indexInWorld;
+  const auto index = this->ReferenceInterface<ModelInfo>(
+    _modelID)->indexInWorld;
   return index+1;
 }
 
