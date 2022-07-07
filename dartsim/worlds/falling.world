@@ -2,8 +2,8 @@
 <sdf version="1.6">
   <world name="default">
     <plugin
-      filename="libignition-gazebo-physics-system.so"
-      name="gz::gazebo::systems::v0::Physics">
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::v0::Physics">
     </plugin>
     <model name="sphere">
       <pose>0 0 2 0 0.78539816339 0</pose>

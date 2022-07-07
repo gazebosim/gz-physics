@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
+#include <gz/plugin/Loader.hh>
 
 #include "../helpers/TestLibLoader.hh"
 
@@ -46,7 +47,7 @@ using Features = gz::physics::FeatureList<
 >;
 
 class ConstructEmptyWorldTest:
-public gz::physics::TestLibLoader
+  public testing::Test, public gz::physics::TestLibLoader
 {
   // Documentation inherited
   public: void SetUp() override
@@ -62,9 +63,12 @@ public gz::physics::TestLibLoader
     {
       std::cerr << "No plugins with required features found in "
                 << GetLibToTest() << std::endl;
-      // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
+      GTEST_SKIP();
     }
   }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
 };
 
 /////////////////////////////////////////////////
@@ -80,75 +84,37 @@ TEST_F(ConstructEmptyWorldTest, ConstructEmptyWorld)
 
     auto world = engine->ConstructEmptyWorld("empty world");
     ASSERT_NE(nullptr, world);
+    EXPECT_EQ("empty world", world->GetName());
+    EXPECT_EQ(engine, world->GetEngine());
+
     auto model = world->ConstructEmptyModel("empty model");
     ASSERT_NE(nullptr, model);
-    auto modelAlias = world->GetModel(0);
+    EXPECT_EQ("empty model", model->GetName());
+    EXPECT_EQ(world, model->GetWorld());
+    EXPECT_NE(model, world->ConstructEmptyModel("dummy"));
 
-    model->Remove();
-    EXPECT_TRUE(model->Removed());
-    EXPECT_TRUE(modelAlias->Removed());
-    EXPECT_EQ(nullptr, world->GetModel(0));
-    EXPECT_EQ(nullptr, world->GetModel("empty model"));
-    EXPECT_EQ(0ul, world->GetModelCount());
+    auto nestedModel = model->ConstructEmptyNestedModel("empty nested model");
+    ASSERT_NE(nullptr, nestedModel);
+    EXPECT_EQ("empty nested model", nestedModel->GetName());
+    EXPECT_EQ(1u, model->GetNestedModelCount());
+    EXPECT_EQ(0u, model->GetIndex());
+    EXPECT_EQ(nestedModel, model->GetNestedModel(0));
+    EXPECT_EQ(nestedModel, model->GetNestedModel("empty nested model"));
+    EXPECT_NE(nestedModel, nestedModel->ConstructEmptyNestedModel("dummy"));
+    // This should remain 1 since we're adding a nested model in `nestedModel` not
+    // in `model`.
+    EXPECT_EQ(1u, model->GetNestedModelCount());
+    EXPECT_EQ(1u, nestedModel->GetNestedModelCount());
 
-    auto model2 = world->ConstructEmptyModel("model2");
-    ASSERT_NE(nullptr, model2);
-    EXPECT_EQ(0ul, model2->GetIndex());
-    world->RemoveModel(0);
-    EXPECT_EQ(0ul, world->GetModelCount());
-
-    auto model3 = world->ConstructEmptyModel("model 3");
-    ASSERT_NE(nullptr, model3);
-    EXPECT_EQ(1u, world->GetModelCount());
-    world->RemoveModel("model 3");
-    EXPECT_EQ(0ul, world->GetModelCount());
-    EXPECT_EQ(nullptr, world->GetModel("model 3"));
-
-    auto parentModel = world->ConstructEmptyModel("parent model");
-    ASSERT_NE(nullptr, parentModel);
-    EXPECT_EQ(0u, parentModel->GetNestedModelCount());
-    auto nestedModel1 =
-        parentModel->ConstructEmptyNestedModel("empty nested model1");
-    ASSERT_NE(nullptr, nestedModel1);
-    EXPECT_EQ(1u, parentModel->GetNestedModelCount());
-
-    EXPECT_TRUE(parentModel->RemoveNestedModel(0));
-    EXPECT_EQ(0u, parentModel->GetNestedModelCount());
-    EXPECT_TRUE(nestedModel1->Removed());
-
-    auto nestedModel2 =
-        parentModel->ConstructEmptyNestedModel("empty nested model2");
-    ASSERT_NE(nullptr, nestedModel2);
-    EXPECT_EQ(nestedModel2, parentModel->GetNestedModel(0));
-    EXPECT_TRUE(parentModel->RemoveNestedModel("empty nested model2"));
-    EXPECT_EQ(0u, parentModel->GetNestedModelCount());
-    EXPECT_TRUE(nestedModel2->Removed());
-
-    auto nestedModel3 =
-        parentModel->ConstructEmptyNestedModel("empty nested model3");
-    ASSERT_NE(nullptr, nestedModel3);
-    EXPECT_EQ(nestedModel3, parentModel->GetNestedModel(0));
-    EXPECT_TRUE(nestedModel3->Remove());
-    EXPECT_EQ(0u, parentModel->GetNestedModelCount());
-    EXPECT_TRUE(nestedModel3->Removed());
-
-    auto nestedModel4 =
-        parentModel->ConstructEmptyNestedModel("empty nested model4");
-    ASSERT_NE(nullptr, nestedModel4);
-    EXPECT_EQ(nestedModel4, parentModel->GetNestedModel(0));
-    // Remove the parent model and check that the nested model is removed as well
-    EXPECT_TRUE(parentModel->Remove());
-    EXPECT_TRUE(nestedModel4->Removed());
-
-    model = world->ConstructEmptyModel("empty model");
-    ASSERT_NE(nullptr, model);
     auto link = model->ConstructEmptyLink("empty link");
     ASSERT_NE(nullptr, link);
     EXPECT_EQ("empty link", link->GetName());
     EXPECT_EQ(model, link->GetModel());
     EXPECT_NE(link, model->ConstructEmptyLink("dummy"));
-    EXPECT_EQ(0u, link->GetIndex());
     EXPECT_EQ(model, link->GetModel());
+
+    auto child = model->ConstructEmptyLink("child link");
+    EXPECT_EQ(model, child->GetModel());
 
     const std::string boxName = "box";
     const Eigen::Vector3d boxSize(0.1, 0.2, 0.3);
@@ -159,7 +125,6 @@ TEST_F(ConstructEmptyWorldTest, ConstructEmptyWorld)
     EXPECT_EQ(1u, link->GetShapeCount());
     auto boxCopy = link->GetShape(0u);
     EXPECT_EQ(box, boxCopy);
-
   }
 }
 
@@ -277,6 +242,7 @@ TEST_F(ConstructEmptyWorldTest, ModelByIndexWithNestedModels)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  ConstructEmptyWorldTest::init(argc, argv);
+  if (!ConstructEmptyWorldTest::init(argc, argv))
+    return -1;
   return RUN_ALL_TESTS();
 }

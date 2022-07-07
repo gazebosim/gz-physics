@@ -3,7 +3,7 @@
 ## Prerequisites
 
 In the previous tutorial \ref installation "Installation", you have installed
-the Gazebo Physics corresponding to the desired Ignition release.
+the Gazebo Physics corresponding to the desired Gazebo release.
 
 ## How to adapt a physics engine as a plugin in Gazebo Physics
 
@@ -20,7 +20,7 @@ as an example for this tutorial.
 ### General structure of a physics plugin
 
 As described in \ref createcustomfeature "Implement a custom feature" tutorial,
-the plugin folder is placed just below the top-level folder of `ign-physics`.
+the plugin folder is placed just below the top-level folder of `gz-physics`.
 In general, any physics plugin folder will have the following structure, which
 is commented in detail:
 
@@ -202,7 +202,7 @@ class for foundation metadata definitions of Models, Joints, Links, and Shapes o
 of TPE to provide easy access to [tpelib](https://github.com/gazebosim/gz-physics/tree/main/tpe/lib)
 structures in the TPE library. Note that we mention `Base` class here for
 completeness, `Base` class is not necessarily needed if there is a straightforward
-way to interface external physics engine class objects with `ign-physics` class objects.
+way to interface external physics engine class objects with `gz-physics` class objects.
 - \ref gz::physics::Implements3d "Implements3d" for implementing the
 custom feature with \ref gz::physics::FeaturePolicy3d "FeaturePolicy3d"
 ("FeaturePolicy" of 3 dimensions and scalar type `double`).
@@ -276,7 +276,7 @@ for more comprehensive unit tests.
 ## Build the custom physics plugin
 
 Please follow the previous tutorial \ref installation "Installation" to build
-`ign-physics` from source again for our new feature to be compiled.
+`gz-physics` from source again for our new feature to be compiled.
 
-Now we can load the new physics plugin named `ignition-physics-tpe-plugin`
+Now we can load the new physics plugin named `gz-physics-tpe-plugin`
 to test it on Gazebo by following this \ref switchphysicsengines "Switching physics engines" tutorial.

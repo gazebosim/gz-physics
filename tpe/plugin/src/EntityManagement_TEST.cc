@@ -170,9 +170,3 @@ TEST(EntityManagement_TEST, RemoveEntities)
   EXPECT_TRUE(parentModel->Remove());
   EXPECT_TRUE(nestedModel4->Removed());
 }
-
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

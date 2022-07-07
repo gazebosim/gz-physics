@@ -18,8 +18,8 @@ Gazebo automatically looks for all physics engine plugins that are
 installed with Gazebo Physics.
 At the time of writing, there are two physics engines available (more detail
 in \ref physicsplugin "Physics plugin tutorial"):
-- **DART**: `ignition-physics-dartsim-plugin`.
-- **TPE**: `ignition-physics-tpe-plugin`.
+- **DART**: `gz-physics-dartsim-plugin`.
+- **TPE**: `gz-physics-tpe-plugin`.
 
 If you've created a custom engine plugin, you can tell Gazebo where to
 find it by setting the `GZ_SIM_PHYSICS_ENGINE_PATH` environment variable to
@@ -46,7 +46,7 @@ For additional environment variables that Gazebo finds other plugins
 or resources, you can see them by:
 
 ```bash
-ign gazebo -h
+gz sim -h
 ```
 
 ## Pointing Gazebo to physics engines
@@ -66,8 +66,8 @@ For the example above, you can load it like this:
 
 ```{.xml}
 <plugin
-  filename="ignition-gazebo-physics-system"
-  name="gz::gazebo::systems::Physics">
+  filename="gz-sim-physics-system"
+  name="gz::sim::systems::Physics">
   <engine>
     <filename>CustomEngine</filename>
   </engine>
@@ -80,21 +80,21 @@ Alternatively, you can choose a plugin from the command line using the
 `--physics-engine` option, for example:
 
 ```bash
-ign gazebo --physics-engine CustomEngine
+gz sim --physics-engine CustomEngine
 ```
 
 ### From C++ API
 
 All features available through the command line are also available through
-[gz::gazebo::ServerConfig](https://gazebosim.org/api/gazebo/4.0/classignition_1_1gazebo_1_1ServerConfig.html).
+[gz::sim::ServerConfig](https://gazebosim.org/api/gazebo/4.0/classignition_1_1gazebo_1_1ServerConfig.html).
 When instantiating a server programmatically, a physics engine can be passed to
 the constructor, for example:
 
 ```
-gz::gazebo::ServerConfig serverConfig;
+gz::sim::ServerConfig serverConfig;
 serverConfig.SetPhysicsEngine("CustomEngine");
 
-gz::gazebo::Server server(serverConfig);
+gz::sim::Server server(serverConfig);
 ```
 
 ## Troubleshooting

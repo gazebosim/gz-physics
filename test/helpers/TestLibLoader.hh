@@ -17,10 +17,7 @@
 #ifndef GZ_PHYSICS_TESTLIBLOADER_HH_
 #define GZ_PHYSICS_TESTLIBLOADER_HH_
 
-#include <gtest/gtest.h>
-
 #include <string>
-#include <gz/plugin/Loader.hh>
 
 #ifndef _WIN32
 #  define TestLibLoader_EXPORTS_API
@@ -32,17 +29,24 @@
 #  endif
 #endif
 
+// This is necessary because of using stl types here. It is completely safe, because
+// a) the member is not accessible from the outside
+// b) there are no inline functions.
+#ifdef _WIN32
+# pragma warning(push)
+# pragma warning(disable:4251)
+#endif
+
 namespace gz
 {
 namespace physics
 {
-class TestLibLoader:
-  public testing::Test
+class TestLibLoader_EXPORTS_API TestLibLoader
 {
   /// brief Initialize command line arguments
   /// \param[in] argc Number of arguments
   /// \param[in] argv Vector with the arguments
-  public: static void init(int argc, char *argv[]);
+  public: static bool init(int argc, char *argv[]);
 
   /// \brief Get the name of the library to test
   /// \return Name of the library to test
@@ -53,10 +57,13 @@ class TestLibLoader:
   /// \return Name of the Physics Engine
   std::string PhysicsEngineName(std::string _name);
 
-  protected: static std::string libToTest;
-  protected: gz::plugin::Loader loader;
-  protected: std::set<std::string> pluginNames;
+  private: static std::string libToTest;
 };
 }
 }
+
+#ifdef _WIN32
+# pragma warning(pop)
+#endif
+
 #endif

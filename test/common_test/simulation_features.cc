@@ -21,8 +21,12 @@
 #include <unordered_set>
 
 #include <gz/common/Console.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/plugin/Loader.hh>
 
 #include <gz/math/eigen3/Conversions.hh>
+
+#include <gz/plugin/Loader.hh>
 
 #include "../helpers/TestLibLoader.hh"
 
@@ -89,7 +93,7 @@ using TestWorldPtr = gz::physics::World3dPtr<Features>;
 using TestContactPoint = gz::physics::World3d<Features>::ContactPoint;
 
 class SimulationFeaturesTest:
-public gz::physics::TestLibLoader
+  public testing::Test, public gz::physics::TestLibLoader
 {
   // Documentation inherited
   public: void SetUp() override
@@ -105,9 +109,11 @@ public gz::physics::TestLibLoader
     {
       std::cerr << "No plugins with required features found in "
                 << GetLibToTest() << std::endl;
-      // TODO(ahcorde): If we update gtest we can use here GTEST_SKIP()
+      GTEST_SKIP();
     }
   }
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
 };
 
 std::unordered_set<TestWorldPtr> LoadWorlds(
@@ -173,7 +179,10 @@ bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
 /////////////////////////////////////////////////
 TEST_F(SimulationFeaturesTest, StepWorld)
 {
-  auto worlds = LoadWorlds(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
+  auto worlds = LoadWorlds(
+    loader,
+    pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
     auto checkedOutput = StepWorld(world, true, 1000);
@@ -184,7 +193,10 @@ TEST_F(SimulationFeaturesTest, StepWorld)
 /////////////////////////////////////////////////
 TEST_F(SimulationFeaturesTest, ShapeFeatures)
 {
-  auto worlds = LoadWorlds(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
+  auto worlds = LoadWorlds(
+    loader,
+    pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
     // test ShapeFeatures
@@ -318,7 +330,10 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
 
 TEST_F(SimulationFeaturesTest, FreeGroup)
 {
-  auto worlds = LoadWorlds(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
+  auto worlds = LoadWorlds(
+    loader,
+    pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
 
   for (const auto &world : worlds)
   {
@@ -363,7 +378,10 @@ TEST_F(SimulationFeaturesTest, FreeGroup)
 
 TEST_F(SimulationFeaturesTest, CollideBitmasks)
 {
-  auto worlds = LoadWorlds(loader, pluginNames, TEST_WORLD_DIR "/shapes_bitmask.sdf");
+  auto worlds = LoadWorlds(
+    loader,
+    pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "shapes_bitmask.sdf"));
 
   for (const auto &world : worlds)
   {
@@ -404,7 +422,10 @@ TEST_F(SimulationFeaturesTest, CollideBitmasks)
 
 TEST_F(SimulationFeaturesTest, RetrieveContacts)
 {
-  auto worlds = LoadWorlds(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
+  auto worlds = LoadWorlds(
+    loader,
+    pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
 
   for (const auto &world : worlds)
   {
