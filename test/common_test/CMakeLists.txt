@@ -2,6 +2,7 @@ set(TEST_TYPE "COMMON_TEST")
 
 set(tests
   basic_test
+  construct_empty_world
 )
 
 link_directories(${PROJECT_BINARY_DIR}/test)
@@ -24,6 +25,7 @@ foreach(test ${tests})
       ${PROJECT_LIBRARY_TARGET_NAME}
       gtest
       gtest_main
+      ${PROJECT_NAME}_test_lib_loader
   )
 
   if (${BULLET_FOUND})

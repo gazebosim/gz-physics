@@ -197,9 +197,9 @@ Identity EntityManagementFeatures::GetWorld(
 }
 
 const std::string &EntityManagementFeatures::GetWorldName(
-    const Identity &) const
+    const Identity &_worldID) const
 {
-  static const std::string worldName = "bullet";
+  static const std::string worldName = this->worlds.at(_worldID)->name;
   return worldName;
 }
 
