@@ -17,6 +17,9 @@
 
 #include "SimulationFeatures.hh"
 
+#include <unordered_map>
+#include <utility>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {

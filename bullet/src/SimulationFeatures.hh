@@ -18,7 +18,9 @@
 #ifndef GZ_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
 #define GZ_PHYSICS_BULLET_SRC_SIMULATIONFEATURES_HH_
 
+#include <unordered_map>
 #include <vector>
+
 #include <gz/physics/ForwardStep.hh>
 
 #include "Base.hh"
