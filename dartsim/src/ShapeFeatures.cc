@@ -241,11 +241,11 @@ Vector3d ShapeFeatures::GetEllipsoidShapeRadii(
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_ellipsoidID);
 
-  dart::dynamics::EllipsoidShape *ellipsoid =
-      static_cast<dart::dynamics::EllipsoidShape *>(
+  dart::dynamics::MeshShape *ellipsoid =
+      static_cast<dart::dynamics::MeshShape *>(
           shapeInfo->node->getShape().get());
 
-  return ellipsoid->getRadii();
+  return ellipsoid->getBoundingBox().getMax();
 }
 
 /////////////////////////////////////////////////
