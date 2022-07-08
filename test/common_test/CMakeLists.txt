@@ -6,8 +6,6 @@ set(tests
   simulation_features
 )
 
-link_directories(${PROJECT_BINARY_DIR}/test)
-
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
   add_test(NAME ${test_name}_${PHYSICS_ENGINE_NAME}
     COMMAND
