@@ -3,9 +3,8 @@ set(TEST_TYPE "COMMON_TEST")
 set(tests
   basic_test
   construct_empty_world
+  simulation_features
 )
-
-link_directories(${PROJECT_BINARY_DIR}/test)
 
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
   add_test(NAME ${test_name}_${PHYSICS_ENGINE_NAME}
@@ -23,9 +22,14 @@ foreach(test ${tests})
       gz-plugin${GZ_PLUGIN_VER}::loader
       gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
       ${PROJECT_LIBRARY_TARGET_NAME}
+      ${PROJECT_LIBRARY_TARGET_NAME}-sdf
       gtest
       gtest_main
       ${PROJECT_NAME}_test_lib_loader
+  )
+
+  target_compile_definitions(${TEST_TYPE}_${test} PRIVATE
+    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
   )
 
   if (${BULLET_FOUND})
