@@ -21,12 +21,9 @@
 #include <unordered_set>
 
 #include <gz/common/Console.hh>
-#include <gz/common/Filesystem.hh>
 #include <gz/plugin/Loader.hh>
 
 #include <gz/math/eigen3/Conversions.hh>
-
-#include <gz/plugin/Loader.hh>
 
 #include "../helpers/TestLibLoader.hh"
 
@@ -89,7 +86,6 @@ using Features = gz::physics::FeatureList<
   gz::physics::GetEllipsoidShapeProperties
 >;
 
-using TestWorldPtr = gz::physics::World3dPtr<Features>;
 using TestContactPoint = gz::physics::World3d<Features>::ContactPoint;
 
 class SimulationFeaturesTest:
@@ -112,16 +108,18 @@ class SimulationFeaturesTest:
       GTEST_SKIP();
     }
   }
+
   public: std::set<std::string> pluginNames;
   public: gz::plugin::Loader loader;
 };
 
-std::unordered_set<TestWorldPtr> LoadWorlds(
+template <class T>
+std::unordered_set<gz::physics::World3dPtr<T>> LoadWorlds(
     const gz::plugin::Loader &_loader,
     const std::set<std::string> pluginNames,
     const std::string &_world)
 {
-  std::unordered_set<TestWorldPtr> worlds;
+  std::unordered_set<gz::physics::World3dPtr<T>> worlds;
   for (const std::string &name : pluginNames)
   {
     gz::plugin::PluginPtr plugin = _loader.Instantiate(name);
@@ -129,7 +127,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     gzdbg << " -- Plugin name: " << name << std::endl;
 
     auto engine =
-      gz::physics::RequestEngine3d<Features>::From(plugin);
+      gz::physics::RequestEngine3d<T>::From(plugin);
     EXPECT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -137,6 +135,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     EXPECT_EQ(0u, errors.size());
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     auto world = engine->ConstructWorld(*sdfWorld);
+    EXPECT_NE(nullptr, world);
 
     worlds.insert(world);
   }
@@ -149,9 +148,11 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
 /// being stepped in (true) or not (false)
 /// \param[in] _numSteps The number of steps to take in _world
 /// \return true if the forward step output was checked, false otherwise
-bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
+template <class T>
+bool StepWorld(const gz::physics::World3dPtr<T> &_world, bool _firstTime,
     const std::size_t _numSteps = 1)
 {
+  EXPECT_NE(nullptr, _world);
   gz::physics::ForwardStep::Input input;
   gz::physics::ForwardStep::State state;
   gz::physics::ForwardStep::Output output;
@@ -176,26 +177,118 @@ bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
   return checkedOutput;
 }
 
-/////////////////////////////////////////////////
-TEST_F(SimulationFeaturesTest, StepWorld)
+template <class T>
+class StepWorldTest:
+  public testing::Test, public gz::physics::TestLibLoader
 {
-  auto worlds = LoadWorlds(
-    loader,
-    pluginNames,
+  // Documentation inherited
+  public: void SetUp() override
+  {
+    gz::common::Console::SetVerbosity(4);
+
+    loader.LoadLib(StepWorldTest::GetLibToTest());
+
+    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
+    // FindFeatures
+    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
+    if (pluginNames.empty())
+    {
+      std::cerr << "No plugins with required features found in "
+                << GetLibToTest() << std::endl;
+      GTEST_SKIP();
+    }
+  }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
+};
+
+// The features that an engine must have to be loaded by this loader.
+using StepForwardFeatures = gz::physics::FeatureList<
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ForwardStep,
+  gz::physics::sdf::ConstructSdfWorld
+>;
+
+template <class T>
+class StepForwardTestClass :
+  public StepWorldTest<T>{};
+TYPED_TEST_CASE(StepForwardTestClass, StepForwardFeatures);
+
+/////////////////////////////////////////////////
+TYPED_TEST(StepForwardTestClass, StepWorld)
+{
+  auto worlds = LoadWorlds<StepForwardFeatures>(
+    this->loader,
+    this->pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
-    auto checkedOutput = StepWorld(world, true, 1000);
+    auto checkedOutput = StepWorld<StepForwardFeatures>(world, true, 1000);
     EXPECT_TRUE(checkedOutput);
   }
 }
 
-/////////////////////////////////////////////////
-TEST_F(SimulationFeaturesTest, ShapeFeatures)
+template <class T>
+class ShapeFeaturesTest:
+  public testing::Test, public gz::physics::TestLibLoader
 {
-  auto worlds = LoadWorlds(
-    loader,
-    pluginNames,
+  // Documentation inherited
+  public: void SetUp() override
+  {
+    gz::common::Console::SetVerbosity(4);
+
+    loader.LoadLib(ShapeFeaturesTest::GetLibToTest());
+
+    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
+    // FindFeatures
+    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
+    if (pluginNames.empty())
+    {
+      std::cerr << "No plugins with required features found in "
+                << GetLibToTest() << std::endl;
+      GTEST_SKIP();
+    }
+  }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
+};
+
+// The features that an engine must have to be loaded by this loader.
+using ShapeFeaturesFeatures = gz::physics::FeatureList<
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetShapeFromLink,
+  gz::physics::GetModelBoundingBox,
+
+  gz::physics::AttachBoxShapeFeature,
+  gz::physics::AttachSphereShapeFeature,
+  gz::physics::AttachCylinderShapeFeature,
+  gz::physics::AttachEllipsoidShapeFeature,
+  gz::physics::AttachCapsuleShapeFeature,
+  gz::physics::GetSphereShapeProperties,
+  gz::physics::GetBoxShapeProperties,
+  gz::physics::GetCylinderShapeProperties,
+  gz::physics::GetCapsuleShapeProperties,
+  gz::physics::GetEllipsoidShapeProperties,
+
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ForwardStep,
+  gz::physics::sdf::ConstructSdfWorld
+>;
+
+template <class T>
+class ShapeFeaturesTestClass :
+  public ShapeFeaturesTest<T>{};
+TYPED_TEST_CASE(ShapeFeaturesTestClass, ShapeFeaturesFeatures);
+
+/////////////////////////////////////////////////
+TYPED_TEST(ShapeFeaturesTestClass, ShapeFeatures)
+{
+  auto worlds = LoadWorlds<ShapeFeaturesFeatures>(
+    this->loader,
+    this->pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
@@ -330,10 +423,7 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
 
 TEST_F(SimulationFeaturesTest, FreeGroup)
 {
-  auto worlds = LoadWorlds(
-    loader,
-    pluginNames,
-    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+  auto worlds = LoadWorlds<Features>(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
 
   for (const auto &world : worlds)
   {
@@ -350,7 +440,7 @@ TEST_F(SimulationFeaturesTest, FreeGroup)
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 
-    StepWorld(world, true);
+    StepWorld<Features>(world, true);
 
     freeGroup->SetWorldPose(
       gz::math::eigen3::convert(
@@ -365,7 +455,7 @@ TEST_F(SimulationFeaturesTest, FreeGroup)
               gz::math::eigen3::convert(frameData.pose));
 
     // Step the world
-    StepWorld(world, false);
+    StepWorld<Features>(world, false);
     // Check that the first link's velocities are updated
     frameData = model->GetLink(0)->FrameDataRelativeToWorld();
     EXPECT_TRUE(gz::math::Vector3d(0.1, 0.2, 0.3).Equal(
@@ -378,10 +468,7 @@ TEST_F(SimulationFeaturesTest, FreeGroup)
 
 TEST_F(SimulationFeaturesTest, CollideBitmasks)
 {
-  auto worlds = LoadWorlds(
-    loader,
-    pluginNames,
-    gz::common::joinPaths(TEST_WORLD_DIR, "shapes_bitmask.sdf"));
+  auto worlds = LoadWorlds<Features>(loader, pluginNames, TEST_WORLD_DIR "/shapes_bitmask.sdf");
 
   for (const auto &world : worlds)
   {
@@ -389,7 +476,7 @@ TEST_F(SimulationFeaturesTest, CollideBitmasks)
     auto filteredBox = world->GetModel("box_filtered");
     auto collidingBox = world->GetModel("box_colliding");
 
-    auto checkedOutput = StepWorld(world, true);
+    auto checkedOutput = StepWorld<Features>(world, true);
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
     // Only box_colliding should collide with box_base
@@ -402,7 +489,7 @@ TEST_F(SimulationFeaturesTest, CollideBitmasks)
     // Also test the getter
     EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
     // Step and make sure there are no collisions
-    checkedOutput = StepWorld(world, false);
+    checkedOutput = StepWorld<Features>(world, false);
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
@@ -411,7 +498,7 @@ TEST_F(SimulationFeaturesTest, CollideBitmasks)
     // Equivalent to 0xFF
     collidingShape->RemoveCollisionFilterMask();
     filteredShape->RemoveCollisionFilterMask();
-    checkedOutput = StepWorld(world, false);
+    checkedOutput = StepWorld<Features>(world, false);
     EXPECT_FALSE(checkedOutput);
     // Expect box_filtered and box_colliding to collide with box_base
     contacts = world->GetContactsFromLastStep();
@@ -422,10 +509,7 @@ TEST_F(SimulationFeaturesTest, CollideBitmasks)
 
 TEST_F(SimulationFeaturesTest, RetrieveContacts)
 {
-  auto worlds = LoadWorlds(
-    loader,
-    pluginNames,
-    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+  auto worlds = LoadWorlds<Features>(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
 
   for (const auto &world : worlds)
   {
@@ -448,7 +532,7 @@ TEST_F(SimulationFeaturesTest, RetrieveContacts)
     auto box = world->GetModel("box");
 
     // step and get contacts
-    auto checkedOutput = StepWorld(world, true);
+    auto checkedOutput = StepWorld<Features>(world, true);
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
 
@@ -507,7 +591,7 @@ TEST_F(SimulationFeaturesTest, RetrieveContacts)
         gz::math::Pose3d(0, 100, 0.5, 0, 0, 0)));
 
     // step and get contacts
-    checkedOutput = StepWorld(world, false);
+    checkedOutput = StepWorld<Features>(world, false);
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
 
@@ -566,7 +650,7 @@ TEST_F(SimulationFeaturesTest, RetrieveContacts)
         gz::math::Pose3d(0, -100, -100, 0, 0, 0)));
 
     // step and get contacts
-    checkedOutput = StepWorld(world, false);
+    checkedOutput = StepWorld<Features>(world, false);
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
 
@@ -578,6 +662,9 @@ TEST_F(SimulationFeaturesTest, RetrieveContacts)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  SimulationFeaturesTest::init(argc, argv);
+  // SimulationFeaturesTest::init(argc, argv);
+  if (!StepWorldTest<StepForwardFeatures>::init(
+       argc, argv))
+    return -1;
   return RUN_ALL_TESTS();
 }

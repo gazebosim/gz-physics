@@ -40,6 +40,14 @@ class SimulationFeatures :
       ForwardStep::Output &_h,
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
+
+  public: void Write(ChangedWorldPoses &_changedPoses) const;
+
+  private: double stepSize = 0.001;
+
+  /// \brief link poses from the most recent pose change/update.
+  /// The key is the link's ID, and the value is the link's pose
+  private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
 };
 
 }  // namespace bullet_featherstone
