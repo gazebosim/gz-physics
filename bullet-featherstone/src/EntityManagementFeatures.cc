@@ -325,21 +325,21 @@ const std::string &EntityManagementFeatures::GetWorldName(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetWorldIndex(
-    const Identity &_worldID) const
+    const Identity &) const
 {
   return 0;
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetEngineOfWorld(
-    const Identity &_worldID) const
+    const Identity &) const
 {
   return this->GenerateIdentity(0);
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetModelCount(
-    const Identity &_worldID) const
+    const Identity &) const
 {
   return this->models.size();
 }
