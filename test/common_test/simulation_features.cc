@@ -215,7 +215,7 @@ class StepForwardTestClass :
   public StepWorldTest<T>{};
 using StepForwardTestClassTypes =
     ::testing::Types<StepForwardFeatures>;
-TYPED_TEST_CASE(StepForwardTestClass, StepForwardTestClassTypes);
+TYPED_TEST_SUITE(StepForwardTestClass, StepForwardTestClassTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(StepForwardTestClass, StepWorld)
@@ -283,7 +283,9 @@ using ShapeFeaturesFeatures = gz::physics::FeatureList<
 template <class T>
 class ShapeFeaturesTestClass :
   public ShapeFeaturesTest<T>{};
-TYPED_TEST_CASE(ShapeFeaturesTestClass, ShapeFeaturesFeatures);
+using ShapeFeaturesTestClassTypes =
+    ::testing::Types<ShapeFeaturesFeatures>;
+TYPED_TEST_SUITE(ShapeFeaturesTestClass, ShapeFeaturesTestClassTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ShapeFeaturesTestClass, ShapeFeatures)
