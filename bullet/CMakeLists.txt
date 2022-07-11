@@ -5,7 +5,7 @@ gz_add_component(bullet INTERFACE
   GET_TARGET_NAME features)
 
 link_directories(${BULLET_LIBRARY_DIRS})
-target_link_libraries(${features} INTERFACE IgnBullet::IgnBullet)
+target_link_libraries(${features} INTERFACE GzBullet::GzBullet)
 
 gz_get_libsources_and_unittests(sources test_sources)
 
