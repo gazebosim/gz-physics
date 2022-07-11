@@ -213,7 +213,9 @@ using StepForwardFeatures = gz::physics::FeatureList<
 template <class T>
 class StepForwardTestClass :
   public StepWorldTest<T>{};
-TYPED_TEST_CASE(StepForwardTestClass, StepForwardFeatures);
+using StepForwardTestClassTypes =
+    ::testing::Types<StepForwardFeatures>;
+TYPED_TEST_CASE(StepForwardTestClass, StepForwardTestClassTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(StepForwardTestClass, StepWorld)
