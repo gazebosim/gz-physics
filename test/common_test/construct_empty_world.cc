@@ -60,13 +60,12 @@ using FeaturesUpToEmptyWorld = gz::physics::FeatureList<
   gz::physics::ConstructEmptyWorldFeature
 >;
 
-template <class T>
-class ConstructEmptyWorldTestUpToEmptyWorld :
-  public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToEmptyWorld, FeaturesUpToEmptyWorld);
+using ConstructEmptyWorldTestUpToEmptyWorldTypes =
+  ::testing::Types<FeaturesUpToEmptyWorld>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTest, ConstructEmptyWorldTestUpToEmptyWorldTypes);
 
 /////////////////////////////////////////////////
-TYPED_TEST(ConstructEmptyWorldTestUpToEmptyWorld, ConstructUpToEmptyWorld)
+TYPED_TEST(ConstructEmptyWorldTest, ConstructUpToEmptyWorld)
 {
   for (const std::string &name : this->pluginNames)
   {
@@ -91,8 +90,11 @@ using FeaturesUpToGetWorldFromEngine = gz::physics::FeatureList<
 template <class T>
 class ConstructEmptyWorldTestUpToGetWorldFromEngine :
   public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToGetWorldFromEngine,
-                FeaturesUpToGetWorldFromEngine);
+
+using ConstructEmptyWorldTestUpToGetWorldFromEngineTypes =
+  ::testing::Types<FeaturesUpToEmptyWorld>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToGetWorldFromEngine,
+                 ConstructEmptyWorldTestUpToGetWorldFromEngineTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ConstructEmptyWorldTestUpToGetWorldFromEngine,
@@ -125,8 +127,10 @@ using FeaturesUpToEmptyModelFeature = gz::physics::FeatureList<
 template <class T>
 class ConstructEmptyWorldTestUpToEmptyModelFeature :
   public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToEmptyModelFeature,
-                FeaturesUpToEmptyModelFeature);
+using ConstructEmptyWorldTestUpToEmptyModelFeatureTypes =
+  ::testing::Types<FeaturesUpToEmptyModelFeature>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToEmptyModelFeature,
+                 ConstructEmptyWorldTestUpToEmptyModelFeatureTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ConstructEmptyWorldTestUpToEmptyModelFeature,
@@ -163,8 +167,10 @@ using FeaturesUpToGetModelFromWorld = gz::physics::FeatureList<
 template <class T>
 class ConstructEmptyWorldTestUpToGetModelFromWorld :
   public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToGetModelFromWorld,
-                FeaturesUpToGetModelFromWorld);
+using ConstructEmptyWorldTestUpToGetModelFromWorldTypes =
+  ::testing::Types<FeaturesUpToGetModelFromWorld>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToGetModelFromWorld,
+                 ConstructEmptyWorldTestUpToGetModelFromWorldTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ConstructEmptyWorldTestUpToGetModelFromWorld,
@@ -205,8 +211,10 @@ using FeaturesUpToEmptyNestedModelFeature = gz::physics::FeatureList<
 template <class T>
 class ConstructEmptyWorldTestUpToEmptyNestedModelFeature :
   public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToEmptyNestedModelFeature,
-                FeaturesUpToEmptyNestedModelFeature);
+using ConstructEmptyWorldTestUpToEmptyNestedModelFeatureTypes =
+  ::testing::Types<FeaturesUpToEmptyNestedModelFeature>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToEmptyNestedModelFeature,
+                 ConstructEmptyWorldTestUpToEmptyNestedModelFeatureTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ConstructEmptyWorldTestUpToEmptyNestedModelFeature,
@@ -251,7 +259,10 @@ using FeaturesUpToEmptyLink = gz::physics::FeatureList<
 template <class T>
 class ConstructEmptyWorldTestUpToEmptyLink :
   public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToEmptyLink, FeaturesUpToEmptyLink);
+using ConstructEmptyWorldTestUpToEmptyLinkTypes =
+  ::testing::Types<FeaturesUpToEmptyLink>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToEmptyLink,
+                 ConstructEmptyWorldTestUpToEmptyLinkTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ConstructEmptyWorldTestUpToEmptyLink, ConstructUpToEmptyWorld)
@@ -299,7 +310,10 @@ using FeaturesUpToRemove = gz::physics::FeatureList<
 
 template <class T>
 class ConstructEmptyWorldTestUpToRemove : public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToRemove, FeaturesUpToRemove);
+using ConstructEmptyWorldTestUpToRemoveTypes =
+  ::testing::Types<FeaturesUpToRemove>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToRemove,
+                 ConstructEmptyWorldTestUpToRemoveTypes);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ConstructEmptyWorldTestUpToRemove, ConstructUpToEmptyWorld)
@@ -391,8 +405,10 @@ using FeaturesUpToEmptyNestedModelFeature2 = gz::physics::FeatureList<
 template <class T>
 class ConstructEmptyWorldTestUpToEmptyNestedModelFeature2 :
   public ConstructEmptyWorldTest<T>{};
-TYPED_TEST_CASE(ConstructEmptyWorldTestUpToEmptyNestedModelFeature2,
-                FeaturesUpToEmptyNestedModelFeature2);
+using ConstructEmptyWorldTestUpToEmptyNestedModelFeature2Types =
+  ::testing::Types<FeaturesUpToEmptyNestedModelFeature2>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToEmptyNestedModelFeature2,
+                 FeaturesUpToEmptyNestedModelFeature2);
 
 /////////////////////////////////////////////////
 TYPED_TEST(ConstructEmptyWorldTestUpToEmptyNestedModelFeature2,
