@@ -84,7 +84,7 @@ gz_find_package(DART
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
-gz_find_package(IgnBullet
+gz_find_package(GzBullet
   VERSION 2.87
   REQUIRED_BY bullet
   PKGCONFIG bullet
