@@ -39,6 +39,7 @@
 // #include "test/Utils.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<
+    gz::physics::GetEngineInfo,
     gz::physics::sdf::ConstructSdfWorld,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfNestedModel,
@@ -135,7 +136,17 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
     };
 
     EXPECT_TRUE(checkFreeGroupForModel("parent_model"));
-    EXPECT_TRUE(checkFreeGroupForModel("parent_model::nested_model"));
+    if (engine->GetName() == "tpe")
+    {
+      // Expect true because tpe doesn't support joints, the link in
+      // nested_model could not be referenced by a joint.
+      EXPECT_TRUE(checkFreeGroupForModel("parent_model::nested_model"));
+    }
+    else
+    {
+      // Expect false because the link in nested_model is referenced by a joint.
+      EXPECT_FALSE(checkFreeGroupForModel("parent_model::nested_model"));
+    }
     EXPECT_TRUE(checkFreeGroupForModel("parent_model::nested_model2"));
     EXPECT_TRUE(checkFreeGroupForModel("parent_model::nested_model3"));
   }
