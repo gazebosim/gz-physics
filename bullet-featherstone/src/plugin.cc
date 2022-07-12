@@ -26,6 +26,7 @@
 #include "SDFFeatures.hh"
 #include "KinematicsFeatures.hh"
 #include "FreeGroupFeatures.hh"
+#include "ShapeFeatures.hh"
 #include "JointFeatures.hh"
 
 namespace gz {
@@ -38,6 +39,7 @@ struct BulletFeatures : FeatureList <
   FreeGroupFeatureList,
   KinematicsFeatureList,
   SDFFeatureList,
+  ShapeFeatureList,
   JointFeatureList
 > { };
 
@@ -49,6 +51,7 @@ class Plugin :
     public virtual FreeGroupFeatures,
     public virtual KinematicsFeatures,
     public virtual SDFFeatures,
+    public virtual ShapeFeatures,
     public virtual JointFeatures
 {};
 
