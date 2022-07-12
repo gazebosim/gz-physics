@@ -66,7 +66,7 @@ namespace gz
 /// \brief Use this macro to create an API "selector" for a custom class.
 ///
 /// Features may define APIs for class types that are not anticipated ahead of
-/// time by the ign-physics library. When aggregating the API for that class
+/// time by the gz-physics library. When aggregating the API for that class
 /// from a set of features, the Aggregator must be given a Selector that can
 /// ignore features that don't mention the class (or else a compilation failure
 /// would occur).

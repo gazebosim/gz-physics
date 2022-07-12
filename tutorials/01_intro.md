@@ -20,7 +20,7 @@ Gazebo Physics extensibility and modularity.
 For a big picture of the Gazebo Physics operation in Gazebo ecosystem, see
 the abstract diagram below:
 
-@image html img/ign-libraries.png
+@image html img/gz-libraries.png
 
 In general, `gz-sim` is the main simulation library, in which its
 functionalities are powered by many component libraries.

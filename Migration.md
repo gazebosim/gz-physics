@@ -61,7 +61,7 @@ release will remove the deprecated code.
 
 ### Modifications
 
-1. Depends on ignition-utils1.
+1. Depends on gz-utils1.
 
 1. Depends on sdformat11.
 
