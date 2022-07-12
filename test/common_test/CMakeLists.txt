@@ -4,6 +4,7 @@ set(tests
   basic_test
   construct_empty_world
   simulation_features
+  world_features
 )
 
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
