@@ -22,7 +22,7 @@ physics engine in `gz-physics` repository and how to define a custom
 Below is the general structure of the `gz-physics` repository:
 
 ```
-ign-physics
+gz-physics
 ├── dartsim                   Files for dartsim plugin component.
 ├── tpe                       Files for tpe plugin component.
 ├── heightmap                 Files for heightmap component.

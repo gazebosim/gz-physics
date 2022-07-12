@@ -13,11 +13,11 @@ endif()
 
 install(
   DIRECTORY include/
-  DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
+  DESTINATION "${GZ_INCLUDE_INSTALL_DIR_FULL}")
 
 gz_get_libsources_and_unittests(sources test_sources)
 
-# TODO(MXG): Think about an gz_add_plugin(~) macro for ign-cmake
+# TODO(MXG): Think about an gz_add_plugin(~) macro for gz-cmake
 set(engine_name dartsim-plugin)
 gz_add_component(${engine_name}
   SOURCES ${sources}

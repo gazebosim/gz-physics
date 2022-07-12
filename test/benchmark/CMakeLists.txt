@@ -1,4 +1,4 @@
-include(IgnBenchmark)
+include(GzBenchmark)
 
 set(tests
   ExpectData.cc

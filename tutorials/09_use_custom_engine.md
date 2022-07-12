@@ -23,7 +23,7 @@ the folder structure could be slightly different from what's shown below.
 Here's the plugin folder structure of TPE, within the Gazebo Physics library.
 
 ```
-ign-physics
+gz-physics
 ├── tpe
 │   ├── plugin                           Implementation of the plugin features interfacing the physics engines API
 │   │    ├── src
