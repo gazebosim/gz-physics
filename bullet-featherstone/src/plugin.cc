@@ -27,6 +27,7 @@
 #include "KinematicsFeatures.hh"
 #include "FreeGroupFeatures.hh"
 #include "JointFeatures.hh"
+#include "WorldFeatures.hh"
 
 namespace gz {
 namespace physics {
@@ -38,7 +39,8 @@ struct BulletFeatures : FeatureList <
   FreeGroupFeatureList,
   KinematicsFeatureList,
   SDFFeatureList,
-  JointFeatureList
+  JointFeatureList,
+  WorldFeatureList
 > { };
 
 class Plugin :
@@ -49,7 +51,8 @@ class Plugin :
     public virtual FreeGroupFeatures,
     public virtual KinematicsFeatures,
     public virtual SDFFeatures,
-    public virtual JointFeatures
+    public virtual JointFeatures,
+    public virtual WorldFeatures
 {};
 
 GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
