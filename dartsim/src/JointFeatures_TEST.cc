@@ -834,7 +834,7 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
   // the same as it was before they were attached
   fixedJoint->SetTransformFromParent(poseParentChild);
 
-  // The name of the link obtained using the ign-physics API should remain the
+  // The name of the link obtained using the gz-physics API should remain the
   // same even though AttachFixedJoint renames the associated BodyNode.
   EXPECT_EQ(bodyName, model2Body->GetName());
 
@@ -855,7 +855,7 @@ TEST_F(JointFeaturesFixture, JointAttachDetach)
   // now detach joint and expect model2 to start moving again
   fixedJoint->Detach();
 
-  // The name of the link obtained using the ign-physics API should remain the
+  // The name of the link obtained using the gz-physics API should remain the
   // same even though Detach renames the associated BodyNode.
   EXPECT_EQ(bodyName, model2Body->GetName());
 
@@ -1030,7 +1030,7 @@ TEST_F(JointFeaturesFixture, JointAttachDetachSpawnedModel)
   const auto poseParent = dartBody1->getTransform();
   const auto poseChild = dartBody2->getTransform();
 
-  // Before ign-physics PR #31, uncommenting the following `step` call makes
+  // Before gz-physics PR #31, uncommenting the following `step` call makes
   // this test pass, but commenting it out makes it fail.
   // world->Step(output, state, input);
   auto fixedJoint = model2Body->AttachFixedJoint(model1Body);

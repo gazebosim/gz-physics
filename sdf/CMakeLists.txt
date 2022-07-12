@@ -5,4 +5,4 @@ target_link_libraries(${sdf} INTERFACE ${SDFormat_LIBRARIES})
 
 install(
   DIRECTORY include/
-  DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
+  DESTINATION "${GZ_INCLUDE_INSTALL_DIR_FULL}")

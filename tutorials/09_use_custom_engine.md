@@ -23,7 +23,7 @@ the folder structure could be slightly different from what's shown below.
 Here's the plugin folder structure of TPE, within the Gazebo Physics library.
 
 ```
-ign-physics
+gz-physics
 ├── tpe
 │   ├── plugin                           Implementation of the plugin features interfacing the physics engines API
 │   │    ├── src
@@ -103,7 +103,7 @@ in `EntityManagementFeatures` "FeatureList" using TPE API from `tpe/lib` in Gaze
 Before we dive into the feature implementation, we need to understand how the features are defined.
 
 The \ref gz::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature"
-is declared in a function template file `gz-physics/include/ignition/physics/ConstructEmpty.hh`.
+is declared in a function template file `gz-physics/include/gz/physics/ConstructEmpty.hh`.
 
 Gazebo Physics library uses function templates to specify features that accept generic types.
 The use of templates makes it easier to implement features using different physics engine APIs,

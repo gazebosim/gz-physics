@@ -35,7 +35,7 @@ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 On Ubuntu systems, `apt-get` can be used to install `gz-plugin`:
 ```
 sudo apt-get update
-sudo apt-get install libignition-physics<#>-dev
+sudo apt-get install libgz-physics<#>-dev
 ```
 Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
@@ -44,7 +44,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 1. Install dependencies
   ```
   sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-  sudo apt-get build-dep -y ignition-physics<#>-dev
+  sudo apt-get build-dep -y gz-physics<#>-dev
   ```
   Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
@@ -90,7 +90,7 @@ command-line tools:
 2. Run the following commands
   ```
   brew tap osrf/simulation
-  brew install ignition-physics<#>
+  brew install gz-physics<#>
   ```
 Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
 
@@ -99,7 +99,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 1. Install dependencies
   ```
   brew tap osrf/simulation
-  brew install ignition-physics<#> --only-dependencies
+  brew install gz-physics<#> --only-dependencies
   ```
 
 2. Clone the repository
@@ -142,7 +142,7 @@ conda activate gz-ws
 ## Binary Installation
 
 ```
-conda install libignition-physics<#> --channel conda-forge
+conda install libgz-physics<#> --channel conda-forge
 ```
 
 Be sure to replace `<#>` with a number value, such as 1 or 2, depending on
@@ -156,12 +156,12 @@ This assumes you have created and activated a Conda environment while installing
 
   You can view available versions and their dependencies:
   ```
-  conda search libignition-physics* --channel conda-forge --info
+  conda search libgz-physics* --channel conda-forge --info
   ```
 
   Install dependencies, replacing `<#>` with the desired versions:
   ```
-  conda install libignition-cmake<#> libignition-common<#> libignition-math<#> libignition-plugin<#> libsdformat<#> --channel conda-forge
+  conda install libgz-cmake<#> libgz-common<#> libgz-math<#> libgz-plugin<#> libsdformat<#> --channel conda-forge
   ```
 
 2. Navigate to where you would like to build the library, and clone the repository.
