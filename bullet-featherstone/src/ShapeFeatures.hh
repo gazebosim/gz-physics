@@ -25,6 +25,8 @@
 #include <gz/physics/EllipsoidShape.hh>
 #include <gz/physics/SphereShape.hh>
 
+#include <string>
+
 #include "Base.hh"
 
 namespace gz {

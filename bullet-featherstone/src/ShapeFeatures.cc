@@ -17,6 +17,10 @@
 
 #include "ShapeFeatures.hh"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -197,7 +201,8 @@ double ShapeFeatures::GetCylinderShapeHeight(
   {
     if (it->second->collider != nullptr)
     {
-      auto *cylinder = static_cast<btCylinderShape*>(it->second->collider.get());
+      auto *cylinder = static_cast<btCylinderShape*>(
+        it->second->collider.get());
       if (cylinder)
       {
         return cylinder->getHalfExtentsWithMargin()[2] * 2;
