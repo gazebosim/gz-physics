@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_SHAPEFEATURES_HH_
 #define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_SHAPEFEATURES_HH_
 
-// #include <gz/physics/Shape.hh>
+#include <gz/physics/Shape.hh>
 #include <gz/physics/BoxShape.hh>
 #include <gz/physics/CapsuleShape.hh>
 #include <gz/physics/CylinderShape.hh>
@@ -34,9 +34,8 @@ namespace physics {
 namespace bullet_featherstone {
 
 struct ShapeFeatureList : FeatureList<
-  // GetShapeKinematicProperties,
-  // SetShapeKinematicProperties,
-  // GetShapeBoundingBox,
+  GetShapeBoundingBox,
+
   GetBoxShapeProperties,
   AttachBoxShapeFeature,
 
@@ -57,14 +56,10 @@ class ShapeFeatures :
     public virtual Base,
     public virtual Implements3d<ShapeFeatureList>
 {
-  // // ----- Kinematic Properties -----
-  // public: Pose3d GetShapeRelativeTransform(
-  //     const Identity &_shapeID) const override;
-  //
-  // public: void SetShapeRelativeTransform(
-  //     const Identity &_shapeID, const Pose3d &_pose) override;
-  //
-  //
+  // ----- Boundingbox Features -----
+  public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
+              const Identity &_shapeID) const override;
+
   // ----- Box Features -----
   public: Identity CastToBoxShape(
       const Identity &_shapeID) const override;

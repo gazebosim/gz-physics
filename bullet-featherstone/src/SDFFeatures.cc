@@ -79,7 +79,7 @@ Identity SDFFeatures::ConstructSdfWorld(
   auto gravity = _sdfWorld.Gravity();
   worldInfo->world->setGravity(btVector3(gravity[0], gravity[1], gravity[2]));
 
-  for (std::size_t i=0; i < _sdfWorld.ModelCount(); ++i)
+  for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
     const ::sdf::Model *model = _sdfWorld.ModelByIndex(i);
 
@@ -232,7 +232,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       for (std::size_t i = 0; i < model.LinkCount(); ++i)
       {
         const auto *link = model.LinkByIndex(i);
-        if (parentOf.count(link) == 0)
+        if (parentOf.size() != 0 && parentOf.count(link) == 0)
         {
           // This link must be the root. If a different link was already
           // identified as the root then we have a conflict.
@@ -247,6 +247,10 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
 
           rootLink = link;
           continue;
+        }
+        if (parentOf.size() == 0)
+        {
+          rootLink = link;
         }
 
         linkIndex[link] = linkIndex.size();
@@ -276,6 +280,10 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
   {
     // Every element in flatLinks should have a parent if the earlier validation
     // was done correctly.
+    if (parentOf.size() == 0)
+    {
+      break;
+    }
     const auto *parentJoint = parentOf.at(flatLinks[i]).joint;
 
     const auto *parentLink =
@@ -379,10 +387,13 @@ Identity SDFFeatures::ConstructSdfModel(
     const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
           link->Inertial().Pose());
 
-    const auto linkID = this->AddLink(
-      LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
+    if (linkIDs.find(link) == linkIDs.end())
+    {
+      const auto linkID = this->AddLink(
+        LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
+      linkIDs.insert(std::make_pair(link, linkID));
+    }
 
-    linkIDs.insert(std::make_pair(link, linkID));
     const auto &M = link->Inertial().MassMatrix();
     const double mass = M.Mass();
     const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
@@ -398,126 +409,129 @@ Identity SDFFeatures::ConstructSdfModel(
       }
     }
 
-    const auto &parentInfo = structure.parentOf.at(link);
-    const auto *joint = parentInfo.joint;
-    const auto &parentLinkID = linkIDs.at(
-      parentInfo.model->LinkByName(joint->ParentName()));
-    const auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
-      parentLinkID);
-
-    int parentIndex = -1;
-    if (parentLinkInfo->indexInModel.has_value())
-      parentIndex = *parentLinkInfo->indexInModel;
-
-    Eigen::Isometry3d poseParentLinkToJoint;
-    Eigen::Isometry3d poseParentComToJoint;
+    if (structure.parentOf.size())
     {
-      gz::math::Pose3d gzPoseParentToJoint;
-      const auto errors = joint->SemanticPose().Resolve(
-        gzPoseParentToJoint, joint->ParentName());
-      if (!errors.empty())
+      const auto &parentInfo = structure.parentOf.at(link);
+      const auto *joint = parentInfo.joint;
+      const auto &parentLinkID = linkIDs.at(
+        parentInfo.model->LinkByName(joint->ParentName()));
+      const auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
+        parentLinkID);
+
+      int parentIndex = -1;
+      if (parentLinkInfo->indexInModel.has_value())
+        parentIndex = *parentLinkInfo->indexInModel;
+
+      Eigen::Isometry3d poseParentLinkToJoint;
+      Eigen::Isometry3d poseParentComToJoint;
       {
-        gzerr << "An error occurred while resolving the transform of Joint ["
-              << joint->Name() << "] in Model [" << model->name << "]:\n";
-        for (const auto &error : errors)
+        gz::math::Pose3d gzPoseParentToJoint;
+        const auto errors = joint->SemanticPose().Resolve(
+          gzPoseParentToJoint, joint->ParentName());
+        if (!errors.empty())
         {
-          gzerr << error << "\n";
+          gzerr << "An error occurred while resolving the transform of Joint ["
+                << joint->Name() << "] in Model [" << model->name << "]:\n";
+          for (const auto &error : errors)
+          {
+            gzerr << error << "\n";
+          }
+
+          return this->GenerateInvalidId();
         }
 
-        return this->GenerateInvalidId();
+        poseParentLinkToJoint = gz::math::eigen3::convert(gzPoseParentToJoint);
+        poseParentComToJoint =
+          poseParentLinkToJoint * parentLinkInfo->inertiaToLinkFrame;
       }
 
-      poseParentLinkToJoint = gz::math::eigen3::convert(gzPoseParentToJoint);
-      poseParentComToJoint =
-        poseParentLinkToJoint * parentLinkInfo->inertiaToLinkFrame;
-    }
-
-    Eigen::Isometry3d poseJointToChild;
-    {
-      gz::math::Pose3d gzPoseJointToChild;
-      const auto errors =
-        link->SemanticPose().Resolve(gzPoseJointToChild, joint->Name());
-      if (!errors.empty())
+      Eigen::Isometry3d poseJointToChild;
       {
-        gzerr << "An error occured while resolving the transform of Link ["
-              << link->Name() << "]:\n";
-        for (const auto &error : errors)
+        gz::math::Pose3d gzPoseJointToChild;
+        const auto errors =
+          link->SemanticPose().Resolve(gzPoseJointToChild, joint->Name());
+        if (!errors.empty())
         {
-          gzerr << error << "\n";
+          gzerr << "An error occured while resolving the transform of Link ["
+                << link->Name() << "]:\n";
+          for (const auto &error : errors)
+          {
+            gzerr << error << "\n";
+          }
+
+          return this->GenerateInvalidId();
         }
 
-        return this->GenerateInvalidId();
+        poseJointToChild = gz::math::eigen3::convert(gzPoseJointToChild);
       }
 
-      poseJointToChild = gz::math::eigen3::convert(gzPoseJointToChild);
-    }
+      btQuaternion btRotParentComToJoint;
+      convertMat(poseParentComToJoint.linear())
+        .getRotation(btRotParentComToJoint);
 
-    btQuaternion btRotParentComToJoint;
-    convertMat(poseParentComToJoint.linear())
-      .getRotation(btRotParentComToJoint);
+      btVector3 btPosParentComToJoint =
+        convertVec(poseParentComToJoint.translation());
 
-    btVector3 btPosParentComToJoint =
-      convertVec(poseParentComToJoint.translation());
+      btVector3 btJointToChildCom =
+        convertVec((poseJointToChild * linkToComTf).translation());
 
-    btVector3 btJointToChildCom =
-      convertVec((poseJointToChild * linkToComTf).translation());
+      this->AddJoint(
+        JointInfo{
+          joint->Name(),
+          InternalJoint{i},
+          model->linkEntityIds[parentIndex+1],
+          linkIDs.find(link)->second,
+          poseParentLinkToJoint,
+          poseJointToChild,
+          modelID
+        });
 
-    this->AddJoint(
-      JointInfo{
-        joint->Name(),
-        InternalJoint{i},
-        model->linkEntityIds[parentIndex+1],
-        linkID,
-        poseParentLinkToJoint,
-        poseJointToChild,
-        modelID
-      });
-
-    if (::sdf::JointType::FIXED == joint->Type())
-    {
-      model->body->setupFixed(
-        i, mass, inertia, parentIndex,
-        btRotParentComToJoint,
-        btPosParentComToJoint,
-        btJointToChildCom);
-    }
-    else if (::sdf::JointType::REVOLUTE == joint->Type())
-    {
-      const auto axis = joint->Axis()->Xyz();
-      model->body->setupRevolute(
-        i, mass, inertia, parentIndex,
-        btRotParentComToJoint,
-        btVector3(axis[0], axis[1], axis[2]),
-        btPosParentComToJoint,
-        btJointToChildCom,
-        true);
-    }
-    else if (::sdf::JointType::PRISMATIC == joint->Type())
-    {
-      const auto axis = joint->Axis()->Xyz();
-      model->body->setupPrismatic(
-        i, mass, inertia, parentIndex,
-        btRotParentComToJoint,
-        btVector3(axis[0], axis[1], axis[2]),
-        btPosParentComToJoint,
-        btJointToChildCom,
-        true);
-    }
-    else if (::sdf::JointType::BALL == joint->Type())
-    {
-      model->body->setupSpherical(
-        i, mass, inertia, parentIndex,
-        btRotParentComToJoint,
-        btPosParentComToJoint,
-        btJointToChildCom);
-    }
-    else
-    {
-      gzerr << "You have found a bug in gz-physics-bullet-featherstone. Joint "
-            << "type [" << (std::size_t)(joint->Type()) << "] should have been "
-            << "filtered out during model validation, but that filtering "
-            << "failed. Please report this to the gz-physics developers\n";
-      return this->GenerateInvalidId();
+      if (::sdf::JointType::FIXED == joint->Type())
+      {
+        model->body->setupFixed(
+          i, mass, inertia, parentIndex,
+          btRotParentComToJoint,
+          btPosParentComToJoint,
+          btJointToChildCom);
+      }
+      else if (::sdf::JointType::REVOLUTE == joint->Type())
+      {
+        const auto axis = joint->Axis()->Xyz();
+        model->body->setupRevolute(
+          i, mass, inertia, parentIndex,
+          btRotParentComToJoint,
+          btVector3(axis[0], axis[1], axis[2]),
+          btPosParentComToJoint,
+          btJointToChildCom,
+          true);
+      }
+      else if (::sdf::JointType::PRISMATIC == joint->Type())
+      {
+        const auto axis = joint->Axis()->Xyz();
+        model->body->setupPrismatic(
+          i, mass, inertia, parentIndex,
+          btRotParentComToJoint,
+          btVector3(axis[0], axis[1], axis[2]),
+          btPosParentComToJoint,
+          btJointToChildCom,
+          true);
+      }
+      else if (::sdf::JointType::BALL == joint->Type())
+      {
+        model->body->setupSpherical(
+          i, mass, inertia, parentIndex,
+          btRotParentComToJoint,
+          btPosParentComToJoint,
+          btJointToChildCom);
+      }
+      else
+      {
+        gzerr << "You have found a bug in gz-physics-bullet-featherstone. Joint "
+              << "type [" << (std::size_t)(joint->Type()) << "] should have been "
+              << "filtered out during model validation, but that filtering "
+              << "failed. Please report this to the gz-physics developers\n";
+        return this->GenerateInvalidId();
+      }
     }
 
     for (std::size_t c = 0; c < link->CollisionCount(); ++c)
@@ -525,7 +539,7 @@ Identity SDFFeatures::ConstructSdfModel(
       // If we fail to add the collision, just keep building the model. It may
       // need to be constructed outside of the SDF generation pipeline, e.g.
       // with AttachHeightmap.
-      this->AddSdfCollision(linkID, *link->CollisionByIndex(c));
+      this->AddSdfCollision(linkIDs.find(link)->second, *link->CollisionByIndex(c));
     }
   }
 
@@ -636,26 +650,31 @@ bool SDFFeatures::AddSdfCollision(
         mu = ode->Mu();
         mu2 = ode->Mu2();
       }
-
-      if (const auto bullet = friction->Element()->GetElement("bullet"))
+      if (friction->Element())
       {
-        if (const auto f1 = bullet->GetElement("friction"))
-          mu = f1->Get<double>();
+        if (const auto bullet = friction->Element()->GetElement("bullet"))
+        {
+          if (const auto f1 = bullet->GetElement("friction"))
+            mu = f1->Get<double>();
 
-        if (const auto f2 = bullet->GetElement("friction2"))
-          mu2 = f2->Get<double>();
+          if (const auto f2 = bullet->GetElement("friction2"))
+            mu2 = f2->Get<double>();
 
-        // What is fdir1 for in the SDF's <bullet> spec?
+          // What is fdir1 for in the SDF's <bullet> spec?
 
-        if (const auto rolling = bullet->GetElement("rolling_friction"))
-          rollingFriction = rolling->Get<double>();
+          if (const auto rolling = bullet->GetElement("rolling_friction"))
+            rollingFriction = rolling->Get<double>();
+        }
       }
     }
 
-    if (const auto bounce = surface->Element()->GetElement("bounce"))
+    if (surface->Element())
     {
-      if (const auto r = bounce->GetElement("restitution_coefficient"))
-        restitution = r->Get<double>();
+      if (const auto bounce = surface->Element()->GetElement("bounce"))
+      {
+        if (const auto r = bounce->GetElement("restitution_coefficient"))
+          restitution = r->Get<double>();
+      }
     }
   }
 

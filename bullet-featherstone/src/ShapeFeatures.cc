@@ -16,6 +16,7 @@
 */
 
 #include "ShapeFeatures.hh"
+#include <gz/math/eigen3/Conversions.hh>
 
 #include <memory>
 #include <string>
@@ -24,6 +25,28 @@
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/////////////////////////////////////////////////
+AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
+    const Identity &_shapeID) const
+{
+  const auto *collider = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  if (collider)
+  {
+    btTransform t;
+    t.setIdentity();
+    btVector3 minBox(0, 0, 0);
+    btVector3 maxBox(0, 0, 0);
+    btVector3 minBox2(0, 0, 0);
+    btVector3 maxBox2(0, 0, 0);
+    collider->collider->getAabb(t, minBox, maxBox);
+    return math::eigen3::convert(math::AxisAlignedBox(
+      math::Vector3d(minBox[0], minBox[1], minBox[2]),
+      math::Vector3d(maxBox[0], maxBox[1], maxBox[2])));
+  }
+  return math::eigen3::convert(math::AxisAlignedBox());
+}
+
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToBoxShape(
       const Identity &_shapeID) const
@@ -201,8 +224,7 @@ double ShapeFeatures::GetCylinderShapeHeight(
   {
     if (it->second->collider != nullptr)
     {
-      auto *cylinder = static_cast<btCylinderShape*>(
-        it->second->collider.get());
+      auto *cylinder = static_cast<btCylinderShape*>(it->second->collider.get());
       if (cylinder)
       {
         return cylinder->getHalfExtentsWithMargin()[2] * 2;

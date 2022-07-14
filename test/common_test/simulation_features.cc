@@ -116,12 +116,13 @@ class SimulationFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-std::unordered_set<TestWorldPtr> LoadWorlds(
+template <class T>
+std::unordered_set<gz::physics::World3dPtr<T>> LoadWorlds(
     const gz::plugin::Loader &_loader,
     const std::set<std::string> pluginNames,
     const std::string &_world)
 {
-  std::unordered_set<TestWorldPtr> worlds;
+  std::unordered_set<gz::physics::World3dPtr<T>> worlds;
   for (const std::string &name : pluginNames)
   {
     gz::plugin::PluginPtr plugin = _loader.Instantiate(name);
@@ -129,7 +130,7 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     gzdbg << " -- Plugin name: " << name << std::endl;
 
     auto engine =
-      gz::physics::RequestEngine3d<Features>::From(plugin);
+      gz::physics::RequestEngine3d<T>::From(plugin);
     EXPECT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -179,7 +180,7 @@ bool StepWorld(const TestWorldPtr &_world, bool _firstTime,
 /////////////////////////////////////////////////
 TEST_F(SimulationFeaturesTest, StepWorld)
 {
-  auto worlds = LoadWorlds(
+  auto worlds = LoadWorlds<Features>(
     loader,
     pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
@@ -190,20 +191,81 @@ TEST_F(SimulationFeaturesTest, StepWorld)
   }
 }
 
-/////////////////////////////////////////////////
-TEST_F(SimulationFeaturesTest, ShapeFeatures)
+template <class T>
+class ShapeFeaturesTest:
+  public testing::Test, public gz::physics::TestLibLoader
 {
-  auto worlds = LoadWorlds(
-    loader,
-    pluginNames,
+  // Documentation inherited
+  public: void SetUp() override
+  {
+    gz::common::Console::SetVerbosity(4);
+
+    loader.LoadLib(ShapeFeaturesTest::GetLibToTest());
+
+    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
+    // FindFeatures
+    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
+    if (pluginNames.empty())
+    {
+      std::cerr << "No plugins with required features found in "
+                << GetLibToTest() << std::endl;
+      GTEST_SKIP();
+    }
+  }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
+};
+
+// The features that an engine must have to be loaded by this loader.
+using ShapeFeaturesFeatures = gz::physics::FeatureList<
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetShapeFromLink,
+  gz::physics::GetModelBoundingBox,
+
+  gz::physics::AttachBoxShapeFeature,
+  gz::physics::AttachCapsuleShapeFeature,
+  gz::physics::AttachCylinderShapeFeature,
+  gz::physics::AttachSphereShapeFeature,
+  gz::physics::AttachEllipsoidShapeFeature,
+  gz::physics::GetBoxShapeProperties,
+  gz::physics::GetCapsuleShapeProperties,
+  gz::physics::GetCylinderShapeProperties,
+  gz::physics::GetSphereShapeProperties,
+  gz::physics::GetEllipsoidShapeProperties,
+
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ForwardStep,
+  gz::physics::sdf::ConstructSdfWorld
+>;
+
+template <class T>
+class ShapeFeaturesTestClass :
+  public ShapeFeaturesTest<T>{};
+using ShapeFeaturesTestClassTypes =
+  ::testing::Types<ShapeFeaturesFeatures>;
+TYPED_TEST_CASE(ShapeFeaturesTestClass, ShapeFeaturesTestClassTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(ShapeFeaturesTestClass, ShapeFeatures)
+{
+  auto worlds = LoadWorlds<ShapeFeaturesFeatures>(
+    this->loader,
+    this->pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
+    std::cerr << "world model count " << world->GetModelCount() << '\n';
     // test ShapeFeatures
     auto sphere = world->GetModel("sphere");
+    EXPECT_NE(nullptr, sphere);
     auto sphereLink = sphere->GetLink(0);
+    EXPECT_NE(nullptr, sphereLink);
     auto sphereCollision = sphereLink->GetShape(0);
+    EXPECT_NE(nullptr, sphereCollision);
     auto sphereShape = sphereCollision->CastToSphereShape();
+    EXPECT_NE(nullptr, sphereShape);
     EXPECT_NEAR(1.0, sphereShape->GetRadius(), 1e-6);
 
     EXPECT_EQ(1u, sphereLink->GetShapeCount());
@@ -213,9 +275,13 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
     EXPECT_EQ(sphere2, sphereLink->GetShape(1));
 
     auto box = world->GetModel("box");
-    auto boxLink = box->GetLink(0);
+    EXPECT_NE(nullptr, box);
+    auto boxLink = box->GetLink("box_link");
+    EXPECT_NE(nullptr, boxLink);
     auto boxCollision = boxLink->GetShape(0);
+    EXPECT_NE(nullptr, boxCollision);
     auto boxShape = boxCollision->CastToBoxShape();
+    EXPECT_NE(nullptr, boxShape);
     EXPECT_EQ(gz::math::Vector3d(100, 100, 1),
               gz::math::eigen3::convert(boxShape->GetSize()));
 
@@ -226,6 +292,8 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
       Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, boxLink->GetShapeCount());
     EXPECT_EQ(box2, boxLink->GetShape(1));
+    EXPECT_EQ(gz::math::Vector3d(1.2, 1.2, 1.2),
+              gz::math::eigen3::convert(boxLink->GetShape(1)->CastToBoxShape()->GetSize()));
 
     auto cylinder = world->GetModel("cylinder");
     auto cylinderLink = cylinder->GetLink(0);
@@ -238,6 +306,12 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
       "cylinder2", 3.0, 4.0, Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, cylinderLink->GetShapeCount());
     EXPECT_EQ(cylinder2, cylinderLink->GetShape(1));
+    EXPECT_NEAR(3.0,
+                cylinderLink->GetShape(1)->CastToCylinderShape()->GetRadius(),
+                1e-6);
+    EXPECT_NEAR(4.0,
+                cylinderLink->GetShape(1)->CastToCylinderShape()->GetHeight(),
+                1e-6);
 
     auto ellipsoid = world->GetModel("ellipsoid");
     auto ellipsoidLink = ellipsoid->GetLink(0);
@@ -278,6 +352,15 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
     auto capsuleAABB =
       capsuleCollision->GetAxisAlignedBoundingBox(*capsuleCollision);
 
+    std::cerr << "gz::math::eigen3::convert(sphereAABB).Min() " << gz::math::eigen3::convert(sphereAABB).Min() << '\n';
+    std::cerr << "gz::math::eigen3::convert(sphereAABB).Max() " << gz::math::eigen3::convert(sphereAABB).Max() << '\n';
+
+    std::cerr << "gz::math::eigen3::convert(boxAABB).Min() " << gz::math::eigen3::convert(boxAABB).Min() << '\n';
+    std::cerr << "gz::math::eigen3::convert(boxAABB).Max() " << gz::math::eigen3::convert(boxAABB).Max() << '\n';
+
+    std::cerr << "gz::math::eigen3::convert(ellipsoidAABB).Min() " << gz::math::eigen3::convert(ellipsoidAABB).Min() << '\n';
+    std::cerr << "gz::math::eigen3::convert(ellipsoidAABB).Max() " << gz::math::eigen3::convert(ellipsoidAABB).Max() << '\n';
+
     EXPECT_TRUE(gz::math::Vector3d(-1, -1, -1).Equal(
                 gz::math::eigen3::convert(sphereAABB).Min(), 0.1));
     EXPECT_EQ(gz::math::Vector3d(1, 1, 1),
@@ -299,12 +382,18 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
     EXPECT_TRUE(gz::math::Vector3d(0.2, 0.2, 0.5).Equal(
                 gz::math::eigen3::convert(capsuleAABB).Max(), 0.1));
 
+
+std::cerr << "---------------------------------------" << '\n';
     // check model AABB. By default, the AABBs are in world frame
     auto sphereModelAABB = sphere->GetAxisAlignedBoundingBox();
     auto boxModelAABB = box->GetAxisAlignedBoundingBox();
     auto cylinderModelAABB = cylinder->GetAxisAlignedBoundingBox();
     auto ellipsoidModelAABB = ellipsoid->GetAxisAlignedBoundingBox();
     auto capsuleModelAABB = capsule->GetAxisAlignedBoundingBox();
+
+    std::cerr << "gz::math::eigen3::convert(ellipsoidModelAABB) " << gz::math::eigen3::convert(ellipsoidModelAABB).Min() << '\n';
+    std::cerr << "gz::math::eigen3::convert(ellipsoidModelAABB) " << gz::math::eigen3::convert(ellipsoidModelAABB).Max() << '\n';
+
     EXPECT_EQ(gz::math::Vector3d(-1, 0.5, -0.5),
               gz::math::eigen3::convert(sphereModelAABB).Min());
     EXPECT_EQ(gz::math::Vector3d(1, 2.5, 1.5),
@@ -330,7 +419,7 @@ TEST_F(SimulationFeaturesTest, ShapeFeatures)
 
 TEST_F(SimulationFeaturesTest, FreeGroup)
 {
-  auto worlds = LoadWorlds(
+  auto worlds = LoadWorlds<Features>(
     loader,
     pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
@@ -378,7 +467,7 @@ TEST_F(SimulationFeaturesTest, FreeGroup)
 
 TEST_F(SimulationFeaturesTest, CollideBitmasks)
 {
-  auto worlds = LoadWorlds(
+  auto worlds = LoadWorlds<Features>(
     loader,
     pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes_bitmask.sdf"));
@@ -422,7 +511,7 @@ TEST_F(SimulationFeaturesTest, CollideBitmasks)
 
 TEST_F(SimulationFeaturesTest, RetrieveContacts)
 {
-  auto worlds = LoadWorlds(
+  auto worlds = LoadWorlds<Features>(
     loader,
     pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
@@ -579,5 +668,8 @@ int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   SimulationFeaturesTest::init(argc, argv);
+  if (!ShapeFeaturesTest<ShapeFeaturesFeatures>::init(
+     argc, argv))
+  return -1;
   return RUN_ALL_TESTS();
 }

@@ -61,14 +61,30 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     // Groups are always Models underneath. If we ever support frame semantics
     // for more than links, models, and free groups, then this implementation
     // needs to change.
-    model = this->FrameInterface<ModelInfo>(_id);
+    // model = this->FrameInterface<ModelInfo>(_id);
+    // I commented this line because it's returning a bad object.
+    // I'm not able to access getBaseWorldTransform
+    for (auto const [key, value] : this->links)
+    {
+      for (unsigned int i = 0; i < value->collisionEntityIds.size(); ++i)
+      {
+        if (value->collisionEntityIds[i] == _id.ID())
+        {
+          model = this->ReferenceInterface<ModelInfo>(value->model);
+          break;
+        }
+      }
+    }
   }
 
   FrameData data;
-  data.pose = convert(model->body->getBaseWorldTransform())
-    * model->baseInertiaToLinkFrame;
-  data.linearVelocity = convert(model->body->getBaseVel());
-  data.linearAcceleration = convert(model->body->getBaseOmega());
+  if(model && model->body)
+  {
+    data.pose = convert(model->body->getBaseWorldTransform())
+      * model->baseInertiaToLinkFrame;
+    data.linearVelocity = convert(model->body->getBaseVel());
+    data.linearAcceleration = convert(model->body->getBaseOmega());
+  }
   return data;
 }
 
