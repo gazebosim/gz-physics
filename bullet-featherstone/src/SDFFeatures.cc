@@ -526,10 +526,11 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else
       {
-        gzerr << "You have found a bug in gz-physics-bullet-featherstone. Joint "
-              << "type [" << (std::size_t)(joint->Type()) << "] should have been "
-              << "filtered out during model validation, but that filtering "
-              << "failed. Please report this to the gz-physics developers\n";
+        gzerr << "You have found a bug in gz-physics-bullet-featherstone. "
+              << "Joint  type [" << (std::size_t)(joint->Type()) << "] should "
+              << "have been filtered out during model validation, but that "
+              << "filtering failed. Please report this to the gz-physics "
+              << "developers\n";
         return this->GenerateInvalidId();
       }
     }
@@ -539,7 +540,8 @@ Identity SDFFeatures::ConstructSdfModel(
       // If we fail to add the collision, just keep building the model. It may
       // need to be constructed outside of the SDF generation pipeline, e.g.
       // with AttachHeightmap.
-      this->AddSdfCollision(linkIDs.find(link)->second, *link->CollisionByIndex(c));
+      this->AddSdfCollision(
+        linkIDs.find(link)->second, *link->CollisionByIndex(c));
     }
   }
 
