@@ -24,7 +24,7 @@
 namespace mock
 {
   /////////////////////////////////////////////////
-  // TODO(MXG): Offer an gz::physics::Vector class that accepts a
+  // TODO(MXG): Offer a gz::physics::Vector class that accepts a
   // FeaturePolicy type.
   template <typename FeaturePolicyT>
   using Vector = Eigen::Matrix<

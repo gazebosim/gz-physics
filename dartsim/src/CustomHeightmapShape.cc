@@ -47,10 +47,10 @@ CustomHeightmapShape::CustomHeightmapShape(
   else
     scale.Z(fabs(_size(2)) / heightmapSizeZ);
 
-  auto sizeIgn = gz::math::eigen3::convert(_size);
+  auto sizeGz = gz::math::eigen3::convert(_size);
 
   std::vector<float> heightsFloat;
-  _input.FillHeightMap(_subSampling, vertSize, sizeIgn, scale, flipY,
+  _input.FillHeightMap(_subSampling, vertSize, sizeGz, scale, flipY,
       heightsFloat);
 
   this->setHeightField(vertSize, vertSize, heightsFloat);
