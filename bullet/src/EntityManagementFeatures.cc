@@ -264,8 +264,16 @@ Identity EntityManagementFeatures::GetWorld(
 const std::string &EntityManagementFeatures::GetWorldName(
     const Identity &_worldID) const
 {
-  static const std::string worldName = this->worlds.at(_worldID)->name;
-  return worldName;
+  // Check if the world exists
+  if (!this->worlds.count(_worldID.id))
+  {
+    static const std::string worldName = "";
+    return worldName;
+  }
+  else
+  {
+    return this->worlds.at(_worldID)->name;
+  }
 }
 
 std::size_t EntityManagementFeatures::GetWorldIndex(const Identity &) const
@@ -335,9 +343,10 @@ const std::string &EntityManagementFeatures::GetModelName(
     static const std::string modelName = "";
     return modelName;
   }
-
-  static const std::string modelName = this->models.at(_modelID)->name;
-  return modelName;
+  else
+  {
+    return this->models.at(_modelID)->name;
+  }
 }
 
 std::size_t EntityManagementFeatures::GetModelIndex(
@@ -473,9 +482,10 @@ const std::string &EntityManagementFeatures::GetLinkName(
     static const std::string linkName = "";
     return linkName;
   }
-
-  static const std::string linkName = this->links.at(_linkId)->name;;
-  return linkName;
+  else
+  {
+    return this->links.at(_linkId)->name;
+  }
 }
 
 std::size_t EntityManagementFeatures::GetLinkIndex(
