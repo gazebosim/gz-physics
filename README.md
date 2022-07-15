@@ -1,21 +1,20 @@
-# Ignition Physics : Physics classes and functions for robot applications
+# Gazebo Physics : Physics classes and functions for robot applications
 
 **Maintainer:** scpeters AT openrobotics DOT org
 
-[![GitHub open issues](https://img.shields.io/github/issues-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/issues)
-[![GitHub open pull requests](https://img.shields.io/github/issues-pr-raw/ignitionrobotics/ign-physics.svg)](https://github.com/ignitionrobotics/ign-physics/pulls)
+[![GitHub open issues](https://img.shields.io/github/issues-raw/gazebosim/gz-physics.svg)](https://github.com/gazebosim/gz-physics/issues)
+[![GitHub open pull requests](https://img.shields.io/github/issues-pr-raw/gazebosim/gz-physics.svg)](https://github.com/gazebosim/gz-physics/pulls)
 [![Discourse topics](https://img.shields.io/discourse/https/community.gazebosim.org/topics.svg)](https://community.gazebosim.org)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/ignitionrobotics/ign-physics/branch/ign-physics2/graph/badge.svg)](https://codecov.io/gh/ignitionrobotics/ign-physics)
-Ubuntu Bionic | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics2-bionic-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics2-bionic-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/ign-physics2/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/branch/ign-physics2)
+Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics2-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics2-focal-amd64)
 Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics2-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics2-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
-Ignition Physics, a component of [Ignition
-Robotics](https://ignitionrobotics.org), provides an abstract physics interface
+Gazebo Physics, a component of [Gazebo](https://gazebosim.org), provides an abstract physics interface
 designed to support simulation and rapid development of robot applications.
 
 # Table of Contents
@@ -51,7 +50,7 @@ designed to support simulation and rapid development of robot applications.
 Many physics simulation software libraries have been designed for different
 applications (gaming, robotics, science) and with different features
 (rigid or deformable contact, 2d or 3d).
-Ignition Physics is designed on the premise that there is not a single physics
+Gazebo Physics is designed on the premise that there is not a single physics
 engine that is universally best for all simulation contexts.
 It should be possible to support a different set of features
 for each physics engine according to its capabilities.
@@ -60,7 +59,7 @@ based on its context.
 
 # Features
 
-Ignition Physics provides the following functionality:
+Gazebo Physics provides the following functionality:
 
 * Granular definition of physics engine features as optional API's.
 * Plugin interface for loading physics engines with requested features
@@ -122,16 +121,16 @@ sudo update-alternatives --install \
 1. Clone the repository
 
     ```
-    git clone https://github.com/ignitionrobotics/ign-physics -b ign-physics2
+    git clone https://github.com/gazebosim/gz-physics -b ign-physics2
     ```
 
 2. Configure and build
 
     ```
-    cd ign-physics; mkdir build; cd build; cmake ..; make
+    cd gz-physics; mkdir build; cd build; cmake ..; make
     ```
 
-3. Optionally, install Ignition Physics
+3. Optionally, install Gazebo Physics
 
     ```
     sudo make install
@@ -139,14 +138,14 @@ sudo update-alternatives --install \
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/ignitionrobotics/ign-physics/raw/ign-physics2/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/ign-physics2/examples/).
 
 # Folder Structure
 
 Refer to the following table for information about important directories and files in this repository.
 
 ```
-ign-physics
+gz-physics
 ├── dartsim                   Files for dartsim plugin component.
 ├── include/ignition/physics  Header files.
 ├── mesh                      Files for mesh component.
@@ -166,17 +165,17 @@ ign-physics
 ```
 # Contributing
 
-Please see the [contribution guide](https://ignitionrobotics.org/docs/all/contributing).
+Please see the [contribution guide](https://gazebosim.org/docs/all/contributing).
 
 # Code of Conduct
 
 Please see
-[CODE\_OF\_CONDUCT.md](https://github.com/ignitionrobotics/ign-gazebo/blob/main/CODE_OF_CONDUCT.md).
+[CODE\_OF\_CONDUCT.md](https://github.com/gazebosim/gz-sim/blob/main/CODE_OF_CONDUCT.md).
 
 # Versioning
 
-This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Ignition Robotics project](https://ignitionrobotics.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Ignition Robotics website](https://ignitionrobotics.org) for version and release information.
+This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Gazebo project](https://gazebosim.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Gazebo website](https://gazebosim.org) for version and release information.
 
 # License
 
-This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/ignitionrobotics/ign-physics/blob/main/LICENSE) file.
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/gazebosim/gz-physics/blob/main/LICENSE) file.
