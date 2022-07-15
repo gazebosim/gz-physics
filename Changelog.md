@@ -9,7 +9,7 @@
 
 ### Gazebo Physics 5.1.0 (2021-11-12)
 
-1. Remove unused ign_auto_headers.hh.in
+1. Remove unused gz_auto_headers.hh.in
     * [Pull request #305](https://github.com/gazebosim/gz-physics/pull/305)
 
 1. Added DART feature for setting joint limits dynamically.
@@ -69,7 +69,7 @@
 
 ### Gazebo Physics 4.3.0 (2021-11-11)
 
-1. Remove unused ign_auto_headers.hh.in
+1. Remove unused gz_auto_headers.hh.in
     * [Pull request #305](https://github.com/gazebosim/gz-physics/pull/305)
 
 1. Added DART feature for setting joint limits dynamically.
@@ -323,7 +323,7 @@
 
 ### Gazebo Physics 2.5.0 (2021-11-09)
 
-1. Remove unused ign_auto_headers.hh.in
+1. Remove unused gz_auto_headers.hh.in
     * [Pull request #305](https://github.com/gazebosim/gz-physics/pull/305)
 
 1. Added DART feature for setting joint limits dynamically.

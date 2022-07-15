@@ -172,7 +172,7 @@ void SimulationFeatures::AddContactPropertiesCallback(
 {
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
 
-  auto handler = std::make_shared<IgnContactSurfaceHandler>();
+  auto handler = std::make_shared<GzContactSurfaceHandler>();
   handler->surfaceParamsCallback = _callback;
   handler->convertContact = [this](const dart::collision::Contact& _contact) {
     return this->convertContact(_contact);
@@ -202,7 +202,7 @@ bool SimulationFeatures::RemoveContactPropertiesCallback(
   }
 }
 
-dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
+dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
   const dart::collision::Contact& _contact,
   const size_t _numContactsOnCollisionObject) const
 {
@@ -214,40 +214,40 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
 
   typedef SetContactPropertiesCallbackFeature F;
   typedef FeaturePolicy3d P;
-  typename F::ContactSurfaceParams<P> pIgn;
+  typename F::ContactSurfaceParams<P> pGz;
 
-  pIgn.frictionCoeff = pDart.mFrictionCoeff;
-  pIgn.secondaryFrictionCoeff = pDart.mSecondaryFrictionCoeff;
-  pIgn.slipCompliance = pDart.mSlipCompliance;
-  pIgn.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
-  pIgn.restitutionCoeff = pDart.mRestitutionCoeff;
-  pIgn.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
-  pIgn.contactSurfaceMotionVelocity = pDart.mContactSurfaceMotionVelocity;
+  pGz.frictionCoeff = pDart.mFrictionCoeff;
+  pGz.secondaryFrictionCoeff = pDart.mSecondaryFrictionCoeff;
+  pGz.slipCompliance = pDart.mSlipCompliance;
+  pGz.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
+  pGz.restitutionCoeff = pDart.mRestitutionCoeff;
+  pGz.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
+  pGz.contactSurfaceMotionVelocity = pDart.mContactSurfaceMotionVelocity;
 
   auto contactInternal = this->convertContact(_contact);
   if (contactInternal)
   {
     this->surfaceParamsCallback(contactInternal.value(),
-                                _numContactsOnCollisionObject, pIgn);
+                                _numContactsOnCollisionObject, pGz);
 
-    if (pIgn.frictionCoeff)
-      pDart.mFrictionCoeff = pIgn.frictionCoeff.value();
-    if (pIgn.secondaryFrictionCoeff)
-      pDart.mSecondaryFrictionCoeff = pIgn.secondaryFrictionCoeff.value();
-    if (pIgn.slipCompliance)
-      pDart.mSlipCompliance = pIgn.slipCompliance.value();
-    if (pIgn.secondarySlipCompliance)
-      pDart.mSecondarySlipCompliance = pIgn.secondarySlipCompliance.value();
-    if (pIgn.restitutionCoeff)
-      pDart.mRestitutionCoeff = pIgn.restitutionCoeff.value();
-    if (pIgn.firstFrictionalDirection)
-      pDart.mFirstFrictionalDirection = pIgn.firstFrictionalDirection.value();
-    if (pIgn.contactSurfaceMotionVelocity)
+    if (pGz.frictionCoeff)
+      pDart.mFrictionCoeff = pGz.frictionCoeff.value();
+    if (pGz.secondaryFrictionCoeff)
+      pDart.mSecondaryFrictionCoeff = pGz.secondaryFrictionCoeff.value();
+    if (pGz.slipCompliance)
+      pDart.mSlipCompliance = pGz.slipCompliance.value();
+    if (pGz.secondarySlipCompliance)
+      pDart.mSecondarySlipCompliance = pGz.secondarySlipCompliance.value();
+    if (pGz.restitutionCoeff)
+      pDart.mRestitutionCoeff = pGz.restitutionCoeff.value();
+    if (pGz.firstFrictionalDirection)
+      pDart.mFirstFrictionalDirection = pGz.firstFrictionalDirection.value();
+    if (pGz.contactSurfaceMotionVelocity)
       pDart.mContactSurfaceMotionVelocity =
-        pIgn.contactSurfaceMotionVelocity.value();
+        pGz.contactSurfaceMotionVelocity.value();
 
     static bool warnedRollingFrictionCoeff = false;
-    if (!warnedRollingFrictionCoeff && pIgn.rollingFrictionCoeff)
+    if (!warnedRollingFrictionCoeff && pGz.rollingFrictionCoeff)
     {
       gzwarn << "DART doesn't support rolling friction setting" << std::endl;
       warnedRollingFrictionCoeff = true;
@@ -255,7 +255,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
 
     static bool warnedSecondaryRollingFrictionCoeff = false;
     if (!warnedSecondaryRollingFrictionCoeff &&
-      pIgn.secondaryRollingFrictionCoeff)
+      pGz.secondaryRollingFrictionCoeff)
     {
       gzwarn << "DART doesn't support secondary rolling friction setting"
               << std::endl;
@@ -263,7 +263,7 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     }
 
     static bool warnedTorsionalFrictionCoeff = false;
-    if (!warnedTorsionalFrictionCoeff && pIgn.torsionalFrictionCoeff)
+    if (!warnedTorsionalFrictionCoeff && pGz.torsionalFrictionCoeff)
     {
       gzwarn << "DART doesn't support torsional friction setting"
               << std::endl;
@@ -271,36 +271,36 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
     }
   }
 
-  this->lastIgnParams = pIgn;
+  this->lastGzParams = pGz;
 
   return pDart;
 }
 
 dart::constraint::ContactConstraintPtr
-IgnContactSurfaceHandler::createConstraint(
+GzContactSurfaceHandler::createConstraint(
   dart::collision::Contact& _contact,
   const size_t _numContactsOnCollisionObject,
   const double _timeStep) const
 {
-  // this call sets this->lastIgnParams
+  // this call sets this->lastGzParams
   auto constraint = dart::constraint::ContactSurfaceHandler::createConstraint(
     _contact, _numContactsOnCollisionObject, _timeStep);
 
   typedef SetContactPropertiesCallbackFeature F;
   typedef FeaturePolicy3d P;
-  typename F::ContactSurfaceParams<P>& p = this->lastIgnParams;
+  typename F::ContactSurfaceParams<P>& p = this->lastGzParams;
 
-  if (this->lastIgnParams.errorReductionParameter)
+  if (this->lastGzParams.errorReductionParameter)
     constraint->setErrorReductionParameter(p.errorReductionParameter.value());
 
-  if (this->lastIgnParams.maxErrorAllowance)
+  if (this->lastGzParams.maxErrorAllowance)
     constraint->setErrorAllowance(p.maxErrorAllowance.value());
 
-  if (this->lastIgnParams.maxErrorReductionVelocity)
+  if (this->lastGzParams.maxErrorReductionVelocity)
     constraint->setMaxErrorReductionVelocity(
       p.maxErrorReductionVelocity.value());
 
-  if (this->lastIgnParams.constraintForceMixing)
+  if (this->lastGzParams.constraintForceMixing)
     constraint->setConstraintForceMixing(p.constraintForceMixing.value());
 
   return constraint;
