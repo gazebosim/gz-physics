@@ -9,7 +9,7 @@ target_link_libraries(${features} INTERFACE GzBullet::GzBullet)
 
 gz_get_libsources_and_unittests(sources test_sources)
 
-# TODO(MXG): Think about an gz_add_plugin(~) macro for ign-cmake
+# TODO(MXG): Think about a gz_add_plugin(~) macro for gz-cmake
 set(engine_name bullet-plugin)
 gz_add_component(${engine_name}
   SOURCES ${sources}
@@ -30,7 +30,7 @@ install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 # Install redirection headers
 install(
   DIRECTORY include/
-  DESTINATION "${IGN_INCLUDE_INSTALL_DIR_FULL}")
+  DESTINATION "${GZ_INCLUDE_INSTALL_DIR_FULL}")
 
 # The library created by `gz_add_component` includes the gz-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,

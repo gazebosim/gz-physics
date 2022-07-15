@@ -38,7 +38,7 @@
 1. Fix TPE Link velocity not being updated and Model velocity not having any effect.
     * [Pull request #289](https://github.com/gazebosim/gz-physics/pull/289)
 
-1. Make ignition-physics CMake config files relocatable
+1. Make gz-physics CMake config files relocatable
     * [Pull request #282](https://github.com/gazebosim/gz-physics/pull/282)
 
 1. Added DART feature for setting joint limits dynamically.
@@ -91,7 +91,7 @@
     * [Pull request #287](https://github.com/gazebosim/gz-physics/pull/287)
     * [Pull request #281](https://github.com/gazebosim/gz-physics/pull/281)
 
-1. Make ignition-physics CMake config files relocatable
+1. Make gz-physics CMake config files relocatable
     * [Pull request #282](https://github.com/gazebosim/gz-physics/pull/282)
 
 ### Gazebo Physics 4.2.0 (2021-07-16)

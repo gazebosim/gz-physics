@@ -665,7 +665,7 @@ Identity SDFFeatures::ConstructSdfLink(
       this->ConstructSdfCollision(linkIdentity, *collision);
   }
 
-  // ign-physics is currently ignoring visuals, so we won't parse them from the
+  // gz-physics is currently ignoring visuals, so we won't parse them from the
   // SDF
 //  for (std::size_t i = 0; i < _sdfLink.VisualCount(); ++i)
 //  {
