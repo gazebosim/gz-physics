@@ -60,7 +60,7 @@ struct SimulationFeatureList : FeatureList<
 > { };
 
 #ifdef DART_HAS_CONTACT_SURFACE
-class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
+class GzContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
 {
   public: dart::constraint::ContactSurfaceParams createParams(
     const dart::collision::Contact& _contact,
@@ -81,10 +81,10 @@ class IgnContactSurfaceHandler : public dart::constraint::ContactSurfaceHandler
   > convertContact;
 
   public: mutable typename Feature::ContactSurfaceParams<FeaturePolicy3d>
-  lastIgnParams;
+  lastGzParams;
 };
 
-using IgnContactSurfaceHandlerPtr = std::shared_ptr<IgnContactSurfaceHandler>;
+using GzContactSurfaceHandlerPtr = std::shared_ptr<GzContactSurfaceHandler>;
 #endif
 
 class SimulationFeatures :
@@ -127,7 +127,7 @@ class SimulationFeatures :
       const Identity &_worldID, const std::string &_callbackID) override;
 
   private: std::unordered_map<
-    std::string, IgnContactSurfaceHandlerPtr> contactSurfaceHandlers;
+    std::string, GzContactSurfaceHandlerPtr> contactSurfaceHandlers;
 #endif
 };
 

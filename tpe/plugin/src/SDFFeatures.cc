@@ -321,7 +321,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   }
   // \todo(anyone) add mesh. currently mesh has to be loaded externally
   // and passed in as argument as there is no logic for searching resources
-  // in ign-physics
+  // in gz-physics
   const auto collisionIdentity = this->AddCollision(link->GetId(), *collision);
 
   // set collide bitmask

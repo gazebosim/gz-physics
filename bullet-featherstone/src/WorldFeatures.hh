@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
-#ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICSFEATURES_HH_
-#define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICSFEATURES_HH_
+#ifndef GZ_PHYSICS_BULLET_SRC_WORLDFEATURES_HH_
+#define GZ_PHYSICS_BULLET_SRC_WORLDFEATURES_HH_
 
-#include <gz/physics/FrameSemantics.hh>
-#include <gz/physics/FreeGroup.hh>
+#include <string>
+
+#include <gz/physics/World.hh>
 
 #include "Base.hh"
 
@@ -27,22 +28,24 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
-struct KinematicsFeatureList : gz::physics::FeatureList<
-  LinkFrameSemantics,
-  ModelFrameSemantics,
-  FreeGroupFrameSemantics
+struct WorldFeatureList : FeatureList<
+  Gravity
 > { };
 
-class KinematicsFeatures :
+class WorldFeatures :
     public virtual Base,
-    public virtual Implements3d<KinematicsFeatureList>
+    public virtual Implements3d<WorldFeatureList>
 {
-  public: FrameData3d FrameDataRelativeToWorld(
-              const FrameID &_id) const override;
+  // Documentation inherited
+  public: void SetWorldGravity(
+      const Identity &_id, const LinearVectorType &_gravity) override;
+
+  // Documentation inherited
+  public: LinearVectorType GetWorldGravity(const Identity &_id) const override;
 };
 
-}  // namespace bullet_featherstone
-}  // namespace physics
-}  // namespace gz
+}
+}
+}
 
 #endif

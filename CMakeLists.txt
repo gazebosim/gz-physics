@@ -16,9 +16,7 @@ find_package(gz-cmake3 REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-gz_configure_project(
-  REPLACE_IGNITION_INCLUDE_PATH gz/physics
-  VERSION_SUFFIX pre1)
+gz_configure_project(VERSION_SUFFIX pre1)
 
 #============================================================================
 # Set project-specific options
@@ -84,7 +82,7 @@ gz_find_package(DART
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
-gz_find_package(IgnBullet
+gz_find_package(GzBullet
   VERSION 2.87
   REQUIRED_BY bullet
   PKGCONFIG bullet
@@ -96,7 +94,7 @@ set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 # Plugin install dirs
 set(GZ_PHYSICS_ENGINE_INSTALL_DIR
-  ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR}/gz-${IGN_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+  ${CMAKE_INSTALL_PREFIX}/${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
 )
 
 #============================================================================

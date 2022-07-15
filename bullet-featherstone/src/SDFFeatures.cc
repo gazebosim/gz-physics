@@ -79,7 +79,7 @@ Identity SDFFeatures::ConstructSdfWorld(
   auto gravity = _sdfWorld.Gravity();
   worldInfo->world->setGravity(btVector3(gravity[0], gravity[1], gravity[2]));
 
-  for (std::size_t i=0; i < _sdfWorld.ModelCount(); ++i)
+  for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
     const ::sdf::Model *model = _sdfWorld.ModelByIndex(i);
 
@@ -636,26 +636,31 @@ bool SDFFeatures::AddSdfCollision(
         mu = ode->Mu();
         mu2 = ode->Mu2();
       }
-
-      if (const auto bullet = friction->Element()->GetElement("bullet"))
+      if (friction->Element())
       {
-        if (const auto f1 = bullet->GetElement("friction"))
-          mu = f1->Get<double>();
+        if (const auto bullet = friction->Element()->GetElement("bullet"))
+        {
+          if (const auto f1 = bullet->GetElement("friction"))
+            mu = f1->Get<double>();
 
-        if (const auto f2 = bullet->GetElement("friction2"))
-          mu2 = f2->Get<double>();
+          if (const auto f2 = bullet->GetElement("friction2"))
+            mu2 = f2->Get<double>();
 
-        // What is fdir1 for in the SDF's <bullet> spec?
+          // What is fdir1 for in the SDF's <bullet> spec?
 
-        if (const auto rolling = bullet->GetElement("rolling_friction"))
-          rollingFriction = rolling->Get<double>();
+          if (const auto rolling = bullet->GetElement("rolling_friction"))
+            rollingFriction = rolling->Get<double>();
+        }
       }
     }
 
-    if (const auto bounce = surface->Element()->GetElement("bounce"))
+    if (surface->Element())
     {
-      if (const auto r = bounce->GetElement("restitution_coefficient"))
-        restitution = r->Get<double>();
+      if (const auto bounce = surface->Element()->GetElement("bounce"))
+      {
+        if (const auto r = bounce->GetElement("restitution_coefficient"))
+          restitution = r->Get<double>();
+      }
     }
   }
 

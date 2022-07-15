@@ -1,5 +1,5 @@
 #============================================================================
-# Do a fake install of ign-physics in order to test the examples.
+# Do a fake install of gz-physics in order to test the examples.
 #============================================================================
 set(FAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/fake/install")
 

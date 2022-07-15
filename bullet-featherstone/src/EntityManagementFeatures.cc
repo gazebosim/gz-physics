@@ -356,7 +356,7 @@ Identity EntityManagementFeatures::GetModel(
   if (it == world->modelIndexToEntityId.end())
     return this->GenerateInvalidId();
 
-  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+  return this->GenerateIdentity(it->second, this->models.at(it->second));
 }
 
 /////////////////////////////////////////////////
@@ -370,7 +370,7 @@ Identity EntityManagementFeatures::GetModel(
   if (it == world->modelNameToEntityId.end())
     return this->GenerateInvalidId();
 
-  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+  return this->GenerateIdentity(it->second, this->models.at(it->second));
 }
 
 /////////////////////////////////////////////////

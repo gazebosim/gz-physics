@@ -477,8 +477,8 @@ namespace gz
             const Quantity &_box,
             const RotationType &/*_currentCoordinates*/)
         {
-          // TODO(anyone): Replace with gzwarn when/if we add an ign console
-          // dependency to ign-physics
+          // TODO(anyone): Replace with gzwarn when/if we add a gz console
+          // dependency to gz-physics
           std::cerr << "[AABBSpace::ResolveToWorldCoordinates] Warning: "
                     << "Axis-aligned bounding boxes cannot undergo coordinate "
                     << "changes.\n";
@@ -490,8 +490,8 @@ namespace gz
             const RotationType &/*_currentCoordinates*/,
             const RotationType &/*_targetCoordinates*/)
         {
-          // TODO(anyone): Replace with gzwarn when/if we add an ign console
-          // dependency to ign-physics
+          // TODO(anyone): Replace with gzwarn when/if we add a gz console
+          // dependency to gz-physics
           std::cerr << "[AABBSpace::ResolveToTargetCoordinates] Warning: "
                     << "Axis-aligned bounding boxes cannot undergo coordinate "
                     << "changes.\n";
