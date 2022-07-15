@@ -3,6 +3,7 @@ set(TEST_TYPE "COMMON_TEST")
 set(tests
   basic_test
   construct_empty_world
+  free_joint_features
   simulation_features
 )
 
