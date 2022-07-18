@@ -734,19 +734,19 @@ bool SDFFeatures::AddSdfCollision(
         model->body->setBaseCollider(linkInfo->collider.get());
       }
 
-//      auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+      auto *world = this->ReferenceInterface<WorldInfo>(model->world);
 
-//      if (isStatic)
-//      {
-//        world->world->addCollisionObject(
-//          linkInfo->collider.get(),
-//          btBroadphaseProxy::DefaultFilter,
-//          btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::DefaultFilter);
-//      }
-//      else
-//      {
-//        world->world->addCollisionObject(linkInfo->collider.get());
-//      }
+      if (isStatic)
+      {
+        world->world->addCollisionObject(
+          linkInfo->collider.get(),
+          btBroadphaseProxy::DefaultFilter,
+          btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::DefaultFilter);
+      }
+      else
+      {
+        world->world->addCollisionObject(linkInfo->collider.get());
+      }
     }
     else
     {
