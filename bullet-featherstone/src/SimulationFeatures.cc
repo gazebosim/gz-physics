@@ -32,6 +32,12 @@ void SimulationFeatures::WorldForwardStep(
       _u.Query<std::chrono::steady_clock::duration>();
     std::chrono::duration<double> dt = *dtDur;
     worldInfo->world->stepSimulation(dt.count(), 1, dt.count());
+    const auto m = worldInfo->world->getDispatcher()->getNumManifolds();
+    std::cout << "MANIFOLDS: " << m << std::endl;
+    if (m > 0)
+    {
+      std::cout << " ^^^^^^^^^^^^^^^^^^^^^^^^ " << std::endl;
+    }
 }
 
 }  // namespace bullet_featherstone
