@@ -375,15 +375,6 @@ Identity SDFFeatures::ConstructSdfModel(
           });
   }
 
-  for (std::size_t c = 0; c < structure.rootLink->CollisionCount(); ++c)
-  {
-    std::cout << " >>>> ADDING ROOT LINK COLLISION FOR ["
-              << structure.rootLink->Name() << "] IN ["
-              << _sdfModel.Name() << "]" << std::endl;
-    // Add the base link's collision objects
-    this->AddSdfCollision(rootID, *structure.rootLink->CollisionByIndex(c), isStatic);
-  }
-
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
   for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
@@ -539,15 +530,6 @@ Identity SDFFeatures::ConstructSdfModel(
         return this->GenerateInvalidId();
       }
     }
-
-    for (std::size_t c = 0; c < link->CollisionCount(); ++c)
-    {
-      // If we fail to add the collision, just keep building the model. It may
-      // need to be constructed outside of the SDF generation pipeline, e.g.
-      // with AttachHeightmap.
-      this->AddSdfCollision(
-        linkIDs.find(link)->second, *link->CollisionByIndex(c), isStatic);
-    }
   }
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
@@ -572,6 +554,18 @@ Identity SDFFeatures::ConstructSdfModel(
   model->body->setBaseOmega(btVector3(0, 0, 0));
 
   world->world->addMultiBody(model->body.get());
+
+  for (const auto& [linkSdf, linkID] : linkIDs)
+  {
+    for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
+    {
+      // If we fail to add the collision, just keep building the model. It may
+      // need to be constructed outside of the SDF generation pipeline, e.g.
+      // with AttachHeightmap.
+      this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
+    }
+  }
+
   return modelID;
 }
 
@@ -596,20 +590,17 @@ bool SDFFeatures::AddSdfCollision(
 
   if (const auto *box = geom->BoxShape())
   {
-    std::cout << " --- box shape" << std::endl;
     const auto size = math::eigen3::convert(box->Size());
     const auto halfExtents = convertVec(size)*0.5;
     shape = std::make_unique<btBoxShape>(halfExtents);
   }
   else if (const auto *sphere = geom->SphereShape())
   {
-    std::cout << " --- sphere shape" << std::endl;
     const auto radius = sphere->Radius();
     shape = std::make_unique<btSphereShape>(radius);
   }
   else if (const auto *cylinder = geom->CylinderShape())
   {
-    std::cout << " --- cylinder shape" << std::endl;
     const auto radius = cylinder->Radius();
     const auto halfLength = cylinder->Length()*0.5;
     shape =
@@ -617,19 +608,16 @@ bool SDFFeatures::AddSdfCollision(
   }
   else if (const auto *plane = geom->PlaneShape())
   {
-    std::cout << " --- plane shape" << std::endl;
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
     shape = std::make_unique<btStaticPlaneShape>(normal, 0);
   }
   else if (const auto *capsule = geom->CapsuleShape())
   {
-    std::cout << " --- capsule shape" << std::endl;
     shape = std::make_unique<btCapsuleShapeZ>(
       capsule->Radius(), capsule->Length());
   }
   else if (const auto *ellipsoid = geom->EllipsoidShape())
   {
-    std::cout << " --- ellipsoid shape" << std::endl;
     btVector3 positions[1];
     btScalar radius[1];
     positions[0] = btVector3();
@@ -643,7 +631,6 @@ bool SDFFeatures::AddSdfCollision(
   }
   else
   {
-    std::cout << " --- UNSUPPORTED: " << (int)geom->Type() << std::endl;
     // TODO(MXG) Support mesh collisions
     gzerr << "Unsupported collision geometry type ["
           << (std::size_t)(geom->Type()) << "] for collision ["
@@ -714,12 +701,12 @@ bool SDFFeatures::AddSdfCollision(
         model->body.get(), linkIndexInModel);
       collider->setCollisionShape(linkInfo->shape.get());
 
-//      collider->setRestitution(restitution);
-//      collider->setRollingFriction(rollingFriction);
-//      collider->setFriction(mu);
-//      collider->setAnisotropicFriction(
-//        btVector3(mu, mu2, 1),
-//        btCollisionObject::CF_ANISOTROPIC_FRICTION);
+      collider->setRestitution(restitution);
+      collider->setRollingFriction(rollingFriction);
+      collider->setFriction(mu);
+      collider->setAnisotropicFriction(
+        btVector3(mu, mu2, 1),
+        btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
       linkInfo->collider = std::move(collider);
 
@@ -727,11 +714,17 @@ bool SDFFeatures::AddSdfCollision(
       {
         model->body->getLink(linkIndexInModel).m_collider =
           linkInfo->collider.get();
+        const auto p = model->body->localPosToWorld(
+          linkIndexInModel, btVector3(0, 0, 0));
+        const auto rot = model->body->localFrameToWorld(
+          linkIndexInModel, btMatrix3x3::getIdentity());
+        linkInfo->collider->setWorldTransform(btTransform(rot, p));
       }
       else
       {
-        std::cout << " >>>>> SETTING BASE COLLIDER" << std::endl;
         model->body->setBaseCollider(linkInfo->collider.get());
+        linkInfo->collider->setWorldTransform(
+          model->body->getBaseWorldTransform());
       }
 
       auto *world = this->ReferenceInterface<WorldInfo>(model->world);
@@ -740,12 +733,15 @@ bool SDFFeatures::AddSdfCollision(
       {
         world->world->addCollisionObject(
           linkInfo->collider.get(),
-          btBroadphaseProxy::DefaultFilter,
-          btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::DefaultFilter);
+          btBroadphaseProxy::StaticFilter,
+          btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
       }
       else
       {
-        world->world->addCollisionObject(linkInfo->collider.get());
+        world->world->addCollisionObject(
+          linkInfo->collider.get(),
+          btBroadphaseProxy::DefaultFilter,
+          btBroadphaseProxy::AllFilter);
       }
     }
     else
