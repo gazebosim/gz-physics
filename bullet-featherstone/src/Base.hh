@@ -206,6 +206,32 @@ inline Eigen::Isometry3d convert(const btTransform& tf)
   return output;
 }
 
+inline btTransform GetWorldTransformOfLinkInertiaFrame(
+    const btMultiBody &body,
+    const std::size_t linkIndexInModel)
+{
+  const auto p = body.localPosToWorld(
+    linkIndexInModel, btVector3(0, 0, 0));
+  const auto rot = body.localFrameToWorld(
+    linkIndexInModel, btMatrix3x3::getIdentity());
+  return btTransform(rot, p);
+}
+
+inline Eigen::Isometry3d GetWorldTransformOfLink(
+    const ModelInfo &model,
+    const LinkInfo &linkInfo)
+{
+  const auto &body = *model.body;
+  const auto indexOpt = linkInfo.indexInModel;
+  if (indexOpt.has_value())
+  {
+    return convert(GetWorldTransformOfLinkInertiaFrame(body, *indexOpt))
+        * linkInfo.inertiaToLinkFrame;
+  }
+
+  return convert(body.getBaseWorldTransform()) * model.baseInertiaToLinkFrame;
+}
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
   // Note: Entity ID 0 is reserved for the "engine"
