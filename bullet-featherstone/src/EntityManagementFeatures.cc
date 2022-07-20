@@ -225,6 +225,19 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
 
   world->world->removeMultiBody(model->body.get());
+  for (const auto linkID : model->linkEntityIds)
+  {
+    const auto &link = this->links.at(linkID);
+    world->world->removeCollisionObject(link->collider.get());
+    for (const auto shapeID : link->collisionEntityIds)
+      this->collisions.erase(shapeID);
+
+    this->links.erase(linkID);
+  }
+
+  for (const auto jointID : model->jointEntityIds)
+    this->joints.erase(jointID);
+
   this->models.erase(_modelID);
   return true;
 }
@@ -289,31 +302,34 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorld(
-    const Identity &_engineID, std::size_t _worldIndex) const
+    const Identity &, const std::size_t _requestedWorldIndex) const
 {
-  const auto *world = this->ReferenceInterface<WorldInfo>(_engineID);
-  if (_worldIndex >= world->modelIndexToEntityId.size())
-    return this->GenerateInvalidId();
+  // _worldIndex is not the same as a WorldID. The value of _worldIndex should
+  // range from 0 to GetWorldCount()-1. The most efficient implementation
+  // would be to maintain a std::vector of WorldIDs, but then we'd have to
+  // manage that data when worlds are added and removed.
+  std::size_t currentWorldIndex = 0;
+  for (const auto &[worldID, world] : this->worlds)
+  {
+    if (currentWorldIndex == _requestedWorldIndex)
+      return this->GenerateIdentity(worldID, world);
+  }
 
-  const auto it = world->modelIndexToEntityId.find(_worldIndex);
-  if (it == world->modelIndexToEntityId.end())
-    return this->GenerateInvalidId();
-
-  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorld(
-    const Identity &_engineID, const std::string &_worldName) const
+    const Identity &, const std::string &_requestedWorldName) const
 {
-  // TODO(MXG): Consider using a hashmap with the link names as a key to speed
-  // this up
-  const auto *world = this->ReferenceInterface<WorldInfo>(_engineID);
-  const auto it = world->modelNameToEntityId.find(_worldName);
-  if (it == world->modelNameToEntityId.end())
-    return this->GenerateInvalidId();
+  // We could speed this up by maintaining a hashmap from world name to world ID
+  for (const auto &[worldID, world] : this->worlds)
+  {
+    if (world->name == _requestedWorldName)
+      return this->GenerateIdentity(worldID, world);
+  }
 
-  return this->GenerateIdentity(it->second, this->worlds.at(it->second));
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -349,9 +365,6 @@ Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, std::size_t _modelIndex) const
 {
   const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
-  if (_modelIndex >= world->modelIndexToEntityId.size())
-    return this->GenerateInvalidId();
-
   const auto it = world->modelIndexToEntityId.find(_modelIndex);
   if (it == world->modelIndexToEntityId.end())
     return this->GenerateInvalidId();
@@ -363,8 +376,6 @@ Identity EntityManagementFeatures::GetModel(
 Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, const std::string &_modelName) const
 {
-  // TODO(MXG): Consider using a hashmap with the link names as a key to speed
-  // this up
   const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
   const auto it = world->modelNameToEntityId.find(_modelName);
   if (it == world->modelNameToEntityId.end())
@@ -396,30 +407,6 @@ Identity EntityManagementFeatures::GetWorldOfModel(
     const Identity &_modelID) const
 {
   return this->ReferenceInterface<ModelInfo>(_modelID)->world;
-}
-
-/////////////////////////////////////////////////
-Identity EntityManagementFeatures::ConstructEmptyModel(
-  const Identity &_worldID, const std::string &_name)
-{
-  return this->AddModel(
-    _name,
-    _worldID,
-    Eigen::Isometry3d(),
-    std::make_unique<btMultiBody>(
-      0,  // n_links
-      1,  // mass
-      btVector3(1, 1, 1),  // Inertia
-      false,  // fixed based
-      true));  // can_sleep
-}
-
-/////////////////////////////////////////////////
-Identity EntityManagementFeatures::ConstructEmptyLink(
-    const Identity &_modelID, const std::string &_name)
-{
-  return this->AddLink(
-    LinkInfo{_name, std::nullopt, _modelID, Eigen::Isometry3d()});
 }
 
 }  // namespace bullet_featherstone

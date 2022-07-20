@@ -39,9 +39,7 @@ struct EntityManagementFeatureList : gz::physics::FeatureList<
   GetShapeFromLink,
   GetEngineInfo,
   GetWorldFromEngine,
-  ConstructEmptyModelFeature,
-  GetModelFromWorld,
-  ConstructEmptyLinkFeature
+  GetModelFromWorld
 > { };
 
 class EntityManagementFeatures :
@@ -160,14 +158,6 @@ class EntityManagementFeatures :
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       const Identity &_engineID, const std::string & _name) override;
-
-  // ----- ConstructEmptyModelFeature -----
-  public: Identity ConstructEmptyModel(
-    const Identity &_worldID, const std::string &_name) override;
-
-  // ----- ConstructEmptyLinkFeature -----
-  public: virtual Identity ConstructEmptyLink(
-      const Identity &_modelID, const std::string &_name) override;
 };
 
 }  // namespace bullet_featherstone
