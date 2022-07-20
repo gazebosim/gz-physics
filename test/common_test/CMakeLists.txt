@@ -3,7 +3,9 @@ set(TEST_TYPE "COMMON_TEST")
 set(tests
   basic_test
   construct_empty_world
+  free_joint_features
   simulation_features
+  world_features
 )
 
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)

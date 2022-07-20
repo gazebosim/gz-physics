@@ -36,13 +36,61 @@ struct EntityManagementFeatureList : gz::physics::FeatureList<
   ConstructEmptyWorldFeature,
   GetLinkFromModel,
   GetJointFromModel,
-  GetShapeFromLink
+  GetShapeFromLink,
+  GetEngineInfo,
+  GetWorldFromEngine,
+  GetModelFromWorld
 > { };
 
 class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
+  // ----- GetEngineInfo -----
+  public: const std::string &GetEngineName(
+      const Identity &_engineID) const override;
+
+  public: std::size_t GetEngineIndex(
+      const Identity &_engineID) const override;
+
+  // ----- GetModelFromWorld -----
+  public: virtual std::size_t GetModelCount(
+      const Identity &_worldID) const override;
+
+  public: virtual Identity GetModel(
+      const Identity &_worldID, std::size_t _modelIndex) const override;
+
+  public: virtual Identity GetModel(
+      const Identity &_worldID, const std::string &_modelName) const override;
+
+  public: virtual const std::string &GetModelName(
+      const Identity &_modelID) const override;
+
+  public: virtual std::size_t GetModelIndex(
+      const Identity &_modelID) const override;
+
+  public: virtual Identity GetWorldOfModel(
+      const Identity &_modelID) const override;
+
+  // ----- GetWorldFromEngine -----
+  public: virtual std::size_t GetWorldCount(
+      const Identity &_engineID) const override;
+
+  public: virtual Identity GetWorld(
+      const Identity &_engineID, std::size_t _worldIndex) const override;
+
+  public: virtual Identity GetWorld(
+      const Identity &_engineID, const std::string &_worldName) const override;
+
+  public: virtual const std::string &GetWorldName(
+      const Identity &_worldID) const override;
+
+  public: virtual std::size_t GetWorldIndex(
+      const Identity &_worldID) const override;
+
+  public: virtual Identity GetEngineOfWorld(
+      const Identity &_worldID) const override;
+
   // ----- GetLinkFromModel -----
   public: std::size_t GetLinkCount(
       const Identity &_modelID) const override;

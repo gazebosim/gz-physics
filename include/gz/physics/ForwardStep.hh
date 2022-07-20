@@ -155,7 +155,8 @@ namespace gz
               ApplyExternalForceTorques,
               ApplyGeneralizedForces,
               VelocityControlCommands,
-              ServoControlCommands>;
+              ServoControlCommands,
+              std::chrono::steady_clock::duration>;
 
       public: using Output = SpecifyData<
           RequireData<WorldPoses>,

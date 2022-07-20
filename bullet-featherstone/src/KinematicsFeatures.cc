@@ -38,14 +38,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     {
       const auto index = *indexOpt;
       FrameData data;
-      data.pose.translation() = convert(
-        model->body->localPosToWorld(index, btVector3(0, 0, 0)));
-      data.pose.linear() = convert(
-        model->body->localFrameToWorld(index, btMatrix3x3::getIdentity()));
-
-      // Transform from bullet's inertia frame to Gazebo's link frame
-      data.pose = data.pose * linkInfo->inertiaToLinkFrame;
-
+      data.pose = GetWorldTransformOfLink(*model, *linkInfo);
       const auto &link = model->body->getLink(index);
       data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
       data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
