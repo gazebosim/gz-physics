@@ -636,9 +636,9 @@ bool SDFFeatures::AddSdfCollision(
         mu = ode->Mu();
         mu2 = ode->Mu2();
       }
-      if (friction->Element())
+      if (const auto frictionElement = friction->Element())
       {
-        if (const auto bullet = friction->Element()->GetElement("bullet"))
+        if (const auto bullet = frictionElement->GetElement("bullet"))
         {
           if (const auto f1 = bullet->GetElement("friction"))
             mu = f1->Get<double>();
@@ -654,9 +654,9 @@ bool SDFFeatures::AddSdfCollision(
       }
     }
 
-    if (surface->Element())
+    if (const auto surfaceElement = surface->Element())
     {
-      if (const auto bounce = surface->Element()->GetElement("bounce"))
+      if (const auto bounce = surfaceElement->GetElement("bounce"))
       {
         if (const auto r = bounce->GetElement("restitution_coefficient"))
           restitution = r->Get<double>();
