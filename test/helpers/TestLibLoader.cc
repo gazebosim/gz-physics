@@ -54,6 +54,10 @@ namespace physics
     {
       std::string physicsEngineName = tokens[2];
       std::string physicsEnginePluginName = physicsEngineName;
+      if (physicsEngineName == "bullet_featherstone")
+      {
+        physicsEnginePluginName = "bullet-featherstone";
+      }
       if (physicsEngineName == "tpeplugin")
       {
         physicsEnginePluginName = "tpe";
