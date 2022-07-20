@@ -76,29 +76,6 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     }
   }
 
-  // Iterate over models to make sure link velocities for moving models
-  // are calculated and sent
-  for (const auto &[id, info] : this->models)
-  {
-    // make sure the model exists
-    if (info)
-    {
-      WorldPose wp;
-      wp.pose = info->pose;
-      wp.body = id;
-
-      auto iter = this->prevLinkPoses.find(id);
-      if ((iter == this->prevLinkPoses.end()) ||
-          !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
-          !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
-      {
-        _changedPoses.entries.push_back(wp);
-        newPoses[id] = wp.pose;
-      }
-      else
-        newPoses[id] = iter->second;
-    }
-  }
   // Save the new poses so that they can be used to check for updates in the
   // next iteration. Re-setting this->prevLinkPoses with the contents of
   // newPoses ensures that we aren't caching data for links that were removed
