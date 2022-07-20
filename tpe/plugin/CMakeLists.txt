@@ -9,7 +9,7 @@ target_include_directories(${features} SYSTEM INTERFACE)
 
 gz_get_libsources_and_unittests(sources test_sources)
 
-# TODO(MXG): Think about an gz_add_plugin(~) macro for ign-cmake
+# TODO(MXG): Think about a gz_add_plugin(~) macro for gz-cmake
 set(engine_name tpe-plugin)
 gz_add_component(${engine_name}
   SOURCES ${sources}

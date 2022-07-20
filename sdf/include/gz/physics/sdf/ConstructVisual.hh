@@ -32,7 +32,7 @@ class ConstructSdfVisual : public virtual Feature
   class Link : public virtual Feature::Link<PolicyT, FeaturesT>
   {
     // TODO(MXG): Return a Shape type instead of a bool once we have shape
-    // features in the core ign-physics library.
+    // features in the core gz-physics library.
     public: bool ConstructVisual(const ::sdf::Visual &_visual);
   };
 
