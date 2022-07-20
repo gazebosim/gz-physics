@@ -639,13 +639,9 @@ bool SDFFeatures::AddSdfCollision(
     return false;
   }
 
-//  double mu = 1.0;
-//  double mu2 = 1.0;
-//  double restitution = 0.0;
-
-  double mu = 0.5;
-  double mu2 = 0.5;
-  double restitution = 0.5;
+  double mu = 1.0;
+  double mu2 = 1.0;
+  double restitution = 0.0;
 
   double rollingFriction = 0.0;
   if (const auto *surface = _collision.Surface())
