@@ -225,6 +225,19 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   }
 
   world->world->removeMultiBody(model->body.get());
+  for (const auto linkID : model->linkEntityIds)
+  {
+    const auto &link = this->links.at(linkID);
+    world->world->removeCollisionObject(link->collider.get());
+    for (const auto shapeID : link->collisionEntityIds)
+      this->collisions.erase(shapeID);
+
+    this->links.erase(linkID);
+  }
+
+  for (const auto jointID : model->jointEntityIds)
+    this->joints.erase(jointID);
+
   this->models.erase(_modelID);
   return true;
 }
@@ -263,6 +276,137 @@ bool EntityManagementFeatures::RemoveModelByName(
 
   return this->RemoveModel(
     this->GenerateIdentity(it->second, this->models.at(it->second)));
+}
+
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetEngineName(
+  const Identity &) const
+{
+  static const std::string engineName = "bullet-featherstone";
+  return engineName;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetEngineIndex(const Identity &) const
+{
+  return 0;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetWorldCount(
+    const Identity &) const
+{
+  return worlds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, const std::size_t _requestedWorldIndex) const
+{
+  // _worldIndex is not the same as a WorldID. The value of _worldIndex should
+  // range from 0 to GetWorldCount()-1. The most efficient implementation
+  // would be to maintain a std::vector of WorldIDs, but then we'd have to
+  // manage that data when worlds are added and removed.
+  std::size_t currentWorldIndex = 0;
+  for (const auto &[worldID, world] : this->worlds)
+  {
+    if (currentWorldIndex == _requestedWorldIndex)
+      return this->GenerateIdentity(worldID, world);
+  }
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, const std::string &_requestedWorldName) const
+{
+  // We could speed this up by maintaining a hashmap from world name to world ID
+  for (const auto &[worldID, world] : this->worlds)
+  {
+    if (world->name == _requestedWorldName)
+      return this->GenerateIdentity(worldID, world);
+  }
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetWorldName(
+    const Identity &_worldID) const
+{
+  return this->ReferenceInterface<WorldInfo>(_worldID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetWorldIndex(
+    const Identity &) const
+{
+  return 0;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetEngineOfWorld(
+    const Identity &) const
+{
+  return this->GenerateIdentity(0);
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetModelCount(
+    const Identity &) const
+{
+  return this->models.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModel(
+    const Identity &_worldID, std::size_t _modelIndex) const
+{
+  const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
+  const auto it = world->modelIndexToEntityId.find(_modelIndex);
+  if (it == world->modelIndexToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->models.at(it->second));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModel(
+    const Identity &_worldID, const std::string &_modelName) const
+{
+  const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
+  const auto it = world->modelNameToEntityId.find(_modelName);
+  if (it == world->modelNameToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->models.at(it->second));
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetModelName(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetModelIndex(
+    const Identity &_modelID) const
+{
+  // The root link does not have an index, so we give it an index of 0 and bump
+  // the rest up by one when providing an index to gazebo
+  const auto index = this->ReferenceInterface<ModelInfo>(
+    _modelID)->indexInWorld;
+  return index+1;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorldOfModel(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->world;
 }
 
 }  // namespace bullet_featherstone
