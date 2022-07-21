@@ -232,7 +232,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       for (std::size_t i = 0; i < model.LinkCount(); ++i)
       {
         const auto *link = model.LinkByIndex(i);
-        if (parentOf.size() != 0 && parentOf.count(link) == 0)
+        if (parentOf.count(link) == 0)
         {
           // This link must be the root. If a different link was already
           // identified as the root then we have a conflict.
@@ -247,10 +247,6 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
 
           rootLink = link;
           continue;
-        }
-        if (parentOf.size() == 0)
-        {
-          rootLink = link;
         }
 
         linkIndex[link] = linkIndex.size();
@@ -534,15 +530,6 @@ Identity SDFFeatures::ConstructSdfModel(
         return this->GenerateInvalidId();
       }
     }
-
-    for (std::size_t c = 0; c < link->CollisionCount(); ++c)
-    {
-      // If we fail to add the collision, just keep building the model. It may
-      // need to be constructed outside of the SDF generation pipeline, e.g.
-      // with AttachHeightmap.
-      this->AddSdfCollision(
-        linkIDs.find(link)->second, *link->CollisionByIndex(c));
-    }
   }
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
@@ -567,13 +554,26 @@ Identity SDFFeatures::ConstructSdfModel(
   model->body->setBaseOmega(btVector3(0, 0, 0));
 
   world->world->addMultiBody(model->body.get());
+
+  for (const auto& [linkSdf, linkID] : linkIDs)
+  {
+    for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
+    {
+      // If we fail to add the collision, just keep building the model. It may
+      // need to be constructed outside of the SDF generation pipeline, e.g.
+      // with AttachHeightmap.
+      this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
+    }
+  }
+
   return modelID;
 }
 
 /////////////////////////////////////////////////
 bool SDFFeatures::AddSdfCollision(
     const Identity &_linkID,
-    const ::sdf::Collision &_collision)
+    const ::sdf::Collision &_collision,
+    bool isStatic)
 {
   if (!_collision.Geom())
   {
@@ -642,6 +642,7 @@ bool SDFFeatures::AddSdfCollision(
   double mu = 1.0;
   double mu2 = 1.0;
   double restitution = 0.0;
+
   double rollingFriction = 0.0;
   if (const auto *surface = _collision.Surface())
   {
@@ -709,14 +710,35 @@ bool SDFFeatures::AddSdfCollision(
       {
         model->body->getLink(linkIndexInModel).m_collider =
           linkInfo->collider.get();
+        const auto p = model->body->localPosToWorld(
+          linkIndexInModel, btVector3(0, 0, 0));
+        const auto rot = model->body->localFrameToWorld(
+          linkIndexInModel, btMatrix3x3::getIdentity());
+        linkInfo->collider->setWorldTransform(btTransform(rot, p));
       }
       else
       {
         model->body->setBaseCollider(linkInfo->collider.get());
+        linkInfo->collider->setWorldTransform(
+          model->body->getBaseWorldTransform());
       }
 
       auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-      world->world->addCollisionObject(linkInfo->collider.get());
+
+      if (isStatic)
+      {
+        world->world->addCollisionObject(
+          linkInfo->collider.get(),
+          btBroadphaseProxy::StaticFilter,
+          btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
+      }
+      else
+      {
+        world->world->addCollisionObject(
+          linkInfo->collider.get(),
+          btBroadphaseProxy::DefaultFilter,
+          btBroadphaseProxy::AllFilter);
+      }
     }
     else
     {

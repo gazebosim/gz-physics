@@ -51,7 +51,8 @@ class SDFFeatures :
 
   public: bool AddSdfCollision(
       const Identity &_linkID,
-      const ::sdf::Collision &_collision);
+      const ::sdf::Collision &_collision,
+      bool isStatic);
 };
 
 }  // namespace bullet_featherstone

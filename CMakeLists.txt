@@ -84,7 +84,7 @@ gz_find_package(DART
 # Find bullet for the bullet plugin wrapper
 gz_find_package(GzBullet
   VERSION 2.87
-  REQUIRED_BY bullet
+  REQUIRED_BY bullet bullet-featherstone
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
