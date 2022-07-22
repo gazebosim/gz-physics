@@ -86,10 +86,10 @@ set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
 #============================================================================
 # Configure the build
 #============================================================================
-ign_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf mesh dartsim tpe)
 configure_file("${PROJECT_SOURCE_DIR}/coverage.ignore.in"
                ${PROJECT_BINARY_DIR}/coverage.ignore)
+ign_configure_build(QUIT_IF_BUILD_ERRORS
+  COMPONENTS sdf mesh dartsim tpe)
 
 #============================================================================
 # Create package information
