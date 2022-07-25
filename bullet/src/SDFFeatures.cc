@@ -460,7 +460,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Generate an identity for it and return it
   auto identity =
-    this->AddJoint({_sdfJoint.Name(), joint, childId, parentId,
+    this->AddJoint(_modelID.id, {_sdfJoint.Name(), joint, childId, parentId,
     static_cast<int>(type), axis});
   return identity;
 }

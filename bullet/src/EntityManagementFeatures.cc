@@ -185,27 +185,48 @@ std::size_t EntityManagementFeatures::GetWorldCount(const Identity &) const
 }
 
 Identity EntityManagementFeatures::GetWorld(
-    const Identity &, std::size_t) const
+    const Identity &, const std::size_t _worldIndex) const
 {
-    return this->GenerateIdentity(0);
+  if (_worldIndex >= this->worldsByIndex.size())
+    return this->GenerateInvalidId();
+
+  const auto worldID = this->worldsByIndex[_worldIndex];
+  return this->GenerateIdentity(worldID, this->worlds.at(worldID));
 }
 
 Identity EntityManagementFeatures::GetWorld(
-    const Identity &, const std::string &) const
+    const Identity &, const std::string &_name) const
 {
-  return this->GenerateIdentity(0);
+  const auto it = this->worldsByName.find(_name);
+  if (it == this->worldsByName.end())
+    return this->GenerateInvalidId();
+
+  const auto id = it->second;
+  return this->GenerateIdentity(id, this->worlds.at(id));
 }
 
 const std::string &EntityManagementFeatures::GetWorldName(
     const Identity &_worldID) const
 {
-  static const std::string worldName = this->worlds.at(_worldID)->name;
-  return worldName;
+  return this->ReferenceInterface<WorldInfo>(_worldID)->name;
 }
 
-std::size_t EntityManagementFeatures::GetWorldIndex(const Identity &) const
+std::size_t EntityManagementFeatures::GetWorldIndex(
+    const Identity &_worldID) const
 {
-  return 0;
+  const auto it = std::find(
+        this->worldsByIndex.begin(),
+        this->worldsByIndex.end(),
+        _worldID.id);
+
+  if (it == this->worldsByIndex.end())
+  {
+    throw std::runtime_error(
+      "World [" + std::to_string(_worldID.id) + "] cannot be found in engine "
+      "with " + std::to_string(this->worlds.size()) + " worlds");
+  }
+
+  return *it;
 }
 
 Identity EntityManagementFeatures::GetEngineOfWorld(const Identity &) const
@@ -214,21 +235,29 @@ Identity EntityManagementFeatures::GetEngineOfWorld(const Identity &) const
 }
 
 std::size_t EntityManagementFeatures::GetModelCount(
-    const Identity &) const
+    const Identity &_worldId) const
 {
-  return 0;
+  return this->ReferenceInterface<WorldInfo>(_worldId)->models.size();
 }
 
 Identity EntityManagementFeatures::GetModel(
-    const Identity &, std::size_t) const
+    const Identity &_worldID, const std::size_t index) const
 {
-  return this->GenerateIdentity(0);
+  const auto modelID =
+      this->ReferenceInterface<WorldInfo>(_worldID)->models.at(index);
+  return this->GenerateIdentity(modelID, this->models.at(modelID));
 }
 
 Identity EntityManagementFeatures::GetModel(
-    const Identity &, const std::string &) const
+    const Identity &_worldID, const std::string &_name) const
 {
-  return this->GenerateIdentity(0);
+  const auto world = this->ReferenceInterface<WorldInfo>(_worldID);
+  const auto it = world->modelsByName.find(_name);
+  if (it == world->modelsByName.end())
+    return this->GenerateInvalidId();
+
+  const auto id = it->second;
+  return this->GenerateIdentity(id, this->models.at(id));
 }
 
 const std::string &EntityManagementFeatures::GetModelName(
@@ -238,135 +267,223 @@ const std::string &EntityManagementFeatures::GetModelName(
   return modelName;
 }
 
-std::size_t EntityManagementFeatures::GetModelIndex(const Identity &) const
+std::size_t EntityManagementFeatures::GetModelIndex(
+    const Identity &_modelID) const
 {
-  return 0;
+  const auto model = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto world = this->ReferenceInterface<WorldInfo>(model->world);
+  const auto it =
+      std::find(world->models.begin(), world->models.end(), _modelID.id);
+
+  if (it == world->models.end())
+  {
+    throw std::runtime_error(
+          "Model [" + std::to_string(_modelID.id) + "] cannot be found in "
+          "world [" + std::to_string(model->world.id) + "]");
+  }
+
+  return *it;
 }
 
-Identity EntityManagementFeatures::GetWorldOfModel(const Identity &) const
+Identity EntityManagementFeatures::GetWorldOfModel(
+    const Identity &_modelID) const
 {
-  return this->GenerateIdentity(0);
+  return this->ReferenceInterface<ModelInfo>(_modelID)->world;
 }
 
-std::size_t EntityManagementFeatures::GetNestedModelCount(
-  const Identity &) const
+std::size_t EntityManagementFeatures::GetLinkCount(
+    const Identity &_modelID) const
 {
-  return 0;
-}
-
-Identity EntityManagementFeatures::GetNestedModel(
-  const Identity &, std::size_t ) const
-{
-  return this->GenerateIdentity(0);
-}
-
-Identity EntityManagementFeatures::GetNestedModel(
-  const Identity &, const std::string &) const
-{
-  return this->GenerateIdentity(0);
-}
-
-std::size_t EntityManagementFeatures::GetLinkCount(const Identity &) const
-{
-  return 0;
+  return this->ReferenceInterface<ModelInfo>(_modelID)->links.size();
 }
 
 Identity EntityManagementFeatures::GetLink(
-    const Identity &, std::size_t) const
+    const Identity &_modelID, std::size_t _linkIndex) const
 {
-  return this->GenerateIdentity(0);
+  const auto model = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_linkIndex < model->links.size())
+  {
+    const auto id = model->links[_linkIndex];
+    const auto link = this->links.at(id);
+    return this->GenerateIdentity(id, link);
+  }
+
+  return this->GenerateInvalidId();
 }
 
 Identity EntityManagementFeatures::GetLink(
-    const Identity &, const std::string &) const
+    const Identity &_modelID, const std::string &_name) const
 
 {
-  return this->GenerateIdentity(0);
+  const auto model = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto it = model->linksByName.find(_name);
+  if (it == model->linksByName.end())
+    return this->GenerateInvalidId();
+
+  const auto linkID = it->second;
+  return this->GenerateIdentity(linkID, this->links.at(linkID));
 }
 
-std::size_t EntityManagementFeatures::GetJointCount(const Identity &) const
+std::size_t EntityManagementFeatures::GetJointCount(
+    const Identity &_modelID) const
 {
-  return 0;
+  return this->ReferenceInterface<ModelInfo>(_modelID)->joints.size();
 }
 
 Identity EntityManagementFeatures::GetJoint(
-    const Identity &, std::size_t ) const
+    const Identity &_modelID, std::size_t _jointIndex) const
 {
-  return this->GenerateIdentity(0);
+  const auto model = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_jointIndex < model->joints.size())
+  {
+    const auto id = model->joints[_jointIndex];
+    const auto joint = this->joints.at(id);
+    return this->GenerateIdentity(id, joint);
+  }
+
+  return this->GenerateInvalidId();
 }
 
 Identity EntityManagementFeatures::GetJoint(
-    const Identity &, const std::string &) const
+    const Identity &_modelID, const std::string &_name) const
 {
-  return this->GenerateIdentity(0);
+  const auto model = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto it = model->jointsByName.find(_name);
+  if (it == model->jointsByName.end())
+    return this->GenerateInvalidId();
+
+  const auto jointID = it->second;
+  return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
 
 const std::string &EntityManagementFeatures::GetLinkName(
-    const Identity &) const
+    const Identity &_linkID) const
 {
-  static const std::string linkName = "bulletLink";
-  return linkName;
+  return this->ReferenceInterface<LinkInfo>(_linkID)->name;
 }
 
-std::size_t EntityManagementFeatures::GetLinkIndex(const Identity &) const
+std::size_t EntityManagementFeatures::GetLinkIndex(
+    const Identity &_linkID) const
 {
-  return 0;
+  const auto link = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto model = this->ReferenceInterface<ModelInfo>(link->model);
+  const auto it =
+      std::find(model->links.begin(), model->links.end(), _linkID.id);
+
+  if (it == model->links.end())
+  {
+    throw std::runtime_error(
+          "Link [" + std::to_string(_linkID.id) + "] cannot be found in "
+          "model [" + std::to_string(link->model.id) + "]");
+  }
+
+  return *it;
 }
 
-Identity EntityManagementFeatures::GetModelOfLink(const Identity &) const
+Identity EntityManagementFeatures::GetModelOfLink(
+    const Identity &_linkID) const
 {
-  return this->GenerateIdentity(0);
+  return this->ReferenceInterface<LinkInfo>(_linkID)->model;
 }
 
-std::size_t EntityManagementFeatures::GetShapeCount(const Identity &) const
+std::size_t EntityManagementFeatures::GetShapeCount(
+    const Identity &_linkID) const
 {
-  return 0;
+  return this->ReferenceInterface<LinkInfo>(_linkID)->shapes.size();
 }
 
 Identity EntityManagementFeatures::GetShape(
-    const Identity &, std::size_t) const
+    const Identity &_linkID, std::size_t shapeIndex) const
 {
-  return this->GenerateIdentity(0);
+  const auto link = this->ReferenceInterface<LinkInfo>(_linkID);
+  if (link->shapes.size() >= shapeIndex)
+  {
+    throw std::runtime_error(
+          "Link [" + std::to_string(_linkID.id) + "] cannot be found in "
+          "model [" + std::to_string(link->model.id) + "]");
+  }
+
+  const auto shapeID = link->shapes[shapeIndex];
+  return this->GenerateIdentity(shapeID, this->collisions.at(shapeID));
 }
 
 Identity EntityManagementFeatures::GetShape(
-    const Identity &, const std::string &) const
+    const Identity &_linkID, const std::string &_name) const
 {
-  return this->GenerateIdentity(0);
+  const auto link = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto it = std::find_if(
+        link->shapes.begin(),
+        link->shapes.end(),
+        [this, &_name](const auto& shapeID)
+    {
+      return _name == this->collisions.at(shapeID)->name;
+    });
+
+  if (it == link->shapes.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(*it, this->collisions.at(*it));
 }
 
 const std::string &EntityManagementFeatures::GetJointName(
-    const Identity &) const
+    const Identity &_jointID) const
 {
-  static const std::string jointName = "bulletJoint";
-  return jointName;
+  return this->ReferenceInterface<JointInfo>(_jointID)->name;
 }
 
-std::size_t EntityManagementFeatures::GetJointIndex(const Identity &) const
+std::size_t EntityManagementFeatures::GetJointIndex(
+    const Identity &_jointID) const
 {
-  return 0;
+  const auto joint = this->ReferenceInterface<JointInfo>(_jointID);
+  const auto parentLink = this->links.at(joint->parentLinkId);
+  const auto model = this->ReferenceInterface<ModelInfo>(parentLink->model);
+  const auto it =
+      std::find(model->joints.begin(), model->joints.end(), _jointID.id);
+  if (it == model->joints.end())
+  {
+    throw std::runtime_error(
+          "Joint [" + std::to_string(_jointID.id) + "] cannot be found in "
+          "model [" + std::to_string(parentLink->model.id) + "]");
+  }
+
+  return *it;
 }
 
-Identity EntityManagementFeatures::GetModelOfJoint(const Identity &) const
+Identity EntityManagementFeatures::GetModelOfJoint(
+    const Identity &_jointID) const
 {
-  return this->GenerateIdentity(0);
+  const auto joint = this->ReferenceInterface<JointInfo>(_jointID);
+  const auto parentLink = this->links.at(joint->parentLinkId);
+  return parentLink->model;
 }
 
 const std::string &EntityManagementFeatures::GetShapeName(
-    const Identity &) const
+    const Identity &_shapeID) const
 {
-  static const std::string shapeName = "bulletShape";
-  return shapeName;
+  return this->ReferenceInterface<CollisionInfo>(_shapeID)->name;
 }
 
-std::size_t EntityManagementFeatures::GetShapeIndex(const Identity &) const
+std::size_t EntityManagementFeatures::GetShapeIndex(
+    const Identity &_shapeID) const
 {
-  return 0;
+  const auto shape = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  const auto link = this->ReferenceInterface<LinkInfo>(shape->link);
+  const auto it =
+      std::find(link->shapes.begin(), link->shapes.end(), _shapeID.id);
+  if (it == link->shapes.end())
+  {
+    throw std::runtime_error(
+          "Shape [" + std::to_string(_shapeID.id) + "] cannot be found in "
+          "link [" + std::to_string(shape->link.id) + "]");
+  }
+
+  return *it;
 }
 
-Identity EntityManagementFeatures::GetLinkOfShape(const Identity &) const
+Identity EntityManagementFeatures::GetLinkOfShape(
+    const Identity &_shapeID) const
 {
-  return this->GenerateIdentity(0);
+  return this->ReferenceInterface<CollisionInfo>(_shapeID)->link;
 }
 }  // namespace bullet
 }  // namespace physics

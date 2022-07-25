@@ -32,7 +32,12 @@ namespace physics {
 namespace bullet {
 
 struct EntityManagementFeatureList : gz::physics::FeatureList<
-  GetEntities,
+  GetEngineInfo,
+  GetWorldFromEngine,
+  GetModelFromWorld,
+  GetLinkFromModel,
+  GetJointFromModel,
+  GetShapeFromLink,
   RemoveModelFromWorld,
   ConstructEmptyWorldFeature
 > { };
@@ -92,15 +97,6 @@ class EntityManagementFeatures :
   public: std::size_t GetModelIndex(const Identity &_modelID) const override;
 
   public: Identity GetWorldOfModel(const Identity &_modelID) const override;
-
-  public: std::size_t GetNestedModelCount(
-    const Identity &_modelID) const override;
-
-  public: Identity GetNestedModel(
-    const Identity &_modelID, std::size_t _modelIndex) const override;
-
-  public: Identity GetNestedModel(
-    const Identity &_modelID, const std::string &_modelName) const override;
 
   public: std::size_t GetLinkCount(const Identity &_modelID) const override;
 
