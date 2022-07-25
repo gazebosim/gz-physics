@@ -188,7 +188,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   // Generate an identity for it
   const auto linkIdentity =
-    this->AddLink(_modelID, {name, _modelID, pose, inertialPose,
+    this->AddLink({name, _modelID, pose, inertialPose,
     mass, linkInertiaDiag, myMotionState, collisionShape, body});
 
   // Create associated collisions to this model

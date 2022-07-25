@@ -56,16 +56,32 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
-  // Check if the model exists
-  if (this->models.find(_modelID.id) == this->models.end())
+  const auto model = this->ReferenceInterface<ModelInfo>(_modelID);
+  auto worldID = model->world;
+  auto bulletWorld = this->worlds.at(model->world)->world;
+
+  // Clean up joints, this section considers both links in the joint
+  // are part of the same world
+  for (const auto jointID : model->joints)
   {
-    return false;
+    const auto joint = this->joints.at(jointID);
+    bulletWorld->removeConstraint(joint->joint.get());
+    this->joints.erase(jointID);
   }
 
-  auto worldID = this->models.at(_modelID)->world;
-  auto modelIndex = idToIndexInContainer(_modelID);
+  for (const auto linkID : model->links)
+  {
+    const auto link = this->links.at(linkID);
+    for (const auto shapeID : link->shapes)
+      this->collisions.erase(shapeID);
 
-  return this->RemoveModelByIndex(worldID, modelIndex);
+    bulletWorld->removeRigidBody(link->link.get());
+    this->links.erase(linkID);
+  }
+
+  // Clean up model
+  this->models.erase(_modelID.id);
+  return true;
 }
 
 bool EntityManagementFeatures::ModelRemoved(
@@ -77,95 +93,22 @@ bool EntityManagementFeatures::ModelRemoved(
 bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity & _worldID, std::size_t _modelIndex)
 {
+  const auto modelID = this->GetModel(_worldID, _modelIndex);
   // Check if the model exists
-  auto _modelEntity = indexInContainerToId(_worldID, _modelIndex);
-  if (this->models.find(_modelEntity) == this->models.end())
-  {
+  if (!modelID)
     return false;
-  }
 
-  auto model = this->models.at(_modelEntity);
-  auto bulletWorld = this->worlds.at(model->world)->world;
-
-  // Clean up joints, this section considers both links in the joint
-  // are part of the same world
-  auto joint_it = this->joints.begin();
-  while (joint_it != this->joints.end())
-  {
-    const auto &jointInfo = joint_it->second;
-    const auto &childLinkInfo = this->links[jointInfo->childLinkId];
-    if (childLinkInfo->model.id == _modelIndex)
-    {
-      bulletWorld->removeConstraint(jointInfo->joint.get());
-      this->childIdToParentId.erase(joint_it->first);
-      joint_it = this->joints.erase(joint_it);
-      continue;
-    }
-    joint_it++;
-  }
-
-  // Clean up collisions
-  auto collision_it = this->collisions.begin();
-  while (collision_it != this->collisions.end())
-  {
-    const auto &collisionInfo = collision_it->second;
-    if (collisionInfo->model.id == _modelIndex)
-    {
-      this->childIdToParentId.erase(collision_it->first);
-      collision_it = this->collisions.erase(collision_it);
-      continue;
-    }
-    collision_it++;
-  }
-
-  // Clean up links
-  auto it = this->links.begin();
-  while (it != this->links.end())
-  {
-    const auto &linkInfo = it->second;
-
-    if (linkInfo->model.id == _modelIndex)
-    {
-      bulletWorld->removeRigidBody(linkInfo->link.get());
-      this->childIdToParentId.erase(it->first);
-      it = this->links.erase(it);
-      continue;
-    }
-    it++;
-  }
-
-  // Clean up model
-  this->models.erase(_modelEntity);
-  this->childIdToParentId.erase(_modelIndex);
-
-  return true;
+  return this->RemoveModel(modelID);
 }
 
 bool EntityManagementFeatures::RemoveModelByName(
     const Identity & _worldID, const std::string & _modelName )
 {
-  // Check if there is a model with the requested name
-  bool found = false;
-  size_t entity = 0;
-  // We need a link to model relationship
-  for (const auto &model : this->models)
-  {
-    const auto &modelInfo = model.second;
-    if (modelInfo->name == _modelName)
-    {
-      found = true;
-      entity = model.first;
-      break;
-    }
-  }
+  const auto modelID = this->GetModel(_worldID, _modelName);
+  if (!modelID)
+    return false;
 
-  if (found)
-  {
-    auto modelIndex = idToIndexInContainer(entity);
-    return this->RemoveModelByIndex(_worldID, modelIndex);
-  }
-
-  return false;
+  return this->RemoveModel(modelID);
 }
 const std::string &EntityManagementFeatures::GetEngineName(
   const Identity &) const
