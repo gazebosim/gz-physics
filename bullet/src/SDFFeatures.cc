@@ -188,7 +188,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   // Generate an identity for it
   const auto linkIdentity =
-    this->AddLink(_modelID, {name, _modelID, pose, inertialPose,
+    this->AddLink({name, _modelID, pose, inertialPose,
     mass, linkInertiaDiag, myMotionState, collisionShape, body});
 
   // Create associated collisions to this model
@@ -460,7 +460,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   // Generate an identity for it and return it
   auto identity =
-    this->AddJoint({_sdfJoint.Name(), joint, childId, parentId,
+    this->AddJoint(_modelID.id, {_sdfJoint.Name(), joint, childId, parentId,
     static_cast<int>(type), axis});
   return identity;
 }
