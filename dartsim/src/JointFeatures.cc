@@ -377,12 +377,28 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
           dart::dynamics::Frame::World(),
           dart::dynamics::Frame::World());
 
-  if (!this->links.HasEntity(child))
+  LinkInfo *childLinkInfo;
+  if (this->links.HasEntity(child))
   {
+    childLinkInfo = this->links.at(child).get();
+  }
+  else if (this->linkByWeldedNode.find(child) !=
+           this->linkByWeldedNode.end())
+  {
+    childLinkInfo = this->linkByWeldedNode.at(child);
+    this->MergeLinkAndWeldedBody(childLinkInfo, child);
+    this->linkByWeldedNode.erase(child);
+    child->remove();
     return;
   }
-
-  auto childLinkInfo = this->links.at(child);
+  else
+  {
+    ignerr << "Could not find LinkInfo for child link [" << child->getName()
+           << "] when detaching joint "
+           << "[" << joint->getName() << "]. Joint detaching failed."
+           << std::endl;
+    return;
+  }
 
   dart::dynamics::SkeletonPtr skeleton;
   {
@@ -455,29 +471,37 @@ Identity JointFeatures::AttachFixedJoint(
     const std::string &_name)
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
-  DartBodyNode *const bn = linkInfo->link.get();
+  DartBodyNode *bn = linkInfo->link.get();
   dart::dynamics::WeldJoint::Properties properties;
   properties.mName = _name;
 
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
+  std::string childLinkName = linkInfo->name;
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    return this->GenerateInvalidId();
+    // split and weld the child body node, and attach to the new welded node
+    bn = SplitAndWeldLink(linkInfo);
+    childLinkName = bn->getName();
   }
 
   {
     auto skeleton = bn->getSkeleton();
     if (skeleton)
     {
-      bn->setName(skeleton->getName() + '/' + linkInfo->name);
+      bn->setName(skeleton->getName() + '/' + childLinkName);
     }
   }
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+  if (linkInfo->weldedNodes.size() > 0)
+  {
+    // weld constraint needs to be updated after moving to new skeleton
+    auto constraint = linkInfo->weldedNodes.back().second;
+    constraint->setRelativeTransform(Eigen::Isometry3d::Identity());
+  }
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();
