@@ -26,7 +26,7 @@
 // Make sure the ignition namespace still works
 TEST(Deprecated, IgnitionNamespace)
 {
-  ignition::physics::WorldPose pose;
+  gz::physics::WorldPose pose;
 }
 
 #undef SUPPRESS_IGNITION_HEADER_DEPRECATION

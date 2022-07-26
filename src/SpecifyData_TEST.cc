@@ -688,11 +688,11 @@ TEST(SpecifyData, Copy)
 /////////////////////////////////////////////////
 TEST(SpecifyData, CopyExpectData)
 {
-  ignition::physics::ExpectData<StringData> data;
+  gz::physics::ExpectData<StringData> data;
   data.Get<StringData>().myString = "old_string";
   EXPECT_EQ("old_string", data.Get<StringData>().myString);
 
-  ignition::physics::ExpectData<StringData>copyCtor(data);
+  gz::physics::ExpectData<StringData>copyCtor(data);
   EXPECT_EQ("old_string", copyCtor.Get<StringData>().myString);
 
   // Modify the original and check that the copy is not affected
@@ -700,7 +700,7 @@ TEST(SpecifyData, CopyExpectData)
   EXPECT_EQ("old_string", copyCtor.Get<StringData>().myString);
 }
 
-class ExpectString : public virtual ignition::physics::ExpectData<StringData>
+class ExpectString : public virtual gz::physics::ExpectData<StringData>
 {
 };
 
