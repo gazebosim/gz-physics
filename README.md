@@ -133,7 +133,8 @@ gz-physics
 ├── dartsim                   Files for dartsim plugin component.
 ├── example                   Examples about how to use the library
 ├── heightmap                 Heightmap related header files.
-├── include/gz/physics  Header files.
+├── include/gz/physics        Header files.
+├── include/ignition/physics  Deprecated header files.
 ├── mesh                      Files for mesh component.
 ├── resources                 Model and mesh resource files used by tests.
 ├── sdf                       Files for sdf component.
