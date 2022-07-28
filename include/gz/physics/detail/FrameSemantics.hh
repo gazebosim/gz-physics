@@ -215,6 +215,15 @@ namespace gz
     {
       return FrameID(_identity);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT>
+    template <typename T>
+    T *FrameSemantics::Implementation<PolicyT>::FrameInterface(
+        const FrameID &_frameID) const
+    {
+      return static_cast<T *>(_frameID.ref.get());
+    }
   }
 }
 
