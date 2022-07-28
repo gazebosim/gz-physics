@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/ign-physics6/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics)
-Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-focal-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-ign-physics6-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-ign-physics6-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/main/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/branch/main)
+Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-main-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-main-focal-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-main-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-main-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-ci-win)](https://build.osrfoundation.org/job/ign_physics-ci-win)
 
 Gazebo Physics, a component of [Gazebo](https://gazebosim.org), provides an abstract physics interface
@@ -128,12 +128,13 @@ Follow these steps to run tests and static code analysis in your clone of this r
 Refer to the following table for information about important directories and files in this repository.
 
 ```
-ign-physics
+gz-physics
 ├── bullet                    Files for bullet plugin component.
 ├── dartsim                   Files for dartsim plugin component.
 ├── example                   Examples about how to use the library
 ├── heightmap                 Heightmap related header files.
-├── include/ignition/physics  Header files.
+├── include/gz/physics        Header files.
+├── include/ignition/physics  Deprecated header files.
 ├── mesh                      Files for mesh component.
 ├── resources                 Model and mesh resource files used by tests.
 ├── sdf                       Files for sdf component.

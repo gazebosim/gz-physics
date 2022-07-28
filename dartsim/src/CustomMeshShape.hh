@@ -26,7 +26,7 @@ namespace physics {
 namespace dartsim {
 
 /// \brief This class creates a custom derivative of dartsim's MeshShape class
-/// which allows an gz::common::Mesh to be converted into a MeshShape that
+/// which allows a gz::common::Mesh to be converted into a MeshShape that
 /// can be used by dartsim.
 class CustomMeshShape : public dart::dynamics::MeshShape
 {

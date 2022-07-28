@@ -22,11 +22,11 @@ physics engine in `gz-physics` repository and how to define a custom
 Below is the general structure of the `gz-physics` repository:
 
 ```
-ign-physics
+gz-physics
 ├── dartsim                   Files for dartsim plugin component.
 ├── tpe                       Files for tpe plugin component.
 ├── heightmap                 Files for heightmap component.
-├── include/ignition/physics  Header files.
+├── include/gz/physics  Header files.
 ├── mesh                      Files for mesh component.
 ├── resources                 Model and mesh resource files used by tests.
 ├── sdf                       Files for sdf component.
@@ -49,14 +49,14 @@ Looking closer to a plugin folder, for example, the `dartsim` (DART) plugin:
 dartsim
 ├── worlds                            Example SDF files for testing dartsim plugin functionalities.
 ├── src                               Main implementation files of the plugin features interfacing the physics engines API
-├── include/ignition/physics/dartsim  Header files for the plugin features.
+├── include/gz/physics/dartsim  Header files for the plugin features.
 └── CMakeLists.txt                    CMake plugin build script.
 ```
 
 Basically, new implementation of \ref gz::physics::Feature "Feature" or
 \ref gz::physics::FeatureList "FeatureList", which is corresponded to a
 functionality of the external physics engine can be defined as a header in
-`include/ignition/physics/<plugin_name>` folder. The custom feature could
+`include/gz/physics/<plugin_name>` folder. The custom feature could
 be added in a \ref gz::physics::FeatureList "FeatureList"
 and implemented its functionalities in `src` folder.
 
@@ -134,9 +134,9 @@ will not run at the same time when requested.
 
 ### Define custom feature template
 
-With the requirements and restrictions above, we first need to define a feature template for the custom feature. In this case, this feature will be responsible for retrieving world pointer from the physics engine. The template is placed in [World.hh](https://github.com/gazebosim/gz-physics/blob/main/dartsim/include/ignition/physics/dartsim/World.hh):
+With the requirements and restrictions above, we first need to define a feature template for the custom feature. In this case, this feature will be responsible for retrieving world pointer from the physics engine. The template is placed in [World.hh](https://github.com/gazebosim/gz-physics/blob/main/dartsim/include/gz/physics/dartsim/World.hh):
 
-\snippet dartsim/include/ignition/physics/dartsim/World.hh feature template
+\snippet dartsim/include/gz/physics/dartsim/World.hh feature template
 
 The `RetrieveWorld` feature retrieves
 world pointer from physics engine, so we will use the `World` entity inherited
@@ -160,7 +160,7 @@ dartsim
 │    ├── CustomFeatures.hh
 │    ├── CustomFeatures.cc
 │    └── ...
-├── include/ignition/physics/dartsim
+├── include/gz/physics/dartsim
 │    └──  World.hh
 └── CMakeLists.txt
 ```
@@ -208,6 +208,6 @@ dartsim
 │    ├── CustomFeatures.hh
 │    ├── CustomFeatures.cc
 │    ├── ...
-├── include/ignition/physics/dartsim
+├── include/gz/physics/dartsim
 └── CMakeLists.txt
 ```
