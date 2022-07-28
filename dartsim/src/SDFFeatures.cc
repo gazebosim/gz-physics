@@ -609,7 +609,7 @@ Identity SDFFeatures::ConstructSdfLink(
   bodyProperties.mInertia.setLocalCOM(localCom);
 
   // If added mass is provided, add that to DART's computed spatial tensor
-  // TODO Put in another feature
+  // TODO(chapulina) Put in another feature
   if (sdfInertia.FluidAddedMass().has_value())
   {
     // TODO check off-diagonal blocks
