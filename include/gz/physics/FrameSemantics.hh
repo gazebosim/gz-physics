@@ -156,6 +156,15 @@ namespace gz
         /// \return A FrameID object that corresponds to _identity.
         protected: virtual FrameID GenerateFrameID(
             const Identity &_identity) const;
+
+        /// \brief An implementation class can use this function to get the
+        /// interface that _frameID holds onto in its reference-counted pointer.
+        /// \tparam T The stored pointer is cast to this type.
+        /// \param[in] _frameID the frame identifier to cast an interface from
+        /// \return A raw pointer from the stored shared_ptr but cast to the
+        ///         provided type T
+        protected: template<typename T>
+        T *FrameInterface(const FrameID &_frameID) const;
       };
     };
 
