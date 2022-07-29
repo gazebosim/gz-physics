@@ -162,7 +162,7 @@ namespace gz
         /// \tparam T The stored pointer is cast to this type.
         /// \param[in] _frameID the frame identifier to cast an interface from
         /// \return A raw pointer from the stored shared_ptr but cast to the
-        ///         /// provided type T
+        ///         provided type T
         protected: template<typename T>
         T *FrameInterface(const FrameID &_frameID) const;
       };
