@@ -591,11 +591,6 @@ Identity SDFFeatures::ConstructSdfLink(
   const ignition::math::Inertiald &sdfInertia = _sdfLink.Inertial();
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
 
-  // TODO(addisu) Resolve the pose of inertials when frame information is
-  // availabile for ignition::math::Inertial
-  const Eigen::Matrix3d R_inertial{
-        math::eigen3::convert(sdfInertia.Pose().Rot())};
-
   const Eigen::Matrix3d I_link = math::eigen3::convert(sdfInertia.Moi());
 
   bodyProperties.mInertia.setMoment(I_link);
