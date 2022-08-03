@@ -109,7 +109,7 @@ namespace gz
       /// Objects that don't support reference counting will leave this as a
       /// nullptr.
       GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
-      private: std::shared_ptr<const void> ref;
+      private: std::shared_ptr<void> ref;
       GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
     };
   }
