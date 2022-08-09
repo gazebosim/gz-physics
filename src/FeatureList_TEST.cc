@@ -218,7 +218,7 @@ TEST(FeatureList_TEST, ConflictsAndRequirements)
 
   // This is a regression test. We need to make sure that this FeatureList
   // compiles.
-  ignition::physics::FeatureList<OnlyConflictWith1, TestRequiresFeatureA>();
+  FeatureList<OnlyConflictWith1, TestRequiresFeatureA>();
 }
 
 TEST(FeatureList_TEST, Hierarchy)

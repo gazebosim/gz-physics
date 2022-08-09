@@ -42,7 +42,7 @@
 
 using namespace ignition;
 
-using TestFeatureList = ignition::physics::FeatureList<
+using TestFeatureList = physics::FeatureList<
   physics::ForwardStep,
   physics::GetEntities,
   physics::JointFrameSemantics,
@@ -57,14 +57,14 @@ class KinematicsFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
+    plugin::PluginPtr dartsim =
         loader.Instantiate("ignition::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;
