@@ -59,14 +59,14 @@ class LinkFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
+    plugin::PluginPtr dartsim =
         loader.Instantiate("ignition::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;
@@ -102,7 +102,7 @@ class AssertVectorApprox
               const char *_mExpr, const char *_nExpr, Eigen::Vector3d _m,
               Eigen::Vector3d _n)
   {
-    if (ignition::physics::test::Equal(_m, _n, this->tol))
+    if (physics::test::Equal(_m, _n, this->tol))
       return ::testing::AssertionSuccess();
 
     return ::testing::AssertionFailure()
@@ -134,9 +134,9 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   linkSDF.SetInertial({massMatrix, math::Pose3d::Zero});
   auto link = model->ConstructLink(linkSDF);
 
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  physics::ForwardStep::Input input;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Output output;
 
   AssertVectorApprox vectorPredicate(1e-4);
 
