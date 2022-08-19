@@ -19,21 +19,21 @@
 
 #include <test/PhysicsPluginsList.hh>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/plugin/Loader.hh>
 
 // Features
-#include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/FreeJoint.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/mesh/MeshShape.hh>
-#include <ignition/physics/PlaneShape.hh>
-#include <ignition/physics/FixedJoint.hh>
+#include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/FreeJoint.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/mesh/MeshShape.hh>
+#include <gz/physics/PlaneShape.hh>
+#include <gz/physics/FixedJoint.hh>
 
-#include <ignition/common/MeshManager.hh>
+#include <gz/common/MeshManager.hh>
 
 using TestFeatureList = gz::physics::FeatureList<
   gz::physics::LinkFrameSemantics,

@@ -20,7 +20,7 @@
 
 #include <memory>
 #include <utility>
-#include "ignition/physics/Cloneable.hh"
+#include "gz/physics/Cloneable.hh"
 
 namespace gz
 {

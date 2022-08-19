@@ -22,10 +22,10 @@
 #include <map>
 #include <set>
 
-#include <ignition/utilities/SuppressWarning.hh>
+#include <gz/utilities/SuppressWarning.hh>
 
-#include "ignition/physics/Cloneable.hh"
-#include "ignition/physics/Export.hh"
+#include "gz/physics/Cloneable.hh"
+#include "gz/physics/Export.hh"
 
 namespace gz
 {
@@ -60,7 +60,7 @@ namespace gz
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -136,7 +136,7 @@ namespace gz
       /// \code
       ///     #include <iostream>
       ///     #include <cassert>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -223,7 +223,7 @@ namespace gz
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -305,7 +305,7 @@ namespace gz
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -380,7 +380,7 @@ namespace gz
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -476,7 +476,7 @@ namespace gz
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -592,7 +592,7 @@ namespace gz
       ///
       /// \code
       ///     #include <cassert>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -652,7 +652,7 @@ namespace gz
       ///
       /// \code
       ///     #include <cassert>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -776,7 +776,7 @@ namespace gz
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///
@@ -840,7 +840,7 @@ namespace gz
       ///
       /// \code
       ///     #include <iostream>
-      ///     #include <ignition/physics/CompositeData.hh>
+      ///     #include <gz/physics/CompositeData.hh>
       ///
       ///     using namespace gz::physics;
       ///

@@ -20,7 +20,7 @@
 
 #include <memory>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 #include "lib/src/World.hh"
 

@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_FREEJOINT_HH_
 #define GZ_PHYSICS_DETAIL_FREEJOINT_HH_
 
-#include <ignition/physics/FreeJoint.hh>
+#include <gz/physics/FreeJoint.hh>
 
 namespace gz
 {

@@ -22,7 +22,7 @@
 #include <limits>
 #include <memory>
 
-#include <ignition/physics/Export.hh>
+#include <gz/physics/Export.hh>
 #include <gz/physics/detail/Identity.hh>
 
 namespace gz

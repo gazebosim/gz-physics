@@ -21,8 +21,8 @@
 #include <string>
 #include <unordered_set>
 
-#include "ignition/physics/SpecifyData.hh"
-#include "ignition/physics/DataStatusMask.hh"
+#include "gz/physics/SpecifyData.hh"
+#include "gz/physics/DataStatusMask.hh"
 
 namespace gz
 {

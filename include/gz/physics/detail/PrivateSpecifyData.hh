@@ -21,7 +21,7 @@
 #include <memory>
 #include <utility>
 
-#include "ignition/physics/CompositeData.hh"
+#include "gz/physics/CompositeData.hh"
 
 #define IGNITION_PHYSICS_CONST_GET_ERROR \
   "Cannot use the const-qualified Get<Data>() function if " \

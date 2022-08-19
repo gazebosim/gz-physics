@@ -28,9 +28,9 @@
 #include <dart/constraint/ContactSurface.hpp>
 #endif
 
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetContacts.hh>
-#include <ignition/physics/ContactProperties.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetContacts.hh>
+#include <gz/physics/ContactProperties.hh>
 
 #include "Base.hh"
 

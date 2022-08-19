@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_FREEGROUP_HH_
 #define GZ_PHYSICS_DETAIL_FREEGROUP_HH_
 
-#include <ignition/physics/FreeGroup.hh>
+#include <gz/physics/FreeGroup.hh>
 
 namespace gz
 {

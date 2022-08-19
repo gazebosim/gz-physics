@@ -21,7 +21,7 @@
 #include <map>
 #include <memory>
 
-#include <ignition/utilities/SuppressWarning.hh>
+#include <gz/utilities/SuppressWarning.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 

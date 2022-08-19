@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/ConstructEmpty.hh>
+#include <gz/physics/ConstructEmpty.hh>
 
 namespace gz {
 namespace physics {

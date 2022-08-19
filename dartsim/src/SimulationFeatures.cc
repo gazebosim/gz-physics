@@ -29,8 +29,8 @@
 
 #include "SimulationFeatures.hh"
 
-#include "ignition/common/Profiler.hh"
-#include "ignition/physics/GetContacts.hh"
+#include "gz/common/Profiler.hh"
+#include "gz/physics/GetContacts.hh"
 
 namespace gz {
 namespace physics {

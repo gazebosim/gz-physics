@@ -18,8 +18,8 @@
 #ifndef GZ_PHYSICS_RELATIVEQUANTITY_HH_
 #define GZ_PHYSICS_RELATIVEQUANTITY_HH_
 
-#include <ignition/physics/FrameID.hh>
-#include <ignition/physics/FrameData.hh>
+#include <gz/physics/FrameID.hh>
+#include <gz/physics/FrameData.hh>
 
 namespace gz
 {

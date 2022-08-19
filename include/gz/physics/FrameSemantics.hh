@@ -20,11 +20,11 @@
 
 #include <memory>
 
-#include <ignition/physics/Feature.hh>
-#include <ignition/physics/Entity.hh>
-#include <ignition/physics/FrameID.hh>
-#include <ignition/physics/FrameData.hh>
-#include <ignition/physics/RelativeQuantity.hh>
+#include <gz/physics/Feature.hh>
+#include <gz/physics/Entity.hh>
+#include <gz/physics/FrameID.hh>
+#include <gz/physics/FrameData.hh>
+#include <gz/physics/RelativeQuantity.hh>
 
 namespace gz
 {

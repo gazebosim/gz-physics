@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_FRAMEDATA_HH_
 #define GZ_PHYSICS_FRAMEDATA_HH_
 
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace gz
 {

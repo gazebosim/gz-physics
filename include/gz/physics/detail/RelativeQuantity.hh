@@ -21,7 +21,7 @@
 #include <iostream>
 #include <utility>
 
-#include <ignition/physics/RelativeQuantity.hh>
+#include <gz/physics/RelativeQuantity.hh>
 
 namespace gz
 {

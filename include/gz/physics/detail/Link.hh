@@ -18,9 +18,9 @@
 #ifndef GZ_PHYSICS_DETAIL_LINK_HH_
 #define GZ_PHYSICS_DETAIL_LINK_HH_
 
-#include <ignition/physics/Link.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/RelativeQuantity.hh>
+#include <gz/physics/Link.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/RelativeQuantity.hh>
 
 namespace gz
 {

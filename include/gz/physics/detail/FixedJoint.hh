@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/FixedJoint.hh>
+#include <gz/physics/FixedJoint.hh>
 
 namespace gz
 {

@@ -17,8 +17,8 @@
 
 #include <iostream>
 
-#include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/physics/RequestEngine.hh>
 #include "EntityManagementFeatures.hh"
 
 // Simple executable that loads the simple plugin and constructs a world.

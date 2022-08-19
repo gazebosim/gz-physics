@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_DECLAREJOINTTYPE_HH_
 #define GZ_PHYSICS_DECLAREJOINTTYPE_HH_
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 #include <gz/physics/detail/DeclareDerivedType.hh>
 
 /// \brief Given a joint type named CustomJointType, this macro creates the

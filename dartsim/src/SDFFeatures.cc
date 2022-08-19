@@ -36,9 +36,9 @@
 #include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
-#include <ignition/common/Console.hh>
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/math/Helpers.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Helpers.hh>
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>

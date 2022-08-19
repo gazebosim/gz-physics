@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_CANWRITEDATA_HH_
 #define GZ_PHYSICS_CANWRITEDATA_HH_
 
-#include "ignition/physics/OperateOnSpecifiedData.hh"
+#include "gz/physics/OperateOnSpecifiedData.hh"
 
 namespace gz
 {

@@ -18,8 +18,8 @@
 #ifndef GZ_PHYSICS_FREEJOINT_HH_
 #define GZ_PHYSICS_FREEJOINT_HH_
 
-#include <ignition/physics/DeclareJointType.hh>
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/DeclareJointType.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace gz
 {

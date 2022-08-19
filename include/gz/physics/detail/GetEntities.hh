@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_DETAIL_GETENTITIES_HH_
 
 #include <string>
-#include <ignition/physics/GetEntities.hh>
+#include <gz/physics/GetEntities.hh>
 
 namespace gz
 {

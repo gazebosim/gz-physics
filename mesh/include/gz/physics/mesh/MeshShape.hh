@@ -20,10 +20,10 @@
 
 #include <string>
 
-#include <ignition/common/Mesh.hh>
+#include <gz/common/Mesh.hh>
 
-#include <ignition/physics/DeclareShapeType.hh>
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/DeclareShapeType.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace gz
 {

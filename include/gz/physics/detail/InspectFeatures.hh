@@ -22,7 +22,7 @@
 #include <string>
 #include <tuple>
 
-#include <ignition/plugin/PluginPtr.hh>
+#include <gz/plugin/PluginPtr.hh>
 
 namespace gz
 {

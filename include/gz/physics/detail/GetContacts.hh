@@ -20,7 +20,7 @@
 
 #include <utility>
 #include <vector>
-#include <ignition/physics/GetContacts.hh>
+#include <gz/physics/GetContacts.hh>
 
 namespace gz
 {

@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/mesh/MeshShape.hh>
+#include <gz/physics/mesh/MeshShape.hh>
 
 namespace gz
 {

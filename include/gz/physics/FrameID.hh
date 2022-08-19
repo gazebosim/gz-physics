@@ -20,9 +20,9 @@
 
 #include <memory>
 
-#include <ignition/physics/Export.hh>
+#include <gz/physics/Export.hh>
 #include <gz/physics/detail/Identity.hh>
-#include <ignition/utilities/SuppressWarning.hh>
+#include <gz/utilities/SuppressWarning.hh>
 
 namespace gz
 {

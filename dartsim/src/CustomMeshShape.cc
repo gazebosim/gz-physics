@@ -20,8 +20,8 @@
 #include <memory>
 #include <string>
 
-#include <ignition/common/Console.hh>
-#include <ignition/common/SubMesh.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/SubMesh.hh>
 
 namespace gz {
 namespace physics {

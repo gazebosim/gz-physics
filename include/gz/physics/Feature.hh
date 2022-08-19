@@ -22,8 +22,8 @@
 #include <memory>
 #include <tuple>
 
-#include <ignition/physics/Export.hh>
-#include <ignition/physics/Entity.hh>
+#include <gz/physics/Export.hh>
+#include <gz/physics/Entity.hh>
 
 namespace gz
 {

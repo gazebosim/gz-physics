@@ -21,10 +21,10 @@
 #include <string>
 #include <vector>
 
-#include <ignition/math.hh>
+#include <gz/math.hh>
 
-#include <ignition/physics/SpecifyData.hh>
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/SpecifyData.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace gz
 {

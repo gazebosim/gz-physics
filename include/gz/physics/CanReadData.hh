@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_CANREADDATA_HH_
 
 
-#include "ignition/physics/OperateOnSpecifiedData.hh"
+#include "gz/physics/OperateOnSpecifiedData.hh"
 
 namespace gz
 {

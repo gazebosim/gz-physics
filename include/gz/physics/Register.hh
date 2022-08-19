@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_REGISTER_HH_
 
 #include <gz/physics/detail/Register.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
 // -------------------- Add a physics engine plugin ------------------------
 

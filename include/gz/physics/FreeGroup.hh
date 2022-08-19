@@ -18,9 +18,9 @@
 #ifndef GZ_PHYSICS_FREEGROUP_HH_
 #define GZ_PHYSICS_FREEGROUP_HH_
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace gz
 {

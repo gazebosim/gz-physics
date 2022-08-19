@@ -20,8 +20,8 @@
 
 #include <string>
 
-#include <ignition/physics/DeclareShapeType.hh>
-#include <ignition/physics/Geometry.hh>
+#include <gz/physics/DeclareShapeType.hh>
+#include <gz/physics/Geometry.hh>
 
 namespace gz
 {

@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/PrismaticJoint.hh>
+#include <gz/physics/PrismaticJoint.hh>
 
 namespace gz
 {

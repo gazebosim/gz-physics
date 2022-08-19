@@ -22,7 +22,7 @@
 #include <set>
 #include <string>
 
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/RequestEngine.hh>
 #include <gz/physics/detail/InspectFeatures.hh>
 
 namespace gz

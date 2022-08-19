@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_CANREADDATA_HH_
 #define GZ_PHYSICS_DETAIL_CANREADDATA_HH_
 
-#include "ignition/physics/CanReadData.hh"
+#include "gz/physics/CanReadData.hh"
 #include <cassert>
 
 namespace gz

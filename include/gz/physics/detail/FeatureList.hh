@@ -25,9 +25,9 @@
 #include <type_traits>
 #include <utility>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FeaturePolicy.hh>
-#include <ignition/physics/TemplateHelpers.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FeaturePolicy.hh>
+#include <gz/physics/TemplateHelpers.hh>
 
 namespace gz
 {

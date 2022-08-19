@@ -22,9 +22,9 @@
 #include <tuple>
 #include <utility>
 
-#include <ignition/plugin/SpecializedPluginPtr.hh>
-#include <ignition/physics/Entity.hh>
-#include <ignition/physics/TemplateHelpers.hh>
+#include <gz/plugin/SpecializedPluginPtr.hh>
+#include <gz/physics/Entity.hh>
+#include <gz/physics/TemplateHelpers.hh>
 
 namespace gz
 {

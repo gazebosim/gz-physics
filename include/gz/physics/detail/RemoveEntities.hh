@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_DETAIL_REMOVEENTITIES_HH_
 
 #include <string>
-#include <ignition/physics/RemoveEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
 
 namespace gz
 {

@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_DECLARESHAPETYPE_HH_
 #define GZ_PHYSICS_DECLARESHAPETYPE_HH_
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 #include <gz/physics/detail/DeclareDerivedType.hh>
 
 /// \brief Given a shape type named CustomShapeType, this macro creates the

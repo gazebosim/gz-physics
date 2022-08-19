@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/CylinderShape.hh>
+#include <gz/physics/CylinderShape.hh>
 
 namespace gz
 {

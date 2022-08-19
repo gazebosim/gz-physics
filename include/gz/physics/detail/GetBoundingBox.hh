@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_GETBOUNDINGBOX_HH_
 #define GZ_PHYSICS_DETAIL_GETBOUNDINGBOX_HH_
 
-#include <ignition/physics/GetBoundingBox.hh>
+#include <gz/physics/GetBoundingBox.hh>
 
 namespace gz
 {

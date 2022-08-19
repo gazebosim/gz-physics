@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/SphereShape.hh>
+#include <gz/physics/SphereShape.hh>
 
 namespace gz
 {

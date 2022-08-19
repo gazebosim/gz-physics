@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/DeclareJointType.hh>
+#include <gz/physics/DeclareJointType.hh>
 
 namespace gz
 {

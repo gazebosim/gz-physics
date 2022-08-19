@@ -18,8 +18,8 @@
 #ifndef GZ_PHYSICS_IMPLEMENTS_HH_
 #define GZ_PHYSICS_IMPLEMENTS_HH_
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FeaturePolicy.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FeaturePolicy.hh>
 
 namespace gz
 {

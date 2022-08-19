@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/PlaneShape.hh>
+#include <gz/physics/PlaneShape.hh>
 
 namespace gz
 {

@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include <ignition/physics/ContactProperties.hh>
+#include <gz/physics/ContactProperties.hh>
 
 namespace gz
 {

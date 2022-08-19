@@ -20,8 +20,8 @@
 
 #include <string>
 #include <vector>
-#include "ignition/physics/CompositeData.hh"
-#include "ignition/physics/SpecifyData.hh"
+#include "gz/physics/CompositeData.hh"
+#include "gz/physics/SpecifyData.hh"
 
 /////////////////////////////////////////////////
 class StringData

@@ -20,8 +20,8 @@
 
 #include <string>
 
-#include <ignition/physics/Feature.hh>
-#include <ignition/plugin/Loader.hh>
+#include <gz/physics/Feature.hh>
+#include <gz/plugin/Loader.hh>
 
 #include <test/PhysicsPluginsList.hh>
 

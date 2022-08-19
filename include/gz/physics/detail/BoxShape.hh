@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/BoxShape.hh>
+#include <gz/physics/BoxShape.hh>
 
 namespace gz
 {

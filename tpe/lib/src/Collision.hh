@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 #define GZ_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
-#include <ignition/math/AxisAlignedBox.hh>
+#include <gz/math/AxisAlignedBox.hh>
 
 #include "gz/physics/tpelib/Export.hh"
 

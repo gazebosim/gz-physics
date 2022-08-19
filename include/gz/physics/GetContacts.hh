@@ -19,10 +19,10 @@
 #define GZ_PHYSICS_GETCONTACTS_HH_
 
 #include <vector>
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/Geometry.hh>
-#include <ignition/physics/SpecifyData.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/Geometry.hh>
+#include <gz/physics/SpecifyData.hh>
 
 namespace gz
 {

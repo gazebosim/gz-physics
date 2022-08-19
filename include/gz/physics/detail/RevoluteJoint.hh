@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/RevoluteJoint.hh>
+#include <gz/physics/RevoluteJoint.hh>
 
 namespace gz
 {

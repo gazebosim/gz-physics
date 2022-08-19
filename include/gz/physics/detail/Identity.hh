@@ -21,8 +21,8 @@
 #include <cstddef>
 #include <memory>
 
-#include <ignition/physics/Export.hh>
-#include <ignition/utilities/SuppressWarning.hh>
+#include <gz/physics/Export.hh>
+#include <gz/utilities/SuppressWarning.hh>
 
 namespace gz
 {

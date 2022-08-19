@@ -22,7 +22,7 @@
 #include <utility>
 #include <iostream>
 
-#include "ignition/physics/SpecifyData.hh"
+#include "gz/physics/SpecifyData.hh"
 
 namespace gz
 {

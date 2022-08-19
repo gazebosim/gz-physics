@@ -21,11 +21,11 @@
 #include <string>
 #include <vector>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/Geometry.hh>
-#include <ignition/physics/GetContacts.hh>
-#include <ignition/physics/SpecifyData.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/Geometry.hh>
+#include <gz/physics/GetContacts.hh>
+#include <gz/physics/SpecifyData.hh>
 
 namespace gz
 {

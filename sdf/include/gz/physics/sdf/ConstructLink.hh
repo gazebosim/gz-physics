@@ -20,7 +20,7 @@
 
 #include <sdf/Link.hh>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace gz {
 namespace physics {

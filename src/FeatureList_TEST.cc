@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/RequestEngine.hh>
 
 using namespace gz::physics;
 

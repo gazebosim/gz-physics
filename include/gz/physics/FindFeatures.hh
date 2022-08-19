@@ -21,7 +21,7 @@
 #include <set>
 #include <string>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace gz
 {

@@ -18,10 +18,10 @@
 #ifndef GZ_PHYSICS_GETBOUNDINGBOX_HH_
 #define GZ_PHYSICS_GETBOUNDINGBOX_HH_
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Shape.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/Shape.hh>
 
 namespace gz
 {

@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_JOINT_HH_
 #define GZ_PHYSICS_DETAIL_JOINT_HH_
 
-#include <ignition/physics/Joint.hh>
+#include <gz/physics/Joint.hh>
 
 namespace gz
 {

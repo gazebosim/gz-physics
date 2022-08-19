@@ -15,9 +15,9 @@
  *
 */
 
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/math/Pose3.hh>
-#include <ignition/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/common/Console.hh>
 
 #include "ShapeFeatures.hh"
 

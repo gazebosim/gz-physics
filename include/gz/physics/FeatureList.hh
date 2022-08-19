@@ -20,7 +20,7 @@
 
 #include <tuple>
 
-#include <ignition/physics/Feature.hh>
+#include <gz/physics/Feature.hh>
 
 namespace gz
 {

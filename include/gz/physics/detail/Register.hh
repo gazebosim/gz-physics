@@ -20,8 +20,8 @@
 
 #include <tuple>
 
-#include <ignition/plugin/Register.hh>
-#include <ignition/physics/Feature.hh>
+#include <gz/plugin/Register.hh>
+#include <gz/physics/Feature.hh>
 
 namespace gz
 {

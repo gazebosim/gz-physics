@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/Feature.hh>
+#include <gz/physics/Feature.hh>
 
 namespace mock
 {

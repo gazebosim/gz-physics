@@ -20,21 +20,21 @@
 #include <iostream>
 #include <set>
 
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/physics/RequestEngine.hh>
 
 // Features
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetContacts.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Shape.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/ContactProperties.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/GetContacts.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/Shape.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/ContactProperties.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>

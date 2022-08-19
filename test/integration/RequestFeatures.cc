@@ -17,17 +17,17 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/RevoluteJoint.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/RevoluteJoint.hh>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/RequestFeatures.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/RequestFeatures.hh>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
 #include "../../src/TestUtilities.hh"
 #include "../MockFeatures.hh"
