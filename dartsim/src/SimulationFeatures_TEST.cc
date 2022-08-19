@@ -42,28 +42,28 @@
 #include <test/PhysicsPluginsList.hh>
 #include <test/Utils.hh>
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::LinkFrameSemantics,
-    ignition::physics::ForwardStep,
-    ignition::physics::GetContactsFromLastStepFeature,
-    ignition::physics::GetEntities,
-    ignition::physics::GetShapeBoundingBox,
-    ignition::physics::CollisionFilterMaskFeature,
+struct TestFeatureList : gz::physics::FeatureList<
+    gz::physics::LinkFrameSemantics,
+    gz::physics::ForwardStep,
+    gz::physics::GetContactsFromLastStepFeature,
+    gz::physics::GetEntities,
+    gz::physics::GetShapeBoundingBox,
+    gz::physics::CollisionFilterMaskFeature,
 #ifdef DART_HAS_CONTACT_SURFACE
-    ignition::physics::SetContactPropertiesCallbackFeature,
+    gz::physics::SetContactPropertiesCallbackFeature,
 #endif
-    ignition::physics::sdf::ConstructSdfWorld
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
-using TestWorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
-using TestShapePtr = ignition::physics::Shape3dPtr<TestFeatureList>;
-using TestWorld = ignition::physics::World3d<TestFeatureList>;
+using TestWorldPtr = gz::physics::World3dPtr<TestFeatureList>;
+using TestShapePtr = gz::physics::Shape3dPtr<TestFeatureList>;
+using TestWorld = gz::physics::World3d<TestFeatureList>;
 using TestContactPoint = TestWorld::ContactPoint;
 using TestExtraContactData = TestWorld::ExtraContactData;
 using TestContact = TestWorld::Contact;
 #ifdef DART_HAS_CONTACT_SURFACE
 using ContactSurfaceParams =
-  ignition::physics::SetContactPropertiesCallbackFeature::
+  gz::physics::SetContactPropertiesCallbackFeature::
     ContactSurfaceParams<TestWorld::Policy>;
 #endif
 
@@ -71,23 +71,23 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
     const std::string &_library,
     const std::string &_world)
 {
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
   loader.LoadLib(_library);
 
   const std::set<std::string> pluginNames =
-      ignition::physics::FindFeatures3d<TestFeatureList>::From(loader);
+      gz::physics::FindFeatures3d<TestFeatureList>::From(loader);
 
   EXPECT_LT(0u, pluginNames.size());
 
   std::unordered_set<TestWorldPtr> worlds;
   for (const std::string &name : pluginNames)
   {
-    ignition::plugin::PluginPtr plugin = loader.Instantiate(name);
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
     std::cout << " -- Plugin name: " << name << std::endl;
 
     auto engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
     EXPECT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -104,9 +104,9 @@ std::unordered_set<TestWorldPtr> LoadWorlds(
 
 void StepWorld(const TestWorldPtr &_world, const std::size_t _num_steps = 1)
 {
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
 
   for (size_t i = 0; i < _num_steps; ++i)
   {
@@ -161,14 +161,14 @@ TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
     auto groundAABB =
         groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
 
-    EXPECT_EQ(ignition::math::Vector3d(-1, -1, -1),
-              ignition::math::eigen3::convert(sphereAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(1, 1, 1),
-              ignition::math::eigen3::convert(sphereAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-50, -50, -0.5),
-              ignition::math::eigen3::convert(groundAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(50, 50, 0.5),
-              ignition::math::eigen3::convert(groundAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-1, -1, -1),
+              gz::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(1, 1, 1),
+              gz::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-50, -50, -0.5),
+              gz::math::eigen3::convert(groundAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(50, 50, 0.5),
+              gz::math::eigen3::convert(groundAABB).Max());
 
     // Test the bounding boxes in the world frames
     sphereAABB = sphereCollision->GetAxisAlignedBoundingBox();
@@ -179,14 +179,14 @@ TEST_P(SimulationFeatures_TEST, ShapeBoundingBox)
     // a 45-degree rotation, the dimensions that are orthogonal to the axis of
     // rotation will dilate from 1.0 to sqrt(2).
     const double d = std::sqrt(2);
-    EXPECT_EQ(ignition::math::Vector3d(-d, -1, 2.0 - d),
-              ignition::math::eigen3::convert(sphereAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(d, 1, 2 + d),
-              ignition::math::eigen3::convert(sphereAABB).Max());
-    EXPECT_EQ(ignition::math::Vector3d(-50*d, -50*d, -1),
-              ignition::math::eigen3::convert(groundAABB).Min());
-    EXPECT_EQ(ignition::math::Vector3d(50*d, 50*d, 0),
-              ignition::math::eigen3::convert(groundAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-d, -1, 2.0 - d),
+              gz::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(d, 1, 2 + d),
+              gz::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-50*d, -50*d, -1),
+              gz::math::eigen3::convert(groundAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(50*d, 50*d, 0),
+              gz::math::eigen3::convert(groundAABB).Max());
   }
 }
 
@@ -302,7 +302,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 
       expectedContactPos = expectations.at(testCollision);
 
-      EXPECT_TRUE(ignition::physics::test::Equal(expectedContactPos,
+      EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
                                                  contactPoint.point, 1e-6));
 
       // Check if the engine populated the extra contact data struct
@@ -361,10 +361,10 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
       EXPECT_NEAR(_surfaceParams.secondarySlipCompliance.value(), 0.0, 1e-6);
       EXPECT_NEAR(_surfaceParams.restitutionCoeff.value(), 0.0, 1e-6);
 
-      EXPECT_TRUE(ignition::physics::test::Equal(Eigen::Vector3d(0, 0, 1),
+      EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, 0, 1),
         _surfaceParams.firstFrictionalDirection.value(), 1e-6));
 
-      EXPECT_TRUE(ignition::physics::test::Equal(Eigen::Vector3d(0, 0, 0),
+      EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, 0, 0),
         _surfaceParams.contactSurfaceMotionVelocity.value(), 1e-6));
     };
     world->AddContactPropertiesCallback("test", contactCallback);
@@ -456,7 +456,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
 }
 
 INSTANTIATE_TEST_CASE_P(PhysicsPlugins, SimulationFeatures_TEST,
-    ::testing::ValuesIn(ignition::physics::test::g_PhysicsPluginLibraries),); // NOLINT
+    ::testing::ValuesIn(gz::physics::test::g_PhysicsPluginLibraries),); // NOLINT
 
 int main(int argc, char *argv[])
 {

@@ -15,18 +15,18 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_WORLD_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 
 #include <vector>
 #include <ignition/utilities/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 #include "CollisionDetector.hh"
 #include "Entity.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 
@@ -85,6 +85,6 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE World : public Entity
 
 }  // namespace tpelib
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

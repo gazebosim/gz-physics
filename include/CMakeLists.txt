@@ -1,1 +1,1 @@
-add_subdirectory(ignition/physics)
+add_subdirectory(gz/physics)

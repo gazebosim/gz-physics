@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_ENTITY_HH_
-#define IGNITION_PHYSICS_DETAIL_ENTITY_HH_
+#ifndef GZ_PHYSICS_DETAIL_ENTITY_HH_
+#define GZ_PHYSICS_DETAIL_ENTITY_HH_
 
 #include <memory>
 #include <tuple>
@@ -26,7 +26,7 @@
 #include <ignition/physics/Entity.hh>
 #include <ignition/physics/TemplateHelpers.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -145,7 +145,7 @@ namespace ignition
                         typename To::UpcastIdentifiers>::value>::value);
 
         static_assert(
-            ignition::physics::ConstCompatible<To, From>::value,
+            gz::physics::ConstCompatible<To, From>::value,
             "CANNOT CAST FROM A CONST-QUALIFIED ENTITY TO AN ENTITY WITHOUT A "
             "CONST-QUALIFIER.");
       };
@@ -464,9 +464,9 @@ namespace std
   /// so that it can easily be used in STL objects like std::unordered_set and
   /// std::unordered_map
   template <typename EntityT>
-  struct hash<ignition::physics::EntityPtr<EntityT>>
+  struct hash<gz::physics::EntityPtr<EntityT>>
   {
-    size_t operator()(const ignition::physics::EntityPtr<EntityT> &ptr) const
+    size_t operator()(const gz::physics::EntityPtr<EntityT> &ptr) const
     {
       return ptr.Hash();
     }

@@ -19,7 +19,7 @@
 #include "Utils.hh"
 
 /// \brief Private data class for entity
-class ignition::physics::tpelib::EntityPrivate
+class gz::physics::tpelib::EntityPrivate
 {
   /// \brief Name of entity
   public: std::string name;
@@ -55,7 +55,7 @@ class ignition::physics::tpelib::EntityPrivate
   public: Entity *parent = nullptr;
 };
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_DETAIL_CONTACTPROPERTIES_HH_
-#define IGNITION_PHYSICS_DETAIL_CONTACTPROPERTIES_HH_
+#ifndef GZ_PHYSICS_DETAIL_CONTACTPROPERTIES_HH_
+#define GZ_PHYSICS_DETAIL_CONTACTPROPERTIES_HH_
 
 #include <string>
 #include <utility>
@@ -24,7 +24,7 @@
 
 #include <ignition/physics/ContactProperties.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -98,6 +98,6 @@ bool SetContactPropertiesCallbackFeature::World<PolicyT, FeaturesT>::
 }
 
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

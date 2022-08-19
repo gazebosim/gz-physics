@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_SDF_CONSTRUCTVISUAL_HH_
-#define IGNITION_PHYSICS_SDF_CONSTRUCTVISUAL_HH_
+#ifndef GZ_PHYSICS_SDF_CONSTRUCTVISUAL_HH_
+#define GZ_PHYSICS_SDF_CONSTRUCTVISUAL_HH_
 
 #include <sdf/Visual.hh>
 
 #include <ignition/physics/FeatureList.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace sdf {
 

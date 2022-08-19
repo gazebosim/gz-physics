@@ -19,7 +19,7 @@
 
 #include "ignition/physics/CompositeData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

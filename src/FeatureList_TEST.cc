@@ -19,7 +19,7 @@
 
 #include <ignition/physics/RequestEngine.hh>
 
-using namespace ignition::physics;
+using namespace gz::physics;
 
 class FeatureA : public virtual Feature { };
 class FeatureB : public virtual Feature { };

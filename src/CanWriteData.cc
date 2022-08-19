@@ -17,7 +17,7 @@
 
 #include "ignition/physics/CanWriteData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_REGISTERMORE_HH_
-#define IGNITION_PHYSICS_REGISTERMORE_HH_
+#ifndef GZ_PHYSICS_REGISTERMORE_HH_
+#define GZ_PHYSICS_REGISTERMORE_HH_
 
 /// If your library already has a translation unit (.cpp file) containing
 /// \code

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_COMPOSITEDATA_HH_
-#define IGNITION_PHYSICS_COMPOSITEDATA_HH_
+#ifndef GZ_PHYSICS_COMPOSITEDATA_HH_
+#define GZ_PHYSICS_COMPOSITEDATA_HH_
 
 #include <string>
 #include <map>
@@ -27,7 +27,7 @@
 #include "ignition/physics/Cloneable.hh"
 #include "ignition/physics/Export.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -62,7 +62,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -138,7 +138,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -225,7 +225,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -307,7 +307,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     // Create a data structure called MyData
       ///     struct MyData
@@ -382,7 +382,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyDataWithoutDefault
       ///     {
@@ -478,7 +478,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -594,7 +594,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -654,7 +654,7 @@ namespace ignition
       ///     #include <cassert>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData
       ///     {
@@ -778,7 +778,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData1
       ///     {
@@ -842,7 +842,7 @@ namespace ignition
       ///     #include <iostream>
       ///     #include <ignition/physics/CompositeData.hh>
       ///
-      ///     using namespace ignition::physics;
+      ///     using namespace gz::physics;
       ///
       ///     struct MyData1
       ///     {
@@ -955,7 +955,7 @@ namespace ignition
       public: CompositeData &operator=(CompositeData &&_other);
 
       /// \brief Struct which contains information about a data type within the
-      /// CompositeData. See ignition/physics/detail/CompositeData.hh for the
+      /// CompositeData. See gz/physics/detail/CompositeData.hh for the
       /// definition. This class is public so that helper functions can use it
       /// without being friends of the class.
       /// \private
@@ -986,6 +986,6 @@ namespace ignition
   }
 }
 
-#include "ignition/physics/detail/CompositeData.hh"
+#include "gz/physics/detail/CompositeData.hh"
 
 #endif

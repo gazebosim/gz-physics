@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEMPLATEHELPERS_HH_
-#define IGNITION_PHYSICS_TEMPLATEHELPERS_HH_
+#ifndef GZ_PHYSICS_TEMPLATEHELPERS_HH_
+#define GZ_PHYSICS_TEMPLATEHELPERS_HH_
 
 #include <type_traits>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -83,15 +83,15 @@ namespace ignition
   struct Select ## X \
   { \
     template<typename F, typename PolicyT, typename FeaturesT, \
-             typename = ::ignition::physics::void_t<>> \
+             typename = ::gz::physics::void_t<>> \
     struct Implementation \
     { \
-      using type = ::ignition::physics::Empty; \
+      using type = ::gz::physics::Empty; \
     }; \
     \
     template<typename F, typename PolicyT, typename FeaturesT> \
     struct Implementation<F, PolicyT, FeaturesT, \
-                          ::ignition::physics::void_t< \
+                          ::gz::physics::void_t< \
                               typename F::template X <PolicyT, FeaturesT>>> \
     { \
       using type = typename F::template X <PolicyT, FeaturesT>; \

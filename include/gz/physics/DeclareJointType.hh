@@ -15,11 +15,11 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DECLAREJOINTTYPE_HH_
-#define IGNITION_PHYSICS_DECLAREJOINTTYPE_HH_
+#ifndef GZ_PHYSICS_DECLAREJOINTTYPE_HH_
+#define GZ_PHYSICS_DECLAREJOINTTYPE_HH_
 
 #include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/detail/DeclareDerivedType.hh>
+#include <gz/physics/detail/DeclareDerivedType.hh>
 
 /// \brief Given a joint type named CustomJointType, this macro creates the
 /// following classes:
@@ -44,7 +44,7 @@
 /// Physics engine plugin developers must implement the virtual function
 ///
 /// \code
-/// ignition::physics::Identity CastToCustomJointType(const Identity &_id) const
+/// gz::physics::Identity CastToCustomJointType(const Identity &_id) const
 /// \endcode
 ///
 /// if their physics engine plugin wants to be able to provide CustomJointType

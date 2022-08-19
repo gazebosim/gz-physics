@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_REVOLUTEJOINT_HH_
-#define IGNITION_PHYSICS_REVOLUTEJOINT_HH_
+#ifndef GZ_PHYSICS_REVOLUTEJOINT_HH_
+#define GZ_PHYSICS_REVOLUTEJOINT_HH_
 
 #include <string>
 
 #include <ignition/physics/DeclareJointType.hh>
 #include <ignition/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -164,6 +164,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/RevoluteJoint.hh>
+#include <gz/physics/detail/RevoluteJoint.hh>
 
 #endif

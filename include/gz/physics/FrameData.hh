@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FRAMEDATA_HH_
-#define IGNITION_PHYSICS_FRAMEDATA_HH_
+#ifndef GZ_PHYSICS_FRAMEDATA_HH_
+#define GZ_PHYSICS_FRAMEDATA_HH_
 
 #include <ignition/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -41,9 +41,9 @@ namespace ignition
     template <typename Scalar, std::size_t Dim>
     struct FrameData
     {
-      using Pose = ignition::physics::Pose<Scalar, Dim>;
-      using LinearVector = ignition::physics::LinearVector<Scalar, Dim>;
-      using AngularVector = ignition::physics::AngularVector<Scalar, Dim>;
+      using Pose = gz::physics::Pose<Scalar, Dim>;
+      using LinearVector = gz::physics::LinearVector<Scalar, Dim>;
+      using AngularVector = gz::physics::AngularVector<Scalar, Dim>;
 
       /// \brief Constructor. This will initialize the transform with identity
       /// and all velocity and acceleration vectors to zero.
@@ -86,6 +86,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FrameData.hh>
+#include <gz/physics/detail/FrameData.hh>
 
 #endif

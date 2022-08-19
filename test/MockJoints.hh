@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKJOINTS_HH_
-#define IGNITION_PHYSICS_TEST_MOCKJOINTS_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKJOINTS_HH_
+#define GZ_PHYSICS_TEST_MOCKJOINTS_HH_
 
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/Joint.hh>
@@ -26,17 +26,17 @@
 
 namespace mock
 {
-  class MockGetJointByIndex : public ignition::physics::Feature
+  class MockGetJointByIndex : public gz::physics::Feature
   {
-    public: using Identity = ignition::physics::Identity;
+    public: using Identity = gz::physics::Identity;
 
     template <typename PolicyT, typename FeaturesT>
     class Engine :
-        public virtual ignition::physics::Feature::Engine<PolicyT, FeaturesT>
+        public virtual gz::physics::Feature::Engine<PolicyT, FeaturesT>
     {
-      public: using JointPtr = ignition::physics::JointPtr<PolicyT, FeaturesT>;
+      public: using JointPtr = gz::physics::JointPtr<PolicyT, FeaturesT>;
       public: using ConstJointPtr =
-        ignition::physics::ConstJointPtr<PolicyT, FeaturesT>;
+        gz::physics::ConstJointPtr<PolicyT, FeaturesT>;
 
       public: JointPtr GetJoint(const std::size_t _id)
       {
@@ -55,26 +55,26 @@ namespace mock
 
     template <typename PolicyT>
     class Implementation :
-        public virtual ignition::physics::Feature::Implementation<PolicyT>
+        public virtual gz::physics::Feature::Implementation<PolicyT>
     {
       public: virtual Identity GetJointByIndex(std::size_t _index) const = 0;
     };
   };
 
 
-  using MockJointList = ignition::physics::FeatureList<
+  using MockJointList = gz::physics::FeatureList<
     MockGetJointByIndex,
-    ignition::physics::GetBasicJointState,
-    ignition::physics::SetBasicJointState,
-    ignition::physics::GetBasicJointProperties,
-    ignition::physics::SetJointTransformFromParentFeature,
-    ignition::physics::SetJointTransformToChildFeature,
-    ignition::physics::SetRevoluteJointProperties,
-    ignition::physics::GetRevoluteJointProperties,
-    ignition::physics::GetPrismaticJointProperties,
-    ignition::physics::SetPrismaticJointProperties,
-    ignition::physics::SetFreeJointRelativeTransformFeature,
-    ignition::physics::JointFrameSemantics
+    gz::physics::GetBasicJointState,
+    gz::physics::SetBasicJointState,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::SetJointTransformFromParentFeature,
+    gz::physics::SetJointTransformToChildFeature,
+    gz::physics::SetRevoluteJointProperties,
+    gz::physics::GetRevoluteJointProperties,
+    gz::physics::GetPrismaticJointProperties,
+    gz::physics::SetPrismaticJointProperties,
+    gz::physics::SetFreeJointRelativeTransformFeature,
+    gz::physics::JointFrameSemantics
   >;
 
 }

@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_BOXSHAPE_HH_
-#define IGNITION_PHYSICS_BOXSHAPE_HH_
+#ifndef GZ_PHYSICS_BOXSHAPE_HH_
+#define GZ_PHYSICS_BOXSHAPE_HH_
 
 #include <string>
 
 #include <ignition/physics/DeclareShapeType.hh>
 #include <ignition/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -131,6 +131,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/BoxShape.hh>
+#include <gz/physics/detail/BoxShape.hh>
 
 #endif

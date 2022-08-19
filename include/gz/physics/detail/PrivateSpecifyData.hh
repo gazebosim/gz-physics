@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
-#define IGNITION_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
+#ifndef GZ_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
+#define GZ_PHYSICS_DETAIL_PRIVATESPECIFYDATA_HH_
 
 #include <memory>
 #include <utility>
@@ -36,7 +36,7 @@
 bool usedExpectedDataAccess;
 #endif
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -53,7 +53,7 @@ namespace ignition
 
       /// \brief This class implements the specialized functions for ExpectData.
       /// The implementations of these functions can be found in
-      /// ignition/physics/detail/SpecifyData.hh
+      /// gz/physics/detail/SpecifyData.hh
       template <typename Expected>
       class PrivateExpectData
       {
@@ -376,7 +376,7 @@ namespace ignition
           return true;
         }
 
-        template <typename...> friend class ::ignition::physics::ExpectData;
+        template <typename...> friend class ::gz::physics::ExpectData;
 
         /// \brief Construct this with the iterator that it is meant to hold
         private: explicit PrivateExpectData(

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
-#define IGNITION_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
+#define GZ_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
 
 #include "MockCreateEntities.hh"
 
@@ -24,9 +24,9 @@
 
 namespace mock
 {
-  using MockFrameSemanticsList = ignition::physics::FeatureList<
+  using MockFrameSemanticsList = gz::physics::FeatureList<
       MockCreateEntities,
-      ignition::physics::CompleteFrameSemantics
+      gz::physics::CompleteFrameSemantics
   >;
 }
 

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_GEOMETRY_HH_
-#define IGNITION_PHYSICS_GEOMETRY_HH_
+#ifndef GZ_PHYSICS_GEOMETRY_HH_
+#define GZ_PHYSICS_GEOMETRY_HH_
 
 #include <Eigen/Geometry>
 
@@ -33,7 +33,7 @@
   DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 2) \
   DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 3)
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

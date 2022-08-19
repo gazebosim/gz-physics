@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_WORLD_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_WORLD_HH_
+#ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_WORLD_HH_
+#define GZ_PHYSICS_TPE_PLUGIN_SRC_WORLD_HH_
 
 #include <memory>
 
@@ -24,7 +24,7 @@
 
 #include "lib/src/World.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

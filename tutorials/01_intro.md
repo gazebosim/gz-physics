@@ -35,17 +35,17 @@ implemented as a plugin that can be loaded at runtime.
 To enable users the ability to choose between physics engines, Ignition Physics
 introduces four keys elements:
 
-- \ref ignition::physics::Entity "Entity": the base class, which abstracts all
+- \ref gz::physics::Entity "Entity": the base class, which abstracts all
 proxy objects, which contains minimal descriptive data
 (e.g. a unique identifier, a reference-counter, etc.) pointing the corresponding
 implemented objects.
-- \ref ignition::physics::FeaturePolicy "FeaturePolicy": the policy class,
+- \ref gz::physics::FeaturePolicy "FeaturePolicy": the policy class,
 which provides metadata to features about their simulation engine specifications.
 FeaturePolicy supports customizing Ignition Physics' APIs by the number of
 dimensions (2D or 3D) and also the floating-point scalar type (float or double).
-- \ref ignition::physics::Feature "Feature": defines the concept used to encode
+- \ref gz::physics::Feature "Feature": defines the concept used to encode
 the capabilities of a physics engine.
-- \ref ignition::physics::FeatureList "FeatureList": aggregates a list of features.
+- \ref gz::physics::FeatureList "FeatureList": aggregates a list of features.
 
 Depending on which external physics engine is used (e.g. DART, TPE, Bullet, etc.),
 the internal interface to the physics engine might be different.

@@ -28,8 +28,8 @@ namespace mock
   ////////////////////////////////////////////////////////
   //! [feature list]
   // List of all features that this plugin will implement
-  struct HelloWorldFeatureList : ignition::physics::FeatureList<
-      ignition::physics::GetEngineInfo
+  struct HelloWorldFeatureList : gz::physics::FeatureList<
+      gz::physics::GetEngineInfo
   > { };
   //! [feature list]
 
@@ -37,9 +37,9 @@ namespace mock
   //! [implementation]
   // The plugin class, which implements a 3D policy
   class HelloWorldPlugin
-      : public ignition::physics::Implements3d<HelloWorldFeatureList>
+      : public gz::physics::Implements3d<HelloWorldFeatureList>
   {
-    using Identity = ignition::physics::Identity;
+    using Identity = gz::physics::Identity;
 
     public: Identity InitiateEngine(std::size_t /*_engineID*/) override
     {
@@ -67,7 +67,7 @@ namespace mock
   // Register plugin
   IGN_PHYSICS_ADD_PLUGIN(
       HelloWorldPlugin,
-      ignition::physics::FeaturePolicy3d,
+      gz::physics::FeaturePolicy3d,
       HelloWorldFeatureList)
   //! [register]
 }

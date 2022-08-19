@@ -20,7 +20,7 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

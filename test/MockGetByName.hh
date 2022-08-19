@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKGETBYNAME_HH_
-#define IGNITION_PHYSICS_TEST_MOCKGETBYNAME_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKGETBYNAME_HH_
+#define GZ_PHYSICS_TEST_MOCKGETBYNAME_HH_
 
 #include <memory>
 
@@ -26,16 +26,16 @@ namespace mock
 {
   /// \brief A feature for retrieving objects from their owners by name, and for
   /// checking the names of those objects.
-  struct MockGetByName : public ignition::physics::Feature
+  struct MockGetByName : public gz::physics::Feature
   {
-    using Identity = ignition::physics::Identity;
+    using Identity = gz::physics::Identity;
 
     template <typename PolicyT, typename FeaturesT>
     class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
     {
-      public: using WorldPtr = ignition::physics::WorldPtr<PolicyT, FeaturesT>;
+      public: using WorldPtr = gz::physics::WorldPtr<PolicyT, FeaturesT>;
       public: using ConstWorldPtr =
-          ignition::physics::ConstWorldPtr<PolicyT, FeaturesT>;
+          gz::physics::ConstWorldPtr<PolicyT, FeaturesT>;
 
       /// \brief Name of the engine
       std::string Name() const;
@@ -55,9 +55,9 @@ namespace mock
     template <typename PolicyT, typename FeaturesT>
     class World : public virtual Feature::World<PolicyT, FeaturesT>
     {
-      public: using ModelPtr = ignition::physics::ModelPtr<PolicyT, FeaturesT>;
+      public: using ModelPtr = gz::physics::ModelPtr<PolicyT, FeaturesT>;
       public: using ConstModelPtr =
-          ignition::physics::ConstModelPtr<PolicyT, FeaturesT>;
+          gz::physics::ConstModelPtr<PolicyT, FeaturesT>;
 
       /// \brief Name of this world
       std::string Name() const;
@@ -76,13 +76,13 @@ namespace mock
     template <typename PolicyT, typename FeaturesT>
     class Model : public virtual Feature::Model<PolicyT, FeaturesT>
     {
-      public: using LinkPtr = ignition::physics::LinkPtr<PolicyT, FeaturesT>;
+      public: using LinkPtr = gz::physics::LinkPtr<PolicyT, FeaturesT>;
       public: using ConstLinkPtr =
-          ignition::physics::ConstLinkPtr<PolicyT, FeaturesT>;
+          gz::physics::ConstLinkPtr<PolicyT, FeaturesT>;
 
-      public: using JointPtr = ignition::physics::JointPtr<PolicyT, FeaturesT>;
+      public: using JointPtr = gz::physics::JointPtr<PolicyT, FeaturesT>;
       public: using ConstJointPtr =
-          ignition::physics::ConstJointPtr<PolicyT, FeaturesT>;
+          gz::physics::ConstJointPtr<PolicyT, FeaturesT>;
 
       /// \brief Name of this model
       std::string Name() const;

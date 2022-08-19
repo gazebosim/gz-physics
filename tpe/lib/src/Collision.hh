@@ -15,17 +15,17 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_COLLISION_HH_
 
 #include <ignition/math/AxisAlignedBox.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 #include "Shape.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 

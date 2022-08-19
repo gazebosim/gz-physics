@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
-#define IGNITION_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
+#ifndef GZ_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
+#define GZ_PHYISCS_OPERATEONSPECIFIEDDATA_HH_
 
 #include <string>
 #include <unordered_set>
@@ -24,7 +24,7 @@
 #include "ignition/physics/SpecifyData.hh"
 #include "ignition/physics/DataStatusMask.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -123,6 +123,6 @@ namespace ignition
   }
 }
 
-#include "ignition/physics/detail/OperateOnSpecifiedData.hh"
+#include "gz/physics/detail/OperateOnSpecifiedData.hh"
 
 #endif

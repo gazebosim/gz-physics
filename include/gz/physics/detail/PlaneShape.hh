@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_PLANESHAPE_HH_
-#define IGNITION_PHYSICS_DETAIL_PLANESHAPE_HH_
+#ifndef GZ_PHYSICS_DETAIL_PLANESHAPE_HH_
+#define GZ_PHYSICS_DETAIL_PLANESHAPE_HH_
 
 #include <string>
 
 #include <ignition/physics/PlaneShape.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -74,4 +74,4 @@ namespace physics
 }
 }
 
-#endif  // IGNITION_PHYSICS_DETAIL_PLANESHAPE_HH_
+#endif  // GZ_PHYSICS_DETAIL_PLANESHAPE_HH_

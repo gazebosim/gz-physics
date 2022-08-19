@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
 
 #include <string>
 
@@ -32,7 +32,7 @@
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

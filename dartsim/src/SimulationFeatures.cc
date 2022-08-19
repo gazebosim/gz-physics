@@ -32,7 +32,7 @@
 #include "ignition/common/Profiler.hh"
 #include "ignition/physics/GetContacts.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

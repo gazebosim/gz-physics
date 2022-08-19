@@ -27,7 +27,7 @@
 #include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

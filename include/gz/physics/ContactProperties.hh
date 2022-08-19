@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_CONTACTPROPERTIES_HH_
-#define IGNITION_PHYSICS_CONTACTPROPERTIES_HH_
+#ifndef GZ_PHYSICS_CONTACTPROPERTIES_HH_
+#define GZ_PHYSICS_CONTACTPROPERTIES_HH_
 
 #include <string>
 #include <vector>
@@ -27,7 +27,7 @@
 #include <ignition/physics/GetContacts.hh>
 #include <ignition/physics/SpecifyData.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -164,6 +164,6 @@ class IGNITION_PHYSICS_VISIBLE SetContactPropertiesCallbackFeature
 }
 }
 
-#include "ignition/physics/detail/ContactProperties.hh"
+#include "gz/physics/detail/ContactProperties.hh"
 
-#endif /* end of include guard: IGNITION_PHYSICS_CONTACTPROPERTIES_HH_ */
+#endif /* end of include guard: GZ_PHYSICS_CONTACTPROPERTIES_HH_ */

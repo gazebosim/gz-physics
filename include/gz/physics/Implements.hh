@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_IMPLEMENTS_HH_
-#define IGNITION_PHYSICS_IMPLEMENTS_HH_
+#ifndef GZ_PHYSICS_IMPLEMENTS_HH_
+#define GZ_PHYSICS_IMPLEMENTS_HH_
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FeaturePolicy.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

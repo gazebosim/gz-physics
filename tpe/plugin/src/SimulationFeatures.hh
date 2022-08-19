@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
+#ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
+#define GZ_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
 
 #include <vector>
 #include <ignition/physics/ForwardStep.hh>
@@ -24,7 +24,7 @@
 
 #include "Base.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpeplugin {
 

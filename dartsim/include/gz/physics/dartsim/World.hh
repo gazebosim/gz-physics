@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_WORLD_HH_
-#define IGNITION_PHYSICS_DARTSIM_WORLD_HH_
+#ifndef GZ_PHYSICS_DARTSIM_WORLD_HH_
+#define GZ_PHYSICS_DARTSIM_WORLD_HH_
 
 #include <dart/simulation/World.hpp>
 
 #include <ignition/physics/FeatureList.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

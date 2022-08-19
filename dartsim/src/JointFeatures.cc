@@ -24,7 +24,7 @@
 
 #include "JointFeatures.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

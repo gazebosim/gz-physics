@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_CANWRITEDATA_HH_
-#define IGNITION_PHYSICS_CANWRITEDATA_HH_
+#ifndef GZ_PHYSICS_CANWRITEDATA_HH_
+#define GZ_PHYSICS_CANWRITEDATA_HH_
 
 #include "ignition/physics/OperateOnSpecifiedData.hh"
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -143,6 +143,6 @@ namespace ignition
   }
 }
 
-#include "ignition/physics/detail/CanWriteData.hh"
+#include "gz/physics/detail/CanWriteData.hh"
 
 #endif

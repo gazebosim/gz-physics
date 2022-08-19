@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FINDFEATURES_HH_
-#define IGNITION_PHYSICS_FINDFEATURES_HH_
+#ifndef GZ_PHYSICS_FINDFEATURES_HH_
+#define GZ_PHYSICS_FINDFEATURES_HH_
 
 #include <set>
 #include <string>
 
 #include <ignition/physics/FeatureList.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -38,7 +38,7 @@ namespace ignition
       ///
       /// \tparam LoaderT
       ///   The type of plugin loader to use. Typically this will be an
-      ///   ignition::plugin::Loader object, but the function can be used on any
+      ///   gz::plugin::Loader object, but the function can be used on any
       ///   type that has a function `C<std::string> PluginsImplementing<T>()`
       ///   and `C<std::string> AllPlugins()` where `T` is an interface class
       ///   type and `C<std::string>` is a container of `std::strings`.
@@ -66,6 +66,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FindFeatures.hh>
+#include <gz/physics/detail/FindFeatures.hh>
 
 #endif

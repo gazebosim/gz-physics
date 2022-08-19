@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_SDF_CONSTRUCTCOLLISION_HH_
-#define IGNITION_PHYSICS_SDF_CONSTRUCTCOLLISION_HH_
+#ifndef GZ_PHYSICS_SDF_CONSTRUCTCOLLISION_HH_
+#define GZ_PHYSICS_SDF_CONSTRUCTCOLLISION_HH_
 
 #include <sdf/Collision.hh>
 
 #include <ignition/physics/FeatureList.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace sdf {
 

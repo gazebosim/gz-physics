@@ -3,7 +3,7 @@
   <world name="default">
     <plugin
       filename="libignition-gazebo-physics-system.so"
-      name="ignition::gazebo::systems::v0::Physics">
+      name="gz::sim::systems::v0::Physics">
     </plugin>
     <model name="sphere">
       <pose>0 0 2 0 0.78539816339 0</pose>

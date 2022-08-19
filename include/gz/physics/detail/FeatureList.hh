@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_FEATURELIST_HH_
-#define IGNITION_PHYSICS_DETAIL_FEATURELIST_HH_
+#ifndef GZ_PHYSICS_DETAIL_FEATURELIST_HH_
+#define GZ_PHYSICS_DETAIL_FEATURELIST_HH_
 
 #include <memory>
 #include <set>
@@ -29,7 +29,7 @@
 #include <ignition/physics/FeaturePolicy.hh>
 #include <ignition/physics/TemplateHelpers.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -82,7 +82,7 @@ namespace ignition
       struct CheckRequirements
       {
         using type =
-            ::ignition::plugin::SpecializedPlugin<
+            ::gz::plugin::SpecializedPlugin<
                 typename Feature::template Implementation<Policy>>;
       };
 
@@ -90,7 +90,7 @@ namespace ignition
       struct CheckRequirements<Policy, Feature, true>
       {
         struct type :
-            ::ignition::plugin::SpecializedPlugin<
+            ::gz::plugin::SpecializedPlugin<
                 typename Feature::template Implementation<Policy>>,
             ComposePlugin<Policy, typename Feature::RequiredFeatures>::type { };
       };
@@ -125,10 +125,10 @@ namespace ignition
       struct DeterminePlugin
       {
         struct Specializer
-            : ::ignition::plugin::detail::SelectSpecializers<
+            : ::gz::plugin::detail::SelectSpecializers<
               typename ComposePlugin<Policy, FeaturesT>::type> { };
 
-        using type = ::ignition::plugin::TemplatePluginPtr<Specializer>;
+        using type = ::gz::plugin::TemplatePluginPtr<Specializer>;
       };
 
       /////////////////////////////////////////////////
@@ -619,17 +619,17 @@ namespace ignition
 // Macros for generating EngineTemplate, LinkTemplate, etc
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, P) \
   template <typename List> \
-  using X ## P = X <::ignition::physics::FeaturePolicy ## P, List>; \
+  using X ## P = X <::gz::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
   using X ## P ## Ptr = X ## Ptr < \
-    ::ignition::physics::FeaturePolicy ## P, List>; \
+    ::gz::physics::FeaturePolicy ## P, List>; \
   template <typename List> \
   using Const ## X ## P ## Ptr = X ## Ptr < \
-    ::ignition::physics::FeaturePolicy ## P, List>; \
+    ::gz::physics::FeaturePolicy ## P, List>; \
   using Base ## X ## P ## Ptr = Base ## X ## Ptr < \
-    ::ignition::physics::FeaturePolicy ## P>; \
+    ::gz::physics::FeaturePolicy ## P>; \
   using ConstBase ## X ## P ## Ptr = ConstBase ## X ## Ptr <\
-    ::ignition::physics::FeaturePolicy ## P>;
+    ::gz::physics::FeaturePolicy ## P>;
 
 
 #define DETAIL_IGN_PHYSICS_DEFINE_ENTITY(X) \
@@ -639,7 +639,7 @@ namespace ignition
     struct X ## Identifier { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
-  class X : public ::ignition::physics::detail::ExtractAPI< \
+  class X : public ::gz::physics::detail::ExtractAPI< \
         detail::Select ## X, FeaturesT> \
           ::template type<PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
@@ -658,19 +658,19 @@ namespace ignition
       : Entity<PolicyT, FeaturesT>(std::move(_pimpl), _identity) { } \
   }; \
   template <typename PolicyT, typename FeaturesT> \
-  using X ## Ptr = ::ignition::physics::EntityPtr< \
+  using X ## Ptr = ::gz::physics::EntityPtr< \
     X <PolicyT, FeaturesT> >; \
   template <typename PolicyT, typename FeaturesT> \
-  using Const ## X ## Ptr = ::ignition::physics::EntityPtr< \
+  using Const ## X ## Ptr = ::gz::physics::EntityPtr< \
     const X <PolicyT, FeaturesT> >; \
   template <typename PolicyT> \
-  using Base ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    X <PolicyT, ::ignition::physics::FeatureList< \
-        ::ignition::physics::Feature>>>; \
+  using Base ## X ## Ptr = ::gz::physics::EntityPtr< \
+    X <PolicyT, ::gz::physics::FeatureList< \
+        ::gz::physics::Feature>>>; \
   template <typename PolicyT> \
-  using ConstBase ## X ## Ptr = ::ignition::physics::EntityPtr< \
-    const X <PolicyT, ::ignition::physics::FeatureList< \
-        ::ignition::physics::Feature>>>; \
+  using ConstBase ## X ## Ptr = ::gz::physics::EntityPtr< \
+    const X <PolicyT, ::gz::physics::FeatureList< \
+        ::gz::physics::Feature>>>; \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 2d) \
   DETAIL_IGN_PHYSICS_DEFINE_ENTITY_WITH_POLICY(X, 3f) \

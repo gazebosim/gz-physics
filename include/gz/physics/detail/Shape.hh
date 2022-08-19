@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_SHAPE_HH_
-#define IGNITION_PHYSICS_DETAIL_SHAPE_HH_
+#ifndef GZ_PHYSICS_DETAIL_SHAPE_HH_
+#define GZ_PHYSICS_DETAIL_SHAPE_HH_
 
 #include <ignition/physics/Shape.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -69,7 +69,7 @@ namespace ignition
     -> AlignedBoxType
     {
       using RelativeAlignedBox =
-          ignition::physics::RelativeAlignedBox<
+          gz::physics::RelativeAlignedBox<
             typename PolicyT::Scalar, PolicyT::Dim>;
 
       return detail::Resolve<PolicyT>(

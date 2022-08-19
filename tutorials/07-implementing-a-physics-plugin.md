@@ -1,8 +1,8 @@
 \page createphysicsplugin Implement physics feature
 
 This tutorial shows how to develop a simple plugin that implements a
-\ref ignition::physics::Implements3d "3D policy" and includes a sample list of
-\ref ignition::physics::Feature "Feature" Features.
+\ref gz::physics::Implements3d "3D policy" and includes a sample list of
+\ref gz::physics::Feature "Feature" Features.
 
 ## Prerequisites
 
@@ -23,10 +23,10 @@ cd hello_world_plugin
 ### Examine the code
 
 To set up all libraries needed to implement physics feature, we need to include the following:
-- \ref ignition::physics::FeatureList "FeatureList" header: to define a list of
-\ref ignition::physics::Feature "Feature" that will be implemented for the
-plugin, e.g. \ref ignition::physics::GetEngineInfo "GetEngineInfo".
-- \ref ignition::physics::FeaturePolicy "FeaturePolicy" header: to specify the
+- \ref gz::physics::FeatureList "FeatureList" header: to define a list of
+\ref gz::physics::Feature "Feature" that will be implemented for the
+plugin, e.g. \ref gz::physics::GetEngineInfo "GetEngineInfo".
+- \ref gz::physics::FeaturePolicy "FeaturePolicy" header: to specify the
 metadata about the coordinate system (e.g. 2 or 3 dimensions) and numeric system
 (e.g. float, int) that the `Features` will be implemented accordingly.
 - `GetEntities.hh` header: to retrieve the pre-defined list of features in
@@ -44,8 +44,8 @@ Next, we use a dummy namespace `mock` and list all the features we would like to
 
 The plugin will be able to return its physics engine metadata.
 We will now implement our plugin class named `HelloWorldPlugin`
-using the defined \ref ignition::physics::FeatureList "FeatureList" above.
-The class is inherited from \ref ignition::physics::Implements3d "Implements3d"
+using the defined \ref gz::physics::FeatureList "FeatureList" above.
+The class is inherited from \ref gz::physics::Implements3d "Implements3d"
 to declare that the plugin's `HelloWorldFeatureList` will be in the 3D
 coordinate system.
 
@@ -55,7 +55,7 @@ Because we are not using a real physics engines, a dummy
 physics engines is defined inside member function `InitiateEngine` by simply setting the `engineName` to `HelloWorld`,
 and returning the engine object using `Identity`. Then, we
 define the metadata getters `GetEngineIndex` and `GetEngineName` for the
-feature \ref ignition::physics::GetEngineInfo "GetEngineInfo" (please look into
+feature \ref gz::physics::GetEngineInfo "GetEngineInfo" (please look into
 corresponding public member functions defined in the subclasses). A list of other
 pre-defined features can be found in the [`GetEntities` FeatureList](https://ignitionrobotics.org/api/physics/2.0/GetEntities_8hh.html).
 

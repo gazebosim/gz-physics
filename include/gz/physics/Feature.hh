@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FEATURE_HH_
-#define IGNITION_PHYSICS_FEATURE_HH_
+#ifndef GZ_PHYSICS_FEATURE_HH_
+#define GZ_PHYSICS_FEATURE_HH_
 
 #include <cstddef>
 #include <memory>
@@ -25,7 +25,7 @@
 #include <ignition/physics/Export.hh>
 #include <ignition/physics/Entity.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

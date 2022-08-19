@@ -23,7 +23,7 @@
 //! [include feature]
 #include <ignition/physics/ConstructEmpty.hh>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace simpleplugin {
 

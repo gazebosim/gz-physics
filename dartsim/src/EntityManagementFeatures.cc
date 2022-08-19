@@ -29,7 +29,7 @@
 #include <dart/collision/CollisionFilter.hpp>
 #include <dart/collision/CollisionObject.hpp>
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace dartsim {
 

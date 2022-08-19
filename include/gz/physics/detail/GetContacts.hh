@@ -15,14 +15,14 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_DETAIL_GETCONTACTS_HH_
-#define IGNITION_PHYSICS_DETAIL_GETCONTACTS_HH_
+#ifndef GZ_PHYSICS_DETAIL_GETCONTACTS_HH_
+#define GZ_PHYSICS_DETAIL_GETCONTACTS_HH_
 
 #include <utility>
 #include <vector>
 #include <ignition/physics/GetContacts.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -68,6 +68,6 @@ auto GetContactsFromLastStepFeature::World<
 }
 
 }  // namespace physics
-}  // namespace ignition
+}  // namespace gz
 
 #endif

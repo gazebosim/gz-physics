@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_FREEGROUP_HH_
-#define IGNITION_PHYSICS_FREEGROUP_HH_
+#ifndef GZ_PHYSICS_FREEGROUP_HH_
+#define GZ_PHYSICS_FREEGROUP_HH_
 
 #include <ignition/physics/FeatureList.hh>
 #include <ignition/physics/FrameSemantics.hh>
 #include <ignition/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {
@@ -198,6 +198,6 @@ namespace ignition
   }
 }
 
-#include <ignition/physics/detail/FreeGroup.hh>
+#include <gz/physics/detail/FreeGroup.hh>
 
 #endif

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
-#define IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
+#ifndef GZ_PHYSICS_MESH_MESHSHAPE_HH_
+#define GZ_PHYSICS_MESH_MESHSHAPE_HH_
 
 #include <string>
 
@@ -25,7 +25,7 @@
 #include <ignition/physics/DeclareShapeType.hh>
 #include <ignition/physics/Geometry.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -108,7 +108,7 @@ namespace mesh
 
       public: ShapePtrType AttachMeshShape(
           const std::string &_name,
-          const ignition::common::Mesh &_mesh,
+          const gz::common::Mesh &_mesh,
           const PoseType &_pose = PoseType::Identity(),
           const Dimensions &_scale = Dimensions::Ones());
     };
@@ -125,7 +125,7 @@ namespace mesh
       public: virtual Identity AttachMeshShape(
           const Identity &_linkID,
           const std::string &_name,
-          const ignition::common::Mesh &_mesh,
+          const gz::common::Mesh &_mesh,
           const PoseType &_pose,
           const Dimensions &_scale) = 0;
     };
@@ -134,6 +134,6 @@ namespace mesh
 }
 }
 
-#include <ignition/physics/mesh/detail/MeshShape.hh>
+#include <gz/physics/mesh/detail/MeshShape.hh>
 
-#endif  // IGNITION_PHYSICS_MESH_MESHSHAPE_HH_
+#endif  // GZ_PHYSICS_MESH_MESHSHAPE_HH_

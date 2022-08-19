@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_GETCONTACTS_HH_
-#define IGNITION_PHYSICS_GETCONTACTS_HH_
+#ifndef GZ_PHYSICS_GETCONTACTS_HH_
+#define GZ_PHYSICS_GETCONTACTS_HH_
 
 #include <vector>
 #include <ignition/physics/FeatureList.hh>
@@ -24,7 +24,7 @@
 #include <ignition/physics/Geometry.hh>
 #include <ignition/physics/SpecifyData.hh>
 
-namespace ignition
+namespace gz
 {
 namespace physics
 {
@@ -103,6 +103,6 @@ class IGNITION_PHYSICS_VISIBLE GetContactsFromLastStepFeature
 }
 }
 
-#include "ignition/physics/detail/GetContacts.hh"
+#include "gz/physics/detail/GetContacts.hh"
 
-#endif /* end of include guard: IGNITION_PHYSICS_GETCONTACTS_HH_ */
+#endif /* end of include guard: GZ_PHYSICS_GETCONTACTS_HH_ */

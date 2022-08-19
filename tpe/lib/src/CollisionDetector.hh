@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_COLLISIONDETECTOR_HH_
 
 #include <map>
 #include <memory>
@@ -26,13 +26,13 @@
 #include <ignition/math/Pose3.hh>
 #include <ignition/utilities/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 
 #include "AABBTree.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 

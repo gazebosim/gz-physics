@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_GETENTITIES_HH_
-#define IGNITION_PHYSICS_DETAIL_GETENTITIES_HH_
+#ifndef GZ_PHYSICS_DETAIL_GETENTITIES_HH_
+#define GZ_PHYSICS_DETAIL_GETENTITIES_HH_
 
 #include <string>
 #include <ignition/physics/GetEntities.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

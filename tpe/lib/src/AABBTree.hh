@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_AABBTREE_HH_
 
 #include <memory>
 #include <set>
@@ -24,9 +24,9 @@
 #include <ignition/math/AxisAlignedBox.hh>
 #include <ignition/utilities/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
-namespace ignition {
+namespace gz {
 namespace physics {
 namespace tpelib {
 

@@ -15,11 +15,11 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DECLARESHAPETYPE_HH_
-#define IGNITION_PHYSICS_DECLARESHAPETYPE_HH_
+#ifndef GZ_PHYSICS_DECLARESHAPETYPE_HH_
+#define GZ_PHYSICS_DECLARESHAPETYPE_HH_
 
 #include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/detail/DeclareDerivedType.hh>
+#include <gz/physics/detail/DeclareDerivedType.hh>
 
 /// \brief Given a shape type named CustomShapeType, this macro creates the
 /// following classes:
@@ -44,7 +44,7 @@
 /// Physics engine plugin developers must implement the virtual function
 ///
 /// \code
-/// ignition::physics::Identity CastToCustomShapeType(const Identity &_id) const
+/// gz::physics::Identity CastToCustomShapeType(const Identity &_id) const
 /// \endcode
 ///
 /// if their physics engine plugin wants to be able to provide CustomShapeType

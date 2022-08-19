@@ -15,17 +15,17 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_REQUESTENGINE_HH_
-#define IGNITION_PHYSICS_DETAIL_REQUESTENGINE_HH_
+#ifndef GZ_PHYSICS_DETAIL_REQUESTENGINE_HH_
+#define GZ_PHYSICS_DETAIL_REQUESTENGINE_HH_
 
 #include <memory>
 #include <set>
 #include <string>
 
 #include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/detail/InspectFeatures.hh>
+#include <gz/physics/detail/InspectFeatures.hh>
 
-namespace ignition
+namespace gz
 {
   namespace physics
   {

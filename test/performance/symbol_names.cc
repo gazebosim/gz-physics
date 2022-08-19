@@ -28,50 +28,50 @@
 #include <ignition/physics/RevoluteJoint.hh>
 
 /////////////////////////////////////////////////
-struct CylinderFeaturesClass : ignition::physics::FeatureList<
-    ignition::physics::GetCylinderShapeProperties,
-    ignition::physics::SetCylinderShapeProperties,
-    ignition::physics::AttachCylinderShapeFeature
+struct CylinderFeaturesClass : gz::physics::FeatureList<
+    gz::physics::GetCylinderShapeProperties,
+    gz::physics::SetCylinderShapeProperties,
+    gz::physics::AttachCylinderShapeFeature
 > { };
 
-using CylinderFeaturesAlias = ignition::physics::FeatureList<
-    ignition::physics::GetCylinderShapeProperties,
-    ignition::physics::SetCylinderShapeProperties,
-    ignition::physics::AttachCylinderShapeFeature
+using CylinderFeaturesAlias = gz::physics::FeatureList<
+    gz::physics::GetCylinderShapeProperties,
+    gz::physics::SetCylinderShapeProperties,
+    gz::physics::AttachCylinderShapeFeature
 >;
 
 /////////////////////////////////////////////////
-struct JointFeaturesClass : ignition::physics::FeatureList<
-    ignition::physics::GetRevoluteJointProperties,
-    ignition::physics::SetRevoluteJointProperties
+struct JointFeaturesClass : gz::physics::FeatureList<
+    gz::physics::GetRevoluteJointProperties,
+    gz::physics::SetRevoluteJointProperties
 > { };
 
-using JointFeaturesAlias = ignition::physics::FeatureList<
-    ignition::physics::GetRevoluteJointProperties,
-    ignition::physics::SetRevoluteJointProperties
+using JointFeaturesAlias = gz::physics::FeatureList<
+    gz::physics::GetRevoluteJointProperties,
+    gz::physics::SetRevoluteJointProperties
 >;
 
 /////////////////////////////////////////////////
-struct BoxFeaturesClass : ignition::physics::FeatureList<
-    ignition::physics::GetBoxShapeProperties,
-    ignition::physics::SetBoxShapeProperties,
-    ignition::physics::AttachBoxShapeFeature
+struct BoxFeaturesClass : gz::physics::FeatureList<
+    gz::physics::GetBoxShapeProperties,
+    gz::physics::SetBoxShapeProperties,
+    gz::physics::AttachBoxShapeFeature
 > { };
 
-using BoxFeaturesAlias = ignition::physics::FeatureList<
-    ignition::physics::GetBoxShapeProperties,
-    ignition::physics::SetBoxShapeProperties,
-    ignition::physics::AttachBoxShapeFeature
+using BoxFeaturesAlias = gz::physics::FeatureList<
+    gz::physics::GetBoxShapeProperties,
+    gz::physics::SetBoxShapeProperties,
+    gz::physics::AttachBoxShapeFeature
 >;
 
 /////////////////////////////////////////////////
-struct FeatureSetClass : ignition::physics::FeatureList<
+struct FeatureSetClass : gz::physics::FeatureList<
     CylinderFeaturesClass,
     JointFeaturesClass,
     BoxFeaturesClass
 > { };
 
-using FeatureSetAlias = ignition::physics::FeatureList<
+using FeatureSetAlias = gz::physics::FeatureList<
     CylinderFeaturesAlias,
     JointFeaturesAlias,
     BoxFeaturesAlias
@@ -80,10 +80,10 @@ using FeatureSetAlias = ignition::physics::FeatureList<
 TEST(symbol_names, Length)
 {
   const std::string composite_featurelist_name =
-      typeid(ignition::physics::Link3dPtr<FeatureSetClass>).name();
+      typeid(gz::physics::Link3dPtr<FeatureSetClass>).name();
 
   const std::string aliased_featurelist_name =
-      typeid(ignition::physics::Link3dPtr<FeatureSetAlias>).name();
+      typeid(gz::physics::Link3dPtr<FeatureSetAlias>).name();
 
   // The size of the feature list that uses inheritance composition should be
   // less than a third of the size of the feature list that uses aliasing.
@@ -95,11 +95,11 @@ TEST(symbol_names, Length)
   // created when these classes are instantiated. This isn't tested explicitly,
   // but the symbols can be seen by running
   // $ nm PERFORMANCE_symbol_names
-  auto engineClass = ignition::physics::RequestEngine3d<FeatureSetClass>::From(
-        ignition::plugin::PluginPtr());
+  auto engineClass = gz::physics::RequestEngine3d<FeatureSetClass>::From(
+        gz::plugin::PluginPtr());
 
-  auto engineAlias = ignition::physics::RequestEngine3d<FeatureSetAlias>::From(
-        ignition::plugin::PluginPtr());
+  auto engineAlias = gz::physics::RequestEngine3d<FeatureSetAlias>::From(
+        gz::plugin::PluginPtr());
 }
 
 int main(int argc, char **argv)
