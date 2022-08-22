@@ -30,7 +30,7 @@ cd hello_world_loader
 Then download the example loader into your current directory by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-physics/ign-physics6/examples/hello_world_loader/hello_world_loader.cc
+wget https://raw.githubusercontent.com/gazebosim/gz-physics/main/examples/hello_world_loader/hello_world_loader.cc
 ```
 
 ### Examine the code

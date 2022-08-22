@@ -57,6 +57,8 @@ struct WorldInfo
   std::shared_ptr<btBroadphaseInterface> broadphase;
   std::shared_ptr<btConstraintSolver> solver;
   std::shared_ptr<btDiscreteDynamicsWorld> world;
+  std::vector<std::size_t> models = {};
+  std::unordered_map<std::string, std::size_t> modelsByName = {};
 };
 
 struct ModelInfo
@@ -67,6 +69,9 @@ struct ModelInfo
   bool fixed;
   math::Pose3d pose;
   std::vector<std::size_t> links = {};
+  std::unordered_map<std::string, std::size_t> linksByName = {};
+  std::vector<std::size_t> joints = {};
+  std::unordered_map<std::string, std::size_t> jointsByName = {};
 };
 
 struct LinkInfo
@@ -81,6 +86,7 @@ struct LinkInfo
   std::shared_ptr<btDefaultMotionState> motionState;
   std::shared_ptr<btCompoundShape> collisionShape;
   std::shared_ptr<btRigidBody> link;
+  std::vector<std::size_t> shapes = {};
 };
 
 struct CollisionInfo
@@ -154,75 +160,36 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(0);
   }
 
-  public: inline std::size_t idToIndexInContainer(std::size_t _id) const
-  {
-    auto it = this->childIdToParentId.find(_id);
-    if (it != this->childIdToParentId.end())
-    {
-      std::size_t index = 0;
-      for (const auto &pair : this->childIdToParentId)
-      {
-        if (pair.first == _id && pair.second == it->second)
-        {
-          return index;
-        }
-        else if (pair.second == it->second)
-        {
-          ++index;
-        }
-      }
-    }
-    // return invalid index if not found in id map
-    return -1;
-  }
-
-  public: inline std::size_t indexInContainerToId(
-    const std::size_t _containerId, const std::size_t _index) const
-  {
-    std::size_t counter = 0;
-    auto it = this->childIdToParentId.begin();
-
-    while (counter <= _index && it != this->childIdToParentId.end())
-    {
-      if (it->second == _containerId && counter == _index)
-      {
-        return it->first;
-      }
-      else if (it->second == _containerId)
-      {
-        ++counter;
-      }
-      ++it;
-    }
-    // return invalid id if entity not found
-    return -1;
-  }
-
   public: inline Identity AddWorld(WorldInfo _worldInfo)
   {
     const auto id = this->GetNextEntity();
-    this->worlds[id] = std::make_shared<WorldInfo>(_worldInfo);
-    this->childIdToParentId.insert({id, -1});
+    const auto world = std::make_shared<WorldInfo>(_worldInfo);
+    this->worlds[id] = world;
+    this->worldsByName[world->name] = id;
+    this->worldsByIndex.push_back(id);
     return this->GenerateIdentity(id, this->worlds.at(id));
   }
 
   public: inline Identity AddModel(std::size_t _worldId, ModelInfo _modelInfo)
   {
     const auto id = this->GetNextEntity();
-    this->models[id] = std::make_shared<ModelInfo>(_modelInfo);
-    this->childIdToParentId.insert({id, _worldId});
+    const auto model = std::make_shared<ModelInfo>(_modelInfo);
+    this->models[id] = model;
+    const auto world = this->worlds.at(_worldId);
+    world->models.push_back(id);
+    world->modelsByName[model->name] = id;
     return this->GenerateIdentity(id, this->models.at(id));
   }
 
-  public: inline Identity AddLink(std::size_t _modelId, LinkInfo _linkInfo)
+  public: inline Identity AddLink(LinkInfo _linkInfo)
   {
     const auto id = this->GetNextEntity();
-    this->links[id] = std::make_shared<LinkInfo>(_linkInfo);
+    const auto link = std::make_shared<LinkInfo>(_linkInfo);
+    this->links[id] = link;
 
-    auto model = this->models.at(_linkInfo.model);
+    auto model = this->models.at(link->model);
     model->links.push_back(id);
-
-    this->childIdToParentId.insert({id, _modelId});
+    model->linksByName[link->name] = id;
     return this->GenerateIdentity(id, this->links.at(id));
   }
   public: inline Identity AddCollision(
@@ -230,14 +197,22 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
    const auto id = this->GetNextEntity();
    this->collisions[id] = std::make_shared<CollisionInfo>(_collisionInfo);
-   this->childIdToParentId.insert({id, _linkId});
+   this->links.at(_linkId)->shapes.push_back(id);
    return this->GenerateIdentity(id, this->collisions.at(id));
   }
 
-  public: inline Identity AddJoint(JointInfo _jointInfo)
+  public: inline Identity AddJoint(
+    std::optional<std::size_t> _modelId, JointInfo _jointInfo)
   {
     const auto id = this->GetNextEntity();
-    this->joints[id] = std::make_shared<JointInfo>(_jointInfo);
+    const auto joint = std::make_shared<JointInfo>(_jointInfo);
+    this->joints[id] = joint;
+    if (_modelId.has_value())
+    {
+      const auto model = this->models.at(*_modelId);
+      model->joints.push_back(id);
+      model->jointsByName[joint->name] = id;
+    }
 
     return this->GenerateIdentity(id, this->joints.at(id));
   }
@@ -249,14 +224,12 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using JointInfoPtr  = std::shared_ptr<JointInfo>;
 
   public: std::unordered_map<std::size_t, WorldInfoPtr> worlds;
+  public: std::vector<std::size_t> worldsByIndex;
+  public: std::unordered_map<std::string, std::size_t> worldsByName;
   public: std::unordered_map<std::size_t, ModelInfoPtr> models;
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
-
-  // childIdToParentId needs to be an ordered map so this iteration proceeds
-  // in ascending order of the keys of that map. Do not change.
-  public: std::map<std::size_t, std::size_t> childIdToParentId;
 };
 
 }  // namespace bullet
