@@ -681,6 +681,7 @@ bool SDFFeatures::AddSdfCollision(
     }
   }
 
+  Eigen::Isometry3d linkFrameToCollision;
   if (shape != nullptr)
   {
     int linkIndexInModel = -1;
@@ -695,8 +696,33 @@ bool SDFFeatures::AddSdfCollision(
       // for different shapes attached to the same link.
       auto collider = std::make_unique<btMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
-      collider->setCollisionShape(linkInfo->shape.get());
 
+      {
+        gz::math::Pose3d gzLinkToCollision;
+        const auto errors =
+          _collision.SemanticPose().Resolve(gzLinkToCollision, linkInfo->name);
+        if (!errors.empty())
+        {
+          gzerr << "An error occurred while resolving the transform of the "
+                << "collider [" << _collision.Name() << "] in Link ["
+                << linkInfo->name << "] in Model [" << model->name << "]:\n";
+          for (const auto &error : errors)
+          {
+            gzerr << error << "\n";
+          }
+
+          return false;
+        }
+
+        linkFrameToCollision = gz::math::eigen3::convert(gzLinkToCollision);
+      }
+
+      const btTransform btInertialToCollision =
+        convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
+
+      linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
+
+      collider->setCollisionShape(linkInfo->shape.get());
       collider->setRestitution(restitution);
       collider->setRollingFriction(rollingFriction);
       collider->setFriction(mu);
@@ -746,31 +772,6 @@ bool SDFFeatures::AddSdfCollision(
       // match the existing collider and issue a warning if they don't.
     }
 
-    Eigen::Isometry3d linkFrameToCollision;
-    {
-      gz::math::Pose3d gzLinkToCollision;
-      const auto errors =
-        _collision.SemanticPose().Resolve(gzLinkToCollision, linkInfo->name);
-      if (!errors.empty())
-      {
-        gzerr << "An error occurred while resolving the transform of the "
-              << "collider [" << _collision.Name() << "] in Link ["
-              << linkInfo->name << "] in Model [" << model->name << "]:\n";
-        for (const auto &error : errors)
-        {
-          gzerr << error << "\n";
-        }
-
-        return false;
-      }
-
-      linkFrameToCollision = gz::math::eigen3::convert(gzLinkToCollision);
-    }
-
-    const btTransform btInertialToCollision =
-      convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
-
-    linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
     this->AddCollision(
       CollisionInfo{
         _collision.Name(),
