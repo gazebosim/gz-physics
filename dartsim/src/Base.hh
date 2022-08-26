@@ -33,7 +33,7 @@
 #include <gz/common/Console.hh>
 #include <gz/physics/Implements.hh>
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace dartsim {
 

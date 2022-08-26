@@ -20,31 +20,31 @@
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames3f)
 {
-  TestRelativeFrames<gz::physics::FeaturePolicy3f>(1e-2, "3f");
+  TestRelativeFrames<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeAlignedBox3f)
 {
-  TestRelativeAlignedBox<gz::physics::FeaturePolicy3f>(1e-3, "3f");
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy3f>(1e-3, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID3f)
 {
-  TestFrameID<gz::physics::FeaturePolicy3f>(1e-2, "3f");
+  TestFrameID<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeQuantities3f)
 {
-  TestRelativeQuantities<gz::physics::FeaturePolicy3f>(1e-2, "3f");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrameData3f)
 {
-  TestRelativeFrameData<gz::physics::FeaturePolicy3f>(1e-2, "3f");
+  TestRelativeFrameData<ignition::physics::FeaturePolicy3f>(1e-2, "3f");
 }
 
 int main(int argc, char **argv)
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
   // but understand that the values generated in these tests will be different
   // each time that you change it. The expected tolerances might need to be
   // adjusted if the seed number is changed.
-  gz::math::Rand::Seed(416);
+  ignition::math::Rand::Seed(416);
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

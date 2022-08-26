@@ -32,17 +32,17 @@
 #include "../MockJoints.hh"
 #include "../Utils.hh"
 
-using namespace gz::physics;
-using namespace gz::physics::test;
+using namespace ignition::physics;
+using namespace ignition::physics::test;
 
 /////////////////////////////////////////////////
-gz::plugin::PluginPtr LoadMockJointTypesPlugin(
+ignition::plugin::PluginPtr LoadMockJointTypesPlugin(
     const std::string &_suffix)
 {
-  gz::plugin::Loader pl;
+  ignition::plugin::Loader pl;
   auto plugins = pl.LoadLib(MockJoints_LIB);
 
-  gz::plugin::PluginPtr plugin =
+  ignition::plugin::PluginPtr plugin =
       pl.Instantiate("mock::JointPlugin"+_suffix);
   EXPECT_FALSE(plugin.IsEmpty());
 

@@ -13,4 +13,13 @@
 
 #define IGNITION_PHYSICS_ENGINE_INSTALL_DIR "${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}"
 
+namespace ignition
+{
+}
+
+namespace gz
+{
+  using namespace ignition;
+}
+
 #endif

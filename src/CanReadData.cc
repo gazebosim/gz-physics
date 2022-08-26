@@ -17,7 +17,7 @@
 
 #include "gz/physics/CanReadData.hh"
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

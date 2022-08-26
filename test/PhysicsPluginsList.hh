@@ -33,7 +33,7 @@
 #define tpe_plugin_LIB ""
 #endif
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

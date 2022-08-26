@@ -20,25 +20,25 @@
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeFrames2f)
 {
-  TestRelativeFrames<gz::physics::FeaturePolicy2f>(1e-3, "2f");
+  TestRelativeFrames<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeAlignedBox2f)
 {
-  TestRelativeAlignedBox<gz::physics::FeaturePolicy2f>(1e-3, "2f");
+  TestRelativeAlignedBox<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID2f)
 {
-  TestFrameID<gz::physics::FeaturePolicy2f>(1e-3, "2f");
+  TestFrameID<ignition::physics::FeaturePolicy2f>(1e-3, "2f");
 }
 
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, RelativeQuantities2f)
 {
-  TestRelativeQuantities<gz::physics::FeaturePolicy2f>(1e-4, "2f");
+  TestRelativeQuantities<ignition::physics::FeaturePolicy2f>(1e-4, "2f");
 }
 
 int main(int argc, char **argv)
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
   // but understand that the values generated in these tests will be different
   // each time that you change it. The expected tolerances might need to be
   // adjusted if the seed number is changed.
-  gz::math::Rand::Seed(416);
+  ignition::math::Rand::Seed(416);
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

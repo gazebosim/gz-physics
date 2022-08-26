@@ -21,7 +21,7 @@
 
 #include "EntityManagementFeatures.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace simpleplugin {
 
@@ -33,7 +33,7 @@ namespace simpleplugin {
     public virtual EntityManagementFeatures,
     public virtual Implements3d<SimplePluginFeatures>
   {
-    using Identity = gz::physics::Identity;
+    using Identity = ignition::physics::Identity;
     public: Identity InitiateEngine(std::size_t /*_engineID*/) override
     {
       return this->GenerateIdentity(0);

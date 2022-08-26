@@ -20,7 +20,7 @@
 
 #include <type_traits>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -83,15 +83,15 @@ namespace gz
   struct Select ## X \
   { \
     template<typename F, typename PolicyT, typename FeaturesT, \
-             typename = ::gz::physics::void_t<>> \
+             typename = ::ignition::physics::void_t<>> \
     struct Implementation \
     { \
-      using type = ::gz::physics::Empty; \
+      using type = ::ignition::physics::Empty; \
     }; \
     \
     template<typename F, typename PolicyT, typename FeaturesT> \
     struct Implementation<F, PolicyT, FeaturesT, \
-                          ::gz::physics::void_t< \
+                          ::ignition::physics::void_t< \
                               typename F::template X <PolicyT, FeaturesT>>> \
     { \
       using type = typename F::template X <PolicyT, FeaturesT>; \

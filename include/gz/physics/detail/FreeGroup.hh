@@ -20,7 +20,7 @@
 
 #include <gz/physics/FreeGroup.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

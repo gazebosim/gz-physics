@@ -22,7 +22,7 @@
 
 #include <gz/physics/DeclareJointType.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

@@ -24,7 +24,7 @@
 
 #include <gz/plugin/PluginPtr.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

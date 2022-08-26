@@ -20,7 +20,7 @@
 
 #include <gz/physics/FrameData.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -29,7 +29,7 @@ namespace gz
     FrameData<Scalar, Dim>::FrameData()
     {
       /// Technically we do not need to call this function in the constructor
-      /// since the gz::math types initialize their values to zero (or
+      /// since the ignition::math types initialize their values to zero (or
       /// identity for Pose3) automatically, but I am putting this here for
       /// safety, just in case that behavior ever changes.
       this->SetToZero();

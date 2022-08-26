@@ -17,7 +17,7 @@
 
 #include <gz/physics/Entity.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

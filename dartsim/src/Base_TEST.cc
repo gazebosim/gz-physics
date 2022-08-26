@@ -35,7 +35,7 @@
 #include "EntityManagementFeatures.hh"
 #include "SDFFeatures.hh"
 
-using namespace gz::physics;
+using namespace ignition::physics;
 
 
 

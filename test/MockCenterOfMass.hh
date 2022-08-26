@@ -24,7 +24,7 @@
 namespace mock
 {
   /////////////////////////////////////////////////
-  // TODO(MXG): Offer an gz::physics::Vector class that accepts a
+  // TODO(MXG): Offer an ignition::physics::Vector class that accepts a
   // FeaturePolicy type.
   template <typename FeaturePolicyT>
   using Vector = Eigen::Matrix<
@@ -32,9 +32,9 @@ namespace mock
 
 
   /////////////////////////////////////////////////
-  struct MockLinkCenterOfMass : public gz::physics::Feature
+  struct MockLinkCenterOfMass : public ignition::physics::Feature
   {
-    using Identity = gz::physics::Identity;
+    using Identity = ignition::physics::Identity;
 
     template <typename PolicyT, typename FeaturesT>
     class Link : public virtual Feature::Link<PolicyT, FeaturesT>
@@ -52,9 +52,9 @@ namespace mock
   };
 
   /////////////////////////////////////////////////
-  struct MockModelCenterOfMass : public gz::physics::Feature
+  struct MockModelCenterOfMass : public ignition::physics::Feature
   {
-    using Identity = gz::physics::Identity;
+    using Identity = ignition::physics::Identity;
 
     template <typename PolicyT, typename FeaturesT>
     class Model : public virtual Feature::Model<PolicyT, FeaturesT>
@@ -71,7 +71,7 @@ namespace mock
     };
   };
 
-  using MockCenterOfMass = gz::physics::FeatureList<
+  using MockCenterOfMass = ignition::physics::FeatureList<
       MockLinkCenterOfMass,
       MockModelCenterOfMass
   >;

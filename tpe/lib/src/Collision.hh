@@ -25,7 +25,7 @@
 #include "Entity.hh"
 #include "Shape.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace tpelib {
 

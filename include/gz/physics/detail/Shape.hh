@@ -20,7 +20,7 @@
 
 #include <gz/physics/Shape.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -69,7 +69,7 @@ namespace gz
     -> AlignedBoxType
     {
       using RelativeAlignedBox =
-          gz::physics::RelativeAlignedBox<
+          ignition::physics::RelativeAlignedBox<
             typename PolicyT::Scalar, PolicyT::Dim>;
 
       return detail::Resolve<PolicyT>(

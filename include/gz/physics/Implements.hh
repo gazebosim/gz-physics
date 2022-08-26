@@ -21,7 +21,7 @@
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/FeaturePolicy.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

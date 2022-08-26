@@ -23,22 +23,22 @@
 
 // Simple executable that loads the simple plugin and constructs a world.
 
-struct TestFeatureList : gz::physics::FeatureList<
-  gz::physics::simpleplugin::EntityManagementFeatureList
+struct TestFeatureList : ignition::physics::FeatureList<
+  ignition::physics::simpleplugin::EntityManagementFeatureList
 > { };
 
 int main(int argc, char *argv[])
 {
   // Load the custom plugin
-  gz::plugin::Loader loader;
+  ignition::plugin::Loader loader;
   loader.LoadLib(simple_plugin_LIB);
 
   auto simplePlugin =
-    loader.Instantiate("gz::physics::simpleplugin::Plugin");
+    loader.Instantiate("ignition::physics::simpleplugin::Plugin");
 
   // Get the engine pointer
   auto engine =
-      gz::physics::RequestEngine3d<TestFeatureList>::From(simplePlugin);
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(simplePlugin);
 
   if (nullptr == engine)
   {

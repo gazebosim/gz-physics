@@ -31,7 +31,7 @@
 #include "lib/src/Collision.hh"
 #include "lib/src/Shape.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace tpeplugin {
 

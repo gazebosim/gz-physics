@@ -28,15 +28,15 @@
 
 #include "../MockDoublePendulum.hh"
 
-using namespace gz::physics;
+using namespace ignition::physics;
 
 
-void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin);
+void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin);
 
 /////////////////////////////////////////////////
 TEST(DoublePendulum, Step)
 {
-  gz::plugin::Loader pl;
+  ignition::plugin::Loader pl;
   auto plugins = pl.LoadLib(MockDoublePendulum_LIB);
 
   auto pluginNames = FindFeatures3d<mock::MockDoublePendulumList>::From(pl);
@@ -44,13 +44,13 @@ TEST(DoublePendulum, Step)
   for (const std::string & name : pluginNames)
   {
     std::cout << "DoublePendulum: testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = pl.Instantiate(name);
+    ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
     EXPECT_FALSE(plugin.IsEmpty());
     DoublePendulum_TEST(plugin);
   }
 }
 
-void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
+void DoublePendulum_TEST(ignition::plugin::PluginPtr _plugin)
 {
   ASSERT_TRUE(_plugin);
 
@@ -96,11 +96,11 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   {
     if (worldPose.body == 0)
     {
-      EXPECT_EQ(worldPose.pose, gz::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
+      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
     }
     else if (worldPose.body == 1)
     {
-      EXPECT_EQ(worldPose.pose, gz::math::Pose3d(0, 0.2, 3.3, 0, 0, 0));
+      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.2, 3.3, 0, 0, 0));
     }
   }
 
@@ -110,8 +110,8 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   const double target11 = IGN_PI;
 
   // PID gains tuned in gazebo
-  gz::math::PID pid0(100, 0, 10);
-  gz::math::PID pid1(10, 0, 5);
+  ignition::math::PID pid0(100, 0, 10);
+  ignition::math::PID pid1(10, 0, 5);
   const std::chrono::duration<double> settleTime(std::chrono::seconds(4));
   unsigned int settleSteps = settleTime / dt;
   for (unsigned int i = 0; i < settleSteps; ++i)
@@ -141,12 +141,12 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   {
     if (worldPose.body == 0)
     {
-      EXPECT_EQ(worldPose.pose, gz::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
+      EXPECT_EQ(worldPose.pose, ignition::math::Pose3d(0, 0.1, 2.4, 0, 0, 0));
     }
     else if (worldPose.body == 1)
     {
       EXPECT_EQ(worldPose.pose,
-          gz::math::Pose3d(0, 0.2, 2.4, 0, target11, 0));
+          ignition::math::Pose3d(0, 0.2, 2.4, 0, target11, 0));
     }
   }
 

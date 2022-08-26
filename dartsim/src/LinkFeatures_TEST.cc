@@ -39,15 +39,15 @@
 
 #include "test/Utils.hh"
 
-struct TestFeatureList : gz::physics::FeatureList<
-    gz::physics::AddLinkExternalForceTorque,
-    gz::physics::ForwardStep,
-    gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::sdf::ConstructSdfModel,
-    gz::physics::sdf::ConstructSdfLink,
-    gz::physics::GetEntities,
-    gz::physics::GetLinkBoundingBox,
-    gz::physics::GetModelBoundingBox
+struct TestFeatureList : ignition::physics::FeatureList<
+    ignition::physics::AddLinkExternalForceTorque,
+    ignition::physics::ForwardStep,
+    ignition::physics::sdf::ConstructSdfWorld,
+    ignition::physics::sdf::ConstructSdfModel,
+    ignition::physics::sdf::ConstructSdfLink,
+    ignition::physics::GetEntities,
+    ignition::physics::GetLinkBoundingBox,
+    ignition::physics::GetModelBoundingBox
 > { };
 
 using namespace gz;
@@ -63,7 +63,7 @@ class LinkFeaturesFixture : public ::testing::Test
     loader.LoadLib(dartsim_plugin_LIB);
 
     plugin::PluginPtr dartsim =
-        loader.Instantiate("gz::physics::dartsim::Plugin");
+        loader.Instantiate("ignition::physics::dartsim::Plugin");
 
     this->engine =
         physics::RequestEngine3d<TestFeatureList>::From(dartsim);

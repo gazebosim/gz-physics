@@ -36,7 +36,7 @@
 bool usedExpectedDataAccess;
 #endif
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -376,7 +376,7 @@ namespace gz
           return true;
         }
 
-        template <typename...> friend class ::gz::physics::ExpectData;
+        template <typename...> friend class ::ignition::physics::ExpectData;
 
         /// \brief Construct this with the iterator that it is meant to hold
         private: explicit PrivateExpectData(

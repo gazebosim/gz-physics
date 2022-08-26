@@ -22,7 +22,7 @@
 
 #include <gz/physics/FrameSemantics.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -178,7 +178,7 @@ namespace gz
         const FrameID &_inCoordinatesOf) const -> FrameData
     {
       using RelativeFrameData =
-          gz::physics::RelativeFrameData<
+          ignition::physics::RelativeFrameData<
             typename PolicyT::Scalar, PolicyT::Dim>;
 
       // Create a zeroed-out FrameData which is a child of this frame,

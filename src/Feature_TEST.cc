@@ -20,7 +20,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/Entity.hh>
 
-using namespace gz::physics;
+using namespace ignition::physics;
 
 /////////////////////////////////////////////////
 class EngineMockFeature : public virtual Feature
@@ -110,7 +110,7 @@ TEST(Feature_TEST, SimpleMock)
   // a total of 3 feature names.
   std::set<std::string> missing =
       RequestEngine3d<MockList>::MissingFeatureNames(
-        gz::plugin::PluginPtr());
+        ignition::plugin::PluginPtr());
 
   EXPECT_EQ(3u, missing.size());
 }

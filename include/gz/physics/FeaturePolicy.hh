@@ -20,7 +20,7 @@
 
 #include <cstddef>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

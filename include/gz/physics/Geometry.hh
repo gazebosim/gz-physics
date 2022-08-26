@@ -33,7 +33,7 @@
   DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 2) \
   DETAIL_IGN_PHYSICS_MAKE_BOTH_PRECISIONS(Type, 3)
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

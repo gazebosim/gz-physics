@@ -25,7 +25,7 @@
 #include <gz/physics/DeclareShapeType.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace gz
+namespace ignition
 {
 namespace physics
 {
@@ -108,7 +108,7 @@ namespace mesh
 
       public: ShapePtrType AttachMeshShape(
           const std::string &_name,
-          const gz::common::Mesh &_mesh,
+          const ignition::common::Mesh &_mesh,
           const PoseType &_pose = PoseType::Identity(),
           const Dimensions &_scale = Dimensions::Ones());
     };
@@ -125,7 +125,7 @@ namespace mesh
       public: virtual Identity AttachMeshShape(
           const Identity &_linkID,
           const std::string &_name,
-          const gz::common::Mesh &_mesh,
+          const ignition::common::Mesh &_mesh,
           const PoseType &_pose,
           const Dimensions &_scale) = 0;
     };

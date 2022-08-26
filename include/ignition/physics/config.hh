@@ -30,14 +30,4 @@
 
 // #define IGNITION_PHYSICS_ENGINE_INSTALL_DIR GZ_PHYSICS_ENGINE_INSTALL_DIR
 
-namespace gz
-{
-}
-
-namespace ignition
-{
-  using namespace gz;
-}
-
-
 #endif

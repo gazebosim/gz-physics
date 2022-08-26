@@ -42,7 +42,7 @@ cd examples/hello_world_loader/build
 And you'll see the engine info:
 
 ~~~
-Testing plugin: gz::physics::dartsim::Plugin
+Testing plugin: ignition::physics::dartsim::Plugin
   engine name: dartsim-6.10.0
 ~~~
 

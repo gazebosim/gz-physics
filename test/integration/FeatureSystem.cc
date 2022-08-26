@@ -22,16 +22,16 @@
 #include <gz/physics/RequestEngine.hh>
 #include "../MockFeatures.hh"
 
-using namespace gz::physics;
+using namespace ignition::physics;
 
 /////////////////////////////////////////////////
-gz::plugin::PluginPtr LoadMockPlugin(const std::string &_pluginName)
+ignition::plugin::PluginPtr LoadMockPlugin(const std::string &_pluginName)
 {
-  gz::plugin::Loader pl;
+  ignition::plugin::Loader pl;
   auto plugins = pl.LoadLib(MockEntities_LIB);
   EXPECT_EQ(2u, plugins.size());
 
-  gz::plugin::PluginPtr plugin =
+  ignition::plugin::PluginPtr plugin =
       pl.Instantiate(_pluginName);
   EXPECT_TRUE(plugin);
 

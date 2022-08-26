@@ -22,7 +22,7 @@
 
 #include <gz/physics/PrismaticJoint.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

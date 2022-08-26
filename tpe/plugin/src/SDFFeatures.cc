@@ -24,7 +24,7 @@
 #include <sdf/World.hh>
 #include <gz/common/Console.hh>
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace tpeplugin {
 

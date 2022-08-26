@@ -28,7 +28,7 @@
 
 #include "Base.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace tpeplugin {
 

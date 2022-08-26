@@ -27,8 +27,8 @@
 #include <gz/physics/RequestEngine.hh>
 
 // The features that an engine must have to be loaded by this loader.
-using Features = gz::physics::FeatureList<
-    gz::physics::GetEngineInfo
+using Features = ignition::physics::FeatureList<
+    ignition::physics::GetEngineInfo
 >;
 //! [include statements]
 
@@ -45,11 +45,11 @@ int main(int argc, char **argv)
 
   std::string pluginPath = argv[1];
 
-  gz::plugin::Loader pl;
+  ignition::plugin::Loader pl;
   auto plugins = pl.LoadLib(pluginPath);
 
   // Look for 3d plugins
-  auto pluginNames = gz::physics::FindFeatures3d<Features>::From(pl);
+  auto pluginNames = ignition::physics::FindFeatures3d<Features>::From(pl);
   if (pluginNames.empty())
   {
     std::cerr << "No plugins with required features found in "
@@ -60,9 +60,9 @@ int main(int argc, char **argv)
   for (const std::string &name : pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = pl.Instantiate(name);
+    ignition::plugin::PluginPtr plugin = pl.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<Features>::From(plugin);
+    auto engine = ignition::physics::RequestEngine3d<Features>::From(plugin);
 
     std::cout << "  engine name: " << engine->GetName() << std::endl;
   }

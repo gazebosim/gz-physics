@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

@@ -42,7 +42,7 @@ class Contact;
 }
 }
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace dartsim {
 

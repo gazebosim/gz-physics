@@ -28,7 +28,7 @@
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace dartsim {
 

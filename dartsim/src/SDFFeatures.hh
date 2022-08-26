@@ -32,7 +32,7 @@
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace dartsim {
 

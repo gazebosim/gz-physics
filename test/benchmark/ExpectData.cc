@@ -25,33 +25,33 @@ struct SomeData18 { };
 struct SomeData19 { };
 
 // Expect only 1 type
-using ExpectString = gz::physics::ExpectData<StringData>;
+using ExpectString = ignition::physics::ExpectData<StringData>;
 
 // Expect 3 different types, and put the type we care about first in the list
 using Expect3Types_Leading =
-    gz::physics::ExpectData<StringData, BoolData, CharData>;
+    ignition::physics::ExpectData<StringData, BoolData, CharData>;
 
 // Expect 3 different types, and put the type we care about last in the list
 using Expect3Types_Trailing =
-    gz::physics::ExpectData<CharData, BoolData, StringData>;
+    ignition::physics::ExpectData<CharData, BoolData, StringData>;
 
 // Expect 10 different types, and put the type we care about first in the list
 using Expect10Types_Leading =
-    gz::physics::ExpectData<
+    ignition::physics::ExpectData<
         StringData,
         SomeData1, SomeData2, SomeData3, SomeData4, SomeData5,
         SomeData6, SomeData7, SomeData8, SomeData9>;
 
 // Expect 10 different types, and put the type we care about last in the list
 using Expect10Types_Trailing =
-    gz::physics::ExpectData<
+    ignition::physics::ExpectData<
         SomeData1, SomeData2, SomeData3, SomeData4, SomeData5,
         SomeData6, SomeData7, SomeData8, SomeData9,
         StringData>;
 
 // Expect 20 different types, and put the type we care about first in the list
 using Expect20Types_Leading =
-    gz::physics::ExpectData<
+    ignition::physics::ExpectData<
         StringData,
         SomeData1, SomeData2, SomeData3, SomeData4, SomeData5,
         SomeData6, SomeData7, SomeData8, SomeData9, SomeData10,
@@ -60,14 +60,14 @@ using Expect20Types_Leading =
 
 // Expect 20 different types, and put the type we care about last in the list
 using Expect20Types_Trailing =
-    gz::physics::ExpectData<
+    ignition::physics::ExpectData<
         SomeData1, SomeData2, SomeData3, SomeData4, SomeData5,
         SomeData6, SomeData7, SomeData8, SomeData9, SomeData10,
         SomeData11, SomeData12, SomeData13, SomeData14, SomeData15,
         SomeData16, SomeData17, SomeData18, SomeData19,
         StringData>;
 
-gz::physics::CompositeData CreatePerformanceTestData()
+ignition::physics::CompositeData CreatePerformanceTestData()
 {
   return CreateSomeData<StringData, DoubleData, IntData,
       FloatData, VectorDoubleData, BoolData, CharData>();
@@ -148,7 +148,7 @@ BENCHMARK_TEMPLATE(BM_Expect, Expect20Types_Leading)->Arg(gNumTests);
 // NOLINTNEXTLINE
 BENCHMARK_TEMPLATE(BM_Expect, Expect20Types_Trailing)->Arg(gNumTests);
 // NOLINTNEXTLINE
-BENCHMARK_TEMPLATE(BM_Expect, gz::physics::CompositeData)->Arg(gNumTests);
+BENCHMARK_TEMPLATE(BM_Expect, ignition::physics::CompositeData)->Arg(gNumTests);
 
 // OSX needs the semicolon, Ubuntu complains that there's an extra ';'
 #pragma GCC diagnostic push

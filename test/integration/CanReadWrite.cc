@@ -25,10 +25,10 @@
 
 #include "utils/TestDataTypes.hh"
 
-using gz::physics::CanReadRequiredData;
-using gz::physics::CanReadExpectedData;
-using gz::physics::CanWriteExpectedData;
-using gz::physics::CanWriteRequiredData;
+using ignition::physics::CanReadRequiredData;
+using ignition::physics::CanReadExpectedData;
+using ignition::physics::CanWriteExpectedData;
+using ignition::physics::CanWriteRequiredData;
 
 template <typename ReadSpec>
 class SomeClassBase
@@ -126,7 +126,7 @@ class SomeClass
 /////////////////////////////////////////////////
 TEST(CanReadWrite, ReadWriteData)
 {
-  gz::physics::CompositeData input;
+  ignition::physics::CompositeData input;
   input.Get<StringData>().myString = "89";
   input.Get<BoolData>().myBool = false;
   input.Get<CharData>().myChar = 'd';
@@ -152,7 +152,7 @@ TEST(CanReadWrite, ReadWriteData)
   EXPECT_EQ(1u, something.icount);
   EXPECT_EQ(1u, something.fcount);
 
-  gz::physics::CompositeData output;
+  ignition::physics::CompositeData output;
   something.WriteExpectedData(output);
   EXPECT_EQ(67, output.Get<IntData>().myInt);
   EXPECT_DOUBLE_EQ(7.2, output.Get<DoubleData>().myDouble);
@@ -163,7 +163,7 @@ TEST(CanReadWrite, ReadWriteData)
 /////////////////////////////////////////////////
 TEST(CanReadWrite, OnlyReadOnce)
 {
-  gz::physics::CompositeData input;
+  ignition::physics::CompositeData input;
   input.Get<StringData>().myString = "89";
   input.Get<BoolData>().myBool = false;
   input.Get<CharData>().myChar = 'd';
@@ -172,7 +172,7 @@ TEST(CanReadWrite, OnlyReadOnce)
   input.ResetQueries();
 
   SomeClass<RedundantSpec> redundant;
-  redundant.ReadRequiredData(input, gz::physics::ReadOptions(false));
+  redundant.ReadRequiredData(input, ignition::physics::ReadOptions(false));
   redundant.ReadRequiredData(input);
   EXPECT_EQ("89", redundant.sdata.myString);
   EXPECT_FALSE(redundant.bdata.myBool);
@@ -215,7 +215,7 @@ TEST(CanReadWrite, ReadExpected)
   EXPECT_EQ(0u, something.fcount);
 
   {
-    gz::physics::CompositeData empty;
+    ignition::physics::CompositeData empty;
 
     // nothing happens if reading from empty CompositeData
     something.ReadExpectedData(empty);
@@ -248,7 +248,7 @@ TEST(CanReadWrite, ReadExpected)
     EXPECT_EQ(0u, something.icount);
     EXPECT_EQ(0u, something.fcount);
 
-    gz::physics::ReadOptions opt;
+    ignition::physics::ReadOptions opt;
     opt.onlyReadUnqueriedData = true;
     // repeat with explicit option to skip queried data
     // again nothing happens
@@ -310,7 +310,7 @@ TEST(CanReadWrite, ReadRequired)
   EXPECT_EQ(0u, something.fcount);
 
   {
-    gz::physics::CompositeData empty;
+    ignition::physics::CompositeData empty;
 
     // nothing happens if reading from empty CompositeData
     something.ReadRequiredData(empty);
@@ -345,7 +345,7 @@ TEST(CanReadWrite, ReadRequired)
     EXPECT_EQ(0u, something.icount);
     EXPECT_EQ(0u, something.fcount);
 
-    gz::physics::ReadOptions opt;
+    ignition::physics::ReadOptions opt;
     opt.onlyReadUnqueriedData = true;
     // repeat with explicit option to skip queried data
     // again nothing happens
@@ -386,7 +386,7 @@ TEST(CanReadWrite, WriteExpected)
   SomeClassWriteExpected<RequireIntDouble> something;
 
   {
-    gz::physics::CompositeData output;
+    ignition::physics::CompositeData output;
     EXPECT_FALSE(output.Has<DoubleData>());
     EXPECT_FALSE(output.Has<IntData>());
     EXPECT_FALSE(output.Has<StringData>());
@@ -407,7 +407,7 @@ TEST(CanReadWrite, WriteExpected)
   }
 
   {
-    gz::physics::CompositeData output;
+    ignition::physics::CompositeData output;
     EXPECT_FALSE(output.Has<DoubleData>());
     EXPECT_FALSE(output.Has<IntData>());
     EXPECT_FALSE(output.Has<StringData>());
@@ -415,7 +415,7 @@ TEST(CanReadWrite, WriteExpected)
     EXPECT_EQ(0u, output.AllEntries().size());
 
     // Write with explicit default options
-    gz::physics::WriteOptions opt;
+    ignition::physics::WriteOptions opt;
     opt.skipMissingData = false;
     opt.onlyWriteUnqueriedData = true;
     something.WriteExpectedData(output, opt);
@@ -431,7 +431,7 @@ TEST(CanReadWrite, WriteExpected)
   }
 
   {
-    gz::physics::CompositeData output;
+    ignition::physics::CompositeData output;
     EXPECT_FALSE(output.Has<DoubleData>());
     EXPECT_FALSE(output.Has<IntData>());
     EXPECT_FALSE(output.Has<StringData>());
@@ -440,7 +440,7 @@ TEST(CanReadWrite, WriteExpected)
 
     // skip missing data
     // output is initially empty, so nothing should be written
-    gz::physics::WriteOptions opt;
+    ignition::physics::WriteOptions opt;
     opt.skipMissingData = true;
     opt.onlyWriteUnqueriedData = true;
     something.WriteExpectedData(output, opt);
@@ -524,7 +524,7 @@ TEST(CanReadWrite, WriteRequired)
   SomeClassWriteRequired<RequireIntDouble> something;
 
   {
-    gz::physics::CompositeData output;
+    ignition::physics::CompositeData output;
     EXPECT_FALSE(output.Has<DoubleData>());
     EXPECT_FALSE(output.Has<IntData>());
     EXPECT_EQ(0u, output.AllEntries().size());
@@ -539,13 +539,13 @@ TEST(CanReadWrite, WriteRequired)
   }
 
   {
-    gz::physics::CompositeData output;
+    ignition::physics::CompositeData output;
     EXPECT_FALSE(output.Has<DoubleData>());
     EXPECT_FALSE(output.Has<IntData>());
     EXPECT_EQ(0u, output.AllEntries().size());
 
     // Write with explicit default options
-    gz::physics::WriteOptions opt;
+    ignition::physics::WriteOptions opt;
     opt.skipMissingData = false;
     opt.onlyWriteUnqueriedData = true;
     something.WriteRequiredData(output, opt);
@@ -557,14 +557,14 @@ TEST(CanReadWrite, WriteRequired)
   }
 
   {
-    gz::physics::CompositeData output;
+    ignition::physics::CompositeData output;
     EXPECT_FALSE(output.Has<DoubleData>());
     EXPECT_FALSE(output.Has<IntData>());
     EXPECT_EQ(0u, output.AllEntries().size());
 
     // skip missing data
     // output is initially empty, so nothing should be written
-    gz::physics::WriteOptions opt;
+    ignition::physics::WriteOptions opt;
     opt.skipMissingData = true;
     opt.onlyWriteUnqueriedData = true;
     something.WriteRequiredData(output, opt);

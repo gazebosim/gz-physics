@@ -20,7 +20,7 @@
 
 #include "gz/physics/CanWriteData.hh"
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

@@ -22,7 +22,7 @@
 
 #include <gz/physics/RevoluteJoint.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

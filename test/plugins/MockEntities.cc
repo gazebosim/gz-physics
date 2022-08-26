@@ -27,9 +27,9 @@ namespace mock
 {
   template <typename PolicyT>
   class EntitiesPlugin
-      : public gz::physics::Implements<PolicyT, MockFeatureList>
+      : public ignition::physics::Implements<PolicyT, MockFeatureList>
   {
-    using Identity = gz::physics::Identity;
+    using Identity = ignition::physics::Identity;
 
     using NameToId = std::unordered_map<std::string, std::size_t>;
     using ParentToNameToId = std::unordered_map<std::size_t, NameToId>;
@@ -111,7 +111,7 @@ namespace mock
       return true;
     }
 
-    public: gz::physics::Identity InitiateEngine(
+    public: ignition::physics::Identity InitiateEngine(
         std::size_t /*_engineID*/) override
     {
       engineNames[NextId()] = "Only one engine";
@@ -283,18 +283,18 @@ namespace mock
   };
 
   class EntitiesPlugin3d
-      : public EntitiesPlugin<gz::physics::FeaturePolicy3d> { };
+      : public EntitiesPlugin<ignition::physics::FeaturePolicy3d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
       EntitiesPlugin3d,
-      gz::physics::FeaturePolicy3d,
+      ignition::physics::FeaturePolicy3d,
       MockFeatureList)
 
   class EntitiesPlugin2d
-    : public EntitiesPlugin<gz::physics::FeaturePolicy2d> { };
+    : public EntitiesPlugin<ignition::physics::FeaturePolicy2d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
       EntitiesPlugin2d,
-      gz::physics::FeaturePolicy2d,
+      ignition::physics::FeaturePolicy2d,
       MockFeatureList)
 }

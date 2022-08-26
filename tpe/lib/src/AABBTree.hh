@@ -26,7 +26,7 @@
 
 #include "gz/physics/tpelib/Export.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace tpelib {
 

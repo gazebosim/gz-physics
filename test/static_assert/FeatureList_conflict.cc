@@ -17,7 +17,7 @@
 
 #include <gz/physics/FeatureList.hh>
 
-using namespace gz::physics;
+using namespace ignition::physics;
 
 class FeatureA : public virtual Feature { };
 class FeatureB : public virtual Feature { };

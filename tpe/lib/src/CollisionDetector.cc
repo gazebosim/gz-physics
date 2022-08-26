@@ -26,7 +26,7 @@
 #include "AABBTree.hh"
 
 /// \brief Private data class for CollisionDetector
-class gz::physics::tpelib::CollisionDetectorPrivate
+class ignition::physics::tpelib::CollisionDetectorPrivate
 {
   /// \brief Helper function to check if collisions for a pair of nodes have
   /// already been recorded or not

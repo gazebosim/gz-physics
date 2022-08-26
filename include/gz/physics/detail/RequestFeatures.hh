@@ -26,7 +26,7 @@
 #include <gz/physics/RequestFeatures.hh>
 #include <gz/physics/detail/InspectFeatures.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

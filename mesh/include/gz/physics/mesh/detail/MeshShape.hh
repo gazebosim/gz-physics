@@ -22,7 +22,7 @@
 
 #include <gz/physics/mesh/MeshShape.hh>
 
-namespace gz
+namespace ignition
 {
 namespace physics
 {
@@ -59,7 +59,7 @@ namespace mesh
   template <typename PolicyT, typename FeaturesT>
   auto AttachMeshShapeFeature::Link<PolicyT, FeaturesT>::AttachMeshShape(
       const std::string &_name,
-      const gz::common::Mesh &_mesh,
+      const ignition::common::Mesh &_mesh,
       const PoseType &_pose,
       const Dimensions &_scale) -> ShapePtrType
   {

@@ -24,9 +24,9 @@
 
 namespace mock
 {
-  using MockFrameSemanticsList = gz::physics::FeatureList<
+  using MockFrameSemanticsList = ignition::physics::FeatureList<
       MockCreateEntities,
-      gz::physics::CompleteFrameSemantics
+      ignition::physics::CompleteFrameSemantics
   >;
 }
 

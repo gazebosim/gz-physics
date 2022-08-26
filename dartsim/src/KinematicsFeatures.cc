@@ -20,7 +20,7 @@
 #include <gz/common/Console.hh>
 #include "KinematicsFeatures.hh"
 
-namespace gz {
+namespace ignition {
 namespace physics {
 namespace dartsim {
 

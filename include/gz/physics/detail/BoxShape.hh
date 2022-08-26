@@ -22,7 +22,7 @@
 
 #include <gz/physics/BoxShape.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

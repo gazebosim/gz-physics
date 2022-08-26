@@ -27,7 +27,7 @@
 #include "Model.hh"
 
 /// \brief Private data class for Model
-class gz::physics::tpelib::ModelPrivate
+class ignition::physics::tpelib::ModelPrivate
 {
   /// \brief Canonical link id;
   public: std::size_t canonicalLinkId = kNullEntityId;

@@ -78,7 +78,7 @@ class JointFeaturesFixture : public ::testing::Test
     loader.LoadLib(dartsim_plugin_LIB);
 
     plugin::PluginPtr dartsim =
-        loader.Instantiate("gz::physics::dartsim::Plugin");
+        loader.Instantiate("ignition::physics::dartsim::Plugin");
 
     this->engine =
         physics::RequestEngine3d<TestFeatureList>::From(dartsim);

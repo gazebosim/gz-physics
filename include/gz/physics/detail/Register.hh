@@ -23,7 +23,7 @@
 #include <gz/plugin/Register.hh>
 #include <gz/physics/Feature.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -50,7 +50,7 @@ namespace gz
       {
         static void RegisterPlugin()
         {
-          gz::plugin::detail::Registrar<
+          ignition::plugin::detail::Registrar<
                 PluginT, Feature::Implementation<FeaturePolicyT>,
                 typename Features::template Implementation<FeaturePolicyT>...>::
               Register();
@@ -61,7 +61,7 @@ namespace gz
 }
 
 // Dev Note (MXG): Using a namespace called detail_ignition_physics avoids
-// confusion with the gz::physics namespace. This is important because
+// confusion with the ignition::physics namespace. This is important because
 // users might call this macro within their own namespace scope, which can
 // create unexpected and confusing namespace hierarchies.
 #define DETAIL_IGN_PHYSICS_ADD_PLUGIN_HELPER( \
@@ -74,7 +74,7 @@ namespace gz
     { \
       ExecuteWhenLoadingLibrary##UniqueID() \
       { \
-        ::gz::physics::detail::Registrar< \
+        ::ignition::physics::detail::Registrar< \
             PluginType, FeaturePolicyT, FeatureListT>:: \
             RegisterPlugin(); \
       } \

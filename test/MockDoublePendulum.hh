@@ -25,21 +25,21 @@
 
 namespace mock
 {
-  using MockDoublePendulumList = gz::physics::FeatureList<
-    gz::physics::ForwardStep,
-    gz::physics::GetEngineInfo,
-    gz::physics::GetWorldFromEngine
+  using MockDoublePendulumList = ignition::physics::FeatureList<
+    ignition::physics::ForwardStep,
+    ignition::physics::GetEngineInfo,
+    ignition::physics::GetWorldFromEngine
   >;
 
   class MockDoublePendulum
-      : public gz::physics::CanWriteRequiredData<
+      : public ignition::physics::CanWriteRequiredData<
             MockDoublePendulum,
-            gz::physics::ForwardStep::Output>
+            ignition::physics::ForwardStep::Output>
   {
-    public: virtual void Write(gz::physics::JointPositions &_positions) const = 0;
+    public: virtual void Write(ignition::physics::JointPositions &_positions) const = 0;
 
     /// \brief Write poses for each link in inertial frame (at COM).
-    public: virtual void Write(gz::physics::WorldPoses &_poses) const = 0;
+    public: virtual void Write(ignition::physics::WorldPoses &_poses) const = 0;
 
     public: virtual ~MockDoublePendulum() = default;
   };

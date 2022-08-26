@@ -35,24 +35,24 @@
 TEST(RequestFeatures_TEST, Casting)
 {
   using InitialFeatures =
-    gz::physics::FeatureList<
+    ignition::physics::FeatureList<
       mock::MockGetByName>;
 
   using ExtendFeatures =
-    gz::physics::FeatureList<
+    ignition::physics::FeatureList<
       InitialFeatures,
       mock::MockSetName>;
 
   using SidewaysFeatures =
-    gz::physics::FeatureList<
+    ignition::physics::FeatureList<
       mock::MockCenterOfMass>;
 
   using UnavailableFeatures =
-    gz::physics::FeatureList<test::UnimplementedFeature>;
+    ignition::physics::FeatureList<test::UnimplementedFeature>;
 
   // Get a list of all plugins who satisfy the features that are needed for
   // testing
-  gz::plugin::Loader loader;
+  ignition::plugin::Loader loader;
   const auto pluginNames = loader.LoadLib(MockEntities_LIB);
   EXPECT_EQ(2u, pluginNames.size());
 
@@ -60,7 +60,7 @@ TEST(RequestFeatures_TEST, Casting)
   EXPECT_TRUE(plugin);
 
   auto engine =
-      gz::physics::RequestEngine3d<InitialFeatures>::From(plugin);
+      ignition::physics::RequestEngine3d<InitialFeatures>::From(plugin);
   ASSERT_TRUE(engine);
 
   // Initial features
@@ -68,12 +68,12 @@ TEST(RequestFeatures_TEST, Casting)
   ASSERT_TRUE(initialWorld);
   EXPECT_EQ("Some world", initialWorld->Name());
 
-  EXPECT_TRUE(gz::physics::RequestFeatures<ExtendFeatures>
+  EXPECT_TRUE(ignition::physics::RequestFeatures<ExtendFeatures>
               ::MissingFeatureNames(initialWorld).empty());
 
   // Extend features
   auto extendWorld =
-      gz::physics::RequestFeatures<ExtendFeatures>::From(initialWorld);
+      ignition::physics::RequestFeatures<ExtendFeatures>::From(initialWorld);
   ASSERT_TRUE(extendWorld);
   extendWorld->SetName("Another world");
   EXPECT_EQ("Another world", initialWorld->Name());
@@ -84,29 +84,29 @@ TEST(RequestFeatures_TEST, Casting)
   EXPECT_EQ("Another model", extendModel->Name());
 
   // Sideways features
-  EXPECT_TRUE(gz::physics::RequestFeatures<SidewaysFeatures>
+  EXPECT_TRUE(ignition::physics::RequestFeatures<SidewaysFeatures>
               ::MissingFeatureNames(extendModel).empty());
 
   auto sidewaysModel =
-      gz::physics::RequestFeatures<SidewaysFeatures>::From(extendModel);
+      ignition::physics::RequestFeatures<SidewaysFeatures>::From(extendModel);
   ASSERT_TRUE(sidewaysModel);
   sidewaysModel->CenterOfMass();
 
   // Unavailable features
-  EXPECT_EQ(1u, gz::physics::RequestFeatures<UnavailableFeatures>
+  EXPECT_EQ(1u, ignition::physics::RequestFeatures<UnavailableFeatures>
             ::MissingFeatureNames(sidewaysModel).size());
 
   auto unavailableFeatureModel =
-      gz::physics::RequestFeatures<UnavailableFeatures>::From(
+      ignition::physics::RequestFeatures<UnavailableFeatures>::From(
       sidewaysModel);
   EXPECT_FALSE(unavailableFeatureModel);
 
   // Invalid entity
-  EXPECT_EQ(1u, gz::physics::RequestFeatures<InitialFeatures>
+  EXPECT_EQ(1u, ignition::physics::RequestFeatures<InitialFeatures>
             ::MissingFeatureNames(unavailableFeatureModel).size());
 
   auto invalidModel =
-      gz::physics::RequestFeatures<UnavailableFeatures>::From(
+      ignition::physics::RequestFeatures<UnavailableFeatures>::From(
       unavailableFeatureModel);
   EXPECT_FALSE(invalidModel);
 }

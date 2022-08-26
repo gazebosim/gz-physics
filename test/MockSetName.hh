@@ -24,9 +24,9 @@
 
 namespace mock
 {
-  struct MockSetName : public gz::physics::Feature
+  struct MockSetName : public ignition::physics::Feature
   {
-    using Identity = gz::physics::Identity;
+    using Identity = ignition::physics::Identity;
 
     template <typename PolicyT, typename FeaturesT>
     class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>

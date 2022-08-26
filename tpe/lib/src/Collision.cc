@@ -20,7 +20,7 @@
 #include "Collision.hh"
 
 /// \brief Private data class for Collision
-class gz::physics::tpelib::CollisionPrivate
+class ignition::physics::tpelib::CollisionPrivate
 {
   /// \brief Collision's geometry shape
   public: std::shared_ptr<Shape> shape = nullptr;

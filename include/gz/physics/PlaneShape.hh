@@ -23,7 +23,7 @@
 #include <gz/physics/DeclareShapeType.hh>
 #include <gz/physics/Geometry.hh>
 
-namespace gz
+namespace ignition
 {
 namespace physics
 {

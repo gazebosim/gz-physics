@@ -26,7 +26,7 @@
 #include <gz/physics/FrameData.hh>
 #include <gz/physics/RelativeQuantity.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -46,7 +46,7 @@ namespace gz
       class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
       {
         public: using FrameData =
-            gz::physics::FrameData<
+            ignition::physics::FrameData<
               typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Resolve can take a RelativeQuantity (RQ) and compute its
@@ -100,7 +100,7 @@ namespace gz
       class Frame : public virtual Entity<PolicyT, FeaturesT>
       {
         public: using FrameData =
-          gz::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+          ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Get a FrameID for this object
         public: FrameID GetFrameID() const;
@@ -134,7 +134,7 @@ namespace gz
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: using FrameData =
-          gz::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
+          ignition::physics::FrameData<typename PolicyT::Scalar, PolicyT::Dim>;
 
         /// \brief Get the current 3D transformation of the specified frame with
         /// respect to the WorldFrame.

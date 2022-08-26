@@ -11,11 +11,11 @@
 
 In the last \ref createphysicsplugin "Implement a physics feature" tutorial, we
 know how to implement a dummy physics engine as a plugin and load it using
-\ref gz::physics "Ignition Physics API". In this tutorial, we will look
+\ref ignition::physics "Ignition Physics API". In this tutorial, we will look
 deeper into the structure of a physics engine plugin, for example, the available
 [DART](https://github.com/ignitionrobotics/ign-physics/tree/ign-physics2/dartsim)
 physics engine in `ign-physics` repository and how to define a custom
-\ref gz::physics::Feature "Feature" for the plugin.
+\ref ignition::physics::Feature "Feature" for the plugin.
 
 ### Folder structure of the plugins
 
@@ -52,11 +52,11 @@ dartsim
 └── CMakeLists.txt                    CMake plugin build script.
 ```
 
-Basically, new implementation of \ref gz::physics::Feature "Feature" or
-\ref gz::physics::FeatureList "FeatureList", which is corresponded to a
+Basically, new implementation of \ref ignition::physics::Feature "Feature" or
+\ref ignition::physics::FeatureList "FeatureList", which is corresponded to a
 functionality of the external physics engine can be defined as a header in
 `include/ignition/physics/<plugin_name>` folder. The custom feature could
-be added in a \ref gz::physics::FeatureList "FeatureList"
+be added in a \ref ignition::physics::FeatureList "FeatureList"
 and implemented its functionalities in `src` folder.
 
 See the \ref physicsplugin "Understanding the physics plugin" tutorial for details on physics engines.
@@ -65,15 +65,15 @@ See the \ref physicsplugin "Understanding the physics plugin" tutorial for detai
 
 In general, the minimum set of features that any physics engine plugin must
 implement to be supported by Ignition Gazebo is as below:
-- \ref gz::physics::FindFreeGroupFeature "FindFreeGroupFeature"
-- \ref gz::physics::SetFreeGroupWorldPose "SetFreeGroupWorldPose"
-- \ref gz::physics::FreeGroupFrameSemantics "FreeGroupFrameSemantics"
-- \ref gz::physics::LinkFrameSemantics "LinkFrameSemantics"
-- \ref gz::physics::ForwardStep "ForwardStep"
-- \ref gz::physics::RemoveEntities "RemoveEntities"
-- \ref gz::physics::sdf::ConstructSdfLink "ConstructSdfLink"
-- \ref gz::physics::sdf::ConstructSdfModel "ConstructSdfModel"
-- \ref gz::physics::sdf::ConstructSdfWorld "ConstructSdfWorld"
+- \ref ignition::physics::FindFreeGroupFeature "FindFreeGroupFeature"
+- \ref ignition::physics::SetFreeGroupWorldPose "SetFreeGroupWorldPose"
+- \ref ignition::physics::FreeGroupFrameSemantics "FreeGroupFrameSemantics"
+- \ref ignition::physics::LinkFrameSemantics "LinkFrameSemantics"
+- \ref ignition::physics::ForwardStep "ForwardStep"
+- \ref ignition::physics::RemoveEntities "RemoveEntities"
+- \ref ignition::physics::sdf::ConstructSdfLink "ConstructSdfLink"
+- \ref ignition::physics::sdf::ConstructSdfModel "ConstructSdfModel"
+- \ref ignition::physics::sdf::ConstructSdfWorld "ConstructSdfWorld"
 
 This list defines the minimum requirements for the simulation capability of a
 physics engine plugin and also maintains backward compatibility with
@@ -81,53 +81,53 @@ downstream physics plugins.
 
 For custom feature requirements, there are two main component classes
 in the general structure of a custom feature:
-- \ref gz::physics::Entity "Entity" corresponds to the "proxy object" that
-the \ref gz::physics::Feature "Feature" is implemented. These are the most
+- \ref ignition::physics::Entity "Entity" corresponds to the "proxy object" that
+the \ref ignition::physics::Feature "Feature" is implemented. These are the most
 common "proxy objects" that are inherited from `Entity` class:
-  - \ref gz::physics::Feature::Engine "Engine": Placeholder class for the
+  - \ref ignition::physics::Feature::Engine "Engine": Placeholder class for the
     Engine API. This class serves metadata for the physics engine (for example
-    the \ref gz::physics::GetEngineInfo "GetEngineInfo" feature).
+    the \ref ignition::physics::GetEngineInfo "GetEngineInfo" feature).
     Every Engine feature **must** inherit this class.
-  - \ref gz::physics::Feature::Joint "Joint": defines physics concept
+  - \ref ignition::physics::Feature::Joint "Joint": defines physics concept
     `Joint` behaviors (for example the
-    \ref gz::physics::GetBasicJointState "GetBasicJointState" feature).
-  - \ref gz::physics::Feature::Link "Link": defines physics concept `Link`
+    \ref ignition::physics::GetBasicJointState "GetBasicJointState" feature).
+  - \ref ignition::physics::Feature::Link "Link": defines physics concept `Link`
     structure.
-  - \ref gz::physics::Feature::Model "Model": defines physics concept
+  - \ref ignition::physics::Feature::Model "Model": defines physics concept
     `Model` structure (for example the
-    \ref gz::physics::GetLinkFromModel "GetLinkFromModel" feature
+    \ref ignition::physics::GetLinkFromModel "GetLinkFromModel" feature
     including both `Link` and `Model` objects).
-  - \ref gz::physics::Feature::Shape "Shape": defines physics concept
+  - \ref ignition::physics::Feature::Shape "Shape": defines physics concept
     `Shape` structure (for example the
-    \ref gz::physics::GetShapeKinematicProperties "GetShapeKinematicProperties"
+    \ref ignition::physics::GetShapeKinematicProperties "GetShapeKinematicProperties"
     feature).
-  - \ref gz::physics::Feature::World "World": defines physics concept
+  - \ref ignition::physics::Feature::World "World": defines physics concept
     `Shape` structure (for example
-    the \ref gz::physics::dartsim::RetrieveWorld "RetrieveWorld" feature
+    the \ref ignition::physics::dartsim::RetrieveWorld "RetrieveWorld" feature
     in `dartsim` plugin).
 
   Note that these object classes are not mutually exclusive and could be defined
   in conjunction together to describe the `Feature`. There are also other
   uncommon objects defined depending on feature functionality, for example, the
-  \ref gz::physics::SetFreeGroupWorldPose::FreeGroup "FreeGroup"
+  \ref ignition::physics::SetFreeGroupWorldPose::FreeGroup "FreeGroup"
   object in `SetFreeGroupWorldPose` feature. For more information about the
   physics concepts, please refer to
   \ref physicsconcepts "Ignition Physics simulation concepts" tutorial.
-- \ref gz::physics::Feature::Implementation "Implementation" interfaces
+- \ref ignition::physics::Feature::Implementation "Implementation" interfaces
 the actual physics engines API for the custom feature. It has
-\ref gz::physics::Feature::Implementation::InitiateEngine "InitiateEngine"
+\ref ignition::physics::Feature::Implementation::InitiateEngine "InitiateEngine"
 to trigger physics engine initiation to provide the required functionalities.
 
 Moreover, we can define dependencies between custom `Features`:
 - By default, a blank feature will not require any other features.
 If the custom feature does require some other set of features,
 then it should be inherited from
-\ref gz::physics::FeatureWithRequirements "FeatureWithRequirements" class,
+\ref ignition::physics::FeatureWithRequirements "FeatureWithRequirements" class,
 and provided a list of the `Features` required.
 - By default, a blank feature will not conflict with any other features. If
 the custom feature does conflict with some other set of features, then it should
 be inherited from
-\ref gz::physics::FeatureWithConflicts "FeatureWithConflicts" class,
+\ref ignition::physics::FeatureWithConflicts "FeatureWithConflicts" class,
 and provided a list of the conflicting `Features`. The conflicting `Features`
 will not run at the same time when requested.
 
@@ -139,7 +139,7 @@ With the requirements and restrictions above, we first need to define a feature 
 
 The `RetrieveWorld` feature retrieves
 world pointer from physics engine, so we will use the `World` entity inherited
-from \ref gz::physics::Feature::World "Feature::World" and declare the
+from \ref ignition::physics::Feature::World "Feature::World" and declare the
 member function `GetDartsimWorld`. Then we substantiate the virtual `Implementation`
 member function by overriding in the actual implementation of
 the custom feature `RetrieveWorld` later.
@@ -147,7 +147,7 @@ the custom feature `RetrieveWorld` later.
 Finally, we implement the `World`
 entity's member function `GetDartsimWorld` to call the `Implementation`
 class's member function `GetDartsimWorld` via
-\ref gz::physics::Feature::Entity::Interface "Entity::Interface"
+\ref ignition::physics::Feature::Entity::Interface "Entity::Interface"
 convenience function for querying the feature `Implementation` object.
 
 The newly defined feature template is placed in an `/include` folder shown in the following structure:
@@ -170,7 +170,7 @@ implement the `RetrieveWorld` feature function using Dartsim API.
 ### Implement the custom feature
 
 After defining the feature template, we can add it to a custom
-\ref gz::physics::FeatureList "FeatureList":
+\ref ignition::physics::FeatureList "FeatureList":
 
 \snippet dartsim/src/CustomFeatures.hh add to list
 
@@ -179,8 +179,8 @@ features could also be added here.
 The `CustomFeatures` "FeatureList" here uses data structures and classes from:
 - [Base.hh](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/Base.hh), which defines structures that contain information to create `Model`, `Joint`, `Link`, and `Shape` objects in Dartsim API.
 They act as an interface between Ignition Physics Library and the actual physics engine.
-- \ref gz::physics::Implements3d "Implements3d" for implementing the
-custom feature with \ref gz::physics::FeaturePolicy3d "FeaturePolicy3d"
+- \ref ignition::physics::Implements3d "Implements3d" for implementing the
+custom feature with \ref ignition::physics::FeaturePolicy3d "FeaturePolicy3d"
 ("FeaturePolicy" of 3 dimensions and scalar type `double`).
 
 We will then implement the actual function with Dartsim API in [CustomFeatures.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/CustomFeatures.cc) to override the member function
@@ -193,7 +193,7 @@ world pointer from `EntityStorage` object storing world pointers of `dartsim` in
 [Base](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/Base.hh) class.
 
 In the end, we add the implemented `CustomFeatures` "FeatureList" together with
-other \ref gz::physics::FeatureList "FeatureList" to final `DartsimFeatures`
+other \ref ignition::physics::FeatureList "FeatureList" to final `DartsimFeatures`
 "FeatureList" as in [dartsim/src/plugin.cc](https://github.com/ignitionrobotics/ign-physics/blob/ign-physics2/dartsim/src/plugin.cc)
 (please see the \ref createphysicsplugin "Implement a physics feature" tutorial
 for registering the plugin to Ignition Physics).

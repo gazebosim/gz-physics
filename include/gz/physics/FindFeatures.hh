@@ -23,7 +23,7 @@
 
 #include <gz/physics/FeatureList.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {
@@ -38,7 +38,7 @@ namespace gz
       ///
       /// \tparam LoaderT
       ///   The type of plugin loader to use. Typically this will be an
-      ///   gz::plugin::Loader object, but the function can be used on any
+      ///   ignition::plugin::Loader object, but the function can be used on any
       ///   type that has a function `C<std::string> PluginsImplementing<T>()`
       ///   and `C<std::string> AllPlugins()` where `T` is an interface class
       ///   type and `C<std::string>` is a container of `std::strings`.

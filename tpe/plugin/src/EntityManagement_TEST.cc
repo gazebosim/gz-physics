@@ -23,21 +23,21 @@
 
 #include "EntityManagementFeatures.hh"
 
-struct TestFeatureList : gz::physics::FeatureList<
-  gz::physics::tpeplugin::EntityManagementFeatureList
+struct TestFeatureList : ignition::physics::FeatureList<
+  ignition::physics::tpeplugin::EntityManagementFeatureList
 > { };
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
-  gz::plugin::Loader loader;
+  ignition::plugin::Loader loader;
   loader.LoadLib(tpe_plugin_LIB);
 
-  gz::plugin::PluginPtr tpe_plugin =
-    loader.Instantiate("gz::physics::tpeplugin::Plugin");
+  ignition::plugin::PluginPtr tpe_plugin =
+    loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
   // GetEntities_TEST
   auto engine =
-    gz::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
+    ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
   ASSERT_NE(nullptr, engine);
   EXPECT_EQ("tpe", engine->GetName());
   EXPECT_EQ(0u, engine->GetIndex());
@@ -83,14 +83,14 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 
 TEST(EntityManagement_TEST, RemoveEntities)
 {
-  gz::plugin::Loader loader;
+  ignition::plugin::Loader loader;
   loader.LoadLib(tpe_plugin_LIB);
 
-  gz::plugin::PluginPtr tpe_plugin =
-    loader.Instantiate("gz::physics::tpeplugin::Plugin");
+  ignition::plugin::PluginPtr tpe_plugin =
+    loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
   auto engine =
-      gz::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
+      ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("empty world");

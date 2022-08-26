@@ -26,34 +26,34 @@ namespace mock
 {
   template <typename PolicyT>
   class JointPlugin
-      : public gz::physics::Implements<PolicyT, MockJointList>
+      : public ignition::physics::Implements<PolicyT, MockJointList>
   {
     using Scalar = typename PolicyT::Scalar;
 
     using RevoluteAxis =
-        typename gz::physics::FromPolicy<PolicyT>
-        ::template Use<gz::physics::AngularVector>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::AngularVector>;
 
     using PrismaticAxis =
-        typename gz::physics::FromPolicy<PolicyT>
-        ::template Use<gz::physics::LinearVector>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::LinearVector>;
 
     using Pose =
-        typename gz::physics::FromPolicy<PolicyT>
-        ::template Use<gz::physics::Pose>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::Pose>;
 
     using FrameData =
-        typename gz::physics::FromPolicy<PolicyT>
-        ::template Use<gz::physics::FrameData>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::FrameData>;
 
     using LinearVector =
-        typename gz::physics::FromPolicy<PolicyT>
-        ::template Use<gz::physics::LinearVector>;
+        typename ignition::physics::FromPolicy<PolicyT>
+        ::template Use<ignition::physics::LinearVector>;
 
     using VectorX = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
 
-    using FrameID = gz::physics::FrameID;
-    using Identity = gz::physics::Identity;
+    using FrameID = ignition::physics::FrameID;
+    using Identity = ignition::physics::Identity;
 
     struct JointState
     {
@@ -109,7 +109,7 @@ namespace mock
       return this->GenerateFrameID(this->GenerateIdentity(entityID));
     }
 
-    gz::physics::Identity InitiateEngine(std::size_t) override
+    ignition::physics::Identity InitiateEngine(std::size_t) override
     {
       NextId(); // Pass on the zero ID, which is reserved for the engine
 
@@ -193,7 +193,7 @@ namespace mock
       const auto &p = idToJointProperties.at(_id.ID());
       const auto &axis = idToRevoluteJointProperties.at(_id.ID()).axis;
 
-      const Pose R{gz::physics::Rotate(
+      const Pose R{ignition::physics::Rotate(
               idToJointState.at(_id.ID()).position[0], axis)};
 
       Pose parentJointToParentLink = Pose::Identity();
@@ -241,7 +241,7 @@ namespace mock
       const auto &p = this->idToJointProperties.at(_id);
       const auto &axis = this->idToRevoluteJointProperties.at(_id).axis;
 
-      const Pose R{gz::physics::Rotate(
+      const Pose R{ignition::physics::Rotate(
               this->idToJointState.at(_id).position[0], axis)};
 
       return p.parentLinkToJoint * R * p.jointToChildLink;
@@ -313,34 +313,34 @@ namespace mock
   };
 
   class JointPlugin3d
-      : public JointPlugin<gz::physics::FeaturePolicy3d> { };
+      : public JointPlugin<ignition::physics::FeaturePolicy3d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
       JointPlugin3d,
-      gz::physics::FeaturePolicy3d,
+      ignition::physics::FeaturePolicy3d,
       MockJointList)
 
   class JointPlugin2d
-      : public JointPlugin<gz::physics::FeaturePolicy2d> { };
+      : public JointPlugin<ignition::physics::FeaturePolicy2d> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
       JointPlugin2d,
-      gz::physics::FeaturePolicy2d,
+      ignition::physics::FeaturePolicy2d,
       MockJointList)
 
   class JointPlugin3f
-      : public JointPlugin<gz::physics::FeaturePolicy3f> { };
+      : public JointPlugin<ignition::physics::FeaturePolicy3f> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
       JointPlugin3f,
-      gz::physics::FeaturePolicy3f,
+      ignition::physics::FeaturePolicy3f,
       MockJointList)
 
   class JointPlugin2f
-      : public JointPlugin<gz::physics::FeaturePolicy2f> { };
+      : public JointPlugin<ignition::physics::FeaturePolicy2f> { };
 
   IGN_PHYSICS_ADD_PLUGIN(
       JointPlugin2f,
-      gz::physics::FeaturePolicy2f,
+      ignition::physics::FeaturePolicy2f,
       MockJointList)
 }

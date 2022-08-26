@@ -32,7 +32,7 @@
 #include "EntityManagementFeatures.hh"
 
 
-using namespace gz::physics;
+using namespace ignition::physics;
 
 TEST(BaseClass, AddEntities)
 {

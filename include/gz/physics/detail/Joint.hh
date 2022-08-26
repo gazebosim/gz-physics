@@ -20,7 +20,7 @@
 
 #include <gz/physics/Joint.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

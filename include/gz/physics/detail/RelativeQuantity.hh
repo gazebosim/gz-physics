@@ -23,7 +23,7 @@
 
 #include <gz/physics/RelativeQuantity.hh>
 
-namespace gz
+namespace ignition
 {
   namespace physics
   {

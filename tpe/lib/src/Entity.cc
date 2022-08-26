@@ -19,7 +19,7 @@
 #include "Utils.hh"
 
 /// \brief Private data class for entity
-class gz::physics::tpelib::EntityPrivate
+class ignition::physics::tpelib::EntityPrivate
 {
   /// \brief Name of entity
   public: std::string name;
