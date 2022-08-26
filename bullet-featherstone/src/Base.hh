@@ -18,30 +18,30 @@
 #ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_BASE_HH_
 #define GZ_PHYSICS_BULLET_FEATHERSTONE_BASE_HH_
 
-#include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
+#include <BulletDynamics/Featherstone/btMultiBody.h>
+#include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
+#include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <LinearMath/btVector3.h>
 #include <btBulletDynamicsCommon.h>
-#include <BulletDynamics/Featherstone/btMultiBody.h>
-#include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
-#include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
-#include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 
 #include <Eigen/Geometry>
-#include <algorithm>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
-#include <vector>
 #include <variant>
+#include <vector>
 
 #include <gz/common/Console.hh>
-#include <gz/physics/Implements.hh>
 #include <gz/math/eigen3/Conversions.hh>
+#include <gz/physics/Implements.hh>
 
 namespace gz {
 namespace physics {

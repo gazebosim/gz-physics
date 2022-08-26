@@ -20,8 +20,8 @@
 
 #include <string>
 
-#include <gz/physics/Joint.hh>
 #include <gz/physics/FixedJoint.hh>
+#include <gz/physics/Joint.hh>
 #include <gz/physics/PrismaticJoint.hh>
 #include <gz/physics/RevoluteJoint.hh>
 
@@ -59,7 +59,6 @@ class JointFeatures :
       const Identity &_id, const std::size_t _dof) const override;
 
   public: Pose3d GetJointTransform(const Identity &_id) const override;
-
 
   // ----- Set Basic Joint State -----
   public: void SetJointPosition(

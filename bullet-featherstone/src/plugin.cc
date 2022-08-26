@@ -22,12 +22,12 @@
 
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
-#include "SimulationFeatures.hh"
-#include "SDFFeatures.hh"
-#include "KinematicsFeatures.hh"
 #include "FreeGroupFeatures.hh"
 #include "ShapeFeatures.hh"
 #include "JointFeatures.hh"
+#include "KinematicsFeatures.hh"
+#include "SDFFeatures.hh"
+#include "SimulationFeatures.hh"
 #include "WorldFeatures.hh"
 
 namespace gz {
