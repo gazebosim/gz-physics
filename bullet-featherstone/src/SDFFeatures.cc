@@ -32,6 +32,7 @@
 #include <sdf/Surface.hh>
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
+#include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
 
 #include <memory>
 #include <unordered_map>
@@ -149,8 +150,8 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
           default:
             gzerr << "Joint type [" << (std::size_t)(joint->Type())
                   << "] is not supported by "
-                  << "gz-physics-bullet-featherstone-plugin\n";
-            return false;
+                  << "gz-physics-bullet-featherstone-plugin."
+                  << "Replaced by a fixed joint.\n";
         }
 
         if (child == parent)
@@ -207,7 +208,6 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
           gzerr << "The Link [" << childLinkName << "] in Model ["
                 << rootModelName << "] has multiple parent joints. That is not "
                 << "supported by the gz-physics-bullet-featherstone plugin.\n";
-          return false;
         }
       }
 
@@ -522,12 +522,24 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else
       {
-        gzerr << "You have found a bug in gz-physics-bullet-featherstone. "
-              << "Joint  type [" << (std::size_t)(joint->Type()) << "] should "
-              << "have been filtered out during model validation, but that "
-              << "filtering failed. Please report this to the gz-physics "
-              << "developers\n";
-        return this->GenerateInvalidId();
+        model->body->setupFixed(
+          i, mass, inertia, parentIndex,
+          btRotParentComToJoint,
+          btPosParentComToJoint,
+          btJointToChildCom);
+      }
+      if (::sdf::JointType::PRISMATIC == joint->Type() || ::sdf::JointType::REVOLUTE == joint->Type())
+      {
+        model->body->getLink(i).m_jointLowerLimit = joint->Axis()->Lower();
+        model->body->getLink(i).m_jointUpperLimit = joint->Axis()->Upper();
+        model->body->getLink(i).m_jointDamping = 100;//joint->Axis()->Damping();
+        model->body->getLink(i).m_jointFriction = joint->Axis()->Friction();
+        model->body->getLink(i).m_jointMaxVelocity = joint->Axis()->MaxVelocity();
+        model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
+
+        btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
+          model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
+        world->world->addMultiBodyConstraint(con);
       }
     }
   }
@@ -535,7 +547,6 @@ Identity SDFFeatures::ConstructSdfModel(
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
 
   model->body->finalizeMultiDof();
-
 
   const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
   if (!worldToModel)
