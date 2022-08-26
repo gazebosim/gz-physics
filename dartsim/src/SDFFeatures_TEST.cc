@@ -344,12 +344,16 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
   // Test that things were parsed correctly. These values are either stated or
   // implied in the test.world SDF file.
   verify(skeleton->getJoint(1)->getDof(0),
-         3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
+         3.0, 0.0, 0.0, 0.0,
+         -std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity());
 
   verify(skeleton->getJoint(2)->getDof(0),
-         3.0, 0.0, 0.0, 0.0, -1e16, 1e16,
+         3.0, 0.0, 0.0, 0.0,
+         -std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity());
 
