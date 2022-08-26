@@ -22,8 +22,8 @@
 
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/GetEntities.hh>
-#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/Implements.hh>
+#include <gz/physics/RemoveEntities.hh>
 
 #include "Base.hh"
 
@@ -32,14 +32,14 @@ namespace physics {
 namespace bullet_featherstone {
 
 struct EntityManagementFeatureList : gz::physics::FeatureList<
-  RemoveModelFromWorld,
   ConstructEmptyWorldFeature,
-  GetLinkFromModel,
-  GetJointFromModel,
-  GetShapeFromLink,
   GetEngineInfo,
+  GetJointFromModel,
+  GetLinkFromModel,
+  GetModelFromWorld,
+  GetShapeFromLink,
   GetWorldFromEngine,
-  GetModelFromWorld
+  RemoveModelFromWorld
 > { };
 
 class EntityManagementFeatures :

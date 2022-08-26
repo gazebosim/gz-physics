@@ -19,16 +19,16 @@
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Helpers.hh>
 
-#include <sdf/Link.hh>
-#include <sdf/Joint.hh>
-#include <sdf/Geometry.hh>
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
-#include <sdf/Ellipsoid.hh>
-#include <sdf/Sphere.hh>
 #include <sdf/Cylinder.hh>
-#include <sdf/Plane.hh>
+#include <sdf/Ellipsoid.hh>
+#include <sdf/Geometry.hh>
+#include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
+#include <sdf/Link.hh>
+#include <sdf/Plane.hh>
+#include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>

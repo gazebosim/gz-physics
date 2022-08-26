@@ -278,7 +278,6 @@ bool EntityManagementFeatures::RemoveModelByName(
     this->GenerateIdentity(it->second, this->models.at(it->second)));
 }
 
-
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetEngineName(
   const Identity &) const
