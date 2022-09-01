@@ -101,6 +101,12 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
 {
   for (const std::string &name : this->pluginNames)
   {
+    // TODO(ahcorde): reactive this test when test.world is working with bullet
+    if(this->PhysicsEngineName(name) == "bullet")
+    {
+      GTEST_SKIP();
+    }
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
