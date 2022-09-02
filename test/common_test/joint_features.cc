@@ -27,19 +27,20 @@
 #include "../helpers/TestLibLoader.hh"
 #include "../Utils.hh"
 
-#include <gz/physics/sdf/ConstructWorld.hh>
-#include <gz/physics/sdf/ConstructModel.hh>
 #include "gz/physics/FrameSemantics.hh"
-#include <gz/physics/ForwardStep.hh>
-#include <gz/physics/FixedJoint.hh>
-#include <gz/physics/Joint.hh>
-#include <gz/physics/FreeJoint.hh>
-#include <gz/physics/FreeGroup.hh>
 #include <gz/physics/FindFeatures.hh>
+#include <gz/physics/FixedJoint.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FreeGroup.hh>
+#include <gz/physics/FreeJoint.hh>
 #include <gz/physics/GetEntities.hh>
-#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/Joint.hh>
 #include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/RequestEngine.hh>
 #include <gz/physics/RevoluteJoint.hh>
+#include <gz/physics/Shape.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
 
@@ -79,17 +80,17 @@ class JointFeaturesTest:
 };
 
 struct JointFeatureList : gz::physics::FeatureList<
-    gz::physics::GetEngineInfo,
     gz::physics::ForwardStep,
-    gz::physics::GetBasicJointState,
-    gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetModelFromWorld,
-    gz::physics::GetLinkFromModel,
-    gz::physics::GetJointFromModel,
-    gz::physics::SetBasicJointState,
     gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
-    gz::physics::SetJointVelocityCommandFeature
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointVelocityCommandFeature,
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
 using JointFeaturesTestTypes =
@@ -183,16 +184,16 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
 }
 
 struct JointFeaturePositionLimitsList : gz::physics::FeatureList<
-    gz::physics::GetEngineInfo,
     gz::physics::ForwardStep,
-    gz::physics::GetBasicJointState,
-    gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetModelFromWorld,
-    gz::physics::GetJointFromModel,
-    gz::physics::SetBasicJointState,
     gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointPositionLimitsFeature,
     gz::physics::SetJointVelocityCommandFeature,
-    gz::physics::SetJointPositionLimitsFeature
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
 template <class T>
@@ -277,18 +278,21 @@ TYPED_TEST(JointFeaturesPositionLimitsTest, JointSetPositionLimitsWithForceContr
 }
 
 struct JointFeaturePositionLimitsForceControlList : gz::physics::FeatureList<
-    gz::physics::GetEngineInfo,
     gz::physics::ForwardStep,
-    gz::physics::GetBasicJointState,
-    gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetModelFromWorld,
-    gz::physics::GetJointFromModel,
-    gz::physics::SetBasicJointState,
     gz::physics::GetBasicJointProperties,
-    gz::physics::SetJointVelocityCommandFeature,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetModelFromWorld,
+    // This feature is not requited but it will force to use dart6.10 which is required
+    // to run these tests
+    gz::physics::GetShapeFrictionPyramidSlipCompliance,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointEffortLimitsFeature,
     gz::physics::SetJointPositionLimitsFeature,
+    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::SetJointVelocityLimitsFeature,
-    gz::physics::SetJointEffortLimitsFeature
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
 template <class T>
@@ -811,20 +815,20 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
 
 
 struct JointFeatureDetachList : gz::physics::FeatureList<
-    gz::physics::GetEngineInfo,
+    gz::physics::DetachJointFeature,
     gz::physics::ForwardStep,
+    gz::physics::FreeJointCast,
+    gz::physics::GetBasicJointProperties,
     gz::physics::GetBasicJointState,
-    gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetModelFromWorld,
+    gz::physics::GetEngineInfo,
     gz::physics::GetJointFromModel,
     gz::physics::GetLinkFromModel,
-    gz::physics::SetBasicJointState,
-    gz::physics::GetBasicJointProperties,
-    gz::physics::SetJointVelocityCommandFeature,
-    gz::physics::FreeJointCast,
+    gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
     gz::physics::RevoluteJointCast,
-    gz::physics::DetachJointFeature
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointVelocityCommandFeature,
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
 template <class T>
@@ -971,23 +975,23 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
 }
 
 struct JointFeatureAttachDetachList : gz::physics::FeatureList<
-    gz::physics::GetEngineInfo,
+    gz::physics::AttachFixedJointFeature,
+    gz::physics::DetachJointFeature,
     gz::physics::ForwardStep,
+    gz::physics::FreeJointCast,
+    gz::physics::GetBasicJointProperties,
     gz::physics::GetBasicJointState,
-    gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetModelFromWorld,
+    gz::physics::GetEngineInfo,
     gz::physics::GetJointFromModel,
     gz::physics::GetLinkFromModel,
-    gz::physics::SetBasicJointState,
-    gz::physics::GetBasicJointProperties,
-    gz::physics::SetJointVelocityCommandFeature,
-    gz::physics::FreeJointCast,
+    gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
     gz::physics::RevoluteJointCast,
-    gz::physics::DetachJointFeature,
-    gz::physics::AttachFixedJointFeature,
+    gz::physics::SetBasicJointState,
     gz::physics::SetJointTransformFromParentFeature,
-    gz::physics::sdf::ConstructSdfModel
+    gz::physics::SetJointVelocityCommandFeature,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
 template <class T>
@@ -1529,18 +1533,18 @@ class JointTransmittedWrenchFixture : public JointFeaturesTest<T>
 };
 
 struct JointTransmittedWrenchFeatureList : gz::physics::FeatureList<
-    gz::physics::GetEngineInfo,
     gz::physics::ForwardStep,
-    gz::physics::GetBasicJointState,
-    gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetModelFromWorld,
-    gz::physics::GetLinkFromModel,
-    gz::physics::GetJointFromModel,
-    gz::physics::SetBasicJointState,
-    gz::physics::LinkFrameSemantics,
-    gz::physics::SetFreeGroupWorldPose,
     gz::physics::FreeGroupFrameSemantics,
-    gz::physics::GetJointTransmittedWrench
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetJointTransmittedWrench,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetFreeGroupWorldPose,
+    gz::physics::sdf::ConstructSdfWorld
 > { };
 
 using JointTransmittedWrenchFeaturesTestTypes =
