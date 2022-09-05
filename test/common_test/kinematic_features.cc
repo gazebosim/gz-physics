@@ -53,6 +53,14 @@ class KinematicFeaturesTest:
                << GetLibToTest() << std::endl;
      GTEST_SKIP();
    }
+   // TODO(ahcorde): SKIP bullet, review this test again.
+   for (const std::string &name : this->pluginNames)
+   {
+     if(this->PhysicsEngineName(name) == "bullet")
+     {
+       GTEST_SKIP();
+     }
+   }
  }
 
  public: std::set<std::string> pluginNames;
