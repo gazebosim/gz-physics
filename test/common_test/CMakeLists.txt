@@ -4,6 +4,8 @@ set(tests
   basic_test
   construct_empty_world
   free_joint_features
+  joint_features
+  kinematic_features
   simulation_features
 )
 

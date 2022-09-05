@@ -49,31 +49,3 @@ else()
 endif()
 EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
 INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
-
-# Testing
-gz_build_tests(
-  TYPE UNIT_bullet
-  SOURCES ${test_sources}
-  LIB_DEPS
-    ${features}
-    gz-plugin${GZ_PLUGIN_VER}::loader
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    ${PROJECT_LIBRARY_TARGET_NAME}-sdf
-    ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-  TEST_LIST tests)
-
-foreach(test ${tests})
-
-  target_compile_definitions(${test} PRIVATE
-    "bullet_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\""
-    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
-    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
-
-endforeach()
-
-if(TARGET UNIT_FindFeatures_TEST)
-
-  target_compile_definitions(UNIT_FindFeatures_TEST PRIVATE
-    "bullet_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\"")
-
-endif()
