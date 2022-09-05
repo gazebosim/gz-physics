@@ -297,6 +297,15 @@ void JointFeatures::SetJointForce(
   {
     const JointInfoPtr &jointInfo = this->joints.at(_id.id);
     const int jointType = jointInfo->constraintType;
+
+    if (!std::isfinite(_value))
+    {
+      gzerr << "Invalid joint force value [" << _value << "] set on joint ["
+             << jointInfo->name << " DOF " << _dof
+             << "]. The value will be ignored\n";
+      return;
+    }
+
     switch(jointInfo->constraintType)
     {
       case static_cast<int>(::sdf::JointType::REVOLUTE) :
