@@ -6,6 +6,7 @@ set(tests
   free_joint_features
   joint_features
   simulation_features
+  world_features
 )
 
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
