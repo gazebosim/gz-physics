@@ -528,13 +528,15 @@ Identity SDFFeatures::ConstructSdfModel(
           btPosParentComToJoint,
           btJointToChildCom);
       }
-      if (::sdf::JointType::PRISMATIC == joint->Type() || ::sdf::JointType::REVOLUTE == joint->Type())
+      if (::sdf::JointType::PRISMATIC == joint->Type() ||
+        ::sdf::JointType::REVOLUTE == joint->Type())
       {
         model->body->getLink(i).m_jointLowerLimit = joint->Axis()->Lower();
         model->body->getLink(i).m_jointUpperLimit = joint->Axis()->Upper();
-        model->body->getLink(i).m_jointDamping = 100;//joint->Axis()->Damping();
+        model->body->getLink(i).m_jointDamping = joint->Axis()->Damping();
         model->body->getLink(i).m_jointFriction = joint->Axis()->Friction();
-        model->body->getLink(i).m_jointMaxVelocity = joint->Axis()->MaxVelocity();
+        model->body->getLink(i).m_jointMaxVelocity =
+          joint->Axis()->MaxVelocity();
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
 
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
