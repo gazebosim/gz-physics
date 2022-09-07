@@ -1,5 +1,2 @@
 ignore:
   - "tpe/lib/src/aabb_tree"
-  - test/*
-  - examples/*
-  - "**/*_TEST.cc"
