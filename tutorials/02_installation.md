@@ -47,14 +47,14 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
   sudo apt-get build-dep -y libgz-physics<#>-dev
   ```
   Be sure to replace `<#>` with a number value, such as `5` or `6`, depending on which version you need.
-  Older versions can be installed by using the `libignition-physics<#>-dev` packages.
+  On Focal, versions `2`, `3`, and `4`, can be installed by using the `libignition-physics<#>-dev` packages.
 
 2. Clone the repository
   ```
   git clone https://github.com/gazebosim/gz-physics -b gz-physics<#>
   ```
   Be sure to replace `<#>` with a number value, such as `5` or `6`, depending on which version you need.
-  Older versions can be cloned from the `ign-physics<#>` branches.
+  On Focal, versions `2`, `3`, and `4`, can be cloned from the `ign-physics<#>` branches.
 
 3. Configure and build
   ```
