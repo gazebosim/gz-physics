@@ -7,6 +7,7 @@ set(tests
   free_joint_features
   joint_features
   kinematic_features
+  link_features
   simulation_features
 )
 
