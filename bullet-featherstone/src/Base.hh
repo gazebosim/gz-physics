@@ -24,6 +24,7 @@
 #include <BulletDynamics/Featherstone/btMultiBody.h>
 #include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+#include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <LinearMath/btVector3.h>
 #include <btBulletDynamicsCommon.h>
@@ -161,6 +162,7 @@ struct JointInfo
   Identity model;
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
+  btMultiBodyJointMotor* motor = nullptr;
 };
 
 inline btMatrix3x3 convertMat(const Eigen::Matrix3d& mat)

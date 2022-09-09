@@ -34,6 +34,8 @@
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
 
+#include <LinearMath/btQuaternion.h>
+
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -377,6 +379,7 @@ Identity SDFFeatures::ConstructSdfModel(
 
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
+  std::vector<btMultiBodyConstraint*> contraints;
   for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
   {
     const auto *link = structure.flatLinks[i];
@@ -471,7 +474,7 @@ Identity SDFFeatures::ConstructSdfModel(
       btVector3 btJointToChildCom =
         convertVec((poseJointToChild * linkToComTf).translation());
 
-      this->AddJoint(
+      auto jointID = this->AddJoint(
         JointInfo{
           joint->Name(),
           InternalJoint{i},
@@ -481,6 +484,7 @@ Identity SDFFeatures::ConstructSdfModel(
           poseJointToChild,
           modelID
         });
+      auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
       if (::sdf::JointType::FIXED == joint->Type())
       {
@@ -493,12 +497,29 @@ Identity SDFFeatures::ConstructSdfModel(
       else if (::sdf::JointType::REVOLUTE == joint->Type())
       {
         const auto axis = joint->Axis()->Xyz();
+        auto linkParent = _sdfModel.LinkByName(joint->ParentName());
+        gz::math::Pose3d parentTransformInWorldSpace;
+        const auto errors = linkParent->SemanticPose().Resolve(
+          parentTransformInWorldSpace);
+
+        gz::math::Pose3d parent2joint;
+        const auto errors2 = linkParent->SemanticPose().Resolve(
+          parent2joint, joint->Name());
+
+        btTransform parentLocalInertialFrame = convertTf(parentLinkInfo->inertiaToLinkFrame);
+        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(parent2joint.Inverse()));
+
+        btTransform offsetInABt, offsetInBBt;
+  			offsetInABt = parentLocalInertialFrame * parent2jointBt;
+        offsetInBBt = convertTf(linkToComTf.inverse());
+        btQuaternion parentRotToThis = offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
+
         model->body->setupRevolute(
           i, mass, inertia, parentIndex,
-          btRotParentComToJoint,
-          btVector3(axis[0], axis[1], axis[2]),
-          btPosParentComToJoint,
-          btJointToChildCom,
+          parentRotToThis,
+          quatRotate(offsetInBBt.getRotation(), btVector3(axis[0], axis[1], axis[2])),
+          offsetInABt.getOrigin(),
+          -offsetInBBt.getOrigin(),
           true);
       }
       else if (::sdf::JointType::PRISMATIC == joint->Type())
@@ -539,9 +560,14 @@ Identity SDFFeatures::ConstructSdfModel(
           joint->Axis()->MaxVelocity();
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
 
+        jointInfo->motor = new btMultiBodyJointMotor(model->body.get(), i, 0, 0, joint->Axis()->Effort() );
+        contraints.push_back(jointInfo->motor);
+        // world->world->addMultiBodyConstraint(jointInfo->motor);
+
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
-          model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
-        world->world->addMultiBodyConstraint(con);
+          model->body.get(), i, -0.01, 0.01);
+        contraints.push_back(con);
+        // world->world->addMultiBodyConstraint(con);
       }
     }
   }
@@ -577,6 +603,16 @@ Identity SDFFeatures::ConstructSdfModel(
       // with AttachHeightmap.
       this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
     }
+  }
+
+  for (unsigned int i = 0; i < contraints.size(); i++)
+  {
+    world->world->addMultiBodyConstraint(contraints[i]);
+  }
+
+  for (int i = 0; i < world->world->getNumMultiBodyConstraints(); i++)
+  {
+    world->world->getMultiBodyConstraint(i)->finalizeMultiDof();
   }
 
   return modelID;

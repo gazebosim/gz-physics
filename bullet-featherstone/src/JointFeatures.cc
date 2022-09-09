@@ -250,6 +250,27 @@ Identity JointFeatures::CastToJointType(
   return this->GenerateInvalidId();
 }
 
+/////////////////////////////////////////////////
+void JointFeatures::SetJointVelocityCommand(
+    const Identity &_id, const std::size_t _dof, const double _value)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+  // Take extra care that the value is finite. A nan can cause the Bullet
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint velocity value [" << _value
+           << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  std::cerr << "SetJointVelocityCommand " << jointInfo->name << " " << _value << '\n';
+  jointInfo->motor->setVelocityTarget(_value);
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz
