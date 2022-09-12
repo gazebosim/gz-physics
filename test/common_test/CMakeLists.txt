@@ -8,6 +8,7 @@ set(tests
   joint_features
   kinematic_features
   link_features
+  shape_features
   simulation_features
   world_features
 )
