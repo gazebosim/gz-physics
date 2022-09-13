@@ -1,4 +1,4 @@
-\page setupphysicsenginetpe "Use custom engine with Gazebo Physics"
+\page setupphysicsenginetpe "Set up the physics engine with TPE"
 
 ## Prerequisites
 
@@ -127,8 +127,8 @@ and [Base.hh](https://github.com/gazebosim/gz-physics/blob/main/tpe/plugin/src/B
 into `plugin` folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-physics/main/tpe/plugin/CMakeLists.txt -P <path-to-gz-physics>/tpe/plugin/
-wget https://raw.githubusercontent.com/gazebosim/gz-physics/main/tpe/plugin/src/Base.hh -P <path-to-gz-physics>/tpe/plugin/src
+wget https://raw.githubusercontent.com/gazebosim/gz-physics/gz-physics6/tpe/plugin/CMakeLists.txt -P <path-to-gz-physics>/tpe/plugin/
+wget https://raw.githubusercontent.com/gazebosim/gz-physics/gz-physics6/tpe/plugin/src/Base.hh -P <path-to-gz-physics>/tpe/plugin/src
 ```
 
 Now the folder structure looks like this:
