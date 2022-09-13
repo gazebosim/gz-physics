@@ -26,6 +26,7 @@
 #include <gz/math/eigen3/Conversions.hh>
 
 #include "../helpers/TestLibLoader.hh"
+#include "../Utils.hh"
 
 #include <gz/physics/sdf/ConstructJoint.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
@@ -86,8 +87,7 @@ using Features = gz::physics::FeatureList<
   gz::physics::GetEllipsoidShapeProperties
 >;
 
-using TestContactPoint = gz::physics::World3d<Features>::ContactPoint;
-
+template <class T>
 class SimulationFeaturesTest:
   public testing::Test, public gz::physics::TestLibLoader
 {
@@ -100,7 +100,7 @@ class SimulationFeaturesTest:
 
     // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
     // FindFeatures
-    pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
+    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
     if (pluginNames.empty())
     {
       std::cerr << "No plugins with required features found in "
@@ -149,8 +149,10 @@ std::unordered_set<gz::physics::World3dPtr<T>> LoadWorlds(
 /// \param[in] _numSteps The number of steps to take in _world
 /// \return true if the forward step output was checked, false otherwise
 template <class T>
-bool StepWorld(const gz::physics::World3dPtr<T> &_world, bool _firstTime,
-    const std::size_t _numSteps = 1)
+bool StepWorld(
+  const gz::physics::World3dPtr<T> &_world,
+  bool _firstTime,
+  const std::size_t _numSteps = 1)
 {
   EXPECT_NE(nullptr, _world);
   gz::physics::ForwardStep::Input input;
@@ -178,119 +180,58 @@ bool StepWorld(const gz::physics::World3dPtr<T> &_world, bool _firstTime,
 }
 
 template <class T>
-class StepWorldTest:
-  public testing::Test, public gz::physics::TestLibLoader
-{
-  // Documentation inherited
-  public: void SetUp() override
-  {
-    gz::common::Console::SetVerbosity(4);
-
-    loader.LoadLib(StepWorldTest::GetLibToTest());
-
-    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
-    // FindFeatures
-    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
-    if (pluginNames.empty())
-    {
-      std::cerr << "No plugins with required features found in "
-                << GetLibToTest() << std::endl;
-      GTEST_SKIP();
-    }
-  }
-
-  public: std::set<std::string> pluginNames;
-  public: gz::plugin::Loader loader;
-};
-
-// The features that an engine must have to be loaded by this loader.
-using StepForwardFeatures = gz::physics::FeatureList<
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::ForwardStep,
-  gz::physics::sdf::ConstructSdfWorld
->;
-
-template <class T>
-class StepForwardTestClass :
-  public StepWorldTest<T>{};
-using StepForwardTestClassTypes =
-    ::testing::Types<StepForwardFeatures>;
-TYPED_TEST_SUITE(StepForwardTestClass, StepForwardTestClassTypes);
+class SimulationFeaturesTestBasic :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestBasicTypes =
+  ::testing::Types<Features>;
+TYPED_TEST_SUITE(SimulationFeaturesTestBasic,
+                 SimulationFeaturesTestBasicTypes);
 
 /////////////////////////////////////////////////
-TYPED_TEST(StepForwardTestClass, StepWorld)
+TYPED_TEST(SimulationFeaturesTestBasic, StepWorld)
 {
-  auto worlds = LoadWorlds<StepForwardFeatures>(
+  auto worlds = LoadWorlds<Features>(
     this->loader,
     this->pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
-    auto checkedOutput = StepWorld<StepForwardFeatures>(world, true, 1000);
+    auto checkedOutput = StepWorld<Features>(world, true, 1000);
     EXPECT_TRUE(checkedOutput);
   }
 }
 
-template <class T>
-class ShapeFeaturesTest:
-  public testing::Test, public gz::physics::TestLibLoader
-{
-  // Documentation inherited
-  public: void SetUp() override
-  {
-    gz::common::Console::SetVerbosity(4);
-
-    loader.LoadLib(ShapeFeaturesTest::GetLibToTest());
-
-    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
-    // FindFeatures
-    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
-    if (pluginNames.empty())
-    {
-      std::cerr << "No plugins with required features found in "
-                << GetLibToTest() << std::endl;
-      GTEST_SKIP();
-    }
-  }
-
-  public: std::set<std::string> pluginNames;
-  public: gz::plugin::Loader loader;
-};
-
-// The features that an engine must have to be loaded by this loader.
-using ShapeFeaturesFeatures = gz::physics::FeatureList<
-  gz::physics::GetModelFromWorld,
-  gz::physics::GetLinkFromModel,
-  gz::physics::GetShapeFromLink,
-  gz::physics::GetModelBoundingBox,
-
-  gz::physics::AttachBoxShapeFeature,
-  gz::physics::AttachSphereShapeFeature,
-  gz::physics::AttachCylinderShapeFeature,
-  gz::physics::AttachEllipsoidShapeFeature,
-  gz::physics::AttachCapsuleShapeFeature,
-  gz::physics::GetSphereShapeProperties,
-  gz::physics::GetBoxShapeProperties,
-  gz::physics::GetCylinderShapeProperties,
-  gz::physics::GetCapsuleShapeProperties,
-  gz::physics::GetEllipsoidShapeProperties,
-
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::ForwardStep,
-  gz::physics::sdf::ConstructSdfWorld
->;
-
-template <class T>
-class ShapeFeaturesTestClass :
-  public ShapeFeaturesTest<T>{};
-using ShapeFeaturesTestClassTypes =
-    ::testing::Types<ShapeFeaturesFeatures>;
-TYPED_TEST_SUITE(ShapeFeaturesTestClass, ShapeFeaturesTestClassTypes);
 
 /////////////////////////////////////////////////
-TYPED_TEST(ShapeFeaturesTestClass, ShapeFeatures)
+TYPED_TEST(SimulationFeaturesTestBasic, Falling)
 {
-  auto worlds = LoadWorlds<ShapeFeaturesFeatures>(
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) == "tpe")
+    {
+      GTEST_SKIP();
+    }
+
+    auto worlds = LoadWorlds<Features>(
+      this->loader,
+      this->pluginNames,
+      gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+    for (const auto &world : worlds)
+    {
+      auto checkedOutput = StepWorld<Features>(world, true, 1000);
+      EXPECT_TRUE(checkedOutput);
+
+      auto link = world->GetModel(0)->GetLink(0);
+      auto pos = link->FrameDataRelativeToWorld().pose.translation();
+      EXPECT_NEAR(pos.z(), 1.0, 5e-2);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
+{
+  auto worlds = LoadWorlds<Features>(
     this->loader,
     this->pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
@@ -425,9 +366,12 @@ TYPED_TEST(ShapeFeaturesTestClass, ShapeFeatures)
   }
 }
 
-TEST_F(SimulationFeaturesTest, FreeGroup)
+TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
 {
-  auto worlds = LoadWorlds<Features>(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
+  auto worlds = LoadWorlds<Features>(
+    this->loader,
+    this->pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
 
   for (const auto &world : worlds)
   {
@@ -469,10 +413,62 @@ TEST_F(SimulationFeaturesTest, FreeGroup)
   }
 }
 
-
-TEST_F(SimulationFeaturesTest, CollideBitmasks)
+TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
 {
-  auto worlds = LoadWorlds<Features>(loader, pluginNames, TEST_WORLD_DIR "/shapes_bitmask.sdf");
+  auto worlds = LoadWorlds<Features>(
+    this->loader,
+    this->pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+
+  for (const auto &world : worlds)
+  {
+    auto sphere = world->GetModel("sphere");
+    auto sphereCollision = sphere->GetLink(0)->GetShape(0);
+    auto ground = world->GetModel("box");
+    auto groundCollision = ground->GetLink(0)->GetShape(0);
+
+    // Test the bounding boxes in the local frames
+    auto sphereAABB =
+        sphereCollision->GetAxisAlignedBoundingBox(*sphereCollision);
+
+    auto groundAABB =
+        groundCollision->GetAxisAlignedBoundingBox(*groundCollision);
+
+    EXPECT_EQ(gz::math::Vector3d(-1, -1, -1),
+              gz::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(1, 1, 1),
+              gz::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-50, -50, -0.5),
+              gz::math::eigen3::convert(groundAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(50, 50, 0.5),
+              gz::math::eigen3::convert(groundAABB).Max());
+
+    // Test the bounding boxes in the world frames
+    sphereAABB = sphereCollision->GetAxisAlignedBoundingBox();
+    groundAABB = groundCollision->GetAxisAlignedBoundingBox();
+
+    // The sphere shape has a radius of 1.0, so its bounding box will have
+    // dimensions of 1.0 x 1.0 x 1.0. When that bounding box is transformed by
+    // a 45-degree rotation, the dimensions that are orthogonal to the axis of
+    // rotation will dilate from 1.0 to sqrt(2).
+    const double d = std::sqrt(2);
+    EXPECT_EQ(gz::math::Vector3d(-d, -1, 2.0 - d),
+              gz::math::eigen3::convert(sphereAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(d, 1, 2 + d),
+              gz::math::eigen3::convert(sphereAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-50*d, -50*d, -1),
+              gz::math::eigen3::convert(groundAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(50*d, 50*d, 0),
+              gz::math::eigen3::convert(groundAABB).Max());
+  }
+}
+
+TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
+{
+  auto worlds = LoadWorlds<Features>(
+    this->loader,
+    this->pluginNames,
+    gz::common::joinPaths(TEST_WORLD_DIR, "shapes_bitmask.sdf"));
 
   for (const auto &world : worlds)
   {
@@ -511,9 +507,13 @@ TEST_F(SimulationFeaturesTest, CollideBitmasks)
 }
 
 
-TEST_F(SimulationFeaturesTest, RetrieveContacts)
+TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 {
-  auto worlds = LoadWorlds<Features>(loader, pluginNames, TEST_WORLD_DIR "/shapes.world");
+  std::unordered_set<gz::physics::World3dPtr<Features>> worlds =
+    LoadWorlds<Features>(
+      this->loader,
+      this->pluginNames,
+      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
 
   for (const auto &world : worlds)
   {
@@ -550,7 +550,7 @@ TEST_F(SimulationFeaturesTest, RetrieveContacts)
 
     for (auto &contact : contacts)
     {
-      const auto &contactPoint = contact.Get<TestContactPoint>();
+      const auto &contactPoint = contact.Get<gz::physics::World3d<Features>::ContactPoint>();
       ASSERT_TRUE(contactPoint.collision1);
       ASSERT_TRUE(contactPoint.collision2);
       EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
@@ -608,7 +608,7 @@ TEST_F(SimulationFeaturesTest, RetrieveContacts)
     contactBoxEllipsoid = 0u;
     for (auto contact : contacts)
     {
-      const auto &contactPoint = contact.Get<::TestContactPoint>();
+      const auto &contactPoint = contact.Get<gz::physics::World3d<Features>::ContactPoint>();
       ASSERT_TRUE(contactPoint.collision1);
       ASSERT_TRUE(contactPoint.collision2);
       EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
@@ -663,11 +663,296 @@ TEST_F(SimulationFeaturesTest, RetrieveContacts)
   }
 }
 
+using FeaturesContactPropertiesCallback = gz::physics::FeatureList<
+  gz::physics::ConstructEmptyWorldFeature,
+
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::SetFreeGroupWorldPose,
+  gz::physics::SetFreeGroupWorldVelocity,
+
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::CollisionFilterMaskFeature,
+
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetShapeFromLink,
+  gz::physics::GetModelBoundingBox,
+
+  // gz::physics::sdf::ConstructSdfJoint,
+  gz::physics::sdf::ConstructSdfLink,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfCollision,
+  gz::physics::sdf::ConstructSdfWorld,
+
+  gz::physics::ForwardStep,
+
+  #ifdef DART_HAS_CONTACT_SURFACE
+      gz::physics::SetContactPropertiesCallbackFeature,
+  #endif
+
+  gz::physics::AttachBoxShapeFeature,
+  gz::physics::AttachSphereShapeFeature,
+  gz::physics::AttachCylinderShapeFeature,
+  gz::physics::AttachEllipsoidShapeFeature,
+  gz::physics::AttachCapsuleShapeFeature,
+  gz::physics::GetSphereShapeProperties,
+  gz::physics::GetBoxShapeProperties,
+  gz::physics::GetCylinderShapeProperties,
+  gz::physics::GetCapsuleShapeProperties,
+  gz::physics::GetEllipsoidShapeProperties
+>;
+
+#ifdef DART_HAS_CONTACT_SURFACE
+using ContactSurfaceParams =
+  gz::physics::SetContactPropertiesCallbackFeature::
+    ContactSurfaceParams<gz::physics::World3d<FeaturesContactPropertiesCallback>::Policy>;
+#endif
+
+template <class T>
+class SimulationFeaturesTestFeaturesContactPropertiesCallback :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestFeaturesContactPropertiesCallbackTypes =
+  ::testing::Types<FeaturesContactPropertiesCallback>;
+TYPED_TEST_SUITE(SimulationFeaturesTestFeaturesContactPropertiesCallback,
+                 FeaturesContactPropertiesCallback);
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesTestFeaturesContactPropertiesCallback, ContactPropertiesCallback)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::unordered_set<gz::physics::World3dPtr<FeaturesContactPropertiesCallback>> worlds =
+      LoadWorlds<FeaturesContactPropertiesCallback>(
+        this->loader,
+        this->pluginNames,
+        gz::common::joinPaths(TEST_WORLD_DIR, "contact.sdf"));
+
+    for (const auto &world : worlds)
+    {
+      auto sphere = world->GetModel("sphere");
+      auto groundPlane = world->GetModel("ground_plane");
+      auto groundPlaneCollision = groundPlane->GetLink(0)->GetShape(0);
+
+      // Use a set because the order of collisions is not determined.
+      std::set<gz::physics::Shape3dPtr<FeaturesContactPropertiesCallback>> possibleCollisions = {
+          groundPlaneCollision,
+          sphere->GetLink(0)->GetShape(0),
+          sphere->GetLink(1)->GetShape(0),
+          sphere->GetLink(2)->GetShape(0),
+          sphere->GetLink(3)->GetShape(0),
+      };
+      std::map<gz::physics::Shape3dPtr<FeaturesContactPropertiesCallback>, Eigen::Vector3d> expectations
+      {
+        {sphere->GetLink(0)->GetShape(0), {0.0, 0.0, 0.0}},
+        {sphere->GetLink(1)->GetShape(0), {0.0, 1.0, 0.0}},
+        {sphere->GetLink(2)->GetShape(0), {1.0, 0.0, 0.0}},
+        {sphere->GetLink(3)->GetShape(0), {1.0, 1.0, 0.0}},
+      };
+
+      const double gravity = 9.8;
+      std::map<gz::physics::Shape3dPtr<FeaturesContactPropertiesCallback>, double> forceExpectations
+      {
+        // Contact force expectations are: link mass * gravity.
+        {sphere->GetLink(0)->GetShape(0), 0.1 * gravity},
+        {sphere->GetLink(1)->GetShape(0), 1.0 * gravity},
+        {sphere->GetLink(2)->GetShape(0), 2.0 * gravity},
+        {sphere->GetLink(3)->GetShape(0), 3.0 * gravity},
+      };
+
+      // This procedure checks the validity of a generated contact point. It is
+      // used both when checking the contacts after the step is finished and for
+      // checking them inside the contact joint properties callback. The callback
+      // is called after the contacts are generated but before they affect the
+      // physics. That is why contact force is zero during the callback.
+      auto checkContact = [&](
+        const gz::physics::World3d<FeaturesContactPropertiesCallback>::Contact& _contact,
+        const bool zeroForce)
+      {
+        const auto &contactPoint =
+          _contact.Get<gz::physics::World3d<FeaturesContactPropertiesCallback>::ContactPoint>();
+        ASSERT_TRUE(contactPoint.collision1);
+        ASSERT_TRUE(contactPoint.collision2);
+
+        EXPECT_TRUE(possibleCollisions.find(contactPoint.collision1) !=
+                    possibleCollisions.end());
+        EXPECT_TRUE(possibleCollisions.find(contactPoint.collision2) !=
+                    possibleCollisions.end());
+        EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d::Zero();
+
+        // The test expectations are all on the collision that is not the ground
+        // plane.
+        auto testCollision = contactPoint.collision1;
+        if (testCollision == groundPlaneCollision)
+        {
+          testCollision = contactPoint.collision2;
+        }
+
+        expectedContactPos = expectations.at(testCollision);
+
+        EXPECT_TRUE(gz::physics::test::Equal(expectedContactPos,
+                                                   contactPoint.point, 1e-6));
+
+        // Check if the engine populated the extra contact data struct
+        const auto* extraContactData =
+          _contact.Query<gz::physics::World3d<FeaturesContactPropertiesCallback>::ExtraContactData>();
+        ASSERT_NE(nullptr, extraContactData);
+
+        // The normal of the contact force is a vector pointing up (z positive)
+        EXPECT_NEAR(extraContactData->normal[0], 0.0, 1e-3);
+        EXPECT_NEAR(extraContactData->normal[1], 0.0, 1e-3);
+        EXPECT_NEAR(extraContactData->normal[2], 1.0, 1e-3);
+
+        // The contact force has only a z component and its value is
+        // the the weight of the sphere times the gravitational acceleration
+        EXPECT_NEAR(extraContactData->force[0], 0.0, 1e-3);
+        EXPECT_NEAR(extraContactData->force[1], 0.0, 1e-3);
+        EXPECT_NEAR(extraContactData->force[2],
+                    zeroForce ? 0 : forceExpectations.at(testCollision), 1e-3);
+      };
+
+  #ifdef DART_HAS_CONTACT_SURFACE
+      size_t numContactCallbackCalls = 0u;
+      auto contactCallback = [&](
+        const gz::physics::World3d<FeaturesContactPropertiesCallback>::Contact& _contact,
+        size_t _numContactsOnCollision,
+        ContactSurfaceParams& _surfaceParams)
+      {
+        numContactCallbackCalls++;
+        checkContact(_contact, true);
+        EXPECT_EQ(1u, _numContactsOnCollision);
+        // the values in _surfaceParams are implemented as std::optional to allow
+        // physics engines fill only those parameters that are actually
+        // implemented
+        ASSERT_TRUE(_surfaceParams.frictionCoeff.has_value());
+        ASSERT_TRUE(_surfaceParams.secondaryFrictionCoeff.has_value());
+        // not implemented in DART yet
+        EXPECT_FALSE(_surfaceParams.rollingFrictionCoeff.has_value());
+        // not implemented in DART yet
+        EXPECT_FALSE(_surfaceParams.secondaryRollingFrictionCoeff.has_value());
+        // not implemented in DART yet
+        EXPECT_FALSE(_surfaceParams.torsionalFrictionCoeff.has_value());
+        ASSERT_TRUE(_surfaceParams.slipCompliance.has_value());
+        ASSERT_TRUE(_surfaceParams.secondarySlipCompliance.has_value());
+        ASSERT_TRUE(_surfaceParams.restitutionCoeff.has_value());
+        ASSERT_TRUE(_surfaceParams.firstFrictionalDirection.has_value());
+        ASSERT_TRUE(_surfaceParams.contactSurfaceMotionVelocity.has_value());
+        // these constraint parameters are implemented in DART but are not filled
+        // when the callback is called; they are only read after the callback ends
+        EXPECT_FALSE(_surfaceParams.errorReductionParameter.has_value());
+        EXPECT_FALSE(_surfaceParams.maxErrorReductionVelocity.has_value());
+        EXPECT_FALSE(_surfaceParams.maxErrorAllowance.has_value());
+        EXPECT_FALSE(_surfaceParams.constraintForceMixing.has_value());
+
+        EXPECT_NEAR(_surfaceParams.frictionCoeff.value(), 1.0, 1e-6);
+        EXPECT_NEAR(_surfaceParams.secondaryFrictionCoeff.value(), 1.0, 1e-6);
+        EXPECT_NEAR(_surfaceParams.slipCompliance.value(), 0.0, 1e-6);
+        EXPECT_NEAR(_surfaceParams.secondarySlipCompliance.value(), 0.0, 1e-6);
+        EXPECT_NEAR(_surfaceParams.restitutionCoeff.value(), 0.0, 1e-6);
+
+        EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, 0, 1),
+          _surfaceParams.firstFrictionalDirection.value(), 1e-6));
+
+        EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, 0, 0),
+          _surfaceParams.contactSurfaceMotionVelocity.value(), 1e-6));
+      };
+      world->AddContactPropertiesCallback("test", contactCallback);
+  #endif
+
+      // The first step already has contacts, but the contact force due to the
+      // impact does not match the steady-state force generated by the
+      // body's weight.
+      StepWorld<FeaturesContactPropertiesCallback>(world, true);
+
+  #ifdef DART_HAS_CONTACT_SURFACE
+      // There are 4 collision bodies in the world all colliding at the same time
+      EXPECT_EQ(4u, numContactCallbackCalls);
+  #endif
+
+      // After a second step, the contact force reaches steady-state
+      StepWorld<FeaturesContactPropertiesCallback>(world, false);
+
+  #ifdef DART_HAS_CONTACT_SURFACE
+      // There are 4 collision bodies in the world all colliding at the same time
+      EXPECT_EQ(8u, numContactCallbackCalls);
+  #endif
+
+      auto contacts = world->GetContactsFromLastStep();
+      if(this->PhysicsEngineName(name) != "tpe")
+      {
+        EXPECT_EQ(4u, contacts.size());
+      }
+
+      for (auto &contact : contacts)
+      {
+        checkContact(contact, false);
+      }
+
+  #ifdef DART_HAS_CONTACT_SURFACE
+      // removing a non-existing callback yields no error but returns false
+      EXPECT_FALSE(world->RemoveContactPropertiesCallback("foo"));
+
+      // removing an existing callback works and the callback is no longer called
+      EXPECT_TRUE(world->RemoveContactPropertiesCallback("test"));
+
+      // Third step
+      StepWorld<FeaturesContactPropertiesCallback>(world, false);
+
+      // Number of callback calls is the same as after the 2nd call
+      EXPECT_EQ(8u, numContactCallbackCalls);
+
+      // Now we check that changing _surfaceParams inside the contact properties
+      // callback affects the result of the simulation; we set
+      // contactSurfaceMotionVelocity to [1,0,0] which accelerates the contact
+      // points from 0 m/s to 1 m/s in a single simulation step.
+
+      auto contactCallback2 = [&](
+        const gz::physics::World3d<FeaturesContactPropertiesCallback>::Contact& /*_contact*/,
+        size_t /*_numContactsOnCollision*/,
+        ContactSurfaceParams& _surfaceParams)
+      {
+        numContactCallbackCalls++;
+        // friction direction is [0,0,1] and contact surface motion velocity uses
+        // the X value to denote the desired velocity along the friction direction
+        _surfaceParams.contactSurfaceMotionVelocity->x() = 1.0;
+      };
+      world->AddContactPropertiesCallback("test2", contactCallback2);
+
+      numContactCallbackCalls = 0u;
+      // Fourth step
+      StepWorld<FeaturesContactPropertiesCallback>(world, false);
+      EXPECT_EQ(4u, numContactCallbackCalls);
+
+      // Adjust the expected forces to account for the added acceleration along Z
+      forceExpectations =
+      {
+        // Contact force expectations are:
+        // link mass * (gravity + acceleration to 1 m.s^-1 in 1 ms)
+        {sphere->GetLink(0)->GetShape(0), 0.1 * gravity + 100},
+        {sphere->GetLink(1)->GetShape(0), 1.0 * gravity + 999.99},
+        {sphere->GetLink(2)->GetShape(0), 2.0 * gravity + 1999.98},
+        {sphere->GetLink(3)->GetShape(0), 3.0 * gravity + 2999.97},
+      };
+
+      // Verify that the detected contacts correspond to the adjusted expectations
+      contacts = world->GetContactsFromLastStep();
+      EXPECT_EQ(4u, contacts.size());
+      for (auto &contact : contacts)
+      {
+        checkContact(contact, false);
+      }
+
+      EXPECT_TRUE(world->RemoveContactPropertiesCallback("test2"));
+  #endif
+    }
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  // SimulationFeaturesTest::init(argc, argv);
-  if (!StepWorldTest<StepForwardFeatures>::init(
+  if (!SimulationFeaturesTest<Features>::init(
        argc, argv))
     return -1;
   return RUN_ALL_TESTS();
