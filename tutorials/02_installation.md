@@ -13,10 +13,10 @@ The Source Installation instructions are generally recommended for developers wh
 
 Ubuntu Focal or later.
 
-If you don't already have the `lsb-release` package installed, please do so now:
+If you don't already have the packages `gnupg`, `lsb-release`, or `wget` installed, please do so now:
 ```
 sudo apt-get update
-sudo apt-get install lsb-release
+sudo apt-get install gnupg lsb-release wget
 ```
 
 Setup your computer to accept software from
@@ -44,15 +44,17 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 1. Install dependencies
   ```
   sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-  sudo apt-get build-dep -y gz-physics<#>-dev
+  sudo apt-get build-dep -y libgz-physics<#>-dev
   ```
-  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+  Be sure to replace `<#>` with a number value, such as `5` or `6`, depending on which version you need.
+  From version `6` onward, you should use `libgz-physics<#>-dev`; for lower versions, `libignition-physics<#>-dev`.
 
 2. Clone the repository
   ```
-  git clone https://github.com/gazebosim/gz-physics -b ign-physics<#>
+  git clone https://github.com/gazebosim/gz-physics -b gz-physics<#>
   ```
-  Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+  Be sure to replace `<#>` with a number value, such as `5` or `6`, depending on which version you need.
+  From version `6` onward, you should use `gz-physics<#>`; for lower versions, `ign-physics<#>`.
 
 3. Configure and build
   ```
@@ -225,7 +227,16 @@ Follow these steps to run tests and static code analysis in your clone of this r
   make test
   ```
 
-3. Static code checker.
+3. You will need Cppcheck in order to run static code checks. On Ubuntu Cppcheck can be installed using
   ```
+  sudo apt-get install cppcheck
+  ```
+
+4. Configure and run the static code checker.
+  ```
+  cd gz-physics
+  mkdir build
+  cd build
+  cmake ..
   make codecheck
   ```

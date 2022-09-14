@@ -1,7 +1,3 @@
-## Gazebo Physics 7.x
-
-### Gazebo Physics 7.x.x (202X-XX-XX)
-
 ## Gazebo Physics 6.x
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
