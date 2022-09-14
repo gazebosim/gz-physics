@@ -73,7 +73,7 @@ See the [installation tutorial](https://gazebosim.org/api/physics/5.0/installati
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/main/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/gz-physics6/examples/).
 
 # Documentation
 
@@ -90,7 +90,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/gazebosim/gz-physics -b main
+    git clone https://github.com/gazebosim/gz-physics -b gz-physics6 
     ```
 
 3. Configure and build the documentation.
