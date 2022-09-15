@@ -16,7 +16,6 @@ Gazebo @GZ_DESIGNATION_CAP@ library and how to use the library effectively.
 7. \subpage createphysicsplugin "Implement a physics feature"
 8. \subpage createcustomfeature "Implement a custom feature"
 9. \subpage usecustomengine "Use custom engine with Gazebo Physics"
-10. \subpage setupphysicsenginetpe "Set up the physics engine with TPE"
 
 ## License
 
