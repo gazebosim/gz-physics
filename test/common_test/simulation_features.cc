@@ -201,7 +201,6 @@ TYPED_TEST(SimulationFeaturesTestBasic, StepWorld)
   }
 }
 
-
 /////////////////////////////////////////////////
 TYPED_TEST(SimulationFeaturesTestBasic, Falling)
 {
@@ -237,11 +236,16 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
+    std::cerr << "world model count " << world->GetModelCount() << '\n';
     // test ShapeFeatures
     auto sphere = world->GetModel("sphere");
+    EXPECT_NE(nullptr, sphere);
     auto sphereLink = sphere->GetLink(0);
+    EXPECT_NE(nullptr, sphereLink);
     auto sphereCollision = sphereLink->GetShape(0);
+    EXPECT_NE(nullptr, sphereCollision);
     auto sphereShape = sphereCollision->CastToSphereShape();
+    EXPECT_NE(nullptr, sphereShape);
     EXPECT_NEAR(1.0, sphereShape->GetRadius(), 1e-6);
 
     EXPECT_EQ(1u, sphereLink->GetShapeCount());
@@ -251,9 +255,13 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
     EXPECT_EQ(sphere2, sphereLink->GetShape(1));
 
     auto box = world->GetModel("box");
-    auto boxLink = box->GetLink(0);
+    EXPECT_NE(nullptr, box);
+    auto boxLink = box->GetLink("box_link");
+    EXPECT_NE(nullptr, boxLink);
     auto boxCollision = boxLink->GetShape(0);
+    EXPECT_NE(nullptr, boxCollision);
     auto boxShape = boxCollision->CastToBoxShape();
+    EXPECT_NE(nullptr, boxShape);
     EXPECT_EQ(gz::math::Vector3d(100, 100, 1),
               gz::math::eigen3::convert(boxShape->GetSize()));
 
@@ -264,6 +272,8 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
       Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, boxLink->GetShapeCount());
     EXPECT_EQ(box2, boxLink->GetShape(1));
+    EXPECT_EQ(gz::math::Vector3d(1.2, 1.2, 1.2),
+              gz::math::eigen3::convert(boxLink->GetShape(1)->CastToBoxShape()->GetSize()));
 
     auto cylinder = world->GetModel("cylinder");
     auto cylinderLink = cylinder->GetLink(0);
@@ -276,6 +286,12 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
       "cylinder2", 3.0, 4.0, Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, cylinderLink->GetShapeCount());
     EXPECT_EQ(cylinder2, cylinderLink->GetShape(1));
+    EXPECT_NEAR(3.0,
+                cylinderLink->GetShape(1)->CastToCylinderShape()->GetRadius(),
+                1e-6);
+    EXPECT_NEAR(4.0,
+                cylinderLink->GetShape(1)->CastToCylinderShape()->GetHeight(),
+                1e-6);
 
     auto ellipsoid = world->GetModel("ellipsoid");
     auto ellipsoidLink = ellipsoid->GetLink(0);
@@ -316,6 +332,15 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
     auto capsuleAABB =
       capsuleCollision->GetAxisAlignedBoundingBox(*capsuleCollision);
 
+    std::cerr << "gz::math::eigen3::convert(sphereAABB).Min() " << gz::math::eigen3::convert(sphereAABB).Min() << '\n';
+    std::cerr << "gz::math::eigen3::convert(sphereAABB).Max() " << gz::math::eigen3::convert(sphereAABB).Max() << '\n';
+
+    std::cerr << "gz::math::eigen3::convert(boxAABB).Min() " << gz::math::eigen3::convert(boxAABB).Min() << '\n';
+    std::cerr << "gz::math::eigen3::convert(boxAABB).Max() " << gz::math::eigen3::convert(boxAABB).Max() << '\n';
+
+    std::cerr << "gz::math::eigen3::convert(ellipsoidAABB).Min() " << gz::math::eigen3::convert(ellipsoidAABB).Min() << '\n';
+    std::cerr << "gz::math::eigen3::convert(ellipsoidAABB).Max() " << gz::math::eigen3::convert(ellipsoidAABB).Max() << '\n';
+
     EXPECT_TRUE(gz::math::Vector3d(-1, -1, -1).Equal(
                 gz::math::eigen3::convert(sphereAABB).Min(), 0.1));
     EXPECT_EQ(gz::math::Vector3d(1, 1, 1),
@@ -343,6 +368,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
     auto cylinderModelAABB = cylinder->GetAxisAlignedBoundingBox();
     auto ellipsoidModelAABB = ellipsoid->GetAxisAlignedBoundingBox();
     auto capsuleModelAABB = capsule->GetAxisAlignedBoundingBox();
+
     EXPECT_EQ(gz::math::Vector3d(-1, 0.5, -0.5),
               gz::math::eigen3::convert(sphereModelAABB).Min());
     EXPECT_EQ(gz::math::Vector3d(1, 2.5, 1.5),
@@ -952,6 +978,7 @@ TYPED_TEST(SimulationFeaturesTestFeaturesContactPropertiesCallback, ContactPrope
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
+
   if (!SimulationFeaturesTest<Features>::init(
        argc, argv))
     return -1;

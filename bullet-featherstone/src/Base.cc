@@ -37,8 +37,6 @@ WorldInfo::WorldInfo(std::string name_)
     dispatcher.get(), broadphase.get(), solver.get(),
     collisionConfiguration.get());
 
-  /* TO-DO(Lobotuerk): figure out what this line does*/
-  world->getSolverInfo().m_globalCfm = 0;
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
 }
 

@@ -50,18 +50,22 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   }
   else
   {
-    // If the Frame was not a Link then we can assume it's a Model because Free
-    // Groups are always Models underneath. If we ever support frame semantics
-    // for more than links, models, and free groups, then this implementation
-    // needs to change.
-    model = this->FrameInterface<ModelInfo>(_id);
+    // If the Frame was not a Link then check if it's a collision object
+    const auto collisionIt = this->collisions.find(_id.ID());
+    if (collisionIt != this->collisions.end())
+    {
+      throw std::runtime_error("Okay it happened");
+    }
   }
 
   FrameData data;
-  data.pose = convert(model->body->getBaseWorldTransform())
-    * model->baseInertiaToLinkFrame;
-  data.linearVelocity = convert(model->body->getBaseVel());
-  data.linearAcceleration = convert(model->body->getBaseOmega());
+  if(model && model->body)
+  {
+    data.pose = convert(model->body->getBaseWorldTransform())
+      * model->baseInertiaToLinkFrame;
+    data.linearVelocity = convert(model->body->getBaseVel());
+    data.linearAcceleration = convert(model->body->getBaseOmega());
+  }
   return data;
 }
 

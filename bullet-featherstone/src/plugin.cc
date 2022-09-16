@@ -23,6 +23,7 @@
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
+#include "ShapeFeatures.hh"
 #include "JointFeatures.hh"
 #include "KinematicsFeatures.hh"
 #include "SDFFeatures.hh"
@@ -39,6 +40,7 @@ struct BulletFeatures : FeatureList <
   FreeGroupFeatureList,
   KinematicsFeatureList,
   SDFFeatureList,
+  ShapeFeatureList,
   JointFeatureList,
   WorldFeatureList
 > { };
@@ -51,6 +53,7 @@ class Plugin :
     public virtual FreeGroupFeatures,
     public virtual KinematicsFeatures,
     public virtual SDFFeatures,
+    public virtual ShapeFeatures,
     public virtual JointFeatures,
     public virtual WorldFeatures
 {};
