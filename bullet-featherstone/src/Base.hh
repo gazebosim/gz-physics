@@ -326,8 +326,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     model->jointEntityIds.push_back(id);
     model->jointNameToEntityId[joint->name] = id;
 
-    gzdbg << "AddJoint " << "\n";
-
     return this->GenerateIdentity(id, joint);
   }
 

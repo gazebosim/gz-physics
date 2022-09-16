@@ -16,7 +16,6 @@
 */
 
 #include "ShapeFeatures.hh"
-#include <bullet/BulletCollision/BroadphaseCollision/btBroadphaseProxy.h>
 
 #include <gz/math/eigen3/Conversions.hh>
 #include <memory>

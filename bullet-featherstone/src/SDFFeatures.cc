@@ -490,14 +490,8 @@ Identity SDFFeatures::ConstructSdfModel(
           poseJointToChild,
           modelID
         });
-      auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
-
-      std::stringstream ss;
-      ss << "Setting up joint: ";
-
       if (::sdf::JointType::FIXED == joint->Type())
       {
-        ss << "fixed";
         model->body->setupFixed(
           i, mass, inertia, parentIndex,
           btRotParentComToJoint,
@@ -506,7 +500,6 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else if (::sdf::JointType::REVOLUTE == joint->Type())
       {
-        ss << "revolute";
         const auto axis = joint->Axis()->Xyz();
         auto linkParent = _sdfModel.LinkByName(joint->ParentName());
         gz::math::Pose3d parentTransformInWorldSpace;
@@ -535,7 +528,6 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else if (::sdf::JointType::PRISMATIC == joint->Type())
       {
-        ss << "prismatic";
         const auto axis = joint->Axis()->Xyz();
         model->body->setupPrismatic(
           i, mass, inertia, parentIndex,
@@ -547,7 +539,6 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else if (::sdf::JointType::BALL == joint->Type())
       {
-        ss << "ball";
         model->body->setupSpherical(
           i, mass, inertia, parentIndex,
           btRotParentComToJoint,
@@ -556,7 +547,6 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else
       {
-        ss << "unknown, setting to fixed";
         model->body->setupFixed(
           i, mass, inertia, parentIndex,
           btRotParentComToJoint,
@@ -581,20 +571,14 @@ Identity SDFFeatures::ConstructSdfModel(
         // world->world->addMultiBodyConstraint(jointInfo->motor);
         */
 
-        gzdbg << "Adding JointLimitConstraint: " << joint->Axis()->Lower() << " " << joint->Axis()->Upper() << std::endl;
-
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
           model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
         contraints.push_back(con);
       }
-
-      gzdbg << ss.str() << std::endl;
     }
   }
 
-
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
-
   model->body->finalizeMultiDof();
 
   const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
