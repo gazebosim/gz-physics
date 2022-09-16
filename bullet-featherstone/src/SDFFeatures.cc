@@ -33,7 +33,6 @@
 
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
-
 #include <LinearMath/btQuaternion.h>
 
 #include <memory>
@@ -579,11 +578,9 @@ Identity SDFFeatures::ConstructSdfModel(
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
 
         jointInfo->motor = new btMultiBodyJointMotor(model->body.get(), i, 0, 0, joint->Axis()->Effort());
-        contraints.push_back(jointInfo->motor);
         world->world->addMultiBodyConstraint(jointInfo->motor);
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
           model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
-        contraints.push_back(con);
         world->world->addMultiBodyConstraint(con);
       }
     }
