@@ -20,7 +20,7 @@ At the time of writing, there are three physics engines available (more detail
 in \ref physicsplugin "Physics plugin tutorial"):
 - **DART**: `gz-physics-dartsim-plugin`.
 - **TPE**: `gz-physics-tpe-plugin`.
-- **Bulet**: `gz-physics-bullet-plugin`.
+- **Bullet**: `gz-physics-bullet-plugin`.
 
 If you've created a custom engine plugin, you can tell Gazebo where to
 find it by setting the `GZ_SIM_PHYSICS_ENGINE_PATH` environment variable to
