@@ -492,7 +492,6 @@ Identity SDFFeatures::ConstructSdfModel(
           poseJointToChild,
           modelID
         });
-
       auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
       if (::sdf::JointType::FIXED == joint->Type())
@@ -575,7 +574,6 @@ Identity SDFFeatures::ConstructSdfModel(
           btPosParentComToJoint,
           btJointToChildCom);
       }
-
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
         ::sdf::JointType::REVOLUTE == joint->Type())
       {
@@ -600,6 +598,7 @@ Identity SDFFeatures::ConstructSdfModel(
   }
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
+
   model->body->finalizeMultiDof();
 
   const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());

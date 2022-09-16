@@ -25,8 +25,6 @@
 #include <gz/physics/EllipsoidShape.hh>
 #include <gz/physics/SphereShape.hh>
 
-#include <gz/physics/mesh/MeshShape.hh>
-
 #include <string>
 
 #include "Base.hh"
@@ -134,20 +132,6 @@ class ShapeFeatures :
       const std::string &_name,
       double _radius,
       const Pose3d &_pose) override;
-
-  // ----- Mesh Features -----
-          /*
-  public: Identity CastToMeshShape(
-      const Identity &_shapeID) const override;
-
-  public: Identity AttachMeshShape(
-      const Identity &_linkID,
-      const std::string &_name,
-      const gz::common::Mesh &_mesh,
-      const Pose3d &_pose,
-      const LinearVector3d &_scale) override;
-      */
-
 };
 
 }

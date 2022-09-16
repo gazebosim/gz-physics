@@ -74,7 +74,6 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 
   std::unordered_map<std::size_t, math::Pose3d> newPoses;
 
-  size_t ii = 0;
   for (const auto &[id, info] : this->links)
   {
     const auto &model = this->ReferenceInterface<ModelInfo>(info->model);
@@ -87,7 +86,6 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
         !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
         !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
     {
-      ii++;
       _changedPoses.entries.push_back(wp);
       newPoses[id] = wp.pose;
     }
