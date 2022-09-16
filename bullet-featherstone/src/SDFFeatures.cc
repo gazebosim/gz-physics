@@ -382,7 +382,6 @@ Identity SDFFeatures::ConstructSdfModel(
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
   for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
-
   {
     const auto *link = structure.flatLinks[i];
     const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
@@ -508,18 +507,22 @@ Identity SDFFeatures::ConstructSdfModel(
         const auto errors2 = linkParent->SemanticPose().Resolve(
           parent2joint, joint->Name());
 
-        btTransform parentLocalInertialFrame = convertTf(parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(parent2joint.Inverse()));
+        btTransform parentLocalInertialFrame = convertTf(
+          parentLinkInfo->inertiaToLinkFrame);
+        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(
+          arent2joint.Inverse()));
 
         btTransform offsetInABt, offsetInBBt;
   			offsetInABt = parentLocalInertialFrame * parent2jointBt;
         offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis = offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
+        btQuaternion parentRotToThis =
+          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
         model->body->setupRevolute(
           i, mass, inertia, parentIndex,
           parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(), btVector3(axis[0], axis[1], axis[2])),
+          quatRotate(offsetInBBt.getRotation(),
+                     btVector3(axis[0], axis[1], axis[2])),
           offsetInABt.getOrigin(),
           -offsetInBBt.getOrigin(),
           true);
@@ -536,18 +539,22 @@ Identity SDFFeatures::ConstructSdfModel(
         const auto errors2 = linkParent->SemanticPose().Resolve(
           parent2joint, joint->Name());
 
-        btTransform parentLocalInertialFrame = convertTf(parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(parent2joint.Inverse()));
+        btTransform parentLocalInertialFrame = convertTf(
+          parentLinkInfo->inertiaToLinkFrame);
+        btTransform parent2jointBt = convertTf(
+          gz::math::eigen3::convert(parent2joint.Inverse()));
 
         btTransform offsetInABt, offsetInBBt;
   			offsetInABt = parentLocalInertialFrame * parent2jointBt;
         offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis = offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
+        btQuaternion parentRotToThis =
+          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
         model->body->setupPrismatic(
           i, mass, inertia, parentIndex,
           parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(), btVector3(axis[0], axis[1], axis[2])),
+          quatRotate(offsetInBBt.getRotation(),
+                     btVector3(axis[0], axis[1], axis[2])),
           offsetInABt.getOrigin(),
           -offsetInBBt.getOrigin(),
           true);
