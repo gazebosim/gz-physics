@@ -712,25 +712,24 @@ bool SDFFeatures::AddSdfCollision(
       auto s = mesh->SubMeshByIndex(submeshIdx).lock();
       auto vertexCount = s->VertexCount();
       auto indexCount = s->IndexCount();
-
-			btAlignedObjectArray<btVector3> convertedVerts;
-			convertedVerts.reserve(vertexCount);
-			for (unsigned int i = 0; i < vertexCount; i++)
-			{
-				convertedVerts.push_back(btVector3(
+      btAlignedObjectArray<btVector3> convertedVerts;
+      convertedVerts.reserve(vertexCount);
+      for (unsigned int i = 0; i < vertexCount; i++)
+      {
+        convertedVerts.push_back(btVector3(
               s->Vertex(i).X() * scale.X(),
               s->Vertex(i).Y() * scale.Y(),
               s->Vertex(i).Z() * scale.Z()));
-			}
+      }
 
       auto btTrimesh = std::make_unique<btTriangleMesh>();
 
       for (unsigned int i = 0; i < indexCount/3; i++)
       {
         const btVector3& v0 = convertedVerts[s->Index(i*3)];
-				const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
-				const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
-				btTrimesh->addTriangle(v0, v1, v2);
+        const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
+        const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
+        btTrimesh->addTriangle(v0, v1, v2);
       }
 
       this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(btTrimesh.get(), true, true));
