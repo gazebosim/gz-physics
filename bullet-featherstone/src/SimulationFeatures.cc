@@ -44,6 +44,12 @@ void SimulationFeatures::WorldForwardStep(
 
   worldInfo->world->stepSimulation(this->stepSize, 1, this->stepSize);
 
+  gzdbg << "SimulationFeatures::WorldForwardStep\n";
+  gzdbg << " - getGravity: " << worldInfo->world->getGravity().z() << std::endl;
+  gzdbg << " - getNumConstraints: " << worldInfo->world->getNumConstraints() << std::endl;
+  gzdbg << " - getNumMultibodies: " << worldInfo->world->getNumMultibodies() << std::endl;
+  gzdbg << " - getNumMultiBodyConstraints: " << worldInfo->world->getNumMultiBodyConstraints() << std::endl;
+
   this->Write(_h.Get<ChangedWorldPoses>());
 }
 
@@ -56,6 +62,9 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 
   std::unordered_map<std::size_t, math::Pose3d> newPoses;
 
+  std::stringstream ss;
+  ss << "SimulationFEatures::Write\n";
+  size_t ii = 0;
   for (const auto &[id, info] : this->links)
   {
     const auto &model = this->ReferenceInterface<ModelInfo>(info->model);
@@ -68,12 +77,16 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
         !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
         !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
     {
+      ii++;
       _changedPoses.entries.push_back(wp);
       newPoses[id] = wp.pose;
     }
     else
       newPoses[id] = iter->second;
   }
+
+  ss << " - changedPoses: (" << ii << "/" << this->links.size() << ")\n";
+  gzdbg << ss.str();
 
   // Save the new poses so that they can be used to check for updates in the
   // next iteration. Re-setting this->prevLinkPoses with the contents of

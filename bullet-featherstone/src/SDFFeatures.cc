@@ -16,6 +16,10 @@
 */
 
 #include "SDFFeatures.hh"
+#include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+#include <gz/common/Mesh.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/common/SubMesh.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Helpers.hh>
 
@@ -27,6 +31,7 @@
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
+#include <sdf/Mesh.hh>
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
@@ -379,6 +384,7 @@ Identity SDFFeatures::ConstructSdfModel(
 
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
+
   std::vector<btMultiBodyConstraint*> contraints;
   for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
   {
@@ -486,8 +492,12 @@ Identity SDFFeatures::ConstructSdfModel(
         });
       auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
+      std::stringstream ss;
+      ss << "Setting up joint: ";
+
       if (::sdf::JointType::FIXED == joint->Type())
       {
+        ss << "fixed";
         model->body->setupFixed(
           i, mass, inertia, parentIndex,
           btRotParentComToJoint,
@@ -496,6 +506,7 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else if (::sdf::JointType::REVOLUTE == joint->Type())
       {
+        ss << "revolute";
         const auto axis = joint->Axis()->Xyz();
         auto linkParent = _sdfModel.LinkByName(joint->ParentName());
         gz::math::Pose3d parentTransformInWorldSpace;
@@ -524,6 +535,7 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else if (::sdf::JointType::PRISMATIC == joint->Type())
       {
+        ss << "prismatic";
         const auto axis = joint->Axis()->Xyz();
         model->body->setupPrismatic(
           i, mass, inertia, parentIndex,
@@ -535,6 +547,7 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else if (::sdf::JointType::BALL == joint->Type())
       {
+        ss << "ball";
         model->body->setupSpherical(
           i, mass, inertia, parentIndex,
           btRotParentComToJoint,
@@ -543,12 +556,14 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else
       {
+        ss << "unknown, setting to fixed";
         model->body->setupFixed(
           i, mass, inertia, parentIndex,
           btRotParentComToJoint,
           btPosParentComToJoint,
           btJointToChildCom);
       }
+
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
         ::sdf::JointType::REVOLUTE == joint->Type())
       {
@@ -560,17 +575,23 @@ Identity SDFFeatures::ConstructSdfModel(
           joint->Axis()->MaxVelocity();
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
 
+        /*
         jointInfo->motor = new btMultiBodyJointMotor(model->body.get(), i, 0, 0, joint->Axis()->Effort() );
         contraints.push_back(jointInfo->motor);
         // world->world->addMultiBodyConstraint(jointInfo->motor);
+        */
+
+        gzdbg << "Adding JointLimitConstraint: " << joint->Axis()->Lower() << " " << joint->Axis()->Upper() << std::endl;
 
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
-          model->body.get(), i, -0.01, 0.01);
+          model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
         contraints.push_back(con);
-        // world->world->addMultiBodyConstraint(con);
       }
+
+      gzdbg << ss.str() << std::endl;
     }
   }
+
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
 
@@ -677,6 +698,51 @@ bool SDFFeatures::AddSdfCollision(
       positions, radius, 1);
     btSphere->setLocalScaling(btVector3(radii.X(), radii.Y(), radii.Z()));
     shape = std::move(btSphere);
+  }
+  else if (const auto *meshSdf = geom->MeshShape())
+  {
+    auto &meshManager = *gz::common::MeshManager::Instance();
+    auto *mesh = meshManager.Load(meshSdf->Uri());
+    auto scale = meshSdf->Scale();
+    if (nullptr == mesh)
+    {
+      gzwarn << "Failed to load mesh from [" << meshSdf->Uri()
+             << "]." << std::endl;
+      return false;
+    }
+
+    auto compoundShape = std::make_unique<btCompoundShape>();
+
+    for (unsigned int submeshIdx = 0; submeshIdx < mesh->SubMeshCount(); ++submeshIdx)
+    {
+      auto s = mesh->SubMeshByIndex(submeshIdx).lock();
+      auto vertexCount = s->VertexCount();
+      auto indexCount = s->IndexCount();
+
+			btAlignedObjectArray<btVector3> convertedVerts;
+			convertedVerts.reserve(vertexCount);
+			for (unsigned int i = 0; i < vertexCount; i++)
+			{
+				convertedVerts.push_back(btVector3(
+              s->Vertex(i).X() * scale.X(),
+              s->Vertex(i).Y() * scale.Y(),
+              s->Vertex(i).Z() * scale.Z()));
+			}
+
+      auto btTrimesh = std::make_unique<btTriangleMesh>();
+
+      for (unsigned int i = 0; i < indexCount/3; i++)
+      {
+        const btVector3& v0 = convertedVerts[s->Index(i*3)];
+				const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
+				const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
+				btTrimesh->addTriangle(v0, v1, v2);
+      }
+
+      this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(btTrimesh.get(), true, true));
+      compoundShape->addChildShape(btTransform::getIdentity(), this->meshes.back().get());
+    }
+    shape = std::move(compoundShape);
   }
   else
   {

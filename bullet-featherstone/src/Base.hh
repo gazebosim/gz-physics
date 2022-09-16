@@ -326,6 +326,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     model->jointEntityIds.push_back(id);
     model->jointNameToEntityId[joint->name] = id;
 
+    gzdbg << "AddJoint " << "\n";
+
     return this->GenerateIdentity(id, joint);
   }
 
@@ -340,6 +342,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, LinkInfoPtr> links;
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
+
+  public: std::vector<std::unique_ptr<btBvhTriangleMeshShape>> meshes;
 };
 
 }  // namespace bullet_featherstone
