@@ -513,7 +513,7 @@ Identity SDFFeatures::ConstructSdfModel(
           arent2joint.Inverse()));
 
         btTransform offsetInABt, offsetInBBt;
-  			offsetInABt = parentLocalInertialFrame * parent2jointBt;
+        offsetInABt = parentLocalInertialFrame * parent2jointBt;
         offsetInBBt = convertTf(linkToComTf.inverse());
         btQuaternion parentRotToThis =
           offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
@@ -545,7 +545,7 @@ Identity SDFFeatures::ConstructSdfModel(
           gz::math::eigen3::convert(parent2joint.Inverse()));
 
         btTransform offsetInABt, offsetInBBt;
-  			offsetInABt = parentLocalInertialFrame * parent2jointBt;
+        offsetInABt = parentLocalInertialFrame * parent2jointBt;
         offsetInBBt = convertTf(linkToComTf.inverse());
         btQuaternion parentRotToThis =
           offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
@@ -586,7 +586,8 @@ Identity SDFFeatures::ConstructSdfModel(
           joint->Axis()->MaxVelocity();
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
 
-        jointInfo->motor = new btMultiBodyJointMotor(model->body.get(), i, 0, 0, joint->Axis()->Effort());
+        jointInfo->motor = new btMultiBodyJointMotor(
+          model->body.get(), i, 0, 0, joint->Axis()->Effort());
         world->world->addMultiBodyConstraint(jointInfo->motor);
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
           model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
