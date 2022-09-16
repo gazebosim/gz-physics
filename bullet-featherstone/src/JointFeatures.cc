@@ -267,7 +267,6 @@ void JointFeatures::SetJointVelocityCommand(
     return;
   }
 
-  std::cerr << "SetJointVelocityCommand " << jointInfo->name << " " << _value << '\n';
   jointInfo->motor->setVelocityTarget(_value);
 }
 
