@@ -44,6 +44,24 @@ void SimulationFeatures::WorldForwardStep(
 
   worldInfo->world->stepSimulation(this->stepSize, 1, this->stepSize);
 
+  for (auto & m : this->models)
+  {
+    if (m.second->body)
+    {
+      m.second->body->checkMotionAndSleepIfRequired(this->stepSize);
+      btMultiBodyLinkCollider* col = m.second->body->getBaseCollider();
+      if (col && col->getActivationState() != DISABLE_DEACTIVATION)
+        col->setActivationState(ACTIVE_TAG);
+
+      for (int b = 0; b < m.second->body->getNumLinks(); b++)
+      {
+        col =  m.second->body->getLink(b).m_collider;
+        if (col && col->getActivationState() != DISABLE_DEACTIVATION)
+          col->setActivationState(ACTIVE_TAG);
+      }
+    }
+  }
+
   this->Write(_h.Get<ChangedWorldPoses>());
 }
 
