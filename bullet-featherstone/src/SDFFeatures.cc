@@ -510,7 +510,7 @@ Identity SDFFeatures::ConstructSdfModel(
         btTransform parentLocalInertialFrame = convertTf(
           parentLinkInfo->inertiaToLinkFrame);
         btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(
-          arent2joint.Inverse()));
+          parent2joint.Inverse()));
 
         btTransform offsetInABt, offsetInBBt;
         offsetInABt = parentLocalInertialFrame * parent2jointBt;
