@@ -152,12 +152,16 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
             F_WCexpected.pose.translation(),
             childLinkFrameData.pose.translation());
     }
-    EXPECT_EQ(
+    EXPECT_TRUE(
+      gz::physics::test::Equal(
           F_WCexpected.linearVelocity,
-          childLinkFrameData.linearVelocity);
-    EXPECT_EQ(
+          childLinkFrameData.linearVelocity,
+          1e-6));
+    EXPECT_TRUE(
+      gz::physics::test::Equal(
           F_WCexpected.linearAcceleration,
-          childLinkFrameData.linearAcceleration);
+          childLinkFrameData.linearAcceleration,
+          1e-6));
   }
 }
 
