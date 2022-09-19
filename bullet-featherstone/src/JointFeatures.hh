@@ -36,6 +36,8 @@ struct JointFeatureList : FeatureList<
   SetBasicJointState,
   GetBasicJointProperties,
 
+  SetJointVelocityCommandFeature,
+
   GetRevoluteJointProperties,
   GetPrismaticJointProperties,
   FixedJointCast
@@ -108,6 +110,11 @@ class JointFeatures :
   public: Identity CastToJointType(
       const Identity &_jointID,
       btMultibodyLink::eFeatherstoneJointType type) const;
+
+  // ----- Joint Commands -----
+  public: void SetJointVelocityCommand(
+    const Identity &_id, const std::size_t _dof,
+    const double _value) override;
 };
 
 }  // namespace bullet_featherstone
