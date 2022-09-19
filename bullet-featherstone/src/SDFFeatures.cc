@@ -154,7 +154,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
           default:
             gzerr << "Joint type [" << (std::size_t)(joint->Type())
                   << "] is not supported by "
-                  << "gz-physics-bullet-featherstone-plugin."
+                  << "gz-physics-bullet-featherstone-plugin. "
                   << "Replaced by a fixed joint.\n";
         }
 

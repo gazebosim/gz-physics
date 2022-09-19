@@ -135,6 +135,15 @@ void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint velocity value [" << _value
+           << "] commanded on joint [" << joint->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
     return;
