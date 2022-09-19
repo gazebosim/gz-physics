@@ -159,7 +159,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
           default:
             gzerr << "Joint type [" << (std::size_t)(joint->Type())
                   << "] is not supported by "
-                  << "gz-physics-bullet-featherstone-plugin."
+                  << "gz-physics-bullet-featherstone-plugin. "
                   << "Replaced by a fixed joint.\n";
         }
 
@@ -513,18 +513,22 @@ Identity SDFFeatures::ConstructSdfModel(
         const auto errors2 = linkParent->SemanticPose().Resolve(
           parent2joint, joint->Name());
 
-        btTransform parentLocalInertialFrame = convertTf(parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(parent2joint.Inverse()));
+        btTransform parentLocalInertialFrame = convertTf(
+          parentLinkInfo->inertiaToLinkFrame);
+        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(
+          parent2joint.Inverse()));
 
         btTransform offsetInABt, offsetInBBt;
-  			offsetInABt = parentLocalInertialFrame * parent2jointBt;
+        offsetInABt = parentLocalInertialFrame * parent2jointBt;
         offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis = offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
+        btQuaternion parentRotToThis =
+          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
         model->body->setupRevolute(
           i, mass, inertia, parentIndex,
           parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(), btVector3(axis[0], axis[1], axis[2])),
+          quatRotate(offsetInBBt.getRotation(),
+                     btVector3(axis[0], axis[1], axis[2])),
           offsetInABt.getOrigin(),
           -offsetInBBt.getOrigin(),
           true);
@@ -541,18 +545,22 @@ Identity SDFFeatures::ConstructSdfModel(
         const auto errors2 = linkParent->SemanticPose().Resolve(
           parent2joint, joint->Name());
 
-        btTransform parentLocalInertialFrame = convertTf(parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(parent2joint.Inverse()));
+        btTransform parentLocalInertialFrame = convertTf(
+          parentLinkInfo->inertiaToLinkFrame);
+        btTransform parent2jointBt = convertTf(
+          gz::math::eigen3::convert(parent2joint.Inverse()));
 
         btTransform offsetInABt, offsetInBBt;
-  			offsetInABt = parentLocalInertialFrame * parent2jointBt;
+        offsetInABt = parentLocalInertialFrame * parent2jointBt;
         offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis = offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
+        btQuaternion parentRotToThis =
+          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
         model->body->setupPrismatic(
           i, mass, inertia, parentIndex,
           parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(), btVector3(axis[0], axis[1], axis[2])),
+          quatRotate(offsetInBBt.getRotation(),
+                     btVector3(axis[0], axis[1], axis[2])),
           offsetInABt.getOrigin(),
           -offsetInBBt.getOrigin(),
           true);
@@ -584,7 +592,8 @@ Identity SDFFeatures::ConstructSdfModel(
           joint->Axis()->MaxVelocity();
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
 
-        jointInfo->motor = new btMultiBodyJointMotor(model->body.get(), i, 0, 0, joint->Axis()->Effort());
+        jointInfo->motor = new btMultiBodyJointMotor(
+          model->body.get(), i, 0, 0, joint->Axis()->Effort());
         world->world->addMultiBodyConstraint(jointInfo->motor);
 
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(

@@ -270,7 +270,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     this->models[id] = model;
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-    // world->world->addMultiBody(model->body.get());
     world->modelNameToEntityId[model->name] = id;
     model->indexInWorld = world->nextModelIndex++;
     world->modelIndexToEntityId[model->indexInWorld] = id;
