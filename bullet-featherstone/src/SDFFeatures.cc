@@ -387,7 +387,6 @@ Identity SDFFeatures::ConstructSdfModel(
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
 
-  std::vector<btMultiBodyConstraint*> constraints;
   for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
   {
     const auto *link = structure.flatLinks[i];
@@ -586,12 +585,10 @@ Identity SDFFeatures::ConstructSdfModel(
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
 
         jointInfo->motor = new btMultiBodyJointMotor(model->body.get(), i, 0, 0, joint->Axis()->Effort());
-        constraints.push_back(jointInfo->motor);
         world->world->addMultiBodyConstraint(jointInfo->motor);
 
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
           model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
-        constraints.push_back(con);
         world->world->addMultiBodyConstraint(con);
       }
     }
