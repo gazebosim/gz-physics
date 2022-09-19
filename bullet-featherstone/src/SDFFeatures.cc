@@ -713,7 +713,9 @@ bool SDFFeatures::AddSdfCollision(
 
     auto compoundShape = std::make_unique<btCompoundShape>();
 
-    for (unsigned int submeshIdx = 0; submeshIdx < mesh->SubMeshCount(); ++submeshIdx)
+    for (unsigned int submeshIdx = 0;
+         submeshIdx < mesh->SubMeshCount();
+         ++submeshIdx)
     {
       auto s = mesh->SubMeshByIndex(submeshIdx).lock();
       auto vertexCount = s->VertexCount();
@@ -738,8 +740,10 @@ bool SDFFeatures::AddSdfCollision(
         btTrimesh->addTriangle(v0, v1, v2);
       }
 
-      this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(btTrimesh.get(), true, true));
-      compoundShape->addChildShape(btTransform::getIdentity(), this->meshes.back().get());
+      this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(
+          btTrimesh.get(), true, true));
+      compoundShape->addChildShape(
+          btTransform::getIdentity(), this->meshes.back().get());
     }
     shape = std::move(compoundShape);
   }
