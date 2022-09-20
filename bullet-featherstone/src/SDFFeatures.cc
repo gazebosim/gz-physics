@@ -687,16 +687,53 @@ bool SDFFeatures::AddSdfCollision(
   }
   else if (const auto *ellipsoid = geom->EllipsoidShape())
   {
-    btVector3 positions[1];
-    btScalar radius[1];
-    positions[0] = btVector3();
-    radius[0] = 1;
-
+    // This code is from bullet3 examples/SoftDemo/SoftDemo.cpp
+    struct Hammersley
+  	{
+  		static void Generate(btVector3* x, int n)
+  		{
+  			for (int i = 0; i < n; i++)
+  			{
+  				btScalar p = 0.5, t = 0;
+  				for (int j = i; j; p *= 0.5, j >>= 1)
+  					if (j & 1) t += p;
+  				btScalar w = 2 * t - 1;
+  				btScalar a = (SIMD_PI + 2 * i * SIMD_PI) / n;
+  				btScalar s = btSqrt(1 - w * w);
+  				*x++ = btVector3(s * btCos(a), s * btSin(a), w);
+  			}
+  		}
+  	};
+  	btAlignedObjectArray<btVector3> vtx;
+  	vtx.resize(3 + 128);
+  	Hammersley::Generate(&vtx[0], vtx.size());
+    btVector3 center(0, 0, 0);
     const auto radii = ellipsoid->Radii();
-    auto btSphere = std::make_unique<btMultiSphereShape>(
-      positions, radius, 1);
-    btSphere->setLocalScaling(btVector3(radii.X(), radii.Y(), radii.Z()));
-    shape = std::move(btSphere);
+    btVector3 radius(radii.X(), radii.Y(), radii.Z());
+  	for (int i = 0; i < vtx.size(); ++i)
+  	{
+  		vtx[i] = vtx[i] * radius + center;
+  	}
+
+    auto *btTrimesh = new btTriangleMesh();
+    this->triangleMeshes.push_back(btTrimesh);
+
+    for (unsigned int i = 0; i < vtx.size()/3; i++)
+    {
+      const btVector3& v0 = vtx[i * 3 + 0];
+      const btVector3& v1 = vtx[i * 3 + 1];
+      const btVector3& v2 = vtx[i * 3 + 2];
+      btTrimesh->addTriangle(v0, v1, v2);
+    }
+    auto compoundShape = std::make_unique<btCompoundShape>();
+
+    btGImpactMeshShape *gImpactMesh = new btGImpactMeshShape(btTrimesh);
+    gImpactMesh->updateBound();
+    gImpactMesh->setMargin(0.001);
+    this->meshesGImpact.push_back(gImpactMesh);
+    compoundShape->addChildShape(
+        btTransform::getIdentity(), gImpactMesh);
+    shape = std::move(compoundShape);
   }
   else if (const auto *meshSdf = geom->MeshShape())
   {
