@@ -740,10 +740,12 @@ bool SDFFeatures::AddSdfCollision(
         btTrimesh->addTriangle(v0, v1, v2);
       }
 
-      this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(
-          btTrimesh, true, true));
+      btGImpactMeshShape *gImpactMesh = new btGImpactMeshShape(btTrimesh);
+      gImpactMesh->updateBound();
+      gImpactMesh->setMargin(0.001);
+      this->meshesGImpact.push_back(gImpactMesh);
       compoundShape->addChildShape(
-          btTransform::getIdentity(), this->meshes.back().get());
+          btTransform::getIdentity(), gImpactMesh);
     }
     shape = std::move(compoundShape);
   }
