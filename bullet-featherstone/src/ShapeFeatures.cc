@@ -16,8 +16,8 @@
 */
 
 #include "ShapeFeatures.hh"
-#include <gz/math/eigen3/Conversions.hh>
 
+#include <gz/math/eigen3/Conversions.hh>
 #include <memory>
 #include <string>
 #include <utility>

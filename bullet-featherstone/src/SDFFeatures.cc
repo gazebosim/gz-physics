@@ -16,6 +16,10 @@
 */
 
 #include "SDFFeatures.hh"
+#include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+#include <gz/common/Mesh.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/common/SubMesh.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Helpers.hh>
 
@@ -27,6 +31,7 @@
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
+#include <sdf/Mesh.hh>
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
@@ -381,6 +386,7 @@ Identity SDFFeatures::ConstructSdfModel(
 
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
+
   for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
   {
     const auto *link = structure.flatLinks[i];
@@ -691,6 +697,55 @@ bool SDFFeatures::AddSdfCollision(
       positions, radius, 1);
     btSphere->setLocalScaling(btVector3(radii.X(), radii.Y(), radii.Z()));
     shape = std::move(btSphere);
+  }
+  else if (const auto *meshSdf = geom->MeshShape())
+  {
+    auto &meshManager = *gz::common::MeshManager::Instance();
+    auto *mesh = meshManager.Load(meshSdf->Uri());
+    auto scale = meshSdf->Scale();
+    if (nullptr == mesh)
+    {
+      gzwarn << "Failed to load mesh from [" << meshSdf->Uri()
+             << "]." << std::endl;
+      return false;
+    }
+
+    auto compoundShape = std::make_unique<btCompoundShape>();
+
+    for (unsigned int submeshIdx = 0;
+         submeshIdx < mesh->SubMeshCount();
+         ++submeshIdx)
+    {
+      auto s = mesh->SubMeshByIndex(submeshIdx).lock();
+      auto vertexCount = s->VertexCount();
+      auto indexCount = s->IndexCount();
+      btAlignedObjectArray<btVector3> convertedVerts;
+      convertedVerts.reserve(vertexCount);
+      for (unsigned int i = 0; i < vertexCount; i++)
+      {
+        convertedVerts.push_back(btVector3(
+              s->Vertex(i).X() * scale.X(),
+              s->Vertex(i).Y() * scale.Y(),
+              s->Vertex(i).Z() * scale.Z()));
+      }
+
+      auto *btTrimesh = new btTriangleMesh();
+      this->triangleMeshes.push_back(btTrimesh);
+
+      for (unsigned int i = 0; i < indexCount/3; i++)
+      {
+        const btVector3& v0 = convertedVerts[s->Index(i*3)];
+        const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
+        const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
+        btTrimesh->addTriangle(v0, v1, v2);
+      }
+
+      this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(
+          btTrimesh, true, true));
+      compoundShape->addChildShape(
+          btTransform::getIdentity(), this->meshes.back().get());
+    }
+    shape = std::move(compoundShape);
   }
   else
   {
