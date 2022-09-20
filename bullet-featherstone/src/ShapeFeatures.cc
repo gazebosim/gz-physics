@@ -98,7 +98,7 @@ Identity ShapeFeatures::AttachBoxShape(
       _name,
       std::move(shape),
       _linkID,
-      Eigen::Isometry3d()});
+      _pose});
 
   return identity;
 }
@@ -175,7 +175,7 @@ Identity ShapeFeatures::AttachCapsuleShape(
       _name,
       std::move(shape),
       _linkID,
-      Eigen::Isometry3d()});
+      _pose});
 
   return identity;
 }
@@ -254,7 +254,7 @@ Identity ShapeFeatures::AttachCylinderShape(
       _name,
       std::move(shape),
       _linkID,
-      Eigen::Isometry3d()});
+      _pose});
 
   return identity;
 }
@@ -318,7 +318,7 @@ Identity ShapeFeatures::AttachEllipsoidShape(
       _name,
       std::move(shape),
       _linkID,
-      Eigen::Isometry3d()});
+      _pose});
   return identity;
 }
 
@@ -371,7 +371,7 @@ Identity ShapeFeatures::AttachSphereShape(
       _name,
       std::move(shape),
       _linkID,
-      Eigen::Isometry3d()});
+      _pose});
 
   return identity;
 }
