@@ -341,6 +341,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
 
   public: std::vector<std::unique_ptr<btBvhTriangleMeshShape>> meshes;
+  public: btAlignedObjectArray<btTriangleMesh*> triangleMeshes;
 };
 
 }  // namespace bullet_featherstone

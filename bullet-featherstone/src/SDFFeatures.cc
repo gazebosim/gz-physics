@@ -729,7 +729,8 @@ bool SDFFeatures::AddSdfCollision(
               s->Vertex(i).Z() * scale.Z()));
       }
 
-      auto btTrimesh = std::make_unique<btTriangleMesh>();
+      auto *btTrimesh = new btTriangleMesh();
+      this->triangleMeshes.push_back(btTrimesh);
 
       for (unsigned int i = 0; i < indexCount/3; i++)
       {
@@ -740,7 +741,7 @@ bool SDFFeatures::AddSdfCollision(
       }
 
       this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(
-          btTrimesh.get(), true, true));
+          btTrimesh, true, true));
       compoundShape->addChildShape(
           btTransform::getIdentity(), this->meshes.back().get());
     }
