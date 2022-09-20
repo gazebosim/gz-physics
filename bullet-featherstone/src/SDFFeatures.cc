@@ -745,7 +745,6 @@ bool SDFFeatures::AddSdfCollision(
       this->meshesGImpact.back()->setMargin(0.001);
       compoundShape->addChildShape(btTransform::getIdentity(),
         this->meshesGImpact.back().get());
-      //
     }
     shape = std::move(compoundShape);
   }
