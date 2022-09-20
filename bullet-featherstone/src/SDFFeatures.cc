@@ -595,7 +595,6 @@ Identity SDFFeatures::ConstructSdfModel(
         jointInfo->motor = new btMultiBodyJointMotor(
           model->body.get(), i, 0, 0, joint->Axis()->Effort());
         world->world->addMultiBodyConstraint(jointInfo->motor);
-
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
           model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
         world->world->addMultiBodyConstraint(con);
