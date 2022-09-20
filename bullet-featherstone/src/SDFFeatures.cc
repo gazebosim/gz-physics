@@ -715,24 +715,24 @@ bool SDFFeatures::AddSdfCollision(
   		vtx[i] = vtx[i] * radius + center;
   	}
 
-    auto *btTrimesh = new btTriangleMesh();
-    this->triangleMeshes.push_back(btTrimesh);
+    this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
 
     for (unsigned int i = 0; i < vtx.size()/3; i++)
     {
       const btVector3& v0 = vtx[i * 3 + 0];
       const btVector3& v1 = vtx[i * 3 + 1];
       const btVector3& v2 = vtx[i * 3 + 2];
-      btTrimesh->addTriangle(v0, v1, v2);
+      this->triangleMeshes.back()->addTriangle(v0, v1, v2);
     }
     auto compoundShape = std::make_unique<btCompoundShape>();
 
-    btGImpactMeshShape *gImpactMesh = new btGImpactMeshShape(btTrimesh);
-    gImpactMesh->updateBound();
-    gImpactMesh->setMargin(0.001);
-    this->meshesGImpact.push_back(gImpactMesh);
-    compoundShape->addChildShape(
-        btTransform::getIdentity(), gImpactMesh);
+    this->meshesGImpact.push_back(
+      std::make_unique<btGImpactMeshShape>(
+        this->triangleMeshes.back().get()));
+    this->meshesGImpact.back()->updateBound();
+    this->meshesGImpact.back()->setMargin(0.001);
+    compoundShape->addChildShape(btTransform::getIdentity(),
+      this->meshesGImpact.back().get());
     shape = std::move(compoundShape);
   }
   else if (const auto *meshSdf = geom->MeshShape())
@@ -766,21 +766,22 @@ bool SDFFeatures::AddSdfCollision(
               s->Vertex(i).Z() * scale.Z()));
       }
 
-      auto *btTrimesh = new btTriangleMesh();
-      this->triangleMeshes.push_back(btTrimesh);
-
+      this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
       for (unsigned int i = 0; i < indexCount/3; i++)
       {
         const btVector3& v0 = convertedVerts[s->Index(i*3)];
         const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
         const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
-        btTrimesh->addTriangle(v0, v1, v2);
+        this->triangleMeshes.back()->addTriangle(v0, v1, v2);
       }
 
-      this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(
-          btTrimesh, true, true));
-      compoundShape->addChildShape(
-          btTransform::getIdentity(), this->meshes.back().get());
+      this->meshesGImpact.push_back(
+        std::make_unique<btGImpactMeshShape>(
+          this->triangleMeshes.back().get()));
+      this->meshesGImpact.back()->updateBound();
+      this->meshesGImpact.back()->setMargin(0.001);
+      compoundShape->addChildShape(btTransform::getIdentity(),
+        this->meshesGImpact.back().get());
     }
     shape = std::move(compoundShape);
   }
