@@ -717,7 +717,7 @@ bool SDFFeatures::AddSdfCollision(
 
     this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
 
-    for (unsigned int i = 0; i < vtx.size()/3; i++)
+    for (int i = 0; i < vtx.size()/3; i++)
     {
       const btVector3& v0 = vtx[i * 3 + 0];
       const btVector3& v1 = vtx[i * 3 + 1];
