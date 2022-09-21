@@ -689,31 +689,31 @@ bool SDFFeatures::AddSdfCollision(
   {
     // This code is from bullet3 examples/SoftDemo/SoftDemo.cpp
     struct Hammersley
-  	{
-  		static void Generate(btVector3* x, int n)
-  		{
-  			for (int i = 0; i < n; i++)
-  			{
-  				btScalar p = 0.5, t = 0;
-  				for (int j = i; j; p *= 0.5, j >>= 1)
-  					if (j & 1) t += p;
-  				btScalar w = 2 * t - 1;
-  				btScalar a = (SIMD_PI + 2 * i * SIMD_PI) / n;
-  				btScalar s = btSqrt(1 - w * w);
-  				*x++ = btVector3(s * btCos(a), s * btSin(a), w);
-  			}
-  		}
-  	};
-  	btAlignedObjectArray<btVector3> vtx;
-  	vtx.resize(3 + 128);
-  	Hammersley::Generate(&vtx[0], vtx.size());
+    {
+      static void Generate(btVector3* x, int n)
+      {
+        for (int i = 0; i < n; i++)
+        {
+          btScalar p = 0.5, t = 0;
+          for (int j = i; j; p *= 0.5, j >>= 1)
+            if (j & 1) t += p;
+          btScalar w = 2 * t - 1;
+          btScalar a = (SIMD_PI + 2 * i * SIMD_PI) / n;
+          btScalar s = btSqrt(1 - w * w);
+          *x++ = btVector3(s * btCos(a), s * btSin(a), w);
+        }
+      }
+    };
+    btAlignedObjectArray<btVector3> vtx;
+    vtx.resize(3 + 128);
+    Hammersley::Generate(&vtx[0], vtx.size());
     btVector3 center(0, 0, 0);
     const auto radii = ellipsoid->Radii();
     btVector3 radius(radii.X(), radii.Y(), radii.Z());
-  	for (int i = 0; i < vtx.size(); ++i)
-  	{
-  		vtx[i] = vtx[i] * radius + center;
-  	}
+    for (int i = 0; i < vtx.size(); ++i)
+    {
+      vtx[i] = vtx[i] * radius + center;
+    }
 
     this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
 
