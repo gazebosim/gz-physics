@@ -2,6 +2,119 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
+### Gazebo Physics 6.0.0 (2022-09-21)
+
+1. Improved documentation and instructions
+    * [Pull request #421](https://github.com/gazebosim/gz-physics/pull/421)
+    * [Pull request #419](https://github.com/gazebosim/gz-physics/pull/419)
+    * [Pull request #422](https://github.com/gazebosim/gz-physics/pull/422)
+    * [Pull request #417](https://github.com/gazebosim/gz-physics/pull/417)
+    * [Pull request #416](https://github.com/gazebosim/gz-physics/pull/416)
+    * [Pull request #316](https://github.com/gazebosim/gz-physics/pull/316)
+    * [Pull request #312](https://github.com/gazebosim/gz-physics/pull/312)
+    * [Pull request #401](https://github.com/gazebosim/gz-physics/pull/401)
+
+1. Added common tests
+    * [Pull request #414](https://github.com/gazebosim/gz-physics/pull/414)
+    * [Pull request #412](https://github.com/gazebosim/gz-physics/pull/412)
+    * [Pull request #411](https://github.com/gazebosim/gz-physics/pull/411)
+    * [Pull request #410](https://github.com/gazebosim/gz-physics/pull/410)
+    * [Pull request #409](https://github.com/gazebosim/gz-physics/pull/409)
+    * [Pull request #408](https://github.com/gazebosim/gz-physics/pull/408)
+    * [Pull request #407](https://github.com/gazebosim/gz-physics/pull/407)
+    * [Pull request #364](https://github.com/gazebosim/gz-physics/pull/364)
+    * [Pull request #362](https://github.com/gazebosim/gz-physics/pull/362)
+    * [Pull request #360](https://github.com/gazebosim/gz-physics/pull/360)
+    * [Pull request #363](https://github.com/gazebosim/gz-physics/pull/363)
+    * [Pull request #357](https://github.com/gazebosim/gz-physics/pull/357)
+
+1. Forward ports
+    * [Pull request #398](https://github.com/gazebosim/gz-physics/pull/398)
+    * [Pull request #5 ➡️  6 (main](https://github.com/gazebosim/gz-physics/pull/5 ➡️  6 (main)
+    * [Pull request #397](https://github.com/gazebosim/gz-physics/pull/397)
+    * [Pull request #2 ➡️  5](https://github.com/gazebosim/gz-physics/pull/2 ➡️  5)
+    * [Pull request #1 ➡️  2](https://github.com/gazebosim/gz-physics/pull/1 ➡️  2)
+    * [Pull request #5 -> 6](https://github.com/gazebosim/gz-physics/pull/5 -> 6)
+    * [Pull request #392](https://github.com/gazebosim/gz-physics/pull/392)
+    * [Pull request #2 ➡ 5](https://github.com/gazebosim/gz-physics/pull/2 ➡ 5)
+    * [Pull request #321](https://github.com/gazebosim/gz-physics/pull/321)
+    * [Pull request #5 ➡️  6 (main](https://github.com/gazebosim/gz-physics/pull/5 ➡️  6 (main)
+    * [Pull request #336 from ignitionrobotics/merge5main](https://github.com/gazebosim/gz-physics/pull/336 from ignitionrobotics/merge5main)
+    * [Pull request #Merge branch 'ign-physics5' into merge5main](https://github.com/gazebosim/gz-physics/pull/Merge branch 'ign-physics5' into merge5main)
+    * [Pull request #396 from gazebosim/chapulina/1_to_2](https://github.com/gazebosim/gz-physics/pull/396 from gazebosim/chapulina/1_to_2)
+    * [Pull request #391 from gazebosim/chapulina/5_to_6](https://github.com/gazebosim/gz-physics/pull/391 from gazebosim/chapulina/5_to_6)
+    * [Pull request #Merge branch 'main' into chapulina/5_to_6](https://github.com/gazebosim/gz-physics/pull/Merge branch 'main' into chapulina/5_to_6)
+
+1. dartsim: fix handling inertia matrix pose rotation
+    * [Pull request #351](https://github.com/gazebosim/gz-physics/pull/351)
+
+1. ABI tweaks to help bullet-featherstone
+    * [Pull request #395](https://github.com/gazebosim/gz-physics/pull/395)
+
+1. Add code coverage ignore file
+    * [Pull request #388](https://github.com/gazebosim/gz-physics/pull/388)
+
+1. Fix bullet classic entity management
+    * [Pull request #393](https://github.com/gazebosim/gz-physics/pull/393)
+
+1. Ignition to Gazebo transition
+    * [Pull request #386](https://github.com/gazebosim/gz-physics/pull/386)
+    * [Pull request #Fixed merge - ignition to gz](https://github.com/gazebosim/gz-physics/pull/Fixed merge - ignition to gz)
+    * [Pull request #378](https://github.com/gazebosim/gz-physics/pull/378)
+    * [Pull request #368](https://github.com/gazebosim/gz-physics/pull/368)
+    * [Pull request #356](https://github.com/gazebosim/gz-physics/pull/356)
+    * [Pull request #355](https://github.com/gazebosim/gz-physics/pull/355)
+    * [Pull request #358](https://github.com/gazebosim/gz-physics/pull/358)
+    * [Pull request #353](https://github.com/gazebosim/gz-physics/pull/353)
+    * [Pull request #348](https://github.com/gazebosim/gz-physics/pull/348)
+    * [Pull request #346](https://github.com/gazebosim/gz-physics/pull/346)
+    * [Pull request #390](https://github.com/gazebosim/gz-physics/pull/390)
+
+1. Partial source and cmake migrations
+    * [Pull request #381](https://github.com/gazebosim/gz-physics/pull/381)
+
+1. Move png file
+    * [Pull request #381](https://github.com/gazebosim/gz-physics/pull/381)
+
+1. Restore CXX_STANDARD export from core library
+    * [Pull request #377](https://github.com/gazebosim/gz-physics/pull/377)
+
+1. Fixed warning SDFfeatures_TEST - dartsim
+    * [Pull request #370](https://github.com/gazebosim/gz-physics/pull/370)
+
+1. Update GoogleTest to latest version
+    * [Pull request #369](https://github.com/gazebosim/gz-physics/pull/369)
+
+1. Use new Joint APIs for Parent/Child name
+    * [Pull request #361](https://github.com/gazebosim/gz-physics/pull/361)
+
+1. Bullet: Added collision shape to Capsule and Ellipsoid
+    * [Pull request #350](https://github.com/gazebosim/gz-physics/pull/350)
+
+1. Version bumps and removal of deprecations
+    * [Pull request #344](https://github.com/gazebosim/gz-physics/pull/344)
+    * [Pull request #341](https://github.com/gazebosim/gz-physics/pull/341)
+    * [Pull request #Bumps in garden: depend on ign-math7, ign-common5 and sdformat13](https://github.com/gazebosim/gz-physics/pull/Bumps in garden: depend on ign-math7, ign-common5 and sdformat13)
+    * [Pull request #383](https://github.com/gazebosim/gz-physics/pull/383)
+
+1. examples: fix cmake find version variables
+    * [Pull request #340](https://github.com/gazebosim/gz-physics/pull/340)
+
+1. Fix ExpectData compiler warnings
+    * [Pull request #335](https://github.com/gazebosim/gz-physics/pull/335)
+
+1. Added DEM support to heightmaps
+    * [Pull request #315](https://github.com/gazebosim/gz-physics/pull/315)
+
+1. Remove Bionic from future releases (Garden+)
+    * [Pull request #331](https://github.com/gazebosim/gz-physics/pull/331)
+
+1. Remove explicitly-defined copy constructor/operator
+    * [Pull request #328](https://github.com/gazebosim/gz-physics/pull/328)
+
+1. Bump main to 6.0.0~pre1
+
+
 ## Gazebo Physics 5.x
 
 ### Gazebo Physics 5.2.0 (2022-06-29)
