@@ -729,21 +729,22 @@ bool SDFFeatures::AddSdfCollision(
               s->Vertex(i).Z() * scale.Z()));
       }
 
-      auto *btTrimesh = new btTriangleMesh();
-      this->triangleMeshes.push_back(btTrimesh);
-
+      this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
       for (unsigned int i = 0; i < indexCount/3; i++)
       {
         const btVector3& v0 = convertedVerts[s->Index(i*3)];
         const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
         const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
-        btTrimesh->addTriangle(v0, v1, v2);
+        this->triangleMeshes.back()->addTriangle(v0, v1, v2);
       }
 
-      this->meshes.push_back(std::make_unique<btBvhTriangleMeshShape>(
-          btTrimesh, true, true));
-      compoundShape->addChildShape(
-          btTransform::getIdentity(), this->meshes.back().get());
+      this->meshesGImpact.push_back(
+        std::make_unique<btGImpactMeshShape>(
+          this->triangleMeshes.back().get()));
+      this->meshesGImpact.back()->updateBound();
+      this->meshesGImpact.back()->setMargin(0.001);
+      compoundShape->addChildShape(btTransform::getIdentity(),
+        this->meshesGImpact.back().get());
     }
     shape = std::move(compoundShape);
   }
