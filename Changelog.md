@@ -50,21 +50,14 @@
     * [Pull request #348](https://github.com/gazebosim/gz-physics/pull/348)
     * [Pull request #346](https://github.com/gazebosim/gz-physics/pull/346)
     * [Pull request #390](https://github.com/gazebosim/gz-physics/pull/390)
-
-1. Partial source and cmake migrations
     * [Pull request #381](https://github.com/gazebosim/gz-physics/pull/381)
-
-1. Move png file
-    * [Pull request #381](https://github.com/gazebosim/gz-physics/pull/381)
-
-1. Restore CXX_STANDARD export from core library
-    * [Pull request #377](https://github.com/gazebosim/gz-physics/pull/377)
 
 1. Fixed warning SDFfeatures_TEST - dartsim
     * [Pull request #370](https://github.com/gazebosim/gz-physics/pull/370)
 
 1. Update GoogleTest to latest version
     * [Pull request #369](https://github.com/gazebosim/gz-physics/pull/369)
+    * [Pull request #377](https://github.com/gazebosim/gz-physics/pull/377)
 
 1. Use new Joint APIs for Parent/Child name
     * [Pull request #361](https://github.com/gazebosim/gz-physics/pull/361)
