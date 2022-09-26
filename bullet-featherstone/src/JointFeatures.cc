@@ -287,8 +287,10 @@ Identity JointFeatures::AttachFixedJoint(
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
   auto modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
-  auto parentLinkInfo = this->ReferenceInterface<LinkInfo>(_parent->FullIdentity());
-  auto parentModelInfo = this->ReferenceInterface<ModelInfo>(parentLinkInfo->model);
+  auto parentLinkInfo = this->ReferenceInterface<LinkInfo>(
+    _parent->FullIdentity());
+  auto parentModelInfo = this->ReferenceInterface<ModelInfo>(
+    parentLinkInfo->model);
   auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
 
   auto jointID = this->AddJoint(
