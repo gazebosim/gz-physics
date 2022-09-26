@@ -279,6 +279,83 @@ void JointFeatures::SetJointVelocityCommand(
   jointInfo->motor->setVelocityTarget(_value);
 }
 
+/////////////////////////////////////////////////
+Identity JointFeatures::AttachFixedJoint(
+    const Identity &_childID,
+    const BaseLink3dPtr &_parent,
+    const std::string &_name)
+{
+  auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+  auto parentLinkInfo = this->ReferenceInterface<LinkInfo>(_parent->FullIdentity());
+  auto parentModelInfo = this->ReferenceInterface<ModelInfo>(parentLinkInfo->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+
+  auto jointID = this->AddJoint(
+    JointInfo{
+      _name + "_" + parentLinkInfo->name + "_" + linkInfo->name,
+      InternalJoint{0},
+      _parent->FullIdentity().id,
+      _childID,
+      Eigen::Isometry3d(),
+      Eigen::Isometry3d(),
+      linkInfo->model
+    });
+
+  auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
+
+  jointInfo->fixedContraint = new btMultiBodyFixedConstraint(
+    parentModelInfo->body.get(), -1,
+    modelInfo->body.get(), -1,
+    btVector3(), btVector3(),
+    btMatrix3x3::getIdentity(),
+    btMatrix3x3::getIdentity());
+  jointInfo->fixedContraint->setMaxAppliedImpulse(0.2);
+
+  if (world)
+  {
+    if (world->world)
+    {
+      world->world->addMultiBodyConstraint(jointInfo->fixedContraint);
+      return this->GenerateIdentity(jointID, this->joints.at(jointID));
+    }
+  }
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::DetachJoint(const Identity &_jointId)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
+  if (jointInfo->fixedContraint)
+  {
+    auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+    if (modelInfo)
+    {
+      auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+      world->world->removeMultiBodyConstraint(jointInfo->fixedContraint);
+      delete jointInfo->fixedContraint;
+      jointInfo->fixedContraint = 0;
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointTransformFromParent(
+    const Identity &_id, const Pose3d &_pose)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+  if (jointInfo->fixedContraint)
+  {
+      jointInfo->fixedContraint->setPivotInA(
+        btVector3(
+          _pose.translation()[0],
+          _pose.translation()[1],
+          _pose.translation()[2]));
+  }
+}
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz
