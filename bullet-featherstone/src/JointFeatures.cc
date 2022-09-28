@@ -18,6 +18,8 @@
 #include "JointFeatures.hh"
 
 #include <algorithm>
+#include <memory>
+
 #include <sdf/Joint.hh>
 
 namespace gz {
