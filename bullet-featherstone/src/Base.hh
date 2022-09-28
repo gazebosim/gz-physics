@@ -165,7 +165,7 @@ struct JointInfo
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
   btMultiBodyJointMotor* motor = nullptr;
-  btMultiBodyFixedConstraint* fixedContraint = nullptr;
+  std::shared_ptr<btMultiBodyFixedConstraint> fixedContraint = nullptr;
 };
 
 inline btMatrix3x3 convertMat(const Eigen::Matrix3d& mat)
@@ -327,6 +327,15 @@ class Base : public Implements3d<FeatureList<Feature>>
     joint->indexInGzModel = model->jointEntityIds.size();
     model->jointEntityIds.push_back(id);
     model->jointNameToEntityId[joint->name] = id;
+
+    return this->GenerateIdentity(id, joint);
+  }
+
+  public: inline Identity addConstraint(JointInfo _jointInfo)
+  {
+    const auto id = this->GetNextEntity();
+    auto joint = std::make_shared<JointInfo>(std::move(_jointInfo));
+    this->joints[id] = joint;
 
     return this->GenerateIdentity(id, joint);
   }

@@ -293,7 +293,7 @@ Identity JointFeatures::AttachFixedJoint(
     parentLinkInfo->model);
   auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
 
-  auto jointID = this->AddJoint(
+  auto jointID = this->addConstraint(
     JointInfo{
       _name + "_" + parentLinkInfo->name + "_" + linkInfo->name,
       InternalJoint{0},
@@ -306,10 +306,10 @@ Identity JointFeatures::AttachFixedJoint(
 
   auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
-  jointInfo->fixedContraint = new btMultiBodyFixedConstraint(
+  jointInfo->fixedContraint = std::make_shared<btMultiBodyFixedConstraint>(
     parentModelInfo->body.get(), -1,
     modelInfo->body.get(), -1,
-    btVector3(), btVector3(),
+    btVector3(0, 0, 0), btVector3(0, 0, 0),
     btMatrix3x3::getIdentity(),
     btMatrix3x3::getIdentity());
   jointInfo->fixedContraint->setMaxAppliedImpulse(0.2);
@@ -318,7 +318,7 @@ Identity JointFeatures::AttachFixedJoint(
   {
     if (world->world)
     {
-      world->world->addMultiBodyConstraint(jointInfo->fixedContraint);
+      world->world->addMultiBodyConstraint(jointInfo->fixedContraint.get());
       return this->GenerateIdentity(jointID, this->joints.at(jointID));
     }
   }
@@ -336,9 +336,9 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
     if (modelInfo)
     {
       auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
-      world->world->removeMultiBodyConstraint(jointInfo->fixedContraint);
-      delete jointInfo->fixedContraint;
-      jointInfo->fixedContraint = 0;
+      world->world->removeMultiBodyConstraint(jointInfo->fixedContraint.get());
+      jointInfo->fixedContraint.reset();
+      jointInfo->fixedContraint = nullptr;
     }
   }
 }
