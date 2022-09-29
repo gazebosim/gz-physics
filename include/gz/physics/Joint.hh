@@ -584,6 +584,38 @@ namespace gz
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the mimic constraint for this Joint.
+    class GZ_PHYSICS_VISIBLE SetMimicConstraintFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting the mimic joint constraint.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        public: void SetMimicConstraint(
+                    const std::size_t &_dof, std::string &_joint,
+                    std::string &_axis, Scalar _multiplier,
+                    Scalar _offset);
+      };
+
+      /// \private The implementation API for setting the mimic constraint.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::MimicConstraint above
+        public: virtual void SetJointMimicConstraint(
+            const Identity &_id, std::size_t &_dof,
+            std::string &_joint, std::string &_axis,
+            Scalar _multiplier, Scalar _offset) = 0;
+      };
+    };
+
+
   }
 }
 

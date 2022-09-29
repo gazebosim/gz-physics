@@ -696,6 +696,17 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   wrenchOut.force = transmittedWrenchInJoint.tail<3>();
   return wrenchOut;
 }
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMimicConstraint(
+    const Identity &_id, std::size_t &_dof,
+    std::string &_joint, std::string &_axis,
+    const double _multiplier,
+    const double _offset)
+{
+}
+
+
 }
 }
 }

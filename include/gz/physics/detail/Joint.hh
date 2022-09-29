@@ -216,6 +216,18 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    void SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
+    SetMimicConstraint(
+      const std::size_t &_dof, std::string &_joint,
+      std::string &_axis, Scalar _multiplier, Scalar _offset)
+    {
+      this->template Interface<SetMimicConstraintFeature>()
+        ->SetJointMimicConstraint(this->identity, _dof, _joint,
+          _axis, _multiplier, _offset);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void DetachJointFeature::Joint<PolicyT, FeaturesT>::Detach()
     {
       this->template Interface<DetachJointFeature>()

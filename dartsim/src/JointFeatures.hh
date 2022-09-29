@@ -56,7 +56,9 @@ struct JointFeatureList : FeatureList<
   SetJointPositionLimitsFeature,
   SetJointVelocityLimitsFeature,
   SetJointEffortLimitsFeature,
-  GetJointTransmittedWrench
+  GetJointTransmittedWrench,
+
+  SetMimicConstraintFeature
 > { };
 
 class JointFeatures :
@@ -203,6 +205,13 @@ class JointFeatures :
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
       const Identity &_id) const override;
+
+  // ----- Mimic joint constraint -----
+  public: void SetJointMimicConstraint(
+      const Identity &_id, std::size_t &_dof,
+      std::string &_joint, std::string &_axis,
+      const double _multiplier,
+      const double _offset) override;
 };
 
 }
