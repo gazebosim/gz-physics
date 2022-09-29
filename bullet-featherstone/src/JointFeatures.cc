@@ -316,6 +316,7 @@ Identity JointFeatures::AttachFixedJoint(
     btMatrix3x3::getIdentity());
 
   if (world && world->world)
+  {
     world->world->addMultiBodyConstraint(jointInfo->fixedContraint.get());
     return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
