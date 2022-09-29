@@ -596,7 +596,7 @@ namespace gz
         public: using Scalar = typename PolicyT::Scalar;
 
         public: void SetMimicConstraint(
-                    const std::size_t &_dof, std::string &_joint,
+                    const std::size_t &_dof, const Identity &_idMimicJoint,
                     std::string &_axis, Scalar _multiplier,
                     Scalar _offset);
       };
@@ -610,7 +610,7 @@ namespace gz
         // See Joint::MimicConstraint above
         public: virtual void SetJointMimicConstraint(
             const Identity &_id, std::size_t &_dof,
-            std::string &_joint, std::string &_axis,
+            const Identity &_idMimicJoint, std::string &_axis,
             Scalar _multiplier, Scalar _offset) = 0;
       };
     };
