@@ -66,6 +66,60 @@ void SimulationFeatures::WorldForwardStep(
 }
 
 /////////////////////////////////////////////////
+std::vector<SimulationFeatures::ContactInternal>
+SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
+{
+  std::vector<SimulationFeatures::ContactInternal> outContacts;
+  auto *const world = this->ReferenceInterface<WorldInfo>(_worldID);
+  if (!world)
+  {
+    return outContacts;
+  }
+
+  int numManifolds = world->world->getDispatcher()->getNumManifolds();
+	for (int i = 0; i < numManifolds; i++)
+	{
+		btPersistentManifold* contactManifold = world->world->getDispatcher()->getManifoldByIndexInternal(i);
+		const btMultiBodyLinkCollider* obA = (btMultiBodyLinkCollider*)contactManifold->getBody0();
+		const btMultiBodyLinkCollider* obB = (btMultiBodyLinkCollider*)contactManifold->getBody1();
+    std::size_t shape1ID;
+    std::size_t shape2ID;
+
+    for (const auto & link : this->links)
+    {
+      if (obA == link.second->collider.get())
+      {
+        shape1ID = link.first;
+      }
+      if (obB == link.second->collider.get())
+      {
+        shape2ID = link.first;
+      }
+
+    }
+		int numContacts = contactManifold->getNumContacts();
+		for (int j = 0; j < numContacts; j++)
+		{
+			btManifoldPoint& pt = contactManifold->getContactPoint(j);
+      CompositeData extraData;
+
+      // Add normal, depth and wrench to extraData.
+      auto& extraContactData =
+        extraData.Get<SimulationFeatures::ExtraContactData>();
+      extraContactData.force =  convert(btVector3(pt.m_appliedImpulse, pt.m_appliedImpulse, pt.m_appliedImpulse));
+      extraContactData.normal = convert(pt.m_normalWorldOnB);
+      extraContactData.depth = pt.getDistance();
+
+      outContacts.push_back(SimulationFeatures::ContactInternal {
+        this->GenerateIdentity(shape1ID, this->links.at(shape1ID)),
+        this->GenerateIdentity(shape2ID, this->links.at(shape2ID)),
+        convert(pt.getPositionWorldOnA()), extraData});
+      }
+  }
+  return outContacts;
+}
+
+/////////////////////////////////////////////////
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {
   // remove link poses from the previous iteration

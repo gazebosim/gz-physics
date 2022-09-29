@@ -939,6 +939,24 @@ bool SDFFeatures::AddSdfCollision(
   return true;
 }
 
+Identity SDFFeatures::ConstructSdfCollision(
+    const Identity &_linkID,
+    const ::sdf::Collision &_collision)
+{
+  if(this->AddSdfCollision(_linkID, _collision, false))
+  {
+    for (const auto& collision : this->collisions)
+    {
+      if (collision.second->link.id == _linkID.id)
+      {
+        return this->GenerateIdentity(
+          collision.first, this->collisions.at(collision.first));
+      }
+    }
+  }
+  return this->GenerateInvalidId();
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

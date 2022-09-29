@@ -267,7 +267,7 @@ Identity ShapeFeatures::CastToEllipsoidShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btMultiSphereShape*>(shape.get()))
+    if (dynamic_cast<btCompoundShape*>(shape.get()))
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -283,12 +283,15 @@ Vector3d ShapeFeatures::GetEllipsoidShapeRadii(
   {
     if (it->second->collider != nullptr)
     {
-      auto *ellipsoid = static_cast<btMultiSphereShape*>(
+      auto *ellipsoid = static_cast<btCompoundShape*>(
         it->second->collider.get());
       if (ellipsoid)
       {
-        auto radii = ellipsoid->getLocalScaling();
-        return Vector3d(radii[0], radii[1], radii[2]);
+        btVector3 aabbMin, aabbMax;
+        btTransform tr;
+        tr.setIdentity();
+        ellipsoid->getAabb(tr, aabbMin, aabbMax);
+        return Vector3d(aabbMax[0], aabbMax[1], aabbMax[2]);
       }
     }
   }
