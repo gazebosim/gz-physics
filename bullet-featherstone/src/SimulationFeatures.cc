@@ -77,11 +77,14 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   }
 
   int numManifolds = world->world->getDispatcher()->getNumManifolds();
-	for (int i = 0; i < numManifolds; i++)
-	{
-		btPersistentManifold* contactManifold = world->world->getDispatcher()->getManifoldByIndexInternal(i);
-		const btMultiBodyLinkCollider* obA = (btMultiBodyLinkCollider*)contactManifold->getBody0();
-		const btMultiBodyLinkCollider* obB = (btMultiBodyLinkCollider*)contactManifold->getBody1();
+  for (int i = 0; i < numManifolds; i++)
+  {
+    btPersistentManifold* contactManifold =
+      world->world->getDispatcher()->getManifoldByIndexInternal(i);
+    const btMultiBodyLinkCollider* obA =
+      reinterpret_cast<btMultiBodyLinkCollider*>(contactManifold->getBody0());
+    const btMultiBodyLinkCollider* obB =
+      reinterpret_cast<btMultiBodyLinkCollider*>(contactManifold->getBody1());
     std::size_t shape1ID;
     std::size_t shape2ID;
 
@@ -95,18 +98,20 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       {
         shape2ID = link.first;
       }
-
     }
-		int numContacts = contactManifold->getNumContacts();
-		for (int j = 0; j < numContacts; j++)
-		{
-			btManifoldPoint& pt = contactManifold->getContactPoint(j);
+    int numContacts = contactManifold->getNumContacts();
+    for (int j = 0; j < numContacts; j++)
+    {
+      btManifoldPoint& pt = contactManifold->getContactPoint(j);
       CompositeData extraData;
 
       // Add normal, depth and wrench to extraData.
       auto& extraContactData =
         extraData.Get<SimulationFeatures::ExtraContactData>();
-      extraContactData.force =  convert(btVector3(pt.m_appliedImpulse, pt.m_appliedImpulse, pt.m_appliedImpulse));
+      extraContactData.force =
+        convert(btVector3(pt.m_appliedImpulse,
+                          pt.m_appliedImpulse,
+                          pt.m_appliedImpulse));
       extraContactData.normal = convert(pt.m_normalWorldOnB);
       extraContactData.depth = pt.getDistance();
 
