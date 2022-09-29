@@ -82,9 +82,9 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     btPersistentManifold* contactManifold =
       world->world->getDispatcher()->getManifoldByIndexInternal(i);
     const btMultiBodyLinkCollider* obA =
-      reinterpret_cast<btMultiBodyLinkCollider*>(contactManifold->getBody0());
+      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
     const btMultiBodyLinkCollider* obB =
-      reinterpret_cast<btMultiBodyLinkCollider*>(contactManifold->getBody1());
+      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
     std::size_t shape1ID;
     std::size_t shape2ID;
 
