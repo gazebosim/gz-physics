@@ -38,6 +38,10 @@ struct JointFeatureList : FeatureList<
 
   SetJointVelocityCommandFeature,
 
+  SetJointTransformFromParentFeature,
+  AttachFixedJointFeature,
+  DetachJointFeature,
+
   GetRevoluteJointProperties,
   GetPrismaticJointProperties,
   FixedJointCast
@@ -115,8 +119,20 @@ class JointFeatures :
   public: void SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof,
     const double _value) override;
-};
 
+  // ----- AttachFixedJointFeature -----
+  public: Identity AttachFixedJoint(
+      const Identity &_childID,
+      const BaseLink3dPtr &_parent,
+      const std::string &_name) override;
+
+  // ----- Detach Joint -----
+  public: void DetachJoint(const Identity &_jointId) override;
+
+  // ----- Set Basic Joint Properties -----
+  public: void SetJointTransformFromParent(
+      const Identity &_id, const Pose3d &_pose) override;
+};
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

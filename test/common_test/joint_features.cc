@@ -982,7 +982,6 @@ struct JointFeatureAttachDetachList : gz::physics::FeatureList<
     gz::physics::AttachFixedJointFeature,
     gz::physics::DetachJointFeature,
     gz::physics::ForwardStep,
-    gz::physics::FreeJointCast,
     gz::physics::GetBasicJointProperties,
     gz::physics::GetBasicJointState,
     gz::physics::GetEngineInfo,
@@ -990,7 +989,6 @@ struct JointFeatureAttachDetachList : gz::physics::FeatureList<
     gz::physics::GetLinkFromModel,
     gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
-    gz::physics::RevoluteJointCast,
     gz::physics::SetBasicJointState,
     gz::physics::SetJointTransformFromParentFeature,
     gz::physics::SetJointVelocityCommandFeature,
@@ -1060,7 +1058,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
           gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
       gz::math::Vector3d body2LinearVelocity =
         gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-2);
       // Negative z velocity
       EXPECT_GT(0.0, body2LinearVelocity.Z());
     }
@@ -1083,6 +1081,11 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     for (std::size_t i = 0; i < numSteps; ++i)
     {
       world->Step(output, state, input);
+    }
+
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
 
       frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
       frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
@@ -1092,8 +1095,8 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
         gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
       gz::math::Vector3d body2LinearVelocity =
         gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
     }
 
     // now detach joint and expect model2 to start moving again
@@ -1116,7 +1119,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
         gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
       gz::math::Vector3d body2LinearVelocity =
         gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-2);
       // Negative z velocity
       EXPECT_GT(0.0, body2LinearVelocity.Z());
     }
@@ -1248,9 +1251,9 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
           gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
       gz::math::Vector3d body3LinearVelocity =
           gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-7);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
-      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-7);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-1);
+      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-1);
+      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-1);
     }
 
     // Detach the joints. M1 and M3 should fall as there is now nothing stopping
@@ -1274,9 +1277,9 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
           gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
       gz::math::Vector3d body3LinearVelocity =
           gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-      EXPECT_NEAR(dt * (i + 1) * -9.81, body1LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-7);
-      EXPECT_NEAR(dt * (i + 1) * -9.81, body3LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(dt * (i + 1) * -9.81, body1LinearVelocity.Z(), 1e-2);
+      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-2);
+      EXPECT_NEAR(dt * (i + 1) * -9.81, body3LinearVelocity.Z(), 1e-2);
     }
   }
 }
