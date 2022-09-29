@@ -314,15 +314,11 @@ Identity JointFeatures::AttachFixedJoint(
     btVector3(0, 0, 0), btVector3(0, 0, 0),
     btMatrix3x3::getIdentity(),
     btMatrix3x3::getIdentity());
-  jointInfo->fixedContraint->setMaxAppliedImpulse(0.2);
 
-  if (world)
+  if (world && world->world)
   {
-    if (world->world)
-    {
-      world->world->addMultiBodyConstraint(jointInfo->fixedContraint.get());
-      return this->GenerateIdentity(jointID, this->joints.at(jointID));
-    }
+    world->world->addMultiBodyConstraint(jointInfo->fixedContraint.get());
+    return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
 
   return this->GenerateInvalidId();
