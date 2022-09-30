@@ -258,7 +258,7 @@ Identity SDFFeatures::GetCollision(
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
   if (linkInfo != nullptr)
   {
-    tpelib::Entity &shapeEnt = linkInfo->link->GetChildByName(_shapeName);
+    tpelib::Entity &shapeEnt = linkInfo->link->GetChildByName(_collisionName);
     for (auto it = this->collisions.begin();
          it != this->collisions.end();
          ++it)

@@ -210,9 +210,9 @@ Identity SDFFeatures::GetCollision(
   const auto it = std::find_if(
         link->shapes.begin(),
         link->shapes.end(),
-        [this, &_name](const auto& shapeID)
+        [this, &_collisionName](const auto& shapeID)
     {
-      return _name == this->collisions.at(shapeID)->name;
+      return _collisionName == this->collisions.at(shapeID)->name;
     });
 
   if (it == link->shapes.end())
