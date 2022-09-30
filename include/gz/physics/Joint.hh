@@ -22,6 +22,8 @@
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/Geometry.hh>
 
+#include <string>
+
 namespace gz
 {
   namespace physics
