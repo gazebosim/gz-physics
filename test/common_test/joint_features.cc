@@ -1820,6 +1820,112 @@ TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
                                        wrenchAtMotorJointInJoint, 1e-4));
 }
 
+struct JointMimicFeatureList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointVelocityCommandFeature,
+    gz::physics::SetMimicConstraintFeature,
+    gz::physics::sdf::ConstructSdfWorld>{};
+
+template <class T>
+class JointMimicFeatureFixture :
+  public JointFeaturesTest<T>{};
+using JointMimicFeatureTestTypes =
+    ::testing::Types<JointMimicFeatureList>;
+TYPED_TEST_SUITE(JointMimicFeatureFixture,
+    JointMimicFeatureTestTypes);
+
+TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<JointFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "mimic_constraint.world"));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    auto model = world->GetModel("double_pendulum_with_base");
+    auto upperJoint = model->GetJoint("upper_joint");
+    auto lowerJoint = model->GetJoint("lower_joint");
+
+    std::cout << upperJoint->GetPosition(0) << std::endl;
+    std::cout << lowerJoint->GetPosition(0) << std::endl;
+
+    /* // Test joint velocity command */
+    /* gz::physics::ForwardStep::Output output; */
+    /* gz::physics::ForwardStep::State state; */
+    /* gz::physics::ForwardStep::Input input; */
+
+    /* // Expect negative joint velocity after 1 step without joint command */
+    /* world->Step(output, state, input); */
+    /* EXPECT_LT(joint->GetVelocity(0), 0.0); */
+
+    /* auto base_link = model->GetLink("base"); */
+    /* ASSERT_NE(nullptr, base_link); */
+
+    /* // Check that invalid velocity commands don't cause collisions to fail */
+    /* for (std::size_t i = 0; i < 1000; ++i) */
+    /* { */
+    /*   joint->SetForce(0, std::numeric_limits<double>::quiet_NaN()); */
+    /*   // expect the position of the pendulum to stay above ground */
+    /*   world->Step(output, state, input); */
+    /*   auto frameData = base_link->FrameDataRelativeToWorld(); */
+    /*   EXPECT_NEAR(0.0, frameData.pose.translation().z(), 1e-3); */
+    /* } */
+
+    /* joint->SetVelocityCommand(0, 1); */
+    /* world->Step(output, state, input); */
+    /* // Setting a velocity command changes the actuator type to SERVO */
+    /* // EXPECT_EQ(dart::dynamics::Joint::SERVO, dartJoint->getActuatorType()); */
+
+    /* const std::size_t numSteps = 10; */
+    /* for (std::size_t i = 0; i < numSteps; ++i) */
+    /* { */
+    /*   // Call SetVelocityCommand before each step */
+    /*   joint->SetVelocityCommand(0, 1); */
+    /*   world->Step(output, state, input); */
+    /*   EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-6); */
+    /* } */
+
+    /* for (std::size_t i = 0; i < numSteps; ++i) */
+    /* { */
+    /*   // expect joint to freeze in subsequent steps without SetVelocityCommand */
+    /*   world->Step(output, state, input); */
+    /*   EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-6); */
+    /* } */
+
+    /* // Check that invalid velocity commands don't cause collisions to fail */
+    /* for (std::size_t i = 0; i < 1000; ++i) */
+    /* { */
+    /*   joint->SetVelocityCommand(0, std::numeric_limits<double>::quiet_NaN()); */
+    /*   // expect the position of the pendulum to stay aabove ground */
+    /*   world->Step(output, state, input); */
+    /*   auto frameData = base_link->FrameDataRelativeToWorld(); */
+    /*   EXPECT_NEAR(0.0, frameData.pose.translation().z(), 1e-3); */
+    /* } */
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
