@@ -590,14 +590,21 @@ namespace gz
         : public virtual Feature
     {
       /// \brief The Joint API for setting the mimic joint constraint.
+      /// \param[in] _mimicJoint
+      ///   name of the joint to be mimicked, i.e. the parent joint.
+      /// \param[in] _multiplier
+      ///   The multiplier to be applied to poistion of parent joint.
+      /// \param[in] _offset
+      ///   The offset to be applied to position of parent joint after
+      ///   the multiplier is applied.
       public: template <typename PolicyT, typename FeaturesT>
       class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
       {
         public: using Scalar = typename PolicyT::Scalar;
 
         public: void SetMimicConstraint(
-                    const std::size_t &_dof, const Identity &_idMimicJoint,
-                    std::string &_axis, Scalar _multiplier,
+                    const std::string _mimicJoint,
+                    Scalar _multiplier,
                     Scalar _offset);
       };
 
@@ -609,8 +616,8 @@ namespace gz
 
         // See Joint::MimicConstraint above
         public: virtual void SetJointMimicConstraint(
-            const Identity &_id, std::size_t &_dof,
-            const Identity &_idMimicJoint, std::string &_axis,
+            const Identity &_id,
+            const std::string _mimicJoint,
             Scalar _multiplier, Scalar _offset) = 0;
       };
     };

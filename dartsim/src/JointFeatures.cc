@@ -699,13 +699,13 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMimicConstraint(
-    const Identity &_id, std::size_t &_dof,
-    const Identity &_idMimicJoint, std::string &_axis,
+    const Identity &_id,
+    const std::string _mimicJoint,
     const double _multiplier,
     const double _offset)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
-  auto jointMimic = this->ReferenceInterface<JointInfo>(_idMimicJoint)->joint;
+  auto jointMimic = joint->getSkeleton()->getJoint(_mimicJoint);
 
   // Take extra care that the value is valid. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
@@ -713,14 +713,14 @@ void JointFeatures::SetJointMimicConstraint(
   if (std::isnan(_multiplier))
   {
     gzerr << "Invalid value found in multiplier [" << _multiplier
-           << "] for joint [" << joint->getName() << " DOF " << _dof
+           << "] for joint [" << joint->getName()
            << "]. The command will be ignored\n";
     return;
   }
   if (std::isnan(_offset))
   {
     gzerr << "Invalid value found in offset [" << _offset
-           << "] for joint [" << joint->getName() << " DOF " << _dof
+           << "] for joint [" << joint->getName()
            << "]. The command will be ignored\n";
     return;
   }

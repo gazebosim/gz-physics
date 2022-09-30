@@ -1854,11 +1854,11 @@ TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<JointFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "mimic_constraint.world"));
+    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1867,61 +1867,54 @@ TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
     auto upperJoint = model->GetJoint("upper_joint");
     auto lowerJoint = model->GetJoint("lower_joint");
 
-    std::cout << upperJoint->GetPosition(0) << std::endl;
-    std::cout << lowerJoint->GetPosition(0) << std::endl;
+    // Ensure both joints start from zero angle.
+    EXPECT_EQ(upperJoint->GetPosition(0), 0);
+    EXPECT_EQ(lowerJoint->GetPosition(0), 0);
 
-    /* // Test joint velocity command */
-    /* gz::physics::ForwardStep::Output output; */
-    /* gz::physics::ForwardStep::State state; */
-    /* gz::physics::ForwardStep::Input input; */
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
 
-    /* // Expect negative joint velocity after 1 step without joint command */
-    /* world->Step(output, state, input); */
-    /* EXPECT_LT(joint->GetVelocity(0), 0.0); */
+    // Case : Without mimic constraint
 
-    /* auto base_link = model->GetLink("base"); */
-    /* ASSERT_NE(nullptr, base_link); */
+    // Let the simulation run without mimic constraint.
+    // The postions of joints should not be equal.
+    double upperJointPrevPos = 0;
+    for (int _ = 0; _ < 10; _++)
+    {
+      world->Step(output, state, input);
+      EXPECT_NE(upperJointPrevPos, lowerJoint->GetPosition(0));
+      upperJointPrevPos = upperJoint->GetPosition(0);
+    }
 
-    /* // Check that invalid velocity commands don't cause collisions to fail */
-    /* for (std::size_t i = 0; i < 1000; ++i) */
-    /* { */
-    /*   joint->SetForce(0, std::numeric_limits<double>::quiet_NaN()); */
-    /*   // expect the position of the pendulum to stay above ground */
-    /*   world->Step(output, state, input); */
-    /*   auto frameData = base_link->FrameDataRelativeToWorld(); */
-    /*   EXPECT_NEAR(0.0, frameData.pose.translation().z(), 1e-3); */
-    /* } */
+    auto testMimicFcn = [&](double multiplier, double offset)
+      {
+        // Set mimic joint constraint.
+        lowerJoint->SetMimicConstraint("upper_joint", multiplier, offset);
+        // Reset positions and run a few iterations so the positions reach nontrivial values.
+        upperJoint->SetPosition(0, 0);
+        lowerJoint->SetPosition(0, 0);
+        for (int _ = 0; _ < 10; _++)
+          world->Step(output, state, input);
 
-    /* joint->SetVelocityCommand(0, 1); */
-    /* world->Step(output, state, input); */
-    /* // Setting a velocity command changes the actuator type to SERVO */
-    /* // EXPECT_EQ(dart::dynamics::Joint::SERVO, dartJoint->getActuatorType()); */
+        // Lower joint's position should be equal to that of upper joint in previous timestep.
+        upperJointPrevPos = upperJoint->GetPosition(0);
+        for (int _ = 0; _ < 10; _++)
+        {
+          world->Step(output, state, input);
+          EXPECT_FLOAT_EQ(upperJointPrevPos, multiplier * lowerJoint->GetPosition(0) - offset);
+          upperJointPrevPos = upperJoint->GetPosition(0);
+        }
+      };
 
-    /* const std::size_t numSteps = 10; */
-    /* for (std::size_t i = 0; i < numSteps; ++i) */
-    /* { */
-    /*   // Call SetVelocityCommand before each step */
-    /*   joint->SetVelocityCommand(0, 1); */
-    /*   world->Step(output, state, input); */
-    /*   EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-6); */
-    /* } */
+    // Case : Mimic -> muliplier = 1, offset = 0
+    testMimicFcn(1, 0);
 
-    /* for (std::size_t i = 0; i < numSteps; ++i) */
-    /* { */
-    /*   // expect joint to freeze in subsequent steps without SetVelocityCommand */
-    /*   world->Step(output, state, input); */
-    /*   EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-6); */
-    /* } */
+    // Case : Mimic -> muliplier = -1, offset = 0
+    testMimicFcn(-1, 0);
 
-    /* // Check that invalid velocity commands don't cause collisions to fail */
-    /* for (std::size_t i = 0; i < 1000; ++i) */
-    /* { */
-    /*   joint->SetVelocityCommand(0, std::numeric_limits<double>::quiet_NaN()); */
-    /*   // expect the position of the pendulum to stay aabove ground */
-    /*   world->Step(output, state, input); */
-    /*   auto frameData = base_link->FrameDataRelativeToWorld(); */
-    /*   EXPECT_NEAR(0.0, frameData.pose.translation().z(), 1e-3); */
-    /* } */
+    // Case : Mimic -> muliplier = 2, offset = 0.5
+    testMimicFcn(2, 0.5);
   }
 }
 
