@@ -92,14 +92,14 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     {
       if (obA == link.second->collider.get())
       {
-        for(const auto &v: link.second->collisionNameToEntityId)
+        for (const auto &v: link.second->collisionNameToEntityId)
         {
           collision1ID = v.second;
         }
       }
       if (obB == link.second->collider.get())
       {
-        for(const auto &v: link.second->collisionNameToEntityId)
+        for (const auto &v: link.second->collisionNameToEntityId)
         {
           collision2ID = v.second;
         }
