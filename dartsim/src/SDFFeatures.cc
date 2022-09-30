@@ -669,6 +669,32 @@ Identity SDFFeatures::ConstructSdfLink(
   return linkIdentity;
 }
 
+Identity SDFFeatures::GetCollision(
+  const Identity &_linkID,
+  const std::string &_collisionName)
+{
+  auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
+
+  DartShapeNode *const sn = bn->getSkeleton()->getShapeNode(
+          bn->getName() + ":" + _collisionName);
+
+  // If the shape doesn't exist in "shapes", it means the containing entity has
+  // been removed.
+  if (this->shapes.HasEntity(sn))
+  {
+    const std::size_t shapeID = this->shapes.IdentityOf(sn);
+    return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
+  }
+  else
+  {
+    // TODO(addisu) It's not clear what to do when `GetShape` is called on a
+    // link that has been removed. Right now we are returning an invalid
+    // identity, but that could cause a segfault if the use doesn't check if
+    // returned value before using it.
+    return this->GenerateInvalidId();
+  }
+}
+
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,

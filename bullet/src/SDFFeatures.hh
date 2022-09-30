@@ -62,6 +62,10 @@ class SDFFeatures :
       const Identity &_linkID,
       const ::sdf::Collision &_collision) override;
 
+  private: Identity GetCollision(
+      const Identity &_linkID,
+      const std::string &_collisionName) override;
+
   private: Identity ConstructSdfJoint(
       const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint) override;

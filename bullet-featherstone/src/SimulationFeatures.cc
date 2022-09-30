@@ -85,18 +85,24 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
     const btMultiBodyLinkCollider* obB =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-    std::size_t shape1ID;
-    std::size_t shape2ID;
+    std::size_t collision1ID;
+    std::size_t collision2ID;
 
     for (const auto & link : this->links)
     {
       if (obA == link.second->collider.get())
       {
-        shape1ID = link.first;
+        for(const auto &v: link.second->collisionNameToEntityId)
+        {
+          collision1ID = v.second;
+        }
       }
       if (obB == link.second->collider.get())
       {
-        shape2ID = link.first;
+        for(const auto &v: link.second->collisionNameToEntityId)
+        {
+          collision2ID = v.second;
+        }
       }
     }
     int numContacts = contactManifold->getNumContacts();
@@ -116,8 +122,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       extraContactData.depth = pt.getDistance();
 
       outContacts.push_back(SimulationFeatures::ContactInternal {
-        this->GenerateIdentity(shape1ID, this->links.at(shape1ID)),
-        this->GenerateIdentity(shape2ID, this->links.at(shape2ID)),
+        this->GenerateIdentity(collision1ID, this->collisions.at(collision1ID)),
+        this->GenerateIdentity(collision2ID, this->collisions.at(collision2ID)),
         convert(pt.getPositionWorldOnA()), extraData});
       }
   }

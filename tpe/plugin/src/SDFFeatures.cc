@@ -251,6 +251,32 @@ Identity SDFFeatures::ConstructSdfLink(
 }
 
 /////////////////////////////////////////////////
+Identity SDFFeatures::GetCollision(
+  const Identity &_linkID,
+  const std::string &_collisionName)
+{
+  auto linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
+  if (linkInfo != nullptr)
+  {
+    tpelib::Entity &shapeEnt = linkInfo->link->GetChildByName(_shapeName);
+    for (auto it = this->collisions.begin();
+         it != this->collisions.end();
+         ++it)
+    {
+      if (it->second != nullptr)
+      {
+        std::string name = it->second->collision->GetName();
+        if (it->first == shapeEnt.GetId() && name == shapeEnt.GetName())
+        {
+          return this->GenerateIdentity(it->first, it->second);
+        }
+      }
+    }
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_sdfCollision)

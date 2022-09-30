@@ -939,6 +939,18 @@ bool SDFFeatures::AddSdfCollision(
   return true;
 }
 
+Identity SDFFeatures::GetCollision(
+  const Identity &_linkID,
+  const std::string &_collisionName)
+{
+  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto it = link->collisionNameToEntityId.find(_collisionName);
+  if (it == link->collisionNameToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->collisions.at(it->second));
+}
+
 Identity SDFFeatures::ConstructSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_collision)
