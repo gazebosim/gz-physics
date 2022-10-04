@@ -1842,7 +1842,7 @@ using JointMimicFeatureTestTypes =
 TYPED_TEST_SUITE(JointMimicFeatureFixture,
     JointMimicFeatureTestTypes);
 
-TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
+TYPED_TEST(JointMimicFeatureFixture, RevoluteMimicTest)
 {
   for (const std::string &name : this->pluginNames)
   {
@@ -1863,6 +1863,7 @@ TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
 
+    // Test mimic constraint between two revolute joints.
     auto model = world->GetModel("double_pendulum_with_base");
     auto upperJoint = model->GetJoint("upper_joint");
     auto lowerJoint = model->GetJoint("lower_joint");
@@ -1911,9 +1912,85 @@ TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
     testMimicFcn(1, 0);
     testMimicFcn(-1, 0);
     testMimicFcn(1, 0.1);
-    testMimicFcn(-1, 0.3);
+    testMimicFcn(-1, 0.2);
     testMimicFcn(-2, 0);
-    testMimicFcn(2, 0.5);
+    testMimicFcn(2, 0.1);
+  }
+}
+
+TYPED_TEST(JointMimicFeatureFixture, PrismaticMimicTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "mimic_world.sdf"));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    // Test mimic constraint between two revolute joints.
+    auto model = world->GetModel("prismatic_model");
+    auto parentJoint = model->GetJoint("prismatic_joint_1");
+    auto childJoint = model->GetJoint("prismatic_joint_2");
+
+    // Ensure both joints start from zero angle.
+    EXPECT_EQ(parentJoint->GetPosition(0), 0);
+    EXPECT_EQ(childJoint->GetPosition(0), 0);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Case : Without mimic constraint
+
+    // Let the simulation run without mimic constraint.
+    // The positions of joints should not be equal.
+    double parentJointPrevPos = 0;
+    for (int _ = 0; _ < 10; _++)
+    {
+      world->Step(output, state, input);
+      EXPECT_NE(parentJointPrevPos, childJoint->GetPosition(0));
+      parentJointPrevPos = parentJoint->GetPosition(0);
+    }
+
+    auto testMimicFcn = [&](double multiplier, double offset)
+      {
+        // Set mimic joint constraint.
+        childJoint->SetMimicConstraint("prismatic_joint_1", multiplier, offset);
+        // Reset positions and run a few iterations so the positions reach nontrivial values.
+        parentJoint->SetPosition(0, 0);
+        childJoint->SetPosition(0, 0);
+        for (int _ = 0; _ < 10; _++)
+          world->Step(output, state, input);
+
+        // Child joint's position should be equal to that of parent joint in previous timestep.
+        parentJointPrevPos = parentJoint->GetPosition(0);
+        for (int _ = 0; _ < 10; _++)
+        {
+          world->Step(output, state, input);
+          EXPECT_FLOAT_EQ(multiplier * parentJointPrevPos + offset, childJoint->GetPosition(0));
+          parentJointPrevPos = parentJoint->GetPosition(0);
+        }
+      };
+
+    // Testing with different (multiplier, offset) combinations.
+    testMimicFcn(1, 0);
+    testMimicFcn(-1, 0);
+    testMimicFcn(1, 0.1);
+    testMimicFcn(-1, 0.2);
+    testMimicFcn(-2, 0);
+    testMimicFcn(2, 0.1);
   }
 }
 
