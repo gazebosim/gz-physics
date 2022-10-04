@@ -1902,18 +1902,17 @@ TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
         for (int _ = 0; _ < 10; _++)
         {
           world->Step(output, state, input);
-          EXPECT_FLOAT_EQ(upperJointPrevPos, multiplier * lowerJoint->GetPosition(0) - offset);
+          EXPECT_FLOAT_EQ(multiplier * upperJointPrevPos + offset, lowerJoint->GetPosition(0));
           upperJointPrevPos = upperJoint->GetPosition(0);
         }
       };
 
-    // Case : Mimic -> muliplier = 1, offset = 0
+    // Testing with different (multiplier, offset) combinations.
     testMimicFcn(1, 0);
-
-    // Case : Mimic -> muliplier = -1, offset = 0
     testMimicFcn(-1, 0);
-
-    // Case : Mimic -> muliplier = 2, offset = 0.5
+    testMimicFcn(1, 0.1);
+    testMimicFcn(1, 0.3);
+    testMimicFcn(2, 0);
     testMimicFcn(2, 0.5);
   }
 }
