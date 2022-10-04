@@ -1878,7 +1878,7 @@ TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
     // Case : Without mimic constraint
 
     // Let the simulation run without mimic constraint.
-    // The postions of joints should not be equal.
+    // The positions of joints should not be equal.
     double upperJointPrevPos = 0;
     for (int _ = 0; _ < 10; _++)
     {
@@ -1911,12 +1911,11 @@ TYPED_TEST(JointMimicFeatureFixture, JointMimicTest)
     testMimicFcn(1, 0);
     testMimicFcn(-1, 0);
     testMimicFcn(1, 0.1);
-    testMimicFcn(1, 0.3);
-    testMimicFcn(2, 0);
+    testMimicFcn(-1, 0.3);
+    testMimicFcn(-2, 0);
     testMimicFcn(2, 0.5);
   }
 }
-
 
 int main(int argc, char *argv[])
 {

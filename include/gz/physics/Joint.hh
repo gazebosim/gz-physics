@@ -623,8 +623,6 @@ namespace gz
             Scalar _multiplier, Scalar _offset) = 0;
       };
     };
-
-
   }
 }
 
