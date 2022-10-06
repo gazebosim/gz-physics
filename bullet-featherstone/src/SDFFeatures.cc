@@ -505,7 +505,6 @@ Identity SDFFeatures::ConstructSdfModel(
               ::sdf::JointType::REVOLUTE == joint->Type() ||
               ::sdf::JointType::BALL == joint->Type())
       {
-        const auto axis = joint->Axis()->Xyz();
         auto linkParent = _sdfModel.LinkByName(joint->ParentName());
         gz::math::Pose3d parentTransformInWorldSpace;
         const auto errors = linkParent->SemanticPose().Resolve(
@@ -528,6 +527,7 @@ Identity SDFFeatures::ConstructSdfModel(
 
         if (::sdf::JointType::REVOLUTE == joint->Type())
         {
+          const auto axis = joint->Axis()->Xyz();
           model->body->setupRevolute(
             i, mass, inertia, parentIndex,
             parentRotToThis,
@@ -539,6 +539,7 @@ Identity SDFFeatures::ConstructSdfModel(
         }
         else if (::sdf::JointType::PRISMATIC == joint->Type())
         {
+          const auto axis = joint->Axis()->Xyz();
           model->body->setupPrismatic(
             i, mass, inertia, parentIndex,
             parentRotToThis,
