@@ -332,15 +332,6 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
     auto capsuleAABB =
       capsuleCollision->GetAxisAlignedBoundingBox(*capsuleCollision);
 
-    std::cerr << "gz::math::eigen3::convert(sphereAABB).Min() " << gz::math::eigen3::convert(sphereAABB).Min() << '\n';
-    std::cerr << "gz::math::eigen3::convert(sphereAABB).Max() " << gz::math::eigen3::convert(sphereAABB).Max() << '\n';
-
-    std::cerr << "gz::math::eigen3::convert(boxAABB).Min() " << gz::math::eigen3::convert(boxAABB).Min() << '\n';
-    std::cerr << "gz::math::eigen3::convert(boxAABB).Max() " << gz::math::eigen3::convert(boxAABB).Max() << '\n';
-
-    std::cerr << "gz::math::eigen3::convert(ellipsoidAABB).Min() " << gz::math::eigen3::convert(ellipsoidAABB).Min() << '\n';
-    std::cerr << "gz::math::eigen3::convert(ellipsoidAABB).Max() " << gz::math::eigen3::convert(ellipsoidAABB).Max() << '\n';
-
     EXPECT_TRUE(gz::math::Vector3d(-1, -1, -1).Equal(
                 gz::math::eigen3::convert(sphereAABB).Min(), 0.1));
     EXPECT_EQ(gz::math::Vector3d(1, 1, 1),
