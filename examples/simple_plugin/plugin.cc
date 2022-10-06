@@ -21,6 +21,7 @@
 
 #include "EntityManagementFeatures.hh"
 
+//! [code]
 namespace gz {
 namespace physics {
 namespace simpleplugin {
@@ -45,3 +46,4 @@ namespace simpleplugin {
 }
 }
 }
+//! [code]

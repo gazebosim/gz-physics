@@ -22,6 +22,7 @@ using namespace gz;
 using namespace physics;
 using namespace simpleplugin;
 
+//! [code]
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
   const Identity &, const std::string &_name)
@@ -29,3 +30,4 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   // Generate dummy identity
   return this->GenerateIdentity(0);
 }
+//! [code]
