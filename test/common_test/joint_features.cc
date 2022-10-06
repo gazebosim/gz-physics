@@ -1934,7 +1934,8 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticMimicTest)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "mimic_world.sdf"));
+    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
+          "mimic_prismatic_world.sdf"));
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1981,6 +1982,93 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticMimicTest)
           world->Step(output, state, input);
           EXPECT_FLOAT_EQ(multiplier * parentJointPrevPos + offset, childJoint->GetPosition(0));
           parentJointPrevPos = parentJoint->GetPosition(0);
+        }
+      };
+
+    // Testing with different (multiplier, offset) combinations.
+    testMimicFcn(1, 0);
+    testMimicFcn(-1, 0);
+    testMimicFcn(1, 0.1);
+    testMimicFcn(-1, 0.2);
+    testMimicFcn(-2, 0);
+    testMimicFcn(2, 0.1);
+  }
+}
+
+TYPED_TEST(JointMimicFeatureFixture, UniversalMimicTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
+          "mimic_universal_world.sdf"));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    // Test mimic constraint between two revolute joints.
+    auto model = world->GetModel("universal_model");
+    auto parentJoint = model->GetJoint("universal_joint_1");
+    auto childJoint = model->GetJoint("universal_joint_2");
+
+    // Ensure both joints start from zero angle.
+    EXPECT_EQ(parentJoint->GetPosition(0), 0);
+    EXPECT_EQ(childJoint->GetPosition(0), 0);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Case : Without mimic constraint
+
+    // Let the simulation run without mimic constraint.
+    // The positions of joints should not be equal.
+    double parentJointPrevPosAxis1 = 0;
+    double parentJointPrevPosAxis2 = 0;
+    for (int _ = 0; _ < 10; _++)
+    {
+      world->Step(output, state, input);
+      EXPECT_NE(parentJointPrevPosAxis1, childJoint->GetPosition(0));
+      EXPECT_NE(parentJointPrevPosAxis2, childJoint->GetPosition(1));
+      parentJointPrevPosAxis1 = parentJoint->GetPosition(0);
+      parentJointPrevPosAxis2 = parentJoint->GetPosition(1);
+    }
+
+    auto testMimicFcn = [&](double multiplier, double offset)
+      {
+        // Set mimic joint constraint.
+        childJoint->SetMimicConstraint("universal_joint_1", multiplier, offset);
+        // Reset positions and run a few iterations so the positions reach nontrivial values.
+        parentJoint->SetPosition(0, 0);
+        parentJoint->SetPosition(1, 0);
+        childJoint->SetPosition(0, 0);
+        childJoint->SetPosition(1, 0);
+        for (int _ = 0; _ < 10; _++)
+          world->Step(output, state, input);
+
+        // Child joint's position should be equal to that of parent joint in previous timestep.
+        parentJointPrevPosAxis1 = parentJoint->GetPosition(0);
+        parentJointPrevPosAxis2 = parentJoint->GetPosition(1);
+        for (int _ = 0; _ < 10; _++)
+        {
+          world->Step(output, state, input);
+          EXPECT_FLOAT_EQ(multiplier * parentJointPrevPosAxis1 + offset,
+              childJoint->GetPosition(0));
+          EXPECT_FLOAT_EQ(multiplier * parentJointPrevPosAxis2 + offset,
+              childJoint->GetPosition(1));
+          parentJointPrevPosAxis1 = parentJoint->GetPosition(0);
+          parentJointPrevPosAxis2 = parentJoint->GetPosition(1);
         }
       };
 
