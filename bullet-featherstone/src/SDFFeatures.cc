@@ -501,39 +501,9 @@ Identity SDFFeatures::ConstructSdfModel(
           btPosParentComToJoint,
           btJointToChildCom);
       }
-      else if (::sdf::JointType::REVOLUTE == joint->Type())
-      {
-        const auto axis = joint->Axis()->Xyz();
-        auto linkParent = _sdfModel.LinkByName(joint->ParentName());
-        gz::math::Pose3d parentTransformInWorldSpace;
-        const auto errors = linkParent->SemanticPose().Resolve(
-          parentTransformInWorldSpace);
-
-        gz::math::Pose3d parent2joint;
-        const auto errors2 = linkParent->SemanticPose().Resolve(
-          parent2joint, joint->Name());
-
-        btTransform parentLocalInertialFrame = convertTf(
-          parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(
-          parent2joint.Inverse()));
-
-        btTransform offsetInABt, offsetInBBt;
-        offsetInABt = parentLocalInertialFrame * parent2jointBt;
-        offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis =
-          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
-
-        model->body->setupRevolute(
-          i, mass, inertia, parentIndex,
-          parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(),
-                     btVector3(axis[0], axis[1], axis[2])),
-          offsetInABt.getOrigin(),
-          -offsetInBBt.getOrigin(),
-          true);
-      }
-      else if (::sdf::JointType::PRISMATIC == joint->Type())
+      else if (::sdf::JointType::PRISMATIC == joint->Type() ||
+              ::sdf::JointType::REVOLUTE == joint->Type() ||
+              ::sdf::JointType::BALL == joint->Type())
       {
         const auto axis = joint->Axis()->Xyz();
         auto linkParent = _sdfModel.LinkByName(joint->ParentName());
@@ -556,22 +526,37 @@ Identity SDFFeatures::ConstructSdfModel(
         btQuaternion parentRotToThis =
           offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
-        model->body->setupPrismatic(
-          i, mass, inertia, parentIndex,
-          parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(),
-                     btVector3(axis[0], axis[1], axis[2])),
-          offsetInABt.getOrigin(),
-          -offsetInBBt.getOrigin(),
-          true);
-      }
-      else if (::sdf::JointType::BALL == joint->Type())
-      {
-        model->body->setupSpherical(
-          i, mass, inertia, parentIndex,
-          btRotParentComToJoint,
-          btPosParentComToJoint,
-          btJointToChildCom);
+        if (::sdf::JointType::REVOLUTE == joint->Type())
+        {
+          model->body->setupRevolute(
+            i, mass, inertia, parentIndex,
+            parentRotToThis,
+            quatRotate(offsetInBBt.getRotation(),
+                       btVector3(axis[0], axis[1], axis[2])),
+            offsetInABt.getOrigin(),
+            -offsetInBBt.getOrigin(),
+            true);
+        }
+        else if (::sdf::JointType::PRISMATIC == joint->Type())
+        {
+          model->body->setupPrismatic(
+            i, mass, inertia, parentIndex,
+            parentRotToThis,
+            quatRotate(offsetInBBt.getRotation(),
+                       btVector3(axis[0], axis[1], axis[2])),
+            offsetInABt.getOrigin(),
+            -offsetInBBt.getOrigin(),
+            true);
+        }
+        else if (::sdf::JointType::BALL == joint->Type())
+        {
+          model->body->setupSpherical(
+            i, mass, inertia, parentIndex,
+            parentRotToThis,
+            offsetInABt.getOrigin(),
+            -offsetInBBt.getOrigin(),
+            true);
+        }
       }
       else
       {
