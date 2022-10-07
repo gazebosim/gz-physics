@@ -787,11 +787,6 @@ bool SDFFeatures::AddSdfCollision(
   {
     if (const auto *friction = surface->Friction())
     {
-      if (const auto *ode = friction->ODE())
-      {
-        mu = ode->Mu();
-        mu2 = ode->Mu2();
-      }
       if (const auto frictionElement = friction->Element())
       {
         if (const auto bullet = frictionElement->GetElement("bullet"))
