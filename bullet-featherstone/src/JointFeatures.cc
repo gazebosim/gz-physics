@@ -278,6 +278,19 @@ void JointFeatures::SetJointVelocityCommand(
     return;
   }
 
+  if (!jointInfo->motor)
+  {
+    auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+    jointInfo->motor = new btMultiBodyJointMotor(
+      modelInfo->body.get(),
+      std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
+      0,
+      0,
+      jointInfo->effort);
+    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+    world->world->addMultiBodyConstraint(jointInfo->motor);
+  }
+
   jointInfo->motor->setVelocityTarget(_value);
 }
 

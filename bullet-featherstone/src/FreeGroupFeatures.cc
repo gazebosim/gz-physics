@@ -58,6 +58,51 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 }
 
 /////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
+    const Identity &_groupID, const AngularVelocity &_angularVelocity)
+{
+  // Free groups in bullet-featherstone are always represented by ModelInfo
+  const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
+
+  if(model)
+  {
+    // Set angular velocity the each one of the joints of the model
+    for (const auto& jointID : model->jointEntityIds)
+    {
+      auto jointInfo = this->joints[jointID];
+      if (!jointInfo->motor)
+      {
+        auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+        jointInfo->motor = new btMultiBodyJointMotor(
+          modelInfo->body.get(),
+          std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
+          0,
+          0,
+          jointInfo->effort);
+        auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+        world->world->addMultiBodyConstraint(jointInfo->motor);
+      }
+
+      if (jointInfo->motor)
+        jointInfo->motor->setVelocityTarget(_angularVelocity[2]);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
+    const Identity &_groupID, const LinearVelocity &_linearVelocity)
+{
+  // Free groups in bullet-featherstone are always represented by ModelInfo
+  const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
+  // Set Base Vel
+  if(model)
+  {
+    model->body->setBaseVel(convertVec(_linearVelocity));
+  }
+}
+
+/////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)

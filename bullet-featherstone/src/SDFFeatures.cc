@@ -577,10 +577,7 @@ Identity SDFFeatures::ConstructSdfModel(
         model->body->getLink(i).m_jointMaxVelocity =
           joint->Axis()->MaxVelocity();
         model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
-
-        jointInfo->motor = new btMultiBodyJointMotor(
-          model->body.get(), i, 0, 0, joint->Axis()->Effort());
-        world->world->addMultiBodyConstraint(jointInfo->motor);
+        jointInfo->effort = joint->Axis()->Effort();
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
           model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
         world->world->addMultiBodyConstraint(con);

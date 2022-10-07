@@ -28,7 +28,8 @@ namespace bullet_featherstone {
 
 struct FreeGroupFeatureList : gz::physics::FeatureList<
   FindFreeGroupFeature,
-  SetFreeGroupWorldPose
+  SetFreeGroupWorldPose,
+  SetFreeGroupWorldVelocity
 > { };
 
 class FreeGroupFeatures
@@ -46,6 +47,15 @@ class FreeGroupFeatures
   void SetFreeGroupWorldPose(
       const Identity &_groupID,
       const PoseType &_pose) override;
+
+  // ----- SetFreeGroupWorldVelocity -----
+  void SetFreeGroupWorldLinearVelocity(
+      const Identity &_groupID,
+      const LinearVelocity &_linearVelocity) override;
+
+  void SetFreeGroupWorldAngularVelocity(
+      const Identity &_groupID,
+      const AngularVelocity &_angularVelocity) override;
 };
 
 }  // namespace bullet_featherstone
