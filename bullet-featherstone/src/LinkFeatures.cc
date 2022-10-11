@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2022 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,17 +29,26 @@ void LinkFeatures::AddLinkExternalForceInWorld(
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 
-  auto F = btVector3(_force[0], _force[1], _force[2]);
+  auto F = convertVec(_force);
 
   if (link->indexInModel.has_value())
   {
-    gzdbg << "Adding force to link: " << F.x() << " " << F.y() << " " << F.z() <<  std::endl;
-    model->body->addLinkForce(link->indexInModel.value(), F);
+    btVector3 forceWorld = F;
+    btVector3 relPosWorld =
+      convertVec(_position) - model->body->getLink(
+        link->indexInModel.value()).m_cachedWorldTransform.getOrigin();
+
+    model->body->addLinkForce(link->indexInModel.value(), forceWorld);
+    model->body->addLinkTorque(
+      link->indexInModel.value(), relPosWorld.cross(forceWorld));
   }
   else
   {
-    gzdbg << "Adding force to body: " << F.x() << " " << F.y() << " " << F.z() <<  std::endl;
+    btVector3 relPosWorld =
+      convertVec(_position) -
+      model->body->getBaseWorldTransform().getOrigin();
     model->body->addBaseForce(F);
+    model->body->addBaseTorque(relPosWorld.cross(F));
   }
 }
 
@@ -54,13 +63,14 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
 
   if (link->indexInModel.has_value())
   {
-    gzdbg << "Adding torque to link: " << T.x() << " " << T.y() << " " << T.z() <<  std::endl;
-    model->body->addLinkTorque(link->indexInModel.value(), T);
+    btVector3 torqueWorld = model->body->getLink(link->indexInModel.value()).m_cachedWorldTransform.getBasis() * T;
+    model->body->addLinkTorque(link->indexInModel.value(), torqueWorld);
   }
   else
   {
-    gzdbg << "Adding torque to body: " << T.x() << " " << T.y() << " " << T.z() <<  std::endl;
     model->body->addBaseTorque(T);
+    btVector3 torqueWorld = model->body->getBaseWorldTransform().getBasis() * T;
+    model->body->addBaseTorque(torqueWorld);
   }
 }
 
