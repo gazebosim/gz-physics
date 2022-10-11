@@ -115,6 +115,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       * model->baseInertiaToLinkFrame;
     data.linearVelocity = convert(model->body->getBaseVel());
     data.linearAcceleration = convert(model->body->getBaseOmega());
+    std::cout << model->body->getBaseForce().x() << " " << model->body->getBaseForce().y() << " " << model->body->getBaseForce().z() << std::endl;
   }
   return data;
 }

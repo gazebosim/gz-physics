@@ -384,6 +384,9 @@ Identity SDFFeatures::ConstructSdfModel(
           });
   }
 
+  model->body->setLinearDamping(0.0);
+  model->body->setAngularDamping(0.0);
+
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
 
@@ -403,6 +406,7 @@ Identity SDFFeatures::ConstructSdfModel(
     const auto &M = link->Inertial().MassMatrix();
     const double mass = M.Mass();
     const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
+
     for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
     {
       if (std::abs(I) > 1e-3)
@@ -585,6 +589,7 @@ Identity SDFFeatures::ConstructSdfModel(
     }
   }
 
+
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
 
   model->body->finalizeMultiDof();
@@ -605,12 +610,37 @@ Identity SDFFeatures::ConstructSdfModel(
   model->body->setBaseVel(btVector3(0, 0, 0));
   model->body->setBaseOmega(btVector3(0, 0, 0));
 
+  {
+    const auto *link = structure.rootLink;
+    const auto &M = link->Inertial().MassMatrix();
+    const double mass = M.Mass();
+    const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
+
+    for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
+    {
+      if (std::abs(I) > 1e-3)
+      {
+        gzerr << "Links are required to have a diagonal inertia matrix in "
+              << "gz-physics-bullet-featherstone, but Link [" << link->Name()
+              << "] in Model [" << model->name << "] has a non-zero off "
+              << "diagonal value in its inertia matrix\n";
+      }
+      else
+      {
+        gzmsg << "Setting base mass/inertia: " << mass << std::endl;
+        model->body->setBaseMass(mass);
+        model->body->setBaseInertia(inertia);
+      }
+    }
+  }
+
   world->world->addMultiBody(model->body.get());
 
   for (const auto& [linkSdf, linkID] : linkIDs)
   {
     for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
     {
+      gzerr << "Adding collision to: " << linkSdf->Name() << std::endl;
       // If we fail to add the collision, just keep building the model. It may
       // need to be constructed outside of the SDF generation pipeline, e.g.
       // with AttachHeightmap.

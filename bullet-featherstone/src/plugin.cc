@@ -26,6 +26,7 @@
 #include "ShapeFeatures.hh"
 #include "JointFeatures.hh"
 #include "KinematicsFeatures.hh"
+#include "LinkFeatures.hh"
 #include "SDFFeatures.hh"
 #include "SimulationFeatures.hh"
 #include "WorldFeatures.hh"
@@ -39,6 +40,7 @@ struct BulletFeatures : FeatureList <
   SimulationFeatureList,
   FreeGroupFeatureList,
   KinematicsFeatureList,
+  LinkFeatureList,
   SDFFeatureList,
   ShapeFeatureList,
   JointFeatureList,
@@ -52,6 +54,7 @@ class Plugin :
     public virtual SimulationFeatures,
     public virtual FreeGroupFeatures,
     public virtual KinematicsFeatures,
+    public virtual LinkFeatures,
     public virtual SDFFeatures,
     public virtual ShapeFeatures,
     public virtual JointFeatures,
