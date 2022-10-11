@@ -221,11 +221,11 @@ namespace gz
     void SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
     SetMimicConstraint(
       const std::string _mimicJoint,
-      Scalar _multiplier, Scalar _offset)
+      Scalar _multiplier, Scalar _offset, Scalar _reference)
     {
       this->template Interface<SetMimicConstraintFeature>()
         ->SetJointMimicConstraint(this->identity, _mimicJoint,
-          _multiplier, _offset);
+          _multiplier, _offset, _reference);
     }
 
     /////////////////////////////////////////////////

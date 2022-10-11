@@ -702,7 +702,8 @@ void JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
     const std::string _mimicJoint,
     const double _multiplier,
-    const double _offset)
+    const double _offset,
+    const double _reference)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
   auto jointMimic = joint->getSkeleton()->getJoint(_mimicJoint);
@@ -726,7 +727,7 @@ void JointFeatures::SetJointMimicConstraint(
   }
 
   joint->setActuatorType(dart::dynamics::Joint::MIMIC);
-  joint->setMimicJoint(jointMimic, _multiplier, _offset);
+  joint->setMimicJoint(jointMimic, _multiplier, _offset - _multiplier * _reference);
 }
 
 }

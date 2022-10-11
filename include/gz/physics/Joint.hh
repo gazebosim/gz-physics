@@ -607,7 +607,8 @@ namespace gz
         public: void SetMimicConstraint(
                     const std::string _mimicJoint,
                     Scalar _multiplier,
-                    Scalar _offset);
+                    Scalar _offset,
+                    Scalar _reference);
       };
 
       /// \private The implementation API for setting the mimic constraint.
@@ -620,7 +621,7 @@ namespace gz
         public: virtual void SetJointMimicConstraint(
             const Identity &_id,
             const std::string _mimicJoint,
-            Scalar _multiplier, Scalar _offset) = 0;
+            Scalar _multiplier, Scalar _offset, Scalar _reference) = 0;
       };
     };
   }

@@ -211,7 +211,8 @@ class JointFeatures :
       const Identity &_id,
       const std::string _mimicJoint,
       const double _multiplier,
-      const double _offset) override;
+      const double _offset,
+      const double _reference) override;
 };
 
 }

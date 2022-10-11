@@ -1912,7 +1912,7 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticRevoluteMimicTest)
       revoluteJointPrevPos = revoluteChildJoint1->GetPosition(0);
     }
 
-    auto testMimicFcn = [&](double multiplier, double offset)
+    auto testMimicFcn = [&](double multiplier, double offset, double reference)
       {
         // Set mimic joint constraints.
         // Parent --> Child
@@ -1920,10 +1920,14 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticRevoluteMimicTest)
         // prismatic_joint_1 -> revolute_joint_1
         // revolute_joint_1 --> revolute_joint_2
         // revolute_joint_1 --> prismatic_joint_3
-        prismaticChildJoint1->SetMimicConstraint("prismatic_joint_1", multiplier, offset);
-        revoluteChildJoint1->SetMimicConstraint("prismatic_joint_1", multiplier, offset);
-        revoluteChildJoint2->SetMimicConstraint("revolute_joint_1", multiplier, offset);
-        prismaticChildJoint2->SetMimicConstraint("revolute_joint_1", multiplier, offset);
+        prismaticChildJoint1->SetMimicConstraint("prismatic_joint_1", multiplier,
+            offset, reference);
+        revoluteChildJoint1->SetMimicConstraint("prismatic_joint_1", multiplier,
+            offset, reference);
+        revoluteChildJoint2->SetMimicConstraint("revolute_joint_1", multiplier,
+            offset, reference);
+        prismaticChildJoint2->SetMimicConstraint("revolute_joint_1", multiplier,
+            offset, reference);
 
         // Reset positions and run a few iterations so the positions reach nontrivial values.
         parentJoint->SetPosition(0, 0);
@@ -1942,16 +1946,16 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticRevoluteMimicTest)
         {
           world->Step(output, state, input);
           // Check for prismatic -> prismatic mimicking.
-          EXPECT_FLOAT_EQ(multiplier * prismaticJointPrevPos + offset,
+          EXPECT_FLOAT_EQ(multiplier * (prismaticJointPrevPos - reference) + offset,
               prismaticChildJoint1->GetPosition(0));
           // Check for prismatic -> revolute mimicking.
-          EXPECT_FLOAT_EQ(multiplier * prismaticJointPrevPos + offset,
+          EXPECT_FLOAT_EQ(multiplier * (prismaticJointPrevPos - reference) + offset,
               revoluteChildJoint1->GetPosition(0));
           // Check for revolute -> revolute mimicking.
-          EXPECT_FLOAT_EQ(multiplier * revoluteJointPrevPos + offset,
+          EXPECT_FLOAT_EQ(multiplier * (revoluteJointPrevPos - reference) + offset,
               revoluteChildJoint2->GetPosition(0));
           // Check for revolute --> prismatic mimicking.
-          EXPECT_FLOAT_EQ(multiplier * revoluteJointPrevPos + offset,
+          EXPECT_FLOAT_EQ(multiplier * (revoluteJointPrevPos - reference) + offset,
               prismaticChildJoint2->GetPosition(0));
 
           // Update previous positions.
@@ -1960,13 +1964,15 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticRevoluteMimicTest)
         }
       };
 
-    // Testing with different (multiplier, offset) combinations.
-    testMimicFcn(1, 0);
-    testMimicFcn(-1, 0);
-    testMimicFcn(1, 0.1);
-    testMimicFcn(-1, 0.2);
-    testMimicFcn(-2, 0);
-    testMimicFcn(2, 0.1);
+    // Testing with different (multiplier, offset, reference) combinations.
+    testMimicFcn(1, 0, 0);
+    testMimicFcn(-1, 0, 0);
+    testMimicFcn(1, 0.1, 0);
+    testMimicFcn(1, 0.05, 0.05);
+    testMimicFcn(-1, 0.2, 0);
+    testMimicFcn(-1, 0.05, -0.05);
+    testMimicFcn(-2, 0, 0);
+    testMimicFcn(2, 0.1, 0);
   }
 }
 
@@ -2020,10 +2026,10 @@ TYPED_TEST(JointMimicFeatureFixture, UniversalMimicTest)
       parentJointPrevPosAxis2 = parentJoint->GetPosition(1);
     }
 
-    auto testMimicFcn = [&](double multiplier, double offset)
+    auto testMimicFcn = [&](double multiplier, double offset, double reference)
       {
         // Set mimic joint constraint.
-        childJoint->SetMimicConstraint("universal_joint_1", multiplier, offset);
+        childJoint->SetMimicConstraint("universal_joint_1", multiplier, offset, reference);
         // Reset positions and run a few iterations so the positions reach nontrivial values.
         parentJoint->SetPosition(0, 0);
         parentJoint->SetPosition(1, 0);
@@ -2038,22 +2044,24 @@ TYPED_TEST(JointMimicFeatureFixture, UniversalMimicTest)
         for (int _ = 0; _ < 10; _++)
         {
           world->Step(output, state, input);
-          EXPECT_FLOAT_EQ(multiplier * parentJointPrevPosAxis1 + offset,
+          EXPECT_FLOAT_EQ(multiplier * (parentJointPrevPosAxis1 - reference) + offset,
               childJoint->GetPosition(0));
-          EXPECT_FLOAT_EQ(multiplier * parentJointPrevPosAxis2 + offset,
+          EXPECT_FLOAT_EQ(multiplier * (parentJointPrevPosAxis2 - reference) + offset,
               childJoint->GetPosition(1));
           parentJointPrevPosAxis1 = parentJoint->GetPosition(0);
           parentJointPrevPosAxis2 = parentJoint->GetPosition(1);
         }
       };
 
-    // Testing with different (multiplier, offset) combinations.
-    testMimicFcn(1, 0);
-    testMimicFcn(-1, 0);
-    testMimicFcn(1, 0.1);
-    testMimicFcn(-1, 0.2);
-    testMimicFcn(-2, 0);
-    testMimicFcn(2, 0.1);
+    // Testing with different (multiplier, offset, reference) combinations.
+    testMimicFcn(1, 0, 0);
+    testMimicFcn(-1, 0, 0);
+    testMimicFcn(1, 0.1, 0);
+    testMimicFcn(1, 0.2, 0.1);
+    testMimicFcn(-1, 0.2, 0);
+    testMimicFcn(-2, 0, 0);
+    testMimicFcn(2, 0.1, 0);
+    testMimicFcn(2, 0.3, -0.1);
   }
 }
 
