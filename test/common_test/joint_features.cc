@@ -1842,84 +1842,15 @@ using JointMimicFeatureTestTypes =
 TYPED_TEST_SUITE(JointMimicFeatureFixture,
     JointMimicFeatureTestTypes);
 
-TYPED_TEST(JointMimicFeatureFixture, RevoluteMimicTest)
+TYPED_TEST(JointMimicFeatureFixture, PrismaticRevoluteMimicTest)
 {
-  for (const std::string &name : this->pluginNames)
-  {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-
-    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
-    ASSERT_TRUE(errors.empty()) << errors.front();
-
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-
-    // Test mimic constraint between two revolute joints.
-    auto model = world->GetModel("double_pendulum_with_base");
-    auto upperJoint = model->GetJoint("upper_joint");
-    auto lowerJoint = model->GetJoint("lower_joint");
-
-    // Ensure both joints start from zero angle.
-    EXPECT_EQ(upperJoint->GetPosition(0), 0);
-    EXPECT_EQ(lowerJoint->GetPosition(0), 0);
-
-    gz::physics::ForwardStep::Output output;
-    gz::physics::ForwardStep::State state;
-    gz::physics::ForwardStep::Input input;
-
-    // Case : Without mimic constraint
-
-    // Let the simulation run without mimic constraint.
-    // The positions of joints should not be equal.
-    double upperJointPrevPos = 0;
-    for (int _ = 0; _ < 10; _++)
-    {
-      world->Step(output, state, input);
-      EXPECT_NE(upperJointPrevPos, lowerJoint->GetPosition(0));
-      upperJointPrevPos = upperJoint->GetPosition(0);
-    }
-
-    auto testMimicFcn = [&](double multiplier, double offset)
-      {
-        // Set mimic joint constraint.
-        lowerJoint->SetMimicConstraint("upper_joint", multiplier, offset);
-        // Reset positions and run a few iterations so the positions reach nontrivial values.
-        upperJoint->SetPosition(0, 0);
-        lowerJoint->SetPosition(0, 0);
-        for (int _ = 0; _ < 10; _++)
-          world->Step(output, state, input);
-
-        // Lower joint's position should be equal to that of upper joint in previous timestep.
-        upperJointPrevPos = upperJoint->GetPosition(0);
-        for (int _ = 0; _ < 10; _++)
-        {
-          world->Step(output, state, input);
-          EXPECT_FLOAT_EQ(multiplier * upperJointPrevPos + offset, lowerJoint->GetPosition(0));
-          upperJointPrevPos = upperJoint->GetPosition(0);
-        }
-      };
-
-    // Testing with different (multiplier, offset) combinations.
-    testMimicFcn(1, 0);
-    testMimicFcn(-1, 0);
-    testMimicFcn(1, 0.1);
-    testMimicFcn(-1, 0.2);
-    testMimicFcn(-2, 0);
-    testMimicFcn(2, 0.1);
-  }
-}
-
-TYPED_TEST(JointMimicFeatureFixture, PrismaticMimicTest)
-{
+  // This test contains 5 joints : 3 prismatic and 2 revolute.
+  // They are connected as follows :
+  // prismatic_joint_1 : Free joint
+  // prismatic_joint_2 : Mimics prismatic_joint_1
+  // revolute_joint_1 : Mimics prismatic_joint_1
+  // revolute_joint_2 : Mimics revolute_joint_1
+  // prismatic_joint_3 : Mimics revolute_joint_1
   for (const std::string &name : this->pluginNames)
   {
     if(this->PhysicsEngineName(name) != "dartsim")
@@ -1940,14 +1871,20 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticMimicTest)
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
 
-    // Test mimic constraint between two revolute joints.
     auto model = world->GetModel("prismatic_model");
+
     auto parentJoint = model->GetJoint("prismatic_joint_1");
-    auto childJoint = model->GetJoint("prismatic_joint_2");
+    auto prismaticChildJoint1 = model->GetJoint("prismatic_joint_2");
+    auto revoluteChildJoint1 = model->GetJoint("revolute_joint_1");
+    auto revoluteChildJoint2 = model->GetJoint("revolute_joint_2");
+    auto prismaticChildJoint2 = model->GetJoint("prismatic_joint_3");
 
     // Ensure both joints start from zero angle.
     EXPECT_EQ(parentJoint->GetPosition(0), 0);
-    EXPECT_EQ(childJoint->GetPosition(0), 0);
+    EXPECT_EQ(prismaticChildJoint1->GetPosition(0), 0);
+    EXPECT_EQ(revoluteChildJoint1->GetPosition(0), 0);
+    EXPECT_EQ(revoluteChildJoint2->GetPosition(0), 0);
+    EXPECT_EQ(prismaticChildJoint2->GetPosition(0), 0);
 
     gz::physics::ForwardStep::Output output;
     gz::physics::ForwardStep::State state;
@@ -1957,31 +1894,69 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticMimicTest)
 
     // Let the simulation run without mimic constraint.
     // The positions of joints should not be equal.
-    double parentJointPrevPos = 0;
-    for (int _ = 0; _ < 10; _++)
+    double prismaticJointPrevPos = 0;
+    double revoluteJointPrevPos = 0;
+    for (int i = 0; i < 10; i++)
     {
       world->Step(output, state, input);
-      EXPECT_NE(parentJointPrevPos, childJoint->GetPosition(0));
-      parentJointPrevPos = parentJoint->GetPosition(0);
+      if (i > 5)
+      {
+        EXPECT_NE(prismaticJointPrevPos, prismaticChildJoint1->GetPosition(0));
+        EXPECT_NE(prismaticJointPrevPos, revoluteChildJoint1->GetPosition(0));
+        EXPECT_NE(revoluteJointPrevPos, revoluteChildJoint2->GetPosition(0));
+        EXPECT_NE(revoluteJointPrevPos, prismaticChildJoint2->GetPosition(0));
+      }
+
+      // Update previous positions.
+      prismaticJointPrevPos = parentJoint->GetPosition(0);
+      revoluteJointPrevPos = revoluteChildJoint1->GetPosition(0);
     }
 
     auto testMimicFcn = [&](double multiplier, double offset)
       {
-        // Set mimic joint constraint.
-        childJoint->SetMimicConstraint("prismatic_joint_1", multiplier, offset);
+        // Set mimic joint constraints.
+        // Parent --> Child
+        // prismatic_joint_1 -> prismatic_joint_2
+        // prismatic_joint_1 -> revolute_joint_1
+        // revolute_joint_1 --> revolute_joint_2
+        // revolute_joint_1 --> prismatic_joint_3
+        prismaticChildJoint1->SetMimicConstraint("prismatic_joint_1", multiplier, offset);
+        revoluteChildJoint1->SetMimicConstraint("prismatic_joint_1", multiplier, offset);
+        revoluteChildJoint2->SetMimicConstraint("revolute_joint_1", multiplier, offset);
+        prismaticChildJoint2->SetMimicConstraint("revolute_joint_1", multiplier, offset);
+
         // Reset positions and run a few iterations so the positions reach nontrivial values.
         parentJoint->SetPosition(0, 0);
-        childJoint->SetPosition(0, 0);
+        prismaticChildJoint1->SetPosition(0, 0);
+        prismaticChildJoint2->SetPosition(0, 0);
+        revoluteChildJoint1->SetPosition(0, 0);
+        revoluteChildJoint2->SetPosition(0, 0);
         for (int _ = 0; _ < 10; _++)
           world->Step(output, state, input);
 
-        // Child joint's position should be equal to that of parent joint in previous timestep.
-        parentJointPrevPos = parentJoint->GetPosition(0);
+        // Child joint's position should be equal to that of parent joint in previous timestep,
+        // considering the offsets and multipliers.
+        prismaticJointPrevPos = parentJoint->GetPosition(0);
+        revoluteJointPrevPos = revoluteChildJoint1->GetPosition(0);
         for (int _ = 0; _ < 10; _++)
         {
           world->Step(output, state, input);
-          EXPECT_FLOAT_EQ(multiplier * parentJointPrevPos + offset, childJoint->GetPosition(0));
-          parentJointPrevPos = parentJoint->GetPosition(0);
+          // Check for prismatic -> prismatic mimicking.
+          EXPECT_FLOAT_EQ(multiplier * prismaticJointPrevPos + offset,
+              prismaticChildJoint1->GetPosition(0));
+          // Check for prismatic -> revolute mimicking.
+          EXPECT_FLOAT_EQ(multiplier * prismaticJointPrevPos + offset,
+              revoluteChildJoint1->GetPosition(0));
+          // Check for revolute -> revolute mimicking.
+          EXPECT_FLOAT_EQ(multiplier * revoluteJointPrevPos + offset,
+              revoluteChildJoint2->GetPosition(0));
+          // Check for revolute --> prismatic mimicking.
+          EXPECT_FLOAT_EQ(multiplier * revoluteJointPrevPos + offset,
+              prismaticChildJoint2->GetPosition(0));
+
+          // Update previous positions.
+          prismaticJointPrevPos = parentJoint->GetPosition(0);
+          revoluteJointPrevPos = revoluteChildJoint1->GetPosition(0);
         }
       };
 
