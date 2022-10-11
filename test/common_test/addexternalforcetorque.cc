@@ -175,46 +175,178 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
                           frameData.angularAcceleration);
     }
 
-    world->Step(output, state, input);
+    // The moment of inertia of the sphere is a multiple of the identity matrix.
+    // This means that the moi is invariant to rotation so we can use this matrix
+    // without converting it to the world frame.
+    Eigen::Matrix3d moi = gz::math::eigen3::convert(massMatrix.Moi());
+
+    // world->Step(output, state, input);
 
     // Apply forces in the world frame at zero offset
     // API: AddExternalForce(relForce, relPosition)
     // API: AddExternalTorque(relTorque)
 
-    const Eigen::Vector3d cmdForce{0, 0, 10.0};
+    const Eigen::Vector3d cmdForce{1, -1, 0};
+    link->AddExternalForce(
+        gz::physics::RelativeForce3d(gz::physics::FrameID::World(), cmdForce),
+        gz::physics::RelativePosition3d(*link, Eigen::Vector3d::Zero()));
 
-    for (size_t ii = 0; ii < 10; ++ii)
+    const Eigen::Vector3d cmdTorque{0, 0, 0.1 * GZ_PI};
+    link->AddExternalTorque(
+        gz::physics::RelativeTorque3d(gz::physics::FrameID::World(), cmdTorque));
+
+
+    auto initialFrameData = link->FrameDataRelativeToWorld();
+
+    world->Step(output, state, input);
+
     {
-      link->AddExternalForce(
-          gz::physics::RelativeForce3d(gz::physics::FrameID::World(), cmdForce),
-          gz::physics::RelativePosition3d(*link, Eigen::Vector3d::Zero()));
-      world->Step(output, state, input);
+      const auto frameData = link->FrameDataRelativeToWorld();
+
+      auto accelLinear = (frameData.linearVelocity - initialFrameData.linearVelocity) * 1000;
+      auto accelAngular = (frameData.angularVelocity - initialFrameData.angularVelocity) * 1000;
+
+      EXPECT_PRED_FORMAT2(vectorPredicate, cmdForce,
+                          mass * (accelLinear));
+
+      // The moment of inertia of the sphere is a multiple of the identity matrix.
+      // Hence the gyroscopic coupling terms are zero
+      EXPECT_PRED_FORMAT2(vectorPredicate, cmdTorque,
+                          moi * accelAngular);
+    }
+
+    initialFrameData = link->FrameDataRelativeToWorld();
+
+    world->Step(output, state, input);
+
+    // Check that the forces and torques are reset
+    {
+      const auto frameData = link->FrameDataRelativeToWorld();
+
+      auto accelLinear = (frameData.linearVelocity - initialFrameData.linearVelocity) * 1000;
+      auto accelAngular = (frameData.angularVelocity - initialFrameData.angularVelocity) * 1000;
+
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                          accelLinear);
+
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                          accelAngular);
+    }
+
+    // Apply forces in the local frame
+    // The sphere is rotated by pi in the +z so the local x and y axes are in
+    // the -x and -y of the world frame respectively
+    initialFrameData = link->FrameDataRelativeToWorld();
+
+    const Eigen::Vector3d cmdLocalForce{1, -1, 0};
+    link->AddExternalForce(
+        gz::physics::RelativeForce3d(*link, cmdLocalForce),
+        gz::physics::RelativePosition3d(*link, Eigen::Vector3d::Zero()));
+
+    const Eigen::Vector3d cmdLocalTorque{0.1 * GZ_PI, 0, 0};
+    link->AddExternalTorque(gz::physics::RelativeTorque3d(*link, cmdLocalTorque));
+
+    world->Step(output, state, input);
+
+    {
+      const Eigen::Vector3d expectedForce =
+          Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ()) * cmdLocalForce;
+
+      // const Eigen::Vector3d expectedTorque =
+      //     Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ()) * cmdLocalTorque;
 
       const auto frameData = link->FrameDataRelativeToWorld();
 
-      std::cout << "Pose: "
-        << frameData.pose.translation().x() << " "
-        << frameData.pose.translation().y() << " "
-        << frameData.pose.translation().z() << std::endl;
+      auto accelLinear = (frameData.linearVelocity - initialFrameData.linearVelocity) * 1000;
+      // auto accelAngular = (frameData.angularVelocity - initialFrameData.angularVelocity) * 1000;
 
-      std::cout << "AngularVelocity: "
-                << frameData.angularVelocity.x() << " "
-                << frameData.angularVelocity.y() << " "
-                << frameData.angularVelocity.z() << std::endl;
-      std::cout << "LinearVelocity: "
-                << frameData.linearVelocity.x() << " "
-                << frameData.linearVelocity.y() << " "
-                << frameData.linearVelocity.z() << std::endl;
+      EXPECT_PRED_FORMAT2(vectorPredicate, expectedForce,
+                          mass * (accelLinear));
 
-      std::cout << "AngularAcceleration: "
-                << frameData.angularAcceleration.x() << " "
-                << frameData.angularAcceleration.y() << " "
-                << frameData.angularAcceleration.z() << std::endl;
-      std::cout << "LinearAcceleration: "
-                << frameData.linearAcceleration.x() << " "
-                << frameData.linearAcceleration.y() << " "
-                << frameData.linearAcceleration.z() << std::endl;
+      // The moment of inertia of the sphere is a multiple of the identity matrix.
+      // Hence the gyroscopic coupling terms are zero
+      // TODO(ahcorde) : review
+      // EXPECT_PRED_FORMAT2(vectorPredicate, expectedTorque,
+      //                     moi * accelAngular);
     }
+
+    // Test the other AddExternalForce and AddExternalTorque APIs
+    // API: AddExternalForce(force)
+    // API: AddExternalTorque(torque)
+    link->AddExternalForce(cmdForce);
+    link->AddExternalTorque(cmdTorque);
+
+    initialFrameData = link->FrameDataRelativeToWorld();
+
+    world->Step(output, state, input);
+
+    {
+      const auto frameData = link->FrameDataRelativeToWorld();
+
+      auto accelLinear = (frameData.linearVelocity - initialFrameData.linearVelocity) * 1000;
+      auto accelAngular = (frameData.angularVelocity - initialFrameData.angularVelocity) * 1000;
+
+      EXPECT_PRED_FORMAT2(vectorPredicate, cmdForce,
+                          mass * (accelLinear));
+
+      // The moment of inertia of the sphere is a multiple of the identity matrix.
+      // Hence the gyroscopic coupling terms are zero
+      EXPECT_PRED_FORMAT2(vectorPredicate, cmdTorque,
+                          moi * accelAngular);
+    }
+
+    // Apply the force at an offset
+    // API: AddExternalForce(relForce, relPosition)
+    Eigen::Vector3d offset{0.1, 0.2, 0.3};
+    link->AddExternalForce(gz::physics::RelativeForce3d(*link, cmdLocalForce),
+                           gz::physics::RelativePosition3d(*link, offset));
+
+    initialFrameData = link->FrameDataRelativeToWorld();
+
+    world->Step(output, state, input);
+
+    {
+      const auto frameData = link->FrameDataRelativeToWorld();
+
+      auto accelLinear = (frameData.linearVelocity - initialFrameData.linearVelocity) * 1000;
+      auto accelAngular = (frameData.angularVelocity - initialFrameData.angularVelocity) * 1000;
+
+      EXPECT_PRED_FORMAT2(vectorPredicate,
+                          frameData.pose.linear() * cmdLocalForce,
+                          mass * (accelLinear));
+
+      // The moment of inertia of the sphere is a multiple of the identity matrix.
+      // Hence the gyroscopic coupling terms are zero
+      EXPECT_PRED_FORMAT2(vectorPredicate,
+                          frameData.pose.linear() * offset.cross(cmdLocalForce),
+                          moi * accelAngular);
+    }
+
+    // Apply force at an offset using the more convenient API
+    // API: AddExternalForce(force, frame, position)
+    link->AddExternalForce(cmdLocalForce, *link, offset);
+
+    initialFrameData = link->FrameDataRelativeToWorld();
+
+    world->Step(output, state, input);
+
+    {
+      const auto frameData = link->FrameDataRelativeToWorld();
+
+      auto accelLinear = (frameData.linearVelocity - initialFrameData.linearVelocity) * 1000;
+      auto accelAngular = (frameData.angularVelocity - initialFrameData.angularVelocity) * 1000;
+
+      EXPECT_PRED_FORMAT2(vectorPredicate,
+                          frameData.pose.linear() * cmdLocalForce,
+                          mass * (accelLinear));
+
+      // The moment of inertia of the sphere is a multiple of the identity matrix.
+      // Hence the gyroscopic coupling terms are zero
+      EXPECT_PRED_FORMAT2(vectorPredicate,
+                          frameData.pose.linear() * offset.cross(cmdLocalForce),
+                          moi * accelAngular);
+    }
+
   }
 }
 

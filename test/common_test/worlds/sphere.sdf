@@ -2,9 +2,8 @@
 <sdf version="1.6">
   <world name="empty">
     <gravity>0 0 0</gravity>
-
     <model name="sphere">
-      <pose>0 0 10 0 0 0</pose>
+      <pose>0 0 2 0 0 3.1416</pose>
       <link name="sphere_link">
         <inertial>
           <inertia>
@@ -33,6 +32,5 @@
         </visual>
       </link>
     </model>
-
   </world>
 </sdf>

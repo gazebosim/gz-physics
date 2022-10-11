@@ -42,21 +42,6 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
-  for (auto & m: this->models)
-  {
-    gzmsg << m.first << std::endl;
-    btMultiBody* body = m.second->body.get();
-    if (body)
-    {
-      auto bf = body->getBaseForce();
-      gzmsg << bf[0] << " " << bf[1] << " " << bf[2] << std::endl;
-    }
-    else
-    {
-      gzwarn << "Body is nullptr" << std::endl;
-    }
-  }
-
   worldInfo->world->stepSimulation(this->stepSize, 1, this->stepSize);
 
   for (auto & m : this->models)

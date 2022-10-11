@@ -63,12 +63,13 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
 
   if (link->indexInModel.has_value())
   {
-    btVector3 torqueWorld = model->body->getLink(link->indexInModel.value()).m_cachedWorldTransform.getBasis() * T;
+    btVector3 torqueWorld =
+      model->body->getLink(link->indexInModel.value()).
+        m_cachedWorldTransform.getBasis() * T;
     model->body->addLinkTorque(link->indexInModel.value(), torqueWorld);
   }
   else
   {
-    model->body->addBaseTorque(T);
     btVector3 torqueWorld = model->body->getBaseWorldTransform().getBasis() * T;
     model->body->addBaseTorque(torqueWorld);
   }
