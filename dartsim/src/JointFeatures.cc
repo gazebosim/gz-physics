@@ -725,6 +725,20 @@ void JointFeatures::SetJointMimicConstraint(
            << "]. The command will be ignored\n";
     return;
   }
+  // Check if the joint tries to mimic itself.
+  if (joint == jointMimic)
+  {
+    gzerr << "Parent and child joints for the mimic contraint"
+      << " should not be the same. The constraint will be ignored"
+      << std::endl;
+  }
+  // Check for degrees of freedom.
+  if (joint->getNumDofs() != jointMimic->getNumDofs())
+  {
+    gzerr << "Mimic constraint pair of joints should have the same"
+      << " degress of freedom. The constraint will be ignored"
+      << std::endl;
+  }
 
   joint->setActuatorType(dart::dynamics::Joint::MIMIC);
   joint->setMimicJoint(jointMimic, _multiplier,
