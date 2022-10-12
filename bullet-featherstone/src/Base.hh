@@ -166,6 +166,7 @@ struct JointInfo
   std::size_t indexInGzModel = 0;
   btMultiBodyJointMotor* motor = nullptr;
   double effort = 0;
+
   std::shared_ptr<btMultiBodyFixedConstraint> fixedContraint = nullptr;
 };
 
