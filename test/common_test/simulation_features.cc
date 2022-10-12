@@ -67,7 +67,6 @@ using Features = gz::physics::FeatureList<
   gz::physics::GetShapeFromLink,
   gz::physics::GetModelBoundingBox,
 
-  // gz::physics::sdf::ConstructSdfJoint,
   gz::physics::sdf::ConstructSdfLink,
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfCollision,
@@ -179,30 +178,87 @@ bool StepWorld(
   return checkedOutput;
 }
 
+// The features that an engine must have to be loaded by this loader.
+using FeaturesContacts = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::ForwardStep
+>;
+
 template <class T>
-class SimulationFeaturesTestBasic :
+class SimulationFeaturesContactsTest :
   public SimulationFeaturesTest<T>{};
-using SimulationFeaturesTestBasicTypes =
-  ::testing::Types<Features>;
-TYPED_TEST_SUITE(SimulationFeaturesTestBasic,
-                 SimulationFeaturesTestBasicTypes);
+using SimulationFeaturesContactsTestTypes =
+  ::testing::Types<FeaturesContacts>;
+TYPED_TEST_SUITE(SimulationFeaturesContactsTest,
+                 SimulationFeaturesContactsTestTypes);
 
 /////////////////////////////////////////////////
-TYPED_TEST(SimulationFeaturesTestBasic, StepWorld)
+TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
 {
-  auto worlds = LoadWorlds<Features>(
+  auto worlds = LoadWorlds<FeaturesContacts>(
     this->loader,
     this->pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
-    auto checkedOutput = StepWorld<Features>(world, true, 1000);
+    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1);
+    EXPECT_TRUE(checkedOutput);
+
+    auto contacts = world->GetContactsFromLastStep();
+    // Only box_colliding should collide with box_base
+    EXPECT_NE(0u, contacts.size());
+  }
+}
+
+
+// The features that an engine must have to be loaded by this loader.
+using FeaturesStep = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::ForwardStep
+>;
+
+template <class T>
+class SimulationFeaturesStepTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesStepTestTypes =
+  ::testing::Types<FeaturesStep>;
+TYPED_TEST_SUITE(SimulationFeaturesStepTest,
+                 SimulationFeaturesStepTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesStepTest, StepWorld)
+{
+  auto worlds = LoadWorlds<FeaturesStep>(
+    this->loader,
+    this->pluginNames,
+  gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+  for (const auto &world : worlds)
+  {
+    auto checkedOutput = StepWorld<FeaturesStep>(world, true, 1000);
     EXPECT_TRUE(checkedOutput);
   }
 }
 
+// The features that an engine must have to be loaded by this loader.
+using FeaturesFalling = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::ForwardStep,
+  gz::physics::LinkFrameSemantics
+>;
+
+template <class T>
+class SimulationFeaturesFallingTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesFallingTestTypes =
+  ::testing::Types<FeaturesFalling>;
+TYPED_TEST_SUITE(SimulationFeaturesFallingTest,
+                 SimulationFeaturesFallingTestTypes);
+
 /////////////////////////////////////////////////
-TYPED_TEST(SimulationFeaturesTestBasic, Falling)
+TYPED_TEST(SimulationFeaturesFallingTest, Falling)
 {
   for (const std::string &name : this->pluginNames)
   {
@@ -211,13 +267,13 @@ TYPED_TEST(SimulationFeaturesTestBasic, Falling)
       GTEST_SKIP();
     }
 
-    auto worlds = LoadWorlds<Features>(
+    auto worlds = LoadWorlds<FeaturesFalling>(
       this->loader,
       this->pluginNames,
       gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
     for (const auto &world : worlds)
     {
-      auto checkedOutput = StepWorld<Features>(world, true, 1000);
+      auto checkedOutput = StepWorld<FeaturesFalling>(world, true, 1000);
       EXPECT_TRUE(checkedOutput);
 
       auto link = world->GetModel(0)->GetLink(0);
@@ -227,10 +283,40 @@ TYPED_TEST(SimulationFeaturesTestBasic, Falling)
   }
 }
 
+
+// The features that an engine must have to be loaded by this loader.
+using FeaturesShapeFeatures = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetShapeFromLink,
+  gz::physics::GetModelBoundingBox,
+  gz::physics::ForwardStep,
+
+  gz::physics::AttachBoxShapeFeature,
+  gz::physics::AttachSphereShapeFeature,
+  gz::physics::AttachCylinderShapeFeature,
+  gz::physics::AttachEllipsoidShapeFeature,
+  gz::physics::AttachCapsuleShapeFeature,
+  gz::physics::GetSphereShapeProperties,
+  gz::physics::GetBoxShapeProperties,
+  gz::physics::GetCylinderShapeProperties,
+  gz::physics::GetCapsuleShapeProperties,
+  gz::physics::GetEllipsoidShapeProperties
+>;
+
+template <class T>
+class SimulationFeaturesShapeFeaturesTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesShapeFeaturesTestTypes =
+  ::testing::Types<FeaturesShapeFeatures>;
+TYPED_TEST_SUITE(SimulationFeaturesShapeFeaturesTest,
+                 SimulationFeaturesShapeFeaturesTestTypes);
+
 /////////////////////////////////////////////////
-TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
+TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
 {
-  auto worlds = LoadWorlds<Features>(
+  auto worlds = LoadWorlds<FeaturesShapeFeatures>(
     this->loader,
     this->pluginNames,
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
@@ -382,6 +468,14 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeFeatures)
               gz::math::eigen3::convert(capsuleModelAABB).Max());
   }
 }
+
+template <class T>
+class SimulationFeaturesTestBasic :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestBasicTypes =
+  ::testing::Types<Features>;
+TYPED_TEST_SUITE(SimulationFeaturesTestBasic,
+                 SimulationFeaturesTestBasicTypes);
 
 TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
 {

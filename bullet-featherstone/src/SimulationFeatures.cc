@@ -66,6 +66,71 @@ void SimulationFeatures::WorldForwardStep(
 }
 
 /////////////////////////////////////////////////
+std::vector<SimulationFeatures::ContactInternal>
+SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
+{
+  std::vector<SimulationFeatures::ContactInternal> outContacts;
+  auto *const world = this->ReferenceInterface<WorldInfo>(_worldID);
+  if (!world)
+  {
+    return outContacts;
+  }
+
+  int numManifolds = world->world->getDispatcher()->getNumManifolds();
+  for (int i = 0; i < numManifolds; i++)
+  {
+    btPersistentManifold* contactManifold =
+      world->world->getDispatcher()->getManifoldByIndexInternal(i);
+    const btMultiBodyLinkCollider* obA =
+      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
+    const btMultiBodyLinkCollider* obB =
+      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
+    std::size_t collision1ID;
+    std::size_t collision2ID;
+
+    for (const auto & link : this->links)
+    {
+      if (obA == link.second->collider.get())
+      {
+        for (const auto &v : link.second->collisionNameToEntityId)
+        {
+          collision1ID = v.second;
+        }
+      }
+      if (obB == link.second->collider.get())
+      {
+        for (const auto &v : link.second->collisionNameToEntityId)
+        {
+          collision2ID = v.second;
+        }
+      }
+    }
+    int numContacts = contactManifold->getNumContacts();
+    for (int j = 0; j < numContacts; j++)
+    {
+      btManifoldPoint& pt = contactManifold->getContactPoint(j);
+      CompositeData extraData;
+
+      // Add normal, depth and wrench to extraData.
+      auto& extraContactData =
+        extraData.Get<SimulationFeatures::ExtraContactData>();
+      extraContactData.force =
+        convert(btVector3(pt.m_appliedImpulse,
+                          pt.m_appliedImpulse,
+                          pt.m_appliedImpulse));
+      extraContactData.normal = convert(pt.m_normalWorldOnB);
+      extraContactData.depth = pt.getDistance();
+
+      outContacts.push_back(SimulationFeatures::ContactInternal {
+        this->GenerateIdentity(collision1ID, this->collisions.at(collision1ID)),
+        this->GenerateIdentity(collision2ID, this->collisions.at(collision2ID)),
+        convert(pt.getPositionWorldOnA()), extraData});
+      }
+  }
+  return outContacts;
+}
+
+/////////////////////////////////////////////////
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {
   // remove link poses from the previous iteration

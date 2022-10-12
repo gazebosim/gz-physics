@@ -50,39 +50,62 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   }
   else
   {
-    // If the Frame was not a Link then check if it's a collision object
-    // const auto collisionIt = this->collisions.find(_id.ID());
-    model = this->FrameInterface<ModelInfo>(_id);
-
-    if (model->body == nullptr)
+    auto jointIt = this->joints.find(_id.ID());
+    if (jointIt != this->joints.end())
     {
-      auto jointIt = this->joints.find(_id.ID());
-      if (jointIt != this->joints.end())
+      const auto &jointInfo = jointIt->second;
+
+      const auto linkIt2 = this->links.find(jointInfo->childLinkID);
+      if (linkIt2 != this->links.end())
       {
-        const auto &jointInfo = jointIt->second;
+        const auto &linkInfo2 = linkIt2->second;
+        const auto indexOpt2 = linkInfo2->indexInModel;
+        model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
 
-        const auto linkIt2 = this->links.find(jointInfo->childLinkID);
-        if (linkIt2 != this->links.end())
+        if (indexOpt2.has_value())
         {
-          const auto &linkInfo2 = linkIt2->second;
-          const auto indexOpt2 = linkInfo2->indexInModel;
-          model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
-
-          if (indexOpt2.has_value())
-          {
-            const auto index2 = *indexOpt2;
-            FrameData data;
-            data.pose = GetWorldTransformOfLink(*model, *linkInfo2);
-            const auto &link = model->body->getLink(index2);
-            data.linearVelocity = convert(
-              link.m_absFrameTotVelocity.getLinear());
-            data.angularVelocity = convert(
-              link.m_absFrameTotVelocity.getAngular());
-            return data;
-          }
+          const auto index2 = *indexOpt2;
+          FrameData data;
+          data.pose = GetWorldTransformOfLink(*model, *linkInfo2);
+          const auto &link = model->body->getLink(index2);
+          data.linearVelocity = convert(
+            link.m_absFrameTotVelocity.getLinear());
+          data.angularVelocity = convert(
+            link.m_absFrameTotVelocity.getAngular());
+          return data;
         }
       }
     }
+
+    auto collisionIt = this->collisions.find(_id.ID());
+    if (collisionIt != this->collisions.end())
+    {
+      const auto &collisionInfo = collisionIt->second;
+
+      const auto linkIt2 = this->links.find(collisionInfo->link);
+      if (linkIt2 != this->links.end())
+      {
+        const auto &linkInfo2 = linkIt2->second;
+        const auto indexOpt2 = linkInfo2->indexInModel;
+        model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
+
+        if (indexOpt2.has_value())
+        {
+          const auto index2 = *indexOpt2;
+          FrameData data;
+          data.pose = GetWorldTransformOfLink(*model, *linkInfo2);
+          const auto &link = model->body->getLink(index2);
+          data.linearVelocity = convert(
+            link.m_absFrameTotVelocity.getLinear());
+          data.angularVelocity = convert(
+            link.m_absFrameTotVelocity.getAngular());
+          return data;
+        }
+      }
+    }
+
+    if (model->body == nullptr)
+      model = this->FrameInterface<ModelInfo>(_id);
   }
 
   FrameData data;

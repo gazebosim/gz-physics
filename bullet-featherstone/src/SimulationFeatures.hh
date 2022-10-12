@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetContacts.hh>
 
 #include "Base.hh"
 
@@ -30,13 +31,17 @@ namespace physics {
 namespace bullet_featherstone {
 
 struct SimulationFeatureList : gz::physics::FeatureList<
-  ForwardStep
+  ForwardStep,
+  GetContactsFromLastStepFeature
 > { };
 
 class SimulationFeatures :
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
+  public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
+    ::ContactInternal;
+
   public: void WorldForwardStep(
       const Identity &_worldID,
       ForwardStep::Output &_h,
@@ -44,6 +49,9 @@ class SimulationFeatures :
       const ForwardStep::Input &_u) override;
 
   public: void Write(ChangedWorldPoses &_changedPoses) const;
+
+  public: std::vector<ContactInternal> GetContactsFromLastStep(
+      const Identity &_worldID) const override;
 
   private: double stepSize = 0.001;
 

@@ -501,41 +501,10 @@ Identity SDFFeatures::ConstructSdfModel(
           btPosParentComToJoint,
           btJointToChildCom);
       }
-      else if (::sdf::JointType::REVOLUTE == joint->Type())
+      else if (::sdf::JointType::PRISMATIC == joint->Type() ||
+              ::sdf::JointType::REVOLUTE == joint->Type() ||
+              ::sdf::JointType::BALL == joint->Type())
       {
-        const auto axis = joint->Axis()->Xyz();
-        auto linkParent = _sdfModel.LinkByName(joint->ParentName());
-        gz::math::Pose3d parentTransformInWorldSpace;
-        const auto errors = linkParent->SemanticPose().Resolve(
-          parentTransformInWorldSpace);
-
-        gz::math::Pose3d parent2joint;
-        const auto errors2 = linkParent->SemanticPose().Resolve(
-          parent2joint, joint->Name());
-
-        btTransform parentLocalInertialFrame = convertTf(
-          parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(gz::math::eigen3::convert(
-          parent2joint.Inverse()));
-
-        btTransform offsetInABt, offsetInBBt;
-        offsetInABt = parentLocalInertialFrame * parent2jointBt;
-        offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis =
-          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
-
-        model->body->setupRevolute(
-          i, mass, inertia, parentIndex,
-          parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(),
-                     btVector3(axis[0], axis[1], axis[2])),
-          offsetInABt.getOrigin(),
-          -offsetInBBt.getOrigin(),
-          true);
-      }
-      else if (::sdf::JointType::PRISMATIC == joint->Type())
-      {
-        const auto axis = joint->Axis()->Xyz();
         auto linkParent = _sdfModel.LinkByName(joint->ParentName());
         gz::math::Pose3d parentTransformInWorldSpace;
         const auto errors = linkParent->SemanticPose().Resolve(
@@ -556,22 +525,39 @@ Identity SDFFeatures::ConstructSdfModel(
         btQuaternion parentRotToThis =
           offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
-        model->body->setupPrismatic(
-          i, mass, inertia, parentIndex,
-          parentRotToThis,
-          quatRotate(offsetInBBt.getRotation(),
-                     btVector3(axis[0], axis[1], axis[2])),
-          offsetInABt.getOrigin(),
-          -offsetInBBt.getOrigin(),
-          true);
-      }
-      else if (::sdf::JointType::BALL == joint->Type())
-      {
-        model->body->setupSpherical(
-          i, mass, inertia, parentIndex,
-          btRotParentComToJoint,
-          btPosParentComToJoint,
-          btJointToChildCom);
+        if (::sdf::JointType::REVOLUTE == joint->Type())
+        {
+          const auto axis = joint->Axis()->Xyz();
+          model->body->setupRevolute(
+            i, mass, inertia, parentIndex,
+            parentRotToThis,
+            quatRotate(offsetInBBt.getRotation(),
+                       btVector3(axis[0], axis[1], axis[2])),
+            offsetInABt.getOrigin(),
+            -offsetInBBt.getOrigin(),
+            true);
+        }
+        else if (::sdf::JointType::PRISMATIC == joint->Type())
+        {
+          const auto axis = joint->Axis()->Xyz();
+          model->body->setupPrismatic(
+            i, mass, inertia, parentIndex,
+            parentRotToThis,
+            quatRotate(offsetInBBt.getRotation(),
+                       btVector3(axis[0], axis[1], axis[2])),
+            offsetInABt.getOrigin(),
+            -offsetInBBt.getOrigin(),
+            true);
+        }
+        else if (::sdf::JointType::BALL == joint->Type())
+        {
+          model->body->setupSpherical(
+            i, mass, inertia, parentIndex,
+            parentRotToThis,
+            offsetInABt.getOrigin(),
+            -offsetInBBt.getOrigin(),
+            true);
+        }
       }
       else
       {
@@ -937,6 +923,36 @@ bool SDFFeatures::AddSdfCollision(
   }
 
   return true;
+}
+
+Identity SDFFeatures::GetCollision(
+  const Identity &_linkID,
+  const std::string &_collisionName)
+{
+  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto it = link->collisionNameToEntityId.find(_collisionName);
+  if (it == link->collisionNameToEntityId.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity(it->second, this->collisions.at(it->second));
+}
+
+Identity SDFFeatures::ConstructSdfCollision(
+    const Identity &_linkID,
+    const ::sdf::Collision &_collision)
+{
+  if(this->AddSdfCollision(_linkID, _collision, false))
+  {
+    for (const auto& collision : this->collisions)
+    {
+      if (collision.second->link.id == _linkID.id)
+      {
+        return this->GenerateIdentity(
+          collision.first, this->collisions.at(collision.first));
+      }
+    }
+  }
+  return this->GenerateInvalidId();
 }
 
 }  // namespace bullet_featherstone
