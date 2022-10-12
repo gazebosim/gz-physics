@@ -727,7 +727,8 @@ void JointFeatures::SetJointMimicConstraint(
   }
 
   joint->setActuatorType(dart::dynamics::Joint::MIMIC);
-  joint->setMimicJoint(jointMimic, _multiplier, _offset - _multiplier * _reference);
+  joint->setMimicJoint(jointMimic, _multiplier,
+      _offset - _multiplier * _reference);
 }
 
 }
