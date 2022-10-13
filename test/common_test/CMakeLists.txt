@@ -1,6 +1,7 @@
 set(TEST_TYPE "COMMON_TEST")
 
 set(tests
+  addexternalforcetorque
   basic_test
   collisions
   construct_empty_world

@@ -85,8 +85,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
     const btMultiBodyLinkCollider* obB =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-    std::size_t collision1ID;
-    std::size_t collision2ID;
+    std::size_t collision1ID = -1;
+    std::size_t collision2ID = -1;
 
     for (const auto & link : this->links)
     {
