@@ -165,6 +165,8 @@ struct JointInfo
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
   btMultiBodyJointMotor* motor = nullptr;
+  double effort = 0;
+
   std::shared_ptr<btMultiBodyFixedConstraint> fixedContraint = nullptr;
 };
 
