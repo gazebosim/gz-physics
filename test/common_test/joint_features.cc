@@ -1202,8 +1202,8 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
     const auto poseParent1 = frameDataModel1Body.pose;
     const auto poseChild1 = frameDataModel2Body.pose;
     auto poseParentChild1 = poseParent1.inverse() * poseChild1;
-    auto fixedJoint1 = model2Body->AttachFixedJoint(model1Body);
-    fixedJoint1->SetTransformFromParent(poseParentChild1);
+    auto fixedJoint_m2m1 = model2Body->AttachFixedJoint(model1Body);
+    fixedJoint_m2m1->SetTransformFromParent(poseParentChild1);
 
     frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
     frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
@@ -1220,8 +1220,8 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
     const auto poseParent2 = frameDataModel3Body.pose;
     const auto poseChild2 = frameDataModel2Body.pose;
     auto poseParentChild2 = poseParent2.inverse() * poseChild2;
-    auto fixedJoint2 = model2Body->AttachFixedJoint(model3Body);
-    fixedJoint2->SetTransformFromParent(poseParentChild2);
+    auto fixedJoint_m2m3 = model2Body->AttachFixedJoint(model3Body);
+    fixedJoint_m2m3->SetTransformFromParent(poseParentChild2);
 
     frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
     frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
@@ -1235,10 +1235,13 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
               gz::math::eigen3::convert(frameDataModel3Body.pose));
 
     const std::size_t numSteps = 100;
+    /// Step through initial transients
     for (std::size_t i = 0; i < numSteps; ++i)
     {
       world->Step(output, state, input);
+    }
 
+    {
       frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
       frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
       frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
@@ -1251,20 +1254,23 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
           gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
       gz::math::Vector3d body3LinearVelocity =
           gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-1);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-1);
-      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-1);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
     }
 
     // Detach the joints. M1 and M3 should fall as there is now nothing stopping
     // them from falling.
-    fixedJoint1->Detach();
-    fixedJoint2->Detach();
+    fixedJoint_m2m1->Detach();
+    fixedJoint_m2m3->Detach();
 
+    /// Step through initial transients
     for (std::size_t i = 0; i < numSteps; ++i)
     {
       world->Step(output, state, input);
+    }
 
+    {
       frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
       frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
       frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
@@ -1277,9 +1283,10 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
           gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
       gz::math::Vector3d body3LinearVelocity =
           gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-      EXPECT_NEAR(dt * (i + 1) * -9.81, body1LinearVelocity.Z(), 1e-2);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-2);
-      EXPECT_NEAR(dt * (i + 1) * -9.81, body3LinearVelocity.Z(), 1e-2);
+
+      EXPECT_NEAR(dt * (numSteps) * -10, body1LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(dt * (numSteps) * -10, body3LinearVelocity.Z(), 1e-3);
     }
   }
 }

@@ -627,7 +627,6 @@ Identity SDFFeatures::ConstructSdfModel(
       }
       else
       {
-        gzmsg << "Setting base mass/inertia: " << mass << std::endl;
         model->body->setBaseMass(mass);
         model->body->setBaseInertia(inertia);
       }
@@ -640,7 +639,6 @@ Identity SDFFeatures::ConstructSdfModel(
   {
     for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
     {
-      gzerr << "Adding collision to: " << linkSdf->Name() << std::endl;
       // If we fail to add the collision, just keep building the model. It may
       // need to be constructed outside of the SDF generation pipeline, e.g.
       // with AttachHeightmap.
