@@ -458,10 +458,16 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
               gz::math::eigen3::convert(cylinderModelAABB).Min());
     EXPECT_EQ(gz::math::Vector3d(3, 1.5, 2.5),
               gz::math::eigen3::convert(cylinderModelAABB).Max());
+
     EXPECT_TRUE(gz::math::Vector3d(-0.2, -5.3, 0.2).Equal(
                 gz::math::eigen3::convert(ellipsoidModelAABB).Min(), 0.1));
     EXPECT_TRUE(gz::math::Vector3d(0.2, -4.7, 1.2).Equal(
                 gz::math::eigen3::convert(ellipsoidModelAABB).Max(), 0.1));
+
+    // Print because something strange is happening on focal
+    std::cout << gz::math::eigen3::convert(ellipsoidModelAABB).Min() << std::endl;
+    std::cout << gz::math::eigen3::convert(ellipsoidModelAABB).Max() << std::endl;
+
     EXPECT_EQ(gz::math::Vector3d(-0.2, -3.2, 0),
               gz::math::eigen3::convert(capsuleModelAABB).Min());
     EXPECT_EQ(gz::math::Vector3d(0.2, -2.8, 1),
