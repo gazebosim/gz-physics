@@ -320,12 +320,14 @@ TYPED_TEST(JointTransmittedWrenchFixture, ValidateWrenchWithSecondaryJoint)
   this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
   this->Step(350);
   const double theta = this->motorJoint->GetPosition(0);
+  const double omega = this->motorJoint->GetVelocity(0);
   // In order to get the math to work out, we need to use the joint
   // acceleration and transmitted wrench from the current time step with the
   // joint position and velocity from the previous time step. That is, we need
   // the position and velocity before they are integrated.
   this->Step(1);
-  const double alpha = this->motorJoint->GetAcceleration(0);
+  const double omega1 = this->motorJoint->GetVelocity(0);
+  const double alpha = (omega1 - omega)/1e-3;
 
   auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
   auto wrenchAtSensorInSensor = this->sensorJoint->GetTransmittedWrench();
