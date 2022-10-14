@@ -590,6 +590,7 @@ Identity SDFFeatures::ConstructSdfModel(
     }
   }
 
+
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
   model->body->finalizeMultiDof();
 
