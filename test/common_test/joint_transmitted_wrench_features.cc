@@ -137,7 +137,7 @@ class JointTransmittedWrenchFixture
   public: LinkPtr armLink;
 
   // From SDFormat file
-  static constexpr double kGravity = 10.0;
+  static constexpr double kGravity = 9.8;
   static constexpr double kArmLinkMass = 6.0;
   static constexpr double kSensorLinkMass = 0.4;
   // MOI in the z-axis
@@ -186,7 +186,6 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
 
   // Test wrench expressed in different frames
   {
-    gzerr << "wrenchAtMotorJoint" << std::endl;
     auto wrenchAtMotorJoint = this->motorJoint->GetTransmittedWrench();
     gz::physics::Wrench3d expectedWrenchAtMotorJoint{
         gz::physics::Vector3d::Zero(),
@@ -196,7 +195,6 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
        gz::physics::test::Equal(expectedWrenchAtMotorJoint, wrenchAtMotorJoint, 1e-4));
   }
   {
-    gzerr << "wrenchAtMotorJointInWorld" << std::endl;
     auto wrenchAtMotorJointInWorld = this->motorJoint->GetTransmittedWrench(
         this->motorJoint->GetFrameID(), gz::physics::FrameID::World());
     gz::physics::Wrench3d expectedWrenchAtMotorJointInWorld{
@@ -207,7 +205,6 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
                                          wrenchAtMotorJointInWorld, 1e-4));
   }
   {
-    gzerr << "wrenchAtMotorJointInArm" << std::endl;
     auto wrenchAtMotorJointInArm = this->motorJoint->GetTransmittedWrench(
         this->armLink->GetFrameID(), this->armLink->GetFrameID());
     // The arm frame is rotated by 90° in the Y-axis of the joint frame.
@@ -239,12 +236,15 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumInMotion)
   {
     const double theta = this->motorJoint->GetPosition(0);
     const double omega = this->motorJoint->GetVelocity(0);
+
     // In order to get the math to work out, we need to use the joint
     // acceleration and transmitted wrench from the current time step with the
     // joint position and velocity from the previous time step. That is, we need
     // the position and velocity before they are integrated.
     this->Step(1);
-    const double alpha = this->motorJoint->GetAcceleration(0);
+
+    const double omega1 = this->motorJoint->GetVelocity(0);
+    const double alpha = (omega1 - omega)/1e-3;
 
     auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
 
