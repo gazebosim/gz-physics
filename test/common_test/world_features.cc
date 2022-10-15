@@ -143,13 +143,13 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
     auto link = model->GetLink(0);
     ASSERT_NE(nullptr, link);
 
-    AssertVectorApprox vectorPredicate10(1e-10);
+    AssertVectorApprox vectorPredicate6(1e-6);
 
     // initial link pose
     const Eigen::Vector3d initialLinkPosition(0, 0, 2);
     {
       Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
-      EXPECT_PRED_FORMAT2(vectorPredicate10,
+      EXPECT_PRED_FORMAT2(vectorPredicate6,
                           initialLinkPosition,
                           pos);
     }
@@ -157,14 +157,14 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
     auto linkFrameID = link->GetFrameID();
 
     // Get default gravity in link frame, which is pitched by pi/4
-    EXPECT_PRED_FORMAT2(vectorPredicate10,
+    EXPECT_PRED_FORMAT2(vectorPredicate6,
                         Eigen::Vector3d(6.92964645563, 0, -6.92964645563),
                         world->GetGravity(linkFrameID));
 
     // set gravity along X axis of linked frame, which is pitched by pi/4
     world->SetGravity(Eigen::Vector3d(1.4142135624, 0, 0), linkFrameID);
 
-    EXPECT_PRED_FORMAT2(vectorPredicate10,
+    EXPECT_PRED_FORMAT2(vectorPredicate6,
                         Eigen::Vector3d(1, 0, -1),
                         world->GetGravity());
 
@@ -174,7 +174,7 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
         linkFrameID, Eigen::Vector3d(0, 0, 1.4142135624));
     world->SetGravity(relativeGravity);
 
-    EXPECT_PRED_FORMAT2(vectorPredicate10,
+    EXPECT_PRED_FORMAT2(vectorPredicate6,
                         Eigen::Vector3d(1, 0, 1),
                         world->GetGravity());
 
@@ -189,10 +189,10 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
       world->Step(output, state, input);
     }
 
-    AssertVectorApprox vectorPredicate3(1e-3);
+    AssertVectorApprox vectorPredicate2(1e-2);
     {
       Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
-      EXPECT_PRED_FORMAT2(vectorPredicate3,
+      EXPECT_PRED_FORMAT2(vectorPredicate2,
                           Eigen::Vector3d(0.5, 0, 2.5),
                           pos);
     }

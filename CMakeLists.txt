@@ -84,7 +84,7 @@ gz_find_package(DART
 # Find bullet for the bullet plugin wrapper
 gz_find_package(GzBullet
   VERSION 2.87
-  REQUIRED_BY bullet
+  REQUIRED_BY bullet bullet-featherstone
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
@@ -101,7 +101,7 @@ set(GZ_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 gz_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf heightmap mesh dartsim tpe bullet)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone)
 
 
 #============================================================================

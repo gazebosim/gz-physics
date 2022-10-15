@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Open Source Robotics Foundation
+ * Copyright (C) 2022 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,28 @@
  *
 */
 
-#ifndef GZ_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
-#define GZ_PHYSICS_BULLET_SRC_SDFFEATURES_HH_
+#ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_SDFFEATURES_HH_
+#define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_SDFFEATURES_HH_
 
 #include <string>
 
-#include <gz/physics/sdf/ConstructJoint.hh>
-#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
-#include <gz/physics/sdf/ConstructCollision.hh>
-
 #include <gz/physics/Implements.hh>
+
+#include <sdf/Collision.hh>
 
 #include "EntityManagementFeatures.hh"
 
 namespace gz {
 namespace physics {
-namespace bullet {
+namespace bullet_featherstone {
 
 struct SDFFeatureList : gz::physics::FeatureList<
-  sdf::ConstructSdfJoint,
-  sdf::ConstructSdfLink,
   sdf::ConstructSdfModel,
-  sdf::ConstructSdfCollision,
-  sdf::ConstructSdfWorld
+  sdf::ConstructSdfWorld,
+  sdf::ConstructSdfCollision
 > { };
 
 class SDFFeatures :
@@ -54,9 +51,10 @@ class SDFFeatures :
       const Identity &_worldID,
       const ::sdf::Model &_sdfModel) override;
 
-  private: Identity ConstructSdfLink(
-      const Identity &_modelID,
-      const ::sdf::Link &_sdfLink) override;
+  public: bool AddSdfCollision(
+      const Identity &_linkID,
+      const ::sdf::Collision &_collision,
+      bool isStatic);
 
   private: Identity ConstructSdfCollision(
       const Identity &_linkID,
@@ -65,24 +63,9 @@ class SDFFeatures :
   private: Identity GetCollision(
       const Identity &_linkID,
       const std::string &_collisionName) override;
-
-  private: Identity ConstructSdfJoint(
-      const Identity &_modelID,
-      const ::sdf::Joint &_sdfJoint) override;
-
-  private: Identity ConstructSdfJoint(
-      const Identity &_modelID,
-      const ::sdf::Joint &_sdfJoint,
-      std::size_t parentId,
-      std::size_t childId);
-
-  private: std::size_t FindOrConstructLink(
-      const Identity &_modelID,
-      const ::sdf::Model &_sdfModel,
-      const std::string &_sdfLinkName);
 };
 
-}  // namespace bullet
+}  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz
 
