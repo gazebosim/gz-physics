@@ -32,10 +32,7 @@
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
 #include <sdf/Mesh.hh>
-#include <sdf<<<<<<< mjcarroll/add-bullet-featherstone/force-torque
-142
- 
-/Plane.hh>
+#include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
 

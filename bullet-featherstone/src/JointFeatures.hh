@@ -47,10 +47,9 @@ struct JointFeatureList : FeatureList<
 
   FixedJointCast,
 
-  GetJointTransmittedWrench
+  GetJointTransmittedWrench,
 
   FixedJointCast
-
 > { };
 
 class JointFeatures :
