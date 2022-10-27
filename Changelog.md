@@ -2,6 +2,17 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
+### Gazebo Physics 6.1.0 (2022-10-27)
+
+1. Removed GetCollision API it's redundant
+    * [Pull request #444](https://github.com/gazebosim/gz-physics/pull/444)
+
+1. Add bullet-featherstone plugin
+    * [Pull request #373](https://github.com/gazebosim/gz-physics/pull/373)
+
+1. Fix bullet cmake, probably bad merge
+    * [Pull request #436](https://github.com/gazebosim/gz-physics/pull/436)
+
 ### Gazebo Physics 6.0.0 (2022-09-21)
 
 1. Improved documentation and instructions
