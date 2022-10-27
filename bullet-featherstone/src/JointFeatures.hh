@@ -44,9 +44,13 @@ struct JointFeatureList : FeatureList<
 
   GetRevoluteJointProperties,
   GetPrismaticJointProperties,
+
   FixedJointCast,
 
   GetJointTransmittedWrench
+
+  FixedJointCast
+
 > { };
 
 class JointFeatures :
@@ -138,7 +142,6 @@ class JointFeatures :
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
       const Identity &_id) const override;
-
 };
 }  // namespace bullet_featherstone
 }  // namespace physics

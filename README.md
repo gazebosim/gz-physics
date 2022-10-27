@@ -130,6 +130,7 @@ Refer to the following table for information about important directories and fil
 ```
 gz-physics
 ├── bullet                    Files for bullet plugin component.
+├── bullet-featherstone       Files for bullet-featherstone plugin component.
 ├── dartsim                   Files for dartsim plugin component.
 ├── example                   Examples about how to use the library
 ├── heightmap                 Heightmap related header files.

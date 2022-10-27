@@ -32,7 +32,10 @@
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
 #include <sdf/Mesh.hh>
-#include <sdf/Plane.hh>
+#include <sdf<<<<<<< mjcarroll/add-bullet-featherstone/force-torque
+142
+ 
+/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
 
@@ -943,18 +946,6 @@ bool SDFFeatures::AddSdfCollision(
   }
 
   return true;
-}
-
-Identity SDFFeatures::GetCollision(
-  const Identity &_linkID,
-  const std::string &_collisionName)
-{
-  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
-  const auto it = link->collisionNameToEntityId.find(_collisionName);
-  if (it == link->collisionNameToEntityId.end())
-    return this->GenerateInvalidId();
-
-  return this->GenerateIdentity(it->second, this->collisions.at(it->second));
 }
 
 Identity SDFFeatures::ConstructSdfCollision(

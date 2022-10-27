@@ -124,8 +124,8 @@ void JointFeatures::SetJointVelocity(
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] = _value;
 }
-/////////////////////////////////////////////////
 
+/////////////////////////////////////////////////
 void JointFeatures::SetJointAcceleration(
   const Identity &/*_id*/, const std::size_t /*_dof*/, const double /*_value*/)
 {
@@ -381,7 +381,6 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   wrenchOut.torque = convert(jointInfo->jointFeedback->m_reactionForces.getAngular());
   return wrenchOut;
 }
-
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz
