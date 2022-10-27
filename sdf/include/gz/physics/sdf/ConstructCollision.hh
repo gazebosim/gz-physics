@@ -36,8 +36,6 @@ class ConstructSdfCollision : public virtual Feature
     public: using ShapePtrType = ShapePtr<PolicyT, FeaturesT>;
 
     public: ShapePtrType ConstructCollision(const ::sdf::Collision &_collision);
-
-    public: ShapePtrType GetCollision(const std::string &_collisionName);
   };
 
   public: template <typename PolicyT>
@@ -45,9 +43,6 @@ class ConstructSdfCollision : public virtual Feature
   {
     public: virtual Identity ConstructSdfCollision(
         const Identity &_linkID, const ::sdf::Collision &_collision) = 0;
-
-    public: virtual Identity GetCollision(
-        const Identity &_linkID, const std::string &_collisionName) = 0;
   };
 };
 
@@ -59,15 +54,6 @@ auto ConstructSdfCollision::Link<PolicyT, FeaturesT>::ConstructCollision(
   return ShapePtrType(this->pimpl,
         this->template Interface<ConstructSdfCollision>()
             ->ConstructSdfCollision(this->identity, _collision));
-}
-/////////////////////////////////////////////////
-template <typename PolicyT, typename FeaturesT>
-auto ConstructSdfCollision::Link<PolicyT, FeaturesT>::GetCollision(
-    const std::string &_collisionName) -> ShapePtrType
-{
-  return ShapePtrType(this->pimpl,
-        this->template Interface<ConstructSdfCollision>()
-            ->GetCollision(this->identity, _collisionName));
 }
 }
 }

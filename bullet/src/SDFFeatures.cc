@@ -202,25 +202,6 @@ Identity SDFFeatures::ConstructSdfLink(
   return linkIdentity;
 }
 
-Identity SDFFeatures::GetCollision(
-  const Identity &_linkID,
-  const std::string &_collisionName)
-{
-  const auto link = this->ReferenceInterface<LinkInfo>(_linkID);
-  const auto it = std::find_if(
-        link->shapes.begin(),
-        link->shapes.end(),
-        [this, &_collisionName](const auto& shapeID)
-    {
-      return _collisionName == this->collisions.at(shapeID)->name;
-    });
-
-  if (it == link->shapes.end())
-    return this->GenerateInvalidId();
-
-  return this->GenerateIdentity(*it, this->collisions.at(*it));
-}
-
 Identity SDFFeatures::ConstructSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_collision)
