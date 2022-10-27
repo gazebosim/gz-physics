@@ -377,8 +377,10 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
   Wrench3d wrenchOut;
-  wrenchOut.force = convert(jointInfo->jointFeedback->m_reactionForces.getLinear());
-  wrenchOut.torque = convert(jointInfo->jointFeedback->m_reactionForces.getAngular());
+  wrenchOut.force = convert(
+    jointInfo->jointFeedback->m_reactionForces.getLinear());
+  wrenchOut.torque = convert(
+    jointInfo->jointFeedback->m_reactionForces.getAngular());
   return wrenchOut;
 }
 }  // namespace bullet_featherstone

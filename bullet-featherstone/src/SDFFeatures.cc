@@ -486,12 +486,12 @@ Identity SDFFeatures::ConstructSdfModel(
 
        gz::math::Pose3d parent2joint;
        const auto errors2 = linkParent->SemanticPose().Resolve(
-         parent2joint, joint->Name()); // X_JP
+         parent2joint, joint->Name());  // X_JP
 
        btTransform parentLocalInertialFrame = convertTf(
          parentLinkInfo->inertiaToLinkFrame);
        btTransform parent2jointBt = convertTf(
-         gz::math::eigen3::convert(parent2joint.Inverse())); // X_PJ
+         gz::math::eigen3::convert(parent2joint.Inverse()));  // X_PJ
 
        // offsetInABt = parent COM to pivot (X_IpJ)
        // offsetInBBt = current COM to pivot (X_IcJ)
