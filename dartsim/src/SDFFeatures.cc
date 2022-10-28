@@ -446,7 +446,11 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     const auto &skel = parentModelInfo->model;
     modelName = ::sdf::JoinName(skel->getName(), _sdfModel.Name());
 
-    for (const auto &nestedModelID: parentModelInfo->nestedModels)
+    // Check to see if the nested model has already been constructed.
+    // This can happen in the case that it was recursively created as
+    // part of the parent model.
+    // In this case, return the identity, rather than duplicating.
+    for (const auto &nestedModelID : parentModelInfo->nestedModels)
     {
       auto nestedModel = this->models.at(nestedModelID);
       if (nestedModel->localName == _sdfModel.Name())
