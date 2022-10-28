@@ -441,8 +441,19 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   if (isNested)
   {
     worldID = this->GetWorldOfModelImpl(_parentID);
-    const auto &skel = this->models.at(_parentID)->model;
+
+    const auto parentModelInfo = this->models.at(_parentID);
+    const auto &skel = parentModelInfo->model;
     modelName = ::sdf::JoinName(skel->getName(), _sdfModel.Name());
+
+    for (const auto &nestedModelID: parentModelInfo->nestedModels)
+    {
+      auto nestedModel = this->models.at(nestedModelID);
+      if (nestedModel->localName == _sdfModel.Name())
+      {
+        return this->GenerateIdentity(nestedModelID, nestedModel);
+      }
+    }
   }
 
   dart::dynamics::Frame *parentFrame = this->frames.at(_parentID);
