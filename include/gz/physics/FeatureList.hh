@@ -22,6 +22,14 @@
 
 #include <gz/physics/Feature.hh>
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+/// Suppress warnings about "base-class is already a base-class"
+/// Typically, this would indicate a diamond pattern in inheritance,
+/// but this is a false positive for the plugin mechanism.
+#pragma warning(disable: 4584)
+#endif  // defined(_MSC_VER)
+
 namespace gz
 {
   namespace physics
@@ -111,4 +119,7 @@ namespace gz
 
 #include <gz/physics/detail/FeatureList.hh>
 
-#endif
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif  // defined(_MSC_VER)
+#endif  // GZ_PHYSICS_FEATURELIST_HH_
