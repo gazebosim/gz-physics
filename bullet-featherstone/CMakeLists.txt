@@ -1,6 +1,6 @@
 # This component expresses custom features of the bullet plugin, which can
 # expose native bullet data types.
-gz_add_component(bullet INTERFACE
+gz_add_component(bullet-featherstone INTERFACE
   DEPENDS_ON_COMPONENTS sdf mesh
   GET_TARGET_NAME features)
 
@@ -9,11 +9,11 @@ target_link_libraries(${features} INTERFACE GzBullet::GzBullet)
 
 gz_get_libsources_and_unittests(sources test_sources)
 
-# TODO(MXG): Think about a gz_add_plugin(~) macro for gz-cmake
-set(engine_name bullet-plugin)
+# TODO(MXG): Think about an gz_add_plugin(~) macro for ign-cmake
+set(engine_name bullet-featherstone-plugin)
 gz_add_component(${engine_name}
   SOURCES ${sources}
-  DEPENDS_ON_COMPONENTS bullet
+  DEPENDS_ON_COMPONENTS bullet-featherstone
   GET_TARGET_NAME bullet_plugin)
 
 target_link_libraries(${bullet_plugin}
@@ -27,12 +27,7 @@ target_link_libraries(${bullet_plugin}
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 
-# Install redirection headers
-install(
-  DIRECTORY include/
-  DESTINATION "${GZ_INCLUDE_INSTALL_DIR_FULL}")
-
-# The library created by `gz_add_component` includes the gz-physics version
+# The library created by `gz_add_component` includes the ign-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,
 # we also install an unversioned symlink into the same versioned folder.
 set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${bullet_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -47,3 +42,5 @@ else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
   INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
 endif()
+EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
+INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
