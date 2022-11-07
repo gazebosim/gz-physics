@@ -2,6 +2,14 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
+### Gazebo Physics 6.1.1 (2022-11-07)
+
+1. Suppress MSVC warning that is not applicable
+    * [Pull request #446](https://github.com/gazebosim/gz-physics/pull/446)
+
+1. Fix construction of nested models 
+    * [Pull request #445](https://github.com/gazebosim/gz-physics/pull/445)
+
 ### Gazebo Physics 6.1.0 (2022-10-27)
 
 1. Removed GetCollision API it's redundant
