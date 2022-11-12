@@ -82,8 +82,7 @@ TYPED_TEST(ConstructEmptyWorldTest, ConstructUpToEmptyWorld)
 }
 
 using FeaturesUpToGetWorldFromEngine = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
+  FeaturesUpToEmptyWorld,
   gz::physics::GetWorldFromEngine
 >;
 
@@ -118,9 +117,7 @@ TYPED_TEST(ConstructEmptyWorldTestUpToGetWorldFromEngine,
 }
 
 using FeaturesUpToEmptyModelFeature = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
+  FeaturesUpToGetWorldFromEngine,
   gz::physics::ConstructEmptyModelFeature
 >;
 
@@ -157,10 +154,7 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyModelFeature,
 }
 
 using FeaturesUpToGetModelFromWorld = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
-  gz::physics::ConstructEmptyModelFeature,
+  FeaturesUpToEmptyModelFeature,
   gz::physics::GetModelFromWorld
 >;
 
@@ -199,11 +193,7 @@ TYPED_TEST(ConstructEmptyWorldTestUpToGetModelFromWorld,
 }
 
 using FeaturesUpToEmptyNestedModelFeature = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
-  gz::physics::ConstructEmptyModelFeature,
-  gz::physics::GetModelFromWorld,
+  FeaturesUpToGetModelFromWorld,
   gz::physics::ConstructEmptyNestedModelFeature,
   gz::physics::GetNestedModelFromModel
 >;
@@ -248,10 +238,7 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyNestedModelFeature,
 }
 
 using FeaturesUpToEmptyLink = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
-  gz::physics::ConstructEmptyModelFeature,
+  FeaturesUpToEmptyModelFeature,
   gz::physics::GetLinkFromModel,
   gz::physics::ConstructEmptyLinkFeature
 >;
