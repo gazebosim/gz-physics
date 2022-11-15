@@ -73,7 +73,7 @@ See the [installation tutorial](https://gazebosim.org/api/physics/5.0/installati
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/ign-physics6/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/gz-physics6/examples/).
 
 # Documentation
 
@@ -90,7 +90,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/gazebosim/gz-physics -b ign-physics6
+    git clone https://github.com/gazebosim/gz-physics -b gz-physics6 
     ```
 
 3. Configure and build the documentation.
@@ -130,6 +130,7 @@ Refer to the following table for information about important directories and fil
 ```
 gz-physics
 ├── bullet                    Files for bullet plugin component.
+├── bullet-featherstone       Files for bullet-featherstone plugin component.
 ├── dartsim                   Files for dartsim plugin component.
 ├── example                   Examples about how to use the library
 ├── heightmap                 Heightmap related header files.
