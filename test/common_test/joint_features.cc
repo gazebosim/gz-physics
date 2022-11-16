@@ -1856,6 +1856,8 @@ using JointMimicFeatureTestTypes =
 TYPED_TEST_SUITE(JointMimicFeatureFixture,
     JointMimicFeatureTestTypes);
 
+// Here, we test mimic constraints on various combinations of
+// prismatic and revolute joints using a chain of constraints.
 TYPED_TEST(JointMimicFeatureFixture, PrismaticRevoluteMimicTest)
 {
   // This test contains 5 joints : 3 prismatic and 2 revolute.
@@ -1990,6 +1992,7 @@ TYPED_TEST(JointMimicFeatureFixture, PrismaticRevoluteMimicTest)
   }
 }
 
+// Here, we test the mimic constraint for a pair of universal joints.
 TYPED_TEST(JointMimicFeatureFixture, UniversalMimicTest)
 {
   for (const std::string &name : this->pluginNames)
@@ -2064,6 +2067,90 @@ TYPED_TEST(JointMimicFeatureFixture, UniversalMimicTest)
               childJoint->GetPosition(1));
           parentJointPrevPosAxis1 = parentJoint->GetPosition(0);
           parentJointPrevPosAxis2 = parentJoint->GetPosition(1);
+        }
+      };
+
+    // Testing with different (multiplier, offset, reference) combinations.
+    testMimicFcn(1, 0, 0);
+    testMimicFcn(-1, 0, 0);
+    testMimicFcn(1, 0.1, 0);
+    testMimicFcn(1, 0.2, 0.1);
+    testMimicFcn(-1, 0.2, 0);
+    testMimicFcn(-2, 0, 0);
+    testMimicFcn(2, 0.1, 0);
+    testMimicFcn(2, 0.3, -0.1);
+  }
+}
+
+// In this test, we have 2 pendulums of different lengths.
+// Originally, their time periods are different, but after applying
+// the mimic constraint, they follow the same velocity, effectively
+// violating some laws. (Work done = Change in kinetic energy, for instance)
+TYPED_TEST(JointMimicFeatureFixture, PendulumMimicTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
+          "mimic_pendulum_world.sdf"));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    // Test mimic constraint between two revolute joints.
+    auto model = world->GetModel("pendulum_with_base");
+    auto parentJoint = model->GetJoint("upper_joint_1");
+    auto childJoint = model->GetJoint("upper_joint_2");
+
+    // Ensure both joints start from zero angle.
+    EXPECT_EQ(parentJoint->GetPosition(0), 0);
+    EXPECT_EQ(childJoint->GetPosition(0), 0);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Case : Without mimic constraint
+
+    // Let the simulation run without mimic constraint.
+    // The positions of joints should not be equal.
+    double parentJointPrevPosAxis = 0;
+    for (int _ = 0; _ < 10; _++)
+    {
+      world->Step(output, state, input);
+      EXPECT_NE(parentJointPrevPosAxis, childJoint->GetPosition(0));
+      parentJointPrevPosAxis = parentJoint->GetPosition(0);
+    }
+
+    auto testMimicFcn = [&](double multiplier, double offset, double reference)
+      {
+        // Set mimic joint constraint.
+        childJoint->SetMimicConstraint("upper_joint_1", multiplier, offset, reference);
+        // Reset positions and run a few iterations so the positions reach nontrivial values.
+        parentJoint->SetPosition(0, 0);
+        childJoint->SetPosition(0, 0);
+        for (int _ = 0; _ < 10; _++)
+          world->Step(output, state, input);
+
+        // Child joint's position should be equal to that of parent joint in previous timestep.
+        parentJointPrevPosAxis = parentJoint->GetPosition(0);
+        for (int _ = 0; _ < 10; _++)
+        {
+          world->Step(output, state, input);
+          EXPECT_FLOAT_EQ(multiplier * (parentJointPrevPosAxis - reference) + offset,
+              childJoint->GetPosition(0));
+          parentJointPrevPosAxis = parentJoint->GetPosition(0);
         }
       };
 
