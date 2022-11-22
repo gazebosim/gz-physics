@@ -619,7 +619,8 @@ Identity SDFFeatures::ConstructSdfLink(
   // TODO(chapulina) Put in another feature
   if (sdfInertia.FluidAddedMass().has_value())
   {
-    // TODO check off-diagonal blocks
+    // Note that the ordering of the spatial inertia matrix used in DART is
+    // different than the one used in Gazebo and SDF.
     math::Matrix6d featherstoneMatrix;
     featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_LEFT,
         sdfInertia.FluidAddedMass().value().Submatrix(
