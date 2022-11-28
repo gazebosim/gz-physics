@@ -615,6 +615,32 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
+  // If added mass is provided, add that to DART's computed spatial tensor
+  // TODO(chapulina) Put in another feature
+  if (sdfInertia.FluidAddedMass().has_value())
+  {
+    // Note that the ordering of the spatial inertia matrix used in DART is
+    // different than the one used in Gazebo and SDF.
+    math::Matrix6d featherstoneMatrix;
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_LEFT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::BOTTOM_RIGHT));
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_RIGHT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::BOTTOM_LEFT));
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_LEFT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::TOP_RIGHT));
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_RIGHT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::TOP_LEFT));
+
+    bodyProperties.mInertia.setSpatialTensor(
+        bodyProperties.mInertia.getSpatialTensor() +
+        math::eigen3::convert(featherstoneMatrix)
+    );
+  }
+
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
   // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
