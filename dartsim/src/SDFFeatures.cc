@@ -306,8 +306,16 @@ static ShapeAndTransform ConstructPlane(
 static ShapeAndTransform ConstructHeightmap(
     const ::sdf::Heightmap & /*_heightmap*/)
 {
+<<<<<<< HEAD
   ignerr << "Heightmap construction from an SDF has not been implemented yet "
          << "for dartsim.\n";
+=======
+  // TODO(mjcarroll) Allow dartsim to construct heightmaps internally rather
+  // than relying on the physics consumer constructing and attaching:
+  // https://github.com/gazebosim/gz-physics/issues/451
+  gzdbg << "Heightmap construction from an SDF has not been implemented yet "
+        << "for dartsim. Use AttachHeightmapShapeFeature to use heightmaps.\n";
+>>>>>>> 86d5a0f (Reduce error to debug and add notes (#452))
   return {nullptr};
 }
 
@@ -317,8 +325,16 @@ static ShapeAndTransform ConstructMesh(
 {
   // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
   // a local file name, or do we need to resolve the URI?
+<<<<<<< HEAD
   ignerr << "Mesh construction from an SDF has not been implemented yet for "
          << "dartsim.\n";
+=======
+  // TODO(mjcarroll) Allow dartsim to construct meshes internally rather
+  // than relying on the physics consumer constructing and attaching:
+  // https://github.com/gazebosim/gz-physics/issues/451
+  gzdbg << "Mesh construction from an SDF has not been implemented yet for "
+        << "dartsim. Use AttachMeshShapeFeature to use mesh shapes.\n";
+>>>>>>> 86d5a0f (Reduce error to debug and add notes (#452))
   return {nullptr};
 }
 
