@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_BASE_HH_
-#define IGNITION_PHYSICS_DARTSIM_BASE_HH_
+#ifndef GZ_PHYSICS_DARTSIM_BASE_HH_
+#define GZ_PHYSICS_DARTSIM_BASE_HH_
 
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/SimpleFrame.hpp>
@@ -30,8 +30,8 @@
 #include <utility>
 #include <vector>
 
-#include <ignition/common/Console.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/common/Console.hh>
+#include <gz/physics/Implements.hh>
 
 namespace ignition {
 namespace physics {

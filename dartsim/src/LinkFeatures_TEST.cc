@@ -19,38 +19,40 @@
 
 #include <iostream>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/physics/RequestEngine.hh>
 
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 // Features
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetBoundingBox.hh>
-#include <ignition/physics/Link.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/GetBoundingBox.hh>
+#include <gz/physics/Link.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
 #include "test/Utils.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::AddLinkExternalForceTorque,
-    ignition::physics::ForwardStep,
-    ignition::physics::sdf::ConstructSdfWorld,
-    ignition::physics::sdf::ConstructSdfModel,
-    ignition::physics::sdf::ConstructSdfLink,
-    ignition::physics::GetEntities,
-    ignition::physics::GetLinkBoundingBox,
-    ignition::physics::GetModelBoundingBox
+using namespace ignition;
+
+struct TestFeatureList : physics::FeatureList<
+    physics::AddLinkExternalForceTorque,
+    physics::ForwardStep,
+    physics::sdf::ConstructSdfWorld,
+    physics::sdf::ConstructSdfModel,
+    physics::sdf::ConstructSdfLink,
+    physics::GetEntities,
+    physics::GetLinkBoundingBox,
+    physics::GetModelBoundingBox
 > { };
 
-using namespace ignition;
+using namespace gz;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
 using TestWorldPtr = physics::World3dPtr<TestFeatureList>;

@@ -18,10 +18,10 @@
 #include <set>
 #include <string>
 
-#include <ignition/common/Profiler.hh>
+#include <gz/common/Profiler.hh>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Vector3.hh>
 
 #include "Link.hh"
 #include "Model.hh"
@@ -36,7 +36,7 @@ class ignition::physics::tpelib::ModelPrivate
   public: std::size_t firstLinkId = kNullEntityId;
 };
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

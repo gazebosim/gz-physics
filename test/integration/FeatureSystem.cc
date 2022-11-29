@@ -17,9 +17,9 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/RequestEngine.hh>
 #include "../MockFeatures.hh"
 
 using namespace ignition::physics;

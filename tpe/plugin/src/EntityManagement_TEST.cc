@@ -17,27 +17,29 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/RequestEngine.hh>
 
 #include "EntityManagementFeatures.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-  ignition::physics::tpeplugin::EntityManagementFeatureList
+using namespace ignition;
+
+struct TestFeatureList : physics::FeatureList<
+  physics::tpeplugin::EntityManagementFeatureList
 > { };
 
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
-  ignition::plugin::Loader loader;
+  plugin::Loader loader;
   loader.LoadLib(tpe_plugin_LIB);
 
-  ignition::plugin::PluginPtr tpe_plugin =
+  plugin::PluginPtr tpe_plugin =
     loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
   // GetEntities_TEST
   auto engine =
-    ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
+    physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
   ASSERT_NE(nullptr, engine);
   EXPECT_EQ("tpe", engine->GetName());
   EXPECT_EQ(0u, engine->GetIndex());
@@ -83,14 +85,14 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 
 TEST(EntityManagement_TEST, RemoveEntities)
 {
-  ignition::plugin::Loader loader;
+  plugin::Loader loader;
   loader.LoadLib(tpe_plugin_LIB);
 
-  ignition::plugin::PluginPtr tpe_plugin =
+  plugin::PluginPtr tpe_plugin =
     loader.Instantiate("ignition::physics::tpeplugin::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
+      physics::RequestEngine3d<TestFeatureList>::From(tpe_plugin);
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("empty world");

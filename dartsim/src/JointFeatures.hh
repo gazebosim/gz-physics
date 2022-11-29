@@ -15,16 +15,16 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_JOINTFEATURES_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_JOINTFEATURES_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_JOINTFEATURES_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_JOINTFEATURES_HH_
 
 #include <string>
 
-#include <ignition/physics/Joint.hh>
-#include <ignition/physics/FixedJoint.hh>
-#include <ignition/physics/FreeJoint.hh>
-#include <ignition/physics/PrismaticJoint.hh>
-#include <ignition/physics/RevoluteJoint.hh>
+#include <gz/physics/Joint.hh>
+#include <gz/physics/FixedJoint.hh>
+#include <gz/physics/FreeJoint.hh>
+#include <gz/physics/PrismaticJoint.hh>
+#include <gz/physics/RevoluteJoint.hh>
 
 #include "Base.hh"
 

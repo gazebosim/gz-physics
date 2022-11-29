@@ -22,12 +22,12 @@
 #include <string>
 #include <vector>
 
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/PluginPtr.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/plugin/PluginPtr.hh>
+#include <gz/physics/RequestEngine.hh>
 
-#include <ignition/physics/RevoluteJoint.hh>
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/RevoluteJoint.hh>
+#include <gz/physics/FrameSemantics.hh>
 
 #include "../MockJoints.hh"
 #include "../Utils.hh"

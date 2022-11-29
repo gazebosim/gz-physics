@@ -15,16 +15,16 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SHAPEFEATURES_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SHAPEFEATURES_HH_
+#ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_SHAPEFEATURES_HH_
+#define GZ_PHYSICS_TPE_PLUGIN_SRC_SHAPEFEATURES_HH_
 
 #include <string>
 
-#include <ignition/physics/Shape.hh>
-#include <ignition/physics/BoxShape.hh>
-#include <ignition/physics/CylinderShape.hh>
-#include <ignition/physics/mesh/MeshShape.hh>
-#include <ignition/physics/SphereShape.hh>
+#include <gz/physics/Shape.hh>
+#include <gz/physics/BoxShape.hh>
+#include <gz/physics/CylinderShape.hh>
+#include <gz/physics/mesh/MeshShape.hh>
+#include <gz/physics/SphereShape.hh>
 
 #include "Base.hh"
 

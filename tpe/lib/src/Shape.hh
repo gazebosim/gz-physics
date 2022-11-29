@@ -15,18 +15,18 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_SHAPE_HH_
 
 #include <string>
 #include <map>
 
-#include <ignition/common/Mesh.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/utilities/SuppressWarning.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/utilities/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 namespace ignition {
 namespace physics {
@@ -182,7 +182,7 @@ class IGNITION_PHYSICS_TPELIB_VISIBLE MeshShape : public Shape
 
   /// \brief Set mesh
   /// \param[in] _mesh Mesh object
-  public: void SetMesh(const ignition::common::Mesh &_mesh);
+  public: void SetMesh(const common::Mesh &_mesh);
 
   /// \brief Get mesh scale
   /// \return Mesh scale

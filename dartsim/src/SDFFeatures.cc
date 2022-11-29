@@ -36,9 +36,9 @@
 #include <dart/constraint/WeldJointConstraint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
-#include <ignition/common/Console.hh>
-#include <ignition/math/eigen3/Conversions.hh>
-#include <ignition/math/Helpers.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Helpers.hh>
 
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
@@ -154,7 +154,7 @@ static Eigen::Vector3d ConvertJointAxis(
   // Error while Resolving xyz. Fallback sdformat 1.6 behavior but treat
   // xyz_expressed_in = "__model__" as the old use_parent_model_frame
 
-  const Eigen::Vector3d axis = ignition::math::eigen3::convert(_sdfAxis->Xyz());
+  const Eigen::Vector3d axis = math::eigen3::convert(_sdfAxis->Xyz());
 
   if (_sdfAxis->XyzExpressedIn().empty())
     return axis;
@@ -323,7 +323,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
 
-  world->setGravity(ignition::math::eigen3::convert(_sdfWorld.Gravity()));
+  world->setGravity(math::eigen3::convert(_sdfWorld.Gravity()));
 
   // TODO(MXG): Add a Physics class to the SDFormat DOM and then parse that
   // information here. For now, we'll just use dartsim's default physics
@@ -414,11 +414,11 @@ Identity SDFFeatures::ConstructSdfLink(
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
-  const ignition::math::Inertiald &sdfInertia = _sdfLink.Inertial();
+  const math::Inertiald &sdfInertia = _sdfLink.Inertial();
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
 
   // TODO(addisu) Resolve the pose of inertials when frame information is
-  // availabile for ignition::math::Inertial
+  // availabile for math::Inertial
   const Eigen::Matrix3d R_inertial{
         math::eigen3::convert(sdfInertia.Pose().Rot())};
 
@@ -660,7 +660,7 @@ Identity SDFFeatures::ConstructSdfVisual(
   // intended for the physics?
   if (_visual.Material())
   {
-    const ignition::math::Color &color = _visual.Material()->Ambient();
+    const math::Color &color = _visual.Material()->Ambient();
     node->getVisualAspect()->setColor(
           Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
   }

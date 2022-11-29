@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
-#define IGNITION_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
+#define GZ_PHYSICS_TEST_MOCKDOUBLEPENDULUM_HH_
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/CanWriteData.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/CanWriteData.hh>
 
 namespace mock
 {

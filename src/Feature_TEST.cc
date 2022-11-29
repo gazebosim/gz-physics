@@ -17,10 +17,11 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/physics/RequestEngine.hh>
-#include <ignition/physics/Entity.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/Entity.hh>
 
-using namespace ignition::physics;
+using namespace ignition;
+using namespace physics;
 
 /////////////////////////////////////////////////
 class EngineMockFeature : public virtual Feature
@@ -110,7 +111,7 @@ TEST(Feature_TEST, SimpleMock)
   // a total of 3 feature names.
   std::set<std::string> missing =
       RequestEngine3d<MockList>::MissingFeatureNames(
-        ignition::plugin::PluginPtr());
+        plugin::PluginPtr());
 
   EXPECT_EQ(3u, missing.size());
 }

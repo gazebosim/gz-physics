@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
-#define IGNITION_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
+#ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
+#define GZ_PHYSICS_TPE_PLUGIN_SRC_SIMULATIONFEATURES_HH_
 
 #include <vector>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetContacts.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetContacts.hh>
 
 #include "Base.hh"
 

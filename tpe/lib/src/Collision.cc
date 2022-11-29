@@ -15,7 +15,7 @@
  *
 */
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 #include "Collision.hh"
 
@@ -29,7 +29,7 @@ class ignition::physics::tpelib::CollisionPrivate
   public: uint16_t collideBitmask = 0xFF;
 };
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

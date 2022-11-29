@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_UTILS_HH_
-#define IGNITION_PHYSICS_TEST_UTILS_HH_
+#ifndef GZ_PHYSICS_TEST_UTILS_HH_
+#define GZ_PHYSICS_TEST_UTILS_HH_
 
-#include <ignition/math/Helpers.hh>
-#include <ignition/math/Rand.hh>
-#include <ignition/physics/FrameData.hh>
+#include <gz/math/Helpers.hh>
+#include <gz/math/Rand.hh>
+#include <gz/physics/FrameData.hh>
 
 namespace ignition
 {

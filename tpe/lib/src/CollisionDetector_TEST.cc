@@ -16,7 +16,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <ignition/math/AxisAlignedBox.hh>
+#include <gz/math/AxisAlignedBox.hh>
 
 #include "Collision.hh"
 #include "CollisionDetector.hh"
@@ -24,7 +24,7 @@
 #include "Link.hh"
 #include "Shape.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

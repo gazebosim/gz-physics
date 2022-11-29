@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
-#define IGNITION_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
+#define GZ_PHYSICS_TEST_MOCKFRAMESEMANTICS_HH_
 
 #include "MockCreateEntities.hh"
 
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/FrameSemantics.hh>
 
 namespace mock
 {
