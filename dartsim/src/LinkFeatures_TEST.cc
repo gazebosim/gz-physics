@@ -39,15 +39,17 @@
 
 #include "test/Utils.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::AddLinkExternalForceTorque,
-    ignition::physics::ForwardStep,
-    ignition::physics::sdf::ConstructSdfWorld,
-    ignition::physics::sdf::ConstructSdfModel,
-    ignition::physics::sdf::ConstructSdfLink,
-    ignition::physics::GetEntities,
-    ignition::physics::GetLinkBoundingBox,
-    ignition::physics::GetModelBoundingBox
+using namespace ignition;
+
+struct TestFeatureList : physics::FeatureList<
+    physics::AddLinkExternalForceTorque,
+    physics::ForwardStep,
+    physics::sdf::ConstructSdfWorld,
+    physics::sdf::ConstructSdfModel,
+    physics::sdf::ConstructSdfLink,
+    physics::GetEntities,
+    physics::GetLinkBoundingBox,
+    physics::GetModelBoundingBox
 > { };
 
 using namespace gz;
