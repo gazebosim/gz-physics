@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(ignition-physics2 VERSION 2.5.1)
+project(ignition-physics2 VERSION 2.6.0)
 
 #============================================================================
 # Find ignition-cmake
@@ -15,7 +15,7 @@ find_package(ignition-cmake2 2.14.0 REQUIRED)
 #============================================================================
 ign_configure_project(
   REPLACE_IGNITION_INCLUDE_PATH gz/physics
-  VERSION_SUFFIX
+  VERSION_SUFFIX pre1
 )
 
 #============================================================================
