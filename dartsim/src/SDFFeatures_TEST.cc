@@ -935,3 +935,36 @@ TEST_P(SDFFeatures_TEST, Shapes)
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
   }
 }
+
+/////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, AddedMass)
+{
+  // Expected spatial inertia matrix. This includes inertia due to the body's
+  // mass and added mass. Note that the ordering of the matrix is different
+  // than the one used in SDF.
+  Eigen::Matrix6d expectedSpatialInertia;
+  expectedSpatialInertia <<
+    17, 17, 18, 4, 9, 13,
+    17, 20, 20, 5, 10, 14,
+    18, 20, 22, 6, 11, 15,
+    4, 5, 6, 2, 2, 3,
+    9, 10, 11, 2, 8, 8,
+    13, 14, 15, 3, 8, 13;
+
+  auto world = this->LoadWorld(TEST_WORLD_DIR"/added_mass.sdf");
+  ASSERT_NE(nullptr, world);
+
+  auto dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  ASSERT_EQ(1u, dartWorld->getNumSkeletons());
+  const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton("body");
+  ASSERT_NE(skeleton, nullptr);
+
+  ASSERT_EQ(1u, skeleton->getNumBodyNodes());
+  const dart::dynamics::BodyNode *link = skeleton->getBodyNode("link");
+  ASSERT_NE(link, nullptr);
+
+  const Eigen::Matrix6d spatialInertia = link->getSpatialInertia();
+  ASSERT_TRUE(expectedSpatialInertia.isApprox(spatialInertia));
+}

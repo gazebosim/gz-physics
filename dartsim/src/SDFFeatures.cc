@@ -306,8 +306,11 @@ static ShapeAndTransform ConstructPlane(
 static ShapeAndTransform ConstructHeightmap(
     const ::sdf::Heightmap & /*_heightmap*/)
 {
-  gzerr << "Heightmap construction from an SDF has not been implemented yet "
-         << "for dartsim.\n";
+  // TODO(mjcarroll) Allow dartsim to construct heightmaps internally rather
+  // than relying on the physics consumer constructing and attaching:
+  // https://github.com/gazebosim/gz-physics/issues/451
+  gzdbg << "Heightmap construction from an SDF has not been implemented yet "
+        << "for dartsim. Use AttachHeightmapShapeFeature to use heightmaps.\n";
   return {nullptr};
 }
 
@@ -317,8 +320,11 @@ static ShapeAndTransform ConstructMesh(
 {
   // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
   // a local file name, or do we need to resolve the URI?
-  gzerr << "Mesh construction from an SDF has not been implemented yet for "
-         << "dartsim.\n";
+  // TODO(mjcarroll) Allow dartsim to construct meshes internally rather
+  // than relying on the physics consumer constructing and attaching:
+  // https://github.com/gazebosim/gz-physics/issues/451
+  gzdbg << "Mesh construction from an SDF has not been implemented yet for "
+        << "dartsim. Use AttachMeshShapeFeature to use mesh shapes.\n";
   return {nullptr};
 }
 
@@ -614,6 +620,32 @@ Identity SDFFeatures::ConstructSdfLink(
       math::eigen3::convert(sdfInertia.Pose().Pos());
 
   bodyProperties.mInertia.setLocalCOM(localCom);
+
+  // If added mass is provided, add that to DART's computed spatial tensor
+  // TODO(chapulina) Put in another feature
+  if (sdfInertia.FluidAddedMass().has_value())
+  {
+    // Note that the ordering of the spatial inertia matrix used in DART is
+    // different than the one used in Gazebo and SDF.
+    math::Matrix6d featherstoneMatrix;
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_LEFT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::BOTTOM_RIGHT));
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_RIGHT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::BOTTOM_LEFT));
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_LEFT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::TOP_RIGHT));
+    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_RIGHT,
+        sdfInertia.FluidAddedMass().value().Submatrix(
+        math::Matrix6d::TOP_LEFT));
+
+    bodyProperties.mInertia.setSpatialTensor(
+        bodyProperties.mInertia.getSpatialTensor() +
+        math::eigen3::convert(featherstoneMatrix)
+    );
+  }
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";

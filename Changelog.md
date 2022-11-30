@@ -2,6 +2,17 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
+### Gazebo Physics 6.2.0 (2022-11-28)
+
+1. Reduce error to debug and add notes 
+    * [Pull request #452](https://github.com/gazebosim/gz-physics/pull/452)
+
+1. Support fluid added mass 
+    * [Pull request #384](https://github.com/gazebosim/gz-physics/pull/384)
+
+1. Deduplicate common tests part1 
+    * [Pull request #448](https://github.com/gazebosim/gz-physics/pull/448)
+
 ### Gazebo Physics 6.1.1 (2022-11-07)
 
 1. Suppress MSVC warning that is not applicable
