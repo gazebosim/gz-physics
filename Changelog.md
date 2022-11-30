@@ -1,5 +1,10 @@
 ## Gazebo Physics 2.x
 
+### Gazebo Physics 2.6.0 (2022-11-30)
+
+1. Migrate Ignition headers
+    * [Pull request #402](https://github.com/gazebosim/gz-physics/pull/402)
+
 ### Gazebo Physics 2.5.1 (2022-08-16)
 
 1. Remove redundant namespace references
