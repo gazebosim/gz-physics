@@ -62,6 +62,7 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
+  this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
 }
 
@@ -130,6 +131,22 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   return outContacts;
 }
 
+/////////////////////////////////////////////////
+void SimulationFeatures::Write(WorldPoses &_worldPoses) const
+{
+  // remove link poses from the previous iteration
+  _worldPoses.entries.clear();
+  _worldPoses.entries.reserve(this->links.size());
+
+  for (const auto &[id, info] : this->links)
+  {
+    const auto &model = this->ReferenceInterface<ModelInfo>(info->model);
+    WorldPose wp;
+    wp.pose = gz::math::eigen3::convert(GetWorldTransformOfLink(*model, *info));
+    wp.body = id;
+    _worldPoses.entries.push_back(wp);
+  }
+}
 /////////////////////////////////////////////////
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {

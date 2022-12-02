@@ -95,7 +95,11 @@ class SimulationFeaturesTest:
   {
     gz::common::Console::SetVerbosity(4);
 
-    loader.LoadLib(SimulationFeaturesTest::GetLibToTest());
+    std::unordered_set<std::string> sharedLibs =
+        loader.LoadLib(SimulationFeaturesTest::GetLibToTest());
+
+    ASSERT_FALSE(sharedLibs.empty())
+        << "Failed to load plugin library " << GetLibToTest();
 
     // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
     // FindFeatures
@@ -148,7 +152,7 @@ std::unordered_set<gz::physics::World3dPtr<T>> LoadWorlds(
 /// \param[in] _numSteps The number of steps to take in _world
 /// \return true if the forward step output was checked, false otherwise
 template <class T>
-bool StepWorld(
+std::pair<bool, gz::physics::ForwardStep::Output> StepWorld(
   const gz::physics::World3dPtr<T> &_world,
   bool _firstTime,
   const std::size_t _numSteps = 1)
@@ -173,9 +177,16 @@ bool StepWorld(
           output.Get<gz::physics::ChangedWorldPoses>().entries.empty());
       checkedOutput = true;
     }
+
+    if (i == _numSteps - 2)
+    {
+      // This is needed so Step populates WorldPoses even though we haven't
+      // queried them.
+      output.ResetQueries();
+    }
   }
 
-  return checkedOutput;
+  return std::make_pair(checkedOutput, output);
 }
 
 // The features that an engine must have to be loaded by this loader.
@@ -202,7 +213,7 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
-    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1);
+    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
@@ -235,19 +246,18 @@ TYPED_TEST(SimulationFeaturesStepTest, StepWorld)
   gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
   for (const auto &world : worlds)
   {
-    auto checkedOutput = StepWorld<FeaturesStep>(world, true, 1000);
+    auto checkedOutput = StepWorld<FeaturesStep>(world, true, 1000).first;
     EXPECT_TRUE(checkedOutput);
   }
 }
 
 // The features that an engine must have to be loaded by this loader.
-using FeaturesFalling = gz::physics::FeatureList<
+struct FeaturesFalling : public  gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
-  gz::physics::ForwardStep,
-  gz::physics::LinkFrameSemantics
->;
+  gz::physics::ForwardStep
+> {};
 
 template <class T>
 class SimulationFeaturesFallingTest :
@@ -273,12 +283,23 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
       gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
     for (const auto &world : worlds)
     {
-      auto checkedOutput = StepWorld<FeaturesFalling>(world, true, 1000);
+      auto [checkedOutput, output] =
+          StepWorld<FeaturesFalling>(world, true, 1000);
       EXPECT_TRUE(checkedOutput);
 
-      auto link = world->GetModel(0)->GetLink(0);
-      auto pos = link->FrameDataRelativeToWorld().pose.translation();
-      EXPECT_NEAR(pos.z(), 1.0, 5e-2);
+      const std::vector<gz::physics::WorldPose> worldPoses =
+          output.template Get<gz::physics::WorldPoses>().entries;
+
+      ASSERT_GE(worldPoses.size(), 1);
+      const auto link = world->GetModel(0)->GetLink("sphere_link");
+
+      // get the pose of the link from the list of worldPoses
+      auto poseIt = std::find_if(worldPoses.begin(), worldPoses.end(),
+                                 [&](const auto &_wPose)
+                                 { return _wPose.body == link->EntityID(); });
+      ASSERT_NE(poseIt, worldPoses.end());
+      auto pos = poseIt->pose.Pos();
+      EXPECT_NEAR(pos.Z(), 1.0, 5e-2);
     }
   }
 }
@@ -596,7 +617,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     auto filteredBox = world->GetModel("box_filtered");
     auto collidingBox = world->GetModel("box_colliding");
 
-    auto checkedOutput = StepWorld<Features>(world, true);
+    auto checkedOutput = StepWorld<Features>(world, true).first;
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
     // Only box_colliding should collide with box_base
@@ -609,7 +630,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     // Also test the getter
     EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
     // Step and make sure there are no collisions
-    checkedOutput = StepWorld<Features>(world, false);
+    checkedOutput = StepWorld<Features>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
@@ -618,7 +639,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     // Equivalent to 0xFF
     collidingShape->RemoveCollisionFilterMask();
     filteredShape->RemoveCollisionFilterMask();
-    checkedOutput = StepWorld<Features>(world, false);
+    checkedOutput = StepWorld<Features>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     // Expect box_filtered and box_colliding to collide with box_base
     contacts = world->GetContactsFromLastStep();
@@ -656,7 +677,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     auto box = world->GetModel("box");
 
     // step and get contacts
-    auto checkedOutput = StepWorld<Features>(world, true);
+    auto checkedOutput = StepWorld<Features>(world, true).first;
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
 
@@ -715,7 +736,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
         gz::math::Pose3d(0, 100, 0.5, 0, 0, 0)));
 
     // step and get contacts
-    checkedOutput = StepWorld<Features>(world, false);
+    checkedOutput = StepWorld<Features>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
 
@@ -774,7 +795,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
         gz::math::Pose3d(0, -100, -100, 0, 0, 0)));
 
     // step and get contacts
-    checkedOutput = StepWorld<Features>(world, false);
+    checkedOutput = StepWorld<Features>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
 

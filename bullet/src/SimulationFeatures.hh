@@ -35,6 +35,7 @@ struct SimulationFeatureList : gz::physics::FeatureList<
 > { };
 
 class SimulationFeatures :
+    public CanWriteRequiredData<SimulationFeatures, RequireData<WorldPoses>>,
     public CanWriteExpectedData<SimulationFeatures,
       ExpectData<ChangedWorldPoses>>,
     public virtual Base,
@@ -46,6 +47,7 @@ class SimulationFeatures :
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
 
+  public: void Write(WorldPoses &_worldPoses) const;
   public: void Write(ChangedWorldPoses &_changedPoses) const;
 
   private: double stepSize = 0.001;

@@ -67,8 +67,25 @@ void SimulationFeatures::WorldForwardStep(
 
   // TODO(MXG): Parse input
   world->step();
+  this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
   // TODO(MXG): Fill in state
+}
+
+void SimulationFeatures::Write(WorldPoses &_worldPoses) const
+{
+  // remove link poses from the previous iteration
+  _worldPoses.entries.clear();
+  _worldPoses.entries.reserve(this->links.size());
+
+  for (const auto &[id, info] : this->links.idToObject)
+  {
+    WorldPose wp;
+    wp.pose = gz::math::eigen3::convert(
+        info->link->getWorldTransform());
+    wp.body = id;
+    _worldPoses.entries.push_back(wp);
+  }
 }
 
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
