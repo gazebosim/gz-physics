@@ -26,8 +26,6 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
     ENVIRONMENT "${_env_vars}")
 endfunction()
 
-set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
-
 foreach(test ${tests})
   add_executable(${TEST_TYPE}_${test} ${test}.cc)
 

@@ -3,7 +3,7 @@ add_library(${PROJECT_NAME}_test_lib_loader SHARED
 )
 target_compile_definitions(${PROJECT_NAME}_test_lib_loader PRIVATE
   -DTestLibLoader_EXPORTS
-  "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
+  "GZ_PHYSICS_RESOURCE_INSTALL_DIR=\"${GZ_PHYSICS_RESOURCE_INSTALL_DIR}\""
 )
 target_link_libraries(${PROJECT_NAME}_test_lib_loader
   PUBLIC

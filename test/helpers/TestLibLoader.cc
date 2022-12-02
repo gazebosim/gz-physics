@@ -57,7 +57,7 @@ namespace physics
       return resourceDirFromEnv;
     }
     // Otherwise return the configure-time constant.
-    return GZ_PHYSICS_RESOURCE_DIR;
+    return GZ_PHYSICS_RESOURCE_INSTALL_DIR;
   }
 
   std::string TestLibLoader::PhysicsEngineName(std::string _name)

@@ -91,6 +91,10 @@ gz_find_package(GzBullet
 message(STATUS "-------------------------------------------\n")
 
 set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
+set(GZ_PHYSICS_RESOURCE_INSTALL_POSTFIX "${GZ_DATA_INSTALL_DIR}/resources")
+# TODO(anyone) make this relocatable
+set(GZ_PHYSICS_RESOURCE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_RESOURCE_INSTALL_POSTFIX}")
+install(DIRECTORY resources DESTINATION ${GZ_PHYSICS_RESOURCE_INSTALL_DIR})
 
 # Plugin install dirs
 set(GZ_PHYSICS_ENGINE_INSTALL_DIR
