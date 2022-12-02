@@ -20,6 +20,10 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
       ${test_name}
       $<TARGET_FILE:${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin>
   )
+  set(_env_vars)
+  list(APPEND _env_vars "GZ_PHYSICS_RESOURCE_DIR=${GZ_PHYSICS_RESOURCE_DIR}")
+  set_tests_properties(${test_name}_${PHYSICS_ENGINE_NAME} PROPERTIES
+    ENVIRONMENT "${_env_vars}")
 endfunction()
 
 set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")

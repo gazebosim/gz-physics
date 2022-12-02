@@ -53,7 +53,8 @@ class TestLibLoader_EXPORTS_API TestLibLoader
   public: static std::string GetLibToTest();
 
   /// \brief Get the path of the resources folder as a string from the
-  /// GZ_PHYSICS_RESOURCE_DIR compiler definition
+  /// GZ_PHYSICS_RESOURCE_DIR environment variable or from the configure-time
+  /// constant
   /// \return Path to resources folder
   public: std::string ResourceDir();
 

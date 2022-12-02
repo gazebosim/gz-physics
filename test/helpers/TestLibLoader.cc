@@ -49,6 +49,14 @@ namespace physics
 
   std::string TestLibLoader::ResourceDir()
   {
+    // First check the GZ_PHYSICS_RESOURCE_DIR envrionment variable and return
+    // that value if it is set.
+    std::string resourceDirFromEnv;
+    if (common::env("GZ_PHYSICS_RESOURCE_DIR", resourceDirFromEnv))
+    {
+      return resourceDirFromEnv;
+    }
+    // Otherwise return the configure-time constant.
     return GZ_PHYSICS_RESOURCE_DIR;
   }
 
