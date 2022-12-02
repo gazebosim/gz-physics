@@ -101,7 +101,7 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
     auto link = model->ConstructEmptyLink("link");
 
     const std::string meshFilename = gz::common::joinPaths(
-      GZ_PHYSICS_RESOURCE_DIR, "chassis.dae");
+      this->ResourceDir(), "chassis.dae");
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshFilename);
 

@@ -41,7 +41,6 @@ foreach(test ${tests})
 
   target_compile_definitions(${TEST_TYPE}_${test} PRIVATE
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
-    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
   )
 
   if (${BULLET_FOUND})

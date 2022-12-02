@@ -47,6 +47,11 @@ namespace physics
     return libToTest;
   }
 
+  std::string TestLibLoader::ResourceDir()
+  {
+    return GZ_PHYSICS_RESOURCE_DIR;
+  }
+
   std::string TestLibLoader::PhysicsEngineName(std::string _name)
   {
     std::vector<std::string> tokens = gz::common::split(_name, "::");

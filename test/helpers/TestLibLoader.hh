@@ -52,6 +52,11 @@ class TestLibLoader_EXPORTS_API TestLibLoader
   /// \return Name of the library to test
   public: static std::string GetLibToTest();
 
+  /// \brief Get the path of the resources folder as a string from the
+  /// GZ_PHYSICS_RESOURCE_DIR compiler definition
+  /// \return Path to resources folder
+  public: std::string ResourceDir();
+
   /// \brief Get Physics Engine name based on the plugin name
   /// \param[in] _name Plugin name
   /// \return Name of the Physics Engine
