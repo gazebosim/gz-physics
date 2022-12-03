@@ -45,6 +45,26 @@ class ConstructSdfJoint : public virtual Feature
 };
 
 /////////////////////////////////////////////////
+/// \brief TODO: CREATE A MESSAGE HERE
+class ConstructSdfWorldJoint : public virtual Feature
+{
+  public: template <typename PolicyT, typename FeaturesT>
+  class World: public virtual Feature::World<PolicyT, FeaturesT>
+  {
+    public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
+
+    public: JointPtrType ConstructWorldJoint(const ::sdf::Joint &_joint);
+  };
+
+  public: template <typename PolicyT>
+  class Implementation : public virtual Feature::Implementation<PolicyT>
+  {
+    public: virtual Identity ConstructSdfWorldJoint(
+        const Identity &_world, const ::sdf::Joint &_joint) = 0;
+  };
+};
+
+/////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 auto ConstructSdfJoint::Model<PolicyT, FeaturesT>::ConstructJoint(
     const ::sdf::Joint &_joint) -> JointPtrType
@@ -54,6 +74,15 @@ auto ConstructSdfJoint::Model<PolicyT, FeaturesT>::ConstructJoint(
               ->ConstructSdfJoint(this->identity, _joint));
 }
 
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+auto ConstructSdfWorldJoint::World<PolicyT, FeaturesT>::ConstructWorldJoint(
+    const ::sdf::Joint &_joint) -> JointPtrType
+{
+  return JointPtrType(this->pimpl,
+        this->template Interface<ConstructSdfJoint>()
+              ->ConstructSdfWorldJoint(this->identity, _joint));
+}
 }
 }
 }
