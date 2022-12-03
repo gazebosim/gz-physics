@@ -521,6 +521,14 @@ namespace gz
             this->template Interface<GetJointFromModel>()
               ->GetModelOfJoint(this->identity));
     }
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    const std::string &GetJointFromWorld::Joint<PolicyT, FeaturesT>::GetWorldJointName()
+        const
+    {
+      return this->template Interface<GetJointFromWorld>()
+          ->GetJointName(this->identity);
+    }
   }
 }
 

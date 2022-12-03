@@ -426,6 +426,56 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
+    /// TODO: MAKE CHANGES ON THE DESCRIPTION
+    /// \brief This feature retrieves the joint pointer from the world
+    /// by specifying world index and joint index/name.
+    class GZ_PHYSICS_VISIBLE GetJointFromWorld : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        // typedefs for the type of Model that this Link can return
+        public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
+        public: using ConstJointPtrType = ConstJointPtr<PolicyT, FeaturesT>;
+
+        /// \brief Get the name of this Joint.
+        public: const std::string &GetWorldJointName() const;
+
+        // // / \brief Get the index of this Joint within its World.
+        // public: std::size_t GetIndex() const;
+
+        // /// \brief Get the model that contains this Link.
+        // /// \return A Model reference to the Model that contains this Link.
+        // public: WorldPtrType GetModel();
+
+        // /// \sa GetModel()
+        // public: ConstWorldPtrType GetModel() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        // public: virtual std::size_t GetJointCount(
+        //     const Identity &_worldID) const = 0;
+
+        // public: virtual Identity GetJoint(
+        //     const Identity &_jointID, std::size_t _jointIndex) const = 0;
+
+        // public: virtual Identity GetJoint(
+        //     const Identity &_jointID, const std::string &_jointName) const = 0;
+
+        public: virtual const std::string &GetJointName(
+            const Identity &_jointID) const = 0;
+
+        // public: virtual std::size_t GetJointIndex(
+        //     const Identity &_jointID) const = 0;
+
+        // public: virtual Identity GetModelOfJoint(
+        //     const Identity &_worldID) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
     /// \brief This feature retrieves the shape pointer from the link
     /// by specifying link index and shape index/name.
     class GZ_PHYSICS_VISIBLE GetShapeFromLink : public virtual Feature
@@ -512,6 +562,7 @@ namespace gz
       GetNestedModelFromModel,
       GetLinkFromModel,
       GetJointFromModel,
+      GetJointFromWorld,
       GetShapeFromLink
     > { };
   }
