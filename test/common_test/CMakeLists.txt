@@ -20,6 +20,9 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
       ${test_name}
       $<TARGET_FILE:${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin>
   )
+  set_property(TEST ${test_name}_${PHYSICS_ENGINE_NAME} PROPERTY
+    SKIP_REGULAR_EXPRESSION "\[[ \t]*SKIPPED[ \t]*]"
+  )
 endfunction()
 
 set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
