@@ -432,7 +432,7 @@ namespace gz
     class GZ_PHYSICS_VISIBLE GetJointFromWorld : public virtual Feature
     {
       public: template <typename PolicyT, typename FeaturesT>
-      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      class World : public virtual Feature::World<PolicyT, FeaturesT>
       {
         // typedefs for the type of Model that this Link can return
         public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;

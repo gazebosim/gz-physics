@@ -523,7 +523,7 @@ namespace gz
     }
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const std::string &GetJointFromWorld::Joint<PolicyT, FeaturesT>::GetWorldJointName()
+    const std::string &GetJointFromWorld::World<PolicyT, FeaturesT>::GetWorldJointName()
         const
     {
       return this->template Interface<GetJointFromWorld>()

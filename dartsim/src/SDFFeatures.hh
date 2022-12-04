@@ -97,7 +97,7 @@ class SDFFeatures :
   /// assumed to be world
   /// \param[in] _child Pointer to child link. If nullptr, the child is assumed
   /// to be world
-  private: Identity ConstructSdfJoint(const ModelInfo &_modelInfo,
+  private: Identity ConstructSdfJoint(const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint,
       dart::dynamics::BodyNode * const _parent,
       dart::dynamics::BodyNode * const _child);

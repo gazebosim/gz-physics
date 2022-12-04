@@ -65,7 +65,8 @@ struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::sdf::ConstructSdfLink,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfNestedModel,
-    gz::physics::sdf::ConstructSdfWorld
+    gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::sdf::ConstructSdfWorldJoint
 > { };
 
 using World = gz::physics::World3d<TestFeatureList>;
@@ -239,6 +240,44 @@ WorldPtr LoadWorldPiecemeal(const std::string &_world)
     }
   }
 
+  // joint exists inside the world tag (aka worldjoint)
+  if (sdfWorld->JointCount() != 0){
+    for (uint64_t ji = 0; ji < sdfWorld->JointCount(); ++ji)
+    {
+      const auto sdfWorldJoint = sdfWorld->JointByIndex(ji);
+        EXPECT_NE(nullptr, sdfWorldJoint);
+
+      std::string resolvedParentLinkName;
+      const auto resolveParentErrors =
+          sdfWorldJoint->ResolveParentLink(resolvedParentLinkName);
+      EXPECT_TRUE(resolveParentErrors.empty()) << resolveParentErrors;
+
+      std::string resolvedChildLinkName;
+      const auto resolveChildErrors =
+        sdfWorldJoint->ResolveChildLink(resolvedChildLinkName);
+      EXPECT_TRUE (resolveChildErrors.empty()) << resolveChildErrors;
+
+      sdf::Joint newSdfJoint;
+      newSdfJoint.SetName(sdfWorldJoint->Name());
+      if (sdfWorldJoint->Axis(0))
+      {
+        newSdfJoint.SetAxis(0, ResolveJointAxis(*sdfWorldJoint->Axis(0)));
+      }
+      if (sdfWorldJoint->Axis(1))
+      {
+        newSdfJoint.SetAxis(1, ResolveJointAxis(*sdfWorldJoint->Axis(1)));
+      }
+      newSdfJoint.SetType(sdfWorldJoint->Type());
+      newSdfJoint.SetRawPose(ResolveSdfPose(sdfWorldJoint->SemanticPose()));
+
+      newSdfJoint.SetParentName(resolvedParentLinkName);
+      newSdfJoint.SetChildName(resolvedChildLinkName);
+
+      world->ConstructWorldJoint(newSdfJoint);
+    }
+  }
+
+  // there are joint inside model tags
   for (auto [sdfModel, physModel] : modelMap)
   {
     for (uint64_t ji = 0; ji < sdfModel->JointCount(); ++ji)
@@ -499,6 +538,33 @@ auto CreateTestModel(WorldPtr _world, const std::string &_model,
   return std::make_tuple(model, joint0);
 }
 
+/// Maybe another test where world joint parent is not world
+
+
+/////////////////////////////////////////////////
+// Test joints with world as parent or child
+TEST_P(SDFFeatures_TEST, WorldJointTest)
+{
+  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/world_joint.sdf");
+  ASSERT_NE(nullptr, world);
+
+  dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
+  ASSERT_NE(nullptr, dartWorld);
+
+  auto modelSkel = dartWorld->getSkeleton("child_model");
+  ASSERT_NE(nullptr, modelSkel);
+  EXPECT_NE(nullptr, modelSkel->getBodyNode("L_C"));
+
+  auto parentModel = world->GetModel("parent_model");
+  ASSERT_NE(nullptr, parentModel);
+  auto childModel = world->GetModel("child_model");
+  ASSERT_NE(nullptr, childModel);
+
+  // auto worldJoint = dartWorld->GetWorldJoint();
+  // ASSERT_NE(nullptr, worldJoint);
+  // ASSERT_EQ("J1", worldJoint->GetName());
+}
+
 /////////////////////////////////////////////////
 // Test joints with world as parent or child
 TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
@@ -521,7 +587,8 @@ TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
     EXPECT_EQ(nullptr, joint);
   }
   {
-    const auto &[model, joint] = CreateTestModel(world, "test1", parent, child);
+    const auto &[model, joint] =
+        CreateTestModel(world, "test1", parent, child);
     EXPECT_NE(nullptr, joint);
   }
   {

@@ -153,7 +153,7 @@ static Eigen::Isometry3d GetParentModelFrame(
 /////////////////////////////////////////////////
 static Eigen::Vector3d ConvertJointAxis(
     const ::sdf::JointAxis *_sdfAxis,
-    const ModelInfo &_modelInfo,
+    const Eigen::Isometry3d &_T_parent,
     const Eigen::Isometry3d &_T_joint)
 {
   math::Vector3d resolvedAxis;
@@ -172,7 +172,7 @@ static Eigen::Vector3d ConvertJointAxis(
   if (_sdfAxis->XyzExpressedIn() == "__model__")
   {
     const Eigen::Quaterniond O_R_J{_T_joint.rotation()};
-    const Eigen::Quaterniond O_R_M{GetParentModelFrame(_modelInfo).rotation()};
+    const Eigen::Quaterniond O_R_M{_T_parent.rotation()};
     const Eigen::Quaterniond J_R_M = O_R_J.inverse() * O_R_M;
     return J_R_M * axis;
   }
@@ -195,10 +195,10 @@ static Eigen::Vector3d ConvertJointAxis(
 /////////////////////////////////////////////////
 template <typename JointType>
 static JointType *ConstructSingleAxisJoint(
-    const ModelInfo &_modelInfo,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child,
+    const Eigen::Isometry3d &_T_parent,
     const Eigen::Isometry3d &_T_joint)
 {
   typename JointType::Properties properties;
@@ -208,7 +208,7 @@ static JointType *ConstructSingleAxisJoint(
   // use the default properties if sdfAxis is not set
   if (sdfAxis)
   {
-    properties.mAxis = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
+    properties.mAxis = ConvertJointAxis(sdfAxis, _T_parent, _T_joint);
     CopyStandardJointAxisProperties(0, properties, sdfAxis);
   }
 
@@ -217,10 +217,10 @@ static JointType *ConstructSingleAxisJoint(
 
 /////////////////////////////////////////////////
 static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
-    const ModelInfo &_modelInfo,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child,
+    const Eigen::Isometry3d &_T_parent,
     const Eigen::Isometry3d &_T_joint)
 {
   dart::dynamics::UniversalJoint::Properties properties;
@@ -231,7 +231,7 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
     // use the default properties if sdfAxis is not set
     if (sdfAxis)
     {
-      properties.mAxis[index] = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
+      properties.mAxis[index] = ConvertJointAxis(sdfAxis, _T_parent, _T_joint);
       CopyStandardJointAxisProperties(index, properties, sdfAxis);
     }
   }
@@ -594,7 +594,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       continue;
     }
 
-    this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
+    this->ConstructSdfJoint(modelIdentity, *sdfJoint, parent, child);
   }
 
   return modelIdentity;
@@ -794,7 +794,35 @@ Identity SDFFeatures::ConstructSdfJoint(
     return this->GenerateInvalidId();
   }
 
-  return ConstructSdfJoint(modelInfo, _sdfJoint, parent, child);
+  return ConstructSdfJoint(_modelID, _sdfJoint, parent, child);
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfWorldJoint(
+    const Identity &_worldID,
+    const ::sdf::Joint &_worldSdfJoint)
+{
+  dart::simulation::WorldPtr &world = this->worlds.at(_worldID);
+
+  std::string parentLinkName;
+  const auto resolveParentErrors = _worldSdfJoint.ResolveParentLink(parentLinkName);
+  if (!resolveParentErrors.empty()) {
+    parentLinkName = _worldSdfJoint.ParentName();
+  }
+
+  std::string childLinkName;
+  const auto childResolveErrors = _worldSdfJoint.ResolveChildLink(childLinkName);
+  if (!childResolveErrors.empty()) {
+    childLinkName = _worldSdfJoint.ChildName();
+  }
+
+  dart::dynamics::BodyNode * const parentPtr =
+    FindBodyNode(world->getName(), "", parentLinkName);
+
+  dart::dynamics::BodyNode * const childPtr =
+    FindBodyNode(world->getName(),"" , childLinkName);
+
+  return ConstructSdfJoint(_worldID, _worldSdfJoint, parentPtr, childPtr);
 }
 
 /////////////////////////////////////////////////
@@ -946,14 +974,6 @@ Identity SDFFeatures::ConstructSdfCollision(
 }
 
 /////////////////////////////////////////////////
-Identity SDFFeatures::ConstructSdfWorldJoint(
-    const Identity &/*_worldID*/,
-    const ::sdf::Joint &/*_worldJoint*/)
-{
-  return GenerateIdentity(1);
-}
-
-/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfVisual(
     const Identity &_linkID,
     const ::sdf::Visual &_visual)
@@ -1032,11 +1052,13 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfJoint(
-    const ModelInfo &_modelInfo,
+    const Identity &_identityID,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child)
 {
+  const auto &_modelInfo = *this->ReferenceInterface<ModelInfo>(_identityID);
+
   // if a specified link is named "world" but cannot be found, we'll assume the
   // joint is connected to the world
   bool worldParent = (!_parent && _sdfJoint.ParentName() == "world");
@@ -1127,12 +1149,13 @@ Identity SDFFeatures::ConstructSdfJoint(
   else if (::sdf::JointType::PRISMATIC == type)
   {
     joint = ConstructSingleAxisJoint<dart::dynamics::PrismaticJoint>(
-          _modelInfo, _sdfJoint, _parent, _child, T_joint);
+          _sdfJoint, _parent, _child, T_parent, T_joint);
   }
   else if (::sdf::JointType::REVOLUTE == type)
   {
+    // std::cout <<"is revolute" << std::endl;
     joint = ConstructSingleAxisJoint<dart::dynamics::RevoluteJoint>(
-          _modelInfo, _sdfJoint, _parent, _child, T_joint);
+           _sdfJoint, _parent, _child, T_parent, T_joint);
   }
   // TODO(MXG): Consider adding dartsim support for a REVOLUTE2 joint type.
   // Alternatively, support the REVOLUTE2 joint type by wrapping two
@@ -1140,7 +1163,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   else if (::sdf::JointType::SCREW == type)
   {
     auto *screw = ConstructSingleAxisJoint<dart::dynamics::ScrewJoint>(
-          _modelInfo, _sdfJoint, _parent, _child, T_joint);
+          _sdfJoint, _parent, _child, T_parent, T_joint);
 
     screw->setPitch(InvertThreadPitch(_sdfJoint.ThreadPitch()));
     joint = screw;
@@ -1148,7 +1171,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   else if (::sdf::JointType::UNIVERSAL == type)
   {
     joint = ConstructUniversalJoint(
-          _modelInfo, _sdfJoint, _parent, _child, T_joint);
+        _sdfJoint, _parent, _child, T_parent, T_joint);
   }
   else
   {

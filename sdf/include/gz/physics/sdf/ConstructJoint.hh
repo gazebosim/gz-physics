@@ -45,7 +45,6 @@ class ConstructSdfJoint : public virtual Feature
 };
 
 /////////////////////////////////////////////////
-/// \brief TODO: CREATE A MESSAGE HERE
 class ConstructSdfWorldJoint : public virtual Feature
 {
   public: template <typename PolicyT, typename FeaturesT>
@@ -53,7 +52,7 @@ class ConstructSdfWorldJoint : public virtual Feature
   {
     public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
 
-    public: JointPtrType ConstructWorldJoint(const ::sdf::Joint &_joint);
+      public: JointPtrType ConstructWorldJoint(const ::sdf::Joint &_joint);
   };
 
   public: template <typename PolicyT>
