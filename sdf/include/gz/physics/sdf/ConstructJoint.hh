@@ -74,6 +74,16 @@ auto ConstructSdfJoint::Model<PolicyT, FeaturesT>::ConstructJoint(
               ->ConstructSdfJoint(this->identity, _joint));
 }
 
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+auto ConstructSdfWorldJoint::World<PolicyT, FeaturesT>::ConstructWorldJoint(
+    const ::sdf::Joint &_worldJoint) -> JointPtrType
+{
+  return JointPtrType(this->pimpl,
+        this->template Interface<ConstructSdfWorldJoint>()
+              ->ConstructSdfWorldJoint(this->identity, _worldJoint));
+}
+
 }
 }
 }

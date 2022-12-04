@@ -43,6 +43,7 @@ struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfLink,
   sdf::ConstructSdfJoint,
+  sdf::ConstructSdfWorldJoint,
   sdf::ConstructSdfCollision,
   sdf::ConstructSdfVisual
 > { };
@@ -70,6 +71,10 @@ class SDFFeatures :
   public: Identity ConstructSdfJoint(
       const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint) override;
+
+  public: Identity ConstructSdfWorldJoint(
+      const Identity & _worldID,
+      const ::sdf::Joint &_worldJoint) override;
 
   public: Identity ConstructSdfCollision(
       const Identity &_linkID,

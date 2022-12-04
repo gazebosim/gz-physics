@@ -946,6 +946,14 @@ Identity SDFFeatures::ConstructSdfCollision(
 }
 
 /////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfWorldJoint(
+    const Identity &/*_worldID*/,
+    const ::sdf::Joint &/*_worldJoint*/)
+{
+  return GenerateIdentity(1);
+}
+
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfVisual(
     const Identity &_linkID,
     const ::sdf::Visual &_visual)
