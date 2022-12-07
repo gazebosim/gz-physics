@@ -27,10 +27,6 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
       --gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${target_name}.xml
   )
 
-  set_property(TEST ${target_name} PROPERTY
-    SKIP_REGULAR_EXPRESSION "\[[ \t]*SKIPPED[ \t]*]"
-  )
-
   if(Python3_Interpreter_FOUND)
     # Check that the test produced a result and create a failure if it didn't.
     # Guards against crashed and timed out tests.
