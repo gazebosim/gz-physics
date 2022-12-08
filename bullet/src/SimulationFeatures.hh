@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <gz/physics/CanWriteData.hh>
 #include <gz/physics/ForwardStep.hh>
 
 #include "Base.hh"
@@ -34,6 +35,8 @@ struct SimulationFeatureList : gz::physics::FeatureList<
 > { };
 
 class SimulationFeatures :
+    public CanWriteExpectedData<SimulationFeatures,
+      ExpectData<ChangedWorldPoses>>,
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
