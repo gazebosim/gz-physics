@@ -143,6 +143,25 @@ inline Eigen::Vector3d convert(btVector3 vec)
   return val;
 }
 
+inline math::Vector3d convertToGz(const btVector3 &_vec)
+{
+  return math::Vector3d(_vec[0], _vec[1], _vec[2]);
+}
+
+inline math::Quaterniond convertToGz(const btMatrix3x3 &_mat)
+{
+  return math::Quaterniond(math::Matrix3d(_mat[0][0], _mat[0][1], _mat[0][2],
+                                          _mat[1][0], _mat[1][1], _mat[1][2],
+                                          _mat[2][0], _mat[2][1], _mat[2][2]));
+}
+
+inline math::Pose3d convertToGz(const btTransform &_pose)
+{
+  return math::Pose3d(convertToGz(_pose.getOrigin()),
+                      convertToGz(_pose.getBasis()));
+}
+
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: std::size_t entityCount = 0;
@@ -156,6 +175,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     const auto id = this->GetNextEntity();
     assert(id == 0);
+    (void)id;
 
     return this->GenerateIdentity(0);
   }
