@@ -37,7 +37,6 @@ foreach(test ${tests})
       ${PROJECT_LIBRARY_TARGET_NAME}-mesh
       gtest
       gtest_main
-      ${PROJECT_NAME}_test_lib_loader
   )
 
   target_compile_definitions(${test_executable} PRIVATE

@@ -14,8 +14,8 @@
  * limitations under the License.
  *
  */
-
-#include "TestLibLoader.hh"
+#ifndef GZ_PHYSICS_TESTLIBLOADER_HH_
+#define GZ_PHYSICS_TESTLIBLOADER_HH_
 
 #include <iostream>
 #include <string>
@@ -24,13 +24,16 @@
 #include <gz/common/Filesystem.hh>
 #include <gz/common/Util.hh>
 
-std::string gz::physics::TestLibLoader::libToTest = std::string("");
-
 namespace gz
 {
 namespace physics
 {
-  bool TestLibLoader::init(int argc, char *argv[])
+class TestLibLoader
+{
+  /// brief Initialize command line arguments
+  /// \param[in] argc Number of arguments
+  /// \param[in] argv Vector with the arguments
+  public: static bool init(int argc, char *argv[])
   {
     if (argc != 2)
     {
@@ -42,12 +45,17 @@ namespace physics
     return true;
   }
 
-  std::string TestLibLoader::GetLibToTest()
+  /// \brief Get the name of the library to test
+  /// \return Name of the library to test
+  public: static std::string GetLibToTest()
   {
     return libToTest;
   }
 
-  std::string TestLibLoader::PhysicsEngineName(std::string _name)
+  /// \brief Get Physics Engine name based on the plugin name
+  /// \param[in] _name Plugin name
+  /// \return Name of the Physics Engine
+  std::string PhysicsEngineName(std::string _name)
   {
     std::vector<std::string> tokens = gz::common::split(_name, "::");
     if (tokens.size() == 4)
@@ -66,5 +74,12 @@ namespace physics
     }
     return "";
   }
+
+  private: static std::string libToTest;
+};
 }
 }
+
+std::string gz::physics::TestLibLoader::libToTest = std::string("");
+
+#endif
