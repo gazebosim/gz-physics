@@ -641,6 +641,10 @@ Identity SDFFeatures::ConstructSdfLink(
         sdfInertia.FluidAddedMass().value().Submatrix(
         math::Matrix6d::TOP_LEFT));
 
+    // If using added mass, gravity needs to be applied as a separate
+    // force at the center of mass using F=ma;
+    bodyProperties.mGravityMode = false;
+
     bodyProperties.mInertia.setSpatialTensor(
         bodyProperties.mInertia.getSpatialTensor() +
         math::eigen3::convert(featherstoneMatrix)

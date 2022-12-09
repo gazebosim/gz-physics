@@ -199,6 +199,107 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
   }
 }
 
+/////////////////////////////////////////////////
+TYPED_TEST(WorldFeaturesTest, GravityAddedMassFeatures)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<GravityFeatures>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+    EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
+                std::string::npos);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+      gz::common::joinPaths(TEST_WORLD_DIR, "falling_added_mass.world"));
+    EXPECT_TRUE(errors.empty()) << errors;
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    EXPECT_NE(nullptr, sdfWorld);
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+
+    auto graphErrors = sdfWorld->ValidateGraphs();
+    EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
+
+    Eigen::Vector3d gravity = {0, 0, -9.8};
+
+    AssertVectorApprox vectorPredicate(1e-6);
+    EXPECT_PRED_FORMAT2(vectorPredicate, gravity,
+                        world->GetGravity());
+
+    world->SetGravity({8, 4, 3});
+    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d(8, 4, 3),
+                        world->GetGravity());
+
+    world->SetGravity(gravity);
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+
+    auto link = model->GetLink(0);
+    ASSERT_NE(nullptr, link);
+
+    AssertVectorApprox vectorPredicate6(1e-6);
+
+    // initial link pose
+    const Eigen::Vector3d initialLinkPosition(0, 0, 2);
+    {
+      Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
+      EXPECT_PRED_FORMAT2(vectorPredicate6,
+                          initialLinkPosition,
+                          pos);
+    }
+
+    auto linkFrameID = link->GetFrameID();
+
+    // Get default gravity in link frame, which is pitched by pi/4
+    EXPECT_PRED_FORMAT2(vectorPredicate6,
+                        Eigen::Vector3d(6.92964645563, 0, -6.92964645563),
+                        world->GetGravity(linkFrameID));
+
+    // set gravity along X axis of linked frame, which is pitched by pi/4
+    world->SetGravity(Eigen::Vector3d(1.4142135624, 0, 0), linkFrameID);
+
+    EXPECT_PRED_FORMAT2(vectorPredicate6,
+                        Eigen::Vector3d(1, 0, -1),
+                        world->GetGravity());
+
+    // test other SetGravity API
+    // set gravity along Z axis of linked frame, which is pitched by pi/4
+    gz::physics::RelativeForce3d relativeGravity(
+        linkFrameID, Eigen::Vector3d(0, 0, 1.4142135624));
+    world->SetGravity(relativeGravity);
+
+    EXPECT_PRED_FORMAT2(vectorPredicate6,
+                        Eigen::Vector3d(1, 0, 1),
+                        world->GetGravity());
+
+    // Confirm that changed gravity direction affects pose of link
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+
+    const size_t numSteps = 1000;
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    AssertVectorApprox vectorPredicate2(1e-2);
+    {
+      Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
+      EXPECT_PRED_FORMAT2(vectorPredicate2,
+                          Eigen::Vector3d(0.5, 0, 2.5),
+                          pos);
+    }
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
