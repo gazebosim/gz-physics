@@ -41,6 +41,7 @@ class TestLibLoader
                 << "Usage " <<  argv[0] << " <physics engine path>\n";
       return false;
     }
+    std::string &libToTest = LibToTest();
     libToTest = argv[1];
     return true;
   }
@@ -49,7 +50,7 @@ class TestLibLoader
   /// \return Name of the library to test
   public: static std::string GetLibToTest()
   {
-    return libToTest;
+    return LibToTest();
   }
 
   /// \brief Get Physics Engine name based on the plugin name
@@ -75,11 +76,13 @@ class TestLibLoader
     return "";
   }
 
-  private: static std::string libToTest;
+  private: static std::string& LibToTest()
+  {
+    static std::string libToTest = "";
+    return libToTest;
+  }
 };
 }
 }
-
-std::string gz::physics::TestLibLoader::libToTest = std::string("");
 
 #endif
