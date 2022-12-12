@@ -100,7 +100,8 @@ class SDFFeatures :
   private: Identity ConstructSdfJoint(const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint,
       dart::dynamics::BodyNode * const _parent,
-      dart::dynamics::BodyNode * const _child);
+      dart::dynamics::BodyNode * const _child,
+      bool _isWorldJoint = false);
 
   private: Eigen::Isometry3d ResolveSdfLinkReferenceFrame(
       const std::string &_frame,

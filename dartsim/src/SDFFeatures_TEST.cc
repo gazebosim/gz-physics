@@ -551,14 +551,20 @@ TEST_P(SDFFeatures_TEST, WorldJointTest)
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
   ASSERT_NE(nullptr, dartWorld);
 
-  auto modelSkel = dartWorld->getSkeleton("child_model");
-  ASSERT_NE(nullptr, modelSkel);
-  EXPECT_NE(nullptr, modelSkel->getBodyNode("L_C"));
+  auto model2Skel = dartWorld->getSkeleton("parent_model");
+  ASSERT_NE(nullptr, model2Skel);
+  EXPECT_NE(nullptr, model2Skel->getBodyNode("L_P"));
+  ASSERT_EQ("L_P", model2Skel->getBodyNode("L_P")->getName());
 
-  auto parentModel = world->GetModel("parent_model");
-  ASSERT_NE(nullptr, parentModel);
-  auto childModel = world->GetModel("child_model");
-  ASSERT_NE(nullptr, childModel);
+  // auto model1Skel = dartWorld->getSkeleton("child_model");
+  // ASSERT_NE(nullptr, model1Skel);
+  // EXPECT_NE(nullptr, model1Skel->getBodyNode("L_C"));
+  // ASSERT_EQ("L_C", model1Skel->getBodyNode("L_C")->getName());
+
+  // auto parentModel = world->GetModel("parent_model");
+  // ASSERT_NE(nullptr, parentModel);
+  // auto childModel = world->GetModel("child_model");
+  // ASSERT_NE(nullptr, childModel);
 
   // auto worldJoint = dartWorld->GetWorldJoint();
   // ASSERT_NE(nullptr, worldJoint);

@@ -822,7 +822,7 @@ Identity SDFFeatures::ConstructSdfWorldJoint(
   dart::dynamics::BodyNode * const childPtr =
     FindBodyNode(world->getName(),"" , childLinkName);
 
-  return ConstructSdfJoint(_worldID, _worldSdfJoint, parentPtr, childPtr);
+  return ConstructSdfJoint(_worldID, _worldSdfJoint, parentPtr, childPtr, true);
 }
 
 /////////////////////////////////////////////////
@@ -1055,9 +1055,14 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_identityID,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
-    dart::dynamics::BodyNode * const _child)
+    dart::dynamics::BodyNode * const _child,
+    bool _isWorldJoint)
 {
-  const auto &_modelInfo = *this->ReferenceInterface<ModelInfo>(_identityID);
+  ModelInfo _modelInfo;
+  if (!_isWorldJoint)
+  {
+    _modelInfo = *this->ReferenceInterface<ModelInfo>(_identityID);
+  }
 
   // if a specified link is named "world" but cannot be found, we'll assume the
   // joint is connected to the world
@@ -1066,9 +1071,14 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (worldChild)
   {
-    gzerr << "Asked to create a joint with the world as the child in model "
-           << "[" << _modelInfo.model->getName() << "]. This is currently not "
-           << "supported\n";
+    std::stringstream msg;
+    msg << "Asked to create a joint with the world as the child";
+    if (!_isWorldJoint)
+    {
+      msg << "in model [" << _modelInfo.model->getName() << "]";
+    }
+    msg << ". This is currently not supported\n";
+    gzerr << msg.str();
 
     return this->GenerateInvalidId();
   }
