@@ -60,7 +60,8 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     if (info)
     {
       WorldPose wp;
-      wp.pose = info->pose;
+      wp.pose = convertToGz(info->link->getCenterOfMassTransform()) *
+                info->inertialPose.Inverse();
       wp.body = id;
 
       auto iter = this->prevLinkPoses.find(id);
