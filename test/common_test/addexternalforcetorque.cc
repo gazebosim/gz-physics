@@ -24,7 +24,7 @@
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "../helpers/TestLibLoader.hh"
+#include "TestLibLoader.hh"
 #include "../Utils.hh"
 
 #include <gz/physics/FindFeatures.hh>
