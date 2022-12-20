@@ -16,12 +16,27 @@ set(tests
 
 set(TEST_INSTALL_DIR ${CMAKE_INSTALL_LIBEXECDIR}/gz/${GZ_DESIGNATION}${PROJECT_VERSION_MAJOR}/)
 
+# Find the Python interpreter for running the
+# check_test_ran.py script
+include(GzPython)
+
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
-  add_test(NAME ${test_name}_${PHYSICS_ENGINE_NAME}
+  set(target_name ${test_name}_${PHYSICS_ENGINE_NAME})
+  add_test(NAME ${target_name}
     COMMAND
       ${test_name}
       $<TARGET_FILE:${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin>
+      --gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${target_name}.xml
   )
+
+  set_tests_properties(${target_name} PROPERTIES TIMEOUT 240)
+
+  if(Python3_Interpreter_FOUND)
+    # Check that the test produced a result and create a failure if it didn't.
+    # Guards against crashed and timed out tests.
+    add_test(check_${target_name} ${Python3_EXECUTABLE} ${GZ_CMAKE_TOOLS_DIR}/check_test_ran.py
+      ${CMAKE_BINARY_DIR}/test_results/${target_name}.xml)
+  endif()
 endfunction()
 
 set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")

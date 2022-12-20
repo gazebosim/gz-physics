@@ -42,9 +42,25 @@ void SimulationFeatures::WorldForwardStep(
   }
 
   worldInfo->world->stepSimulation(this->stepSize, 1, this->stepSize);
+  this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
 }
 
+void SimulationFeatures::Write(WorldPoses &_worldPoses) const
+{
+  // remove link poses from the previous iteration
+  _worldPoses.entries.clear();
+  _worldPoses.entries.reserve(this->links.size());
+
+  for (const auto &[id, info] : this->links)
+  {
+    WorldPose wp;
+    wp.pose = convertToGz(info->link->getCenterOfMassTransform()) *
+              info->inertialPose.Inverse();
+    wp.body = id;
+    _worldPoses.entries.push_back(wp);
+  }
+}
 /////////////////////////////////////////////////
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {
