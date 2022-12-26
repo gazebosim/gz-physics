@@ -411,15 +411,18 @@ std::size_t EntityManagementFeatures::GetJointCount(
 Identity EntityManagementFeatures::GetJoint(
     const Identity &_modelID, const std::size_t _jointIndex) const
 {
-  DartJoint *const joint =
-      this->ReferenceInterface<ModelInfo>(_modelID)->model->getJoint(
-          _jointIndex);
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+
+  if (_jointIndex >= modelInfo->joints.size())
+    return this->GenerateInvalidId();
+
+  const auto &jointInfo = modelInfo->joints[_jointIndex];
 
   // If the joint doesn't exist in "joints", it means the containing entity has
   // been removed.
-  if (this->joints.HasEntity(joint))
+  if (this->joints.HasEntity(jointInfo->joint))
   {
-    const std::size_t jointID = this->joints.IdentityOf(joint);
+    const std::size_t jointID = this->joints.IdentityOf(jointInfo->joint);
     return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
   else
@@ -428,6 +431,9 @@ Identity EntityManagementFeatures::GetJoint(
     // model that has been removed. Right now we are returning an invalid
     // identity, but that could cause a segfault if the use doesn't check if
     // returned value before using it.
+    gzwarn << "No joint with ID ["
+        << _jointIndex << "] for modelID [" << _modelID.id << "]\n";
+
     return this->GenerateInvalidId();
   }
 }
@@ -436,25 +442,32 @@ Identity EntityManagementFeatures::GetJoint(
 Identity EntityManagementFeatures::GetJoint(
     const Identity &_modelID, const std::string &_jointName) const
 {
-  DartJoint *const joint =
-      this->ReferenceInterface<ModelInfo>(_modelID)->model->getJoint(
-          _jointName);
+  const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  for (const auto &jointInfo : modelInfo->joints)
+  {
+    if (_jointName == jointInfo->name)
+    {
+      // If the joint doesn't exist in "joints", it means the containing entity
+      // has been removed.
+      if (this->joints.HasEntity(jointInfo->joint))
+      {
+        const std::size_t jointID = this->joints.IdentityOf(jointInfo->joint);
+        return this->GenerateIdentity(jointID, this->joints.at(jointID));
+      }
+      else
+      {
+        // TODO(anyone) It's not clear what to do when `GetLink` is called on a
+        // model that has been removed. Right now we are returning an invalid
+        // identity, but that could cause a segfault if the user doesn't check
+        // the returned value before using it.
+        gzwarn << "No joint named ["
+            << _jointName << "] for modelID [" << _modelID.id << "]\n";
 
-  // If the joint doesn't exist in "joints", it means the containing entity has
-  // been removed.
-  if (this->joints.HasEntity(joint))
-  {
-    const std::size_t jointID = this->joints.IdentityOf(joint);
-    return this->GenerateIdentity(jointID, this->joints.at(jointID));
+        return this->GenerateInvalidId();
+      }
+    }
   }
-  else
-  {
-    // TODO(addisu) It's not clear what to do when `GetJoint` is called on a
-    // model that has been removed. Right now we are returning an invalid
-    // identity, but that could cause a segfault if the use doesn't check if
-    // returned value before using it.
-    return this->GenerateInvalidId();
-  }
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
@@ -475,18 +488,7 @@ std::size_t EntityManagementFeatures::GetLinkIndex(
 Identity EntityManagementFeatures::GetModelOfLink(
     const Identity &_linkID) const
 {
-  const std::size_t modelID = this->links.idToContainerID.at(_linkID);
-
-  // If the model containing the link doesn't exist in "models", it means this
-  // link belongs to a removed model.
-  if (this->models.HasEntity(modelID))
-  {
-    return this->GenerateIdentity(modelID, this->models.at(modelID));
-  }
-  else
-  {
-    return this->GenerateInvalidId();
-  }
+  return GetModelOfLinkImpl(_linkID);
 }
 
 /////////////////////////////////////////////////
@@ -558,22 +560,19 @@ const std::string &EntityManagementFeatures::GetJointName(
 std::size_t EntityManagementFeatures::GetJointIndex(
     const Identity &_jointID) const
 {
-  return this->ReferenceInterface<JointInfo>(_jointID)
-      ->joint->getJointIndexInSkeleton();
+  return this->joints.idToIndexInContainer.at(_jointID);
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModelOfJoint(
     const Identity &_jointID) const
 {
-  const DartSkeletonPtr &model =
-      this->ReferenceInterface<JointInfo>(_jointID)->joint->getSkeleton();
+  const std::size_t modelID = this->joints.idToContainerID.at(_jointID);
 
   // If the model containing the joint doesn't exist in "models", it means this
   // joint belongs to a removed model.
-  if (this->models.HasEntity(model))
+  if (this->models.HasEntity(modelID))
   {
-    const std::size_t modelID = this->models.IdentityOf(model);
     return this->GenerateIdentity(modelID, this->models.at(modelID));
   }
   else

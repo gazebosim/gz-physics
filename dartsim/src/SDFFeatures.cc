@@ -680,7 +680,11 @@ Identity SDFFeatures::ConstructSdfLink(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
   const std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
-  this->AddJoint(joint);
+
+  const std::string fullJointName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(modelInfo.model->getName(), joint->getName()));
+  this->AddJoint(joint, fullJointName, _modelID);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
@@ -1158,14 +1162,30 @@ Identity SDFFeatures::ConstructSdfJoint(
     joint = _child->moveTo<dart::dynamics::WeldJoint>(_parent);
   }
 
-  joint->setName(_sdfJoint.Name());
+  const std::string jointName = _sdfJoint.Name();
+  joint->setName(jointName);
 
   const Eigen::Isometry3d child_T_postjoint = T_child.inverse() * T_joint;
   const Eigen::Isometry3d parent_T_prejoint_init = T_parent.inverse() * T_joint;
   joint->setTransformFromParentBodyNode(parent_T_prejoint_init);
   joint->setTransformFromChildBodyNode(child_T_postjoint);
 
-  const std::size_t jointID = this->AddJoint(joint);
+  auto modelID = this->models.IdentityOf(_modelInfo.model);
+  auto worldID = this->GetWorldOfModelImpl(modelID);
+  if (worldID == INVALID_ENTITY_ID)
+  {
+    gzerr << "World of model [" << _modelInfo.model->getName()
+           << "] could not be found when creating joint [" << jointName
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldID);
+  const std::string fullJointName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(_modelInfo.model->getName(), jointName));
+
+  const std::size_t jointID = this->AddJoint(joint, fullJointName, modelID);
   // Increment BodyNode version since the child could be moved to a new skeleton
   // when a joint is created.
   // TODO(azeey) Remove incrementVersion once DART has been updated to

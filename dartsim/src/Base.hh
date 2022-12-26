@@ -82,6 +82,16 @@ struct LinkInfo
   std::optional<math::Inertiald> inertial;
 };
 
+struct JointInfo
+{
+  dart::dynamics::JointPtr joint;
+  dart::dynamics::SimpleFramePtr frame;
+  /// \brief It may be necessary for dartsim to rename a Joint (eg. when
+  /// moving the Joint to a new skeleton), so we store the Gazebo-specified
+  /// name of the Joint here.
+  std::string name;
+};
+
 struct ModelInfo
 {
   dart::dynamics::SkeletonPtr model;
@@ -89,13 +99,8 @@ struct ModelInfo
   dart::dynamics::SimpleFramePtr frame;
   std::string canonicalLinkName;
   std::vector<std::shared_ptr<LinkInfo>> links {};
+  std::vector<std::shared_ptr<JointInfo>> joints {};
   std::vector<std::size_t> nestedModels = {};
-};
-
-struct JointInfo
-{
-  dart::dynamics::JointPtr joint;
-  dart::dynamics::SimpleFramePtr frame;
 };
 
 struct ShapeInfo
@@ -488,16 +493,36 @@ class Base : public Implements3d<FeatureList<Feature>>
     }
   }
 
-  public: inline std::size_t AddJoint(DartJoint *_joint)
+  public: inline std::size_t AddJoint(DartJoint *_joint,
+      const std::string &_fullName, std::size_t _modelID)
   {
     const std::size_t id = this->GetNextEntity();
-    this->joints.idToObject[id] = std::make_shared<JointInfo>();
+    auto jointInfo = std::make_shared<JointInfo>();
+    this->joints.idToObject[id] = jointInfo;
+    jointInfo->joint = _joint;
+    // The name of the dart Joint during creation is assumed to be the
+    // Gazebo-specified name.
+    jointInfo->name = _joint->getName();
+
     this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;
     dart::dynamics::SimpleFramePtr jointFrame =
         dart::dynamics::SimpleFrame::createShared(
             _joint->getChildBodyNode(), _joint->getName() + "_frame",
             _joint->getTransformFromChildBodyNode());
+
+    this->jointsByName[_fullName] = _joint;
+    this->models.at(_modelID)->joints.push_back(jointInfo);
+
+    // Even though DART keeps track of the index of this joint in the
+    // skeleton, the joint may be moved to another skeleton when a joint is
+    // constructed. Thus, we store the original index here.
+    this->joints.idToIndexInContainer[id] = _joint->getJointIndexInSkeleton();
+    std::vector<std::size_t> &indexInContainerToID =
+        this->joints.indexInContainerToID[_modelID];
+    indexInContainerToID.push_back(id);
+
+    this->joints.idToContainerID[id] = _modelID;
 
     this->joints.idToObject[id]->frame = jointFrame;
     this->frames[id] = this->joints.idToObject[id]->frame.get();
@@ -532,6 +557,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     for (auto &jt : skel->getJoints())
     {
       this->joints.RemoveEntity(jt);
+      this->jointsByName.erase(::sdf::JoinName(
+          world->getName(), ::sdf::JoinName(skel->getName(), jt->getName())));
     }
     for (auto &bn : skel->getBodyNodes())
     {
@@ -587,6 +614,19 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateInvalidId();
   }
 
+  public: inline Identity GetModelOfLinkImpl(const Identity &_linkID) const
+  {
+    const std::size_t modelID = this->links.idToContainerID.at(_linkID);
+    if (this->models.HasEntity(modelID))
+    {
+      return this->GenerateIdentity(modelID, this->models.at(modelID));
+    }
+    else
+    {
+      return this->GenerateInvalidId();
+    }
+  };
+
   public: EntityStorage<DartWorldPtr, std::string> worlds;
   public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
@@ -598,6 +638,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even
   /// as they move to other skeletons.
   public: std::unordered_map<std::string, DartBodyNode*> linksByName;
+
+  /// \brief Map from the fully qualified joint name (including the world name)
+  /// to the dart Joint object. This is useful for keeping track of
+  /// dart Joints even as they move to other skeletons.
+  public: std::unordered_map<std::string, DartJoint*> jointsByName;
 
   /// \brief Map from welded body nodes to the LinkInfo for the original link
   /// they are welded to. This is useful when detaching joints.

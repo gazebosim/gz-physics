@@ -494,8 +494,29 @@ Identity JointFeatures::AttachFixedJoint(
       bn->setName(skeleton->getName() + '/' + childLinkName);
     }
   }
+
+  /// \todo(srmainwaring) consolidate
+  // Get model of child link
+  auto modelID = this->GetModelOfLinkImpl(_childID);
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(modelID);
+
+  auto worldID = this->GetWorldOfModelImpl(modelID);
+  if (worldID == INVALID_ENTITY_ID)
+  {
+    gzerr << "World of model [" << modelInfo->model->getName()
+           << "] could not be found when creating joint [" << _name
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldID);
+  const std::string fullJointName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(modelInfo->model->getName(), _name));
+
   const std::size_t jointID = this->AddJoint(
-      bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+      bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties),
+      fullJointName, modelID);
   if (linkInfo->weldedNodes.size() > 0)
   {
     // weld constraint needs to be updated after moving to new skeleton
@@ -592,8 +613,29 @@ Identity JointFeatures::AttachRevoluteJoint(
       bn->setName(skeleton->getName() + '/' + linkInfo->name);
     }
   }
+
+  /// \todo(srmainwaring) consolidate
+  // Get model of child link
+  auto modelID = this->GetModelOfLinkImpl(_childID);
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(modelID);
+
+  auto worldID = this->GetWorldOfModelImpl(modelID);
+  if (worldID == INVALID_ENTITY_ID)
+  {
+    gzerr << "World of model [" << modelInfo->model->getName()
+           << "] could not be found when creating joint [" << _name
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldID);
+  const std::string fullJointName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(modelInfo->model->getName(), _name));
+
   const std::size_t jointID = this->AddJoint(
-      bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
+      bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties),
+        fullJointName, modelID);
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();
@@ -661,8 +703,29 @@ Identity JointFeatures::AttachPrismaticJoint(
       bn->setName(skeleton->getName() + '/' + linkInfo->name);
     }
   }
+
+  /// \todo(srmainwaring) consolidate
+  // Get model of child link
+  auto modelID = this->GetModelOfLinkImpl(_childID);
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(modelID);
+
+  auto worldID = this->GetWorldOfModelImpl(modelID);
+  if (worldID == INVALID_ENTITY_ID)
+  {
+    gzerr << "World of model [" << modelInfo->model->getName()
+           << "] could not be found when creating joint [" << _name
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldID);
+  const std::string fullJointName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(modelInfo->model->getName(), _name));
+
   const std::size_t jointID = this->AddJoint(
-      bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));
+      bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties),
+      fullJointName, modelID);
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();
