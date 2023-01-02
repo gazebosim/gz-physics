@@ -170,9 +170,17 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P> pIgn;
 
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+  pIgn.frictionCoeff = pDart.mPrimaryFrictionCoeff;
+#else
   pIgn.frictionCoeff = pDart.mFrictionCoeff;
+#endif
   pIgn.secondaryFrictionCoeff = pDart.mSecondaryFrictionCoeff;
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+  pIgn.slipCompliance = pDart.mPrimarySlipCompliance;
+#else
   pIgn.slipCompliance = pDart.mSlipCompliance;
+#endif
   pIgn.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
   pIgn.restitutionCoeff = pDart.mRestitutionCoeff;
   pIgn.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
@@ -185,11 +193,23 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
                                 _numContactsOnCollisionObject, pIgn);
 
     if (pIgn.frictionCoeff)
+    {
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+      pDart.mPrimaryFrictionCoeff = pIgn.frictionCoeff.value();
+#else
       pDart.mFrictionCoeff = pIgn.frictionCoeff.value();
+#endif
+    }
     if (pIgn.secondaryFrictionCoeff)
       pDart.mSecondaryFrictionCoeff = pIgn.secondaryFrictionCoeff.value();
     if (pIgn.slipCompliance)
+    {
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+      pDart.mPrimarySlipCompliance = pIgn.slipCompliance.value();
+#else
       pDart.mSlipCompliance = pIgn.slipCompliance.value();
+#endif
+    }
     if (pIgn.secondarySlipCompliance)
       pDart.mSecondarySlipCompliance = pIgn.secondarySlipCompliance.value();
     if (pIgn.restitutionCoeff)

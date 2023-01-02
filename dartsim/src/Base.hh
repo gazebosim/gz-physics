@@ -339,10 +339,17 @@ class Base : public Implements3d<FeatureList<Feature>>
     }
     for (auto &bn : skel->getBodyNodes())
     {
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+      bn->eachShapeNode([this](dart::dynamics::ShapeNode *_sn)
+      {
+        this->shapes.RemoveEntity(_sn);
+      });
+#else
       for (auto &sn : bn->getShapeNodes())
       {
         this->shapes.RemoveEntity(sn);
       }
+#endif
       this->links.RemoveEntity(bn);
     }
     this->models.RemoveEntity(skel);
