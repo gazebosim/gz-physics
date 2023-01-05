@@ -38,6 +38,15 @@
 
 #include "SimulationFeatures.hh"
 
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+// The ContactSurfaceParams class was first added to version 6.10 of our fork
+// of dart, and then merged upstream and released in version 6.13.0 with
+// different public member variable names.
+// See https://github.com/dartsim/dart/pull/1626 and
+// https://github.com/gazebo-forks/dart/pull/22 for more info.
+#define DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+#endif
+
 namespace gz {
 namespace physics {
 namespace dartsim {
@@ -216,9 +225,17 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P> pGz;
 
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+  pGz.frictionCoeff = pDart.mPrimaryFrictionCoeff;
+#else
   pGz.frictionCoeff = pDart.mFrictionCoeff;
+#endif
   pGz.secondaryFrictionCoeff = pDart.mSecondaryFrictionCoeff;
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+  pGz.slipCompliance = pDart.mPrimarySlipCompliance;
+#else
   pGz.slipCompliance = pDart.mSlipCompliance;
+#endif
   pGz.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
   pGz.restitutionCoeff = pDart.mRestitutionCoeff;
   pGz.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
@@ -231,11 +248,23 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
                                 _numContactsOnCollisionObject, pGz);
 
     if (pGz.frictionCoeff)
+    {
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+      pDart.mPrimaryFrictionCoeff = pGz.frictionCoeff.value();
+#else
       pDart.mFrictionCoeff = pGz.frictionCoeff.value();
+#endif
+    }
     if (pGz.secondaryFrictionCoeff)
       pDart.mSecondaryFrictionCoeff = pGz.secondaryFrictionCoeff.value();
     if (pGz.slipCompliance)
+    {
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+      pDart.mPrimarySlipCompliance = pGz.slipCompliance.value();
+#else
       pDart.mSlipCompliance = pGz.slipCompliance.value();
+#endif
+    }
     if (pGz.secondarySlipCompliance)
       pDart.mSecondarySlipCompliance = pGz.secondarySlipCompliance.value();
     if (pGz.restitutionCoeff)
