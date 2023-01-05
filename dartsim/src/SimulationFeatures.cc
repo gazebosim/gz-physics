@@ -32,6 +32,15 @@
 #include "gz/common/Profiler.hh"
 #include "gz/physics/GetContacts.hh"
 
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+// The ContactSurfaceParams class was first added to version 6.10 of our fork
+// of dart, and then merged upstream and released in version 6.13.0 with
+// different public member variable names.
+// See https://github.com/dartsim/dart/pull/1626 and
+// https://github.com/gazebo-forks/dart/pull/22 for more info.
+#define DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+#endif
+
 namespace ignition {
 namespace physics {
 namespace dartsim {
@@ -170,9 +179,17 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P> pIgn;
 
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+  pIgn.frictionCoeff = pDart.mPrimaryFrictionCoeff;
+#else
   pIgn.frictionCoeff = pDart.mFrictionCoeff;
+#endif
   pIgn.secondaryFrictionCoeff = pDart.mSecondaryFrictionCoeff;
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+  pIgn.slipCompliance = pDart.mPrimarySlipCompliance;
+#else
   pIgn.slipCompliance = pDart.mSlipCompliance;
+#endif
   pIgn.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
   pIgn.restitutionCoeff = pDart.mRestitutionCoeff;
   pIgn.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
@@ -185,11 +202,23 @@ dart::constraint::ContactSurfaceParams IgnContactSurfaceHandler::createParams(
                                 _numContactsOnCollisionObject, pIgn);
 
     if (pIgn.frictionCoeff)
+    {
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+      pDart.mPrimaryFrictionCoeff = pIgn.frictionCoeff.value();
+#else
       pDart.mFrictionCoeff = pIgn.frictionCoeff.value();
+#endif
+    }
     if (pIgn.secondaryFrictionCoeff)
       pDart.mSecondaryFrictionCoeff = pIgn.secondaryFrictionCoeff.value();
     if (pIgn.slipCompliance)
+    {
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+      pDart.mPrimarySlipCompliance = pIgn.slipCompliance.value();
+#else
       pDart.mSlipCompliance = pIgn.slipCompliance.value();
+#endif
+    }
     if (pIgn.secondarySlipCompliance)
       pDart.mSecondarySlipCompliance = pIgn.secondarySlipCompliance.value();
     if (pIgn.restitutionCoeff)
