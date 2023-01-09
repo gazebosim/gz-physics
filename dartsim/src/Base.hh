@@ -41,6 +41,13 @@
 
 #include <sdf/Types.hh>
 
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+// The BodyNode::getShapeNodes method was deprecated in dart 6.13.0
+// in favor of an iterator approach with BodyNode::eachShapeNode
+// See https://github.com/dartsim/dart/pull/1644 for more info
+#define DART_HAS_EACH_SHAPE_NODE_API
+#endif
+
 namespace gz {
 namespace physics {
 namespace dartsim {
@@ -528,10 +535,17 @@ class Base : public Implements3d<FeatureList<Feature>>
     }
     for (auto &bn : skel->getBodyNodes())
     {
+#ifdef DART_HAS_EACH_SHAPE_NODE_API
+      bn->eachShapeNode([this](dart::dynamics::ShapeNode *_sn)
+      {
+        this->shapes.RemoveEntity(_sn);
+      });
+#else
       for (auto &sn : bn->getShapeNodes())
       {
         this->shapes.RemoveEntity(sn);
       }
+#endif
       this->links.RemoveEntity(bn);
       this->linksByName.erase(::sdf::JoinName(
           world->getName(), ::sdf::JoinName(skel->getName(), bn->getName())));
