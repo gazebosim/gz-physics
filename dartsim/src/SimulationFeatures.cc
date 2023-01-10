@@ -84,6 +84,7 @@ void SimulationFeatures::WorldForwardStep(
 
       auto mass = info->inertial->MassMatrix().Mass();
       auto g = world->getGravity();
+
       info->link->addExtForce(mass * g, com, false, true);
     }
   }

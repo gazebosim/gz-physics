@@ -97,7 +97,7 @@ using GravityFeatures = gz::physics::FeatureList<
 using GravityFeaturesTestTypes =
   ::testing::Types<GravityFeatures>;
 TYPED_TEST_SUITE(WorldFeaturesTest,
-                 GravityFeatures);
+                 GravityFeatures,);
 
 /////////////////////////////////////////////////
 TYPED_TEST(WorldFeaturesTest, GravityFeatures)
@@ -225,60 +225,31 @@ TYPED_TEST(WorldFeaturesTest, GravityAddedMassFeatures)
     auto graphErrors = sdfWorld->ValidateGraphs();
     EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
 
-    Eigen::Vector3d gravity = {0, 0, -9.8};
-
-    AssertVectorApprox vectorPredicate(1e-6);
-    EXPECT_PRED_FORMAT2(vectorPredicate, gravity,
-                        world->GetGravity());
-
-    world->SetGravity({8, 4, 3});
-    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d(8, 4, 3),
-                        world->GetGravity());
-
-    world->SetGravity(gravity);
-
-    auto model = world->GetModel("sphere");
-    ASSERT_NE(nullptr, model);
-
-    auto link = model->GetLink(0);
-    ASSERT_NE(nullptr, link);
-
     AssertVectorApprox vectorPredicate6(1e-6);
 
-    // initial link pose
+    // Set gravity to a nice round number
+    world->SetGravity({0, 0, -10});
+
+    // Link poses
     const Eigen::Vector3d initialLinkPosition(0, 0, 2);
+    const Eigen::Vector3d finalLinkPosition(0, 0, -3.005);
+    const Eigen::Vector3d finalLinkPositionAddedMass(0, 0, -0.5025);
+
+    // This tests that the physics plugin correctly considers added mass.
+    for (auto modelName: {"sphere", "sphere_zero_added_mass", "sphere_added_mass", "heavy_sphere"})
     {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+
+      auto link = model->GetLink(0);
+      ASSERT_NE(nullptr, link);
+
       Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
       EXPECT_PRED_FORMAT2(vectorPredicate6,
                           initialLinkPosition,
                           pos);
     }
 
-    auto linkFrameID = link->GetFrameID();
-
-    // Get default gravity in link frame, which is pitched by pi/4
-    EXPECT_PRED_FORMAT2(vectorPredicate6,
-                        Eigen::Vector3d(6.92964645563, 0, -6.92964645563),
-                        world->GetGravity(linkFrameID));
-
-    // set gravity along X axis of linked frame, which is pitched by pi/4
-    world->SetGravity(Eigen::Vector3d(1.4142135624, 0, 0), linkFrameID);
-
-    EXPECT_PRED_FORMAT2(vectorPredicate6,
-                        Eigen::Vector3d(1, 0, -1),
-                        world->GetGravity());
-
-    // test other SetGravity API
-    // set gravity along Z axis of linked frame, which is pitched by pi/4
-    gz::physics::RelativeForce3d relativeGravity(
-        linkFrameID, Eigen::Vector3d(0, 0, 1.4142135624));
-    world->SetGravity(relativeGravity);
-
-    EXPECT_PRED_FORMAT2(vectorPredicate6,
-                        Eigen::Vector3d(1, 0, 1),
-                        world->GetGravity());
-
-    // Confirm that changed gravity direction affects pose of link
     gz::physics::ForwardStep::Input input;
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Output output;
@@ -289,11 +260,32 @@ TYPED_TEST(WorldFeaturesTest, GravityAddedMassFeatures)
       world->Step(output, state, input);
     }
 
-    AssertVectorApprox vectorPredicate2(1e-2);
+    // Confirm that the models with zero added mass behave consistently
+    for (auto modelName: {"sphere", "sphere_zero_added_mass", "heavy_sphere"})
     {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+
+      auto link = model->GetLink(0);
+      ASSERT_NE(nullptr, link);
+
       Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
-      EXPECT_PRED_FORMAT2(vectorPredicate2,
-                          Eigen::Vector3d(0.5, 0, 2.5),
+      EXPECT_PRED_FORMAT2(vectorPredicate6,
+                          finalLinkPosition,
+                          pos);
+    }
+
+    for (auto modelName: {"sphere_added_mass"})
+    {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+
+      auto link = model->GetLink(0);
+      ASSERT_NE(nullptr, link);
+
+      Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
+      EXPECT_PRED_FORMAT2(vectorPredicate6,
+                          finalLinkPositionAddedMass,
                           pos);
     }
   }
