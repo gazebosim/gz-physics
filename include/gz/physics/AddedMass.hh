@@ -40,7 +40,8 @@ class AddedMass: public virtual Feature
   {
     public: virtual void SetLinkAddedMass(const Identity &_link,
                 const gz::math::Matrix6d &_addedMass) = 0;
-    public: virtual gz::math::Matrix6d GetLinkAddedMass(const Identity &_link) const = 0;
+    public: virtual gz::math::Matrix6d GetLinkAddedMass(
+                const Identity &_link) const = 0;
   };
 };
 

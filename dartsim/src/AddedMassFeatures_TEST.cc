@@ -130,7 +130,7 @@ TEST(AddedMassFeatures, AddedMass)
   ASSERT_EQ(3u, dartWorld->getNumSkeletons());
 
   {
-    const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton("body_no_added_mass");
+    const auto skeleton = dartWorld->getSkeleton("body_no_added_mass");
     ASSERT_NE(skeleton, nullptr);
 
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
@@ -139,10 +139,15 @@ TEST(AddedMassFeatures, AddedMass)
 
     const Eigen::Matrix6d spatialInertia = link->getSpatialInertia();
     ASSERT_TRUE(expectedZeroSpatialInertia.isApprox(spatialInertia));
+
+    const auto linkAddedMass =
+      world->GetModel("body_no_added_mass")->GetLink("link")->GetAddedMass();
+    ASSERT_TRUE(Eigen::Matrix6d::Zero().isApprox(
+          gz::math::eigen3::convert(linkAddedMass)));
   }
 
   {
-    const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton("body_zero_added_mass");
+    const auto skeleton = dartWorld->getSkeleton("body_zero_added_mass");
     ASSERT_NE(skeleton, nullptr);
 
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
@@ -151,10 +156,15 @@ TEST(AddedMassFeatures, AddedMass)
 
     const Eigen::Matrix6d spatialInertia = link->getSpatialInertia();
     ASSERT_TRUE(expectedZeroSpatialInertia.isApprox(spatialInertia));
+
+    auto linkAddedMass =
+      world->GetModel("body_zero_added_mass")->GetLink("link")->GetAddedMass();
+    ASSERT_TRUE(Eigen::Matrix6d::Zero().isApprox(
+          gz::math::eigen3::convert(linkAddedMass)));
   }
 
   {
-    const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton("body_added_mass");
+    const auto skeleton = dartWorld->getSkeleton("body_added_mass");
     ASSERT_NE(skeleton, nullptr);
 
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
@@ -163,5 +173,10 @@ TEST(AddedMassFeatures, AddedMass)
 
     const Eigen::Matrix6d spatialInertia = link->getSpatialInertia();
     ASSERT_TRUE(expectedSpatialInertia.isApprox(spatialInertia));
+
+    auto linkAddedMass =
+      world->GetModel("body_added_mass")->GetLink("link")->GetAddedMass();
+    ASSERT_FALSE(Eigen::Matrix6d::Zero().isApprox(
+          gz::math::eigen3::convert(linkAddedMass)));
   }
 }

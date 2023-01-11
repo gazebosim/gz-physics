@@ -72,11 +72,13 @@ void AddedMassFeatures::SetLinkAddedMass(const Identity &_link,
   }
 }
 
-gz::math::Matrix6d AddedMassFeatures::GetLinkAddedMass(const Identity &_link) const
+gz::math::Matrix6d
+AddedMassFeatures::GetLinkAddedMass(const Identity &_link) const
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_link);
 
-  if (linkInfo->inertial.has_value() && linkInfo->inertial->FluidAddedMass().has_value())
+  if (linkInfo->inertial.has_value() &&
+      linkInfo->inertial->FluidAddedMass().has_value())
   {
     return linkInfo->inertial->FluidAddedMass().value();
   }

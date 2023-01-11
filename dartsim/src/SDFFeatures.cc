@@ -667,9 +667,10 @@ Identity SDFFeatures::ConstructSdfLink(
 
     if (nullptr == amf)
     {
-      gzwarn << "Link [" << _sdfLink.Name() << "] in model [" << modelInfo.model->getName() <<
+      gzwarn << "Link [" << _sdfLink.Name() << "] in model ["
+        << modelInfo.model->getName() <<
         "] has added mass specified in SDF, but AddedMassFeatures" <<
-        "was not requested on this engine.  Added mass will not be applied.\n";
+        "was not available on this engine.  Added mass will not be applied.\n";
     }
     else
     {

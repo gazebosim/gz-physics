@@ -36,7 +36,8 @@ class AddedMassFeatures :
   public: void SetLinkAddedMass(const Identity &_link,
                                 const gz::math::Matrix6d &_addedMass) override;
 
-  public: gz::math::Matrix6d GetLinkAddedMass(const Identity &_link) const override;
+  public: gz::math::Matrix6d GetLinkAddedMass(
+              const Identity &_link) const override;
 };
 }  // namespace gz::physics::dartsim
 
