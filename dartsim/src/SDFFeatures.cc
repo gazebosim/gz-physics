@@ -63,6 +63,7 @@
 #include <sdf/Visual.hh>
 #include <sdf/World.hh>
 
+#include "AddedMassFeatures.hh"
 #include "CustomMeshShape.hh"
 
 namespace gz {
@@ -373,6 +374,7 @@ static ShapeAndTransform ConstructGeometry(
 
 }  // namespace
 
+/////////////////////////////////////////////////
 dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
     const std::string &_worldName, const std::string &_jointModelName,
     const std::string &_linkRelativeName)
@@ -621,35 +623,6 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
-  // If added mass is provided, add that to DART's computed spatial tensor
-  // TODO(chapulina) Put in another feature
-  if (sdfInertia.FluidAddedMass().has_value())
-  {
-    // Note that the ordering of the spatial inertia matrix used in DART is
-    // different than the one used in Gazebo and SDF.
-    math::Matrix6d featherstoneMatrix;
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_LEFT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::BOTTOM_RIGHT));
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_RIGHT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::BOTTOM_LEFT));
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_LEFT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::TOP_RIGHT));
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_RIGHT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::TOP_LEFT));
-
-    // If using added mass, gravity needs to be applied as a separate
-    // force at the center of mass using F=ma;
-    bodyProperties.mGravityMode = false;
-
-    bodyProperties.mInertia.setSpatialTensor(
-        bodyProperties.mInertia.getSpatialTensor() +
-        math::eigen3::convert(featherstoneMatrix)
-    );
-  }
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
@@ -687,6 +660,22 @@ Identity SDFFeatures::ConstructSdfLink(
   this->AddJoint(joint);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
+
+  if (sdfInertia.FluidAddedMass().has_value())
+  {
+    auto* amf = dynamic_cast<AddedMassFeatures*>(this);
+
+    if (nullptr == amf)
+    {
+      gzwarn << "Link [" << _sdfLink.Name() << "] in model [" << modelInfo.model->getName() <<
+        "] has added mass specified in SDF, but AddedMassFeatures" <<
+        "was not requested on this engine.  Added mass will not be applied.\n";
+    }
+    else
+    {
+      amf->SetLinkAddedMass(linkIdentity, sdfInertia.FluidAddedMass().value());
+    }
+  }
 
   if (_sdfLink.Name() == modelInfo.canonicalLinkName ||
       (modelInfo.canonicalLinkName.empty() &&

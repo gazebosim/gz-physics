@@ -1,6 +1,7 @@
 set(TEST_TYPE "COMMON_TEST")
 
 set(tests
+  added_mass
   addexternalforcetorque
   basic_test
   collisions
