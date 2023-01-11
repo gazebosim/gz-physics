@@ -442,6 +442,11 @@ Identity EntityManagementFeatures::GetJoint(
 Identity EntityManagementFeatures::GetJoint(
     const Identity &_modelID, const std::string &_jointName) const
 {
+  /// \todo(srmainwaring) remove debug code
+  // std::cerr << this->DebugModels();
+  // std::cerr << this->DebugLinks();
+  // std::cerr << this->DebugJoints();
+
   const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   for (const auto &jointInfo : modelInfo->joints)
   {

@@ -647,6 +647,70 @@ class Base : public Implements3d<FeatureList<Feature>>
   /// \brief Map from welded body nodes to the LinkInfo for the original link
   /// they are welded to. This is useful when detaching joints.
   public: std::unordered_map<DartBodyNode*, LinkInfo*> linkByWeldedNode;
+
+  /// \todo(srmainwaring) remove debug code
+  public: std::string DebugModels() const
+  {
+    std::stringstream ss;
+    ss << "*** Models ***\n";
+    for (size_t id = 0, i = 0; i < models.size(); ++id)
+    {
+      if (models.HasEntity(id))
+      {
+        ++i;
+        auto modelInfo = models.at(id);
+        ss << "ModelID:     " << id << "\n"
+           << "LocalName:   " << modelInfo->localName << "\n"
+           << "NodeName:    " << modelInfo->model->getName() << "\n"
+           << "NumModels:   " << modelInfo->nestedModels.size() << "\n"
+           << "NumLinks:    " << modelInfo->links.size() << "\n"
+           << "NumJoints:   " << modelInfo->model->getNumJoints() << "\n";
+        for (auto& joint :  modelInfo->model->getJoints())
+        {
+          ss  << "  Joint:     " << joint->getName() << "\n";
+        }
+      }
+    }
+    return ss.str();
+  }
+
+  /// \todo(srmainwaring) remove debug code
+  public: std::string DebugLinks() const
+  {
+    std::stringstream ss;
+    ss << "*** Links ***\n";
+    for (size_t id = 0, i = 0; i < links.size(); ++id)
+    {
+      if (links.HasEntity(id))
+      {
+        ++i;
+        auto linkInfo = links.at(id);
+        ss << "LinkID       " << id << "\n"
+           << "Name:        " << linkInfo->name << "\n"
+           << "NodeName:    " << linkInfo->link->getName() << "\n";
+      }
+    }
+    return ss.str();
+  }
+
+  /// \todo(srmainwaring) remove debug code
+  public: std::string DebugJoints() const
+  {
+    std::stringstream ss;
+    ss << "*** Joints ***\n";
+    for (size_t id = 0, i = 0; i < joints.size(); ++id)
+    {
+      if (joints.HasEntity(id))
+      {
+        ++i;
+        auto jointInfo = joints.at(id);
+        ss << "JointID      " << id << "\n"
+           << "NodeName:    " << jointInfo->joint->getName() << "\n";
+      }
+    }
+    return ss.str();
+  }
+
 };
 
 }
