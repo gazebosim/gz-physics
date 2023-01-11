@@ -15,16 +15,16 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_GETENTITIESFEATURE_HH_
 
 #include <string>
 
-#include <ignition/physics/ConstructEmpty.hh>
-#include <ignition/physics/Shape.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/RemoveEntities.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/Shape.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/Implements.hh>
 
 #include "Base.hh"
 

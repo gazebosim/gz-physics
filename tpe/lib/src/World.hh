@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_WORLD_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_WORLD_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_WORLD_HH_
 
 #include <vector>
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/utils/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 #include "CollisionDetector.hh"
 #include "Entity.hh"

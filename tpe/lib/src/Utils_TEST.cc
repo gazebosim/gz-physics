@@ -19,7 +19,7 @@
 
 #include "Utils.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

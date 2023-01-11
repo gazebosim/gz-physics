@@ -24,7 +24,7 @@
 #include <sdf/Sphere.hh>
 #include <sdf/Geometry.hh>
 #include <sdf/World.hh>
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
 namespace ignition {
 namespace physics {

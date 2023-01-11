@@ -18,14 +18,14 @@
 #include <string>
 #include <memory>
 
-#include <ignition/common/Profiler.hh>
+#include <gz/common/Profiler.hh>
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 #include "World.hh"
 #include "Model.hh"
 #include "Link.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

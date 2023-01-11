@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2022 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,49 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
-#ifndef IGNITION_PHYSICS_SDF_CONSTRUCTJOINT_HH_
-#define IGNITION_PHYSICS_SDF_CONSTRUCTJOINT_HH_
-
-#include <sdf/Joint.hh>
-
-#include <ignition/physics/FeatureList.hh>
-
-namespace ignition {
-namespace physics {
-namespace sdf {
-
-class ConstructSdfJoint : public virtual Feature
-{
-  public: template <typename PolicyT, typename FeaturesT>
-  class Model : public virtual Feature::Model<PolicyT, FeaturesT>
-  {
-    public: using JointPtrType = JointPtr<PolicyT, FeaturesT>;
-
-    public: JointPtrType ConstructJoint(const ::sdf::Joint &_joint);
-  };
-
-  public: template <typename PolicyT>
-  class Implementation : public virtual Feature::Implementation<PolicyT>
-  {
-    public: virtual Identity ConstructSdfJoint(
-        const Identity &_model, const ::sdf::Joint &_joint) = 0;
-  };
-};
-
-/////////////////////////////////////////////////
-template <typename PolicyT, typename FeaturesT>
-auto ConstructSdfJoint::Model<PolicyT, FeaturesT>::ConstructJoint(
-    const ::sdf::Joint &_joint) -> JointPtrType
-{
-  return JointPtrType(this->pimpl,
-        this->template Interface<ConstructSdfJoint>()
-              ->ConstructSdfJoint(this->identity, _joint));
-}
-
-}
-}
-}
-
-#endif
+#include <gz/physics/sdf/ConstructJoint.hh>
+#include <ignition/physics/config.hh>

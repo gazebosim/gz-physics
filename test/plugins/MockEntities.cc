@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include <ignition/physics/Register.hh>
+#include <gz/physics/Register.hh>
 
 namespace mock
 {

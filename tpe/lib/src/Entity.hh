@@ -15,17 +15,17 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_ENTITY_HH_
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
 
-#include <ignition/math/AxisAlignedBox.hh>
-#include <ignition/math/Pose3.hh>
-#include "ignition/physics/tpelib/Export.hh"
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/math/Pose3.hh>
+#include "gz/physics/tpelib/Export.hh"
 
 namespace ignition {
 namespace physics {

@@ -341,9 +341,47 @@
     * [Pull request 111](https://github.com/ignitionrobotics/ign-physics/pull/111)
     * [Pull request 112](https://github.com/ignitionrobotics/ign-physics/pull/112)
 
-## Ignition Physics 2.x
+## Gazebo Physics 2.x
 
-### Ignition Physics 2.x.x (20XX-XX-XX)
+### Gazebo Physics 2.6.0 (2022-11-30)
+
+1. Migrate Ignition headers
+    * [Pull request #402](https://github.com/gazebosim/gz-physics/pull/402)
+
+### Gazebo Physics 2.5.1 (2022-08-16)
+
+1. Remove redundant namespace references
+    * [Pull request #400](https://github.com/gazebosim/gz-physics/pull/400)
+
+1. Add code coverage ignore file
+    * [Pull request #388](https://github.com/gazebosim/gz-physics/pull/388)
+
+1. Change `IGN_DESIGNATION` to `GZ_DESIGNATION`
+    * [Pull request #390](https://github.com/gazebosim/gz-physics/pull/390)
+
+1. Ignition -> Gazebo
+    * [Pull request #386](https://github.com/gazebosim/gz-physics/pull/386)
+
+1. Make `CONFIG` a CMake pass-through option for DART
+    * [Pull request #339](https://github.com/gazebosim/gz-physics/pull/339)
+
+1. Remove explicitly-defined copy constructor/operator for `Shape`
+    * [Pull request #328](https://github.com/gazebosim/gz-physics/pull/328)
+
+1. Fix `ExpectData` compiler warnings
+    * [Pull request #335](https://github.com/gazebosim/gz-physics/pull/335)
+
+1. Fix copying of `ExpectData` objects
+    * [Pull request #337](https://github.com/gazebosim/gz-physics/pull/337)
+
+1. Fix Apache license version
+    * [Pull request #326](https://github.com/gazebosim/gz-physics/pull/326)
+
+1. Tutorial fixes
+    * [Pull request #318](https://github.com/gazebosim/gz-physics/pull/318)
+
+1. Add `project()` to examples
+    * [Pull request #322](https://github.com/gazebosim/gz-physics/pull/322)
 
 ### Ignition Physics 2.5.0 (2021-11-09)
 

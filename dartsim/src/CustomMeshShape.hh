@@ -15,23 +15,23 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
-#define IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
 
 #include <dart/dynamics/MeshShape.hpp>
-#include <ignition/common/Mesh.hh>
+#include <gz/common/Mesh.hh>
 
 namespace ignition {
 namespace physics {
 namespace dartsim {
 
 /// \brief This class creates a custom derivative of dartsim's MeshShape class
-/// which allows an ignition::common::Mesh to be converted into a MeshShape that
+/// which allows an common::Mesh to be converted into a MeshShape that
 /// can be used by dartsim.
 class CustomMeshShape : public dart::dynamics::MeshShape
 {
   public: CustomMeshShape(
-      const ignition::common::Mesh &_input,
+      const common::Mesh &_input,
       const Eigen::Vector3d &_scale);
 };
 
@@ -39,4 +39,4 @@ class CustomMeshShape : public dart::dynamics::MeshShape
 }
 }
 
-#endif  // IGNITION_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
+#endif  // GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_

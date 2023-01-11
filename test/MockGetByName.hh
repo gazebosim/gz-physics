@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKGETBYNAME_HH_
-#define IGNITION_PHYSICS_TEST_MOCKGETBYNAME_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKGETBYNAME_HH_
+#define GZ_PHYSICS_TEST_MOCKGETBYNAME_HH_
 
 #include <memory>
 
-#include <ignition/physics/FeatureList.hh>
+#include <gz/physics/FeatureList.hh>
 
 namespace mock
 {
