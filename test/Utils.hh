@@ -85,7 +85,7 @@ struct Rotation<Scalar, 2>
   static void Randomize(gz::physics::Pose<Scalar, 2> &_pose)
   {
     _pose.rotate(Eigen::Rotation2D<Scalar>(
-                   math::Rand::DblUniform(0, 2*GZ_PI)));
+                   math::Rand::DblUniform(0, 2 * GZ_PI)));
   }
 
   static bool Equal(
@@ -153,7 +153,7 @@ bool Equal(const Vector<Scalar, Dim> &_vec1,
   const double scale = std::max(static_cast<Scalar>(1.0),
                                 std::max(_vec1.norm(), _vec2.norm()));
   const double diff = (_vec1 - _vec2).norm();
-  if (diff/scale <= _tolerance)
+  if (diff / scale <= _tolerance)
     return true;
 
   std::cout << "Scaled difference in " << _label << ": " << diff/scale
@@ -260,7 +260,6 @@ class AssertVectorApprox
   /// \brief Tolerance for comparison
   private: double tol;
 };
-
 
 }  // namespace gz::physics::test
 
