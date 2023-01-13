@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DETAIL_ELLIPSOIDSHAPE_HH_
-#define IGNITION_PHYSICS_DETAIL_ELLIPSOIDSHAPE_HH_
+#ifndef GZ_PHYSICS_DETAIL_ELLIPSOIDSHAPE_HH_
+#define GZ_PHYSICS_DETAIL_ELLIPSOIDSHAPE_HH_
 
 #include <string>
 
-#include <ignition/physics/EllipsoidShape.hh>
+#include <gz/physics/EllipsoidShape.hh>
 
 namespace ignition
 {
