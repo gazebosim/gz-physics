@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKJOINTS_HH_
-#define IGNITION_PHYSICS_TEST_MOCKJOINTS_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKJOINTS_HH_
+#define GZ_PHYSICS_TEST_MOCKJOINTS_HH_
 
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/Joint.hh>
-#include <ignition/physics/RevoluteJoint.hh>
-#include <ignition/physics/FreeJoint.hh>
-#include <ignition/physics/PrismaticJoint.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/Joint.hh>
+#include <gz/physics/RevoluteJoint.hh>
+#include <gz/physics/FreeJoint.hh>
+#include <gz/physics/PrismaticJoint.hh>
 
 namespace mock
 {

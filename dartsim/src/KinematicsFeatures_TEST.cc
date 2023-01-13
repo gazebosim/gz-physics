@@ -19,19 +19,19 @@
 
 #include <iostream>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/physics/RequestEngine.hh>
 
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 // Features
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Joint.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/Joint.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <limits>
 #include <sdf/Model.hh>
@@ -40,9 +40,9 @@
 
 #include "test/Utils.hh"
 
-using namespace ignition;
+using namespace gz;
 
-using TestFeatureList = ignition::physics::FeatureList<
+using TestFeatureList = physics::FeatureList<
   physics::ForwardStep,
   physics::GetEntities,
   physics::JointFrameSemantics,
@@ -57,14 +57,14 @@ class KinematicsFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
+    plugin::PluginPtr dartsim =
         loader.Instantiate("ignition::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;

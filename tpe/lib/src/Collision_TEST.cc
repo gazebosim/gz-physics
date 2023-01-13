@@ -21,7 +21,7 @@
 #include "Shape.hh"
 #include "Link.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 /////////////////////////////////////////////////
@@ -60,11 +60,11 @@ TEST(Collision, BoxShape)
 {
   Collision collision;
   BoxShape boxShape;
-  boxShape.SetSize(ignition::math::Vector3d(0.5, 0.5, 0.5));
+  boxShape.SetSize(math::Vector3d(0.5, 0.5, 0.5));
   collision.SetShape(boxShape);
   auto result = collision.GetShape();
   ASSERT_NE(nullptr, result);
-  EXPECT_EQ(ignition::math::Vector3d(0.25, 0.25, 0.25),
+  EXPECT_EQ(math::Vector3d(0.25, 0.25, 0.25),
       result->GetBoundingBox().Max());
 }
 
@@ -92,7 +92,7 @@ TEST(Collision, CylinderShape)
   collision.SetShape(cylinderShape);
   auto result = collision.GetShape();
   ASSERT_NE(nullptr, result);
-  EXPECT_EQ(ignition::math::Vector3d(2.0, 2.0, 1.5),
+  EXPECT_EQ(math::Vector3d(2.0, 2.0, 1.5),
       result->GetBoundingBox().Max());
 }
 
@@ -117,7 +117,7 @@ TEST(Collision, SphereShape)
   collision.SetShape(sphereShape);
   auto result = collision.GetShape();
   ASSERT_NE(nullptr, result);
-  EXPECT_EQ(ignition::math::Vector3d(2.0, 2.0, 2.0),
+  EXPECT_EQ(math::Vector3d(2.0, 2.0, 2.0),
       result->GetBoundingBox().Max());
 }
 

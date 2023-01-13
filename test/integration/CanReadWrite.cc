@@ -19,9 +19,9 @@
 
 #define IGNITION_UNITTEST_EXPECTDATA_ACCESS
 
-#include "ignition/physics/SpecifyData.hh"
-#include "ignition/physics/CanReadData.hh"
-#include "ignition/physics/CanWriteData.hh"
+#include "gz/physics/SpecifyData.hh"
+#include "gz/physics/CanReadData.hh"
+#include "gz/physics/CanWriteData.hh"
 
 #include "utils/TestDataTypes.hh"
 

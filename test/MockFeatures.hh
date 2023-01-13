@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKFEATURES_HH_
-#define IGNITION_PHYSICS_TEST_MOCKFEATURES_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKFEATURES_HH_
+#define GZ_PHYSICS_TEST_MOCKFEATURES_HH_
 
 #include "MockGetByName.hh"
 #include "MockSetName.hh"

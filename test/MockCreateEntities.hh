@@ -15,13 +15,13 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TEST_MOCKCREATEENTITY_HH_
-#define IGNITION_PHYSICS_TEST_MOCKCREATEENTITY_HH_
+#ifndef GZ_PHYSICS_TEST_MOCKCREATEENTITY_HH_
+#define GZ_PHYSICS_TEST_MOCKCREATEENTITY_HH_
 
 #include <memory>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/RelativeQuantity.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/RelativeQuantity.hh>
 
 namespace mock
 {

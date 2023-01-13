@@ -19,40 +19,42 @@
 
 #include <iostream>
 
-#include <ignition/physics/FindFeatures.hh>
-#include <ignition/plugin/Loader.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/physics/RequestEngine.hh>
 
-#include <ignition/math/eigen3/Conversions.hh>
+#include <gz/math/eigen3/Conversions.hh>
 
 // Features
-#include <ignition/physics/ForwardStep.hh>
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetBoundingBox.hh>
-#include <ignition/physics/Link.hh>
+#include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/GetBoundingBox.hh>
+#include <gz/physics/Link.hh>
 #include <ignition/physics/World.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
 
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
 #include "test/Utils.hh"
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::AddLinkExternalForceTorque,
-    ignition::physics::ForwardStep,
+using namespace ignition;
+
+struct TestFeatureList : physics::FeatureList<
+    physics::AddLinkExternalForceTorque,
+    physics::ForwardStep,
     ignition::physics::Gravity,
-    ignition::physics::sdf::ConstructSdfWorld,
-    ignition::physics::sdf::ConstructSdfModel,
-    ignition::physics::sdf::ConstructSdfLink,
-    ignition::physics::GetEntities,
-    ignition::physics::GetLinkBoundingBox,
-    ignition::physics::GetModelBoundingBox
+    physics::sdf::ConstructSdfWorld,
+    physics::sdf::ConstructSdfModel,
+    physics::sdf::ConstructSdfLink,
+    physics::GetEntities,
+    physics::GetLinkBoundingBox,
+    physics::GetModelBoundingBox
 > { };
 
-using namespace ignition;
+using namespace gz;
 
 using TestEnginePtr = physics::Engine3dPtr<TestFeatureList>;
 using TestWorldPtr = physics::World3dPtr<TestFeatureList>;
@@ -61,14 +63,14 @@ class LinkFeaturesFixture : public ::testing::Test
 {
   protected: void SetUp() override
   {
-    ignition::plugin::Loader loader;
+    plugin::Loader loader;
     loader.LoadLib(dartsim_plugin_LIB);
 
-    ignition::plugin::PluginPtr dartsim =
+    plugin::PluginPtr dartsim =
         loader.Instantiate("ignition::physics::dartsim::Plugin");
 
     this->engine =
-        ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+        physics::RequestEngine3d<TestFeatureList>::From(dartsim);
     ASSERT_NE(nullptr, this->engine);
   }
   protected: TestEnginePtr engine;
@@ -85,7 +87,7 @@ class AssertVectorApprox
               const char *_mExpr, const char *_nExpr, Eigen::Vector3d _m,
               Eigen::Vector3d _n)
   {
-    if (ignition::physics::test::Equal(_m, _n, this->tol))
+    if (physics::test::Equal(_m, _n, this->tol))
       return ::testing::AssertionSuccess();
 
     return ::testing::AssertionFailure()
@@ -148,9 +150,9 @@ TEST_F(LinkFeaturesFixture, LinkForceTorque)
   linkSDF.SetInertial({massMatrix, math::Pose3d::Zero});
   auto link = model->ConstructLink(linkSDF);
 
-  ignition::physics::ForwardStep::Input input;
-  ignition::physics::ForwardStep::State state;
-  ignition::physics::ForwardStep::Output output;
+  physics::ForwardStep::Input input;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Output output;
 
   AssertVectorApprox vectorPredicate(1e-4);
 

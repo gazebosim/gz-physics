@@ -15,7 +15,7 @@
  *
 */
 
-#include <ignition/physics/Register.hh>
+#include <gz/physics/Register.hh>
 
 #include "Base.hh"
 #include "CustomFeatures.hh"

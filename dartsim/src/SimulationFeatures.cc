@@ -29,14 +29,13 @@
 #include <dart/constraint/ContactSurface.hpp>
 #endif
 
-#include <ignition/common/Profiler.hh>
 
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
-
-#include "ignition/physics/GetContacts.hh"
-
 #include "SimulationFeatures.hh"
+
+#include "gz/common/Profiler.hh"
+#include "gz/physics/GetContacts.hh"
 
 #if DART_VERSION_AT_LEAST(6, 13, 0)
 // The ContactSurfaceParams class was first added to version 6.10 of our fork

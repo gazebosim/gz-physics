@@ -20,8 +20,8 @@
 #include <map>
 #include <vector>
 
-#include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/Register.hh>
+#include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/Register.hh>
 
 namespace mock
 {

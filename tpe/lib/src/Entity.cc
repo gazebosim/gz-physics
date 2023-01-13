@@ -55,7 +55,7 @@ class ignition::physics::tpelib::EntityPrivate
   public: Entity *parent = nullptr;
 };
 
-using namespace ignition;
+using namespace gz;
 using namespace physics;
 using namespace tpelib;
 

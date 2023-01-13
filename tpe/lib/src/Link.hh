@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
-#define IGNITION_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#ifndef GZ_PHYSICS_TPE_LIB_SRC_LINK_HH_
+#define GZ_PHYSICS_TPE_LIB_SRC_LINK_HH_
 
-#include <ignition/utils/SuppressWarning.hh>
+#include <gz/utils/SuppressWarning.hh>
 
-#include "ignition/physics/tpelib/Export.hh"
+#include "gz/physics/tpelib/Export.hh"
 
 #include "Entity.hh"
 

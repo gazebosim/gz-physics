@@ -28,22 +28,22 @@
 
 #include <tuple>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
 #include <ignition/physics/FrameSemantics.hh>
-#include <ignition/physics/GetEntities.hh>
-#include <ignition/physics/Joint.hh>
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/Joint.hh>
+#include <gz/physics/RequestEngine.hh>
 #include <ignition/physics/RevoluteJoint.hh>
 
 #include <ignition/physics/sdf/ConstructCollision.hh>
-#include <ignition/physics/sdf/ConstructJoint.hh>
-#include <ignition/physics/sdf/ConstructLink.hh>
-#include <ignition/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructJoint.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
 #include <ignition/physics/sdf/ConstructNestedModel.hh>
-#include <ignition/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructWorld.hh>
 
-#include <ignition/physics/dartsim/World.hh>
+#include <gz/physics/dartsim/World.hh>
 
 #include <sdf/Collision.hh>
 #include <sdf/Joint.hh>
@@ -54,36 +54,38 @@
 
 #include <test/Utils.hh>
 
-struct TestFeatureList : ignition::physics::FeatureList<
-    ignition::physics::GetEntities,
-    ignition::physics::GetBasicJointState,
-    ignition::physics::SetBasicJointState,
+using namespace ignition;
+
+struct TestFeatureList : physics::FeatureList<
+    physics::GetEntities,
+    physics::GetBasicJointState,
+    physics::SetBasicJointState,
     ignition::physics::LinkFrameSemantics,
-    ignition::physics::dartsim::RetrieveWorld,
+    physics::dartsim::RetrieveWorld,
     ignition::physics::sdf::ConstructSdfCollision,
-    ignition::physics::sdf::ConstructSdfJoint,
-    ignition::physics::sdf::ConstructSdfLink,
-    ignition::physics::sdf::ConstructSdfModel,
+    physics::sdf::ConstructSdfJoint,
+    physics::sdf::ConstructSdfLink,
+    physics::sdf::ConstructSdfModel,
     ignition::physics::sdf::ConstructSdfNestedModel,
-    ignition::physics::sdf::ConstructSdfWorld
+    physics::sdf::ConstructSdfWorld
 > { };
 
-using World = ignition::physics::World3d<TestFeatureList>;
-using WorldPtr = ignition::physics::World3dPtr<TestFeatureList>;
+using World = physics::World3d<TestFeatureList>;
+using WorldPtr = physics::World3dPtr<TestFeatureList>;
 using ModelPtr = ignition::physics::Model3dPtr<TestFeatureList>;
 using LinkPtr = ignition::physics::Link3dPtr<TestFeatureList>;
 
 /////////////////////////////////////////////////
 auto LoadEngine()
 {
-  ignition::plugin::Loader loader;
+  plugin::Loader loader;
   loader.LoadLib(dartsim_plugin_LIB);
 
-  ignition::plugin::PluginPtr dartsim =
+  plugin::PluginPtr dartsim =
       loader.Instantiate("ignition::physics::dartsim::Plugin");
 
   auto engine =
-      ignition::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+      physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   return engine;
 }
 
@@ -749,7 +751,7 @@ TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
   dartWorld->step();
 
   // Step once and check
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expWorldPose, link2->getWorldTransform(), 1e-3));
 }
 
@@ -780,13 +782,13 @@ TEST_P(SDFFeatures_FrameSemantics, CollisionRelativeTo)
   Eigen::Isometry3d expPose;
   expPose = Eigen::Translation3d(0, 0, -1);
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 
   // Step once and check, the relative pose should still be the same
   dartWorld->step();
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
@@ -817,7 +819,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
   Eigen::Isometry3d link1ExpPose;
   link1ExpPose = Eigen::Translation3d(1, 0, 1);
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link1ExpPose, link1->getWorldTransform(), 1e-5));
 
   // Expect the world pose of L2 to be the same as the world pose of F2, which
@@ -825,15 +827,15 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
   Eigen::Isometry3d link2ExpPose;
   link2ExpPose = Eigen::Translation3d(1, 0, 0);
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link2ExpPose, link2->getWorldTransform(), 1e-5));
 
   // Step once and check
   dartWorld->step();
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link1ExpPose, link1->getWorldTransform(), 1e-5));
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link2ExpPose, link2->getWorldTransform(), 1e-5));
 }
 
@@ -864,13 +866,13 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
   Eigen::Isometry3d expPose;
   expPose = Eigen::Translation3d(0, 0, 1);
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 
   // Step once and check
   dartWorld->step();
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
@@ -901,13 +903,13 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 
   // Since we can't get the skeleton's world transform, we use the world
   // transform of L1 which is at the origin of the model frame.
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, link1->getWorldTransform(), 1e-5));
 
   // Step once and check
   dartWorld->step();
 
-  EXPECT_TRUE(ignition::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, link1->getWorldTransform(), 1e-5));
 }
 

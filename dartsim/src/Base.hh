@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef IGNITION_PHYSICS_DARTSIM_BASE_HH_
-#define IGNITION_PHYSICS_DARTSIM_BASE_HH_
+#ifndef GZ_PHYSICS_DARTSIM_BASE_HH_
+#define GZ_PHYSICS_DARTSIM_BASE_HH_
 
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/constraint/WeldJointConstraint.hpp>
@@ -34,10 +34,10 @@
 #include <utility>
 #include <vector>
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 #include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Inertial.hh>
-#include <ignition/physics/Implements.hh>
+#include <gz/physics/Implements.hh>
 
 #include <sdf/Types.hh>
 

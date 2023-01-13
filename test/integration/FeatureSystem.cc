@@ -17,9 +17,9 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/plugin/Loader.hh>
+#include <gz/plugin/Loader.hh>
 
-#include <ignition/physics/RequestEngine.hh>
+#include <gz/physics/RequestEngine.hh>
 #include "../MockFeatures.hh"
 
 using namespace ignition::physics;
@@ -43,7 +43,7 @@ TEST(FeatureSystem, MockPluginInvalidFeatures)
 {
   // mismatch between 2d and 3d
   mock::MockEngine3dPtr engine =
-      ignition::physics::RequestEngine3d<mock::MockFeatureList>::From(
+      RequestEngine3d<mock::MockFeatureList>::From(
          LoadMockPlugin("mock::EntitiesPlugin2d"));
   EXPECT_EQ(nullptr, engine);
 }
@@ -52,7 +52,7 @@ TEST(FeatureSystem, MockPluginInvalidFeatures)
 TEST(FeatureSystem, MockPlugin)
 {
   mock::MockEngine3dPtr engine =
-      ignition::physics::RequestEngine3d<mock::MockFeatureList>::From(
+      RequestEngine3d<mock::MockFeatureList>::From(
          LoadMockPlugin("mock::EntitiesPlugin3d"));
 
   EXPECT_EQ("Only one engine", engine->Name());
@@ -116,7 +116,7 @@ TEST(FeatureSystem, MockPlugin)
 TEST(FeatureSystem, MockCenterOfMass3d)
 {
   mock::MockEngine3dPtr engine =
-      ignition::physics::RequestEngine3d<mock::MockFeatureList>::From(
+      RequestEngine3d<mock::MockFeatureList>::From(
         LoadMockPlugin("mock::EntitiesPlugin3d"));
 
   mock::MockWorld3dPtr world = engine->GetWorld("Some world");
@@ -166,7 +166,7 @@ TEST(FeatureSystem, MockCenterOfMass3d)
 TEST(FeatureSystem, MockCenterOfMass2d)
 {
   mock::MockEngine2dPtr engine =
-      ignition::physics::RequestEngine2d<mock::MockFeatureList>::From(
+      RequestEngine2d<mock::MockFeatureList>::From(
         LoadMockPlugin("mock::EntitiesPlugin2d"));
 
   mock::MockWorld2dPtr world = engine->GetWorld("Some world");
