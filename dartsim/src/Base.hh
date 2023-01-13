@@ -86,10 +86,6 @@ struct JointInfo
 {
   dart::dynamics::JointPtr joint;
   dart::dynamics::SimpleFramePtr frame;
-  /// \brief It may be necessary for dartsim to rename a Joint (eg. when
-  /// moving the Joint to a new skeleton), so we store the Gazebo-specified
-  /// name of the Joint here.
-  std::string name;
 };
 
 struct ModelInfo
@@ -500,9 +496,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     auto jointInfo = std::make_shared<JointInfo>();
     this->joints.idToObject[id] = jointInfo;
     jointInfo->joint = _joint;
-    // The name of the dart Joint during creation is assumed to be the
-    // Gazebo-specified name.
-    jointInfo->name = _joint->getName();
 
     this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;

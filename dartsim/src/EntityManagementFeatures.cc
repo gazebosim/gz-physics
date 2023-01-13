@@ -450,7 +450,7 @@ Identity EntityManagementFeatures::GetJoint(
   const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   for (const auto &jointInfo : modelInfo->joints)
   {
-    if (_jointName == jointInfo->name)
+    if (_jointName == jointInfo->joint->getName())
     {
       // If the joint doesn't exist in "joints", it means the containing entity
       // has been removed.
