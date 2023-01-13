@@ -598,13 +598,14 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   auto nestedModel = parentModel->GetNestedModel("nested_model");
   ASSERT_NE(nullptr, nestedModel);
 
-  /// \todo(srmainwaring) this is failing. DART associates the nested joint
-  /// with the skeleton of the top level model when the nested model is
-  /// joined to the parent model, but Gazebo should not find grandchild
-  /// joints when querying a parent model.
+  // DART associates the nested joint with the skeleton of the top level
+  // model when the nested model is joined to the parent model, but Gazebo
+  // should not find grandchild joints when querying a parent model.
   auto nestedJoint = parentModel->GetJoint("nested_joint");
-  // EXPECT_NE(nullptr, nestedJoint);
   EXPECT_EQ(nullptr, nestedJoint);
+
+  // The nested_joint should be found when querying the nested model.
+  EXPECT_NE(nullptr, nestedModel->GetJoint("nested_joint"));
 
   EXPECT_EQ(1u, parentModel->GetLinkCount());
   EXPECT_NE(nullptr, parentModel->GetLink("link1"));
