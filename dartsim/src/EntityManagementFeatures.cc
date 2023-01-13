@@ -442,36 +442,40 @@ Identity EntityManagementFeatures::GetJoint(
 Identity EntityManagementFeatures::GetJoint(
     const Identity &_modelID, const std::string &_jointName) const
 {
-  /// \todo(srmainwaring) remove debug code
-  // std::cerr << this->DebugModels();
-  // std::cerr << this->DebugLinks();
-  // std::cerr << this->DebugJoints();
-
   const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
-  for (const auto &jointInfo : modelInfo->joints)
-  {
-    if (_jointName == jointInfo->joint->getName())
-    {
-      // If the joint doesn't exist in "joints", it means the containing entity
-      // has been removed.
-      if (this->joints.HasEntity(jointInfo->joint))
-      {
-        const std::size_t jointID = this->joints.IdentityOf(jointInfo->joint);
-        return this->GenerateIdentity(jointID, this->joints.at(jointID));
-      }
-      else
-      {
-        // TODO(anyone) It's not clear what to do when `GetLink` is called on a
-        // model that has been removed. Right now we are returning an invalid
-        // identity, but that could cause a segfault if the user doesn't check
-        // the returned value before using it.
-        gzwarn << "No joint named ["
-            << _jointName << "] for modelID [" << _modelID.id << "]\n";
 
-        return this->GenerateInvalidId();
-      }
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  if (worldID == INVALID_ENTITY_ID)
+  {
+    gzerr << "World of model [" << modelInfo->model->getName()
+          << "] could not be found for joint [" << _jointName
+          << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldID);
+  const std::string fullJointName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(modelInfo->model->getName(), _jointName));
+  
+  auto it = this->jointsByName.find(fullJointName);
+  if (it != this->jointsByName.end())
+  {
+    auto joint = it->second;
+    if (this->joints.HasEntity(joint))
+    {
+      const std::size_t jointID = this->joints.IdentityOf(joint);
+      return this->GenerateIdentity(jointID, this->joints.at(jointID));
     }
   }
+
+  // TODO(anyone) It's not clear what to do when `GetLink` is called on a
+  // model that has been removed. Right now we are returning an invalid
+  // identity, but that could cause a segfault if the user doesn't check
+  // the returned value before using it.
+  gzwarn << "No joint named ["
+      << _jointName << "] for modelID [" << _modelID.id << "]\n";
+
   return this->GenerateInvalidId();
 }
 
