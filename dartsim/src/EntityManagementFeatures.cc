@@ -457,7 +457,7 @@ Identity EntityManagementFeatures::GetJoint(
   const std::string fullJointName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(modelInfo->model->getName(), _jointName));
-  
+
   auto it = this->jointsByName.find(fullJointName);
   if (it != this->jointsByName.end())
   {
