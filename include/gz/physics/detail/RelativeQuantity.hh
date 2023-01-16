@@ -22,7 +22,7 @@
 #include <utility>
 
 #include <gz/physics/RelativeQuantity.hh>
-#include "ignition/physics/Geometry.hh"
+#include "gz/physics/Geometry.hh"
 
 namespace ignition
 {
