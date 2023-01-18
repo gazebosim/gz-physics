@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <ignition/physics/heightmap/HeightmapShape.hh>
+#include <gz/physics/heightmap/HeightmapShape.hh>
 
 namespace ignition
 {

@@ -19,7 +19,7 @@
 #define GZ_PHYSICS_JOINT_HH_
 
 #include <gz/physics/FeatureList.hh>
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/Geometry.hh>
 
 namespace ignition

@@ -15,13 +15,13 @@
  *
  */
 
-#ifndef IGNITION_PHYSICS_WORLD_HH_
-#define IGNITION_PHYSICS_WORLD_HH_
+#ifndef GZ_PHYSICS_WORLD_HH_
+#define GZ_PHYSICS_WORLD_HH_
 
 #include <string>
 
-#include <ignition/physics/FeatureList.hh>
-#include <ignition/physics/FrameSemantics.hh>
+#include <gz/physics/FeatureList.hh>
+#include <gz/physics/FrameSemantics.hh>
 
 namespace ignition
 {
