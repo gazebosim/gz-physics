@@ -1,0 +1,143 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::v0::Physics">
+    </plugin>
+
+    <model name="sphere">
+      <pose>0 0 2 0 0 0</pose>
+      <link name="sphere_link">
+        <pose>0.0 0.0 0.0 0 0 0</pose>
+        <inertial>
+          <inertia>
+            <ixx>0.4</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4</iyy>
+            <iyz>0</iyz>
+            <izz>0.4</izz>
+          </inertia>
+          <mass>1.0</mass>
+        </inertial>
+        <visual name="sphere_visual">
+          <pose>0.0 0.0 0.0 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>1</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <collision name="sphere_collision">
+          <pose>0.0 0.0 0.0 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>1</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="sphere_zero_added_mass">
+      <pose>0 0 2 0 0 0</pose>
+      <link name="sphere_link">
+        <pose>0.0 0.0 0.0 0 0 0</pose>
+        <inertial>
+          <inertia>
+            <ixx>0.4</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4</iyy>
+            <iyz>0</iyz>
+            <izz>0.4</izz>
+          </inertia>
+          <fluid_added_mass>
+            <xx>0</xx>
+            <xy>0</xy>
+            <xz>0</xz>
+            <xp>0</xp>
+            <xq>0</xq>
+            <xr>0</xr>
+            <yy>0</yy>
+            <yz>0</yz>
+            <yp>0</yp>
+            <yq>0</yq>
+            <yr>0</yr>
+            <zz>0</zz>
+            <zp>0</zp>
+            <zq>0</zq>
+            <zr>0</zr>
+            <pp>0</pp>
+            <pq>0</pq>
+            <pr>0</pr>
+            <qq>0</qq>
+            <qr>0</qr>
+            <rr>0</rr>
+          </fluid_added_mass>
+          <mass>1.0</mass>
+        </inertial>
+      </link>
+    </model>
+
+    <model name="sphere_added_mass">
+      <pose>0 0 2 0 0 0</pose>
+      <link name="sphere_link">
+        <pose>0.0 0.0 0.0 0 0 0</pose>
+        <inertial>
+          <inertia>
+            <ixx>0.4</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4</iyy>
+            <iyz>0</iyz>
+            <izz>0.4</izz>
+          </inertia>
+          <fluid_added_mass>
+            <xx>1</xx>
+            <xy>0</xy>
+            <xz>0</xz>
+            <xp>0</xp>
+            <xq>0</xq>
+            <xr>0</xr>
+            <yy>1</yy>
+            <yz>0</yz>
+            <yp>0</yp>
+            <yq>0</yq>
+            <yr>0</yr>
+            <zz>1</zz>
+            <zp>0</zp>
+            <zq>0</zq>
+            <zr>0</zr>
+            <pp>0</pp>
+            <pq>0</pq>
+            <pr>0</pr>
+            <qq>0</qq>
+            <qr>0</qr>
+            <rr>0</rr>
+          </fluid_added_mass>
+          <mass>1.0</mass>
+        </inertial>
+      </link>
+    </model>
+
+    <model name="heavy_sphere">
+      <pose>0 0 2 0 0 0</pose>
+      <link name="sphere_link">
+        <pose>0.0 0.0 0.0 0 0 0</pose>
+        <inertial>
+          <inertia>
+            <ixx>0.4</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.4</iyy>
+            <iyz>0</iyz>
+            <izz>0.4</izz>
+          </inertia>
+          <mass>2.0</mass>
+        </inertial>
+      </link>
+    </model>
+  </world>
+</sdf>

@@ -22,6 +22,7 @@
 #include "TestLibLoader.hh"
 #include "../Utils.hh"
 
+#include <gz/physics/AddedMass.hh>
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
@@ -35,33 +36,9 @@
 
 using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
 
-template <class T>
-class WorldFeaturesTest:
-  public testing::Test, public gz::physics::TestLibLoader
-{
-  // Documentation inherited
-  public: void SetUp() override
-  {
-    gz::common::Console::SetVerbosity(4);
-
-    loader.LoadLib(WorldFeaturesTest::GetLibToTest());
-
-    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
-    // FindFeatures
-    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
-    if (pluginNames.empty())
-    {
-      std::cerr << "No plugins with required features found in "
-                << GetLibToTest() << std::endl;
-      GTEST_SKIP();
-    }
-  }
-
-  public: std::set<std::string> pluginNames;
-  public: gz::plugin::Loader loader;
-};
-
-using GravityFeatures = gz::physics::FeatureList<
+// The features that an engine must have to be loaded by this loader.
+using AddedMassFeatures = gz::physics::FeatureList<
+  gz::physics::AddedMass,
   gz::physics::GetEngineInfo,
   gz::physics::Gravity,
   gz::physics::sdf::ConstructSdfWorld,
@@ -71,27 +48,46 @@ using GravityFeatures = gz::physics::FeatureList<
   gz::physics::ForwardStep
 >;
 
-using GravityFeaturesTestTypes =
-  ::testing::Types<GravityFeatures>;
-TYPED_TEST_SUITE(WorldFeaturesTest,
-                 GravityFeatures,);
+class AddedMassFeaturesTest:
+  public testing::Test, public gz::physics::TestLibLoader
+{
+  // Documentation inherited
+  public: void SetUp() override
+  {
+    gz::common::Console::SetVerbosity(4);
+
+    auto plugins = loader.LoadLib(AddedMassFeaturesTest::GetLibToTest());
+
+    // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
+    // FindFeatures
+    pluginNames = gz::physics::FindFeatures3d<AddedMassFeatures>::From(loader);
+    if (pluginNames.empty())
+    {
+      std::cerr << "No plugins with required features found in " << GetLibToTest();
+      GTEST_SKIP();
+    }
+  }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
+};
 
 /////////////////////////////////////////////////
-TYPED_TEST(WorldFeaturesTest, GravityFeatures)
+TEST_F(AddedMassFeaturesTest, Gravity)
 {
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<GravityFeatures>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<AddedMassFeatures>::From(plugin);
     ASSERT_NE(nullptr, engine);
     EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
                 std::string::npos);
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-      gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+      gz::common::joinPaths(TEST_WORLD_DIR, "falling_added_mass.world"));
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);
@@ -102,60 +98,31 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
     auto graphErrors = sdfWorld->ValidateGraphs();
     EXPECT_EQ(0u, graphErrors.size()) << graphErrors;
 
-    Eigen::Vector3d gravity = {0, 0, -9.8};
-
-    AssertVectorApprox vectorPredicate(1e-6);
-    EXPECT_PRED_FORMAT2(vectorPredicate, gravity,
-                        world->GetGravity());
-
-    world->SetGravity({8, 4, 3});
-    EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d(8, 4, 3),
-                        world->GetGravity());
-
-    world->SetGravity(gravity);
-
-    auto model = world->GetModel("sphere");
-    ASSERT_NE(nullptr, model);
-
-    auto link = model->GetLink(0);
-    ASSERT_NE(nullptr, link);
-
     AssertVectorApprox vectorPredicate6(1e-6);
 
-    // initial link pose
+    // Set gravity to a nice round number
+    world->SetGravity({0, 0, -10});
+
+    // Link poses
     const Eigen::Vector3d initialLinkPosition(0, 0, 2);
+    const Eigen::Vector3d finalLinkPosition(0, 0, -3.005);
+    const Eigen::Vector3d finalLinkPositionAddedMass(0, 0, -0.5025);
+
+    // This tests that the physics plugin correctly considers added mass.
+    for (auto modelName: {"sphere", "sphere_zero_added_mass", "sphere_added_mass", "heavy_sphere"})
     {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+
+      auto link = model->GetLink(0);
+      ASSERT_NE(nullptr, link);
+
       Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
       EXPECT_PRED_FORMAT2(vectorPredicate6,
                           initialLinkPosition,
                           pos);
     }
 
-    auto linkFrameID = link->GetFrameID();
-
-    // Get default gravity in link frame, which is pitched by pi/4
-    EXPECT_PRED_FORMAT2(vectorPredicate6,
-                        Eigen::Vector3d(6.92964645563, 0, -6.92964645563),
-                        world->GetGravity(linkFrameID));
-
-    // set gravity along X axis of linked frame, which is pitched by pi/4
-    world->SetGravity(Eigen::Vector3d(1.4142135624, 0, 0), linkFrameID);
-
-    EXPECT_PRED_FORMAT2(vectorPredicate6,
-                        Eigen::Vector3d(1, 0, -1),
-                        world->GetGravity());
-
-    // test other SetGravity API
-    // set gravity along Z axis of linked frame, which is pitched by pi/4
-    gz::physics::RelativeForce3d relativeGravity(
-        linkFrameID, Eigen::Vector3d(0, 0, 1.4142135624));
-    world->SetGravity(relativeGravity);
-
-    EXPECT_PRED_FORMAT2(vectorPredicate6,
-                        Eigen::Vector3d(1, 0, 1),
-                        world->GetGravity());
-
-    // Confirm that changed gravity direction affects pose of link
     gz::physics::ForwardStep::Input input;
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Output output;
@@ -166,20 +133,42 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
       world->Step(output, state, input);
     }
 
-    AssertVectorApprox vectorPredicate2(1e-2);
+    // Confirm that the models with zero added mass behave consistently
+    for (auto modelName: {"sphere", "sphere_zero_added_mass", "heavy_sphere"})
     {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+
+      auto link = model->GetLink(0);
+      ASSERT_NE(nullptr, link);
+
       Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
-      EXPECT_PRED_FORMAT2(vectorPredicate2,
-                          Eigen::Vector3d(0.5, 0, 2.5),
+      EXPECT_PRED_FORMAT2(vectorPredicate6,
+                          finalLinkPosition,
+                          pos);
+    }
+
+    for (auto modelName: {"sphere_added_mass"})
+    {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+
+      auto link = model->GetLink(0);
+      ASSERT_NE(nullptr, link);
+
+      Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
+      EXPECT_PRED_FORMAT2(vectorPredicate6,
+                          finalLinkPositionAddedMass,
                           pos);
     }
   }
+
 }
 
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  if(!WorldFeaturesTest<GravityFeatures>::init(argc, argv))
+  if (!AddedMassFeaturesTest::init(argc, argv))
     return -1;
   return RUN_ALL_TESTS();
 }
