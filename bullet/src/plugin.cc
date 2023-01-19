@@ -61,7 +61,6 @@ class Plugin :
 
     return this->GenerateIdentity(0);
   }
-
 };
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
