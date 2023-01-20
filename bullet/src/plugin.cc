@@ -53,7 +53,15 @@ class Plugin :
     public virtual SDFFeatures,
     public virtual ShapeFeatures,
     public virtual JointFeatures
-{};
+{
+  public: Identity InitiateEngine(std::size_t /*_engineID*/) override
+  {
+    const auto id = this->GetNextEntity();
+    assert(id == 0);
+
+    return this->GenerateIdentity(0);
+  }
+};
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, BulletFeatures)
 

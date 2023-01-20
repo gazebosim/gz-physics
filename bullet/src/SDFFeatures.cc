@@ -224,14 +224,14 @@ Identity SDFFeatures::ConstructSdfCollision(
   else if (geom->SphereShape())
   {
     const auto sphere = geom->SphereShape();
-    const auto radius = sphere->Radius();
+    const auto radius = static_cast<btScalar>(sphere->Radius());
     shape = std::make_shared<btSphereShape>(radius);
   }
   else if (geom->CylinderShape())
   {
     const auto cylinder = geom->CylinderShape();
-    const auto radius = cylinder->Radius();
-    const auto halfLength = cylinder->Length()*0.5;
+    const auto radius = static_cast<btScalar>(cylinder->Radius());
+    const auto halfLength = static_cast<btScalar>(cylinder->Length() * 0.5);
     shape =
       std::make_shared<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
   }
@@ -239,7 +239,7 @@ Identity SDFFeatures::ConstructSdfCollision(
   {
     const auto plane = geom->PlaneShape();
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
-    shape = std::make_shared<btStaticPlaneShape>(normal, 0);
+    shape = std::make_shared<btStaticPlaneShape>(normal, 0.0f);
   }
 
   // TODO(lobotuerk/blast545) Add additional friction parameters for bullet
