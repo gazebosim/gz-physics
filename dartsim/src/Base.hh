@@ -641,7 +641,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   /// they are welded to. This is useful when detaching joints.
   public: std::unordered_map<DartBodyNode*, LinkInfo*> linkByWeldedNode;
 
-  /// \todo(srmainwaring) remove debug code
+  /// \brief A debug function to list the models and their immediate
+  /// nested models, links and joints.
+  /// \return A string containing the list of model information.
   public: std::string DebugModels() const
   {
     std::stringstream ss;
@@ -667,7 +669,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     return ss.str();
   }
 
-  /// \todo(srmainwaring) remove debug code
+  /// \brief A debug function to list the links and their names.
+  /// \return A string containing the list of link information.
   public: std::string DebugLinks() const
   {
     std::stringstream ss;
@@ -686,7 +689,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     return ss.str();
   }
 
-  /// \todo(srmainwaring) remove debug code
+  /// \brief A debug function to list the joints and their names.
+  /// \return A string containing the list of joint information.
   public: std::string DebugJoints() const
   {
     std::stringstream ss;
