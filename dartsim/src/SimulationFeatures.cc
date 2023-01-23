@@ -74,6 +74,21 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
+  for (const auto &[id, info] : this->links.idToObject)
+  {
+    if (info && info->inertial->FluidAddedMass().has_value())
+    {
+      auto com = Eigen::Vector3d(info->inertial->Pose().Pos().X(),
+                                 info->inertial->Pose().Pos().Y(),
+                                 info->inertial->Pose().Pos().Z());
+
+      auto mass = info->inertial->MassMatrix().Mass();
+      auto g = world->getGravity();
+
+      info->link->addExtForce(mass * g, com, false, true);
+    }
+  }
+
   // TODO(MXG): Parse input
   world->step();
   this->WriteRequiredData(_h);

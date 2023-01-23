@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
 #define GZ_PHYSICS_DARTSIM_SRC_SDFFEATURES_HH_
 
+#include <gz/math/Inertial.hh>
 #include <string>
 
 #include <gz/physics/sdf/ConstructCollision.hh>

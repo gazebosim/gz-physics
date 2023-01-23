@@ -2,6 +2,26 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
+### Gazebo Physics 6.3.0 (2023-01-20)
+
+1. Apply gravity external to dartsim for added mass
+    * [Pull request #462](https://github.com/gazebosim/gz-physics/pull/462)
+
+1. Refactor the VectorApprox to a single location 
+    * [Pull request #470](https://github.com/gazebosim/gz-physics/pull/470)
+
+1. Port: 5 to 6 
+    * [Pull request #467](https://github.com/gazebosim/gz-physics/pull/467)
+
+1. Simplify "falling" test to not require LinkFrameSemantics 
+    * [Pull request #461](https://github.com/gazebosim/gz-physics/pull/461)
+
+1. Install the common test executables to libexec 
+    * [Pull request #458](https://github.com/gazebosim/gz-physics/pull/458)
+
+1. [bullet]: Fix how changed link poses are computed 
+    * [Pull request #460](https://github.com/gazebosim/gz-physics/pull/460)
+
 ### Gazebo Physics 6.2.0 (2022-11-28)
 
 1. Reduce error to debug and add notes 

@@ -18,6 +18,7 @@
 #include <gz/physics/Register.hh>
 
 #include "Base.hh"
+#include "AddedMassFeatures.hh"
 #include "CustomFeatures.hh"
 #include "JointFeatures.hh"
 #include "KinematicsFeatures.hh"
@@ -34,6 +35,7 @@ namespace physics {
 namespace dartsim {
 
 struct DartsimFeatures : FeatureList<
+  AddedMassFeatureList,
   CustomFeatureList,
   EntityManagementFeatureList,
   FreeGroupFeatureList,
@@ -48,6 +50,7 @@ struct DartsimFeatures : FeatureList<
 
 class Plugin :
     public virtual Base,
+    public virtual AddedMassFeatures,
     public virtual CustomFeatures,
     public virtual EntityManagementFeatures,
     public virtual FreeGroupFeatures,
