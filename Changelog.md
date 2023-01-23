@@ -1,6 +1,33 @@
 ## Ignition Physics 5.x
 
-### Ignition Physics 5.x.x (20XX-XX-XX)
+### Ignition Physics 5.3.0 (2023-01-09)
+
+1. Fix windows warnings related to bullet 
+    * [Pull request #473](https://github.com/gazebosim/gz-physics/pull/473)
+
+1. Apply ign-gz after forward merge from ign-physics2 
+    * [Pull request #472](https://github.com/gazebosim/gz-physics/pull/472)
+
+1. Port: 2 to 5
+    * [Pull request #471](https://github.com/gazebosim/gz-physics/pull/471)
+
+1. Fix build errors and warnings for DART 6.13.0
+    * [Pull request #465](https://github.com/gazebosim/gz-physics/pull/465)
+
+1. Backport windows fix
+    * [Pull request #437](https://github.com/gazebosim/gz-physics/pull/437)
+
+1. dartsim: fix handling inertia matrix pose rotation
+    * [Pull request #351](https://github.com/gazebosim/gz-physics/pull/351)
+
+1. Add code coverage ignore file
+    * [Pull request #388](https://github.com/gazebosim/gz-physics/pull/388)
+
+1. Change IGN\_DESIGNATION to GZ\_DESIGNATION
+    * [Pull request #390](https://github.com/gazebosim/gz-physics/pull/390)
+
+1. README: Ignition -> Gazebo
+    * [Pull request #386](https://github.com/gazebosim/gz-physics/pull/386)
 
 ### Ignition Physics 5.2.0 (2022-06-29)
 
