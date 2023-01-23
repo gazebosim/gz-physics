@@ -15,8 +15,6 @@ set(tests
   world_features
 )
 
-set(TEST_INSTALL_DIR ${CMAKE_INSTALL_LIBEXECDIR}/gz/${GZ_DESIGNATION}${PROJECT_VERSION_MAJOR}/)
-
 # Find the Python interpreter for running the
 # check_test_ran.py script
 include(GzPython)
@@ -61,8 +59,6 @@ foreach(test ${tests})
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
   )
-
-  install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
 
   if (${BULLET_FOUND})
     configure_common_test("bullet" ${test_executable})
