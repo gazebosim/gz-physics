@@ -620,6 +620,36 @@ class Base : public Implements3d<FeatureList<Feature>>
     }
   };
 
+  /// \brief Create a fully (world) scoped joint name.
+  /// \param _modelID Identity of the parent model of the joint's child link.
+  /// \param _childID Identity of the joint's child link.
+  /// \param _name The unscoped joint name.
+  /// \return The fully (world) scoped joint name, or an empty string
+  /// if a world cannot be resolved.
+  public: inline std::string FullyScopedJointName(
+    const Identity &_modelID,
+    const Identity &_childID,
+    const std::string &_name) const
+  {
+    const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+
+    auto worldID = this->GetWorldOfModelImpl(_modelID);
+    if (worldID == INVALID_ENTITY_ID)
+    {
+      gzerr << "World of model [" << modelInfo->model->getName()
+            << "] could not be found when creating joint [" << _name
+            << "]\n";
+      return "";
+    }
+
+    auto world = this->worlds.at(worldID);
+    const std::string fullJointName = ::sdf::JoinName(
+        world->getName(),
+        ::sdf::JoinName(modelInfo->model->getName(), _name));
+
+    return fullJointName;
+  }
+
   public: EntityStorage<DartWorldPtr, std::string> worlds;
   public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;

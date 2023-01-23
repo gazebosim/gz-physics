@@ -495,24 +495,12 @@ Identity JointFeatures::AttachFixedJoint(
     }
   }
 
-  /// \todo(srmainwaring) consolidate
-  // Get model of child link
+  // Get the model of child link and fully scoped joint name.
   auto modelID = this->GetModelOfLinkImpl(_childID);
-  const auto modelInfo = this->ReferenceInterface<ModelInfo>(modelID);
-
-  auto worldID = this->GetWorldOfModelImpl(modelID);
-  if (worldID == INVALID_ENTITY_ID)
-  {
-    gzerr << "World of model [" << modelInfo->model->getName()
-           << "] could not be found when creating joint [" << _name
-           << "]\n";
+  const std::string fullJointName =
+      this->FullyScopedJointName(modelID, _childID, _name);
+  if (fullJointName.empty())
     return this->GenerateInvalidId();
-  }
-
-  auto world = this->worlds.at(worldID);
-  const std::string fullJointName = ::sdf::JoinName(
-      world->getName(),
-      ::sdf::JoinName(modelInfo->model->getName(), _name));
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties),
@@ -614,24 +602,12 @@ Identity JointFeatures::AttachRevoluteJoint(
     }
   }
 
-  /// \todo(srmainwaring) consolidate
-  // Get model of child link
+  // Get the model of child link and fully scoped joint name.
   auto modelID = this->GetModelOfLinkImpl(_childID);
-  const auto modelInfo = this->ReferenceInterface<ModelInfo>(modelID);
-
-  auto worldID = this->GetWorldOfModelImpl(modelID);
-  if (worldID == INVALID_ENTITY_ID)
-  {
-    gzerr << "World of model [" << modelInfo->model->getName()
-           << "] could not be found when creating joint [" << _name
-           << "]\n";
+  const std::string fullJointName =
+      this->FullyScopedJointName(modelID, _childID, _name);
+  if (fullJointName.empty())
     return this->GenerateInvalidId();
-  }
-
-  auto world = this->worlds.at(worldID);
-  const std::string fullJointName = ::sdf::JoinName(
-      world->getName(),
-      ::sdf::JoinName(modelInfo->model->getName(), _name));
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties),
@@ -704,24 +680,12 @@ Identity JointFeatures::AttachPrismaticJoint(
     }
   }
 
-  /// \todo(srmainwaring) consolidate
-  // Get model of child link
+  // Get the model of child link and fully scoped joint name.
   auto modelID = this->GetModelOfLinkImpl(_childID);
-  const auto modelInfo = this->ReferenceInterface<ModelInfo>(modelID);
-
-  auto worldID = this->GetWorldOfModelImpl(modelID);
-  if (worldID == INVALID_ENTITY_ID)
-  {
-    gzerr << "World of model [" << modelInfo->model->getName()
-           << "] could not be found when creating joint [" << _name
-           << "]\n";
+  const std::string fullJointName =
+      this->FullyScopedJointName(modelID, _childID, _name);
+  if (fullJointName.empty())
     return this->GenerateInvalidId();
-  }
-
-  auto world = this->worlds.at(worldID);
-  const std::string fullJointName = ::sdf::JoinName(
-      world->getName(),
-      ::sdf::JoinName(modelInfo->model->getName(), _name));
 
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties),
