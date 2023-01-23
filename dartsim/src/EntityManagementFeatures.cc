@@ -469,7 +469,7 @@ Identity EntityManagementFeatures::GetJoint(
     }
   }
 
-  // TODO(anyone) It's not clear what to do when `GetLink` is called on a
+  // TODO(anyone) It's not clear what to do when `GetJoint` is called on a
   // model that has been removed. Right now we are returning an invalid
   // identity, but that could cause a segfault if the user doesn't check
   // the returned value before using it.
