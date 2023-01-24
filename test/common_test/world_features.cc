@@ -22,13 +22,19 @@
 #include "TestLibLoader.hh"
 #include "../Utils.hh"
 
+#include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 
 #include <gz/physics/World.hh>
+#include <gz/physics/sdf/ConstructLink.hh>
+#include <gz/physics/sdf/ConstructJoint.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
@@ -173,6 +179,104 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
                           Eigen::Vector3d(0.5, 0, 2.5),
                           pos);
     }
+  }
+}
+
+struct WorldModelFeatureList
+    : gz::physics::FeatureList<GravityFeatures, gz::physics::WorldModelFeature,
+                               gz::physics::RemoveEntities,
+                               gz::physics::GetNestedModelFromModel,
+                               gz::physics::sdf::ConstructSdfLink,
+                               gz::physics::sdf::ConstructSdfJoint,
+                               gz::physics::sdf::ConstructSdfModel,
+                               gz::physics::sdf::ConstructSdfNestedModel,
+                               gz::physics::ConstructEmptyLinkFeature,
+                               gz::physics::ConstructEmptyNestedModelFeature
+                               >
+{
+};
+
+class WorldModelTest : public WorldFeaturesTest<WorldModelFeatureList>
+{
+  public: gz::physics::World3dPtr<WorldModelFeatureList> LoadWorld(
+      const std::string &_pluginName)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(_pluginName);
+
+    auto engine =
+        gz::physics::RequestEngine3d<WorldModelFeatureList>::From(plugin);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        gz::common::joinPaths(TEST_WORLD_DIR, "world_joint_test.sdf"));
+    EXPECT_TRUE(errors.empty()) << errors;
+    if (errors.empty())
+    {
+      auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+      return world;
+    }
+    return nullptr;
+  }
+};
+
+TEST_F(WorldModelTest, WorldModelAPI)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = this->LoadWorld(name);
+    ASSERT_NE(nullptr, world);
+
+    auto worldModel = world->GetWorldModel();
+    ASSERT_NE(nullptr, worldModel);
+    EXPECT_EQ(world, worldModel->GetWorld());
+    EXPECT_EQ("default", worldModel->GetName());
+    EXPECT_EQ(0, worldModel->GetLinkCount());
+    EXPECT_EQ(nullptr, worldModel->GetLink(0));
+    EXPECT_EQ(nullptr, worldModel->GetLink("nonexistent_link"));
+    EXPECT_EQ(0, worldModel->GetIndex());
+    EXPECT_EQ(world->GetModelCount(), worldModel->GetNestedModelCount());
+    auto nestedModel = worldModel->GetNestedModel(0);
+    ASSERT_NE(nullptr, nestedModel);
+    EXPECT_EQ("m1", nestedModel->GetName());
+    EXPECT_NE(nullptr, worldModel->GetNestedModel("m2"));
+
+    // Check that removing a World model proxy is not allowed
+    EXPECT_FALSE(worldModel->Remove());
+    EXPECT_TRUE(worldModel.Valid());
+    EXPECT_FALSE(worldModel->Removed());
+    ASSERT_NE(nullptr, worldModel);
+    EXPECT_EQ(world, worldModel->GetWorld());
+
+    auto worldModel2 = world->GetWorldModel();
+    ASSERT_NE(nullptr, worldModel2);
+    EXPECT_EQ(world, worldModel2->GetWorld());
+
+    // Check that we can construct nested models and joints, but not links
+    auto m3 = worldModel->ConstructEmptyNestedModel("m3");
+    ASSERT_TRUE(m3);
+    EXPECT_EQ(m3, world->GetModel("m3"));
+    EXPECT_EQ(m3, worldModel->GetNestedModel("m3"));
+    EXPECT_FALSE(worldModel->ConstructEmptyLink("test_link"));
+
+    sdf::Link sdfLink;
+    sdfLink.SetName("link3");
+    EXPECT_FALSE(worldModel->ConstructLink(sdfLink));
+
+    // Create a link in m3 for testing joint creation.
+    EXPECT_TRUE(m3->ConstructLink(sdfLink));
+    sdf::Joint sdfJoint;
+    sdfJoint.SetName("test_joint");
+    sdfJoint.SetType(sdf::JointType::FIXED);
+    sdfJoint.SetParentName("m2::link2");
+    sdfJoint.SetChildName("m3::link3");
+    EXPECT_TRUE(worldModel->ConstructJoint(sdfJoint));
+
+    sdf::Model sdfModel;
+    sdfModel.SetName("m4");
+    sdfModel.AddLink(sdfLink);
+    EXPECT_TRUE(worldModel->ConstructNestedModel(sdfModel));
+    EXPECT_TRUE(world->GetModel("m4"));
+    EXPECT_TRUE(worldModel->GetNestedModel("m4"));
   }
 }
 

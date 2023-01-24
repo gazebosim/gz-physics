@@ -1483,6 +1483,119 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachSpawnedModel)
   EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
 }
 
+struct WorldJointFeatureList
+    : gz::physics::FeatureList<JointFeatureList, gz::physics::WorldModelFeature>
+{
+};
+
+class WorldModelTest : public JointFeaturesTest<WorldJointFeatureList>
+{
+  public: gz::physics::World3dPtr<WorldJointFeatureList> LoadWorld(
+      const std::string &_pluginName)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(_pluginName);
+
+    auto engine =
+        gz::physics::RequestEngine3d<WorldJointFeatureList>::From(plugin);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        gz::common::joinPaths(TEST_WORLD_DIR, "world_joint_test.sdf"));
+    EXPECT_TRUE(errors.empty()) << errors;
+    if (errors.empty())
+    {
+      auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+      return world;
+    }
+    return nullptr;
+  }
+};
+
+TEST_F(WorldModelTest, JointSetCommand)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = this->LoadWorld(name);
+    ASSERT_NE(nullptr, world);
+
+    auto worldModel = world->GetWorldModel();
+    ASSERT_NE(nullptr, worldModel);
+
+    EXPECT_EQ(2u, worldModel->GetJointCount());
+
+    {
+      auto jointByName = worldModel->GetJoint("j1");
+      ASSERT_NE(nullptr, jointByName);
+      auto jointByIndex = worldModel->GetJoint(0);
+      ASSERT_NE(nullptr, jointByIndex);
+      EXPECT_EQ(jointByName, jointByIndex);
+
+      EXPECT_EQ(0u, jointByName->GetIndex());
+      EXPECT_EQ(0u, jointByIndex->GetIndex());
+
+      ASSERT_TRUE(jointByIndex.Valid());
+      auto modelFromJoint = jointByIndex->GetModel();
+      ASSERT_NE(nullptr, modelFromJoint);
+      EXPECT_EQ(modelFromJoint, worldModel);
+
+      EXPECT_EQ(0u, jointByIndex->GetDegreesOfFreedom());
+    }
+
+    {
+      auto jointByName = worldModel->GetJoint("j2");
+      ASSERT_NE(nullptr, jointByName);
+      auto jointByIndex = worldModel->GetJoint(1);
+      ASSERT_NE(nullptr, jointByIndex);
+      EXPECT_EQ(jointByName, jointByIndex);
+
+
+      EXPECT_EQ(1u, jointByIndex->GetIndex());
+      EXPECT_EQ(1u, jointByName->GetIndex());
+
+      auto joint = jointByIndex;
+      EXPECT_EQ(1u, jointByIndex->GetDegreesOfFreedom());
+
+      gz::physics::ForwardStep::Output output;
+      gz::physics::ForwardStep::State state;
+      gz::physics::ForwardStep::Input input;
+
+      EXPECT_NEAR(joint->GetVelocity(0), 0, 1e-3);
+      // Joint limit set in SDF
+      bool jointLimitReached{false};
+      const double kJointPosLimit = 0.5;
+      double lastJointPos = 0.0;
+      for (std::size_t i = 0; i < 1000; ++i)
+      {
+        joint->SetForce(0, 1.0);
+        world->Step(output, state, input);
+
+        const double curJointPos = joint->GetPosition(0);
+        if (curJointPos < kJointPosLimit)
+        {
+          // Check that joint position is always increasing while it's under the
+          // position limit.
+          EXPECT_GE(curJointPos, lastJointPos);
+          // Velocity should be positive until position limit is reached.
+          EXPECT_GE(jointByIndex->GetVelocity(0), 0);
+        }
+        else
+        {
+          jointLimitReached = true;
+          break;
+        }
+        lastJointPos = curJointPos;
+      }
+
+      // One more step without a joint force to ensure the velocity is computed
+      // correctly.
+      world->Step(output, state, input);
+      EXPECT_TRUE(jointLimitReached);
+      EXPECT_NEAR(joint->GetPosition(0), kJointPosLimit, 1e-3);
+      EXPECT_NEAR(joint->GetVelocity(0), 0, 1e-3);
+    }
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
