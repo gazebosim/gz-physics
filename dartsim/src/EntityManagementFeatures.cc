@@ -836,6 +836,9 @@ void EntityManagementFeatures::RemoveCollisionFilterMask(
   filterPtr->RemoveIgnoredCollision(shapeNode);
 }
 
+Identity EntityManagementFeatures::GetWorldModel() const
+{
+}
 }
 }
 }

@@ -505,6 +505,24 @@ namespace gz
       };
     };
 
+    class GZ_PHYSICS_VISIBLE WorldModelFeature : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+              class World: public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
+        public: ModelPtrType GetWorldModel();
+        public: ConstModelPtrType GetWorldModel() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual Identity GetWorldModel() const = 0;
+      };
+    };
+
     struct GetEntities : FeatureList<
       GetEngineInfo,
       GetWorldFromEngine,
