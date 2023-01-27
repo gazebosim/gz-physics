@@ -622,13 +622,11 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   /// \brief Create a fully (world) scoped joint name.
   /// \param _modelID Identity of the parent model of the joint's child link.
-  /// \param _childID Identity of the joint's child link.
   /// \param _name The unscoped joint name.
   /// \return The fully (world) scoped joint name, or an empty string
   /// if a world cannot be resolved.
   public: inline std::string FullyScopedJointName(
     const Identity &_modelID,
-    const Identity &_childID,
     const std::string &_name) const
   {
     const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);

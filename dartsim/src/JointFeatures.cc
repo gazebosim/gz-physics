@@ -498,7 +498,7 @@ Identity JointFeatures::AttachFixedJoint(
   // Get the model of child link and fully scoped joint name.
   auto modelID = this->GetModelOfLinkImpl(_childID);
   const std::string fullJointName =
-      this->FullyScopedJointName(modelID, _childID, _name);
+      this->FullyScopedJointName(modelID, _name);
   if (fullJointName.empty())
     return this->GenerateInvalidId();
 
@@ -605,7 +605,7 @@ Identity JointFeatures::AttachRevoluteJoint(
   // Get the model of child link and fully scoped joint name.
   auto modelID = this->GetModelOfLinkImpl(_childID);
   const std::string fullJointName =
-      this->FullyScopedJointName(modelID, _childID, _name);
+      this->FullyScopedJointName(modelID, _name);
   if (fullJointName.empty())
     return this->GenerateInvalidId();
 
@@ -683,7 +683,7 @@ Identity JointFeatures::AttachPrismaticJoint(
   // Get the model of child link and fully scoped joint name.
   auto modelID = this->GetModelOfLinkImpl(_childID);
   const std::string fullJointName =
-      this->FullyScopedJointName(modelID, _childID, _name);
+      this->FullyScopedJointName(modelID, _name);
   if (fullJointName.empty())
     return this->GenerateInvalidId();
 
