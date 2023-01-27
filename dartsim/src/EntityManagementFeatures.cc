@@ -442,8 +442,6 @@ Identity EntityManagementFeatures::GetJoint(
 Identity EntityManagementFeatures::GetJoint(
     const Identity &_modelID, const std::string &_jointName) const
 {
-  const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
-
   const std::string fullJointName =
       this->FullyScopedJointName(_modelID, _jointName);
   if (fullJointName.empty())
