@@ -444,19 +444,10 @@ Identity EntityManagementFeatures::GetJoint(
 {
   const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
 
-  auto worldID = this->GetWorldOfModelImpl(_modelID);
-  if (worldID == INVALID_ENTITY_ID)
-  {
-    gzerr << "World of model [" << modelInfo->model->getName()
-          << "] could not be found for joint [" << _jointName
-          << "]\n";
+  const std::string fullJointName =
+      this->FullyScopedJointName(_modelID, _jointName);
+  if (fullJointName.empty())
     return this->GenerateInvalidId();
-  }
-
-  auto world = this->worlds.at(worldID);
-  const std::string fullJointName = ::sdf::JoinName(
-      world->getName(),
-      ::sdf::JoinName(modelInfo->model->getName(), _jointName));
 
   auto it = this->jointsByName.find(fullJointName);
   if (it != this->jointsByName.end())
