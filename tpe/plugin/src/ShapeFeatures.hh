@@ -146,7 +146,7 @@ class ShapeFeatures :
   public: Identity AttachMeshShape(
     const Identity &_linkID,
     const std::string &_name,
-    const gz::common::Mesh &_mesh,
+    const common::Mesh &_mesh,
     const Pose3d &_pose,
     const LinearVector3d &_scale) override;
 

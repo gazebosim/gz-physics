@@ -130,6 +130,35 @@
 
 ## Gazebo Physics 5.x
 
+### Gazebo Physics 5.3.0 (2023-01-09)
+
+1. Fix windows warnings related to bullet
+    * [Pull request #473](https://github.com/gazebosim/gz-physics/pull/473)
+
+1. Apply ign-gz after forward merge from ign-physics2
+    * [Pull request #472](https://github.com/gazebosim/gz-physics/pull/472)
+
+1. Port: 2 to 5
+    * [Pull request #471](https://github.com/gazebosim/gz-physics/pull/471)
+
+1. Fix build errors and warnings for DART 6.13.0
+    * [Pull request #465](https://github.com/gazebosim/gz-physics/pull/465)
+
+1. Backport windows fix
+    * [Pull request #437](https://github.com/gazebosim/gz-physics/pull/437)
+
+1. dartsim: fix handling inertia matrix pose rotation
+    * [Pull request #351](https://github.com/gazebosim/gz-physics/pull/351)
+
+1. Add code coverage ignore file
+    * [Pull request #388](https://github.com/gazebosim/gz-physics/pull/388)
+
+1. Change IGN\_DESIGNATION to GZ\_DESIGNATION
+    * [Pull request #390](https://github.com/gazebosim/gz-physics/pull/390)
+
+1. README: Ignition -> Gazebo
+    * [Pull request #386](https://github.com/gazebosim/gz-physics/pull/386)
+
 ### Gazebo Physics 5.2.0 (2022-06-29)
 
 1. dartsim: support non-tree kinematics in AttachFixedJoint
@@ -471,7 +500,45 @@
 
 ## Gazebo Physics 2.x
 
-### Gazebo Physics 2.x.x (20XX-XX-XX)
+### Gazebo Physics 2.6.0 (2022-11-30)
+
+1. Migrate Ignition headers
+    * [Pull request #402](https://github.com/gazebosim/gz-physics/pull/402)
+
+### Gazebo Physics 2.5.1 (2022-08-16)
+
+1. Remove redundant namespace references
+    * [Pull request #400](https://github.com/gazebosim/gz-physics/pull/400)
+
+1. Add code coverage ignore file
+    * [Pull request #388](https://github.com/gazebosim/gz-physics/pull/388)
+
+1. Change `IGN_DESIGNATION` to `GZ_DESIGNATION`
+    * [Pull request #390](https://github.com/gazebosim/gz-physics/pull/390)
+
+1. Ignition -> Gazebo
+    * [Pull request #386](https://github.com/gazebosim/gz-physics/pull/386)
+
+1. Make `CONFIG` a CMake pass-through option for DART
+    * [Pull request #339](https://github.com/gazebosim/gz-physics/pull/339)
+
+1. Remove explicitly-defined copy constructor/operator for `Shape`
+    * [Pull request #328](https://github.com/gazebosim/gz-physics/pull/328)
+
+1. Fix `ExpectData` compiler warnings
+    * [Pull request #335](https://github.com/gazebosim/gz-physics/pull/335)
+
+1. Fix copying of `ExpectData` objects
+    * [Pull request #337](https://github.com/gazebosim/gz-physics/pull/337)
+
+1. Fix Apache license version
+    * [Pull request #326](https://github.com/gazebosim/gz-physics/pull/326)
+
+1. Tutorial fixes
+    * [Pull request #318](https://github.com/gazebosim/gz-physics/pull/318)
+
+1. Add `project()` to examples
+    * [Pull request #322](https://github.com/gazebosim/gz-physics/pull/322)
 
 ### Gazebo Physics 2.5.0 (2021-11-09)
 

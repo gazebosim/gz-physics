@@ -15,5 +15,5 @@
  *
  */
 
-#include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/tpe-plugin/Export.hh>
 #include <ignition/physics/config.hh>
