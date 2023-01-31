@@ -370,6 +370,14 @@
 
 ## Gazebo Physics 2.x
 
+### Gazebo Physics 2.6.1 (2023-01-09)
+
+1. Fix build errors and warnings for DART 6.13.0
+    * [Pull request #465](https://github.com/gazebosim/gz-physics/pull/465)
+
+1. Don't install CMakeLists.txt files
+    * [Pull request #456](https://github.com/gazebosim/gz-physics/pull/456)
+
 ### Gazebo Physics 2.6.0 (2022-11-30)
 
 1. Migrate Ignition headers
