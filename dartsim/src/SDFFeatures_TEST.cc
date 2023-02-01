@@ -539,6 +539,45 @@ TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
 }
 
 /////////////////////////////////////////////////
+// The model, link and joint structure in the
+// test world `world_with_nested_model.sdf`:
+//
+//  model and link tree:
+//    parent_model
+//      nested_model
+//        nested_link1
+//        nested_link2
+//      link1
+//      nested_model2
+//        nested_link1
+//      nested_model3
+//        link1
+//    parent_model2
+//      child_model
+//        grand_child_model
+//          link1
+//
+//  models:
+//    parent_model
+//    parent_model::nested_model
+//    parent_model::nested_model2
+//    parent_model::nested_model3
+//    parent_model2
+//    parent_model2::child_model
+//    parent_model2::child_model::grand_child_model
+//
+//  links:
+//    parent_model::nested_link1::nested_link1
+//    parent_model::nested_link1::nested_link2
+//    parent_model::link1
+//    parent_model::nested_model2::nested_link1
+//    parent_model::nested_model3::link1
+//    parent_model2::child_model::grand_child_model::link1
+//
+//  joints:
+//    parent_model::nested_model::nested_joint
+//    parent_model::joint1
+//
 TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 {
   WorldPtr world =
@@ -561,8 +600,14 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   auto nestedModel = parentModel->GetNestedModel("nested_model");
   ASSERT_NE(nullptr, nestedModel);
 
+  // DART associates the nested joint with the skeleton of the top level
+  // model when the nested model is joined to the parent model, but Gazebo
+  // should not find grandchild joints when querying a parent model.
   auto nestedJoint = parentModel->GetJoint("nested_joint");
-  EXPECT_NE(nullptr, nestedJoint);
+  EXPECT_EQ(nullptr, nestedJoint);
+
+  // The nested_joint should be found when querying the nested model.
+  EXPECT_NE(nullptr, nestedModel->GetJoint("nested_joint"));
 
   EXPECT_EQ(1u, parentModel->GetLinkCount());
   EXPECT_NE(nullptr, parentModel->GetLink("link1"));

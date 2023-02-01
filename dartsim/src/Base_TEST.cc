@@ -78,7 +78,12 @@ TEST(BaseClass, RemoveModel)
     EXPECT_EQ(pair.second->getName(), linkInfo->name);
     EXPECT_EQ(pair.second, linkInfo->link);
 
-    base.AddJoint(pair.first);
+    auto modelID = base.models.IdentityOf(modelInfo->model);
+    const std::string fullJointName = ::sdf::JoinName(
+        world->getName(),
+        ::sdf::JoinName(modelInfo->model->getName(), pair.first->getName()));
+
+    base.AddJoint(pair.first, fullJointName, modelID);
     base.AddShape({sn, name + "_shape"});
 
     modelIDs[name] = std::get<0>(res);

@@ -82,6 +82,12 @@ struct LinkInfo
   std::optional<math::Inertiald> inertial;
 };
 
+struct JointInfo
+{
+  dart::dynamics::JointPtr joint;
+  dart::dynamics::SimpleFramePtr frame;
+};
+
 struct ModelInfo
 {
   dart::dynamics::SkeletonPtr model;
@@ -89,13 +95,8 @@ struct ModelInfo
   dart::dynamics::SimpleFramePtr frame;
   std::string canonicalLinkName;
   std::vector<std::shared_ptr<LinkInfo>> links {};
+  std::vector<std::shared_ptr<JointInfo>> joints {};
   std::vector<std::size_t> nestedModels = {};
-};
-
-struct JointInfo
-{
-  dart::dynamics::JointPtr joint;
-  dart::dynamics::SimpleFramePtr frame;
 };
 
 struct ShapeInfo
@@ -488,16 +489,33 @@ class Base : public Implements3d<FeatureList<Feature>>
     }
   }
 
-  public: inline std::size_t AddJoint(DartJoint *_joint)
+  public: inline std::size_t AddJoint(DartJoint *_joint,
+      const std::string &_fullName, std::size_t _modelID)
   {
     const std::size_t id = this->GetNextEntity();
-    this->joints.idToObject[id] = std::make_shared<JointInfo>();
+    auto jointInfo = std::make_shared<JointInfo>();
+    this->joints.idToObject[id] = jointInfo;
+    jointInfo->joint = _joint;
+
     this->joints.idToObject[id]->joint = _joint;
     this->joints.objectToID[_joint] = id;
     dart::dynamics::SimpleFramePtr jointFrame =
         dart::dynamics::SimpleFrame::createShared(
             _joint->getChildBodyNode(), _joint->getName() + "_frame",
             _joint->getTransformFromChildBodyNode());
+
+    this->jointsByName[_fullName] = _joint;
+    this->models.at(_modelID)->joints.push_back(jointInfo);
+
+    // Even though DART keeps track of the index of this joint in the
+    // skeleton, the joint may be moved to another skeleton when a joint is
+    // constructed. Thus, we store the original index here.
+    this->joints.idToIndexInContainer[id] = _joint->getJointIndexInSkeleton();
+    std::vector<std::size_t> &indexInContainerToID =
+        this->joints.indexInContainerToID[_modelID];
+    indexInContainerToID.push_back(id);
+
+    this->joints.idToContainerID[id] = _modelID;
 
     this->joints.idToObject[id]->frame = jointFrame;
     this->frames[id] = this->joints.idToObject[id]->frame.get();
@@ -532,6 +550,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     for (auto &jt : skel->getJoints())
     {
       this->joints.RemoveEntity(jt);
+      this->jointsByName.erase(::sdf::JoinName(
+          world->getName(), ::sdf::JoinName(skel->getName(), jt->getName())));
     }
     for (auto &bn : skel->getBodyNodes())
     {
@@ -587,6 +607,47 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateInvalidId();
   }
 
+  public: inline Identity GetModelOfLinkImpl(const Identity &_linkID) const
+  {
+    const std::size_t modelID = this->links.idToContainerID.at(_linkID);
+    if (this->models.HasEntity(modelID))
+    {
+      return this->GenerateIdentity(modelID, this->models.at(modelID));
+    }
+    else
+    {
+      return this->GenerateInvalidId();
+    }
+  };
+
+  /// \brief Create a fully (world) scoped joint name.
+  /// \param _modelID Identity of the parent model of the joint's child link.
+  /// \param _name The unscoped joint name.
+  /// \return The fully (world) scoped joint name, or an empty string
+  /// if a world cannot be resolved.
+  public: inline std::string FullyScopedJointName(
+    const Identity &_modelID,
+    const std::string &_name) const
+  {
+    const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+
+    auto worldID = this->GetWorldOfModelImpl(_modelID);
+    if (worldID == INVALID_ENTITY_ID)
+    {
+      gzerr << "World of model [" << modelInfo->model->getName()
+            << "] could not be found when creating joint [" << _name
+            << "]\n";
+      return "";
+    }
+
+    auto world = this->worlds.at(worldID);
+    const std::string fullJointName = ::sdf::JoinName(
+        world->getName(),
+        ::sdf::JoinName(modelInfo->model->getName(), _name));
+
+    return fullJointName;
+  }
+
   public: EntityStorage<DartWorldPtr, std::string> worlds;
   public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
@@ -599,9 +660,82 @@ class Base : public Implements3d<FeatureList<Feature>>
   /// as they move to other skeletons.
   public: std::unordered_map<std::string, DartBodyNode*> linksByName;
 
+  /// \brief Map from the fully qualified joint name (including the world name)
+  /// to the dart Joint object. This is useful for keeping track of
+  /// dart Joints even as they move to other skeletons.
+  public: std::unordered_map<std::string, DartJoint*> jointsByName;
+
   /// \brief Map from welded body nodes to the LinkInfo for the original link
   /// they are welded to. This is useful when detaching joints.
   public: std::unordered_map<DartBodyNode*, LinkInfo*> linkByWeldedNode;
+
+  /// \brief A debug function to list the models and their immediate
+  /// nested models, links and joints.
+  /// \return A string containing the list of model information.
+  public: std::string DebugModels() const
+  {
+    std::stringstream ss;
+    ss << "*** Models ***\n";
+    for (size_t id = 0, i = 0; i < models.size(); ++id)
+    {
+      if (models.HasEntity(id))
+      {
+        ++i;
+        auto modelInfo = models.at(id);
+        ss << "ModelID:     " << id << "\n"
+           << "LocalName:   " << modelInfo->localName << "\n"
+           << "NodeName:    " << modelInfo->model->getName() << "\n"
+           << "NumModels:   " << modelInfo->nestedModels.size() << "\n"
+           << "NumLinks:    " << modelInfo->links.size() << "\n"
+           << "NumJoints:   " << modelInfo->model->getNumJoints() << "\n";
+        for (auto& joint :  modelInfo->model->getJoints())
+        {
+          ss  << "  Joint:     " << joint->getName() << "\n";
+        }
+      }
+    }
+    return ss.str();
+  }
+
+  /// \brief A debug function to list the links and their names.
+  /// \return A string containing the list of link information.
+  public: std::string DebugLinks() const
+  {
+    std::stringstream ss;
+    ss << "*** Links ***\n";
+    for (size_t id = 0, i = 0; i < links.size(); ++id)
+    {
+      if (links.HasEntity(id))
+      {
+        ++i;
+        auto linkInfo = links.at(id);
+        ss << "LinkID       " << id << "\n"
+           << "Name:        " << linkInfo->name << "\n"
+           << "NodeName:    " << linkInfo->link->getName() << "\n";
+      }
+    }
+    return ss.str();
+  }
+
+  /// \brief A debug function to list the joints and their names.
+  /// \return A string containing the list of joint information.
+  public: std::string DebugJoints() const
+  {
+    std::stringstream ss;
+    ss << "*** Joints ***\n";
+    for (size_t id = 0, i = 0; i < joints.size(); ++id)
+    {
+      if (joints.HasEntity(id))
+      {
+        ++i;
+        auto jointInfo = joints.at(id);
+        ss << "JointID      " << id << "\n"
+           << "NodeName:    " << jointInfo->joint->getName() << "\n";
+      }
+    }
+    return ss.str();
+  }
+
 };
 
 }
