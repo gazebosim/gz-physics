@@ -30,11 +30,11 @@ namespace dartsim {
 namespace {
 /////////////////////////////////////////////////
 unsigned int CheckNumVerticesPerFaces(
-    const gz::common::SubMesh &_inputSubmesh,
+    const common::SubMesh &_inputSubmesh,
     const unsigned int _submeshIndex,
     const std::string &_path)
 {
-  using namespace gz::common;
+  using namespace common;
 
   const SubMesh::PrimitiveType type = _inputSubmesh.SubMeshPrimitiveType();
 
@@ -76,9 +76,9 @@ unsigned int CheckNumVerticesPerFaces(
 
 /////////////////////////////////////////////////
 unsigned int GetPrimitiveType(
-    const gz::common::SubMesh &_inputSubmesh)
+    const common::SubMesh &_inputSubmesh)
 {
-  using namespace gz::common;
+  using namespace common;
 
   const SubMesh::PrimitiveType type = _inputSubmesh.SubMeshPrimitiveType();
 
@@ -97,7 +97,7 @@ unsigned int GetPrimitiveType(
 
 /////////////////////////////////////////////////
 CustomMeshShape::CustomMeshShape(
-    const gz::common::Mesh &_input,
+    const common::Mesh &_input,
     const Eigen::Vector3d &_scale)
   : dart::dynamics::MeshShape(_scale, nullptr)
 {
@@ -123,7 +123,7 @@ CustomMeshShape::CustomMeshShape(
   // Fill in submesh contents
   for (unsigned int i = 0; i < numSubMeshes; ++i)
   {
-    const gz::common::SubMeshPtr &inputSubmesh =
+    const common::SubMeshPtr &inputSubmesh =
         _input.SubMeshByIndex(i).lock();
 
     scene->mMeshes[i] = nullptr;
@@ -205,11 +205,11 @@ CustomMeshShape::CustomMeshShape(
 
     for (unsigned int j = 0; j < numVertices; ++j)
     {
-      const gz::math::Vector3d &v = inputSubmesh->Vertex(j);
+      const math::Vector3d &v = inputSubmesh->Vertex(j);
       for (unsigned int k = 0; k < 3; ++k)
         mesh->mVertices[j][k] = static_cast<ai_real>(v[k]);
 
-      const gz::math::Vector3d &n = inputSubmesh->Normal(j);
+      const math::Vector3d &n = inputSubmesh->Normal(j);
       for (unsigned int k = 0; k < 3; ++k)
         mesh->mNormals[j][k] = static_cast<ai_real>(n[k]);
     }

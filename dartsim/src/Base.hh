@@ -103,7 +103,7 @@ struct ShapeInfo
 {
   dart::dynamics::ShapeNodePtr node;
 
-  /// \brief dartsim has more strict name uniqueness rules tha Gazebo, so we
+  /// \brief dartsim has more strict name uniqueness rules than Gazebo, so we
   /// store the Gazebo-specified name of the Shape here.
   std::string name;
 

@@ -59,17 +59,17 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
 
   auto world = engine->GetWorld(0);
 
-  gz::physics::ForwardStep::State state;
-  gz::physics::ForwardStep::Output output;
-  gz::physics::ForwardStep::Input input;
+  ForwardStep::State state;
+  ForwardStep::Output output;
+  ForwardStep::Input input;
 
   const std::chrono::duration<double> dt(std::chrono::milliseconds(1));
-  gz::physics::TimeStep &timeStep =
-      input.Get<gz::physics::TimeStep>();
+  TimeStep &timeStep =
+      input.Get<TimeStep>();
   timeStep.dt = dt.count();
 
-  gz::physics::GeneralizedParameters &efforts =
-      input.Get<gz::physics::GeneralizedParameters>();
+  GeneralizedParameters &efforts =
+      input.Get<GeneralizedParameters>();
   efforts.dofs.push_back(0);
   efforts.dofs.push_back(1);
   efforts.forces.push_back(0.0);
@@ -78,11 +78,11 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   // No input on the first step, let's just see the output
   world->Step(output, state, input);
 
-  ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
-  const auto positions0 = output.Get<gz::physics::JointPositions>();
+  ASSERT_TRUE(output.Has<JointPositions>());
+  const auto positions0 = output.Get<JointPositions>();
 
-  ASSERT_TRUE(output.Has<gz::physics::WorldPoses>());
-  const auto poses0 = output.Get<gz::physics::WorldPoses>();
+  ASSERT_TRUE(output.Has<WorldPoses>());
+  const auto poses0 = output.Get<WorldPoses>();
 
   // the double pendulum is initially fully inverted
   // and angles are defined as zero in this state
@@ -116,7 +116,7 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   unsigned int settleSteps = settleTime / dt;
   for (unsigned int i = 0; i < settleSteps; ++i)
   {
-    auto positions = output.Get<gz::physics::JointPositions>();
+    auto positions = output.Get<JointPositions>();
     double error0 = positions.positions[positions.dofs[0]] - target10;
     double error1 = positions.positions[positions.dofs[1]] - target11;
 
@@ -127,15 +127,15 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   }
 
   // expect joints are near target positions
-  ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
-  auto positions1 = output.Get<gz::physics::JointPositions>();
+  ASSERT_TRUE(output.Has<JointPositions>());
+  auto positions1 = output.Get<JointPositions>();
   double angle10 = positions1.positions[positions1.dofs[0]];
   double angle11 = positions1.positions[positions1.dofs[1]];
   EXPECT_NEAR(target10, angle10, 1e-5);
   EXPECT_NEAR(target11, angle11, 1e-3);
 
-  ASSERT_TRUE(output.Has<gz::physics::WorldPoses>());
-  const auto poses1 = output.Get<gz::physics::WorldPoses>();
+  ASSERT_TRUE(output.Has<WorldPoses>());
+  const auto poses1 = output.Get<WorldPoses>();
   ASSERT_EQ(2u, poses1.entries.size());
   for (const auto & worldPose : poses1.entries)
   {
@@ -151,7 +151,7 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   }
 
   // test recording the state and repeatability
-  gz::physics::ForwardStep::State bookmark = state;
+  ForwardStep::State bookmark = state;
   std::vector<double> errorHistory0;
   std::vector<double> errorHistory1;
 
@@ -168,7 +168,7 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
 
   for (unsigned int i = 0; i < settleSteps; ++i)
   {
-    auto positions = output.Get<gz::physics::JointPositions>();
+    auto positions = output.Get<JointPositions>();
     double error0 = positions.positions[positions.dofs[0]] - target20;
     double error1 = positions.positions[positions.dofs[1]] - target21;
     errorHistory0.push_back(error0);
@@ -181,16 +181,16 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   }
 
   // expect joints are near target positions again
-  ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
-  auto positions2 = output.Get<gz::physics::JointPositions>();
+  ASSERT_TRUE(output.Has<JointPositions>());
+  auto positions2 = output.Get<JointPositions>();
   double angle20 = positions2.positions[positions2.dofs[0]];
   double angle21 = positions2.positions[positions2.dofs[1]];
   EXPECT_NEAR(target20, angle20, 1e-4);
   EXPECT_NEAR(target21, angle21, 1e-3);
 
   // // Go back to the bookmarked state and run through the steps again.
-  // gz::physics::SetState *setState =
-  //     _plugin->QueryInterface<gz::physics::SetState>();
+  // SetState *setState =
+  //     _plugin->QueryInterface<SetState>();
   // ASSERT_TRUE(setState);
   // setState->SetStateTo(bookmark);
 
@@ -205,7 +205,7 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
 
   // for (unsigned int i = 0; i < settleSteps; ++i)
   // {
-  //   auto positions = output.Get<gz::physics::JointPositions>();
+  //   auto positions = output.Get<JointPositions>();
   //   double error0 = positions.positions[positions.dofs[0]] - target20;
   //   double error1 = positions.positions[positions.dofs[1]] - target21;
   //   EXPECT_DOUBLE_EQ(error0, errorHistory0[i]);
@@ -218,8 +218,8 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   // }
 
   // // expect joints are near target positions again
-  // ASSERT_TRUE(output.Has<gz::physics::JointPositions>());
-  // auto positions3 = output.Get<gz::physics::JointPositions>();
+  // ASSERT_TRUE(output.Has<JointPositions>());
+  // auto positions3 = output.Get<JointPositions>();
   // double angle30 = positions3.positions[positions3.dofs[0]];
   // double angle31 = positions3.positions[positions3.dofs[1]];
   // EXPECT_DOUBLE_EQ(angle20, angle30);

@@ -23,6 +23,8 @@
 #include "gz/physics/SpecifyData.hh"
 #include "gz/math/Vector3.hh"
 
+using namespace gz;
+
 /////////////////////////////////////////////////
 TEST(SpecifyData, RequirementsAccessConstruction)
 {
@@ -221,11 +223,11 @@ TEST(SpecifyData, RequirementsAccessConstruction)
 /////////////////////////////////////////////////
 TEST(SpecifyData, QueryCounting)
 {
-  const gz::physics::CompositeData::QueryMode normal =
-      gz::physics::CompositeData::QueryMode::NORMAL;
+  const physics::CompositeData::QueryMode normal =
+      physics::CompositeData::QueryMode::NORMAL;
 
-  const gz::physics::CompositeData::QueryMode silent =
-      gz::physics::CompositeData::QueryMode::SILENT;
+  const physics::CompositeData::QueryMode silent =
+      physics::CompositeData::QueryMode::SILENT;
 
 
   RequireStringBoolChar data;
@@ -444,7 +446,7 @@ TEST(SpecifyData, QueryCounting)
 
   // Test StatusOf on an existing queried required type
   usedExpectedDataAccess = false;
-  gz::physics::CompositeData::DataStatus status =
+  physics::CompositeData::DataStatus status =
       data.StatusOf<StringData>();
   EXPECT_TRUE(usedExpectedDataAccess);
   EXPECT_TRUE(status.exists);
@@ -506,11 +508,11 @@ TEST(SpecifyData, QueryCounting)
 /////////////////////////////////////////////////
 TEST(SpecifyData, ConstQueryCounting)
 {
-  const gz::physics::CompositeData::QueryMode normal =
-      gz::physics::CompositeData::QueryMode::NORMAL;
+  const physics::CompositeData::QueryMode normal =
+      physics::CompositeData::QueryMode::NORMAL;
 
-  const gz::physics::CompositeData::QueryMode silent =
-      gz::physics::CompositeData::QueryMode::SILENT;
+  const physics::CompositeData::QueryMode silent =
+      physics::CompositeData::QueryMode::SILENT;
 
 
   RequireStringBoolChar data;
@@ -611,16 +613,16 @@ TEST(SpecifyData, Remove)
 /////////////////////////////////////////////////
 TEST(SpecifyData, CountData)
 {
-  EXPECT_EQ(1u, gz::physics::CountUpperLimitOfRequiredData<
+  EXPECT_EQ(1u, physics::CountUpperLimitOfRequiredData<
             RequireString>());
 
-  EXPECT_EQ(1u, gz::physics::CountUpperLimitOfExpectedData<
+  EXPECT_EQ(1u, physics::CountUpperLimitOfExpectedData<
             RequireString>());
 
-  EXPECT_EQ(3u, gz::physics::CountUpperLimitOfRequiredData<
+  EXPECT_EQ(3u, physics::CountUpperLimitOfRequiredData<
             RequireStringBoolChar>());
 
-  EXPECT_EQ(5u, gz::physics::CountUpperLimitOfExpectedData<
+  EXPECT_EQ(5u, physics::CountUpperLimitOfExpectedData<
             RequireStringBoolChar>());
 
   // Note that there are only 3 unique requirements and 5 unique expectations
@@ -628,34 +630,34 @@ TEST(SpecifyData, CountData)
   // of constexpr, we only provide an upper limit of the count which will count
   // repeated data specifications once for each repeat. In the future, if we can
   // find a way to push these tests down to 3u and 5u, that would be ideal.
-  EXPECT_EQ(4u, gz::physics::CountUpperLimitOfRequiredData<
+  EXPECT_EQ(4u, physics::CountUpperLimitOfRequiredData<
             RedundantSpec>());
 
-  EXPECT_EQ(6u, gz::physics::CountUpperLimitOfExpectedData<
+  EXPECT_EQ(6u, physics::CountUpperLimitOfExpectedData<
             RedundantSpec>());
 }
 
 /////////////////////////////////////////////////
 TEST(SpecifyData, OtherDataTypes)
 {
-  gz::physics::RequireData<std::string> stringData;
+  physics::RequireData<std::string> stringData;
   EXPECT_TRUE(stringData.Has<std::string>());
   EXPECT_EQ("", stringData.Get<std::string>());
   stringData.Get<std::string>() = "my_new_string";
   EXPECT_EQ("my_new_string", stringData.Get<std::string>());
 
-  gz::physics::RequireData<gz::math::Vector3d> vector3dData;
+  physics::RequireData<math::Vector3d> vector3dData;
   EXPECT_FALSE(vector3dData.Has<std::string>());
-  EXPECT_TRUE(vector3dData.Has<gz::math::Vector3d>());
-  EXPECT_EQ(gz::math::Vector3d(),
-            vector3dData.Get<gz::math::Vector3d>());
+  EXPECT_TRUE(vector3dData.Has<math::Vector3d>());
+  EXPECT_EQ(math::Vector3d(),
+            vector3dData.Get<math::Vector3d>());
   // We can add a string to the vector3d composite data.
   vector3dData.Get<std::string>() = "my_new_string";
   EXPECT_EQ("my_new_string", vector3dData.Get<std::string>());
   // We can also set the vector3d data
-  vector3dData.Get<gz::math::Vector3d>().Set(1, 2, 3);
-  EXPECT_EQ(gz::math::Vector3d(1, 2, 3),
-            vector3dData.Get<gz::math::Vector3d>());
+  vector3dData.Get<math::Vector3d>().Set(1, 2, 3);
+  EXPECT_EQ(math::Vector3d(1, 2, 3),
+            vector3dData.Get<math::Vector3d>());
 }
 
 /////////////////////////////////////////////////
@@ -688,11 +690,11 @@ TEST(SpecifyData, Copy)
 /////////////////////////////////////////////////
 TEST(SpecifyData, CopyExpectData)
 {
-  gz::physics::ExpectData<StringData> data;
+  physics::ExpectData<StringData> data;
   data.Get<StringData>().myString = "old_string";
   EXPECT_EQ("old_string", data.Get<StringData>().myString);
 
-  gz::physics::ExpectData<StringData>copyCtor(data);
+  physics::ExpectData<StringData>copyCtor(data);
   EXPECT_EQ("old_string", copyCtor.Get<StringData>().myString);
 
   // Modify the original and check that the copy is not affected
@@ -700,7 +702,7 @@ TEST(SpecifyData, CopyExpectData)
   EXPECT_EQ("old_string", copyCtor.Get<StringData>().myString);
 }
 
-class ExpectString : public virtual gz::physics::ExpectData<StringData>
+class ExpectString : public virtual physics::ExpectData<StringData>
 {
 };
 

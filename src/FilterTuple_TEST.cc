@@ -19,19 +19,20 @@
 
 #include <gz/physics/FeatureList.hh>
 
-class ClassA : public gz::physics::Feature { };
-class ClassB : public gz::physics::Feature { };
-class ClassC : public gz::physics::Feature { };
+using namespace gz;
+class ClassA : public physics::Feature { };
+class ClassB : public physics::Feature { };
+class ClassC : public physics::Feature { };
 class ClassD : public ClassB { };
 
 using Filter = std::tuple<ClassA, ClassD>;
 using Input = std::tuple<ClassB, ClassC, ClassD, ClassA>;
 
-using Result = gz::physics::detail::SubtractTuple<Filter>
+using Result = physics::detail::SubtractTuple<Filter>
     ::From<Input>::type;
 
 using UnfilteredResult =
-    gz::physics::detail::SubtractTuple<std::tuple<>>::From<Input>::type;
+    physics::detail::SubtractTuple<std::tuple<>>::From<Input>::type;
 
 TEST(FilterTuple_TEST, FilterTupleResult)
 {
@@ -46,19 +47,19 @@ TEST(FilterTuple_TEST, FilterTupleResult)
 
 
 using SingleCombineLists =
-  gz::physics::detail::CombineListsImpl<
+  physics::detail::CombineListsImpl<
       std::tuple<>, ClassA>::type;
 
 using SingleCombineListsInitial =
-  gz::physics::detail::CombineListsImpl<
+  physics::detail::CombineListsImpl<
       std::tuple<>, ClassA>::InitialResult;
 
 using SingleCombineListsPartial =
-  gz::physics::detail::CombineListsImpl<
+  physics::detail::CombineListsImpl<
       std::tuple<>, ClassA>::PartialResult;
 
 using SingleCombineListsChildFilter =
-  gz::physics::detail::CombineListsImpl<
+  physics::detail::CombineListsImpl<
       std::tuple<>, ClassA>::ChildFilter;
 
 TEST(FilterTuple_TEST, CombineListsResult)
