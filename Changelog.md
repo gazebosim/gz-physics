@@ -2,7 +2,13 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
-### Gazebo Physics 6.3.0 (2023-01-20)
+### Gazebo Physics 6.3.0 (2023-02-02)
+
+1. Port: 5 to 6
+    * [Pull request #477](https://github.com/gazebosim/gz-physics/pull/477)
+
+1. Resolve joints in nested models
+    * [Pull request #464](https://github.com/gazebosim/gz-physics/pull/464)
 
 1. Apply gravity external to dartsim for added mass
     * [Pull request #462](https://github.com/gazebosim/gz-physics/pull/462)
