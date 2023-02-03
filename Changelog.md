@@ -4,8 +4,11 @@
 
 ### Gazebo Physics 6.3.0 (2023-02-02)
 
-1. Port: 5 to 6
-    * [Pull request #477](https://github.com/gazebosim/gz-physics/pull/477)
+1. Fix windows warnings related to bullet #473
+    * [Pull request #473](https://github.com/gazebosim/gz-physics/pull/473)
+
+1. ign -> gz : Remove redundant namespace references
+    * [Pull request #400](https://github.com/gazebosim/gz-physics/pull/400)
 
 1. Resolve joints in nested models
     * [Pull request #464](https://github.com/gazebosim/gz-physics/pull/464)
