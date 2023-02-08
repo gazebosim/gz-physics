@@ -53,6 +53,7 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+#include "dartsim/src/Worlds.hh"
 
 using namespace gz;
 
@@ -313,7 +314,7 @@ INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST_P(SDFFeatures_TEST, CheckDartsimData)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/test.world");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -421,7 +422,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
 // Test that joint limits are working by running the simulation
 TEST_P(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/test.world");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -580,8 +581,7 @@ TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
 //
 TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 {
-  WorldPtr world =
-      this->LoadWorld(TEST_WORLD_DIR "/world_with_nested_model.sdf");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kWorldWithNestedModelSdf);
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(2u, world->GetModelCount());
 
@@ -646,7 +646,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 {
   WorldPtr world = this->LoadWorld(
-      TEST_WORLD_DIR "/world_with_nested_model_joint_to_world.sdf");
+    dartsim::worlds::kWorldWithNestedModelJointToWorldSdf);
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(1u, world->GetModelCount());
 
@@ -690,7 +690,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 // Test that joint type falls back to fixed if the type is not supported
 TEST_P(SDFFeatures_TEST, FallbackToFixedJoint)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/test.world");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -717,7 +717,7 @@ TEST_P(SDFFeatures_TEST, FallbackToFixedJoint)
 TEST_P(SDFFeatures_TEST, JointsAcrossNestedModels)
 {
   WorldPtr world = this->LoadWorld(
-      TEST_WORLD_DIR "/joint_across_nested_models.sdf");
+    dartsim::worlds::kJointAcrossNestedModelsSdf);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -775,7 +775,7 @@ INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_FrameSemantics,
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "link_relative_to";
 
@@ -807,7 +807,7 @@ TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "collision_relative_to";
 
@@ -844,7 +844,7 @@ TEST_P(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "explicit_frames_with_links";
 
@@ -891,7 +891,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/model_frames.sdf");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "explicit_frames_with_collisions";
 
@@ -928,7 +928,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 {
-  WorldPtr world = this->LoadWorld(TEST_WORLD_DIR"/world_frames.sdf");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kWorldFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "M";
 
@@ -937,7 +937,6 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 
   const dart::dynamics::SkeletonPtr skeleton =
       dartWorld->getSkeleton(modelName);
-
 
   ASSERT_NE(nullptr, skeleton);
   ASSERT_EQ(1u, skeleton->getNumBodyNodes());
@@ -965,7 +964,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_TEST, Shapes)
 {
-  auto world = this->LoadWorld(TEST_WORLD_DIR"/shapes.sdf");
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kShapesSdf);
   ASSERT_NE(nullptr, world);
 
   auto dartWorld = world->GetDartsimWorld();

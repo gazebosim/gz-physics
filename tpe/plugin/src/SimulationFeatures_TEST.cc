@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
+
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
@@ -42,12 +43,14 @@
 
 #include <test/PhysicsPluginsList.hh>
 #include <test/Utils.hh>
+#include "Worlds.hh"
 
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
 #include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
 #include "World.hh"
+
 
 using namespace gz;
 
@@ -273,7 +276,7 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
     return;
 
   gzdbg << "Testing library " << library << std::endl;
-  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
+  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {
@@ -296,7 +299,7 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
   if (library.empty())
     return;
 
-  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
+  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {
@@ -435,7 +438,7 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
   if (library.empty())
     return;
 
-  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
+  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {
@@ -483,8 +486,7 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
   if (library.empty())
     return;
 
-  auto worlds =
-      LoadWorldsPiecemeal(library, TEST_WORLD_DIR "/nested_model.world");
+  const auto worlds = LoadWorlds(library, tpe::worlds::kNestedModelWorld);
 
   for (const auto &world : worlds)
   {
@@ -534,7 +536,10 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
   if (library.empty())
     return;
 
-  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes_bitmask.sdf");
+  const auto worldPath =
+    gz::common::testing::SourceFile(
+      "tpe", "plugin", "worlds", "shapes_bitmask.sdf");
+  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesBitmaskSdf);
 
   for (const auto &world : worlds)
   {
@@ -578,7 +583,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
   if (library.empty())
     return;
 
-  auto worlds = LoadWorlds(library, TEST_WORLD_DIR "/shapes.world");
+  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {

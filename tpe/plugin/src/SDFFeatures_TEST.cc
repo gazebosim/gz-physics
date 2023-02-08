@@ -23,6 +23,7 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+#include "Worlds.hh"
 
 #include <gz/plugin/Loader.hh>
 
@@ -90,7 +91,7 @@ World LoadWorld(const std::string &_world)
 // Test that the tpe plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckTpeData)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  auto world = LoadWorld(tpe::worlds::kTestWorld);
   auto tpeWorld = world.GetTpeLibWorld();
   ASSERT_NE(nullptr, tpeWorld);
 
@@ -363,7 +364,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
 // Test that the tpe plugin loaded nested models correctly.
 TEST(SDFFeatures_TEST, NestedModel)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/nested_model.world");
+  auto world = LoadWorld(tpe::worlds::kNestedModelWorld);
   auto tpeWorld = world.GetTpeLibWorld();
   ASSERT_NE(nullptr, tpeWorld);
 

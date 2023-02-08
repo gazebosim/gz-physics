@@ -25,8 +25,9 @@
 
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/sdf/ConstructJoint.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
@@ -208,7 +209,7 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     auto world = LoadPluginAndWorld<FeaturesContacts>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kShapesWorld);
     auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
 
@@ -245,7 +246,7 @@ TYPED_TEST(SimulationFeaturesStepTest, StepWorld)
     auto world = LoadPluginAndWorld<FeaturesStep>(
       this->loader,
       name,
-    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kShapesWorld);
     auto checkedOutput = StepWorld<FeaturesStep>(world, true, 1000).first;
     EXPECT_TRUE(checkedOutput);
   }
@@ -278,10 +279,9 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
     // See https://github.com/gazebosim/gz-physics/issues/483
     CHECK_UNSUPPORTED_ENGINE(name, "bullet")
 #endif
-
     auto world = LoadPluginAndWorld<FeaturesFalling>(
         this->loader, name,
-        gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+        common_test::worlds::kFallingWorld);
 
     auto [checkedOutput, output] =
       StepWorld<FeaturesFalling>(world, true, 1000);
@@ -344,7 +344,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
 #endif
     auto world = LoadPluginAndWorld<FeaturesShapeFeatures>(
         this->loader, name,
-        gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+        common_test::worlds::kShapesWorld);
     std::cerr << "world model count " << world->GetModelCount() << '\n';
     // test ShapeFeatures
     auto sphere = world->GetModel("sphere");
@@ -523,7 +523,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     auto world = LoadPluginAndWorld<FreeGroupFeatures>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "sphere.sdf"));
+      common_test::worlds::kSphereSdf);
 
     // model free group test
     auto model = world->GetModel("sphere");
@@ -611,7 +611,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+      common_test::worlds::kFallingWorld);
     auto sphere = world->GetModel("sphere");
     auto sphereCollision = sphere->GetLink(0)->GetShape(0);
     auto ground = world->GetModel("box");
@@ -660,7 +660,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes_bitmask.sdf"));
+      common_test::worlds::kShapesBitmaskWorld);
 
     auto baseBox = world->GetModel("box_base");
     auto filteredBox = world->GetModel("box_filtered");
@@ -705,7 +705,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kShapesWorld);
 
     auto sphere = world->GetModel("sphere");
     auto sphereFreeGroup = sphere->FindFreeGroup();
@@ -917,7 +917,7 @@ TYPED_TEST(SimulationFeaturesTestFeaturesContactPropertiesCallback, ContactPrope
       LoadPluginAndWorld<FeaturesContactPropertiesCallback>(
           this->loader,
           name,
-          gz::common::joinPaths(TEST_WORLD_DIR, "contact.sdf"));
+          common_test::worlds::kContactSdf);
 
     auto sphere = world->GetModel("sphere");
     auto groundPlane = world->GetModel("ground_plane");
@@ -1147,7 +1147,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "multiple_collisions.sdf"));
+      common_test::worlds::kMultipleCollisionsSdf);
 
     // model free group test
     auto model = world->GetModel("box");

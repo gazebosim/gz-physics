@@ -32,6 +32,7 @@
 #include <sdf/World.hh>
 
 #include "test/Utils.hh"
+#include "Worlds.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::CollisionDetector,
@@ -82,8 +83,7 @@ TestWorldPtr LoadWorld(
 //////////////////////////////////////////////////
 TEST_F(WorldFeaturesFixture, CollisionDetector)
 {
-  auto world = LoadWorld(this->engine,
-    gz::common::joinPaths(TEST_WORLD_DIR, "empty.sdf"));
+  const auto world = LoadWorld(this->engine, dartsim::worlds::kEmptySdf);
   EXPECT_EQ("ode", world->GetCollisionDetector());
 
   world->SetCollisionDetector("banana");
@@ -105,8 +105,7 @@ TEST_F(WorldFeaturesFixture, CollisionDetector)
 //////////////////////////////////////////////////
 TEST_F(WorldFeaturesFixture, Solver)
 {
-  auto world = LoadWorld(this->engine,
-    gz::common::joinPaths(TEST_WORLD_DIR, "empty.sdf"));
+  const auto world = LoadWorld(this->engine, dartsim::worlds::kEmptySdf);
 
   EXPECT_EQ("DantzigBoxedLcpSolver", world->GetSolver());
 

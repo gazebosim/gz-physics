@@ -19,7 +19,8 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
-#include "TestLibLoader.hh"
+#include "test/Resources.hh"
+#include "test/TestLibLoader.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/RequestEngine.hh>
@@ -34,8 +35,6 @@
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <gz/common/MeshManager.hh>
-
-// #include <sdf/Root.hh>
 
 template <class T>
 class CollisionTest:
@@ -100,8 +99,7 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
     auto model = world->ConstructEmptyModel("mesh");
     auto link = model->ConstructEmptyLink("link");
 
-    const std::string meshFilename = gz::common::joinPaths(
-      GZ_PHYSICS_RESOURCE_DIR, "chassis.dae");
+    const std::string meshFilename = gz::physics::test::resources::kChassisDae;
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshFilename);
 
