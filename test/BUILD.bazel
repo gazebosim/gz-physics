@@ -1,0 +1,264 @@
+load(
+    "@gz//bazel/skylark:build_defs.bzl",
+    "GZ_ROOT",
+    "GZ_VISIBILITY",
+)
+
+cc_library(
+    name = "test_headers",
+    srcs = glob(["*.hh"]),
+    includes = ["."],
+    visibility = GZ_VISIBILITY,
+)
+
+cc_library(
+    name = "common_test_dartsim",
+    hdrs = ["common_test/TestLibLoader.hh"],
+    data = [
+        GZ_ROOT + "physics/dartsim:libgz-physics-dartsim-plugin.so",
+        "common_test/worlds",
+        GZ_ROOT + "physics:resources",
+    ],
+    includes = ["common_test"],
+    deps = [
+        ":test_headers",
+        GZ_ROOT + "common",
+        GZ_ROOT + "common/testing",
+        GZ_ROOT + "physics",
+        GZ_ROOT + "plugin:loader",
+    ],
+)
+
+cc_library(
+    name = "common_test_bullet-featherstone",
+    hdrs = ["common_test/TestLibLoader.hh"],
+    data = [
+        GZ_ROOT + "physics/bullet-featherstone:libgz-physics-bullet-featherstone-plugin.so",
+        "common_test/worlds",
+        GZ_ROOT + "physics:resources",
+    ],
+    includes = ["common_test"],
+    deps = [
+        ":test_headers",
+        GZ_ROOT + "common",
+        GZ_ROOT + "common/testing",
+        GZ_ROOT + "physics",
+        GZ_ROOT + "plugin:loader",
+    ],
+)
+
+physics_engines = [
+    "dartsim",
+    "bullet-featherstone",
+]
+
+[cc_test(
+    name = "addexternalforcetorque_%s" % engine,
+    srcs = [
+        "common_test/addexternalforcetorque.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "basic_test_%s" % engine,
+    srcs = [
+        "common_test/basic_test.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "collisions_%s" % engine,
+    srcs = [
+        "common_test/collisions.cc",
+    ],
+    defines = [
+        'GZ_PHYSICS_RESOURCE_DIR=\\"physics/resources/\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "common/graphics",
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:mesh",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "construct_empty_world_%s" % engine,
+    srcs = [
+        "common_test/construct_empty_world.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "free_joint_features_%s" % engine,
+    srcs = [
+        "common_test/free_joint_features.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "joint_features_%s" % engine,
+    srcs = [
+        "common_test/joint_features.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "kinematic_features_%s" % engine,
+    srcs = [
+        "common_test/kinematic_features.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "physics:sdf",
+        "@eigen3",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "link_features_%s" % engine,
+    srcs = [
+        "common_test/link_features.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "shape_features_%s" % engine,
+    srcs = [
+        "common_test/shape_features.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "simulation_features_%s" % engine,
+    srcs = [
+        "common_test/simulation_features.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]
+
+[cc_test(
+    name = "world_features_%s" % engine,
+    srcs = [
+        "common_test/world_features.cc",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+        "LIB_TO_TEST": "physics/%s/libgz-physics-%s-plugin.so" % (engine, engine),
+    },
+    deps = [
+        ":common_test_%s" % engine,
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics:sdf",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for engine in physics_engines]

@@ -20,6 +20,7 @@
 #include <LinearMath/btScalar.h>
 
 #include <gz/common/Console.hh>
+#include <gz/common/testing/TestPaths.hh>
 #include <gz/plugin/Loader.hh>
 
 #include <gz/math/Helpers.hh>
@@ -102,8 +103,11 @@ class JointTransmittedWrenchFixture :
       auto engine = gz::physics::RequestEngine3d<T>::From(plugin);
       ASSERT_NE(nullptr, engine);
 
+      const auto worldPath =
+        gz::common::testing::TestFile(
+            "common_test", "worlds", "pendulum_joint_wrench.sdf");
       sdf::Root root;
-      const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "pendulum_joint_wrench.sdf"));
+      const sdf::Errors errors = root.Load(worldPath);
       ASSERT_TRUE(errors.empty()) << errors.front();
 
       this->world = engine->ConstructWorld(*root.WorldByIndex(0));

@@ -19,7 +19,7 @@
 
 #define GZ_UNITTEST_EXPECTDATA_ACCESS
 
-#include "utils/TestDataTypes.hh"
+#include "TestDataTypes.hh"
 #include "gz/physics/SpecifyData.hh"
 #include "gz/math/Vector3.hh"
 

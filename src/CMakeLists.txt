@@ -26,7 +26,9 @@ gz_build_tests(
   TYPE UNIT
   SOURCES ${gtest_sources}
   ENVIRONMENT
-    GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
+    GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+  INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}/test)
 
 if(TARGET UNIT_FindFeatures_TEST)
   target_link_libraries(UNIT_FindFeatures_TEST

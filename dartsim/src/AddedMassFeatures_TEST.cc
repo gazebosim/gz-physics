@@ -19,6 +19,8 @@
 #include <dart/dynamics/BodyNode.hpp>
 
 #include <gz/common/Console.hh>
+#include <gz/common/testing/TestPaths.hh>
+
 #include <gz/math/eigen3.hh>
 #include <gz/plugin/Loader.hh>
 
@@ -121,7 +123,9 @@ TEST(AddedMassFeatures, AddedMass)
     0, 0, 0, 0, 1, 0,
     0, 0, 0, 0, 0, 1;
 
-  auto world = LoadWorld(TEST_WORLD_DIR"/added_mass.sdf");
+  const auto worldPath =
+    gz::common::testing::SourceFile("dartsim", "worlds", "added_mass.sdf");
+  const auto world = LoadWorld(worldPath);
   ASSERT_NE(nullptr, world);
 
   auto dartWorld = world->GetDartsimWorld();

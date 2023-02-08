@@ -5,4 +5,4 @@ set(tests
 )
 
 gz_add_benchmarks(SOURCES ${tests}
-  INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/src)
+  INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/test)

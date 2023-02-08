@@ -23,7 +23,7 @@
 #include "gz/physics/CanReadData.hh"
 #include "gz/physics/CanWriteData.hh"
 
-#include "utils/TestDataTypes.hh"
+#include "TestDataTypes.hh"
 
 using gz::physics::CanReadRequiredData;
 using gz::physics::CanReadExpectedData;

@@ -87,6 +87,7 @@ gz_build_tests(
     gz-plugin${GZ_PLUGIN_VER}::loader
     gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
     gz-common${GZ_COMMON_VER}::geospatial
+    gz-common${GZ_COMMON_VER}::testing
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
@@ -95,10 +96,8 @@ gz_build_tests(
     GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
 
 foreach(test ${tests})
-
   target_compile_definitions(${test} PRIVATE
     "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\""
-    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
 
   if (DART_HAS_CONTACT_SURFACE_HEADER)
@@ -107,11 +106,4 @@ foreach(test ${tests})
 
   # Helps when we want to build a single test after making changes to dartsim_plugin
   add_dependencies(${test} ${dartsim_plugin})
-endforeach()
-
-foreach(test UNIT_FindFeatures_TEST UNIT_RequestFeatures_TEST)
-  if(TARGET ${test})
-    target_compile_definitions(${test} PRIVATE
-      "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
-  endif()
 endforeach()

@@ -39,6 +39,8 @@
 
 #include <sdf/Root.hh>
 
+#include <gz/common/testing/TestPaths.hh>
+
 using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
 
 template <class T>
@@ -80,6 +82,12 @@ struct GravityFeatures : gz::physics::FeatureList<
 using WorldFeaturesTestGravity = WorldFeaturesTest<GravityFeatures>;
 
 /////////////////////////////////////////////////
+std::string CommonTestFile(const std::string &_worldName)
+{
+  return gz::common::testing::TestFile("common_test", "worlds", _worldName);
+}
+
+/////////////////////////////////////////////////
 TEST_F(WorldFeaturesTestGravity, GravityFeatures)
 {
   for (const std::string &name : this->pluginNames)
@@ -92,9 +100,10 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
                 std::string::npos);
 
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "falling.world");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(
-      gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+    const sdf::Errors errors = root.Load(worldPath);
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);
@@ -206,7 +215,8 @@ TEST_F(WorldFeaturesTestConstructModel, ConstructModelUnsortedLinks)
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-      gz::common::joinPaths(TEST_WORLD_DIR, "world_unsorted_links.sdf"));
+      CommonTestFile("world_unsorted_links.sdf"));
+
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     ASSERT_NE(nullptr, sdfWorld);
@@ -244,8 +254,7 @@ class WorldModelTest : public WorldFeaturesTest<WorldModelFeatureList>
         gz::physics::RequestEngine3d<WorldModelFeatureList>::From(plugin);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(
-        gz::common::joinPaths(TEST_WORLD_DIR, "world_joint_test.sdf"));
+    const sdf::Errors errors = root.Load(CommonTestFile("world_joint_test.sdf"));
     EXPECT_TRUE(errors.empty()) << errors;
     if (errors.empty())
     {

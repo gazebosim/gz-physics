@@ -33,6 +33,8 @@
 
 #include <sdf/Root.hh>
 
+#include <gz/common/testing/TestPaths.hh>
+
 template <class T>
 class KinematicFeaturesTest:
  public testing::Test, public gz::physics::TestLibLoader
@@ -93,9 +95,10 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
     auto engine = gz::physics::RequestEngine3d<KinematicFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "string_pendulum.sdf");
     sdf::Root root;
-    const sdf::Errors errors =
-      root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "string_pendulum.sdf"));
+    const sdf::Errors errors = root.Load(worldPath);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));

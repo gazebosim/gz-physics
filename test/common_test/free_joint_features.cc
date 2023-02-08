@@ -36,7 +36,8 @@
 #include "gz/physics/sdf/ConstructModel.hh"
 #include "gz/physics/sdf/ConstructNestedModel.hh"
 #include "gz/physics/sdf/ConstructWorld.hh"
-// #include "test/Utils.hh"
+
+#include <gz/common/testing/TestPaths.hh>
 
 struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::GetEngineInfo,
@@ -112,7 +113,9 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors &errors = root.Load(TEST_WORLD_DIR "/world_with_nested_model.sdf");
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "world_with_nested_model.sdf");
+    const sdf::Errors &errors = root.Load(worldPath);
     EXPECT_EQ(0u, errors.size()) << errors;
 
     EXPECT_EQ(1u, root.WorldCount());
@@ -163,7 +166,9 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors &errors = root.Load(TEST_WORLD_DIR "/world_with_nested_model.sdf");
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "world_with_nested_model.sdf");
+    const sdf::Errors &errors = root.Load(worldPath);
     EXPECT_EQ(0u, errors.size()) << errors;
 
     EXPECT_EQ(1u, root.WorldCount());

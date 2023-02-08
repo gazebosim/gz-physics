@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "gz/physics/CompositeData.hh"
-#include "utils/TestDataTypes.hh"
+#include "TestDataTypes.hh"
 
 using namespace gz;
 

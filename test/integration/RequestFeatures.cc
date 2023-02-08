@@ -29,8 +29,8 @@
 
 #include <gz/plugin/Loader.hh>
 
-#include "../../src/TestUtilities.hh"
-#include "../MockFeatures.hh"
+#include "TestUtilities.hh"
+#include "MockFeatures.hh"
 
 TEST(RequestFeatures_TEST, Casting)
 {

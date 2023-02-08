@@ -25,7 +25,7 @@
 #include <gz/math/eigen3/Conversions.hh>
 
 #include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "Utils.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
@@ -44,6 +44,8 @@
 #include <sdf/Model.hh>
 #include <sdf/Root.hh>
 #include <sdf/Sphere.hh>
+
+#include <gz/common/testing/TestPaths.hh>
 
 template <class T>
 class LinkFeaturesTest:
@@ -108,7 +110,10 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "sphere.sdf"));
+
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "sphere.sdf");
+    const sdf::Errors errors = root.Load(worldPath);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"sphere"};

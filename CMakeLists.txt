@@ -42,6 +42,8 @@ gz_find_package(gz-common5
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
 
+gz_find_package(gz-common5 COMPONENTS testing)
+
 #--------------------------------------
 # Find gz-math
 gz_find_package(gz-math7 REQUIRED COMPONENTS eigen3)

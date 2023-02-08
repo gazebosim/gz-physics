@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <cmath>
 
-#include "utils/TestDataTypes.hh"
+#include "TestDataTypes.hh"
 
 std::size_t gNumTests = 100000;
 

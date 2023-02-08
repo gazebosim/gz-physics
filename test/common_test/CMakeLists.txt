@@ -1,5 +1,4 @@
 set(TEST_TYPE "COMMON_TEST")
-include_directories(${BULLET_INCLUDE_DIRS})
 
 set(tests
   added_mass
@@ -55,6 +54,7 @@ foreach(test ${tests})
     PUBLIC
       gz-plugin${GZ_PLUGIN_VER}::loader
       gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+      gz-common${GZ_COMMON_VER}::testing
       ${PROJECT_LIBRARY_TARGET_NAME}
       ${PROJECT_LIBRARY_TARGET_NAME}-sdf
       ${PROJECT_LIBRARY_TARGET_NAME}-mesh
@@ -62,9 +62,13 @@ foreach(test ${tests})
       gtest_main
   )
 
+  target_include_directories(${test_executable}
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}/test)
+
   target_compile_definitions(${test_executable} PRIVATE
-    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
+    "TESTING_PROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\""
   )
 
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
@@ -74,3 +78,7 @@ foreach(test ${tests})
   configure_common_test("dartsim" ${test_executable})
   configure_common_test("tpe" ${test_executable})
 endforeach()
+
+if(TARGET COMMON_TEST_joint_transmitted_wrench_features)
+  target_include_directories(COMMON_TEST_joint_transmitted_wrench_features PRIVATE ${BULLET_INCLUDE_DIRS})
+endif()

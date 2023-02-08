@@ -42,6 +42,8 @@
 #include <sdf/Root.hh>
 #include <sdf/Model.hh>
 
+#include <gz/common/testing/TestPaths.hh>
+
 template <class T>
 class LinkFeaturesTest:
   public testing::Test, public gz::physics::TestLibLoader
@@ -104,8 +106,10 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "empty.sdf");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "empty.sdf"));
+    const sdf::Errors errors = root.Load(worldPath);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -302,8 +306,10 @@ TYPED_TEST(LinkFeaturesTest, AxisAlignedBoundingBox)
     auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "test.world");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(worldPath);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -353,8 +359,10 @@ TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
     auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
+    const auto worldPath =
+      gz::common::testing::TestFile("common_test", "worlds", "contact.sdf");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "contact.sdf"));
+    const sdf::Errors errors = root.Load(worldPath);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};

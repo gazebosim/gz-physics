@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "gz/physics/Cloneable.hh"
-#include "utils/TestDataTypes.hh"
+#include "TestDataTypes.hh"
 
 using namespace gz;
 using physics::Cloneable;

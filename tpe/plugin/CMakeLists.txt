@@ -57,6 +57,7 @@ gz_build_tests(
     ${features}
     gz-plugin${GZ_PLUGIN_VER}::loader
     gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+    gz-common${GZ_COMMON_VER}::testing
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
   TEST_LIST tests
@@ -68,7 +69,6 @@ foreach(test ${tests})
   target_include_directories(${test} PRIVATE ${tpelib_dir})
   target_compile_definitions(${test} PRIVATE
     "tpe_plugin_LIB=\"$<TARGET_FILE:${tpe_plugin}>\""
-    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
 
 endforeach()

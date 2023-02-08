@@ -23,7 +23,7 @@
 #include <gz/physics/Feature.hh>
 #include <gz/plugin/Loader.hh>
 
-#include <test/PhysicsPluginsList.hh>
+#include <PhysicsPluginsList.hh>
 
 using namespace gz;
 namespace test
