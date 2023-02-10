@@ -19,7 +19,7 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
-#include "../helpers/TestLibLoader.hh"
+#include "TestLibLoader.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/FindFeatures.hh>
@@ -51,9 +51,28 @@ class ConstructEmptyWorldTest:
     }
   }
 
+  using FeaturePolicy3d = gz::physics::FeaturePolicy3d;
+
+  public: void MakeEmptyWorld(
+              const std::string &_pluginName,
+              gz::physics::EnginePtr<FeaturePolicy3d, T> &_engine,
+              gz::physics::WorldPtr<FeaturePolicy3d, T> &_world)
+  {
+    std::cout << "Testing plugin: " << _pluginName << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(_pluginName);
+
+    _engine = gz::physics::RequestEngine3d<T>::From(plugin);
+    ASSERT_NE(nullptr, _engine);
+
+    _world = _engine->ConstructEmptyWorld("empty world");
+    ASSERT_NE(nullptr, _world);
+  }
+
   public: std::set<std::string> pluginNames;
   public: gz::plugin::Loader loader;
 };
+
+using gz::physics::FeaturePolicy3d;
 
 using FeaturesUpToEmptyWorld = gz::physics::FeatureList<
   gz::physics::GetEngineInfo,
@@ -69,21 +88,15 @@ TYPED_TEST(ConstructEmptyWorldTest, ConstructUpToEmptyWorld)
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
 
-    auto engine =
-      gz::physics::RequestEngine3d<FeaturesUpToEmptyWorld>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
+    this->MakeEmptyWorld(name, engine, world);
   }
 }
 
 using FeaturesUpToGetWorldFromEngine = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
+  FeaturesUpToEmptyWorld,
   gz::physics::GetWorldFromEngine
 >;
 
@@ -92,7 +105,7 @@ class ConstructEmptyWorldTestUpToGetWorldFromEngine :
   public ConstructEmptyWorldTest<T>{};
 
 using ConstructEmptyWorldTestUpToGetWorldFromEngineTypes =
-  ::testing::Types<FeaturesUpToEmptyWorld>;
+  ::testing::Types<FeaturesUpToGetWorldFromEngine>;
 TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToGetWorldFromEngine,
                  ConstructEmptyWorldTestUpToGetWorldFromEngineTypes);
 
@@ -102,25 +115,17 @@ TYPED_TEST(ConstructEmptyWorldTestUpToGetWorldFromEngine,
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
 
-    auto engine =
-      gz::physics::RequestEngine3d<FeaturesUpToGetWorldFromEngine>::From(
-        plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
     EXPECT_EQ("empty world", world->GetName());
     EXPECT_EQ(engine, world->GetEngine());
   }
 }
 
 using FeaturesUpToEmptyModelFeature = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
+  FeaturesUpToGetWorldFromEngine,
   gz::physics::ConstructEmptyModelFeature
 >;
 
@@ -138,15 +143,10 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyModelFeature,
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
 
-    auto engine =
-      gz::physics::RequestEngine3d<FeaturesUpToEmptyModelFeature>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
     EXPECT_EQ("empty world", world->GetName());
     EXPECT_EQ(engine, world->GetEngine());
 
@@ -157,10 +157,7 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyModelFeature,
 }
 
 using FeaturesUpToGetModelFromWorld = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
-  gz::physics::ConstructEmptyModelFeature,
+  FeaturesUpToEmptyModelFeature,
   gz::physics::GetModelFromWorld
 >;
 
@@ -178,15 +175,10 @@ TYPED_TEST(ConstructEmptyWorldTestUpToGetModelFromWorld,
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
 
-    auto engine =
-      gz::physics::RequestEngine3d<FeaturesUpToGetModelFromWorld>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
     EXPECT_EQ("empty world", world->GetName());
     EXPECT_EQ(engine, world->GetEngine());
 
@@ -199,11 +191,7 @@ TYPED_TEST(ConstructEmptyWorldTestUpToGetModelFromWorld,
 }
 
 using FeaturesUpToEmptyNestedModelFeature = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
-  gz::physics::ConstructEmptyModelFeature,
-  gz::physics::GetModelFromWorld,
+  FeaturesUpToGetModelFromWorld,
   gz::physics::ConstructEmptyNestedModelFeature,
   gz::physics::GetNestedModelFromModel
 >;
@@ -222,14 +210,10 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyNestedModelFeature,
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
 
-    auto engine = gz::physics::RequestEngine3d<FeaturesUpToEmptyNestedModelFeature>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
     auto model = world->ConstructEmptyModel("empty model");
 
     auto nestedModel = model->ConstructEmptyNestedModel("empty nested model");
@@ -248,10 +232,7 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyNestedModelFeature,
 }
 
 using FeaturesUpToEmptyLink = gz::physics::FeatureList<
-  gz::physics::GetEngineInfo,
-  gz::physics::ConstructEmptyWorldFeature,
-  gz::physics::GetWorldFromEngine,
-  gz::physics::ConstructEmptyModelFeature,
+  FeaturesUpToEmptyModelFeature,
   gz::physics::GetLinkFromModel,
   gz::physics::ConstructEmptyLinkFeature
 >;
@@ -269,15 +250,10 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyLink, ConstructUpToEmptyWorld)
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
 
-    auto engine =
-      gz::physics::RequestEngine3d<FeaturesUpToEmptyLink>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
     EXPECT_EQ("empty world", world->GetName());
     EXPECT_EQ(engine, world->GetEngine());
 
@@ -320,15 +296,10 @@ TYPED_TEST(ConstructEmptyWorldTestUpToRemove, ConstructUpToEmptyWorld)
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
 
-    auto engine =
-      gz::physics::RequestEngine3d<FeaturesUpToRemove>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
     auto model = world->ConstructEmptyModel("empty model");
     ASSERT_NE(nullptr, model);
     auto modelAlias = world->GetModel(0);
@@ -416,16 +387,10 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyNestedModelFeature2,
 {
   for (const std::string &name : this->pluginNames)
   {
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
 
-    auto engine =
-      gz::physics::RequestEngine3d<FeaturesUpToEmptyNestedModelFeature2>::From(
-        plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = engine->ConstructEmptyWorld("empty world");
-    ASSERT_NE(nullptr, world);
     auto model1 = world->ConstructEmptyModel("model1");
     ASSERT_NE(nullptr, model1);
     EXPECT_EQ(0ul, model1->GetIndex());

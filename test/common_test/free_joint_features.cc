@@ -18,7 +18,7 @@
 
 #include <tuple>
 
-#include "../helpers/TestLibLoader.hh"
+#include "TestLibLoader.hh"
 
 #include <gz/common/Console.hh>
 #include <gz/common/Util.hh>

@@ -494,8 +494,17 @@ Identity JointFeatures::AttachFixedJoint(
       bn->setName(skeleton->getName() + '/' + childLinkName);
     }
   }
+
+  // Get the model of child link and fully scoped joint name.
+  auto modelID = this->GetModelOfLinkImpl(_childID);
+  const std::string fullJointName =
+      this->FullyScopedJointName(modelID, _name);
+  if (fullJointName.empty())
+    return this->GenerateInvalidId();
+
   const std::size_t jointID = this->AddJoint(
-      bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties));
+      bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties),
+      fullJointName, modelID);
   if (linkInfo->weldedNodes.size() > 0)
   {
     // weld constraint needs to be updated after moving to new skeleton
@@ -592,8 +601,17 @@ Identity JointFeatures::AttachRevoluteJoint(
       bn->setName(skeleton->getName() + '/' + linkInfo->name);
     }
   }
+
+  // Get the model of child link and fully scoped joint name.
+  auto modelID = this->GetModelOfLinkImpl(_childID);
+  const std::string fullJointName =
+      this->FullyScopedJointName(modelID, _name);
+  if (fullJointName.empty())
+    return this->GenerateInvalidId();
+
   const std::size_t jointID = this->AddJoint(
-      bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties));
+      bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties),
+        fullJointName, modelID);
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();
@@ -661,8 +679,17 @@ Identity JointFeatures::AttachPrismaticJoint(
       bn->setName(skeleton->getName() + '/' + linkInfo->name);
     }
   }
+
+  // Get the model of child link and fully scoped joint name.
+  auto modelID = this->GetModelOfLinkImpl(_childID);
+  const std::string fullJointName =
+      this->FullyScopedJointName(modelID, _name);
+  if (fullJointName.empty())
+    return this->GenerateInvalidId();
+
   const std::size_t jointID = this->AddJoint(
-      bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties));
+      bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties),
+      fullJointName, modelID);
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();

@@ -88,6 +88,7 @@ using GzContactSurfaceHandlerPtr = std::shared_ptr<GzContactSurfaceHandler>;
 #endif
 
 class SimulationFeatures :
+    public CanWriteRequiredData<SimulationFeatures, RequireData<WorldPoses>>,
     public CanWriteExpectedData<SimulationFeatures,
       ExpectData<ChangedWorldPoses>>,
     public virtual Base,
@@ -104,6 +105,8 @@ class SimulationFeatures :
       ForwardStep::Output &_h,
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
+
+  public: void Write(WorldPoses &_worldPoses) const;
 
   public: void Write(ChangedWorldPoses &_changedPoses) const;
 
