@@ -54,36 +54,38 @@
 
 #include <test/Utils.hh>
 
-struct TestFeatureList : gz::physics::FeatureList<
-    gz::physics::GetEntities,
-    gz::physics::GetBasicJointState,
-    gz::physics::SetBasicJointState,
-    gz::physics::LinkFrameSemantics,
-    gz::physics::dartsim::RetrieveWorld,
-    gz::physics::sdf::ConstructSdfCollision,
-    gz::physics::sdf::ConstructSdfJoint,
-    gz::physics::sdf::ConstructSdfLink,
-    gz::physics::sdf::ConstructSdfModel,
-    gz::physics::sdf::ConstructSdfNestedModel,
-    gz::physics::sdf::ConstructSdfWorld
+using namespace gz;
+
+struct TestFeatureList : physics::FeatureList<
+    physics::GetEntities,
+    physics::GetBasicJointState,
+    physics::SetBasicJointState,
+    physics::LinkFrameSemantics,
+    physics::dartsim::RetrieveWorld,
+    physics::sdf::ConstructSdfCollision,
+    physics::sdf::ConstructSdfJoint,
+    physics::sdf::ConstructSdfLink,
+    physics::sdf::ConstructSdfModel,
+    physics::sdf::ConstructSdfNestedModel,
+    physics::sdf::ConstructSdfWorld
 > { };
 
-using World = gz::physics::World3d<TestFeatureList>;
-using WorldPtr = gz::physics::World3dPtr<TestFeatureList>;
-using ModelPtr = gz::physics::Model3dPtr<TestFeatureList>;
-using LinkPtr = gz::physics::Link3dPtr<TestFeatureList>;
+using World = physics::World3d<TestFeatureList>;
+using WorldPtr = physics::World3dPtr<TestFeatureList>;
+using ModelPtr = physics::Model3dPtr<TestFeatureList>;
+using LinkPtr = physics::Link3dPtr<TestFeatureList>;
 
 /////////////////////////////////////////////////
 auto LoadEngine()
 {
-  gz::plugin::Loader loader;
+  plugin::Loader loader;
   loader.LoadLib(dartsim_plugin_LIB);
 
-  gz::plugin::PluginPtr dartsim =
+  plugin::PluginPtr dartsim =
       loader.Instantiate("gz::physics::dartsim::Plugin");
 
   auto engine =
-      gz::physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+      physics::RequestEngine3d<TestFeatureList>::From(dartsim);
   return engine;
 }
 
@@ -537,6 +539,45 @@ TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
 }
 
 /////////////////////////////////////////////////
+// The model, link and joint structure in the
+// test world `world_with_nested_model.sdf`:
+//
+//  model and link tree:
+//    parent_model
+//      nested_model
+//        nested_link1
+//        nested_link2
+//      link1
+//      nested_model2
+//        nested_link1
+//      nested_model3
+//        link1
+//    parent_model2
+//      child_model
+//        grand_child_model
+//          link1
+//
+//  models:
+//    parent_model
+//    parent_model::nested_model
+//    parent_model::nested_model2
+//    parent_model::nested_model3
+//    parent_model2
+//    parent_model2::child_model
+//    parent_model2::child_model::grand_child_model
+//
+//  links:
+//    parent_model::nested_link1::nested_link1
+//    parent_model::nested_link1::nested_link2
+//    parent_model::link1
+//    parent_model::nested_model2::nested_link1
+//    parent_model::nested_model3::link1
+//    parent_model2::child_model::grand_child_model::link1
+//
+//  joints:
+//    parent_model::nested_model::nested_joint
+//    parent_model::joint1
+//
 TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 {
   WorldPtr world =
@@ -559,8 +600,14 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
   auto nestedModel = parentModel->GetNestedModel("nested_model");
   ASSERT_NE(nullptr, nestedModel);
 
+  // DART associates the nested joint with the skeleton of the top level
+  // model when the nested model is joined to the parent model, but Gazebo
+  // should not find grandchild joints when querying a parent model.
   auto nestedJoint = parentModel->GetJoint("nested_joint");
-  EXPECT_NE(nullptr, nestedJoint);
+  EXPECT_EQ(nullptr, nestedJoint);
+
+  // The nested_joint should be found when querying the nested model.
+  EXPECT_NE(nullptr, nestedModel->GetJoint("nested_joint"));
 
   EXPECT_EQ(1u, parentModel->GetLinkCount());
   EXPECT_NE(nullptr, parentModel->GetLink("link1"));
@@ -753,7 +800,7 @@ TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
   dartWorld->step();
 
   // Step once and check
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expWorldPose, link2->getWorldTransform(), 1e-3));
 }
 
@@ -784,13 +831,13 @@ TEST_P(SDFFeatures_FrameSemantics, CollisionRelativeTo)
   Eigen::Isometry3d expPose;
   expPose = Eigen::Translation3d(0, 0, -1);
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 
   // Step once and check, the relative pose should still be the same
   dartWorld->step();
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
@@ -821,7 +868,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
   Eigen::Isometry3d link1ExpPose;
   link1ExpPose = Eigen::Translation3d(1, 0, 1);
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link1ExpPose, link1->getWorldTransform(), 1e-5));
 
   // Expect the world pose of L2 to be the same as the world pose of F2, which
@@ -829,15 +876,15 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
   Eigen::Isometry3d link2ExpPose;
   link2ExpPose = Eigen::Translation3d(1, 0, 0);
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link2ExpPose, link2->getWorldTransform(), 1e-5));
 
   // Step once and check
   dartWorld->step();
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link1ExpPose, link1->getWorldTransform(), 1e-5));
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       link2ExpPose, link2->getWorldTransform(), 1e-5));
 }
 
@@ -868,13 +915,13 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
   Eigen::Isometry3d expPose;
   expPose = Eigen::Translation3d(0, 0, 1);
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 
   // Step once and check
   dartWorld->step();
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, collision->getRelativeTransform(), 1e-5));
 }
 
@@ -905,13 +952,13 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 
   // Since we can't get the skeleton's world transform, we use the world
   // transform of L1 which is at the origin of the model frame.
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, link1->getWorldTransform(), 1e-5));
 
   // Step once and check
   dartWorld->step();
 
-  EXPECT_TRUE(gz::physics::test::Equal(
+  EXPECT_TRUE(physics::test::Equal(
       expPose, link1->getWorldTransform(), 1e-5));
 }
 

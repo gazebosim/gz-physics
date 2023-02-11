@@ -117,14 +117,18 @@ struct JointInfo
 
 inline btMatrix3x3 convertMat(Eigen::Matrix3d mat)
 {
-  return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
-                     mat(1, 0), mat(1, 1), mat(1, 2),
-                     mat(2, 0), mat(2, 1), mat(2, 2));
+  return btMatrix3x3(
+      static_cast<btScalar>(mat(0, 0)), static_cast<btScalar>(mat(0, 1)),
+      static_cast<btScalar>(mat(0, 2)), static_cast<btScalar>(mat(1, 0)),
+      static_cast<btScalar>(mat(1, 1)), static_cast<btScalar>(mat(1, 2)),
+      static_cast<btScalar>(mat(2, 0)), static_cast<btScalar>(mat(2, 1)),
+      static_cast<btScalar>(mat(2, 2)));
 }
 
 inline btVector3 convertVec(Eigen::Vector3d vec)
 {
-  return btVector3(vec(0), vec(1), vec(2));
+  return btVector3(static_cast<btScalar>(vec(0)), static_cast<btScalar>(vec(1)),
+                   static_cast<btScalar>(vec(2)));
 }
 
 inline Eigen::Matrix3d convert(btMatrix3x3 mat)
@@ -143,6 +147,25 @@ inline Eigen::Vector3d convert(btVector3 vec)
   return val;
 }
 
+inline math::Vector3d convertToGz(const btVector3 &_vec)
+{
+  return math::Vector3d(_vec[0], _vec[1], _vec[2]);
+}
+
+inline math::Quaterniond convertToGz(const btMatrix3x3 &_mat)
+{
+  return math::Quaterniond(math::Matrix3d(_mat[0][0], _mat[0][1], _mat[0][2],
+                                          _mat[1][0], _mat[1][1], _mat[1][2],
+                                          _mat[2][0], _mat[2][1], _mat[2][2]));
+}
+
+inline math::Pose3d convertToGz(const btTransform &_pose)
+{
+  return math::Pose3d(convertToGz(_pose.getOrigin()),
+                      convertToGz(_pose.getBasis()));
+}
+
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: std::size_t entityCount = 0;
@@ -150,14 +173,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline std::size_t GetNextEntity()
   {
     return entityCount++;
-  }
-
-  public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
-  {
-    const auto id = this->GetNextEntity();
-    assert(id == 0);
-
-    return this->GenerateIdentity(0);
   }
 
   public: inline Identity AddWorld(WorldInfo _worldInfo)

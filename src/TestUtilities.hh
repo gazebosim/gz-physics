@@ -25,9 +25,10 @@
 
 #include <test/PhysicsPluginsList.hh>
 
+using namespace gz;
 namespace test
 {
-  class UnimplementedFeature : public virtual gz::physics::Feature
+  class UnimplementedFeature : public virtual physics::Feature
   {
     public: template <typename PolicyT>
     class Implementation : public virtual Feature::Implementation<PolicyT>
@@ -39,10 +40,10 @@ namespace test
   };
 }
 
-void PrimeTheLoader(gz::plugin::Loader &_loader)
+void PrimeTheLoader(plugin::Loader &_loader)
 {
   for (const std::string &library
-       : gz::physics::test::g_PhysicsPluginLibraries)
+       : physics::test::g_PhysicsPluginLibraries)
   {
     if (!library.empty())
       _loader.LoadLib(library);

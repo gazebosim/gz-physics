@@ -18,6 +18,8 @@
 #ifndef GZ_PHYSICS_SDF_CONSTRUCTCOLLISION_HH_
 #define GZ_PHYSICS_SDF_CONSTRUCTCOLLISION_HH_
 
+#include <string>
+
 #include <sdf/Collision.hh>
 
 #include <gz/physics/FeatureList.hh>
@@ -53,7 +55,6 @@ auto ConstructSdfCollision::Link<PolicyT, FeaturesT>::ConstructCollision(
         this->template Interface<ConstructSdfCollision>()
             ->ConstructSdfCollision(this->identity, _collision));
 }
-
 }
 }
 }
