@@ -633,7 +633,6 @@ Identity SDFFeatures::ConstructSdfLink(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
   const std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
-  this->AddJoint(joint);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
