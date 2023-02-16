@@ -1,5 +1,17 @@
 ## Ignition Physics 5.x
 
+### Ignition Physics 5.3.1 (2023-02-16)
+
+1. Fix memory corruption due to faulty refcount tracking
+    * [Pull request #480](https://github.com/gazebosim/gz-physics/pull/480)
+
+1. Port: 2 to 5
+    * [Pull request #476](https://github.com/gazebosim/gz-physics/pull/476)
+
+1. Prepare for 2.6.1 release
+    * [Pull request #468](https://github.com/gazebosim/gz-physics/pull/468)
+
+
 ### Ignition Physics 5.3.0 (2023-01-09)
 
 1. Fix windows warnings related to bullet 
