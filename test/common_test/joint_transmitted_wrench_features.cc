@@ -24,7 +24,7 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "../helpers/TestLibLoader.hh"
+#include "TestLibLoader.hh"
 #include "../Utils.hh"
 
 #include "gz/physics/FrameSemantics.hh"

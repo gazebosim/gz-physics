@@ -377,9 +377,11 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
   Wrench3d wrenchOut;
-  wrenchOut.force = convert(
+
+  // Convert the force and torque into the joint's frame of reference.
+  wrenchOut.force = jointInfo->tf_to_child.rotation() * convert(
     jointInfo->jointFeedback->m_reactionForces.getLinear());
-  wrenchOut.torque = convert(
+  wrenchOut.torque = jointInfo->tf_to_child.rotation() * convert(
     jointInfo->jointFeedback->m_reactionForces.getAngular());
   return wrenchOut;
 }
