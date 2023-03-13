@@ -15,6 +15,8 @@
  *
 */
 
+#include <memory>
+
 #include "AddedMassFeatures.hh"
 #include <dart/dynamics/Inertia.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
@@ -68,12 +70,15 @@ void AddedMassFeatures::SetLinkAddedMass(const Identity &_link,
 
       dart::dynamics::BodyNode::Properties bodyProperties;
       bodyProperties.mName = bn->getName() + "_fluid_added_mass";
-      bodyProperties.mInertia.setSpatialTensor(math::eigen3::convert(featherstoneMatrix));
+      bodyProperties.mInertia.setSpatialTensor(
+          math::eigen3::convert(featherstoneMatrix));
 
       dart::dynamics::WeldJoint::Properties jointProperties;
       jointProperties.mName =  bodyProperties.mName + "_WeldJoint";
 
-      auto result = bn->createChildJointAndBodyNodePair<dart::dynamics::WeldJoint>(jointProperties, bodyProperties);
+      auto result =
+        bn->createChildJointAndBodyNodePair<dart::dynamics::WeldJoint>(
+            jointProperties, bodyProperties);
       result.second->setGravityMode(false);
 
       {
