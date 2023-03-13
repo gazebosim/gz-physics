@@ -17,6 +17,7 @@
 
 #include "AddedMassFeatures.hh"
 #include <dart/dynamics/Inertia.hpp>
+#include <dart/dynamics/WeldJoint.hpp>
 
 namespace gz::physics::dartsim
 {
@@ -41,6 +42,7 @@ void AddedMassFeatures::SetLinkAddedMass(const Identity &_link,
     const Eigen::Vector3d localCom =
         math::eigen3::convert(sdfInertia.Pose().Pos());
     newInertia.setLocalCOM(localCom);
+    bn->setInertia(newInertia);
 
     if (sdfInertia.FluidAddedMass().has_value())
     {
@@ -64,11 +66,30 @@ void AddedMassFeatures::SetLinkAddedMass(const Identity &_link,
       // force at the center of mass using F=ma;
       bn->setGravityMode(false);
 
-      newInertia.setSpatialTensor(
-          newInertia.getSpatialTensor() +
-          math::eigen3::convert(featherstoneMatrix));
+      dart::dynamics::BodyNode::Properties bodyProperties;
+      bodyProperties.mName = bn->getName() + "_fluid_added_mass";
+      bodyProperties.mInertia.setSpatialTensor(math::eigen3::convert(featherstoneMatrix));
+
+      dart::dynamics::WeldJoint::Properties jointProperties;
+      jointProperties.mName =  bodyProperties.mName + "_WeldJoint";
+
+      auto result = bn->createChildJointAndBodyNodePair<dart::dynamics::WeldJoint>(jointProperties, bodyProperties);
+      result.second->setGravityMode(false);
+
+      {
+        const std::size_t id = this->GetNextEntity();
+        auto newLinkInfo = std::make_shared<LinkInfo>();
+        this->links.idToObject[id] = newLinkInfo;
+        newLinkInfo->link = result.second;
+      }
+
+      {
+        const std::size_t id = this->GetNextEntity();
+        auto newJointInfo = std::make_shared<JointInfo>();
+        this->joints.idToObject[id] = newJointInfo;
+        newJointInfo->joint = result.first;
+      }
     }
-    bn->setInertia(newInertia);
   }
 }
 
