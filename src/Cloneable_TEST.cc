@@ -20,8 +20,9 @@
 #include "gz/physics/Cloneable.hh"
 #include "utils/TestDataTypes.hh"
 
-using gz::physics::Cloneable;
-using gz::physics::MakeCloneable;
+using namespace gz;
+using physics::Cloneable;
+using physics::MakeCloneable;
 
 /////////////////////////////////////////////////
 TEST(Cloneable_TEST, Construct)

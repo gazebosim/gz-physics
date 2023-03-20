@@ -24,7 +24,7 @@
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "../helpers/TestLibLoader.hh"
+#include "TestLibLoader.hh"
 #include "../Utils.hh"
 
 #include <gz/physics/FindFeatures.hh>
@@ -75,28 +75,7 @@ class LinkFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-// A predicate-formatter for asserting that two vectors are approximately equal.
-class AssertVectorApprox
-{
-  public: explicit AssertVectorApprox(double _tol = 1e-6) : tol(_tol)
-  {
-  }
-
-  public: ::testing::AssertionResult operator()(
-              const char *_mExpr, const char *_nExpr, Eigen::Vector3d _m,
-              Eigen::Vector3d _n)
-  {
-    if (gz::physics::test::Equal(_m, _n, this->tol))
-      return ::testing::AssertionSuccess();
-
-    return ::testing::AssertionFailure()
-           << _mExpr << " and " << _nExpr << " ([" << _m.transpose()
-           << "] and [" << _n.transpose() << "]"
-           << ") are not equal";
-  }
-
-  private: double tol;
-};
+using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
 
 struct LinkFeaturesList : gz::physics::FeatureList<
     gz::physics::AddLinkExternalForceTorque,

@@ -20,7 +20,9 @@
 #include "gz/physics/CompositeData.hh"
 #include "utils/TestDataTypes.hh"
 
-using gz::physics::CompositeData;
+using namespace gz;
+
+using physics::CompositeData;
 
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, DestructorCoverage)
@@ -136,7 +138,7 @@ TEST(CompositeData_TEST, InsertOrAssign)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, CopyMoveOperators)
 {
-  gz::physics::CompositeData data =
+  physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
 
   EXPECT_EQ(3u, data.EntryCount());
@@ -144,7 +146,7 @@ TEST(CompositeData_TEST, CopyMoveOperators)
   EXPECT_TRUE(data.Has<DoubleData>());
   EXPECT_TRUE(data.Has<IntData>());
 
-  gz::physics::CompositeData emptyData;
+  physics::CompositeData emptyData;
   data = emptyData;
 
   EXPECT_EQ(0u, data.EntryCount());
@@ -167,10 +169,10 @@ struct zzzzzzzzz
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, CopyFunction)
 {
-  gz::physics::CompositeData data =
+  physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
 
-  gz::physics::CompositeData otherData =
+  physics::CompositeData otherData =
       CreateSomeData<BoolData, CharData, FloatData>();
 
   EXPECT_TRUE(data.Has<StringData>());
@@ -206,7 +208,7 @@ TEST(CompositeData_TEST, CopyFunction)
 
   // The next section is used for implementation line coverage to ensure that
   // we can correctly insert data entries in the center of the data map.
-  gz::physics::CompositeData zzzData = CreateSomeData<zzzzzzzzz>();
+  physics::CompositeData zzzData = CreateSomeData<zzzzzzzzz>();
   EXPECT_TRUE(zzzData.Has<zzzzzzzzz>());
   zzzData.Copy(otherData);
 
@@ -218,7 +220,7 @@ TEST(CompositeData_TEST, CopyFunction)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, CopyFunctionWithRequirements)
 {
-  gz::physics::CompositeData data =
+  physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
 
   EXPECT_FALSE(data.Requires<StringData>());
@@ -233,7 +235,7 @@ TEST(CompositeData_TEST, CopyFunctionWithRequirements)
   EXPECT_FALSE(data.Requires<IntData>());
 
 
-  gz::physics::CompositeData otherData =
+  physics::CompositeData otherData =
       CreateSomeData<BoolData, CharData, FloatData>();
   otherData.MakeRequired<BoolData>();
 
@@ -294,10 +296,10 @@ TEST(CompositeData_TEST, CopyFunctionWithRequirements)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, MergeFunction)
 {
-  gz::physics::CompositeData data =
+  physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
 
-  gz::physics::CompositeData otherData =
+  physics::CompositeData otherData =
       CreateSomeData<BoolData, CharData, FloatData>();
 
   EXPECT_TRUE(data.Has<StringData>());
@@ -318,7 +320,7 @@ TEST(CompositeData_TEST, MergeFunction)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, MergeFunctionWithRequirements)
 {
-  gz::physics::CompositeData data =
+  physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>();
 
   EXPECT_FALSE(data.Requires<StringData>());
@@ -333,7 +335,7 @@ TEST(CompositeData_TEST, MergeFunctionWithRequirements)
   EXPECT_FALSE(data.Requires<IntData>());
 
 
-  gz::physics::CompositeData otherData =
+  physics::CompositeData otherData =
       CreateSomeData<BoolData, CharData, FloatData>();
   otherData.MakeRequired<BoolData>();
 
@@ -374,7 +376,7 @@ TEST(CompositeData_TEST, MergeFunctionWithRequirements)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, Remove)
 {
-  gz::physics::CompositeData data;
+  physics::CompositeData data;
 
   // try to remove data from an empty container
   // it should return true because the container does not have it now
@@ -409,7 +411,7 @@ TEST(CompositeData_TEST, Remove)
 /////////////////////////////////////////////////
 TEST(CompositeData_TEST, Requirements)
 {
-  gz::physics::CompositeData requiredData;
+  physics::CompositeData requiredData;
 
   // If StringData was not already created, we should create a new one when it
   // gets marked as required, using the arguments passed in by MarkRequired
@@ -438,7 +440,7 @@ TEST(CompositeData_TEST, Requirements)
 
   // When we copy from a blank object, we should retain the required data and
   // lose everything else.
-  requiredData = gz::physics::CompositeData();
+  requiredData = physics::CompositeData();
   EXPECT_TRUE(requiredData.Has<StringData>());
   EXPECT_TRUE(requiredData.Has<IntData>());
   EXPECT_FALSE(requiredData.Has<DoubleData>());
@@ -449,7 +451,7 @@ TEST(CompositeData_TEST, Queries)
 {
   // test queries on empty container
   {
-    gz::physics::CompositeData data;
+    physics::CompositeData data;
     EXPECT_EQ(nullptr, data.Query<StringData>());
     EXPECT_EQ(nullptr, data.Query<DoubleData>());
     EXPECT_EQ(nullptr, data.Query<IntData>());
@@ -460,7 +462,7 @@ TEST(CompositeData_TEST, Queries)
   // copy/move operators and copy/move constructors, perhaps using return value
   // optimization. That gives us the wrong query behavior. If we instead did
   //
-  //   gz::physics::CompositeData data;
+  //   physics::CompositeData data;
   //   data = CreateSomeData<StringData, DoubleData, IntData>();
   //
   // we would get the correct query behavior. I feel like this is a bug in the
@@ -471,7 +473,7 @@ TEST(CompositeData_TEST, Queries)
   // considered good practice to call ResetQueries() before returning a
   // CompositeData from a function.
 
-  gz::physics::CompositeData data =
+  physics::CompositeData data =
       CreateSomeData<StringData, DoubleData, IntData>(true);
 
   std::set<std::string> unqueried, all;
@@ -562,7 +564,7 @@ TEST(CompositeData_TEST, Queries)
 
 
   // Make sure that the const-qualified version of query also works
-  EXPECT_NE(nullptr, static_cast<const gz::physics::CompositeData&>(
+  EXPECT_NE(nullptr, static_cast<const physics::CompositeData&>(
               data).Query<IntData>());
   EXPECT_EQ(1u, data.UnqueriedEntryCount());
   EXPECT_EQ(4u, data.EntryCount());

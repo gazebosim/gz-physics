@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="added_mass">
+    <model name="body_no_added_mass">
+      <link name="link">
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+
+    <model name="body_zero_added_mass">
+      <link name="link">
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <fluid_added_mass>
+            <xx>0</xx>
+            <xy>0</xy>
+            <xz>0</xz>
+            <xp>0</xp>
+            <xq>0</xq>
+            <xr>0</xr>
+            <yy>0</yy>
+            <yz>0</yz>
+            <yp>0</yp>
+            <yq>0</yq>
+            <yr>0</yr>
+            <zz>0</zz>
+            <zp>0</zp>
+            <zq>0</zq>
+            <zr>0</zr>
+            <pp>0</pp>
+            <pq>0</pq>
+            <pr>0</pr>
+            <qq>0</qq>
+            <qr>0</qr>
+            <rr>0</rr>
+          </fluid_added_mass>
+        </inertial>
+      </link>
+    </model>
+
+    <model name="body_added_mass">
+      <link name="link">
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <fluid_added_mass>
+            <xx>1</xx>
+            <xy>2</xy>
+            <xz>3</xz>
+            <xp>4</xp>
+            <xq>5</xq>
+            <xr>6</xr>
+            <yy>7</yy>
+            <yz>8</yz>
+            <yp>9</yp>
+            <yq>10</yq>
+            <yr>11</yr>
+            <zz>12</zz>
+            <zp>13</zp>
+            <zq>14</zq>
+            <zr>15</zr>
+            <pp>16</pp>
+            <pq>17</pq>
+            <pr>18</pr>
+            <qq>19</qq>
+            <qr>20</qr>
+            <rr>21</rr>
+          </fluid_added_mass>
+        </inertial>
+      </link>
+    </model>
+  </world>
+</sdf>

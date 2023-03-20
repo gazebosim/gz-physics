@@ -1,12 +1,12 @@
-\page setupphysicsenginetpe Use a custom engine with Gazebo Physics
+\page usecustomengine Use a custom engine with Gazebo Physics
 
 ## Prerequisites
 
 - \ref installation "Installation"
 - \ref physicsplugin "Understand physics plugin"
 - \ref physicsengine "Use different physics engines"
-- \ref loadplugin "Load physics plugin"
-- \ref implementcustomfeature "Implement custom feature"
+- \ref pluginloading "Load physics plugin"
+- \ref createcustomfeature "Implement custom feature"
 
 ## How to interface with physics engine
 
@@ -72,7 +72,7 @@ simple_plugin
 └── EntityManagementFeatures_TEST.cc
 ```
 
-### `plugin.cc`
+### plugin.cc
 
 In this tutorial, we will show how to construct a simple simulation world using
 [TPE](https://github.com/gazebosim/gz-physics/tree/main/tpe) physics
@@ -83,7 +83,9 @@ named `EntityManagementFeatureList` defined in `EntityManagementFeatures.hh`.
 We first include the `EntityManagementFeatureList` in `plugin.cc` main file
 and register the example TPE physics plugin as follow:
 
-\snippet examples/simple_plugin/plugin.cc
+
+\snippet examples/simple_plugin/plugin.cc code
+
 
 Those are 3 things needed to be specified in `plugin.cc`:
 - Define the conclusive \ref gz::physics::FeatureList "FeatureList" including
@@ -139,7 +141,7 @@ custom feature with \ref gz::physics::FeaturePolicy3d "FeaturePolicy3d"
 
 Then we can go ahead with the implementation of `ConstructEmptyWorldFeature`:
 
-\snippet examples/simple_plugin/EntityManagementFeatures.cc
+\snippet examples/simple_plugin/EntityManagementFeatures.cc code
 
 Here we show the overriding of `ConstructEmptyWorld` member function of
 \ref gz::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature",
@@ -152,7 +154,7 @@ Simple unit tests are good practice for sanity checks.
 While we won't go into detail, here is an example to test our new
 \ref gz::physics::ConstructEmptyWorldFeature "ConstructEmptyWorldFeature":
 
-\snippet examples/simple_plugin/EntityManagementFeatures_TEST.cc
+\snippet examples/simple_plugin/EntityManagementFeatures_TEST.cc code
 
 To get a more comprehensive view of how `EntityManagementFeatures` are constructed in TPE and Dartsim,
 feel free to take a look here:

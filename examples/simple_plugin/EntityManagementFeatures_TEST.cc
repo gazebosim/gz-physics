@@ -22,7 +22,7 @@
 #include "EntityManagementFeatures.hh"
 
 // Simple executable that loads the simple plugin and constructs a world.
-
+//! [code]
 struct TestFeatureList : gz::physics::FeatureList<
   gz::physics::simpleplugin::EntityManagementFeatureList
 > { };
@@ -58,3 +58,4 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+//! [code]

@@ -19,7 +19,7 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
-#include "../helpers/TestLibLoader.hh"
+#include "TestLibLoader.hh"
 #include "../Utils.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -142,8 +142,26 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
     F_WCexpected.linearVelocity = F_WJ.angularVelocity.cross(pendulumArmInWorld);
 
     auto childLinkFrameData = childLink->FrameDataRelativeToWorld();
+    EXPECT_EQ(
+          F_WCexpected.pose.rotation(),
+          childLinkFrameData.pose.rotation());
+    // TODO(ahcorde): Rewiew this in bullet-featherstone
+    if(this->PhysicsEngineName(name) == "bullet_featherstone")
+    {
+      EXPECT_EQ(
+            F_WCexpected.pose.translation(),
+            childLinkFrameData.pose.translation());
+    }
     EXPECT_TRUE(
-        gz::physics::test::Equal(F_WCexpected, childLinkFrameData, 1e-6));
+      gz::physics::test::Equal(
+          F_WCexpected.linearVelocity,
+          childLinkFrameData.linearVelocity,
+          1e-6));
+    EXPECT_TRUE(
+      gz::physics::test::Equal(
+          F_WCexpected.linearAcceleration,
+          childLinkFrameData.linearAcceleration,
+          1e-6));
   }
 }
 

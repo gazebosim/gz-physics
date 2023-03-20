@@ -38,6 +38,15 @@
 
 #include "SimulationFeatures.hh"
 
+#if DART_VERSION_AT_LEAST(6, 13, 0)
+// The ContactSurfaceParams class was first added to version 6.10 of our fork
+// of dart, and then merged upstream and released in version 6.13.0 with
+// different public member variable names.
+// See https://github.com/dartsim/dart/pull/1626 and
+// https://github.com/gazebo-forks/dart/pull/22 for more info.
+#define DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+#endif
+
 namespace gz {
 namespace physics {
 namespace dartsim {
@@ -65,10 +74,42 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
+  for (const auto &[id, info] : this->links.idToObject)
+  {
+    if (info && info->inertial->FluidAddedMass().has_value())
+    {
+      auto com = Eigen::Vector3d(info->inertial->Pose().Pos().X(),
+                                 info->inertial->Pose().Pos().Y(),
+                                 info->inertial->Pose().Pos().Z());
+
+      auto mass = info->inertial->MassMatrix().Mass();
+      auto g = world->getGravity();
+
+      info->link->addExtForce(mass * g, com, false, true);
+    }
+  }
+
   // TODO(MXG): Parse input
   world->step();
+  this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
   // TODO(MXG): Fill in state
+}
+
+void SimulationFeatures::Write(WorldPoses &_worldPoses) const
+{
+  // remove link poses from the previous iteration
+  _worldPoses.entries.clear();
+  _worldPoses.entries.reserve(this->links.size());
+
+  for (const auto &[id, info] : this->links.idToObject)
+  {
+    WorldPose wp;
+    wp.pose = gz::math::eigen3::convert(
+        info->link->getWorldTransform());
+    wp.body = id;
+    _worldPoses.entries.push_back(wp);
+  }
 }
 
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
@@ -216,9 +257,17 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P> pGz;
 
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+  pGz.frictionCoeff = pDart.mPrimaryFrictionCoeff;
+#else
   pGz.frictionCoeff = pDart.mFrictionCoeff;
+#endif
   pGz.secondaryFrictionCoeff = pDart.mSecondaryFrictionCoeff;
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+  pGz.slipCompliance = pDart.mPrimarySlipCompliance;
+#else
   pGz.slipCompliance = pDart.mSlipCompliance;
+#endif
   pGz.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
   pGz.restitutionCoeff = pDart.mRestitutionCoeff;
   pGz.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
@@ -231,11 +280,23 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
                                 _numContactsOnCollisionObject, pGz);
 
     if (pGz.frictionCoeff)
+    {
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+      pDart.mPrimaryFrictionCoeff = pGz.frictionCoeff.value();
+#else
       pDart.mFrictionCoeff = pGz.frictionCoeff.value();
+#endif
+    }
     if (pGz.secondaryFrictionCoeff)
       pDart.mSecondaryFrictionCoeff = pGz.secondaryFrictionCoeff.value();
     if (pGz.slipCompliance)
+    {
+#ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+      pDart.mPrimarySlipCompliance = pGz.slipCompliance.value();
+#else
       pDart.mSlipCompliance = pGz.slipCompliance.value();
+#endif
+    }
     if (pGz.secondarySlipCompliance)
       pDart.mSecondarySlipCompliance = pGz.secondarySlipCompliance.value();
     if (pGz.restitutionCoeff)

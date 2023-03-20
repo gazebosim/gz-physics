@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <gz/physics/CanWriteData.hh>
 #include <gz/physics/ForwardStep.hh>
 
 #include "Base.hh"
@@ -34,6 +35,9 @@ struct SimulationFeatureList : gz::physics::FeatureList<
 > { };
 
 class SimulationFeatures :
+    public CanWriteRequiredData<SimulationFeatures, RequireData<WorldPoses>>,
+    public CanWriteExpectedData<SimulationFeatures,
+      ExpectData<ChangedWorldPoses>>,
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
@@ -43,6 +47,7 @@ class SimulationFeatures :
       ForwardStep::State &_x,
       const ForwardStep::Input &_u) override;
 
+  public: void Write(WorldPoses &_worldPoses) const;
   public: void Write(ChangedWorldPoses &_changedPoses) const;
 
   private: double stepSize = 0.001;
