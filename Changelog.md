@@ -2,9 +2,30 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
+### Gazebo Physics 6.3.1 (2023-03-22)
+
+1. Rename COPYING to LICENSE
+    * [Pull request #487](https://github.com/gazebosim/gz-physics/pull/487)
+
+1. Remove an extra symlink on all platforms
+    * [Pull request #482](https://github.com/gazebosim/gz-physics/pull/482)
+
+1. Fix memory corruption due to faulty refcount tracking
+    * [Pull request #480](https://github.com/gazebosim/gz-physics/pull/480)
+
+1. Infrastructure
+    * [Pull request #490](https://github.com/gazebosim/gz-physics/pull/490)
+    * [Pull request #488](https://github.com/gazebosim/gz-physics/pull/488)
+
+1. Forward Ports
+    * [Pull request #491](https://github.com/gazebosim/gz-physics/pull/491)
+    * [Pull request #489](https://github.com/gazebosim/gz-physics/pull/489)
+    * [Pull request #485](https://github.com/gazebosim/gz-physics/pull/485)
+    * [Pull request #476](https://github.com/gazebosim/gz-physics/pull/476)
+
 ### Gazebo Physics 6.3.0 (2023-02-02)
 
-1. Fix windows warnings related to bullet #473
+1. Fix windows warnings related to bullet
     * [Pull request #473](https://github.com/gazebosim/gz-physics/pull/473)
 
 1. ign -> gz : Remove redundant namespace references
