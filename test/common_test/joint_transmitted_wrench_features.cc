@@ -432,4 +432,11 @@ TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
                                        wrenchAtMotorJointInJoint, 1e-4));
 }
 
-
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  if (!JointTransmittedWrenchFeaturesTest<
+      JointTransmittedWrenchFeatureList>::init(argc, argv))
+    return -1;
+  return RUN_ALL_TESTS();
+}
