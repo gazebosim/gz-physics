@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Open Source Robotics Foundation
+ * Copyright (C) 2023 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ class JointTransmittedWrenchFeaturesTest:
   {
     gz::common::Console::SetVerbosity(4);
 
-    std::cerr << "JointFeaturesTest::GetLibToTest() "
+    std::cerr << "JointTransmittedWrenchFeaturesTest::GetLibToTest() "
       << JointTransmittedWrenchFeaturesTest::GetLibToTest() << '\n';
 
     loader.LoadLib(JointTransmittedWrenchFeaturesTest::GetLibToTest());
@@ -80,10 +80,9 @@ class JointTransmittedWrenchFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-
 template <class T>
-class JointTransmittedWrenchFixture
- : public JointTransmittedWrenchFeaturesTest<T>
+class JointTransmittedWrenchFixture :
+  public JointTransmittedWrenchFeaturesTest<T>
 {
   public: using WorldPtr = gz::physics::World3dPtr<T>;
   public: using ModelPtr = gz::physics::Model3dPtr<T>;

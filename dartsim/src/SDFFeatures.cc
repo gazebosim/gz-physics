@@ -658,11 +658,6 @@ Identity SDFFeatures::ConstructSdfLink(
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
   const std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
 
-  const std::string fullJointName = ::sdf::JoinName(
-      world->getName(),
-      ::sdf::JoinName(modelInfo.model->getName(), joint->getName()));
-  this->AddJoint(joint, fullJointName, _modelID);
-
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
   if (sdfInertia.FluidAddedMass().has_value())
