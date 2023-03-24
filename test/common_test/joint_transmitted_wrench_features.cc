@@ -404,7 +404,6 @@ TYPED_TEST(JointTransmittedWrenchFixture, JointLosses)
 }
 
 // Check that the transmitted wrench is affected by contact forces
-/*
 TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
 {
   auto box = this->world->GetModel("box");
@@ -454,7 +453,6 @@ TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
   EXPECT_TRUE(gz::physics::test::Equal(expectedWrenchAtMotorJointInJoint,
                                        wrenchAtMotorJointInJoint, 1e-4));
 }
-*/
 
 int main(int argc, char *argv[])
 {
