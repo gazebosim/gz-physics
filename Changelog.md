@@ -7,11 +7,9 @@
 1. Fix joint index used in bookkeeping
     * [Pull request #498](https://github.com/gazebosim/gz-physics/pull/498)
 
-1. Add main function to joint transmitted wrench test
-    * [Pull request #496](https://github.com/gazebosim/gz-physics/pull/496)
-
 1. Move joint transmitted wrench test to separate file
     * [Pull request #495](https://github.com/gazebosim/gz-physics/pull/495)
+    * [Pull request #496](https://github.com/gazebosim/gz-physics/pull/496)
 
 ### Gazebo Physics 6.3.1 (2023-03-22)
 
