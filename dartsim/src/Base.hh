@@ -510,9 +510,9 @@ class Base : public Implements3d<FeatureList<Feature>>
     // Even though DART keeps track of the index of this joint in the
     // skeleton, the joint may be moved to another skeleton when a joint is
     // constructed. Thus, we store the original index here.
-    this->joints.idToIndexInContainer[id] = _joint->getJointIndexInSkeleton();
     std::vector<std::size_t> &indexInContainerToID =
         this->joints.indexInContainerToID[_modelID];
+    this->joints.idToIndexInContainer[id] = indexInContainerToID.size();
     indexInContainerToID.push_back(id);
 
     this->joints.idToContainerID[id] = _modelID;
