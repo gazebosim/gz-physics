@@ -191,6 +191,20 @@ struct EntityStorage
     return idToObject.find(_id) != idToObject.end();
   }
 
+  void AddEntity(std::size_t _id, const Value1 &_value1, const Key2 &_key,
+                 std::size_t _containerID)
+  {
+    this->idToObject[_id] = _value1;
+    this->objectToID[_key] = _id;
+    std::vector<std::size_t> &indexInContainerToIDVector =
+        this->indexInContainerToID[_containerID];
+    const std::size_t indexInContainer = indexInContainerToIDVector.size();
+
+    this->idToIndexInContainer[_id] = indexInContainer;
+    indexInContainerToIDVector.push_back(_id);
+    this->idToContainerID[_id] = _containerID;
+  }
+
   bool RemoveEntity(const Key2 &_key)
   {
     auto entIter = this->objectToID.find(_key);
@@ -275,19 +289,9 @@ class Base : public Implements3d<FeatureList<Feature>>
       const DartWorldPtr &_world, const std::string &_name)
   {
     const std::size_t id = this->GetNextEntity();
-
-    this->worlds.idToObject[id] = _world;
-    this->worlds.objectToID[_name] = id;
-
-    std::vector<std::size_t> &indexInContainerToID =
-        this->worlds.indexInContainerToID.at(0);
-
-    this->worlds.idToIndexInContainer[id] = indexInContainerToID.size();
-    indexInContainerToID.push_back(id);
-
-    this->worlds.idToContainerID[id] = 0;
-
     _world->setName(_name);
+    this->worlds.AddEntity(id, _world, _name, 0);
+
     this->frames[id] = dart::dynamics::Frame::World();
 
     return id;
@@ -297,23 +301,17 @@ class Base : public Implements3d<FeatureList<Feature>>
       const ModelInfo &_info, const std::size_t _worldID)
   {
     const std::size_t id = this->GetNextEntity();
-    this->models.idToObject[id] = std::make_shared<ModelInfo>(_info);
-    ModelInfo &entry = *this->models.idToObject[id];
-    this->models.objectToID[_info.model] = id;
+    auto entry = std::make_shared<ModelInfo>(_info);
 
     const dart::simulation::WorldPtr &world = worlds[_worldID];
+    world->addSkeleton(entry->model);
+    this->models.AddEntity(id, entry, _info.model, _worldID);
+    if (_info.frame)
+    {
+      this->frames[id] = _info.frame.get();
+    }
 
-    std::vector<std::size_t> &indexInContainerToID =
-        this->models.indexInContainerToID[_worldID];
-    const std::size_t indexInWorld = indexInContainerToID.size();
-    this->models.idToIndexInContainer[id] = indexInWorld;
-    indexInContainerToID.push_back(id);
-    world->addSkeleton(entry.model);
-
-    this->models.idToContainerID[id] = _worldID;
-    this->frames[id] = _info.frame.get();
-
-    return std::forward_as_tuple(id, entry);
+    return std::forward_as_tuple(id, *entry);
   }
 
   public: inline std::tuple<std::size_t, ModelInfo &> AddNestedModel(
@@ -321,25 +319,17 @@ class Base : public Implements3d<FeatureList<Feature>>
               const std::size_t _worldID)
   {
     const std::size_t id = this->GetNextEntity();
-    this->models.idToObject[id] = std::make_shared<ModelInfo>(_info);
-    ModelInfo &entry = *this->models.idToObject[id];
-    this->models.objectToID[_info.model] = id;
+    auto entry = std::make_shared<ModelInfo>(_info);
 
     const dart::simulation::WorldPtr &world = worlds[_worldID];
+    world->addSkeleton(entry->model);
+
+    this->models.AddEntity(id, entry, _info.model, _parentID);
+    this->frames[id] = _info.frame.get();
 
     auto parentModelInfo = this->models.at(_parentID);
-    const std::size_t indexInModel =
-        parentModelInfo->nestedModels.size();
-    this->models.idToIndexInContainer[id] = indexInModel;
-    std::vector<std::size_t> &indexInContainerToID =
-        this->models.indexInContainerToID[_parentID];
-    indexInContainerToID.push_back(id);
-    world->addSkeleton(entry.model);
-
-    this->models.idToContainerID[id] = _parentID;
-    this->frames[id] = _info.frame.get();
     parentModelInfo->nestedModels.push_back(id);
-    return {id, entry};
+    return {id, *entry};
   }
 
   public: inline std::size_t AddLink(DartBodyNode *_bn,
@@ -348,7 +338,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     const std::size_t id = this->GetNextEntity();
     auto linkInfo = std::make_shared<LinkInfo>();
-    this->links.idToObject[id] = linkInfo;
     linkInfo->link = _bn;
     // The name of the BodyNode during creation is assumed to be the
     // Gazebo-specified name.
@@ -356,21 +345,11 @@ class Base : public Implements3d<FeatureList<Feature>>
     // Inertial properties (if available) used when splitting nodes to close
     // kinematic loops.
     linkInfo->inertial = _inertial;
-    this->links.objectToID[_bn] = id;
+    this->links.AddEntity(id, linkInfo, _bn, _modelID);
     this->frames[id] = _bn;
 
     this->linksByName[_fullName] = _bn;
     this->models.at(_modelID)->links.push_back(linkInfo);
-
-    // Even though DART keeps track of the index of this BodyNode in the
-    // skeleton, the BodyNode may be moved to another skeleton when a joint is
-    // constructed. Thus, we store the original index here.
-    this->links.idToIndexInContainer[id] = _bn->getIndexInSkeleton();
-    std::vector<std::size_t> &indexInContainerToID =
-        this->links.indexInContainerToID[_modelID];
-    indexInContainerToID.push_back(id);
-
-    this->links.idToContainerID[id] = _modelID;
 
     return id;
   }
@@ -494,11 +473,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     const std::size_t id = this->GetNextEntity();
     auto jointInfo = std::make_shared<JointInfo>();
-    this->joints.idToObject[id] = jointInfo;
     jointInfo->joint = _joint;
+    this->joints.AddEntity(id, jointInfo, _joint, _modelID);
 
-    this->joints.idToObject[id]->joint = _joint;
-    this->joints.objectToID[_joint] = id;
     dart::dynamics::SimpleFramePtr jointFrame =
         dart::dynamics::SimpleFrame::createShared(
             _joint->getChildBodyNode(), _joint->getName() + "_frame",
@@ -506,17 +483,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     this->jointsByName[_fullName] = _joint;
     this->models.at(_modelID)->joints.push_back(jointInfo);
-
-    // Even though DART keeps track of the index of this joint in the
-    // skeleton, the joint may be moved to another skeleton when a joint is
-    // constructed. Thus, we store the original index here.
-    std::vector<std::size_t> &indexInContainerToID =
-        this->joints.indexInContainerToID[_modelID];
-    this->joints.idToIndexInContainer[id] = indexInContainerToID.size();
-    indexInContainerToID.push_back(id);
-
-    this->joints.idToContainerID[id] = _modelID;
-
     this->joints.idToObject[id]->frame = jointFrame;
     this->frames[id] = this->joints.idToObject[id]->frame.get();
 
