@@ -416,6 +416,9 @@ TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
   this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
   // After this many steps, the pendulum is in contact with the box
   this->Step(1000);
+
+  auto poses = this->output.Get<gz::physics::WorldPoses>();
+
   const double theta = this->motorJoint->GetPosition(0);
   // Sanity check that the pendulum is at rest
   EXPECT_NEAR(0.0, this->motorJoint->GetVelocity(0), 1e-3);
