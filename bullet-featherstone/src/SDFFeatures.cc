@@ -114,7 +114,7 @@ struct Structure
   /// The root link of the model
   const ::sdf::Link *rootLink;
   const ::sdf::Joint *rootJoint;
-  double mass;
+  btScalar mass;
   btVector3 inertia;
 
   /// Is the root link fixed
@@ -320,7 +320,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
   }
 
   const auto &M = rootLink->Inertial().MassMatrix();
-  const auto mass = M.Mass();
+  const auto mass = static_cast<btScalar>(M.Mass());
   btVector3 inertia(convertVec(M.DiagonalMoments()));
   for (const double &I : {M.Ixy(), M.Ixz(), M.Iyz()})
   {
@@ -357,7 +357,7 @@ Identity SDFFeatures::ConstructSdfModel(
   const auto modelID = this->AddModel(
     _sdfModel.Name(), _worldID, rootInertialToLink,
     std::make_unique<btMultiBody>(
-      structure.flatLinks.size(),
+      static_cast<int>(structure.flatLinks.size()),
       structure.mass,
       structure.inertia,
       structure.fixedBase || isStatic,
@@ -692,12 +692,13 @@ bool SDFFeatures::AddSdfCollision(
   else if (const auto *plane = geom->PlaneShape())
   {
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
-    shape = std::make_unique<btStaticPlaneShape>(normal, 0);
+    shape = std::make_unique<btStaticPlaneShape>(normal, btScalar(0));
   }
   else if (const auto *capsule = geom->CapsuleShape())
   {
     shape = std::make_unique<btCapsuleShapeZ>(
-      capsule->Radius(), capsule->Length());
+        static_cast<btScalar>(capsule->Radius()),
+        static_cast<btScalar>(capsule->Length()));
   }
   else if (const auto *ellipsoid = geom->EllipsoidShape())
   {

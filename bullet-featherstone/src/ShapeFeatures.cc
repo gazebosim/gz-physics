@@ -166,8 +166,8 @@ Identity ShapeFeatures::AttachCapsuleShape(
     const double _length,
     const Pose3d &_pose)
 {
-  auto shape =
-    std::make_unique<btCapsuleShapeZ>(_radius, _length / 2);
+  auto shape = std::make_unique<btCapsuleShapeZ>(
+      static_cast<btScalar>(_radius), static_cast<btScalar>(_length / 2));
 
   auto identity = this->AddCollision(
     CollisionInfo{
