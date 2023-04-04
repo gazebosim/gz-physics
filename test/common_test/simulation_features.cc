@@ -236,6 +236,13 @@ TYPED_TEST(SimulationFeaturesStepTest, StepWorld)
 {
   for (const std::string &name : this->pluginNames)
   {
+#ifdef _WIN32
+    if(this->PhysicsEngineName(name) == "bullet")
+    {
+      // See https://github.com/gazebosim/gz-physics/issues/483
+      GTEST_SKIP();
+    }
+#endif
     auto world = LoadPluginAndWorld<FeaturesStep>(
       this->loader,
       name,
@@ -270,6 +277,14 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
     {
       GTEST_SKIP();
     }
+
+#ifdef _WIN32
+    if(this->PhysicsEngineName(name) == "bullet")
+    {
+      // See https://github.com/gazebosim/gz-physics/issues/483
+      GTEST_SKIP();
+    }
+#endif
 
     auto world = LoadPluginAndWorld<FeaturesFalling>(
         this->loader, name,
@@ -330,6 +345,13 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
 {
   for (const std::string &name : this->pluginNames)
   {
+#ifdef _WIN32
+    if(this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      // See https://github.com/gazebosim/gz-physics/issues/483
+      GTEST_SKIP();
+    }
+#endif
     auto world = LoadPluginAndWorld<FeaturesShapeFeatures>(
         this->loader, name,
         gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
