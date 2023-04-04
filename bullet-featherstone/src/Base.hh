@@ -69,9 +69,9 @@ struct WorldInfo
   std::unique_ptr<btMultiBodyConstraintSolver> solver;
   std::unique_ptr<btMultiBodyDynamicsWorld> world;
 
-  std::unordered_map<std::size_t, std::size_t> modelIndexToEntityId;
+  std::unordered_map<int, std::size_t> modelIndexToEntityId;
   std::unordered_map<std::string, std::size_t> modelNameToEntityId;
-  std::size_t nextModelIndex = 0;
+  int nextModelIndex = 0;
 
   explicit WorldInfo(std::string name);
 };
@@ -80,7 +80,7 @@ struct ModelInfo
 {
   std::string name;
   Identity world;
-  std::size_t indexInWorld;
+  int indexInWorld;
   Eigen::Isometry3d baseInertiaToLinkFrame;
   std::unique_ptr<btMultiBody> body;
 
@@ -112,7 +112,7 @@ struct ModelInfo
 struct LinkInfo
 {
   std::string name;
-  std::optional<std::size_t> indexInModel;
+  std::optional<int> indexInModel;
   Identity model;
   Eigen::Isometry3d inertiaToLinkFrame;
   std::unique_ptr<btMultiBodyLinkCollider> collider = nullptr;
@@ -127,12 +127,12 @@ struct CollisionInfo
   std::unique_ptr<btCollisionShape> collider;
   Identity link;
   Eigen::Isometry3d linkToCollision;
-  std::size_t indexInLink = 0;
+  int indexInLink = 0;
 };
 
 struct InternalJoint
 {
-  std::size_t indexInBtModel;
+  int indexInBtModel;
 };
 
 struct RootJoint {};
@@ -225,7 +225,7 @@ inline Eigen::Isometry3d convert(const btTransform& tf)
 
 inline btTransform GetWorldTransformOfLinkInertiaFrame(
     const btMultiBody &body,
-    const std::size_t linkIndexInModel)
+    const int linkIndexInModel)
 {
   const auto p = body.localPosToWorld(
     linkIndexInModel, btVector3(0, 0, 0));
@@ -302,7 +302,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (link->indexInModel.has_value())
     {
       // We expect the links to be added in order
-      assert(*link->indexInModel+1 == model->linkEntityIds.size());
+      assert(static_cast<std::size_t>(*link->indexInModel + 1) ==
+             model->linkEntityIds.size());
     }
     else
     {
@@ -322,7 +323,7 @@ class Base : public Implements3d<FeatureList<Feature>>
    auto collision = std::make_shared<CollisionInfo>(std::move(_collisionInfo));
    this->collisions[id] = collision;
    auto *link = this->ReferenceInterface<LinkInfo>(_collisionInfo.link);
-   collision->indexInLink = link->collisionEntityIds.size();
+   collision->indexInLink = static_cast<int>(link->collisionEntityIds.size());
    link->collisionEntityIds.push_back(id);
    link->collisionNameToEntityId[collision->name] = id;
 

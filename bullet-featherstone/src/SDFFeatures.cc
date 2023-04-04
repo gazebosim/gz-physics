@@ -389,9 +389,9 @@ Identity SDFFeatures::ConstructSdfModel(
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
 
-  for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
+  for (int i = 0; i < static_cast<int>(structure.flatLinks.size()); ++i)
   {
-    const auto *link = structure.flatLinks[i];
+    const auto *link = structure.flatLinks[static_cast<std::size_t>(i)];
     const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
           link->Inertial().Pose());
 
@@ -488,7 +488,7 @@ Identity SDFFeatures::ConstructSdfModel(
         JointInfo{
           joint->Name(),
           InternalJoint{i},
-          model->linkEntityIds[parentIndex+1],
+          model->linkEntityIds[static_cast<std::size_t>(parentIndex+1)],
           linkIDs.find(link)->second,
           poseParentLinkToJoint,
           poseJointToChild,
@@ -772,7 +772,7 @@ bool SDFFeatures::AddSdfCollision(
       auto vertexCount = s->VertexCount();
       auto indexCount = s->IndexCount();
       btAlignedObjectArray<btVector3> convertedVerts;
-      convertedVerts.reserve(vertexCount);
+      convertedVerts.reserve(static_cast<int>(vertexCount));
       for (unsigned int i = 0; i < vertexCount; i++)
       {
         convertedVerts.push_back(btVector3(

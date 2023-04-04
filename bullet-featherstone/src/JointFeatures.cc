@@ -170,7 +170,8 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   }
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  return model->body->getLink(identifier->indexInBtModel).m_dofCount;
+  return static_cast<std::size_t>(
+      model->body->getLink(identifier->indexInBtModel).m_dofCount);
 }
 
 /////////////////////////////////////////////////

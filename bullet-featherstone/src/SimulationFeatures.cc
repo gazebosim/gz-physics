@@ -19,6 +19,7 @@
 
 #include <gz/math/eigen3/Conversions.hh>
 
+#include <limits>
 #include <unordered_map>
 #include <utility>
 
@@ -88,8 +89,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
     const btMultiBodyLinkCollider* obB =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-    std::size_t collision1ID = -1;
-    std::size_t collision2ID = -1;
+    std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
+    std::size_t collision2ID = std::numeric_limits<std::size_t>::max();
 
     for (const auto & link : this->links)
     {

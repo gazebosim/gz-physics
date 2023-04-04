@@ -76,7 +76,7 @@ std::size_t EntityManagementFeatures::GetLinkIndex(
   // the rest up by one when providing an index to gazebo
   const auto index = this->ReferenceInterface<LinkInfo>(_linkID)->indexInModel;
   if (index.has_value())
-    return *index+1;
+    return static_cast<std::size_t>(*index+1);
 
   return 0;
 }
@@ -183,7 +183,8 @@ const std::string &EntityManagementFeatures::GetShapeName(
 std::size_t EntityManagementFeatures::GetShapeIndex(
   const Identity &_shapeID) const
 {
-  return this->ReferenceInterface<CollisionInfo>(_shapeID)->indexInLink;
+  return static_cast<std::size_t>(
+      this->ReferenceInterface<CollisionInfo>(_shapeID)->indexInLink);
 }
 
 /////////////////////////////////////////////////
@@ -259,7 +260,8 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity & _worldID, std::size_t _modelIndex)
 {
   auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
-  const auto it = world->modelIndexToEntityId.find(_modelIndex);
+  const auto it =
+      world->modelIndexToEntityId.find(static_cast<int>(_modelIndex));
   if (it == world->modelIndexToEntityId.end())
     return false;
 
@@ -367,7 +369,8 @@ Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, std::size_t _modelIndex) const
 {
   const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
-  const auto it = world->modelIndexToEntityId.find(_modelIndex);
+  const auto it =
+      world->modelIndexToEntityId.find(static_cast<int>(_modelIndex));
   if (it == world->modelIndexToEntityId.end())
     return this->GenerateInvalidId();
 
@@ -401,7 +404,7 @@ std::size_t EntityManagementFeatures::GetModelIndex(
   // the rest up by one when providing an index to gazebo
   const auto index = this->ReferenceInterface<ModelInfo>(
     _modelID)->indexInWorld;
-  return index+1;
+  return static_cast<std::size_t>(index + 1);
 }
 
 /////////////////////////////////////////////////
