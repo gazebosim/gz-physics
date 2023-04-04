@@ -165,21 +165,31 @@ struct JointInfo
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
   btMultiBodyJointMotor* motor = nullptr;
-  double effort = 0;
+  btScalar effort = 0;
 
   std::shared_ptr<btMultiBodyFixedConstraint> fixedContraint = nullptr;
 };
 
 inline btMatrix3x3 convertMat(const Eigen::Matrix3d& mat)
 {
-  return btMatrix3x3(mat(0, 0), mat(0, 1), mat(0, 2),
-                     mat(1, 0), mat(1, 1), mat(1, 2),
-                     mat(2, 0), mat(2, 1), mat(2, 2));
+  return btMatrix3x3(
+      static_cast<btScalar>(mat(0, 0)), static_cast<btScalar>(mat(0, 1)),
+      static_cast<btScalar>(mat(0, 2)), static_cast<btScalar>(mat(1, 0)),
+      static_cast<btScalar>(mat(1, 1)), static_cast<btScalar>(mat(1, 2)),
+      static_cast<btScalar>(mat(2, 0)), static_cast<btScalar>(mat(2, 1)),
+      static_cast<btScalar>(mat(2, 2)));
 }
 
 inline btVector3 convertVec(const Eigen::Vector3d& vec)
 {
-  return btVector3(vec(0), vec(1), vec(2));
+  return btVector3(static_cast<btScalar>(vec(0)), static_cast<btScalar>(vec(1)),
+                   static_cast<btScalar>(vec(2)));
+}
+
+inline btVector3 convertVec(const math::Vector3d& vec)
+{
+  return btVector3(static_cast<btScalar>(vec[0]), static_cast<btScalar>(vec[1]),
+                   static_cast<btScalar>(vec[2]));
 }
 
 inline btTransform convertTf(const Eigen::Isometry3d& tf)

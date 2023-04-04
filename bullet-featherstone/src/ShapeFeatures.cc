@@ -88,8 +88,7 @@ Identity ShapeFeatures::AttachBoxShape(
       const LinearVector3d &_size,
       const Pose3d &_pose)
 {
-  const auto size = math::eigen3::convert(_size);
-  const btVector3 halfExtents = btVector3(size.X(), size.Y(), size.Z()) * 0.5;
+  const btVector3 halfExtents = convertVec(_size * 0.5);
   std::unique_ptr<btCollisionShape> shape =
     std::make_unique<btBoxShape>(halfExtents);
 
@@ -244,8 +243,8 @@ Identity ShapeFeatures::AttachCylinderShape(
     const double _height,
     const Pose3d &_pose)
 {
-  const auto radius = _radius;
-  const auto halfLength = _height * 0.5;
+  const auto radius = static_cast<btScalar>(_radius);
+  const auto halfLength = static_cast<btScalar>(_height * 0.5);
   auto shape =
     std::make_unique<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
 
@@ -313,7 +312,7 @@ Identity ShapeFeatures::AttachEllipsoidShape(
 
   auto btSphere = std::make_unique<btMultiSphereShape>(
     positions, radius, 1);
-  btSphere->setLocalScaling(btVector3(_radii[0], _radii[1], _radii[2]));
+  btSphere->setLocalScaling(convertVec(_radii));
   auto shape = std::move(btSphere);
 
   auto identity = this->AddCollision(

@@ -42,13 +42,15 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
-  worldInfo->world->stepSimulation(this->stepSize, 1, this->stepSize);
+  worldInfo->world->stepSimulation(static_cast<btScalar>(this->stepSize), 1,
+                                   static_cast<btScalar>(this->stepSize));
 
   for (auto & m : this->models)
   {
     if (m.second->body)
     {
-      m.second->body->checkMotionAndSleepIfRequired(this->stepSize);
+      m.second->body->checkMotionAndSleepIfRequired(
+          static_cast<btScalar>(this->stepSize));
       btMultiBodyLinkCollider* col = m.second->body->getBaseCollider();
       if (col && col->getActivationState() != DISABLE_DEACTIVATION)
         col->setActivationState(ACTIVE_TAG);

@@ -86,8 +86,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
 
-  auto gravity = _sdfWorld.Gravity();
-  worldInfo->world->setGravity(btVector3(gravity[0], gravity[1], gravity[2]));
+  worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
@@ -322,7 +321,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
 
   const auto &M = rootLink->Inertial().MassMatrix();
   const auto mass = M.Mass();
-  btVector3 inertia(M.Ixx(), M.Iyy(), M.Izz());
+  btVector3 inertia(convertVec(M.DiagonalMoments()));
   for (const double &I : {M.Ixy(), M.Ixz(), M.Iyz()})
   {
     if (std::abs(I) > 1e-3)
@@ -404,8 +403,8 @@ Identity SDFFeatures::ConstructSdfModel(
     }
 
     const auto &M = link->Inertial().MassMatrix();
-    const double mass = M.Mass();
-    const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
+    const btScalar mass = static_cast<btScalar>(M.Mass());
+    const auto inertia = btVector3(convertVec(M.DiagonalMoments()));
 
     for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
     {
@@ -531,24 +530,22 @@ Identity SDFFeatures::ConstructSdfModel(
 
         if (::sdf::JointType::REVOLUTE == joint->Type())
         {
-          const auto axis = joint->Axis()->Xyz();
+          const auto axis = convertVec(joint->Axis()->Xyz());
           model->body->setupRevolute(
             i, mass, inertia, parentIndex,
             parentRotToThis,
-            quatRotate(offsetInBBt.getRotation(),
-                       btVector3(axis[0], axis[1], axis[2])),
+            quatRotate(offsetInBBt.getRotation(), axis),
             offsetInABt.getOrigin(),
             -offsetInBBt.getOrigin(),
             true);
         }
         else if (::sdf::JointType::PRISMATIC == joint->Type())
         {
-          const auto axis = joint->Axis()->Xyz();
+          const auto axis = convertVec(joint->Axis()->Xyz());
           model->body->setupPrismatic(
             i, mass, inertia, parentIndex,
             parentRotToThis,
-            quatRotate(offsetInBBt.getRotation(),
-                       btVector3(axis[0], axis[1], axis[2])),
+            quatRotate(offsetInBBt.getRotation(), axis),
             offsetInABt.getOrigin(),
             -offsetInBBt.getOrigin(),
             true);
@@ -574,16 +571,22 @@ Identity SDFFeatures::ConstructSdfModel(
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
         ::sdf::JointType::REVOLUTE == joint->Type())
       {
-        model->body->getLink(i).m_jointLowerLimit = joint->Axis()->Lower();
-        model->body->getLink(i).m_jointUpperLimit = joint->Axis()->Upper();
-        model->body->getLink(i).m_jointDamping = joint->Axis()->Damping();
-        model->body->getLink(i).m_jointFriction = joint->Axis()->Friction();
+        model->body->getLink(i).m_jointLowerLimit =
+            static_cast<btScalar>(joint->Axis()->Lower());
+        model->body->getLink(i).m_jointUpperLimit =
+            static_cast<btScalar>(joint->Axis()->Upper());
+        model->body->getLink(i).m_jointDamping =
+            static_cast<btScalar>(joint->Axis()->Damping());
+        model->body->getLink(i).m_jointFriction =
+            static_cast<btScalar>(joint->Axis()->Friction());
         model->body->getLink(i).m_jointMaxVelocity =
-          joint->Axis()->MaxVelocity();
-        model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
-        jointInfo->effort = joint->Axis()->Effort();
-        btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
-          model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
+            static_cast<btScalar>(joint->Axis()->MaxVelocity());
+        model->body->getLink(i).m_jointMaxForce =
+            static_cast<btScalar>(joint->Axis()->Effort());
+        jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
+        btMultiBodyConstraint *con = new btMultiBodyJointLimitConstraint(
+            model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
+            static_cast<btScalar>(joint->Axis()->Upper()));
         world->world->addMultiBodyConstraint(con);
       }
     }
@@ -613,8 +616,8 @@ Identity SDFFeatures::ConstructSdfModel(
   {
     const auto *link = structure.rootLink;
     const auto &M = link->Inertial().MassMatrix();
-    const double mass = M.Mass();
-    const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
+    const btScalar mass = static_cast<btScalar>(M.Mass());
+    const auto inertia = convertVec(M.DiagonalMoments());
 
     for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
     {
@@ -681,8 +684,8 @@ bool SDFFeatures::AddSdfCollision(
   }
   else if (const auto *cylinder = geom->CylinderShape())
   {
-    const auto radius = cylinder->Radius();
-    const auto halfLength = cylinder->Length()*0.5;
+    const auto radius = static_cast<btScalar>(cylinder->Radius());
+    const auto halfLength = static_cast<btScalar>(cylinder->Length()*0.5);
     shape =
       std::make_unique<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
   }
@@ -706,10 +709,12 @@ bool SDFFeatures::AddSdfCollision(
         for (int i = 0; i < n; i++)
         {
           btScalar p = 0.5, t = 0;
-          for (int j = i; j; p *= 0.5, j >>= 1)
+          for (int j = i; j; p *= btScalar(0.5), j >>= 1)
             if (j & 1) t += p;
           btScalar w = 2 * t - 1;
-          btScalar a = (SIMD_PI + 2 * i * SIMD_PI) / n;
+          btScalar a =
+              (SIMD_PI + btScalar(2.0) * static_cast<btScalar>(i) * SIMD_PI) /
+              static_cast<btScalar>(n);
           btScalar s = btSqrt(1 - w * w);
           *x++ = btVector3(s * btCos(a), s * btSin(a), w);
         }
@@ -719,8 +724,7 @@ bool SDFFeatures::AddSdfCollision(
     vtx.resize(3 + 128);
     Hammersley::Generate(&vtx[0], vtx.size());
     btVector3 center(0, 0, 0);
-    const auto radii = ellipsoid->Radii();
-    btVector3 radius(radii.X(), radii.Y(), radii.Z());
+    btVector3 radius = convertVec(ellipsoid->Radii());
     for (int i = 0; i < vtx.size(); ++i)
     {
       vtx[i] = vtx[i] * radius + center;
@@ -741,7 +745,7 @@ bool SDFFeatures::AddSdfCollision(
       std::make_unique<btGImpactMeshShape>(
         this->triangleMeshes.back().get()));
     this->meshesGImpact.back()->updateBound();
-    this->meshesGImpact.back()->setMargin(0.001);
+    this->meshesGImpact.back()->setMargin(btScalar(0.001));
     compoundShape->addChildShape(btTransform::getIdentity(),
       this->meshesGImpact.back().get());
     shape = std::move(compoundShape);
@@ -750,7 +754,7 @@ bool SDFFeatures::AddSdfCollision(
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshSdf->Uri());
-    auto scale = meshSdf->Scale();
+    const btVector3 scale = convertVec(meshSdf->Scale());
     if (nullptr == mesh)
     {
       gzwarn << "Failed to load mesh from [" << meshSdf->Uri()
@@ -772,9 +776,9 @@ bool SDFFeatures::AddSdfCollision(
       for (unsigned int i = 0; i < vertexCount; i++)
       {
         convertedVerts.push_back(btVector3(
-              s->Vertex(i).X() * scale.X(),
-              s->Vertex(i).Y() * scale.Y(),
-              s->Vertex(i).Z() * scale.Z()));
+              static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
+              static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
+              static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
       }
 
       this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
@@ -790,7 +794,7 @@ bool SDFFeatures::AddSdfCollision(
         std::make_unique<btGImpactMeshShape>(
           this->triangleMeshes.back().get()));
       this->meshesGImpact.back()->updateBound();
-      this->meshesGImpact.back()->setMargin(0.001);
+      this->meshesGImpact.back()->setMargin(btScalar(0.001));
       compoundShape->addChildShape(btTransform::getIdentity(),
         this->meshesGImpact.back().get());
     }
@@ -885,11 +889,11 @@ bool SDFFeatures::AddSdfCollision(
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
 
       collider->setCollisionShape(linkInfo->shape.get());
-      collider->setRestitution(restitution);
-      collider->setRollingFriction(rollingFriction);
-      collider->setFriction(mu);
+      collider->setRestitution(static_cast<btScalar>(restitution));
+      collider->setRollingFriction(static_cast<btScalar>(rollingFriction));
+      collider->setFriction(static_cast<btScalar>(mu));
       collider->setAnisotropicFriction(
-        btVector3(mu, mu2, 1),
+        btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
       linkInfo->collider = std::move(collider);
