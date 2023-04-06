@@ -21,7 +21,12 @@ foreach(plugin IN LISTS plugins)
 endforeach()
 
 if (DART_FOUND)
-  target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES})
+  # Linking against libdart-collision-bullet causes a segfault on macOS for
+  # some reason. We'll remove it since MockDoublePendulum doesn't use bullet
+  # for collision checking.
+  set(DART_LIBRARIES_NO_BULLET ${DART_LIBRARIES})
+  list(REMOVE_ITEM DART_LIBRARIES_NO_BULLET dart-collision-bullet)
+  target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES_NO_BULLET})
   target_compile_definitions(MockDoublePendulum PRIVATE
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
   if (MSVC)
