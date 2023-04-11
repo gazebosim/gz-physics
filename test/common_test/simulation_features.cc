@@ -1092,41 +1092,37 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) == "tpe")
-      GTEST_SKIP();
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
 
-    auto worlds = LoadWorlds<Features>(
+    auto world = LoadPluginAndWorld<Features>(
       this->loader,
-      this->pluginNames,
+      name,
       gz::common::joinPaths(TEST_WORLD_DIR, "multiple_collisions.sdf"));
 
-    for (const auto &world : worlds)
-    {
-      // model free group test
-      auto model = world->GetModel("box");
-      auto freeGroup = model->FindFreeGroup();
-      ASSERT_NE(nullptr, freeGroup);
-      GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    // model free group test
+    auto model = world->GetModel("box");
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
       ASSERT_NE(nullptr, freeGroup->CanonicalLink());
-      GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
       ASSERT_NE(nullptr, freeGroup->RootLink());
 
-      auto link = model->GetLink("box_link");
-      auto freeGroupLink = link->FindFreeGroup();
-      ASSERT_NE(nullptr, freeGroupLink);
+    auto link = model->GetLink("box_link");
+    auto freeGroupLink = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroupLink);
 
-      StepWorld<Features>(world, true);
+    StepWorld<Features>(world, true);
 
-      auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-      EXPECT_EQ(gz::math::Pose3d(0, 0, 4, 0, 0, 0),
-                gz::math::eigen3::convert(frameData.pose));
+    auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
+    EXPECT_EQ(gz::math::Pose3d(0, 0, 4, 0, 0, 0),
+        gz::math::eigen3::convert(frameData.pose));
 
-      StepWorld<Features>(world, false, 1000);
-      frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-      gz::math::Pose3d framePose = gz::math::eigen3::convert(frameData.pose);
+    StepWorld<Features>(world, false, 1000);
+    frameData = model->GetLink(0)->FrameDataRelativeToWorld();
+    gz::math::Pose3d framePose = gz::math::eigen3::convert(frameData.pose);
 
-      EXPECT_NEAR(0.5, framePose.Z(), 0.1);
-    }
+    EXPECT_NEAR(0.5, framePose.Z(), 0.1);
   }
 }
 
