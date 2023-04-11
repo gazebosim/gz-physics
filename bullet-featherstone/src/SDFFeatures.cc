@@ -846,6 +846,29 @@ bool SDFFeatures::AddSdfCollision(
   Eigen::Isometry3d linkFrameToCollision;
   if (shape != nullptr)
   {
+    {
+      gz::math::Pose3d gzLinkToCollision;
+      const auto errors =
+        _collision.SemanticPose().Resolve(gzLinkToCollision, linkInfo->name);
+      if (!errors.empty())
+      {
+        gzerr << "An error occurred while resolving the transform of the "
+          << "collider [" << _collision.Name() << "] in Link ["
+          << linkInfo->name << "] in Model [" << model->name << "]:\n";
+        for (const auto &error : errors)
+        {
+          gzerr << error << "\n";
+        }
+
+        return false;
+      }
+
+      linkFrameToCollision = gz::math::eigen3::convert(gzLinkToCollision);
+    }
+
+    const btTransform btInertialToCollision =
+      convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
+
     int linkIndexInModel = -1;
     if (linkInfo->indexInModel.has_value())
       linkIndexInModel = *linkInfo->indexInModel;
@@ -858,29 +881,6 @@ bool SDFFeatures::AddSdfCollision(
       // for different shapes attached to the same link.
       auto collider = std::make_unique<btMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
-
-      {
-        gz::math::Pose3d gzLinkToCollision;
-        const auto errors =
-          _collision.SemanticPose().Resolve(gzLinkToCollision, linkInfo->name);
-        if (!errors.empty())
-        {
-          gzerr << "An error occurred while resolving the transform of the "
-                << "collider [" << _collision.Name() << "] in Link ["
-                << linkInfo->name << "] in Model [" << model->name << "]:\n";
-          for (const auto &error : errors)
-          {
-            gzerr << error << "\n";
-          }
-
-          return false;
-        }
-
-        linkFrameToCollision = gz::math::eigen3::convert(gzLinkToCollision);
-      }
-
-      const btTransform btInertialToCollision =
-        convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
 
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
 
@@ -927,6 +927,10 @@ bool SDFFeatures::AddSdfCollision(
           btBroadphaseProxy::DefaultFilter,
           btBroadphaseProxy::AllFilter);
       }
+    }
+    else if (linkInfo->shape)
+    {
+      linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
     }
     else
     {
