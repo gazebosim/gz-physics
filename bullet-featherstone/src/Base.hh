@@ -365,8 +365,10 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
 
-  public: std::vector<std::unique_ptr<btGImpactMeshShape>> meshesGImpact;
+  // Note, the order of triangleMeshes and meshesGImpact is important. Reversing
+  // the order causes segfaults on macOS during destruction.
   public: std::vector<std::unique_ptr<btTriangleMesh>> triangleMeshes;
+  public: std::vector<std::unique_ptr<btGImpactMeshShape>> meshesGImpact;
 };
 
 }  // namespace bullet_featherstone
