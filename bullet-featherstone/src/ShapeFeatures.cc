@@ -307,7 +307,7 @@ Identity ShapeFeatures::AttachEllipsoidShape(
 {
   btVector3 positions[1];
   btScalar radius[1];
-  positions[0] = btVector3();
+  positions[0] = btVector3(0, 0, 0);
   radius[0] = 1;
 
   auto btSphere = std::make_unique<btMultiSphereShape>(
@@ -366,7 +366,7 @@ Identity ShapeFeatures::AttachSphereShape(
     const Pose3d &_pose)
 {
   std::unique_ptr<btCollisionShape> shape =
-    std::make_unique<btSphereShape>(_radius);
+    std::make_unique<btSphereShape>(static_cast<btScalar>(_radius));
 
   auto identity = this->AddCollision(
     CollisionInfo{

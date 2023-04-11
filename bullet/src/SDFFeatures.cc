@@ -246,13 +246,14 @@ Identity SDFFeatures::ConstructSdfCollision(
   {
     const auto capsule = geom->CapsuleShape();
     shape = std::make_shared<btCapsuleShapeZ>(
-      capsule->Radius(), capsule->Length());
+        static_cast<btScalar>(capsule->Radius()),
+        static_cast<btScalar>(capsule->Length()));
   }
   else if (geom->EllipsoidShape())
   {
     btVector3 positions[1];
     btScalar radius[1];
-    positions[0] = btVector3();
+    positions[0] = btVector3(0, 0, 0);
     radius[0] = 1;
 
     const auto ellipsoid = geom->EllipsoidShape();

@@ -680,7 +680,7 @@ bool SDFFeatures::AddSdfCollision(
   else if (const auto *sphere = geom->SphereShape())
   {
     const auto radius = sphere->Radius();
-    shape = std::make_unique<btSphereShape>(radius);
+    shape = std::make_unique<btSphereShape>(static_cast<btScalar>(radius));
   }
   else if (const auto *cylinder = geom->CylinderShape())
   {
