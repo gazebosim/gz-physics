@@ -19,6 +19,7 @@
 
 #include <gz/math/eigen3/Conversions.hh>
 
+#include <limits>
 #include <unordered_map>
 #include <utility>
 
@@ -42,13 +43,15 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
-  worldInfo->world->stepSimulation(this->stepSize, 1, this->stepSize);
+  worldInfo->world->stepSimulation(static_cast<btScalar>(this->stepSize), 1,
+                                   static_cast<btScalar>(this->stepSize));
 
   for (auto & m : this->models)
   {
     if (m.second->body)
     {
-      m.second->body->checkMotionAndSleepIfRequired(this->stepSize);
+      m.second->body->checkMotionAndSleepIfRequired(
+          static_cast<btScalar>(this->stepSize));
       btMultiBodyLinkCollider* col = m.second->body->getBaseCollider();
       if (col && col->getActivationState() != DISABLE_DEACTIVATION)
         col->setActivationState(ACTIVE_TAG);
@@ -86,8 +89,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
     const btMultiBodyLinkCollider* obB =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-    std::size_t collision1ID = -1;
-    std::size_t collision2ID = -1;
+    std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
+    std::size_t collision2ID = std::numeric_limits<std::size_t>::max();
 
     for (const auto & link : this->links)
     {

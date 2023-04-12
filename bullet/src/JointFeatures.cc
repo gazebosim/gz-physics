@@ -332,8 +332,10 @@ void JointFeatures::SetJointForce(
             hinge->getRigidBodyB().getWorldTransform().getBasis() *
             hingeAxisLocalB;
 
-          btVector3 hingeTorqueA = _value * hingeAxisWorldA;
-          btVector3 hingeTorqueB = _value * hingeAxisWorldB;
+          btVector3 hingeTorqueA =
+              static_cast<btScalar>(_value) * hingeAxisWorldA;
+          btVector3 hingeTorqueB =
+              static_cast<btScalar>(_value) * hingeAxisWorldB;
 
           hinge->getRigidBodyA().applyTorque(hingeTorqueA);
           hinge->getRigidBodyB().applyTorque(-hingeTorqueB);
@@ -374,7 +376,7 @@ void JointFeatures::SetJointVelocityCommand(
     link->getMotionState()->getWorldTransform(trans);
     btVector3 motion = quatRotate(trans.getRotation(),
       convertVec(gz::math::eigen3::convert(jointInfo->axis)));
-    btVector3 angular_vel = motion * _value;
+    btVector3 angular_vel = motion * static_cast<btScalar>(_value);
     link->setAngularVelocity(angular_vel);
   }
   break;
