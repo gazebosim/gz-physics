@@ -479,19 +479,10 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
         gz::math::eigen3::convert(cylinderModelAABB).Min());
     EXPECT_EQ(gz::math::Vector3d(3, 1.5, 2.5),
         gz::math::eigen3::convert(cylinderModelAABB).Max());
-    /*
-    /// \TODO(mjcarroll)  The ellipsoid bounding box happens to return a
-    /// FLT_MAX rather than the correct value of 1.2 on the bullet-featherstone
-    /// implementation on Ubuntu Focal.
-    /// Since Focal is a lower-priority platform for featherstone and there
-    /// should be few downstream impacts of this calculation, I am commenting
-    /// it for now.
-    /// Tracked in: https://github.com/gazebosim/gz-physics/issues/440
     EXPECT_TRUE(gz::math::Vector3d(-0.2, -5.3, 0.2).Equal(
     gz::math::eigen3::convert(ellipsoidModelAABB).Min(), 0.1));
     EXPECT_TRUE(gz::math::Vector3d(0.2, -4.7, 1.2).Equal(
     gz::math::eigen3::convert(ellipsoidModelAABB).Max(), 0.1));
-    */
     EXPECT_EQ(gz::math::Vector3d(-0.2, -3.2, 0),
         gz::math::eigen3::convert(capsuleModelAABB).Min());
     EXPECT_EQ(gz::math::Vector3d(0.2, -2.8, 1),
