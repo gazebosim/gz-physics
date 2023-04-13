@@ -187,7 +187,7 @@
       </joint>
 
       <link name="arm">
-        <pose>0.125 0.0 1.6   0 0 0</pose>
+        <pose>0.125 0.0 1.6 0 0 0</pose>
         <inertial>
           <mass>6.0</mass>
           <inertia>
