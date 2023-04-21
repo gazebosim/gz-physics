@@ -37,9 +37,9 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find gz-common
-gz_find_package(gz-common5
+gz_find_package(gz-common5 REQUIRED
   COMPONENTS geospatial graphics profiler
-  REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
+  )
 set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
 
 #--------------------------------------
@@ -93,8 +93,11 @@ message(STATUS "-------------------------------------------\n")
 set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 # Plugin install dirs
+set(GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR
+  ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+)
 set(GZ_PHYSICS_ENGINE_INSTALL_DIR
-  ${CMAKE_INSTALL_PREFIX}/${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+  ${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR}
 )
 
 #============================================================================
