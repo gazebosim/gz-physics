@@ -63,6 +63,7 @@
 #include <sdf/Visual.hh>
 #include <sdf/World.hh>
 
+#include "AddedMassFeatures.hh"
 #include "CustomMeshShape.hh"
 
 namespace gz {
@@ -164,7 +165,7 @@ static Eigen::Vector3d ConvertJointAxis(
   // Error while Resolving xyz. Fallback sdformat 1.6 behavior but treat
   // xyz_expressed_in = "__model__" as the old use_parent_model_frame
 
-  const Eigen::Vector3d axis = gz::math::eigen3::convert(_sdfAxis->Xyz());
+  const Eigen::Vector3d axis = math::eigen3::convert(_sdfAxis->Xyz());
 
   if (_sdfAxis->XyzExpressedIn().empty())
     return axis;
@@ -373,6 +374,7 @@ static ShapeAndTransform ConstructGeometry(
 
 }  // namespace
 
+/////////////////////////////////////////////////
 dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
     const std::string &_worldName, const std::string &_jointModelName,
     const std::string &_linkRelativeName)
@@ -401,7 +403,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
 
-  world->setGravity(gz::math::eigen3::convert(_sdfWorld.Gravity()));
+  world->setGravity(math::eigen3::convert(_sdfWorld.Gravity()));
 
   // TODO(MXG): Add a Physics class to the SDFormat DOM and then parse that
   // information here. For now, we'll just use dartsim's default physics
@@ -609,7 +611,7 @@ Identity SDFFeatures::ConstructSdfLink(
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
 
-  const gz::math::Inertiald &sdfInertia = _sdfLink.Inertial();
+  const math::Inertiald &sdfInertia = _sdfLink.Inertial();
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
 
   const Eigen::Matrix3d I_link = math::eigen3::convert(sdfInertia.Moi());
@@ -621,31 +623,6 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
-  // If added mass is provided, add that to DART's computed spatial tensor
-  // TODO(chapulina) Put in another feature
-  if (sdfInertia.FluidAddedMass().has_value())
-  {
-    // Note that the ordering of the spatial inertia matrix used in DART is
-    // different than the one used in Gazebo and SDF.
-    math::Matrix6d featherstoneMatrix;
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_LEFT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::BOTTOM_RIGHT));
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::TOP_RIGHT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::BOTTOM_LEFT));
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_LEFT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::TOP_RIGHT));
-    featherstoneMatrix.SetSubmatrix(math::Matrix6d::BOTTOM_RIGHT,
-        sdfInertia.FluidAddedMass().value().Submatrix(
-        math::Matrix6d::TOP_LEFT));
-
-    bodyProperties.mInertia.setSpatialTensor(
-        bodyProperties.mInertia.getSpatialTensor() +
-        math::eigen3::convert(featherstoneMatrix)
-    );
-  }
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
@@ -680,9 +657,25 @@ Identity SDFFeatures::ConstructSdfLink(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
   const std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
-  this->AddJoint(joint);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
+
+  if (sdfInertia.FluidAddedMass().has_value())
+  {
+    auto* amf = dynamic_cast<AddedMassFeatures*>(this);
+
+    if (nullptr == amf)
+    {
+      gzwarn << "Link [" << _sdfLink.Name() << "] in model ["
+        << modelInfo.model->getName() <<
+        "] has added mass specified in SDF, but AddedMassFeatures" <<
+        "was not available on this engine.  Added mass will not be applied.\n";
+    }
+    else
+    {
+      amf->SetLinkAddedMass(linkIdentity, sdfInertia.FluidAddedMass().value());
+    }
+  }
 
   if (_sdfLink.Name() == modelInfo.canonicalLinkName ||
       (modelInfo.canonicalLinkName.empty() &&
@@ -988,7 +981,7 @@ Identity SDFFeatures::ConstructSdfVisual(
   // intended for the physics?
   if (_visual.Material())
   {
-    const gz::math::Color &color = _visual.Material()->Ambient();
+    const math::Color &color = _visual.Material()->Ambient();
     node->getVisualAspect()->setColor(
           Eigen::Vector4d(color.R(), color.G(), color.B(), color.A()));
   }
@@ -1158,14 +1151,30 @@ Identity SDFFeatures::ConstructSdfJoint(
     joint = _child->moveTo<dart::dynamics::WeldJoint>(_parent);
   }
 
-  joint->setName(_sdfJoint.Name());
+  const std::string jointName = _sdfJoint.Name();
+  joint->setName(jointName);
 
   const Eigen::Isometry3d child_T_postjoint = T_child.inverse() * T_joint;
   const Eigen::Isometry3d parent_T_prejoint_init = T_parent.inverse() * T_joint;
   joint->setTransformFromParentBodyNode(parent_T_prejoint_init);
   joint->setTransformFromChildBodyNode(child_T_postjoint);
 
-  const std::size_t jointID = this->AddJoint(joint);
+  auto modelID = this->models.IdentityOf(_modelInfo.model);
+  auto worldID = this->GetWorldOfModelImpl(modelID);
+  if (worldID == INVALID_ENTITY_ID)
+  {
+    gzerr << "World of model [" << _modelInfo.model->getName()
+           << "] could not be found when creating joint [" << jointName
+           << "]\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto world = this->worlds.at(worldID);
+  const std::string fullJointName = ::sdf::JoinName(
+      world->getName(),
+      ::sdf::JoinName(_modelInfo.model->getName(), jointName));
+
+  const std::size_t jointID = this->AddJoint(joint, fullJointName, modelID);
   // Increment BodyNode version since the child could be moved to a new skeleton
   // when a joint is created.
   // TODO(azeey) Remove incrementVersion once DART has been updated to

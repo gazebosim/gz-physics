@@ -26,6 +26,9 @@
 #include <gz/physics/sdf/ConstructVisual.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
+#include <sdf/Root.hh>
+#include <sdf/Model.hh>
+
 #include "dart/dynamics/BoxShape.hpp"
 #include "dart/dynamics/FreeJoint.hpp"
 #include "dart/dynamics/Skeleton.hpp"
@@ -78,7 +81,12 @@ TEST(BaseClass, RemoveModel)
     EXPECT_EQ(pair.second->getName(), linkInfo->name);
     EXPECT_EQ(pair.second, linkInfo->link);
 
-    base.AddJoint(pair.first);
+    auto modelID = base.models.IdentityOf(modelInfo->model);
+    const std::string fullJointName = ::sdf::JoinName(
+        world->getName(),
+        ::sdf::JoinName(modelInfo->model->getName(), pair.first->getName()));
+
+    base.AddJoint(pair.first, fullJointName, modelID);
     base.AddShape({sn, name + "_shape"});
 
     modelIDs[name] = std::get<0>(res);
@@ -146,6 +154,49 @@ TEST(BaseClass, RemoveModel)
     checkModelIndices();
   }
   EXPECT_EQ(0u, curSize);
+}
+
+
+TEST(BaseClass, SdfConstructionBookkeeping)
+{
+  dartsim::SDFFeatures sdfFeatures;
+  auto engineId = sdfFeatures.InitiateEngine(0);
+  auto worldID = sdfFeatures.ConstructEmptyWorld(engineId, "default");
+
+  ::sdf::Root root;
+
+  auto errors = root.Load(GZ_PHYSICS_RESOURCE_DIR "/rrbot.xml");
+  ASSERT_TRUE(errors.empty());
+  const ::sdf::Model *sdfModel = root.Model();
+  ASSERT_NE(nullptr, sdfModel);
+
+  auto modelID = sdfFeatures.ConstructSdfModel(worldID, *sdfModel);
+  EXPECT_EQ(1u, sdfFeatures.models.size());
+  EXPECT_EQ(sdfModel->LinkCount(), sdfFeatures.links.size());
+  EXPECT_EQ(sdfModel->LinkCount(), sdfFeatures.linksByName.size());
+  EXPECT_EQ(sdfModel->JointCount(), sdfFeatures.joints.size());
+  EXPECT_EQ(2u, sdfFeatures.shapes.size());
+
+  EXPECT_EQ(sdfModel->LinkCount(), sdfFeatures.GetLinkCount(modelID));
+  EXPECT_EQ(sdfModel->JointCount(), sdfFeatures.GetJointCount(modelID));
+
+  for (uint64_t i = 0; i < sdfModel->LinkCount(); ++i)
+  {
+    EXPECT_EQ(sdfModel->LinkByIndex(i)->CollisionCount(),
+              sdfFeatures.GetShapeCount(sdfFeatures.GetLink(modelID, i)));
+  }
+
+  for (uint64_t i =0; i < sdfModel->JointCount(); ++i)
+  {
+    auto jointID = sdfFeatures.GetJoint(modelID, i);
+    ASSERT_TRUE(jointID);
+    ASSERT_EQ(1u, sdfFeatures.joints.idToIndexInContainer.count(jointID));
+    EXPECT_EQ(sdfFeatures.joints.idToIndexInContainer[jointID], i);
+    EXPECT_EQ(sdfFeatures.joints.idToContainerID[jointID], modelID.id);
+
+    ASSERT_GE(sdfFeatures.joints.indexInContainerToID[modelID].size(), i);
+    EXPECT_EQ(sdfFeatures.joints.indexInContainerToID[modelID][i], jointID.id);
+  }
 }
 
 TEST(BaseClass, AddNestedModel)

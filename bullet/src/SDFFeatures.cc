@@ -69,8 +69,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
 
-  auto gravity = _sdfWorld.Gravity();
-  worldInfo->world->setGravity(btVector3(gravity[0], gravity[1], gravity[2]));
+  worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
 
   for (std::size_t i=0; i < _sdfWorld.ModelCount(); ++i)
   {
@@ -147,7 +146,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::string name = _sdfLink.Name();
   const math::Pose3d pose = ResolveSdfPose(_sdfLink.SemanticPose());
   const gz::math::Inertiald inertial = _sdfLink.Inertial();
-  double mass = inertial.MassMatrix().Mass();
+  btScalar mass = static_cast<btScalar>(inertial.MassMatrix().Mass());
   math::Pose3d inertialPose = inertial.Pose();
   inertialPose.Rot() *= inertial.MassMatrix().PrincipalAxesOffset();
   const auto diagonalMoments = inertial.MassMatrix().PrincipalMoments();
@@ -226,14 +225,14 @@ Identity SDFFeatures::ConstructSdfCollision(
   else if (geom->SphereShape())
   {
     const auto sphere = geom->SphereShape();
-    const auto radius = sphere->Radius();
+    const auto radius = static_cast<btScalar>(sphere->Radius());
     shape = std::make_shared<btSphereShape>(radius);
   }
   else if (geom->CylinderShape())
   {
     const auto cylinder = geom->CylinderShape();
-    const auto radius = cylinder->Radius();
-    const auto halfLength = cylinder->Length()*0.5;
+    const auto radius = static_cast<btScalar>(cylinder->Radius());
+    const auto halfLength = static_cast<btScalar>(cylinder->Length() * 0.5);
     shape =
       std::make_shared<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
   }
@@ -241,27 +240,28 @@ Identity SDFFeatures::ConstructSdfCollision(
   {
     const auto plane = geom->PlaneShape();
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
-    shape = std::make_shared<btStaticPlaneShape>(normal, 0);
+    shape = std::make_shared<btStaticPlaneShape>(normal, 0.0f);
   }
   else if (geom->CapsuleShape())
   {
     const auto capsule = geom->CapsuleShape();
     shape = std::make_shared<btCapsuleShapeZ>(
-      capsule->Radius(), capsule->Length());
+        static_cast<btScalar>(capsule->Radius()),
+        static_cast<btScalar>(capsule->Length()));
   }
   else if (geom->EllipsoidShape())
   {
     btVector3 positions[1];
     btScalar radius[1];
-    positions[0] = btVector3();
+    positions[0] = btVector3(0, 0, 0);
     radius[0] = 1;
 
     const auto ellipsoid = geom->EllipsoidShape();
-    const auto radii = ellipsoid->Radii();
+    const auto radii = convertVec(ellipsoid->Radii());
     shape = std::make_shared<btMultiSphereShape>(
       positions, radius, 1);
     std::dynamic_pointer_cast<btMultiSphereShape>(shape)->setLocalScaling(
-      btVector3(radii.X(), radii.Y(), radii.Z()));
+        radii);
   }
 
   // TODO(lobotuerk/blast545) Add additional friction parameters for bullet
@@ -450,8 +450,9 @@ Identity SDFFeatures::ConstructSdfJoint(
   if (_sdfJoint.Axis(0) != nullptr)
   {
     double friction = _sdfJoint.Axis(0)->Friction();
-    joint->enableAngularMotor(true, 0.0, friction);
-    joint->setLimit(_sdfJoint.Axis(0)->Lower(), _sdfJoint.Axis(0)->Upper());
+    joint->enableAngularMotor(true, 0.0, static_cast<btScalar>(friction));
+    joint->setLimit(static_cast<btScalar>(_sdfJoint.Axis(0)->Lower()),
+                    static_cast<btScalar>(_sdfJoint.Axis(0)->Upper()));
   }
   else
   {

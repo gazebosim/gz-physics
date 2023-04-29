@@ -1,12 +1,15 @@
 set(TEST_TYPE "COMMON_TEST")
 
 set(tests
+  added_mass
   addexternalforcetorque
   basic_test
   collisions
   construct_empty_world
   free_joint_features
   joint_features
+  joint_mimic_features
+  joint_transmitted_wrench_features
   kinematic_features
   link_features
   shape_features

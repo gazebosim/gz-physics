@@ -33,30 +33,7 @@
 
 #include <sdf/Root.hh>
 
-
-// A predicate-formatter for asserting that two vectors are approximately equal.
-class AssertVectorApprox
-{
-public: explicit AssertVectorApprox(double _tol = 1e-6) : tol(_tol)
-{
-}
-
-public: ::testing::AssertionResult operator()(
-            const char *_mExpr, const char *_nExpr, Eigen::Vector3d _m,
-            Eigen::Vector3d _n)
-{
-  if (gz::physics::test::Equal(_m, _n, this->tol))
-    return ::testing::AssertionSuccess();
-
-  return ::testing::AssertionFailure()
-         << _mExpr << " and " << _nExpr << " ([" << _m.transpose()
-         << "] and [" << _n.transpose() << "]"
-         << ") are not equal";
-}
-
-private: double tol;
-};
-
+using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
 
 template <class T>
 class WorldFeaturesTest:
@@ -97,7 +74,7 @@ using GravityFeatures = gz::physics::FeatureList<
 using GravityFeaturesTestTypes =
   ::testing::Types<GravityFeatures>;
 TYPED_TEST_SUITE(WorldFeaturesTest,
-                 GravityFeatures);
+                 GravityFeatures,);
 
 /////////////////////////////////////////////////
 TYPED_TEST(WorldFeaturesTest, GravityFeatures)

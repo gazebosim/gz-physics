@@ -1,7 +1,62 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
   <world name="added_mass">
-    <model name="body">
+    <model name="body_no_added_mass">
+      <link name="link">
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+
+    <model name="body_zero_added_mass">
+      <link name="link">
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <fluid_added_mass>
+            <xx>0</xx>
+            <xy>0</xy>
+            <xz>0</xz>
+            <xp>0</xp>
+            <xq>0</xq>
+            <xr>0</xr>
+            <yy>0</yy>
+            <yz>0</yz>
+            <yp>0</yp>
+            <yq>0</yq>
+            <yr>0</yr>
+            <zz>0</zz>
+            <zp>0</zp>
+            <zq>0</zq>
+            <zr>0</zr>
+            <pp>0</pp>
+            <pq>0</pq>
+            <pr>0</pr>
+            <qq>0</qq>
+            <qr>0</qr>
+            <rr>0</rr>
+          </fluid_added_mass>
+        </inertial>
+      </link>
+    </model>
+
+    <model name="body_added_mass">
       <link name="link">
         <inertial>
           <mass>1</mass>
