@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <LinearMath/btScalar.h>
 
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
@@ -94,6 +95,7 @@ class JointTransmittedWrenchFixture :
     JointTransmittedWrenchFeaturesTest<T>::SetUp();
     for (const std::string &name : this->pluginNames)
     {
+      this->engineName = this->PhysicsEngineName(name);
       std::cout << "Testing plugin: " << name << std::endl;
       gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -134,6 +136,7 @@ class JointTransmittedWrenchFixture :
   public: JointPtr motorJoint;
   public: JointPtr sensorJoint;
   public: LinkPtr armLink;
+  public: std::string engineName;
 
   // From SDFormat file
   static constexpr double kGravity = 9.8;
@@ -221,6 +224,14 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
 
 TYPED_TEST(JointTransmittedWrenchFixture, PendulumInMotion)
 {
+  // This test requires https://github.com/bulletphysics/bullet3/pull/4462
+  // When removing this check, also remove
+  // `#include <LinearMath/btScalar.h>` at the top of this file, and
+  // `include_directories(${BULLET_INCLUDE_DIRS})` from
+  // test/common_test/CMakeLists.txt
+  if (this->engineName == "bullet-featherstone" && btGetVersion() <= 325)
+    GTEST_SKIP();
+
   // Start pendulum at 90° (parallel to the ground) and stop at about 40°
   // so that we have non-trivial test expectations.
   this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
@@ -406,6 +417,14 @@ TYPED_TEST(JointTransmittedWrenchFixture, JointLosses)
 // Check that the transmitted wrench is affected by contact forces
 TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
 {
+  // This test requires https://github.com/bulletphysics/bullet3/pull/4462
+  // When removing this check, also remove
+  // `#include <LinearMath/btScalar.h>` at the top of this file, and
+  // `include_directories(${BULLET_INCLUDE_DIRS})` from
+  // test/common_test/CMakeLists.txt
+  if (this->engineName == "bullet-featherstone" && btGetVersion() <= 325)
+    GTEST_SKIP();
+
   auto box = this->world->GetModel("box");
   ASSERT_NE(nullptr, box);
   auto boxFreeGroup = box->FindFreeGroup();
