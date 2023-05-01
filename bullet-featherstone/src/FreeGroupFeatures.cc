@@ -84,7 +84,10 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
       }
 
       if (jointInfo->motor)
-        jointInfo->motor->setVelocityTarget(_angularVelocity[2]);
+      {
+        jointInfo->motor->setVelocityTarget(
+            static_cast<btScalar>(_angularVelocity[2]));
+      }
     }
   }
 }

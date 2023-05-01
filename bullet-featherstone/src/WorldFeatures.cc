@@ -31,8 +31,7 @@ void WorldFeatures::SetWorldGravity(
 {
   auto worldInfo = this->ReferenceInterface<WorldInfo>(_id);
   if (worldInfo)
-    worldInfo->world->setGravity(
-      btVector3(_gravity(0), _gravity(1), _gravity(2)));
+    worldInfo->world->setGravity(convertVec(_gravity));
 }
 
 /////////////////////////////////////////////////

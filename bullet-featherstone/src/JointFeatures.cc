@@ -109,7 +109,8 @@ void JointFeatures::SetJointPosition(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof] = _value;
+  model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof] =
+      static_cast<btScalar>(_value);
 }
 
 /////////////////////////////////////////////////
@@ -122,7 +123,8 @@ void JointFeatures::SetJointVelocity(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] = _value;
+  model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
+      static_cast<btScalar>(_value);
 }
 
 /////////////////////////////////////////////////
@@ -152,7 +154,7 @@ void JointFeatures::SetJointForce(
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointTorqueMultiDof(
-    identifier->indexInBtModel)[_dof] = _value;
+    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(_value);
 }
 
 /////////////////////////////////////////////////
@@ -168,7 +170,8 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   }
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  return model->body->getLink(identifier->indexInBtModel).m_dofCount;
+  return static_cast<std::size_t>(
+      model->body->getLink(identifier->indexInBtModel).m_dofCount);
 }
 
 /////////////////////////////////////////////////
@@ -291,7 +294,7 @@ void JointFeatures::SetJointVelocityCommand(
     world->world->addMultiBodyConstraint(jointInfo->motor);
   }
 
-  jointInfo->motor->setVelocityTarget(_value);
+  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(_value));
 }
 
 /////////////////////////////////////////////////
@@ -363,10 +366,7 @@ void JointFeatures::SetJointTransformFromParent(
   if (jointInfo->fixedContraint)
   {
       jointInfo->fixedContraint->setPivotInA(
-        btVector3(
-          _pose.translation()[0],
-          _pose.translation()[1],
-          _pose.translation()[2]));
+        convertVec(_pose.translation()));
   }
 }
 
