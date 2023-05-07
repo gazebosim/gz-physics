@@ -28,7 +28,8 @@ inline namespace GZ_PHYSICS_VERSION_NAMESPACE {
 
 std::string getEngineInstallDir()
 {
-  return gz::common::joinPaths(getInstallPrefix(), GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR);
+  return gz::common::joinPaths(getInstallPrefix(),
+                               GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR);
 }
 
 }
