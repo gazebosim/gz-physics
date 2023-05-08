@@ -12,7 +12,6 @@ set_property(
 
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
     gz-math${GZ_MATH_VER}::gz-math${GZ_MATH_VER}
     gz-utils${GZ_UTILS_VER}::gz-utils${GZ_UTILS_VER}
     gz-plugin${GZ_PLUGIN_VER}::register
