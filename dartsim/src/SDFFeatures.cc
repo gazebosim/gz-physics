@@ -432,7 +432,11 @@ SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
     return {};
   }
 
-  // Determine the model associated with the joint. This will be the
+  // When calling `FindBodyNode`, we need to check wheter the parent entity
+  // (different from parent link/frame) of the joint is a model or world. If it
+  // is a world, relative name we provide to `FindBodyNode` should *not* be
+  // prefixed by the world name since is that step is done in `FindBodyNode`
+  // itself.
 
   auto *const parent = this->FindBodyNode(
       this->worlds.at(_worldID)->getName(),
