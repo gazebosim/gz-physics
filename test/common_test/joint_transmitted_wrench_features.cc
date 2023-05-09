@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <LinearMath/btScalar.h>
 
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
@@ -94,6 +95,7 @@ class JointTransmittedWrenchFixture :
     JointTransmittedWrenchFeaturesTest<T>::SetUp();
     for (const std::string &name : this->pluginNames)
     {
+      this->engineName = this->PhysicsEngineName(name);
       std::cout << "Testing plugin: " << name << std::endl;
       gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -134,6 +136,7 @@ class JointTransmittedWrenchFixture :
   public: JointPtr motorJoint;
   public: JointPtr sensorJoint;
   public: LinkPtr armLink;
+  public: std::string engineName;
 
   // From SDFormat file
   static constexpr double kGravity = 9.8;
@@ -161,13 +164,27 @@ struct JointTransmittedWrenchFeatureList : gz::physics::FeatureList<
 
 using JointTransmittedWrenchFeaturesTestTypes =
   ::testing::Types<JointTransmittedWrenchFeatureList>;
+
 TYPED_TEST_SUITE(JointTransmittedWrenchFixture,
-                 JointTransmittedWrenchFeaturesTestTypes);
+                 JointTransmittedWrenchFeaturesTestTypes,);
+
+
+void printWrench(const gz::physics::Wrench3d &wrench)
+{
+    std::cout << "force: ["
+      << wrench.force.x() << " "
+      << wrench.force.y() << " "
+      << wrench.force.z() <<
+      "] torque: ["
+      << wrench.torque.x() << " "
+      << wrench.torque.y() << " "
+      << wrench.torque.z() << "]\n";
+}
 
 TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
 {
   // Run a few steps for the constraint forces to stabilize
-  this->Step(10);
+  this->Step(100);
 
   // Test wrench expressed in different frames
   {
@@ -197,6 +214,9 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
         gz::physics::Vector3d::Zero(),
         {0, 0, this->kGravity * (this->kArmLinkMass + this->kSensorLinkMass)}};
 
+    printWrench(expectedWrenchAtMotorJointInArm);
+    printWrench(wrenchAtMotorJointInArm);
+
     EXPECT_TRUE(gz::physics::test::Equal(expectedWrenchAtMotorJointInArm,
                                          wrenchAtMotorJointInArm, 1e-4));
   }
@@ -204,6 +224,14 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
 
 TYPED_TEST(JointTransmittedWrenchFixture, PendulumInMotion)
 {
+  // This test requires https://github.com/bulletphysics/bullet3/pull/4462
+  // When removing this check, also remove
+  // `#include <LinearMath/btScalar.h>` at the top of this file, and
+  // `include_directories(${BULLET_INCLUDE_DIRS})` from
+  // test/common_test/CMakeLists.txt
+  if (this->engineName == "bullet-featherstone" && btGetVersion() <= 325)
+    GTEST_SKIP();
+
   // Start pendulum at 90° (parallel to the ground) and stop at about 40°
   // so that we have non-trivial test expectations.
   this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
@@ -218,12 +246,15 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumInMotion)
   {
     const double theta = this->motorJoint->GetPosition(0);
     const double omega = this->motorJoint->GetVelocity(0);
+
     // In order to get the math to work out, we need to use the joint
     // acceleration and transmitted wrench from the current time step with the
     // joint position and velocity from the previous time step. That is, we need
     // the position and velocity before they are integrated.
     this->Step(1);
-    const double alpha = this->motorJoint->GetAcceleration(0);
+
+    const double omega1 = this->motorJoint->GetVelocity(0);
+    const double alpha = (omega1 - omega)/1e-3;
 
     auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
 
@@ -299,12 +330,14 @@ TYPED_TEST(JointTransmittedWrenchFixture, ValidateWrenchWithSecondaryJoint)
   this->motorJoint->SetPosition(0, GZ_DTOR(90.0));
   this->Step(350);
   const double theta = this->motorJoint->GetPosition(0);
+  const double omega = this->motorJoint->GetVelocity(0);
   // In order to get the math to work out, we need to use the joint
   // acceleration and transmitted wrench from the current time step with the
   // joint position and velocity from the previous time step. That is, we need
   // the position and velocity before they are integrated.
   this->Step(1);
-  const double alpha = this->motorJoint->GetAcceleration(0);
+  const double omega1 = this->motorJoint->GetVelocity(0);
+  const double alpha = (omega1 - omega)/1e-3;
 
   auto wrenchAtMotorJointInJoint = this->motorJoint->GetTransmittedWrench();
   auto wrenchAtSensorInSensor = this->sensorJoint->GetTransmittedWrench();
@@ -384,6 +417,14 @@ TYPED_TEST(JointTransmittedWrenchFixture, JointLosses)
 // Check that the transmitted wrench is affected by contact forces
 TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
 {
+  // This test requires https://github.com/bulletphysics/bullet3/pull/4462
+  // When removing this check, also remove
+  // `#include <LinearMath/btScalar.h>` at the top of this file, and
+  // `include_directories(${BULLET_INCLUDE_DIRS})` from
+  // test/common_test/CMakeLists.txt
+  if (this->engineName == "bullet-featherstone" && btGetVersion() <= 325)
+    GTEST_SKIP();
+
   auto box = this->world->GetModel("box");
   ASSERT_NE(nullptr, box);
   auto boxFreeGroup = box->FindFreeGroup();

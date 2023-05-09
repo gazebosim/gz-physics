@@ -369,6 +369,22 @@ void JointFeatures::SetJointTransformFromParent(
         convertVec(_pose.translation()));
   }
 }
+
+/////////////////////////////////////////////////
+Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
+    const Identity &_id) const
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+  Wrench3d wrenchOut;
+
+  // Convert the force and torque into the joint's frame of reference.
+  wrenchOut.force = jointInfo->tf_to_child.rotation() * convert(
+    jointInfo->jointFeedback->m_reactionForces.getLinear());
+  wrenchOut.torque = jointInfo->tf_to_child.rotation() * convert(
+    jointInfo->jointFeedback->m_reactionForces.getAngular());
+  return wrenchOut;
+}
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

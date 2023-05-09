@@ -1,4 +1,5 @@
 set(TEST_TYPE "COMMON_TEST")
+include_directories(${BULLET_INCLUDE_DIRS})
 
 set(tests
   added_mass
