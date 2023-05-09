@@ -235,7 +235,7 @@ TEST_F(WorldModelTest, WorldModelAPI)
     EXPECT_EQ(nullptr, worldModel->GetLink("nonexistent_link"));
     EXPECT_EQ(0, worldModel->GetIndex());
     EXPECT_EQ(world->GetModelCount(), worldModel->GetNestedModelCount());
-    auto nestedModel = worldModel->GetNestedModel(0);
+    const auto nestedModel = worldModel->GetNestedModel(0);
     ASSERT_NE(nullptr, nestedModel);
     EXPECT_EQ("m1", nestedModel->GetName());
     EXPECT_NE(nullptr, worldModel->GetNestedModel("m2"));
@@ -250,6 +250,25 @@ TEST_F(WorldModelTest, WorldModelAPI)
     auto worldModel2 = world->GetWorldModel();
     ASSERT_NE(nullptr, worldModel2);
     EXPECT_EQ(world, worldModel2->GetWorld());
+
+    EXPECT_EQ(2u, world->GetModelCount());
+    EXPECT_EQ(2u, worldModel->GetNestedModelCount());
+
+    // Check that we can remove models via RemoveNestedModel
+    EXPECT_TRUE(worldModel->RemoveNestedModel(0));
+    EXPECT_TRUE(nestedModel->Removed());
+    EXPECT_EQ(1u, world->GetModelCount());
+    EXPECT_EQ(1u, worldModel->GetNestedModelCount());
+    EXPECT_NE(nullptr, worldModel->GetNestedModel(0));
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m1"));
+
+    const auto m2 = worldModel->GetNestedModel("m2");
+    ASSERT_NE(nullptr, m2);
+    EXPECT_TRUE(worldModel->RemoveNestedModel("m2"));
+    EXPECT_TRUE(m2->Removed());
+    EXPECT_EQ(0u, world->GetModelCount());
+    EXPECT_EQ(0u, worldModel->GetNestedModelCount());
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m2"));
 
     // Check that we can construct nested models and joints, but not links
     auto m3 = worldModel->ConstructEmptyNestedModel("m3");
@@ -277,6 +296,26 @@ TEST_F(WorldModelTest, WorldModelAPI)
     EXPECT_TRUE(worldModel->ConstructNestedModel(sdfModel));
     EXPECT_TRUE(world->GetModel("m4"));
     EXPECT_TRUE(worldModel->GetNestedModel("m4"));
+
+    EXPECT_EQ(2u, world->GetModelCount());
+    EXPECT_EQ(2u, worldModel->GetNestedModelCount());
+    // Check that we can remove created via the World model proxy
+    EXPECT_EQ(m3, worldModel->GetNestedModel(0));
+    EXPECT_TRUE(worldModel->RemoveNestedModel(0));
+    EXPECT_TRUE(m3->Removed());
+    EXPECT_EQ(1u, world->GetModelCount());
+    EXPECT_EQ(1u, worldModel->GetNestedModelCount());
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m3"));
+    EXPECT_EQ(nullptr, world->GetModel("m3"));
+
+    const auto m4 = worldModel->GetNestedModel("m4");
+    ASSERT_NE(nullptr, m4);
+    EXPECT_TRUE(worldModel->RemoveNestedModel("m4"));
+    EXPECT_EQ(0u, world->GetModelCount());
+    EXPECT_EQ(0u, worldModel->GetNestedModelCount());
+    EXPECT_TRUE(m4->Removed());
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m4"));
+    EXPECT_EQ(nullptr, world->GetModel("m4"));
   }
 }
 

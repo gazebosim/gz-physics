@@ -557,17 +557,16 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     // If this is a nested model, remove an entry from the parent models
     // "nestedModels" vector
+    // Note, it is the responsibility of the caller to avoid calling this
+    // function when `_modelID` points to a proxy model to a world.
     auto parentID = this->models.idToContainerID.at(_modelID);
-    if (parentID != _worldID)
-    {
-      auto parentModelInfo = this->models.at(parentID);
-      const std::size_t modelIndex =
-          this->models.idToIndexInContainer.at(_modelID);
-      if (modelIndex >= parentModelInfo->nestedModels.size())
-        return false;
-      parentModelInfo->nestedModels.erase(
-          parentModelInfo->nestedModels.begin() + modelIndex);
-    }
+    const std::size_t modelIndex =
+        this->models.idToIndexInContainer.at(_modelID);
+    auto parentModelInfo = this->GetModelInfo(parentID);
+    if (modelIndex >= parentModelInfo->nestedModels.size())
+      return false;
+    parentModelInfo->nestedModels.erase(parentModelInfo->nestedModels.begin() +
+                                        modelIndex);
     this->models.RemoveEntity(skel);
     world->removeSkeleton(skel);
     return true;

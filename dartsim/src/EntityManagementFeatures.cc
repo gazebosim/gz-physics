@@ -709,20 +709,16 @@ bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
   const std::string fullName =
       ::sdf::JoinName(modelInfo->model->getName(), _modelName);
 
-  if (this->models.HasEntity(_modelID))
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
+  if (nullptr == nestedSkel || !this->models.HasEntity(nestedSkel))
   {
-    auto worldID = this->GetWorldOfModelImpl(_modelID);
-    auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
-    if (nullptr == nestedSkel || !this->models.HasEntity(nestedSkel))
-    {
-      return false;
-    }
-    const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
-    const auto filterPtr = GetFilterPtr(this, worldID);
-    filterPtr->RemoveSkeletonCollisions(nestedSkel);
-    return this->RemoveModelImpl(worldID, nestedModelID);
+    return false;
   }
-  return false;
+  const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->RemoveSkeletonCollisions(nestedSkel);
+  return this->RemoveModelImpl(worldID, nestedModelID);
 }
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
