@@ -52,17 +52,17 @@ Identity ShapeFeatures::AttachMeshShape(
   // Create the Bullet trimesh
   for (unsigned int j = 0; j < numIndices; j += 3)
   {
-    btVector3 bv0(vertices[indices[j]*3+0],
-                  vertices[indices[j]*3+1],
-                  vertices[indices[j]*3+2]);
+    btVector3 bv0(static_cast<btScalar>(vertices[indices[j]*3+0]),
+                  static_cast<btScalar>(vertices[indices[j]*3+1]),
+                  static_cast<btScalar>(vertices[indices[j]*3+2]));
 
-    btVector3 bv1(vertices[indices[j+1]*3+0],
-                  vertices[indices[j+1]*3+1],
-                  vertices[indices[j+1]*3+2]);
+    btVector3 bv1(static_cast<btScalar>(vertices[indices[j+1]*3+0]),
+                  static_cast<btScalar>(vertices[indices[j+1]*3+1]),
+                  static_cast<btScalar>(vertices[indices[j+1]*3+2]));
 
-    btVector3 bv2(vertices[indices[j+2]*3+0],
-                  vertices[indices[j+2]*3+1],
-                  vertices[indices[j+2]*3+2]);
+    btVector3 bv2(static_cast<btScalar>(vertices[indices[j+2]*3+0]),
+                  static_cast<btScalar>(vertices[indices[j+2]*3+1]),
+                  static_cast<btScalar>(vertices[indices[j+2]*3+2]));
 
     mTriMesh.get()->addTriangle(bv0, bv1, bv2);
   }
