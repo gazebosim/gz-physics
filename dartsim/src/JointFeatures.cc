@@ -728,6 +728,7 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 void JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
     const std::string _mimicJoint,
+    const std::string,
     const double _multiplier,
     const double _offset,
     const double _reference)
@@ -755,7 +756,7 @@ void JointFeatures::SetJointMimicConstraint(
   // Check if the joint tries to mimic itself.
   if (joint == jointMimic)
   {
-    gzerr << "Parent and child joints for the mimic contraint"
+    gzerr << "Leader and follower joints for the mimic contraint"
       << " should not be the same. The constraint will be ignored"
       << std::endl;
   }

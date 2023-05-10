@@ -606,6 +606,7 @@ namespace gz
 
         public: void SetMimicConstraint(
                     const std::string _mimicJoint,
+                    const std::string _axis,
                     Scalar _multiplier,
                     Scalar _offset,
                     Scalar _reference);
@@ -621,6 +622,7 @@ namespace gz
         public: virtual void SetJointMimicConstraint(
             const Identity &_id,
             const std::string _mimicJoint,
+            const std::string _axis,
             Scalar _multiplier, Scalar _offset, Scalar _reference) = 0;
       };
     };

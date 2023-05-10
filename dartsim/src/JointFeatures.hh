@@ -210,6 +210,7 @@ class JointFeatures :
   public: void SetJointMimicConstraint(
       const Identity &_id,
       const std::string _mimicJoint,
+      const std::string _axis,
       const double _multiplier,
       const double _offset,
       const double _reference) override;
