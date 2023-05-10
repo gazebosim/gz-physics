@@ -209,7 +209,7 @@ class JointFeatures :
   // ----- Mimic joint constraint -----
   public: void SetJointMimicConstraint(
       const Identity &_id,
-      const std::string _mimicJoint,
+      const std::string _joint,
       const std::string _axis,
       const double _multiplier,
       const double _offset,

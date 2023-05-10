@@ -220,12 +220,12 @@ namespace gz
     template <typename PolicyT, typename FeaturesT>
     void SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
     SetMimicConstraint(
-      const std::string _mimicJoint,
+      const std::string _joint,
       const std::string _axis,
       Scalar _multiplier, Scalar _offset, Scalar _reference)
     {
       this->template Interface<SetMimicConstraintFeature>()
-        ->SetJointMimicConstraint(this->identity, _mimicJoint,
+        ->SetJointMimicConstraint(this->identity, _joint,
           _axis, _multiplier, _offset, _reference);
     }
 

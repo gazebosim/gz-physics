@@ -727,14 +727,14 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
-    const std::string _mimicJoint,
+    const std::string _joint,
     const std::string,
     const double _multiplier,
     const double _offset,
     const double _reference)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
-  auto jointMimic = joint->getSkeleton()->getJoint(_mimicJoint);
+  auto jointMimic = joint->getSkeleton()->getJoint(_joint);
 
   // Take extra care that the value is valid. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
@@ -756,7 +756,7 @@ void JointFeatures::SetJointMimicConstraint(
   // Check if the joint tries to mimic itself.
   if (joint == jointMimic)
   {
-    gzerr << "Leader and follower joints for the mimic contraint"
+    gzerr << "Leader and follower joints for the mimic constraint"
       << " should not be the same. The constraint will be ignored"
       << std::endl;
   }
