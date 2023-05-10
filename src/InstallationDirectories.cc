@@ -126,7 +126,7 @@ std::string joinPaths(const std::string &_path1,
 #else  // _WIN32
   std::string path1 = sanitizeSlashes(checkWindowsPath(_path1));
   std::string path2 = sanitizeSlashes(checkWindowsPath(_path2), true);
-  std::vector<CHAR> combined(path1.length() + path2.length() + 2);
+  std::vector<char> combined(path1.length() + path2.length() + 2);
   if (::PathCombineA(combined.data(), path1.c_str(), path2.c_str()) != NULL)
   {
     path = sanitizeSlashes(checkWindowsPath(std::string(combined.data())));
