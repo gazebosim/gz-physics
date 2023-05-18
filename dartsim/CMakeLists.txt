@@ -111,5 +111,9 @@ foreach(test UNIT_FindFeatures_TEST UNIT_RequestFeatures_TEST)
   if(TARGET ${test})
     target_compile_definitions(${test} PRIVATE
       "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
+
+    target_link_libraries(${test} ${dartsim_plugin})
+    add_dependencies(${test} ${dartsim_plugin})
+
   endif()
 endforeach()
