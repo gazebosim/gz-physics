@@ -24,6 +24,7 @@
 #include <BulletDynamics/Featherstone/btMultiBody.h>
 #include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+#include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
@@ -167,7 +168,8 @@ struct JointInfo
   btMultiBodyJointMotor* motor = nullptr;
   btScalar effort = 0;
 
-  std::shared_ptr<btMultiBodyFixedConstraint> fixedContraint = nullptr;
+  std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
+  std::shared_ptr<btMultiBodyJointFeedback> jointFeedback = nullptr;
 };
 
 inline btMatrix3x3 convertMat(const Eigen::Matrix3d& mat)

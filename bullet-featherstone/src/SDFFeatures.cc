@@ -478,11 +478,35 @@ Identity SDFFeatures::ConstructSdfModel(
       convertMat(poseParentComToJoint.linear())
         .getRotation(btRotParentComToJoint);
 
-      btVector3 btPosParentComToJoint =
-        convertVec(poseParentComToJoint.translation());
+       auto linkParent = _sdfModel.LinkByName(joint->ParentName());
+       gz::math::Pose3d parentTransformInWorldSpace;
+       const auto errors = linkParent->SemanticPose().Resolve(
+         parentTransformInWorldSpace);
 
-      btVector3 btJointToChildCom =
-        convertVec((poseJointToChild * linkToComTf).translation());
+       gz::math::Pose3d parent2joint;
+       const auto errors2 = linkParent->SemanticPose().Resolve(
+         parent2joint, joint->Name());  // X_JP
+
+       btTransform parentLocalInertialFrame = convertTf(
+         parentLinkInfo->inertiaToLinkFrame);
+       btTransform parent2jointBt = convertTf(
+         gz::math::eigen3::convert(parent2joint.Inverse()));  // X_PJ
+
+       // offsetInABt = parent COM to pivot (X_IpJ)
+       // offsetInBBt = current COM to pivot (X_IcJ)
+       //
+       // X_PIp
+       // X_PJ
+       // X_IpJ = X_PIp^-1 * X_PJ
+       //
+       // X_IcJ = X_CIc^-1 * X_CJ
+       btTransform offsetInABt, offsetInBBt;
+       offsetInABt = parentLocalInertialFrame * parent2jointBt;
+       offsetInBBt =
+          convertTf(linkToComTf.inverse() * poseJointToChild.inverse());
+       // R_IcJ * R_IpJ ^ -1 = R_IcIp;
+       btQuaternion parentRotToThis =
+         offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
       auto jointID = this->AddJoint(
         JointInfo{
@@ -496,38 +520,10 @@ Identity SDFFeatures::ConstructSdfModel(
         });
       auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
-      if (::sdf::JointType::FIXED == joint->Type())
+      if (::sdf::JointType::PRISMATIC == joint->Type() ||
+          ::sdf::JointType::REVOLUTE == joint->Type() ||
+          ::sdf::JointType::BALL == joint->Type())
       {
-        model->body->setupFixed(
-          i, mass, inertia, parentIndex,
-          btRotParentComToJoint,
-          btPosParentComToJoint,
-          btJointToChildCom);
-      }
-      else if (::sdf::JointType::PRISMATIC == joint->Type() ||
-              ::sdf::JointType::REVOLUTE == joint->Type() ||
-              ::sdf::JointType::BALL == joint->Type())
-      {
-        auto linkParent = _sdfModel.LinkByName(joint->ParentName());
-        gz::math::Pose3d parentTransformInWorldSpace;
-        const auto errors = linkParent->SemanticPose().Resolve(
-          parentTransformInWorldSpace);
-
-        gz::math::Pose3d parent2joint;
-        const auto errors2 = linkParent->SemanticPose().Resolve(
-          parent2joint, joint->Name());
-
-        btTransform parentLocalInertialFrame = convertTf(
-          parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(
-          gz::math::eigen3::convert(parent2joint.Inverse()));
-
-        btTransform offsetInABt, offsetInBBt;
-        offsetInABt = parentLocalInertialFrame * parent2jointBt;
-        offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis =
-          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
-
         if (::sdf::JointType::REVOLUTE == joint->Type())
         {
           const auto axis = convertVec(joint->Axis()->Xyz());
@@ -564,12 +560,13 @@ Identity SDFFeatures::ConstructSdfModel(
       {
         model->body->setupFixed(
           i, mass, inertia, parentIndex,
-          btRotParentComToJoint,
-          btPosParentComToJoint,
-          btJointToChildCom);
+          parentRotToThis,
+          offsetInABt.getOrigin(),
+          -offsetInBBt.getOrigin());
       }
+
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
-        ::sdf::JointType::REVOLUTE == joint->Type())
+          ::sdf::JointType::REVOLUTE == joint->Type())
       {
         model->body->getLink(i).m_jointLowerLimit =
             static_cast<btScalar>(joint->Axis()->Lower());
@@ -589,12 +586,15 @@ Identity SDFFeatures::ConstructSdfModel(
             static_cast<btScalar>(joint->Axis()->Upper()));
         world->world->addMultiBodyConstraint(con);
       }
+
+      jointInfo->jointFeedback = std::make_shared<btMultiBodyJointFeedback>();
+      jointInfo->jointFeedback->m_reactionForces.setZero();
+      model->body->getLink(i).m_jointFeedback = jointInfo->jointFeedback.get();
     }
   }
 
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
-
   model->body->finalizeMultiDof();
 
   const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
