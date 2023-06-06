@@ -393,10 +393,10 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   }
   else
   {
-    ignerr << "Could not find LinkInfo for child link [" << child->getName()
-           << "] when detaching joint "
-           << "[" << joint->getName() << "]. Joint detaching failed."
-           << std::endl;
+    gzerr << "Could not find LinkInfo for child link [" << child->getName()
+          << "] when detaching joint "
+          << "[" << joint->getName() << "]. Joint detaching failed."
+          << std::endl;
     return;
   }
 

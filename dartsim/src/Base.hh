@@ -469,8 +469,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     {
       // We have not found a welded node associated with _link. This shouldn't
       // happen.
-      ignerr << "Could not find welded body node for link " << _link->name
-             << ". Merging of link and welded body failed.";
+      gzerr << "Could not find welded body node for link " << _link->name
+            << ". Merging of link and welded body failed.";
       return;
     }
 
