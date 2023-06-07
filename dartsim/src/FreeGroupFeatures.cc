@@ -35,7 +35,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 
   // If there are no bodies at all in this model, then the FreeGroup functions
   // will not work properly, so we'll just reject these cases.
-  if (skeleton->getNumBodyNodes() == 0 && modelInfo->nestedModels.size() == 0)
+  if (skeleton->getNumBodyNodes() == 0 && modelInfo->nestedModels.empty())
     return this->GenerateInvalidId();
 
   // Verify that all root joints are FreeJoints
@@ -58,7 +58,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
     // returning an error.
     auto nestedModelInfo = this->models.at(nestedModel);
     if (nestedModelInfo->model->getNumBodyNodes() > 0 ||
-        nestedModelInfo->nestedModels.size() > 0)
+        !nestedModelInfo->nestedModels.empty())
     {
       if (!this->FindFreeGroupForModel(
               this->GenerateIdentity(nestedModel, nestedModelInfo)))

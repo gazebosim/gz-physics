@@ -161,7 +161,7 @@ struct EntityStorage
     return idToObject.at(_id);
   }
 
-  const std::optional<Value1> MaybeAt(const std::size_t _id) const
+  std::optional<Value1> MaybeAt(const std::size_t _id) const
   {
     auto it = this->idToObject.find(_id);
     if (it != this->idToObject.end())
