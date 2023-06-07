@@ -40,7 +40,7 @@ namespace test
   };
 }
 
-void PrimeTheLoader(plugin::Loader &_loader)
+inline void PrimeTheLoader(plugin::Loader &_loader)
 {
   for (const std::string &library
        : physics::test::g_PhysicsPluginLibraries)
