@@ -492,7 +492,7 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
 
 /////////////////////////////////////////////////
 void EntityManagementFeatures::SetCollisionFilterMask(
-    const Identity &_shapeID, const uint16_t _mask)
+    const Identity &_shapeID, uint16_t _mask)
 {
   auto collision =
       this->ReferenceInterface<CollisionInfo>(_shapeID)->collision;
