@@ -82,7 +82,7 @@ Entity &Model::AddLink()
 
   it->second->SetParent(this);
   this->ChildrenChanged();
-  return *it->second.get();
+  return *it->second;
 }
 
 //////////////////////////////////////////////////
@@ -101,7 +101,7 @@ Entity &Model::AddModel()
 
   it->second->SetParent(this);
   this->ChildrenChanged();
-  return *it->second.get();
+  return *it->second;
 }
 
 //////////////////////////////////////////////////
