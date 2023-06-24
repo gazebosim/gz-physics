@@ -16,6 +16,9 @@ install(
   DESTINATION "${GZ_INCLUDE_INSTALL_DIR_FULL}")
 
 gz_get_libsources_and_unittests(sources test_sources)
+if(NOT gz-common${GZ_COMMON_VER}-geospatial_FOUND)
+  list(REMOVE_ITEM sources src/CustomHeightmapShape.cc)
+endif()
 
 # TODO(MXG): Think about a gz_add_plugin(~) macro for gz-cmake
 set(engine_name dartsim-plugin)
@@ -28,15 +31,22 @@ target_link_libraries(${dartsim_plugin}
   PUBLIC
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
-    ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    gz-common${GZ_COMMON_VER}::geospatial
     gz-math${GZ_MATH_VER}::eigen3
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
     gz-common${GZ_COMMON_VER}::profiler
 )
+if(gz-common${GZ_COMMON_VER}-geospatial_FOUND)
+  target_link_libraries(${dartsim_plugin}
+    PUBLIC
+      ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
+      gz-common${GZ_COMMON_VER}::geospatial)
+  target_compile_definitions(${dartsim_plugin}
+    PRIVATE
+      GZ_COMMON_GEOSPATIAL_FOUND)
+endif()
 
 # The Gazebo fork of DART contains additional code that allows customizing
 # contact constraints. We check for the presence of "ContactSurface.hpp", which
@@ -86,9 +96,7 @@ gz_build_tests(
     ${dartsim_plugin}
     gz-plugin${GZ_PLUGIN_VER}::loader
     gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    gz-common${GZ_COMMON_VER}::geospatial
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
-    ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
   TEST_LIST tests)
 

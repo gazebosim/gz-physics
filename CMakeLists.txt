@@ -38,8 +38,9 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 #--------------------------------------
 # Find gz-common
 gz_find_package(gz-common5
-  COMPONENTS geospatial graphics profiler
-  REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
+  COMPONENTS graphics profiler
+  OPTIONAL_COMPONENTS geospatial
+  REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet bullet-featherstone)
 set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
 
 #--------------------------------------

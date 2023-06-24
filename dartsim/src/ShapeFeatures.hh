@@ -25,7 +25,9 @@
 #include <gz/physics/CapsuleShape.hh>
 #include <gz/physics/CylinderShape.hh>
 #include <gz/physics/EllipsoidShape.hh>
+#ifdef GZ_COMMON_GEOSPATIAL_FOUND
 #include <gz/physics/heightmap/HeightmapShape.hh>
+#endif
 #include <gz/physics/mesh/MeshShape.hh>
 #include <gz/physics/PlaneShape.hh>
 #include <gz/physics/SphereShape.hh>
@@ -67,9 +69,11 @@ struct ShapeFeatureList : FeatureList<
 //  SetSphereShapeProperties,
   AttachSphereShapeFeature,
 
+#ifdef GZ_COMMON_GEOSPATIAL_FOUND
   heightmap::GetHeightmapShapeProperties,
 //  heightmap::SetHeightmapShapeProperties,
   heightmap::AttachHeightmapShapeFeature,
+#endif
 
   mesh::GetMeshShapeProperties,
 //  mesh::SetMeshShapeProperties,
@@ -165,6 +169,7 @@ class ShapeFeatures :
       const Pose3d &_pose) override;
 
 
+#ifdef GZ_COMMON_GEOSPATIAL_FOUND
   // ----- Heightmap Features -----
   public: Identity CastToHeightmapShape(
       const Identity &_shapeID) const override;
@@ -179,6 +184,7 @@ class ShapeFeatures :
       const Pose3d &_pose,
       const LinearVector3d &_size,
       int _subSampling) override;
+#endif
 
   // ----- Mesh Features -----
   public: Identity CastToMeshShape(

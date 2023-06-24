@@ -19,8 +19,10 @@
 
 #include <gz/plugin/Loader.hh>
 
+#ifdef GZ_COMMON_GEOSPATIAL_FOUND
 #include <gz/common/geospatial/Dem.hh>
 #include <gz/common/geospatial/ImageHeightmap.hh>
+#endif
 #include <gz/common/MeshManager.hh>
 #include <gz/common/Filesystem.hh>
 
@@ -208,6 +210,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(meshShapeScaledSize[1], 0.3831, 1e-4);
   EXPECT_NEAR(meshShapeScaledSize[2], 0.0489, 1e-4);
 
+#ifdef GZ_COMMON_GEOSPATIAL_FOUND
   // image heightmap
   auto heightmapLink = model->ConstructEmptyLink("heightmap_link");
   heightmapLink->AttachFixedJoint(child, "heightmap_joint");
@@ -266,6 +269,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(sizeDem.X(), demShapeRecast->GetSize()[0], 1e-3);
   EXPECT_NEAR(sizeDem.Y(), demShapeRecast->GetSize()[1], 1e-3);
   EXPECT_NEAR(sizeDem.Z(), demShapeRecast->GetSize()[2], 1e-6);
+#endif
 }
 
 TEST(EntityManagement_TEST, RemoveEntities)

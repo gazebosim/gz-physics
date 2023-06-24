@@ -32,7 +32,9 @@
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 
+#ifdef GZ_COMMON_GEOSPATIAL_FOUND
 #include "CustomHeightmapShape.hh"
+#endif
 #include "CustomMeshShape.hh"
 
 namespace gz {
@@ -325,6 +327,7 @@ Identity ShapeFeatures::AttachSphereShape(
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
 
+#ifdef GZ_COMMON_GEOSPATIAL_FOUND
 //////////////////////////////////////////////////
 Identity ShapeFeatures::CastToHeightmapShape(
     const Identity &_shapeID) const
@@ -376,6 +379,7 @@ Identity ShapeFeatures::AttachHeightmapShape(
   const std::size_t shapeID = this->AddShape({sn, _name});
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
+#endif
 
 /////////////////////////////////////////////////
 Identity ShapeFeatures::CastToMeshShape(
