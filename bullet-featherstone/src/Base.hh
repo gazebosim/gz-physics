@@ -24,6 +24,7 @@
 #include <BulletDynamics/Featherstone/btMultiBody.h>
 #include <BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h>
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
+#include <BulletDynamics/Featherstone/btMultiBodyGearConstraint.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>

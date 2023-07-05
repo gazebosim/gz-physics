@@ -385,6 +385,66 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
     jointInfo->jointFeedback->m_reactionForces.getAngular());
   return wrenchOut;
 }
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMimicConstraint(
+    const Identity &_id,
+    const std::string _joint,
+    const std::string,
+    const double _multiplier,
+    const double _offset,
+    const double _reference)
+{
+  auto followerJoint = this->ReferenceInterface<JointInfo>(_id);
+  auto followerChild = this->ReferenceInterface<LinkInfo>(
+      followerJoint->childLinkID);
+  if (!followerChild->indexInModel.has_value())
+  {
+    // print error message
+    return;
+  }
+  const auto *model =
+      this->ReferenceInterface<ModelInfo>(followerJoint->model);
+
+  // This would be easier with EntityManagementFeatures::GetJoint()
+  const auto leaderJointIt = model->jointNameToEntityId.find(_joint);
+  if (leaderJointIt == model->jointNameToEntityId.end())
+  {
+    // print error message
+    return;
+  }
+  auto leaderJointId =
+      this->GenerateIdentity(leaderJointIt->second,
+                             this->joints.at(leaderJointIt->second));
+  auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId);
+  auto leaderChild = this->ReferenceInterface<LinkInfo>(
+      leaderJoint->childLinkID);
+  if (!followerChild->indexInModel.has_value())
+  {
+    // print error message
+    return;
+  }
+
+  btMultiBodyGearConstraint* multibodyGear =
+    new btMultiBodyGearConstraint(
+      model->body.get(),
+      *followerChild->indexInModel,
+      model->body.get(),
+      *leaderChild->indexInModel,
+      btVector3(0, 0, 0),
+      btVector3(0, 0, 0),
+      btMatrix3x3::getIdentity(),
+      btMatrix3x3::getIdentity());
+  multibodyGear->setGearRatio(btScalar(-_multiplier));
+  multibodyGear->setRelativePositionTarget(
+      btScalar(_offset - _multiplier * _reference));
+  multibodyGear->setMaxAppliedImpulse(btScalar(1e8));
+  // setErp is needed to correct position constraint errors
+  // this is especially relevant to the offset and reference parameters
+  multibodyGear->setErp(btScalar(0.2));
+  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+  world->world->addMultiBodyConstraint(multibodyGear);
+}
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz
