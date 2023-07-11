@@ -521,6 +521,26 @@ namespace gz
             this->template Interface<GetJointFromModel>()
               ->GetModelOfJoint(this->identity));
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto WorldModelFeature::World<PolicyT, FeaturesT>::GetWorldModel()
+        -> ModelPtrType
+    {
+      return ModelPtrType(this->pimpl,
+            this->template Interface<WorldModelFeature>()
+              ->GetWorldModel(this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto WorldModelFeature::World<PolicyT, FeaturesT>::GetWorldModel() const
+        -> ConstModelPtrType
+    {
+      return ConstModelPtrType(this->pimpl,
+            this->template Interface<WorldModelFeature>()
+              ->GetWorldModel(this->identity));
+    }
   }
 }
 

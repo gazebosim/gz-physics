@@ -1,0 +1,38 @@
+<sdf version="1.10">
+  <world name="default">
+    <joint name="j1" type="fixed">
+      <parent>world</parent>
+      <child>m1</child>
+    </joint>
+
+    <model name="m1">
+      <link name="link1">
+        <inertial>
+          <mass>1</mass>
+        </inertial>
+      </link>
+    </model>
+
+    <joint name="j2" type="revolute">
+      <parent>m1</parent>
+      <child>m2</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.5</lower>
+          <upper>0.5</upper>
+          <effort>100</effort>
+        </limit>
+      </axis>
+    </joint>
+
+    <model name="m2">
+      <link name="link2">
+        <inertial>
+          <mass>1</mass>
+        </inertial>
+      </link>
+    </model>
+  </world>
+</sdf>
+

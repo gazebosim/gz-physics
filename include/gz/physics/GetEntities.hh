@@ -505,6 +505,45 @@ namespace gz
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves a model proxy of a world so that model
+    /// APIs can be used on the world, e.g., to access a world joint.
+    ///
+    /// Entities such as joints are only available in a Model. To support world
+    /// joints, instead of creating a new type of entity, we have chosen to
+    /// implement a scheme where the world behaves like a model via this
+    /// feature. Given a world, `w`, we can do `model = w->GetWorldModel()` to
+    /// get the model proxy. We can then use any of the APIs supported by the
+    /// features available in the physics engine, e.g., `model->GetJoint("j1")`.
+    /// where "j1" is a joint directly under `<world>` in the SDFormat.
+    ///
+    /// Note: Certain features available on models, such as
+    /// `RemoveModelFromWorld`, `ConstructEmptyLink`, and `ConstructSdfLink` are
+    /// not valid on the model proxy. Physics engine plugin implementers should
+    /// ensure that calls to APIs from these features fail gracefully.
+    class GZ_PHYSICS_VISIBLE WorldModelFeature : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+              class World: public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        public: using ModelPtrType = ModelPtr<PolicyT, FeaturesT>;
+        public: using ConstModelPtrType = ConstModelPtr<PolicyT, FeaturesT>;
+
+        /// \brief Get the model that represents the world.
+        public: ModelPtrType GetWorldModel();
+
+        /// \sa GetWorldModel()
+        public: ConstModelPtrType GetWorldModel() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public:
+            virtual Identity GetWorldModel(const Identity &_worldID) const = 0;
+      };
+    };
+
     struct GetEntities : FeatureList<
       GetEngineInfo,
       GetWorldFromEngine,

@@ -161,6 +161,16 @@ struct EntityStorage
     return idToObject.at(_id);
   }
 
+  const std::optional<Value1> MaybeAt(const std::size_t _id) const
+  {
+    auto it = this->idToObject.find(_id);
+    if (it != this->idToObject.end())
+    {
+      return it->second;
+    }
+    return std::nullopt;
+  }
+
   Value1 &at(const Key2 &_key)
   {
     return idToObject.at(objectToID.at(_key));
@@ -293,6 +303,12 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->worlds.AddEntity(id, _world, _name, 0);
 
     this->frames[id] = dart::dynamics::Frame::World();
+    auto model = dart::dynamics::Skeleton::create("");
+
+    auto modelInfo = std::make_shared<ModelInfo>();
+    modelInfo->model = model;
+    modelInfo->localName = _name;
+    this->modelProxiesToWorld.AddEntity(id, modelInfo, _world, 0);
 
     return id;
   }
@@ -310,6 +326,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     {
       this->frames[id] = _info.frame.get();
     }
+    auto modelProxy = this->modelProxiesToWorld.at(_worldID);
+    modelProxy->nestedModels.push_back(id);
 
     return std::forward_as_tuple(id, *entry);
   }
@@ -327,7 +345,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->models.AddEntity(id, entry, _info.model, _parentID);
     this->frames[id] = _info.frame.get();
 
-    auto parentModelInfo = this->models.at(_parentID);
+    auto parentModelInfo = this->GetModelInfo(_parentID);
     parentModelInfo->nestedModels.push_back(id);
     return {id, *entry};
   }
@@ -482,7 +500,7 @@ class Base : public Implements3d<FeatureList<Feature>>
             _joint->getTransformFromChildBodyNode());
 
     this->jointsByName[_fullName] = _joint;
-    this->models.at(_modelID)->joints.push_back(jointInfo);
+    this->GetModelInfo(_modelID)->joints.push_back(jointInfo);
     this->joints.idToObject[id]->frame = jointFrame;
     this->frames[id] = this->joints.idToObject[id]->frame.get();
 
@@ -539,17 +557,16 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     // If this is a nested model, remove an entry from the parent models
     // "nestedModels" vector
+    // Note, it is the responsibility of the caller to avoid calling this
+    // function when `_modelID` points to a proxy model to a world.
     auto parentID = this->models.idToContainerID.at(_modelID);
-    if (parentID != _worldID)
-    {
-      auto parentModelInfo = this->models.at(parentID);
-      const std::size_t modelIndex =
-          this->models.idToIndexInContainer.at(_modelID);
-      if (modelIndex >= parentModelInfo->nestedModels.size())
-        return false;
-      parentModelInfo->nestedModels.erase(
-          parentModelInfo->nestedModels.begin() + modelIndex);
-    }
+    const std::size_t modelIndex =
+        this->models.idToIndexInContainer.at(_modelID);
+    auto parentModelInfo = this->GetModelInfo(parentID);
+    if (modelIndex >= parentModelInfo->nestedModels.size())
+      return false;
+    parentModelInfo->nestedModels.erase(parentModelInfo->nestedModels.begin() +
+                                        modelIndex);
     this->models.RemoveEntity(skel);
     world->removeSkeleton(skel);
     return true;
@@ -558,6 +575,12 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline std::size_t GetWorldOfModelImpl(
               const std::size_t &_modelID) const
   {
+    auto worldModelProxy = this->modelProxiesToWorld.MaybeAt(_modelID);
+    if (worldModelProxy.has_value())
+    {
+      return _modelID;
+    }
+
     if (this->models.HasEntity(_modelID))
     {
       auto parentIt = this->models.idToContainerID.find(_modelID);
@@ -586,32 +609,49 @@ class Base : public Implements3d<FeatureList<Feature>>
     }
   };
 
+
   /// \brief Create a fully (world) scoped joint name.
   /// \param _modelID Identity of the parent model of the joint's child link.
   /// \param _name The unscoped joint name.
   /// \return The fully (world) scoped joint name, or an empty string
   /// if a world cannot be resolved.
   public: inline std::string FullyScopedJointName(
-    const Identity &_modelID,
+    const std::size_t &_modelID,
     const std::string &_name) const
   {
-    const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
-
-    auto worldID = this->GetWorldOfModelImpl(_modelID);
-    if (worldID == INVALID_ENTITY_ID)
+    if (this->modelProxiesToWorld.HasEntity(_modelID))
     {
-      gzerr << "World of model [" << modelInfo->model->getName()
-            << "] could not be found when creating joint [" << _name
-            << "]\n";
-      return "";
+      auto world = this->worlds.at(_modelID);
+      return ::sdf::JoinName(world->getName(), _name);
     }
+    else
+    {
+      const auto modelInfo = this->models.at(_modelID);
 
-    auto world = this->worlds.at(worldID);
-    const std::string fullJointName = ::sdf::JoinName(
-        world->getName(),
-        ::sdf::JoinName(modelInfo->model->getName(), _name));
+      auto worldID = this->GetWorldOfModelImpl(_modelID);
+      if (worldID == INVALID_ENTITY_ID)
+      {
+        gzerr << "World of model [" << modelInfo->model->getName()
+              << "] could not be found when creating the fully scoped name of "
+                 "joint ["
+              << _name << "]\n";
+        return "";
+      }
+      auto world = this->worlds.at(worldID);
+      return ::sdf::JoinName(
+          world->getName(),
+          ::sdf::JoinName(modelInfo->model->getName(), _name));
+    }
+  }
 
-    return fullJointName;
+  public: ModelInfoPtr GetModelInfo(std::size_t _modelID) const
+  {
+    auto modelProxy = this->modelProxiesToWorld.MaybeAt(_modelID);
+    if (modelProxy)
+    {
+      return *modelProxy;
+    }
+    return this->models.at(_modelID);
   }
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
@@ -620,6 +660,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
+  public: EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
 
   /// \brief Map from the fully qualified link name (including the world name)
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even
