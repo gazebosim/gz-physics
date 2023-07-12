@@ -592,6 +592,10 @@ namespace gz
         : public virtual Feature
     {
       /// \brief The Joint API for setting the mimic joint constraint.
+      /// \param[in] _dof
+      ///   The desired generalized coordinate corresponding to the follower
+      ///   axis within this joint. Values start from 0 and stop before
+      ///   Joint::GetDegreesOfFreedom().
       /// \param[in] _joint
       ///   name of the joint to be mimicked, i.e. the leader joint.
       /// \param[in] _multiplier
@@ -605,6 +609,7 @@ namespace gz
         public: using Scalar = typename PolicyT::Scalar;
 
         public: void SetMimicConstraint(
+                    const std::size_t _dof,
                     const std::string _joint,
                     const std::string _axis,
                     Scalar _multiplier,
@@ -621,6 +626,7 @@ namespace gz
         // See Joint::MimicConstraint above
         public: virtual void SetJointMimicConstraint(
             const Identity &_id,
+            const std::size_t _dof,
             const std::string _joint,
             const std::string _axis,
             Scalar _multiplier, Scalar _offset, Scalar _reference) = 0;

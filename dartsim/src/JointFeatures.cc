@@ -727,6 +727,7 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
+    const std::size_t /*_dof*/,  // follower dof not supported by dart API yet
     const std::string _joint,
     const std::string,
     const double _multiplier,

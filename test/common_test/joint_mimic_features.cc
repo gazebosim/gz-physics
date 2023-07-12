@@ -177,13 +177,13 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
         // prismatic_joint_1 -> revolute_joint_1
         // revolute_joint_1 --> revolute_joint_2
         // revolute_joint_1 --> prismatic_joint_3
-        prismaticFollowerJoint1->SetMimicConstraint("prismatic_joint_1", "axis", multiplier,
+        prismaticFollowerJoint1->SetMimicConstraint(0, "prismatic_joint_1", "axis", multiplier,
             offset, reference);
-        revoluteFollowerJoint1->SetMimicConstraint("prismatic_joint_1", "axis" , multiplier,
+        revoluteFollowerJoint1->SetMimicConstraint(0, "prismatic_joint_1", "axis" , multiplier,
             offset, reference);
-        revoluteFollowerJoint2->SetMimicConstraint("revolute_joint_1", "axis", multiplier,
+        revoluteFollowerJoint2->SetMimicConstraint(0, "revolute_joint_1", "axis", multiplier,
             offset, reference);
-        prismaticFollowerJoint2->SetMimicConstraint("revolute_joint_1", "axis", multiplier,
+        prismaticFollowerJoint2->SetMimicConstraint(0, "revolute_joint_1", "axis", multiplier,
             offset, reference);
 
         // Reset positions and run a few iterations so the positions reach nontrivial values.
@@ -287,7 +287,7 @@ TEST_F(JointMimicFeatureTest, UniversalMimicTest)
     auto testMimicFcn = [&](double multiplier, double offset, double reference)
       {
         // Set mimic joint constraint.
-        followerJoint->SetMimicConstraint("universal_joint_1", "axis", multiplier, offset, reference);
+        followerJoint->SetMimicConstraint(0, "universal_joint_1", "axis", multiplier, offset, reference);
         // Reset positions and run a few iterations so the positions reach nontrivial values.
         leaderJoint->SetPosition(0, 0);
         leaderJoint->SetPosition(1, 0);
@@ -377,7 +377,7 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
     auto testMimicFcn = [&](double multiplier, double offset, double reference)
       {
         // Set mimic joint constraint.
-        followerJoint->SetMimicConstraint("upper_joint_1", "axis" , multiplier, offset, reference);
+        followerJoint->SetMimicConstraint(0, "upper_joint_1", "axis" , multiplier, offset, reference);
         // Reset positions and run a few iterations so the positions reach nontrivial values.
         leaderJoint->SetPosition(0, 0);
         followerJoint->SetPosition(0, 0);
