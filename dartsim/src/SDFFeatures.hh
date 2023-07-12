@@ -20,6 +20,7 @@
 
 #include <gz/math/Inertial.hh>
 #include <string>
+#include <utility>
 
 #include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructJoint.hh>
@@ -30,6 +31,7 @@
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <gz/physics/Implements.hh>
+#include <sdf/Joint.hh>
 
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
@@ -93,7 +95,7 @@ class SDFFeatures :
   /// assumed to be world
   /// \param[in] _child Pointer to child link. If nullptr, the child is assumed
   /// to be world
-  private: Identity ConstructSdfJoint(const ModelInfo &_modelInfo,
+  private: Identity ConstructSdfJoint(const Identity &_modelID,
       const ::sdf::Joint &_sdfJoint,
       dart::dynamics::BodyNode * const _parent,
       dart::dynamics::BodyNode * const _child);
@@ -124,7 +126,15 @@ class SDFFeatures :
   private: dart::dynamics::BodyNode *FindBodyNode(
                const std::string &_worldName,
                const std::string &_jointModelName,
-               const std::string &_linkRelativeName);
+               const std::string &_linkRelativeName) const;
+
+  private:
+      std::optional<
+          std::pair<dart::dynamics::BodyNode *, dart::dynamics::BodyNode *>>
+      FindParentAndChildOfJoint(std::size_t _worldID,
+                                const ::sdf::Joint *_sdfJoint,
+                                const std::string &_parentName,
+                                const std::string &_parentType) const;
 };
 
 }

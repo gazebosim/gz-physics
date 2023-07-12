@@ -169,7 +169,7 @@ struct JointInfo
   btMultiBodyJointMotor* motor = nullptr;
   btScalar effort = 0;
 
-  std::shared_ptr<btMultiBodyFixedConstraint> fixedContraint = nullptr;
+  std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
   std::shared_ptr<btMultiBodyJointFeedback> jointFeedback = nullptr;
 };
 

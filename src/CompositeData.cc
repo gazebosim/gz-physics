@@ -16,6 +16,7 @@
 */
 
 #include <cassert>
+#include <utility>
 
 #include "gz/physics/CompositeData.hh"
 
@@ -129,7 +130,7 @@ namespace gz
       if (!_receiver->second.data)
         ++_numEntries;
 
-      _receiver->second.data.reset(_sender->second.data.release());
+      _receiver->second.data = std::move(_sender->second.data);
       _receiver->second.required =
           _mergeRequirements && _sender->second.required;
     }

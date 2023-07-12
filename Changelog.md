@@ -2,6 +2,43 @@
 
 ### Gazebo Physics 6.x.x (202X-XX-XX)
 
+### Gazebo Physics 6.4.0 (2023-05-22)
+
+1. dartsim: Add support for joints in worlds
+    * [Pull request #501](https://github.com/gazebosim/gz-physics/pull/501)
+
+1. Changed contraint to constraint
+    * [Pull request #508](https://github.com/gazebosim/gz-physics/pull/508)
+
+1. Bullet featherstone: Add JointTransmittedWrench for F-T sensor
+    * [Pull request #434](https://github.com/gazebosim/gz-physics/pull/434)
+
+1. Reenable AABB tests for ellipsoids
+    * [Pull request #506](https://github.com/gazebosim/gz-physics/pull/506)
+
+1. Fix bullet double to float conversion compiler warnings
+    * [Pull request #503](https://github.com/gazebosim/gz-physics/pull/503)
+
+1. Disable failing bullet(-featherstone) tests on windows
+    * [Pull request #502](https://github.com/gazebosim/gz-physics/pull/502)
+
+1. Support multiple collisions per link in bullet-featherstone
+    * [Pull request #505](https://github.com/gazebosim/gz-physics/pull/505)
+
+1. Fix bullet related segfaults on macOS
+    * [Pull request #504](https://github.com/gazebosim/gz-physics/pull/504)
+
+1. dartsim: Refactor entity addition logic in the EntityStorage class
+    * [Pull request #500](https://github.com/gazebosim/gz-physics/pull/500)
+
+1. Fix a crash due to an invalid pointer
+    * [Pull request #486](https://github.com/gazebosim/gz-physics/pull/486)
+
+1. Forward ports
+    * [Pull request #511](https://github.com/gazebosim/gz-physics/pull/511)
+    * [Pull request #492](https://github.com/gazebosim/gz-physics/pull/492)
+
+
 ### Gazebo Physics 6.3.2 (2023-03-28)
 
 1. Fix joint index used in bookkeeping
@@ -46,30 +83,30 @@
 1. Apply gravity external to dartsim for added mass
     * [Pull request #462](https://github.com/gazebosim/gz-physics/pull/462)
 
-1. Refactor the VectorApprox to a single location 
+1. Refactor the VectorApprox to a single location
     * [Pull request #470](https://github.com/gazebosim/gz-physics/pull/470)
 
-1. Port: 5 to 6 
+1. Port: 5 to 6
     * [Pull request #467](https://github.com/gazebosim/gz-physics/pull/467)
 
-1. Simplify "falling" test to not require LinkFrameSemantics 
+1. Simplify "falling" test to not require LinkFrameSemantics
     * [Pull request #461](https://github.com/gazebosim/gz-physics/pull/461)
 
-1. Install the common test executables to libexec 
+1. Install the common test executables to libexec
     * [Pull request #458](https://github.com/gazebosim/gz-physics/pull/458)
 
-1. [bullet]: Fix how changed link poses are computed 
+1. [bullet]: Fix how changed link poses are computed
     * [Pull request #460](https://github.com/gazebosim/gz-physics/pull/460)
 
 ### Gazebo Physics 6.2.0 (2022-11-28)
 
-1. Reduce error to debug and add notes 
+1. Reduce error to debug and add notes
     * [Pull request #452](https://github.com/gazebosim/gz-physics/pull/452)
 
-1. Support fluid added mass 
+1. Support fluid added mass
     * [Pull request #384](https://github.com/gazebosim/gz-physics/pull/384)
 
-1. Deduplicate common tests part1 
+1. Deduplicate common tests part1
     * [Pull request #448](https://github.com/gazebosim/gz-physics/pull/448)
 
 ### Gazebo Physics 6.1.1 (2022-11-07)
@@ -77,7 +114,7 @@
 1. Suppress MSVC warning that is not applicable
     * [Pull request #446](https://github.com/gazebosim/gz-physics/pull/446)
 
-1. Fix construction of nested models 
+1. Fix construction of nested models
     * [Pull request #445](https://github.com/gazebosim/gz-physics/pull/445)
 
 ### Gazebo Physics 6.1.0 (2022-10-27)

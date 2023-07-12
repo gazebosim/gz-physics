@@ -40,7 +40,7 @@ Entity &Link::AddCollision()
     {collisionId, std::make_shared<Collision>(collisionId)});
   it->second->SetParent(this);
   this->ChildrenChanged();
-  return *it->second.get();
+  return *it->second;
 }
 
 //////////////////////////////////////////////////
