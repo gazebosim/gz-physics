@@ -595,7 +595,7 @@ namespace gz
       /// \param[in] _joint
       ///   name of the joint to be mimicked, i.e. the leader joint.
       /// \param[in] _multiplier
-      ///   The multiplier to be applied to poistion of leader joint.
+      ///   The multiplier to be applied to position of leader joint.
       /// \param[in] _offset
       ///   The offset to be applied to position of leader joint after
       ///   the multiplier is applied.
