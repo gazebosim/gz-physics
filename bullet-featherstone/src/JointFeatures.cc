@@ -407,6 +407,16 @@ void JointFeatures::SetJointMimicConstraint(
   const auto *model =
       this->ReferenceInterface<ModelInfo>(followerJoint->model);
 
+  // Get world pointer and remove an existing mimic / gear constraint
+  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+  if (followerJoint->gearConstraint)
+  {
+    world->world->removeMultiBodyConstraint(
+        followerJoint->gearConstraint.get());
+    followerJoint->gearConstraint.reset();
+  }
+
+
   // This would be easier with EntityManagementFeatures::GetJoint()
   const auto leaderJointIt = model->jointNameToEntityId.find(_joint);
   if (leaderJointIt == model->jointNameToEntityId.end())
@@ -426,8 +436,7 @@ void JointFeatures::SetJointMimicConstraint(
     return;
   }
 
-  btMultiBodyGearConstraint* multibodyGear =
-    new btMultiBodyGearConstraint(
+  followerJoint->gearConstraint = std::make_shared<btMultiBodyGearConstraint>(
       model->body.get(),
       *followerChild->indexInModel,
       model->body.get(),
@@ -436,15 +445,15 @@ void JointFeatures::SetJointMimicConstraint(
       btVector3(0, 0, 0),
       btMatrix3x3::getIdentity(),
       btMatrix3x3::getIdentity());
-  multibodyGear->setGearRatio(btScalar(-_multiplier));
-  multibodyGear->setRelativePositionTarget(
+  followerJoint->gearConstraint->setGearRatio(btScalar(-_multiplier));
+  followerJoint->gearConstraint->setRelativePositionTarget(
       btScalar(_offset - _multiplier * _reference));
-  multibodyGear->setMaxAppliedImpulse(btScalar(1e8));
+  // TODO: figure out what is a good value for this
+  followerJoint->gearConstraint->setMaxAppliedImpulse(btScalar(1e8));
   // setErp is needed to correct position constraint errors
   // this is especially relevant to the offset and reference parameters
-  multibodyGear->setErp(btScalar(0.2));
-  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-  world->world->addMultiBodyConstraint(multibodyGear);
+  followerJoint->gearConstraint->setErp(btScalar(0.2));
+  world->world->addMultiBodyConstraint(followerJoint->gearConstraint.get());
 }
 }  // namespace bullet_featherstone
 }  // namespace physics

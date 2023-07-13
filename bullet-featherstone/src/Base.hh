@@ -170,6 +170,7 @@ struct JointInfo
   btScalar effort = 0;
 
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
+  std::shared_ptr<btMultiBodyGearConstraint> gearConstraint = nullptr;
   std::shared_ptr<btMultiBodyJointFeedback> jointFeedback = nullptr;
 };
 
