@@ -389,6 +389,7 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
+    const std::size_t /*_dof*/,  // bullet doesn't mimic multi-axis joints yet
     const std::string _joint,
     const std::string,
     const double _multiplier,
