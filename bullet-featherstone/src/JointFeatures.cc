@@ -452,7 +452,7 @@ void JointFeatures::SetJointMimicConstraint(
   followerJoint->gearConstraint->setMaxAppliedImpulse(btScalar(1e8));
   // setErp is needed to correct position constraint errors
   // this is especially relevant to the offset and reference parameters
-  followerJoint->gearConstraint->setErp(btScalar(0.2));
+  followerJoint->gearConstraint->setErp(btScalar(0.3));
   world->world->addMultiBodyConstraint(followerJoint->gearConstraint.get());
 }
 }  // namespace bullet_featherstone
