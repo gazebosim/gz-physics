@@ -390,8 +390,8 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 void JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
     const std::size_t /*_dof*/,  // bullet doesn't mimic multi-axis joints yet
-    const std::string _joint,
-    const std::string,
+    const std::string &_joint,
+    const std::string &/*_axis*/,
     const double _multiplier,
     const double _offset,
     const double _reference)
@@ -448,7 +448,7 @@ void JointFeatures::SetJointMimicConstraint(
   followerJoint->gearConstraint->setGearRatio(btScalar(-_multiplier));
   followerJoint->gearConstraint->setRelativePositionTarget(
       btScalar(_offset - _multiplier * _reference));
-  // TODO: figure out what is a good value for this
+  // TODO(scpeters): figure out what is a good value for this
   followerJoint->gearConstraint->setMaxAppliedImpulse(btScalar(1e8));
   // setErp is needed to correct position constraint errors
   // this is especially relevant to the offset and reference parameters
