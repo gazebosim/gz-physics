@@ -53,7 +53,7 @@ class SDFFeatures :
     const ::sdf::Model &_sdfModel) override;
 
   public: Identity ConstructSdfNestedModel(
-    const Identity &_modelID,
+    const Identity &_parentID,
     const ::sdf::Model &_sdfModel) override;
 
   public: Identity ConstructSdfLink(
@@ -62,7 +62,7 @@ class SDFFeatures :
 
   private: Identity ConstructSdfCollision(
     const Identity &_linkID,
-    const ::sdf::Collision &_collision) override;
+    const ::sdf::Collision &_sdfCollision) override;
 };
 
 }
