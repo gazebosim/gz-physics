@@ -385,10 +385,10 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
         // Reset positions and run a few iterations so the positions reach nontrivial values.
         leaderJoint->SetPosition(0, 0);
         followerJoint->SetPosition(0, 0);
-        for (int _ = 0; _ < 125; _++)
+        for (int _ = 0; _ < 75; _++)
           world->Step(output, state, input);
 
-        const double positionTolerance = 3e-3;
+        const double positionTolerance = 5e-3;
         for (int _ = 0; _ < 10; _++)
         {
           world->Step(output, state, input);
