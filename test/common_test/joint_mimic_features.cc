@@ -21,6 +21,7 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
+#include <gz/math/Angle.hh>
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
@@ -406,6 +407,171 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
     testMimicFcn(-2, 0, 0);
     testMimicFcn(2, 0.1, 0);
     testMimicFcn(2, 0.3, -0.1);
+  }
+}
+
+// In this test, we have a pair of pendulums with different lengths and
+// oscillation frequencies that is repeated 3 times. One pendulum pair is
+// uncoupled, and they oscillate at different rates, but the other two pairs
+// have a mimic constraint so that they oscillate at the same rate.
+// In one pair the big pendulum follows the small pendulum and vice versa.
+TEST_F(JointMimicFeatureTest, PendulumsBigSmallMimicTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim" &&
+       this->PhysicsEngineName(name) != "bullet-featherstone")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
+          "mimic_fast_slow_pendulums_world.sdf"));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    // Set mimic parameters so that pendulums oscillate at the same rate
+    const double multiplier = 1.0;
+    const double offset = 0.0;
+    const double reference = 0.0;
+
+    // Get uncoupled pendulum pair
+    auto model = world->GetModel("pendulum_with_base");
+    auto slowJoint = model->GetJoint("slow_joint");
+    auto fastJoint = model->GetJoint("fast_joint");
+
+    // Test mimic constraint with fast joint following slow joint
+    const std::string followJointNameFastFollowsSlow = "fast_joint";
+    const std::string leaderJointNameFastFollowsSlow = "slow_joint";
+    auto modelFastFollowsSlow =
+        world->GetModel("pendulum_with_base_mimic_fast_follows_slow");
+    auto followJointFastFollowsSlow =
+        modelFastFollowsSlow->GetJoint(followJointNameFastFollowsSlow);
+    auto leaderJointFastFollowsSlow =
+        modelFastFollowsSlow->GetJoint(leaderJointNameFastFollowsSlow);
+    followJointFastFollowsSlow->SetMimicConstraint(
+        0, leaderJointNameFastFollowsSlow, "axis",
+        multiplier, offset, reference);
+
+    // Test mimic constraint with slow joint following fast joint
+    const std::string followJointNameSlowFollowsFast = "slow_joint";
+    const std::string leaderJointNameSlowFollowsFast = "fast_joint";
+    auto modelSlowFollowsFast =
+        world->GetModel("pendulum_with_base_mimic_slow_follows_fast");
+    auto followJointSlowFollowsFast =
+        modelSlowFollowsFast->GetJoint(followJointNameSlowFollowsFast);
+    auto leaderJointSlowFollowsFast =
+        modelSlowFollowsFast->GetJoint(leaderJointNameSlowFollowsFast);
+    followJointSlowFollowsFast->SetMimicConstraint(
+        0, leaderJointNameSlowFollowsFast, "axis",
+        multiplier, offset, reference);
+
+    // Ensure all joints start from zero angle.
+    EXPECT_EQ(fastJoint->GetPosition(0), 0);
+    EXPECT_EQ(slowJoint->GetPosition(0), 0);
+    EXPECT_EQ(followJointFastFollowsSlow->GetPosition(0), 0);
+    EXPECT_EQ(leaderJointFastFollowsSlow->GetPosition(0), 0);
+    EXPECT_EQ(followJointSlowFollowsFast->GetPosition(0), 0);
+    EXPECT_EQ(leaderJointSlowFollowsFast->GetPosition(0), 0);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Take two steps to allow the pendulums to start moving
+    world->Step(output, state, input);
+    world->Step(output, state, input);
+
+    // Step forward less than one half pendulum oscillation and check
+    // joint positions and velocities
+    for (int _ = 0; _ < 300; _++)
+    {
+      world->Step(output, state, input);
+
+      // Expect all joint positions are within 0, 90 degrees
+      const double deg45 = GZ_DTOR(45);
+      EXPECT_NEAR(slowJoint->GetPosition(0), deg45, deg45);
+      EXPECT_NEAR(fastJoint->GetPosition(0), deg45, deg45);
+      EXPECT_NEAR(followJointFastFollowsSlow->GetPosition(0), deg45, deg45);
+      EXPECT_NEAR(leaderJointFastFollowsSlow->GetPosition(0), deg45, deg45);
+      EXPECT_NEAR(followJointSlowFollowsFast->GetPosition(0), deg45, deg45);
+      EXPECT_NEAR(leaderJointSlowFollowsFast->GetPosition(0), deg45, deg45);
+
+      // Expect all joint velocities are positive
+      EXPECT_GT(slowJoint->GetVelocity(0), 0);
+      EXPECT_GT(fastJoint->GetVelocity(0), 0);
+      EXPECT_GT(followJointFastFollowsSlow->GetVelocity(0), 0);
+      EXPECT_GT(leaderJointFastFollowsSlow->GetVelocity(0), 0);
+      EXPECT_GT(followJointSlowFollowsFast->GetVelocity(0), 0);
+      EXPECT_GT(leaderJointSlowFollowsFast->GetVelocity(0), 0);
+
+      // Expect fast joint position/velocity are greater than other joints
+      // position
+      EXPECT_GT(fastJoint->GetPosition(0), slowJoint->GetPosition(0));
+      EXPECT_GT(fastJoint->GetPosition(0),
+                followJointFastFollowsSlow->GetPosition(0));
+      EXPECT_GT(fastJoint->GetPosition(0),
+                leaderJointFastFollowsSlow->GetPosition(0));
+      EXPECT_GT(fastJoint->GetPosition(0),
+                followJointSlowFollowsFast->GetPosition(0));
+      EXPECT_GT(fastJoint->GetPosition(0),
+                leaderJointSlowFollowsFast->GetPosition(0));
+      // velocity
+      EXPECT_GT(fastJoint->GetVelocity(0), slowJoint->GetVelocity(0));
+      EXPECT_GT(fastJoint->GetVelocity(0),
+                followJointFastFollowsSlow->GetVelocity(0));
+      EXPECT_GT(fastJoint->GetVelocity(0),
+                leaderJointFastFollowsSlow->GetVelocity(0));
+      EXPECT_GT(fastJoint->GetVelocity(0),
+                followJointSlowFollowsFast->GetVelocity(0));
+      EXPECT_GT(fastJoint->GetVelocity(0),
+                leaderJointSlowFollowsFast->GetVelocity(0));
+
+      // Expect slow joint position/velocity are smaller than mimicked joints
+      // position
+      EXPECT_LT(slowJoint->GetPosition(0),
+                followJointFastFollowsSlow->GetPosition(0));
+      EXPECT_LT(slowJoint->GetPosition(0),
+                leaderJointFastFollowsSlow->GetPosition(0));
+      EXPECT_LT(slowJoint->GetPosition(0),
+                followJointSlowFollowsFast->GetPosition(0));
+      EXPECT_LT(slowJoint->GetPosition(0),
+                leaderJointSlowFollowsFast->GetPosition(0));
+      // velocity
+      EXPECT_LT(slowJoint->GetVelocity(0),
+                followJointFastFollowsSlow->GetVelocity(0));
+      EXPECT_LT(slowJoint->GetVelocity(0),
+                leaderJointFastFollowsSlow->GetVelocity(0));
+      EXPECT_LT(slowJoint->GetVelocity(0),
+                followJointSlowFollowsFast->GetVelocity(0));
+      EXPECT_LT(slowJoint->GetVelocity(0),
+                leaderJointSlowFollowsFast->GetVelocity(0));
+
+      // Expect mimicked joint position/velocity are approximately equal
+      const double tolerance = 5e-3;
+      // position
+      EXPECT_NEAR(followJointFastFollowsSlow->GetVelocity(0),
+                  leaderJointFastFollowsSlow->GetVelocity(0), tolerance);
+      EXPECT_NEAR(followJointSlowFollowsFast->GetVelocity(0),
+                  leaderJointSlowFollowsFast->GetVelocity(0), tolerance);
+      EXPECT_NEAR(followJointFastFollowsSlow->GetVelocity(0),
+                  followJointSlowFollowsFast->GetVelocity(0), tolerance);
+      // velocity
+      EXPECT_NEAR(followJointFastFollowsSlow->GetVelocity(0),
+                  leaderJointFastFollowsSlow->GetVelocity(0), tolerance);
+      EXPECT_NEAR(followJointSlowFollowsFast->GetVelocity(0),
+                  leaderJointSlowFollowsFast->GetVelocity(0), tolerance);
+      EXPECT_NEAR(followJointFastFollowsSlow->GetVelocity(0),
+                  followJointSlowFollowsFast->GetVelocity(0), tolerance);
+    }
   }
 }
 
