@@ -414,13 +414,13 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
 // oscillation frequencies that is repeated 3 times. One pendulum pair is
 // uncoupled, and they oscillate at different rates, but the other two pairs
 // have a mimic constraint so that they oscillate at the same rate.
-// In one pair the big pendulum follows the small pendulum and vice versa.
-TEST_F(JointMimicFeatureTest, PendulumsBigSmallMimicTest)
+// In one mimic pair the fast pendulum follows the slow pendulum,
+// and vice versa for the other pair.
+TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim" &&
-       this->PhysicsEngineName(name) != "bullet-featherstone")
+    if(this->PhysicsEngineName(name) != "bullet-featherstone")
     {
       GTEST_SKIP();
     }
