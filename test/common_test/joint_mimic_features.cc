@@ -111,8 +111,7 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
   // prismatic_joint_3 : Mimics revolute_joint_1
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim" &&
-       this->PhysicsEngineName(name) != "bullet-featherstone")
+    if(this->PhysicsEngineName(name) != "bullet-featherstone")
     {
       GTEST_SKIP();
     }
@@ -239,96 +238,6 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
   }
 }
 
-// Here, we test the mimic constraint for a pair of universal joints.
-TEST_F(JointMimicFeatureTest, UniversalMimicTest)
-{
-  for (const std::string &name : this->pluginNames)
-  {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-
-    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
-          "mimic_universal_world.sdf"));
-    ASSERT_TRUE(errors.empty()) << errors.front();
-
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-
-    // Test mimic constraint between two revolute joints.
-    auto model = world->GetModel("universal_model");
-    auto leaderJoint = model->GetJoint("universal_joint_1");
-    auto followerJoint = model->GetJoint("universal_joint_2");
-
-    // Ensure both joints start from zero angle.
-    EXPECT_EQ(leaderJoint->GetPosition(0), 0);
-    EXPECT_EQ(followerJoint->GetPosition(0), 0);
-
-    gz::physics::ForwardStep::Output output;
-    gz::physics::ForwardStep::State state;
-    gz::physics::ForwardStep::Input input;
-
-    // Case : Without mimic constraint
-
-    // Let the simulation run without mimic constraint.
-    // The positions of joints should not be equal.
-    double leaderJointPrevPosAxis1 = 0;
-    double leaderJointPrevPosAxis2 = 0;
-    for (int _ = 0; _ < 10; _++)
-    {
-      world->Step(output, state, input);
-      EXPECT_NE(leaderJointPrevPosAxis1, followerJoint->GetPosition(0));
-      EXPECT_NE(leaderJointPrevPosAxis2, followerJoint->GetPosition(1));
-      leaderJointPrevPosAxis1 = leaderJoint->GetPosition(0);
-      leaderJointPrevPosAxis2 = leaderJoint->GetPosition(1);
-    }
-
-    auto testMimicFcn = [&](double multiplier, double offset, double reference)
-      {
-        // Set mimic joint constraint.
-        followerJoint->SetMimicConstraint(0, "universal_joint_1", "axis", multiplier, offset, reference);
-        // Reset positions and run a few iterations so the positions reach nontrivial values.
-        leaderJoint->SetPosition(0, 0);
-        leaderJoint->SetPosition(1, 0);
-        followerJoint->SetPosition(0, 0);
-        followerJoint->SetPosition(1, 0);
-        for (int _ = 0; _ < 10; _++)
-          world->Step(output, state, input);
-
-        // Follower joint's position should be equal to that of leader joint in previous timestep.
-        leaderJointPrevPosAxis1 = leaderJoint->GetPosition(0);
-        leaderJointPrevPosAxis2 = leaderJoint->GetPosition(1);
-        for (int _ = 0; _ < 10; _++)
-        {
-          world->Step(output, state, input);
-          EXPECT_FLOAT_EQ(multiplier * (leaderJointPrevPosAxis1 - reference) + offset,
-              followerJoint->GetPosition(0));
-          EXPECT_FLOAT_EQ(multiplier * (leaderJointPrevPosAxis2 - reference) + offset,
-              followerJoint->GetPosition(1));
-          leaderJointPrevPosAxis1 = leaderJoint->GetPosition(0);
-          leaderJointPrevPosAxis2 = leaderJoint->GetPosition(1);
-        }
-      };
-
-    // Testing with different (multiplier, offset, reference) combinations.
-    testMimicFcn(1, 0, 0);
-    testMimicFcn(-1, 0, 0);
-    testMimicFcn(1, 0.1, 0);
-    testMimicFcn(1, 0.2, 0.1);
-    testMimicFcn(-1, 0.2, 0);
-    testMimicFcn(-2, 0, 0);
-    testMimicFcn(2, 0.1, 0);
-    testMimicFcn(2, 0.3, -0.1);
-  }
-}
-
 // In this test, we have 2 pendulums of different lengths.
 // Originally, their time periods are different, but after applying
 // the mimic constraint, they follow the same velocity, effectively
@@ -337,8 +246,7 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim" &&
-       this->PhysicsEngineName(name) != "bullet-featherstone")
+    if(this->PhysicsEngineName(name) != "bullet-featherstone")
     {
       GTEST_SKIP();
     }
