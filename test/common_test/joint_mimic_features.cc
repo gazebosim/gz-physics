@@ -264,8 +264,7 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
 
 // In this test, we have 2 pendulums of different lengths.
 // Originally, their time periods are different, but after applying
-// the mimic constraint, they follow the same velocity, effectively
-// violating some laws. (Work done = Change in kinetic energy, for instance)
+// the mimic constraint, they follow the same velocity.
 TEST_F(JointMimicFeatureTest, PendulumMimicTest)
 {
   for (const std::string &name : this->pluginNames)
@@ -350,7 +349,8 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
 // In this test, we have a pair of pendulums with different lengths and
 // oscillation frequencies that is repeated 3 times. One pendulum pair is
 // uncoupled, and they oscillate at different rates, but the other two pairs
-// have a mimic constraint so that they oscillate at the same rate.
+// have a mimic constraint so that all the mimicked pendulums oscillate at a
+// frequency in between that of the slow and fast pendulums.
 // In one mimic pair the fast pendulum follows the slow pendulum,
 // and vice versa for the other pair.
 TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
