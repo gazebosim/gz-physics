@@ -119,7 +119,8 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    auto engine =
+        gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -157,11 +158,15 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
       world->Step(output, state, input);
       if (i > 5)
       {
-        EXPECT_NE(leaderJoint->GetPosition(0), prismaticFollowerJoint1->GetPosition(0));
-        EXPECT_NE(leaderJoint->GetPosition(0), revoluteFollowerJoint1->GetPosition(0));
-        // this following expectation fails. I think the revolute joints are too similar?
-        // EXPECT_NE(revoluteFollowerJoint1->GetPosition(0), revoluteFollowerJoint2->GetPosition(0));
-        EXPECT_NE(revoluteFollowerJoint1->GetPosition(0), prismaticFollowerJoint2->GetPosition(0));
+        EXPECT_NE(leaderJoint->GetPosition(0),
+                  prismaticFollowerJoint1->GetPosition(0));
+        EXPECT_NE(leaderJoint->GetPosition(0),
+                  revoluteFollowerJoint1->GetPosition(0));
+        // This expectation fails, are the revolute joints are too similar?
+        // EXPECT_NE(revoluteFollowerJoint1->GetPosition(0),
+        //           revoluteFollowerJoint2->GetPosition(0));
+        EXPECT_NE(revoluteFollowerJoint1->GetPosition(0),
+                  prismaticFollowerJoint2->GetPosition(0));
       }
     }
 
@@ -173,16 +178,17 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
         // prismatic_joint_1 -> revolute_joint_1
         // revolute_joint_1 --> revolute_joint_2
         // revolute_joint_1 --> prismatic_joint_3
-        prismaticFollowerJoint1->SetMimicConstraint(0, "prismatic_joint_1", "axis", multiplier,
-            offset, reference);
-        revoluteFollowerJoint1->SetMimicConstraint(0, "prismatic_joint_1", "axis" , multiplier,
-            offset, reference);
-        revoluteFollowerJoint2->SetMimicConstraint(0, "revolute_joint_1", "axis", multiplier,
-            offset, reference);
-        prismaticFollowerJoint2->SetMimicConstraint(0, "revolute_joint_1", "axis", multiplier,
-            offset, reference);
+        prismaticFollowerJoint1->SetMimicConstraint(0,
+            "prismatic_joint_1", "axis", multiplier, offset, reference);
+        revoluteFollowerJoint1->SetMimicConstraint(0,
+            "prismatic_joint_1", "axis" , multiplier, offset, reference);
+        revoluteFollowerJoint2->SetMimicConstraint(0,
+            "revolute_joint_1", "axis", multiplier, offset, reference);
+        prismaticFollowerJoint2->SetMimicConstraint(0,
+            "revolute_joint_1", "axis", multiplier, offset, reference);
 
-        // Reset positions and run a few iterations so the positions reach nontrivial values.
+        // Reset positions and run a few iterations so the positions reach
+        // nontrivial values.
         leaderJoint->SetPosition(0, 0);
         prismaticFollowerJoint1->SetPosition(0, 0);
         prismaticFollowerJoint2->SetPosition(0, 0);
@@ -196,33 +202,51 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
           world->Step(output, state, input);
           // Check for prismatic -> prismatic mimicking.
           const double positionTolerance = 0.1;
-          EXPECT_NEAR(multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
-              prismaticFollowerJoint1->GetPosition(0), positionTolerance)
-              << "multiplier [" << multiplier
-              << "], reference [" << reference
-              << "], offset [" << offset
-              << "], leaderPos [" << leaderJoint->GetPosition(0)
-              << "], followerPos [" << prismaticFollowerJoint1->GetPosition(0) << "]";
+          EXPECT_NEAR(
+              multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
+              prismaticFollowerJoint1->GetPosition(0),
+              positionTolerance)
+            << "multiplier [" << multiplier
+            << "], reference [" << reference
+            << "], offset [" << offset
+            << "], leaderPos [" << leaderJoint->GetPosition(0)
+            << "], followerPos [" << prismaticFollowerJoint1->GetPosition(0)
+            << "]";
           // Check for prismatic -> revolute mimicking.
-          EXPECT_NEAR(multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
-              revoluteFollowerJoint1->GetPosition(0), positionTolerance)
-              << "multiplier [" << multiplier
-              << "], reference [" << reference
-              << "], offset [" << offset
-              << "], leaderPos [" << leaderJoint->GetPosition(0)
-              << "], followerPos [" << revoluteFollowerJoint1->GetPosition(0) << "]";
+          EXPECT_NEAR(
+              multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
+              revoluteFollowerJoint1->GetPosition(0),
+              positionTolerance)
+            << "multiplier [" << multiplier
+            << "], reference [" << reference
+            << "], offset [" << offset
+            << "], leaderPos [" << leaderJoint->GetPosition(0)
+            << "], followerPos [" << revoluteFollowerJoint1->GetPosition(0)
+            << "]";
           // Check for revolute -> revolute mimicking.
-          EXPECT_NEAR(multiplier * (revoluteFollowerJoint1->GetPosition(0) - reference) + offset,
-              revoluteFollowerJoint2->GetPosition(0), positionTolerance)
-              << "multiplier [" << multiplier
-              << "], reference [" << reference
-              << "], offset [" << offset << "]";
+          EXPECT_NEAR(
+              multiplier * (revoluteFollowerJoint1->GetPosition(0) - reference)
+                + offset,
+              revoluteFollowerJoint2->GetPosition(0),
+              positionTolerance)
+            << "multiplier [" << multiplier
+            << "], reference [" << reference
+            << "], offset [" << offset
+            << "], leaderPos [" << revoluteFollowerJoint1->GetPosition(0)
+            << "], followerPos [" << revoluteFollowerJoint2->GetPosition(0)
+            << "]";
           // Check for revolute --> prismatic mimicking.
-          EXPECT_NEAR(multiplier * (revoluteFollowerJoint1->GetPosition(0) - reference) + offset,
-              prismaticFollowerJoint2->GetPosition(0), positionTolerance)
-              << "multiplier [" << multiplier
-              << "], reference [" << reference
-              << "], offset [" << offset << "]";
+          EXPECT_NEAR(
+              multiplier * (revoluteFollowerJoint1->GetPosition(0) - reference)
+                + offset,
+              prismaticFollowerJoint2->GetPosition(0),
+              positionTolerance)
+            << "multiplier [" << multiplier
+            << "], reference [" << reference
+            << "], offset [" << offset
+            << "], leaderPos [" << revoluteFollowerJoint1->GetPosition(0)
+            << "], followerPos [" << prismaticFollowerJoint2->GetPosition(0)
+            << "]";
         }
       };
 
@@ -254,7 +278,8 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    auto engine =
+        gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -290,8 +315,10 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
     auto testMimicFcn = [&](double multiplier, double offset, double reference)
       {
         // Set mimic joint constraint.
-        followerJoint->SetMimicConstraint(0, "upper_joint_1", "axis" , multiplier, offset, reference);
-        // Reset positions and run a few iterations so the positions reach nontrivial values.
+        followerJoint->SetMimicConstraint(0,
+            "upper_joint_1", "axis" , multiplier, offset, reference);
+        // Reset positions and run a few iterations so the positions reach
+        // nontrivial values.
         leaderJoint->SetPosition(0, 0);
         followerJoint->SetPosition(0, 0);
         for (int _ = 0; _ < 75; _++)
@@ -301,8 +328,10 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
         for (int _ = 0; _ < 10; _++)
         {
           world->Step(output, state, input);
-          EXPECT_NEAR(multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
-              followerJoint->GetPosition(0), positionTolerance);
+          EXPECT_NEAR(
+              multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
+              followerJoint->GetPosition(0),
+              positionTolerance);
         }
       };
 
@@ -336,7 +365,8 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    auto engine =
+        gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
