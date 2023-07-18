@@ -259,6 +259,8 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
     testMimicFcn(-1, 0.05, -0.05);
     testMimicFcn(-2, 0, 0);
     testMimicFcn(2, 0.1, 0);
+
+    std::cout << "Finished testing plugin: " << name << std::endl;
   }
 }
 
@@ -343,6 +345,8 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
     testMimicFcn(-2, 0, 0);
     testMimicFcn(2, 0.1, 0);
     testMimicFcn(2, 0.3, -0.1);
+
+    std::cout << "Finished testing plugin: " << name << std::endl;
   }
 }
 
@@ -510,6 +514,8 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
       EXPECT_NEAR(followJointFastFollowsSlow->GetVelocity(0),
                   followJointSlowFollowsFast->GetVelocity(0), tolerance);
     }
+
+    std::cout << "Finished testing plugin: " << name << std::endl;
   }
 }
 
