@@ -52,6 +52,7 @@ class JointMimicFeaturesTest:
   // Documentation inherited
   public: void SetUp() override
   {
+    std::cerr << "SetUp begin" << std::endl;
     gz::common::Console::SetVerbosity(4);
 
     std::cerr << "JointMimicFeaturesTest::GetLibToTest() "
@@ -75,6 +76,7 @@ class JointMimicFeaturesTest:
         GTEST_SKIP();
       }
     }
+    std::cerr << "SetUp end" << std::endl;
   }
 
   public: std::set<std::string> pluginNames;
@@ -102,6 +104,7 @@ using JointMimicFeatureTest =
 // prismatic and revolute joints using a chain of constraints.
 TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
 {
+  std::cerr << "PrismaticRevoluteMimicTest begin" << std::endl;
   // This test contains 5 joints : 3 prismatic and 2 revolute.
   // They are connected as follows :
   // prismatic_joint_1 : Free joint
@@ -111,6 +114,9 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
   // prismatic_joint_3 : Mimics revolute_joint_1
   for (const std::string &name : this->pluginNames)
   {
+    std::cerr << "PrismaticRevoluteMimicTest loop "
+              << name
+              << std::endl;
     if(this->PhysicsEngineName(name) != "bullet-featherstone")
     {
       GTEST_SKIP();
@@ -119,19 +125,24 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
+    std::cerr << "PrismaticRevoluteMimicTest RequestEngine" << std::endl;
     auto engine =
         gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
+    std::cerr << "PrismaticRevoluteMimicTest load SDF" << std::endl;
     sdf::Root root;
     const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
           "mimic_prismatic_world.sdf"));
     ASSERT_TRUE(errors.empty()) << errors.front();
 
+    std::cerr << "PrismaticRevoluteMimicTest ConstructWorld" << std::endl;
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
 
+    std::cerr << "PrismaticRevoluteMimicTest GetModel" << std::endl;
     auto model = world->GetModel("prismatic_model");
 
+    std::cerr << "PrismaticRevoluteMimicTest GetJoints" << std::endl;
     auto leaderJoint = model->GetJoint("prismatic_joint_1");
     auto prismaticFollowerJoint1 = model->GetJoint("prismatic_joint_2");
     auto revoluteFollowerJoint1 = model->GetJoint("revolute_joint_1");
@@ -155,6 +166,7 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
     // The positions of joints should not be equal.
     for (int i = 0; i < 10; i++)
     {
+      std::cerr << "  init Step loop " << i << std::endl;
       world->Step(output, state, input);
       if (i > 5)
       {
@@ -251,6 +263,7 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
       };
 
     // Testing with different (multiplier, offset, reference) combinations.
+    std::cerr << " start calling testMimicFcn" << std::endl;
     testMimicFcn(1, 0, 0);
     testMimicFcn(-1, 0, 0);
     testMimicFcn(1, 0.1, 0);
@@ -259,6 +272,7 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
     testMimicFcn(-1, 0.05, -0.05);
     testMimicFcn(-2, 0, 0);
     testMimicFcn(2, 0.1, 0);
+    std::cerr << "finish calling testMimicFcn" << std::endl;
   }
 }
 
