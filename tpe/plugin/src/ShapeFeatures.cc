@@ -272,7 +272,7 @@ Vector3d ShapeFeatures::GetEllipsoidShapeRadii(
 Identity ShapeFeatures::AttachEllipsoidShape(
   const Identity &_linkID,
   const std::string &_name,
-  Vector3d _radii,
+  const Vector3d &_radii,
   const Pose3d &_pose)
 {
   auto it = this->links.find(_linkID);
