@@ -131,6 +131,12 @@ inline btVector3 convertVec(Eigen::Vector3d vec)
                    static_cast<btScalar>(vec(2)));
 }
 
+inline btVector3 convertVec(const math::Vector3d& vec)
+{
+  return btVector3(static_cast<btScalar>(vec[0]), static_cast<btScalar>(vec[1]),
+                   static_cast<btScalar>(vec[2]));
+}
+
 inline Eigen::Matrix3d convert(btMatrix3x3 mat)
 {
   Eigen::Matrix3d val;

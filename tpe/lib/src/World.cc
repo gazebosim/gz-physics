@@ -99,7 +99,7 @@ Entity &World::AddModel()
   std::size_t modelId = Entity::GetNextId();
   const auto[it, success] = this->GetChildren().insert(
     {modelId, std::make_shared<Model>(modelId)});
-  return *it->second.get();
+  return *it->second;
 }
 
 /////////////////////////////////////////////////

@@ -83,6 +83,7 @@ gz_build_tests(
   SOURCES ${test_sources}
   LIB_DEPS
     ${features}
+    ${dartsim_plugin}
     gz-plugin${GZ_PLUGIN_VER}::loader
     gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
     gz-common${GZ_COMMON_VER}::geospatial

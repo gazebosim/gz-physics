@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <gz/common/Filesystem.hh>
@@ -56,7 +57,7 @@ class TestLibLoader
   /// \brief Get Physics Engine name based on the plugin name
   /// \param[in] _name Plugin name
   /// \return Name of the Physics Engine
-  std::string PhysicsEngineName(std::string _name)
+  static std::string PhysicsEngineName(std::string _name)
   {
     std::vector<std::string> tokens = gz::common::split(_name, "::");
     if (tokens.size() == 4)
@@ -76,6 +77,19 @@ class TestLibLoader
     return "";
   }
 
+  /// \brief Check if the physics engine provided by the plugin is in the
+  /// provided list.
+  /// \param[in] _pluginName Plugin name. PhysicsEngineName will first be called
+  /// to determine the engine name.
+  /// \param[in] _engineList List of engine names.
+  /// \return True if the engine is in the list.
+  public:
+  static bool EngineInList(const std::string &_pluginName,
+                           const std::unordered_set<std::string> &_engineList)
+  {
+    return _engineList.count(PhysicsEngineName(_pluginName)) != 0;
+  }
+
   private: static std::string& LibToTest()
   {
     static std::string libToTest = "";
@@ -85,4 +99,25 @@ class TestLibLoader
 }
 }
 
+/// \brief Check that the current engine being tested is supported.
+/// If the engine is not in the set of passed arguments, the test is skipped
+/// Adapted from
+/// https://github.com/gazebosim/gz-rendering/blob/c2e72ee51a7e4dba5156faa96c972c63ca5ab437/test/common_test/CommonRenderingTest.hh#L127-L138
+/// Example:
+/// Skip test if engine is not dart or bullet
+/// CHECK_SUPPORTED_ENGINE(name, "dart", "bullet");
+#define CHECK_SUPPORTED_ENGINE(engineToTest, ...)                             \
+  if (!gz::physics::TestLibLoader::EngineInList(engineToTest, {__VA_ARGS__})) \
+    GTEST_SKIP() << "Engine '" << engineToTest << "' unsupported";
+
+/// \brief Check that the current engine being tested is unsupported
+/// If the engine is in the set of passed arguments, the test is skipped
+/// Adapted from
+/// https://github.com/gazebosim/gz-rendering/blob/c2e72ee51a7e4dba5156faa96c972c63ca5ab437/test/common_test/CommonRenderingTest.hh#L127-L138
+/// Example:
+/// Skip test if engine is bullet-featherstone
+/// CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone");
+#define CHECK_UNSUPPORTED_ENGINE(engineToTest, ...)                          \
+  if (gz::physics::TestLibLoader::EngineInList(engineToTest, {__VA_ARGS__})) \
+    GTEST_SKIP() << "Engine '" << (engineToTest) << "' unsupported";
 #endif
