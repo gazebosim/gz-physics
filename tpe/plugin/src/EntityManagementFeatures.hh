@@ -160,7 +160,7 @@ class EntityManagementFeatures :
 
   // ----- Manage collision filter masks -----
   public: void SetCollisionFilterMask(
-      const Identity &_shapeID, const uint16_t _mask) override;
+      const Identity &_shapeID, uint16_t _mask) override;
 
   public: uint16_t GetCollisionFilterMask(
       const Identity &_shapeID) const override;

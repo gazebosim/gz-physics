@@ -39,7 +39,8 @@ struct EntityManagementFeatureList : FeatureList<
   ConstructEmptyModelFeature,
   ConstructEmptyNestedModelFeature,
   ConstructEmptyLinkFeature,
-  CollisionFilterMaskFeature
+  CollisionFilterMaskFeature,
+  WorldModelFeature
 > { };
 
 class EntityManagementFeatures :
@@ -174,6 +175,9 @@ class EntityManagementFeatures :
       const Identity &_shapeID) const override;
 
   public: void RemoveCollisionFilterMask(const Identity &_shapeID) override;
+
+  // ----- World model feature -----
+  public: Identity GetWorldModel(const Identity &_worldID) const override;
 };
 
 }

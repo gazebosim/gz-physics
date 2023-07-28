@@ -86,8 +86,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
 
-  auto gravity = _sdfWorld.Gravity();
-  worldInfo->world->setGravity(btVector3(gravity[0], gravity[1], gravity[2]));
+  worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
@@ -115,7 +114,7 @@ struct Structure
   /// The root link of the model
   const ::sdf::Link *rootLink;
   const ::sdf::Joint *rootJoint;
-  double mass;
+  btScalar mass;
   btVector3 inertia;
 
   /// Is the root link fixed
@@ -321,8 +320,8 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
   }
 
   const auto &M = rootLink->Inertial().MassMatrix();
-  const auto mass = M.Mass();
-  btVector3 inertia(M.Ixx(), M.Iyy(), M.Izz());
+  const auto mass = static_cast<btScalar>(M.Mass());
+  btVector3 inertia(convertVec(M.DiagonalMoments()));
   for (const double &I : {M.Ixy(), M.Ixz(), M.Iyz()})
   {
     if (std::abs(I) > 1e-3)
@@ -358,7 +357,7 @@ Identity SDFFeatures::ConstructSdfModel(
   const auto modelID = this->AddModel(
     _sdfModel.Name(), _worldID, rootInertialToLink,
     std::make_unique<btMultiBody>(
-      structure.flatLinks.size(),
+      static_cast<int>(structure.flatLinks.size()),
       structure.mass,
       structure.inertia,
       structure.fixedBase || isStatic,
@@ -390,9 +389,9 @@ Identity SDFFeatures::ConstructSdfModel(
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
 
-  for (std::size_t i = 0; i < structure.flatLinks.size(); ++i)
+  for (int i = 0; i < static_cast<int>(structure.flatLinks.size()); ++i)
   {
-    const auto *link = structure.flatLinks[i];
+    const auto *link = structure.flatLinks[static_cast<std::size_t>(i)];
     const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
           link->Inertial().Pose());
 
@@ -404,8 +403,8 @@ Identity SDFFeatures::ConstructSdfModel(
     }
 
     const auto &M = link->Inertial().MassMatrix();
-    const double mass = M.Mass();
-    const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
+    const btScalar mass = static_cast<btScalar>(M.Mass());
+    const auto inertia = btVector3(convertVec(M.DiagonalMoments()));
 
     for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
     {
@@ -479,17 +478,41 @@ Identity SDFFeatures::ConstructSdfModel(
       convertMat(poseParentComToJoint.linear())
         .getRotation(btRotParentComToJoint);
 
-      btVector3 btPosParentComToJoint =
-        convertVec(poseParentComToJoint.translation());
+       auto linkParent = _sdfModel.LinkByName(joint->ParentName());
+       gz::math::Pose3d parentTransformInWorldSpace;
+       const auto errors = linkParent->SemanticPose().Resolve(
+         parentTransformInWorldSpace);
 
-      btVector3 btJointToChildCom =
-        convertVec((poseJointToChild * linkToComTf).translation());
+       gz::math::Pose3d parent2joint;
+       const auto errors2 = linkParent->SemanticPose().Resolve(
+         parent2joint, joint->Name());  // X_JP
+
+       btTransform parentLocalInertialFrame = convertTf(
+         parentLinkInfo->inertiaToLinkFrame);
+       btTransform parent2jointBt = convertTf(
+         gz::math::eigen3::convert(parent2joint.Inverse()));  // X_PJ
+
+       // offsetInABt = parent COM to pivot (X_IpJ)
+       // offsetInBBt = current COM to pivot (X_IcJ)
+       //
+       // X_PIp
+       // X_PJ
+       // X_IpJ = X_PIp^-1 * X_PJ
+       //
+       // X_IcJ = X_CIc^-1 * X_CJ
+       btTransform offsetInABt, offsetInBBt;
+       offsetInABt = parentLocalInertialFrame * parent2jointBt;
+       offsetInBBt =
+          convertTf(linkToComTf.inverse() * poseJointToChild.inverse());
+       // R_IcJ * R_IpJ ^ -1 = R_IcIp;
+       btQuaternion parentRotToThis =
+         offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
       auto jointID = this->AddJoint(
         JointInfo{
           joint->Name(),
           InternalJoint{i},
-          model->linkEntityIds[parentIndex+1],
+          model->linkEntityIds[static_cast<std::size_t>(parentIndex+1)],
           linkIDs.find(link)->second,
           poseParentLinkToJoint,
           poseJointToChild,
@@ -497,58 +520,28 @@ Identity SDFFeatures::ConstructSdfModel(
         });
       auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
-      if (::sdf::JointType::FIXED == joint->Type())
+      if (::sdf::JointType::PRISMATIC == joint->Type() ||
+          ::sdf::JointType::REVOLUTE == joint->Type() ||
+          ::sdf::JointType::BALL == joint->Type())
       {
-        model->body->setupFixed(
-          i, mass, inertia, parentIndex,
-          btRotParentComToJoint,
-          btPosParentComToJoint,
-          btJointToChildCom);
-      }
-      else if (::sdf::JointType::PRISMATIC == joint->Type() ||
-              ::sdf::JointType::REVOLUTE == joint->Type() ||
-              ::sdf::JointType::BALL == joint->Type())
-      {
-        auto linkParent = _sdfModel.LinkByName(joint->ParentName());
-        gz::math::Pose3d parentTransformInWorldSpace;
-        const auto errors = linkParent->SemanticPose().Resolve(
-          parentTransformInWorldSpace);
-
-        gz::math::Pose3d parent2joint;
-        const auto errors2 = linkParent->SemanticPose().Resolve(
-          parent2joint, joint->Name());
-
-        btTransform parentLocalInertialFrame = convertTf(
-          parentLinkInfo->inertiaToLinkFrame);
-        btTransform parent2jointBt = convertTf(
-          gz::math::eigen3::convert(parent2joint.Inverse()));
-
-        btTransform offsetInABt, offsetInBBt;
-        offsetInABt = parentLocalInertialFrame * parent2jointBt;
-        offsetInBBt = convertTf(linkToComTf.inverse());
-        btQuaternion parentRotToThis =
-          offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
-
         if (::sdf::JointType::REVOLUTE == joint->Type())
         {
-          const auto axis = joint->Axis()->Xyz();
+          const auto axis = convertVec(joint->Axis()->Xyz());
           model->body->setupRevolute(
             i, mass, inertia, parentIndex,
             parentRotToThis,
-            quatRotate(offsetInBBt.getRotation(),
-                       btVector3(axis[0], axis[1], axis[2])),
+            quatRotate(offsetInBBt.getRotation(), axis),
             offsetInABt.getOrigin(),
             -offsetInBBt.getOrigin(),
             true);
         }
         else if (::sdf::JointType::PRISMATIC == joint->Type())
         {
-          const auto axis = joint->Axis()->Xyz();
+          const auto axis = convertVec(joint->Axis()->Xyz());
           model->body->setupPrismatic(
             i, mass, inertia, parentIndex,
             parentRotToThis,
-            quatRotate(offsetInBBt.getRotation(),
-                       btVector3(axis[0], axis[1], axis[2])),
+            quatRotate(offsetInBBt.getRotation(), axis),
             offsetInABt.getOrigin(),
             -offsetInBBt.getOrigin(),
             true);
@@ -567,31 +560,41 @@ Identity SDFFeatures::ConstructSdfModel(
       {
         model->body->setupFixed(
           i, mass, inertia, parentIndex,
-          btRotParentComToJoint,
-          btPosParentComToJoint,
-          btJointToChildCom);
+          parentRotToThis,
+          offsetInABt.getOrigin(),
+          -offsetInBBt.getOrigin());
       }
+
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
-        ::sdf::JointType::REVOLUTE == joint->Type())
+          ::sdf::JointType::REVOLUTE == joint->Type())
       {
-        model->body->getLink(i).m_jointLowerLimit = joint->Axis()->Lower();
-        model->body->getLink(i).m_jointUpperLimit = joint->Axis()->Upper();
-        model->body->getLink(i).m_jointDamping = joint->Axis()->Damping();
-        model->body->getLink(i).m_jointFriction = joint->Axis()->Friction();
+        model->body->getLink(i).m_jointLowerLimit =
+            static_cast<btScalar>(joint->Axis()->Lower());
+        model->body->getLink(i).m_jointUpperLimit =
+            static_cast<btScalar>(joint->Axis()->Upper());
+        model->body->getLink(i).m_jointDamping =
+            static_cast<btScalar>(joint->Axis()->Damping());
+        model->body->getLink(i).m_jointFriction =
+            static_cast<btScalar>(joint->Axis()->Friction());
         model->body->getLink(i).m_jointMaxVelocity =
-          joint->Axis()->MaxVelocity();
-        model->body->getLink(i).m_jointMaxForce = joint->Axis()->Effort();
-        jointInfo->effort = joint->Axis()->Effort();
-        btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(
-          model->body.get(), i, joint->Axis()->Lower(), joint->Axis()->Upper());
+            static_cast<btScalar>(joint->Axis()->MaxVelocity());
+        model->body->getLink(i).m_jointMaxForce =
+            static_cast<btScalar>(joint->Axis()->Effort());
+        jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
+        btMultiBodyConstraint *con = new btMultiBodyJointLimitConstraint(
+            model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
+            static_cast<btScalar>(joint->Axis()->Upper()));
         world->world->addMultiBodyConstraint(con);
       }
+
+      jointInfo->jointFeedback = std::make_shared<btMultiBodyJointFeedback>();
+      jointInfo->jointFeedback->m_reactionForces.setZero();
+      model->body->getLink(i).m_jointFeedback = jointInfo->jointFeedback.get();
     }
   }
 
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
-
   model->body->finalizeMultiDof();
 
   const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
@@ -613,8 +616,8 @@ Identity SDFFeatures::ConstructSdfModel(
   {
     const auto *link = structure.rootLink;
     const auto &M = link->Inertial().MassMatrix();
-    const double mass = M.Mass();
-    const auto inertia = btVector3(M.Ixx(), M.Iyy(), M.Izz());
+    const btScalar mass = static_cast<btScalar>(M.Mass());
+    const auto inertia = convertVec(M.DiagonalMoments());
 
     for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
     {
@@ -677,24 +680,25 @@ bool SDFFeatures::AddSdfCollision(
   else if (const auto *sphere = geom->SphereShape())
   {
     const auto radius = sphere->Radius();
-    shape = std::make_unique<btSphereShape>(radius);
+    shape = std::make_unique<btSphereShape>(static_cast<btScalar>(radius));
   }
   else if (const auto *cylinder = geom->CylinderShape())
   {
-    const auto radius = cylinder->Radius();
-    const auto halfLength = cylinder->Length()*0.5;
+    const auto radius = static_cast<btScalar>(cylinder->Radius());
+    const auto halfLength = static_cast<btScalar>(cylinder->Length()*0.5);
     shape =
       std::make_unique<btCylinderShapeZ>(btVector3(radius, radius, halfLength));
   }
   else if (const auto *plane = geom->PlaneShape())
   {
     const auto normal = convertVec(math::eigen3::convert(plane->Normal()));
-    shape = std::make_unique<btStaticPlaneShape>(normal, 0);
+    shape = std::make_unique<btStaticPlaneShape>(normal, btScalar(0));
   }
   else if (const auto *capsule = geom->CapsuleShape())
   {
     shape = std::make_unique<btCapsuleShapeZ>(
-      capsule->Radius(), capsule->Length());
+        static_cast<btScalar>(capsule->Radius()),
+        static_cast<btScalar>(capsule->Length()));
   }
   else if (const auto *ellipsoid = geom->EllipsoidShape())
   {
@@ -706,10 +710,12 @@ bool SDFFeatures::AddSdfCollision(
         for (int i = 0; i < n; i++)
         {
           btScalar p = 0.5, t = 0;
-          for (int j = i; j; p *= 0.5, j >>= 1)
+          for (int j = i; j; p *= btScalar(0.5), j >>= 1)
             if (j & 1) t += p;
           btScalar w = 2 * t - 1;
-          btScalar a = (SIMD_PI + 2 * i * SIMD_PI) / n;
+          btScalar a =
+              (SIMD_PI + btScalar(2.0) * static_cast<btScalar>(i) * SIMD_PI) /
+              static_cast<btScalar>(n);
           btScalar s = btSqrt(1 - w * w);
           *x++ = btVector3(s * btCos(a), s * btSin(a), w);
         }
@@ -719,8 +725,7 @@ bool SDFFeatures::AddSdfCollision(
     vtx.resize(3 + 128);
     Hammersley::Generate(&vtx[0], vtx.size());
     btVector3 center(0, 0, 0);
-    const auto radii = ellipsoid->Radii();
-    btVector3 radius(radii.X(), radii.Y(), radii.Z());
+    btVector3 radius = convertVec(ellipsoid->Radii());
     for (int i = 0; i < vtx.size(); ++i)
     {
       vtx[i] = vtx[i] * radius + center;
@@ -741,7 +746,7 @@ bool SDFFeatures::AddSdfCollision(
       std::make_unique<btGImpactMeshShape>(
         this->triangleMeshes.back().get()));
     this->meshesGImpact.back()->updateBound();
-    this->meshesGImpact.back()->setMargin(0.001);
+    this->meshesGImpact.back()->setMargin(btScalar(0.001));
     compoundShape->addChildShape(btTransform::getIdentity(),
       this->meshesGImpact.back().get());
     shape = std::move(compoundShape);
@@ -750,7 +755,7 @@ bool SDFFeatures::AddSdfCollision(
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshSdf->Uri());
-    auto scale = meshSdf->Scale();
+    const btVector3 scale = convertVec(meshSdf->Scale());
     if (nullptr == mesh)
     {
       gzwarn << "Failed to load mesh from [" << meshSdf->Uri()
@@ -768,13 +773,13 @@ bool SDFFeatures::AddSdfCollision(
       auto vertexCount = s->VertexCount();
       auto indexCount = s->IndexCount();
       btAlignedObjectArray<btVector3> convertedVerts;
-      convertedVerts.reserve(vertexCount);
+      convertedVerts.reserve(static_cast<int>(vertexCount));
       for (unsigned int i = 0; i < vertexCount; i++)
       {
         convertedVerts.push_back(btVector3(
-              s->Vertex(i).X() * scale.X(),
-              s->Vertex(i).Y() * scale.Y(),
-              s->Vertex(i).Z() * scale.Z()));
+              static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
+              static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
+              static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
       }
 
       this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
@@ -790,7 +795,7 @@ bool SDFFeatures::AddSdfCollision(
         std::make_unique<btGImpactMeshShape>(
           this->triangleMeshes.back().get()));
       this->meshesGImpact.back()->updateBound();
-      this->meshesGImpact.back()->setMargin(0.001);
+      this->meshesGImpact.back()->setMargin(btScalar(0.001));
       compoundShape->addChildShape(btTransform::getIdentity(),
         this->meshesGImpact.back().get());
     }
@@ -846,6 +851,29 @@ bool SDFFeatures::AddSdfCollision(
   Eigen::Isometry3d linkFrameToCollision;
   if (shape != nullptr)
   {
+    {
+      gz::math::Pose3d gzLinkToCollision;
+      const auto errors =
+        _collision.SemanticPose().Resolve(gzLinkToCollision, linkInfo->name);
+      if (!errors.empty())
+      {
+        gzerr << "An error occurred while resolving the transform of the "
+          << "collider [" << _collision.Name() << "] in Link ["
+          << linkInfo->name << "] in Model [" << model->name << "]:\n";
+        for (const auto &error : errors)
+        {
+          gzerr << error << "\n";
+        }
+
+        return false;
+      }
+
+      linkFrameToCollision = gz::math::eigen3::convert(gzLinkToCollision);
+    }
+
+    const btTransform btInertialToCollision =
+      convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
+
     int linkIndexInModel = -1;
     if (linkInfo->indexInModel.has_value())
       linkIndexInModel = *linkInfo->indexInModel;
@@ -859,37 +887,14 @@ bool SDFFeatures::AddSdfCollision(
       auto collider = std::make_unique<btMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
 
-      {
-        gz::math::Pose3d gzLinkToCollision;
-        const auto errors =
-          _collision.SemanticPose().Resolve(gzLinkToCollision, linkInfo->name);
-        if (!errors.empty())
-        {
-          gzerr << "An error occurred while resolving the transform of the "
-                << "collider [" << _collision.Name() << "] in Link ["
-                << linkInfo->name << "] in Model [" << model->name << "]:\n";
-          for (const auto &error : errors)
-          {
-            gzerr << error << "\n";
-          }
-
-          return false;
-        }
-
-        linkFrameToCollision = gz::math::eigen3::convert(gzLinkToCollision);
-      }
-
-      const btTransform btInertialToCollision =
-        convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
-
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
 
       collider->setCollisionShape(linkInfo->shape.get());
-      collider->setRestitution(restitution);
-      collider->setRollingFriction(rollingFriction);
-      collider->setFriction(mu);
+      collider->setRestitution(static_cast<btScalar>(restitution));
+      collider->setRollingFriction(static_cast<btScalar>(rollingFriction));
+      collider->setFriction(static_cast<btScalar>(mu));
       collider->setAnisotropicFriction(
-        btVector3(mu, mu2, 1),
+        btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
       linkInfo->collider = std::move(collider);
@@ -927,6 +932,10 @@ bool SDFFeatures::AddSdfCollision(
           btBroadphaseProxy::DefaultFilter,
           btBroadphaseProxy::AllFilter);
       }
+    }
+    else if (linkInfo->shape)
+    {
+      linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
     }
     else
     {

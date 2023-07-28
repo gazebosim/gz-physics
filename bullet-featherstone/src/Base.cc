@@ -38,6 +38,10 @@ WorldInfo::WorldInfo(std::string name_)
     collisionConfiguration.get());
 
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
+
+  // Needed for force-torque sensor
+  this->world->getSolverInfo().m_jointFeedbackInJointFrame = true;
+  this->world->getSolverInfo().m_jointFeedbackInWorldSpace = false;
 }
 
 }  // namespace bullet_featherstone

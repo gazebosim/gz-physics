@@ -59,7 +59,7 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 
-  auto T = btVector3(_torque[0], _torque[1], _torque[2]);
+  const btVector3 T = convertVec(_torque);
 
   if (link->indexInModel.has_value())
   {

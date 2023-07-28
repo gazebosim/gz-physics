@@ -41,7 +41,8 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
-  worldInfo->world->stepSimulation(this->stepSize, 1, this->stepSize);
+  worldInfo->world->stepSimulation(static_cast<btScalar>(this->stepSize), 1,
+                                   static_cast<btScalar>(this->stepSize));
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
 }
