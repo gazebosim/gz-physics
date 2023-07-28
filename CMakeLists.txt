@@ -8,7 +8,7 @@ project(gz-physics7 VERSION 7.0.0)
 #============================================================================
 # Find gz-cmake
 #============================================================================
-find_package(gz-cmake3 REQUIRED)
+find_package(gz-cmake4 REQUIRED)
 
 #============================================================================
 # Configure the project
@@ -37,25 +37,25 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find gz-common
-gz_find_package(gz-common5
+gz_find_package(gz-common6
   COMPONENTS geospatial graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
-set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
+set(GZ_COMMON_VER ${gz-common6_VERSION_MAJOR})
 
 #--------------------------------------
 # Find gz-math
-gz_find_package(gz-math7 REQUIRED COMPONENTS eigen3)
-set(GZ_MATH_VER ${gz-math7_VERSION_MAJOR})
+gz_find_package(gz-math8 REQUIRED COMPONENTS eigen3)
+set(GZ_MATH_VER ${gz-math8_VERSION_MAJOR})
 
 #--------------------------------------
 # Find gz-plugin
-gz_find_package(gz-plugin2 REQUIRED COMPONENTS all)
-set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
+gz_find_package(gz-plugin3 REQUIRED COMPONENTS all)
+set(GZ_PLUGIN_VER ${gz-plugin3_VERSION_MAJOR})
 
 #--------------------------------------
 # Find gz-utils
-gz_find_package(gz-utils2 REQUIRED COMPONENTS cli)
-set(GZ_UTILS_VER ${gz-utils2_VERSION_MAJOR})
+gz_find_package(gz-utils3 REQUIRED COMPONENTS cli)
+set(GZ_UTILS_VER ${gz-utils3_VERSION_MAJOR})
 
 #--------------------------------------
 # Find Eigen
