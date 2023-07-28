@@ -63,7 +63,7 @@ gz_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-gz_find_package(sdformat13
+gz_find_package(sdformat14
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
