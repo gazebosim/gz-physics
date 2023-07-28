@@ -1,4 +1,5 @@
 set(TEST_TYPE "COMMON_TEST")
+include_directories(${BULLET_INCLUDE_DIRS})
 
 set(tests
   added_mass
@@ -8,6 +9,7 @@ set(tests
   construct_empty_world
   free_joint_features
   joint_features
+  joint_transmitted_wrench_features
   kinematic_features
   link_features
   shape_features
@@ -22,21 +24,23 @@ set(TEST_INSTALL_DIR ${CMAKE_INSTALL_LIBEXECDIR}/gz/${GZ_DESIGNATION}${PROJECT_V
 include(GzPython)
 
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
-  set(target_name ${test_name}_${PHYSICS_ENGINE_NAME})
-  add_test(NAME ${target_name}
-    COMMAND
-      ${test_name}
-      $<TARGET_FILE:${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin>
-      --gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${target_name}.xml
-  )
+  if(NOT SKIP_${PHYSICS_ENGINE_NAME} AND NOT INTERNAL_SKIP_${PHYSICS_ENGINE_NAME})
+    set(target_name ${test_name}_${PHYSICS_ENGINE_NAME})
+    add_test(NAME ${target_name}
+      COMMAND
+        ${test_name}
+        $<TARGET_FILE:${PROJECT_LIBRARY_TARGET_NAME}-${PHYSICS_ENGINE_NAME}-plugin>
+        --gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${target_name}.xml
+    )
 
-  set_tests_properties(${target_name} PROPERTIES TIMEOUT 240)
+    set_tests_properties(${target_name} PROPERTIES TIMEOUT 240)
 
-  if(Python3_Interpreter_FOUND)
-    # Check that the test produced a result and create a failure if it didn't.
-    # Guards against crashed and timed out tests.
-    add_test(check_${target_name} ${Python3_EXECUTABLE} ${GZ_CMAKE_TOOLS_DIR}/check_test_ran.py
-      ${CMAKE_BINARY_DIR}/test_results/${target_name}.xml)
+    if(Python3_Interpreter_FOUND)
+      # Check that the test produced a result and create a failure if it didn't.
+      # Guards against crashed and timed out tests.
+      add_test(check_${target_name} ${Python3_EXECUTABLE} ${GZ_CMAKE_TOOLS_DIR}/check_test_ran.py
+        ${CMAKE_BINARY_DIR}/test_results/${target_name}.xml)
+    endif()
   endif()
 endfunction()
 
@@ -64,12 +68,8 @@ foreach(test ${tests})
 
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
 
-  if (${BULLET_FOUND})
-    configure_common_test("bullet" ${test_executable})
-    configure_common_test("bullet-featherstone" ${test_executable})
-  endif()
-  if (${DART_FOUND})
-    configure_common_test("dartsim" ${test_executable})
-  endif()
+  configure_common_test("bullet" ${test_executable})
+  configure_common_test("bullet-featherstone" ${test_executable})
+  configure_common_test("dartsim" ${test_executable})
   configure_common_test("tpe" ${test_executable})
 endforeach()

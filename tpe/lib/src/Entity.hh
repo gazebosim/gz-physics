@@ -48,8 +48,8 @@ class GZ_PHYSICS_TPELIB_VISIBLE Entity
   public: Entity(const Entity &_other);
 
   /// \brief Move constructor
-  /// \param[in] _entity Other entity to move from
-  public: Entity(Entity &&_entity) noexcept;
+  /// \param[in] _other Other entity to move from
+  public: Entity(Entity &&_other) noexcept;
 
   /// \brief Move assignment operator
   /// \param[in] _entity Entity to move

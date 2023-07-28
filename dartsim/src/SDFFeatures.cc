@@ -20,6 +20,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <utility>
 
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
@@ -377,7 +378,7 @@ static ShapeAndTransform ConstructGeometry(
 /////////////////////////////////////////////////
 dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
     const std::string &_worldName, const std::string &_jointModelName,
-    const std::string &_linkRelativeName)
+    const std::string &_linkRelativeName) const
 {
   if (_linkRelativeName == "world")
     return nullptr;
@@ -392,6 +393,75 @@ dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
   gzerr << "Could not find link " << _linkRelativeName << " in model "
          << _jointModelName << std::endl;
   return nullptr;
+}
+
+std::optional<std::pair<dart::dynamics::BodyNode *, dart::dynamics::BodyNode *>>
+SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
+                                       const ::sdf::Joint *_sdfJoint,
+                                       const std::string &_parentName,
+                                       const std::string &_parentType) const
+{
+
+  // Resolve parent and child frames to links
+  std::string parentLinkName;
+  ::sdf::Errors errors = _sdfJoint->ResolveParentLink(parentLinkName);
+  if (!errors.empty())
+  {
+    gzerr << "The link of the parent frame [" << _sdfJoint->ParentName()
+      << "] of joint [" << _sdfJoint->Name() << "] in " << _parentType
+      << " [" << _parentName
+      << "] could not be resolved. The joint will not be constructed\n";
+    for (const auto &error : errors)
+    {
+      gzerr << error << std::endl;
+    }
+    return {};
+  }
+  std::string childLinkName;
+  errors = _sdfJoint->ResolveChildLink(childLinkName);
+  if (!errors.empty())
+  {
+    gzerr << "The link of the child frame [" << _sdfJoint->ChildName()
+      << "] of joint [" << _sdfJoint->Name() << "] in " << _parentType
+      << " [" << _parentName
+      << "] could not be resolved. The joint will not be constructed\n";
+    for (const auto &error : errors)
+    {
+      gzerr << error << std::endl;
+    }
+    return {};
+  }
+
+  // When calling `FindBodyNode`, we need to check wheter the parent entity
+  // (different from parent link/frame) of the joint is a model or world. If it
+  // is a world, relative name we provide to `FindBodyNode` should *not* be
+  // prefixed by the world name since is that step is done in `FindBodyNode`
+  // itself.
+
+  auto *const parent = this->FindBodyNode(
+      this->worlds.at(_worldID)->getName(),
+      _parentType == "model" ? _parentName : "", parentLinkName);
+
+  if (nullptr == parent && parentLinkName != "world")
+  {
+    gzerr << "The parent [" << _sdfJoint->ParentName() << "] of joint ["
+      << _sdfJoint->Name() << "] in " << _parentType << " [" << _parentName
+      << "] was not found. The joint will not be constructed\n";
+    return {};
+  }
+
+  auto *const child = this->FindBodyNode(
+      this->worlds.at(_worldID)->getName(),
+      _parentType == "model" ? _parentName : "", childLinkName);
+  if (nullptr == child)
+  {
+    gzerr << "The child of joint [" << _sdfJoint->Name() << "] in "
+          << _parentType << " [" << _parentName
+          << "] was not found. The joint will not be constructed\n";
+    return {};
+  }
+
+  return std::make_pair(parent, child);
 }
 
 /////////////////////////////////////////////////
@@ -419,6 +489,28 @@ Identity SDFFeatures::ConstructSdfWorld(
     this->ConstructSdfNestedModel(worldID, *model);
   }
 
+  auto modelProxy = this->modelProxiesToWorld.MaybeAt(worldID);
+  if (modelProxy)
+  {
+    for (std::size_t i = 0; i < _sdfWorld.JointCount(); ++i)
+    {
+      const ::sdf::Joint *sdfJoint = _sdfWorld.JointByIndex(i);
+      if (!sdfJoint)
+      {
+        gzerr << "The joint with index [" << i << "] in world ["
+              << _sdfWorld.Name() << "] is a nullptr. It will be skipped.\n";
+        continue;
+      }
+      auto parentAndChild = this->FindParentAndChildOfJoint(
+          worldID, sdfJoint, _sdfWorld.Name(), "world");
+      if (parentAndChild)
+      {
+        auto [parent, child] = *parentAndChild;
+        this->ConstructSdfJoint(this->GetWorldModel(worldID), *sdfJoint, parent,
+                                child);
+      }
+    }
+  }
   return worldID;
 }
 
@@ -521,82 +613,16 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (!sdfJoint)
     {
       gzerr << "The joint with index [" << i << "] in model ["
-             << _sdfModel.Name() << "] is a nullptr. It will be skipped.\n";
+        << modelName << "] is a nullptr. It will be skipped.\n";
       continue;
     }
-
-    // Resolve parent and child frames to links
-    std::string parentLinkName;
-    ::sdf::Errors errors = sdfJoint->ResolveParentLink(parentLinkName);
-    if (!errors.empty())
+    auto parentAndChild =
+        this->FindParentAndChildOfJoint(worldID, sdfJoint, modelName, "model");
+    if (parentAndChild)
     {
-      gzerr << "The link of the parent frame [" << sdfJoint->ParentName()
-             << "] of joint [" << sdfJoint->Name() << "] in model ["
-             << modelName
-             << "] could not be resolved. The joint will not be constructed\n";
-      for (const auto &error : errors)
-      {
-        gzerr << error << std::endl;
-      }
-      continue;
+      auto [parent, child] = *parentAndChild;
+      this->ConstructSdfJoint(modelIdentity, *sdfJoint, parent, child);
     }
-    std::string childLinkName;
-    errors = sdfJoint->ResolveChildLink(childLinkName);
-    if (!errors.empty())
-    {
-      gzerr << "The link of the child frame [" << sdfJoint->ChildName()
-             << "] of joint [" << sdfJoint->Name() << "] in model ["
-             << modelName
-             << "] could not be resolved. The joint will not be constructed\n";
-      for (const auto &error : errors)
-      {
-        gzerr << error << std::endl;
-      }
-      continue;
-    }
-
-    const ::sdf::Link *parentSdfLink = _sdfModel.LinkByName(parentLinkName);
-    if (nullptr == parentSdfLink && parentLinkName != "world")
-    {
-      gzerr << "The link [" << parentLinkName << "] of the parent frame ["
-             << sdfJoint->ParentName() << "] of joint [" << sdfJoint->Name()
-             << "] in model [" << modelName
-             << "] could not be resolved. The joint will not be constructed\n";
-      continue;
-    }
-
-    const ::sdf::Link *childSdfLink = _sdfModel.LinkByName(childLinkName);
-    if (nullptr == childSdfLink)
-    {
-      gzerr << "The link [" << childLinkName << "] of the child frame ["
-             << sdfJoint->ChildName() << "] of joint [" << sdfJoint->Name()
-             << "] in model [" << modelName
-             << "] could not be resolved. The joint will not be constructed\n";
-      continue;
-    }
-
-    auto * const parent =
-      FindBodyNode(this->worlds[worldID]->getName(), modelName, parentLinkName);
-
-    if (nullptr == parent && parentLinkName != "world")
-    {
-      gzerr << "The parent [" << sdfJoint->ParentName() << "] of joint ["
-             << sdfJoint->Name() << "] in model [" << modelName
-             << "] was not found. The joint will not be constructed\n";
-      continue;
-    }
-
-    auto * const child =
-      FindBodyNode(worlds[worldID]->getName(), modelName, childLinkName);
-    if (nullptr == child)
-    {
-      gzerr << "The child of joint [" << sdfJoint->Name() << "] in model ["
-             << modelName
-             << "] was not found. The joint will not be constructed\n";
-      continue;
-    }
-
-    this->ConstructSdfJoint(modelInfo, *sdfJoint, parent, child);
   }
 
   return modelIdentity;
@@ -607,6 +633,11 @@ Identity SDFFeatures::ConstructSdfLink(
     const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
+  // Return early if model is a proxy to the world.
+  if (this->modelProxiesToWorld.MaybeAt(_modelID))
+  {
+    return this->GenerateInvalidId();
+  }
   const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   dart::dynamics::BodyNode::Properties bodyProperties;
   bodyProperties.mName = _sdfLink.Name();
@@ -657,11 +688,6 @@ Identity SDFFeatures::ConstructSdfLink(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
   const std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
-
-  const std::string fullJointName = ::sdf::JoinName(
-      world->getName(),
-      ::sdf::JoinName(modelInfo.model->getName(), joint->getName()));
-  this->AddJoint(joint, fullJointName, _modelID);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
@@ -792,7 +818,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     return this->GenerateInvalidId();
   }
 
-  return ConstructSdfJoint(modelInfo, _sdfJoint, parent, child);
+  return ConstructSdfJoint(_modelID, _sdfJoint, parent, child);
 }
 
 /////////////////////////////////////////////////
@@ -1009,11 +1035,12 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
 
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfJoint(
-    const ModelInfo &_modelInfo,
+    const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child)
 {
+  const auto &_modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   // if a specified link is named "world" but cannot be found, we'll assume the
   // joint is connected to the world
   bool worldParent = (!_parent && _sdfJoint.ParentName() == "world");
@@ -1057,10 +1084,11 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   {
     auto childsParentJoint = _child->getParentJoint();
+    std::string parentName = worldParent? "world" : _parent->getName();
     if (childsParentJoint->getType() != "FreeJoint")
     {
       gzerr << "Asked to create a joint between links "
-             << "[" << _parent->getName() << "] as parent and ["
+             << "[" << parentName << "] as parent and ["
              << _child->getName() << "] as child, but the child link already "
              << "has a parent joint of type [" << childsParentJoint->getType()
              << "].\n";
@@ -1070,7 +1098,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     {
       // TODO(MXG): Add support for non-tree graph structures
       gzerr << "Asked to create a closed kinematic chain between links "
-             << "[" << _parent->getName() << "] and [" << _child->getName()
+             << "[" << parentName << "] and [" << _child->getName()
              << "], but that is not supported by the dartsim wrapper yet.\n";
       return this->GenerateInvalidId();
     }
@@ -1151,22 +1179,10 @@ Identity SDFFeatures::ConstructSdfJoint(
   joint->setTransformFromParentBodyNode(parent_T_prejoint_init);
   joint->setTransformFromChildBodyNode(child_T_postjoint);
 
-  auto modelID = this->models.IdentityOf(_modelInfo.model);
-  auto worldID = this->GetWorldOfModelImpl(modelID);
-  if (worldID == INVALID_ENTITY_ID)
-  {
-    gzerr << "World of model [" << _modelInfo.model->getName()
-           << "] could not be found when creating joint [" << jointName
-           << "]\n";
-    return this->GenerateInvalidId();
-  }
+  const std::string fullJointName =
+      this->FullyScopedJointName(_modelID, jointName);
 
-  auto world = this->worlds.at(worldID);
-  const std::string fullJointName = ::sdf::JoinName(
-      world->getName(),
-      ::sdf::JoinName(_modelInfo.model->getName(), jointName));
-
-  const std::size_t jointID = this->AddJoint(joint, fullJointName, modelID);
+  const std::size_t jointID = this->AddJoint(joint, fullJointName, _modelID);
   // Increment BodyNode version since the child could be moved to a new skeleton
   // when a joint is created.
   // TODO(azeey) Remove incrementVersion once DART has been updated to

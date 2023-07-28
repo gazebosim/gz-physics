@@ -258,6 +258,12 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
     const Identity &_modelID) const
 {
+  // If this is a model proxy of a world, we just return 0.
+  auto modelProxy = this->modelProxiesToWorld.MaybeAt(_modelID);
+  if (modelProxy)
+  {
+    return 0;
+  }
   // TODO(anyone) this will throw if the model has been removed. The alternative
   // is to first check if the model exists, but what should we return if it
   // doesn't exist
@@ -317,22 +323,20 @@ Identity EntityManagementFeatures::GetNestedModel(
   const std::string fullName =
       ::sdf::JoinName(modelInfo->model->getName(), _modelName);
 
-  if (this->models.HasEntity(_modelID))
-  {
-    auto worldID = this->GetWorldOfModelImpl(_modelID);
-    auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
-    if (nullptr == nestedSkel)
-    {
-      return this->GenerateInvalidId();
-    }
-    const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
-    return this->GenerateIdentity(nestedModelID,
-                                  this->models.at(nestedModelID));
-  }
-  else
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  if (!worldID)
   {
     return this->GenerateInvalidId();
   }
+
+  auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
+  if (nullptr == nestedSkel)
+  {
+    return this->GenerateInvalidId();
+  }
+  const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
+  return this->GenerateIdentity(nestedModelID,
+      this->models.at(nestedModelID));
 }
 
 /////////////////////////////////////////////////
@@ -404,7 +408,7 @@ Identity EntityManagementFeatures::GetLink(
 std::size_t EntityManagementFeatures::GetJointCount(
     const Identity &_modelID) const
 {
-  return this->ReferenceInterface<ModelInfo>(_modelID)->model->getNumJoints();
+  return this->ReferenceInterface<ModelInfo>(_modelID)->joints.size();
 }
 
 /////////////////////////////////////////////////
@@ -566,12 +570,14 @@ Identity EntityManagementFeatures::GetModelOfJoint(
     const Identity &_jointID) const
 {
   const std::size_t modelID = this->joints.idToContainerID.at(_jointID);
+  auto modelInfo = this->GetModelInfo(modelID);
+
 
   // If the model containing the joint doesn't exist in "models", it means this
   // joint belongs to a removed model.
-  if (this->models.HasEntity(modelID))
+  if (modelInfo)
   {
-    return this->GenerateIdentity(modelID, this->models.at(modelID));
+    return this->GenerateIdentity(modelID, modelInfo);
   }
   else
   {
@@ -666,6 +672,11 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
+  auto modelProxy = this->modelProxiesToWorld.MaybeAt(_modelID);
+  if (modelProxy)
+  {
+    return false;
+  }
   return !this->models.HasEntity(_modelID);
 }
 
@@ -698,20 +709,16 @@ bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
   const std::string fullName =
       ::sdf::JoinName(modelInfo->model->getName(), _modelName);
 
-  if (this->models.HasEntity(_modelID))
+  auto worldID = this->GetWorldOfModelImpl(_modelID);
+  auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
+  if (nullptr == nestedSkel || !this->models.HasEntity(nestedSkel))
   {
-    auto worldID = this->GetWorldOfModelImpl(_modelID);
-    auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
-    if (nullptr == nestedSkel || !this->models.HasEntity(nestedSkel))
-    {
-      return false;
-    }
-    const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
-    const auto filterPtr = GetFilterPtr(this, worldID);
-    filterPtr->RemoveSkeletonCollisions(nestedSkel);
-    return this->RemoveModelImpl(worldID, nestedModelID);
+    return false;
   }
-  return false;
+  const std::size_t nestedModelID = this->models.IdentityOf(nestedSkel);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->RemoveSkeletonCollisions(nestedSkel);
+  return this->RemoveModelImpl(worldID, nestedModelID);
 }
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
@@ -755,7 +762,7 @@ Identity EntityManagementFeatures::ConstructEmptyNestedModel(
 {
   // find the world assocated with the model
   auto worldID = this->GetWorldOfModelImpl(_parentModelID);
-  const auto &skel = this->models.at(_parentModelID)->model;
+  const auto &skel = this->GetModelInfo(_parentModelID)->model;
   const std::string modelFullName = ::sdf::JoinName(skel->getName(), _name);
 
   dart::dynamics::SkeletonPtr model =
@@ -776,6 +783,11 @@ Identity EntityManagementFeatures::ConstructEmptyNestedModel(
 Identity EntityManagementFeatures::ConstructEmptyLink(
     const Identity &_modelID, const std::string &_name)
 {
+  // Return early if model is a proxy to the world.
+  if (this->modelProxiesToWorld.MaybeAt(_modelID))
+  {
+    return this->GenerateInvalidId();
+  }
   auto model = this->ReferenceInterface<ModelInfo>(_modelID)->model;
 
   dart::dynamics::FreeJoint::Properties prop_fj;
@@ -833,6 +845,15 @@ void EntityManagementFeatures::RemoveCollisionFilterMask(
   filterPtr->RemoveIgnoredCollision(shapeNode);
 }
 
+Identity EntityManagementFeatures::GetWorldModel(const Identity &_worldID) const
+{
+  auto modelID = this->modelProxiesToWorld.MaybeAt(_worldID);
+  if (modelID)
+  {
+    return this->GenerateIdentity(_worldID, *modelID);
+  }
+  return this->GenerateInvalidId();
 }
+}  // namespace dartsim
 }
 }

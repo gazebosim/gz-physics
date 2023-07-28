@@ -181,7 +181,7 @@ Entity &Entity::GetChildById(std::size_t _id) const
   auto it = this->dataPtr->children.find(_id);
   if (it != this->dataPtr->children.end())
   {
-    return *it->second.get();
+    return *it->second;
   }
 
   return kNullEntity;
@@ -195,7 +195,7 @@ Entity &Entity::GetChildByName(const std::string &_name) const
   {
     if (it->second->GetName() == _name)
     {
-      return *it->second.get();
+      return *it->second;
     }
   }
 
@@ -212,7 +212,7 @@ Entity &Entity::GetChildByIndex(unsigned int _index) const
   std::advance(it, _index);
   if (it != this->dataPtr->children.end())
   {
-    return *it->second.get();
+    return *it->second;
   }
 
   return kNullEntity;
