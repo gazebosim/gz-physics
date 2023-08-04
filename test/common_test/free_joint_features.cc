@@ -85,7 +85,7 @@ ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
                                   const std::string &_absoluteName)
 {
   std::vector<std::string> names =
-      gz::common::split(_absoluteName, sdf::kSdfScopeDelimiter);
+      gz::common::split(_absoluteName, std::string(sdf::kScopeDelimiter));
   if (names.empty())
   {
     return nullptr;
