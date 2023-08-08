@@ -19,7 +19,6 @@
 
 #include <vector>
 #include <gz/common/Console.hh>
-#include <gz/common/geospatial/Dem.hh>
 #include <gz/common/geospatial/ImageHeightmap.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
