@@ -62,6 +62,19 @@ class Plugin :
     public virtual SimulationFeatures,
     public virtual WorldFeatures { };
 
+namespace {
+
+struct UnregisterCollisionDetectors
+{
+  ~UnregisterCollisionDetectors()
+  {
+    dart::collision::CollisionDetector::getFactory()->unregisterAllCreators();
+  }
+};
+
+UnregisterCollisionDetectors unregisterAtUnload;
+}
+
 GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
 
 }
