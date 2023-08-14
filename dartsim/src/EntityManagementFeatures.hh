@@ -149,7 +149,7 @@ class EntityManagementFeatures :
   public: bool ModelRemoved(const Identity &_modelID) const override;
 
   public: bool RemoveNestedModelByIndex(
-     const Identity &_modelID, std::size_t _modelIndex) override;
+     const Identity &_modelID, std::size_t _nestedModelIndex) override;
 
   public: bool RemoveNestedModelByName(
       const Identity &_modelID, const std::string &_modelName) override;
@@ -162,14 +162,14 @@ class EntityManagementFeatures :
       const Identity &_worldID, const std::string &_name) override;
 
   public: Identity ConstructEmptyNestedModel(
-      const Identity &_modelID, const std::string &_name) override;
+      const Identity &_parentModelID, const std::string &_name) override;
 
   public: Identity ConstructEmptyLink(
       const Identity &_modelID, const std::string &_name) override;
 
   // ----- Manage collision filter masks -----
   public: void SetCollisionFilterMask(
-      const Identity &_shapeID, const uint16_t _mask) override;
+      const Identity &_shapeID, uint16_t _mask) override;
 
   public: uint16_t GetCollisionFilterMask(
       const Identity &_shapeID) const override;
