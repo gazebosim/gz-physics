@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics6/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics6)
-Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics6-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics6-focal-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics6-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics6-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics7/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics7)
+Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics7-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics7-focal-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics7-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics7-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-gz-6-win)](https://build.osrfoundation.org/job/ign_physics-gz-6-win)
 
 Gazebo Physics, a component of [Gazebo](https://gazebosim.org), provides an abstract physics interface
