@@ -134,14 +134,15 @@ TEST(BaseClass, RemoveModel)
   // Collect the model names in a vector so we can remove them from the modelIDs
   // map in a for loop.
   std::vector<std::string> modelNames;
-  for (auto item : modelIDs)
+  modelNames.reserve(modelIDs.size());
+  for (const auto& item : modelIDs)
   {
     modelNames.push_back(item.first);
   }
 
   // Remove all of the models while checking sizes and indices;
   std::size_t curSize = 4;
-  for (auto name : modelNames) {
+  for (const auto& name : modelNames) {
     auto modelID = modelIDs[name];
     base.RemoveModelImpl(worldID, modelID);
     modelIDs.erase(name);

@@ -67,36 +67,36 @@ class JointFeatures :
 {
   // ----- Get Basic Joint State -----
   public: double GetJointPosition(
-      const Identity &_id, const std::size_t _dof) const override;
+      const Identity &_id, std::size_t _dof) const override;
 
   public: double GetJointVelocity(
-      const Identity &_id, const std::size_t _dof) const override;
+      const Identity &_id, std::size_t _dof) const override;
 
   public: double GetJointAcceleration(
-      const Identity &_id, const std::size_t _dof) const override;
+      const Identity &_id, std::size_t _dof) const override;
 
   public: double GetJointForce(
-      const Identity &_id, const std::size_t _dof) const override;
+      const Identity &_id, std::size_t _dof) const override;
 
   public: Pose3d GetJointTransform(const Identity &_id) const override;
 
 
   // ----- Set Basic Joint State -----
   public: void SetJointPosition(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointVelocity(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointAcceleration(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointForce(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
 
   // ----- Get Basic Joint Properties -----
@@ -175,32 +175,32 @@ class JointFeatures :
 
   // ----- Joint Commands -----
   public: void SetJointVelocityCommand(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointMinPosition(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointMaxPosition(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointMinVelocity(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointMaxVelocity(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointMinEffort(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   public: void SetJointMaxEffort(
-      const Identity &_id, const std::size_t _dof,
-      const double _value) override;
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(

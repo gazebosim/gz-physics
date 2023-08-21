@@ -64,8 +64,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
     return false;
   }
 
-  public: void SetIgnoredCollision(DartShapeConstPtr _shapePtr,
-      const uint16_t _mask)
+  public: void SetIgnoredCollision(DartShapeConstPtr _shapePtr, uint16_t _mask)
   {
     bitmaskMap[_shapePtr] = _mask;
   }
@@ -103,7 +102,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 /// as RemoveModelByIndex, where we call GetFilterPtr followed by
 /// RemoveSkeletonCollisions(model). To de-duplicate this, move this logic into
 /// RemoveModelImpl. To do that, we need to move GetFilterPtr into Base.hh.
-static const std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
+static std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
     const EntityManagementFeatures* _emf, std::size_t _worldID)
 {
   const auto world = _emf->worlds.at(_worldID);
@@ -819,7 +818,7 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
 }
 
 void EntityManagementFeatures::SetCollisionFilterMask(
-    const Identity &_shapeID, const uint16_t _mask)
+    const Identity &_shapeID, uint16_t _mask)
 {
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
