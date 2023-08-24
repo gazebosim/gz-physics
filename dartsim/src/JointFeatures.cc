@@ -30,28 +30,28 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointPosition(
-    const Identity &_id, const std::size_t _dof) const
+    const Identity &_id, std::size_t _dof) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getPosition(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointVelocity(
-    const Identity &_id, const std::size_t _dof) const
+    const Identity &_id, std::size_t _dof) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getVelocity(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointAcceleration(
-    const Identity &_id, const std::size_t _dof) const
+    const Identity &_id, std::size_t _dof) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getAcceleration(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
-    const Identity &_id, const std::size_t _dof) const
+    const Identity &_id, std::size_t _dof) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getForce(_dof);
 }
@@ -65,7 +65,7 @@ Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointPosition(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -84,7 +84,7 @@ void JointFeatures::SetJointPosition(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -103,7 +103,7 @@ void JointFeatures::SetJointVelocity(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointAcceleration(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -122,7 +122,7 @@ void JointFeatures::SetJointAcceleration(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointForce(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -145,7 +145,7 @@ void JointFeatures::SetJointForce(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocityCommand(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -186,7 +186,7 @@ void JointFeatures::SetJointVelocityCommand(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMinPosition(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -211,7 +211,7 @@ void JointFeatures::SetJointMinPosition(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMaxPosition(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -236,7 +236,7 @@ void JointFeatures::SetJointMaxPosition(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMinVelocity(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -261,7 +261,7 @@ void JointFeatures::SetJointMinVelocity(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMaxVelocity(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -286,7 +286,7 @@ void JointFeatures::SetJointMaxVelocity(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMinEffort(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -306,7 +306,7 @@ void JointFeatures::SetJointMinEffort(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMaxEffort(
-    const Identity &_id, const std::size_t _dof, const double _value)
+    const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
@@ -394,9 +394,9 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   else
   {
     gzerr << "Could not find LinkInfo for child link [" << child->getName()
-           << "] when detaching joint "
-           << "[" << joint->getName() << "]. Joint detaching failed."
-           << std::endl;
+          << "] when detaching joint "
+          << "[" << joint->getName() << "]. Joint detaching failed."
+          << std::endl;
     return;
   }
 
@@ -505,7 +505,7 @@ Identity JointFeatures::AttachFixedJoint(
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::WeldJoint>(parentBn, properties),
       fullJointName, modelID);
-  if (linkInfo->weldedNodes.size() > 0)
+  if (!linkInfo->weldedNodes.empty())
   {
     // weld constraint needs to be updated after moving to new skeleton
     auto constraint = linkInfo->weldedNodes.back().second;
