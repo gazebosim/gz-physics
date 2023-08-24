@@ -161,7 +161,7 @@ struct EntityStorage
     return idToObject.at(_id);
   }
 
-  const std::optional<Value1> MaybeAt(const std::size_t _id) const
+  std::optional<Value1> MaybeAt(const std::size_t _id) const
   {
     auto it = this->idToObject.find(_id);
     if (it != this->idToObject.end())
@@ -470,7 +470,7 @@ class Base : public Implements3d<FeatureList<Feature>>
       // We have not found a welded node associated with _link. This shouldn't
       // happen.
       gzerr << "Could not find welded body node for link " << _link->name
-             << ". Merging of link and welded body failed.";
+            << ". Merging of link and welded body failed.";
       return;
     }
 
