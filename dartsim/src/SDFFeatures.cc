@@ -894,19 +894,6 @@ Identity SDFFeatures::ConstructSdfCollision(
 
       std::string expressedIn = "gz:expressed_in";
 
-      // TODO(CH3): Deprecated. Remove on tock.
-      // Try deprecated ignition:expressed_in attribute
-      // if gz:expressed_in attribute is missing
-      if (!frictionDirectionElem->HasAttribute("gz:expressed_in"))
-      {
-        if (frictionDirectionElem->HasAttribute("ignition:expressed_in"))
-        {
-          gzwarn << "The `ignition:expressed_in` attribute is deprecated. "
-                 << "Please use `gz:expressed_in` instead." << std::endl;
-          expressedIn = "ignition:expressed_in";
-        }
-      }
-
       if (frictionDirectionElem->HasAttribute(expressedIn))
       {
         auto skeleton = bn->getSkeleton();
