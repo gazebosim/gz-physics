@@ -1,4 +1,10 @@
 libbenchmark-dev
+libdart-collision-bullet-dev
+libdart-collision-ode-dev
+libdart-dev
+libdart-external-ikfast-dev
+libdart-external-odelcpsolver-dev
+libdart-utils-urdf-dev
 libeigen3-dev
 libgz-cmake3-dev
 libgz-common5-dev
@@ -7,4 +13,4 @@ libgz-math7-eigen3-dev
 libgz-plugin2-dev
 libgz-utils2-cli-dev
 libgz-utils2-dev
-libsdformat13-dev
+libsdformat14-dev

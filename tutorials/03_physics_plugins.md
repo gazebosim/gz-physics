@@ -78,12 +78,12 @@ Users do not need to organize their own plugin implementations this way.
 
 Dart ([Dynamic Animation and Robotics Toolkit](https://dartsim.github.io/)) is an open source library that provides data structures and algorithms for kinematic and dynamic applications in robotics and computer animation.
 It is the default physics engine used in Gazebo Simulation.
-The source code for Dartsim plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/gz-physics6) under `dartsim` directory.
+The source code for Dartsim plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/main) under `dartsim` directory.
 
-TPE ([Trivial Physics Engine](https://github.com/gazebosim/gz-physics/tree/gz-physics6/tpe)) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
+TPE ([Trivial Physics Engine](https://github.com/gazebosim/gz-physics/tree/main/tpe)) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
 It supports higher-order fleet dynamics without real physics (eg. gravity, force, constraint etc.) and multi-machine synchronization.
 Gazebo support for TPE targets [Citadel](https://gazebosim.org/docs/citadel) and onward releases.
-The source code for TPE plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/gz-physics6) under the `tpe/plugin` directory.
+The source code for TPE plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/main) under the `tpe/plugin` directory.
 
 The following is a list of features supported by each physics engine to help users select one that fits their needs.
 

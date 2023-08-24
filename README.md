@@ -9,9 +9,9 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics6/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics6)
-Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics6-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics6-focal-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics6-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics6-homebrew-amd64)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics7/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics7)
+Ubuntu Focal | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics7-focal-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics7-focal-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ignition_physics-ci-gz-physics7-homebrew-amd64)](https://build.osrfoundation.org/job/ignition_physics-ci-gz-physics7-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=ign_physics-gz-6-win)](https://build.osrfoundation.org/job/ign_physics-gz-6-win)
 
 Gazebo Physics, a component of [Gazebo](https://gazebosim.org), provides an abstract physics interface
@@ -73,7 +73,7 @@ See the [installation tutorial](https://gazebosim.org/api/physics/5.0/installati
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/gz-physics6/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/main/examples/).
 
 # Documentation
 
@@ -90,7 +90,7 @@ You can also generate the documentation from a clone of this repository by follo
 2. Clone the repository
 
     ```
-    git clone https://github.com/gazebosim/gz-physics -b gz-physics6 
+    git clone https://github.com/gazebosim/gz-physics -b main
     ```
 
 3. Configure and build the documentation.
@@ -135,7 +135,6 @@ gz-physics
 ├── example                   Examples about how to use the library
 ├── heightmap                 Heightmap related header files.
 ├── include/gz/physics        Header files.
-├── include/ignition/physics  Deprecated header files.
 ├── mesh                      Files for mesh component.
 ├── resources                 Model and mesh resource files used by tests.
 ├── sdf                       Files for sdf component.

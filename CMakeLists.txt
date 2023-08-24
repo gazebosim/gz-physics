@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics6 VERSION 6.4.0)
+project(gz-physics7 VERSION 7.0.0)
 
 #============================================================================
 # Find gz-cmake
@@ -16,7 +16,7 @@ find_package(gz-cmake3 REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-gz_configure_project(VERSION_SUFFIX)
+gz_configure_project(VERSION_SUFFIX pre1)
 
 #============================================================================
 # Set project-specific options
@@ -63,7 +63,7 @@ gz_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-gz_find_package(sdformat13
+gz_find_package(sdformat14
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------

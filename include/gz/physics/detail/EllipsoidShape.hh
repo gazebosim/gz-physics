@@ -37,7 +37,7 @@ namespace gz
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     void SetEllipsoidShapeProperties::EllipsoidShape<PolicyT, FeaturesT>
-    ::SetRadii(Dimensions _radii)
+    ::SetRadii(const Dimensions &_radii)
     {
       this->template Interface<SetEllipsoidShapeProperties>()
           ->SetEllipsoidShapeRadii(this->identity, _radii);
@@ -48,7 +48,7 @@ namespace gz
     auto AttachEllipsoidShapeFeature::Link<PolicyT, FeaturesT>
     ::AttachEllipsoidShape(
         const std::string &_name,
-        Dimensions _radii,
+        const Dimensions &_radii,
         const PoseType &_pose) -> ShapePtrType
     {
       return ShapePtrType(this->pimpl,

@@ -69,7 +69,7 @@ namespace gz
         /// \brief Set the radius of this EllipsoidShape
         /// \param[in] _radii
         ///   The desired radius of this EllipsoidShape
-        public: void SetRadii(Dimensions _radii);
+        public: void SetRadii(const Dimensions &_radii);
       };
 
       public: template <typename PolicyT>
@@ -79,7 +79,7 @@ namespace gz
             typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
         public: virtual void SetEllipsoidShapeRadii(
-            const Identity &_ellipsoidID, Dimensions _radii) = 0;
+            const Identity &_ellipsoidID, const Dimensions &_radii) = 0;
       };
     };
 
@@ -109,7 +109,7 @@ namespace gz
         /// \returns a ShapePtrType to the newly constructed EllipsoidShape
         public: ShapePtrType AttachEllipsoidShape(
             const std::string &_name = "ellipsoid",
-            Dimensions _radii = Dimensions::Constant(1.0),
+            const Dimensions &_radii = Dimensions::Constant(1.0),
             const PoseType &_pose = PoseType::Identity());
       };
 
@@ -125,7 +125,7 @@ namespace gz
         public: virtual Identity AttachEllipsoidShape(
             const Identity &_linkID,
             const std::string &_name,
-            Dimensions _radii,
+            const Dimensions &_radii,
             const PoseType &_pose) = 0;
       };
     };

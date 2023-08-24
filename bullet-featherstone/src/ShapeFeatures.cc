@@ -302,7 +302,7 @@ Vector3d ShapeFeatures::GetEllipsoidShapeRadii(
 Identity ShapeFeatures::AttachEllipsoidShape(
     const Identity &_linkID,
     const std::string &_name,
-    const Vector3d _radii,
+    const Vector3d &_radii,
     const Pose3d &_pose)
 {
   btVector3 positions[1];

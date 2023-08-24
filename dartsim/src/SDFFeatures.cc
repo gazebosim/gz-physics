@@ -840,8 +840,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
-    gzerr << "The geometry element of collision [" << _collision.Name() << "] "
-           << "couldn't be created\n";
+    gzdbg << "The geometry element of collision [" << _collision.Name() << "] "
+          << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
 
@@ -893,19 +893,6 @@ Identity SDFFeatures::ConstructSdfCollision(
       aspect->setFirstFrictionDirection(math::eigen3::convert(fdir1));
 
       std::string expressedIn = "gz:expressed_in";
-
-      // TODO(CH3): Deprecated. Remove on tock.
-      // Try deprecated ignition:expressed_in attribute
-      // if gz:expressed_in attribute is missing
-      if (!frictionDirectionElem->HasAttribute("gz:expressed_in"))
-      {
-        if (frictionDirectionElem->HasAttribute("ignition:expressed_in"))
-        {
-          gzwarn << "The `ignition:expressed_in` attribute is deprecated. "
-                 << "Please use `gz:expressed_in` instead." << std::endl;
-          expressedIn = "ignition:expressed_in";
-        }
-      }
 
       if (frictionDirectionElem->HasAttribute(expressedIn))
       {

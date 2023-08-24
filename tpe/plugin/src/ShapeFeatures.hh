@@ -116,7 +116,7 @@ class ShapeFeatures :
   public: Identity AttachEllipsoidShape(
     const Identity &_linkID,
     const std::string &_name,
-    Vector3d _radii,
+    const Vector3d &_radii,
     const Pose3d &_pose) override;
 
   // ----- Sphere Features -----
