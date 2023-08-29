@@ -393,9 +393,9 @@ bool JointFeatures::SetJointMimicConstraint(
     std::size_t _dof,
     const BaseJoint3dPtr &_leaderJoint,
     std::size_t _leaderAxisDof,
-    Scalar _multiplier,
-    Scalar _offset,
-    Scalar _reference)
+    double _multiplier,
+    double _offset,
+    double _reference)
 {
   if (_dof != 0 || _leaderAxisDof != 0)
   {

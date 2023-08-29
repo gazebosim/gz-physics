@@ -150,9 +150,9 @@ class JointFeatures :
       std::size_t _dof,
       const BaseJoint3dPtr &_leaderJoint,
       std::size_t _leaderAxisDof,
-      Scalar _multiplier,
-      Scalar _offset,
-      Scalar _reference) override;
+      double _multiplier,
+      double _offset,
+      double _reference) override;
 };
 }  // namespace bullet_featherstone
 }  // namespace physics
