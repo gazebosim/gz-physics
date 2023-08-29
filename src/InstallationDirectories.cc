@@ -20,6 +20,10 @@
 #include <gz/physics/config.hh>
 #include <gz/physics/InstallationDirectories.hh>
 
+#ifdef _WIN32
+#include <shlwapi.h>
+#endif
+
 namespace gz
 {
 namespace physics
