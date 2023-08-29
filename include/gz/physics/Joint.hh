@@ -587,31 +587,47 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature sets the mimic constraint for this Joint.
+    /// \brief This feature applies a Mimic constraint to an axis of this Joint.
+    /// This constraint encodes a linear relationship between the output
+    /// position of two joint axes. One joint axis is labelled as the *leader*
+    /// and the other as the *follower*.
+    /// The multiplier, offset, and reference parameters determine the linear
+    /// relationship according to the following equation:
+    ///
+    /// follower_position = multiplier * (leader_position - reference) + offset
     class GZ_PHYSICS_VISIBLE SetMimicConstraintFeature
         : public virtual Feature
     {
-      /// \brief The Joint API for setting the mimic joint constraint.
-      /// \param[in] _dof
-      ///   The desired generalized coordinate corresponding to the follower
-      ///   axis within this joint. Values start from 0 and stop before
-      ///   Joint::GetDegreesOfFreedom().
-      /// \param[in] _joint
-      ///   name of the joint to be mimicked, i.e. the leader joint.
-      /// \param[in] _multiplier
-      ///   The multiplier to be applied to position of leader joint.
-      /// \param[in] _offset
-      ///   The offset to be applied to position of leader joint after
-      ///   the multiplier is applied.
       public: template <typename PolicyT, typename FeaturesT>
       class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
       {
         public: using Scalar = typename PolicyT::Scalar;
 
+        /// \brief The Joint API for applying a mimic constraint to an axis of
+        /// this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate corresponding to the follower
+        ///   axis within this joint. Values start from 0 and stop before
+        ///   Joint::GetDegreesOfFreedom().
+        /// \param[in] _leaderJoint
+        ///   pointer to the joint containing the axis to be mimicked,
+        ///   i.e. the leader joint.
+        /// \param[in] _leaderAxisDof
+        ///   The desired generalized coordinate corresponding to the leader
+        ///   axis within the _leaderJoint. Values start from 0 and stop before
+        ///   Joint::GetDegreesOfFreedom().
+        /// \param[in] _multiplier
+        ///   The multiplier to be applied to position of leader joint.
+        /// \param[in] _offset
+        ///   The offset to be applied to position of leader joint after
+        ///   the multiplier is applied.
+        /// \param[in] _reference
+        ///   Reference for the leader position before applying the multiplier
+        ///   in the linear constraint.
         public: void SetMimicConstraint(
-                    const std::size_t _dof,
-                    const std::string &_joint,
-                    const std::string &_axis,
+                    std::size_t _dof,
+                    const BaseJointPtr<PolicyT> &_leaderJoint,
+                    std::size_t _leaderAxisDof,
                     Scalar _multiplier,
                     Scalar _offset,
                     Scalar _reference);
@@ -626,10 +642,12 @@ namespace gz
         // See Joint::MimicConstraint above
         public: virtual void SetJointMimicConstraint(
             const Identity &_id,
-            const std::size_t _dof,
-            const std::string &_joint,
-            const std::string &_axis,
-            Scalar _multiplier, Scalar _offset, Scalar _reference) = 0;
+            std::size_t _dof,
+            const BaseJointPtr<PolicyT> &_leaderJoint,
+            std::size_t _leaderAxisDof,
+            Scalar _multiplier,
+            Scalar _offset,
+            Scalar _reference) = 0;
       };
     };
   }

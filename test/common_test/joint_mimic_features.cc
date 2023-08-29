@@ -179,13 +179,13 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
         // revolute_joint_1 --> revolute_joint_2
         // revolute_joint_1 --> prismatic_joint_3
         prismaticFollowerJoint1->SetMimicConstraint(0,
-            "prismatic_joint_1", "axis", multiplier, offset, reference);
+            leaderJoint, 0, multiplier, offset, reference);
         revoluteFollowerJoint1->SetMimicConstraint(0,
-            "prismatic_joint_1", "axis" , multiplier, offset, reference);
+            leaderJoint, 0, multiplier, offset, reference);
         revoluteFollowerJoint2->SetMimicConstraint(0,
-            "revolute_joint_1", "axis", multiplier, offset, reference);
+            revoluteFollowerJoint1, 0, multiplier, offset, reference);
         prismaticFollowerJoint2->SetMimicConstraint(0,
-            "revolute_joint_1", "axis", multiplier, offset, reference);
+            revoluteFollowerJoint1, 0, multiplier, offset, reference);
 
         // Reset positions and run a few iterations so the positions reach
         // nontrivial values.
@@ -317,7 +317,7 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
       {
         // Set mimic joint constraint.
         followerJoint->SetMimicConstraint(0,
-            "upper_joint_1", "axis" , multiplier, offset, reference);
+            leaderJoint, 0 , multiplier, offset, reference);
         // Reset positions and run a few iterations so the positions reach
         // nontrivial values.
         leaderJoint->SetPosition(0, 0);
@@ -400,7 +400,7 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
     auto leaderJointFastFollowsSlow =
         modelFastFollowsSlow->GetJoint(leaderJointNameFastFollowsSlow);
     followJointFastFollowsSlow->SetMimicConstraint(
-        0, leaderJointNameFastFollowsSlow, "axis",
+        0, leaderJointFastFollowsSlow, 0,
         multiplier, offset, reference);
 
     // Test mimic constraint with slow joint following fast joint
@@ -413,7 +413,7 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
     auto leaderJointSlowFollowsFast =
         modelSlowFollowsFast->GetJoint(leaderJointNameSlowFollowsFast);
     followJointSlowFollowsFast->SetMimicConstraint(
-        0, leaderJointNameSlowFollowsFast, "axis",
+        0, leaderJointSlowFollowsFast, 0,
         multiplier, offset, reference);
 
     // Ensure all joints start from zero angle.

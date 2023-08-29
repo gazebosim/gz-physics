@@ -147,12 +147,12 @@ class JointFeatures :
   // ----- Mimic joint constraint -----
   public: void SetJointMimicConstraint(
       const Identity &_id,
-      const std::size_t _dof,
-      const std::string &_joint,
-      const std::string &_axis,
-      const double _multiplier,
-      const double _offset,
-      const double _reference) override;
+      std::size_t _dof,
+      const BaseJoint3dPtr &_leaderJoint,
+      std::size_t _leaderAxisDof,
+      Scalar _multiplier,
+      Scalar _offset,
+      Scalar _reference) override;
 };
 }  // namespace bullet_featherstone
 }  // namespace physics

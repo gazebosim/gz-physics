@@ -389,12 +389,12 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
-    const std::size_t /*_dof*/,  // bullet doesn't mimic multi-axis joints yet
-    const std::string &_joint,
-    const std::string &/*_axis*/,
-    const double _multiplier,
-    const double _offset,
-    const double _reference)
+    std::size_t _dof,
+    const BaseJoint3dPtr &_leaderJoint,
+    std::size_t _leaderAxisDof,
+    Scalar _multiplier,
+    Scalar _offset,
+    Scalar _reference)
 {
   auto followerJoint = this->ReferenceInterface<JointInfo>(_id);
   auto followerChild = this->ReferenceInterface<LinkInfo>(
@@ -416,21 +416,11 @@ void JointFeatures::SetJointMimicConstraint(
     followerJoint->gearConstraint.reset();
   }
 
-
-  // This would be easier with EntityManagementFeatures::GetJoint()
-  const auto leaderJointIt = model->jointNameToEntityId.find(_joint);
-  if (leaderJointIt == model->jointNameToEntityId.end())
-  {
-    // print error message
-    return;
-  }
-  auto leaderJointId =
-      this->GenerateIdentity(leaderJointIt->second,
-                             this->joints.at(leaderJointIt->second));
+  auto leaderJointId = _leaderJoint->FullIdentity();
   auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId);
   auto leaderChild = this->ReferenceInterface<LinkInfo>(
       leaderJoint->childLinkID);
-  if (!followerChild->indexInModel.has_value())
+  if (!leaderChild->indexInModel.has_value())
   {
     // print error message
     return;
