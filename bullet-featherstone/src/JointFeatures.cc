@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <memory>
 
+#include <gz/common/Console.hh>
 #include <sdf/Joint.hh>
 
 namespace gz {
@@ -387,7 +388,7 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMimicConstraint(
+bool JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
     std::size_t _dof,
     const BaseJoint3dPtr &_leaderJoint,
@@ -396,6 +397,16 @@ void JointFeatures::SetJointMimicConstraint(
     Scalar _offset,
     Scalar _reference)
 {
+  if (_dof != 0 || _leaderAxisDof != 0)
+  {
+    gzerr << "Failed to set mimic constraint for follower axis " << _dof
+          << " and leader axis " << _leaderAxisDof
+          << " because bullet-featherstone doesn't yet support mimic "
+          << " constraints for multi-axis joints."
+          << std::endl;
+    return false;
+  }
+
   auto followerJoint = this->ReferenceInterface<JointInfo>(_id);
   auto followerChild = this->ReferenceInterface<LinkInfo>(
       followerJoint->childLinkID);
@@ -403,7 +414,14 @@ void JointFeatures::SetJointMimicConstraint(
   const auto *model =
       this->ReferenceInterface<ModelInfo>(followerJoint->model);
 
+  auto leaderJointId = _leaderJoint->FullIdentity();
+  auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId);
+  auto leaderChild = this->ReferenceInterface<LinkInfo>(
+      leaderJoint->childLinkID);
+  auto leaderChildIndexInModel = leaderChild->indexInModel.value_or(-1);
+
   // Get world pointer and remove an existing mimic / gear constraint
+  // after follower and leader entities have been found.
   auto *world = this->ReferenceInterface<WorldInfo>(model->world);
   if (followerJoint->gearConstraint)
   {
@@ -411,12 +429,6 @@ void JointFeatures::SetJointMimicConstraint(
         followerJoint->gearConstraint.get());
     followerJoint->gearConstraint.reset();
   }
-
-  auto leaderJointId = _leaderJoint->FullIdentity();
-  auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId);
-  auto leaderChild = this->ReferenceInterface<LinkInfo>(
-      leaderJoint->childLinkID);
-  auto leaderChildIndexInModel = leaderChild->indexInModel.value_or(-1);
 
   followerJoint->gearConstraint = std::make_shared<btMultiBodyGearConstraint>(
       model->body.get(),
@@ -447,6 +459,7 @@ void JointFeatures::SetJointMimicConstraint(
   // this is especially relevant to the offset and reference parameters
   followerJoint->gearConstraint->setErp(btScalar(0.3));
   world->world->addMultiBodyConstraint(followerJoint->gearConstraint.get());
+  return true;
 }
 }  // namespace bullet_featherstone
 }  // namespace physics

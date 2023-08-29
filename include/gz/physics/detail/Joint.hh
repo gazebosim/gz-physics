@@ -218,7 +218,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
+    bool SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
     SetMimicConstraint(
       std::size_t _dof,
       const BaseJointPtr<PolicyT> &_leaderJoint,
@@ -227,7 +227,7 @@ namespace gz
       Scalar _offset,
       Scalar _reference)
     {
-      this->template Interface<SetMimicConstraintFeature>()
+      return this->template Interface<SetMimicConstraintFeature>()
         ->SetJointMimicConstraint(this->identity, _dof, _leaderJoint,
           _leaderAxisDof, _multiplier, _offset, _reference);
     }

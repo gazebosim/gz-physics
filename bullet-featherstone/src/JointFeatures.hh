@@ -145,7 +145,7 @@ class JointFeatures :
       const Identity &_id) const override;
 
   // ----- Mimic joint constraint -----
-  public: void SetJointMimicConstraint(
+  public: bool SetJointMimicConstraint(
       const Identity &_id,
       std::size_t _dof,
       const BaseJoint3dPtr &_leaderJoint,

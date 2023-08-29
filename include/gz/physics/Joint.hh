@@ -624,7 +624,9 @@ namespace gz
         /// \param[in] _reference
         ///   Reference for the leader position before applying the multiplier
         ///   in the linear constraint.
-        public: void SetMimicConstraint(
+        /// \return True if mimic constraint was set successfully,
+        /// false otherwise.
+        public: bool SetMimicConstraint(
                     std::size_t _dof,
                     const BaseJointPtr<PolicyT> &_leaderJoint,
                     std::size_t _leaderAxisDof,
@@ -640,7 +642,7 @@ namespace gz
         public: using Scalar = typename PolicyT::Scalar;
 
         // See Joint::MimicConstraint above
-        public: virtual void SetJointMimicConstraint(
+        public: virtual bool SetJointMimicConstraint(
             const Identity &_id,
             std::size_t _dof,
             const BaseJointPtr<PolicyT> &_leaderJoint,
