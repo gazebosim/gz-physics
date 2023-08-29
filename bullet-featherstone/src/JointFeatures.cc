@@ -427,7 +427,18 @@ void JointFeatures::SetJointMimicConstraint(
       btVector3(0, 0, 0),
       btMatrix3x3::getIdentity(),
       btMatrix3x3::getIdentity());
+  // btMultiBodyGearConstraint isn't clearly documented, but from trial and
+  // and error, I found that the Gear Ratio should have the opposite sign
+  // of the multiplier parameter.
   followerJoint->gearConstraint->setGearRatio(btScalar(-_multiplier));
+  // Recall the linear equation from the definition of the mimic constraint:
+  // follower_position = multiplier * (leader_position - reference) + offset
+  //
+  // The equation can be rewritten to collect the constant terms involving the
+  // reference and offset parameters together:
+  // follower_position = multiplier*leader_position
+  //                   + offset - multiplier * reference
+  // The RelativePositionTarget is then set as (offset - multiplier * reference)
   followerJoint->gearConstraint->setRelativePositionTarget(
       btScalar(_offset - _multiplier * _reference));
   // TODO(scpeters): figure out what is a good value for this
