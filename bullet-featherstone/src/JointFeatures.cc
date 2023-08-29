@@ -399,11 +399,7 @@ void JointFeatures::SetJointMimicConstraint(
   auto followerJoint = this->ReferenceInterface<JointInfo>(_id);
   auto followerChild = this->ReferenceInterface<LinkInfo>(
       followerJoint->childLinkID);
-  if (!followerChild->indexInModel.has_value())
-  {
-    // print error message
-    return;
-  }
+  auto followerChildIndexInModel = followerChild->indexInModel.value_or(-1);
   const auto *model =
       this->ReferenceInterface<ModelInfo>(followerJoint->model);
 
@@ -420,17 +416,13 @@ void JointFeatures::SetJointMimicConstraint(
   auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId);
   auto leaderChild = this->ReferenceInterface<LinkInfo>(
       leaderJoint->childLinkID);
-  if (!leaderChild->indexInModel.has_value())
-  {
-    // print error message
-    return;
-  }
+  auto leaderChildIndexInModel = leaderChild->indexInModel.value_or(-1);
 
   followerJoint->gearConstraint = std::make_shared<btMultiBodyGearConstraint>(
       model->body.get(),
-      *followerChild->indexInModel,
+      followerChildIndexInModel,
       model->body.get(),
-      *leaderChild->indexInModel,
+      leaderChildIndexInModel,
       btVector3(0, 0, 0),
       btVector3(0, 0, 0),
       btMatrix3x3::getIdentity(),
