@@ -17,6 +17,11 @@ target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
     gz-plugin${GZ_PLUGIN_VER}::register
     Eigen3::Eigen)
 
+if(WIN32)
+  target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
+    PRIVATE shlwapi)
+endif()
+
 gz_build_tests(
   TYPE UNIT
   SOURCES ${gtest_sources}
