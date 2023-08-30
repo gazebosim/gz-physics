@@ -21,6 +21,8 @@
 #include <gz/physics/Joint.hh>
 #include "gz/physics/detail/FrameSemantics.hh"
 
+#include <string>
+
 namespace gz
 {
   namespace physics
@@ -212,6 +214,22 @@ namespace gz
     {
       this->template Interface<SetJointEffortLimitsFeature>()
         ->SetJointMaxEffort(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
+    SetMimicConstraint(
+      std::size_t _dof,
+      const BaseJointPtr<PolicyT> &_leaderJoint,
+      std::size_t _leaderAxisDof,
+      Scalar _multiplier,
+      Scalar _offset,
+      Scalar _reference)
+    {
+      return this->template Interface<SetMimicConstraintFeature>()
+        ->SetJointMimicConstraint(this->identity, _dof, _leaderJoint,
+          _leaderAxisDof, _multiplier, _offset, _reference);
     }
 
     /////////////////////////////////////////////////

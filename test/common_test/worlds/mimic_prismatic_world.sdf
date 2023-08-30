@@ -1,0 +1,392 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <physics name="fast" type="ignored">
+      <real_time_factor>0</real_time_factor>
+    </physics>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <pose>0 0 -0.5 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>100 100 1</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>100 100 1</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>1 1 1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="prismatic_model">
+        <!-- A Heavy base keeps the joints from falling over -->
+        <link name="heavy_base">
+            <!-- position the base such that the bottom touches the floor -->
+            <pose>0 0 0.05 0 0 0</pose>
+            <inertial>
+                <mass>100</mass> <!-- kg -->
+                <inertia>
+                    <!-- (mass / 12) * (y*y + z*z) -->
+                    <ixx>8.4167</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <!-- (mass / 12) * (x*x + z*z) -->
+                    <iyy>40.417</iyy>
+                    <iyz>0</iyz>
+                    <!-- (mass / 12) * (y*y + x*x) -->
+                    <izz>48.667</izz>
+                </inertia>
+            </inertial>
+            <!-- Same geometry as visual -->
+            <collision name="heavy_base_collision">
+                <geometry>
+                    <box>
+                        <size>2.2 1 0.1</size>
+                    </box>
+                </geometry>
+            </collision>
+            <!-- Same geometry as collision -->
+            <visual name="heavy_base_visual">
+                <geometry>
+                    <box>
+                        <size>2.2 1 0.1</size>
+                    </box>
+                </geometry>
+                <material>
+                  <ambient>0 0 1 1</ambient>
+                  <diffuse>0 0 1 1</diffuse>
+                  <specular>0 0 1 1</specular>
+                </material>
+            </visual>
+        </link>
+
+        <link name="prismatic_base">
+            <!-- Put the bottom of base on top of the heavy base -->
+            <pose >0.09 0 0.35 0 0 0</pose>
+            <inertial>
+                <inertia>
+                    <!-- (mass / 12) * (y*y + z*z) -->
+                    <ixx>0.021667</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <!-- (mass / 12) * (x*x + z*z) -->
+                    <iyy>0.021667</iyy>
+                    <iyz>0</iyz>
+                    <!-- (mass / 12) * (y*y + x*x) -->
+                    <izz>0.0016667</izz>
+                </inertia>
+            </inertial>
+            <!-- Same geometry as visual -->
+            <collision name="prismatic_base_collision">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.5</size>
+                    </box>
+                </geometry>
+            </collision>
+            <!-- Same geometry as collision -->
+            <visual name="prismatic_base_visual">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.5</size>
+                    </box>
+                </geometry>
+                <material>
+                  <ambient>0.7 0.7 0.7 1</ambient>
+                  <diffuse>0.7 0.7 0.7 1</diffuse>
+                  <specular>0.7 0.7 0.7 1</specular>
+                </material>
+            </visual>
+        </link>
+
+        <joint name="prismatic_base_to_heavy_base" type="fixed">
+            <parent>heavy_base</parent>
+            <child>prismatic_base</child>
+        </joint>
+
+        <link name="prismatic_slide">
+            <!-- Put the slide near the top of the base -->
+            <pose >0.2 0 0.70 0 0 0</pose>
+            <inertial>
+                <inertia>
+                    <!-- (mass / 12) * (y*y + z*z) -->
+                    <ixx>0.0060417</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <!-- (mass / 12) * (x*x + z*z) -->
+                    <iyy>0.0060417</iyy>
+                    <iyz>0</iyz>
+                    <!-- (mass / 12) * (y*y + x*x) -->
+                    <izz>0.0016667</izz>
+                </inertia>
+            </inertial>
+            <!-- Same geometry as visual -->
+            <collision name="prismatic_slide_collision">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+            </collision>
+            <!-- Same geometry as collision -->
+            <visual name="prismatic_slide_visual">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+                <material>
+                  <ambient>1 0 0 1</ambient>
+                  <diffuse>1 0 0 1</diffuse>
+                  <specular>1 0 0 1</specular>
+                </material>
+            </visual>
+        </link>
+`
+        <link name="prismatic_slide_2">
+            <!-- Put the slide near the top of the base -->
+            <pose >0.5 0 0.70 0 0 0</pose>
+            <inertial>
+                <inertia>
+                    <!-- (mass / 12) * (y*y + z*z) -->
+                    <ixx>0.0060417</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <!-- (mass / 12) * (x*x + z*z) -->
+                    <iyy>0.0060417</iyy>
+                    <iyz>0</iyz>
+                    <!-- (mass / 12) * (y*y + x*x) -->
+                    <izz>0.0016667</izz>
+                </inertia>
+            </inertial>
+            <!-- Same geometry as visual -->
+            <collision name="prismatic_slide_collision">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+            </collision>
+            <!-- Same geometry as collision -->
+            <visual name="prismatic_slide_visual">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+                <material>
+                  <ambient>1 0 0 1</ambient>
+                  <diffuse>1 0 0 1</diffuse>
+                  <specular>1 0 0 1</specular>
+                </material>
+            </visual>
+        </link>
+
+        <link name="revolute_link_1">
+            <!-- Put the slide near the top of the base -->
+            <pose >-0.5 0 0.70 0 0 0</pose>
+            <inertial>
+                <inertia>
+                    <!-- (mass / 12) * (y*y + z*z) -->
+                    <ixx>0.0060417</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <!-- (mass / 12) * (x*x + z*z) -->
+                    <iyy>0.0060417</iyy>
+                    <iyz>0</iyz>
+                    <!-- (mass / 12) * (y*y + x*x) -->
+                    <izz>0.0016667</izz>
+                </inertia>
+            </inertial>
+            <!-- Same geometry as visual -->
+            <collision name="prismatic_slide_collision">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+            </collision>
+            <!-- Same geometry as collision -->
+            <visual name="prismatic_slide_visual">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+                <material>
+                  <ambient>1 0 0 1</ambient>
+                  <diffuse>1 0 0 1</diffuse>
+                  <specular>1 0 0 1</specular>
+                </material>
+            </visual>
+        </link>
+
+        <link name="revolute_link_2">
+            <!-- Put the slide near the top of the base -->
+            <pose >-1 0 0.70 0 0 0</pose>
+            <inertial>
+                <inertia>
+                    <!-- (mass / 12) * (y*y + z*z) -->
+                    <ixx>0.0060417</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <!-- (mass / 12) * (x*x + z*z) -->
+                    <iyy>0.0060417</iyy>
+                    <iyz>0</iyz>
+                    <!-- (mass / 12) * (y*y + x*x) -->
+                    <izz>0.0016667</izz>
+                </inertia>
+            </inertial>
+            <!-- Same geometry as visual -->
+            <collision name="prismatic_slide_collision">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+            </collision>
+            <!-- Same geometry as collision -->
+            <visual name="prismatic_slide_visual">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+                <material>
+                  <ambient>1 0 0 1</ambient>
+                  <diffuse>1 0 0 1</diffuse>
+                  <specular>1 0 0 1</specular>
+                </material>
+            </visual>
+        </link>
+
+        <link name="prismatic_slide_3">
+            <!-- Put the slide near the top of the base -->
+            <pose >-1.5 0 0.70 0 0 0</pose>
+            <inertial>
+                <inertia>
+                    <!-- (mass / 12) * (y*y + z*z) -->
+                    <ixx>0.0060417</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <!-- (mass / 12) * (x*x + z*z) -->
+                    <iyy>0.0060417</iyy>
+                    <iyz>0</iyz>
+                    <!-- (mass / 12) * (y*y + x*x) -->
+                    <izz>0.0016667</izz>
+                </inertia>
+            </inertial>
+            <!-- Same geometry as visual -->
+            <collision name="prismatic_slide_collision">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+            </collision>
+            <!-- Same geometry as collision -->
+            <visual name="prismatic_slide_visual">
+                <geometry>
+                    <box>
+                        <size>0.1 0.1 0.25</size>
+                    </box>
+                </geometry>
+                <material>
+                  <ambient>1 0 0 1</ambient>
+                  <diffuse>1 0 0 1</diffuse>
+                  <specular>1 0 0 1</specular>
+                </material>
+            </visual>
+        </link>
+
+        <joint name="prismatic_joint_1" type="prismatic">
+            <parent>prismatic_base</parent>
+            <child>prismatic_slide</child>
+            <axis>
+                <xyz>0 0 1</xyz>
+                <!-- Make it springy to keep the demo moving -->
+                <limit>
+                    <lower>-0.25</lower>
+                    <upper>0.25</upper>
+                </limit>
+                <dynamics>
+                    <spring_stiffness>50</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name="prismatic_joint_2" type="prismatic">
+            <parent>prismatic_base</parent>
+            <child>prismatic_slide_2</child>
+            <axis>
+                <xyz>0 0 1</xyz>
+                <!-- Make it springy to keep the demo moving -->
+                <limit>
+                    <lower>-0.25</lower>
+                    <upper>0.25</upper>
+                </limit>
+                <dynamics>
+                    <spring_stiffness>100</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name="revolute_joint_1" type="revolute">
+           <parent>prismatic_base</parent>
+           <child>revolute_link_1</child>
+           <axis>
+             <xyz>1.0 0 0</xyz>
+             <dynamics>
+               <damping>3.0</damping>
+             </dynamics>
+           </axis>
+        </joint>
+
+        <joint name="revolute_joint_2" type="revolute">
+           <parent>prismatic_base</parent>
+           <child>revolute_link_2</child>
+           <axis>
+             <xyz>1.0 0 0</xyz>
+             <dynamics>
+               <damping>3.0</damping>
+             </dynamics>
+           </axis>
+        </joint>
+
+        <joint name="prismatic_joint_3" type="prismatic">
+            <parent>prismatic_base</parent>
+            <child>prismatic_slide_3</child>
+            <axis>
+                <xyz>0 0 1</xyz>
+                <!-- Make it springy to keep the demo moving -->
+                <dynamics>
+                    <spring_stiffness>100</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+    </model>
+  </world>
+</sdf>
+

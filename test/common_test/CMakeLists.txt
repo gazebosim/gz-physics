@@ -9,6 +9,7 @@ set(tests
   construct_empty_world
   free_joint_features
   joint_features
+  joint_mimic_features
   joint_transmitted_wrench_features
   kinematic_features
   link_features

@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <memory>
 
+#include <gz/common/Console.hh>
 #include <sdf/Joint.hh>
 
 namespace gz {
@@ -384,6 +385,81 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   wrenchOut.torque = jointInfo->tf_to_child.rotation() * convert(
     jointInfo->jointFeedback->m_reactionForces.getAngular());
   return wrenchOut;
+}
+
+/////////////////////////////////////////////////
+bool JointFeatures::SetJointMimicConstraint(
+    const Identity &_id,
+    std::size_t _dof,
+    const BaseJoint3dPtr &_leaderJoint,
+    std::size_t _leaderAxisDof,
+    double _multiplier,
+    double _offset,
+    double _reference)
+{
+  if (_dof != 0 || _leaderAxisDof != 0)
+  {
+    gzerr << "Failed to set mimic constraint for follower axis " << _dof
+          << " and leader axis " << _leaderAxisDof
+          << " because bullet-featherstone doesn't yet support mimic "
+          << " constraints for multi-axis joints."
+          << std::endl;
+    return false;
+  }
+
+  auto followerJoint = this->ReferenceInterface<JointInfo>(_id);
+  auto followerChild = this->ReferenceInterface<LinkInfo>(
+      followerJoint->childLinkID);
+  auto followerChildIndexInModel = followerChild->indexInModel.value_or(-1);
+  const auto *model =
+      this->ReferenceInterface<ModelInfo>(followerJoint->model);
+
+  auto leaderJointId = _leaderJoint->FullIdentity();
+  auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId);
+  auto leaderChild = this->ReferenceInterface<LinkInfo>(
+      leaderJoint->childLinkID);
+  auto leaderChildIndexInModel = leaderChild->indexInModel.value_or(-1);
+
+  // Get world pointer and remove an existing mimic / gear constraint
+  // after follower and leader entities have been found.
+  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+  if (followerJoint->gearConstraint)
+  {
+    world->world->removeMultiBodyConstraint(
+        followerJoint->gearConstraint.get());
+    followerJoint->gearConstraint.reset();
+  }
+
+  followerJoint->gearConstraint = std::make_shared<btMultiBodyGearConstraint>(
+      model->body.get(),
+      followerChildIndexInModel,
+      model->body.get(),
+      leaderChildIndexInModel,
+      btVector3(0, 0, 0),
+      btVector3(0, 0, 0),
+      btMatrix3x3::getIdentity(),
+      btMatrix3x3::getIdentity());
+  // btMultiBodyGearConstraint isn't clearly documented, but from trial and
+  // and error, I found that the Gear Ratio should have the opposite sign
+  // of the multiplier parameter.
+  followerJoint->gearConstraint->setGearRatio(btScalar(-_multiplier));
+  // Recall the linear equation from the definition of the mimic constraint:
+  // follower_position = multiplier * (leader_position - reference) + offset
+  //
+  // The equation can be rewritten to collect the constant terms involving the
+  // reference and offset parameters together:
+  // follower_position = multiplier*leader_position
+  //                   + offset - multiplier * reference
+  // The RelativePositionTarget is then set as (offset - multiplier * reference)
+  followerJoint->gearConstraint->setRelativePositionTarget(
+      btScalar(_offset - _multiplier * _reference));
+  // TODO(scpeters): figure out what is a good value for this
+  followerJoint->gearConstraint->setMaxAppliedImpulse(btScalar(1e8));
+  // setErp is needed to correct position constraint errors
+  // this is especially relevant to the offset and reference parameters
+  followerJoint->gearConstraint->setErp(btScalar(0.3));
+  world->world->addMultiBodyConstraint(followerJoint->gearConstraint.get());
+  return true;
 }
 }  // namespace bullet_featherstone
 }  // namespace physics

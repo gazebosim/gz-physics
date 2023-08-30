@@ -49,6 +49,8 @@ struct JointFeatureList : FeatureList<
 
   GetJointTransmittedWrench,
 
+  SetMimicConstraintFeature,
+
   FixedJointCast
 > { };
 
@@ -141,6 +143,16 @@ class JointFeatures :
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
       const Identity &_id) const override;
+
+  // ----- Mimic joint constraint -----
+  public: bool SetJointMimicConstraint(
+      const Identity &_id,
+      std::size_t _dof,
+      const BaseJoint3dPtr &_leaderJoint,
+      std::size_t _leaderAxisDof,
+      double _multiplier,
+      double _offset,
+      double _reference) override;
 };
 }  // namespace bullet_featherstone
 }  // namespace physics
