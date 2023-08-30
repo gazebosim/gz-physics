@@ -59,7 +59,9 @@ gz_build_tests(
     gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-  TEST_LIST tests)
+  TEST_LIST tests
+  ENVIRONMENT
+    GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
 
 foreach(test ${tests})
 
