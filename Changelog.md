@@ -1,6 +1,24 @@
 ## Gazebo Physics 6.x
 
-### Gazebo Physics 6.x.x (202X-XX-XX)
+### Gazebo Physics 6.5.0 (2023-08-30)
+
+1. Add optional binary relocatability
+    * [Pull request #507](https://github.com/gazebosim/gz-physics/pull/507)
+
+1. Unregister collision detectors when the darstim plugin is unloaded
+    * [Pull request #529](https://github.com/gazebosim/gz-physics/pull/529)
+
+1. Minor cleanup of dartsim
+    * [Pull request #515](https://github.com/gazebosim/gz-physics/pull/515)
+
+1. Fix Github project automation for new project board
+    * [Pull request #527](https://github.com/gazebosim/gz-physics/pull/527)
+
+1. Check that plugin exists before adding common test
+    * [Pull request #523](https://github.com/gazebosim/gz-physics/pull/523)
+
+1. Clangtidy fixes
+    * [Pull request #514](https://github.com/gazebosim/gz-physics/pull/514)
 
 ### Gazebo Physics 6.4.0 (2023-05-22)
 
