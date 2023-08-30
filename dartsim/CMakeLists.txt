@@ -90,7 +90,9 @@ gz_build_tests(
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-  TEST_LIST tests)
+  TEST_LIST tests
+  ENVIRONMENT
+    GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
 
 foreach(test ${tests})
 
