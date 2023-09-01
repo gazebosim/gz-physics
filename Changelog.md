@@ -1,5 +1,17 @@
 ## Ignition Physics 5.x
 
+### Ignition Physics 5.3.2 (2023-09-01)
+
+1. Fix a crash due to an invalid pointer
+    * [Pull request #486](https://github.com/gazebosim/gz-physics/pull/486)
+
+1. Infrastructure
+    * [Pull request #490](https://github.com/gazebosim/gz-physics/pull/490)
+    * [Pull request #488](https://github.com/gazebosim/gz-physics/pull/488)
+
+1. Rename COPYING to LICENSE
+    * [Pull request #487](https://github.com/gazebosim/gz-physics/pull/487)
+
 ### Ignition Physics 5.3.1 (2023-02-16)
 
 1. Fix memory corruption due to faulty refcount tracking
