@@ -581,10 +581,12 @@ Identity SDFFeatures::ConstructSdfModel(
         model->body->getLink(i).m_jointMaxForce =
             static_cast<btScalar>(joint->Axis()->Effort());
         jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
-        btMultiBodyConstraint *con = new btMultiBodyJointLimitConstraint(
+
+        jointInfo->jointLimits =
+          std::make_shared<btMultiBodyJointLimitConstraint>(
             model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
             static_cast<btScalar>(joint->Axis()->Upper()));
-        world->world->addMultiBodyConstraint(con);
+        world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
       }
 
       jointInfo->jointFeedback = std::make_shared<btMultiBodyJointFeedback>();
@@ -878,31 +880,29 @@ bool SDFFeatures::AddSdfCollision(
     if (linkInfo->indexInModel.has_value())
       linkIndexInModel = *linkInfo->indexInModel;
 
-    if (!linkInfo->collider)
+    if (linkInfo->collider == nullptr)
     {
       linkInfo->shape = std::make_unique<btCompoundShape>();
 
       // NOTE: Bullet does not appear to support different surface properties
       // for different shapes attached to the same link.
-      auto collider = std::make_unique<btMultiBodyLinkCollider>(
+      linkInfo->collider = new btMultiBodyLinkCollider(
         model->body.get(), linkIndexInModel);
 
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
 
-      collider->setCollisionShape(linkInfo->shape.get());
-      collider->setRestitution(static_cast<btScalar>(restitution));
-      collider->setRollingFriction(static_cast<btScalar>(rollingFriction));
-      collider->setFriction(static_cast<btScalar>(mu));
-      collider->setAnisotropicFriction(
+      linkInfo->collider->setCollisionShape(linkInfo->shape.get());
+      linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
+      linkInfo->collider->setRollingFriction(static_cast<btScalar>(rollingFriction));
+      linkInfo->collider->setFriction(static_cast<btScalar>(mu));
+      linkInfo->collider->setAnisotropicFriction(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
-
-      linkInfo->collider = std::move(collider);
 
       if (linkIndexInModel >= 0)
       {
         model->body->getLink(linkIndexInModel).m_collider =
-          linkInfo->collider.get();
+          linkInfo->collider;
         const auto p = model->body->localPosToWorld(
           linkIndexInModel, btVector3(0, 0, 0));
         const auto rot = model->body->localFrameToWorld(
@@ -911,7 +911,7 @@ bool SDFFeatures::AddSdfCollision(
       }
       else
       {
-        model->body->setBaseCollider(linkInfo->collider.get());
+        model->body->setBaseCollider(linkInfo->collider);
         linkInfo->collider->setWorldTransform(
           model->body->getBaseWorldTransform());
       }
@@ -921,14 +921,14 @@ bool SDFFeatures::AddSdfCollision(
       if (isStatic)
       {
         world->world->addCollisionObject(
-          linkInfo->collider.get(),
+          linkInfo->collider,
           btBroadphaseProxy::StaticFilter,
           btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
       }
       else
       {
         world->world->addCollisionObject(
-          linkInfo->collider.get(),
+          linkInfo->collider,
           btBroadphaseProxy::DefaultFilter,
           btBroadphaseProxy::AllFilter);
       }

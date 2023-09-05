@@ -26,6 +26,7 @@
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
+#include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
 #include <LinearMath/btVector3.h>
@@ -116,10 +117,41 @@ struct LinkInfo
   std::optional<int> indexInModel;
   Identity model;
   Eigen::Isometry3d inertiaToLinkFrame;
-  std::unique_ptr<btMultiBodyLinkCollider> collider = nullptr;
+  btMultiBodyLinkCollider* collider = nullptr;
   std::unique_ptr<btCompoundShape> shape = nullptr;
   std::vector<std::size_t> collisionEntityIds = {};
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
+
+  LinkInfo(std::string _name,
+           const std::optional<int> &_indexInModel,
+           Identity _model,
+           Eigen::Isometry3d _inertiaToLinkFrame)
+  : name(std::move(_name)),
+    indexInModel(_indexInModel),
+    model(std::move(_model)),
+    inertiaToLinkFrame(std::move(_inertiaToLinkFrame))
+  {
+  }
+
+  ~LinkInfo() {
+    delete this->collider;
+  }
+
+  LinkInfo(LinkInfo&& other) noexcept
+    : name(std::move(other.name)),
+      indexInModel(other.indexInModel),
+      model(std::move(other.model)),
+      inertiaToLinkFrame(std::move(other.inertiaToLinkFrame)),
+      collider(other.collider),
+      shape(std::move(other.shape)),
+      collisionEntityIds(std::move(other.collisionEntityIds)),
+      collisionNameToEntityId(std::move(other.collisionNameToEntityId))
+  {
+  }
+
+  LinkInfo(const LinkInfo& other) = delete;
+  LinkInfo& operator=(const LinkInfo& other) = delete;
+  LinkInfo& operator=(LinkInfo&& other) noexcept = delete;
 };
 
 struct CollisionInfo
@@ -168,8 +200,10 @@ struct JointInfo
   btMultiBodyJointMotor* motor = nullptr;
   btScalar effort = 0;
 
+  std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
   std::shared_ptr<btMultiBodyJointFeedback> jointFeedback = nullptr;
+
 };
 
 inline btMatrix3x3 convertMat(const Eigen::Matrix3d& mat)
@@ -353,6 +387,33 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints[id] = joint;
 
     return this->GenerateIdentity(id, joint);
+  }
+
+  public: ~Base() override {
+    triangleMeshes.clear();
+    meshesGImpact.clear();
+
+    for (auto [k, joint] : joints)
+    {
+      delete joint->motor;
+    }
+
+    joints.clear();
+
+    for (auto [k, link] : links)
+    {
+        auto *model = this->ReferenceInterface<ModelInfo>(link->model);
+        auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+        if (link->collider != nullptr)
+        {
+          world->world->removeCollisionObject(link->collider);
+        }
+    }
+
+    collisions.clear();
+    links.clear();
+    models.clear();
+    worlds.clear();
   }
 
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;

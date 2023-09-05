@@ -229,9 +229,9 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   for (const auto linkID : model->linkEntityIds)
   {
     const auto &link = this->links.at(linkID);
-    if (link->collider)
+    if (link->collider != nullptr)
     {
-      world->world->removeCollisionObject(link->collider.get());
+      world->world->removeCollisionObject(link->collider);
       for (const auto shapeID : link->collisionEntityIds)
         this->collisions.erase(shapeID);
     }

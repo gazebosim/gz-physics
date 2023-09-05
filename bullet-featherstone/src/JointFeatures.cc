@@ -281,7 +281,7 @@ void JointFeatures::SetJointVelocityCommand(
     return;
   }
 
-  if (!jointInfo->motor)
+  if (jointInfo->motor == nullptr)
   {
     auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
     jointInfo->motor = new btMultiBodyJointMotor(
