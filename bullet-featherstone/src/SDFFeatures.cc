@@ -893,7 +893,8 @@ bool SDFFeatures::AddSdfCollision(
 
       linkInfo->collider->setCollisionShape(linkInfo->shape.get());
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
-      linkInfo->collider->setRollingFriction(static_cast<btScalar>(rollingFriction));
+      linkInfo->collider->setRollingFriction(
+        static_cast<btScalar>(rollingFriction));
       linkInfo->collider->setFriction(static_cast<btScalar>(mu));
       linkInfo->collider->setAnisotropicFriction(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),

@@ -17,6 +17,8 @@
 
 #include "FreeGroupFeatures.hh"
 
+#include <memory>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
