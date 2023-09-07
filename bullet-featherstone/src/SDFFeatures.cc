@@ -880,13 +880,13 @@ bool SDFFeatures::AddSdfCollision(
     if (linkInfo->indexInModel.has_value())
       linkIndexInModel = *linkInfo->indexInModel;
 
-    if (linkInfo->collider == nullptr)
+    if (!linkInfo->collider)
     {
       linkInfo->shape = std::make_unique<btCompoundShape>();
 
       // NOTE: Bullet does not appear to support different surface properties
       // for different shapes attached to the same link.
-      linkInfo->collider = new btMultiBodyLinkCollider(
+      linkInfo->collider = std::make_unique<btMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
 
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
@@ -902,7 +902,7 @@ bool SDFFeatures::AddSdfCollision(
       if (linkIndexInModel >= 0)
       {
         model->body->getLink(linkIndexInModel).m_collider =
-          linkInfo->collider;
+          linkInfo->collider.get();
         const auto p = model->body->localPosToWorld(
           linkIndexInModel, btVector3(0, 0, 0));
         const auto rot = model->body->localFrameToWorld(
@@ -911,7 +911,7 @@ bool SDFFeatures::AddSdfCollision(
       }
       else
       {
-        model->body->setBaseCollider(linkInfo->collider);
+        model->body->setBaseCollider(linkInfo->collider.get());
         linkInfo->collider->setWorldTransform(
           model->body->getBaseWorldTransform());
       }
@@ -921,14 +921,14 @@ bool SDFFeatures::AddSdfCollision(
       if (isStatic)
       {
         world->world->addCollisionObject(
-          linkInfo->collider,
+          linkInfo->collider.get(),
           btBroadphaseProxy::StaticFilter,
           btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
       }
       else
       {
         world->world->addCollisionObject(
-          linkInfo->collider,
+          linkInfo->collider.get(),
           btBroadphaseProxy::DefaultFilter,
           btBroadphaseProxy::AllFilter);
       }
