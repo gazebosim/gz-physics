@@ -66,7 +66,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
 
-  if(model != nullptr)
+  if (model != nullptr)
   {
     // Set angular velocity the each one of the joints of the model
     for (const auto& jointID : model->jointEntityIds)
@@ -74,13 +74,13 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
       auto jointInfo = this->joints[jointID];
       if (!jointInfo->motor)
       {
-        auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+        auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
         jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
           modelInfo->body.get(),
           std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
           0,
-          0,
-          jointInfo->effort);
+          static_cast<btScalar>(0),
+          static_cast<btScalar>(jointInfo->effort));
         auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
         world->world->addMultiBodyConstraint(jointInfo->motor.get());
       }
