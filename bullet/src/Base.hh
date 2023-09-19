@@ -238,6 +238,26 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(id, this->joints.at(id));
   }
 
+  public: ~Base() override
+  {
+    this->joints.clear();
+
+    for (auto [k, link] : links)
+    {
+        auto *model = this->ReferenceInterface<ModelInfo>(link->model);
+        auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+        if (link->link != nullptr)
+        {
+          world->world->removeCollisionObject(link->link.get());
+        }
+    }
+
+    this->collisions.clear();
+    this->links.clear();
+    this->models.clear();
+    this->worlds.clear();
+  }
+
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;
   public: using ModelInfoPtr = std::shared_ptr<ModelInfo>;
   public: using LinkInfoPtr  = std::shared_ptr<LinkInfo>;
