@@ -358,9 +358,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: ~Base() override {
-    triangleMeshes.clear();
-    meshesGImpact.clear();
-    joints.clear();
+    this->triangleMeshes.clear();
+    this->meshesGImpact.clear();
+    this->joints.clear();
 
     for (auto [k, link] : links)
     {
@@ -372,10 +372,10 @@ class Base : public Implements3d<FeatureList<Feature>>
         }
     }
 
-    collisions.clear();
-    links.clear();
-    models.clear();
-    worlds.clear();
+    this->collisions.clear();
+    this->links.clear();
+    this->models.clear();
+    this->worlds.clear();
   }
 
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;
@@ -390,8 +390,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
 
-  // Note, the order of triangleMeshes and meshesGImpact is important. Reversing
-  // the order causes segfaults on macOS during destruction.
   public: std::vector<std::unique_ptr<btTriangleMesh>> triangleMeshes;
   public: std::vector<std::unique_ptr<btGImpactMeshShape>> meshesGImpact;
 };
