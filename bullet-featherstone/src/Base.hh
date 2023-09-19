@@ -358,8 +358,11 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: ~Base() override {
-    this->triangleMeshes.clear();
+    // The order of destruction between meshesGImpact and triangleMeshes is
+    // important.
     this->meshesGImpact.clear();
+    this->triangleMeshes.clear();
+
     this->joints.clear();
 
     for (auto [k, link] : links)
