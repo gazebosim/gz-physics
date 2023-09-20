@@ -143,7 +143,10 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     // Check that invalid velocity commands don't cause collisions to fail
     for (std::size_t i = 0; i < 1000; ++i)
     {
+      // Silence console spam
+      gz::common::Console::SetVerbosity(0);
       joint->SetForce(0, std::numeric_limits<double>::quiet_NaN());
+      gz::common::Console::SetVerbosity(4);
       // expect the position of the pendulum to stay above ground
       world->Step(output, state, input);
       auto frameData = base_link->FrameDataRelativeToWorld();
@@ -178,7 +181,10 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     // Check that invalid velocity commands don't cause collisions to fail
     for (std::size_t i = 0; i < 1000; ++i)
     {
+      // Silence console spam
+      gz::common::Console::SetVerbosity(0);
       joint->SetVelocityCommand(0, std::numeric_limits<double>::quiet_NaN());
+      gz::common::Console::SetVerbosity(4);
       // expect the position of the pendulum to stay above ground
       world->Step(output, state, input);
       auto frameData = base_link->FrameDataRelativeToWorld();
