@@ -116,6 +116,7 @@ struct Structure
   const ::sdf::Joint *rootJoint;
   btScalar mass;
   btVector3 inertia;
+  math::Pose3d linkToPrincipalAxesPose;
 
   /// Is the root link fixed
   bool fixedBase;
@@ -126,6 +127,20 @@ struct Structure
   /// This contains all the links except the root link
   std::vector<const ::sdf::Link*> flatLinks;
 };
+
+/////////////////////////////////////////////////
+void extractInertial(
+    const math::Inertiald &_inertial,
+    btScalar &_mass,
+    btVector3 &_principalInertiaMoments,
+    math::Pose3d &_linkToPrincipalAxesPose)
+{
+  const auto &M = _inertial.MassMatrix();
+  _mass = static_cast<btScalar>(M.Mass());
+  _principalInertiaMoments = convertVec(M.PrincipalMoments());
+  _linkToPrincipalAxesPose = _inertial.Pose();
+  _linkToPrincipalAxesPose.Rot() *= M.PrincipalAxesOffset();
+}
 
 /////////////////////////////////////////////////
 std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
@@ -319,23 +334,14 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
     return std::nullopt;
   }
 
-  const auto &M = rootLink->Inertial().MassMatrix();
-  const auto mass = static_cast<btScalar>(M.Mass());
-  btVector3 inertia(convertVec(M.DiagonalMoments()));
-  for (const double &I : {M.Ixy(), M.Ixz(), M.Iyz()})
-  {
-    if (std::abs(I) > 1e-3)
-    {
-      gzerr << "The base link of the model is required to have a diagonal "
-            << "inertia matrix by gz-physics-bullet-featherstone, but the "
-            << "Model [" << _sdfModel.Name() << "] has a non-zero diagonal "
-            << "value: " << I << "\n";
-      return std::nullopt;
-    }
-  }
+  btScalar mass;
+  btVector3 inertia;
+  math::Pose3d linkToPrincipalAxesPose;
+  extractInertial(rootLink->Inertial(), mass, inertia, linkToPrincipalAxesPose);
 
   return Structure{
-    rootLink, rootJoint, mass, inertia, fixed, parentOf, flatLinks};
+    rootLink, rootJoint, mass, inertia, linkToPrincipalAxesPose, fixed,
+    parentOf, flatLinks};
 }
 
 /////////////////////////////////////////////////
@@ -353,7 +359,7 @@ Identity SDFFeatures::ConstructSdfModel(
   const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
 
   const auto rootInertialToLink =
-    gz::math::eigen3::convert(structure.rootLink->Inertial().Pose()).inverse();
+    gz::math::eigen3::convert(structure.linkToPrincipalAxesPose).inverse();
   const auto modelID = this->AddModel(
     _sdfModel.Name(), _worldID, rootInertialToLink,
     std::make_unique<btMultiBody>(
@@ -392,30 +398,18 @@ Identity SDFFeatures::ConstructSdfModel(
   for (int i = 0; i < static_cast<int>(structure.flatLinks.size()); ++i)
   {
     const auto *link = structure.flatLinks[static_cast<std::size_t>(i)];
+    btScalar mass;
+    btVector3 inertia;
+    math::Pose3d linkToPrincipalAxesPose;
+    extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
     const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
-          link->Inertial().Pose());
+          linkToPrincipalAxesPose);
 
     if (linkIDs.find(link) == linkIDs.end())
     {
       const auto linkID = this->AddLink(
         LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
       linkIDs.insert(std::make_pair(link, linkID));
-    }
-
-    const auto &M = link->Inertial().MassMatrix();
-    const btScalar mass = static_cast<btScalar>(M.Mass());
-    const auto inertia = btVector3(convertVec(M.DiagonalMoments()));
-
-    for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
-    {
-      if (std::abs(I) > 1e-3)
-      {
-        gzerr << "Links are required to have a diagonal inertia matrix in "
-              << "gz-physics-bullet-featherstone, but Link [" << link->Name()
-              << "] in Model [" << model->name << "] has a non-zero off "
-              << "diagonal value in its inertia matrix\n";
-        return this->GenerateInvalidId();
-      }
     }
 
     if (structure.parentOf.size())
@@ -617,25 +611,12 @@ Identity SDFFeatures::ConstructSdfModel(
 
   {
     const auto *link = structure.rootLink;
-    const auto &M = link->Inertial().MassMatrix();
-    const btScalar mass = static_cast<btScalar>(M.Mass());
-    const auto inertia = convertVec(M.DiagonalMoments());
-
-    for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
-    {
-      if (std::abs(I) > 1e-3)
-      {
-        gzerr << "Links are required to have a diagonal inertia matrix in "
-              << "gz-physics-bullet-featherstone, but Link [" << link->Name()
-              << "] in Model [" << model->name << "] has a non-zero off "
-              << "diagonal value in its inertia matrix\n";
-      }
-      else
-      {
-        model->body->setBaseMass(mass);
-        model->body->setBaseInertia(inertia);
-      }
-    }
+    btScalar mass;
+    btVector3 inertia;
+    math::Pose3d linkToPrincipalAxesPose;
+    extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
+    model->body->setBaseMass(mass);
+    model->body->setBaseInertia(inertia);
   }
 
   world->world->addMultiBody(model->body.get());
