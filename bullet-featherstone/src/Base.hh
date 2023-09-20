@@ -365,7 +365,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     this->joints.clear();
 
-    for (auto [k, link] : links)
+    for (const auto &[k, link] : links)
     {
         auto *model = this->ReferenceInterface<ModelInfo>(link->model);
         auto *world = this->ReferenceInterface<WorldInfo>(model->world);

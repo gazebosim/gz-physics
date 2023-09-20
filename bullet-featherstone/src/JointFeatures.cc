@@ -288,8 +288,8 @@ void JointFeatures::SetJointVelocityCommand(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
       0,
-      0,
-      jointInfo->effort);
+      static_cast<btScalar>(0),
+      static_cast<btScalar>(jointInfo->effort));
     auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
     world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
