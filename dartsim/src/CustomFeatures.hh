@@ -20,9 +20,8 @@
 
 #include <gz/physics/Implements.hh>
 
-#include <gz/physics/dartsim/World.hh>
-
 #include "Base.hh"
+#include "World.hh"
 
 namespace gz {
 namespace physics {
