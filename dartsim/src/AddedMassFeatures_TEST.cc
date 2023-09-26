@@ -32,13 +32,14 @@
 #include <gz/physics/sdf/ConstructLink.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
-#include <gz/physics/dartsim/World.hh>
 
 #include <sdf/Link.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+
+#include "World.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::GetEntities,

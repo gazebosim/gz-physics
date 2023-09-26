@@ -43,8 +43,6 @@
 #include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
-#include <gz/physics/dartsim/World.hh>
-
 #include <sdf/Collision.hh>
 #include <sdf/Joint.hh>
 #include <sdf/JointAxis.hh>
@@ -53,6 +51,8 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+
+#include "World.hh"
 
 using namespace gz;
 

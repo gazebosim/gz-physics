@@ -11,10 +11,6 @@ if (MSVC)
   target_compile_options(${features} INTERFACE "/permissive-")
 endif()
 
-install(
-  DIRECTORY include/
-  DESTINATION "${GZ_INCLUDE_INSTALL_DIR_FULL}")
-
 gz_get_libsources_and_unittests(sources test_sources)
 
 # TODO(MXG): Think about a gz_add_plugin(~) macro for gz-cmake
