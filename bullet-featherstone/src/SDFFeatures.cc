@@ -581,10 +581,12 @@ Identity SDFFeatures::ConstructSdfModel(
         model->body->getLink(i).m_jointMaxForce =
             static_cast<btScalar>(joint->Axis()->Effort());
         jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
-        btMultiBodyConstraint *con = new btMultiBodyJointLimitConstraint(
+
+        jointInfo->jointLimits =
+          std::make_shared<btMultiBodyJointLimitConstraint>(
             model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
             static_cast<btScalar>(joint->Axis()->Upper()));
-        world->world->addMultiBodyConstraint(con);
+        world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
       }
 
       jointInfo->jointFeedback = std::make_shared<btMultiBodyJointFeedback>();
@@ -884,20 +886,19 @@ bool SDFFeatures::AddSdfCollision(
 
       // NOTE: Bullet does not appear to support different surface properties
       // for different shapes attached to the same link.
-      auto collider = std::make_unique<btMultiBodyLinkCollider>(
+      linkInfo->collider = std::make_unique<btMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
 
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
 
-      collider->setCollisionShape(linkInfo->shape.get());
-      collider->setRestitution(static_cast<btScalar>(restitution));
-      collider->setRollingFriction(static_cast<btScalar>(rollingFriction));
-      collider->setFriction(static_cast<btScalar>(mu));
-      collider->setAnisotropicFriction(
+      linkInfo->collider->setCollisionShape(linkInfo->shape.get());
+      linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
+      linkInfo->collider->setRollingFriction(
+        static_cast<btScalar>(rollingFriction));
+      linkInfo->collider->setFriction(static_cast<btScalar>(mu));
+      linkInfo->collider->setAnisotropicFriction(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
-
-      linkInfo->collider = std::move(collider);
 
       if (linkIndexInModel >= 0)
       {
