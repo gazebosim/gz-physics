@@ -4,6 +4,14 @@
 
 ## Gazebo Physics 6.x
 
+### Gazebo Physics 6.5.1 (2023-09-26)
+
+1. joint_features test: reduce console spam
+    * [Pull request #543](https://github.com/gazebosim/gz-physics/pull/543)
+
+1. Cleaning up bullet memory use issues
+    * [Pull request #539](https://github.com/gazebosim/gz-physics/pull/539)
+
 ### Gazebo Physics 6.5.0 (2023-08-30)
 
 1. Add optional binary relocatability
@@ -227,6 +235,18 @@
 
 
 ## Gazebo Physics 5.x
+
+### Gazebo Physics 5.3.2 (2023-09-01)
+
+1. Fix a crash due to an invalid pointer
+    * [Pull request #486](https://github.com/gazebosim/gz-physics/pull/486)
+
+1. Infrastructure
+    * [Pull request #490](https://github.com/gazebosim/gz-physics/pull/490)
+    * [Pull request #488](https://github.com/gazebosim/gz-physics/pull/488)
+
+1. Rename COPYING to LICENSE
+    * [Pull request #487](https://github.com/gazebosim/gz-physics/pull/487)
 
 ### Gazebo Physics 5.3.1 (2023-02-16)
 
