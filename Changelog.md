@@ -2,6 +2,38 @@
 
 ### Gazebo Physics 7.x.x (202X-XX-XX)
 
+1. Make dartsim/World.hh header private
+    * [Pull request #551](https://github.com/gazebosim/gz-physics/pull/551)
+
+1. Documentation fixes
+    * [Pull request #542](https://github.com/gazebosim/gz-physics/pull/542)
+
+1. Mimic constraint feature using bullet-featherstone
+    * [Pull request #517](https://github.com/gazebosim/gz-physics/pull/517)
+
+1. ign -> gz
+    * [Pull request #524](https://github.com/gazebosim/gz-physics/pull/524)
+
+1. Reduce error to debug messsage for mesh construction
+    * [Pull request #531](https://github.com/gazebosim/gz-physics/pull/531)
+
+1. Infrastructure
+    * [Pull request #528](https://github.com/gazebosim/gz-physics/pull/528)
+    * [Pull request #553](https://github.com/gazebosim/gz-physics/pull/553)
+
+1. Bumps in harmonic : sdformat14
+    * [Pull request #526](https://github.com/gazebosim/gz-physics/pull/526)
+
+1. EllipsoidShape: use const references in API
+    * [Pull request #521](https://github.com/gazebosim/gz-physics/pull/521)
+
+1. Fixed Dartsim SDFFeatures_TEST
+    * [Pull request #405](https://github.com/gazebosim/gz-physics/pull/405)
+
+1. ⬆️  Bump main to 7.0.0~pre1
+    * [Pull request #399](https://github.com/gazebosim/gz-physics/pull/399)
+
+
 ## Gazebo Physics 6.x
 
 ### Gazebo Physics 6.5.1 (2023-09-26)
