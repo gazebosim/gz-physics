@@ -36,6 +36,7 @@
 
 #include "gz/physics/BoxShape.hh"
 #include <gz/physics/GetContacts.hh>
+#include "gz/physics/ContactProperties.hh"
 #include "gz/physics/CylinderShape.hh"
 #include "gz/physics/CapsuleShape.hh"
 #include "gz/physics/EllipsoidShape.hh"

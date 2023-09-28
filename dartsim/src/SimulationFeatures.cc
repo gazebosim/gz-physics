@@ -45,6 +45,20 @@
 // See https://github.com/dartsim/dart/pull/1626 and
 // https://github.com/gazebo-forks/dart/pull/22 for more info.
 #define DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
+// There's a sign difference between our fork and upstream dart in the
+// implementation of surface velocities. Here, we assume that 6.13 is the
+// upstream version. There's a potential that a user might update our fork to
+// version 6.13.0 or later. To support that case, we'll assume
+// DART_HAS_POSITIVE_CONTACT_SURFACE_MOTION_VELOCITY will be defined in the
+// fork. Note, if we simply check for
+// `DART_HAS_POSITIVE_CONTACT_SURFACE_MOTION_VELOCITY ` without the 6.13
+// condition above, we might break users that are building with our 6.10 fork
+// without updating or adding the
+// DART_HAS_POSITIVE_CONTACT_SURFACE_MOTION_VELOCITY define in their version of
+// dart.
+#ifndef DART_HAS_POSITIVE_CONTACT_SURFACE_MOTION_VELOCITY
+  #define DART_HAS_NEGATIVE_CONTACT_SURFACE_MOTION_VELOCITY
+#endif
 #endif
 
 namespace gz {
@@ -257,6 +271,17 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
   typedef FeaturePolicy3d P;
   typename F::ContactSurfaceParams<P> pGz;
 
+  auto convertMotionVelocity = [](Eigen::Vector3d _input) {
+#ifdef DART_HAS_NEGATIVE_CONTACT_SURFACE_MOTION_VELOCITY
+    // The y and z components correspond to the velocities in the first and
+    // second friction directions. These have to be inverted in the upstream
+    // version of DART. https://github.com/gazebo-forks/dart/pull/33
+    _input.y() = -_input.y();
+    _input.z() = -_input.z();
+#endif
+    return _input;
+  };
+
 #ifdef DART_HAS_UPSTREAM_FRICTION_VARIABLE_NAMES
   pGz.frictionCoeff = pDart.mPrimaryFrictionCoeff;
 #else
@@ -271,7 +296,8 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
   pGz.secondarySlipCompliance = pDart.mSecondarySlipCompliance;
   pGz.restitutionCoeff = pDart.mRestitutionCoeff;
   pGz.firstFrictionalDirection = pDart.mFirstFrictionalDirection;
-  pGz.contactSurfaceMotionVelocity = pDart.mContactSurfaceMotionVelocity;
+  pGz.contactSurfaceMotionVelocity =
+      convertMotionVelocity(pDart.mContactSurfaceMotionVelocity);
 
   auto contactInternal = this->convertContact(_contact);
   if (contactInternal)
@@ -304,8 +330,10 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
     if (pGz.firstFrictionalDirection)
       pDart.mFirstFrictionalDirection = pGz.firstFrictionalDirection.value();
     if (pGz.contactSurfaceMotionVelocity)
+    {
       pDart.mContactSurfaceMotionVelocity =
-        pGz.contactSurfaceMotionVelocity.value();
+          convertMotionVelocity(pGz.contactSurfaceMotionVelocity.value());
+    }
 
     static bool warnedRollingFrictionCoeff = false;
     if (!warnedRollingFrictionCoeff && pGz.rollingFrictionCoeff)

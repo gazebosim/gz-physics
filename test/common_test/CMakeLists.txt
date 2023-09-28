@@ -67,6 +67,10 @@ foreach(test ${tests})
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
   )
 
+  if (DART_HAS_CONTACT_SURFACE_HEADER)
+    target_compile_definitions(${test_executable} PRIVATE DART_HAS_CONTACT_SURFACE)
+  endif()
+
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
 
   configure_common_test("bullet" ${test_executable})
