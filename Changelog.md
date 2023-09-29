@@ -1,6 +1,9 @@
 ## Gazebo Physics 7.x
 
-### Gazebo Physics 7.x.x (202X-XX-XX)
+### Gazebo Physics 7.0.0 (2023-09-29)
+
+1. dartsim: Fix sign convention error with contact surface motion velocities
+    * [Pull request #556](https://github.com/gazebosim/gz-physics/pull/556)
 
 1. Make dartsim/World.hh header private
     * [Pull request #551](https://github.com/gazebosim/gz-physics/pull/551)
