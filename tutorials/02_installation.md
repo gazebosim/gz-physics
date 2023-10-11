@@ -53,7 +53,7 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
   ```
   git clone https://github.com/gazebosim/gz-physics -b gz-physics<#>
   ```
-  Be sure to replace `<#>` with a number value, such as `5` or `6`, depending on which version you need.
+  Be sure to replace `<#>` with a number value, such as `6` or `7`, depending on which version you need.
   From version `6` onward, you should use `gz-physics<#>`; for lower versions, `ign-physics<#>`.
 
 3. Configure and build
@@ -106,9 +106,9 @@ Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on w
 
 2. Clone the repository
   ```
-  git clone https://github.com/gazebosim/gz-physics -b ign-physics<#>
+  git clone https://github.com/gazebosim/gz-physics -b gz-physics<#>
   ```
-Be sure to replace `<#>` with a number value, such as `1` or `2`, depending on which version you need.
+Be sure to replace `<#>` with a number value, such as `6` or `7`, depending on which version you need.
 
 3. Configure and build
   ```
@@ -199,7 +199,7 @@ You can also generate the documentation from a clone of this repository by follo
 
 2. Clone the repository
   ```
-  git clone https://github.com/gazebosim/gz-physics -b ign-physics<#>
+  git clone https://github.com/gazebosim/gz-physics -b gz-physics<#>
   ```
 
 3. Configure and build the documentation.

@@ -1,8 +1,51 @@
 ## Gazebo Physics 7.x
 
-### Gazebo Physics 7.x.x (202X-XX-XX)
+### Gazebo Physics 7.0.0 (2023-09-29)
+
+1. dartsim: Fix sign convention error with contact surface motion velocities
+    * [Pull request #556](https://github.com/gazebosim/gz-physics/pull/556)
+
+1. Make dartsim/World.hh header private
+    * [Pull request #551](https://github.com/gazebosim/gz-physics/pull/551)
+
+1. Documentation fixes
+    * [Pull request #542](https://github.com/gazebosim/gz-physics/pull/542)
+
+1. Mimic constraint feature using bullet-featherstone
+    * [Pull request #517](https://github.com/gazebosim/gz-physics/pull/517)
+
+1. ign -> gz
+    * [Pull request #524](https://github.com/gazebosim/gz-physics/pull/524)
+
+1. Reduce error to debug messsage for mesh construction
+    * [Pull request #531](https://github.com/gazebosim/gz-physics/pull/531)
+
+1. Infrastructure
+    * [Pull request #528](https://github.com/gazebosim/gz-physics/pull/528)
+    * [Pull request #553](https://github.com/gazebosim/gz-physics/pull/553)
+
+1. Bumps in harmonic : sdformat14
+    * [Pull request #526](https://github.com/gazebosim/gz-physics/pull/526)
+
+1. EllipsoidShape: use const references in API
+    * [Pull request #521](https://github.com/gazebosim/gz-physics/pull/521)
+
+1. Fixed Dartsim SDFFeatures_TEST
+    * [Pull request #405](https://github.com/gazebosim/gz-physics/pull/405)
+
+1. ⬆️  Bump main to 7.0.0~pre1
+    * [Pull request #399](https://github.com/gazebosim/gz-physics/pull/399)
+
 
 ## Gazebo Physics 6.x
+
+### Gazebo Physics 6.5.1 (2023-09-26)
+
+1. joint_features test: reduce console spam
+    * [Pull request #543](https://github.com/gazebosim/gz-physics/pull/543)
+
+1. Cleaning up bullet memory use issues
+    * [Pull request #539](https://github.com/gazebosim/gz-physics/pull/539)
 
 ### Gazebo Physics 6.5.0 (2023-08-30)
 
@@ -227,6 +270,18 @@
 
 
 ## Gazebo Physics 5.x
+
+### Gazebo Physics 5.3.2 (2023-09-01)
+
+1. Fix a crash due to an invalid pointer
+    * [Pull request #486](https://github.com/gazebosim/gz-physics/pull/486)
+
+1. Infrastructure
+    * [Pull request #490](https://github.com/gazebosim/gz-physics/pull/490)
+    * [Pull request #488](https://github.com/gazebosim/gz-physics/pull/488)
+
+1. Rename COPYING to LICENSE
+    * [Pull request #487](https://github.com/gazebosim/gz-physics/pull/487)
 
 ### Gazebo Physics 5.3.1 (2023-02-16)
 
