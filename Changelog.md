@@ -1,3 +1,7 @@
+## Gazebo Physics 8.x
+
+### Gazebo Physics 8.0.0 (2023-XX-XX)
+
 ## Gazebo Physics 7.x
 
 ### Gazebo Physics 7.0.0 (2023-09-29)

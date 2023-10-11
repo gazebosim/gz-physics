@@ -35,8 +35,8 @@ cars depending on physics engines and visualize the collision concept.
 To run the demo world, download the SDFormat file by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-physics7/examples/worlds/diff_drive.sdf -P ~
-wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-physics7/examples/worlds/velocity_control.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-physics8/examples/worlds/diff_drive.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-physics8/examples/worlds/velocity_control.sdf -P ~
 ```
 
 Then run the simulation:
