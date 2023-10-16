@@ -11,6 +11,6 @@ libgz-common6-dev
 libgz-math7-dev
 libgz-math7-eigen3-dev
 libgz-plugin2-dev
-libgz-utils2-cli-dev
-libgz-utils2-dev
+libgz-utils3-cli-dev
+libgz-utils3-dev
 libsdformat15-dev
