@@ -26,7 +26,7 @@ For a comprehensive tutorial for constructing your robot model from SDFormat, re
 In this tutorial, we will show how to
 manipulate and visualize some physics aspects using demos on Gazebo.
 
-All demos can be found in [gz-sim/examples/worlds](https://github.com/gazebosim/gz-sim/blob/gz-sim8/examples/worlds/) folder.
+All demos can be found in [gz-sim/examples/worlds](https://github.com/gazebosim/gz-sim/blob/gz-sim9/examples/worlds/) folder.
 
 ### Differential drive
 
@@ -100,7 +100,7 @@ The Lift Drag demo world shows how joint force, torque, and pressure are support
 Gazebo Physics. To run the demo, download by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim8/examples/worlds/lift_drag.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim9/examples/worlds/lift_drag.sdf -P ~
 ```
 
 Run demo in Gazebo by:
@@ -142,7 +142,7 @@ contains the following three models:
 To run the demo, download the Buoyancy demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim8/examples/worlds/buoyancy.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim9/examples/worlds/buoyancy.sdf -P ~
 ```
 
 Run demo on Gazebo by:
@@ -167,7 +167,7 @@ movement by showing free swing of the pendulum. Download the
 Pendulum demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim8/examples/worlds/video_record_dbl_pendulum.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim9/examples/worlds/video_record_dbl_pendulum.sdf -P ~
 ```
 
 and start the Pendulum demo on Gazebo by:
@@ -195,7 +195,7 @@ inertia to control object velocity.
 Download the Multicopter demo to your home folder by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim8/examples/worlds/multicopter_velocity_control.sdf -P ~
+wget https://raw.githubusercontent.com/gazebosim/gz-sim/gz-sim9/examples/worlds/multicopter_velocity_control.sdf -P ~
 ```
 
 and start the Multicopter demo on Gazebo by:
@@ -224,4 +224,4 @@ Do the same for the `X4` multicopter. After pressing the Play button, you will s
 both of the multicopters will ascend, this demonstrates how the physics engine
 utilizes model kinematics and dynamics to support simulating complex model and
 its controller. For more details about the multicopter controller, please see
-[MulticopterVelocityControl.cc](https://github.com/gazebosim/gz-sim/blob/gz-sim8/src/systems/multicopter_control/MulticopterVelocityControl.cc).
+[MulticopterVelocityControl.cc](https://github.com/gazebosim/gz-sim/blob/gz-sim9/src/systems/multicopter_control/MulticopterVelocityControl.cc).

@@ -8,7 +8,7 @@ project(gz-physics8 VERSION 8.0.0)
 #============================================================================
 # Find gz-cmake
 #============================================================================
-find_package(gz-cmake3 REQUIRED)
+find_package(gz-cmake4 REQUIRED)
 
 #============================================================================
 # Configure the project
@@ -37,10 +37,10 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find gz-common
-gz_find_package(gz-common5
+gz_find_package(gz-common6
   COMPONENTS geospatial graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
-set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
+set(GZ_COMMON_VER ${gz-common6_VERSION_MAJOR})
 
 #--------------------------------------
 # Find gz-math
@@ -63,7 +63,7 @@ gz_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-gz_find_package(sdformat14
+gz_find_package(sdformat15
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
