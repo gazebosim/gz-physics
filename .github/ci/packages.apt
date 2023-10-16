@@ -10,7 +10,7 @@ libgz-cmake4-dev
 libgz-common6-dev
 libgz-math8-dev
 libgz-math8-eigen3-dev
-libgz-plugin2-dev
+libgz-plugin3-dev
 libgz-utils3-cli-dev
 libgz-utils3-dev
 libsdformat15-dev
