@@ -1,5 +1,13 @@
 ## Gazebo Physics 6.x
 
+### Gazebo Physics 6.5.1 (2023-09-26)
+
+1. joint_features test: reduce console spam
+    * [Pull request #543](https://github.com/gazebosim/gz-physics/pull/543)
+
+1. Cleaning up bullet memory use issues
+    * [Pull request #539](https://github.com/gazebosim/gz-physics/pull/539)
+
 ### Gazebo Physics 6.5.0 (2023-08-30)
 
 1. Add optional binary relocatability

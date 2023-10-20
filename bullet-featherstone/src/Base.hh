@@ -26,6 +26,7 @@
 #include <BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointFeedback.h>
 #include <BulletDynamics/Featherstone/btMultiBodyJointMotor.h>
+#include <BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h>
 #include <BulletDynamics/Featherstone/btMultiBodyLinkCollider.h>
 #include <BulletDynamics/Featherstone/btMultiBodyFixedConstraint.h>
 #include <LinearMath/btVector3.h>
@@ -165,9 +166,10 @@ struct JointInfo
   Identity model;
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
-  btMultiBodyJointMotor* motor = nullptr;
   btScalar effort = 0;
 
+  std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
+  std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
   std::shared_ptr<btMultiBodyJointFeedback> jointFeedback = nullptr;
 };
@@ -355,6 +357,30 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(id, joint);
   }
 
+  public: ~Base() override {
+    // The order of destruction between meshesGImpact and triangleMeshes is
+    // important.
+    this->meshesGImpact.clear();
+    this->triangleMeshes.clear();
+
+    this->joints.clear();
+
+    for (const auto &[k, link] : links)
+    {
+        auto *model = this->ReferenceInterface<ModelInfo>(link->model);
+        auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+        if (link->collider != nullptr)
+        {
+          world->world->removeCollisionObject(link->collider.get());
+        }
+    }
+
+    this->collisions.clear();
+    this->links.clear();
+    this->models.clear();
+    this->worlds.clear();
+  }
+
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;
   public: using ModelInfoPtr = std::shared_ptr<ModelInfo>;
   public: using LinkInfoPtr  = std::shared_ptr<LinkInfo>;
@@ -367,8 +393,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::unordered_map<std::size_t, CollisionInfoPtr> collisions;
   public: std::unordered_map<std::size_t, JointInfoPtr> joints;
 
-  // Note, the order of triangleMeshes and meshesGImpact is important. Reversing
-  // the order causes segfaults on macOS during destruction.
   public: std::vector<std::unique_ptr<btTriangleMesh>> triangleMeshes;
   public: std::vector<std::unique_ptr<btGImpactMeshShape>> meshesGImpact;
 };
