@@ -39,8 +39,10 @@
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
 
-#include <sdf/Root.hh>
+#include <sdf/Link.hh>
 #include <sdf/Model.hh>
+#include <sdf/Root.hh>
+#include <sdf/World.hh>
 
 template <class T>
 class LinkFeaturesTest:
@@ -83,10 +85,10 @@ struct LinkFeaturesList : gz::physics::FeatureList<
     gz::physics::Gravity,
     gz::physics::sdf::ConstructSdfWorld,
     gz::physics::sdf::ConstructSdfModel,
-    gz::physics::sdf::ConstructSdfLink,
-    gz::physics::GetEntities,
-    gz::physics::GetLinkBoundingBox,
-    gz::physics::GetModelBoundingBox
+    gz::physics::GetEngineInfo,
+    gz::physics::GetWorldFromEngine,
+    gz::physics::GetModelFromWorld,
+    gz::physics::GetLinkFromModel
 > { };
 
 using LinkFeaturesTestTypes =
@@ -112,9 +114,8 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     const std::string jointName{"upper_joint"};
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-    EXPECT_NE(nullptr, world);
+    ASSERT_NE(nullptr, world);
 
-    EXPECT_NE(nullptr, world);
     world->SetGravity(Eigen::Vector3d::Zero());
 
     AssertVectorApprox vectorPredicateGravity(1e-10);
@@ -125,7 +126,6 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     sdf::Model modelSDF;
     modelSDF.SetName("sphere");
     modelSDF.SetRawPose(gz::math::Pose3d(0, 0, 2, 0, 0, GZ_PI));
-    auto model = world->ConstructModel(modelSDF);
 
     const double mass = 1.0;
     gz::math::MassMatrix3d massMatrix{
@@ -136,7 +136,10 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     sdf::Link linkSDF;
     linkSDF.SetName("sphere_link");
     linkSDF.SetInertial({massMatrix, gz::math::Pose3d::Zero});
-    auto link = model->ConstructLink(linkSDF);
+
+    modelSDF.AddLink(linkSDF);
+    auto model = world->ConstructModel(modelSDF);
+    auto link = model->GetLink(0);
 
     gz::physics::ForwardStep::Input input;
     gz::physics::ForwardStep::State state;
@@ -292,14 +295,28 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
   }
 }
 
-TYPED_TEST(LinkFeaturesTest, AxisAlignedBoundingBox)
+template <class T>
+class LinkBoundingBoxFeaturesTest : public LinkFeaturesTest<T>{};
+
+struct LinkBoundingBoxFeaturesList : gz::physics::FeatureList<
+    LinkFeaturesList,
+    gz::physics::GetLinkBoundingBox,
+    gz::physics::GetModelBoundingBox
+> { };
+
+using LinkBoundingBoxFeaturesTestTypes =
+  ::testing::Types<LinkBoundingBoxFeaturesList>;
+TYPED_TEST_SUITE(LinkBoundingBoxFeaturesTest,
+                 LinkBoundingBoxFeaturesTestTypes);
+
+TYPED_TEST(LinkBoundingBoxFeaturesTest, AxisAlignedBoundingBox)
 {
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -343,14 +360,14 @@ TYPED_TEST(LinkFeaturesTest, AxisAlignedBoundingBox)
   }
 }
 
-TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
+TYPED_TEST(LinkBoundingBoxFeaturesTest, ModelAxisAlignedBoundingBox)
 {
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
