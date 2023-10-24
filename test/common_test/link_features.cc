@@ -295,6 +295,177 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
   }
 }
 
+TYPED_TEST(LinkFeaturesTest, AngularMomentum)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors =
+      root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "angular_momentum.sdf"));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    const std::vector<std::string> modelNames{
+      "box010409_no_rotations",
+      "box010409_no_rotations_auto",
+      "box010409_model_yaw_90deg",
+      "box010409_link_yaw_90deg",
+      "box010409_collision_yaw_90deg",
+      "box010409_inertial_yaw_90deg",
+      "box010409_model_and_link_yaw_45deg",
+      //"box010409_model_and_collision_yaw_45deg",
+      "box010409_model_and_inertial_yaw_45deg"};//,
+      //"box010409_model_and_inertia_values_yaw_45deg"};
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // Gravity should already be disabled
+    AssertVectorApprox vectorPredicateGravity(1e-10);
+    EXPECT_PRED_FORMAT2(vectorPredicateGravity, Eigen::Vector3d::Zero(),
+      world->GetGravity());
+
+    // Get initial inertial properties
+    gz::math::Inertiald initialBoxInertialExpressedInWorld;
+    const sdf::World *worldSdf = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, worldSdf);
+    {
+      const sdf::Model *modelSdf = worldSdf->ModelByName(modelNames[0]);
+      ASSERT_NE(nullptr, modelSdf);
+      const sdf::Link *linkSdf = modelSdf->LinkByIndex(0);
+      ASSERT_NE(nullptr, linkSdf);
+      linkSdf->ResolveInertial(initialBoxInertialExpressedInWorld);
+      const auto &massMatrix = initialBoxInertialExpressedInWorld.MassMatrix();
+      EXPECT_DOUBLE_EQ(9.0, massMatrix.Mass());
+      EXPECT_DOUBLE_EQ(0.7275, massMatrix.DiagonalMoments().X());
+      EXPECT_DOUBLE_EQ(0.6150, massMatrix.DiagonalMoments().Y());
+      EXPECT_DOUBLE_EQ(0.1275, massMatrix.DiagonalMoments().Z());
+    }
+    const gz::math::Matrix3d initialMoi =
+        initialBoxInertialExpressedInWorld.MassMatrix().Moi();
+    EXPECT_DOUBLE_EQ(0.7275, initialMoi(0, 0));
+    EXPECT_DOUBLE_EQ(0.6150, initialMoi(1, 1));
+    EXPECT_DOUBLE_EQ(0.1275, initialMoi(2, 2));
+
+    // Apply an angular impulse to each model
+    const Eigen::Vector3d torque{1, 500, 1};
+    for (const std::string &modelName : modelNames)
+    {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+      auto link = model->GetLink("link");
+      ASSERT_NE(nullptr, link);
+      link->AddExternalTorque(
+          gz::physics::RelativeTorque3d(gz::physics::FrameID::World(), torque));
+
+      // Expect no initial velocity
+      AssertVectorApprox vectorPredicate(1e-12);
+      const auto frameData = link->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                          frameData.linearVelocity);
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                          frameData.angularVelocity);
+    }
+
+    // 1 ms time step
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    const double dt = 0.001;
+    auto dur = std::chrono::duration<double>(dt);
+    input.Get<std::chrono::steady_clock::duration>() =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
+
+    // Take one step
+    world->Step(output, state, input);
+
+    // Check initial angular momentum
+    const Eigen::Vector3d expectedAngularVelocity{
+      dt * gz::math::eigen3::convert(initialMoi.Inverse()) * torque};
+    const Eigen::Vector3d expectedAngularMomentum{dt * torque};
+    for (const std::string &modelName : modelNames)
+    {
+      auto model = world->GetModel(modelName);
+      ASSERT_NE(nullptr, model);
+      auto link = model->GetLink("link");
+      ASSERT_NE(nullptr, link);
+      const auto frameData = link->FrameDataRelativeToWorld();
+      AssertVectorApprox velocityPredicate(1e-12);
+      // expect no linear velocity
+      EXPECT_PRED_FORMAT2(velocityPredicate, Eigen::Vector3d::Zero(),
+                          frameData.linearVelocity);
+      // expect initial angular velocity based on impulse
+      EXPECT_PRED_FORMAT2(velocityPredicate, expectedAngularVelocity,
+                          frameData.angularVelocity);
+      // compute rotation matrix for link world pose rotation
+      const gz::math::Pose3d linkWorldPose =
+        gz::math::eigen3::convert(frameData.pose);
+      const gz::math::Matrix3d R{linkWorldPose.Rot()};
+      // compute moment of inertia matrix relative to world frame
+      gz::math::Inertiald inertial;
+      const sdf::Model *modelSdf = worldSdf->ModelByName(modelName);
+      ASSERT_NE(nullptr, modelSdf);
+      const sdf::Link *linkSdf = modelSdf->LinkByIndex(0);
+      ASSERT_NE(nullptr, linkSdf);
+      linkSdf->ResolveInertial(inertial);
+      const gz::math::Matrix3d worldMoi = R * inertial.Moi() * R.Transposed();
+      // compute angular momentum
+      AssertVectorApprox momentumPredicate(5e-6);
+      EXPECT_PRED_FORMAT2(momentumPredicate, expectedAngularMomentum,
+                          gz::math::eigen3::convert(worldMoi) *
+                            frameData.angularVelocity) << modelName << '\n'
+                                                       << inertial.Moi() << '\n'
+                                                       << R << '\n'
+                                                       << worldMoi;
+    }
+
+    // // Step 10 seconds
+    // for (int i = 0; i < 10000; ++i)
+    // {
+    //   world->Step(output, state, input);
+    // }
+
+    // for (const std::string &modelName : modelNames)
+    // {
+    //   auto model = world->GetModel(modelName);
+    //   ASSERT_NE(nullptr, model);
+    //   auto link = model->GetLink("link");
+    //   ASSERT_NE(nullptr, link);
+    //   AssertVectorApprox vectorPredicate(1e-12);
+    //   const auto frameData = link->FrameDataRelativeToWorld();
+    //   // expect no linear velocity
+    //   EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+    //                       frameData.linearVelocity);
+    //   // expect initial angular velocity based on impulse
+    //   EXPECT_PRED_FORMAT2(vectorPredicate, expectedAngularVelocity,
+    //                       frameData.angularVelocity) << modelName;
+    //   // compute rotation matrix for link world pose rotation
+    //   const gz::math::Pose3d linkWorldPose =
+    //     gz::math::eigen3::convert(frameData.pose);
+    //   const gz::math::Matrix3d R{linkWorldPose.Rot()};
+    //   // compute moment of inertia matrix relative to world frame
+    //   gz::math::Inertiald inertial;
+    //   const sdf::Model *modelSdf = worldSdf->ModelByName(modelName);
+    //   ASSERT_NE(nullptr, modelSdf);
+    //   const sdf::Link *linkSdf = modelSdf->LinkByIndex(0);
+    //   ASSERT_NE(nullptr, linkSdf);
+    //   linkSdf->ResolveInertial(inertial);
+    //   const gz::math::Matrix3d worldMoi = R.Transposed() * inertial.Moi() * R;
+    //   // compute angular momentum
+    //   EXPECT_PRED_FORMAT2(vectorPredicate, expectedAngularMomentum,
+    //                       gz::math::eigen3::convert(worldMoi) *
+    //                         frameData.angularVelocity) << modelName << '\n'
+    //                                                    << inertial.Moi() << '\n'
+    //                                                    << R;
+    // }
+  }
+}
+
 template <class T>
 class LinkBoundingBoxFeaturesTest : public LinkFeaturesTest<T>{};
 
