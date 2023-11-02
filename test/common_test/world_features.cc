@@ -77,13 +77,10 @@ using GravityFeatures = gz::physics::FeatureList<
   gz::physics::ForwardStep
 >;
 
-using GravityFeaturesTestTypes =
-  ::testing::Types<GravityFeatures>;
-TYPED_TEST_SUITE(WorldFeaturesTest,
-                 GravityFeatures,);
+using WorldFeaturesTestGravity = WorldFeaturesTest<GravityFeatures>;
 
 /////////////////////////////////////////////////
-TYPED_TEST(WorldFeaturesTest, GravityFeatures)
+TEST_F(WorldFeaturesTestGravity, GravityFeatures)
 {
   for (const std::string &name : this->pluginNames)
   {
@@ -182,19 +179,18 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
   }
 }
 
-struct WorldModelFeatureList
-    : gz::physics::FeatureList<GravityFeatures, gz::physics::WorldModelFeature,
-                               gz::physics::RemoveEntities,
-                               gz::physics::GetNestedModelFromModel,
-                               gz::physics::sdf::ConstructSdfLink,
-                               gz::physics::sdf::ConstructSdfJoint,
-                               gz::physics::sdf::ConstructSdfModel,
-                               gz::physics::sdf::ConstructSdfNestedModel,
-                               gz::physics::ConstructEmptyLinkFeature,
-                               gz::physics::ConstructEmptyNestedModelFeature
-                               >
-{
-};
+using WorldModelFeatureList = gz::physics::FeatureList<
+  GravityFeatures,
+  gz::physics::WorldModelFeature,
+  gz::physics::RemoveEntities,
+  gz::physics::GetNestedModelFromModel,
+  gz::physics::sdf::ConstructSdfLink,
+  gz::physics::sdf::ConstructSdfJoint,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfNestedModel,
+  gz::physics::ConstructEmptyLinkFeature,
+  gz::physics::ConstructEmptyNestedModelFeature
+>;
 
 class WorldModelTest : public WorldFeaturesTest<WorldModelFeatureList>
 {
