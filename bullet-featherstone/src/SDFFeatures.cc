@@ -135,6 +135,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
   const ::sdf::Joint *rootJoint = nullptr;
   bool fixed = false;
   const std::string &rootModelName = _sdfModel.Name();
+  // a map of parent link to a vector of its child links
   std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>>
     linkTree;
 
@@ -219,10 +220,14 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
                 << rootModelName << "] has multiple parent joints. That is not "
                 << "supported by the gz-physics-bullet-featherstone plugin.\n";
         }
-        if (parent != nullptr) {
-          if (linkTree.count(parent) == 0) {
+        if (parent != nullptr)
+        {
+          if (linkTree.count(parent) == 0)
+          {
             linkTree[parent] = {child};
-          } else {
+          }
+          else
+          {
             linkTree[parent].push_back(child);
           }
         }
@@ -240,6 +245,8 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       return std::nullopt;
   }
 
+  // Find root link in model and verify that there is only one root link in
+  // the model. Returns false if more than one root link is found
   const auto findRootLink =
       [&rootLink, &parentOf, &rootModelName](const ::sdf::Model &model) -> bool
     {
@@ -266,16 +273,21 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       return true;
     };
 
-  if (rootLink == nullptr && !findRootLink(_sdfModel)) {
+  if (rootLink == nullptr && !findRootLink(_sdfModel))
+  {
+    // No root link was found in this model
     return std::nullopt;
   }
 
+  // find root link in nested models if one was not already found
   for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
   {
-    if (rootLink != nullptr) {
+    if (rootLink != nullptr)
+    {
       break;
     }
-    if (!findRootLink(*_sdfModel.ModelByIndex(i))) {
+    if (!findRootLink(*_sdfModel.ModelByIndex(i)))
+    {
       return std::nullopt;
     }
   }
@@ -295,12 +307,16 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
   // ordering is necessary.
   std::vector<const ::sdf::Link*> flatLinks;
   std::function<void(const ::sdf::Link *)> flattenLinkTree =
-      [&](const ::sdf::Link *link) {
-    if (link != rootLink) {
+      [&](const ::sdf::Link *link)
+  {
+    if (link != rootLink)
+    {
       flatLinks.push_back(link);
     }
-    if (auto it = linkTree.find(link); it != linkTree.end()) {
-      for (const auto &child_link : it->second) {
+    if (auto it = linkTree.find(link); it != linkTree.end())
+    {
+      for (const auto &child_link : it->second)
+      {
         flattenLinkTree(child_link);
       }
     }
