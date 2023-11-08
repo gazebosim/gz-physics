@@ -67,7 +67,7 @@ class WorldFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-using GravityFeatures = gz::physics::FeatureList<
+struct GravityFeatures : gz::physics::FeatureList<
   gz::physics::GetEngineInfo,
   gz::physics::Gravity,
   gz::physics::sdf::ConstructSdfWorld,
@@ -75,7 +75,7 @@ using GravityFeatures = gz::physics::FeatureList<
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
   gz::physics::ForwardStep
->;
+> { };
 
 using WorldFeaturesTestGravity = WorldFeaturesTest<GravityFeatures>;
 
@@ -179,13 +179,13 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
   }
 }
 
-using ConstructModelFeatures = gz::physics::FeatureList<
+struct ConstructModelFeatures : gz::physics::FeatureList<
   gz::physics::GetEngineInfo,
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::GetModelFromWorld,
   gz::physics::ForwardStep
->;
+> { };
 
 using WorldFeaturesTestConstructModel =
   WorldFeaturesTest<ConstructModelFeatures>;
@@ -206,21 +206,21 @@ TEST_F(WorldFeaturesTestConstructModel, ConstructModelUnsortedLinks)
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-      gz::common::joinPaths(TEST_WORLD_DIR, "world_unsorted_links.world"));
+      gz::common::joinPaths(TEST_WORLD_DIR, "world_unsorted_links.sdf"));
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
-    EXPECT_NE(nullptr, sdfWorld);
+    ASSERT_NE(nullptr, sdfWorld);
 
     // Per https://github.com/gazebosim/gz-physics/pull/562, there is a
     // seg-fault in the bullet-featherstone implementation of ConstructSdfModel
     // (called by ConstructSdfWorld). So loading the world successfully
     // is enough for this test.
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto world = engine->ConstructWorld(*sdfWorld);
     EXPECT_NE(nullptr, world);
   }
 }
 
-using WorldModelFeatureList = gz::physics::FeatureList<
+struct WorldModelFeatureList : gz::physics::FeatureList<
   GravityFeatures,
   gz::physics::WorldModelFeature,
   gz::physics::RemoveEntities,
@@ -231,7 +231,7 @@ using WorldModelFeatureList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfNestedModel,
   gz::physics::ConstructEmptyLinkFeature,
   gz::physics::ConstructEmptyNestedModelFeature
->;
+> { };
 
 class WorldModelTest : public WorldFeaturesTest<WorldModelFeatureList>
 {

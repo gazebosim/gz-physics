@@ -222,14 +222,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
         }
         if (parent != nullptr)
         {
-          if (linkTree.count(parent) == 0)
-          {
-            linkTree[parent] = {child};
-          }
-          else
-          {
-            linkTree[parent].push_back(child);
-          }
+          linkTree[parent].push_back(child);
         }
       }
 

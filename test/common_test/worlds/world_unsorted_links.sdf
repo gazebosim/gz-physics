@@ -1,10 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
   <world name="default">
-    <plugin
-      filename="gz-sim-physics-system"
-      name="gz::sim::systems::v0::Physics">
-    </plugin>
     <model name="unsorted_links">
       <link name="child_linkC" />
       <link name="parent_link" />
