@@ -88,8 +88,10 @@ struct ModelInfo
 
   std::vector<std::size_t> linkEntityIds;
   std::vector<std::size_t> jointEntityIds;
+  std::vector<std::size_t> nestedModelEntityIds;
   std::unordered_map<std::string, std::size_t> linkNameToEntityId;
   std::unordered_map<std::string, std::size_t> jointNameToEntityId;
+  std::unordered_map<std::string, std::size_t> nestedModelNameToEntityId;
 
   /// These are joints that connect this model to other models, e.g. fixed
   /// constraints.
@@ -292,6 +294,25 @@ class Base : public Implements3d<FeatureList<Feature>>
     world->modelNameToEntityId[model->name] = id;
     model->indexInWorld = world->nextModelIndex++;
     world->modelIndexToEntityId[model->indexInWorld] = id;
+    return this->GenerateIdentity(id, model);
+  }
+
+  public: inline Identity AddNestedModel(
+    std::string _name,
+    Identity _parentID,
+    Identity _worldID,
+    Eigen::Isometry3d _baseInertialToLinkFrame,
+    std::unique_ptr<btMultiBody> _body)
+  {
+    const auto id = this->GetNextEntity();
+    auto model = std::make_shared<ModelInfo>(
+      std::move(_name), std::move(_worldID),
+      std::move(_baseInertialToLinkFrame), std::move(_body));
+
+    this->models[id] = model;
+    const auto parentModel = this->models.at(_parentID);
+    parentModel->nestedModelEntityIds.push_back(id);
+    parentModel->nestedModelNameToEntityId[model->name] = id;
     return this->GenerateIdentity(id, model);
   }
 

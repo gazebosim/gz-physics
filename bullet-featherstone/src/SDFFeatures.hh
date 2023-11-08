@@ -22,6 +22,7 @@
 
 #include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 #include <gz/physics/Implements.hh>
 
@@ -35,6 +36,7 @@ namespace bullet_featherstone {
 
 struct SDFFeatureList : gz::physics::FeatureList<
   sdf::ConstructSdfModel,
+  sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfCollision
 > { };
@@ -51,6 +53,10 @@ class SDFFeatures :
       const Identity &_worldID,
       const ::sdf::Model &_sdfModel) override;
 
+  public: Identity ConstructSdfNestedModel(
+      const Identity &_parentID,
+      const ::sdf::Model &_sdfModel) override;
+
   public: bool AddSdfCollision(
       const Identity &_linkID,
       const ::sdf::Collision &_collision,
@@ -59,6 +65,13 @@ class SDFFeatures :
   private: Identity ConstructSdfCollision(
       const Identity &_linkID,
       const ::sdf::Collision &_collision) override;
+
+  /// \brief Construct a bullet entity from a sdf::model
+  /// \param[in] _parentID Parent identity
+  /// \param[in] _sdfModel sdf::Model to construct entity from
+  /// \return The entity identity if constructed otherwise an invalid identity
+  private: Identity ConstructSdfModelImpl(std::size_t _parentID,
+                                          const ::sdf::Model &_sdfModel);
 };
 
 }  // namespace bullet_featherstone

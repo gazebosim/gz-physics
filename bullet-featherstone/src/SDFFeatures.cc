@@ -125,6 +125,8 @@ struct Structure
 
   /// This contains all the links except the root link
   std::vector<const ::sdf::Link*> flatLinks;
+
+  std::vector<Structure> nestedStructure;
 };
 
 /////////////////////////////////////////////////
@@ -340,6 +342,80 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
 
   return Structure{
     rootLink, rootJoint, mass, inertia, fixed, parentOf, flatLinks};
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfNestedModel(const Identity &_parentID,
+                                              const ::sdf::Model &_sdfModel)
+{
+  return this->ConstructSdfModelImpl(_parentID, _sdfModel);
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfModelImpl(
+    std::size_t _parentID,
+    const ::sdf::Model &_sdfModel)
+{
+  const auto validation = ValidateModel(_sdfModel);
+  if (!validation.has_value())
+    return this->GenerateInvalidId();
+
+  const auto &structure = *validation;
+  const bool isStatic = _sdfModel.Static();
+
+  // Identity worldIdentity;
+  auto parentModelIt = this->models.find(_parentID);
+  const bool isNested = (parentModelIt != this->models.end());
+
+  // auto worldID = _parentID;
+  // WorldInfo *world = nullptr;
+  const auto &worldIdentity = isNested ?
+        parentModelIt->second->world :
+        this->GenerateIdentity(_parentID, this->worlds[_parentID]);
+/*  else
+  {
+    const WorldInfoPtr &worldInfo - this->worlds.at(_parentID);
+  }
+*/
+  // const auto *world = this->ReferenceInterface<WorldInfo>(worldIdentity);
+ // auto worldIdentity = this->GenerateIdentity(worldID, this->worlds[worldID]);
+
+  const auto rootInertialToLink =
+    gz::math::eigen3::convert(structure.rootLink->Inertial().Pose()).inverse();
+
+  auto modelID = [&] {
+    if (isNested)
+    {
+      auto modelIdentity = this->GenerateIdentity(_parentID, this->models[_parentID]);
+      return this->AddNestedModel(
+          _sdfModel.Name(), modelIdentity, worldIdentity, rootInertialToLink,
+          std::make_unique<btMultiBody>(
+            static_cast<int>(structure.flatLinks.size()),
+            structure.mass,
+            structure.inertia,
+            structure.fixedBase || isStatic,
+            true));
+    }
+    else
+    {
+      return this->AddModel(
+          _sdfModel.Name(), worldIdentity, rootInertialToLink,
+          std::make_unique<btMultiBody>(
+            static_cast<int>(structure.flatLinks.size()),
+            structure.mass,
+            structure.inertia,
+            structure.fixedBase || isStatic,
+            true));
+    }
+  }();
+
+  const auto rootID =
+    this->AddLink(LinkInfo{
+      structure.rootLink->Name(), std::nullopt, modelID, rootInertialToLink
+    });
+  const auto *model = this->ReferenceInterface<ModelInfo>(modelID);
+
+  return modelID;
 }
 
 /////////////////////////////////////////////////
@@ -598,7 +674,6 @@ Identity SDFFeatures::ConstructSdfModel(
       model->body->getLink(i).m_jointFeedback = jointInfo->jointFeedback.get();
     }
   }
-
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
   model->body->finalizeMultiDof();

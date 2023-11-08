@@ -414,6 +414,49 @@ Identity EntityManagementFeatures::GetWorldOfModel(
   return this->ReferenceInterface<ModelInfo>(_modelID)->world;
 }
 
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(
+      _modelID)->nestedModelEntityIds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::size_t _modelIndex) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_modelIndex >= modelInfo->nestedModelEntityIds.size())
+  {
+    return this->GenerateInvalidId();
+  }
+
+  const auto nestedModelID = modelInfo->nestedModelEntityIds[_modelIndex];
+
+  // If the model doesn't exist in "models", it means the containing entity has
+  // been removed.
+  if (this->models.find(nestedModelID) != this->models.end())
+  {
+    return this->GenerateIdentity(nestedModelID,
+                                  this->models.at(nestedModelID));
+  }
+  else
+  {
+    return this->GenerateInvalidId();
+  }
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::string &_modelName) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  auto nestedModelID = modelInfo->nestedModelNameToEntityId.at(_modelName);
+  return this->GenerateIdentity(nestedModelID,
+      this->models.at(nestedModelID));
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz
