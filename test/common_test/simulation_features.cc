@@ -523,7 +523,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     auto world = LoadPluginAndWorld<FreeGroupFeatures>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+      gz::common::joinPaths(TEST_WORLD_DIR, "sphere.sdf"));
 
     // model free group test
     auto model = world->GetModel("sphere");
@@ -581,14 +581,11 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     // Check the velocities again.
     freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
     linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
-
-    // Expect linear velocity to be affected by gravity.
-    const Eigen::Vector3d linearVelocityAfterStep{0.1, 0.2, 0.3 - 9.8 * 0.001};
     EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
-      linearVelocityAfterStep,
+      initialLinearVelocity,
       freeGroupFrameData.linearVelocity);
     EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
-      linearVelocityAfterStep,
+      initialLinearVelocity,
       linkFrameData.linearVelocity);
 
     // Expect angular velocity is unchanged.
