@@ -587,8 +587,6 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
       initialLinearVelocity,
       linkFrameData.linearVelocity);
-
-    // Expect angular velocity is unchanged.
     EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
       initialAngularVelocity,
       freeGroupFrameData.angularVelocity);
