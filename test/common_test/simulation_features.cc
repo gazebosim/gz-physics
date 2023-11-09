@@ -52,7 +52,7 @@
 #include <sdf/Root.hh>
 
 // The features that an engine must have to be loaded by this loader.
-using Features = gz::physics::FeatureList<
+struct Features : gz::physics::FeatureList<
   gz::physics::ConstructEmptyWorldFeature,
 
   gz::physics::FindFreeGroupFeature,
@@ -84,7 +84,7 @@ using Features = gz::physics::FeatureList<
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
->;
+> {};
 
 template <class T>
 class SimulationFeaturesTest:
@@ -184,11 +184,11 @@ std::pair<bool, gz::physics::ForwardStep::Output> StepWorld(
 }
 
 // The features that an engine must have to be loaded by this loader.
-using FeaturesContacts = gz::physics::FeatureList<
+struct FeaturesContacts : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetContactsFromLastStepFeature,
   gz::physics::ForwardStep
->;
+> {};
 
 template <class T>
 class SimulationFeaturesContactsTest :
@@ -218,10 +218,10 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
 
 
 // The features that an engine must have to be loaded by this loader.
-using FeaturesStep = gz::physics::FeatureList<
+struct FeaturesStep : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::ForwardStep
->;
+> {};
 
 template <class T>
 class SimulationFeaturesStepTest :
@@ -303,7 +303,7 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
 
 
 // The features that an engine must have to be loaded by this loader.
-using FeaturesShapeFeatures = gz::physics::FeatureList<
+struct FeaturesShapeFeatures : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
@@ -321,7 +321,7 @@ using FeaturesShapeFeatures = gz::physics::FeatureList<
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
->;
+> {};
 
 template <class T>
 class SimulationFeaturesShapeFeaturesTest :
@@ -796,7 +796,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
   }
 }
 
-using FeaturesContactPropertiesCallback = gz::physics::FeatureList<
+struct FeaturesContactPropertiesCallback : gz::physics::FeatureList<
   gz::physics::ConstructEmptyWorldFeature,
 
   gz::physics::FindFreeGroupFeature,
@@ -833,7 +833,7 @@ using FeaturesContactPropertiesCallback = gz::physics::FeatureList<
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
->;
+> {};
 
 #ifdef DART_HAS_CONTACT_SURFACE
 using ContactSurfaceParams =
