@@ -7,6 +7,7 @@ set(tests
   basic_test
   collisions
   construct_empty_world
+  detachable_joint
   free_joint_features
   joint_features
   joint_transmitted_wrench_features
