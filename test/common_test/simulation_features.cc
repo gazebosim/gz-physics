@@ -490,19 +490,35 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
   }
 }
 
-template <class T>
-class SimulationFeaturesTestBasic :
-  public SimulationFeaturesTest<T>{};
-using SimulationFeaturesTestBasicTypes =
-  ::testing::Types<Features>;
-TYPED_TEST_SUITE(SimulationFeaturesTestBasic,
-                 SimulationFeaturesTestBasicTypes);
+struct FreeGroupFeatures : gz::physics::FeatureList<
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::SetFreeGroupWorldPose,
+  gz::physics::SetFreeGroupWorldVelocity,
 
-TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+
+  gz::physics::FreeGroupFrameSemantics,
+  gz::physics::LinkFrameSemantics,
+
+  gz::physics::sdf::ConstructSdfWorld,
+
+  gz::physics::ForwardStep
+> {};
+
+template <class T>
+class SimulationFeaturesTestFreeGroup :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestFreeGroupTypes =
+  ::testing::Types<FreeGroupFeatures>;
+TYPED_TEST_SUITE(SimulationFeaturesTestFreeGroup,
+                 SimulationFeaturesTestFreeGroupTypes);
+
+TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 {
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<Features>(
+    auto world = LoadPluginAndWorld<FreeGroupFeatures>(
       this->loader,
       name,
       gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
@@ -520,7 +536,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 
-    StepWorld<Features>(world, true);
+    StepWorld<FreeGroupFeatures>(world, true);
 
     freeGroup->SetWorldPose(
       gz::math::eigen3::convert(
@@ -535,7 +551,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
               gz::math::eigen3::convert(frameData.pose));
 
     // Step the world
-    StepWorld<Features>(world, false);
+    StepWorld<FreeGroupFeatures>(world, false);
     // Check that the first link's velocities are updated
     frameData = model->GetLink(0)->FrameDataRelativeToWorld();
     EXPECT_TRUE(gz::math::Vector3d(0.1, 0.2, 0.3).Equal(
@@ -544,6 +560,14 @@ TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
               gz::math::eigen3::convert(frameData.angularVelocity));
   }
 }
+
+template <class T>
+class SimulationFeaturesTestBasic :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestBasicTypes =
+  ::testing::Types<Features>;
+TYPED_TEST_SUITE(SimulationFeaturesTestBasic,
+                 SimulationFeaturesTestBasicTypes);
 
 TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
 {
