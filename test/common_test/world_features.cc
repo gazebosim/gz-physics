@@ -67,7 +67,7 @@ class WorldFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-using GravityFeatures = gz::physics::FeatureList<
+struct GravityFeatures : gz::physics::FeatureList<
   gz::physics::GetEngineInfo,
   gz::physics::Gravity,
   gz::physics::sdf::ConstructSdfWorld,
@@ -75,15 +75,12 @@ using GravityFeatures = gz::physics::FeatureList<
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
   gz::physics::ForwardStep
->;
+> { };
 
-using GravityFeaturesTestTypes =
-  ::testing::Types<GravityFeatures>;
-TYPED_TEST_SUITE(WorldFeaturesTest,
-                 GravityFeatures,);
+using WorldFeaturesTestGravity = WorldFeaturesTest<GravityFeatures>;
 
 /////////////////////////////////////////////////
-TYPED_TEST(WorldFeaturesTest, GravityFeatures)
+TEST_F(WorldFeaturesTestGravity, GravityFeatures)
 {
   for (const std::string &name : this->pluginNames)
   {
@@ -182,19 +179,59 @@ TYPED_TEST(WorldFeaturesTest, GravityFeatures)
   }
 }
 
-struct WorldModelFeatureList
-    : gz::physics::FeatureList<GravityFeatures, gz::physics::WorldModelFeature,
-                               gz::physics::RemoveEntities,
-                               gz::physics::GetNestedModelFromModel,
-                               gz::physics::sdf::ConstructSdfLink,
-                               gz::physics::sdf::ConstructSdfJoint,
-                               gz::physics::sdf::ConstructSdfModel,
-                               gz::physics::sdf::ConstructSdfNestedModel,
-                               gz::physics::ConstructEmptyLinkFeature,
-                               gz::physics::ConstructEmptyNestedModelFeature
-                               >
+struct ConstructModelFeatures : gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::ForwardStep
+> { };
+
+using WorldFeaturesTestConstructModel =
+  WorldFeaturesTest<ConstructModelFeatures>;
+
+/////////////////////////////////////////////////
+TEST_F(WorldFeaturesTestConstructModel, ConstructModelUnsortedLinks)
 {
-};
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<ConstructModelFeatures>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+    EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
+                std::string::npos);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+      gz::common::joinPaths(TEST_WORLD_DIR, "world_unsorted_links.sdf"));
+    EXPECT_TRUE(errors.empty()) << errors;
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, sdfWorld);
+
+    // Per https://github.com/gazebosim/gz-physics/pull/562, there is a
+    // seg-fault in the bullet-featherstone implementation of ConstructSdfModel
+    // (called by ConstructSdfWorld). So loading the world successfully
+    // is enough for this test.
+    auto world = engine->ConstructWorld(*sdfWorld);
+    EXPECT_NE(nullptr, world);
+  }
+}
+
+struct WorldModelFeatureList : gz::physics::FeatureList<
+  GravityFeatures,
+  gz::physics::WorldModelFeature,
+  gz::physics::RemoveEntities,
+  gz::physics::GetNestedModelFromModel,
+  gz::physics::sdf::ConstructSdfLink,
+  gz::physics::sdf::ConstructSdfJoint,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfNestedModel,
+  gz::physics::ConstructEmptyLinkFeature,
+  gz::physics::ConstructEmptyNestedModelFeature
+> { };
 
 class WorldModelTest : public WorldFeaturesTest<WorldModelFeatureList>
 {

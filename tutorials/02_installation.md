@@ -227,6 +227,22 @@ Follow these steps to run tests and static code analysis in your clone of this r
   make test
   ```
 
+  Each test is registered with `ctest`. These can then be filtered with the `ctest` command line.
+
+  ```
+  # See a list of all available tests
+  ctest -N
+
+  # Run all tests in dartsim (verbose)
+  ctest -R dartsim -V
+
+  # Run all INTEGRATION tests (verbose)
+  ctest -R INTEGRATION -V
+
+  # Run all COMMON tests (verbose)
+  ctest -R COMMON -V
+  ```
+
 3. You will need Cppcheck in order to run static code checks. On Ubuntu Cppcheck can be installed using
   ```
   sudo apt-get install cppcheck

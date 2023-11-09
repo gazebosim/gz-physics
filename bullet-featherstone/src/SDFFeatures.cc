@@ -116,6 +116,7 @@ struct Structure
   const ::sdf::Joint *rootJoint;
   btScalar mass;
   btVector3 inertia;
+  math::Pose3d linkToPrincipalAxesPose;
 
   /// Is the root link fixed
   bool fixedBase;
@@ -128,6 +129,20 @@ struct Structure
 };
 
 /////////////////////////////////////////////////
+void extractInertial(
+    const math::Inertiald &_inertial,
+    btScalar &_mass,
+    btVector3 &_principalInertiaMoments,
+    math::Pose3d &_linkToPrincipalAxesPose)
+{
+  const auto &M = _inertial.MassMatrix();
+  _mass = static_cast<btScalar>(M.Mass());
+  _principalInertiaMoments = convertVec(M.PrincipalMoments());
+  _linkToPrincipalAxesPose = _inertial.Pose();
+  _linkToPrincipalAxesPose.Rot() *= M.PrincipalAxesOffset();
+}
+
+/////////////////////////////////////////////////
 std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
 {
   std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
@@ -135,9 +150,12 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
   const ::sdf::Joint *rootJoint = nullptr;
   bool fixed = false;
   const std::string &rootModelName = _sdfModel.Name();
+  // a map of parent link to a vector of its child links
+  std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>>
+    linkTree;
 
   const auto checkModel =
-      [&rootLink, &rootJoint, &fixed, &parentOf, &rootModelName](
+      [&rootLink, &rootJoint, &fixed, &parentOf, &rootModelName, &linkTree](
       const ::sdf::Model &model) -> bool
     {
       for (std::size_t i = 0; i < model.JointCount(); ++i)
@@ -217,6 +235,10 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
                 << rootModelName << "] has multiple parent joints. That is not "
                 << "supported by the gz-physics-bullet-featherstone plugin.\n";
         }
+        if (parent != nullptr)
+        {
+          linkTree[parent].push_back(child);
+        }
       }
 
       return true;
@@ -231,11 +253,10 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       return std::nullopt;
   }
 
-  std::vector<const ::sdf::Link*> flatLinks;
-  std::unordered_map<const ::sdf::Link*, std::size_t> linkIndex;
-  const auto flattenLinks =
-      [&rootLink, &parentOf, &rootModelName, &flatLinks, &linkIndex](
-      const ::sdf::Model &model) -> bool
+  // Find root link in model and verify that there is only one root link in
+  // the model. Returns false if more than one root link is found
+  const auto findRootLink =
+      [&rootLink, &parentOf, &rootModelName](const ::sdf::Model &model) -> bool
     {
       for (std::size_t i = 0; i < model.LinkCount(); ++i)
       {
@@ -254,62 +275,28 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
           }
 
           rootLink = link;
-          continue;
         }
-
-        linkIndex[link] = linkIndex.size();
-        flatLinks.push_back(link);
       }
 
       return true;
     };
 
-  if (!flattenLinks(_sdfModel))
-    return std::nullopt;
-
-  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
+  if (rootLink == nullptr && !findRootLink(_sdfModel))
   {
-    if (!flattenLinks(*_sdfModel.ModelByIndex(i)))
-      return std::nullopt;
+    // No root link was found in this model
+    return std::nullopt;
   }
 
-  // The documentation for bullet does not mention whether parent links must
-  // have a lower index than their child links, but the Featherstone Algorithm
-  // needs to crawl up and down the tree systematically, and so the flattened
-  // tree structures used by the algorithm usually do expect the parents to
-  // come before their children in the array, and do not work correctly if that
-  // ordering is not held. Out of an abundance of caution we will assume that
-  // ordering is necessary.
-  for (std::size_t i = 0; i < flatLinks.size(); ++i)
+  // find root link in nested models if one was not already found
+  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
   {
-    // Every element in flatLinks should have a parent if the earlier validation
-    // was done correctly.
-    if (parentOf.size() == 0)
+    if (rootLink != nullptr)
     {
       break;
     }
-    const auto *parentJoint = parentOf.at(flatLinks[i]).joint;
-
-    const auto *parentLink =
-      _sdfModel.LinkByName(parentJoint->ParentName());
-    const auto p_index_it = linkIndex.find(parentLink);
-    if (p_index_it == linkIndex.end())
+    if (!findRootLink(*_sdfModel.ModelByIndex(i)))
     {
-      // If the parent index cannot be found, that must mean the parent is the
-      // root link, so this link can go anywhere in the list as long as it is
-      // before its own children.
-      assert(parentLink == rootLink);
-      continue;
-    }
-
-    auto &p_index = p_index_it->second;
-    if (i < p_index)
-    {
-      // The current link is in front of its parent link in the array. We must
-      // swap their places.
-      std::swap(flatLinks[i], flatLinks[p_index]);
-      p_index = i;
-      linkIndex[flatLinks[p_index]] = p_index;
+      return std::nullopt;
     }
   }
 
@@ -319,23 +306,39 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
     return std::nullopt;
   }
 
-  const auto &M = rootLink->Inertial().MassMatrix();
-  const auto mass = static_cast<btScalar>(M.Mass());
-  btVector3 inertia(convertVec(M.DiagonalMoments()));
-  for (const double &I : {M.Ixy(), M.Ixz(), M.Iyz()})
+  // The documentation for bullet does not mention whether parent links must
+  // have a lower index than their child links, but the Featherstone Algorithm
+  // needs to crawl up and down the tree systematically, and so the flattened
+  // tree structures used by the algorithm usually do expect the parents to
+  // come before their children in the array, and do not work correctly if that
+  // ordering is not held. Out of an abundance of caution we will assume that
+  // ordering is necessary.
+  std::vector<const ::sdf::Link*> flatLinks;
+  std::function<void(const ::sdf::Link *)> flattenLinkTree =
+      [&](const ::sdf::Link *link)
   {
-    if (std::abs(I) > 1e-3)
+    if (link != rootLink)
     {
-      gzerr << "The base link of the model is required to have a diagonal "
-            << "inertia matrix by gz-physics-bullet-featherstone, but the "
-            << "Model [" << _sdfModel.Name() << "] has a non-zero diagonal "
-            << "value: " << I << "\n";
-      return std::nullopt;
+      flatLinks.push_back(link);
     }
-  }
+    if (auto it = linkTree.find(link); it != linkTree.end())
+    {
+      for (const auto &child_link : it->second)
+      {
+        flattenLinkTree(child_link);
+      }
+    }
+  };
+  flattenLinkTree(rootLink);
+
+  btScalar mass;
+  btVector3 inertia;
+  math::Pose3d linkToPrincipalAxesPose;
+  extractInertial(rootLink->Inertial(), mass, inertia, linkToPrincipalAxesPose);
 
   return Structure{
-    rootLink, rootJoint, mass, inertia, fixed, parentOf, flatLinks};
+    rootLink, rootJoint, mass, inertia, linkToPrincipalAxesPose, fixed,
+    parentOf, flatLinks};
 }
 
 /////////////////////////////////////////////////
@@ -353,7 +356,7 @@ Identity SDFFeatures::ConstructSdfModel(
   const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
 
   const auto rootInertialToLink =
-    gz::math::eigen3::convert(structure.rootLink->Inertial().Pose()).inverse();
+    gz::math::eigen3::convert(structure.linkToPrincipalAxesPose).inverse();
   const auto modelID = this->AddModel(
     _sdfModel.Name(), _worldID, rootInertialToLink,
     std::make_unique<btMultiBody>(
@@ -392,30 +395,18 @@ Identity SDFFeatures::ConstructSdfModel(
   for (int i = 0; i < static_cast<int>(structure.flatLinks.size()); ++i)
   {
     const auto *link = structure.flatLinks[static_cast<std::size_t>(i)];
+    btScalar mass;
+    btVector3 inertia;
+    math::Pose3d linkToPrincipalAxesPose;
+    extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
     const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
-          link->Inertial().Pose());
+          linkToPrincipalAxesPose);
 
     if (linkIDs.find(link) == linkIDs.end())
     {
       const auto linkID = this->AddLink(
         LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
       linkIDs.insert(std::make_pair(link, linkID));
-    }
-
-    const auto &M = link->Inertial().MassMatrix();
-    const btScalar mass = static_cast<btScalar>(M.Mass());
-    const auto inertia = btVector3(convertVec(M.DiagonalMoments()));
-
-    for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
-    {
-      if (std::abs(I) > 1e-3)
-      {
-        gzerr << "Links are required to have a diagonal inertia matrix in "
-              << "gz-physics-bullet-featherstone, but Link [" << link->Name()
-              << "] in Model [" << model->name << "] has a non-zero off "
-              << "diagonal value in its inertia matrix\n";
-        return this->GenerateInvalidId();
-      }
     }
 
     if (structure.parentOf.size())
@@ -617,25 +608,12 @@ Identity SDFFeatures::ConstructSdfModel(
 
   {
     const auto *link = structure.rootLink;
-    const auto &M = link->Inertial().MassMatrix();
-    const btScalar mass = static_cast<btScalar>(M.Mass());
-    const auto inertia = convertVec(M.DiagonalMoments());
-
-    for (const double I : {M.Ixy(), M.Ixz(), M.Iyz()})
-    {
-      if (std::abs(I) > 1e-3)
-      {
-        gzerr << "Links are required to have a diagonal inertia matrix in "
-              << "gz-physics-bullet-featherstone, but Link [" << link->Name()
-              << "] in Model [" << model->name << "] has a non-zero off "
-              << "diagonal value in its inertia matrix\n";
-      }
-      else
-      {
-        model->body->setBaseMass(mass);
-        model->body->setBaseInertia(inertia);
-      }
-    }
+    btScalar mass;
+    btVector3 inertia;
+    math::Pose3d linkToPrincipalAxesPose;
+    extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
+    model->body->setBaseMass(mass);
+    model->body->setBaseInertia(inertia);
   }
 
   world->world->addMultiBody(model->body.get());
