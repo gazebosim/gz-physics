@@ -139,6 +139,8 @@ gz::physics::World3dPtr<T> LoadPluginAndWorld(
   return world;
 }
 
+using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
+
 /// \brief Step forward in a world
 /// \param[in] _world The world to step in
 /// \param[in] _firstTime Whether this is the very first time this world is
@@ -521,7 +523,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     auto world = LoadPluginAndWorld<FreeGroupFeatures>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
 
     // model free group test
     auto model = world->GetModel("sphere");
@@ -538,26 +540,64 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 
     StepWorld<FreeGroupFeatures>(world, true);
 
+    // Set initial pose.
+    const gz::math::Pose3d initialPose{0, 0, 2, 0, 0, 0};
     freeGroup->SetWorldPose(
-      gz::math::eigen3::convert(
-        gz::math::Pose3d(0, 0, 2, 0, 0, 0)));
-    freeGroup->SetWorldLinearVelocity(
-      gz::math::eigen3::convert(gz::math::Vector3d(0.1, 0.2, 0.3)));
-    freeGroup->SetWorldAngularVelocity(
-      gz::math::eigen3::convert(gz::math::Vector3d(0.4, 0.5, 0.6)));
+      gz::math::eigen3::convert(initialPose));
 
-    auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-    EXPECT_EQ(gz::math::Pose3d(0, 0, 2, 0, 0, 0),
-              gz::math::eigen3::convert(frameData.pose));
+    // Set initial velocities.
+    const Eigen::Vector3d initialLinearVelocity{0.1, 0.2, 0.3};
+    const Eigen::Vector3d initialAngularVelocity{0.4, 0.5, 0.6};
+    freeGroup->SetWorldLinearVelocity(initialLinearVelocity);
+    freeGroup->SetWorldAngularVelocity(initialAngularVelocity);
+
+    auto freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    auto linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Before stepping, check that pose matches what was set.
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Before stepping, check that velocities match what was set.
+    AssertVectorApprox vectorPredicateVelocity(1e-7);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialLinearVelocity,
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialLinearVelocity,
+      linkFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      freeGroupFrameData.angularVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      linkFrameData.angularVelocity);
 
     // Step the world
     StepWorld<FreeGroupFeatures>(world, false);
-    // Check that the first link's velocities are updated
-    frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-    EXPECT_TRUE(gz::math::Vector3d(0.1, 0.2, 0.3).Equal(
-                gz::math::eigen3::convert(frameData.linearVelocity), 0.1));
-    EXPECT_EQ(gz::math::Vector3d(0.4, 0.5, 0.6),
-              gz::math::eigen3::convert(frameData.angularVelocity));
+
+    // Check the velocities again.
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Expect linear velocity to be affected by gravity.
+    const Eigen::Vector3d linearVelocityAfterStep{0.1, 0.2, 0.3 - 9.8 * 0.001};
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      linearVelocityAfterStep,
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      linearVelocityAfterStep,
+      linkFrameData.linearVelocity);
+
+    // Expect angular velocity is unchanged.
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      freeGroupFrameData.angularVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      linkFrameData.angularVelocity);
   }
 }
 
