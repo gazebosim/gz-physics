@@ -534,6 +534,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
     const ::sdf::Model &_sdfModel)
 {
+  std::cerr << "======= construct nested model ---- " << _sdfModel.Name() << std::endl;
   auto worldID = _parentID;
   std::string modelName = _sdfModel.Name();
   const bool isNested = this->models.HasEntity(_parentID);
@@ -1058,6 +1059,19 @@ Identity SDFFeatures::ConstructSdfJoint(
   // joint is connected to the world
   bool worldParent = (!_parent && _sdfJoint.ParentName() == "world");
   bool worldChild = (!_child && _sdfJoint.ChildName() == "world");
+/*
+    std::cerr << "parent link name " << _sdfJoint.ParentName() << std::endl;
+    std::cerr << "child link name " << _sdfJoint.ChildName() << std::endl;
+
+    size_t idx = _sdfJoint.ChildName().find("::");
+    if (idx != std::string::npos)
+    {
+      std::string modelName = _sdfJoint.ChildName().substr(0, idx);
+      std::string linkName = _sdfJoint.ChildName().substr(idx + 2);
+      std::cerr << "model name " << modelName << std::endl;
+      std::cerr << "link name " << linkName << std::endl;
+    }
+*/
 
   if (worldChild)
   {
