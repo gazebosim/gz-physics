@@ -104,7 +104,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       }
     }
 
-    if (model->body == nullptr)
+    if (!model || model->body == nullptr)
       model = this->FrameInterface<ModelInfo>(_id);
   }
 
