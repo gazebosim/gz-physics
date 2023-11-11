@@ -273,13 +273,11 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
     const auto &parentLinkName = joint->ParentName();
     const auto &childLinkName = joint->ChildName();
     const std::string &modelName = _sdfModel->Name();
-//    const auto *parent = FindLinkInModelTree(parentLinkName, _sdfModel);
-//    const auto *child = FindLinkInModelTree(childLinkName, _sdfModel);
     const auto *parent = _sdfModel->LinkByName(parentLinkName);
     const auto *child = _sdfModel->LinkByName(childLinkName);
 
-    std::cerr << "parent link name " << parentLinkName << " " << parent << std::endl;
-    std::cerr << "child link name " << childLinkName << " " << child << std::endl;
+    // std::cerr << "parent link name " << parentLinkName << " " << parent << std::endl;
+    // std::cerr << "child link name " << childLinkName << " " << child << std::endl;
 
     switch (joint->Type())
     {
@@ -343,6 +341,7 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
       // continue;
     }
 
+    std::cerr << " parent of inserting " << child << " " << parent << std::endl;
     if (!_parentOf.insert(
       std::make_pair(child, ParentInfo{joint, _sdfModel, child, parent})).second)
     {
@@ -354,8 +353,8 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
     {
       _linkTree[parent].push_back(child);
     }
-    std::cerr << "parent of inserted " << child->Name() << std::endl;
-    std::cerr << "parent of size " << _parentOf.size() << std::endl;
+    // std::cerr << "parent of inserted " << child->Name() << std::endl;
+    // std::cerr << "parent of size " << _parentOf.size() << std::endl;
   }
 
   // Recursively build tree from nested models
@@ -371,20 +370,22 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
 /////////////////////////////////////////////////
 void FindRootLinks(const ::sdf::Model *_sdfModel,
     const std::unordered_map<const ::sdf::Link*, ParentInfo> &_parentOf,
-    std::unordered_map<const ::sdf::Link*, const ::sdf::Model*> &_rootLinks)
+    std::vector<std::pair<const ::sdf::Link*, const ::sdf::Model*>> &_rootLinks)
 {
-  std::cerr << "find root links parentof size " << _parentOf.size() << std::endl;
-  for (auto p : _parentOf)
-    std::cerr << " parentOf[i] " << p.first << std::endl;
-  std::cerr << "model link count " << _sdfModel->Name() << " " << _sdfModel->LinkCount() << std::endl;
+  // std::cerr << "find root links parentof size " << _parentOf.size() << std::endl;
+  // for (auto p : _parentOf)
+  //   std::cerr << " parentOf[i] " << p.first << std::endl;
+  // std::cerr << "model link count " << _sdfModel->Name() << " " << _sdfModel->LinkCount() << std::endl;
   for (std::size_t i = 0; i < _sdfModel->LinkCount(); ++i)
   {
     const auto *link = _sdfModel->LinkByIndex(i);
-    if (_parentOf.count(link) == 0)
+    auto parentOfIt = _parentOf.find(link);
+    if (parentOfIt == _parentOf.end() || !parentOfIt->second.parent)
     {
-      std::cerr << "root link inserting " << link->Name() << " " << link <<std::endl;
-      // This link must be a root.
-      _rootLinks[link] = _sdfModel;
+      // std::cerr << "root link inserting " << link->Name() << " " << link <<std::endl;
+      // If there is not parent or parent is null (world),
+      // this link must be a root.
+      _rootLinks.push_back({link, _sdfModel});
     }
   }
 
@@ -446,6 +447,7 @@ std::optional<Structure> BuildStructure(
   extractInertial(_rootLink->Inertial(), mass, inertia, linkToPrincipalAxesPose);
 
   std::cerr << " structure: " << std::endl;
+  std::cerr << "    " << _model->Name() << std::endl;
   std::cerr << "    " << _rootLink->Name() << std::endl;
   std::cerr << "    " << ((rootJoint) ? rootJoint->Name() : "N/A") << std::endl;
   std::cerr << "    " << mass << std::endl;
@@ -468,8 +470,9 @@ std::vector<Structure> ValidateModel2(const ::sdf::Model &_sdfModel)
   std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>>
     linkTree;
 
-  // A map of root link of its parent model
-  std::unordered_map<const ::sdf::Link*, const ::sdf::Model*> rootLinks;
+  // A vector of root link of its parent model
+  // Use a vector to preseve order of entities defined in sdf
+  std::vector<std::pair<const ::sdf::Link*, const ::sdf::Model*>> rootLinks;
 
   BuildTrees(&_sdfModel, parentOf, linkTree);
   FindRootLinks(&_sdfModel, parentOf, rootLinks);
@@ -656,7 +659,7 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
 
   if (!rootLink)
   {
-    gzerr << "No root link was found for model [" << _sdfModel.Name() << "\n";
+    gzerr << "No root link was found for model [" << _sdfModel.Name() << "]\n";
     return std::nullopt;
   }
 
@@ -707,11 +710,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
     const ::sdf::Model &_sdfModel)
 {
+  std::cerr << " ---------- constructing " << _sdfModel.Name() << std::endl;
   // This function constructs the entire sdf model tree, including nested models
   // So return the nested model identity if it is constructed already
-  if (this->models.find(_parentID) != this->models.end())
+  auto pIt = this->models.find(_parentID);
+  if (pIt != this->models.end())
   {
-    return this->GenerateIdentity(_parentID, this->models[_parentID]);
+    std::size_t nestedModelID = pIt->second->nestedModelNameToEntityId.at(
+        _sdfModel.Name());
+    return this->GenerateIdentity(nestedModelID, this->models[nestedModelID]);
   }
 
   auto structures = ValidateModel2(_sdfModel);
@@ -721,22 +728,28 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   if (structures.size() > 1)
   {
     // multiple subt-trees detected in model
-    // \todo(iche033) support multiple sub-tree floating bodies
-    gzerr << "Multiple subt-trees / floating bodies are not supported yet. "
+    // \todo(iche033) support multiple sub-tree kinematic trees and
+    // multiple floating links in a single model
+    gzerr << "Multiple subt-trees / floating links detected in a model. "
+          << "This is not supported in bullet-featherstone implementation yet."
           << std::endl;
   }
+  // Create model for the first structure.
   auto structure = structures[0];
+  std::cerr << " Adding structure " << structure.model->Name() << ": " << std::endl;
 
   const bool isStatic = _sdfModel.Static();
   WorldInfo *world = nullptr;
   const auto rootInertialToLink =
     gz::math::eigen3::convert(structure.linkToPrincipalAxesPose).inverse();
 
+  // A map of link sdf to parent model identity
+  std::unordered_map<const ::sdf::Link*, std::size_t> linkParentModelIds;
+
+  std::unordered_map<const ::sdf::Model*, Identity> modelIDs;
   std::size_t rootModelID = 0u;
-
-  std::cerr <<" 0 ==========================================  " << std::endl;
-
-  // recursively create models in SDFFeatures
+  std::shared_ptr<btMultiBody> rootMultiBody;
+  // Add all  models, including nested models
   auto addModels = [&](std::size_t _modelOrWorldID, const ::sdf::Model *_model,
                        auto &&_addModels)
     {
@@ -754,27 +767,36 @@ Identity SDFFeatures::ConstructSdfModelImpl(
               this->GenerateIdentity(_modelOrWorldID, this->models[_modelOrWorldID]);
           return this->AddNestedModel(
               _model->Name(), modelIdentity, worldIdentity, rootInertialToLink,
-              // multibody is null because we are using a single multiple for the
-              // entire model tree
-              nullptr);
+              rootMultiBody);
         }
         else
         {
           auto worldIdentity = this->GenerateIdentity(
               _modelOrWorldID, this->worlds[_modelOrWorldID]);
-          world = this->ReferenceInterface<WorldInfo>(worldIdentity);
-          auto id = this->AddModel(
-              _model->Name(), worldIdentity, rootInertialToLink,
-              std::make_unique<btMultiBody>(
+          rootMultiBody = std::make_shared<btMultiBody>(
                 static_cast<int>(structure.flatLinks.size()),
                 structure.mass,
                 structure.inertia,
                 structure.fixedBase || isStatic,
-                true));
+                true);
+          world = this->ReferenceInterface<WorldInfo>(worldIdentity);
+          auto id = this->AddModel(
+              _model->Name(), worldIdentity, rootInertialToLink,
+              rootMultiBody);
           rootModelID = id;
           return id;
         }
       }();
+
+      // build link to model map for use later when adding links
+      for (std::size_t i = 0; i < _model->LinkCount(); ++i)
+      {
+        const ::sdf::Link *link = _model->LinkByIndex(i);
+        linkParentModelIds[link] = modelID;
+      }
+      modelIDs.insert(std::make_pair(_model, modelID));
+      std::cerr << " Add model " << _model->Name() << " ID:  "
+                << std::size_t(modelID) << std::endl;
 
       // recursively add nested models
       for (std::size_t i = 0; i < _model->ModelCount(); ++i)
@@ -790,18 +812,24 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   }
 
   // Get the root model identity
+  // New links and joints added are associated with this modelID
+  // so we do not break other features.
   auto modelID =
       this->GenerateIdentity(rootModelID, this->models[rootModelID]);
 
+  std::cerr << " adding root link " << structure.rootLink->Name()
+            << " from " << _sdfModel.Name() << std::endl;
+  // Add base link
   const auto rootID =
     this->AddLink(LinkInfo{
       structure.rootLink->Name(), std::nullopt, modelID, rootInertialToLink
     });
+  rootMultiBody->setUserIndex(std::size_t(rootID));
   const auto *model = this->ReferenceInterface<ModelInfo>(modelID);
 
+  // Add world joint
   if (structure.rootJoint)
   {
-    // Add world joint
     this->AddJoint(
           JointInfo{
             structure.rootJoint->Name(),
@@ -819,9 +847,13 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   model->body->setLinearDamping(0.0);
   model->body->setAngularDamping(0.0);
 
+  std::cerr <<" 2 ========================================== flatlink size "
+            << structure.flatLinks.size() << std::endl;
+
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
 
+  // Add all links and joints
   for (int i = 0; i < static_cast<int>(structure.flatLinks.size()); ++i)
   {
     const auto *link = structure.flatLinks[static_cast<std::size_t>(i)];
@@ -834,8 +866,14 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
     if (linkIDs.find(link) == linkIDs.end())
     {
+      std::size_t parentModelID = linkParentModelIds[link];
+      std::cerr << " === = == = =  parent model id " <<  parentModelID << " "
+          << (this->models.find(parentModelID) != this->models.end() )<< std::endl;
       const auto linkID = this->AddLink(
-        LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
+        LinkInfo{link->Name(), i,
+       // modelID,
+        this->GenerateIdentity(parentModelID, this->models.at(parentModelID)),
+        linkToComTf.inverse()});
       linkIDs.insert(std::make_pair(link, linkID));
       std::cerr << " addlink " << link->Name() << " " << i << std::endl;
     }
@@ -854,9 +892,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         parentIndex = *parentLinkInfo->indexInModel;
 
       // TODO
-      std::cerr << " model name " << parentInfo.model->Name() << std::endl;
-      std::cerr << " joint p name " << joint->ParentName() << std::endl;
-      std::cerr << " parent link index " << parentIndex << std::endl;
+      // std::cerr << " model name " << parentInfo.model->Name() << std::endl;
+      // std::cerr << " joint p name " << joint->ParentName() << std::endl;
+      // std::cerr << " parent link index " << parentIndex << std::endl;
 
       Eigen::Isometry3d poseParentLinkToJoint;
       Eigen::Isometry3d poseParentComToJoint;
@@ -915,9 +953,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         .getRotation(btRotParentComToJoint);
 
        // TODO
-       std::cerr << " model name " << _sdfModel.Name() << std::endl;
-       std::cerr << " joint p name " << joint->ParentName() << std::endl;
-       std::cerr << " joint c name " << joint->ChildName() << std::endl;
+       // std::cerr << " model name " << _sdfModel.Name() << std::endl;
+       // std::cerr << " joint p name " << joint->ParentName() << std::endl;
+       // std::cerr << " joint c name " << joint->ChildName() << std::endl;
        //
 
        // auto linkParent = _sdfModel.LinkByName(joint->ParentName());
@@ -953,12 +991,17 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         JointInfo{
           joint->Name(),
           InternalJoint{i},
-          model->linkEntityIds[static_cast<std::size_t>(parentIndex+1)],
+          // model->linkEntityIds[static_cast<std::size_t>(parentIndex+1)],
+          linkIDs.find(parentInfo.parent)->second,
           linkIDs.find(link)->second,
           poseParentLinkToJoint,
           poseJointToChild,
-          modelID
+          // modelID
+          modelIDs.find(parentInfo.model)->second
         });
+      std::cerr << " ================= add joint " << joint->Name()
+          << " " << std::size_t(linkIDs.find(parentInfo.parent)->second) << " " <<
+          std::size_t(linkIDs.find(link)->second) << std::endl;
       auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
@@ -1035,16 +1078,18 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       model->body->getLink(i).m_jointFeedback = jointInfo->jointFeedback.get();
     }
   }
-  std::cerr << " ======================= done 0 " << std::endl;
 
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
   model->body->finalizeMultiDof();
+
+
+  std::cerr << " body num links " << model->name << ": "
+            << model->body->getNumDofs() << std::endl;
 
   const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
   if (!worldToModel)
     return this->GenerateInvalidId();
 
-  std::cerr << " ======================= done 1 " << std::endl;
   const auto modelToRootLink =
     ResolveSdfPose(structure.rootLink->SemanticPose());
   if (!modelToRootLink)
@@ -1067,7 +1112,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     model->body->setBaseInertia(inertia);
   }
 
-  std::cerr << " ======================= done 2 " << std::endl;
   world->world->addMultiBody(model->body.get());
 
   for (const auto& [linkSdf, linkID] : linkIDs)
@@ -1081,6 +1125,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     }
   }
 
+  std::cerr <<"   done ==========================================  " << std::endl;
   return modelID;
 }
 
@@ -1089,7 +1134,10 @@ Identity SDFFeatures::ConstructSdfModel(
     const Identity &_worldID,
     const ::sdf::Model &_sdfModel)
 {
-  const auto validation = ValidateModel(_sdfModel);
+  return this->ConstructSdfModelImpl(_worldID, _sdfModel);
+
+//////////////////////////////
+/*  const auto validation = ValidateModel(_sdfModel);
   if (!validation.has_value())
     return this->GenerateInvalidId();
 
@@ -1372,6 +1420,7 @@ Identity SDFFeatures::ConstructSdfModel(
   }
 
   return modelID;
+*/
 }
 
 /////////////////////////////////////////////////

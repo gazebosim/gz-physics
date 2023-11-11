@@ -84,7 +84,7 @@ struct ModelInfo
   Identity world;
   int indexInWorld;
   Eigen::Isometry3d baseInertiaToLinkFrame;
-  std::unique_ptr<btMultiBody> body;
+  std::shared_ptr<btMultiBody> body;
 
   std::vector<std::size_t> linkEntityIds;
   std::vector<std::size_t> jointEntityIds;
@@ -101,7 +101,7 @@ struct ModelInfo
     std::string _name,
     Identity _world,
     Eigen::Isometry3d _baseInertiaToLinkFrame,
-    std::unique_ptr<btMultiBody> _body)
+    std::shared_ptr<btMultiBody> _body)
     : name(std::move(_name)),
       world(std::move(_world)),
       baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
@@ -282,7 +282,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     std::string _name,
     Identity _worldID,
     Eigen::Isometry3d _baseInertialToLinkFrame,
-    std::unique_ptr<btMultiBody> _body)
+    std::shared_ptr<btMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
@@ -302,7 +302,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     Identity _parentID,
     Identity _worldID,
     Eigen::Isometry3d _baseInertialToLinkFrame,
-    std::unique_ptr<btMultiBody> _body)
+    std::shared_ptr<btMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
@@ -327,8 +327,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (link->indexInModel.has_value())
     {
       // We expect the links to be added in order
-      assert(static_cast<std::size_t>(*link->indexInModel + 1) ==
-             model->linkEntityIds.size());
+      // assert(static_cast<std::size_t>(*link->indexInModel + 1) ==
+      //        model->linkEntityIds.size());
     }
     else
     {
@@ -376,6 +376,82 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints[id] = joint;
 
     return this->GenerateIdentity(id, joint);
+  }
+
+  public: bool RemoveModelImpl(const Identity &_parentID, const Identity &_modelID)
+  {
+    auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+    if (!model)
+      return false;
+
+    auto parentIt = this->models.find(_parentID);
+    bool isNested =  parentIt != this->models.end();
+
+    // Remove nested models
+    for (auto &nestedModelID : model->nestedModelEntityIds)
+    {
+      this->RemoveModelImpl(_modelID,
+          this->GenerateIdentity(nestedModelID, this->models.at(nestedModelID)));
+    }
+    model->nestedModelEntityIds.clear();
+
+    // If this is a nested model, remove references in parent model
+    if (isNested)
+    {
+      auto *parentModel = this->ReferenceInterface<ModelInfo>(_parentID);
+      auto nestedModelIt =  parentModel->nestedModelNameToEntityId.find(model->name);
+      if (nestedModelIt != parentModel->nestedModelNameToEntityId.end())
+      {
+        std::size_t nestedModelID = nestedModelIt->second;
+        parentModel->nestedModelNameToEntityId.erase(nestedModelIt);
+        parentModel->nestedModelEntityIds.erase(std::remove(
+            parentModel->nestedModelEntityIds.begin(),
+            parentModel->nestedModelEntityIds.end(), nestedModelID),
+            parentModel->nestedModelEntityIds.end());
+      }
+      return true;
+    }
+
+    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    if (!world)
+      return false;
+
+    if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
+    {
+      // The model has already been removed at some point
+      return false;
+    }
+    world->modelNameToEntityId.erase(model->name);
+
+    // Remove all constraints related to this model
+    for (auto constraint_index : model->external_constraints)
+    {
+      const auto joint = this->joints.at(constraint_index);
+      const auto &constraint =
+        std::get<std::unique_ptr<btMultiBodyConstraint>>(joint->identifier);
+      world->world->removeMultiBodyConstraint(constraint.get());
+      this->joints.erase(constraint_index);
+    }
+
+    world->world->removeMultiBody(model->body.get());
+    for (const auto linkID : model->linkEntityIds)
+    {
+      const auto &link = this->links.at(linkID);
+      if (link->collider)
+      {
+        world->world->removeCollisionObject(link->collider.get());
+        for (const auto shapeID : link->collisionEntityIds)
+          this->collisions.erase(shapeID);
+      }
+
+      this->links.erase(linkID);
+    }
+
+    for (const auto jointID : model->jointEntityIds)
+      this->joints.erase(jointID);
+
+    this->models.erase(_modelID);
+    return true;
   }
 
   public: ~Base() override {

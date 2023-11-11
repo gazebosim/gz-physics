@@ -40,6 +40,7 @@ struct EntityManagementFeatureList : gz::physics::FeatureList<
   GetNestedModelFromModel,
   GetShapeFromLink,
   GetWorldFromEngine,
+  RemoveEntities,
   RemoveModelFromWorld
 > { };
 
@@ -155,6 +156,12 @@ class EntityManagementFeatures :
   public: bool RemoveModel(const Identity &_modelID) override;
 
   public: bool ModelRemoved(const Identity &_modelID) const override;
+
+  public: bool RemoveNestedModelByIndex(
+     const Identity &_modelID, std::size_t _nestedModelIndex) override;
+
+  public: bool RemoveNestedModelByName(
+      const Identity &_modelID, const std::string &_modelName) override;
 
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
