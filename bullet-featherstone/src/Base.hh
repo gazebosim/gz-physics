@@ -280,7 +280,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     auto worldModel = std::make_shared<ModelInfo>(
       world->name, worldID,
       Eigen::Isometry3d::Identity(), nullptr);
-    std::cerr << "  === Add world model " << _worldInfo.name << " vs " << world << std::endl;
     this->models[id] = worldModel;
     world->modelNameToEntityId[worldModel->name] = id;
     worldModel->indexInWorld = -1;
@@ -396,14 +395,11 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: bool RemoveModelImpl(const Identity &_parentID, const Identity &_modelID)
   {
-    std::cerr << " ============= remove model impl  " << std::endl;
     auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
     if (!model)
       return false;
-    std::cerr << " ============= remove model impl  1  " << std::endl;
 
     bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
-    std::cerr << " ============= remove model impl  2 nested  " << isNested << std::endl;
 
     // Remove nested models
     for (auto &nestedModelID : model->nestedModelEntityIds)
@@ -412,7 +408,6 @@ class Base : public Implements3d<FeatureList<Feature>>
           this->GenerateIdentity(nestedModelID, this->models.at(nestedModelID)));
     }
     model->nestedModelEntityIds.clear();
-    std::cerr << " ============= remove model impl  3  " << std::endl;
 
     // remove references in parent model or world model
     auto *parentModel = this->ReferenceInterface<ModelInfo>(_parentID);
@@ -426,8 +421,6 @@ class Base : public Implements3d<FeatureList<Feature>>
           parentModel->nestedModelEntityIds.end(), nestedModelID),
           parentModel->nestedModelEntityIds.end());
     }
-
-    std::cerr << " ============= remove model impl  4  " << std::endl;
 
     // If nested, we are done here. No need to remove multibody
     if (isNested)
@@ -475,7 +468,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     this->models.erase(_modelID);
 
-    std::cerr << " ============= remove model impl  done " << std::endl;
     return true;
   }
 

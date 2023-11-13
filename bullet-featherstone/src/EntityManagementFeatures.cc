@@ -485,8 +485,6 @@ Identity EntityManagementFeatures::GetNestedModel(
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorldModel(const Identity &_worldID) const
 {
-    std::cerr << "get world model  " << std::endl;
-    std::cerr << "  got  " << this->models.at(_worldID) << std::endl;
   return this->GenerateIdentity(_worldID, this->models.at(_worldID));
 }
 

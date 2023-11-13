@@ -78,128 +78,6 @@ static std::optional<Eigen::Isometry3d> ResolveSdfPose(
 }
 
 /////////////////////////////////////////////////
-::sdf::Errors LinkPoseInModelTree(math::Pose3d &_pose,
-    const std::string &_linkName,
-    const ::sdf::Model *_model)
-{
-  ::sdf::Errors errors;
-  size_t idx = _linkName.find("::");
-  if (idx != std::string::npos)
-  {
-    if (_model->ModelCount() > 0)
-    {
-      std::string nestedModelName = _linkName.substr(0, idx);
-      std::string nestedLinkName = _linkName.substr(idx + 2);
-      const auto *nestedModel = _model->ModelByName(nestedModelName);
-      if (!nestedModel)
-      {
-        gzerr << "Unable to find nested model " << nestedModelName << std::endl;
-        return errors;
-      }
-
-      math::Pose3d p;
-      errors = nestedModel->SemanticPose().Resolve(p);
-      if (!errors.empty())
-        return errors;
-      _pose = _pose * p;
-      return LinkPoseInModelTree(_pose, nestedLinkName, nestedModel);
-    }
-  }
-  else
-  {
-    const auto *link = _model->LinkByName(_linkName);
-    if (!link)
-    {
-      gzerr << "Unable to find link " << _linkName << std::endl;
-      return errors;
-    }
-    math::Pose3d p;
-    errors = link->SemanticPose().Resolve(p);
-    if (!errors.empty())
-      return errors;
-
-    _pose = _pose * p;
-  }
-  return errors;
-}
-
-/////////////////////////////////////////////////
-/// \brief Get pose of joint relative to link
-/// \param[out] _resolvePose Pose of joint relative to link
-/// \param[in] _model Parent model of joint
-/// \param[in] _joint Joint name
-/// \param[in] _link Scoped link name
-::sdf::Errors ResolveJointPoseRelToLink(math::Pose3d &_resolvedPose,
-    const ::sdf::Model *_model,
-    const std::string &_joint, const std::string &_link)
-{
-  ::sdf::Errors errors;
-  const auto *joint = _model->JointByName(_joint);
-  if (!joint)
-  {
-    gzerr << "No joint [" << _joint << "] found in model ["
-          << _model->Name() << "]" << std::endl;
-    return errors;
-  }
-
-  math::Pose3d jointPose;
-  errors = joint->SemanticPose().Resolve(jointPose);
-  if (!errors.empty())
-    return errors;
-
-  // joint pose is expressed relative to child link
-  std::string childLinkName;
-  errors = joint->ResolveChildLink(childLinkName);
-  if (!errors.empty())
-  {
-    childLinkName = joint->ChildName();
-  }
-
-  if (childLinkName == _link)
-  {
-    _resolvedPose = jointPose;
-    return errors;
-  }
-
-  // pose of parent link
-  const auto *link = _model->LinkByName(_link);
-  if (!link)
-  {
-    gzerr << "No link [" << _link << "] found in model ["
-          << _model->Name() << "]" << std::endl;
-   return errors;
-  }
-
-  math::Pose3d parentLinkPose;
-  errors = LinkPoseInModelTree(parentLinkPose, _link, _model);
-  std::cerr << " === parent link pose in  model tree " << _link << " "
-            << parentLinkPose
-            << std::endl;
-  if (!errors.empty())
-    return errors;
-
-  // pose of child link
-  math::Pose3d childLinkPose;
-  errors = LinkPoseInModelTree(childLinkPose, childLinkName, _model);
-  std::cerr << " === child link pose in model tree " << childLinkName << " "
-            << childLinkPose
-            << std::endl;
-  if (!errors.empty())
-    return errors;
-
-  auto jointPoseInModel = childLinkPose * jointPose;
-
-  std::cerr << "joint erros " << errors.size() << std::endl;
-  // std::cerr << "link pose " <<  linkPose << std::endl;
-  std::cerr << "joint pose " <<  jointPose << std::endl;
-  _resolvedPose = parentLinkPose.Inverse() * jointPoseInModel;
-  // _resolvedPose = jointPose.Inverse() * linkPose;
-  std::cerr << "out pose " <<  _resolvedPose << std::endl;
-
-  return errors;
-}
-
-/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
@@ -267,12 +145,130 @@ void extractInertial(
   _linkToPrincipalAxesPose.Rot() *= M.PrincipalAxesOffset();
 }
 
+/////////////////////////////////////////////////
+/// \brief Get pose of link in the model tree
+/// \param[out] _pose Pose of link relative to model
+/// \param[in] _linkName Scoped name of link
+/// \param[in] _model Model SDF
+::sdf::Errors linkPoseInModelTree(math::Pose3d &_pose,
+    const std::string &_linkName,
+    const ::sdf::Model *_model)
+{
+  ::sdf::Errors errors;
+  size_t idx = _linkName.find("::");
+  if (idx != std::string::npos)
+  {
+    if (_model->ModelCount() > 0)
+    {
+      std::string nestedModelName = _linkName.substr(0, idx);
+      std::string nestedLinkName = _linkName.substr(idx + 2);
+      const auto *nestedModel = _model->ModelByName(nestedModelName);
+      if (!nestedModel)
+      {
+        gzerr << "Unable to find nested model " << nestedModelName << std::endl;
+        return errors;
+      }
+
+      math::Pose3d p;
+      errors = nestedModel->SemanticPose().Resolve(p);
+      if (!errors.empty())
+        return errors;
+      _pose = _pose * p;
+      return linkPoseInModelTree(_pose, nestedLinkName, nestedModel);
+    }
+  }
+  else
+  {
+    const auto *link = _model->LinkByName(_linkName);
+    if (!link)
+    {
+      gzerr << "Unable to find link " << _linkName << std::endl;
+      return errors;
+    }
+    math::Pose3d p;
+    errors = link->SemanticPose().Resolve(p);
+    if (!errors.empty())
+      return errors;
+
+    _pose = _pose * p;
+  }
+  return errors;
+}
 
 /////////////////////////////////////////////////
-bool BuildTrees(const ::sdf::Model *_sdfModel,
-    // std::unordered_map<const ::sdf::Link*, Node> &_nodes,
+/// \brief Get pose of joint relative to link
+/// \param[out] _resolvedPose Pose of joint relative to link
+/// \param[in] _model Parent model of joint
+/// \param[in] _joint Joint name
+/// \param[in] _link Scoped link name
+::sdf::Errors resolveJointPoseRelToLink(math::Pose3d &_resolvedPose,
+    const ::sdf::Model *_model,
+    const std::string &_joint, const std::string &_link)
+{
+  ::sdf::Errors errors;
+  const auto *joint = _model->JointByName(_joint);
+  if (!joint)
+  {
+    gzerr << "No joint [" << _joint << "] found in model ["
+          << _model->Name() << "]" << std::endl;
+    return errors;
+  }
+
+  math::Pose3d jointPose;
+  errors = joint->SemanticPose().Resolve(jointPose);
+  if (!errors.empty())
+    return errors;
+
+  // joint pose is expressed relative to child link
+  std::string childLinkName;
+  errors = joint->ResolveChildLink(childLinkName);
+  if (!errors.empty())
+  {
+    childLinkName = joint->ChildName();
+  }
+
+  if (childLinkName == _link)
+  {
+    _resolvedPose = jointPose;
+    return errors;
+  }
+
+  // pose of parent link
+  const auto *link = _model->LinkByName(_link);
+  if (!link)
+  {
+    gzerr << "No link [" << _link << "] found in model ["
+          << _model->Name() << "]" << std::endl;
+   return errors;
+  }
+
+  math::Pose3d parentLinkPose;
+  errors = linkPoseInModelTree(parentLinkPose, _link, _model);
+  if (!errors.empty())
+    return errors;
+
+  // pose of child link
+  math::Pose3d childLinkPose;
+  errors = linkPoseInModelTree(childLinkPose, childLinkName, _model);
+  if (!errors.empty())
+    return errors;
+
+  auto jointPoseInModel = childLinkPose * jointPose;
+
+  _resolvedPose = parentLinkPose.Inverse() * jointPoseInModel;
+
+  return errors;
+}
+
+/////////////////////////////////////////////////
+/// \brief Recursively build a tree of parent-child data structures from the
+/// \param[in] _sdfModel input Model SDF.
+/// \param[out] _parentOf A map of child link to its parent
+/// \param[out] _linkTree A map of parent link to its child links
+bool buildTrees(const ::sdf::Model *_sdfModel,
     std::unordered_map<const ::sdf::Link*, ParentInfo> &_parentOf,
-    std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>> &_linkTree)
+    std::unordered_map<const ::sdf::Link*,
+    std::vector<const ::sdf::Link*>> &_linkTree)
 {
   for (std::size_t i = 0; i < _sdfModel->JointCount(); ++i)
   {
@@ -292,9 +288,6 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
     const std::string &modelName = _sdfModel->Name();
     const auto *parent = _sdfModel->LinkByName(parentLinkName);
     const auto *child = _sdfModel->LinkByName(childLinkName);
-
-    // std::cerr << "parent link name " << parentLinkName << " " << parent << std::endl;
-    // std::cerr << "child link name " << childLinkName << " " << child << std::endl;
 
     switch (joint->Type())
     {
@@ -326,17 +319,6 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
     else if (nullptr == parent)
     {
       // This link is attached to the world, making it the root
-/*      if (nullptr != rootLink)
-      {
-        // A root already exists for this model
-        gzerr << "Two root links were found for Model [" << modelName
-              << "]: [" << rootLink->Name() << "] and [" << childLinkName
-              << "], but gz-physics-bullet-featherstone-plugin only "
-              << "supports one root per Model.\n";
-        return false;
-      }
-*/
-
       if (joint->Type() != ::sdf::JointType::FIXED)
       {
         gzerr << "Link [" << child->Name() << "] in Model ["
@@ -348,17 +330,8 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
               << "gz-physics-bullet-featherstone-plugin\n";
         return false;
       }
-
-      // TODO determine this later in a separate function?
-      // rootLink = child;
-      // rootJoint = joint;
-      // fixed = true;
-
-      // Do not add the root link to the set of links that have parents
-      // continue;
     }
 
-    std::cerr << " parent of inserting " << child << " " << parent << std::endl;
     if (!_parentOf.insert(
       std::make_pair(child, ParentInfo{joint, _sdfModel, child, parent})).second)
     {
@@ -370,36 +343,33 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
     {
       _linkTree[parent].push_back(child);
     }
-    // std::cerr << "parent of inserted " << child->Name() << std::endl;
-    // std::cerr << "parent of size " << _parentOf.size() << std::endl;
   }
 
   // Recursively build tree from nested models
   for (std::size_t i = 0; i < _sdfModel->ModelCount(); ++i)
   {
     const auto *model = _sdfModel->ModelByIndex(i);
-    if (!BuildTrees(model, _parentOf, _linkTree))
+    if (!buildTrees(model, _parentOf, _linkTree))
       return false;
   }
   return true;
 }
 
 /////////////////////////////////////////////////
-void FindRootLinks(const ::sdf::Model *_sdfModel,
+/// \brief Find all the root links given a model SDF
+/// \param[in] _sdfModel Model SDF
+/// \param[in] _parentOf A map of child link to its parent info
+/// \param[out] _rootLinks A vector of root links and its immediate parent model
+void findRootLinks(const ::sdf::Model *_sdfModel,
     const std::unordered_map<const ::sdf::Link*, ParentInfo> &_parentOf,
     std::vector<std::pair<const ::sdf::Link*, const ::sdf::Model*>> &_rootLinks)
 {
-  // std::cerr << "find root links parentof size " << _parentOf.size() << std::endl;
-  // for (auto p : _parentOf)
-  //   std::cerr << " parentOf[i] " << p.first << std::endl;
-  // std::cerr << "model link count " << _sdfModel->Name() << " " << _sdfModel->LinkCount() << std::endl;
   for (std::size_t i = 0; i < _sdfModel->LinkCount(); ++i)
   {
     const auto *link = _sdfModel->LinkByIndex(i);
     auto parentOfIt = _parentOf.find(link);
     if (parentOfIt == _parentOf.end() || !parentOfIt->second.parent)
     {
-      // std::cerr << "root link inserting " << link->Name() << " " << link <<std::endl;
       // If there is not parent or parent is null (world),
       // this link must be a root.
       _rootLinks.push_back({link, _sdfModel});
@@ -409,12 +379,16 @@ void FindRootLinks(const ::sdf::Model *_sdfModel,
   for (std::size_t i = 0; i < _sdfModel->ModelCount(); ++i)
   {
     const auto *model = _sdfModel->ModelByIndex(i);
-    FindRootLinks(model, _parentOf, _rootLinks);
+    findRootLinks(model, _parentOf, _rootLinks);
   }
 }
 
 /////////////////////////////////////////////////
-std::optional<Structure> BuildStructure(
+/// \brief Build a structure for each root link
+/// \param[in] _rootLink Root link in a model tree
+/// \param[in] _parentOf A map of child link to its parent
+/// \param[in] _linkTree A map of parent link to its child links
+std::optional<Structure> buildStructure(
     const ::sdf::Link * _rootLink,
     const ::sdf::Model * _model,
     const std::unordered_map<const ::sdf::Link*, ParentInfo> &_parentOf,
@@ -463,13 +437,14 @@ std::optional<Structure> BuildStructure(
   math::Pose3d linkToPrincipalAxesPose;
   extractInertial(_rootLink->Inertial(), mass, inertia, linkToPrincipalAxesPose);
 
-  std::cerr << " structure: " << std::endl;
-  std::cerr << "    " << _model->Name() << std::endl;
-  std::cerr << "    " << _rootLink->Name() << std::endl;
-  std::cerr << "    " << ((rootJoint) ? rootJoint->Name() : "N/A") << std::endl;
-  std::cerr << "    " << mass << std::endl;
-  std::cerr << "    " << fixed << std::endl;
-  std::cerr << "    " << flatLinks.size() << std::endl;
+  // Uncomment to debug structure
+  // std::cout << "Structure: " << std::endl;
+  // std::cout << "  model:  " << _model->Name() << std::endl;
+  // std::cout << "  root link:  " << _rootLink->Name() << std::endl;
+  // std::cout << "  root joint:  " << ((rootJoint) ? rootJoint->Name() : "N/A") << std::endl;
+  // std::cout << "  mass: " << mass << std::endl;
+  // std::cout << "  fixed:  " << fixed << std::endl;
+  // std::cout << "  flatLinks size:  " << flatLinks.size() << std::endl;
 
   return Structure{
     _rootLink, _model, rootJoint, mass, inertia, linkToPrincipalAxesPose, fixed,
@@ -477,13 +452,16 @@ std::optional<Structure> BuildStructure(
 }
 
 /////////////////////////////////////////////////
-std::vector<Structure> ValidateModel2(const ::sdf::Model &_sdfModel)
+/// \brief Validate input model SDF and build a vector of structures.
+/// Each structure represents a single kinematic tree in the model
+/// \param[in] _sdfModel Input model SDF
+/// \return A vector of structures
+std::vector<Structure> validateModel(const ::sdf::Model &_sdfModel)
 {
-  // std::unordered_map<const ::sdf::Link*, Node> nodes;
-  // a map of child link and its parent info
+  // A map of child link and its parent info
   std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
 
-  // a map of parent link to a vector of its child links
+  // A map of parent link to a vector of its child links
   std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>>
     linkTree;
 
@@ -491,8 +469,8 @@ std::vector<Structure> ValidateModel2(const ::sdf::Model &_sdfModel)
   // Use a vector to preseve order of entities defined in sdf
   std::vector<std::pair<const ::sdf::Link*, const ::sdf::Model*>> rootLinks;
 
-  BuildTrees(&_sdfModel, parentOf, linkTree);
-  FindRootLinks(&_sdfModel, parentOf, rootLinks);
+  buildTrees(&_sdfModel, parentOf, linkTree);
+  findRootLinks(&_sdfModel, parentOf, rootLinks);
 
   std::vector<Structure> structures;
   if (rootLinks.empty())
@@ -505,7 +483,7 @@ std::vector<Structure> ValidateModel2(const ::sdf::Model &_sdfModel)
   // Build subtrees
   for (const auto &rootLinkIt : rootLinks)
   {
-    auto structure = BuildStructure(rootLinkIt.first, rootLinkIt.second,
+    auto structure = buildStructure(rootLinkIt.first, rootLinkIt.second,
         parentOf, linkTree);
     if (structure.has_value())
     {
@@ -514,215 +492,6 @@ std::vector<Structure> ValidateModel2(const ::sdf::Model &_sdfModel)
   }
 
   return structures;
-}
-
-/////////////////////////////////////////////////
-std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
-{
-  std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
-  const ::sdf::Link *rootLink = nullptr;
-  const ::sdf::Joint *rootJoint = nullptr;
-  bool fixed = false;
-  const std::string &rootModelName = _sdfModel.Name();
-  // a map of parent link to a vector of its child links
-  std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>>
-    linkTree;
-
-  const auto checkModel =
-      [&rootLink, &rootJoint, &fixed, &parentOf, &rootModelName, &linkTree](
-      const ::sdf::Model &model) -> bool
-    {
-      for (std::size_t i = 0; i < model.JointCount(); ++i)
-      {
-        const auto *joint = model.JointByIndex(i);
-        std::string parentLinkName;
-        ::sdf::Errors errors = joint->ResolveParentLink(parentLinkName);
-        if (!errors.empty())
-        {
-          parentLinkName = joint->ParentName();
-        }
-        std::string childLinkName;
-        errors = joint->ResolveChildLink(childLinkName);
-        if (!errors.empty())
-        {
-          childLinkName = joint->ChildName();
-        }
-        const auto *parent = model.LinkByName(parentLinkName);
-        const auto *child = model.LinkByName(childLinkName);
-
-        switch (joint->Type())
-        {
-          case ::sdf::JointType::FIXED:
-          case ::sdf::JointType::REVOLUTE:
-          case ::sdf::JointType::PRISMATIC:
-          case ::sdf::JointType::BALL:
-            break;
-          default:
-            gzerr << "Joint type [" << (std::size_t)(joint->Type())
-                  << "] is not supported by "
-                  << "gz-physics-bullet-featherstone-plugin. "
-                  << "Replaced by a fixed joint.\n";
-        }
-
-        if (child == parent)
-        {
-          gzerr << "The Link [" << parentLinkName << "] is being attached to "
-                << "itself by Joint [" << joint->Name() << "] in Model ["
-                << rootModelName << "]. That is not allowed.\n";
-          return false;
-        }
-
-        if (nullptr == parent && parentLinkName != "world")
-        {
-          gzerr << "The link [" << parentLinkName << "] cannot be found in "
-                << "Model [" << rootModelName << "], but joint ["
-                << joint->Name() << "] wants to use it as its parent link\n";
-          return false;
-        }
-        else if (nullptr == parent)
-        {
-          // This link is attached to the world, making it the root
-          if (nullptr != rootLink)
-          {
-            // A root already exists for this model
-            gzerr << "Two root links were found for Model [" << rootModelName
-                  << "]: [" << rootLink->Name() << "] and [" << childLinkName
-                  << "], but gz-physics-bullet-featherstone-plugin only "
-                  << "supports one root per Model.\n";
-            return false;
-          }
-
-          if (joint->Type() != ::sdf::JointType::FIXED)
-          {
-            gzerr << "Link [" << child->Name() << "] in Model ["
-                  << rootModelName << "] is being connected to the "
-                  << "world by Joint [" << joint->Name() << "] with a ["
-                  << (std::size_t)(joint->Type()) << "] joint type, but only "
-                  << "Fixed (" << (std::size_t)(::sdf::JointType::FIXED)
-                  << ") is supported by "
-                  << "gz-physics-bullet-featherstone-plugin\n";
-            return false;
-          }
-
-          rootLink = child;
-          rootJoint = joint;
-          fixed = true;
-
-          // Do not add the root link to the set of links that have parents
-          continue;
-        }
-
-        if (!parentOf.insert(
-          std::make_pair(child, ParentInfo{joint, &model})).second)
-        {
-          gzerr << "The Link [" << childLinkName << "] in Model ["
-                << rootModelName << "] has multiple parent joints. That is not "
-                << "supported by the gz-physics-bullet-featherstone plugin.\n";
-        }
-        if (parent != nullptr)
-        {
-          linkTree[parent].push_back(child);
-        }
-      }
-
-      return true;
-    };
-
-  if (!checkModel(_sdfModel))
-    return std::nullopt;
-
-  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
-  {
-    if (!checkModel(*_sdfModel.ModelByIndex(i)))
-      return std::nullopt;
-  }
-
-  // Find root link in model and verify that there is only one root link in
-  // the model. Returns false if more than one root link is found
-  const auto findRootLink =
-      [&rootLink, &parentOf, &rootModelName](const ::sdf::Model &model) -> bool
-    {
-      for (std::size_t i = 0; i < model.LinkCount(); ++i)
-      {
-        const auto *link = model.LinkByIndex(i);
-        if (parentOf.count(link) == 0)
-        {
-          // This link must be the root. If a different link was already
-          // identified as the root then we have a conflict.
-          if (rootLink && rootLink != link)
-          {
-            gzerr << "Two root links were found for Model [" << rootModelName
-                  << "]: [" << rootLink->Name() << "] and [" << link->Name()
-                  << "]. The Link [" << link->Name() << "] is implicitly a "
-                  << "root because it has no parent joint.\n";
-            return false;
-          }
-
-          rootLink = link;
-        }
-      }
-
-      return true;
-    };
-
-  if (rootLink == nullptr && !findRootLink(_sdfModel))
-  {
-    // No root link was found in this model
-    return std::nullopt;
-  }
-
-  // find root link in nested models if one was not already found
-  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
-  {
-    if (rootLink != nullptr)
-    {
-      break;
-    }
-    if (!findRootLink(*_sdfModel.ModelByIndex(i)))
-    {
-      return std::nullopt;
-    }
-  }
-
-  if (!rootLink)
-  {
-    gzerr << "No root link was found for model [" << _sdfModel.Name() << "]\n";
-    return std::nullopt;
-  }
-
-  // The documentation for bullet does not mention whether parent links must
-  // have a lower index than their child links, but the Featherstone Algorithm
-  // needs to crawl up and down the tree systematically, and so the flattened
-  // tree structures used by the algorithm usually do expect the parents to
-  // come before their children in the array, and do not work correctly if that
-  // ordering is not held. Out of an abundance of caution we will assume that
-  // ordering is necessary.
-  std::vector<const ::sdf::Link*> flatLinks;
-  std::function<void(const ::sdf::Link *)> flattenLinkTree =
-      [&](const ::sdf::Link *link)
-  {
-    if (link != rootLink)
-    {
-      flatLinks.push_back(link);
-    }
-    if (auto it = linkTree.find(link); it != linkTree.end())
-    {
-      for (const auto &child_link : it->second)
-      {
-        flattenLinkTree(child_link);
-      }
-    }
-  };
-  flattenLinkTree(rootLink);
-
-  btScalar mass;
-  btVector3 inertia;
-  math::Pose3d linkToPrincipalAxesPose;
-  extractInertial(rootLink->Inertial(), mass, inertia, linkToPrincipalAxesPose);
-
-  return Structure{
-    rootLink, &_sdfModel, rootJoint, mass, inertia, linkToPrincipalAxesPose, fixed,
-    parentOf, flatLinks};
 }
 
 /////////////////////////////////////////////////
@@ -737,7 +506,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
     const ::sdf::Model &_sdfModel)
 {
-  std::cerr << " ---------- constructing " << _sdfModel.Name() << std::endl;
   // The ConstructSDFModelImpl function constructs the entire sdf model tree,
   // including nested models So return the nested model identity if it is
   // constructed already
@@ -749,17 +517,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         _sdfModel.Name());
     return this->GenerateIdentity(nestedModelID, this->models.at(nestedModelID));
   }
-  std::cerr << " ---------- constructing 1 " << _sdfModel.Name() << std::endl;
 
-  auto structures = ValidateModel2(_sdfModel);
-  std::cerr << " ---------- constructing 2 " << _sdfModel.Name() << std::endl;
+  auto structures = validateModel(_sdfModel);
   if (structures.empty())
     return this->GenerateInvalidId();
 
   if (structures.size() > 1)
   {
     // multiple subt-trees detected in model
-    // \todo(iche033) support multiple sub-tree kinematic trees and
+    // \todo(iche033) support multiple kinematic trees and
     // multiple floating links in a single model
     gzerr << "Multiple subt-trees / floating links detected in a model. "
           << "This is not supported in bullet-featherstone implementation yet."
@@ -767,7 +533,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   }
   // Create model for the first structure.
   auto structure = structures[0];
-  std::cerr << " Adding structure " << structure.model->Name() << ": " << std::endl;
 
   const bool isStatic = _sdfModel.Static();
   WorldInfo *world = nullptr;
@@ -826,8 +591,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         linkParentModelIds[link] = modelID;
       }
       modelIDs.insert(std::make_pair(_model, modelID));
-      std::cerr << " Add model " << _model->Name() << " ID:  "
-                << std::size_t(modelID) << std::endl;
 
       // recursively add nested models
       for (std::size_t i = 0; i < _model->ModelCount(); ++i)
@@ -848,8 +611,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   auto modelID =
       this->GenerateIdentity(rootModelID, this->models[rootModelID]);
 
-  std::cerr << " adding root link " << structure.rootLink->Name()
-            << " from " << _sdfModel.Name() << std::endl;
   // Add base link
   const auto rootID =
     this->AddLink(LinkInfo{
@@ -873,13 +634,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           });
   }
 
-  std::cerr <<" 1 ==========================================  " << std::endl;
-
   model->body->setLinearDamping(0.0);
   model->body->setAngularDamping(0.0);
-
-  std::cerr <<" 2 ========================================== flatlink size "
-            << structure.flatLinks.size() << std::endl;
 
   std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
   linkIDs.insert(std::make_pair(structure.rootLink, rootID));
@@ -898,15 +654,12 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (linkIDs.find(link) == linkIDs.end())
     {
       std::size_t parentModelID = linkParentModelIds[link];
-      std::cerr << " === = == = =  parent model id " <<  parentModelID << " "
-          << (this->models.find(parentModelID) != this->models.end() )<< std::endl;
       const auto linkID = this->AddLink(
         LinkInfo{link->Name(), i,
        // modelID,
         this->GenerateIdentity(parentModelID, this->models.at(parentModelID)),
         linkToComTf.inverse()});
       linkIDs.insert(std::make_pair(link, linkID));
-      std::cerr << " addlink " << link->Name() << " " << i << std::endl;
     }
 
     if (structure.parentOf.size())
@@ -928,16 +681,11 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       if (parentLinkInfo->indexInModel.has_value())
         parentIndex = *parentLinkInfo->indexInModel;
 
-      // TODO
-      // std::cerr << " model name " << parentInfo.model->Name() << std::endl;
-      // std::cerr << " joint p name " << joint->ParentName() << std::endl;
-      // std::cerr << " parent link index " << parentIndex << std::endl;
-
       Eigen::Isometry3d poseParentLinkToJoint;
       Eigen::Isometry3d poseParentComToJoint;
       {
         gz::math::Pose3d gzPoseParentToJoint;
-        errors = ResolveJointPoseRelToLink(gzPoseParentToJoint,
+        errors = resolveJointPoseRelToLink(gzPoseParentToJoint,
             parentInfo.model, joint->Name(), parentLinkName);
         // const auto errors = joint->SemanticPose().Resolve(
         //   gzPoseParentToJoint, joint->ParentName());
@@ -972,7 +720,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         {
           childLinkName = joint->ChildName();
         }
-        errors = ResolveJointPoseRelToLink(gzPoseChildToJoint,
+        errors = resolveJointPoseRelToLink(gzPoseChildToJoint,
             parentInfo.model, joint->Name(), childLinkName);
 
         if (!errors.empty())
@@ -995,46 +743,32 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       convertMat(poseParentComToJoint.linear())
         .getRotation(btRotParentComToJoint);
 
-       // TODO
-       // std::cerr << " model name " << _sdfModel.Name() << std::endl;
-       // std::cerr << " joint p name " << joint->ParentName() << std::endl;
-       // std::cerr << " joint c name " << joint->ChildName() << std::endl;
-       //
+      btTransform parentLocalInertialFrame = convertTf(
+        parentLinkInfo->inertiaToLinkFrame);
+      btTransform parent2jointBt = convertTf(
+        // gz::math::eigen3::convert(parent2joint.Inverse()));  // X_PJ
+        poseParentLinkToJoint);  // X_PJ
 
-       // auto linkParent = _sdfModel.LinkByName(joint->ParentName());
-       // gz::math::Pose3d parent2joint = gzPoseParentToJoint.Inverse();
-       //const auto errors2 = linkParent->SemanticPose().Resolve(
-       //  parent2joint, joint->Name());  // X_JP
-
-       // std::cerr << "parent2joint " << parent2joint << " vs " << gzPoseParentToJoint.Inverse() << std::endl;;
-
-       btTransform parentLocalInertialFrame = convertTf(
-         parentLinkInfo->inertiaToLinkFrame);
-       btTransform parent2jointBt = convertTf(
-         // gz::math::eigen3::convert(parent2joint.Inverse()));  // X_PJ
-         poseParentLinkToJoint);  // X_PJ
-
-       // offsetInABt = parent COM to pivot (X_IpJ)
-       // offsetInBBt = current COM to pivot (X_IcJ)
-       //
-       // X_PIp
-       // X_PJ
-       // X_IpJ = X_PIp^-1 * X_PJ
-       //
-       // X_IcJ = X_CIc^-1 * X_CJ
-       btTransform offsetInABt, offsetInBBt;
-       offsetInABt = parentLocalInertialFrame * parent2jointBt;
-       offsetInBBt =
-          convertTf(linkToComTf.inverse() * poseJointToChild.inverse());
-       // R_IcJ * R_IpJ ^ -1 = R_IcIp;
-       btQuaternion parentRotToThis =
-         offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
+      // offsetInABt = parent COM to pivot (X_IpJ)
+      // offsetInBBt = current COM to pivot (X_IcJ)
+      //
+      // X_PIp
+      // X_PJ
+      // X_IpJ = X_PIp^-1 * X_PJ
+      //
+      // X_IcJ = X_CIc^-1 * X_CJ
+      btTransform offsetInABt, offsetInBBt;
+      offsetInABt = parentLocalInertialFrame * parent2jointBt;
+      offsetInBBt =
+         convertTf(linkToComTf.inverse() * poseJointToChild.inverse());
+      // R_IcJ * R_IpJ ^ -1 = R_IcIp;
+      btQuaternion parentRotToThis =
+        offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
 
       auto jointID = this->AddJoint(
         JointInfo{
           joint->Name(),
           InternalJoint{i},
-          // model->linkEntityIds[static_cast<std::size_t>(parentIndex+1)],
           linkIDs.find(parentInfo.parent)->second,
           linkIDs.find(link)->second,
           poseParentLinkToJoint,
@@ -1042,9 +776,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           // modelID
           modelIDs.find(parentInfo.model)->second
         });
-      std::cerr << " ================= add joint " << joint->Name()
-          << " " << std::size_t(linkIDs.find(parentInfo.parent)->second) << " " <<
-          std::size_t(linkIDs.find(link)->second) << std::endl;
       auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
@@ -1125,10 +856,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
   model->body->finalizeMultiDof();
 
-
-  std::cerr << " body num links " << model->name << ": "
-            << model->body->getNumDofs() << std::endl;
-
   const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
   if (!worldToModel)
     return this->GenerateInvalidId();
@@ -1168,7 +895,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     }
   }
 
-  std::cerr <<"   done ==========================================  " << std::endl;
   return modelID;
 }
 
@@ -1178,292 +904,6 @@ Identity SDFFeatures::ConstructSdfModel(
     const ::sdf::Model &_sdfModel)
 {
   return this->ConstructSdfModelImpl(_worldID, _sdfModel);
-
-//////////////////////////////
-/*  const auto validation = ValidateModel(_sdfModel);
-  if (!validation.has_value())
-    return this->GenerateInvalidId();
-
-  const auto &structure = *validation;
-  const bool isStatic = _sdfModel.Static();
-
-  const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
-
-  const auto rootInertialToLink =
-    gz::math::eigen3::convert(structure.linkToPrincipalAxesPose).inverse();
-  const auto modelID = this->AddModel(
-    _sdfModel.Name(), _worldID, rootInertialToLink,
-    std::make_unique<btMultiBody>(
-      static_cast<int>(structure.flatLinks.size()),
-      structure.mass,
-      structure.inertia,
-      structure.fixedBase || isStatic,
-      true));
-
-  const auto rootID =
-    this->AddLink(LinkInfo{
-      structure.rootLink->Name(), std::nullopt, modelID, rootInertialToLink
-    });
-  const auto *model = this->ReferenceInterface<ModelInfo>(modelID);
-
-  if (structure.rootJoint)
-  {
-    this->AddJoint(
-          JointInfo{
-            structure.rootJoint->Name(),
-            RootJoint{},
-            std::nullopt,
-            rootID,
-            Eigen::Isometry3d::Identity(),
-            Eigen::Isometry3d::Identity(),
-            modelID
-          });
-  }
-
-  model->body->setLinearDamping(0.0);
-  model->body->setAngularDamping(0.0);
-
-  std::unordered_map<const ::sdf::Link*, Identity> linkIDs;
-  linkIDs.insert(std::make_pair(structure.rootLink, rootID));
-
-  for (int i = 0; i < static_cast<int>(structure.flatLinks.size()); ++i)
-  {
-    const auto *link = structure.flatLinks[static_cast<std::size_t>(i)];
-    btScalar mass;
-    btVector3 inertia;
-    math::Pose3d linkToPrincipalAxesPose;
-    extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
-    const Eigen::Isometry3d linkToComTf = gz::math::eigen3::convert(
-          linkToPrincipalAxesPose);
-
-    if (linkIDs.find(link) == linkIDs.end())
-    {
-      const auto linkID = this->AddLink(
-        LinkInfo{link->Name(), i, modelID, linkToComTf.inverse()});
-      linkIDs.insert(std::make_pair(link, linkID));
-    }
-
-    if (structure.parentOf.size())
-    {
-      const auto &parentInfo = structure.parentOf.at(link);
-      const auto *joint = parentInfo.joint;
-      const auto &parentLinkID = linkIDs.at(
-        parentInfo.model->LinkByName(joint->ParentName()));
-      const auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
-        parentLinkID);
-
-      int parentIndex = -1;
-      if (parentLinkInfo->indexInModel.has_value())
-        parentIndex = *parentLinkInfo->indexInModel;
-
-      Eigen::Isometry3d poseParentLinkToJoint;
-      Eigen::Isometry3d poseParentComToJoint;
-      {
-        gz::math::Pose3d gzPoseParentToJoint;
-        const auto errors = joint->SemanticPose().Resolve(
-          gzPoseParentToJoint, joint->ParentName());
-        if (!errors.empty())
-        {
-          gzerr << "An error occurred while resolving the transform of Joint ["
-                << joint->Name() << "] in Model [" << model->name << "]:\n";
-          for (const auto &error : errors)
-          {
-            gzerr << error << "\n";
-          }
-
-          return this->GenerateInvalidId();
-        }
-
-        poseParentLinkToJoint = gz::math::eigen3::convert(gzPoseParentToJoint);
-        poseParentComToJoint =
-          poseParentLinkToJoint * parentLinkInfo->inertiaToLinkFrame;
-      }
-
-      Eigen::Isometry3d poseJointToChild;
-      {
-        gz::math::Pose3d gzPoseJointToChild;
-        const auto errors =
-          link->SemanticPose().Resolve(gzPoseJointToChild, joint->Name());
-        if (!errors.empty())
-        {
-          gzerr << "An error occured while resolving the transform of Link ["
-                << link->Name() << "]:\n";
-          for (const auto &error : errors)
-          {
-            gzerr << error << "\n";
-          }
-
-          return this->GenerateInvalidId();
-        }
-
-        poseJointToChild = gz::math::eigen3::convert(gzPoseJointToChild);
-      }
-
-      btQuaternion btRotParentComToJoint;
-      convertMat(poseParentComToJoint.linear())
-        .getRotation(btRotParentComToJoint);
-
-       auto linkParent = _sdfModel.LinkByName(joint->ParentName());
-       gz::math::Pose3d parentTransformInWorldSpace;
-       const auto errors = linkParent->SemanticPose().Resolve(
-         parentTransformInWorldSpace);
-
-       gz::math::Pose3d parent2joint;
-       const auto errors2 = linkParent->SemanticPose().Resolve(
-         parent2joint, joint->Name());  // X_JP
-
-       btTransform parentLocalInertialFrame = convertTf(
-         parentLinkInfo->inertiaToLinkFrame);
-       btTransform parent2jointBt = convertTf(
-         gz::math::eigen3::convert(parent2joint.Inverse()));  // X_PJ
-
-       // offsetInABt = parent COM to pivot (X_IpJ)
-       // offsetInBBt = current COM to pivot (X_IcJ)
-       //
-       // X_PIp
-       // X_PJ
-       // X_IpJ = X_PIp^-1 * X_PJ
-       //
-       // X_IcJ = X_CIc^-1 * X_CJ
-       btTransform offsetInABt, offsetInBBt;
-       offsetInABt = parentLocalInertialFrame * parent2jointBt;
-       offsetInBBt =
-          convertTf(linkToComTf.inverse() * poseJointToChild.inverse());
-       // R_IcJ * R_IpJ ^ -1 = R_IcIp;
-       btQuaternion parentRotToThis =
-         offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
-
-      auto jointID = this->AddJoint(
-        JointInfo{
-          joint->Name(),
-          InternalJoint{i},
-          model->linkEntityIds[static_cast<std::size_t>(parentIndex+1)],
-          linkIDs.find(link)->second,
-          poseParentLinkToJoint,
-          poseJointToChild,
-          modelID
-        });
-      auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
-
-      if (::sdf::JointType::PRISMATIC == joint->Type() ||
-          ::sdf::JointType::REVOLUTE == joint->Type() ||
-          ::sdf::JointType::BALL == joint->Type())
-      {
-        if (::sdf::JointType::REVOLUTE == joint->Type())
-        {
-          const auto axis = convertVec(joint->Axis()->Xyz());
-          model->body->setupRevolute(
-            i, mass, inertia, parentIndex,
-            parentRotToThis,
-            quatRotate(offsetInBBt.getRotation(), axis),
-            offsetInABt.getOrigin(),
-            -offsetInBBt.getOrigin(),
-            true);
-        }
-        else if (::sdf::JointType::PRISMATIC == joint->Type())
-        {
-          const auto axis = convertVec(joint->Axis()->Xyz());
-          model->body->setupPrismatic(
-            i, mass, inertia, parentIndex,
-            parentRotToThis,
-            quatRotate(offsetInBBt.getRotation(), axis),
-            offsetInABt.getOrigin(),
-            -offsetInBBt.getOrigin(),
-            true);
-        }
-        else if (::sdf::JointType::BALL == joint->Type())
-        {
-          model->body->setupSpherical(
-            i, mass, inertia, parentIndex,
-            parentRotToThis,
-            offsetInABt.getOrigin(),
-            -offsetInBBt.getOrigin(),
-            true);
-        }
-      }
-      else
-      {
-        model->body->setupFixed(
-          i, mass, inertia, parentIndex,
-          parentRotToThis,
-          offsetInABt.getOrigin(),
-          -offsetInBBt.getOrigin());
-      }
-
-      if (::sdf::JointType::PRISMATIC == joint->Type() ||
-          ::sdf::JointType::REVOLUTE == joint->Type())
-      {
-        model->body->getLink(i).m_jointLowerLimit =
-            static_cast<btScalar>(joint->Axis()->Lower());
-        model->body->getLink(i).m_jointUpperLimit =
-            static_cast<btScalar>(joint->Axis()->Upper());
-        model->body->getLink(i).m_jointDamping =
-            static_cast<btScalar>(joint->Axis()->Damping());
-        model->body->getLink(i).m_jointFriction =
-            static_cast<btScalar>(joint->Axis()->Friction());
-        model->body->getLink(i).m_jointMaxVelocity =
-            static_cast<btScalar>(joint->Axis()->MaxVelocity());
-        model->body->getLink(i).m_jointMaxForce =
-            static_cast<btScalar>(joint->Axis()->Effort());
-        jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
-
-        jointInfo->jointLimits =
-          std::make_shared<btMultiBodyJointLimitConstraint>(
-            model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
-            static_cast<btScalar>(joint->Axis()->Upper()));
-        world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
-      }
-
-      jointInfo->jointFeedback = std::make_shared<btMultiBodyJointFeedback>();
-      jointInfo->jointFeedback->m_reactionForces.setZero();
-      model->body->getLink(i).m_jointFeedback = jointInfo->jointFeedback.get();
-    }
-  }
-
-  model->body->setHasSelfCollision(_sdfModel.SelfCollide());
-  model->body->finalizeMultiDof();
-
-  const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
-  if (!worldToModel)
-    return this->GenerateInvalidId();
-
-  const auto modelToRootLink =
-    ResolveSdfPose(structure.rootLink->SemanticPose());
-  if (!modelToRootLink)
-    return this->GenerateInvalidId();
-
-  const auto worldToRootCom =
-    *worldToModel * *modelToRootLink * rootInertialToLink.inverse();
-
-  model->body->setBaseWorldTransform(convertTf(worldToRootCom));
-  model->body->setBaseVel(btVector3(0, 0, 0));
-  model->body->setBaseOmega(btVector3(0, 0, 0));
-
-  {
-    const auto *link = structure.rootLink;
-    btScalar mass;
-    btVector3 inertia;
-    math::Pose3d linkToPrincipalAxesPose;
-    extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
-    model->body->setBaseMass(mass);
-    model->body->setBaseInertia(inertia);
-  }
-
-  world->world->addMultiBody(model->body.get());
-
-  for (const auto& [linkSdf, linkID] : linkIDs)
-  {
-    for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
-    {
-      // If we fail to add the collision, just keep building the model. It may
-      // need to be constructed outside of the SDF generation pipeline, e.g.
-      // with AttachHeightmap.
-      this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
-    }
-  }
-
-  return modelID;
-*/
 }
 
 /////////////////////////////////////////////////
