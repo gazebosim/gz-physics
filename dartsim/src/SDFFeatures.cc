@@ -405,6 +405,9 @@ SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
   // Resolve parent and child frames to links
   std::string parentLinkName;
   ::sdf::Errors errors = _sdfJoint->ResolveParentLink(parentLinkName);
+
+  std::cerr << " joint parent " << _sdfJoint->ParentName() << " resl " <<  parentLinkName << std::endl;
+
   if (!errors.empty())
   {
     gzerr << "The link of the parent frame [" << _sdfJoint->ParentName()
@@ -431,6 +434,7 @@ SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
     }
     return {};
   }
+  std::cerr << " joint child " << _sdfJoint->ChildName() << " resl " <<  childLinkName << std::endl;
 
   // When calling `FindBodyNode`, we need to check wheter the parent entity
   // (different from parent link/frame) of the joint is a model or world. If it

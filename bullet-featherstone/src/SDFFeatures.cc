@@ -148,7 +148,14 @@ static std::optional<Eigen::Isometry3d> ResolveSdfPose(
     return errors;
 
   // joint pose is expressed relative to child link
-  if (joint->ChildName() == _link)
+  std::string childLinkName;
+  errors = joint->ResolveChildLink(childLinkName);
+  if (!errors.empty())
+  {
+    childLinkName = joint->ChildName();
+  }
+
+  if (childLinkName == _link)
   {
     _resolvedPose = jointPose;
     return errors;
@@ -173,8 +180,8 @@ static std::optional<Eigen::Isometry3d> ResolveSdfPose(
 
   // pose of child link
   math::Pose3d childLinkPose;
-  errors = LinkPoseInModelTree(childLinkPose, joint->ChildName(), _model);
-  std::cerr << " === child link pose in model tree " << joint->ChildName() << " "
+  errors = LinkPoseInModelTree(childLinkPose, childLinkName, _model);
+  std::cerr << " === child link pose in model tree " << childLinkName << " "
             << childLinkPose
             << std::endl;
   if (!errors.empty())
@@ -270,8 +277,18 @@ bool BuildTrees(const ::sdf::Model *_sdfModel,
   for (std::size_t i = 0; i < _sdfModel->JointCount(); ++i)
   {
     const auto *joint = _sdfModel->JointByIndex(i);
-    const auto &parentLinkName = joint->ParentName();
-    const auto &childLinkName = joint->ChildName();
+    std::string parentLinkName;
+    ::sdf::Errors errors = joint->ResolveParentLink(parentLinkName);
+    if (!errors.empty())
+    {
+      parentLinkName = joint->ParentName();
+    }
+    std::string childLinkName;
+    errors = joint->ResolveChildLink(childLinkName);
+    if (!errors.empty())
+    {
+      childLinkName = joint->ChildName();
+    }
     const std::string &modelName = _sdfModel->Name();
     const auto *parent = _sdfModel->LinkByName(parentLinkName);
     const auto *child = _sdfModel->LinkByName(childLinkName);
@@ -518,9 +535,19 @@ std::optional<Structure> ValidateModel(const ::sdf::Model &_sdfModel)
       for (std::size_t i = 0; i < model.JointCount(); ++i)
       {
         const auto *joint = model.JointByIndex(i);
-        const auto &parentLinkName = joint->ParentName();
+        std::string parentLinkName;
+        ::sdf::Errors errors = joint->ResolveParentLink(parentLinkName);
+        if (!errors.empty())
+        {
+          parentLinkName = joint->ParentName();
+        }
+        std::string childLinkName;
+        errors = joint->ResolveChildLink(childLinkName);
+        if (!errors.empty())
+        {
+          childLinkName = joint->ChildName();
+        }
         const auto *parent = model.LinkByName(parentLinkName);
-        const auto &childLinkName = joint->ChildName();
         const auto *child = model.LinkByName(childLinkName);
 
         switch (joint->Type())
@@ -711,17 +738,21 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     const ::sdf::Model &_sdfModel)
 {
   std::cerr << " ---------- constructing " << _sdfModel.Name() << std::endl;
-  // This function constructs the entire sdf model tree, including nested models
-  // So return the nested model identity if it is constructed already
-  auto pIt = this->models.find(_parentID);
-  if (pIt != this->models.end())
+  // The ConstructSDFModelImpl function constructs the entire sdf model tree,
+  // including nested models So return the nested model identity if it is
+  // constructed already
+  auto wIt = this->worlds.find(_parentID);
+  if (wIt == this->worlds.end())
   {
-    std::size_t nestedModelID = pIt->second->nestedModelNameToEntityId.at(
+    auto mIt = this->models.find(_parentID);
+    std::size_t nestedModelID = mIt->second->nestedModelNameToEntityId.at(
         _sdfModel.Name());
-    return this->GenerateIdentity(nestedModelID, this->models[nestedModelID]);
+    return this->GenerateIdentity(nestedModelID, this->models.at(nestedModelID));
   }
+  std::cerr << " ---------- constructing 1 " << _sdfModel.Name() << std::endl;
 
   auto structures = ValidateModel2(_sdfModel);
+  std::cerr << " ---------- constructing 2 " << _sdfModel.Name() << std::endl;
   if (structures.empty())
     return this->GenerateInvalidId();
 
@@ -756,15 +787,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       if (!_model)
         return false;
 
-      auto modelIt = this->models.find(_modelOrWorldID);
-      const bool isNested = (modelIt != this->models.end());
-
+      auto worldIt = this->worlds.find(_modelOrWorldID);
+      const bool isNested = worldIt == this->worlds.end();
       auto modelID = [&] {
         if (isNested)
         {
+          auto modelIt = this->models.find(_modelOrWorldID);
           auto worldIdentity = modelIt->second->world;
           auto modelIdentity =
-              this->GenerateIdentity(_modelOrWorldID, this->models[_modelOrWorldID]);
+              this->GenerateIdentity(_modelOrWorldID, modelIt->second);
           return this->AddNestedModel(
               _model->Name(), modelIdentity, worldIdentity, rootInertialToLink,
               rootMultiBody);
@@ -772,7 +803,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         else
         {
           auto worldIdentity = this->GenerateIdentity(
-              _modelOrWorldID, this->worlds[_modelOrWorldID]);
+              _modelOrWorldID, worldIt->second);
           rootMultiBody = std::make_shared<btMultiBody>(
                 static_cast<int>(structure.flatLinks.size()),
                 structure.mass,
@@ -882,8 +913,14 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     {
       const auto &parentInfo = structure.parentOf.at(link);
       const auto *joint = parentInfo.joint;
+      std::string parentLinkName;
+      ::sdf::Errors errors = joint->ResolveParentLink(parentLinkName);
+      if (!errors.empty())
+      {
+        parentLinkName = joint->ParentName();
+      }
       const auto &parentLinkID = linkIDs.at(
-        parentInfo.model->LinkByName(joint->ParentName()));
+        parentInfo.model->LinkByName(parentLinkName));
       const auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
         parentLinkID);
 
@@ -900,8 +937,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       Eigen::Isometry3d poseParentComToJoint;
       {
         gz::math::Pose3d gzPoseParentToJoint;
-        const auto errors = ResolveJointPoseRelToLink(gzPoseParentToJoint,
-            parentInfo.model, joint->Name(), joint->ParentName());
+        errors = ResolveJointPoseRelToLink(gzPoseParentToJoint,
+            parentInfo.model, joint->Name(), parentLinkName);
         // const auto errors = joint->SemanticPose().Resolve(
         //   gzPoseParentToJoint, joint->ParentName());
 
@@ -929,8 +966,14 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         // const auto errors =
         //   link->SemanticPose().Resolve(gzPoseJointToChild, joint->Name());
         // this retrieves the joint pose relative to link
-        const auto errors = ResolveJointPoseRelToLink(gzPoseChildToJoint,
-            parentInfo.model, joint->Name(), joint->ChildName());
+        std::string childLinkName;
+        errors = joint->ResolveChildLink(childLinkName);
+        if (!errors.empty())
+        {
+          childLinkName = joint->ChildName();
+        }
+        errors = ResolveJointPoseRelToLink(gzPoseChildToJoint,
+            parentInfo.model, joint->Name(), childLinkName);
 
         if (!errors.empty())
         {

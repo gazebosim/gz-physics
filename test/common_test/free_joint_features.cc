@@ -105,6 +105,11 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
 {
   for (const std::string &name : pluginNames)
   {
+    // https://github.com/gazebosim/gz-physics/issues/550
+    // bullet-feathersone does not support multiple kinematic trees in
+    // a model so nested_model2 and nested_model3 are not constructed.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
@@ -135,18 +140,6 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
       return testing::AssertionSuccess();
     };
 
-    if (engine->GetName() == "bullet-featherstone")
-    {
-      // https://github.com/gazebosim/gz-physics/issues/550
-      // bullet-feathersone does not support multiple kinematic trees in
-      // a model so nested_model2 and nested_model3 are not constructed.
-      // \todo(iche033) Remove this block once the feature is supported.
-      EXPECT_FALSE(checkFreeGroupForModel("parent_model"));
-      EXPECT_FALSE(checkFreeGroupForModel("parent_model::nested_model2"));
-      EXPECT_FALSE(checkFreeGroupForModel("parent_model::nested_model3"));
-      GTEST_SKIP();
-    }
-
     EXPECT_TRUE(checkFreeGroupForModel("parent_model"));
     if (engine->GetName() == "tpe")
     {
@@ -169,6 +162,11 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
 {
   for (const std::string &name : pluginNames)
   {
+    // https://github.com/gazebosim/gz-physics/issues/550
+    // bullet-feathersone does not support multiple kinematic trees in
+    // a model so nested_model2 and nested_model3 are not constructed.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
@@ -185,15 +183,6 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
 
     auto world = engine->ConstructWorld(*sdfWorld);
     EXPECT_NE(nullptr, world);
-
-    if (engine->GetName() == "bullet-featherstone")
-    {
-      // https://github.com/gazebosim/gz-physics/issues/550
-      // bullet-feathersone does not support multiple kinematic trees in
-      // a model so nested_model2 and nested_model3 are not constructed.
-      // \todo(iche033) Remove this block once the feature is supported.
-      GTEST_SKIP();
-    }
 
     gz::math::Pose3d parentModelNewPose(0, 0, 2, 0, 0, 0);
     {

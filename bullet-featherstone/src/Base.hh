@@ -275,7 +275,18 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto id = this->GetNextEntity();
     auto world = std::make_shared<WorldInfo>(std::move(_worldInfo));
     this->worlds[id] = world;
-    return this->GenerateIdentity(id, world);
+    auto worldID = this->GenerateIdentity(id, world);
+
+    auto worldModel = std::make_shared<ModelInfo>(
+      world->name, worldID,
+      Eigen::Isometry3d::Identity(), nullptr);
+    std::cerr << "  === Add world model " << _worldInfo.name << " vs " << world << std::endl;
+    this->models[id] = worldModel;
+    world->modelNameToEntityId[worldModel->name] = id;
+    worldModel->indexInWorld = -1;
+    world->modelIndexToEntityId[worldModel->indexInWorld] = id;
+
+    return worldID;
   }
 
   public: inline Identity AddModel(
@@ -294,6 +305,11 @@ class Base : public Implements3d<FeatureList<Feature>>
     world->modelNameToEntityId[model->name] = id;
     model->indexInWorld = world->nextModelIndex++;
     world->modelIndexToEntityId[model->indexInWorld] = id;
+
+    auto worldModel = this->models.at(model->world);
+    worldModel->nestedModelEntityIds.push_back(id);
+    worldModel->nestedModelNameToEntityId[model->name] = id;
+
     return this->GenerateIdentity(id, model);
   }
 
@@ -380,12 +396,14 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: bool RemoveModelImpl(const Identity &_parentID, const Identity &_modelID)
   {
+    std::cerr << " ============= remove model impl  " << std::endl;
     auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
     if (!model)
       return false;
+    std::cerr << " ============= remove model impl  1  " << std::endl;
 
-    auto parentIt = this->models.find(_parentID);
-    bool isNested =  parentIt != this->models.end();
+    bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
+    std::cerr << " ============= remove model impl  2 nested  " << isNested << std::endl;
 
     // Remove nested models
     for (auto &nestedModelID : model->nestedModelEntityIds)
@@ -394,28 +412,33 @@ class Base : public Implements3d<FeatureList<Feature>>
           this->GenerateIdentity(nestedModelID, this->models.at(nestedModelID)));
     }
     model->nestedModelEntityIds.clear();
+    std::cerr << " ============= remove model impl  3  " << std::endl;
 
-    // If this is a nested model, remove references in parent model
+    // remove references in parent model or world model
+    auto *parentModel = this->ReferenceInterface<ModelInfo>(_parentID);
+    auto nestedModelIt =  parentModel->nestedModelNameToEntityId.find(model->name);
+    if (nestedModelIt != parentModel->nestedModelNameToEntityId.end())
+    {
+      std::size_t nestedModelID = nestedModelIt->second;
+      parentModel->nestedModelNameToEntityId.erase(nestedModelIt);
+      parentModel->nestedModelEntityIds.erase(std::remove(
+          parentModel->nestedModelEntityIds.begin(),
+          parentModel->nestedModelEntityIds.end(), nestedModelID),
+          parentModel->nestedModelEntityIds.end());
+    }
+
+    std::cerr << " ============= remove model impl  4  " << std::endl;
+
+    // If nested, we are done here. No need to remove multibody
     if (isNested)
     {
-      auto *parentModel = this->ReferenceInterface<ModelInfo>(_parentID);
-      auto nestedModelIt =  parentModel->nestedModelNameToEntityId.find(model->name);
-      if (nestedModelIt != parentModel->nestedModelNameToEntityId.end())
-      {
-        std::size_t nestedModelID = nestedModelIt->second;
-        parentModel->nestedModelNameToEntityId.erase(nestedModelIt);
-        parentModel->nestedModelEntityIds.erase(std::remove(
-            parentModel->nestedModelEntityIds.begin(),
-            parentModel->nestedModelEntityIds.end(), nestedModelID),
-            parentModel->nestedModelEntityIds.end());
-      }
       return true;
     }
 
+    // Remove model from world
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
     if (!world)
       return false;
-
     if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
     {
       // The model has already been removed at some point
@@ -451,6 +474,8 @@ class Base : public Implements3d<FeatureList<Feature>>
       this->joints.erase(jointID);
 
     this->models.erase(_modelID);
+
+    std::cerr << " ============= remove model impl  done " << std::endl;
     return true;
   }
 

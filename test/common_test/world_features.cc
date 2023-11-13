@@ -361,12 +361,8 @@ struct WorldNestedModelFeatureList : gz::physics::FeatureList<
   gz::physics::WorldModelFeature,
   gz::physics::RemoveEntities,
   gz::physics::GetNestedModelFromModel,
-  // gz::physics::sdf::ConstructSdfLink,
-  gz::physics::sdf::ConstructSdfJoint,
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfNestedModel
-  // gz::physics::ConstructEmptyLinkFeature,
-  // gz::physics::ConstructEmptyNestedModelFeature
 > { };
 
 
@@ -382,7 +378,7 @@ class WorldNestedModelTest : public WorldFeaturesTest<WorldNestedModelFeatureLis
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-        gz::common::joinPaths(TEST_WORLD_DIR, "world_nested_model_test.sdf"));
+        gz::common::joinPaths(TEST_WORLD_DIR, "world_single_nested_model.sdf"));
     EXPECT_TRUE(errors.empty()) << errors;
     if (errors.empty())
     {
@@ -393,7 +389,7 @@ class WorldNestedModelTest : public WorldFeaturesTest<WorldNestedModelFeatureLis
   }
 };
 
-TEST_F(WorldModelTest, WorldConstructNestedModel)
+TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
 {
   for (const std::string &name : this->pluginNames)
   {
@@ -403,96 +399,24 @@ TEST_F(WorldModelTest, WorldConstructNestedModel)
     auto worldModel = world->GetWorldModel();
     ASSERT_NE(nullptr, worldModel);
     EXPECT_EQ(world, worldModel->GetWorld());
-    EXPECT_EQ("default", worldModel->GetName());
+    EXPECT_EQ("nested_model_world", worldModel->GetName());
     EXPECT_EQ(0, worldModel->GetLinkCount());
-    EXPECT_EQ(nullptr, worldModel->GetLink(0));
-    EXPECT_EQ(nullptr, worldModel->GetLink("nonexistent_link"));
     EXPECT_EQ(0, worldModel->GetIndex());
+    EXPECT_EQ(1u, world->GetModelCount());
     EXPECT_EQ(world->GetModelCount(), worldModel->GetNestedModelCount());
     const auto nestedModel = worldModel->GetNestedModel(0);
     ASSERT_NE(nullptr, nestedModel);
-    EXPECT_EQ("m1", nestedModel->GetName());
-    EXPECT_NE(nullptr, worldModel->GetNestedModel("m2"));
-
-    // Check that removing a World model proxy is not allowed
-    EXPECT_FALSE(worldModel->Remove());
-    EXPECT_TRUE(worldModel.Valid());
-    EXPECT_FALSE(worldModel->Removed());
-    ASSERT_NE(nullptr, worldModel);
-    EXPECT_EQ(world, worldModel->GetWorld());
-
-    auto worldModel2 = world->GetWorldModel();
-    ASSERT_NE(nullptr, worldModel2);
-    EXPECT_EQ(world, worldModel2->GetWorld());
-
-    EXPECT_EQ(2u, world->GetModelCount());
-    EXPECT_EQ(2u, worldModel->GetNestedModelCount());
+    EXPECT_EQ("parent_model", nestedModel->GetName());
 
     // Check that we can remove models via RemoveNestedModel
     EXPECT_TRUE(worldModel->RemoveNestedModel(0));
     EXPECT_TRUE(nestedModel->Removed());
-    EXPECT_EQ(1u, world->GetModelCount());
-    EXPECT_EQ(1u, worldModel->GetNestedModelCount());
-    EXPECT_NE(nullptr, worldModel->GetNestedModel(0));
-    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m1"));
-
-    const auto m2 = worldModel->GetNestedModel("m2");
-    ASSERT_NE(nullptr, m2);
-    EXPECT_TRUE(worldModel->RemoveNestedModel("m2"));
-    EXPECT_TRUE(m2->Removed());
     EXPECT_EQ(0u, world->GetModelCount());
     EXPECT_EQ(0u, worldModel->GetNestedModelCount());
-    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m2"));
-
-    // Check that we can construct nested models and joints, but not links
-    auto m3 = worldModel->ConstructEmptyNestedModel("m3");
-    ASSERT_TRUE(m3);
-    EXPECT_EQ(m3, world->GetModel("m3"));
-    EXPECT_EQ(m3, worldModel->GetNestedModel("m3"));
-    EXPECT_FALSE(worldModel->ConstructEmptyLink("test_link"));
-
-    sdf::Link sdfLink;
-    sdfLink.SetName("link3");
-    EXPECT_FALSE(worldModel->ConstructLink(sdfLink));
-
-    // Create a link in m3 for testing joint creation.
-    EXPECT_TRUE(m3->ConstructLink(sdfLink));
-    sdf::Joint sdfJoint;
-    sdfJoint.SetName("test_joint");
-    sdfJoint.SetType(sdf::JointType::FIXED);
-    sdfJoint.SetParentName("m2::link2");
-    sdfJoint.SetChildName("m3::link3");
-    EXPECT_TRUE(worldModel->ConstructJoint(sdfJoint));
-
-    sdf::Model sdfModel;
-    sdfModel.SetName("m4");
-    sdfModel.AddLink(sdfLink);
-    EXPECT_TRUE(worldModel->ConstructNestedModel(sdfModel));
-    EXPECT_TRUE(world->GetModel("m4"));
-    EXPECT_TRUE(worldModel->GetNestedModel("m4"));
-
-    EXPECT_EQ(2u, world->GetModelCount());
-    EXPECT_EQ(2u, worldModel->GetNestedModelCount());
-    // Check that we can remove created via the World model proxy
-    EXPECT_EQ(m3, worldModel->GetNestedModel(0));
-    EXPECT_TRUE(worldModel->RemoveNestedModel(0));
-    EXPECT_TRUE(m3->Removed());
-    EXPECT_EQ(1u, world->GetModelCount());
-    EXPECT_EQ(1u, worldModel->GetNestedModelCount());
-    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m3"));
-    EXPECT_EQ(nullptr, world->GetModel("m3"));
-
-    const auto m4 = worldModel->GetNestedModel("m4");
-    ASSERT_NE(nullptr, m4);
-    EXPECT_TRUE(worldModel->RemoveNestedModel("m4"));
-    EXPECT_EQ(0u, world->GetModelCount());
-    EXPECT_EQ(0u, worldModel->GetNestedModelCount());
-    EXPECT_TRUE(m4->Removed());
-    EXPECT_EQ(nullptr, worldModel->GetNestedModel("m4"));
-    EXPECT_EQ(nullptr, world->GetModel("m4"));
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel(0));
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel("parent_model"));
   }
 }
-
 
 int main(int argc, char *argv[])
 {

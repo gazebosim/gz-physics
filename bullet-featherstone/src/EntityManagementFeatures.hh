@@ -41,7 +41,7 @@ struct EntityManagementFeatureList : gz::physics::FeatureList<
   GetShapeFromLink,
   GetWorldFromEngine,
   RemoveEntities,
-  RemoveModelFromWorld
+  WorldModelFeature
 > { };
 
 class EntityManagementFeatures :
@@ -176,6 +176,9 @@ class EntityManagementFeatures :
 
   public: Identity GetNestedModel(
     const Identity &_modelID, const std::string &_modelName) const override;
+
+  // ----- World model feature -----
+  public: Identity GetWorldModel(const Identity &_worldID) const override;
 };
 
 }  // namespace bullet_featherstone

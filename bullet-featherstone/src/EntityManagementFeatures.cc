@@ -215,9 +215,11 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 bool EntityManagementFeatures::ModelRemoved(
     const Identity &_modelID) const
 {
-  auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
-  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-  return world->modelIndexToEntityId.count(model->indexInWorld) == 0;
+//  auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+//  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+//  return world->modelIndexToEntityId.count(model->indexInWorld) == 0;
+
+  return this->models.find(_modelID) == this->models.end();
 }
 
 /////////////////////////////////////////////////
@@ -373,9 +375,15 @@ Identity EntityManagementFeatures::GetEngineOfWorld(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetModelCount(
-    const Identity &) const
+    const Identity &_worldID) const
 {
-  return this->models.size();
+  // Get world model and return its nested model count
+  auto modelIt = this->models.find(_worldID);
+  if (modelIt != this->models.end())
+  {
+    return modelIt->second->nestedModelEntityIds.size();
+  }
+  return 0u;
 }
 
 /////////////////////////////////////////////////
@@ -466,9 +474,20 @@ Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::string &_modelName) const
 {
   const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
-  auto nestedModelID = modelInfo->nestedModelNameToEntityId.at(_modelName);
+  auto modelIt = modelInfo->nestedModelNameToEntityId.find(_modelName);
+  if (modelIt == modelInfo->nestedModelNameToEntityId.end())
+    return this->GenerateInvalidId();
+  auto nestedModelID = modelIt->second;
   return this->GenerateIdentity(nestedModelID,
       this->models.at(nestedModelID));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorldModel(const Identity &_worldID) const
+{
+    std::cerr << "get world model  " << std::endl;
+    std::cerr << "  got  " << this->models.at(_worldID) << std::endl;
+  return this->GenerateIdentity(_worldID, this->models.at(_worldID));
 }
 
 }  // namespace bullet_featherstone
