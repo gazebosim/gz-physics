@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <model name="unsorted_links">
+      <link name="child_linkC" />
+      <link name="parent_link" />
+      <link name="child_linkA" />
+      <link name="child_linkB" />
+      <joint name="world_joint" type="fixed">
+        <parent>world</parent>
+        <child>parent_link</child>
+      </joint>
+      <joint name="joint1" type="prismatic">
+        <parent>parent_link</parent>
+        <child>child_linkA</child>
+        <axis>
+            <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+      <joint name="joint2" type="prismatic">
+        <parent>child_linkA</parent>
+        <child>child_linkB</child>
+        <axis>
+            <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+      <joint name="joint3" type="prismatic">
+        <parent>child_linkB</parent>
+        <child>child_linkC</child>
+        <axis>
+            <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+    </model>
+  </world>
+</sdf>
