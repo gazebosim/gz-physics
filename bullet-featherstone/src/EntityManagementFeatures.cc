@@ -215,10 +215,6 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 bool EntityManagementFeatures::ModelRemoved(
     const Identity &_modelID) const
 {
-//  auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
-//  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-//  return world->modelIndexToEntityId.count(model->indexInWorld) == 0;
-
   return this->models.find(_modelID) == this->models.end();
 }
 

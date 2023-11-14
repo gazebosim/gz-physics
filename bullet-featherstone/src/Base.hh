@@ -405,17 +405,22 @@ class Base : public Implements3d<FeatureList<Feature>>
     model->nestedModelEntityIds.clear();
 
     // remove references in parent model or world model
-    auto *parentModel = this->ReferenceInterface<ModelInfo>(_parentID);
-    auto nestedModelIt =
-        parentModel->nestedModelNameToEntityId.find(model->name);
-    if (nestedModelIt != parentModel->nestedModelNameToEntityId.end())
+    auto parentModelIt = this->models.find(_parentID);
+    if (parentModelIt != this->models.end())
     {
-      std::size_t nestedModelID = nestedModelIt->second;
-      parentModel->nestedModelNameToEntityId.erase(nestedModelIt);
-      parentModel->nestedModelEntityIds.erase(std::remove(
-          parentModel->nestedModelEntityIds.begin(),
-          parentModel->nestedModelEntityIds.end(), nestedModelID),
-          parentModel->nestedModelEntityIds.end());
+      auto parentModel = parentModelIt->second;
+      auto nestedModelIt =
+          parentModel->nestedModelNameToEntityId.find(model->name);
+      if (nestedModelIt !=
+          parentModel->nestedModelNameToEntityId.end())
+      {
+        std::size_t nestedModelID = nestedModelIt->second;
+        parentModel->nestedModelNameToEntityId.erase(nestedModelIt);
+        parentModel->nestedModelEntityIds.erase(std::remove(
+            parentModel->nestedModelEntityIds.begin(),
+            parentModel->nestedModelEntityIds.end(), nestedModelID),
+            parentModel->nestedModelEntityIds.end());
+      }
     }
 
     // If nested, we are done here. No need to remove multibody
