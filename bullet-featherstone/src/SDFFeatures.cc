@@ -334,7 +334,8 @@ bool buildTrees(const ::sdf::Model *_sdfModel,
     }
 
     if (!_parentOf.insert(
-      std::make_pair(child, ParentInfo{joint, _sdfModel, child, parent})).second)
+      std::make_pair(child, ParentInfo{joint, _sdfModel, child, parent}))
+      .second)
     {
       gzerr << "The Link [" << childLinkName << "] in Model ["
             << modelName << "] has multiple parent joints. That is not "
@@ -435,13 +436,15 @@ std::optional<Structure> buildStructure(
   btScalar mass;
   btVector3 inertia;
   math::Pose3d linkToPrincipalAxesPose;
-  extractInertial(_rootLink->Inertial(), mass, inertia, linkToPrincipalAxesPose);
+  extractInertial(_rootLink->Inertial(), mass, inertia,
+                  linkToPrincipalAxesPose);
 
   // Uncomment to debug structure
   // std::cout << "Structure: " << std::endl;
   // std::cout << "  model:  " << _model->Name() << std::endl;
   // std::cout << "  root link:  " << _rootLink->Name() << std::endl;
-  // std::cout << "  root joint:  " << ((rootJoint) ? rootJoint->Name() : "N/A") << std::endl;
+  // std::cout << "  root joint:  " << ((rootJoint) ? rootJoint->Name() : "N/A")
+  //           << std::endl;
   // std::cout << "  mass: " << mass << std::endl;
   // std::cout << "  fixed:  " << fixed << std::endl;
   // std::cout << "  flatLinks size:  " << flatLinks.size() << std::endl;
@@ -515,7 +518,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     auto mIt = this->models.find(_parentID);
     std::size_t nestedModelID = mIt->second->nestedModelNameToEntityId.at(
         _sdfModel.Name());
-    return this->GenerateIdentity(nestedModelID, this->models.at(nestedModelID));
+    return this->GenerateIdentity(nestedModelID,
+                                  this->models.at(nestedModelID));
   }
 
   auto structures = validateModel(_sdfModel);
@@ -690,7 +694,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         if (!errors.empty())
         {
           gzerr << "An error occurred while resolving the transform of Joint ["
-                << joint->Name() << "] in Model [" << parentInfo.model->Name() << "]:\n";
+                << joint->Name() << "] in Model [" << parentInfo.model->Name()
+                << "]:\n";
           for (const auto &error : errors)
           {
             gzerr << error << "\n";

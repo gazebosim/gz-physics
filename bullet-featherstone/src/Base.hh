@@ -387,7 +387,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(id, joint);
   }
 
-  public: bool RemoveModelImpl(const Identity &_parentID, const Identity &_modelID)
+  public: bool RemoveModelImpl(const Identity &_parentID,
+                               const Identity &_modelID)
   {
     auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
     if (!model)
@@ -398,14 +399,15 @@ class Base : public Implements3d<FeatureList<Feature>>
     // Remove nested models
     for (auto &nestedModelID : model->nestedModelEntityIds)
     {
-      this->RemoveModelImpl(_modelID,
-          this->GenerateIdentity(nestedModelID, this->models.at(nestedModelID)));
+      this->RemoveModelImpl(_modelID, this->GenerateIdentity(nestedModelID,
+                            this->models.at(nestedModelID)));
     }
     model->nestedModelEntityIds.clear();
 
     // remove references in parent model or world model
     auto *parentModel = this->ReferenceInterface<ModelInfo>(_parentID);
-    auto nestedModelIt =  parentModel->nestedModelNameToEntityId.find(model->name);
+    auto nestedModelIt =
+        parentModel->nestedModelNameToEntityId.find(model->name);
     if (nestedModelIt != parentModel->nestedModelNameToEntityId.end())
     {
       std::size_t nestedModelID = nestedModelIt->second;
