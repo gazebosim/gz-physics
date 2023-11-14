@@ -66,9 +66,6 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 
   // btMultiBody user index stores the gz-phsics model root link id
   std::size_t rootID = static_cast<std::size_t>(model->body->getUserIndex());
-
-  // The first link entity in the model is always the root link
-  // const std::size_t rootID = model->linkEntityIds.front();
   return this->GenerateIdentity(rootID, this->links.at(rootID));
 }
 

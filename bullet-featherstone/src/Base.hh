@@ -339,13 +339,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     auto *model = this->ReferenceInterface<ModelInfo>(_linkInfo.model);
     model->linkNameToEntityId[link->name] = id;
-    if (link->indexInModel.has_value())
-    {
-      // We expect the links to be added in order
-      // assert(static_cast<std::size_t>(*link->indexInModel + 1) ==
-      //        model->linkEntityIds.size());
-    }
-    else
+    if (!link->indexInModel.has_value())
     {
       // We are adding the root link. This means the model should not already
       // have a root link

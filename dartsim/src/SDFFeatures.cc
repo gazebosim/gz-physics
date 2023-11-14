@@ -405,7 +405,6 @@ SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
   // Resolve parent and child frames to links
   std::string parentLinkName;
   ::sdf::Errors errors = _sdfJoint->ResolveParentLink(parentLinkName);
-
   if (!errors.empty())
   {
     gzerr << "The link of the parent frame [" << _sdfJoint->ParentName()
@@ -1059,6 +1058,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // joint is connected to the world
   bool worldParent = (!_parent && _sdfJoint.ParentName() == "world");
   bool worldChild = (!_child && _sdfJoint.ChildName() == "world");
+
   if (worldChild)
   {
     gzerr << "Asked to create a joint with the world as the child in model "
