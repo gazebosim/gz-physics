@@ -146,7 +146,8 @@ void extractInertial(
 }
 
 /////////////////////////////////////////////////
-/// \brief Get pose of link in the model tree
+/// \brief Get the pose of a link relative to the input model
+/// The input link can be a nested link.
 /// \param[out] _pose Pose of link relative to model
 /// \param[in] _linkName Scoped name of link
 /// \param[in] _model Model SDF
@@ -431,7 +432,6 @@ std::optional<Structure> buildStructure(
   };
   flattenLinkTree(_rootLink);
 
-  // TODO transform to appropriate frame for nested models?
   btScalar mass;
   btVector3 inertia;
   math::Pose3d linkToPrincipalAxesPose;
@@ -656,7 +656,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       std::size_t parentModelID = linkParentModelIds[link];
       const auto linkID = this->AddLink(
         LinkInfo{link->Name(), i,
-       // modelID,
         this->GenerateIdentity(parentModelID, this->models.at(parentModelID)),
         linkToComTf.inverse()});
       linkIDs.insert(std::make_pair(link, linkID));
@@ -687,8 +686,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         gz::math::Pose3d gzPoseParentToJoint;
         errors = resolveJointPoseRelToLink(gzPoseParentToJoint,
             parentInfo.model, joint->Name(), parentLinkName);
-        // const auto errors = joint->SemanticPose().Resolve(
-        //   gzPoseParentToJoint, joint->ParentName());
 
         if (!errors.empty())
         {
@@ -711,8 +708,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       Eigen::Isometry3d poseJointToChild;
       {
         gz::math::Pose3d gzPoseChildToJoint;
-        // const auto errors =
-        //   link->SemanticPose().Resolve(gzPoseJointToChild, joint->Name());
         // this retrieves the joint pose relative to link
         std::string childLinkName;
         errors = joint->ResolveChildLink(childLinkName);
@@ -773,7 +768,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           linkIDs.find(link)->second,
           poseParentLinkToJoint,
           poseJointToChild,
-          // modelID
           modelIDs.find(parentInfo.model)->second
         });
       auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
@@ -856,7 +850,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
   model->body->finalizeMultiDof();
 
-  const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
+  // Note: this assumes the root link is in the top level model
+  // \todo(iche033) consider handling the case when the root link is
+  // in a nested model
+  const auto worldToModel = ResolveSdfPose(structure.model->SemanticPose());
   if (!worldToModel)
     return this->GenerateInvalidId();
 
