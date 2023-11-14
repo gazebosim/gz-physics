@@ -441,14 +441,25 @@ class Base : public Implements3d<FeatureList<Feature>>
     world->modelNameToEntityId.erase(model->name);
 
     // Remove all constraints related to this model
-    for (auto constraint_index : model->external_constraints)
+    for (const auto jointID : model->jointEntityIds)
     {
-      const auto joint = this->joints.at(constraint_index);
-      const auto &constraint =
-        std::get<std::unique_ptr<btMultiBodyConstraint>>(joint->identifier);
-      world->world->removeMultiBodyConstraint(constraint.get());
-      this->joints.erase(constraint_index);
+      const auto joint = this->joints.at(jointID);
+      if (joint->motor)
+      {
+        world->world->removeMultiBodyConstraint(joint->motor.get());
+      }
+      if (joint->fixedConstraint)
+      {
+        world->world->removeMultiBodyConstraint(joint->fixedConstraint.get());
+      }
+      if (joint->jointLimits)
+      {
+        world->world->removeMultiBodyConstraint(joint->jointLimits.get());
+      }
+      this->joints.erase(jointID);
     }
+    // \todo(iche033) Remove external constraints related to this model
+    // (model->external_constraints) once this is supported
 
     world->world->removeMultiBody(model->body.get());
     for (const auto linkID : model->linkEntityIds)
@@ -463,9 +474,6 @@ class Base : public Implements3d<FeatureList<Feature>>
 
       this->links.erase(linkID);
     }
-
-    for (const auto jointID : model->jointEntityIds)
-      this->joints.erase(jointID);
 
     this->models.erase(_modelID);
 
