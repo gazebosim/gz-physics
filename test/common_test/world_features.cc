@@ -358,11 +358,12 @@ TEST_F(WorldModelTest, WorldModelAPI)
 
 struct WorldNestedModelFeatureList : gz::physics::FeatureList<
   GravityFeatures,
-  gz::physics::WorldModelFeature,
-  gz::physics::RemoveEntities,
+  gz::physics::ForwardStep,
   gz::physics::GetNestedModelFromModel,
   gz::physics::sdf::ConstructSdfModel,
-  gz::physics::sdf::ConstructSdfNestedModel
+  gz::physics::sdf::ConstructSdfNestedModel,
+  gz::physics::RemoveEntities,
+  gz::physics::WorldModelFeature
 > { };
 
 
@@ -408,6 +409,10 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
     ASSERT_NE(nullptr, nestedModel);
     EXPECT_EQ("parent_model", nestedModel->GetName());
 
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+
     // Check that we can remove models via RemoveNestedModel
     EXPECT_TRUE(worldModel->RemoveNestedModel(0));
     EXPECT_TRUE(nestedModel->Removed());
@@ -415,6 +420,15 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
     EXPECT_EQ(0u, worldModel->GetNestedModelCount());
     EXPECT_EQ(nullptr, worldModel->GetNestedModel(0));
     EXPECT_EQ(nullptr, worldModel->GetNestedModel("parent_model"));
+
+    // verify we can step the world after model removal
+    const size_t numSteps = 1000;
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    EXPECT_EQ(0u, world->GetModelCount());
+    EXPECT_EQ(0u, worldModel->GetNestedModelCount());
   }
 }
 
