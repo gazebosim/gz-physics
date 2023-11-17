@@ -21,6 +21,7 @@
 #include <string>
 
 #include <gz/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/sdf/ConstructJoint.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
@@ -35,6 +36,7 @@ namespace physics {
 namespace bullet_featherstone {
 
 struct SDFFeatureList : gz::physics::FeatureList<
+  sdf::ConstructSdfJoint,
   sdf::ConstructSdfModel,
   sdf::ConstructSdfNestedModel,
   sdf::ConstructSdfWorld,
@@ -61,6 +63,10 @@ class SDFFeatures :
       const Identity &_linkID,
       const ::sdf::Collision &_collision,
       bool isStatic);
+
+  public: Identity ConstructSdfJoint(
+      const Identity &_modelID,
+      const ::sdf::Joint &_sdfJoint) override;
 
   private: Identity ConstructSdfCollision(
       const Identity &_linkID,

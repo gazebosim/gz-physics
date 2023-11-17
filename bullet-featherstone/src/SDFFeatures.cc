@@ -509,7 +509,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
     const ::sdf::Model &_sdfModel)
 {
-  // The ConstructSDFModelImpl function constructs the entire sdf model tree,
+  // The ConstructSdfModelImpl function constructs the entire sdf model tree,
   // including nested models So return the nested model identity if it is
   // constructed already
   auto wIt = this->worlds.find(_parentID);
@@ -609,23 +609,24 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     return this->GenerateInvalidId();
   }
 
-  // Get the root model identity
-  // New links and joints added are associated with this modelID
-  // so we do not break other features.
-  auto modelID =
-      this->GenerateIdentity(rootModelID, this->models[rootModelID]);
-
   // Add base link
+  std::size_t baseLinkModelID = linkParentModelIds.at(structure.rootLink);
   const auto rootID =
     this->AddLink(LinkInfo{
-      structure.rootLink->Name(), std::nullopt, modelID, rootInertialToLink
+      structure.rootLink->Name(), std::nullopt,
+      this->GenerateIdentity(baseLinkModelID, this->models.at(baseLinkModelID)),
+      rootInertialToLink
     });
   rootMultiBody->setUserIndex(std::size_t(rootID));
+
+  auto modelID =
+      this->GenerateIdentity(rootModelID, this->models[rootModelID]);
   const auto *model = this->ReferenceInterface<ModelInfo>(modelID);
 
   // Add world joint
   if (structure.rootJoint)
   {
+    const auto &parentInfo = structure.parentOf.at(structure.rootLink);
     this->AddJoint(
           JointInfo{
             structure.rootJoint->Name(),
@@ -634,7 +635,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
             rootID,
             Eigen::Isometry3d::Identity(),
             Eigen::Isometry3d::Identity(),
-            modelID
+            modelIDs.find(parentInfo.model)->second
           });
   }
 
@@ -665,7 +666,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       linkIDs.insert(std::make_pair(link, linkID));
     }
 
-    if (structure.parentOf.size())
+    if (!structure.parentOf.empty())
     {
       const auto &parentInfo = structure.parentOf.at(link);
       const auto *joint = parentInfo.joint;
@@ -894,6 +895,40 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       // need to be constructed outside of the SDF generation pipeline, e.g.
       // with AttachHeightmap.
       this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
+    }
+  }
+
+  // Add the remaining links in the model without constructing the bullet objects.
+  // These are dummy links for book-keeping purposes
+  // \todo(iche033) The code will need to be updated when multiple subtrees in
+  // a single model is supported.
+  for (std::size_t i = 1u; i < structures.size(); ++i)
+  {
+    auto otherStructure = structures[i];
+    // Add base link
+    std::size_t rootLinkModelID = linkParentModelIds[otherStructure.rootLink];
+    auto rootLinkModelInfo = this->models.at(rootLinkModelID);
+    this->AddLink(LinkInfo{
+      otherStructure.rootLink->Name(),
+      std::nullopt,
+      this->GenerateIdentity(rootLinkModelID, rootLinkModelInfo),
+      gz::math::eigen3::convert(
+      otherStructure.linkToPrincipalAxesPose).inverse()
+    });
+    // other links
+    for (int j = 0; j < static_cast<int>(otherStructure.flatLinks.size()); ++j)
+    {
+      const auto *link = otherStructure.flatLinks[static_cast<std::size_t>(j)];
+      std::size_t parentModelID = linkParentModelIds[link];
+      btScalar mass;
+      btVector3 inertia;
+      math::Pose3d linkToPrincipalAxesPose;
+      extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
+      auto parentModelInfo = this->models.at(parentModelID);
+      const auto linkID = this->AddLink(
+          LinkInfo{link->Name(), std::nullopt,
+          this->GenerateIdentity(parentModelID, parentModelInfo),
+          gz::math::eigen3::convert(linkToPrincipalAxesPose).inverse()});
     }
   }
 
@@ -1226,6 +1261,73 @@ Identity SDFFeatures::ConstructSdfCollision(
   }
   return this->GenerateInvalidId();
 }
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfJoint(
+    const Identity &_modelID,
+    const ::sdf::Joint &_sdfJoint)
+{
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_sdfJoint.ChildName() == "world")
+  {
+    gzerr << "Asked to create a joint with the world as the child in model "
+           << "[" << modelInfo->name << "]. This is currently not "
+           << "supported\n";
+
+    return this->GenerateInvalidId();
+  }
+
+  std::string parentLinkName;
+  const auto resolveParentErrors = _sdfJoint.ResolveParentLink(parentLinkName);
+  if (!resolveParentErrors.empty()) {
+    parentLinkName = _sdfJoint.ParentName();
+  }
+  std::string childLinkName;
+  const auto childResolveErrors = _sdfJoint.ResolveChildLink(childLinkName);
+  if (!childResolveErrors.empty()) {
+    childLinkName = _sdfJoint.ChildName();
+  }
+
+  // Currently only supports constructing joint with world
+  if (parentLinkName == "world" && _sdfJoint.Type() == ::sdf::JointType::FIXED)
+  {
+    auto worldModelIt = this->models.find(_modelID);
+    if (worldModelIt == this->models.end())
+      return this->GenerateInvalidId();
+    const auto worldModel = worldModelIt->second;
+    std::size_t idx = childLinkName.find("::");
+    if (idx == std::string::npos)
+      return this->GenerateInvalidId();
+
+    const std::string modelName = childLinkName.substr(0, idx);
+    std::size_t modelID = worldModel->nestedModelNameToEntityId.at(modelName);
+    auto model = this->models.at(modelID);
+
+    model->body->setFixedBase(true);
+    std::size_t linkID = model->body->getUserIndex();
+    auto rootID = this->GenerateIdentity(linkID, this->links.at(linkID));
+    return this->AddJoint(
+          JointInfo{
+            _sdfJoint.Name(),
+            RootJoint{},
+            std::nullopt,
+            rootID,
+            Eigen::Isometry3d::Identity(),
+            Eigen::Isometry3d::Identity(),
+            _modelID
+          });
+  }
+
+  // \todo(iche) Support fixed joint between 2 different models
+  gzerr << "Unable to create joint between parent: " << parentLinkName << " "
+        << "and child: " << childLinkName << ". "
+        << "ConstructSdfJoint in bullet-featherstone implementation currently "
+        << "only supports creating a fixed joint with the world as parent link."
+        << std::endl;
+
+  return this->GenerateInvalidId();
+}
+
 
 }  // namespace bullet_featherstone
 }  // namespace physics
