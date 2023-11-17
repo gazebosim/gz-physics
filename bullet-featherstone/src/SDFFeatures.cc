@@ -1274,6 +1274,19 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
+#if BT_BULLET_VERSION < 289
+  // The btMultiBody::setFixedBase function is only available in versions
+  // >= 2.89. This is needed for dynamically creating world joints,
+  // i.e. setting the btMultiBody to be fixed. So output an error letting
+  // users know the joint will not be created.
+  // \todo(iche033) An workaround for this is to loop through all the joints
+  // in the world first in ConstructSdfWorld, keep track of the models who are
+  // a child of the world joint, then when creating the btMultiBody
+  // in ConstructSdfModelImpl, pass fixedBase as true in its constructor.
+  gzerr << "ConstructSdfJoint feature is not supported for bullet version "
+        << "less than 2.89. Joint '" << sdfJoint->Name() << "' will not "
+        << "be created." << std::endl;
+#else
   auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_sdfJoint.ChildName() == "world")
   {
@@ -1325,12 +1338,13 @@ Identity SDFFeatures::ConstructSdfJoint(
           });
   }
 
-  // \todo(iche) Support fixed joint between 2 different models
+  // \todo(iche033) Support fixed joint between 2 different models
   gzerr << "Unable to create joint between parent: " << parentLinkName << " "
         << "and child: " << childLinkName << ". "
         << "ConstructSdfJoint in bullet-featherstone implementation currently "
         << "only supports creating a fixed joint with the world as parent link."
         << std::endl;
+#endif
 
   return this->GenerateInvalidId();
 }
