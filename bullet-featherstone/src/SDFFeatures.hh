@@ -72,7 +72,7 @@ class SDFFeatures :
       const Identity &_linkID,
       const ::sdf::Collision &_collision) override;
 
-  /// \brief Construct a bullet entity from a sdf::model
+  /// \brief Construct a bullet entity from a sdf::Model
   /// \param[in] _parentID Parent identity
   /// \param[in] _sdfModel sdf::Model to construct entity from
   /// \return The entity identity if constructed otherwise an invalid identity

@@ -898,8 +898,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     }
   }
 
-  // Add the remaining links in the model without constructing the bullet objects.
-  // These are dummy links for book-keeping purposes
+  // Add the remaining links in the model without constructing the bullet
+  // objects. These are dummy links for book-keeping purposes
   // \todo(iche033) The code will need to be updated when multiple subtrees in
   // a single model is supported.
   for (std::size_t i = 1u; i < structures.size(); ++i)
