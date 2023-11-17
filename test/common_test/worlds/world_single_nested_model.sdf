@@ -49,9 +49,12 @@
         </visual>
       </link>
 
-      <joint name="joint1" type="fixed">
-         <parent>link1</parent>
-         <child>nested_model::nested_link1</child>
+      <joint name="joint1" type="revolute">
+        <parent>link1</parent>
+        <child>nested_model::nested_link1</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+        </axis>
       </joint>
     </model>
   </world>
