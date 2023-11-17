@@ -1283,8 +1283,9 @@ Identity SDFFeatures::ConstructSdfJoint(
   // in the world first in ConstructSdfWorld, keep track of the models who are
   // a child of the world joint, then when creating the btMultiBody
   // in ConstructSdfModelImpl, pass fixedBase as true in its constructor.
+  (void)_modelID;
   gzerr << "ConstructSdfJoint feature is not supported for bullet version "
-        << "less than 2.89. Joint '" << sdfJoint->Name() << "' will not "
+        << "less than 2.89. Joint '" << _sdfJoint.Name() << "' will not "
         << "be created." << std::endl;
 #else
   auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
