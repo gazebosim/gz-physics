@@ -528,10 +528,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   if (structures.size() > 1)
   {
-    // multiple subt-trees detected in model
+    // multiple sub-trees detected in model
     // \todo(iche033) support multiple kinematic trees and
     // multiple floating links in a single model
-    gzerr << "Multiple subt-trees / floating links detected in a model. "
+    gzerr << "Multiple sub-trees / floating links detected in a model. "
           << "This is not supported in bullet-featherstone implementation yet."
           << std::endl;
   }
