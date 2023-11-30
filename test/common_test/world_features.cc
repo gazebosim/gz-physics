@@ -360,6 +360,7 @@ struct WorldNestedModelFeatureList : gz::physics::FeatureList<
   GravityFeatures,
   gz::physics::ForwardStep,
   gz::physics::GetNestedModelFromModel,
+  gz::physics::sdf::ConstructSdfJoint,
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfNestedModel,
   gz::physics::RemoveEntities,
@@ -408,6 +409,16 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
     const auto nestedModel = worldModel->GetNestedModel(0);
     ASSERT_NE(nullptr, nestedModel);
     EXPECT_EQ("parent_model", nestedModel->GetName());
+
+    // Test joint creation
+    sdf::Joint joint;
+    joint.SetName("world_joint");
+    joint.SetType(sdf::JointType::FIXED);
+    joint.SetParentName("world");
+    joint.SetChildName("invalid_link");
+    EXPECT_FALSE(worldModel->ConstructJoint(joint));
+    joint.SetChildName("parent_model::link1");
+    EXPECT_TRUE(worldModel->ConstructJoint(joint));
 
     gz::physics::ForwardStep::Input input;
     gz::physics::ForwardStep::State state;
