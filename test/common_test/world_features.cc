@@ -16,6 +16,8 @@
 */
 #include <gtest/gtest.h>
 
+#include <LinearMath/btScalar.h>
+
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
@@ -417,8 +419,12 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
     joint.SetParentName("world");
     joint.SetChildName("invalid_link");
     EXPECT_FALSE(worldModel->ConstructJoint(joint));
-    joint.SetChildName("parent_model::link1");
-    EXPECT_TRUE(worldModel->ConstructJoint(joint));
+    if (PhysicsEngineName(name) != "bullet-featherstone" ||
+        btGetVersion() >= 289)
+    {
+      joint.SetChildName("parent_model::link1");
+      EXPECT_TRUE(worldModel->ConstructJoint(joint));
+    }
 
     gz::physics::ForwardStep::Input input;
     gz::physics::ForwardStep::State state;
