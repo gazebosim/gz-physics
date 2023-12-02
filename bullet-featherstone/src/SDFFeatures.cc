@@ -815,7 +815,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     {
       for (std::size_t i = 0u; i < _parentModel->ModelCount(); ++i)
       {
-        auto childModel =_parentModel->ModelByIndex(i);
+        auto childModel = _parentModel->ModelByIndex(i);
         if (childModel == _targetModel)
         {
           modelScopedName = _prefix + childModel->Name();
