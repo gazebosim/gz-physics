@@ -1,5 +1,4 @@
 set(TEST_TYPE "COMMON_TEST")
-include_directories(${BULLET_INCLUDE_DIRS})
 
 set(tests
   added_mass
@@ -47,6 +46,13 @@ endfunction()
 
 set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
+# Get bullet version using pkg_check_modules as it is not available
+# through the cmake module
+gz_pkg_check_modules_quiet(bullet_version_check "bullet")
+if (bullet_version_check_FOUND)
+  string(REPLACE "." ""  GzBullet_VERSION ${bullet_version_check_VERSION})
+endif()
+
 foreach(test ${tests})
   set(test_executable "${TEST_TYPE}_${test}")
   add_executable(${test_executable} ${test}.cc)
@@ -65,6 +71,7 @@ foreach(test ${tests})
   target_compile_definitions(${test_executable} PRIVATE
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
+    "BT_BULLET_VERSION=${GzBullet_VERSION}"
   )
 
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})

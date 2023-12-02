@@ -33,11 +33,6 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   if (model->body->hasFixedBase())
     return this->GenerateInvalidId();
 
-  // bullet-featherstone does not allow floating bodies so if a joint exists
-  // the multibody does not quality as a FreeGroup
-  if (model->body->getNumDofs() > 0)
-    return this->GenerateInvalidId();
-
   return _modelID;
 }
 
@@ -48,11 +43,6 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
   const auto *model = this->ReferenceInterface<ModelInfo>(link->model);
   if (model->body->hasFixedBase())
-    return this->GenerateInvalidId();
-
-  // bullet-featherstone does not allow floating bodies so if a joint exists
-  // the multibody does not quality as a FreeGroup
-  if (model->body->getNumDofs() > 0)
     return this->GenerateInvalidId();
 
   return link->model;

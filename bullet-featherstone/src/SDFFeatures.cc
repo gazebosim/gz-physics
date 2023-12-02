@@ -146,57 +146,6 @@ void extractInertial(
 }
 
 /////////////////////////////////////////////////
-/// \brief Get the pose of a link relative to the input model
-/// The input link can be a nested link.
-/// \param[out] _pose Pose of link relative to model
-/// \param[in] _linkName Scoped name of link
-/// \param[in] _model Model SDF
-::sdf::Errors linkPoseInModelTree(math::Pose3d &_pose,
-    const std::string &_linkName,
-    const ::sdf::Model *_model)
-{
-  ::sdf::Errors errors;
-  size_t idx = _linkName.find("::");
-  if (idx != std::string::npos)
-  {
-    if (_model->ModelCount() > 0)
-    {
-      std::string nestedModelName = _linkName.substr(0, idx);
-      std::string nestedLinkName = _linkName.substr(idx + 2);
-      const auto *nestedModel = _model->ModelByName(nestedModelName);
-      if (!nestedModel)
-      {
-        gzerr << "Unable to find nested model " << nestedModelName << std::endl;
-        return errors;
-      }
-
-      math::Pose3d p;
-      errors = nestedModel->SemanticPose().Resolve(p);
-      if (!errors.empty())
-        return errors;
-      _pose = _pose * p;
-      return linkPoseInModelTree(_pose, nestedLinkName, nestedModel);
-    }
-  }
-  else
-  {
-    const auto *link = _model->LinkByName(_linkName);
-    if (!link)
-    {
-      gzerr << "Unable to find link " << _linkName << std::endl;
-      return errors;
-    }
-    math::Pose3d p;
-    errors = link->SemanticPose().Resolve(p);
-    if (!errors.empty())
-      return errors;
-
-    _pose = _pose * p;
-  }
-  return errors;
-}
-
-/////////////////////////////////////////////////
 /// \brief Get pose of joint relative to link
 /// \param[out] _resolvedPose Pose of joint relative to link
 /// \param[in] _model Parent model of joint
@@ -215,12 +164,6 @@ void extractInertial(
     return errors;
   }
 
-  math::Pose3d jointPose;
-  errors = joint->SemanticPose().Resolve(jointPose);
-  if (!errors.empty())
-    return errors;
-
-  // joint pose is expressed relative to child link
   std::string childLinkName;
   errors = joint->ResolveChildLink(childLinkName);
   if (!errors.empty())
@@ -228,13 +171,15 @@ void extractInertial(
     childLinkName = joint->ChildName();
   }
 
+  // joint pose is expressed relative to child link so return joint pose
+  // if input link is the child link
   if (childLinkName == _link)
   {
-    _resolvedPose = jointPose;
+    errors = joint->SemanticPose().Resolve(_resolvedPose);
     return errors;
   }
 
-  // pose of parent link
+  // compute joint pose relative to parent link
   const auto *link = _model->LinkByName(_link);
   if (!link)
   {
@@ -243,20 +188,16 @@ void extractInertial(
    return errors;
   }
 
-  math::Pose3d parentLinkPose;
-  errors = linkPoseInModelTree(parentLinkPose, _link, _model);
-  if (!errors.empty())
-    return errors;
+  math::Pose3d jointPoseRelToModel;
+  errors = _model->SemanticPose().Resolve(jointPoseRelToModel,
+      _model->Name() + "::" + _joint);
+  jointPoseRelToModel = jointPoseRelToModel.Inverse();
 
-  // pose of child link
-  math::Pose3d childLinkPose;
-  errors = linkPoseInModelTree(childLinkPose, childLinkName, _model);
-  if (!errors.empty())
-    return errors;
+  math::Pose3d modelPoseRelToLink;
+  errors = _model->SemanticPose().Resolve(modelPoseRelToLink,
+      _model->Name() + "::" + _link);
 
-  auto jointPoseInModel = childLinkPose * jointPose;
-
-  _resolvedPose = parentLinkPose.Inverse() * jointPoseInModel;
+  _resolvedPose = modelPoseRelToLink * jointPoseRelToModel;
 
   return errors;
 }
@@ -856,12 +797,51 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   model->body->setHasSelfCollision(_sdfModel.SelfCollide());
   model->body->finalizeMultiDof();
 
-  // Note: this assumes the root link is in the top level model
-  // \todo(iche033) consider handling the case when the root link is
-  // in a nested model
-  const auto worldToModel = ResolveSdfPose(structure.model->SemanticPose());
+  const auto worldToModel = ResolveSdfPose(_sdfModel.SemanticPose());
   if (!worldToModel)
     return this->GenerateInvalidId();
+
+  auto modelToNestedModel = Eigen::Isometry3d::Identity();
+  // if the model of the root link is in a top level model, compute
+  // its pose relative to top level model
+  if (structure.model != &_sdfModel)
+  {
+    // get the scoped name of the model
+    // This is used to resolve the model pose
+    std::string modelScopedName;
+    auto getModelScopedName = [&](const ::sdf::Model *_targetModel,
+      const ::sdf::Model *_parentModel, const std::string &_prefix,
+      auto &&_getModelScopedName)
+    {
+      for (std::size_t i = 0u; i < _parentModel->ModelCount(); ++i)
+      {
+        auto childModel =_parentModel->ModelByIndex(i);
+        if (childModel == _targetModel)
+        {
+          modelScopedName = _prefix + childModel->Name();
+          return true;
+        }
+        else
+        {
+          if (_getModelScopedName(_targetModel, childModel,
+              _prefix + childModel->Name() + "::", _getModelScopedName))
+            return true;
+        }
+      }
+      return false;
+    };
+
+    math::Pose3d modelPose;
+    if (!getModelScopedName(structure.model, &_sdfModel,
+        _sdfModel.Name() + "::", getModelScopedName))
+      return this->GenerateInvalidId();
+
+    auto errors = _sdfModel.SemanticPose().Resolve(modelPose,
+        modelScopedName);
+    if (!errors.empty())
+      return this->GenerateInvalidId();
+    modelToNestedModel = math::eigen3::convert(modelPose).inverse();
+  }
 
   const auto modelToRootLink =
     ResolveSdfPose(structure.rootLink->SemanticPose());
@@ -869,7 +849,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     return this->GenerateInvalidId();
 
   const auto worldToRootCom =
-    *worldToModel * *modelToRootLink * rootInertialToLink.inverse();
+    *worldToModel * modelToNestedModel * *modelToRootLink *
+    rootInertialToLink.inverse();
 
   model->body->setBaseWorldTransform(convertTf(worldToRootCom));
   model->body->setBaseVel(btVector3(0, 0, 0));
