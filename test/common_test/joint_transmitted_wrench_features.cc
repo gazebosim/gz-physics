@@ -224,7 +224,7 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
 TYPED_TEST(JointTransmittedWrenchFixture, PendulumInMotion)
 {
   // This test requires https://github.com/bulletphysics/bullet3/pull/4462
-#if BT_BULLET_VERSION <= 325
+#ifdef BT_BULLET_VERSION_LE_325
   if (this->engineName == "bullet-featherstone")
     GTEST_SKIP();
 #endif
@@ -415,7 +415,7 @@ TYPED_TEST(JointTransmittedWrenchFixture, JointLosses)
 TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
 {
   // This test requires https://github.com/bulletphysics/bullet3/pull/4462
-#if BT_BULLET_VERSION <= 325
+#if BT_BULLET_VERSION_LE_325
   if (this->engineName == "bullet-featherstone")
     GTEST_SKIP();
 #endif

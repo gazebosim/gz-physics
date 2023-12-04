@@ -419,11 +419,15 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
     EXPECT_FALSE(worldModel->ConstructJoint(joint));
     joint.SetChildName("parent_model::link1");
     if (PhysicsEngineName(name) != "bullet-featherstone")
+    {
       EXPECT_TRUE(worldModel->ConstructJoint(joint));
+    }
     else
-#if BT_BULLET_VERSION >= 289
+    {
+#ifdef BT_BULLET_VERSION_GE_289
       EXPECT_TRUE(worldModel->ConstructJoint(joint));
 #endif
+    }
 
     gz::physics::ForwardStep::Input input;
     gz::physics::ForwardStep::State state;

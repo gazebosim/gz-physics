@@ -49,9 +49,6 @@ set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 # Get bullet version using pkg_check_modules as it is not available
 # through the cmake module
 gz_pkg_check_modules_quiet(bullet_version_check "bullet")
-if (bullet_version_check_FOUND)
-  string(REPLACE "." ""  GzBullet_VERSION ${bullet_version_check_VERSION})
-endif()
 
 foreach(test ${tests})
   set(test_executable "${TEST_TYPE}_${test}")
@@ -71,8 +68,19 @@ foreach(test ${tests})
   target_compile_definitions(${test_executable} PRIVATE
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
-    "BT_BULLET_VERSION=${GzBullet_VERSION}"
   )
+
+  if (bullet_version_check_VERSION VERSION_GREATER_EQUAL 2.89)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_GE_289"
+    )
+  endif()
+  if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.25)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_LE_325"
+    )
+  endif()
+
 
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
 
