@@ -729,7 +729,8 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 
   // TODO(anyone) We need a machanism to configure maxNumContacts at runtime.
   auto &collOpt = world->getConstraintSolver()->getCollisionOption();
-  collOpt.maxNumContacts = 10000;
+  //collOpt.maxNumContacts = 10000;
+  collOpt.maxNumContacts = 20;
 
   world->getConstraintSolver()->getCollisionOption().collisionFilter =
       std::make_shared<BitmaskContactFilter>();

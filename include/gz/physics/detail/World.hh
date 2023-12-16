@@ -101,6 +101,24 @@ auto Gravity::World<PolicyT, FeaturesT>::GetGravity(
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
+void MaxContacts::World<PolicyT, FeaturesT>::SetMaxContacts(
+    std::size_t _maxContacts)
+{
+  this->template Interface<MaxContacts>()
+      ->SetWorldMaxContacts(this->identity, _maxContacts);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+std::size_t MaxContacts::World<PolicyT, FeaturesT>::
+    GetMaxContacts() const
+{
+  return this->template Interface<MaxContacts>()
+      ->GetWorldMaxContacts(this->identity);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
 void Solver::World<PolicyT, FeaturesT>::SetSolver(
     const std::string &_solver)
 {

@@ -97,6 +97,23 @@ WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
 }
 
 /////////////////////////////////////////////////
+void WorldFeatures::SetWorldMaxContacts(
+    const Identity &_id, std::size_t _maxContacts)
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto &collOpt = world->getConstraintSolver()->getCollisionOption();
+  collOpt.maxNumContacts = _maxContacts;
+}
+
+/////////////////////////////////////////////////
+std::size_t WorldFeatures::GetWorldMaxContacts(const Identity &_id)
+    const
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  return world->getConstraintSolver()->getCollisionOption().maxNumContacts;
+}
+
+/////////////////////////////////////////////////
 void WorldFeatures::SetWorldSolver(const Identity &_id,
     const std::string &_solver)
 {

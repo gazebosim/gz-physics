@@ -131,6 +131,44 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
+    class GZ_PHYSICS_VISIBLE MaxContacts: public virtual Feature
+    {
+      /// \brief The World API for setting the collision detector.
+      public: template <typename PolicyT, typename FeaturesT>
+      class World : public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        /// \brief Set the maximum number of contacts allowed between two
+        /// entities.
+        /// \param[in] _maxContacts Maximum number of contacts.
+        public: void SetMaxContacts(std::size_t _maxContacts);
+
+        /// \brief Set the maximum number of contacts allowed between two
+        /// entities.
+        /// \return Maximum number of contacts.
+        public: std::size_t GetMaxContacts() const;
+      };
+
+      /// \private The implementation API for the collision detector.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        /// \brief Implementation API for setting the maximum number of
+        /// contacts between two entities.
+        /// \param[in] _id Identity of the world.
+        /// \param[in] _maxContacts Maximum number of contacts.
+        public: virtual void SetWorldMaxContacts(
+            const Identity &_id, std::size_t _maxContacts) = 0;
+
+        /// \brief Implementation API for getting the maximum number of
+        /// contacts between two entities.
+        /// \param[in] _id Identity of the world.
+        /// \param[in] _maxContacts Maximum number of contacts.
+        public: virtual std::size_t GetWorldMaxContacts(
+            const Identity &_id) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
     class GZ_PHYSICS_VISIBLE Solver : public virtual Feature
     {
       /// \brief The World API for setting the solver.
