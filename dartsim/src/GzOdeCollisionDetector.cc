@@ -66,16 +66,23 @@ bool GzOdeCollisionDetector::collide(
 }
 
 /////////////////////////////////////////////////
-void GzOdeCollisionDetector::SetMaxContacts(int _maxContacts)
+void GzOdeCollisionDetector::SetMaxContacts(std::size_t _maxContacts)
 {
   this->maxCollisionPairContacts = _maxContacts;
 }
 
 /////////////////////////////////////////////////
-void GzOdeCollisionDetector::LimitMaxContacts(
-    CollisionResult* _result)
+std::size_t GzOdeCollisionDetector::GetMaxContacts() const
 {
-  if (this->maxCollisionPairContacts < 0)
+  return this->maxCollisionPairContacts;
+}
+
+/////////////////////////////////////////////////
+void GzOdeCollisionDetector::LimitMaxContacts(
+    CollisionResult *_result)
+{
+  if (this->maxCollisionPairContacts ==
+    std::numeric_limits<std::size_t>::max())
     return;
 
   auto allContacts = _result->getContacts();
@@ -92,12 +99,11 @@ void GzOdeCollisionDetector::LimitMaxContacts(
     //auto &count = contactMap[contactPair];
     auto &count = contactMap[contact.collisionObject1][contact.collisionObject2];
     count++;
-    if (static_cast<int>(count) <= this->maxCollisionPairContacts)
+    auto &otherCount = contactMap[contact.collisionObject2][contact.collisionObject1];
+    std::size_t total =  count + otherCount;
+    if (total <= this->maxCollisionPairContacts)
     {
       _result->addContact(contact);
     }
-    // std::cerr << "1 " << contact.collisionObject1 << std::endl;
-    // std::cerr << "2 " << contact.collisionObject2 << std::endl;
-    // std::cerr << "count " << count << std::endl;
   }
 }

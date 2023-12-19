@@ -248,7 +248,7 @@ TYPED_TEST(SimulationFeaturesMaxContactsTest, MaxContacts)
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
-    EXPECT_EQ(20u, world->GetMaxContacts());
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(), world->GetMaxContacts());
     // Large box collides with other shapes
     EXPECT_GT(contacts.size(), 30u);
 

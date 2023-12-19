@@ -15,6 +15,7 @@
  *
 */
 
+#include <limits>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 
 namespace dart {
@@ -37,7 +38,15 @@ class GzOdeCollisionDetector : public dart::collision::OdeCollisionDetector
 
   /// \brief Set the maximum number of contacts between a pair of collision
   /// objects
-  public: void SetMaxContacts(int _maxContacts);
+  /// \param[in] _maxContacts Maximum number of contacts between a pair of
+  /// collision objects.
+  public: void SetMaxContacts(std::size_t _maxContacts);
+
+  /// \brief Get the maximum number of contacts between a pair of collision
+  /// objects
+  /// \return Maximum number of contacts between a pair of collision objects.
+  public: std::size_t GetMaxContacts() const;
+
 
   /// \brief Create the GzOdeCollisionDetector
   public: static std::shared_ptr<GzOdeCollisionDetector> create();
@@ -52,7 +61,8 @@ class GzOdeCollisionDetector : public dart::collision::OdeCollisionDetector
   private: void LimitMaxContacts(CollisionResult *_result);
 
   /// \brief Maximum number of contacts between a pair of collision objects.
-  private: int maxCollisionPairContacts = -1;
+  private: std::size_t maxCollisionPairContacts =
+      std::numeric_limits<std::size_t>::max();
 
   private: static Registrar<GzOdeCollisionDetector> mRegistrar;
 };

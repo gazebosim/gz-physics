@@ -52,8 +52,8 @@ namespace gz {
 namespace physics {
 namespace dartsim {
 
-/// \brief The structs WorldInfo, ModelInfo, LinkInfo, JointInfo, and ShapeInfo
-///  are used for two reasons:
+/// \brief The structs ModelInfo, LinkInfo, JointInfo, and ShapeInfo are used
+/// for two reasons:
 /// 1) Holding extra information such as the name or offset
 ///    that will be different from the underlying engine
 /// 2) Wrap shared pointers to DART entities. Since these shared pointers (eg.
@@ -62,13 +62,6 @@ namespace dartsim {
 ///    create a std::shared_ptr of the struct that wraps the corresponding DART
 ///    shared pointer.
 
-struct WorldInfo
-{
-  /// \brief Pointer to dart simulation world
-  dart::simulation::WorldPtr world;
-  /// \brief Maximum number of contacts between a pair of collision objects
-  int maxContacts = -1;
-};
 
 struct LinkInfo
 {
@@ -282,7 +275,6 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: using LinkInfoPtr = std::shared_ptr<LinkInfo>;
   public: using JointInfoPtr = std::shared_ptr<JointInfo>;
   public: using ShapeInfoPtr = std::shared_ptr<ShapeInfo>;
-  public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;
 
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
@@ -308,9 +300,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     const std::size_t id = this->GetNextEntity();
     _world->setName(_name);
-    auto worldInfo = std::make_shared<WorldInfo>();
-    worldInfo->world = _world;
-    this->worlds.AddEntity(id, worldInfo, _name, 0);
+    this->worlds.AddEntity(id, _world, _name, 0);
 
     this->frames[id] = dart::dynamics::Frame::World();
     auto model = dart::dynamics::Skeleton::create("");
@@ -318,7 +308,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     auto modelInfo = std::make_shared<ModelInfo>();
     modelInfo->model = model;
     modelInfo->localName = _name;
-    this->modelProxiesToWorld.AddEntity(id, modelInfo, worldInfo, 0);
+    this->modelProxiesToWorld.AddEntity(id, modelInfo, _world, 0);
 
     return id;
   }
@@ -329,7 +319,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     auto entry = std::make_shared<ModelInfo>(_info);
 
-    const dart::simulation::WorldPtr &world = worlds[_worldID]->world;
+    const dart::simulation::WorldPtr &world = worlds[_worldID];
     world->addSkeleton(entry->model);
     this->models.AddEntity(id, entry, _info.model, _worldID);
     if (_info.frame)
@@ -349,7 +339,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     const std::size_t id = this->GetNextEntity();
     auto entry = std::make_shared<ModelInfo>(_info);
 
-    const dart::simulation::WorldPtr &world = worlds[_worldID]->world;
+    const dart::simulation::WorldPtr &world = worlds[_worldID];
     world->addSkeleton(entry->model);
 
     this->models.AddEntity(id, entry, _info.model, _parentID);
@@ -434,7 +424,7 @@ class Base : public Implements3d<FeatureList<Feature>>
         _link->link, pairJointBodyNode.second);
     _link->weldedNodes.emplace_back(pairJointBodyNode.second, weld);
     auto worldId = this->GetWorldOfModelImpl(models.objectToID[skeleton]);
-    auto dartWorld = this->worlds.at(worldId)->world;
+    auto dartWorld = this->worlds.at(worldId);
     dartWorld->getConstraintSolver()->addConstraint(weld);
 
     // Rebalance the link inertia between the original body node and its
@@ -466,7 +456,7 @@ class Base : public Implements3d<FeatureList<Feature>>
       {
         auto worldId = this->GetWorldOfModelImpl(
             this->models.objectToID[child->getSkeleton()]);
-        auto dartWorld = this->worlds.at(worldId)->world;
+        auto dartWorld = this->worlds.at(worldId);
         dartWorld->getConstraintSolver()->removeConstraint(it->second);
         // Okay to erase since we break afterward.
         _link->weldedNodes.erase(it);
@@ -531,7 +521,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: bool RemoveModelImpl(const std::size_t _worldID,
                                const std::size_t _modelID)
   {
-    const auto &world = this->worlds.at(_worldID)->world;
+    const auto &world = this->worlds.at(_worldID);
     auto modelInfo = this->models.at(_modelID);
     auto skel = modelInfo->model;
     // Remove the contents of the skeleton from local entity storage containers
@@ -631,7 +621,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     if (this->modelProxiesToWorld.HasEntity(_modelID))
     {
-      auto world = this->worlds.at(_modelID)->world;
+      auto world = this->worlds.at(_modelID);
       return ::sdf::JoinName(world->getName(), _name);
     }
     else
@@ -647,7 +637,7 @@ class Base : public Implements3d<FeatureList<Feature>>
               << _name << "]\n";
         return "";
       }
-      auto world = this->worlds.at(worldID)->world;
+      auto world = this->worlds.at(worldID);
       return ::sdf::JoinName(
           world->getName(),
           ::sdf::JoinName(modelInfo->model->getName(), _name));
@@ -664,13 +654,13 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->models.at(_modelID);
   }
 
-  public: EntityStorage<WorldInfoPtr, std::string> worlds;
+  public: EntityStorage<DartWorldPtr, std::string> worlds;
   public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
-  public: EntityStorage<ModelInfoPtr, WorldInfoPtr> modelProxiesToWorld;
+  public: EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
 
   /// \brief Map from the fully qualified link name (including the world name)
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even

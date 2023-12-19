@@ -22,7 +22,6 @@
 #include <unordered_map>
 
 #include <dart/config.hpp>
-#include <dart/collision/ode/OdeCollisionDetector.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
@@ -107,7 +106,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 static std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
     const EntityManagementFeatures* _emf, std::size_t _worldID)
 {
-  const auto world = _emf->worlds.at(_worldID)->world;
+  const auto world = _emf->worlds.at(_worldID);
   // We need to cast the base class pointer to the derived class
   const auto filterPtr = std::static_pointer_cast<BitmaskContactFilter>(
       world->getConstraintSolver()->getCollisionOption()
@@ -174,7 +173,7 @@ Identity EntityManagementFeatures::GetWorld(
 const std::string &EntityManagementFeatures::GetWorldName(
     const Identity &_worldID) const
 {
-  return this->ReferenceInterface<WorldInfo>(_worldID)->world->getName();
+  return this->ReferenceInterface<DartWorld>(_worldID)->getName();
 }
 
 /////////////////////////////////////////////////
@@ -233,7 +232,7 @@ Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, const std::string &_modelName) const
 {
   const DartSkeletonPtr &model =
-      this->ReferenceInterface<WorldInfo>(_worldID)->world->getSkeleton(_modelName);
+      this->ReferenceInterface<DartWorld>(_worldID)->getSkeleton(_modelName);
 
   // If the model doesn't exist in "models", it means the containing entity has
   // been removed.
@@ -330,7 +329,7 @@ Identity EntityManagementFeatures::GetNestedModel(
     return this->GenerateInvalidId();
   }
 
-  auto nestedSkel = this->worlds.at(worldID)->world->getSkeleton(fullName);
+  auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
   if (nullptr == nestedSkel)
   {
     return this->GenerateInvalidId();
@@ -711,7 +710,7 @@ bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
       ::sdf::JoinName(modelInfo->model->getName(), _modelName);
 
   auto worldID = this->GetWorldOfModelImpl(_modelID);
-  auto nestedSkel = this->worlds.at(worldID)->world->getSkeleton(fullName);
+  auto nestedSkel = this->worlds.at(worldID)->getSkeleton(fullName);
   if (nullptr == nestedSkel || !this->models.HasEntity(nestedSkel))
   {
     return false;
@@ -727,17 +726,12 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
   auto collisionDetector = dart::collision::GzOdeCollisionDetector::create();
-  // auto collisionDetector = dart::collision::OdeCollisionDetector::create();
   world->getConstraintSolver()->setCollisionDetector(collisionDetector);
 
   auto &collOpt = world->getConstraintSolver()->getCollisionOption();
   // Set the max number of contacts for all collision objects
   // in the world
   collOpt.maxNumContacts = 10000;
-
-  // Set the max number of contacts for a pair of collision objects
-  std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
-      collisionDetector)->SetMaxContacts(20u);
 
   world->getConstraintSolver()->getCollisionOption().collisionFilter =
       std::make_shared<BitmaskContactFilter>();
@@ -816,7 +810,7 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
     return this->GenerateInvalidId();
   }
 
-  auto world = this->worlds.at(worldID)->world;
+  auto world = this->worlds.at(worldID);
   const std::string fullName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(model->getName(), bn->getName()));

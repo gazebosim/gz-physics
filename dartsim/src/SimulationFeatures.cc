@@ -58,7 +58,7 @@ void SimulationFeatures::WorldForwardStep(
     const ForwardStep::Input & _u)
 {
   GZ_PROFILE("SimulationFeatures::WorldForwardStep");
-  auto world = this->ReferenceInterface<WorldInfo>(_worldID)->world;
+  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
   auto *dtDur =
       _u.Query<std::chrono::steady_clock::duration>();
   const double tol = 1e-6;
@@ -155,7 +155,7 @@ std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
   std::vector<SimulationFeatures::ContactInternal> outContacts;
-  auto const world = this->ReferenceInterface<WorldInfo>(_worldID)->world;
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   const auto colResult = world->getLastCollisionResult();
 
   for (const auto &dtContact : colResult.getContacts())
@@ -211,7 +211,7 @@ void SimulationFeatures::AddContactPropertiesCallback(
   const Identity& _worldID, const std::string& _callbackID,
   SurfaceParamsCallback _callback)
 {
-  auto *world = this->ReferenceInterface<WorldInfo>(_worldID)->world;
+  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
 
   auto handler = std::make_shared<GzContactSurfaceHandler>();
   handler->surfaceParamsCallback = _callback;
@@ -226,7 +226,7 @@ void SimulationFeatures::AddContactPropertiesCallback(
 bool SimulationFeatures::RemoveContactPropertiesCallback(
   const Identity& _worldID, const std::string& _callbackID)
 {
-  auto *world = this->ReferenceInterface<WorldInfo>(_worldID)->world;
+  auto *world = this->ReferenceInterface<DartWorld>(_worldID);
 
   if (this->contactSurfaceHandlers.find(_callbackID) !=
     this->contactSurfaceHandlers.end())
