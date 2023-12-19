@@ -737,7 +737,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 
   // Set the max number of contacts for a pair of collision objects
   std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
-    collisionDetector)->SetMaxContacts(20);
+      collisionDetector)->SetMaxContacts(20u);
 
   world->getConstraintSolver()->getCollisionOption().collisionFilter =
       std::make_shared<BitmaskContactFilter>();

@@ -42,9 +42,9 @@ namespace dartsim {
 void WorldFeatures::SetWorldCollisionDetector(
     const Identity &_id, const std::string &_collisionDetector)
 {
-  auto world = this->ReferenceInterface<WorldInfo>(_id)->world;
+  auto world = this->ReferenceInterface<WorldInfo>(_id);
   auto collisionDetector =
-       world->getConstraintSolver()->getCollisionDetector();
+       world->world->getConstraintSolver()->getCollisionDetector();
   if (_collisionDetector == "bullet")
   {
     collisionDetector = dart::collision::BulletCollisionDetector::create();
@@ -56,8 +56,9 @@ void WorldFeatures::SetWorldCollisionDetector(
   else if (_collisionDetector == "ode")
   {
     collisionDetector = dart::collision::GzOdeCollisionDetector::create();
+    // collisionDetector = dart::collision::OdeCollisionDetector::create();
     std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
-        collisionDetector)->SetMaxContacts(20);
+        collisionDetector)->SetMaxContacts(world->maxContacts);
   }
   else if (_collisionDetector == "dart")
   {
@@ -70,9 +71,9 @@ void WorldFeatures::SetWorldCollisionDetector(
            << collisionDetector->getType() << "]." << std::endl;
   }
 
-  world->getConstraintSolver()->setCollisionDetector(collisionDetector);
+  world->world->getConstraintSolver()->setCollisionDetector(collisionDetector);
 
-  gzmsg << "Using [" << world->getConstraintSolver()->getCollisionDetector()
+  gzmsg << "Using [" << world->world->getConstraintSolver()->getCollisionDetector()
       ->getType() << "] collision detector" << std::endl;
 }
 
@@ -106,6 +107,16 @@ void WorldFeatures::SetWorldMaxContacts(
 {
   auto world = this->ReferenceInterface<WorldInfo>(_id);
   world->maxContacts = static_cast<int>(_maxContacts);
+  auto collisionDetector =
+    world->world->getConstraintSolver()->getCollisionDetector();
+
+  auto odeCollisionDetector =
+    std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
+    collisionDetector);
+  if (odeCollisionDetector)
+  {
+    odeCollisionDetector->SetMaxContacts(world->maxContacts);
+  }
 }
 
 /////////////////////////////////////////////////

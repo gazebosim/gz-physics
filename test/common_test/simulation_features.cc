@@ -48,6 +48,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RequestEngine.hh>
+#include <gz/physics/World.hh>
 
 #include <sdf/Root.hh>
 
@@ -213,11 +214,61 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
-    // Only box_colliding should collide with box_base
+    // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
   }
 }
 
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesMaxContacts : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::ForwardStep,
+  gz::physics::MaxContacts
+> {};
+
+template <class T>
+class SimulationFeaturesMaxContactsTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesMaxContactsTestTypes =
+  ::testing::Types<FeaturesMaxContacts>;
+TYPED_TEST_SUITE(SimulationFeaturesMaxContactsTest,
+                 SimulationFeaturesMaxContactsTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesMaxContactsTest, MaxContacts)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesMaxContacts>(
+      this->loader,
+      name,
+      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+    auto checkedOutput = StepWorld<FeaturesMaxContacts>(world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(20u, world->GetMaxContacts());
+    // Large box collides with other shapes
+    EXPECT_GT(contacts.size(), 30u);
+
+    world->SetMaxContacts(1u);
+    EXPECT_EQ(1u, world->GetMaxContacts());
+    checkedOutput = StepWorld<FeaturesMaxContacts>(world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(4u, contacts.size());
+
+    world->SetMaxContacts(0u);
+    EXPECT_EQ(0u, world->GetMaxContacts());
+    checkedOutput = StepWorld<FeaturesMaxContacts>(world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(0u, contacts.size());
+  }
+}
 
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesStep : gz::physics::FeatureList<

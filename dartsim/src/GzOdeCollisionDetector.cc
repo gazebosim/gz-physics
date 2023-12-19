@@ -100,5 +100,4 @@ void GzOdeCollisionDetector::LimitMaxContacts(
     // std::cerr << "2 " << contact.collisionObject2 << std::endl;
     // std::cerr << "count " << count << std::endl;
   }
-  // std::cerr << "contacts " << _result->getNumContacts() << std::endl;
 }
