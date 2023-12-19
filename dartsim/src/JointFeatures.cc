@@ -414,7 +414,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
         // world.
         auto worldId = this->GetWorldOfModelImpl(
             this->models.IdentityOf(joint->getSkeleton()));
-        auto dartWorld = this->worlds.at(worldId);
+        auto dartWorld = this->worlds.at(worldId)->world;
         std::string modelName = oldName.substr(0, originalNameIndex - 1);
         skeleton = dartWorld->getSkeleton(modelName);
         if (skeleton)

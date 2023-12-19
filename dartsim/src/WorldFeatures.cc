@@ -30,7 +30,9 @@
 
 #include <gz/common/Console.hh>
 
+#include "GzOdeCollisionDetector.hh"
 #include "WorldFeatures.hh"
+
 
 namespace gz {
 namespace physics {
@@ -40,7 +42,7 @@ namespace dartsim {
 void WorldFeatures::SetWorldCollisionDetector(
     const Identity &_id, const std::string &_collisionDetector)
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto world = this->ReferenceInterface<WorldInfo>(_id)->world;
   auto collisionDetector =
        world->getConstraintSolver()->getCollisionDetector();
   if (_collisionDetector == "bullet")
@@ -53,7 +55,9 @@ void WorldFeatures::SetWorldCollisionDetector(
   }
   else if (_collisionDetector == "ode")
   {
-    collisionDetector = dart::collision::OdeCollisionDetector::create();
+    collisionDetector = dart::collision::GzOdeCollisionDetector::create();
+    std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
+        collisionDetector)->SetMaxContacts(20);
   }
   else if (_collisionDetector == "dart")
   {
@@ -76,7 +80,7 @@ void WorldFeatures::SetWorldCollisionDetector(
 const std::string &WorldFeatures::GetWorldCollisionDetector(const Identity &_id)
     const
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto world = this->ReferenceInterface<WorldInfo>(_id)->world;
   return world->getConstraintSolver()->getCollisionDetector()->getType();
 }
 
@@ -84,7 +88,7 @@ const std::string &WorldFeatures::GetWorldCollisionDetector(const Identity &_id)
 void WorldFeatures::SetWorldGravity(
     const Identity &_id, const LinearVectorType &_gravity)
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto world = this->ReferenceInterface<WorldInfo>(_id)->world;
   world->setGravity(_gravity);
 }
 
@@ -92,7 +96,7 @@ void WorldFeatures::SetWorldGravity(
 WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
     const Identity &_id) const
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto world = this->ReferenceInterface<WorldInfo>(_id)->world;
   return world->getGravity();
 }
 
@@ -100,24 +104,23 @@ WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
 void WorldFeatures::SetWorldMaxContacts(
     const Identity &_id, std::size_t _maxContacts)
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
-  auto &collOpt = world->getConstraintSolver()->getCollisionOption();
-  collOpt.maxNumContacts = _maxContacts;
+  auto world = this->ReferenceInterface<WorldInfo>(_id);
+  world->maxContacts = static_cast<int>(_maxContacts);
 }
 
 /////////////////////////////////////////////////
 std::size_t WorldFeatures::GetWorldMaxContacts(const Identity &_id)
     const
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
-  return world->getConstraintSolver()->getCollisionOption().maxNumContacts;
+  auto world = this->ReferenceInterface<WorldInfo>(_id);
+  return static_cast<std::size_t>(world->maxContacts);
 }
 
 /////////////////////////////////////////////////
 void WorldFeatures::SetWorldSolver(const Identity &_id,
     const std::string &_solver)
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto world = this->ReferenceInterface<WorldInfo>(_id)->world;
 
   auto solver =
       dynamic_cast<dart::constraint::BoxedLcpConstraintSolver *>(
@@ -157,7 +160,7 @@ void WorldFeatures::SetWorldSolver(const Identity &_id,
 /////////////////////////////////////////////////
 const std::string &WorldFeatures::GetWorldSolver(const Identity &_id) const
 {
-  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto world = this->ReferenceInterface<WorldInfo>(_id)->world;
 
   auto solver =
       dynamic_cast<dart::constraint::BoxedLcpConstraintSolver *>(

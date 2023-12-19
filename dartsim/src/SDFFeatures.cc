@@ -439,7 +439,7 @@ SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
   // itself.
 
   auto *const parent = this->FindBodyNode(
-      this->worlds.at(_worldID)->getName(),
+      this->worlds.at(_worldID)->world->getName(),
       _parentType == "model" ? _parentName : "", parentLinkName);
 
   if (nullptr == parent && parentLinkName != "world")
@@ -451,7 +451,7 @@ SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
   }
 
   auto *const child = this->FindBodyNode(
-      this->worlds.at(_worldID)->getName(),
+      this->worlds.at(_worldID)->world->getName(),
       _parentType == "model" ? _parentName : "", childLinkName);
   if (nullptr == child)
   {
@@ -471,7 +471,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 {
   const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
-  const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
+  const dart::simulation::WorldPtr &world = this->worlds.at(worldID)->world;
 
   world->setGravity(math::eigen3::convert(_sdfWorld.Gravity()));
 
@@ -683,7 +683,7 @@ Identity SDFFeatures::ConstructSdfLink(
     return this->GenerateInvalidId();
   }
 
-  auto world = this->worlds.at(worldID);
+  auto world = this->worlds.at(worldID)->world;
   const std::string fullName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
@@ -777,7 +777,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // node is found, an error will not be printed.
   //
   const std::size_t worldID = this->GetWorldOfModelImpl(_modelID);
-  auto & world = this->worlds.at(worldID);
+  auto & world = this->worlds.at(worldID)->world;
 
   std::string parentLinkName;
   const auto resolveParentErrors = _sdfJoint.ResolveParentLink(parentLinkName);
