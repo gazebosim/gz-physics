@@ -55,7 +55,6 @@ void WorldFeatures::SetWorldCollisionDetector(
   else if (_collisionDetector == "ode")
   {
     collisionDetector = dart::collision::GzOdeCollisionDetector::create();
-    // collisionDetector = dart::collision::OdeCollisionDetector::create();
   }
   else if (_collisionDetector == "dart")
   {

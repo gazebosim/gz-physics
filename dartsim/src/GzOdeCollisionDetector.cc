@@ -94,9 +94,6 @@ void GzOdeCollisionDetector::LimitMaxContacts(
 
   for (auto &contact : allContacts)
   {
-    //auto contactPair =
-    //  std::make_pair(contact.collisionObject1, contact.CollisionObject2);
-    //auto &count = contactMap[contactPair];
     auto &count = contactMap[contact.collisionObject1][contact.collisionObject2];
     count++;
     auto &otherCount = contactMap[contact.collisionObject2][contact.collisionObject1];
