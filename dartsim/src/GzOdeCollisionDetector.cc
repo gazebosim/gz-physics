@@ -15,6 +15,9 @@
  *
 */
 
+#include <memory>
+#include <unordered_map>
+
 #include <dart/collision/CollisionObject.hpp>
 
 #include "GzOdeCollisionDetector.hh"
@@ -94,9 +97,11 @@ void GzOdeCollisionDetector::LimitMaxContacts(
 
   for (auto &contact : allContacts)
   {
-    auto &count = contactMap[contact.collisionObject1][contact.collisionObject2];
+    auto &count =
+      contactMap[contact.collisionObject1][contact.collisionObject2];
     count++;
-    auto &otherCount = contactMap[contact.collisionObject2][contact.collisionObject1];
+    auto &otherCount =
+      contactMap[contact.collisionObject2][contact.collisionObject1];
     std::size_t total =  count + otherCount;
     if (total <= this->maxCollisionPairContacts)
     {

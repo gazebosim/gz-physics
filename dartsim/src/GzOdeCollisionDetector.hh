@@ -16,6 +16,8 @@
 */
 
 #include <limits>
+#include <memory>
+
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 
 namespace dart {
