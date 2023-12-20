@@ -133,7 +133,7 @@ namespace gz
     /////////////////////////////////////////////////
     class GZ_PHYSICS_VISIBLE MaxContacts: public virtual Feature
     {
-      /// \brief The World API for setting the collision detector.
+      /// \brief The World API for getting and setting max contacts.
       public: template <typename PolicyT, typename FeaturesT>
       class World : public virtual Feature::World<PolicyT, FeaturesT>
       {
@@ -148,7 +148,7 @@ namespace gz
         public: std::size_t GetMaxContacts() const;
       };
 
-      /// \private The implementation API for the collision detector.
+      /// \private The implementation API for getting and setting max contacts.
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
