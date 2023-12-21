@@ -9,7 +9,7 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics7/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/branch/gz-physics7)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics7/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics7)
 Ubuntu Jammy  | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics7-jammy-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics7-jammy-amd64)
 Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics7-homebrew-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics7-homebrew-amd64)
 Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-7-win)](https://build.osrfoundation.org/job/gz_physics-7-win)
