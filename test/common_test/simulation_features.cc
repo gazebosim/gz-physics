@@ -220,49 +220,54 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
 }
 
 // The features that an engine must have to be loaded by this loader.
-struct FeaturesMaxContacts : gz::physics::FeatureList<
+struct FeaturesCollisionPairMaxTotalContacts : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetContactsFromLastStepFeature,
   gz::physics::ForwardStep,
-  gz::physics::MaxContacts
+  gz::physics::CollisionPairMaxTotalContacts
 > {};
 
 template <class T>
-class SimulationFeaturesMaxContactsTest :
+class SimulationFeaturesCollisionPairMaxTotalContactsTest :
   public SimulationFeaturesTest<T>{};
-using SimulationFeaturesMaxContactsTestTypes =
-  ::testing::Types<FeaturesMaxContacts>;
-TYPED_TEST_SUITE(SimulationFeaturesMaxContactsTest,
-                 SimulationFeaturesMaxContactsTestTypes);
+using SimulationFeaturesCollisionPairMaxTotalContactsTestTypes =
+  ::testing::Types<FeaturesCollisionPairMaxTotalContacts>;
+TYPED_TEST_SUITE(SimulationFeaturesCollisionPairMaxTotalContactsTest,
+                 SimulationFeaturesCollisionPairMaxTotalContactsTestTypes);
 
 /////////////////////////////////////////////////
-TYPED_TEST(SimulationFeaturesMaxContactsTest, MaxContacts)
+TYPED_TEST(SimulationFeaturesCollisionPairMaxTotalContactsTest,
+    CollisionPairMaxTotalContacts)
 {
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<FeaturesMaxContacts>(
+    auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxTotalContacts>(
       this->loader,
       name,
       gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
-    auto checkedOutput = StepWorld<FeaturesMaxContacts>(world, true, 1).first;
+    auto checkedOutput = StepWorld<FeaturesCollisionPairMaxTotalContacts>(
+        world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
-    EXPECT_EQ(std::numeric_limits<std::size_t>::max(), world->GetMaxContacts());
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(),
+              world->GetCollisionPairMaxTotalContacts());
     // Large box collides with other shapes
     EXPECT_GT(contacts.size(), 30u);
 
-    world->SetMaxContacts(1u);
-    EXPECT_EQ(1u, world->GetMaxContacts());
-    checkedOutput = StepWorld<FeaturesMaxContacts>(world, true, 1).first;
+    world->SetCollisionPairMaxTotalContacts(1u);
+    EXPECT_EQ(1u, world->GetCollisionPairMaxTotalContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxTotalContacts>(
+        world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
 
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(4u, contacts.size());
 
-    world->SetMaxContacts(0u);
-    EXPECT_EQ(0u, world->GetMaxContacts());
-    checkedOutput = StepWorld<FeaturesMaxContacts>(world, true, 1).first;
+    world->SetCollisionPairMaxTotalContacts(0u);
+    EXPECT_EQ(0u, world->GetCollisionPairMaxTotalContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxTotalContacts>(
+        world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
 
     contacts = world->GetContactsFromLastStep();
