@@ -120,8 +120,8 @@ void WorldFeatures::SetWorldCollisionPairMaxTotalContacts(
 }
 
 /////////////////////////////////////////////////
-std::size_t WorldFeatures::GetWorldCollisionPairMaxTotalContacts(const Identity &_id)
-    const
+std::size_t WorldFeatures::GetWorldCollisionPairMaxTotalContacts(
+    const Identity &_id) const
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
   auto collisionDetector =

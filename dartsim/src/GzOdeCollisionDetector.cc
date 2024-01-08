@@ -69,7 +69,8 @@ bool GzOdeCollisionDetector::collide(
 }
 
 /////////////////////////////////////////////////
-void GzOdeCollisionDetector::SetCollisionPairMaxTotalContacts(std::size_t _maxContacts)
+void GzOdeCollisionDetector::SetCollisionPairMaxTotalContacts(
+    std::size_t _maxContacts)
 {
   this->maxCollisionPairContacts = _maxContacts;
 }
