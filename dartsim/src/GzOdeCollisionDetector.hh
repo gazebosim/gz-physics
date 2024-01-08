@@ -42,12 +42,12 @@ class GzOdeCollisionDetector : public dart::collision::OdeCollisionDetector
   /// objects
   /// \param[in] _maxContacts Maximum number of contacts between a pair of
   /// collision objects.
-  public: void SetMaxContacts(std::size_t _maxContacts);
+  public: void SetCollisionPairMaxTotalContacts(std::size_t _maxContacts);
 
   /// \brief Get the maximum number of contacts between a pair of collision
   /// objects
   /// \return Maximum number of contacts between a pair of collision objects.
-  public: std::size_t GetMaxContacts() const;
+  public: std::size_t GetCollisionPairMaxTotalContacts() const;
 
 
   /// \brief Create the GzOdeCollisionDetector
@@ -60,7 +60,7 @@ class GzOdeCollisionDetector : public dart::collision::OdeCollisionDetector
   /// The function modifies the contacts vector inside the CollisionResult
   /// object to cap the number of contacts for each collision pair based on the
   /// maxCollisionPairContacts value
-  private: void LimitMaxContacts(CollisionResult *_result);
+  private: void LimitCollisionPairMaxTotalContacts(CollisionResult *_result);
 
   /// \brief Maximum number of contacts between a pair of collision objects.
   private: std::size_t maxCollisionPairContacts =
