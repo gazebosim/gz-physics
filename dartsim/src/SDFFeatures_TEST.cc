@@ -964,7 +964,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_TEST, Shapes)
 {
-  WorldPtr world = this->LoadWorld(dartsim::worlds::kShapesWorld);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kShapesSdf);
   ASSERT_NE(nullptr, world);
 
   auto dartWorld = world->GetDartsimWorld();

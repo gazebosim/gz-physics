@@ -523,7 +523,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     auto world = LoadPluginAndWorld<FreeGroupFeatures>(
       this->loader,
       name,
-      common_test::worlds::kShapesWorld);
+      common_test::worlds::kSphereSdf);
 
     // model free group test
     auto model = world->GetModel("sphere");

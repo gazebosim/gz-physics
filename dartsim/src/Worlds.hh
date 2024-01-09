@@ -22,9 +22,12 @@
 
 #include <string>
 
+// \brief retrieve a filename from the dartsim/worlds directory
+// \param[in] _world filename to retrieve
+// \return full path to the request world
 inline std::string DartsimTestWorld(const std::string &_world)
 {
-  return gz::common::testing::TestFile("dartsim", "worlds", _world);
+  return gz::common::testing::SourceFile("dartsim", "worlds", _world);
 }
 
 namespace dartsim::worlds
@@ -34,8 +37,8 @@ const auto kEmptySdf = DartsimTestWorld("empty.sdf");
 const auto kFallingWorld = DartsimTestWorld("falling.world");
 const auto kJointAcrossNestedModelsSdf =
   DartsimTestWorld("joint_across_nested_models.sdf");
-const auto kModelFramesSdf = DartsimTestWorld("kModelFrames.sdf");
-const auto kShapesWorld = DartsimTestWorld("shapes.world");
+const auto kModelFramesSdf = DartsimTestWorld("model_frames.sdf");
+const auto kShapesSdf = DartsimTestWorld("shapes.sdf");
 const auto kShapesBitmaskWorld = DartsimTestWorld("shapes_bitmask.sdf");
 const auto kTestWorld = DartsimTestWorld("test.world");
 const auto kWorldFramesSdf = DartsimTestWorld("world_frames.sdf");
