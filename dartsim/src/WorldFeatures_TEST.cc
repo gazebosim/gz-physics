@@ -18,7 +18,6 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
-
 #include <gz/physics/FindFeatures.hh>
 #include <gz/plugin/Loader.hh>
 #include <gz/physics/RequestEngine.hh>

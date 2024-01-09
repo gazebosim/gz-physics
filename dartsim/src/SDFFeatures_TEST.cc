@@ -15,7 +15,6 @@
  *
 */
 
-#include <tuple>
 #include <type_traits>
 
 #include <dart/dynamics/BodyNode.hpp>
@@ -27,7 +26,7 @@
 
 #include <gtest/gtest.h>
 
-#include <gz/common/testing/TestPaths.hh>
+#include <tuple>
 
 #include <gz/plugin/Loader.hh>
 

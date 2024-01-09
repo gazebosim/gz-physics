@@ -19,7 +19,6 @@
 #include <dart/dynamics/BodyNode.hpp>
 
 #include <gz/common/Console.hh>
-
 #include <gz/math/eigen3.hh>
 #include <gz/plugin/Loader.hh>
 
