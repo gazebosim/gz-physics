@@ -24,8 +24,33 @@
 #include <gz/math/Rand.hh>
 #include <gz/physics/FrameData.hh>
 
+#include <test/PhysicsPluginsList.hh>
+
+/////////////////////////////////////////////////
+inline void PrimeTheLoader(gz::plugin::Loader &_loader)
+{
+  for (const std::string &library
+       : gz::physics::test::g_PhysicsPluginLibraries)
+  {
+    if (!library.empty())
+      _loader.LoadLib(library);
+  }
+}
+
 namespace gz::physics::test
 {
+/////////////////////////////////////////////////
+class UnimplementedFeature : public virtual physics::Feature
+{
+  public: template <typename PolicyT>
+  class Implementation : public virtual Feature::Implementation<PolicyT>
+  {
+    public: virtual void someUnimplementedVirtualFunction() = 0;
+
+    public: ~Implementation() override;
+  };
+};
+
 /////////////////////////////////////////////////
 template <typename VectorType>
 VectorType RandomVector(const double range)
