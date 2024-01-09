@@ -29,8 +29,8 @@
 
 #include <gz/plugin/Loader.hh>
 
-#include "TestUtilities.hh"
-#include "MockFeatures.hh"
+#include "test/Utils.hh"
+#include "mock/MockFeatures.hh"
 
 TEST(RequestFeatures_TEST, Casting)
 {
@@ -48,7 +48,7 @@ TEST(RequestFeatures_TEST, Casting)
       mock::MockCenterOfMass>;
 
   using UnavailableFeatures =
-    gz::physics::FeatureList<test::UnimplementedFeature>;
+    gz::physics::FeatureList<gz::physics::test::UnimplementedFeature>;
 
   // Get a list of all plugins who satisfy the features that are needed for
   // testing

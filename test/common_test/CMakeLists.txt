@@ -44,7 +44,6 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
   endif()
 endfunction()
 
-set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 foreach(test ${tests})
   set(test_executable "${TEST_TYPE}_${test}")
@@ -52,9 +51,7 @@ foreach(test ${tests})
 
   target_link_libraries(${test_executable}
     PUBLIC
-      gz-plugin${GZ_PLUGIN_VER}::loader
-      gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-      gz-common${GZ_COMMON_VER}::testing
+      gz-physics-test
       ${PROJECT_LIBRARY_TARGET_NAME}
       ${PROJECT_LIBRARY_TARGET_NAME}-sdf
       ${PROJECT_LIBRARY_TARGET_NAME}-mesh
@@ -62,17 +59,9 @@ foreach(test ${tests})
       gtest_main
   )
 
-  target_include_directories(${test_executable}
-    PUBLIC
-    ${PROJECT_SOURCE_DIR}/test)
-
-  target_compile_definitions(${test_executable} PRIVATE
-    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
-    "TESTING_PROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\""
-  )
+  target_include_directories(${test_executable} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
-
   configure_common_test("bullet" ${test_executable})
   configure_common_test("bullet-featherstone" ${test_executable})
   configure_common_test("dartsim" ${test_executable})

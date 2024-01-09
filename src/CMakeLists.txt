@@ -25,6 +25,8 @@ endif()
 gz_build_tests(
   TYPE UNIT
   SOURCES ${gtest_sources}
+  LIB_DEPS
+      gz-physics-test
   ENVIRONMENT
     GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
   INCLUDE_DIRS

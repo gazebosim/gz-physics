@@ -17,12 +17,12 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
-#include <gz/common/testing/TestPaths.hh>
 
 #include <gz/plugin/Loader.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "worlds/Worlds.hh"
 
 #include <gz/physics/AddedMass.hh>
 #include <gz/physics/FindFeatures.hh>
@@ -87,10 +87,8 @@ TEST_F(AddedMassFeaturesTest, Gravity)
     EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
                 std::string::npos);
 
-    const auto worldPath =
-      gz::common::testing::TestFile("common_test", "worlds", "falling_added_mass.world");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worldPath);
+    const sdf::Errors errors = root.Load(worlds::kFallingAddedMassWorld);
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);

@@ -11,14 +11,10 @@ gz_build_tests(
   SOURCES ${tests}
   LIB_DEPS
     Eigen3::Eigen
-    gz-plugin${GZ_PLUGIN_VER}::loader
-  INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/test
+    gz-physics-test
   TEST_LIST list
   ENVIRONMENT
     GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    ${PROJECT_SOURCE_DIR}/test
   TEST_LIST list)
 
 if (BUILD_TESTING)

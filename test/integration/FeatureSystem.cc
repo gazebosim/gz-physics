@@ -20,7 +20,7 @@
 #include <gz/plugin/Loader.hh>
 
 #include <gz/physics/RequestEngine.hh>
-#include "../MockFeatures.hh"
+#include "mock/MockFeatures.hh"
 
 using namespace gz::physics;
 

@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include "TestDataTypes.hh"
+#include "test/TestDataTypes.hh"
 
 std::size_t gNumTests = 100000;
 

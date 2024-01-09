@@ -25,8 +25,9 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "worlds/Worlds.hh"
 
 #include "gz/physics/FrameSemantics.hh"
 #include <gz/physics/FindFeatures.hh>
@@ -110,10 +111,8 @@ TYPED_TEST(DetachableJointTest, CorrectAttachmentPoints)
       gz::physics::RequestEngine3d<DetachableJointFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    const auto worldPath =
-      gz::common::testing::TestFile("common_test", "worlds", "detachable_joint.world");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worldPath);
+    const sdf::Errors errors = root.Load(worlds::kDetachableJointWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));

@@ -24,8 +24,9 @@
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "worlds/Worlds.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
@@ -41,8 +42,6 @@
 
 #include <sdf/Root.hh>
 #include <sdf/Model.hh>
-
-#include <gz/common/testing/TestPaths.hh>
 
 template <class T>
 class LinkFeaturesTest:
@@ -106,10 +105,8 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    const auto worldPath =
-      gz::common::testing::TestFile("common_test", "worlds", "empty.sdf");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worldPath);
+    const sdf::Errors errors = root.Load(worlds::kEmptySdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -306,10 +303,8 @@ TYPED_TEST(LinkFeaturesTest, AxisAlignedBoundingBox)
     auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    const auto worldPath =
-      gz::common::testing::TestFile("common_test", "worlds", "test.world");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worldPath);
+    const sdf::Errors errors = root.Load(worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -359,10 +354,8 @@ TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
     auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    const auto worldPath =
-      gz::common::testing::TestFile("common_test", "worlds", "contact.sdf");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worldPath);
+    const sdf::Errors errors = root.Load(worlds::kContactSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};

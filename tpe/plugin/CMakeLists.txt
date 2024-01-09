@@ -55,6 +55,7 @@ gz_build_tests(
   SOURCES ${test_sources}
   LIB_DEPS
     ${features}
+    gz-physics-test
     gz-plugin${GZ_PLUGIN_VER}::loader
     gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
     gz-common${GZ_COMMON_VER}::testing

@@ -19,7 +19,7 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
-#include "TestLibLoader.hh"
+#include "test/TestLibLoader.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/RequestEngine.hh>

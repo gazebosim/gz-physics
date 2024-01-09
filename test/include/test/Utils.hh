@@ -23,6 +23,9 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/Rand.hh>
 #include <gz/physics/FrameData.hh>
+#include <gz/physics/Feature.hh>
+
+#include <gz/plugin/Loader.hh>
 
 #include <test/PhysicsPluginsList.hh>
 
@@ -40,10 +43,10 @@ inline void PrimeTheLoader(gz::plugin::Loader &_loader)
 namespace gz::physics::test
 {
 /////////////////////////////////////////////////
-class UnimplementedFeature : public virtual physics::Feature
+class UnimplementedFeature : public virtual gz::physics::Feature
 {
   public: template <typename PolicyT>
-  class Implementation : public virtual Feature::Implementation<PolicyT>
+  class Implementation : public virtual gz::physics::Feature::Implementation<PolicyT>
   {
     public: virtual void someUnimplementedVirtualFunction() = 0;
 

@@ -19,8 +19,9 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "worlds/Worlds.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/FindFeatures.hh>
@@ -38,8 +39,6 @@
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
-
-#include <gz/common/testing/TestPaths.hh>
 
 using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
 
@@ -82,12 +81,6 @@ struct GravityFeatures : gz::physics::FeatureList<
 using WorldFeaturesTestGravity = WorldFeaturesTest<GravityFeatures>;
 
 /////////////////////////////////////////////////
-std::string CommonTestFile(const std::string &_worldName)
-{
-  return gz::common::testing::TestFile("common_test", "worlds", _worldName);
-}
-
-/////////////////////////////////////////////////
 TEST_F(WorldFeaturesTestGravity, GravityFeatures)
 {
   for (const std::string &name : this->pluginNames)
@@ -100,10 +93,8 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
                 std::string::npos);
 
-    const auto worldPath =
-      gz::common::testing::TestFile("common_test", "worlds", "falling.world");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worldPath);
+    const sdf::Errors errors = root.Load(worlds::kFallingWorld);
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);
@@ -214,8 +205,7 @@ TEST_F(WorldFeaturesTestConstructModel, ConstructModelUnsortedLinks)
                 std::string::npos);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(
-      CommonTestFile("world_unsorted_links.sdf"));
+    const sdf::Errors errors = root.Load(worlds::kWorldUnsortedLinksSdf);
 
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
@@ -254,7 +244,7 @@ class WorldModelTest : public WorldFeaturesTest<WorldModelFeatureList>
         gz::physics::RequestEngine3d<WorldModelFeatureList>::From(plugin);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(CommonTestFile("world_joint_test.sdf"));
+    const sdf::Errors errors = root.Load(worlds::kWorldJointTestSdf);
     EXPECT_TRUE(errors.empty()) << errors;
     if (errors.empty())
     {
