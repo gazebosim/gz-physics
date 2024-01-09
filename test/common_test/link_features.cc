@@ -24,9 +24,9 @@
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "worlds/Worlds.hh"
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
@@ -106,7 +106,7 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kEmptySdf);
+    const sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -304,7 +304,7 @@ TYPED_TEST(LinkFeaturesTest, AxisAlignedBoundingBox)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kTestWorld);
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -355,7 +355,7 @@ TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kContactSdf);
+    const sdf::Errors errors = root.Load(common_test::worlds::kContactSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};

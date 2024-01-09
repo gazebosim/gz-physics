@@ -92,8 +92,6 @@ gz_find_package(GzBullet
 
 message(STATUS "-------------------------------------------\n")
 
-set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
-
 # Plugin install dirs
 set(GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR
   ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins

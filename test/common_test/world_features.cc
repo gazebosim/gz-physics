@@ -21,7 +21,7 @@
 
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
-#include "worlds/Worlds.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/FindFeatures.hh>
@@ -94,7 +94,7 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
                 std::string::npos);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kFallingWorld);
+    const sdf::Errors errors = root.Load(common_test::worlds::kFallingWorld);
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);
@@ -205,7 +205,8 @@ TEST_F(WorldFeaturesTestConstructModel, ConstructModelUnsortedLinks)
                 std::string::npos);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kWorldUnsortedLinksSdf);
+    const sdf::Errors errors = root.Load(
+      common_test::worlds::kWorldUnsortedLinksSdf);
 
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
@@ -244,7 +245,8 @@ class WorldModelTest : public WorldFeaturesTest<WorldModelFeatureList>
         gz::physics::RequestEngine3d<WorldModelFeatureList>::From(plugin);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kWorldJointTestSdf);
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kWorldJointTestSdf);
     EXPECT_TRUE(errors.empty()) << errors;
     if (errors.empty())
     {

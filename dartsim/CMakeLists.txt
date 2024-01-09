@@ -91,12 +91,14 @@ gz_build_tests(
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
   TEST_LIST tests
   ENVIRONMENT
-    GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
+    GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+  INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 foreach(test ${tests})
   target_compile_definitions(${test} PRIVATE
-    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\""
-    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
+    "dartsim_plugin_LIB=\"$<TARGET_FILE:${dartsim_plugin}>\"")
 
   if (DART_HAS_CONTACT_SURFACE_HEADER)
     target_compile_definitions(${test} PRIVATE DART_HAS_CONTACT_SURFACE)

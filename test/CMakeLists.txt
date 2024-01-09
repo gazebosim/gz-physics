@@ -19,11 +19,9 @@ ExternalProject_Add(
     "-DCMAKE_INSTALL_PREFIX=${FAKE_INSTALL_PREFIX}"
 )
 
-set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 add_library(gz-physics-test INTERFACE)
 target_include_directories(gz-physics-test INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_definitions(gz-physics-test INTERFACE
-    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
     "TESTING_PROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\""
 )
 target_link_libraries(gz-physics-test INTERFACE

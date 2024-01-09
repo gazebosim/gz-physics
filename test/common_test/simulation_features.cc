@@ -27,7 +27,7 @@
 
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
-#include "worlds/Worlds.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/sdf/ConstructJoint.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
@@ -209,7 +209,7 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     auto world = LoadPluginAndWorld<FeaturesContacts>(
       this->loader,
       name,
-      worlds::kShapesWorld);
+      common_test::worlds::kShapesWorld);
     auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
 
@@ -246,7 +246,7 @@ TYPED_TEST(SimulationFeaturesStepTest, StepWorld)
     auto world = LoadPluginAndWorld<FeaturesStep>(
       this->loader,
       name,
-      worlds::kShapesWorld);
+      common_test::worlds::kShapesWorld);
     auto checkedOutput = StepWorld<FeaturesStep>(world, true, 1000).first;
     EXPECT_TRUE(checkedOutput);
   }
@@ -281,7 +281,7 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
 #endif
     auto world = LoadPluginAndWorld<FeaturesFalling>(
         this->loader, name,
-        worlds::kFallingWorld);
+        common_test::worlds::kFallingWorld);
 
     auto [checkedOutput, output] =
       StepWorld<FeaturesFalling>(world, true, 1000);
@@ -344,7 +344,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
 #endif
     auto world = LoadPluginAndWorld<FeaturesShapeFeatures>(
         this->loader, name,
-        worlds::kShapesWorld);
+        common_test::worlds::kShapesWorld);
     std::cerr << "world model count " << world->GetModelCount() << '\n';
     // test ShapeFeatures
     auto sphere = world->GetModel("sphere");
@@ -523,7 +523,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     auto world = LoadPluginAndWorld<FreeGroupFeatures>(
       this->loader,
       name,
-      worlds::kShapesWorld);
+      common_test::worlds::kShapesWorld);
 
     // model free group test
     auto model = world->GetModel("sphere");
@@ -611,7 +611,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      worlds::kFallingWorld);
+      common_test::worlds::kFallingWorld);
     auto sphere = world->GetModel("sphere");
     auto sphereCollision = sphere->GetLink(0)->GetShape(0);
     auto ground = world->GetModel("box");
@@ -660,7 +660,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      worlds::kShapesBitmaskWorld);
+      common_test::worlds::kShapesBitmaskWorld);
 
     auto baseBox = world->GetModel("box_base");
     auto filteredBox = world->GetModel("box_filtered");
@@ -705,7 +705,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      worlds::kShapesWorld);
+      common_test::worlds::kShapesWorld);
 
     auto sphere = world->GetModel("sphere");
     auto sphereFreeGroup = sphere->FindFreeGroup();
@@ -917,7 +917,7 @@ TYPED_TEST(SimulationFeaturesTestFeaturesContactPropertiesCallback, ContactPrope
       LoadPluginAndWorld<FeaturesContactPropertiesCallback>(
           this->loader,
           name,
-          worlds::kContactSdf);
+          common_test::worlds::kContactSdf);
 
     auto sphere = world->GetModel("sphere");
     auto groundPlane = world->GetModel("ground_plane");
@@ -1147,7 +1147,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      worlds::kMultipleCollisionsSdf);
+      common_test::worlds::kMultipleCollisionsSdf);
 
     // model free group test
     auto model = world->GetModel("box");

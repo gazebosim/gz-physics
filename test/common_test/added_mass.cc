@@ -22,7 +22,7 @@
 
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
-#include "worlds/Worlds.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/AddedMass.hh>
 #include <gz/physics/FindFeatures.hh>
@@ -88,7 +88,8 @@ TEST_F(AddedMassFeaturesTest, Gravity)
                 std::string::npos);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kFallingAddedMassWorld);
+    const sdf::Errors errors = root.Load(
+      common_test::worlds::kFallingAddedMassWorld);
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);

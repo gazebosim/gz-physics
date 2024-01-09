@@ -19,7 +19,6 @@
 #include <dart/dynamics/BodyNode.hpp>
 
 #include <gz/common/Console.hh>
-#include <gz/common/testing/TestPaths.hh>
 
 #include <gz/math/eigen3.hh>
 #include <gz/plugin/Loader.hh>
@@ -41,6 +40,7 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+#include "Worlds.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::GetEntities,
@@ -123,9 +123,7 @@ TEST(AddedMassFeatures, AddedMass)
     0, 0, 0, 0, 1, 0,
     0, 0, 0, 0, 0, 1;
 
-  const auto worldPath =
-    gz::common::testing::SourceFile("dartsim", "worlds", "added_mass.sdf");
-  const auto world = LoadWorld(worldPath);
+  const auto world = LoadWorld(dartsim::worlds::kAddedMassSdf);
   ASSERT_NE(nullptr, world);
 
   auto dartWorld = world->GetDartsimWorld();

@@ -18,8 +18,8 @@
 
 #include <tuple>
 
-#include "worlds/Worlds.hh"
 #include "test/TestLibLoader.hh"
+#include "Worlds.hh"
 
 #include <gz/common/Console.hh>
 #include <gz/common/Util.hh>
@@ -112,7 +112,8 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors &errors = root.Load(worlds::kWorldWithNestedModelSdf);
+    const sdf::Errors &errors = root.Load(
+      common_test::worlds::kWorldWithNestedModelSdf);
     EXPECT_EQ(0u, errors.size()) << errors;
 
     EXPECT_EQ(1u, root.WorldCount());
@@ -163,7 +164,8 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors &errors = root.Load(worlds::kWorldWithNestedModelSdf);
+    const sdf::Errors &errors = root.Load(
+      common_test::worlds::kWorldWithNestedModelSdf);
     EXPECT_EQ(0u, errors.size()) << errors;
 
     EXPECT_EQ(1u, root.WorldCount());

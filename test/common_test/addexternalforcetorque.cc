@@ -26,7 +26,7 @@
 
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
-#include "worlds/Worlds.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/GetEntities.hh>
@@ -109,7 +109,7 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kSphereSdf);
+    const sdf::Errors errors = root.Load(common_test::worlds::kSphereSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"sphere"};

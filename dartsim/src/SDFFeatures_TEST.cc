@@ -54,6 +54,7 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+#include "dartsim/src/Worlds.hh"
 
 using namespace gz;
 
@@ -314,9 +315,7 @@ INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST_P(SDFFeatures_TEST, CheckDartsimData)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile("dartsim", "worlds", "test.world");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -424,9 +423,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
 // Test that joint limits are working by running the simulation
 TEST_P(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile("dartsim", "worlds", "test.world");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -585,10 +582,7 @@ TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
 //
 TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "world_with_nested_model.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kWorldWithNestedModelSdf);
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(2u, world->GetModelCount());
 
@@ -652,10 +646,8 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "world_with_nested_model_joint_to_world.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(
+    dartsim::worlds::kWorldWithNestedModelJointToWorldSdf);
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(1u, world->GetModelCount());
 
@@ -699,10 +691,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 // Test that joint type falls back to fixed if the type is not supported
 TEST_P(SDFFeatures_TEST, FallbackToFixedJoint)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "test.world");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -728,10 +717,8 @@ TEST_P(SDFFeatures_TEST, FallbackToFixedJoint)
 // Check that joints between links in different models work as expected
 TEST_P(SDFFeatures_TEST, JointsAcrossNestedModels)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "joint_across_nested_models.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(
+    dartsim::worlds::kJointAcrossNestedModelsSdf);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -789,10 +776,7 @@ INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_FrameSemantics,
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "model_frames.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "link_relative_to";
 
@@ -824,10 +808,7 @@ TEST_P(SDFFeatures_FrameSemantics, LinkRelativeTo)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "model_frames.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "collision_relative_to";
 
@@ -864,10 +845,7 @@ TEST_P(SDFFeatures_FrameSemantics, CollisionRelativeTo)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "model_frames.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "explicit_frames_with_links";
 
@@ -914,10 +892,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithLinks)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "model_frames.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kModelFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "explicit_frames_with_collisions";
 
@@ -954,10 +929,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitFramesWithCollision)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "world_frames.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kWorldFramesSdf);
   ASSERT_NE(nullptr, world);
   const std::string modelName = "M";
 
@@ -993,10 +965,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_TEST, Shapes)
 {
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "dartsim", "worlds", "shapes.sdf");
-  WorldPtr world = this->LoadWorld(worldPath);
+  WorldPtr world = this->LoadWorld(dartsim::worlds::kShapesWorld);
   ASSERT_NE(nullptr, world);
 
   auto dartWorld = world->GetDartsimWorld();

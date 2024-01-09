@@ -27,7 +27,7 @@
 
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
-#include "worlds/Worlds.hh"
+#include "Worlds.hh"
 
 #include "gz/physics/FrameSemantics.hh"
 #include <gz/physics/FindFeatures.hh>
@@ -112,7 +112,8 @@ TYPED_TEST(DetachableJointTest, CorrectAttachmentPoints)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worlds::kDetachableJointWorld);
+    const sdf::Errors errors = root.Load(
+      common_test::worlds::kDetachableJointWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));

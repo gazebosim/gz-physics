@@ -27,7 +27,7 @@ inline std::string CommonTestWorld(const std::string &_world)
   return gz::common::testing::TestFile("common_test", "worlds", _world);
 }
 
-namespace worlds
+namespace common_test::worlds
 {
 const auto kContactSdf = CommonTestWorld("contact.sdf");
 const auto kDetachableJointWorld = CommonTestWorld("detachable_joint.world");
@@ -50,5 +50,5 @@ const auto kWorldJointTestSdf = CommonTestWorld("world_joint_test.sdf");
 const auto kWorldUnsortedLinksSdf = CommonTestWorld("world_unsorted_links.sdf");
 const auto kWorldWithNestedModelSdf =
   CommonTestWorld("world_with_nested_model.sdf");
-}  // namespace worlds
+}  // namespace common_test::worlds
 #endif  // COMMON_TEST_WORLDS_WORLDS_HH_

@@ -19,9 +19,9 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
-#include "worlds/Worlds.hh"
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/Joint.hh>
@@ -96,10 +96,9 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
     auto engine = gz::physics::RequestEngine3d<KinematicFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    const auto worldPath =
-      gz::common::testing::TestFile("common_test", "worlds", "string_pendulum.sdf");
     sdf::Root root;
-    const sdf::Errors errors = root.Load(worldPath);
+    const sdf::Errors errors = root.Load(
+       common_test::worlds::kStringPendulumSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
