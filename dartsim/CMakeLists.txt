@@ -85,10 +85,7 @@ gz_build_tests(
     ${features}
     ${dartsim_plugin}
     gz-physics-test
-    gz-plugin${GZ_PLUGIN_VER}::loader
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
     gz-common${GZ_COMMON_VER}::geospatial
-    gz-common${GZ_COMMON_VER}::testing
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
