@@ -41,8 +41,6 @@
 
 #include <sdf/Root.hh>
 
-#include <gz/common/testing/TestPaths.hh>
-
 template <class T>
 class ShapeFeaturesTest:
   public testing::Test, public gz::physics::TestLibLoader

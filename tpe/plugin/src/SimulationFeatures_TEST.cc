@@ -18,7 +18,6 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
-#include <gz/common/testing/TestPaths.hh>
 
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>

@@ -34,8 +34,6 @@
 
 #include <sdf/Root.hh>
 
-#include <gz/common/testing/TestPaths.hh>
-
 template <class T>
 class KinematicFeaturesTest:
  public testing::Test, public gz::physics::TestLibLoader

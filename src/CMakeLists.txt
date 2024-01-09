@@ -29,8 +29,7 @@ gz_build_tests(
       gz-physics-test
   ENVIRONMENT
     GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-  INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}/test)
+)
 
 if(TARGET UNIT_FindFeatures_TEST)
   target_link_libraries(UNIT_FindFeatures_TEST

@@ -19,7 +19,6 @@
 #include <chrono>
 
 #include <gz/common/Console.hh>
-#include <gz/common/testing/TestPaths.hh>
 #include <gz/plugin/Loader.hh>
 
 #include <gz/math/Helpers.hh>

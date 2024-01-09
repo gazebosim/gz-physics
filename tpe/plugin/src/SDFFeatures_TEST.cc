@@ -19,8 +19,6 @@
 
 #include <tuple>
 
-#include <gz/common/testing/TestPaths.hh>
-
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
