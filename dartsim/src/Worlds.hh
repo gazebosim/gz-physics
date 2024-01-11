@@ -46,6 +46,5 @@ const auto kWorldWithNestedModelSdf =
   DartsimTestWorld("world_with_nested_model.sdf");
 const auto kWorldWithNestedModelJointToWorldSdf =
   DartsimTestWorld("world_with_nested_model_joint_to_world.sdf");
-
 }  // namespace dartsim::worlds
 #endif  // DARTSIM_WORLDS_HH_

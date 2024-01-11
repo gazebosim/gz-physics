@@ -16,6 +16,8 @@
 */
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
