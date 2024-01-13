@@ -52,7 +52,7 @@ bool GzOdeCollisionDetector::collide(
     CollisionResult *_result)
 {
   bool ret = OdeCollisionDetector::collide(_group, _option, _result);
-  this->LimitCollisionPairMaxTotalContacts(_result);
+  this->LimitCollisionPairMaxContacts(_result);
   return ret;
 }
 
@@ -64,25 +64,25 @@ bool GzOdeCollisionDetector::collide(
     CollisionResult *_result)
 {
   bool ret = OdeCollisionDetector::collide(_group1, _group2, _option, _result);
-  this->LimitCollisionPairMaxTotalContacts(_result);
+  this->LimitCollisionPairMaxContacts(_result);
   return ret;
 }
 
 /////////////////////////////////////////////////
-void GzOdeCollisionDetector::SetCollisionPairMaxTotalContacts(
+void GzOdeCollisionDetector::SetCollisionPairMaxContacts(
     std::size_t _maxContacts)
 {
   this->maxCollisionPairContacts = _maxContacts;
 }
 
 /////////////////////////////////////////////////
-std::size_t GzOdeCollisionDetector::GetCollisionPairMaxTotalContacts() const
+std::size_t GzOdeCollisionDetector::GetCollisionPairMaxContacts() const
 {
   return this->maxCollisionPairContacts;
 }
 
 /////////////////////////////////////////////////
-void GzOdeCollisionDetector::LimitCollisionPairMaxTotalContacts(
+void GzOdeCollisionDetector::LimitCollisionPairMaxContacts(
     CollisionResult *_result)
 {
   if (this->maxCollisionPairContacts ==
