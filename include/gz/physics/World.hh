@@ -131,7 +131,7 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    class GZ_PHYSICS_VISIBLE CollisionPairMaxTotalContacts:
+    class GZ_PHYSICS_VISIBLE CollisionPairMaxContacts:
         public virtual Feature
     {
       /// \brief The World API for getting and setting max contacts.
@@ -141,12 +141,12 @@ namespace gz
         /// \brief Set the maximum number of contacts allowed between two
         /// entities.
         /// \param[in] _maxContacts Maximum number of contacts.
-        public: void SetCollisionPairMaxTotalContacts(std::size_t _maxContacts);
+        public: void SetCollisionPairMaxContacts(std::size_t _maxContacts);
 
         /// \brief Set the maximum number of contacts allowed between two
         /// entities.
         /// \return Maximum number of contacts.
-        public: std::size_t GetCollisionPairMaxTotalContacts() const;
+        public: std::size_t GetCollisionPairMaxContacts() const;
       };
 
       /// \private The implementation API for getting and setting max contacts.
@@ -157,14 +157,14 @@ namespace gz
         /// contacts between two entities.
         /// \param[in] _id Identity of the world.
         /// \param[in] _maxContacts Maximum number of contacts.
-        public: virtual void SetWorldCollisionPairMaxTotalContacts(
+        public: virtual void SetWorldCollisionPairMaxContacts(
             const Identity &_id, std::size_t _maxContacts) = 0;
 
         /// \brief Implementation API for getting the maximum number of
         /// contacts between two entities.
         /// \param[in] _id Identity of the world.
         /// \param[in] _maxContacts Maximum number of contacts.
-        public: virtual std::size_t GetWorldCollisionPairMaxTotalContacts(
+        public: virtual std::size_t GetWorldCollisionPairMaxContacts(
             const Identity &_id) const = 0;
       };
     };

@@ -30,7 +30,7 @@ namespace dartsim {
 
 struct WorldFeatureList : FeatureList<
   CollisionDetector,
-  CollisionPairMaxTotalContacts,
+  CollisionPairMaxContacts,
   Gravity,
   Solver
 > { };
@@ -55,11 +55,11 @@ class WorldFeatures :
   public: LinearVectorType GetWorldGravity(const Identity &_id) const override;
 
   // Documentation inherited
-  public: void SetWorldCollisionPairMaxTotalContacts(
+  public: void SetWorldCollisionPairMaxContacts(
       const Identity &_id, std::size_t _maxContacts) override;
 
   // Documentation inherited
-  public: std::size_t GetWorldCollisionPairMaxTotalContacts(const Identity &_id)
+  public: std::size_t GetWorldCollisionPairMaxContacts(const Identity &_id)
       const override;
 
   // Documentation inherited

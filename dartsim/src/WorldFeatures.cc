@@ -98,7 +98,7 @@ WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
 }
 
 /////////////////////////////////////////////////
-void WorldFeatures::SetWorldCollisionPairMaxTotalContacts(
+void WorldFeatures::SetWorldCollisionPairMaxContacts(
     const Identity &_id, std::size_t _maxContacts)
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
@@ -110,7 +110,7 @@ void WorldFeatures::SetWorldCollisionPairMaxTotalContacts(
     collisionDetector);
   if (odeCollisionDetector)
   {
-    odeCollisionDetector->SetCollisionPairMaxTotalContacts(_maxContacts);
+    odeCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
   }
   else
   {
@@ -120,7 +120,7 @@ void WorldFeatures::SetWorldCollisionPairMaxTotalContacts(
 }
 
 /////////////////////////////////////////////////
-std::size_t WorldFeatures::GetWorldCollisionPairMaxTotalContacts(
+std::size_t WorldFeatures::GetWorldCollisionPairMaxContacts(
     const Identity &_id) const
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
@@ -131,7 +131,7 @@ std::size_t WorldFeatures::GetWorldCollisionPairMaxTotalContacts(
     collisionDetector);
   if (odeCollisionDetector)
   {
-    return odeCollisionDetector->GetCollisionPairMaxTotalContacts();
+    return odeCollisionDetector->GetCollisionPairMaxContacts();
   }
 
   return 0u;

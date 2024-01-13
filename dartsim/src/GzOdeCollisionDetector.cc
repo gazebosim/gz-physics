@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Open Source Robotics Foundation
+ * Copyright (C) 2024 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ bool GzOdeCollisionDetector::collide(
     CollisionResult *_result)
 {
   bool ret = OdeCollisionDetector::collide(_group, _option, _result);
-  this->LimitCollisionPairMaxTotalContacts(_result);
+  this->LimitCollisionPairMaxContacts(_result);
   return ret;
 }
 
@@ -65,25 +65,25 @@ bool GzOdeCollisionDetector::collide(
     CollisionResult *_result)
 {
   bool ret = OdeCollisionDetector::collide(_group1, _group2, _option, _result);
-  this->LimitCollisionPairMaxTotalContacts(_result);
+  this->LimitCollisionPairMaxContacts(_result);
   return ret;
 }
 
 /////////////////////////////////////////////////
-void GzOdeCollisionDetector::SetCollisionPairMaxTotalContacts(
+void GzOdeCollisionDetector::SetCollisionPairMaxContacts(
     std::size_t _maxContacts)
 {
   this->maxCollisionPairContacts = _maxContacts;
 }
 
 /////////////////////////////////////////////////
-std::size_t GzOdeCollisionDetector::GetCollisionPairMaxTotalContacts() const
+std::size_t GzOdeCollisionDetector::GetCollisionPairMaxContacts() const
 {
   return this->maxCollisionPairContacts;
 }
 
 /////////////////////////////////////////////////
-void GzOdeCollisionDetector::LimitCollisionPairMaxTotalContacts(
+void GzOdeCollisionDetector::LimitCollisionPairMaxContacts(
     CollisionResult *_result)
 {
   if (this->maxCollisionPairContacts ==
