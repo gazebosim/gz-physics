@@ -134,7 +134,8 @@ namespace gz
     class GZ_PHYSICS_VISIBLE CollisionPairMaxContacts:
         public virtual Feature
     {
-      /// \brief The World API for getting and setting max contacts.
+      /// \brief The World API for getting and setting the maximum
+      /// number of contacts between two entities.
       public: template <typename PolicyT, typename FeaturesT>
       class World : public virtual Feature::World<PolicyT, FeaturesT>
       {
@@ -143,7 +144,7 @@ namespace gz
         /// \param[in] _maxContacts Maximum number of contacts.
         public: void SetCollisionPairMaxContacts(std::size_t _maxContacts);
 
-        /// \brief Set the maximum number of contacts allowed between two
+        /// \brief Get the maximum number of contacts allowed between two
         /// entities.
         /// \return Maximum number of contacts.
         public: std::size_t GetCollisionPairMaxContacts() const;
@@ -163,7 +164,7 @@ namespace gz
         /// \brief Implementation API for getting the maximum number of
         /// contacts between two entities.
         /// \param[in] _id Identity of the world.
-        /// \param[in] _maxContacts Maximum number of contacts.
+        /// \return Maximum number of contacts.
         public: virtual std::size_t GetWorldCollisionPairMaxContacts(
             const Identity &_id) const = 0;
       };
