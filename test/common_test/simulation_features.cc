@@ -275,6 +275,62 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
   }
 }
 
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
+    CollisionPairMaxContactsSelection)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxContacts>(
+      this->loader,
+      name,
+      gz::common::joinPaths(TEST_WORLD_DIR, "collision_pairt_contact_point.sdf"));
+    auto checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    // Get all contacts between box and ellipsoid
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(),
+              world->GetCollisionPairMaxContacts());
+    EXPECT_GT(contacts.size(), 30u);
+
+    // Find contact point with max penetration depth
+    double maxDepth = 0;
+    for (const auto &contact : contacts)
+    {
+      const auto* extraContactData =
+          contact.template Query<
+          gz::physics::World3d<
+          FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+      ASSERT_NE(nullptr, extraContactData);
+      if (extraContactData->depth > maxDepth)
+        maxDepth = extraContactData->depth;
+    }
+    EXPECT_GT(maxDepth, 0.0);
+
+    // Set max contact between collision pairs to be 1
+    world->SetCollisionPairMaxContacts(1u);
+    EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(1u, contacts.size());
+
+    // Verify that the physics engine picked the contact with max penetration
+    // depth
+    auto contact = contacts[0];
+    const auto* extraContactData =
+        contact.template Query<
+        gz::physics::World3d<
+        FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+    ASSERT_NE(nullptr, extraContactData);
+    EXPECT_FLOAT_EQ(maxDepth, extraContactData->depth);
+  }
+}
+
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesStep : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,

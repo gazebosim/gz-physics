@@ -97,7 +97,7 @@ void GzOdeCollisionDetector::LimitCollisionPairMaxContacts(
   if (this->maxCollisionPairContacts == 0u)
     return;
 
-  // A map of collision pairs and their their contact info
+  // A map of collision pairs and their contact info
   // Contact info is stored in std::pair. The elements are:
   // <contact count, index of last contact point (in _result)>
   std::unordered_map<dart::collision::CollisionObject *,
