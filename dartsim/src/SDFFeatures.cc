@@ -840,8 +840,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
-    gzerr << "The geometry element of collision [" << _collision.Name() << "] "
-           << "couldn't be created\n";
+    gzdbg << "The geometry element of collision [" << _collision.Name() << "] "
+          << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
 
