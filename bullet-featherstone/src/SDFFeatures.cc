@@ -794,7 +794,7 @@ bool SDFFeatures::AddSdfCollision(
   double mu = 1.0;
   double mu2 = 1.0;
   double restitution = 0.0;
-
+  double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
   if (const auto *surface = _collision.Surface())
   {
@@ -802,27 +802,32 @@ bool SDFFeatures::AddSdfCollision(
     {
       if (const auto frictionElement = friction->Element())
       {
-        if (const auto bullet = frictionElement->GetElement("bullet"))
+        if (const auto bullet = frictionElement->FindElement("bullet"))
         {
-          if (const auto f1 = bullet->GetElement("friction"))
+          if (const auto f1 = bullet->FindElement("friction"))
             mu = f1->Get<double>();
 
-          if (const auto f2 = bullet->GetElement("friction2"))
+          if (const auto f2 = bullet->FindElement("friction2"))
             mu2 = f2->Get<double>();
 
           // What is fdir1 for in the SDF's <bullet> spec?
 
-          if (const auto rolling = bullet->GetElement("rolling_friction"))
+          if (const auto rolling = bullet->FindElement("rolling_friction"))
             rollingFriction = rolling->Get<double>();
+        }
+        if (const auto torsional = frictionElement->FindElement("torsional"))
+        {
+          if (const auto coefficient = torsional->FindElement("coefficient"))
+            torsionalCoefficient = coefficient->Get<double>();
         }
       }
     }
 
     if (const auto surfaceElement = surface->Element())
     {
-      if (const auto bounce = surfaceElement->GetElement("bounce"))
+      if (const auto bounce = surfaceElement->FindElement("bounce"))
       {
-        if (const auto r = bounce->GetElement("restitution_coefficient"))
+        if (const auto r = bounce->FindElement("restitution_coefficient"))
           restitution = r->Get<double>();
       }
     }
@@ -873,6 +878,8 @@ bool SDFFeatures::AddSdfCollision(
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
       linkInfo->collider->setRollingFriction(
         static_cast<btScalar>(rollingFriction));
+      linkInfo->collider->setSpinningFriction(
+        static_cast<btScalar>(torsionalCoefficient));
       linkInfo->collider->setFriction(static_cast<btScalar>(mu));
       linkInfo->collider->setAnisotropicFriction(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),

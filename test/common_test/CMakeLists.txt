@@ -48,6 +48,10 @@ endfunction()
 
 set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
+# Get bullet version using pkg_check_modules as it is not available
+# through the cmake module
+gz_pkg_check_modules_quiet(bullet_version_check "bullet")
+
 foreach(test ${tests})
   set(test_executable "${TEST_TYPE}_${test}")
   add_executable(${test_executable} ${test}.cc)
@@ -67,6 +71,12 @@ foreach(test ${tests})
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
   )
+
+  if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.25)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_LE_325"
+    )
+  endif()
 
   if (DART_HAS_CONTACT_SURFACE_HEADER)
     target_compile_definitions(${test_executable} PRIVATE DART_HAS_CONTACT_SURFACE)
