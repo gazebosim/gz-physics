@@ -78,7 +78,3 @@ foreach(test ${tests})
   configure_common_test("dartsim" ${test_executable})
   configure_common_test("tpe" ${test_executable})
 endforeach()
-
-if(TARGET COMMON_TEST_joint_transmitted_wrench_features)
-  target_include_directories(COMMON_TEST_joint_transmitted_wrench_features PRIVATE ${BULLET_INCLUDE_DIRS})
-endif()
