@@ -45,6 +45,10 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
 endfunction()
 
 
+# Get bullet version using pkg_check_modules as it is not available
+# through the cmake module
+gz_pkg_check_modules_quiet(bullet_version_check "bullet")
+
 foreach(test ${tests})
   set(test_executable "${TEST_TYPE}_${test}")
   add_executable(${test_executable} ${test}.cc)
@@ -60,6 +64,13 @@ foreach(test ${tests})
   )
 
   target_include_directories(${test_executable} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+  if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.25)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_LE_325"
+    )
+  endif()
+
 
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
   configure_common_test("bullet" ${test_executable})
