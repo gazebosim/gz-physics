@@ -582,7 +582,8 @@ TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
 //
 TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 {
-  WorldPtr world = this->LoadWorld(common_test::worlds::kWorldWithNestedModelSdf);
+  WorldPtr world =
+    this->LoadWorld(common_test::worlds::kWorldWithNestedModelSdf);
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(2u, world->GetModelCount());
 
