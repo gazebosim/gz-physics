@@ -24,7 +24,7 @@
 
 #include <gz/plugin/Loader.hh>
 
-#include "TestUtilities.hh"
+#include "test/Utils.hh"
 
 using namespace gz;
 
@@ -59,7 +59,7 @@ TEST(FindFeatures_TEST, ForwardStep)
 TEST(FindFeatures_TEST, Unimplemented)
 {
   using TestFeatures =
-    physics::FeatureList<test::UnimplementedFeature>;
+    physics::FeatureList<physics::test::UnimplementedFeature>;
 
   plugin::Loader loader;
   PrimeTheLoader(loader);

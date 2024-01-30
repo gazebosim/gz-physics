@@ -15,7 +15,7 @@
  *
 */
 
-#include "../MockFrameSemantics.hh"
+#include "mock/MockFrameSemantics.hh"
 
 #include <map>
 #include <vector>
