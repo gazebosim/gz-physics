@@ -44,7 +44,6 @@
 #include <test/common_test/Worlds.hh>
 #include <test/PhysicsPluginsList.hh>
 #include <test/Utils.hh>
-#include "Worlds.hh"
 
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
