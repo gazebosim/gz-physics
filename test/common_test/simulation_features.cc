@@ -245,7 +245,7 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
     auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxContacts>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kShapesWorld);
     auto checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
         world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
