@@ -29,7 +29,7 @@
 
 #include <gz/common/Console.hh>
 
-#include "GzOdeCollisionDetector.hh"
+#include "GzCollisionDetector.hh"
 #include "WorldFeatures.hh"
 
 
