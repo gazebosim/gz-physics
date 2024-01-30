@@ -48,6 +48,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RequestEngine.hh>
+#include <gz/physics/World.hh>
 
 #include <sdf/Root.hh>
 
@@ -213,11 +214,66 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
-    // Only box_colliding should collide with box_base
+    // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
   }
 }
 
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesCollisionPairMaxContacts : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::ForwardStep,
+  gz::physics::CollisionPairMaxContacts
+> {};
+
+template <class T>
+class SimulationFeaturesCollisionPairMaxContactsTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesCollisionPairMaxContactsTestTypes =
+  ::testing::Types<FeaturesCollisionPairMaxContacts>;
+TYPED_TEST_SUITE(SimulationFeaturesCollisionPairMaxContactsTest,
+                 SimulationFeaturesCollisionPairMaxContactsTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
+    CollisionPairMaxContacts)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxContacts>(
+      this->loader,
+      name,
+      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+    auto checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(),
+              world->GetCollisionPairMaxContacts());
+    // Large box collides with other shapes
+    EXPECT_GT(contacts.size(), 30u);
+
+    world->SetCollisionPairMaxContacts(1u);
+    EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(4u, contacts.size());
+
+    world->SetCollisionPairMaxContacts(0u);
+    EXPECT_EQ(0u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(0u, contacts.size());
+  }
+}
 
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesStep : gz::physics::FeatureList<
