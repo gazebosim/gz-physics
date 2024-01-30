@@ -23,6 +23,7 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+#include <test/common_test/Worlds.hh>
 
 #include <gz/plugin/Loader.hh>
 
@@ -90,11 +91,11 @@ World LoadWorld(const std::string &_world)
 // Test that the tpe plugin loaded all the relevant information correctly.
 TEST(SDFFeatures_TEST, CheckTpeData)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/test.world");
+  auto world = LoadWorld(common_test::worlds::kTestWorld);
   auto tpeWorld = world.GetTpeLibWorld();
   ASSERT_NE(nullptr, tpeWorld);
 
-  ASSERT_EQ(6u, tpeWorld->GetChildCount());
+  ASSERT_EQ(7u, tpeWorld->GetChildCount());
 
   // check model 01
   {
@@ -253,7 +254,13 @@ TEST(SDFFeatures_TEST, CheckTpeData)
         link.GetId());
     EXPECT_EQ("link", link.GetName());
     EXPECT_EQ(math::Pose3d::Zero, link.GetPose());
-    EXPECT_EQ(0u, link.GetChildCount());
+    EXPECT_EQ(1u, link.GetChildCount());
+
+    auto &collision = link.GetChildByName("collision1");
+    ASSERT_NE(physics::tpelib::Entity::kNullEntity.GetId(),
+        collision.GetId());
+    EXPECT_EQ("collision1", collision.GetName());
+    EXPECT_EQ(0u, collision.GetChildCount());
   }
 
   // check model 04
@@ -363,26 +370,26 @@ TEST(SDFFeatures_TEST, CheckTpeData)
 // Test that the tpe plugin loaded nested models correctly.
 TEST(SDFFeatures_TEST, NestedModel)
 {
-  World world = LoadWorld(TEST_WORLD_DIR"/nested_model.world");
+  auto world = LoadWorld(common_test::worlds::kWorldWithNestedModelSdf);
   auto tpeWorld = world.GetTpeLibWorld();
   ASSERT_NE(nullptr, tpeWorld);
 
-  ASSERT_EQ(1u, tpeWorld->GetChildCount());
-  EXPECT_EQ(1u, world.GetModelCount());
+  ASSERT_EQ(2u, tpeWorld->GetChildCount());
+  EXPECT_EQ(2u, world.GetModelCount());
 
   // check top level model
   physics::tpelib::Entity &model =
-      tpeWorld->GetChildByName("model");
+      tpeWorld->GetChildByName("parent_model");
   ASSERT_NE(physics::tpelib::Entity::kNullEntity.GetId(),
       model.GetId());
-  EXPECT_EQ("model", model.GetName());
+  EXPECT_EQ("parent_model", model.GetName());
   EXPECT_EQ(math::Pose3d::Zero, model.GetPose());
-  EXPECT_EQ(2u, model.GetChildCount());
+  EXPECT_EQ(4u, model.GetChildCount());
 
-  physics::tpelib::Entity &link = model.GetChildByName("link");
+  physics::tpelib::Entity &link = model.GetChildByName("link1");
   ASSERT_NE(physics::tpelib::Entity::kNullEntity.GetId(),
       link.GetId());
-  EXPECT_EQ("link", link.GetName());
+  EXPECT_EQ("link1", link.GetName());
   EXPECT_EQ(math::Pose3d::Zero, link.GetPose());
   EXPECT_EQ(1u, link.GetChildCount());
 
@@ -400,27 +407,26 @@ TEST(SDFFeatures_TEST, NestedModel)
       nestedModel.GetId());
   EXPECT_EQ("nested_model", nestedModel.GetName());
   EXPECT_EQ(math::Pose3d(1, 2, 2, 0, 0, 0), nestedModel.GetPose());
-  EXPECT_EQ(1u, nestedModel.GetChildCount());
+  EXPECT_EQ(2u, nestedModel.GetChildCount());
 
   physics::tpelib::Entity &nestedLink =
-      nestedModel.GetChildByName("nested_link");
+      nestedModel.GetChildByName("nested_link1");
   ASSERT_NE(physics::tpelib::Entity::kNullEntity.GetId(),
       nestedLink.GetId());
-  EXPECT_EQ("nested_link", nestedLink.GetName());
+  EXPECT_EQ("nested_link1", nestedLink.GetName());
   EXPECT_EQ(math::Pose3d(3, 1, 1, 0, 0, 1.5707),
       nestedLink.GetPose());
   EXPECT_EQ(1u, nestedLink.GetChildCount());
 
   physics::tpelib::Entity &nestedCollision =
-      nestedLink.GetChildByName("nested_collision");
+      nestedLink.GetChildByName("nested_collision1");
   ASSERT_NE(physics::tpelib::Entity::kNullEntity.GetId(),
       nestedCollision.GetId());
-  EXPECT_EQ("nested_collision", nestedCollision.GetName());
+  EXPECT_EQ("nested_collision1", nestedCollision.GetName());
   EXPECT_EQ(math::Pose3d::Zero, nestedCollision.GetPose());
 
   // canonical link
-  physics::tpelib::Model *m =
-      static_cast<physics::tpelib::Model *>(&model);
+  auto *m = dynamic_cast<physics::tpelib::Model *>(&model);
   physics::tpelib::Entity canLink = m->GetCanonicalLink();
   EXPECT_EQ(link.GetId(), canLink.GetId());
 }

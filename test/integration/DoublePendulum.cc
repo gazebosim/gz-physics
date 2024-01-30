@@ -26,7 +26,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/RequestEngine.hh>
 
-#include "../MockDoublePendulum.hh"
+#include "mock/MockDoublePendulum.hh"
 
 using namespace gz::physics;
 

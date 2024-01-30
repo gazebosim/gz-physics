@@ -29,8 +29,8 @@
 #include <gz/physics/RevoluteJoint.hh>
 #include <gz/physics/FrameSemantics.hh>
 
-#include "../MockJoints.hh"
-#include "../Utils.hh"
+#include "mock/MockJoints.hh"
+#include "test/Utils.hh"
 
 using namespace gz::physics;
 using namespace gz::physics::test;

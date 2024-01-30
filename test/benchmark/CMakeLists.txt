@@ -4,5 +4,4 @@ set(tests
   ExpectData.cc
 )
 
-gz_add_benchmarks(SOURCES ${tests}
-  INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/src)
+gz_add_benchmarks(SOURCES ${tests} LIB_DEPS gz-physics-test)

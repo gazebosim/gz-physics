@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <LinearMath/btScalar.h>
 
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
@@ -25,8 +24,9 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include "gz/physics/FrameSemantics.hh"
 #include <gz/physics/FindFeatures.hh>
@@ -103,7 +103,7 @@ class JointTransmittedWrenchFixture :
       ASSERT_NE(nullptr, engine);
 
       sdf::Root root;
-      const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "pendulum_joint_wrench.sdf"));
+      const sdf::Errors errors = root.Load(common_test::worlds::kPendulumJointWrenchSdf);
       ASSERT_TRUE(errors.empty()) << errors.front();
 
       this->world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -225,12 +225,10 @@ TYPED_TEST(JointTransmittedWrenchFixture, PendulumAtZeroAngle)
 TYPED_TEST(JointTransmittedWrenchFixture, PendulumInMotion)
 {
   // This test requires https://github.com/bulletphysics/bullet3/pull/4462
-  // When removing this check, also remove
-  // `#include <LinearMath/btScalar.h>` at the top of this file, and
-  // `include_directories(${BULLET_INCLUDE_DIRS})` from
-  // test/common_test/CMakeLists.txt
-  if (this->engineName == "bullet-featherstone" && btGetVersion() <= 325)
+#ifdef BT_BULLET_VERSION_LE_325
+  if (this->engineName == "bullet-featherstone")
     GTEST_SKIP();
+#endif
 
   // Start pendulum at 90° (parallel to the ground) and stop at about 40°
   // so that we have non-trivial test expectations.
@@ -418,12 +416,10 @@ TYPED_TEST(JointTransmittedWrenchFixture, JointLosses)
 TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
 {
   // This test requires https://github.com/bulletphysics/bullet3/pull/4462
-  // When removing this check, also remove
-  // `#include <LinearMath/btScalar.h>` at the top of this file, and
-  // `include_directories(${BULLET_INCLUDE_DIRS})` from
-  // test/common_test/CMakeLists.txt
-  if (this->engineName == "bullet-featherstone" && btGetVersion() <= 325)
+#if BT_BULLET_VERSION_LE_325
+  if (this->engineName == "bullet-featherstone")
     GTEST_SKIP();
+#endif
 
   auto box = this->world->GetModel("box");
   ASSERT_NE(nullptr, box);

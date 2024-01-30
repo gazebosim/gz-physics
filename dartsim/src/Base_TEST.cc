@@ -38,8 +38,9 @@
 #include "EntityManagementFeatures.hh"
 #include "SDFFeatures.hh"
 
-using namespace gz::physics;
+#include "test/Resources.hh"
 
+using namespace gz::physics;
 
 
 TEST(BaseClass, RemoveModel)
@@ -166,7 +167,7 @@ TEST(BaseClass, SdfConstructionBookkeeping)
 
   ::sdf::Root root;
 
-  auto errors = root.Load(GZ_PHYSICS_RESOURCE_DIR "/rrbot.xml");
+  auto errors = root.Load(gz::physics::test::resources::kRrbotXml);
   ASSERT_TRUE(errors.empty());
   const ::sdf::Model *sdfModel = root.Model();
   ASSERT_NE(nullptr, sdfModel);

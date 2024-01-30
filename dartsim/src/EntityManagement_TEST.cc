@@ -35,6 +35,8 @@
 #include "KinematicsFeatures.hh"
 #include "ShapeFeatures.hh"
 
+#include "test/Resources.hh"
+
 using namespace gz;
 
 struct TestFeatureList : physics::FeatureList<
@@ -172,8 +174,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto meshLink = model->ConstructEmptyLink("mesh_link");
   meshLink->AttachFixedJoint(child, "fixed");
 
-  const std::string meshFilename = common::joinPaths(
-      GZ_PHYSICS_RESOURCE_DIR, "chassis.dae");
+  const std::string meshFilename = gz::physics::test::resources::kChassisDae;
   auto &meshManager = *common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
 
@@ -212,8 +213,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto heightmapLink = model->ConstructEmptyLink("heightmap_link");
   heightmapLink->AttachFixedJoint(child, "heightmap_joint");
 
-  auto heightmapFilename = common::joinPaths(
-      GZ_PHYSICS_RESOURCE_DIR, "heightmap_bowl.png");
+  auto heightmapFilename = gz::physics::test::resources::kHeightmapBowlPng;
   common::ImageHeightmap data;
   EXPECT_EQ(0, data.Load(heightmapFilename));
 
@@ -239,8 +239,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   auto demLink = model->ConstructEmptyLink("dem_link");
   demLink->AttachFixedJoint(child, "dem_joint");
 
-  auto demFilename = common::joinPaths(
-      GZ_PHYSICS_RESOURCE_DIR, "volcano.tif");
+  auto demFilename = gz::physics::test::resources::kVolcanoTif;
   common::Dem dem;
   EXPECT_EQ(0, dem.Load(demFilename));
 

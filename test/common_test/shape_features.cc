@@ -19,8 +19,9 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 // Features
 #include <gz/physics/ConstructEmpty.hh>
@@ -103,7 +104,8 @@ TYPED_TEST(ShapeFeaturesTest, PrimarySlipCompliance)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "slip_compliance.sdf"));
+    const sdf::Errors errors = root.Load(
+      common_test::worlds::kSlipComplianceSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"box"};
@@ -175,7 +177,8 @@ TYPED_TEST(ShapeFeaturesTest, SecondarySlipCompliance)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "slip_compliance.sdf"));
+    const sdf::Errors errors = root.Load(
+      common_test::worlds::kSlipComplianceSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"box"};

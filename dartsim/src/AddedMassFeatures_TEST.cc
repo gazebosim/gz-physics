@@ -39,6 +39,7 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
+#include "Worlds.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::GetEntities,
@@ -121,7 +122,7 @@ TEST(AddedMassFeatures, AddedMass)
     0, 0, 0, 0, 1, 0,
     0, 0, 0, 0, 0, 1;
 
-  auto world = LoadWorld(TEST_WORLD_DIR"/added_mass.sdf");
+  const auto world = LoadWorld(dartsim::worlds::kAddedMassSdf);
   ASSERT_NE(nullptr, world);
 
   auto dartWorld = world->GetDartsimWorld();

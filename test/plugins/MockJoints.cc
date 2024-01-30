@@ -20,7 +20,7 @@
 
 #include <gz/physics/Register.hh>
 
-#include "../MockJoints.hh"
+#include "mock/MockJoints.hh"
 
 namespace mock
 {

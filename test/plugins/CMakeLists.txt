@@ -17,6 +17,7 @@ endif()
 foreach(plugin IN LISTS plugins)
   target_link_libraries(${plugin}
     PRIVATE
+      gz-physics-test
       ${PROJECT_LIBRARY_TARGET_NAME})
 endforeach()
 
@@ -27,8 +28,6 @@ if (DART_FOUND)
   set(DART_LIBRARIES_NO_BULLET ${DART_LIBRARIES})
   list(REMOVE_ITEM DART_LIBRARIES_NO_BULLET dart-collision-bullet)
   target_link_libraries(MockDoublePendulum PUBLIC ${DART_LIBRARIES_NO_BULLET})
-  target_compile_definitions(MockDoublePendulum PRIVATE
-    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\"")
   if (MSVC)
     # needed by DART, see https://github.com/dartsim/dart/issues/753
     target_compile_options(MockDoublePendulum PUBLIC "/permissive-")

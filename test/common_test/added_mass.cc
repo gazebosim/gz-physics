@@ -17,10 +17,12 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
+
 #include <gz/plugin/Loader.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/AddedMass.hh>
 #include <gz/physics/FindFeatures.hh>
@@ -87,7 +89,7 @@ TEST_F(AddedMassFeaturesTest, Gravity)
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-      gz::common::joinPaths(TEST_WORLD_DIR, "falling_added_mass.world"));
+      common_test::worlds::kFallingAddedMassWorld);
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);

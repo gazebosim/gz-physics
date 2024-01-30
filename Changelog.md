@@ -619,6 +619,19 @@
 
 ## Gazebo Physics 2.x
 
+### Gazebo Physics 2.6.2 (2024-01-05)
+
+1. dartsim: fix handling inertia matrix pose rotation
+    * [Pull request #351](https://github.com/gazebosim/gz-physics/pull/351)
+
+1. Fix a crash due to an invalid pointer
+    * [Pull request #486](https://github.com/gazebosim/gz-physics/pull/486)
+
+1. Infrastructure
+    * [Pull request #488](https://github.com/gazebosim/gz-physics/pull/488)
+    * [Pull request #487](https://github.com/gazebosim/gz-physics/pull/487)
+    * [Pull request #572](https://github.com/gazebosim/gz-physics/pull/572)
+
 ### Gazebo Physics 2.6.1 (2023-01-09)
 
 1. Fix build errors and warnings for DART 6.13.0

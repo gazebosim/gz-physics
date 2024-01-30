@@ -26,7 +26,8 @@
 #include <gz/common/Console.hh>
 #include <gz/physics/Register.hh>
 
-#include "../MockDoublePendulum.hh"
+#include "mock/MockDoublePendulum.hh"
+#include "test/Resources.hh"
 
 namespace mock
 {
@@ -65,7 +66,8 @@ namespace mock
           lastId(0)
       {
         ::dart::utils::DartLoader loader;
-        this->robot = loader.parseSkeleton(GZ_PHYSICS_RESOURCE_DIR "/rrbot.xml");
+        this->robot = loader.parseSkeleton(
+          gz::physics::test::resources::kRrbotXml);
         this->world->addSkeleton(this->robot);
 
         this->joint1 = this->robot->getJoint("joint1");
