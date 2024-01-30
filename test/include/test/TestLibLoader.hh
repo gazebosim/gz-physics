@@ -24,6 +24,9 @@
 
 #include <gz/common/Filesystem.hh>
 #include <gz/common/Util.hh>
+#include <gz/utils/Environment.hh>
+
+#include <filesystem>
 
 namespace gz
 {

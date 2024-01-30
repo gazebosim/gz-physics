@@ -24,8 +24,9 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include "gz/physics/FrameSemantics.hh"
 #include <gz/physics/FindFeatures.hh>
@@ -102,7 +103,7 @@ class JointTransmittedWrenchFixture :
       ASSERT_NE(nullptr, engine);
 
       sdf::Root root;
-      const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "pendulum_joint_wrench.sdf"));
+      const sdf::Errors errors = root.Load(common_test::worlds::kPendulumJointWrenchSdf);
       ASSERT_TRUE(errors.empty()) << errors.front();
 
       this->world = engine->ConstructWorld(*root.WorldByIndex(0));

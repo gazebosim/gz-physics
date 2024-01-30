@@ -24,8 +24,9 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include "gz/physics/FrameSemantics.hh"
 #include <gz/physics/FindFeatures.hh>
@@ -115,7 +116,7 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -225,7 +226,7 @@ TYPED_TEST(JointFeaturesPositionLimitsTest, JointSetPositionLimitsWithForceContr
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -331,7 +332,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetVelocityLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -418,7 +419,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetEffortLimitsWith
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -495,7 +496,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -603,7 +604,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, DISABLED_JointSetPositio
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"simple_joint_test"};
@@ -655,7 +656,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetVelocityLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -726,7 +727,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetEffortLimitsWith
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -786,7 +787,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -861,7 +862,7 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -1022,7 +1023,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "joint_across_models.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointAcrossModelsSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1166,7 +1167,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "joint_constraint.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointConstraintSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1315,7 +1316,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, LinkCountsInJointAttachDetach)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "joint_across_models.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointAcrossModelsSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1412,7 +1413,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachSpawnedModel)
       ASSERT_NE(nullptr, engine);
 
       sdf::Root root;
-      const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "ground.sdf"));
+      const sdf::Errors errors = root.Load(common_test::worlds::kGroundSdf);
       ASSERT_TRUE(errors.empty()) << errors.front();
 
       world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1510,8 +1511,7 @@ class WorldModelTest : public JointFeaturesTest<WorldJointFeatureList>
         gz::physics::RequestEngine3d<WorldJointFeatureList>::From(plugin);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(
-        gz::common::joinPaths(TEST_WORLD_DIR, "world_joint_test.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kWorldJointTestSdf);
     EXPECT_TRUE(errors.empty()) << errors;
     if (errors.empty())
     {
