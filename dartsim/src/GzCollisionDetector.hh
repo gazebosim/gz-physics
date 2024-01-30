@@ -48,7 +48,8 @@ class GzCollisionDetector
   /// The function modifies the contacts vector inside the CollisionResult
   /// object to cap the number of contacts for each collision pair based on the
   /// maxCollisionPairContacts value
-  protected: virtual void LimitCollisionPairMaxContacts(CollisionResult *_result);
+  protected: virtual void LimitCollisionPairMaxContacts(
+      CollisionResult *_result);
 
   /// \brief Maximum number of contacts between a pair of collision objects.
   protected: std::size_t maxCollisionPairContacts =
