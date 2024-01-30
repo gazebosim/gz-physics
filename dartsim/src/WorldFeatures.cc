@@ -143,6 +143,16 @@ std::size_t WorldFeatures::GetWorldCollisionPairMaxContacts(
   {
     return odeCollisionDetector->GetCollisionPairMaxContacts();
   }
+  else
+  {
+    auto bulletCollisionDetector =
+      std::dynamic_pointer_cast<dart::collision::GzBulletCollisionDetector>(
+      collisionDetector);
+    if (bulletCollisionDetector)
+    {
+      return bulletCollisionDetector->GetCollisionPairMaxContacts();
+    }
+  }
 
   return 0u;
 }
