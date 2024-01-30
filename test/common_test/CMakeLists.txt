@@ -44,6 +44,9 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
   endif()
 endfunction()
 
+# Get bullet version using pkg_check_modules as it is not available
+# through the cmake module
+gz_pkg_check_modules_quiet(bullet_version_check "bullet")
 
 foreach(test ${tests})
   set(test_executable "${TEST_TYPE}_${test}")
@@ -61,13 +64,15 @@ foreach(test ${tests})
 
   target_include_directories(${test_executable} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+  if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.25)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_LE_325"
+    )
+  endif()
+
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
   configure_common_test("bullet" ${test_executable})
   configure_common_test("bullet-featherstone" ${test_executable})
   configure_common_test("dartsim" ${test_executable})
   configure_common_test("tpe" ${test_executable})
 endforeach()
-
-if(TARGET COMMON_TEST_joint_transmitted_wrench_features)
-  target_include_directories(COMMON_TEST_joint_transmitted_wrench_features PRIVATE ${BULLET_INCLUDE_DIRS})
-endif()

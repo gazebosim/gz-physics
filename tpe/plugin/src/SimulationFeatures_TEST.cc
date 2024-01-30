@@ -41,6 +41,7 @@
 #include <sdf/Model.hh>
 #include <sdf/Link.hh>
 
+#include <test/common_test/Worlds.hh>
 #include <test/PhysicsPluginsList.hh>
 #include <test/Utils.hh>
 #include "Worlds.hh"
@@ -276,7 +277,7 @@ TEST_P(SimulationFeatures_TEST, StepWorld)
     return;
 
   gzdbg << "Testing library " << library << std::endl;
-  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
+  const auto worlds = LoadWorlds(library, common_test::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {
@@ -299,7 +300,7 @@ TEST_P(SimulationFeatures_TEST, ShapeFeatures)
   if (library.empty())
     return;
 
-  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
+  const auto worlds = LoadWorlds(library, common_test::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {
@@ -438,7 +439,7 @@ TEST_P(SimulationFeatures_TEST, FreeGroup)
   if (library.empty())
     return;
 
-  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
+  const auto worlds = LoadWorlds(library, common_test::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {
@@ -486,7 +487,8 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
   if (library.empty())
     return;
 
-  const auto worlds = LoadWorlds(library, tpe::worlds::kNestedModelWorld);
+  const auto worlds =
+    LoadWorlds(library, common_test::worlds::kWorldWithNestedModelSdf);
 
   for (const auto &world : worlds)
   {
@@ -494,7 +496,7 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
     ASSERT_NE(nullptr, tpeWorld);
 
     // model free group test
-    auto model = world->GetModel("model");
+    auto model = world->GetModel("parent_model");
     ASSERT_NE(nullptr, model);
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
@@ -504,7 +506,7 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
     freeGroup->SetWorldPose(math::eigen3::convert(newPose));
 
     {
-      auto link = model->GetLink("link");
+      auto link = model->GetLink("link1");
       ASSERT_NE(nullptr, link);
       auto frameData = link->FrameDataRelativeToWorld();
       EXPECT_EQ(newPose,
@@ -513,7 +515,7 @@ TEST_P(SimulationFeatures_TEST, NestedFreeGroup)
     {
       auto nestedModel = model->GetNestedModel("nested_model");
       ASSERT_NE(nullptr, nestedModel);
-      auto nestedLink = nestedModel->GetLink("nested_link");
+      auto nestedLink = nestedModel->GetLink("nested_link1");
       ASSERT_NE(nullptr, nestedLink);
 
       // Poses from SDF
@@ -536,10 +538,8 @@ TEST_P(SimulationFeatures_TEST, CollideBitmasks)
   if (library.empty())
     return;
 
-  const auto worldPath =
-    gz::common::testing::SourceFile(
-      "tpe", "plugin", "worlds", "shapes_bitmask.sdf");
-  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesBitmaskSdf);
+  const auto worlds =
+    LoadWorlds(library, common_test::worlds::kShapesBitmaskWorld);
 
   for (const auto &world : worlds)
   {
@@ -583,7 +583,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
   if (library.empty())
     return;
 
-  const auto worlds = LoadWorlds(library, tpe::worlds::kShapesWorld);
+  const auto worlds = LoadWorlds(library, common_test::worlds::kShapesWorld);
 
   for (const auto &world : worlds)
   {

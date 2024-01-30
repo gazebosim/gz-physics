@@ -53,7 +53,8 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
-#include "dartsim/src/Worlds.hh"
+#include <test/common_test/Worlds.hh>
+#include "Worlds.hh"
 
 using namespace gz;
 
@@ -314,7 +315,7 @@ INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST_P(SDFFeatures_TEST, CheckDartsimData)
 {
-  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
+  WorldPtr world = this->LoadWorld(common_test::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -422,7 +423,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
 // Test that joint limits are working by running the simulation
 TEST_P(SDFFeatures_TEST, CheckJointLimitEnforcement)
 {
-  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
+  WorldPtr world = this->LoadWorld(common_test::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -581,7 +582,8 @@ TEST_P(SDFFeatures_TEST, WorldIsParentOrChild)
 //
 TEST_P(SDFFeatures_TEST, WorldWithNestedModel)
 {
-  WorldPtr world = this->LoadWorld(dartsim::worlds::kWorldWithNestedModelSdf);
+  WorldPtr world =
+    this->LoadWorld(common_test::worlds::kWorldWithNestedModelSdf);
   ASSERT_NE(nullptr, world);
   EXPECT_EQ(2u, world->GetModelCount());
 
@@ -690,7 +692,7 @@ TEST_P(SDFFeatures_TEST, WorldWithNestedModelJointToWorld)
 // Test that joint type falls back to fixed if the type is not supported
 TEST_P(SDFFeatures_TEST, FallbackToFixedJoint)
 {
-  WorldPtr world = this->LoadWorld(dartsim::worlds::kTestWorld);
+  WorldPtr world = this->LoadWorld(common_test::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
   dart::simulation::WorldPtr dartWorld = world->GetDartsimWorld();
@@ -964,7 +966,7 @@ TEST_P(SDFFeatures_FrameSemantics, ExplicitWorldFrames)
 /////////////////////////////////////////////////
 TEST_P(SDFFeatures_TEST, Shapes)
 {
-  WorldPtr world = this->LoadWorld(dartsim::worlds::kShapesSdf);
+  WorldPtr world = this->LoadWorld(common_test::worlds::kShapesWorld);
   ASSERT_NE(nullptr, world);
 
   auto dartWorld = world->GetDartsimWorld();
@@ -973,7 +975,7 @@ TEST_P(SDFFeatures_TEST, Shapes)
   ASSERT_EQ(5u, dartWorld->getNumSkeletons());
 
   int count{0};
-  for (auto name : {"box", "cylinder", "sphere", "capsule", "ellipsoid"})
+  for (auto name : {"sphere", "box", "cylinder", "capsule", "ellipsoid"})
   {
     const auto skeleton = dartWorld->getSkeleton(count++);
     ASSERT_NE(nullptr, skeleton);

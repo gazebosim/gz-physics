@@ -43,7 +43,7 @@ gz_find_package(gz-common5
 set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
 
 # This is only used for test support
-gz_find_package(gz-common5 COMPONENTS testing)
+gz_find_package(gz-common5 REQUIRED COMPONENTS testing)
 
 #--------------------------------------
 # Find gz-math

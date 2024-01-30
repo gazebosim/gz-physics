@@ -33,19 +33,11 @@ inline std::string DartsimTestWorld(const std::string &_world)
 namespace dartsim::worlds
 {
 const auto kAddedMassSdf = DartsimTestWorld("added_mass.sdf");
-const auto kEmptySdf = DartsimTestWorld("empty.sdf");
-const auto kFallingWorld = DartsimTestWorld("falling.world");
 const auto kJointAcrossNestedModelsSdf =
   DartsimTestWorld("joint_across_nested_models.sdf");
 const auto kModelFramesSdf = DartsimTestWorld("model_frames.sdf");
-const auto kShapesSdf = DartsimTestWorld("shapes.sdf");
-const auto kShapesBitmaskWorld = DartsimTestWorld("shapes_bitmask.sdf");
-const auto kTestWorld = DartsimTestWorld("test.world");
 const auto kWorldFramesSdf = DartsimTestWorld("world_frames.sdf");
-const auto kWorldWithNestedModelSdf =
-  DartsimTestWorld("world_with_nested_model.sdf");
 const auto kWorldWithNestedModelJointToWorldSdf =
   DartsimTestWorld("world_with_nested_model_joint_to_world.sdf");
-
 }  // namespace dartsim::worlds
 #endif  // DARTSIM_WORLDS_HH_
