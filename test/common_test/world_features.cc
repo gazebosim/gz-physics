@@ -381,7 +381,7 @@ class WorldNestedModelTest : public WorldFeaturesTest<WorldNestedModelFeatureLis
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-        gz::common::joinPaths(TEST_WORLD_DIR, "world_single_nested_model.sdf"));
+        common_test::worlds::kWorldSingleNestedModelSdf);
     EXPECT_TRUE(errors.empty()) << errors;
     if (errors.empty())
     {
