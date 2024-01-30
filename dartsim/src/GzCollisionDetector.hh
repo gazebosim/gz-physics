@@ -23,6 +23,7 @@
 
 #include <dart/collision/CollisionResult.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
+#include <dart/collision/bullet/BulletCollisionDetector.hpp>
 
 namespace dart {
 namespace collision {
@@ -78,6 +79,32 @@ class GzOdeCollisionDetector :
   protected: GzOdeCollisionDetector();
 
   private: static Registrar<GzOdeCollisionDetector> mRegistrar;
+};
+
+class GzBulletCollisionDetector :
+    public dart::collision::BulletCollisionDetector,
+    public dart::collision::GzCollisionDetector
+{
+  // Documentation inherited
+  public: bool collide(
+      CollisionGroup* group,
+      const CollisionOption& option = CollisionOption(false, 1u, nullptr),
+      CollisionResult* result = nullptr) override;
+
+  // Documentation inherited
+  public: bool collide(
+      CollisionGroup* group1,
+      CollisionGroup* group2,
+      const CollisionOption& option = CollisionOption(false, 1u, nullptr),
+      CollisionResult* result = nullptr) override;
+
+  /// \brief Create the GzBulletCollisionDetector
+  public: static std::shared_ptr<GzBulletCollisionDetector> create();
+
+  /// Constructor
+  protected: GzBulletCollisionDetector();
+
+  private: static Registrar<GzBulletCollisionDetector> mRegistrar;
 };
 
 }

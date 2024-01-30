@@ -140,3 +140,48 @@ bool GzOdeCollisionDetector::collide(
   this->LimitCollisionPairMaxContacts(_result);
   return ret;
 }
+
+/////////////////////////////////////////////////
+GzBulletCollisionDetector::GzBulletCollisionDetector()
+  : BulletCollisionDetector(), GzCollisionDetector()
+{
+}
+
+/////////////////////////////////////////////////
+GzBulletCollisionDetector::Registrar<GzBulletCollisionDetector>
+    GzBulletCollisionDetector::mRegistrar{
+        GzBulletCollisionDetector::getStaticType(),
+        []() -> std::shared_ptr<GzBulletCollisionDetector> {
+          return GzBulletCollisionDetector::create();
+        }};
+
+/////////////////////////////////////////////////
+std::shared_ptr<GzBulletCollisionDetector> GzBulletCollisionDetector::create()
+{
+  return std::shared_ptr<GzBulletCollisionDetector>(
+      new GzBulletCollisionDetector());
+}
+
+/////////////////////////////////////////////////
+bool GzBulletCollisionDetector::collide(
+    CollisionGroup *_group,
+    const CollisionOption &_option,
+    CollisionResult *_result)
+{
+  bool ret = BulletCollisionDetector::collide(_group, _option, _result);
+  this->LimitCollisionPairMaxContacts(_result);
+  return ret;
+}
+
+/////////////////////////////////////////////////
+bool GzBulletCollisionDetector::collide(
+    CollisionGroup *_group1,
+    CollisionGroup *_group2,
+    const CollisionOption &_option,
+    CollisionResult *_result)
+{
+  bool ret = BulletCollisionDetector::collide(
+      _group1, _group2, _option, _result);
+  this->LimitCollisionPairMaxContacts(_result);
+  return ret;
+}
