@@ -18,12 +18,13 @@
 #ifndef GZ_PHYSICS_DARTSIM_SRC_GZCOLLISIONDETECTOR_HH_
 #define GZ_PHYSICS_DARTSIM_SRC_GZCOLLISIONDETECTOR_HH_
 
+#include <cstdio>
 #include <limits>
 #include <memory>
 
 #include <dart/collision/CollisionResult.hpp>
-#include <dart/collision/ode/OdeCollisionDetector.hpp>
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
+#include <dart/collision/ode/OdeCollisionDetector.hpp>
 
 namespace dart {
 namespace collision {
