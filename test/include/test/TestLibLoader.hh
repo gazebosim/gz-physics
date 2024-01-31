@@ -41,13 +41,29 @@ class TestLibLoader
   {
     if (argc != 2)
     {
-      std::cerr << "Please provide the path to an engine plugin.\n"
-                << "Usage " <<  argv[0] << " <physics engine path>\n";
-      return false;
+      std::string envLibToTest;
+      if(!gz::utils::env("LIB_TO_TEST", envLibToTest))
+      {
+        std::cerr << "Please provide the path to an engine plugin.\n"
+                  << "Usage " <<  argv[0] << " <physics engine path>\n";
+        return false;
+      }
+      else
+      {
+        std::string &libToTest = LibToTest();
+        libToTest = envLibToTest;
+
+        std::cout << std::filesystem::current_path() << std::endl;
+        std::cout << envLibToTest << std::endl;
+        return true;
+      }
     }
-    std::string &libToTest = LibToTest();
-    libToTest = argv[1];
-    return true;
+    else
+    {
+      std::string &libToTest = LibToTest();
+      libToTest = argv[1];
+      return true;
+    }
   }
 
   /// \brief Get the name of the library to test
