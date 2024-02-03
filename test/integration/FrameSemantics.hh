@@ -27,8 +27,8 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/math/Helpers.hh>
 
-#include "../Utils.hh"
-#include "../MockFrameSemantics.hh"
+#include "test/Utils.hh"
+#include "mock/MockFrameSemantics.hh"
 
 using gz::physics::FrameData;
 using gz::physics::FrameID;

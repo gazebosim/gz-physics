@@ -58,8 +58,7 @@ foreach(test ${tests})
 
   target_link_libraries(${test_executable}
     PUBLIC
-      gz-plugin${GZ_PLUGIN_VER}::loader
-      gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+      gz-physics-test
       ${PROJECT_LIBRARY_TARGET_NAME}
       ${PROJECT_LIBRARY_TARGET_NAME}-sdf
       ${PROJECT_LIBRARY_TARGET_NAME}-mesh
@@ -67,10 +66,7 @@ foreach(test ${tests})
       gtest_main
   )
 
-  target_compile_definitions(${test_executable} PRIVATE
-    "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
-    "GZ_PHYSICS_RESOURCE_DIR=\"${GZ_PHYSICS_RESOURCE_DIR}\""
-  )
+  target_include_directories(${test_executable} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
   if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.25)
     target_compile_definitions(${test_executable} PRIVATE
