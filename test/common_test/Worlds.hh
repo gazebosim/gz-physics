@@ -38,7 +38,7 @@ const auto kGroundSdf = CommonTestWorld("ground.sdf");
 const auto kJointAcrossModelsSdf = CommonTestWorld("joint_across_models.sdf");
 const auto kJointConstraintSdf = CommonTestWorld("joint_constraint.sdf");
 const auto kMimicFastSlowPendulumsWorld =
-  CommonTestWorld("mimic_fast_flow_pendulums_world.sdf");
+  CommonTestWorld("mimic_fast_slow_pendulums_world.sdf");
 const auto kMimicPendulumWorld = CommonTestWorld("mimic_pendulum_world.sdf");
 const auto kMimicPrismaticWorld = CommonTestWorld("mimic_prismatic_world.sdf");
 const auto kMimicUniversalWorld = CommonTestWorld("mimic_universal_world.sdf");
