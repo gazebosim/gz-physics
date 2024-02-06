@@ -81,7 +81,7 @@ struct UnregisterCollisionDetectors
 {
   ~UnregisterCollisionDetectors()
   {
-    dart::collision::CollisionDetector::getFactory()->unregisterAllCreators;
+    dart::collision::CollisionDetector::getFactory()->unregisterAllCreators();
   }
 };
 
