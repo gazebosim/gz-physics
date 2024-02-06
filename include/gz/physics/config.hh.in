@@ -27,7 +27,6 @@
 
 #define GZ_PHYSICS_VERSION "${PROJECT_VERSION}"
 #define GZ_PHYSICS_VERSION_FULL "${PROJECT_VERSION_FULL}"
-#define GZ_PHYSICS_VERSION_NAMESPACE v${PROJECT_VERSION_MAJOR}
 
 #define GZ_PHYSICS_ENGINE_INSTALL_DIR _Pragma ("GCC warning \"'GZ_PHYSICS_ENGINE_INSTALL_DIR' macro is deprecated, use gz::physics::getEngineInstallDir() function instead. \"") "${GZ_PHYSICS_ENGINE_INSTALL_DIR}"
 
