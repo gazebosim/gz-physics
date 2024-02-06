@@ -156,6 +156,7 @@ std::string getEngineInstallDir()
   return gz::physics::joinPaths(
       getInstallPrefix(), GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR);
 }
-}  // namespace GZ_PHYSICS_VERSION_NAMESPACE
-}  // namespace physics
-}  // namespace gz
+
+}
+}
+}
