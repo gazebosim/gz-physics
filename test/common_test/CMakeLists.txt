@@ -46,8 +46,6 @@ function(configure_common_test PHYSICS_ENGINE_NAME test_name)
   endif()
 endfunction()
 
-set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
-
 # Get bullet version using pkg_check_modules as it is not available
 # through the cmake module
 gz_pkg_check_modules_quiet(bullet_version_check "bullet")
