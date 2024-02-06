@@ -64,6 +64,7 @@ class Plugin :
 
 #ifndef GZ_PHYSICS_BAZEL_BUILD
 namespace {
+
 // This is done as a partial fix for
 // https://github.com/gazebosim/gz-physics/issues/442. The issue seems like the
 // destructors for the concrete collision detectors get unloaded and deleted
@@ -80,12 +81,7 @@ struct UnregisterCollisionDetectors
 {
   ~UnregisterCollisionDetectors()
   {
-    auto factory = dart::collision::CollisionDetector::getFactory();
-
-    if (factory != nullptr)
-    {
-      factory->unregisterAllCreators();
-    }
+    dart::collision::CollisionDetector::getFactory()->unregisterAllCreators;
   }
 };
 

@@ -52,9 +52,6 @@ class TestLibLoader
       {
         std::string &libToTest = LibToTest();
         libToTest = envLibToTest;
-
-        std::cout << std::filesystem::current_path() << std::endl;
-        std::cout << envLibToTest << std::endl;
         return true;
       }
     }
