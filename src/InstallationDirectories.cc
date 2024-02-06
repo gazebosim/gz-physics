@@ -103,7 +103,7 @@ std::string joinPaths(const std::string &_path1,
     char replacement = '/';
 #else
     char replacement = '\\';
-#endif
+#endif  // _WIN32
 
     // Sanitize the start of the path.
     size_t index = 0;
@@ -144,7 +144,7 @@ std::string joinPaths(const std::string &_path1,
 #endif  // _WIN32
   return path;
 }
-}  // namespace
+}
 
 inline namespace GZ_PHYSICS_VERSION_NAMESPACE {
 #ifdef GZ_PHYSICS_BAZEL_BUILD
