@@ -1,6 +1,5 @@
 load(
     "@gz//bazel/skylark:build_defs.bzl",
-    "GZ_FEATURES",
     "GZ_ROOT",
     "GZ_VISIBILITY",
     "gz_configure_header",
@@ -53,3 +52,30 @@ cc_binary(
         GZ_ROOT + "plugin:register",
     ],
 )
+
+test_sources = glob(["src/*_TEST.cc"])
+
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [src],
+    copts = ["-fexceptions"],
+    data = [
+        "worlds",
+        ":libgz-physics-dartsim-plugin.so",
+        GZ_ROOT + "physics/test:resources",
+    ],
+    includes = ["src"],
+    local_defines = [
+        "TEST_WORLD_DIR='\"physics/dartsim/worlds/\"'",
+        "GZ_PHYSICS_RESOURCE_DIR='\"physics/test/resources/\"'",
+    ],
+    deps = [
+        GZ_ROOT + "common/geospatial",
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics",
+        GZ_ROOT + "physics/test:common_test",
+        ":dartsim",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+) for src in test_sources]

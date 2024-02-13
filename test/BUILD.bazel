@@ -8,7 +8,6 @@ cc_library(
     name = "test_headers",
     srcs = glob(["include/**/*.hh"]),
     includes = ["include"],
-    visibility = GZ_VISIBILITY,
     deps = [
         GZ_ROOT + "common",
         GZ_ROOT + "common/testing",
@@ -21,6 +20,8 @@ cc_library(
   name = "common_test",
   hdrs = ["common_test/Worlds.hh"],
   includes = ["common_test"],
+  visibility = GZ_VISIBILITY,
+  include_prefix = "test",
   data = [
     ":resources",
     "common_test/worlds",

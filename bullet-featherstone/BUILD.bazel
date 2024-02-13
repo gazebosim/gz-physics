@@ -1,6 +1,5 @@
 load(
     "@gz//bazel/skylark:build_defs.bzl",
-    "GZ_FEATURES",
     "GZ_ROOT",
     "GZ_VISIBILITY",
 )

@@ -7,18 +7,25 @@ load(
     "gz_export_header",
     "gz_include_header",
 )
+load("@rules_license//rules:license.bzl", "license")
 
 package(
+    default_applicable_licenses = [GZ_ROOT + "physics:license"],
     default_visibility = GZ_VISIBILITY,
     features = GZ_FEATURES,
 )
 
-licenses(["notice"])  # Apache-2.0
+license(
+    name = "license",
+    package_name = "gz-physics",
+)
+
+licenses(["notice"])
 
 exports_files(["LICENSE"])
 
 gz_configure_header(
-    name = "physics_config_hh",
+    name = "config",
     src = "include/gz/physics/config.hh.in",
     cmakelists = ["CMakeLists.txt"],
     defines = {
@@ -49,7 +56,7 @@ sources = glob(
 )
 
 gz_include_header(
-    name = "physics_hh_genrule",
+    name = "physicshh_genrule",
     out = "include/gz/physics.hh",
     hdrs = public_headers_no_gen + [
         "include/gz/physics/config.hh",
@@ -83,10 +90,9 @@ cc_library(
 
 cc_library(
     name = "heightmap",
-    hdrs = [
-        "heightmap/include/gz/physics/heightmap/HeightmapShape.hh",
-        "heightmap/include/gz/physics/heightmap/detail/HeightmapShape.hh",
-    ],
+    hdrs = glob([
+        "heightmap/include/gz/physics/heightmap/**/*.hh",
+    ]),
     includes = ["heightmap/include"],
 )
 
@@ -110,9 +116,7 @@ cc_library(
     ],
 )
 
-test_sources = glob(
-    include = ["src/*_TEST.cc"],
-)
+test_sources = glob(["src/*_TEST.cc"])
 
 [cc_test(
     name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
@@ -123,7 +127,7 @@ test_sources = glob(
     },
     deps = [
         ":physics",
-        GZ_ROOT + "physics/test:test_headers",
+        GZ_ROOT + "physics/test:common_test",
         "@gtest",
         "@gtest//:gtest_main",
     ],
