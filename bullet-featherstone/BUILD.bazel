@@ -3,6 +3,10 @@ load(
     "GZ_ROOT",
     "GZ_VISIBILITY",
 )
+load(
+    "@gz//bazel/lint:lint.bzl",
+    "add_lint_tests",
+)
 
 private_headers = glob(["src/*.hh"])
 
@@ -42,3 +46,5 @@ cc_binary(
         GZ_ROOT + "plugin:register",
     ],
 )
+
+add_lint_tests()

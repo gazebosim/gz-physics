@@ -7,6 +7,10 @@ load(
     "gz_export_header",
     "gz_include_header",
 )
+load(
+    "@gz//bazel/lint:lint.bzl",
+    "add_lint_tests",
+)
 load("@rules_license//rules:license.bzl", "license")
 
 package(
@@ -132,3 +136,5 @@ test_sources = glob(["src/*_TEST.cc"])
         "@gtest//:gtest_main",
     ],
 ) for src in test_sources]
+
+add_lint_tests()

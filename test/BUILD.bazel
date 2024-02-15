@@ -17,18 +17,18 @@ cc_library(
 )
 
 cc_library(
-  name = "common_test",
-  hdrs = ["common_test/Worlds.hh"],
-  includes = ["common_test"],
-  visibility = GZ_VISIBILITY,
-  include_prefix = "test",
-  data = [
-    ":resources",
-    "common_test/worlds",
-  ],
-  deps = [
-    ":test_headers",
-  ]
+    name = "common_test",
+    hdrs = ["common_test/Worlds.hh"],
+    data = [
+        "common_test/worlds",
+        ":resources",
+    ],
+    include_prefix = "test",
+    includes = ["common_test"],
+    visibility = GZ_VISIBILITY,
+    deps = [
+        ":test_headers",
+    ],
 )
 
 cc_library(
@@ -37,8 +37,8 @@ cc_library(
         GZ_ROOT + "physics/dartsim:libgz-physics-dartsim-plugin.so",
     ],
     deps = [
-      ":common_test"
-    ]
+        ":common_test",
+    ],
 )
 
 cc_library(
@@ -47,8 +47,8 @@ cc_library(
         GZ_ROOT + "physics/bullet-featherstone:libgz-physics-bullet-featherstone-plugin.so",
     ],
     deps = [
-      ":common_test"
-    ]
+        ":common_test",
+    ],
 )
 
 physics_engines = [
