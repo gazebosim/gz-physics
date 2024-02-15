@@ -21,7 +21,6 @@
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
 #include <dart/collision/dart/DARTCollisionDetector.hpp>
 #include <dart/collision/fcl/FCLCollisionDetector.hpp>
-#include <dart/collision/ode/OdeCollisionDetector.hpp>
 #include <dart/constraint/BoxedLcpConstraintSolver.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/constraint/DantzigBoxedLcpSolver.hpp>
@@ -30,7 +29,9 @@
 
 #include <gz/common/Console.hh>
 
+#include "GzOdeCollisionDetector.hh"
 #include "WorldFeatures.hh"
+
 
 namespace gz {
 namespace physics {
@@ -53,7 +54,7 @@ void WorldFeatures::SetWorldCollisionDetector(
   }
   else if (_collisionDetector == "ode")
   {
-    collisionDetector = dart::collision::OdeCollisionDetector::create();
+    collisionDetector = dart::collision::GzOdeCollisionDetector::create();
   }
   else if (_collisionDetector == "dart")
   {
@@ -94,6 +95,46 @@ WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
 {
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
   return world->getGravity();
+}
+
+/////////////////////////////////////////////////
+void WorldFeatures::SetWorldCollisionPairMaxContacts(
+    const Identity &_id, std::size_t _maxContacts)
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto collisionDetector =
+    world->getConstraintSolver()->getCollisionDetector();
+
+  auto odeCollisionDetector =
+    std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
+    collisionDetector);
+  if (odeCollisionDetector)
+  {
+    odeCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
+  }
+  else
+  {
+    gzwarn << "Currently max contacts feature is only supported by the "
+           << "ode collision detector in dartsim." << std::endl;
+  }
+}
+
+/////////////////////////////////////////////////
+std::size_t WorldFeatures::GetWorldCollisionPairMaxContacts(
+    const Identity &_id) const
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+  auto collisionDetector =
+    world->getConstraintSolver()->getCollisionDetector();
+  auto odeCollisionDetector =
+    std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
+    collisionDetector);
+  if (odeCollisionDetector)
+  {
+    return odeCollisionDetector->GetCollisionPairMaxContacts();
+  }
+
+  return 0u;
 }
 
 /////////////////////////////////////////////////
