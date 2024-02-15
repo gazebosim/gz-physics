@@ -62,33 +62,6 @@ class Plugin :
     public virtual SimulationFeatures,
     public virtual WorldFeatures { };
 
-#ifndef GZ_PHYSICS_BAZEL_BUILD
-namespace {
-
-// This is done as a partial fix for
-// https://github.com/gazebosim/gz-physics/issues/442. The issue seems like the
-// destructors for the concrete collision detectors get unloaded and deleted
-// from memory before the destructors run. When it's time to actually call the
-// destructors, a segfault is generated.
-//
-// It's not clear why the destructors are deleted prematurely. It might be a
-// compiler optimization in new compiler versions.
-//
-// The solution here is to call the `unregisterAllCreators` function from the
-// plugins translation unit in the hopes that it will force the compiler to keep
-// the destructors.
-struct UnregisterCollisionDetectors
-{
-  ~UnregisterCollisionDetectors()
-  {
-    dart::collision::CollisionDetector::getFactory()->unregisterAllCreators();
-  }
-};
-
-UnregisterCollisionDetectors unregisterAtUnload;
-}  // namespace
-#endif  // GZ_PHYSICS_BAZEL_BUILD
-
 GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
 
 }

@@ -53,28 +53,130 @@ cc_binary(
     ],
 )
 
-test_sources = glob(["src/*_TEST.cc"])
-
-[cc_test(
-    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
-    srcs = [src],
+# AddedMassFeatures_TEST must directly link with dart:simulation
+cc_test(
+    name = "AddedMassFeatures_TEST",
+    srcs = ["src/AddedMassFeatures_TEST.cc"] + private_headers + public_headers,
     copts = ["-fexceptions"],
     data = [
         "worlds",
         ":libgz-physics-dartsim-plugin.so",
         GZ_ROOT + "physics/test:resources",
     ],
-    includes = ["src"],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+    },
+    includes = ["src", "include"],
     local_defines = [
         "TEST_WORLD_DIR='\"physics/dartsim/worlds/\"'",
         "GZ_PHYSICS_RESOURCE_DIR='\"physics/test/resources/\"'",
+        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'"
     ],
     deps = [
         GZ_ROOT + "common/geospatial",
         GZ_ROOT + "math/eigen3",
         GZ_ROOT + "physics",
+        GZ_ROOT + "physics:heightmap",
+        GZ_ROOT + "physics:mesh",
+        GZ_ROOT + "physics:sdf",
         GZ_ROOT + "physics/test:common_test",
+        GZ_ROOT + "third_party/dart:simulation",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+# Base_TEST directly links against the dartsim library while the others
+# load the plugin library via gz-plugin
+cc_test(
+    name = "Base_TEST",
+    srcs = ["src/Base_TEST.cc"] + private_headers + public_headers,
+    copts = ["-fexceptions"],
+    data = [
+        "worlds",
+        GZ_ROOT + "physics/test:resources",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+    },
+    includes = ["src", "include"],
+    deps = [
         ":dartsim",
+        GZ_ROOT + "physics/test:common_test",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+# SDFFeatures_TEST must directly link with dart:simulation
+cc_test(
+    name = "SDFFeatures_TEST.cc",
+    srcs = ["src/SDFFeatures_TEST.cc"] + private_headers + public_headers,
+    copts = ["-fexceptions"],
+    data = [
+        "worlds",
+        ":libgz-physics-dartsim-plugin.so",
+        GZ_ROOT + "physics/test:resources",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+    },
+    includes = ["src", "include"],
+    local_defines = [
+        "TEST_WORLD_DIR='\"physics/dartsim/worlds/\"'",
+        "GZ_PHYSICS_RESOURCE_DIR='\"physics/test/resources/\"'",
+        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'"
+    ],
+    deps = [
+        GZ_ROOT + "common/geospatial",
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics",
+        GZ_ROOT + "physics:heightmap",
+        GZ_ROOT + "physics:mesh",
+        GZ_ROOT + "physics:sdf",
+        GZ_ROOT + "physics/test:common_test",
+        GZ_ROOT + "third_party/dart:simulation",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+test_sources = glob(
+  include = ["src/*_TEST.cc"],
+  exclude = ["src/AddedMassFeatures_TEST.cc", "src/Base_TEST.cc", "src/SDFFeatures_TEST.cc"]
+)
+
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [src] + private_headers + public_headers,
+    copts = ["-fexceptions"],
+    data = [
+        "worlds",
+        ":libgz-physics-dartsim-plugin.so",
+        GZ_ROOT + "physics/test:resources",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "GZ_BAZEL_PATH": "physics",
+    },
+    includes = ["src", "include"],
+    local_defines = [
+        "TEST_WORLD_DIR='\"physics/dartsim/worlds/\"'",
+        "GZ_PHYSICS_RESOURCE_DIR='\"physics/test/resources/\"'",
+        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'"
+    ],
+    deps = [
+        GZ_ROOT + "common/geospatial",
+        GZ_ROOT + "math/eigen3",
+        GZ_ROOT + "physics",
+        GZ_ROOT + "physics:heightmap",
+        GZ_ROOT + "physics:mesh",
+        GZ_ROOT + "physics:sdf",
+        GZ_ROOT + "physics/test:common_test",
+        GZ_ROOT + "third_party/dart:constraint_headers",
+        GZ_ROOT + "third_party/dart:simulation_headers",
         "@gtest",
         "@gtest//:gtest_main",
     ],

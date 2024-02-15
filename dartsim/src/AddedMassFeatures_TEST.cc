@@ -16,7 +16,9 @@
 */
 
 #include <gtest/gtest.h>
+
 #include <dart/dynamics/BodyNode.hpp>
+#include <dart/simulation/World.hpp>
 
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
