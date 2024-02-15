@@ -67,11 +67,14 @@ cc_test(
         "GZ_BAZEL": "1",
         "GZ_BAZEL_PATH": "physics",
     },
-    includes = ["src", "include"],
+    includes = [
+        "include",
+        "src",
+    ],
     local_defines = [
         "TEST_WORLD_DIR='\"physics/dartsim/worlds/\"'",
         "GZ_PHYSICS_RESOURCE_DIR='\"physics/test/resources/\"'",
-        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'"
+        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'",
     ],
     deps = [
         GZ_ROOT + "common/geospatial",
@@ -101,7 +104,10 @@ cc_test(
         "GZ_BAZEL": "1",
         "GZ_BAZEL_PATH": "physics",
     },
-    includes = ["src", "include"],
+    includes = [
+        "include",
+        "src",
+    ],
     deps = [
         ":dartsim",
         GZ_ROOT + "physics/test:common_test",
@@ -124,11 +130,14 @@ cc_test(
         "GZ_BAZEL": "1",
         "GZ_BAZEL_PATH": "physics",
     },
-    includes = ["src", "include"],
+    includes = [
+        "include",
+        "src",
+    ],
     local_defines = [
         "TEST_WORLD_DIR='\"physics/dartsim/worlds/\"'",
         "GZ_PHYSICS_RESOURCE_DIR='\"physics/test/resources/\"'",
-        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'"
+        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'",
     ],
     deps = [
         GZ_ROOT + "common/geospatial",
@@ -143,9 +152,14 @@ cc_test(
         "@gtest//:gtest_main",
     ],
 )
+
 test_sources = glob(
-  include = ["src/*_TEST.cc"],
-  exclude = ["src/AddedMassFeatures_TEST.cc", "src/Base_TEST.cc", "src/SDFFeatures_TEST.cc"]
+    include = ["src/*_TEST.cc"],
+    exclude = [
+        "src/AddedMassFeatures_TEST.cc",
+        "src/Base_TEST.cc",
+        "src/SDFFeatures_TEST.cc",
+    ],
 )
 
 [cc_test(
@@ -161,11 +175,14 @@ test_sources = glob(
         "GZ_BAZEL": "1",
         "GZ_BAZEL_PATH": "physics",
     },
-    includes = ["src", "include"],
+    includes = [
+        "include",
+        "src",
+    ],
     local_defines = [
         "TEST_WORLD_DIR='\"physics/dartsim/worlds/\"'",
         "GZ_PHYSICS_RESOURCE_DIR='\"physics/test/resources/\"'",
-        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'"
+        "dartsim_plugin_LIB='\"physics/dartsim/libgz-physics-dartsim-plugin.so\"'",
     ],
     deps = [
         GZ_ROOT + "common/geospatial",
