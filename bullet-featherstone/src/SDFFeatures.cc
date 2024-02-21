@@ -50,6 +50,65 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
+
+//////////////////////////////////////////////////
+// Code taken from gz-sim/src/Util.cc
+// Consider refactoring this function to gz-common in main
+// branches
+std::string asFullPath(const std::string &_uri, const std::string &_filePath)
+{
+  // No path, return unmodified
+  if (_filePath.empty())
+  {
+    return _uri;
+  }
+
+#ifdef __APPLE__
+  const std::string absPrefix = "/";
+  // Not a relative path, return unmodified
+  if (_uri.find("://") != std::string::npos ||
+      _uri.compare(0, absPrefix.size(), absPrefix) == 0)
+  {
+    return _uri;
+  }
+#else
+  if (_uri.find("://") != std::string::npos ||
+      !common::isRelativePath(_uri))
+  {
+    return _uri;
+  }
+#endif
+
+  // When SDF is loaded from a string instead of a file
+  if (std::string(::sdf::kSdfStringSource) == _filePath)
+  {
+    gzwarn << "Can't resolve full path for relative path ["
+            << _uri << "]. Loaded from a data-string." << std::endl;
+    return _uri;
+  }
+
+  // Remove file name from path
+  auto path = common::parentPath(_filePath);
+  auto uri = _uri;
+
+  // If path is URI, use "/" separator for all platforms
+  if (path.find("://") != std::string::npos)
+  {
+    std::replace(uri.begin(), uri.end(), '\\', '/');
+    return path + "/" + uri;
+  }
+
+  // In case relative path doesn't match platform
+#ifdef _WIN32
+  std::replace(uri.begin(), uri.end(), '/', '\\');
+#else
+  std::replace(uri.begin(), uri.end(), '\\', '/');
+#endif
+
+  // Use platform-specific separator
+  return common::joinPaths(path,  uri);
+}
+
 /////////////////////////////////////////////////
 /// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
 /// frame. If that fails, return the raw pose
@@ -734,7 +793,8 @@ bool SDFFeatures::AddSdfCollision(
   else if (const auto *meshSdf = geom->MeshShape())
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
-    auto *mesh = meshManager.Load(meshSdf->Uri());
+    auto *mesh = meshManager.Load(asFullPath(meshSdf->Uri(),
+        meshSdf->FilePath()));
     const btVector3 scale = convertVec(meshSdf->Scale());
     if (nullptr == mesh)
     {
