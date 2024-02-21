@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 #include <dart/collision/CollisionObject.hpp>
 
@@ -92,21 +93,45 @@ void GzOdeCollisionDetector::LimitCollisionPairMaxContacts(
   auto allContacts = _result->getContacts();
   _result->clear();
 
+
+  if (this->maxCollisionPairContacts == 0u)
+    return;
+
+  // A map of collision pairs and their contact info
+  // Contact info is stored in std::pair. The elements are:
+  // <contact count, index of last contact point (in _result)>
   std::unordered_map<dart::collision::CollisionObject *,
-      std::unordered_map<dart::collision::CollisionObject *, std::size_t>>
+      std::unordered_map<dart::collision::CollisionObject *,
+      std::pair<std::size_t, std::size_t>>>
       contactMap;
 
   for (auto &contact : allContacts)
   {
-    auto &count =
-      contactMap[contact.collisionObject1][contact.collisionObject2];
+    auto &[count, lastContactIdx] =
+        contactMap[contact.collisionObject1][contact.collisionObject2];
     count++;
-    auto &otherCount =
+    auto &[otherCount, otherLastContactIdx] =
       contactMap[contact.collisionObject2][contact.collisionObject1];
+
     std::size_t total =  count + otherCount;
     if (total <= this->maxCollisionPairContacts)
     {
+      if (total == this->maxCollisionPairContacts)
+      {
+        lastContactIdx = _result->getNumContacts();
+        otherLastContactIdx = lastContactIdx;
+      }
       _result->addContact(contact);
+    }
+    else
+    {
+      // If too many contacts were generated, replace the last contact point
+      // of the collision pair with one that has a larger penetration depth
+      auto &c = _result->getContact(lastContactIdx);
+      if (contact.penetrationDepth > c.penetrationDepth)
+      {
+        c = contact;
+      }
     }
   }
 }

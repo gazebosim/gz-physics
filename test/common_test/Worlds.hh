@@ -29,6 +29,8 @@ inline std::string CommonTestWorld(const std::string &_world)
 
 namespace common_test::worlds
 {
+const auto kCollisionPairContactPointSdf =
+  CommonTestWorld("collision_pair_contact_point.sdf");
 const auto kContactSdf = CommonTestWorld("contact.sdf");
 const auto kDetachableJointWorld = CommonTestWorld("detachable_joint.world");
 const auto kEmptySdf = CommonTestWorld("empty.sdf");
