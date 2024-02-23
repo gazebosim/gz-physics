@@ -775,7 +775,7 @@ bool SDFFeatures::AddSdfCollision(
         std::make_unique<btGImpactMeshShape>(
           this->triangleMeshes.back().get()));
       this->meshesGImpact.back()->updateBound();
-      this->meshesGImpact.back()->setMargin(btScalar(0.001));
+      this->meshesGImpact.back()->setMargin(btScalar(0.01));
       compoundShape->addChildShape(btTransform::getIdentity(),
         this->meshesGImpact.back().get());
     }
