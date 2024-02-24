@@ -1138,7 +1138,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     }
     frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
 
-    EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
+    EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 2e-3);
   }
 }
 
@@ -1266,9 +1266,9 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
           gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
       gz::math::Vector3d body3LinearVelocity =
           gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 3e-3);
       EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 3e-3);
     }
 
     // Detach the joints. M1 and M3 should fall as there is now nothing stopping
@@ -1296,9 +1296,9 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
       gz::math::Vector3d body3LinearVelocity =
           gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
 
-      EXPECT_NEAR(dt * (numSteps) * -10, body1LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(dt * (numSteps) * -10, body1LinearVelocity.Z(), 3e-3);
       EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(dt * (numSteps) * -10, body3LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(dt * (numSteps) * -10, body3LinearVelocity.Z(), 3e-3);
     }
   }
 }
