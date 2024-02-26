@@ -29,7 +29,7 @@
 
 #include <gz/common/Console.hh>
 
-#include "GzOdeCollisionDetector.hh"
+#include "GzCollisionDetector.hh"
 #include "WorldFeatures.hh"
 
 
@@ -46,7 +46,7 @@ void WorldFeatures::SetWorldCollisionDetector(
        world->getConstraintSolver()->getCollisionDetector();
   if (_collisionDetector == "bullet")
   {
-    collisionDetector = dart::collision::BulletCollisionDetector::create();
+    collisionDetector = dart::collision::GzBulletCollisionDetector::create();
   }
   else if (_collisionDetector == "fcl")
   {
@@ -114,8 +114,18 @@ void WorldFeatures::SetWorldCollisionPairMaxContacts(
   }
   else
   {
-    gzwarn << "Currently max contacts feature is only supported by the "
-           << "ode collision detector in dartsim." << std::endl;
+    auto bulletCollisionDetector =
+      std::dynamic_pointer_cast<dart::collision::GzBulletCollisionDetector>(
+      collisionDetector);
+    if (bulletCollisionDetector)
+    {
+      bulletCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
+    }
+    else
+    {
+      gzwarn << "Currently max contacts feature is only supported by the "
+             << "bullet and ode collision detector in dartsim." << std::endl;
+    }
   }
 }
 
@@ -132,6 +142,16 @@ std::size_t WorldFeatures::GetWorldCollisionPairMaxContacts(
   if (odeCollisionDetector)
   {
     return odeCollisionDetector->GetCollisionPairMaxContacts();
+  }
+  else
+  {
+    auto bulletCollisionDetector =
+      std::dynamic_pointer_cast<dart::collision::GzBulletCollisionDetector>(
+      collisionDetector);
+    if (bulletCollisionDetector)
+    {
+      return bulletCollisionDetector->GetCollisionPairMaxContacts();
+    }
   }
 
   return 0u;
