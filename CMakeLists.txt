@@ -44,7 +44,7 @@ set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
 
 #--------------------------------------
 # Find ignition-math
-ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3)
+ign_find_package(ignition-math6 REQUIRED COMPONENTS eigen3 VERSION 6.13)
 set(IGN_MATH_VER ${ignition-math6_VERSION_MAJOR})
 
 #--------------------------------------
