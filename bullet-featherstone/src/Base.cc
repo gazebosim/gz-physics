@@ -43,9 +43,9 @@ WorldInfo::WorldInfo(std::string name_)
   this->world->getSolverInfo().m_jointFeedbackInJointFrame = true;
   this->world->getSolverInfo().m_jointFeedbackInWorldSpace = false;
 
-  // By default a large impulse is is applied when collisions penetrate
+  // By default a large impulse is applied when collisions penetrate
   // which causes unstable behavior. Bullet featherstone does not support
-  // configuring split impulse and penetration threhold parameters. Instead the
+  // configuring split impulse and penetration threshold parameters. Instead the
   // penentration impulse depends on the erp2 parameter so set to a small value
   // (default is 0.2).
   this->world->getSolverInfo().m_erp2 = 0.002;

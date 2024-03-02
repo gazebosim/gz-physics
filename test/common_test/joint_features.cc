@@ -1132,13 +1132,22 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     }
 
     // After a while, body2 should reach the ground and come to a stop
-    for (std::size_t i = 0; i < 1000; ++i)
+    std::size_t stepCount = 0u;
+    const std::size_t maxNumSteps = 1000u;
+    while (stepCount++ < maxNumSteps)
     {
       world->Step(output, state, input);
+      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+      // Expected Z height of model2 is 0.75 when both boxes are stacked on top
+      // of each other since each is 0.5 high.
+      if (fabs(frameDataModel2Body.pose.translation().z() - 0.75) < 2e-2 &&
+          fabs(frameDataModel2Body.linearVelocity.z()) < 1e-3)
+      {
+        break;
+      }
     }
-    frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
-
-    EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 2e-3);
+    EXPECT_GT(stepCount, 1u);
+    EXPECT_LT(stepCount, maxNumSteps);
   }
 }
 
@@ -1246,8 +1255,8 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
     EXPECT_EQ(initialModel3Pose,
               gz::math::eigen3::convert(frameDataModel3Body.pose));
 
+    // Step through initial transients
     const std::size_t numSteps = 100;
-    /// Step through initial transients
     for (std::size_t i = 0; i < numSteps; ++i)
     {
       world->Step(output, state, input);
@@ -1260,21 +1269,31 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
 
       // Expect all the bodies to be at rest.
       // (since they're held in place by the joints)
-      gz::math::Vector3d body1LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
-      gz::math::Vector3d body2LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
-      gz::math::Vector3d body3LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 3e-3);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 3e-3);
+      {
+        world->Step(output, state, input);
+        EXPECT_NEAR(initialModel1Pose.Z(),
+                    frameDataModel1Body.pose.translation().z(), 1e-3);
+        EXPECT_NEAR(initialModel2Pose.Z(),
+                    frameDataModel2Body.pose.translation().z(), 1e-3);
+        EXPECT_NEAR(initialModel3Pose.Z(),
+                    frameDataModel3Body.pose.translation().z(), 1e-3);
+        EXPECT_NEAR(0.0, frameDataModel1Body.linearVelocity.z(), 3e-3);
+        EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
+        EXPECT_NEAR(0.0, frameDataModel3Body.linearVelocity.z(), 3e-3);
+      }
     }
 
     // Detach the joints. M1 and M3 should fall as there is now nothing stopping
     // them from falling.
     fixedJoint_m2m1->Detach();
     fixedJoint_m2m3->Detach();
+
+    frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+    frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
+    const double preStepBody1LinearVelocityZ =
+        frameDataModel1Body.linearVelocity.z();
+    const double preStepBody3LinearVelocityZ =
+        frameDataModel3Body.linearVelocity.z();
 
     /// Step through initial transients
     for (std::size_t i = 0; i < numSteps; ++i)
@@ -1289,16 +1308,11 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
 
       // Expect the middle box to be still as it is already at rest.
       // Expect the two side boxes to fall away.
-      gz::math::Vector3d body1LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
-      gz::math::Vector3d body2LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
-      gz::math::Vector3d body3LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-
-      EXPECT_NEAR(dt * (numSteps) * -10, body1LinearVelocity.Z(), 3e-3);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(dt * (numSteps) * -10, body3LinearVelocity.Z(), 3e-3);
+      EXPECT_NEAR(preStepBody1LinearVelocityZ + dt * (numSteps) * -10,
+                  frameDataModel1Body.linearVelocity.z(), 1e-3);
+      EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
+      EXPECT_NEAR(preStepBody3LinearVelocityZ + dt * (numSteps) * -10,
+                  frameDataModel3Body.linearVelocity.z(), 1e-3);
     }
   }
 }
