@@ -434,6 +434,10 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Output output;
 
+    // Check invalid input to RemoveNestedModel method
+    EXPECT_FALSE(worldModel->RemoveNestedModel(1));
+    EXPECT_FALSE(worldModel->RemoveNestedModel("invalid"));
+
     // Check that we can remove models via RemoveNestedModel
     EXPECT_TRUE(worldModel->RemoveNestedModel(0));
     EXPECT_TRUE(nestedModel->Removed());
