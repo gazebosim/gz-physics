@@ -394,8 +394,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (!model)
       return false;
 
-    bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
-
     // Remove nested models
     for (auto &nestedModelID : model->nestedModelEntityIds)
     {
@@ -423,7 +421,9 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    // If nested, we are done here. No need to remove multibody
+    // If nested, no need to remove multibody
+    // \todo(iche033) Remove links and joints in nested model
+    bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
     if (isNested)
     {
       return true;

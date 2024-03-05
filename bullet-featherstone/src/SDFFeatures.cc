@@ -179,7 +179,7 @@ void extractInertial(
     return errors;
   }
 
-  // compute joint pose relative to parent link
+  // compute joint pose relative to specified link
   const auto *link = _model->LinkByName(_link);
   if (!link)
   {
@@ -204,6 +204,7 @@ void extractInertial(
 
 /////////////////////////////////////////////////
 /// \brief Recursively build a tree of parent-child data structures from the
+/// input Model SDF.
 /// \param[in] _sdfModel input Model SDF.
 /// \param[out] _parentOf A map of child link to its parent
 /// \param[out] _linkTree A map of parent link to its child links
@@ -302,7 +303,8 @@ bool buildTrees(const ::sdf::Model *_sdfModel,
 /// \brief Find all the root links given a model SDF
 /// \param[in] _sdfModel Model SDF
 /// \param[in] _parentOf A map of child link to its parent info
-/// \param[out] _rootLinks A vector of root links and its immediate parent model
+/// \param[out] _rootLinks A vector of root links paired with their
+/// immediate parent model
 void findRootLinks(const ::sdf::Model *_sdfModel,
     const std::unordered_map<const ::sdf::Link*, ParentInfo> &_parentOf,
     std::vector<std::pair<const ::sdf::Link*, const ::sdf::Model*>> &_rootLinks)
@@ -472,12 +474,13 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     // multiple sub-trees detected in model
     // \todo(iche033) support multiple kinematic trees and
     // multiple floating links in a single model
+    // https://github.com/gazebosim/gz-physics/issues/550
     gzerr << "Multiple sub-trees / floating links detected in a model. "
           << "This is not supported in bullet-featherstone implementation yet."
           << std::endl;
   }
   // Create model for the first structure.
-  auto structure = structures[0];
+  auto &structure = structures[0];
 
   const bool isStatic = _sdfModel.Static();
   WorldInfo *world = nullptr;
@@ -688,7 +691,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       btTransform parentLocalInertialFrame = convertTf(
         parentLinkInfo->inertiaToLinkFrame);
       btTransform parent2jointBt = convertTf(
-        // gz::math::eigen3::convert(parent2joint.Inverse()));  // X_PJ
         poseParentLinkToJoint);  // X_PJ
 
       // offsetInABt = parent COM to pivot (X_IpJ)
@@ -702,7 +704,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       btTransform offsetInABt, offsetInBBt;
       offsetInABt = parentLocalInertialFrame * parent2jointBt;
       offsetInBBt =
-         convertTf(linkToComTf.inverse() * poseJointToChild.inverse());
+        convertTf(linkToComTf.inverse() * poseJointToChild.inverse());
       // R_IcJ * R_IpJ ^ -1 = R_IcIp;
       btQuaternion parentRotToThis =
         offsetInBBt.getRotation() * offsetInABt.inverse().getRotation();
@@ -802,7 +804,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     return this->GenerateInvalidId();
 
   auto modelToNestedModel = Eigen::Isometry3d::Identity();
-  // if the model of the root link is in a top level model, compute
+  // if the model of the root link is nested in a top level model, compute
   // its pose relative to top level model
   if (structure.model != &_sdfModel)
   {
@@ -1267,7 +1269,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // >= 2.89. This is needed for dynamically creating world joints,
   // i.e. setting the btMultiBody to be fixed. So output an error letting
   // users know the joint will not be created.
-  // \todo(iche033) An workaround for this is to loop through all the joints
+  // \todo(iche033) A workaround for this is to loop through all the joints
   // in the world first in ConstructSdfWorld, keep track of the models who are
   // a child of the world joint, then when creating the btMultiBody
   // in ConstructSdfModelImpl, pass fixedBase as true in its constructor.
@@ -1297,7 +1299,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     childLinkName = _sdfJoint.ChildName();
   }
 
-  // Currently only supports constructing joint with world
+  // Currently only supports constructing fixed joint with world as parent
   if (parentLinkName == "world" && _sdfJoint.Type() == ::sdf::JointType::FIXED)
   {
     auto worldModelIt = this->models.find(_modelID);

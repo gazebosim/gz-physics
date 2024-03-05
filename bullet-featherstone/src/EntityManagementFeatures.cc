@@ -206,8 +206,6 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
-  if (!model)
-    return false;
   return this->RemoveModelImpl(model->world, _modelID);
 }
 
