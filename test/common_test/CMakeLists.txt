@@ -65,6 +65,11 @@ foreach(test ${tests})
 
   target_include_directories(${test_executable} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+  if (bullet_version_check_VERSION VERSION_GREATER_EQUAL 2.89)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_GE_289"
+    )
+  endif()
   if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.25)
     target_compile_definitions(${test_executable} PRIVATE
       "BT_BULLET_VERSION_LE_325"

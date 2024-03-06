@@ -1540,6 +1540,9 @@ TEST_F(WorldModelTest, JointSetCommand)
 {
   for (const std::string &name : this->pluginNames)
   {
+    // bullet-feathersone does not support joints between models yet
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
     auto world = this->LoadWorld(name);
     ASSERT_NE(nullptr, world);
 

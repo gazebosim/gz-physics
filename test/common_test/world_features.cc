@@ -357,6 +357,106 @@ TEST_F(WorldModelTest, WorldModelAPI)
   }
 }
 
+struct WorldNestedModelFeatureList : gz::physics::FeatureList<
+  GravityFeatures,
+  gz::physics::ForwardStep,
+  gz::physics::GetNestedModelFromModel,
+  gz::physics::sdf::ConstructSdfJoint,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfNestedModel,
+  gz::physics::RemoveEntities,
+  gz::physics::WorldModelFeature
+> { };
+
+
+class WorldNestedModelTest : public WorldFeaturesTest<WorldNestedModelFeatureList>
+{
+  public: gz::physics::World3dPtr<WorldNestedModelFeatureList> LoadWorld(
+      const std::string &_pluginName)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(_pluginName);
+
+    auto engine =
+        gz::physics::RequestEngine3d<WorldNestedModelFeatureList>::From(plugin);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kWorldSingleNestedModelSdf);
+    EXPECT_TRUE(errors.empty()) << errors;
+    if (errors.empty())
+    {
+      auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+      return world;
+    }
+    return nullptr;
+  }
+};
+
+TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = this->LoadWorld(name);
+    ASSERT_NE(nullptr, world);
+
+    auto worldModel = world->GetWorldModel();
+    ASSERT_NE(nullptr, worldModel);
+    EXPECT_EQ(world, worldModel->GetWorld());
+    EXPECT_EQ("nested_model_world", worldModel->GetName());
+    EXPECT_EQ(0, worldModel->GetLinkCount());
+    EXPECT_EQ(0, worldModel->GetIndex());
+    EXPECT_EQ(1u, world->GetModelCount());
+    EXPECT_EQ(world->GetModelCount(), worldModel->GetNestedModelCount());
+    const auto nestedModel = worldModel->GetNestedModel(0);
+    ASSERT_NE(nullptr, nestedModel);
+    EXPECT_EQ("parent_model", nestedModel->GetName());
+
+    // Test joint creation
+    sdf::Joint joint;
+    joint.SetName("world_joint");
+    joint.SetType(sdf::JointType::FIXED);
+    joint.SetParentName("world");
+    joint.SetChildName("invalid_link");
+    EXPECT_FALSE(worldModel->ConstructJoint(joint));
+    joint.SetChildName("parent_model::link1");
+    if (PhysicsEngineName(name) != "bullet-featherstone")
+    {
+      EXPECT_TRUE(worldModel->ConstructJoint(joint));
+    }
+    else
+    {
+#ifdef BT_BULLET_VERSION_GE_289
+      EXPECT_TRUE(worldModel->ConstructJoint(joint));
+#endif
+    }
+
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+
+    // Check invalid input to RemoveNestedModel method
+    EXPECT_FALSE(worldModel->RemoveNestedModel(1));
+    EXPECT_FALSE(worldModel->RemoveNestedModel("invalid"));
+
+    // Check that we can remove models via RemoveNestedModel
+    EXPECT_TRUE(worldModel->RemoveNestedModel(0));
+    EXPECT_TRUE(nestedModel->Removed());
+    EXPECT_EQ(0u, world->GetModelCount());
+    EXPECT_EQ(0u, worldModel->GetNestedModelCount());
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel(0));
+    EXPECT_EQ(nullptr, worldModel->GetNestedModel("parent_model"));
+
+    // verify we can step the world after model removal
+    const size_t numSteps = 1000;
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    EXPECT_EQ(0u, world->GetModelCount());
+    EXPECT_EQ(0u, worldModel->GetNestedModelCount());
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
