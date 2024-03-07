@@ -105,6 +105,11 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
 {
   for (const std::string &name : pluginNames)
   {
+    // https://github.com/gazebosim/gz-physics/issues/550
+    // bullet-feathersone does not support multiple kinematic trees in
+    // a model so nested_model2 and nested_model3 are not constructed.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
@@ -148,6 +153,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
       // Expect false because the link in nested_model is referenced by a joint.
       EXPECT_FALSE(checkFreeGroupForModel("parent_model::nested_model"));
     }
+
     EXPECT_TRUE(checkFreeGroupForModel("parent_model::nested_model2"));
     EXPECT_TRUE(checkFreeGroupForModel("parent_model::nested_model3"));
   }
@@ -157,6 +163,11 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
 {
   for (const std::string &name : pluginNames)
   {
+    // https://github.com/gazebosim/gz-physics/issues/550
+    // bullet-feathersone does not support multiple kinematic trees in
+    // a model so nested_model2 and nested_model3 are not constructed.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 

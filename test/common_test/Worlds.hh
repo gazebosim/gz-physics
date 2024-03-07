@@ -53,6 +53,8 @@ const auto kStringPendulumSdf = CommonTestWorld("string_pendulum.sdf");
 const auto kTestWorld = CommonTestWorld("test.world");
 const auto kWorldJointTestSdf = CommonTestWorld("world_joint_test.sdf");
 const auto kWorldUnsortedLinksSdf = CommonTestWorld("world_unsorted_links.sdf");
+const auto kWorldSingleNestedModelSdf =
+  CommonTestWorld("world_single_nested_model.sdf");
 const auto kWorldWithNestedModelSdf =
   CommonTestWorld("world_with_nested_model.sdf");
 }  // namespace common_test::worlds

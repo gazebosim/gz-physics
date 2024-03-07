@@ -85,12 +85,14 @@ struct ModelInfo
   Identity world;
   int indexInWorld;
   Eigen::Isometry3d baseInertiaToLinkFrame;
-  std::unique_ptr<btMultiBody> body;
+  std::shared_ptr<btMultiBody> body;
 
   std::vector<std::size_t> linkEntityIds;
   std::vector<std::size_t> jointEntityIds;
+  std::vector<std::size_t> nestedModelEntityIds;
   std::unordered_map<std::string, std::size_t> linkNameToEntityId;
   std::unordered_map<std::string, std::size_t> jointNameToEntityId;
+  std::unordered_map<std::string, std::size_t> nestedModelNameToEntityId;
 
   /// These are joints that connect this model to other models, e.g. fixed
   /// constraints.
@@ -100,7 +102,7 @@ struct ModelInfo
     std::string _name,
     Identity _world,
     Eigen::Isometry3d _baseInertiaToLinkFrame,
-    std::unique_ptr<btMultiBody> _body)
+    std::shared_ptr<btMultiBody> _body)
     : name(std::move(_name)),
       world(std::move(_world)),
       baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
@@ -275,14 +277,24 @@ class Base : public Implements3d<FeatureList<Feature>>
     const auto id = this->GetNextEntity();
     auto world = std::make_shared<WorldInfo>(std::move(_worldInfo));
     this->worlds[id] = world;
-    return this->GenerateIdentity(id, world);
+    auto worldID = this->GenerateIdentity(id, world);
+
+    auto worldModel = std::make_shared<ModelInfo>(
+      world->name, worldID,
+      Eigen::Isometry3d::Identity(), nullptr);
+    this->models[id] = worldModel;
+    world->modelNameToEntityId[worldModel->name] = id;
+    worldModel->indexInWorld = -1;
+    world->modelIndexToEntityId[worldModel->indexInWorld] = id;
+
+    return worldID;
   }
 
   public: inline Identity AddModel(
     std::string _name,
     Identity _worldID,
     Eigen::Isometry3d _baseInertialToLinkFrame,
-    std::unique_ptr<btMultiBody> _body)
+    std::shared_ptr<btMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
@@ -294,6 +306,30 @@ class Base : public Implements3d<FeatureList<Feature>>
     world->modelNameToEntityId[model->name] = id;
     model->indexInWorld = world->nextModelIndex++;
     world->modelIndexToEntityId[model->indexInWorld] = id;
+
+    auto worldModel = this->models.at(model->world);
+    worldModel->nestedModelEntityIds.push_back(id);
+    worldModel->nestedModelNameToEntityId[model->name] = id;
+
+    return this->GenerateIdentity(id, model);
+  }
+
+  public: inline Identity AddNestedModel(
+    std::string _name,
+    Identity _parentID,
+    Identity _worldID,
+    Eigen::Isometry3d _baseInertialToLinkFrame,
+    std::shared_ptr<btMultiBody> _body)
+  {
+    const auto id = this->GetNextEntity();
+    auto model = std::make_shared<ModelInfo>(
+      std::move(_name), std::move(_worldID),
+      std::move(_baseInertialToLinkFrame), std::move(_body));
+
+    this->models[id] = model;
+    const auto parentModel = this->models.at(_parentID);
+    parentModel->nestedModelEntityIds.push_back(id);
+    parentModel->nestedModelNameToEntityId[model->name] = id;
     return this->GenerateIdentity(id, model);
   }
 
@@ -305,13 +341,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     auto *model = this->ReferenceInterface<ModelInfo>(_linkInfo.model);
     model->linkNameToEntityId[link->name] = id;
-    if (link->indexInModel.has_value())
-    {
-      // We expect the links to be added in order
-      assert(static_cast<std::size_t>(*link->indexInModel + 1) ==
-             model->linkEntityIds.size());
-    }
-    else
+    if (!link->indexInModel.has_value())
     {
       // We are adding the root link. This means the model should not already
       // have a root link
@@ -357,6 +387,99 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->joints[id] = joint;
 
     return this->GenerateIdentity(id, joint);
+  }
+
+  public: bool RemoveModelImpl(const Identity &_parentID,
+                               const Identity &_modelID)
+  {
+    auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+    if (!model)
+      return false;
+
+    // Remove nested models
+    for (auto &nestedModelID : model->nestedModelEntityIds)
+    {
+      this->RemoveModelImpl(_modelID, this->GenerateIdentity(nestedModelID,
+                            this->models.at(nestedModelID)));
+    }
+    model->nestedModelEntityIds.clear();
+
+    // remove references in parent model or world model
+    auto parentModelIt = this->models.find(_parentID);
+    if (parentModelIt != this->models.end())
+    {
+      auto parentModel = parentModelIt->second;
+      auto nestedModelIt =
+          parentModel->nestedModelNameToEntityId.find(model->name);
+      if (nestedModelIt !=
+          parentModel->nestedModelNameToEntityId.end())
+      {
+        std::size_t nestedModelID = nestedModelIt->second;
+        parentModel->nestedModelNameToEntityId.erase(nestedModelIt);
+        parentModel->nestedModelEntityIds.erase(std::remove(
+            parentModel->nestedModelEntityIds.begin(),
+            parentModel->nestedModelEntityIds.end(), nestedModelID),
+            parentModel->nestedModelEntityIds.end());
+      }
+    }
+
+    // If nested, no need to remove multibody
+    // \todo(iche033) Remove links and joints in nested model
+    bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
+    if (isNested)
+    {
+      return true;
+    }
+
+    // Remove model from world
+    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    if (!world)
+      return false;
+    if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
+    {
+      // The model has already been removed at some point
+      return false;
+    }
+    world->modelNameToEntityId.erase(model->name);
+
+    // Remove all constraints related to this model
+    for (const auto jointID : model->jointEntityIds)
+    {
+      const auto joint = this->joints.at(jointID);
+      if (joint->motor)
+      {
+        world->world->removeMultiBodyConstraint(joint->motor.get());
+      }
+      if (joint->fixedConstraint)
+      {
+        world->world->removeMultiBodyConstraint(joint->fixedConstraint.get());
+      }
+      if (joint->jointLimits)
+      {
+        world->world->removeMultiBodyConstraint(joint->jointLimits.get());
+      }
+      this->joints.erase(jointID);
+    }
+    // \todo(iche033) Remove external constraints related to this model
+    // (model->external_constraints) once this is supported
+
+    world->world->removeMultiBody(model->body.get());
+    for (const auto linkID : model->linkEntityIds)
+    {
+      const auto &link = this->links.at(linkID);
+      if (link->collider)
+      {
+        world->world->removeCollisionObject(link->collider.get());
+        for (const auto shapeID : link->collisionEntityIds)
+          this->collisions.erase(shapeID);
+      }
+
+      this->links.erase(linkID);
+    }
+
+    this->models.erase(_modelID);
+
+    return true;
   }
 
   public: ~Base() override {
