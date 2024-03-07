@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="nested_model_world">
+    <model name="parent_model">
+      <model name="nested_model">
+        <pose>1 2 2  0 0 0</pose>
+        <link name="nested_link1">
+          <pose>3 1 1  0 0 1.5707</pose>
+          <collision name="nested_collision1">
+            <geometry>
+              <sphere>
+                <radius>2</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <link name="nested_link2">
+          <pose relative_to="nested_link1">0 1 0  1.5707 0 0</pose>
+          <collision name="nested_collision2">
+            <geometry>
+              <sphere>
+                <radius>2</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="nested_joint" type="revolute">
+          <parent>nested_link1</parent>
+          <child>nested_link2</child>
+          <axis>
+            <xyz expressed_in="nested_link1">1 0 0</xyz>
+          </axis>
+        </joint>
+      </model>
+      <link name="link1">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1 2 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1 2 3</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+
+      <joint name="joint1" type="revolute">
+        <parent>link1</parent>
+        <child>nested_model::nested_link1</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+        </axis>
+      </joint>
+    </model>
+  </world>
+</sdf>
