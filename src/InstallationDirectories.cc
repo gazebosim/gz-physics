@@ -28,7 +28,7 @@ namespace gz
 {
 namespace physics
 {
-inline namespace GZ_PHYSICS_VERSION_NAMESPACE {
+namespace {
 
 // We locally import the gz::common::joinPaths function
 // See https://github.com/gazebosim/gz-physics/pull/507#discussion_r1186919267
@@ -36,19 +36,20 @@ inline namespace GZ_PHYSICS_VERSION_NAMESPACE {
 
 // Function imported from
 // https://github.com/gazebosim/gz-common/blob/ignition-common4_4.6.2/src/FilesystemBoost.cc#L507
-#ifndef WIN32
-static const char preferred_separator = '/';
+#ifndef _WIN32
+const char preferred_separator = '/';
 #else  // Windows
 static const char preferred_separator = '\\';
 #endif
-const std::string separator(const std::string &_p)
+std::string separator(const std::string &_p)
 {
   return _p + preferred_separator;
 }
 
+#ifdef _WIN32
 // Function imported from
 // https://github.com/gazebosim/gz-common/blob/ignition-common4_4.6.2/src/Filesystem.cc#L227
-std::string checkWindowsPath(const std::string _path)
+std::string checkWindowsPath(const std::string &_path)
 {
   if (_path.empty())
     return _path;
@@ -75,6 +76,7 @@ std::string checkWindowsPath(const std::string _path)
     result, std::regex("[<>:\"|?*]"), "");
   return result;
 }
+#endif
 
 // Function imported from
 // https://github.com/gazebosim/gz-common/blob/ignition-common4_4.6.2/src/Filesystem.cc#L256
@@ -101,7 +103,7 @@ std::string joinPaths(const std::string &_path1,
     char replacement = '/';
 #else
     char replacement = '\\';
-#endif
+#endif  // _WIN32
 
     // Sanitize the start of the path.
     size_t index = 0;
@@ -142,7 +144,12 @@ std::string joinPaths(const std::string &_path1,
 #endif  // _WIN32
   return path;
 }
+}
 
+inline namespace GZ_PHYSICS_VERSION_NAMESPACE {
+#ifdef GZ_PHYSICS_BAZEL_BUILD
+std::string getInstallPrefix() { return "physics"; }
+#endif
 
 std::string getEngineInstallDir()
 {

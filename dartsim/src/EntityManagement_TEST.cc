@@ -49,7 +49,7 @@ struct TestFeatureList : physics::FeatureList<
 TEST(EntityManagement_TEST, ConstructEmptyWorld)
 {
   plugin::Loader loader;
-  loader.LoadLib(dartsim_plugin_LIB);
+  loader.LoadLib(dartsim_plugin_LIB, true);
 
   plugin::PluginPtr dartsim =
       loader.Instantiate("gz::physics::dartsim::Plugin");
@@ -270,7 +270,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
 TEST(EntityManagement_TEST, RemoveEntities)
 {
   plugin::Loader loader;
-  loader.LoadLib(dartsim_plugin_LIB);
+  loader.LoadLib(dartsim_plugin_LIB, true);
 
   plugin::PluginPtr dartsim =
       loader.Instantiate("gz::physics::dartsim::Plugin");
@@ -342,7 +342,7 @@ TEST(EntityManagement_TEST, RemoveEntities)
 TEST(EntityManagement_TEST, ModelByIndexWithNestedModels)
 {
   plugin::Loader loader;
-  loader.LoadLib(dartsim_plugin_LIB);
+  loader.LoadLib(dartsim_plugin_LIB, true);
 
   plugin::PluginPtr dartsim =
       loader.Instantiate("gz::physics::dartsim::Plugin");
