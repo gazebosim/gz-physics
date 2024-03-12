@@ -19,10 +19,13 @@
 #include <string>
 
 #include <gz/common/Console.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/math/eigen3/Conversions.hh>
 #include <gz/plugin/Loader.hh>
 
 #include "test/Resources.hh"
 #include "test/TestLibLoader.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/RequestEngine.hh>
@@ -34,9 +37,12 @@
 #include <gz/physics/mesh/MeshShape.hh>
 #include <gz/physics/PlaneShape.hh>
 #include <gz/physics/FixedJoint.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <gz/common/MeshManager.hh>
+
+#include <sdf/Root.hh>
 
 template <class T>
 class CollisionTest:
@@ -138,6 +144,112 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
     // be rocking side-to-side after falling).
     EXPECT_NEAR(
           -1.91, link2->FrameDataRelativeToWorld().pose.translation()[2], 0.05);
+  }
+}
+
+struct CollisionMeshFeaturesList : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::ForwardStep,
+  gz::physics::GetEntities
+> { };
+
+template <class T>
+class CollisionMeshTest :
+  public CollisionTest<T>{};
+using CollisionMeshTestTypes =
+  ::testing::Types<CollisionMeshFeaturesList>;
+TYPED_TEST_SUITE(CollisionMeshTest,
+                 CollisionMeshTestTypes);
+
+TYPED_TEST(CollisionMeshTest, MeshDecomposition)
+{
+  // Load a simplified mesh, drop it from some height,
+  // and verify it collides with the ground plane
+  std::string modelSimplifiedStr = R"(
+  <sdf version="1.11">
+    <model name="model_simplified">
+      <pose>0 0 2.0 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry>
+            <mesh simplification="convex_decomposition">
+              <uri>)";
+  modelSimplifiedStr += gz::physics::test::resources::kChassisDae;
+  modelSimplifiedStr += R"(</uri>
+            </mesh>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // currently only bullet-featherstone supports mesh decomposition
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld.front();
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionMeshFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // load the mesh into mesh manager first to create a cache
+    // so the model can be constructed later - needed by bullet-featherstone
+    const std::string meshFilename = gz::physics::test::resources::kChassisDae;
+    auto &meshManager = *gz::common::MeshManager::Instance();
+    meshManager.Load(meshFilename);
+
+    // create the chassis model
+    {
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(modelSimplifiedStr);
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    }
+    const std::string modelSimplifiedName{"model_simplified"};
+    const std::string bodyName{"body"};
+    auto modelSimplified = world->GetModel(modelSimplifiedName);
+    auto modelSimplifiedBody = modelSimplified->GetLink(bodyName);
+
+    auto frameDataModelSimplifiedBody =
+        modelSimplifiedBody->FrameDataRelativeToWorld();
+
+    const gz::math::Pose3d initialModelSimplifiedPose(0, 0, 2, 0, 0, 0);
+    EXPECT_EQ(initialModelSimplifiedPose,
+              gz::math::eigen3::convert(frameDataModelSimplifiedBody.pose));
+
+    // After a while, the mesh model should reach the ground and come to a stop
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    std::size_t stepCount = 1000u;
+    for (unsigned int i = 0; i < stepCount; ++i)
+    {
+      world->Step(output, state, input);
+//    frameDataModelSimplifiedBody =
+//        modelSimplifiedBody->FrameDataRelativeToWorld();
+//    std::cerr  << frameDataModelSimplifiedBody.pose.translation().z() << std::endl;
+
+    }
+
+    frameDataModelSimplifiedBody =
+        modelSimplifiedBody->FrameDataRelativeToWorld();
+    EXPECT_NEAR(0.106,
+                frameDataModelSimplifiedBody.pose.translation().z(), 1e-3);
+    EXPECT_NEAR(0.0, frameDataModelSimplifiedBody.linearVelocity.z(), 2e-3);
   }
 }
 

@@ -520,6 +520,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: std::vector<std::unique_ptr<btTriangleMesh>> triangleMeshes;
   public: std::vector<std::unique_ptr<btGImpactMeshShape>> meshesGImpact;
+  public: std::vector<std::unique_ptr<btConvexHullShape>> meshesConvex;
 };
 
 }  // namespace bullet_featherstone
