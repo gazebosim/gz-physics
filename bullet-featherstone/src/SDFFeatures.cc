@@ -1051,34 +1051,118 @@ bool SDFFeatures::AddSdfCollision(
          ++submeshIdx)
     {
       auto s = mesh->SubMeshByIndex(submeshIdx).lock();
-      auto vertexCount = s->VertexCount();
-      auto indexCount = s->IndexCount();
-      btAlignedObjectArray<btVector3> convertedVerts;
-      convertedVerts.reserve(static_cast<int>(vertexCount));
-      for (unsigned int i = 0; i < vertexCount; i++)
+      bool meshCreated = false;
+      if (meshSdf->Simplification() == "convex_decomposition")
       {
-        convertedVerts.push_back(btVector3(
-              static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
-              static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
-              static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
-      }
+        auto decomposed = meshManager.ConvexDecomposition(s.get());
+        if (!decomposed.empty())
+        {
+          std::cerr << " ==== mesh decomposition " <<decomposed.size() <<  std::endl;
+          btAlignedObjectArray<btVector3> vertices;
+          for (std::size_t n = 0; n < decomposed.size(); ++n)
+          {
+            auto &submesh = decomposed[n];
+            gz::math::Vector3d centroid;
+            for (std::size_t i = 0; i < submesh.VertexCount(); ++i)
+                centroid += submesh.Vertex(i);
+            centroid *= 1.0/static_cast<double>(submesh.VertexCount());
+            for (std::size_t i = 0; i < submesh.VertexCount(); ++i)
+            {
+              gz::math::Vector3d v = submesh.Vertex(i) - centroid;
+              vertices.push_back(convertVec(v) * scale);
+            //  if (n == 0)
+//              std::cerr << " === p " << v*meshSdf->Scale()  << std::endl;
+            }
 
-      this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
-      for (unsigned int i = 0; i < indexCount/3; i++)
+            // shrink the collision based on margin
+            // float margin = 0.04f;
+            // btAlignedObjectArray<btVector3> planeEquations;
+            // btGeometryUtil::getPlaneEquationsFromVertices(vertices, planeEquations);
+            // btAlignedObjectArray<btVector3> shiftedPlaneEquations;
+            // for (int p = 0; p < planeEquations.size(); ++p)
+            // {
+            //     btVector3 planeEq = planeEquations[p];
+            //     planeEq[3] += margin;
+            //     shiftedPlaneEquations.push_back(planeEq);
+            // }
+            // btAlignedObjectArray<btVector3> shiftedVertices;
+            // btGeometryUtil::getVerticesFromPlaneEquations(
+            //     shiftedPlaneEquations, shiftedVertices);
+
+            // if (false && shiftedVertices.size() > 0)
+            // {
+            //   this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
+            //       &(shiftedVertices[0].getX()), shiftedVertices.size()));
+            // }
+            // else
+            // {
+            //   margin = 0.001f;
+            //   this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
+            //       &(vertices[0].getX()), vertices.size()));
+            // }
+            this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
+                &(vertices[0].getX()), vertices.size()));
+
+            /*for (int i = 0; i < this->meshesConvex.back()->getNumPoints(); ++i)
+            {
+              btVector3 pt;
+              this->meshesConvex.back()->getVertex(i, pt);
+              if (n == 0)
+              std::cerr << "point " << i << ": " << pt.x() << " " << pt.y() << " " << pt.z() << std::endl;
+            }
+*/
+            float margin = 0.001f;
+            this->meshesConvex.back()->setMargin(margin);
+            // std::cerr << "margin " << margin << std::endl;
+
+            btVector3 min, max;
+            btTransform t;
+            t.setIdentity();
+            this->meshesConvex.back()->getAabb(t, min, max);
+            // std::cerr  << "min " << min.x() << " " << min.y() << " "  << min.z()  << std::endl;
+            // std::cerr  << "max " << max.x() << " " << max.y() << " "  << max.z()  << std::endl;
+            btTransform trans;
+            trans.setIdentity();
+            trans.setOrigin(convertVec(centroid) * scale);
+            compoundShape->addChildShape(trans,
+                this->meshesConvex.back().get());
+
+          }
+          meshCreated = true;
+        }
+      }
+      if (!meshCreated)
       {
-        const btVector3& v0 = convertedVerts[s->Index(i*3)];
-        const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
-        const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
-        this->triangleMeshes.back()->addTriangle(v0, v1, v2);
-      }
+        std::cerr << " mesh not created !!!!!! " << std::endl;
+        auto vertexCount = s->VertexCount();
+        auto indexCount = s->IndexCount();
+        btAlignedObjectArray<btVector3> convertedVerts;
+        convertedVerts.reserve(static_cast<int>(vertexCount));
+        for (unsigned int i = 0; i < vertexCount; i++)
+        {
+          convertedVerts.push_back(btVector3(
+                static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
+                static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
+                static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
+        }
 
-      this->meshesGImpact.push_back(
-        std::make_unique<btGImpactMeshShape>(
-          this->triangleMeshes.back().get()));
-      this->meshesGImpact.back()->updateBound();
-      this->meshesGImpact.back()->setMargin(btScalar(0.01));
-      compoundShape->addChildShape(btTransform::getIdentity(),
-        this->meshesGImpact.back().get());
+        this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
+        for (unsigned int i = 0; i < indexCount/3; i++)
+        {
+          const btVector3& v0 = convertedVerts[s->Index(i*3)];
+          const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
+          const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
+          this->triangleMeshes.back()->addTriangle(v0, v1, v2);
+        }
+
+        this->meshesGImpact.push_back(
+          std::make_unique<btGImpactMeshShape>(
+            this->triangleMeshes.back().get()));
+        this->meshesGImpact.back()->updateBound();
+        this->meshesGImpact.back()->setMargin(btScalar(0.01));
+        compoundShape->addChildShape(btTransform::getIdentity(),
+          this->meshesGImpact.back().get());
+      }
     }
     shape = std::move(compoundShape);
   }
