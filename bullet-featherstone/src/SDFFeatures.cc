@@ -1054,86 +1054,45 @@ bool SDFFeatures::AddSdfCollision(
       bool meshCreated = false;
       if (meshSdf->Simplification() == "convex_decomposition")
       {
-        auto decomposed = meshManager.ConvexDecomposition(s.get());
+        std::vector<common::SubMesh> decomposed;
+        decomposed = meshManager.ConvexDecomposition(s.get());
+        gzdbg << "Simplifying mesh using convex decomposition. " << std::endl;
+        if (!s->Name().empty())
+          gzdbg << "  Submesh: " << s->Name() << std::endl;
+        gzdbg << "  Mesh: " << mesh->Name() << std::endl;
+        gzdbg << "  Convex hull count: " << decomposed.size() << std::endl;
         if (!decomposed.empty())
         {
-          std::cerr << " ==== mesh decomposition " <<decomposed.size() <<  std::endl;
-          btAlignedObjectArray<btVector3> vertices;
-          for (std::size_t n = 0; n < decomposed.size(); ++n)
+          for (const auto & submesh : decomposed)
           {
-            auto &submesh = decomposed[n];
             gz::math::Vector3d centroid;
             for (std::size_t i = 0; i < submesh.VertexCount(); ++i)
                 centroid += submesh.Vertex(i);
             centroid *= 1.0/static_cast<double>(submesh.VertexCount());
+            btAlignedObjectArray<btVector3> vertices;
             for (std::size_t i = 0; i < submesh.VertexCount(); ++i)
             {
               gz::math::Vector3d v = submesh.Vertex(i) - centroid;
               vertices.push_back(convertVec(v) * scale);
-            //  if (n == 0)
-//              std::cerr << " === p " << v*meshSdf->Scale()  << std::endl;
             }
 
-            // shrink the collision based on margin
-            // float margin = 0.04f;
-            // btAlignedObjectArray<btVector3> planeEquations;
-            // btGeometryUtil::getPlaneEquationsFromVertices(vertices, planeEquations);
-            // btAlignedObjectArray<btVector3> shiftedPlaneEquations;
-            // for (int p = 0; p < planeEquations.size(); ++p)
-            // {
-            //     btVector3 planeEq = planeEquations[p];
-            //     planeEq[3] += margin;
-            //     shiftedPlaneEquations.push_back(planeEq);
-            // }
-            // btAlignedObjectArray<btVector3> shiftedVertices;
-            // btGeometryUtil::getVerticesFromPlaneEquations(
-            //     shiftedPlaneEquations, shiftedVertices);
-
-            // if (false && shiftedVertices.size() > 0)
-            // {
-            //   this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
-            //       &(shiftedVertices[0].getX()), shiftedVertices.size()));
-            // }
-            // else
-            // {
-            //   margin = 0.001f;
-            //   this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
-            //       &(vertices[0].getX()), vertices.size()));
-            // }
+            float collisionMargin = 0.001f;
             this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
                 &(vertices[0].getX()), vertices.size()));
+            auto *convexShape = this->meshesConvex.back().get();
+            convexShape->setMargin(collisionMargin);
 
-            /*for (int i = 0; i < this->meshesConvex.back()->getNumPoints(); ++i)
-            {
-              btVector3 pt;
-              this->meshesConvex.back()->getVertex(i, pt);
-              if (n == 0)
-              std::cerr << "point " << i << ": " << pt.x() << " " << pt.y() << " " << pt.z() << std::endl;
-            }
-*/
-            float margin = 0.001f;
-            this->meshesConvex.back()->setMargin(margin);
-            // std::cerr << "margin " << margin << std::endl;
-
-            btVector3 min, max;
-            btTransform t;
-            t.setIdentity();
-            this->meshesConvex.back()->getAabb(t, min, max);
-            // std::cerr  << "min " << min.x() << " " << min.y() << " "  << min.z()  << std::endl;
-            // std::cerr  << "max " << max.x() << " " << max.y() << " "  << max.z()  << std::endl;
             btTransform trans;
             trans.setIdentity();
             trans.setOrigin(convertVec(centroid) * scale);
-            compoundShape->addChildShape(trans,
-                this->meshesConvex.back().get());
-
+            compoundShape->addChildShape(trans, convexShape);
           }
-          meshCreated = true;
         }
+        meshCreated = true;
       }
+
       if (!meshCreated)
       {
-        std::cerr << " mesh not created !!!!!! " << std::endl;
         auto vertexCount = s->VertexCount();
         auto indexCount = s->IndexCount();
         btAlignedObjectArray<btVector3> convertedVerts;
