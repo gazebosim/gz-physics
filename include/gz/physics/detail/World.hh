@@ -101,6 +101,24 @@ auto Gravity::World<PolicyT, FeaturesT>::GetGravity(
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
+void CollisionPairMaxContacts::World<PolicyT, FeaturesT
+    >::SetCollisionPairMaxContacts(std::size_t _maxContacts)
+{
+  this->template Interface<CollisionPairMaxContacts>()
+      ->SetWorldCollisionPairMaxContacts(this->identity, _maxContacts);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+std::size_t CollisionPairMaxContacts::World<PolicyT, FeaturesT>::
+    GetCollisionPairMaxContacts() const
+{
+  return this->template Interface<CollisionPairMaxContacts>()
+      ->GetWorldCollisionPairMaxContacts(this->identity);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
 void Solver::World<PolicyT, FeaturesT>::SetSolver(
     const std::string &_solver)
 {

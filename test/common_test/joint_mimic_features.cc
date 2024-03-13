@@ -25,8 +25,8 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "Worlds.hh"
 
 #include "gz/physics/FrameSemantics.hh"
 #include <gz/physics/FindFeatures.hh>
@@ -124,8 +124,8 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
-          "mimic_prismatic_world.sdf"));
+    const sdf::Errors errors =
+      root.Load(common_test::worlds::kMimicPrismaticWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -284,8 +284,8 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
-          "mimic_pendulum_world.sdf"));
+    const sdf::Errors errors =
+      root.Load(common_test::worlds::kMimicPendulumWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -374,8 +374,8 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR,
-          "mimic_fast_slow_pendulums_world.sdf"));
+    const sdf::Errors errors =
+      root.Load(common_test::worlds::kMimicFastSlowPendulumsWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
