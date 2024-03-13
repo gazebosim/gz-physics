@@ -237,19 +237,13 @@ TYPED_TEST(CollisionMeshTest, MeshDecomposition)
     gz::physics::ForwardStep::Input input;
     std::size_t stepCount = 1000u;
     for (unsigned int i = 0; i < stepCount; ++i)
-    {
       world->Step(output, state, input);
-//    frameDataModelSimplifiedBody =
-//        modelSimplifiedBody->FrameDataRelativeToWorld();
-//    std::cerr  << frameDataModelSimplifiedBody.pose.translation().z() << std::endl;
-
-    }
 
     frameDataModelSimplifiedBody =
         modelSimplifiedBody->FrameDataRelativeToWorld();
-    EXPECT_NEAR(0.106,
+    EXPECT_NEAR(0.1,
                 frameDataModelSimplifiedBody.pose.translation().z(), 1e-3);
-    EXPECT_NEAR(0.0, frameDataModelSimplifiedBody.linearVelocity.z(), 2e-3);
+    EXPECT_NEAR(0.0, frameDataModelSimplifiedBody.linearVelocity.z(), 1e-3);
   }
 }
 
