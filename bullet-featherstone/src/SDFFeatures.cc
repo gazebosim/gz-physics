@@ -1034,6 +1034,14 @@ bool SDFFeatures::AddSdfCollision(
   }
   else if (const auto *meshSdf = geom->MeshShape())
   {
+    // By default a large impulse is applied when mesh collisions penetrate
+    // which causes unstable behavior. Bullet featherstone does not support
+    // configuring split impulse and penetration threshold parameters. Instead
+    // the penentration impulse depends on the erp2 parameter so set to a small
+    // value (default is 0.2).
+    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    world->world->getSolverInfo().m_erp2 = btScalar(0.02);
+
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshSdf->Uri());
     const btVector3 scale = convertVec(meshSdf->Scale());
