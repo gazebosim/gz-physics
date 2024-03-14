@@ -42,6 +42,9 @@ gz_find_package(gz-common6
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(GZ_COMMON_VER ${gz-common6_VERSION_MAJOR})
 
+# This is only used for test support
+gz_find_package(gz-common6 REQUIRED COMPONENTS testing)
+
 #--------------------------------------
 # Find gz-math
 gz_find_package(gz-math8 REQUIRED COMPONENTS eigen3)
@@ -89,8 +92,6 @@ gz_find_package(GzBullet
   PKGCONFIG_VER_COMPARISON >=)
 
 message(STATUS "-------------------------------------------\n")
-
-set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 # Plugin install dirs
 set(GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR

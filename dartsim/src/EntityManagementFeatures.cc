@@ -22,12 +22,13 @@
 #include <unordered_map>
 
 #include <dart/config.hpp>
-#include <dart/collision/ode/OdeCollisionDetector.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
 #include <dart/collision/CollisionFilter.hpp>
 #include <dart/collision/CollisionObject.hpp>
+
+#include "GzOdeCollisionDetector.hh"
 
 namespace gz {
 namespace physics {
@@ -724,11 +725,12 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
-  world->getConstraintSolver()->setCollisionDetector(
-        dart::collision::OdeCollisionDetector::create());
+  auto collisionDetector = dart::collision::GzOdeCollisionDetector::create();
+  world->getConstraintSolver()->setCollisionDetector(collisionDetector);
 
-  // TODO(anyone) We need a machanism to configure maxNumContacts at runtime.
   auto &collOpt = world->getConstraintSolver()->getCollisionOption();
+  // Set the max number of contacts for all collision objects
+  // in the world
   collOpt.maxNumContacts = 10000;
 
   world->getConstraintSolver()->getCollisionOption().collisionFilter =
