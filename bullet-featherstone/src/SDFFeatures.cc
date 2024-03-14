@@ -1060,10 +1060,22 @@ bool SDFFeatures::AddSdfCollision(
     {
       auto s = mesh->SubMeshByIndex(submeshIdx).lock();
       bool meshCreated = false;
-      if (meshSdf->Simplification() == "convex_decomposition")
+      if (meshSdf->Simplification() ==
+          ::sdf::MeshSimplification::CONVEX_DECOMPOSITION ||
+          meshSdf->Simplification() ==
+          ::sdf::MeshSimplification::CONVEX_HULL)
       {
         std::vector<common::SubMesh> decomposed;
-        decomposed = meshManager.ConvexDecomposition(s.get());
+        if (meshSdf->Simplification() == ::sdf::MeshSimplification::CONVEX_HULL)
+        {
+          /// create 1 convex hull for the whole submesh
+          decomposed = std::move(meshManager.ConvexDecomposition(*s.get(), 1u));
+        }
+        else
+        {
+          /// decompose into multiple convex hulls
+          decomposed = std::move(meshManager.ConvexDecomposition(*s.get()));
+        }
         gzdbg << "Simplifying mesh using convex decomposition. " << std::endl;
         if (!s->Name().empty())
           gzdbg << "  Submesh: " << s->Name() << std::endl;
