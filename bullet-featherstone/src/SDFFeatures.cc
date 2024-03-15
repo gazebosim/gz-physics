@@ -1068,8 +1068,8 @@ bool SDFFeatures::AddSdfCollision(
           // limit max number of convex hulls to generate
           maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
         }
-        std::vector<common::SubMesh> decomposed
-            = std::move(meshManager.ConvexDecomposition(*s.get(), maxConvexHulls));
+        std::vector<common::SubMesh> decomposed =
+          std::move(meshManager.ConvexDecomposition(*s.get(), maxConvexHulls));
 
         gzdbg << "Optimizing mesh using convex decomposition. " << std::endl;
         if (!s->Name().empty())
