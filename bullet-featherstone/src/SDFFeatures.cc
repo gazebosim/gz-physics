@@ -1034,14 +1034,6 @@ bool SDFFeatures::AddSdfCollision(
   }
   else if (const auto *meshSdf = geom->MeshShape())
   {
-    // By default a large impulse is applied when mesh collisions penetrate
-    // which causes unstable behavior. Bullet featherstone does not support
-    // configuring split impulse and penetration threshold parameters. Instead
-    // the penentration impulse depends on the erp2 parameter so set to a small
-    // value (default is 0.2).
-    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-    world->world->getSolverInfo().m_erp2 = btScalar(0.02);
-
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshSdf->Uri());
     const btVector3 scale = convertVec(meshSdf->Scale());
@@ -1060,23 +1052,26 @@ bool SDFFeatures::AddSdfCollision(
     {
       auto s = mesh->SubMeshByIndex(submeshIdx).lock();
       bool meshCreated = false;
-      if (meshSdf->Simplification() ==
-          ::sdf::MeshSimplification::CONVEX_DECOMPOSITION ||
-          meshSdf->Simplification() ==
-          ::sdf::MeshSimplification::CONVEX_HULL)
+      if (meshSdf->Optimization() ==
+          ::sdf::MeshOptimization::CONVEX_DECOMPOSITION ||
+          meshSdf->Optimization() ==
+          ::sdf::MeshOptimization::CONVEX_HULL)
       {
-        std::vector<common::SubMesh> decomposed;
-        if (meshSdf->Simplification() == ::sdf::MeshSimplification::CONVEX_HULL)
+        std::size_t maxConvexHulls = 16u;
+        if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
         {
           /// create 1 convex hull for the whole submesh
-          decomposed = std::move(meshManager.ConvexDecomposition(*s.get(), 1u));
+          maxConvexHulls = 1u;
         }
-        else
+        else if (meshSdf->ConvexDecomposition())
         {
-          /// decompose into multiple convex hulls
-          decomposed = std::move(meshManager.ConvexDecomposition(*s.get()));
+          // limit max number of convex hulls to generate
+          maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
         }
-        gzdbg << "Simplifying mesh using convex decomposition. " << std::endl;
+        std::vector<common::SubMesh> decomposed
+            = std::move(meshManager.ConvexDecomposition(*s.get(), maxConvexHulls));
+
+        gzdbg << "Optimizing mesh using convex decomposition. " << std::endl;
         if (!s->Name().empty())
           gzdbg << "  Submesh: " << s->Name() << std::endl;
         gzdbg << "  Mesh: " << mesh->Name() << std::endl;

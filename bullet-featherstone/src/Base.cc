@@ -42,6 +42,13 @@ WorldInfo::WorldInfo(std::string name_)
   // Needed for force-torque sensor
   this->world->getSolverInfo().m_jointFeedbackInJointFrame = true;
   this->world->getSolverInfo().m_jointFeedbackInWorldSpace = false;
+
+  // By default a large impulse is applied when mesh collisions penetrate
+  // which causes unstable behavior. Bullet featherstone does not support
+  // configuring split impulse and penetration threshold parameters. Instead
+  // the penentration impulse depends on the erp2 parameter so set to a small
+  // value (default is 0.2).
+  this->world->getSolverInfo().m_erp2 = btScalar(0.02);
 }
 
 }  // namespace bullet_featherstone
