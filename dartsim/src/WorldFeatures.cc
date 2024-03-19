@@ -154,6 +154,7 @@ void WorldFeatures::SetWorldSolver(const Identity &_id,
     return;
   }
 
+
   std::shared_ptr<dart::constraint::BoxedLcpSolver> boxedSolver;
   if (_solver == "dantzig" || _solver == "DantzigBoxedLcpSolver")
   {
@@ -194,6 +195,78 @@ const std::string &WorldFeatures::GetWorldSolver(const Identity &_id) const
   }
 
   return solver->getBoxedLcpSolver()->getType();
+}
+
+/////////////////////////////////////////////////
+void WorldFeatures::SetWorldSolverIterations(const Identity &_id,
+    std::size_t _iterations)
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+
+  auto solver =
+      dynamic_cast<dart::constraint::BoxedLcpConstraintSolver *>(
+      world->getConstraintSolver());
+
+  if (!solver)
+  {
+    gzwarn << "Failed to cast constraint solver to [BoxedLcpConstraintSolver]"
+            << std::endl;
+    return;
+  }
+
+  auto boxedLcpSolver = solver->getBoxedLcpSolver();
+  if (boxedLcpSolver->getType() == "PgsBoxedLcpSolver")
+  {
+    auto pgsSolver =
+        std::dynamic_pointer_cast<const dart::constraint::PgsBoxedLcpSolver>(
+        boxedLcpSolver);
+
+    // getBoxedLcpSolver returns a const shared_ptr so in order to update
+    // the solver parameters, we need to create a new boxed lcp solver with
+    // updated values and set it back to the constraint solver.
+    auto newPgsSolver = std::make_shared<dart::constraint::PgsBoxedLcpSolver>();
+    auto option =  pgsSolver->getOption();
+    option.mMaxIteration = _iterations;
+    newPgsSolver->setOption(option);
+    solver->setBoxedLcpSolver(newPgsSolver);
+  }
+  else
+  {
+    gzwarn << "Solver iterations is only supported for [PgsBoxedLcpSolver]"
+            << std::endl;
+  }
+}
+
+/////////////////////////////////////////////////
+std::size_t WorldFeatures::GetWorldSolverIterations(const Identity &_id) const
+{
+  auto world = this->ReferenceInterface<dart::simulation::World>(_id);
+
+  auto solver =
+      dynamic_cast<dart::constraint::BoxedLcpConstraintSolver *>(
+      world->getConstraintSolver());
+
+  if (!solver)
+  {
+    gzwarn << "Failed to cast constraint solver to [BoxedLcpConstraintSolver]"
+            << std::endl;
+    return 0u;
+  }
+
+  auto boxedLcpSolver = solver->getBoxedLcpSolver();
+  if (boxedLcpSolver->getType() == "PgsBoxedLcpSolver")
+  {
+    auto pgsSolver =
+        std::dynamic_pointer_cast<const dart::constraint::PgsBoxedLcpSolver>(
+        boxedLcpSolver);
+    return pgsSolver->getOption().mMaxIteration;
+  }
+  else
+  {
+    gzwarn << "Solver iterations is only supported for [PgsBoxedLcpSolver]"
+            << std::endl;
+  }
+  return 0u;
 }
 
 }

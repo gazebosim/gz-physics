@@ -184,6 +184,14 @@ namespace gz
         /// \brief Get the name of the solver in use.
         /// \return Name of solver.
         public: const std::string &GetSolver() const;
+
+        /// \brief Set the number of solver iterations per step.
+        /// \param[in] _Iterations Number of solver iterations per step
+        public: void SetSolverIterations(std::size_t _iterations);
+
+        /// \brief Get the number of solver iterations per step.
+        /// \return Number of solver iterations per step.
+        public: std::size_t GetSolverIterations() const;
       };
 
       /// \private The implementation API for the solver.
@@ -200,6 +208,18 @@ namespace gz
         /// \param[in] _id Identity of the world.
         /// \return Name of solver.
         public: virtual const std::string &GetWorldSolver(
+            const Identity &_id) const = 0;
+
+        /// \brief Implementation API for setting the number of solver iterations.
+        /// \param[in] _id Identity of the world.
+        /// \param[in] _solver Number of solver iterations.
+        public: virtual void SetWorldSolverIterations(
+            const Identity &_id, std::size_t _iterations) = 0;
+
+        /// \brief Implementation API for getting the number of solver iterations.
+        /// \param[in] _id Identity of the world.
+        /// \return Number of solver iterations.
+        public: virtual std::size_t GetWorldSolverIterations(
             const Identity &_id) const = 0;
       };
     };

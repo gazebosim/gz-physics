@@ -135,6 +135,24 @@ const std::string &Solver::World<PolicyT, FeaturesT>::
       ->GetWorldSolver(this->identity);
 }
 
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+void Solver::World<PolicyT, FeaturesT>::SetSolverIterations(
+    std::size_t _iterations)
+{
+  this->template Interface<Solver>()
+      ->SetWorldSolverIterations(this->identity, _iterations);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+std::size_t Solver::World<PolicyT, FeaturesT>::
+    GetSolverIterations() const
+{
+  return this->template Interface<Solver>()
+      ->GetWorldSolverIterations(this->identity);
+}
+
 }  // namespace physics
 }  // namespace gz
 

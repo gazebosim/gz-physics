@@ -68,6 +68,14 @@ class WorldFeatures :
 
   // Documentation inherited
   public: const std::string &GetWorldSolver(const Identity &_id) const override;
+
+  // Documentation inherited
+  public: void SetWorldSolverIterations(const Identity &_id, std::size_t)
+      override;
+
+  // Documentation inherited
+  public: std::size_t GetWorldSolverIterations(const Identity &_id) const
+      override;
 };
 
 }

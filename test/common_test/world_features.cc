@@ -457,6 +457,56 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
   }
 }
 
+struct WorldSolverFeatureList : gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::Solver,
+  gz::physics::sdf::ConstructSdfWorld
+> { };
+
+
+class WorldSolverTest : public WorldFeaturesTest<WorldSolverFeatureList>
+{
+  public: gz::physics::World3dPtr<WorldSolverFeatureList> LoadWorld(
+      const std::string &_pluginName)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(_pluginName);
+
+    auto engine =
+        gz::physics::RequestEngine3d<WorldSolverFeatureList>::From(plugin);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kEmptySdf);
+    EXPECT_TRUE(errors.empty()) << errors;
+    if (errors.empty())
+    {
+      auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+      return world;
+    }
+    return nullptr;
+  }
+};
+
+TEST_F(WorldSolverTest, WorldSolver)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = this->LoadWorld(name);
+    ASSERT_NE(nullptr, world);
+
+    EXPECT_FALSE(world->GetSolver().empty());
+    EXPECT_NO_THROW(world->SetSolver("invalid"));
+    EXPECT_NE("invalid", world->GetSolver());
+
+    if (PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      EXPECT_LT(0u, world->GetSolverIterations());
+      world->SetSolverIterations(100u);
+      EXPECT_EQ(100u, world->GetSolverIterations());
+    }
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
