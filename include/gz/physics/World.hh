@@ -210,13 +210,15 @@ namespace gz
         public: virtual const std::string &GetWorldSolver(
             const Identity &_id) const = 0;
 
-        /// \brief Implementation API for setting the number of solver iterations.
+        /// \brief Implementation API for setting the number of solver
+        /// iterations.
         /// \param[in] _id Identity of the world.
         /// \param[in] _solver Number of solver iterations.
         public: virtual void SetWorldSolverIterations(
             const Identity &_id, std::size_t _iterations) = 0;
 
-        /// \brief Implementation API for getting the number of solver iterations.
+        /// \brief Implementation API for getting the number of solver
+        /// iterations.
         /// \param[in] _id Identity of the world.
         /// \return Number of solver iterations.
         public: virtual std::size_t GetWorldSolverIterations(

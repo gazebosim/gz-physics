@@ -154,7 +154,6 @@ void WorldFeatures::SetWorldSolver(const Identity &_id,
     return;
   }
 
-
   std::shared_ptr<dart::constraint::BoxedLcpSolver> boxedSolver;
   if (_solver == "dantzig" || _solver == "DantzigBoxedLcpSolver")
   {
