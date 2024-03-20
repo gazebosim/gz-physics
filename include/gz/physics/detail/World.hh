@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_WORLD_HH_
 #define GZ_PHYSICS_DETAIL_WORLD_HH_
 
+#include <cstddef>
 #include <string>
 
 #include <gz/physics/World.hh>

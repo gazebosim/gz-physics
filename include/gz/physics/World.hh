@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_WORLD_HH_
 #define GZ_PHYSICS_WORLD_HH_
 
+#include <cstddef>
 #include <string>
 
 #include <gz/physics/FeatureList.hh>
@@ -186,7 +187,7 @@ namespace gz
         public: const std::string &GetSolver() const;
 
         /// \brief Set the number of solver iterations per step.
-        /// \param[in] _Iterations Number of solver iterations per step
+        /// \param[in] _iterations Number of solver iterations per step
         public: void SetSolverIterations(std::size_t _iterations);
 
         /// \brief Get the number of solver iterations per step.

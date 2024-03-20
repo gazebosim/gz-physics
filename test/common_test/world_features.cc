@@ -15,6 +15,7 @@
  *
 */
 #include <gtest/gtest.h>
+#include <string>
 
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
@@ -39,6 +40,7 @@
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
+#include <sdf/Types.hh>
 
 using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
 
@@ -462,7 +464,6 @@ struct WorldSolverFeatureList : gz::physics::FeatureList<
   gz::physics::Solver,
   gz::physics::sdf::ConstructSdfWorld
 > { };
-
 
 class WorldSolverTest : public WorldFeaturesTest<WorldSolverFeatureList>
 {
