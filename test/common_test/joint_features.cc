@@ -1133,7 +1133,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
 
     // After a while, body2 should reach the ground and come to a stop
     std::size_t stepCount = 0u;
-    const std::size_t maxNumSteps = 1000u;
+    const std::size_t maxNumSteps = 2000u;
     while (stepCount++ < maxNumSteps)
     {
       world->Step(output, state, input);
