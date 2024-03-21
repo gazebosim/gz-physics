@@ -43,12 +43,17 @@ WorldInfo::WorldInfo(std::string name_)
   this->world->getSolverInfo().m_jointFeedbackInJointFrame = true;
   this->world->getSolverInfo().m_jointFeedbackInWorldSpace = false;
 
-  // By default a large impulse is applied when mesh collisions penetrate
+  // By default a large impulse is applied when collisions penetrate
   // which causes unstable behavior. Bullet featherstone does not support
   // configuring split impulse and penetration threshold parameters. Instead
   // the penentration impulse depends on the erp2 parameter so set to a small
-  // value (default is 0.2).
+  // value (default in bullet is 0.2).
   this->world->getSolverInfo().m_erp2 = btScalar(0.02);
+
+  // Set solver iterations to the same as the default value in SDF,
+  // //world/physics/solver/bullet/iters
+  // (default in bullet is 10)
+  this->world->getSolverInfo().m_numIterations = 50u;
 }
 
 }  // namespace bullet_featherstone
