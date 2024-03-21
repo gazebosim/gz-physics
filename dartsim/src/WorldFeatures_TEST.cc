@@ -115,6 +115,12 @@ TEST_F(WorldFeaturesFixture, Solver)
   world->SetSolver("dantzig");
   EXPECT_EQ("DantzigBoxedLcpSolver", world->GetSolver());
 
+  world->SetSolverIterations(20u);
+  EXPECT_EQ(0u, world->GetSolverIterations());
+
   world->SetSolver("pgs");
   EXPECT_EQ("PgsBoxedLcpSolver", world->GetSolver());
+
+  world->SetSolverIterations(20u);
+  EXPECT_EQ(20u, world->GetSolverIterations());
 }

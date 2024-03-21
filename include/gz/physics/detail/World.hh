@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_WORLD_HH_
 #define GZ_PHYSICS_DETAIL_WORLD_HH_
 
+#include <cstddef>
 #include <string>
 
 #include <gz/physics/World.hh>
@@ -133,6 +134,24 @@ const std::string &Solver::World<PolicyT, FeaturesT>::
 {
   return this->template Interface<Solver>()
       ->GetWorldSolver(this->identity);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+void Solver::World<PolicyT, FeaturesT>::SetSolverIterations(
+    std::size_t _iterations)
+{
+  this->template Interface<Solver>()
+      ->SetWorldSolverIterations(this->identity, _iterations);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+std::size_t Solver::World<PolicyT, FeaturesT>::
+    GetSolverIterations() const
+{
+  return this->template Interface<Solver>()
+      ->GetWorldSolverIterations(this->identity);
 }
 
 }  // namespace physics
