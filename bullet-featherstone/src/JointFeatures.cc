@@ -368,8 +368,11 @@ void JointFeatures::SetJointTransformFromParent(
 
   if (jointInfo->fixedConstraint)
   {
+      auto tf = convertTf(_pose);
       jointInfo->fixedConstraint->setPivotInA(
-        convertVec(_pose.translation()));
+        tf.getOrigin());
+      jointInfo->fixedConstraint->setFrameInA(
+        tf.getBasis());
   }
 }
 
