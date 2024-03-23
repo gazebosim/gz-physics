@@ -108,6 +108,7 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
     const std::string meshFilename = gz::physics::test::resources::kChassisDae;
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshFilename);
+    ASSERT_NE(nullptr, mesh);
 
     // TODO(anyone): This test is somewhat awkward because we lift up the mesh
     // from the center of the link instead of lifting up the link or the model.

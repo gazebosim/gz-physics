@@ -1036,13 +1036,13 @@ bool SDFFeatures::AddSdfCollision(
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshSdf->Uri());
-    const btVector3 scale = convertVec(meshSdf->Scale());
     if (nullptr == mesh)
     {
       gzwarn << "Failed to load mesh from [" << meshSdf->Uri()
              << "]." << std::endl;
       return false;
     }
+    const btVector3 scale = convertVec(meshSdf->Scale());
 
     auto compoundShape = std::make_unique<btCompoundShape>();
 
