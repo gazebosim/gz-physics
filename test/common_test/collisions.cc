@@ -40,8 +40,6 @@
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
-#include <gz/common/MeshManager.hh>
-
 #include <sdf/Root.hh>
 
 template <class T>
@@ -209,7 +207,7 @@ TYPED_TEST(CollisionMeshTest, MeshDecomposition)
     // so the model can be constructed later - needed by bullet-featherstone
     const std::string meshFilename = gz::physics::test::resources::kChassisDae;
     auto &meshManager = *gz::common::MeshManager::Instance();
-    meshManager.Load(meshFilename);
+    ASSERT_NE(nullptr, meshManager.Load(meshFilename));
 
     // create the chassis model
     {
