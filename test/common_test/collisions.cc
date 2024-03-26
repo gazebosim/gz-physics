@@ -17,12 +17,16 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <unordered_set>
 
 #include <gz/common/Console.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/math/eigen3/Conversions.hh>
 #include <gz/plugin/Loader.hh>
 
 #include "test/Resources.hh"
 #include "test/TestLibLoader.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/RequestEngine.hh>
@@ -34,9 +38,10 @@
 #include <gz/physics/mesh/MeshShape.hh>
 #include <gz/physics/PlaneShape.hh>
 #include <gz/physics/FixedJoint.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
-#include <gz/common/MeshManager.hh>
+#include <sdf/Root.hh>
 
 template <class T>
 class CollisionTest:
@@ -104,6 +109,7 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
     const std::string meshFilename = gz::physics::test::resources::kChassisDae;
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshFilename);
+    ASSERT_NE(nullptr, mesh);
 
     // TODO(anyone): This test is somewhat awkward because we lift up the mesh
     // from the center of the link instead of lifting up the link or the model.
@@ -138,6 +144,133 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
     // be rocking side-to-side after falling).
     EXPECT_NEAR(
           -1.91, link2->FrameDataRelativeToWorld().pose.translation()[2], 0.05);
+  }
+}
+
+struct CollisionMeshFeaturesList : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::ForwardStep,
+  gz::physics::GetEntities
+> { };
+
+template <class T>
+class CollisionMeshTest :
+  public CollisionTest<T>{};
+using CollisionMeshTestTypes =
+  ::testing::Types<CollisionMeshFeaturesList>;
+TYPED_TEST_SUITE(CollisionMeshTest,
+                 CollisionMeshTestTypes);
+
+TYPED_TEST(CollisionMeshTest, MeshDecomposition)
+{
+  // Load an optimized mesh, drop it from some height,
+  // and verify it collides with the ground plane
+
+  auto getModelOptimizedStr = [](const std::string &_optimization,
+                                 const std::string &_name,
+                                 const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelOptimizedStr;
+    modelOptimizedStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelOptimizedStr << _name << R"(">
+        <pose>)";
+    modelOptimizedStr << _pose;
+    modelOptimizedStr << R"(</pose>
+        <link name="body">
+          <collision name="collision">
+            <geometry>
+              <mesh optimization=")";
+    modelOptimizedStr << _optimization;
+    modelOptimizedStr << R"(">
+                <uri>)";
+    modelOptimizedStr << gz::physics::test::resources::kChassisDae;
+    modelOptimizedStr << R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+    return modelOptimizedStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // currently only bullet-featherstone supports mesh decomposition
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld.front();
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionMeshFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // load the mesh into mesh manager first to create a cache
+    // so the model can be constructed later - needed by bullet-featherstone
+    const std::string meshFilename = gz::physics::test::resources::kChassisDae;
+    auto &meshManager = *gz::common::MeshManager::Instance();
+    ASSERT_NE(nullptr, meshManager.Load(meshFilename));
+
+    std::unordered_set<std::string> optimizations;
+    optimizations.insert("");
+    optimizations.insert("convex_decomposition");
+    optimizations.insert("convex_hull");
+
+    gz::math::Pose3d initialModelPose(0, 0, 2, 0, 0, 0);
+    // Test all optimization methods
+    for (const auto &optimizationStr : optimizations)
+    {
+      // create the chassis model
+      const std::string modelOptimizedName = "model_optimized_" + optimizationStr;
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(getModelOptimizedStr(
+          optimizationStr, modelOptimizedName, initialModelPose));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+
+      const std::string bodyName{"body"};
+      auto modelOptimized = world->GetModel(modelOptimizedName);
+      auto modelOptimizedBody = modelOptimized->GetLink(bodyName);
+
+      auto frameDataModelOptimizedBody =
+          modelOptimizedBody->FrameDataRelativeToWorld();
+
+      EXPECT_EQ(initialModelPose,
+                gz::math::eigen3::convert(frameDataModelOptimizedBody.pose));
+
+      // After a while, the mesh model should reach the ground and come to a stop
+      gz::physics::ForwardStep::Output output;
+      gz::physics::ForwardStep::State state;
+      gz::physics::ForwardStep::Input input;
+      std::size_t stepCount = 3000u;
+      for (unsigned int i = 0; i < stepCount; ++i)
+        world->Step(output, state, input);
+
+      frameDataModelOptimizedBody =
+          modelOptimizedBody->FrameDataRelativeToWorld();
+
+      // convex decomposition gives more accurate results
+      double tol = (optimizationStr == "convex_decomposition") ? 1e-3 : 1e-2;
+      EXPECT_NEAR(0.1,
+                  frameDataModelOptimizedBody.pose.translation().z(), tol);
+      EXPECT_NEAR(0.0, frameDataModelOptimizedBody.linearVelocity.z(), tol);
+
+      initialModelPose.Pos() += gz::math::Vector3d(0, 2, 0);
+    }
   }
 }
 

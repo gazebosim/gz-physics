@@ -48,7 +48,7 @@ WorldInfo::WorldInfo(std::string name_)
   // configuring split impulse and penetration threshold parameters. Instead
   // the penentration impulse depends on the erp2 parameter so set to a small
   // value (default in bullet is 0.2).
-  this->world->getSolverInfo().m_erp2 = btScalar(0.002);
+  this->world->getSolverInfo().m_erp2 = btScalar(0.02);
 
   // Set solver iterations to the same as the default value in SDF,
   // //world/physics/solver/bullet/iters

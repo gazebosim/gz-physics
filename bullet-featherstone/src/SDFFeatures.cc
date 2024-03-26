@@ -1036,49 +1036,109 @@ bool SDFFeatures::AddSdfCollision(
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshSdf->Uri());
-    const btVector3 scale = convertVec(meshSdf->Scale());
     if (nullptr == mesh)
     {
       gzwarn << "Failed to load mesh from [" << meshSdf->Uri()
              << "]." << std::endl;
       return false;
     }
+    const btVector3 scale = convertVec(meshSdf->Scale());
 
     auto compoundShape = std::make_unique<btCompoundShape>();
 
-    for (unsigned int submeshIdx = 0;
-         submeshIdx < mesh->SubMeshCount();
-         ++submeshIdx)
+    bool meshCreated = false;
+    if (meshSdf->Optimization() ==
+        ::sdf::MeshOptimization::CONVEX_DECOMPOSITION ||
+        meshSdf->Optimization() ==
+        ::sdf::MeshOptimization::CONVEX_HULL)
     {
-      auto s = mesh->SubMeshByIndex(submeshIdx).lock();
-      auto vertexCount = s->VertexCount();
-      auto indexCount = s->IndexCount();
-      btAlignedObjectArray<btVector3> convertedVerts;
-      convertedVerts.reserve(static_cast<int>(vertexCount));
-      for (unsigned int i = 0; i < vertexCount; i++)
+      auto mergedMesh = gz::common::MeshManager::MergeSubMeshes(*mesh);
+      if (mergedMesh && mergedMesh->SubMeshCount() == 1u)
       {
-        convertedVerts.push_back(btVector3(
-              static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
-              static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
-              static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
-      }
+        std::size_t maxConvexHulls = 16u;
+        if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
+        {
+          /// create 1 convex hull for the whole submesh
+          maxConvexHulls = 1u;
+        }
+        else if (meshSdf->ConvexDecomposition())
+        {
+          // limit max number of convex hulls to generate
+          maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
+        }
+        auto s = mergedMesh->SubMeshByIndex(0u).lock();
+        std::vector<common::SubMesh> decomposed =
+          std::move(gz::common::MeshManager::ConvexDecomposition(
+          *s.get(), maxConvexHulls));
+        gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
+              <<  mesh->Name() << std::endl;
+        if (!decomposed.empty())
+        {
+          for (const auto & submesh : decomposed)
+          {
+            gz::math::Vector3d centroid;
+            for (std::size_t i = 0; i < submesh.VertexCount(); ++i)
+                centroid += submesh.Vertex(i);
+            centroid *= 1.0/static_cast<double>(submesh.VertexCount());
+            btAlignedObjectArray<btVector3> vertices;
+            for (std::size_t i = 0; i < submesh.VertexCount(); ++i)
+            {
+              gz::math::Vector3d v = submesh.Vertex(i) - centroid;
+              vertices.push_back(convertVec(v) * scale);
+            }
 
-      this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
-      for (unsigned int i = 0; i < indexCount/3; i++)
+            float collisionMargin = 0.001f;
+            this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
+                &(vertices[0].getX()), vertices.size()));
+            auto *convexShape = this->meshesConvex.back().get();
+            convexShape->setMargin(collisionMargin);
+
+            btTransform trans;
+            trans.setIdentity();
+            trans.setOrigin(convertVec(centroid) * scale);
+            compoundShape->addChildShape(trans, convexShape);
+          }
+        }
+      }
+      meshCreated = true;
+    }
+
+    if (!meshCreated)
+    {
+      for (unsigned int submeshIdx = 0;
+           submeshIdx < mesh->SubMeshCount();
+           ++submeshIdx)
       {
-        const btVector3& v0 = convertedVerts[s->Index(i*3)];
-        const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
-        const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
-        this->triangleMeshes.back()->addTriangle(v0, v1, v2);
-      }
+        auto s = mesh->SubMeshByIndex(submeshIdx).lock();
+        auto vertexCount = s->VertexCount();
+        auto indexCount = s->IndexCount();
+        btAlignedObjectArray<btVector3> convertedVerts;
+        convertedVerts.reserve(static_cast<int>(vertexCount));
+        for (unsigned int i = 0; i < vertexCount; i++)
+        {
+          convertedVerts.push_back(btVector3(
+                static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
+                static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
+                static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
+        }
 
-      this->meshesGImpact.push_back(
-        std::make_unique<btGImpactMeshShape>(
-          this->triangleMeshes.back().get()));
-      this->meshesGImpact.back()->updateBound();
-      this->meshesGImpact.back()->setMargin(btScalar(0.01));
-      compoundShape->addChildShape(btTransform::getIdentity(),
-        this->meshesGImpact.back().get());
+        this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
+        for (unsigned int i = 0; i < indexCount/3; i++)
+        {
+          const btVector3& v0 = convertedVerts[s->Index(i*3)];
+          const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
+          const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
+          this->triangleMeshes.back()->addTriangle(v0, v1, v2);
+        }
+
+        this->meshesGImpact.push_back(
+          std::make_unique<btGImpactMeshShape>(
+            this->triangleMeshes.back().get()));
+        this->meshesGImpact.back()->updateBound();
+        this->meshesGImpact.back()->setMargin(btScalar(0.01));
+        compoundShape->addChildShape(btTransform::getIdentity(),
+          this->meshesGImpact.back().get());
+      }
     }
     shape = std::move(compoundShape);
   }
