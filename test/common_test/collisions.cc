@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <unordered_set>
 
 #include <gz/common/Console.hh>
 #include <gz/common/MeshManager.hh>
@@ -166,23 +167,36 @@ TYPED_TEST(CollisionMeshTest, MeshDecomposition)
 {
   // Load an optimized mesh, drop it from some height,
   // and verify it collides with the ground plane
-  std::string modelOptimizedStr = R"(
-  <sdf version="1.11">
-    <model name="model_optimized">
-      <pose>0 0 2.0 0 0 0</pose>
-      <link name="body">
-        <collision name="collision">
-          <geometry>
-            <mesh optimization="convex_decomposition">
-              <uri>)";
-  modelOptimizedStr += gz::physics::test::resources::kChassisDae;
-  modelOptimizedStr += R"(</uri>
-            </mesh>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-  </sdf>)";
+
+  auto getModelOptimizedStr = [](const std::string &_optimization,
+                                 const std::string &_name,
+                                 const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelOptimizedStr;
+    modelOptimizedStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelOptimizedStr << _name << R"(">
+        <pose>)";
+    modelOptimizedStr << _pose;
+    modelOptimizedStr << R"(</pose>
+        <link name="body">
+          <collision name="collision">
+            <geometry>
+              <mesh optimization=")";
+    modelOptimizedStr << _optimization;
+    modelOptimizedStr << R"(">
+                <uri>)";
+    modelOptimizedStr << gz::physics::test::resources::kChassisDae;
+    modelOptimizedStr << R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+    return modelOptimizedStr.str();
+  };
 
   for (const std::string &name : this->pluginNames)
   {
@@ -210,39 +224,53 @@ TYPED_TEST(CollisionMeshTest, MeshDecomposition)
     auto &meshManager = *gz::common::MeshManager::Instance();
     ASSERT_NE(nullptr, meshManager.Load(meshFilename));
 
-    // create the chassis model
+    std::unordered_set<std::string> optimizations;
+    optimizations.insert("");
+    optimizations.insert("convex_decomposition");
+    optimizations.insert("convex_hull");
+
+    gz::math::Pose3d initialModelPose(0, 0, 2, 0, 0, 0);
+    // Test all optimization methods
+    for (const auto &optimizationStr : optimizations)
     {
+      // create the chassis model
+      const std::string modelOptimizedName = "model_optimized_" + optimizationStr;
       sdf::Root root;
-      sdf::Errors errors = root.LoadSdfString(modelOptimizedStr);
+      sdf::Errors errors = root.LoadSdfString(getModelOptimizedStr(
+          optimizationStr, modelOptimizedName, initialModelPose));
       ASSERT_TRUE(errors.empty()) << errors.front();
       ASSERT_NE(nullptr, root.Model());
       world->ConstructModel(*root.Model());
+
+      const std::string bodyName{"body"};
+      auto modelOptimized = world->GetModel(modelOptimizedName);
+      auto modelOptimizedBody = modelOptimized->GetLink(bodyName);
+
+      auto frameDataModelOptimizedBody =
+          modelOptimizedBody->FrameDataRelativeToWorld();
+
+      EXPECT_EQ(initialModelPose,
+                gz::math::eigen3::convert(frameDataModelOptimizedBody.pose));
+
+      // After a while, the mesh model should reach the ground and come to a stop
+      gz::physics::ForwardStep::Output output;
+      gz::physics::ForwardStep::State state;
+      gz::physics::ForwardStep::Input input;
+      std::size_t stepCount = 3000u;
+      for (unsigned int i = 0; i < stepCount; ++i)
+        world->Step(output, state, input);
+
+      frameDataModelOptimizedBody =
+          modelOptimizedBody->FrameDataRelativeToWorld();
+
+      // convex decomposition gives more accurate results
+      double tol = (optimizationStr == "convex_decomposition") ? 1e-3 : 1e-2;
+      EXPECT_NEAR(0.1,
+                  frameDataModelOptimizedBody.pose.translation().z(), tol);
+      EXPECT_NEAR(0.0, frameDataModelOptimizedBody.linearVelocity.z(), tol);
+
+      initialModelPose.Pos() += gz::math::Vector3d(0, 2, 0);
     }
-    const std::string modelOptimizedName{"model_optimized"};
-    const std::string bodyName{"body"};
-    auto modelOptimized = world->GetModel(modelOptimizedName);
-    auto modelOptimizedBody = modelOptimized->GetLink(bodyName);
-
-    auto frameDataModelOptimizedBody =
-        modelOptimizedBody->FrameDataRelativeToWorld();
-
-    const gz::math::Pose3d initialModelOptimizedPose(0, 0, 2, 0, 0, 0);
-    EXPECT_EQ(initialModelOptimizedPose,
-              gz::math::eigen3::convert(frameDataModelOptimizedBody.pose));
-
-    // After a while, the mesh model should reach the ground and come to a stop
-    gz::physics::ForwardStep::Output output;
-    gz::physics::ForwardStep::State state;
-    gz::physics::ForwardStep::Input input;
-    std::size_t stepCount = 1000u;
-    for (unsigned int i = 0; i < stepCount; ++i)
-      world->Step(output, state, input);
-
-    frameDataModelOptimizedBody =
-        modelOptimizedBody->FrameDataRelativeToWorld();
-    EXPECT_NEAR(0.1,
-                frameDataModelOptimizedBody.pose.translation().z(), 1e-3);
-    EXPECT_NEAR(0.0, frameDataModelOptimizedBody.linearVelocity.z(), 1e-3);
   }
 }
 

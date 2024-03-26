@@ -1046,16 +1046,14 @@ bool SDFFeatures::AddSdfCollision(
 
     auto compoundShape = std::make_unique<btCompoundShape>();
 
-    for (unsigned int submeshIdx = 0;
-         submeshIdx < mesh->SubMeshCount();
-         ++submeshIdx)
+    bool meshCreated = false;
+    if (meshSdf->Optimization() ==
+        ::sdf::MeshOptimization::CONVEX_DECOMPOSITION ||
+        meshSdf->Optimization() ==
+        ::sdf::MeshOptimization::CONVEX_HULL)
     {
-      auto s = mesh->SubMeshByIndex(submeshIdx).lock();
-      bool meshCreated = false;
-      if (meshSdf->Optimization() ==
-          ::sdf::MeshOptimization::CONVEX_DECOMPOSITION ||
-          meshSdf->Optimization() ==
-          ::sdf::MeshOptimization::CONVEX_HULL)
+      auto mergedMesh = gz::common::MeshManager::MergeSubMeshes(*mesh);
+      if (mergedMesh && mergedMesh->SubMeshCount() == 1u)
       {
         std::size_t maxConvexHulls = 16u;
         if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
@@ -1068,14 +1066,12 @@ bool SDFFeatures::AddSdfCollision(
           // limit max number of convex hulls to generate
           maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
         }
+        auto s = mergedMesh->SubMeshByIndex(0u).lock();
         std::vector<common::SubMesh> decomposed =
-          std::move(meshManager.ConvexDecomposition(*s.get(), maxConvexHulls));
-
-        gzdbg << "Optimizing mesh using convex decomposition. " << std::endl;
-        if (!s->Name().empty())
-          gzdbg << "  Submesh: " << s->Name() << std::endl;
-        gzdbg << "  Mesh: " << mesh->Name() << std::endl;
-        gzdbg << "  Convex hull count: " << decomposed.size() << std::endl;
+          std::move(gz::common::MeshManager::ConvexDecomposition(
+          *s.get(), maxConvexHulls));
+        gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
+              <<  mesh->Name() << std::endl;
         if (!decomposed.empty())
         {
           for (const auto & submesh : decomposed)
@@ -1103,11 +1099,17 @@ bool SDFFeatures::AddSdfCollision(
             compoundShape->addChildShape(trans, convexShape);
           }
         }
-        meshCreated = true;
       }
+      meshCreated = true;
+    }
 
-      if (!meshCreated)
+    if (!meshCreated)
+    {
+      for (unsigned int submeshIdx = 0;
+           submeshIdx < mesh->SubMeshCount();
+           ++submeshIdx)
       {
+        auto s = mesh->SubMeshByIndex(submeshIdx).lock();
         auto vertexCount = s->VertexCount();
         auto indexCount = s->IndexCount();
         btAlignedObjectArray<btVector3> convertedVerts;
