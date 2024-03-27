@@ -1205,7 +1205,12 @@ bool SDFFeatures::AddSdfCollision(
 
       auto *world = this->ReferenceInterface<WorldInfo>(model->world);
 
-      if (isStatic)
+      // Set static filter for collisions in a static model
+      // and collisions in a base link that is fixed to the world
+      std::size_t linkID = model->body->getUserIndex();
+      bool isFixedBaseLink = model->body->hasFixedBase() &&
+                             (std::size_t(_linkID) == linkID);
+      if (isStatic || isFixedBaseLink)
       {
         world->world->addCollisionObject(
           linkInfo->collider.get(),
