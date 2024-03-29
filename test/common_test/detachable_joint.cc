@@ -187,7 +187,14 @@ TYPED_TEST(DetachableJointTest, CorrectAttachmentPoints)
       // ground.
       auto frameDataC1L1 = cylinder1_link1->FrameDataRelativeToWorld();
       auto frameDataC2L2 = cylinder2_link2->FrameDataRelativeToWorld();
-      EXPECT_NEAR(0.15, frameDataC1L1.pose.translation().z(), 1e-2);
+#ifdef __APPLE__
+      // Disable check for dartsim plugin on homebrew,
+      // see https://github.com/gazebosim/gz-physics/issues/612.
+      if (this->PhysicsEngineName(name) != "dartsim")
+#endif
+      {
+        EXPECT_NEAR(0.15, frameDataC1L1.pose.translation().z(), 1e-2);
+      }
       EXPECT_NEAR(0.05, frameDataC2L2.pose.translation().z(), 1e-2);
     }
   }
