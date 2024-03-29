@@ -1205,12 +1205,24 @@ bool SDFFeatures::AddSdfCollision(
 
       auto *world = this->ReferenceInterface<WorldInfo>(model->world);
 
-      // Set static filter for collisions in a static model
-      // and collisions in a base link that is fixed to the world
-      std::size_t linkID = model->body->getUserIndex();
-      bool isFixedBaseLink = model->body->hasFixedBase() &&
-                             (std::size_t(_linkID) == linkID);
-      if (isStatic || isFixedBaseLink)
+      // Set static filter for collisions in
+      // 1) a static model
+      // 2) a fixed base link
+      // 3) a (non-base) link with zero dofs
+      bool isFixed = false;
+      if (model->body->hasFixedBase())
+      {
+        // check if it's a base link
+        std::size_t linkID = model->body->getUserIndex();
+        isFixed = std::size_t(_linkID) == linkID;
+        // check if link has zero dofs
+        if (!isFixed && linkInfo->indexInModel.has_value())
+        {
+           isFixed = model->body->getLink(
+              linkInfo->indexInModel.value()).m_dofCount == 0;
+        }
+      }
+      if (isStatic || isFixed)
       {
         world->world->addCollisionObject(
           linkInfo->collider.get(),
