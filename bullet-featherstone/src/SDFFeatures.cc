@@ -1213,8 +1213,8 @@ bool SDFFeatures::AddSdfCollision(
       if (model->body->hasFixedBase())
       {
         // check if it's a base link
-        std::size_t linkID = model->body->getUserIndex();
-        isFixed = std::size_t(_linkID) == linkID;
+        isFixed = std::size_t(_linkID) ==
+            static_cast<std::size_t>(model->body->getUserIndex());
         // check if link has zero dofs
         if (!isFixed && linkInfo->indexInModel.has_value())
         {

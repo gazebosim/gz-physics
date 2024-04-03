@@ -147,25 +147,20 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
   }
 }
 
-struct CollisionStaticFeaturesList : gz::physics::FeatureList<
+using CollisionStaticFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetContactsFromLastStepFeature,
   gz::physics::ForwardStep
-> { };
+>;
 
-template <class T>
-class CollisionStaticTest :
-  public CollisionTest<T>{};
-using CollisionStaticTestTypes =
-  ::testing::Types<CollisionStaticFeaturesList>;
-TYPED_TEST_SUITE(CollisionStaticTest,
-                 CollisionStaticTestTypes);
+using CollisionStaticTestFeaturesList =
+  CollisionTest<CollisionStaticFeaturesList>;
 
-TYPED_TEST(CollisionStaticTest, StaticCollisions)
+TEST_F(CollisionStaticTestFeaturesList, StaticCollisions)
 {
   auto getBoxStaticStr = [](const std::string &_name,
-                              const gz::math::Pose3d &_pose)
+                            const gz::math::Pose3d &_pose)
   {
     std::stringstream modelStaticStr;
     modelStaticStr << R"(
