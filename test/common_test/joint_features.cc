@@ -1040,8 +1040,8 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     auto frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
     auto frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
 
-    const gz::math::Pose3d initialModel1Pose(0, 0, 0.25, 0, 0, 0);
-    const gz::math::Pose3d initialModel2Pose(0, 0, 3.0, 0, 0, 0);
+    const gz::math::Pose3d initialModel1Pose(0, 0, 0.25, 0, 0, 0.1);
+    const gz::math::Pose3d initialModel2Pose(0, 0, 3.0, 0, 0, 0.2);
 
     EXPECT_EQ(initialModel1Pose,
               gz::math::eigen3::convert(frameDataModel1Body.pose));
@@ -1133,14 +1133,14 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
 
     // After a while, body2 should reach the ground and come to a stop
     std::size_t stepCount = 0u;
-    const std::size_t maxNumSteps = 1000u;
+    const std::size_t maxNumSteps = 2000u;
     while (stepCount++ < maxNumSteps)
     {
       world->Step(output, state, input);
       frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
       // Expected Z height of model2 is 0.75 when both boxes are stacked on top
       // of each other since each is 0.5 high.
-      if (fabs(frameDataModel2Body.pose.translation().z() - 0.75) < 2e-2 &&
+      if (fabs(frameDataModel2Body.pose.translation().z() - 0.75) < 1e-2 &&
           fabs(frameDataModel2Body.linearVelocity.z()) < 1e-3)
       {
         break;
