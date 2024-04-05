@@ -152,7 +152,6 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
     EXPECT_EQ(
           F_WCexpected.pose.rotation(),
           childLinkFrameData.pose.rotation());
-
     // TODO(ahcorde): Rewiew this in bullet-featherstone
     if(this->PhysicsEngineName(name) == "bullet_featherstone")
     {
@@ -189,7 +188,9 @@ using SetKinematicTestFeaturesList =
 
 TEST_F(SetKinematicTestFeaturesList, SetKinematic)
 {
-  // Test toggling a link between kinematic and dynamic type
+  // Test toggling a link between kinematic and dynamic type.
+  // When dynamic, the link should fall due to gravity. It should also
+  // stop falling when made kinematic again.
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
@@ -307,6 +308,8 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematic)
 
 TEST_F(SetKinematicTestFeaturesList, SetKinematicLinksWithJoint)
 {
+  // Load 2 kinematic links connected by a revolute joint.
+  // Make one of the links dynamic and verify its motion
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
