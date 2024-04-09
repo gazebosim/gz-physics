@@ -97,7 +97,9 @@ message(STATUS "-------------------------------------------\n")
 set(GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR
   ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
 )
-set(GZ_PHYSICS_ENGINE_INSTALL_DIR ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})
+set(GZ_PHYSICS_ENGINE_INSTALL_DIR
+  ${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR}
+)
 
 #============================================================================
 # Configure the build
