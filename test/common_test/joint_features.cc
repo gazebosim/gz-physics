@@ -966,9 +966,23 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
     // sanity check on velocity values
     EXPECT_LT(1e-5, upperLinkLinearVelocity.Z());
     EXPECT_GT(-0.03, upperLinkAngularVelocity.X());
-    EXPECT_NEAR(0.0, upperLinkLinearVelocity.X(), 1e-6);
+#ifdef __APPLE__
+    // Disable some expectations for dartsim plugin on homebrew,
+    // see https://github.com/gazebosim/gz-physics/issues/620.
+    if (this->PhysicsEngineName(name) != "dartsim")
+#endif
+    {
+      EXPECT_NEAR(0.0, upperLinkLinearVelocity.X(), 1e-6);
+    }
     EXPECT_NEAR(0.0, upperLinkLinearVelocity.Y(), 1e-6);
-    EXPECT_NEAR(0.0, upperLinkAngularVelocity.Y(), 1e-6);
+#ifdef __APPLE__
+    // Disable some expectations for dartsim plugin on homebrew,
+    // see https://github.com/gazebosim/gz-physics/issues/620.
+    if (this->PhysicsEngineName(name) != "dartsim")
+#endif
+    {
+      EXPECT_NEAR(0.0, upperLinkAngularVelocity.Y(), 1e-6);
+    }
     EXPECT_NEAR(0.0, upperLinkAngularVelocity.Z(), 1e-6);
 
     upperJoint->Detach();
