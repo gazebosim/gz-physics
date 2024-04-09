@@ -1105,7 +1105,6 @@ bool SDFFeatures::AddSdfCollision(
 
       if (decomposedMesh)
       {
-        //for (const auto & submesh : decomposed)
         for (std::size_t j = 0u; j < decomposedMesh->SubMeshCount(); ++j)
         {
           auto submesh = decomposedMesh->SubMeshByIndex(j).lock();
