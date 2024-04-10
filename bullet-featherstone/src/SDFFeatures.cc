@@ -1076,10 +1076,10 @@ bool SDFFeatures::AddSdfCollision(
         if (mergedMesh && mergedMesh->SubMeshCount() == 1u)
         {
           // Decompose and add mesh to MeshManager
-          auto s = mergedMesh->SubMeshByIndex(0u).lock();
+          auto mergedSubmesh = mergedMesh->SubMeshByIndex(0u).lock();
           std::vector<common::SubMesh> decomposed =
             gz::common::MeshManager::ConvexDecomposition(
-            *s.get(), maxConvexHulls);
+            *mergedSubmesh.get(), maxConvexHulls);
           gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
                 <<  mesh->Name() << std::endl;
           // Create decomposed mesh and add it to MeshManager

@@ -33,6 +33,7 @@ const auto kChassisDae = TestResource("chassis.dae");
 const auto kHeightmapBowlPng = TestResource("heightmap_bowl.png");
 const auto kRrbotXml = TestResource("rrbot.xml");
 const auto kVolcanoTif = TestResource("volcano.tif");
+const auto kVShapeObj = TestResource("v_shape.obj");
 }  // namespace gz::physics::test
 
 #endif  // TEST_RESOURCES_HH_

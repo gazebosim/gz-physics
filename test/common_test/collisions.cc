@@ -147,23 +147,17 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
   }
 }
 
-struct CollisionMeshFeaturesList : gz::physics::FeatureList<
+using CollisionMeshFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::LinkFrameSemantics,
   gz::physics::ForwardStep,
   gz::physics::GetEntities
-> { };
+>;
 
-template <class T>
-class CollisionMeshTest :
-  public CollisionTest<T>{};
-using CollisionMeshTestTypes =
-  ::testing::Types<CollisionMeshFeaturesList>;
-TYPED_TEST_SUITE(CollisionMeshTest,
-                 CollisionMeshTestTypes);
+using CollisionMeshTestFeaturesList = CollisionTest<CollisionMeshFeaturesList>;
 
-TYPED_TEST(CollisionMeshTest, MeshDecomposition)
+TEST_F(CollisionMeshTestFeaturesList, MeshOptimization)
 {
   // Load an optimized mesh, drop it from some height,
   // and verify it collides with the ground plane
@@ -238,7 +232,7 @@ TYPED_TEST(CollisionMeshTest, MeshDecomposition)
       sdf::Root root;
       sdf::Errors errors = root.LoadSdfString(getModelOptimizedStr(
           optimizationStr, modelOptimizedName, initialModelPose));
-      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_TRUE(errors.empty()) << errors;
       ASSERT_NE(nullptr, root.Model());
       world->ConstructModel(*root.Model());
 
@@ -271,6 +265,126 @@ TYPED_TEST(CollisionMeshTest, MeshDecomposition)
 
       initialModelPose.Pos() += gz::math::Vector3d(0, 2, 0);
     }
+  }
+}
+
+TEST_F(CollisionMeshTestFeaturesList, MeshDecomposition)
+{
+  // Load a convex decomposed V shape mesh, drop a sphere over it
+  // and verify the sphere falls inside of the V shape groove and rests
+  // on top of it
+
+  std::string modelStr = R"(
+    <sdf version="1.11">
+      <model name="v_shape">
+        <pose>0 0 0.0 0 0 0</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry>
+              <mesh optimization="convex_decomposition">
+                <convex_decomposition>
+                  <max_convex_hulls>64</max_convex_hulls>
+                </convex_decomposition>
+                <uri>)";
+    modelStr += gz::physics::test::resources::kVShapeObj;
+    modelStr += R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+  const std::string sphereStr = R"(
+    <sdf version="1.11">
+      <model name="sphere">
+        <pose>0 0 1.0 0 0 0</pose>
+        <link name="link">
+          <collision name="coll_sphere">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // currently only bullet-featherstone supports mesh decomposition
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld;
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionMeshFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // load the mesh into mesh manager first to create a cache
+    // so the model can be constructed later - needed by bullet-featherstone
+    const std::string meshFilename = gz::physics::test::resources::kVShapeObj;
+    auto &meshManager = *gz::common::MeshManager::Instance();
+    ASSERT_NE(nullptr, meshManager.Load(meshFilename));
+
+    // create the v shape model
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto model = world->GetModel("v_shape");
+    auto link = model->GetLink("link");
+    auto frameDataLink = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(gz::math::Pose3d::Zero,
+              gz::math::eigen3::convert(frameDataLink.pose));
+
+    // spawn a sphere over the v shape model
+    errors = root.LoadSdfString(sphereStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+    auto sphere = world->GetModel("sphere");
+    auto sphereLink = sphere->GetLink("link");
+    auto frameDataSphereLink = sphereLink->FrameDataRelativeToWorld();
+    EXPECT_EQ(
+      gz::math::Pose3d(0, 0, 1, 0, 0, 0),
+      gz::math::eigen3::convert(frameDataSphereLink.pose));
+
+    // After a while, the sphere model should drop inside the V shape model
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    std::size_t stepCount = 3000u;
+    for (unsigned int i = 0; i < stepCount; ++i)
+      world->Step(output, state, input);
+
+    frameDataLink = link->FrameDataRelativeToWorld();
+    frameDataSphereLink = sphereLink->FrameDataRelativeToWorld();
+
+    // V shape mesh should be at the same pose
+    EXPECT_NEAR(0.0, frameDataLink.pose.translation().x(), 1e-3);
+    EXPECT_NEAR(0.0, frameDataLink.pose.translation().y(), 1e-3);
+    EXPECT_NEAR(0.0, frameDataLink.pose.translation().z(), 1e-2);
+
+    // sphere should rest inside the of V shape
+    EXPECT_NEAR(0.0, frameDataSphereLink.pose.translation().x(), 1e-3);
+    EXPECT_NEAR(0.0, frameDataSphereLink.pose.translation().y(), 1e-2);
+    EXPECT_NEAR(0.523, frameDataSphereLink.pose.translation().z(), 1e-2);
+    EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.x(), 1e-3);
+    EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.y(), 1e-3);
+    EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.z(), 1e-3);
   }
 }
 
