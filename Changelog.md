@@ -1,5 +1,22 @@
 ## Gazebo Physics 7.x
 
+### Gazebo Physics 7.2.0 (2024-04-10)
+
+1. Use relative install paths for plugin shared libraries
+    * [Pull request #616](https://github.com/gazebosim/gz-physics/pull/616)
+
+1. Disable test failing due to ODE/libccd
+    * [Pull request #621](https://github.com/gazebosim/gz-physics/pull/621)
+
+1. bullet-featherstone: Ignore collision between static objects and objects with world joint
+    * [Pull request #611](https://github.com/gazebosim/gz-physics/pull/611)
+
+1. Disable check in DetachableJointTest, CorrectAttachmentPoints for dartsim plugin on macOS
+    * [Pull request #613](https://github.com/gazebosim/gz-physics/pull/613)
+
+1. bullet-featherstone: Fix attaching fixed joint
+    * [Pull request #610](https://github.com/gazebosim/gz-physics/pull/610)
+
 ### Gazebo Physics 7.1.0 (2024-03-14)
 
 1. bullet-featherstone: Improve mesh collision stability
