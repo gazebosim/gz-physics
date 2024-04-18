@@ -50,6 +50,9 @@ WorldInfo::WorldInfo(std::string name_)
   // value (default in bullet is 0.2).
   this->world->getSolverInfo().m_erp2 = btScalar(0.02);
 
+  // Helps to reduce penetration
+  this->world->getSolverInfo().m_globalCfm = 0.001;
+
   // Set solver iterations to the same as the default value in SDF,
   // //world/physics/solver/bullet/iters
   // (default in bullet is 10)
