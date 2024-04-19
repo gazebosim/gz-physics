@@ -93,7 +93,8 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model)
   {
-    model->body->setBaseWorldTransform(convertTf(_pose));
+    model->body->setBaseWorldTransform(
+        convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
   }
 }
 
