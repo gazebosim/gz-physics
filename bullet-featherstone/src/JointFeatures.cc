@@ -80,16 +80,42 @@ double JointFeatures::GetJointAcceleration(
 double JointFeatures::GetJointForce(
     const Identity &_id, const std::size_t _dof) const
 {
+  double results = gz::math::NAN_D;
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (identifier)
-  {
-    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->getJointTorqueMultiDof(
-          identifier->indexInBtModel)[_dof];
-  }
 
-  return gz::math::NAN_D;
+  if (identifier) {
+    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+    auto feedback = model->body->getLink(identifier->indexInBtModel).m_jointFeedback;
+    const auto &link = model->body->getLink(identifier->indexInBtModel);
+    results = 0.0;
+    if (link.m_jointType == btMultibodyLink::eRevolute) {
+      // According to the documentation in btMultibodyLink.h, m_axesTop[0] is the
+      // joint axis for revolute joints.
+      Eigen::Vector3d axis = convert(link.getAxisTop(0));
+      math::Vector3 axis_converted(axis[0], axis[1], axis[2]);
+      btVector3 angular = feedback->m_reactionForces.getAngular();
+      math::Vector3<double> angularTorque(
+        angular.getX(),
+        angular.getY(),
+        angular.getZ());
+      // BUG: The total force is 2 times the cmd one see:
+      // https://github.com/bulletphysics/bullet3/discussions/3713
+      results += axis_converted.Dot(angularTorque);
+      return results / 2.0;
+    } else if (link.m_jointType == btMultibodyLink::ePrismatic) {
+      auto axis = convert(link.getAxisBottom(0));
+      math::Vector3 axis_converted(axis[0], axis[1], axis[2]);
+      btVector3 linear = feedback->m_reactionForces.getLinear();
+      math::Vector3<double> linearForce(
+        linear.getX(),
+        linear.getY(),
+        linear.getZ());
+      results += axis_converted.Dot(linearForce);
+      return results / 2.0;
+    }
+  }
+  return results;
 }
 
 /////////////////////////////////////////////////
