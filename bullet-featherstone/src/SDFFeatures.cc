@@ -1277,6 +1277,15 @@ bool SDFFeatures::AddSdfCollision(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
+      if (geom->MeshShape())
+      {
+        // Set meshes to use softer contacts for stability
+        // \todo(iche033) load <kp> and <kd> values from SDF
+        const btScalar kp = 1e15;
+        const btScalar kd = 1e14;
+        linkInfo->collider->setContactStiffnessAndDamping(kp, kd);
+      }
+
       if (linkIndexInModel >= 0)
       {
         model->body->getLink(linkIndexInModel).m_collider =
