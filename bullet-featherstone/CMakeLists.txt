@@ -25,7 +25,7 @@ target_link_libraries(${bullet_plugin}
     gz-math${GZ_MATH_VER}::eigen3)
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
-install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
+install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})
 
 # The library created by `gz_add_component` includes the ign-physics version
 # (i.e. libgz-physics1-name-plugin.so), but for portability,
@@ -40,5 +40,5 @@ if (WIN32)
       ${GZ_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
 else()
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
-  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_INSTALL_DIR})
+  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})
 endif()

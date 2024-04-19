@@ -16,6 +16,7 @@
 */
 #include <gtest/gtest.h>
 
+#include <sstream>
 #include <string>
 #include <unordered_set>
 
@@ -34,6 +35,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/FreeJoint.hh>
+#include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/mesh/MeshShape.hh>
 #include <gz/physics/PlaneShape.hh>
@@ -385,6 +387,125 @@ TEST_F(CollisionMeshTestFeaturesList, MeshDecomposition)
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.x(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.y(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.z(), 1e-3);
+  }
+}
+
+using CollisionStaticFeaturesList = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::ForwardStep
+>;
+
+using CollisionStaticTestFeaturesList =
+  CollisionTest<CollisionStaticFeaturesList>;
+
+TEST_F(CollisionStaticTestFeaturesList, StaticCollisions)
+{
+  auto getBoxStaticStr = [](const std::string &_name,
+                            const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStaticStr;
+    modelStaticStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStaticStr << _name << R"(">
+        <pose>)";
+    modelStaticStr << _pose;
+    modelStaticStr << R"(</pose>
+        <link name="body">
+          <collision name="collision">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <static>true</static>
+      </model>
+    </sdf>)";
+    return modelStaticStr.str();
+  };
+
+  auto getBoxFixedJointStr = [](const std::string &_name,
+                                const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelFixedJointStr;
+    modelFixedJointStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelFixedJointStr << _name << R"(">
+        <pose>)";
+    modelFixedJointStr << _pose;
+    modelFixedJointStr << R"(</pose>
+        <link name="body">
+          <collision name="collision">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="world_fixed" type="fixed">
+          <parent>world</parent>
+          <child>body</child>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelFixedJointStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld.front();
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionStaticFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(getBoxStaticStr(
+        "box_static", gz::math::Pose3d::Zero));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (std::size_t i = 0; i < 10; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // static box overlaps with ground plane
+    // verify no contacts between static bodies.
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(0u, contacts.size());
+
+    // currently only bullet-featherstone skips collision checking between
+    // static bodies and bodies with world fixed joint
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+
+    errors = root.LoadSdfString(getBoxFixedJointStr(
+        "box_fixed_world_joint", gz::math::Pose3d::Zero));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    world->Step(output, state, input);
+    // box fixed to world overlaps with static box and ground plane
+    // verify there are still no contacts.
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(0u, contacts.size());
   }
 }
 
