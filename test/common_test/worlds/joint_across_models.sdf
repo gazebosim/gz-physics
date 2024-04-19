@@ -29,7 +29,7 @@
     </model>
 
     <model name="M1">
-      <pose>0 0 0.25 0 0.0 0</pose>
+      <pose>0 0 0.25 0 0.0 0.1</pose>
       <link name="body">
         <inertial>
           <inertia>
@@ -65,7 +65,7 @@
       </link>
     </model>
     <model name="M2">
-      <pose>0 0 3.0 0 0.0 0</pose>
+      <pose>0 0 3.0 0 0.0 0.2</pose>
       <link name="body">
         <inertial>
           <inertia>

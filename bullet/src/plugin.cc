@@ -57,6 +57,7 @@ class Plugin :
   public: Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
     const auto id = this->GetNextEntity();
+    (void)(id);
     assert(id == 0);
 
     return this->GenerateIdentity(0);
