@@ -45,10 +45,10 @@ WorldInfo::WorldInfo(std::string name_)
 
   // By default a large impulse is applied when collisions penetrate
   // which causes unstable behavior. Bullet featherstone does not support
-  // configuring split impulse and penetration threshold parameters. Instead the
-  // penentration impulse depends on the erp2 parameter so set to a small value
-  // (default is 0.2).
-  this->world->getSolverInfo().m_erp2 = 0.002;
+  // configuring split impulse and penetration threshold parameters. Instead
+  // the penentration impulse depends on the erp2 parameter so set to a small
+  // value (default in bullet is 0.2).
+  this->world->getSolverInfo().m_erp2 = btScalar(0.002);
 }
 
 }  // namespace bullet_featherstone
