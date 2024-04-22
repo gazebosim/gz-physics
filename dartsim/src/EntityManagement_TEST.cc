@@ -177,6 +177,7 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   const std::string meshFilename = gz::physics::test::resources::kChassisDae;
   auto &meshManager = *common::MeshManager::Instance();
   auto *mesh = meshManager.Load(meshFilename);
+  ASSERT_NE(nullptr, mesh);
 
   auto meshShape = meshLink->AttachMeshShape("chassis", *mesh);
   const auto originalMeshSize = mesh->Max() - mesh->Min();
