@@ -487,6 +487,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     // important.
     this->meshesGImpact.clear();
     this->triangleMeshes.clear();
+    this->meshesConvex.clear();
 
     this->joints.clear();
 
@@ -520,6 +521,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public: std::vector<std::unique_ptr<btTriangleMesh>> triangleMeshes;
   public: std::vector<std::unique_ptr<btGImpactMeshShape>> meshesGImpact;
+  public: std::vector<std::unique_ptr<btConvexHullShape>> meshesConvex;
 };
 
 }  // namespace bullet_featherstone
