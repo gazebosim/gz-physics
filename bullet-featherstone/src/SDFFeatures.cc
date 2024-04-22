@@ -1281,8 +1281,8 @@ bool SDFFeatures::AddSdfCollision(
       {
         // Set meshes to use softer contacts for stability
         // \todo(iche033) load <kp> and <kd> values from SDF
-        const btScalar kp = 1e15;
-        const btScalar kd = 1e14;
+        const btScalar kp = btScalar(1e15);
+        const btScalar kd = btScalar(1e14);
         linkInfo->collider->setContactStiffnessAndDamping(kp, kd);
       }
 
