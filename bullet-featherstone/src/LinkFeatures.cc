@@ -50,6 +50,7 @@ void LinkFeatures::AddLinkExternalForceInWorld(
     model->body->addBaseForce(F);
     model->body->addBaseTorque(relPosWorld.cross(F));
   }
+  model->body->wakeUp();
 }
 
 /////////////////////////////////////////////////
@@ -73,6 +74,7 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
     btVector3 torqueWorld = model->body->getBaseWorldTransform().getBasis() * T;
     model->body->addBaseTorque(torqueWorld);
   }
+  model->body->wakeUp();
 }
 
 }
