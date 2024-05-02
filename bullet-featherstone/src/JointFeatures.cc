@@ -84,16 +84,17 @@ double JointFeatures::GetJointForce(
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
 
-  if (identifier) 
+  if (identifier)
   {
     const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    auto feedback = model->body->getLink(identifier->indexInBtModel).m_jointFeedback;
+    auto feedback = model->body->getLink(
+      identifier->indexInBtModel).m_jointFeedback;
     const auto &link = model->body->getLink(identifier->indexInBtModel);
     results = 0.0;
     if (link.m_jointType == btMultibodyLink::eRevolute)
     {
-      // According to the documentation in btMultibodyLink.h, m_axesTop[0] is the
-      // joint axis for revolute joints.
+      // According to the documentation in btMultibodyLink.h,
+      // m_axesTop[0] is the joint axis for revolute joints.
       Eigen::Vector3d axis = convert(link.getAxisTop(0));
       math::Vector3 axis_converted(axis[0], axis[1], axis[2]);
       btVector3 angular = feedback->m_reactionForces.getAngular();
@@ -120,7 +121,9 @@ double JointFeatures::GetJointForce(
         linear.getZ());
       results += axis_converted.Dot(linearForce);
       #if BT_BULLET_VERSION < 326
-        // not always true
+        // Not always true see for reference:
+        // https://github.com/bulletphysics/bullet3/discussions/3713
+        // https://github.com/gazebosim/gz-physics/issues/565
         return results / 2.0;
       #else
         return results;
