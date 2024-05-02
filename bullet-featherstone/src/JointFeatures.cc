@@ -153,6 +153,7 @@ void JointFeatures::SetJointPosition(
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
+  model->body->wakeUp();
 }
 
 /////////////////////////////////////////////////
@@ -167,6 +168,7 @@ void JointFeatures::SetJointVelocity(
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
+  model->body->wakeUp();
 }
 
 /////////////////////////////////////////////////
@@ -197,6 +199,7 @@ void JointFeatures::SetJointForce(
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointTorqueMultiDof(
     identifier->indexInBtModel)[_dof] = static_cast<btScalar>(_value);
+  model->body->wakeUp();
 }
 
 /////////////////////////////////////////////////
@@ -323,9 +326,9 @@ void JointFeatures::SetJointVelocityCommand(
     return;
   }
 
+  auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
   if (!jointInfo->motor)
   {
-    auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
     jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
@@ -337,6 +340,7 @@ void JointFeatures::SetJointVelocityCommand(
   }
 
   jointInfo->motor->setVelocityTarget(static_cast<btScalar>(_value));
+  modelInfo->body->wakeUp();
 }
 
 /////////////////////////////////////////////////

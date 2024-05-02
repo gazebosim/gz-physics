@@ -69,6 +69,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   if (model)
   {
     model->body->setBaseOmega(convertVec(_angularVelocity));
+    model->body->wakeUp();
   }
 }
 
@@ -82,6 +83,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   if (model)
   {
     model->body->setBaseVel(convertVec(_linearVelocity));
+    model->body->wakeUp();
   }
 }
 
@@ -95,6 +97,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   {
     model->body->setBaseWorldTransform(
         convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
+    model->body->wakeUp();
   }
 }
 
