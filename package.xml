@@ -9,11 +9,11 @@
 
   <buildtool_depend>cmake</buildtool_depend>
 
-  <build_depend>gz-cmake</build_depend>
+  <build_depend>gz-cmake3</build_depend>
 
   <depend>benchmark</depend>
   <depend>bullet</depend>
-  <depend>dartsim</depend>
+  <depend>DART</depend>
   <depend>eigen</depend>
   <depend>gz-common5</depend>
   <depend>gz-math7</depend>
