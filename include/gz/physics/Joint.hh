@@ -657,7 +657,8 @@ namespace gz
     class GZ_PHYSICS_VISIBLE SetFixedJointWeldChildToParentFeature
         : public virtual Feature
     {
-      /// \brief The Joint API for setting the transform from the joint's parent
+      /// \brief The Joint API for setting whether to weld a fixed joint's child
+      /// link to the parent link.
       public: template <typename PolicyT, typename FeaturesT>
       class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
       {
@@ -673,8 +674,8 @@ namespace gz
         public: void SetWeldChildToParent(bool _weldChildToParent);
       };
 
-      /// \private The implementation API for setting the joint childtransform from the
-      /// parent
+      /// \private The implementation API for setting whether to weld the fixed
+      /// joint's child link to the parent link.
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
