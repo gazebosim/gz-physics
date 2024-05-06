@@ -1328,6 +1328,7 @@ bool SDFFeatures::AddSdfCollision(
           linkInfo->collider.get(),
           btBroadphaseProxy::StaticFilter,
           btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
+          linkInfo->isStaticOrFixed = true;
       }
       else
       {

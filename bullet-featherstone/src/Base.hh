@@ -124,6 +124,8 @@ struct LinkInfo
   std::unique_ptr<btCompoundShape> shape = nullptr;
   std::vector<std::size_t> collisionEntityIds = {};
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
+  // Link is either static, fixed to world, or has zero dofs
+  bool isStaticOrFixed = false;
 };
 
 struct CollisionInfo
@@ -170,6 +172,10 @@ struct JointInfo
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
   btScalar effort = 0;
+
+  // True if the fixed constraint's child link is welded to parent link as if
+  // they are part of the same body.
+  bool fixedConstraintWeldChildToParent = true;
 
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;

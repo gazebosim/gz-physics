@@ -341,6 +341,26 @@ Identity JointFeatures::AttachFixedJoint(
   if (world != nullptr && world->world)
   {
     world->world->addMultiBodyConstraint(jointInfo->fixedConstraint.get());
+
+    // Make links static if parent or child link is static
+    // This is done by changing collision filter groups / masks
+    // Otherwise bullet will push bodies apart
+    btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
+    btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
+    if (parentCollider && childCollider)
+    {
+      if (parentLinkInfo->isStaticOrFixed && !linkInfo->isStaticOrFixed)
+      {
+        btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+        if (childProxy)
+        {
+          childProxy->m_collisionFilterGroup = btBroadphaseProxy::StaticFilter;
+          childProxy->m_collisionFilterMask =
+              btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+        }
+      }
+    }
+
     return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
 
@@ -353,6 +373,33 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
   if (jointInfo->fixedConstraint)
   {
+    // Make links dynamic again they were originally not static
+    // This is done by revert any collision flags / masks changes
+    // made in AttachJoint
+    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+    if (jointInfo->parentLinkID.has_value())
+    {
+      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
+
+      btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
+      btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
+      if (parentCollider && childCollider)
+      {
+        btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+        if (childProxy)
+        {
+          // If broadphase and collision object flags do not agree, the
+          // link was originally non-static but made static by AttachJoint
+          if (!linkInfo->isStaticOrFixed && ((childProxy->m_collisionFilterGroup &
+              btBroadphaseProxy::StaticFilter) > 0))
+          {
+            childProxy->m_collisionFilterGroup = btBroadphaseProxy::DefaultFilter;
+            childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
+          }
+        }
+      }
+    }
+
     auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
     if (modelInfo)
     {
@@ -360,6 +407,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       world->world->removeMultiBodyConstraint(jointInfo->fixedConstraint.get());
       jointInfo->fixedConstraint.reset();
       jointInfo->fixedConstraint = nullptr;
+      modelInfo->body->wakeUp();
     }
   }
 }
@@ -377,6 +425,18 @@ void JointFeatures::SetJointTransformFromParent(
         tf.getOrigin());
       jointInfo->fixedConstraint->setFrameInA(
         tf.getBasis());
+  }
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetFixedJointWeldChildToParent(
+    const Identity &_id, bool _weldChildToParent)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+  if (jointInfo->fixedConstraint)
+  {
+    jointInfo->fixedConstraintWeldChildToParent = _weldChildToParent;
   }
 }
 

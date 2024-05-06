@@ -43,6 +43,64 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  // Update fixed constraint behavior if fixedJointWeldChildToParent is true.
+  // Do this before stepping, i.e. before physics engine tries to solve and
+  // enforce the constraint
+  for (auto & joint : this->joints)
+  {
+    if (joint.second->fixedConstraint &&
+        joint.second->fixedConstraintWeldChildToParent)
+    {
+      // Update fxied constraint's child link pose to maintain a fixed transform
+      // from the parent link.
+      btTransform parentToChildTf;
+      parentToChildTf.setOrigin(joint.second->fixedConstraint->getPivotInA());
+      parentToChildTf.setBasis(joint.second->fixedConstraint->getFrameInA());
+      btMultiBody *parent = joint.second->fixedConstraint->getMultiBodyA();
+      btMultiBody *child = joint.second->fixedConstraint->getMultiBodyB();
+
+      int parentLinkIndex = joint.second->fixedConstraint->getLinkA();
+      int childLinkIndex = joint.second->fixedConstraint->getLinkB();
+
+      btTransform parentLinkTf;
+      btTransform childLinkTf;
+      if (parentLinkIndex == -1)
+      {
+        parentLinkTf = parent->getBaseWorldTransform();
+      }
+      else
+      {
+        btMultiBodyLinkCollider *parentCollider =
+            parent->getLinkCollider(parentLinkIndex);
+        parentLinkTf = parentCollider->getWorldTransform();
+      }
+      if (childLinkIndex == -1)
+      {
+        childLinkTf = child->getBaseWorldTransform();
+      }
+      else
+      {
+        btMultiBodyLinkCollider *childCollider =
+            child->getLinkCollider(childLinkIndex);
+        childLinkTf = childCollider->getWorldTransform();
+      }
+      btTransform expectedChildLinkTf = parentLinkTf * parentToChildTf;
+      btTransform childBaseTf =  child->getBaseWorldTransform();
+      btTransform childBaseToLink =
+          childBaseTf.inverse() * childLinkTf;
+      btTransform newChildBaseTf =
+          expectedChildLinkTf * childBaseToLink.inverse();
+      child->setBaseWorldTransform(newChildBaseTf);
+
+      auto parentBaseLinkTf = parent->getBaseWorldTransform();
+      btMultiBodyLinkCollider *parentCollider =
+          parent->getBaseCollider();
+
+      // parent->stepPositionsMultiDof(btScalar(0));
+      parentLinkTf = parentCollider->getWorldTransform();
+    }
+  }
+
   worldInfo->world->stepSimulation(static_cast<btScalar>(this->stepSize), 1,
                                    static_cast<btScalar>(this->stepSize));
 

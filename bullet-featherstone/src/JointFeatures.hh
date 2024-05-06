@@ -51,7 +51,7 @@ struct JointFeatureList : FeatureList<
 
   SetMimicConstraintFeature,
 
-  FixedJointCast
+  SetFixedJointWeldChildToParentFeature
 > { };
 
 class JointFeatures :
@@ -139,6 +139,10 @@ class JointFeatures :
   // ----- Set Basic Joint Properties -----
   public: void SetJointTransformFromParent(
       const Identity &_id, const Pose3d &_pose) override;
+
+  // ----- SetFixedJointWeldChildToParentFeature -----
+  public: void SetFixedJointWeldChildToParent(
+    const Identity &_id, bool _weldChildToParent) override;
 
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
