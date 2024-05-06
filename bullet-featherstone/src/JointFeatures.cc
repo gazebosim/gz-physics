@@ -390,10 +390,12 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
         {
           // If broadphase and collision object flags do not agree, the
           // link was originally non-static but made static by AttachJoint
-          if (!linkInfo->isStaticOrFixed && ((childProxy->m_collisionFilterGroup &
+          if (!linkInfo->isStaticOrFixed &&
+              ((childProxy->m_collisionFilterGroup &
               btBroadphaseProxy::StaticFilter) > 0))
           {
-            childProxy->m_collisionFilterGroup = btBroadphaseProxy::DefaultFilter;
+            childProxy->m_collisionFilterGroup =
+                btBroadphaseProxy::DefaultFilter;
             childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
           }
         }
