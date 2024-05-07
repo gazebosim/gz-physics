@@ -91,13 +91,6 @@ void SimulationFeatures::WorldForwardStep(
       btTransform newChildBaseTf =
           expectedChildLinkTf * childBaseToLink.inverse();
       child->setBaseWorldTransform(newChildBaseTf);
-
-      auto parentBaseLinkTf = parent->getBaseWorldTransform();
-      btMultiBodyLinkCollider *parentCollider =
-          parent->getBaseCollider();
-
-      // parent->stepPositionsMultiDof(btScalar(0));
-      parentLinkTf = parentCollider->getWorldTransform();
     }
   }
 
