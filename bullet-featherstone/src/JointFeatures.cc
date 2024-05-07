@@ -78,7 +78,7 @@ double JointFeatures::GetJointAcceleration(
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
-    const Identity &_id, const std::size_t _dof) const
+    const Identity &_id, const std::size_t /*_dof*/) const
 {
   double results = gz::math::NAN_D;
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
