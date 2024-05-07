@@ -14,6 +14,10 @@
  * limitations under the License.
  *
 */
+
+#include <cstddef>
+#include <iostream>
+#include <string>
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -22,6 +26,7 @@
 #include <gz/plugin/Loader.hh>
 
 #include <gz/math/Helpers.hh>
+#include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
 #include "test/TestLibLoader.hh"
