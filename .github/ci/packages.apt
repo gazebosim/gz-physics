@@ -1,10 +1,10 @@
 libbenchmark-dev
-libdart6.13-collision-bullet-dev
-libdart6.13-collision-ode-dev
-libdart6.13-dev
-libdart6.13-external-ikfast-dev
-libdart6.13-external-odelcpsolver-dev
-libdart6.13-utils-urdf-dev
+libdart-collision-bullet-dev
+libdart-collision-ode-dev
+libdart-dev
+libdart-external-ikfast-dev
+libdart-external-odelcpsolver-dev
+libdart-utils-urdf-dev
 libeigen3-dev
 libgz-cmake3-dev
 libgz-common5-dev
