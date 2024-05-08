@@ -600,6 +600,11 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
+  // ignmsg << "SDF gravity status = " << _sdfLink.EnableGravity() << std::endl;
+
+  bodyProperties.mGravityMode = _sdfLink.EnableGravity();
+  // ignmsg << "gravity in dart set to: " << bodyProperties.mGravityMode << std::endl;
+
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
   // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
