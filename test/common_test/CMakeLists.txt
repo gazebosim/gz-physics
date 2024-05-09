@@ -23,7 +23,7 @@ set(TEST_INSTALL_DIR ${CMAKE_INSTALL_LIBEXECDIR}/gz/${GZ_DESIGNATION}${PROJECT_V
 
 # Find the Python interpreter for running the
 # check_test_ran.py script
-include(GzPython)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 function(configure_common_test PHYSICS_ENGINE_NAME test_name)
   if(NOT SKIP_${PHYSICS_ENGINE_NAME} AND NOT INTERNAL_SKIP_${PHYSICS_ENGINE_NAME})

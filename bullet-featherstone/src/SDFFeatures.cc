@@ -1048,49 +1048,140 @@ bool SDFFeatures::AddSdfCollision(
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(meshSdf->Uri());
-    const btVector3 scale = convertVec(meshSdf->Scale());
     if (nullptr == mesh)
     {
       gzwarn << "Failed to load mesh from [" << meshSdf->Uri()
              << "]." << std::endl;
       return false;
     }
+    const btVector3 scale = convertVec(meshSdf->Scale());
 
     auto compoundShape = std::make_unique<btCompoundShape>();
 
-    for (unsigned int submeshIdx = 0;
-         submeshIdx < mesh->SubMeshCount();
-         ++submeshIdx)
+    bool meshCreated = false;
+    if (meshSdf->Optimization() ==
+        ::sdf::MeshOptimization::CONVEX_DECOMPOSITION ||
+        meshSdf->Optimization() ==
+        ::sdf::MeshOptimization::CONVEX_HULL)
     {
-      auto s = mesh->SubMeshByIndex(submeshIdx).lock();
-      auto vertexCount = s->VertexCount();
-      auto indexCount = s->IndexCount();
-      btAlignedObjectArray<btVector3> convertedVerts;
-      convertedVerts.reserve(static_cast<int>(vertexCount));
-      for (unsigned int i = 0; i < vertexCount; i++)
+      std::size_t maxConvexHulls = 16u;
+      if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
       {
-        convertedVerts.push_back(btVector3(
-              static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
-              static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
-              static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
+        /// create 1 convex hull for the whole submesh
+        maxConvexHulls = 1u;
+      }
+      else if (meshSdf->ConvexDecomposition())
+      {
+        // limit max number of convex hulls to generate
+        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
       }
 
-      this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
-      for (unsigned int i = 0; i < indexCount/3; i++)
+      // Check if MeshManager contains the decomposed mesh already. If not
+      // add it to the MeshManager so we do not need to decompose it again.
+      const std::string convexMeshName =
+          mesh->Name() + "_CONVEX_" + std::to_string(maxConvexHulls);
+      auto *decomposedMesh = meshManager.MeshByName(convexMeshName);
+      if (!decomposedMesh)
       {
-        const btVector3& v0 = convertedVerts[s->Index(i*3)];
-        const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
-        const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
-        this->triangleMeshes.back()->addTriangle(v0, v1, v2);
+        // Merge meshes before convex decomposition
+        auto mergedMesh = gz::common::MeshManager::MergeSubMeshes(*mesh);
+        if (mergedMesh && mergedMesh->SubMeshCount() == 1u)
+        {
+          // Decompose and add mesh to MeshManager
+          auto mergedSubmesh = mergedMesh->SubMeshByIndex(0u).lock();
+          std::vector<common::SubMesh> decomposed =
+            gz::common::MeshManager::ConvexDecomposition(
+            *mergedSubmesh.get(), maxConvexHulls);
+          gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
+                <<  mesh->Name() << std::endl;
+          // Create decomposed mesh and add it to MeshManager
+          // Note: MeshManager will call delete on this mesh in its destructor
+          // \todo(iche033) Consider updating MeshManager to accept
+          // unique pointers instead
+          common::Mesh *convexMesh = new common::Mesh;
+          convexMesh->SetName(convexMeshName);
+          for (const auto & submesh : decomposed)
+            convexMesh->AddSubMesh(submesh);
+          meshManager.AddMesh(convexMesh);
+          if (decomposed.empty())
+          {
+            // Print an error if convex decomposition returned empty submeshes
+            // but still add it to MeshManager to avoid going through the
+            // expensive convex decomposition process for the same mesh again
+            gzerr << "Convex decomposition generated zero meshes: "
+                   << mesh->Name() << std::endl;
+          }
+          decomposedMesh = meshManager.MeshByName(convexMeshName);
+        }
       }
 
-      this->meshesGImpact.push_back(
-        std::make_unique<btGImpactMeshShape>(
-          this->triangleMeshes.back().get()));
-      this->meshesGImpact.back()->updateBound();
-      this->meshesGImpact.back()->setMargin(btScalar(0.01));
-      compoundShape->addChildShape(btTransform::getIdentity(),
-        this->meshesGImpact.back().get());
+      if (decomposedMesh)
+      {
+        for (std::size_t j = 0u; j < decomposedMesh->SubMeshCount(); ++j)
+        {
+          auto submesh = decomposedMesh->SubMeshByIndex(j).lock();
+          gz::math::Vector3d centroid;
+          for (std::size_t i = 0; i < submesh->VertexCount(); ++i)
+              centroid += submesh->Vertex(i);
+          centroid *= 1.0/static_cast<double>(submesh->VertexCount());
+          btAlignedObjectArray<btVector3> vertices;
+          for (std::size_t i = 0; i < submesh->VertexCount(); ++i)
+          {
+            gz::math::Vector3d v = submesh->Vertex(i) - centroid;
+            vertices.push_back(convertVec(v) * scale);
+          }
+
+          float collisionMargin = 0.001f;
+          this->meshesConvex.push_back(std::make_unique<btConvexHullShape>(
+              &(vertices[0].getX()), vertices.size()));
+          auto *convexShape = this->meshesConvex.back().get();
+          convexShape->setMargin(collisionMargin);
+
+          btTransform trans;
+          trans.setIdentity();
+          trans.setOrigin(convertVec(centroid) * scale);
+          compoundShape->addChildShape(trans, convexShape);
+        }
+        meshCreated = true;
+      }
+    }
+
+    if (!meshCreated)
+    {
+      for (unsigned int submeshIdx = 0;
+           submeshIdx < mesh->SubMeshCount();
+           ++submeshIdx)
+      {
+        auto s = mesh->SubMeshByIndex(submeshIdx).lock();
+        auto vertexCount = s->VertexCount();
+        auto indexCount = s->IndexCount();
+        btAlignedObjectArray<btVector3> convertedVerts;
+        convertedVerts.reserve(static_cast<int>(vertexCount));
+        for (unsigned int i = 0; i < vertexCount; i++)
+        {
+          convertedVerts.push_back(btVector3(
+                static_cast<btScalar>(s->Vertex(i).X()) * scale[0],
+                static_cast<btScalar>(s->Vertex(i).Y()) * scale[1],
+                static_cast<btScalar>(s->Vertex(i).Z()) * scale[2]));
+        }
+
+        this->triangleMeshes.push_back(std::make_unique<btTriangleMesh>());
+        for (unsigned int i = 0; i < indexCount/3; i++)
+        {
+          const btVector3& v0 = convertedVerts[s->Index(i*3)];
+          const btVector3& v1 = convertedVerts[s->Index(i*3 + 1)];
+          const btVector3& v2 = convertedVerts[s->Index(i*3 + 2)];
+          this->triangleMeshes.back()->addTriangle(v0, v1, v2);
+        }
+
+        this->meshesGImpact.push_back(
+          std::make_unique<btGImpactMeshShape>(
+            this->triangleMeshes.back().get()));
+        this->meshesGImpact.back()->updateBound();
+        this->meshesGImpact.back()->setMargin(btScalar(0.01));
+        compoundShape->addChildShape(btTransform::getIdentity(),
+          this->meshesGImpact.back().get());
+      }
     }
     shape = std::move(compoundShape);
   }
@@ -1198,6 +1289,15 @@ bool SDFFeatures::AddSdfCollision(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
+      if (geom->MeshShape())
+      {
+        // Set meshes to use softer contacts for stability
+        // \todo(iche033) load <kp> and <kd> values from SDF
+        const btScalar kp = btScalar(1e15);
+        const btScalar kd = btScalar(1e14);
+        linkInfo->collider->setContactStiffnessAndDamping(kp, kd);
+      }
+
       if (linkIndexInModel >= 0)
       {
         model->body->getLink(linkIndexInModel).m_collider =
@@ -1217,7 +1317,24 @@ bool SDFFeatures::AddSdfCollision(
 
       auto *world = this->ReferenceInterface<WorldInfo>(model->world);
 
-      if (isStatic)
+      // Set static filter for collisions in
+      // 1) a static model
+      // 2) a fixed base link
+      // 3) a (non-base) link with zero dofs
+      bool isFixed = false;
+      if (model->body->hasFixedBase())
+      {
+        // check if it's a base link
+        isFixed = std::size_t(_linkID) ==
+            static_cast<std::size_t>(model->body->getUserIndex());
+        // check if link has zero dofs
+        if (!isFixed && linkInfo->indexInModel.has_value())
+        {
+           isFixed = model->body->getLink(
+              linkInfo->indexInModel.value()).m_dofCount == 0;
+        }
+      }
+      if (isStatic || isFixed)
       {
         world->world->addCollisionObject(
           linkInfo->collider.get(),
