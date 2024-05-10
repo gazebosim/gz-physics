@@ -1335,9 +1335,8 @@ bool SDFFeatures::AddSdfCollision(
         linkInfo->collider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
 #else
 	int oldFlags = linkInfo->collider->getCollisionFlags();
-	oldFlags &= ~(btCollisionObject::CF_STATIC_OBJECT |
-                      btCollisionObject::CF_KINEMATIC_OBJECT);
-	linkInfo->collider->setCollisionFlags(oldFlags | dynamicType);
+	linkInfo->collider->setCollisionFlags(oldFlags |
+            btCollisionObject::CF_STATIC_OBJECT);
 #endif
       }
       else
