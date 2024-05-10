@@ -23,6 +23,49 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
+/// \brief Custom Gz Collision dispatcher class that does extra filtering
+/// to ignore collision objects that have with static collision flags set.
+class GzCollisionDispatcher : public btCollisionDispatcher
+{
+  /// \brief Constructor
+  public: GzCollisionDispatcher(btCollisionConfiguration *_collisionConfiguration)
+            : btCollisionDispatcher(_collisionConfiguration) {};
+
+  /// \brief Check if a collision object's broadphase proxy has static
+  /// static collision flag set
+  private: bool hasBroadphaseStaticCollisionFlag(const btCollisionObject *_body)
+  {
+     const btBroadphaseProxy *bodyProxy = _body->getBroadphaseHandle();
+     if (!bodyProxy || (bodyProxy->m_collisionFilterGroup &
+         btBroadphaseProxy::StaticFilter) > 0)
+     {
+       return true;
+     }
+     return false;
+  }
+
+  // Documentation inherited.
+  public: virtual bool needsResponse(const btCollisionObject *_body0,
+                                     const btCollisionObject *_body1) override
+  {
+    if (hasBroadphaseStaticCollisionFlag(_body0) &&
+        hasBroadphaseStaticCollisionFlag(_body1))
+      return false;
+    return btCollisionDispatcher::needsResponse(_body0, _body1);
+  }
+
+  // Documentation inherited.
+  public: virtual bool needsCollision(const btCollisionObject *_body0,
+                                      const btCollisionObject *_body1) override
+  {
+    if (hasBroadphaseStaticCollisionFlag(_body0) &&
+        hasBroadphaseStaticCollisionFlag(_body1))
+      return false;
+    return btCollisionDispatcher::needsCollision(_body0, _body1);
+
+  }
+};
+
 /////////////////////////////////////////////////
 WorldInfo::WorldInfo(std::string name_)
   : name(std::move(name_))
@@ -30,7 +73,7 @@ WorldInfo::WorldInfo(std::string name_)
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
   this->dispatcher =
-    std::make_unique<btCollisionDispatcher>(collisionConfiguration.get());
+    std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
