@@ -1329,6 +1329,16 @@ bool SDFFeatures::AddSdfCollision(
           btBroadphaseProxy::StaticFilter,
           btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
           linkInfo->isStaticOrFixed = true;
+
+        // Set collider collision flags
+#if BT_BULLET_VERSION >= 307
+        linkInfo->collider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#else
+	int oldFlags = linkInfo->collider->getCollisionFlags();
+	oldFlags &= ~(btCollisionObject::CF_STATIC_OBJECT |
+                      btCollisionObject::CF_KINEMATIC_OBJECT);
+	linkInfo->collider->setCollisionFlags(oldFlags | dynamicType);
+#endif
       }
       else
       {

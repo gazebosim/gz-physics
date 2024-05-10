@@ -349,6 +349,8 @@ Identity JointFeatures::AttachFixedJoint(
     btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
     if (parentCollider && childCollider)
     {
+      parentCollider->setIgnoreCollisionCheck(childCollider, true);
+      childCollider->setIgnoreCollisionCheck(parentCollider, true);
       if (parentLinkInfo->isStaticOrFixed && !linkInfo->isStaticOrFixed)
       {
         btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
@@ -385,6 +387,8 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
       if (parentCollider && childCollider)
       {
+        parentCollider->setIgnoreCollisionCheck(childCollider, false);
+        childCollider->setIgnoreCollisionCheck(parentCollider, false);
         btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
         if (childProxy)
         {
