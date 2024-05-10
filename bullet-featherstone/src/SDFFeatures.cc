@@ -1334,8 +1334,8 @@ bool SDFFeatures::AddSdfCollision(
 #if BT_BULLET_VERSION >= 307
         linkInfo->collider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
 #else
-	int oldFlags = linkInfo->collider->getCollisionFlags();
-	linkInfo->collider->setCollisionFlags(oldFlags |
+        int oldFlags = linkInfo->collider->getCollisionFlags();
+        linkInfo->collider->setCollisionFlags(oldFlags |
             btCollisionObject::CF_STATIC_OBJECT);
 #endif
       }
