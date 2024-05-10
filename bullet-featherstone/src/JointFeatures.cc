@@ -360,6 +360,13 @@ Identity JointFeatures::AttachFixedJoint(
           childProxy->m_collisionFilterMask =
               btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
         }
+#if BT_BULLET_VERSION >= 307
+        childCollider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#else
+	int oldFlags = linkInfo->collider->getCollisionFlags();
+	linkInfo->collider->setCollisionFlags(oldFlags |
+            btCollisionObject::CF_STATIC_OBJECT);
+#endif
       }
     }
 
@@ -401,6 +408,16 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
             childProxy->m_collisionFilterGroup =
                 btBroadphaseProxy::DefaultFilter;
             childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
+
+#if BT_BULLET_VERSION >= 307
+            childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+#else
+            int oldFlags = linkInfo->collider->getCollisionFlags();
+            oldFlags &= ~(btCollisionObject::CF_STATIC_OBJECT |
+                          btCollisionObject::CF_KINEMATIC_OBJECT);
+            linkInfo->collider->setCollisionFlags(oldFlags |
+                btCollisionObject::CF_DYNAMIC_OBJECT);
+#endif
           }
         }
       }

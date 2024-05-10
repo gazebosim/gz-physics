@@ -1239,11 +1239,8 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
                   frameDataModel1Body.pose.translation().z(), 1e-3);
       EXPECT_NEAR(initialModel2Pose.Pos().Z(),
                   frameDataModel2Body.pose.translation().z(), 1e-3);
-      // \todo(iche033) Tolerance increased for bullet-featherstone
-      // as it tries to resolve overlapping bodies held together by
-      // a fixed joint
       EXPECT_NEAR(initialModel3Pose.Pos().Z(),
-                  frameDataModel3Body.pose.translation().z(), 1e-2);
+                  frameDataModel3Body.pose.translation().z(), 1e-3);
 
       // Expect all models to have zero velocities
       gz::math::Vector3d body1LinearVelocity =
@@ -1254,12 +1251,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
         gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
       EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
       EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      // \todo(iche033) bullet-featherstone produces non-zero velocities
-      // for overlapping bodies
-      if (this->PhysicsEngineName(name) != "bullet-featherstone")
-      {
-        EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
-      }
+      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
     }
 
     // now detach joint and expect model2 and model3 to start moving
