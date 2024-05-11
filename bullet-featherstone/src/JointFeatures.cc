@@ -362,10 +362,6 @@ Identity JointFeatures::AttachFixedJoint(
         }
 #if BT_BULLET_VERSION >= 307
         childCollider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
-#else
-        int oldFlags = childCollider->getCollisionFlags();
-        childCollider->setCollisionFlags(oldFlags |
-            btCollisionObject::CF_STATIC_OBJECT);
 #endif
       }
     }
@@ -411,11 +407,6 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
 
 #if BT_BULLET_VERSION >= 307
             childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
-#else
-            int oldFlags = childCollider->getCollisionFlags();
-            oldFlags &= ~(btCollisionObject::CF_STATIC_OBJECT |
-                          btCollisionObject::CF_KINEMATIC_OBJECT);
-            childCollider->setCollisionFlags(oldFlags);
 #endif
           }
         }

@@ -1251,7 +1251,14 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
         gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
       EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
       EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
+      // bullet-featherstone produces non-zero velocities
+      // for overlapping bodies in versions <= 3.06.
+#ifdef BT_BULLET_VERSION_LE_306
+      if (this->PhysicsEngineName(name) != "bullet-featherstone")
+#endif
+      {
+        EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
+      }
     }
 
     // now detach joint and expect model2 and model3 to start moving
