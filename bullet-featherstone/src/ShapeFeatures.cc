@@ -180,6 +180,85 @@ Identity ShapeFeatures::AttachCapsuleShape(
 }
 
 /////////////////////////////////////////////////
+Identity ShapeFeatures::CastToConeShape(const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  if (shapeInfo != nullptr)
+  {
+    const auto &shape = shapeInfo->collider;
+    if (dynamic_cast<btConeShape*>(shape.get()))
+      return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
+  }
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetConeShapeRadius(
+    const Identity &_coneID) const
+{
+  auto it = this->collisions.find(_coneID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    if (it->second->collider != nullptr)
+    {
+      auto *cone = static_cast<btConeShape*>(
+        it->second->collider.get());
+      if (cone)
+      {
+        return cone->getRadius();
+      }
+    }
+  }
+
+  return -1;
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetConeShapeHeight(
+    const Identity &_coneID) const
+{
+  auto it = this->collisions.find(_coneID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    if (it->second->collider != nullptr)
+    {
+      auto *cone = static_cast<btConeShape*>(
+        it->second->collider.get());
+      if (cone)
+      {
+        return cone->getHeight();
+      }
+    }
+  }
+
+  return -1;
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachConeShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const double _radius,
+    const double _height,
+    const Pose3d &_pose)
+{
+  const auto radius = static_cast<btScalar>(_radius);
+  const auto height = static_cast<btScalar>(_height);
+  auto shape =
+    std::make_unique<btConeShapeZ>(radius, height);
+
+  auto identity = this->AddCollision(
+    CollisionInfo{
+      _name,
+      std::move(shape),
+      _linkID,
+      _pose});
+
+  return identity;
+}
+
+/////////////////////////////////////////////////
 Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
 {
   const auto *shapeInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);

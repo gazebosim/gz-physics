@@ -26,6 +26,7 @@
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CapsuleShape.hpp>
+#include <dart/dynamics/ConeShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
@@ -49,6 +50,7 @@
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
 #include <sdf/Capsule.hh>
+#include <sdf/Cone.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
@@ -257,6 +259,14 @@ static ShapeAndTransform ConstructBox(
 }
 
 /////////////////////////////////////////////////
+static ShapeAndTransform ConstructCone(
+    const ::sdf::Cone &_cone)
+{
+  return {std::make_shared<dart::dynamics::ConeShape>(
+        _cone.Radius(), _cone.Length())};
+}
+
+/////////////////////////////////////////////////
 static ShapeAndTransform ConstructCylinder(
     const ::sdf::Cylinder &_cylinder)
 {
@@ -340,8 +350,14 @@ static ShapeAndTransform ConstructGeometry(
   {
     return ConstructCapsule(*_geometry.CapsuleShape());
   }
+  else if (_geometry.ConeShape())
+  {
+    return ConstructCone(*_geometry.ConeShape());
+  }
   else if (_geometry.CylinderShape())
+  {
     return ConstructCylinder(*_geometry.CylinderShape());
+  }
   else if (_geometry.EllipsoidShape())
   {
     // TODO(anyone): Replace this code when Ellipsoid is supported by DART

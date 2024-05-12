@@ -58,7 +58,7 @@ Gazebo Physics provides the following functionality:
   at runtime.
 * Features for common aspects of rigid body dynamic simulation
     - Construct model from [SDFormat](http://sdformat.org/) file.
-    - Collision shapes (such as box, sphere, cylinder, capsule, ellipsoid, mesh, heightmap).
+    - Collision shapes (such as box, sphere, cylinder, cone, capsule, ellipsoid, mesh, heightmap).
     - Joint types (such as revolute, prismatic, fixed, ball, screw, universal).
     - Step simulation, get/set state, apply inputs.
 * Reference implementation of physics plugin using

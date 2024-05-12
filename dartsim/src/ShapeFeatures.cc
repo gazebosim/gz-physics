@@ -21,6 +21,7 @@
 
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CapsuleShape.hpp>
+#include <dart/dynamics/ConeShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/HeightmapShape.hpp>
@@ -154,6 +155,67 @@ Identity ShapeFeatures::AttachCapsuleShape(
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
                               dart::dynamics::DynamicsAspect>(
           capsule, bn->getName() + ":" + _name);
+
+  sn->setRelativeTransform(_pose);
+
+  const std::size_t shapeID = this->AddShape({sn, _name});
+  return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToConeShape(const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+
+  const dart::dynamics::ShapePtr &shape = shapeInfo->node->getShape();
+
+  if (dynamic_cast<dart::dynamics::ConeShape *>(shape.get()))
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetConeShapeRadius(
+    const Identity &_coneID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_coneID);
+
+  dart::dynamics::ConeShape *cone =
+      static_cast<dart::dynamics::ConeShape *>(
+          shapeInfo->node->getShape().get());
+
+  return cone->getRadius();
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetConeShapeHeight(
+    const Identity &_coneID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_coneID);
+  dart::dynamics::ConeShape *cone =
+      static_cast<dart::dynamics::ConeShape *>(
+          shapeInfo->node->getShape().get());
+
+  return cone->getHeight();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachConeShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const double _radius,
+    const double _height,
+    const Pose3d &_pose)
+{
+  auto cone = std::make_shared<dart::dynamics::ConeShape>(
+        _radius, _height);
+
+  auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
+  dart::dynamics::ShapeNode *sn =
+      bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
+                              dart::dynamics::DynamicsAspect>(
+          cone, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
 
