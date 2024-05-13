@@ -1242,7 +1242,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
       // For bullet versions <= 3.06, static collision flags are not set.
       // So it tries to resolve overlapping bodies held together by
       // a fixed joint. Increase tolerance for position.
-      const double tol = 1e-3;
+      double tol = 1e-3;
 #ifdef BT_BULLET_VERSION_LE_306
       if (this->PhysicsEngineName(name) == "bullet-featherstone")
         tol = 1e-2;
