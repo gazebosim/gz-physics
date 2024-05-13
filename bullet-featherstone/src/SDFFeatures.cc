@@ -1124,6 +1124,8 @@ bool SDFFeatures::AddSdfCollision(
               &(vertices[0].getX()), vertices.size()));
           auto *convexShape = this->meshesConvex.back().get();
           convexShape->setMargin(collisionMargin);
+          convexShape->recalcLocalAabb();
+          convexShape->optimizeConvexHull();
 
           btTransform trans;
           trans.setIdentity();
