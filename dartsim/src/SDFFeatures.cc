@@ -259,14 +259,6 @@ static ShapeAndTransform ConstructBox(
 }
 
 /////////////////////////////////////////////////
-static ShapeAndTransform ConstructCone(
-    const ::sdf::Cone &_cone)
-{
-  return {std::make_shared<dart::dynamics::ConeShape>(
-        _cone.Radius(), _cone.Length())};
-}
-
-/////////////////////////////////////////////////
 static ShapeAndTransform ConstructCylinder(
     const ::sdf::Cylinder &_cylinder)
 {
@@ -352,7 +344,25 @@ static ShapeAndTransform ConstructGeometry(
   }
   else if (_geometry.ConeShape())
   {
-    return ConstructCone(*_geometry.ConeShape());
+    // TODO(anyone): Replace this code when Cone is supported by DART
+    gzwarn << "DART: Cone is not a supported collision geomerty"
+           << " primitive, using generated mesh of a cone instead"
+           << std::endl;
+    common::MeshManager *meshMgr = common::MeshManager::Instance();
+    std::string coneMeshName = std::string("cone_mesh")
+      + "_" + std::to_string(_geometry.ConeShape()->Radius())
+      + "_" + std::to_string(_geometry.ConeShape()->Length());
+    meshMgr->CreateCone(
+      coneMeshName,
+      _geometry.ConeShape()->Radius(),
+      _geometry.ConeShape()->Length(),
+      3, 40);
+    const gz::common::Mesh * _mesh =
+      meshMgr->MeshByName(coneMeshName);
+
+    auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+    auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
+    return {mesh2};
   }
   else if (_geometry.CylinderShape())
   {
@@ -361,6 +371,9 @@ static ShapeAndTransform ConstructGeometry(
   else if (_geometry.EllipsoidShape())
   {
     // TODO(anyone): Replace this code when Ellipsoid is supported by DART
+    gzwarn << "DART: Ellipsoid is not a supported collision geomerty"
+           << " primitive, using generated mesh of an ellipsoid instead"
+           << std::endl;
     common::MeshManager *meshMgr = common::MeshManager::Instance();
     std::string ellipsoidMeshName = std::string("ellipsoid_mesh")
       + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().X())

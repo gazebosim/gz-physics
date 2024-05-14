@@ -208,17 +208,26 @@ Identity ShapeFeatures::AttachConeShape(
     const double _height,
     const Pose3d &_pose)
 {
-  auto cone = std::make_shared<dart::dynamics::ConeShape>(
-        _radius, _height);
+  gzwarn << "DART: Cone is not a supported collision geomerty"
+         << " primitive, using generated mesh of a cone instead"
+         << std::endl;
+  common::MeshManager *meshMgr = common::MeshManager::Instance();
+  std::string coneMeshName = _name + "_cone_mesh"
+    + "_" + std::to_string(_radius)
+    + "_" + std::to_string(_height);
+  meshMgr->CreateCone(coneMeshName,_radius, _height,
+    3, 40);
+  const gz::common::Mesh * _mesh = meshMgr->MeshByName(coneMeshName);
 
-  auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
+  auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+
+  DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
       bn->createShapeNodeWith<dart::dynamics::CollisionAspect,
                               dart::dynamics::DynamicsAspect>(
-          cone, bn->getName() + ":" + _name);
+          mesh, bn->getName() + ":" + _name);
 
   sn->setRelativeTransform(_pose);
-
   const std::size_t shapeID = this->AddShape({sn, _name});
   return this->GenerateIdentity(shapeID, this->shapes.at(shapeID));
 }
@@ -317,6 +326,9 @@ Identity ShapeFeatures::AttachEllipsoidShape(
     const Vector3d &_radii,
     const Pose3d &_pose)
 {
+  gzwarn << "DART: Ellipsoid is not a supported collision geomerty"
+         << " primitive, using generated mesh of an ellipsoid instead"
+         << std::endl;
   common::MeshManager *meshMgr = common::MeshManager::Instance();
   std::string ellipsoidMeshName = _name + "_ellipsoid_mesh"
     + "_" + std::to_string(_radii[0])

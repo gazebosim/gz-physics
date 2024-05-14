@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright 2024 CogniPilot Foundation
+ * Copyright 2024 Open Source Robotics Foundation
+ * Copyright 2024 Rudis Laboratories
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

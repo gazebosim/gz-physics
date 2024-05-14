@@ -975,7 +975,7 @@ TEST_P(SDFFeatures_TEST, Shapes)
   ASSERT_EQ(5u, dartWorld->getNumSkeletons());
 
   int count{0};
-  for (auto name : {"sphere", "box", "cylinder", "capsule", "ellipsoid"})
+  for (auto name : {"sphere", "box", "cylinder", "capsule", "cone", "ellipsoid"})
   {
     const auto skeleton = dartWorld->getSkeleton(count++);
     ASSERT_NE(nullptr, skeleton);
