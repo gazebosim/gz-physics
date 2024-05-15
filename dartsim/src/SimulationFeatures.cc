@@ -165,6 +165,41 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
   this->prevLinkPoses = std::move(newPoses);
 }
 
+SimulationFeatures::RayIntersection
+SimulationFeatures::GetRayIntersectionFromLastStep(
+  const Identity &_worldID,
+  const LinearVector3d &_from,
+  const LinearVector3d &_to) const
+{
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
+  auto collisionGroup = world->getConstraintSolver()->getCollisionGroup().get();
+
+  // Perform raycast
+  dart::collision::RaycastOption option;
+  dart::collision::RaycastResult result;
+  collisionDetector->raycast(collisionGroup, _from, _to, option, &result);
+
+  SimulationFeatures::RayIntersection intersection;
+  if (result.hasHit())
+  {
+    // Store intersection data if there is a ray hit
+    const auto &firstHit = result.mRayHits[0];
+    intersection.point = firstHit.mPoint;
+    intersection.normal = firstHit.mNormal;
+    intersection.fraction = firstHit.mFraction;
+  }
+  else
+  {
+    // Set invalid measurements to NaN according to REP-117
+    intersection.point = Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    intersection.normal = Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    intersection.fraction = std::numeric_limits<double>::quiet_NaN();
+  }
+
+  return intersection;
+}
+
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
