@@ -43,7 +43,6 @@
 #include "gz/physics/EllipsoidShape.hh"
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetBoundingBox.hh>
-#include <gz/physics/GetRayIntersection.hh>
 #include "gz/physics/SphereShape.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -54,7 +53,6 @@
 #include <gz/physics/World.hh>
 
 #include <sdf/Root.hh>
-#include <sdf/Physics.hh>
 
 // The features that an engine must have to be loaded by this loader.
 struct Features : gz::physics::FeatureList<
@@ -66,8 +64,6 @@ struct Features : gz::physics::FeatureList<
 
   gz::physics::GetContactsFromLastStepFeature,
   gz::physics::CollisionFilterMaskFeature,
-
-  gz::physics::GetRayIntersectionFromLastStepFeature,
 
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
@@ -111,7 +107,6 @@ class SimulationFeaturesTest:
     // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
     // FindFeatures
     pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
-
     if (pluginNames.empty())
     {
       std::cerr << "No plugins with required features found in "
@@ -142,7 +137,6 @@ gz::physics::World3dPtr<T> LoadPluginAndWorld(
   const sdf::Errors &errors = root.Load(_world);
   EXPECT_EQ(0u, errors.size());
   const sdf::World *sdfWorld = root.WorldByIndex(0);
-
   auto world = engine->ConstructWorld(*sdfWorld);
   EXPECT_NE(nullptr, world);
   return world;
@@ -224,66 +218,6 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     auto contacts = world->GetContactsFromLastStep();
     // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
-  }
-}
-
-// The features that an engine must have to be loaded by this loader.
-struct FeaturesRayIntersection : gz::physics::FeatureList<
-  gz::physics::sdf::ConstructSdfWorld,
-  gz::physics::GetRayIntersectionFromLastStepFeature,
-  gz::physics::ForwardStep
-> {};
-
-template <class T>
-class SimulationFeaturesRayIntersectionTest :
-  public SimulationFeaturesTest<T>{};
-using SimulationFeaturesRayIntersectionTestTypes =
-  ::testing::Types<FeaturesRayIntersection>;
-TYPED_TEST_SUITE(SimulationFeaturesRayIntersectionTest,
-                 SimulationFeaturesRayIntersectionTestTypes);
-
-/////////////////////////////////////////////////
-TYPED_TEST(SimulationFeaturesRayIntersectionTest, RayIntersections)
-{
-  for (const std::string &name : this->pluginNames)
-  {
-    auto world = LoadPluginAndWorld<FeaturesRayIntersection>(
-        this->loader,
-        name,
-        common_test::worlds::kRayIntersectionSdf);
-    auto checkedOutput = StepWorld<FeaturesRayIntersection>(world, true, 1).first;
-    EXPECT_TRUE(checkedOutput);
-
-    // ray hits the sphere
-    auto result = world->GetRayIntersectionFromLastStep(Eigen::Vector3d(-2, 0, 0),
-                                                        Eigen::Vector3d( 2, 0, 0));
-    auto rayIntersection =
-        result.template Get<gz::physics::World3d<Features>::RayIntersection>();
-
-    double epsilon = 1e-3;
-    EXPECT_TRUE(rayIntersection.point.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon));
-    EXPECT_TRUE(rayIntersection.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon));
-    EXPECT_DOUBLE_EQ(rayIntersection.fraction, 0.25);
-
-    // ray hits the sphere
-    result = world->GetRayIntersectionFromLastStep(Eigen::Vector3d( 2, 0, 0),
-                                                   Eigen::Vector3d(-2, 0, 0));
-    rayIntersection =
-        result.template Get<gz::physics::World3d<Features>::RayIntersection>();
-
-    EXPECT_TRUE(rayIntersection.point.isApprox(Eigen::Vector3d(1, 0, 0), epsilon));
-    EXPECT_TRUE(rayIntersection.normal.isApprox(Eigen::Vector3d(1, 0, 0), epsilon));
-    EXPECT_DOUBLE_EQ(rayIntersection.fraction, 0.25);
-
-    // ray does not hit the sphere
-    result = world->GetRayIntersectionFromLastStep(Eigen::Vector3d( 2, 0, 5),
-                                                   Eigen::Vector3d(-2, 0, 5));
-    rayIntersection =
-        result.template Get<gz::physics::World3d<Features>::RayIntersection>();
-
-    ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
-    ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
-    ASSERT_TRUE(std::isnan(rayIntersection.fraction));
   }
 }
 

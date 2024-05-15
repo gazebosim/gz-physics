@@ -42,7 +42,7 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
     /// \brief The hit point in the world coordinates
     VectorType point;
 
-    /// The fraction from "from" point to "to" point
+    /// \brief The fraction of the ray length at the intersection/hit point.
     Scalar fraction;
 
     /// \brief The normal at the hit point in the world coordinates
