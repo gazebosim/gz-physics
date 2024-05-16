@@ -20,6 +20,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include <dart/constraint/ConstraintSolver.hpp>

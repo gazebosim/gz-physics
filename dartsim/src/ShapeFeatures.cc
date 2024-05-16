@@ -17,7 +17,9 @@
 
 #include "ShapeFeatures.hh"
 
+#include <cstddef>
 #include <memory>
+#include <string>
 
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CapsuleShape.hpp>
