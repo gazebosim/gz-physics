@@ -18,7 +18,6 @@
 #ifndef GZ_PHYSICS_GETRAYINTERSECTION_HH_
 #define GZ_PHYSICS_GETRAYINTERSECTION_HH_
 
-#include <vector>
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/Geometry.hh>

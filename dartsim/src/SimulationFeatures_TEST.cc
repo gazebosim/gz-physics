@@ -17,6 +17,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include <gz/common/Console.hh>
 #include <gz/physics/FindFeatures.hh>
 #include <gz/plugin/Loader.hh>
@@ -87,7 +89,7 @@ TEST_P(RayIntersectionSupportedFixture, RayIntersection)
 
   // ray hits the sphere
   auto result = world->GetRayIntersectionFromLastStep(
-                  Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d( 2, 0, 2));
+                  Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2));
 
   auto rayIntersection =
     result.template
@@ -102,7 +104,7 @@ TEST_P(RayIntersectionSupportedFixture, RayIntersection)
 
   // ray does not hit the sphere
   result = world->GetRayIntersectionFromLastStep(
-            Eigen::Vector3d( 2, 0, 10), Eigen::Vector3d(-2, 0, 10));
+            Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10));
   rayIntersection =
       result.template
         Get<gz::physics::World3d<TestFeatureList>::RayIntersection>();

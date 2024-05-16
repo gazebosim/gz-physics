@@ -19,7 +19,6 @@
 #define GZ_PHYSICS_DETAIL_GETRAYINTERSECTION_HH_
 
 #include <utility>
-#include <vector>
 #include <gz/physics/GetRayIntersection.hh>
 
 namespace gz
