@@ -28,8 +28,8 @@ namespace gz
 {
 namespace physics
 {
-/// \brief GetRayIntersectionFromLastStepFeature is a feature for retrieving the a
-/// ray intersection generated in the previous simulation step.
+/// \brief GetRayIntersectionFromLastStepFeature is a feature for retrieving
+/// the a ray intersection generated in the previous simulation step.
 class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
@@ -37,7 +37,8 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
   struct RayIntersectionT
   {
     public: using Scalar = typename PolicyT::Scalar;
-    public: using VectorType = typename FromPolicy<PolicyT>::template Use<LinearVector>;
+    public: using VectorType =
+      typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
     /// \brief The hit point in the world coordinates
     VectorType point;
@@ -52,9 +53,11 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
-    public: using VectorType = typename FromPolicy<PolicyT>::template Use<LinearVector>;
+    public: using VectorType =
+      typename FromPolicy<PolicyT>::template Use<LinearVector>;
     public: using RayIntersection = RayIntersectionT<PolicyT>;
-    public: using RayIntersectionData = SpecifyData<RequireData<RayIntersection>>;
+    public: using RayIntersectionData =
+      SpecifyData<RequireData<RayIntersection>>;
 
     /// \brief Get ray intersection generated in the previous simulation step
     public: RayIntersectionData GetRayIntersectionFromLastStep(
@@ -65,7 +68,8 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
     public: using RayIntersection = RayIntersectionT<PolicyT>;
-    public: using VectorType = typename FromPolicy<PolicyT>::template Use<LinearVector>;
+    public: using VectorType =
+      typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
     public: virtual RayIntersection GetRayIntersectionFromLastStep(
       const Identity &_worldID,

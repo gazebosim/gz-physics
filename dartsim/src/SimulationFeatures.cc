@@ -15,6 +15,7 @@
  *
 */
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -192,8 +193,10 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   else
   {
     // Set invalid measurements to NaN according to REP-117
-    intersection.point = Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
-    intersection.normal = Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    intersection.point =
+      Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    intersection.normal =
+      Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
     intersection.fraction = std::numeric_limits<double>::quiet_NaN();
   }
 

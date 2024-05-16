@@ -30,10 +30,12 @@ namespace physics
 template <typename PolicyT, typename FeaturesT>
 auto GetRayIntersectionFromLastStepFeature::World<
     PolicyT, FeaturesT>::GetRayIntersectionFromLastStep(
-      const VectorType &_from, const VectorType &_to) const -> RayIntersectionData
+      const VectorType &_from,
+      const VectorType &_to) const -> RayIntersectionData
 {
-  auto result = this->template Interface<GetRayIntersectionFromLastStepFeature>()
-                  ->GetRayIntersectionFromLastStep(this->identity, _from, _to);
+  auto result =
+    this->template Interface<GetRayIntersectionFromLastStepFeature>()
+        ->GetRayIntersectionFromLastStep(this->identity, _from, _to);
 
   RayIntersection intersection{result.point, result.fraction, result.normal};
 

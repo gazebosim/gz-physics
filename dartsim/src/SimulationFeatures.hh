@@ -99,8 +99,8 @@ class SimulationFeatures :
   public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
     ::ContactInternal;
 
-  public: using GetRayIntersectionFromLastStepFeature::Implementation<FeaturePolicy3d>
-    ::RayIntersection;
+  public: using GetRayIntersectionFromLastStepFeature::Implementation<
+    FeaturePolicy3d>::RayIntersection;
 
   public: SimulationFeatures() = default;
   public: ~SimulationFeatures() override = default;

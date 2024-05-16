@@ -86,21 +86,26 @@ TEST_P(RayIntersectionSupportedFixture, RayIntersection)
   world->SetCollisionDetector(GetParam());
 
   // ray hits the sphere
-  auto result = world->GetRayIntersectionFromLastStep(Eigen::Vector3d(-2, 0, 2),
-                                                      Eigen::Vector3d( 2, 0, 2));
+  auto result = world->GetRayIntersectionFromLastStep(
+                  Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d( 2, 0, 2));
+
   auto rayIntersection =
-      result.template Get<gz::physics::World3d<TestFeatureList>::RayIntersection>();
+    result.template
+      Get<gz::physics::World3d<TestFeatureList>::RayIntersection>();
 
   double epsilon = 1e-3;
-  EXPECT_TRUE(rayIntersection.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon));
-  EXPECT_TRUE(rayIntersection.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon));
+  EXPECT_TRUE(
+    rayIntersection.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon));
+  EXPECT_TRUE(
+    rayIntersection.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon));
   EXPECT_DOUBLE_EQ(rayIntersection.fraction, 0.25);
 
   // ray does not hit the sphere
-  result = world->GetRayIntersectionFromLastStep(Eigen::Vector3d( 2, 0, 10),
-                                                 Eigen::Vector3d(-2, 0, 10));
+  result = world->GetRayIntersectionFromLastStep(
+            Eigen::Vector3d( 2, 0, 10), Eigen::Vector3d(-2, 0, 10));
   rayIntersection =
-      result.template Get<gz::physics::World3d<TestFeatureList>::RayIntersection>();
+      result.template
+        Get<gz::physics::World3d<TestFeatureList>::RayIntersection>();
 
   ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
   ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
@@ -112,11 +117,13 @@ TEST_P(RayIntersectionNotSupportedFixture, RayIntersection)
   const auto world = LoadWorld(this->engine, common_test::worlds::kSphereSdf);
   world->SetCollisionDetector(GetParam());
 
-  // ray would hit the sphere, but the collision detector does not support ray intersection
-  auto result = world->GetRayIntersectionFromLastStep(Eigen::Vector3d(-2, 0, 2),
-                                                      Eigen::Vector3d(2, 0, 2));
+  // ray would hit the sphere, but the collision detector does
+  // not support ray intersection
+  auto result = world->GetRayIntersectionFromLastStep(
+                  Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2));
   auto rayIntersection =
-      result.template Get<gz::physics::World3d<TestFeatureList>::RayIntersection>();
+    result.template
+      Get<gz::physics::World3d<TestFeatureList>::RayIntersection>();
 
   ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
   ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
@@ -124,8 +131,10 @@ TEST_P(RayIntersectionNotSupportedFixture, RayIntersection)
 }
 
 // Parameterized instantiation of test suites
-INSTANTIATE_TEST_SUITE_P(CollisionDetectorsSupported, RayIntersectionSupportedFixture,
+INSTANTIATE_TEST_SUITE_P(CollisionDetectorsSupported,
+                         RayIntersectionSupportedFixture,
                          ::testing::Values("bullet"));
 
-INSTANTIATE_TEST_SUITE_P(CollisionDetectorsNotSupported, RayIntersectionNotSupportedFixture,
+INSTANTIATE_TEST_SUITE_P(CollisionDetectorsNotSupported,
+                         RayIntersectionNotSupportedFixture,
                          ::testing::Values("ode", "dart", "fcl", "banana"));
