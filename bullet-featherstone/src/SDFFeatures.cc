@@ -1263,7 +1263,7 @@ bool SDFFeatures::AddSdfCollision(
 
       // NOTE: Bullet does not appear to support different surface properties
       // for different shapes attached to the same link.
-      linkInfo->collider = std::make_unique<btMultiBodyLinkCollider>(
+      linkInfo->collider = std::make_unique<GzMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
 
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());

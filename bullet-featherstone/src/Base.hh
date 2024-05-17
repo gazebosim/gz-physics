@@ -112,6 +112,13 @@ struct ModelInfo
   }
 };
 
+class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
+  using btMultiBodyLinkCollider::btMultiBodyLinkCollider;
+
+	bool checkCollideWithOverride(const btCollisionObject* co) const override {
+    return btMultiBodyLinkCollider::checkCollideWithOverride(co) && btCollisionObject::checkCollideWithOverride(co);
+  }
+};
 /// Link information is embedded inside the model, so all we need to store here
 /// is a reference to the model and the index of this link inside of it.
 struct LinkInfo
@@ -120,7 +127,7 @@ struct LinkInfo
   std::optional<int> indexInModel;
   Identity model;
   Eigen::Isometry3d inertiaToLinkFrame;
-  std::unique_ptr<btMultiBodyLinkCollider> collider = nullptr;
+  std::unique_ptr<GzMultiBodyLinkCollider> collider = nullptr;
   std::unique_ptr<btCompoundShape> shape = nullptr;
   std::vector<std::size_t> collisionEntityIds = {};
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
