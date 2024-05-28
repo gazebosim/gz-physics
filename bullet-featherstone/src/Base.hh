@@ -112,13 +112,24 @@ struct ModelInfo
   }
 };
 
+/// \brief Custom GzMultiBodyLinkCollider class
 class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
   using btMultiBodyLinkCollider::btMultiBodyLinkCollider;
 
-	bool checkCollideWithOverride(const btCollisionObject* co) const override {
-    return btMultiBodyLinkCollider::checkCollideWithOverride(co) && btCollisionObject::checkCollideWithOverride(co);
+  /// \brief Overrides base function to enable support for ignoring
+  /// collision with objects from other bodies if
+  /// btCollisionObject::setIgnoreCollisionCheck is called.
+  /// Note: originally btMultiBodyLinkCollider::checkCollideWithOverride
+  /// just returns true if the input collision object is from a
+  /// different body and disregards any setIgnoreCollisionCheck calls.
+  public: bool checkCollideWithOverride(const btCollisionObject *_co) const
+          override
+  {
+    return btMultiBodyLinkCollider::checkCollideWithOverride(_co) &&
+           btCollisionObject::checkCollideWithOverride(_co);
   }
 };
+
 /// Link information is embedded inside the model, so all we need to store here
 /// is a reference to the model and the index of this link inside of it.
 struct LinkInfo
