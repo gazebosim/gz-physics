@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <unordered_map>
 
 #include <gz/common/Console.hh>
 #include <sdf/Joint.hh>
