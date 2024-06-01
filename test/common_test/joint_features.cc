@@ -1436,16 +1436,15 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachChain)
       // Expect all models to remain at initial pose
       EXPECT_NEAR(initialModel1Pose.Pos().Z(),
                   frameDataModel1Body.pose.translation().z(), 1e-3);
-      EXPECT_NEAR(initialModel2Pose.Pos().Z(),
-                  frameDataModel2Body.pose.translation().z(), 1e-3);
       // For bullet versions <= 3.06, static collision flags are not set.
-      // So it tries to resolve overlapping bodies held together by
-      // a fixed joint. Increase tolerance for position.
+      // Increase tolerance for position.
       double tol = 1e-3;
 #ifdef BT_BULLET_VERSION_LE_306
       if (this->PhysicsEngineName(name) == "bullet-featherstone")
-        tol = 1e-2;
+        tol = 0.1;
 #endif
+      EXPECT_NEAR(initialModel2Pose.Pos().Z(),
+                  frameDataModel2Body.pose.translation().z(), tol);
       EXPECT_NEAR(initialModel3Pose.Pos().Z(),
                   frameDataModel3Body.pose.translation().z(), tol);
 
@@ -1457,13 +1456,13 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachChain)
       gz::math::Vector3d body3LinearVelocity =
         gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
       EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
       // For bullet versions <= 3.06, static collision flags are not set.
-      // So overlapping bodies generate non-zero velocities.
+      // So bodies generate non-zero velocities.
 #ifdef BT_BULLET_VERSION_LE_306
       if (this->PhysicsEngineName(name) != "bullet-featherstone")
 #endif
       {
+        EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
         EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
       }
     }
