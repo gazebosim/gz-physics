@@ -422,9 +422,8 @@ Identity JointFeatures::AttachFixedJoint(
     world->world->addMultiBodyConstraint(jointInfo->fixedConstraint.get());
     jointInfo->fixedConstraint->setMaxAppliedImpulse(btScalar(1e9));
 
-    // Make links static if parent or child link is static
-    // This is done by changing collision filter groups / masks
-    // Otherwise bullet will push bodies apart
+    // Make child link static if parent is static
+    // This is done by updating collision flags
     btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
     btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
     if (parentCollider && childCollider)
@@ -454,8 +453,8 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
   if (jointInfo->fixedConstraint)
   {
-    // Make links dynamic again they were originally not static
-    // This is done by revert any collision flags / masks changes
+    // Make links dynamic again as they were originally not static
+    // This is done by reverting any collision flag changes
     // made in AttachJoint
     auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
     if (jointInfo->parentLinkID.has_value())
