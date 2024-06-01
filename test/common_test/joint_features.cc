@@ -1297,7 +1297,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
       // So here we just check for non-zero velocity
 #ifdef __APPLE__
       // Disable check for dartsim plugin on homebrew.
-      // jodel3 has zero velocity in dartsim on macOS. It could be a
+      // model3 has zero velocity in dartsim on macOS. It could be a
       // change in behavior between dartsim versions. model3 overlaps
       // with model1 so could be stuck together
       if (this->PhysicsEngineName(name) != "dartsim")
@@ -1352,6 +1352,195 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
       EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-2);
       // Negative z velocity
       EXPECT_GT(0.0, body2LinearVelocity.Z());
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+// Create a chain of models by attaching them with fixed joints:
+// M1 (static) -> M2 (dynamic) -> M3 (dynamic)
+// Verify that M2 and M3 become static once attached to M1
+TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachChain)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<JointFeatureAttachDetachList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointAcrossModelsFixedSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    // M1 is fixed to the world
+    // M2 is non-static and at some distance away from M1
+    // M3 is non-static and overlaps with M1
+    const std::string modelName1{"M1"};
+    const std::string modelName2{"M2"};
+    const std::string modelName3{"M3"};
+    const std::string bodyName{"body"};
+
+    auto model1 = world->GetModel(modelName1);
+    auto model2 = world->GetModel(modelName2);
+    auto model3 = world->GetModel(modelName3);
+    auto model1Body = model1->GetLink(bodyName);
+    auto model2Body = model2->GetLink(bodyName);
+    auto model3Body = model3->GetLink(bodyName);
+
+    auto frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+    auto frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+    auto frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
+
+    const gz::math::Pose3d initialModel1Pose(0, 2, 3.0, 0, 0, 0.0);
+    const gz::math::Pose3d initialModel2Pose(0, 0, 3.0, 0, 0, 0.0);
+    const gz::math::Pose3d initialModel3Pose(0.3, 2, 3.0, 0, 0, 0.0);
+
+    EXPECT_EQ(initialModel1Pose,
+              gz::math::eigen3::convert(frameDataModel1Body.pose));
+    EXPECT_EQ(initialModel2Pose,
+              gz::math::eigen3::convert(frameDataModel2Body.pose));
+    EXPECT_EQ(initialModel3Pose,
+              gz::math::eigen3::convert(frameDataModel3Body.pose));
+
+    // attach the fixed joint between M2 (dynamic) and M3 (dynamic)
+    auto poseParent = frameDataModel2Body.pose;
+    auto poseChild = frameDataModel3Body.pose;
+    auto poseParentChild = poseParent.inverse() * poseChild;
+    auto fixedJoint23 = model3Body->AttachFixedJoint(model2Body);
+    fixedJoint23->SetTransformFromParent(poseParentChild);
+
+    // attach the fixed joint between M1 (static) and M2 (dynamic)
+    // this should recusively make M2 and M3 static
+    poseParent = frameDataModel2Body.pose;
+    poseChild = frameDataModel3Body.pose;
+    poseParentChild = poseParent.inverse() * poseChild;
+    auto fixedJoint12 = model2Body->AttachFixedJoint(model1Body);
+    fixedJoint12->SetTransformFromParent(poseParentChild);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    const std::size_t numSteps = 100;
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+
+      frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+      frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
+
+      // Expect all models to remain at initial pose
+      EXPECT_NEAR(initialModel1Pose.Pos().Z(),
+                  frameDataModel1Body.pose.translation().z(), 1e-3);
+      EXPECT_NEAR(initialModel2Pose.Pos().Z(),
+                  frameDataModel2Body.pose.translation().z(), 1e-3);
+      // For bullet versions <= 3.06, static collision flags are not set.
+      // So it tries to resolve overlapping bodies held together by
+      // a fixed joint. Increase tolerance for position.
+      double tol = 1e-3;
+#ifdef BT_BULLET_VERSION_LE_306
+      if (this->PhysicsEngineName(name) == "bullet-featherstone")
+        tol = 1e-2;
+#endif
+      EXPECT_NEAR(initialModel3Pose.Pos().Z(),
+                  frameDataModel3Body.pose.translation().z(), tol);
+
+      // Expect all models to have zero velocities
+      gz::math::Vector3d body1LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
+      gz::math::Vector3d body2LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
+      gz::math::Vector3d body3LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
+      // For bullet versions <= 3.06, static collision flags are not set.
+      // So overlapping bodies generate non-zero velocities.
+#ifdef BT_BULLET_VERSION_LE_306
+      if (this->PhysicsEngineName(name) != "bullet-featherstone")
+#endif
+      {
+        EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
+      }
+    }
+
+    // Now detach joint between M2 (dynamic) and M3 (dynamic)
+    // Expect M2 to be static as it is still attached to M1 (static)
+    // Expect M3 to start moving
+    fixedJoint23->Detach();
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+
+      frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+      frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
+
+      // Expect the model1 to be fixed to the world and model2 and model3
+      // to start moving
+      gz::math::Vector3d body1LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
+      gz::math::Vector3d body2LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
+      gz::math::Vector3d body3LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-2);
+      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-2);
+      // bullet-featherstone and dartsim has different behavior
+      // when detaching a joint between overlapping bodies
+      // dartsim: body falls after joint is detached
+      // bullet-featherstone: pushes bodies apart
+      // So here we just check for non-zero velocity
+#ifdef __APPLE__
+      // Disable check for dartsim plugin on homebrew.
+      // model3 has zero velocity in dartsim on macOS. It could be a
+      // change in behavior between dartsim versions. model3 overlaps
+      // with model1 so could be stuck together
+      if (this->PhysicsEngineName(name) != "dartsim")
+#endif
+      EXPECT_NE(gz::math::Vector3d::Zero, body3LinearVelocity);
+    }
+
+    // Now detach joint between M1 (static) and M2 (dynamic)
+    // Expect M2 to start falling
+    // Expect M3 to continue moving
+    fixedJoint12->Detach();
+    // fixedJoint13->Detach();
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+
+      frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+      frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
+
+      // Expect the model1 to be fixed to the world and model2 and model3
+      // to start moving
+      gz::math::Vector3d body1LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
+      gz::math::Vector3d body2LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
+      gz::math::Vector3d body3LinearVelocity =
+        gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
+      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-2);
+      EXPECT_GT(0.0, body2LinearVelocity.Z());
+      // bullet-featherstone and dartsim has different behavior
+      // when detaching a joint between overlapping bodies
+      // dartsim: body falls after joint is detached
+      // bullet-featherstone: pushes bodies apart
+      // So here we just check for non-zero velocity
+#ifdef __APPLE__
+      // Disable check for dartsim plugin on homebrew.
+      // model3 has zero velocity in dartsim on macOS. It could be a
+      // change in behavior between dartsim versions. model3 overlaps
+      // with model1 so could be stuck together
+      if (this->PhysicsEngineName(name) != "dartsim")
+#endif
+      EXPECT_NE(gz::math::Vector3d::Zero, body3LinearVelocity);
     }
   }
 }
@@ -1824,7 +2013,7 @@ TEST_F(WorldModelTest, JointSetCommand)
   }
 }
 
-using FixedJointWeldFeatureList = gz::physics::FeatureList<
+using FixedJointFreeGroupFeatureList = gz::physics::FeatureList<
     gz::physics::FindFreeGroupFeature,
     gz::physics::SetFreeGroupWorldPose,
     gz::physics::AttachFixedJointFeature,
@@ -1838,29 +2027,28 @@ using FixedJointWeldFeatureList = gz::physics::FeatureList<
     gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
     gz::physics::SetBasicJointState,
-    gz::physics::SetFixedJointWeldChildToParentFeature,
     gz::physics::SetJointTransformFromParentFeature,
     gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld
 >;
 
-using FixedJointWeldFeatureTestTypes =
-  JointFeaturesTest<FixedJointWeldFeatureList>;
+using FixedJointFreeGroupFeatureTestTypes =
+  JointFeaturesTest<FixedJointFreeGroupFeatureList>;
 
-TEST_F(FixedJointWeldFeatureTestTypes, FixedJointWeldChildToParent)
+TEST_F(FixedJointFreeGroupFeatureTestTypes, FixedJointFreeGroupMove)
 {
-  // Attach joint between links from 2 models with different weld child to
-  // parent property values and verify behavior
-  // When child is welded to parent, the child behave as if it's in the same
-  // body as the parent and moves along with the parent link.
+  // Attach joint between links from 2 models with fixed joint. Move
+  // parent model using free group and verify child body moves along with the
+  // parent link.
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<FixedJointWeldFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<FixedJointFreeGroupFeatureList>::From(
+        plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -1914,20 +2102,18 @@ TEST_F(FixedJointWeldFeatureTestTypes, FixedJointWeldChildToParent)
       EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-2);
     }
 
-    // Attach fixed joint with child welded to parent link
-    // This should already be true by default
+    // Attach fixed joint
     const auto poseParent = frameDataModel1Body.pose;
     const auto poseChild = frameDataModel2Body.pose;
     auto poseParentChild = poseParent.inverse() * poseChild;
     auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
     fixedJoint->SetTransformFromParent(poseParentChild);
-    fixedJoint->SetWeldChildToParent(true);
 
     gz::math::Pose3d poseToMoveModel(1, 0, 0, 0, 0, 0.0);
     gz::math::Pose3d newModel1Pose = poseToMoveModel * model1Pose;
     gz::math::Pose3d newModel2Pose = poseToMoveModel * model2Pose;
 
-    // Move parent model
+    // Move parent model using free group
     freeGroupM1->SetWorldPose(gz::math::eigen3::convert(newModel1Pose));
 
     for (std::size_t i = 0; i < numSteps; ++i)
@@ -1942,46 +2128,6 @@ TEST_F(FixedJointWeldFeatureTestTypes, FixedJointWeldChildToParent)
               gz::math::eigen3::convert(frameDataModel1Body.pose));
     EXPECT_EQ(newModel2Pose,
               gz::math::eigen3::convert(frameDataModel2Body.pose));
-
-    // Disable weld child to parent link
-    fixedJoint->SetWeldChildToParent(false);
-
-    // Move the parent model again
-    newModel1Pose = poseToMoveModel * newModel1Pose;
-    newModel2Pose = poseToMoveModel * newModel2Pose;
-    freeGroupM1->SetWorldPose(gz::math::eigen3::convert(newModel1Pose));
-
-    for (std::size_t i = 0; i < numSteps;  ++i)
-    {
-      world->Step(output, state, input);
-      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
-      auto actualModel2Pose =  gz::math::eigen3::convert(frameDataModel2Body.pose);
-    }
-    frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
-    frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
-
-    // The fixed constraint pulls parent and child model towards each other
-    // The parent should no longer be at the pose that we set it to be.
-    auto actualModel1Pose =  gz::math::eigen3::convert(frameDataModel1Body.pose);
-    auto actualModel2Pose =  gz::math::eigen3::convert(frameDataModel2Body.pose);
-    EXPECT_NE(newModel1Pose, actualModel1Pose);
-    EXPECT_NE(newModel2Pose, actualModel2Pose);
-
-    // Fixed joint constraint should maintain the parent <-> child pose offset
-    auto expectedModel2Pose =  gz::math::eigen3::convert(poseParentChild) *
-        actualModel1Pose;
-    // \todo(iche033) Large tol used for bullet-featherstone as it does not
-    // completely correct position errors. Investigate ways to be more strict in
-    // enforcing the fixed constraint, e.g. set erp, max applied impulse, etc.
-    EXPECT_NEAR(expectedModel2Pose.Pos().X(), actualModel2Pose.Pos().X(), 0.2);
-    EXPECT_NEAR(expectedModel2Pose.Pos().Y(), actualModel2Pose.Pos().Y(), 2e-2);
-    EXPECT_NEAR(expectedModel2Pose.Pos().Z(), actualModel2Pose.Pos().Z(), 1e-3);
-    EXPECT_NEAR(expectedModel2Pose.Rot().Euler().X(),
-                actualModel2Pose.Rot().Euler().X(), 1e-3);
-    EXPECT_NEAR(expectedModel2Pose.Rot().Euler().Y(),
-                actualModel2Pose.Rot().Euler().Y(), 1e-3);
-    EXPECT_NEAR(expectedModel2Pose.Rot().Euler().Z(),
-                actualModel2Pose.Rot().Euler().Z(), 0.2);
   }
 }
 

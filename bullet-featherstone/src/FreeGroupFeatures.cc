@@ -24,6 +24,47 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+btTransform getWorldTransformForLink(btMultiBody *_body, int _linkIndex)
+{
+  if (_linkIndex == -1)
+  {
+    return _body->getBaseWorldTransform();
+  }
+  else
+  {
+    btMultiBodyLinkCollider *collider = _body->getLinkCollider(_linkIndex);
+    return collider->getWorldTransform();
+  }
+}
+
+/////////////////////////////////////////////////
+void enforceFixedConstraint(btMultiBodyFixedConstraint *_fixedConstraint)
+{
+  // Update fixed constraint's child link pose to maintain a fixed transform
+  // from the parent link.
+  btMultiBody *parent = _fixedConstraint->getMultiBodyA();
+  btMultiBody *child = _fixedConstraint->getMultiBodyB();
+
+  btTransform parentToChildTf;
+  parentToChildTf.setOrigin(_fixedConstraint->getPivotInA());
+  parentToChildTf.setBasis(_fixedConstraint->getFrameInA());
+
+  int parentLinkIndex = _fixedConstraint->getLinkA();
+  int childLinkIndex = _fixedConstraint->getLinkB();
+
+  btTransform parentLinkTf = getWorldTransformForLink(parent, parentLinkIndex);
+  btTransform childLinkTf = getWorldTransformForLink(child, childLinkIndex);
+
+  btTransform expectedChildLinkTf = parentLinkTf * parentToChildTf;
+  btTransform childBaseTf =  child->getBaseWorldTransform();
+  btTransform childBaseToLink =
+      childBaseTf.inverse() * childLinkTf;
+  btTransform newChildBaseTf =
+      expectedChildLinkTf * childBaseToLink.inverse();
+  child->setBaseWorldTransform(newChildBaseTf);
+}
+
+/////////////////////////////////////////////////
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
@@ -95,8 +136,35 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model)
   {
+    btMultiBodyFixedConstraint *fixedConstraintToEnforce = nullptr;
+    for (auto & joint : this->joints)
+    {
+      if (joint.second->fixedConstraint)
+      {
+        // If the body is the child of a fixed constraint, do not move update
+        // its world pose.
+        btMultiBody *child = joint.second->fixedConstraint->getMultiBodyB();
+        if (child == model->body.get())
+        {
+          return;
+        }
+        // Only the parent body of a fixed joint can be moved but we need to
+        // enforce the fixed constraint by updating the child pose so it
+        // remains at a fixed transform from parent
+        btMultiBody *parent = joint.second->fixedConstraint->getMultiBodyA();
+        if (parent == model->body.get())
+        {
+          fixedConstraintToEnforce = joint.second->fixedConstraint.get();
+        }
+      }
+    }
+
     model->body->setBaseWorldTransform(
         convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
+
+    if (fixedConstraintToEnforce)
+      enforceFixedConstraint(fixedConstraintToEnforce);
+
     model->body->wakeUp();
   }
 }

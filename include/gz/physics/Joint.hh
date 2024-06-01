@@ -652,38 +652,6 @@ namespace gz
             Scalar _reference) = 0;
       };
     };
-
-    /////////////////////////////////////////////////
-    class GZ_PHYSICS_VISIBLE SetFixedJointWeldChildToParentFeature
-        : public virtual Feature
-    {
-      /// \brief The Joint API for setting whether to weld a fixed joint's child
-      /// link to the parent link.
-      public: template <typename PolicyT, typename FeaturesT>
-      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
-      {
-        /// \brief Set whether to weld the fixed joint's child link to the
-        /// parent link. If true, the child link is welded and it will move /
-        /// with the parent link as if they are part of the same body
-        /// kinematic chain. If false, the fixed joint constraint is enforced
-        /// by applying forces to both the parent and child links.
-        /// By default when a fixed joint constraint is created, this property
-        /// is set to true.
-        /// \param[in] _weldChildToParent True to weld the child link to the
-        /// parent link.
-        public: void SetWeldChildToParent(bool _weldChildToParent);
-      };
-
-      /// \private The implementation API for setting whether to weld the fixed
-      /// joint's child link to the parent link.
-      public: template <typename PolicyT>
-      class Implementation : public virtual Feature::Implementation<PolicyT>
-      {
-        // see Joint::SetWeldChildToParent above
-        public: virtual void SetFixedJointWeldChildToParent(
-            const Identity &_id, bool _weldChildToParent) = 0;
-      };
-    };
   }
 }
 
