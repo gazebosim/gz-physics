@@ -429,6 +429,10 @@ Identity JointFeatures::AttachFixedJoint(
     btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
     if (parentCollider && childCollider)
     {
+      // disable collision between parent and child collider
+      // \todo(iche033) if self collide is true, extend this to
+      // disable collisions between all the links in the parent's model with
+      // all the links in the child's model.
       parentCollider->setIgnoreCollisionCheck(childCollider, true);
       childCollider->setIgnoreCollisionCheck(parentCollider, true);
 
