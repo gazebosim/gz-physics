@@ -49,7 +49,9 @@ struct JointFeatureList : FeatureList<
 
   GetJointTransmittedWrench,
 
-  SetMimicConstraintFeature
+  SetMimicConstraintFeature,
+
+  FixedJointCast
 > { };
 
 class JointFeatures :
