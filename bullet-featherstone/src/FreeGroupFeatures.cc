@@ -18,6 +18,7 @@
 #include "FreeGroupFeatures.hh"
 
 #include <memory>
+#include <unordered_map>
 
 namespace gz {
 namespace physics {
@@ -88,7 +89,8 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   if (model->body->hasFixedBase())
     return this->GenerateInvalidId();
 
-  // Also reject if the model is a child of a fixed constraint (detachable joint)
+  // Also reject if the model is a child of a fixed constraint
+  // (detachable joint)
   for (const auto & joint : this->joints)
   {
     if (joint.second->fixedConstraint)
@@ -179,7 +181,8 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
         btMultiBody *parent = joint.second->fixedConstraint->getMultiBodyA();
         if (parent == model->body.get())
         {
-          enforceFixedConstraint(joint.second->fixedConstraint.get(), this->joints);
+          enforceFixedConstraint(joint.second->fixedConstraint.get(),
+              this->joints);
         }
       }
     }
