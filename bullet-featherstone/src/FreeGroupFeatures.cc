@@ -38,7 +38,9 @@ btTransform getWorldTransformForLink(btMultiBody *_body, int _linkIndex)
 }
 
 /////////////////////////////////////////////////
-void enforceFixedConstraint(btMultiBodyFixedConstraint *_fixedConstraint)
+void enforceFixedConstraint(
+    btMultiBodyFixedConstraint *_fixedConstraint,
+    const std::unordered_map<std::size_t, Base::JointInfoPtr> &_allJoints)
 {
   // Update fixed constraint's child link pose to maintain a fixed transform
   // from the parent link.
@@ -62,6 +64,18 @@ void enforceFixedConstraint(btMultiBodyFixedConstraint *_fixedConstraint)
   btTransform newChildBaseTf =
       expectedChildLinkTf * childBaseToLink.inverse();
   child->setBaseWorldTransform(newChildBaseTf);
+  for (const auto &joint : _allJoints)
+  {
+    if (joint.second->fixedConstraint)
+    {
+      // Recursively enforce constraints where the child here is a parent to
+      // other constraints.
+      if (joint.second->fixedConstraint->getMultiBodyA() == child)
+      {
+        enforceFixedConstraint(joint.second->fixedConstraint.get(), _allJoints);
+      }
+    }
+  }
 }
 
 /////////////////////////////////////////////////
@@ -73,6 +87,19 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   // Reject if the model has fixed base
   if (model->body->hasFixedBase())
     return this->GenerateInvalidId();
+
+  // Also reject if the model is a child of a fixed constraint (detachable joint)
+  for (const auto & joint : this->joints)
+  {
+    if (joint.second->fixedConstraint)
+    {
+      if (joint.second->fixedConstraint->getMultiBodyB() == model->body.get())
+      {
+        return this->GenerateInvalidId();
+      }
+    }
+  }
+
 
   return _modelID;
 }
@@ -136,36 +163,26 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model)
   {
-    btMultiBodyFixedConstraint *fixedConstraintToEnforce = nullptr;
+    model->body->setBaseWorldTransform(
+        convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
+
+    model->body->wakeUp();
+
     for (auto & joint : this->joints)
     {
       if (joint.second->fixedConstraint)
       {
-        // If the body is the child of a fixed constraint, do not move update
-        // its world pose.
-        btMultiBody *child = joint.second->fixedConstraint->getMultiBodyB();
-        if (child == model->body.get())
-        {
-          return;
-        }
         // Only the parent body of a fixed joint can be moved but we need to
         // enforce the fixed constraint by updating the child pose so it
-        // remains at a fixed transform from parent
+        // remains at a fixed transform from parent. We do this recursively to
+        // account for other constraints attached to the child.
         btMultiBody *parent = joint.second->fixedConstraint->getMultiBodyA();
         if (parent == model->body.get())
         {
-          fixedConstraintToEnforce = joint.second->fixedConstraint.get();
+          enforceFixedConstraint(joint.second->fixedConstraint.get(), this->joints);
         }
       }
     }
-
-    model->body->setBaseWorldTransform(
-        convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
-
-    if (fixedConstraintToEnforce)
-      enforceFixedConstraint(fixedConstraintToEnforce);
-
-    model->body->wakeUp();
   }
 }
 
