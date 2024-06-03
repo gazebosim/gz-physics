@@ -112,6 +112,24 @@ struct ModelInfo
   }
 };
 
+/// \brief Custom GzMultiBodyLinkCollider class
+class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
+  using btMultiBodyLinkCollider::btMultiBodyLinkCollider;
+
+  /// \brief Overrides base function to enable support for ignoring
+  /// collision with objects from other bodies if
+  /// btCollisionObject::setIgnoreCollisionCheck is called.
+  /// Note: originally btMultiBodyLinkCollider::checkCollideWithOverride
+  /// just returns true if the input collision object is from a
+  /// different body and disregards any setIgnoreCollisionCheck calls.
+  public: bool checkCollideWithOverride(const btCollisionObject *_co) const
+          override
+  {
+    return btMultiBodyLinkCollider::checkCollideWithOverride(_co) &&
+           btCollisionObject::checkCollideWithOverride(_co);
+  }
+};
+
 /// Link information is embedded inside the model, so all we need to store here
 /// is a reference to the model and the index of this link inside of it.
 struct LinkInfo
@@ -120,10 +138,12 @@ struct LinkInfo
   std::optional<int> indexInModel;
   Identity model;
   Eigen::Isometry3d inertiaToLinkFrame;
-  std::unique_ptr<btMultiBodyLinkCollider> collider = nullptr;
+  std::unique_ptr<GzMultiBodyLinkCollider> collider = nullptr;
   std::unique_ptr<btCompoundShape> shape = nullptr;
   std::vector<std::size_t> collisionEntityIds = {};
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
+  // Link is either static, fixed to world, or has zero dofs
+  bool isStaticOrFixed = false;
 };
 
 struct CollisionInfo

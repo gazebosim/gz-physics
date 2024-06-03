@@ -36,6 +36,8 @@ const auto kFallingWorld = CommonTestWorld("falling.world");
 const auto kFallingAddedMassWorld = CommonTestWorld("falling_added_mass.world");
 const auto kGroundSdf = CommonTestWorld("ground.sdf");
 const auto kJointAcrossModelsSdf = CommonTestWorld("joint_across_models.sdf");
+const auto kJointAcrossModelsFixedSdf =
+    CommonTestWorld("joint_across_models_fixed.sdf");
 const auto kJointConstraintSdf = CommonTestWorld("joint_constraint.sdf");
 const auto kMimicFastSlowPendulumsWorld =
   CommonTestWorld("mimic_fast_slow_pendulums_world.sdf");

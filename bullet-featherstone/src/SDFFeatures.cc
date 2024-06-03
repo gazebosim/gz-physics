@@ -1263,7 +1263,7 @@ bool SDFFeatures::AddSdfCollision(
 
       // NOTE: Bullet does not appear to support different surface properties
       // for different shapes attached to the same link.
-      linkInfo->collider = std::make_unique<btMultiBodyLinkCollider>(
+      linkInfo->collider = std::make_unique<GzMultiBodyLinkCollider>(
         model->body.get(), linkIndexInModel);
 
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
@@ -1330,6 +1330,12 @@ bool SDFFeatures::AddSdfCollision(
           linkInfo->collider.get(),
           btBroadphaseProxy::StaticFilter,
           btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
+          linkInfo->isStaticOrFixed = true;
+
+        // Set collider collision flags
+#if BT_BULLET_VERSION >= 307
+        linkInfo->collider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#endif
       }
       else
       {
