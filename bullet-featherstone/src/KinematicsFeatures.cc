@@ -22,30 +22,40 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
+
+FrameData3d getNonBaseLinkFrameData(const ModelInfo *_modelInfo,
+                                    const LinkInfo *_linkInfo)
+{
+  const auto index = _linkInfo->indexInModel.value();
+  FrameData3d data;
+  data.pose = GetWorldTransformOfLink(*_modelInfo, *_linkInfo);
+  const auto &link = _modelInfo->body->getLink(index);
+  data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
+  data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
+  return data;
+}
+
 /////////////////////////////////////////////////
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const FrameID &_id) const
 {
-  const auto linkIt = this->links.find(_id.ID());
+  bool isModel = false;
+  bool isCollision = false;
   const ModelInfo *model = nullptr;
+  Eigen::Isometry3d collisionPoseOffset = Eigen::Isometry3d();
+
+  const auto linkIt = this->links.find(_id.ID());
   if (linkIt != this->links.end())
   {
     const auto &linkInfo = linkIt->second;
-    const auto indexOpt = linkInfo->indexInModel;
     model = this->ReferenceInterface<ModelInfo>(linkInfo->model);
 
-    if (indexOpt.has_value())
+    if (linkInfo->indexInModel.has_value())
     {
-      const auto index = *indexOpt;
-      FrameData data;
-      data.pose = GetWorldTransformOfLink(*model, *linkInfo);
-      const auto &link = model->body->getLink(index);
-      data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
-      data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
-      return data;
+      return getNonBaseLinkFrameData(model, linkInfo.get());
     }
 
-    // If indexOpt is nullopt then the link is the base link which will be
+    // If indexInModel is nullopt then the link is the base link which will be
     // calculated below.
   }
   else
@@ -59,60 +69,55 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       if (linkIt2 != this->links.end())
       {
         const auto &linkInfo2 = linkIt2->second;
-        const auto indexOpt2 = linkInfo2->indexInModel;
         model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
-
-        if (indexOpt2.has_value())
+        if (linkInfo2->indexInModel.has_value())
         {
-          const auto index2 = *indexOpt2;
-          FrameData data;
-          data.pose = GetWorldTransformOfLink(*model, *linkInfo2);
-          const auto &link = model->body->getLink(index2);
-          data.linearVelocity = convert(
-            link.m_absFrameTotVelocity.getLinear());
-          data.angularVelocity = convert(
-            link.m_absFrameTotVelocity.getAngular());
-          return data;
+          return getNonBaseLinkFrameData(model, linkInfo2.get());
         }
       }
     }
-
-    auto collisionIt = this->collisions.find(_id.ID());
-    if (collisionIt != this->collisions.end())
+    else
     {
-      const auto &collisionInfo = collisionIt->second;
-
-      const auto linkIt2 = this->links.find(collisionInfo->link);
-      if (linkIt2 != this->links.end())
+      auto collisionIt = this->collisions.find(_id.ID());
+      if (collisionIt != this->collisions.end())
       {
-        const auto &linkInfo2 = linkIt2->second;
-        const auto indexOpt2 = linkInfo2->indexInModel;
-        model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
+        isCollision = true;
+        const auto &collisionInfo = collisionIt->second;
 
-        if (indexOpt2.has_value())
+        const auto linkIt2 = this->links.find(collisionInfo->link);
+        if (linkIt2 != this->links.end())
         {
-          const auto index2 = *indexOpt2;
-          FrameData data;
-          data.pose = GetWorldTransformOfLink(*model, *linkInfo2);
-          const auto &link = model->body->getLink(index2);
-          data.linearVelocity = convert(
-            link.m_absFrameTotVelocity.getLinear());
-          data.angularVelocity = convert(
-            link.m_absFrameTotVelocity.getAngular());
-          return data;
+          const auto &linkInfo2 = linkIt2->second;
+          model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
+          collisionPoseOffset = collisionInfo->linkToCollision;
+          if (linkInfo2->indexInModel.has_value())
+          {
+            auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
+            data.pose = data.pose * collisionPoseOffset;
+            return data;
+          }
+        }
+      }
+      else
+      {
+        auto modelIt = this->models.find(_id.ID());
+        if (modelIt != this->models.end())
+        {
+          model = modelIt->second.get();
+          isModel = true;
         }
       }
     }
-
-    if (!model || model->body == nullptr)
-      model = this->FrameInterface<ModelInfo>(_id);
   }
 
   FrameData data;
-  if(model && model->body)
+  if (model && model->body)
   {
-    data.pose = convert(model->body->getBaseWorldTransform())
-      * model->baseInertiaToLinkFrame;
+    data.pose = convert(model->body->getBaseWorldTransform());
+    if (!isModel)
+      data.pose = data.pose * model->baseInertiaToLinkFrame;
+    if (isCollision)
+      data.pose = data.pose * collisionPoseOffset;
     data.linearVelocity = convert(model->body->getBaseVel());
     data.angularVelocity = convert(model->body->getBaseOmega());
   }
