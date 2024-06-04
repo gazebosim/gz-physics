@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <gz/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
 #include <gz/plugin/Loader.hh>
 
 #include "test/TestLibLoader.hh"
@@ -29,6 +30,7 @@
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/Link.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
@@ -72,11 +74,13 @@ struct KinematicFeaturesList : gz::physics::FeatureList<
     gz::physics::GetEngineInfo,
     gz::physics::ForwardStep,
     gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::GetShapeFromLink,
     gz::physics::GetModelFromWorld,
     gz::physics::GetLinkFromModel,
     gz::physics::GetJointFromModel,
+    gz::physics::JointFrameSemantics,
     gz::physics::LinkFrameSemantics,
-    gz::physics::JointFrameSemantics
+    gz::physics::ShapeFrameSemantics
 > { };
 
 using KinematicFeaturesTestTypes =
@@ -146,12 +150,18 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
     EXPECT_EQ(
           F_WCexpected.pose.rotation(),
           childLinkFrameData.pose.rotation());
-    // TODO(ahcorde): Rewiew this in bullet-featherstone
-    if(this->PhysicsEngineName(name) == "bullet_featherstone")
+    // TODO(ahcorde): Review this in bullet-featherstone
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
     {
-      EXPECT_EQ(
-            F_WCexpected.pose.translation(),
-            childLinkFrameData.pose.translation());
+      EXPECT_NEAR(
+            F_WCexpected.pose.translation().x(),
+            childLinkFrameData.pose.translation().x(), 1e-6);
+      EXPECT_NEAR(
+            F_WCexpected.pose.translation().y(),
+            childLinkFrameData.pose.translation().y(), 1e-6);
+      EXPECT_NEAR(
+            F_WCexpected.pose.translation().z(),
+            childLinkFrameData.pose.translation().z(), 1e-6);
     }
     EXPECT_TRUE(
       gz::physics::test::Equal(
@@ -163,6 +173,51 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
           F_WCexpected.linearAcceleration,
           childLinkFrameData.linearAcceleration,
           1e-6));
+  }
+}
+
+TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<KinematicFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+       common_test::worlds::kTestWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("double_pendulum_with_base");
+    ASSERT_NE(nullptr, model);
+    auto upperLink = model->GetLink("upper_link");
+    ASSERT_NE(nullptr, upperLink);
+    auto upperCol = upperLink->GetShape("col_upper_joint");
+    ASSERT_NE(nullptr, upperCol);
+
+    gz::math::Pose3d actualModelPose(1, 0, 0, 0, 0, 0);
+    auto upperLinkFrameData = upperLink->FrameDataRelativeToWorld();
+    auto upperLinkPose = gz::math::eigen3::convert(upperLinkFrameData.pose);
+    gz::math::Pose3d actualLinkLocalPose(0, 0, 2.1, -1.5708, 0, 0);
+    gz::math::Pose3d expectedLinkWorldPose =
+        actualModelPose * actualLinkLocalPose;
+    EXPECT_EQ(expectedLinkWorldPose, upperLinkPose);
+
+    auto upperColFrameData = upperCol->FrameDataRelativeToWorld();
+    auto upperColPose = gz::math::eigen3::convert(upperColFrameData.pose);
+    gz::math::Pose3d actualColLocalPose(-0.05, 0, 0, 0, 1.5708, 0);
+    gz::math::Pose3d expectedColWorldPose =
+        actualModelPose * actualLinkLocalPose * actualColLocalPose;
+    EXPECT_EQ(expectedColWorldPose.Pos(), upperColPose.Pos());
+    EXPECT_EQ(expectedColWorldPose.Rot().Euler(),
+        upperColPose.Rot().Euler());
   }
 }
 
