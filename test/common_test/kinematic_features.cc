@@ -189,35 +189,54 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-       common_test::worlds::kTestWorld);
+       common_test::worlds::kPoseOffsetSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
     ASSERT_NE(nullptr, world);
 
-    auto model = world->GetModel("double_pendulum_with_base");
+    auto model = world->GetModel("model");
     ASSERT_NE(nullptr, model);
-    auto upperLink = model->GetLink("upper_link");
-    ASSERT_NE(nullptr, upperLink);
-    auto upperCol = upperLink->GetShape("col_upper_joint");
-    ASSERT_NE(nullptr, upperCol);
+    auto baseLink = model->GetLink("base");
+    ASSERT_NE(nullptr, baseLink);
+    auto nonBaseLink = model->GetLink("link");
+    ASSERT_NE(nullptr, nonBaseLink);
+    auto baseCol = baseLink->GetShape("base_collision");
+    ASSERT_NE(nullptr, baseCol);
+    auto linkCol = nonBaseLink->GetShape("link_collision");
+    ASSERT_NE(nullptr, linkCol);
 
     gz::math::Pose3d actualModelPose(1, 0, 0, 0, 0, 0);
-    auto upperLinkFrameData = upperLink->FrameDataRelativeToWorld();
-    auto upperLinkPose = gz::math::eigen3::convert(upperLinkFrameData.pose);
-    gz::math::Pose3d actualLinkLocalPose(0, 0, 2.1, -1.5708, 0, 0);
+    auto baseLinkFrameData = baseLink->FrameDataRelativeToWorld();
+    auto baseLinkPose = gz::math::eigen3::convert(baseLinkFrameData.pose);
+    gz::math::Pose3d actualLinkLocalPose(0, 1, 0, 0, 0, 0);
     gz::math::Pose3d expectedLinkWorldPose =
         actualModelPose * actualLinkLocalPose;
-    EXPECT_EQ(expectedLinkWorldPose, upperLinkPose);
+    EXPECT_EQ(expectedLinkWorldPose, baseLinkPose);
 
-    auto upperColFrameData = upperCol->FrameDataRelativeToWorld();
-    auto upperColPose = gz::math::eigen3::convert(upperColFrameData.pose);
-    gz::math::Pose3d actualColLocalPose(-0.05, 0, 0, 0, 1.5708, 0);
+    auto baseColFrameData = baseCol->FrameDataRelativeToWorld();
+    auto baseColPose = gz::math::eigen3::convert(baseColFrameData.pose);
+    gz::math::Pose3d actualColLocalPose(0, 0, 0.01, 0, 0, 0);
     gz::math::Pose3d expectedColWorldPose =
         actualModelPose * actualLinkLocalPose * actualColLocalPose;
-    EXPECT_EQ(expectedColWorldPose.Pos(), upperColPose.Pos());
+    EXPECT_EQ(expectedColWorldPose.Pos(), baseColPose.Pos());
     EXPECT_EQ(expectedColWorldPose.Rot().Euler(),
-        upperColPose.Rot().Euler());
+        baseColPose.Rot().Euler());
+
+    auto nonBaseLinkFrameData = nonBaseLink->FrameDataRelativeToWorld();
+    auto nonBaseLinkPose = gz::math::eigen3::convert(nonBaseLinkFrameData.pose);
+    actualLinkLocalPose = gz::math::Pose3d (0, 0, 2.1, -1.5708, 0, 0);
+    expectedLinkWorldPose = actualModelPose * actualLinkLocalPose;
+    EXPECT_EQ(expectedLinkWorldPose, nonBaseLinkPose);
+
+    auto linkColFrameData = linkCol->FrameDataRelativeToWorld();
+    auto linkColPose = gz::math::eigen3::convert(linkColFrameData.pose);
+    actualColLocalPose = gz::math::Pose3d(-0.05, 0, 0, 0, 1.5708, 0);
+    expectedColWorldPose =
+        actualModelPose * actualLinkLocalPose * actualColLocalPose;
+    EXPECT_EQ(expectedColWorldPose.Pos(), linkColPose.Pos());
+    EXPECT_EQ(expectedColWorldPose.Rot().Euler(),
+        linkColPose.Rot().Euler());
   }
 }
 
