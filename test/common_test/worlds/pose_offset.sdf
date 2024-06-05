@@ -6,6 +6,7 @@
       <link name="base">
         <pose>0 1 0 0 0 0</pose>
         <inertial>
+          <pose>0 0 3 0 0 0</pose>
           <mass>100</mass>
         </inertial>
         <collision name="base_collision">

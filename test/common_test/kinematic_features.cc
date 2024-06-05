@@ -80,7 +80,8 @@ struct KinematicFeaturesList : gz::physics::FeatureList<
     gz::physics::GetJointFromModel,
     gz::physics::JointFrameSemantics,
     gz::physics::LinkFrameSemantics,
-    gz::physics::ShapeFrameSemantics
+    gz::physics::ShapeFrameSemantics,
+    gz::physics::ModelFrameSemantics
 > { };
 
 using KinematicFeaturesTestTypes =
@@ -207,6 +208,8 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
     ASSERT_NE(nullptr, linkCol);
 
     gz::math::Pose3d actualModelPose(1, 0, 0, 0, 0, 0);
+    auto modelFrameData = model->FrameDataRelativeToWorld();
+    EXPECT_EQ(actualModelPose, gz::math::eigen3::convert(modelFrameData.pose));
     auto baseLinkFrameData = baseLink->FrameDataRelativeToWorld();
     auto baseLinkPose = gz::math::eigen3::convert(baseLinkFrameData.pose);
     gz::math::Pose3d actualLinkLocalPose(0, 1, 0, 0, 0, 0);
