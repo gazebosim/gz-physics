@@ -69,7 +69,6 @@ const dart::dynamics::Frame *KinematicsFeatures::SelectFrame(
   {
     // This is a model FreeGroup frame, so we'll use the first root link as the
     // frame
-    std::cerr << " free group frame " << std::endl;
     return model_it->second->model->getRootBodyNode();
   }
 
@@ -78,7 +77,6 @@ const dart::dynamics::Frame *KinematicsFeatures::SelectFrame(
   {
     return nullptr;
   }
-    std::cerr << " frame it " << std::endl;
 
   return framesIt->second;
 }
