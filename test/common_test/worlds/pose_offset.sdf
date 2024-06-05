@@ -35,6 +35,27 @@
           </geometry>
         </collision>
       </link>
+
+      <model name="nested_model">
+        <pose>0 0 1 0 0 0</pose>
+
+        <link name="nested_link">
+          <pose>0 2 0 0 0 0</pose>
+          <inertial>
+            <pose>0 0 0.5 0 0 0</pose>
+          </inertial>
+          <collision name="nested_link_collision">
+            <pose>-0.5 0 0 0 1.5708 0</pose>
+            <geometry>
+              <cylinder>
+                <radius>0.1</radius>
+                <length>0.3</length>
+              </cylinder>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+
       <joint name="joint" type="fixed">
         <parent>base</parent>
         <child>link</child>
@@ -42,6 +63,15 @@
           <xyz>1.0 0 0</xyz>
         </axis>
       </joint>
+
+      <joint name="nested_joint" type="fixed">
+        <parent>link</parent>
+        <child>nested_model::nested_link</child>
+        <axis>
+          <xyz>0.0 0 1</xyz>
+        </axis>
+      </joint>
+
     </model>
   </world>
 </sdf>

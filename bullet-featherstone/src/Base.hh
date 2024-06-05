@@ -84,8 +84,12 @@ struct ModelInfo
   std::string name;
   Identity world;
   int indexInWorld;
+  Eigen::Isometry3d modelToRootLinkTf;
   Eigen::Isometry3d baseInertiaToLinkFrame;
+  Eigen::Isometry3d nestedModelFromRootModelTf;
   std::shared_ptr<btMultiBody> body;
+
+  bool isNestedModel = false;
 
   std::vector<std::size_t> linkEntityIds;
   std::vector<std::size_t> jointEntityIds;
@@ -101,11 +105,15 @@ struct ModelInfo
   ModelInfo(
     std::string _name,
     Identity _world,
+    Eigen::Isometry3d _modelToRootLinkTf,
     Eigen::Isometry3d _baseInertiaToLinkFrame,
+    Eigen::Isometry3d _nestedModelFromRootModelTf,
     std::shared_ptr<btMultiBody> _body)
     : name(std::move(_name)),
       world(std::move(_world)),
+      modelToRootLinkTf(_modelToRootLinkTf),
       baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
+      nestedModelFromRootModelTf(_nestedModelFromRootModelTf),
       body(std::move(_body))
   {
     // Do nothing
@@ -300,8 +308,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     auto worldID = this->GenerateIdentity(id, world);
 
     auto worldModel = std::make_shared<ModelInfo>(
-      world->name, worldID,
-      Eigen::Isometry3d::Identity(), nullptr);
+      world->name, worldID, Eigen::Isometry3d::Identity(),
+      Eigen::Isometry3d::Identity(), Eigen::Isometry3d::Identity(), nullptr);
     this->models[id] = worldModel;
     world->modelNameToEntityId[worldModel->name] = id;
     worldModel->indexInWorld = -1;
@@ -313,13 +321,17 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline Identity AddModel(
     std::string _name,
     Identity _worldID,
+    Eigen::Isometry3d _modelToRootLinkTf,
     Eigen::Isometry3d _baseInertialToLinkFrame,
     std::shared_ptr<btMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
       std::move(_name), std::move(_worldID),
-      std::move(_baseInertialToLinkFrame), std::move(_body));
+      std::move(_modelToRootLinkTf),
+      std::move(_baseInertialToLinkFrame),
+      Eigen::Isometry3d::Identity(),
+      std::move(_body));
 
     this->models[id] = model;
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
@@ -338,14 +350,20 @@ class Base : public Implements3d<FeatureList<Feature>>
     std::string _name,
     Identity _parentID,
     Identity _worldID,
+    Eigen::Isometry3d _modelToRootLinkTf,
     Eigen::Isometry3d _baseInertialToLinkFrame,
+    Eigen::Isometry3d _nestedModelFromRootModelTf,
     std::shared_ptr<btMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
       std::move(_name), std::move(_worldID),
-      std::move(_baseInertialToLinkFrame), std::move(_body));
+      std::move(_modelToRootLinkTf),
+      std::move(_baseInertialToLinkFrame),
+      std::move(_nestedModelFromRootModelTf),
+      std::move(_body));
 
+    model->isNestedModel = true;
     this->models[id] = model;
     const auto parentModel = this->models.at(_parentID);
     parentModel->nestedModelEntityIds.push_back(id);
