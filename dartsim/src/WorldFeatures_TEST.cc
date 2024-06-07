@@ -201,7 +201,7 @@ TEST_F(WorldFeaturesFixture, Gravity)
                         .pose.translation();
     EXPECT_PRED_FORMAT2(vectorPredicate3,
                         Eigen::Vector3d(10, 10, 10),
-                        pos);
+                        posNoGravity);
   }
 }
 
