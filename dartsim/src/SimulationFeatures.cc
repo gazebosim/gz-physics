@@ -181,6 +181,8 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   dart::collision::RaycastResult result;
   collisionDetector->raycast(collisionGroup, _from, _to, option, &result);
 
+  // Currently, raycast supports only the Bullet collision detector.
+  // For other collision detectors, the result will always be NaN.
   SimulationFeatures::RayIntersection intersection;
   if (result.hasHit())
   {

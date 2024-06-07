@@ -59,6 +59,8 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
       SpecifyData<RequireData<RayIntersection>>;
 
     /// \brief Get ray intersection generated in the previous simulation step
+    /// \param[in] _from The start point of the ray in world coordinates
+    /// \param[in] _to The end point of the ray in world coordinates
     public: RayIntersectionData GetRayIntersectionFromLastStep(
       const VectorType &_from, const VectorType &_to) const;
   };
