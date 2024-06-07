@@ -28,7 +28,7 @@ namespace gz
 namespace physics
 {
 /// \brief GetRayIntersectionFromLastStepFeature is a feature for retrieving
-/// the a ray intersection generated in the previous simulation step.
+/// the ray intersection generated in the previous simulation step.
 class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
