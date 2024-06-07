@@ -140,6 +140,12 @@ TEST_F(WorldFeaturesFixture, Gravity)
   auto link = model->GetLink(0);
   ASSERT_NE(nullptr, link);
 
+  auto modelNoGravity = world->GetModel("sphere_no_gravity");
+  ASSERT_NE(nullptr, modelNoGravity);
+
+  auto linkNoGravity = modelNoGravity->GetLink(0);
+  ASSERT_NE(nullptr, linkNoGravity);
+
   // initial link pose
   const Eigen::Vector3d initialLinkPosition(0, 0, 2);
   {
@@ -190,6 +196,12 @@ TEST_F(WorldFeaturesFixture, Gravity)
     EXPECT_PRED_FORMAT2(vectorPredicate3,
                         Eigen::Vector3d(0.5, 0, 2.5),
                         pos);
+    // pose for link without gravity should not change
+    Eigen::Vector3d posNoGravity = linkNoGravity->FrameDataRelativeToWorld()
+                        .pose.translation();
+    EXPECT_PRED_FORMAT2(vectorPredicate3,
+                        Eigen::Vector3d(10, 10, 10),
+                        posNoGravity);
   }
 }
 

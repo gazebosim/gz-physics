@@ -600,6 +600,8 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
+  bodyProperties.mGravityMode = _sdfLink.EnableGravity();
+
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
   // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
