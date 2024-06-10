@@ -68,6 +68,7 @@
 #include <sdf/World.hh>
 
 #include "AddedMassFeatures.hh"
+#include "CustomConeMeshShape.hh"
 #include "CustomMeshShape.hh"
 
 namespace gz {
@@ -349,19 +350,8 @@ static ShapeAndTransform ConstructGeometry(
     gzwarn << "DART: Cone is not a supported collision geomerty"
            << " primitive, using generated mesh of a cone instead"
            << std::endl;
-    common::MeshManager *meshMgr = common::MeshManager::Instance();
-    std::string coneMeshName = std::string("cone_mesh")
-      + "_" + std::to_string(_geometry.ConeShape()->Radius())
-      + "_" + std::to_string(_geometry.ConeShape()->Length());
-    meshMgr->CreateCone(
-      coneMeshName,
-      _geometry.ConeShape()->Radius(),
-      _geometry.ConeShape()->Length(),
-      3, 40);
-    const gz::common::Mesh * _mesh =
-      meshMgr->MeshByName(coneMeshName);
-
-    auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+    auto mesh =
+      std::make_shared<CustomConeMeshShape>(_geometry.ConeShape()->Shape());
     auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
     return {mesh2};
   }

@@ -23,7 +23,6 @@
 
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CapsuleShape.hpp>
-#include <dart/dynamics/ConeShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/HeightmapShape.hpp>
@@ -35,6 +34,7 @@
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 
+#include "CustomConeMeshShape.hh"
 #include "CustomHeightmapShape.hh"
 #include "CustomMeshShape.hh"
 
@@ -171,7 +171,7 @@ Identity ShapeFeatures::CastToConeShape(const Identity &_shapeID) const
 
   const dart::dynamics::ShapePtr &shape = shapeInfo->node->getShape();
 
-  if (dynamic_cast<dart::dynamics::ConeShape *>(shape.get()))
+  if (dynamic_cast<CustomMeshShape *>(shape.get()))
     return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
 
   return this->GenerateInvalidId();
@@ -183,11 +183,11 @@ double ShapeFeatures::GetConeShapeRadius(
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_coneID);
 
-  dart::dynamics::ConeShape *cone =
-      static_cast<dart::dynamics::ConeShape *>(
+  auto *coneShape =
+      static_cast<CustomConeMeshShape *>(
           shapeInfo->node->getShape().get());
 
-  return cone->getRadius();
+  return coneShape->cone.Radius();
 }
 
 /////////////////////////////////////////////////
@@ -195,11 +195,12 @@ double ShapeFeatures::GetConeShapeHeight(
     const Identity &_coneID) const
 {
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_coneID);
-  dart::dynamics::ConeShape *cone =
-      static_cast<dart::dynamics::ConeShape *>(
+
+  auto *coneShape =
+      static_cast<CustomConeMeshShape *>(
           shapeInfo->node->getShape().get());
 
-  return cone->getHeight();
+  return coneShape->cone.Length();
 }
 
 /////////////////////////////////////////////////
@@ -213,15 +214,8 @@ Identity ShapeFeatures::AttachConeShape(
   gzwarn << "DART: Cone is not a supported collision geomerty"
          << " primitive, using generated mesh of a cone instead"
          << std::endl;
-  common::MeshManager *meshMgr = common::MeshManager::Instance();
-  std::string coneMeshName = _name + "_cone_mesh"
-    + "_" + std::to_string(_radius)
-    + "_" + std::to_string(_height);
-  meshMgr->CreateCone(coneMeshName,_radius, _height,
-    3, 40);
-  const gz::common::Mesh * _mesh = meshMgr->MeshByName(coneMeshName);
-
-  auto mesh = std::make_shared<CustomMeshShape>(*_mesh, Vector3d(1, 1, 1));
+  auto mesh =
+    std::make_shared<CustomConeMeshShape>(gz::math::Coned(_height, _radius));
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =
