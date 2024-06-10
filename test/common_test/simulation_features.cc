@@ -223,9 +223,13 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesCollisionPairMaxContacts : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
-  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::CollisionPairMaxContacts,
+  gz::physics::FindFreeGroupFeature,
   gz::physics::ForwardStep,
-  gz::physics::CollisionPairMaxContacts
+  gz::physics::FreeGroupFrameSemantics,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::GetModelFromWorld,
+  gz::physics::SetFreeGroupWorldPose
 > {};
 
 template <class T>
@@ -273,6 +277,92 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
 
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
+    CollisionPairMaxContactsSelection)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxContacts>(
+      this->loader,
+      name,
+      common_test::worlds::kCollisionPairContactPointSdf);
+    auto checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    // Verify initial pose
+    const gz::math::Pose3d initialPose = gz::math::Pose3d::Zero;
+    auto ellipsoid = world->GetModel("ellipsoid");
+    ASSERT_NE(nullptr, ellipsoid);
+    auto ellipsoidFreeGroup = ellipsoid->FindFreeGroup();
+    ASSERT_NE(nullptr, ellipsoidFreeGroup);
+    auto box = world->GetModel("box");
+    ASSERT_NE(nullptr, box);
+    auto boxFreeGroup = box->FindFreeGroup();
+    ASSERT_NE(nullptr, boxFreeGroup);
+    auto ellipsoidFrameData = ellipsoidFreeGroup->FrameDataRelativeToWorld();
+    auto boxFrameData = boxFreeGroup->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(ellipsoidFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(boxFrameData.pose));
+
+    // Get all contacts between box and ellipsoid
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(),
+              world->GetCollisionPairMaxContacts());
+    EXPECT_GT(contacts.size(), 30u);
+
+    // Find contact point with max penetration depth
+    double maxDepth = 0;
+    for (const auto &contact : contacts)
+    {
+      const auto* extraContactData =
+          contact.template Query<
+          gz::physics::World3d<
+          FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+      ASSERT_NE(nullptr, extraContactData);
+      if (extraContactData->depth > maxDepth)
+        maxDepth = extraContactData->depth;
+    }
+    EXPECT_GT(maxDepth, 0.0);
+
+    // Reset pose back to initial pose
+    ellipsoidFreeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+    boxFreeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+    ellipsoidFrameData = ellipsoidFreeGroup->FrameDataRelativeToWorld();
+    boxFrameData = boxFreeGroup->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(ellipsoidFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(boxFrameData.pose));
+
+    // Set max contact between collision pairs to be 1
+    world->SetCollisionPairMaxContacts(1u);
+    EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(1u, contacts.size());
+
+    // Verify that the physics engine picked the contact with max penetration
+    // depth
+    auto contact = contacts[0];
+    const auto* extraContactData =
+        contact.template Query<
+        gz::physics::World3d<
+        FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+    ASSERT_NE(nullptr, extraContactData);
+    EXPECT_FLOAT_EQ(maxDepth, extraContactData->depth);
   }
 }
 
