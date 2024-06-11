@@ -1,5 +1,73 @@
 ## Gazebo Physics 6.x
 
+### Gazebo Physics 6.6.0 (2024-06-11)
+
+1. dartsim: optimize picking contact points with ODE collision detectorq
+    * [Pull request #584](https://github.com/gazebosim/gz-physics/pull/584)
+
+1. Fix windows compiler warning
+    * [Pull request #629](https://github.com/gazebosim/gz-physics/pull/629)
+
+1. Disable test failing due to ODE/libccd
+    * [Pull request #621](https://github.com/gazebosim/gz-physics/pull/621)
+
+1. bullet-featherstone: Improve mesh collision stability
+    * [Pull request #600](https://github.com/gazebosim/gz-physics/pull/600)
+
+1. bullet-featherstone: Support nested models
+    * [Pull request #574](https://github.com/gazebosim/gz-physics/pull/574)
+
+1. Revert "bazel: updates for garden (#513)"
+    * [Pull request #513)"](https://github.com/gazebosim/gz-physics/pull/513)")
+
+1. bazel: updates for garden
+    * [Pull request #513](https://github.com/gazebosim/gz-physics/pull/513)
+
+1. Garden test cleanup
+    * [Pull request #587](https://github.com/gazebosim/gz-physics/pull/587)
+
+1. Support setting max contacts in dartsim's ODE collision detector
+    * [Pull request #582](https://github.com/gazebosim/gz-physics/pull/582)
+
+1. Get bullet version from cmake instead of API
+    * [Pull request #591](https://github.com/gazebosim/gz-physics/pull/591)
+
+1. Prepare for 2.6.2 release
+    * [Pull request #585](https://github.com/gazebosim/gz-physics/pull/585)
+
+1. Reduce error to debug messsage for mesh construction (#531)
+    * [Pull request #531) (#581](https://github.com/gazebosim/gz-physics/pull/531) (#581)
+
+1. bullet-featherstone: Set collision spinning friction
+    * [Pull request #579](https://github.com/gazebosim/gz-physics/pull/579)
+
+1. CI workflow: use 22.04 for codecheck, coverage
+    * [Pull request #578](https://github.com/gazebosim/gz-physics/pull/578)
+
+1. Update github action workflows
+    * [Pull request #572](https://github.com/gazebosim/gz-physics/pull/572)
+
+1. dartsim: fix handling inertia matrix pose rotation
+    * [Pull request #351](https://github.com/gazebosim/gz-physics/pull/351)
+
+1. bullet-featherstone: fix setting angular velocity
+    * [Pull request #567](https://github.com/gazebosim/gz-physics/pull/567)
+
+1. bullet-featherstone: support off-diagonal inertia
+    * [Pull request #544](https://github.com/gazebosim/gz-physics/pull/544)
+
+1. bullet-featherstoneFix how links are flattened in  ConstructSdfModel
+    * [Pull request #562](https://github.com/gazebosim/gz-physics/pull/562)
+
+1. Add sample ctest cmds to tutorial
+    * [Pull request #566](https://github.com/gazebosim/gz-physics/pull/566)
+
+1. Add a test to verify behavior of detachable joints
+    * [Pull request #563](https://github.com/gazebosim/gz-physics/pull/563)
+
+1. Use correct link indicies when constructing fixed constraints
+    * [Pull request #530](https://github.com/gazebosim/gz-physics/pull/530)
+
 ### Gazebo Physics 6.5.1 (2023-09-26)
 
 1. joint_features test: reduce console spam
