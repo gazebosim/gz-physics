@@ -247,6 +247,7 @@ Identity ShapeFeatures::AttachConeShape(
   const auto height = static_cast<btScalar>(_height);
   auto shape =
     std::make_unique<btConeShapeZ>(radius, height);
+  shape->setMargin(0.0);
 
   auto identity = this->AddCollision(
     CollisionInfo{

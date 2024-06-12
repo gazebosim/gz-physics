@@ -970,6 +970,7 @@ bool SDFFeatures::AddSdfCollision(
     const auto height = static_cast<btScalar>(cone->Length());
     shape =
       std::make_unique<btConeShapeZ>(radius, height);
+    shape->setMargin(0.0);
   }
   else if (const auto *cylinder = geom->CylinderShape())
   {
