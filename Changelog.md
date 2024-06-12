@@ -48,7 +48,7 @@
 1. bullet-featherstone: support off-diagonal inertia
     * [Pull request #544](https://github.com/gazebosim/gz-physics/pull/544)
 
-1. bullet-featherstoneFix how links are flattened in  ConstructSdfModel
+1. bullet-featherstone: Fix how links are flattened in  ConstructSdfModel
     * [Pull request #562](https://github.com/gazebosim/gz-physics/pull/562)
 
 1. Add sample ctest cmds to tutorial
