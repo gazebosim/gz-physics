@@ -20,9 +20,6 @@
 1. Revert "bazel: updates for garden (#513)"
     * [Pull request #513)"](https://github.com/gazebosim/gz-physics/pull/513)")
 
-1. bazel: updates for garden
-    * [Pull request #513](https://github.com/gazebosim/gz-physics/pull/513)
-
 1. Garden test cleanup
     * [Pull request #587](https://github.com/gazebosim/gz-physics/pull/587)
 
@@ -32,19 +29,14 @@
 1. Get bullet version from cmake instead of API
     * [Pull request #591](https://github.com/gazebosim/gz-physics/pull/591)
 
-1. Prepare for 2.6.2 release
-    * [Pull request #585](https://github.com/gazebosim/gz-physics/pull/585)
-
-1. Reduce error to debug messsage for mesh construction (#531)
-    * [Pull request #531) (#581](https://github.com/gazebosim/gz-physics/pull/531) (#581)
+1. Reduce error to debug messsage for mesh construction (#581)
+    * [Pull request #581)(https://github.com/gazebosim/gz-physics/pull/581)
 
 1. bullet-featherstone: Set collision spinning friction
     * [Pull request #579](https://github.com/gazebosim/gz-physics/pull/579)
 
-1. CI workflow: use 22.04 for codecheck, coverage
+1. Infrastructure
     * [Pull request #578](https://github.com/gazebosim/gz-physics/pull/578)
-
-1. Update github action workflows
     * [Pull request #572](https://github.com/gazebosim/gz-physics/pull/572)
 
 1. dartsim: fix handling inertia matrix pose rotation
