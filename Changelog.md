@@ -30,7 +30,7 @@
     * [Pull request #591](https://github.com/gazebosim/gz-physics/pull/591)
 
 1. Reduce error to debug messsage for mesh construction (#581)
-    * [Pull request #581)(https://github.com/gazebosim/gz-physics/pull/581)
+    * [Pull request #581](https://github.com/gazebosim/gz-physics/pull/581)
 
 1. bullet-featherstone: Set collision spinning friction
     * [Pull request #579](https://github.com/gazebosim/gz-physics/pull/579)
