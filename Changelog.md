@@ -18,7 +18,7 @@
     * [Pull request #574](https://github.com/gazebosim/gz-physics/pull/574)
 
 1. Revert "bazel: updates for garden (#513)"
-    * [Pull request #513)"](https://github.com/gazebosim/gz-physics/pull/513)")
+    * [Pull request #513](https://github.com/gazebosim/gz-physics/pull/513)
 
 1. Garden test cleanup
     * [Pull request #587](https://github.com/gazebosim/gz-physics/pull/587)
