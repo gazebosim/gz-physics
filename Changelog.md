@@ -2,7 +2,7 @@
 
 ### Gazebo Physics 6.6.0 (2024-06-11)
 
-1. dartsim: optimize picking contact points with ODE collision detectorq
+1. dartsim: optimize picking contact points with ODE collision detector
     * [Pull request #584](https://github.com/gazebosim/gz-physics/pull/584)
 
 1. Fix windows compiler warning
