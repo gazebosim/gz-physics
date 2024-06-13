@@ -516,8 +516,8 @@ void JointFeatures::SetJointTransformFromParent(
       parentInertiaToLinkFrame = parentLinkInfo->inertiaToLinkFrame;
     }
     auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
-    auto tf = convertTf(
-      parentInertiaToLinkFrame * _pose * linkInfo->inertiaToLinkFrame.inverse());
+    auto tf = convertTf(parentInertiaToLinkFrame * _pose *
+                        linkInfo->inertiaToLinkFrame.inverse());
     jointInfo->fixedConstraint->setPivotInA(
       tf.getOrigin());
     jointInfo->fixedConstraint->setFrameInA(
