@@ -31,8 +31,8 @@ class CustomConeMeshShape : public CustomMeshShape
 {
   public: CustomConeMeshShape(
       const gz::math::Coned &_cone,
-      int _meshRings = 3,
-      int _meshSegments = 40);
+      int _meshRings = 1,
+      int _meshSegments = 36);
 
   public: gz::math::Coned cone;
 };
