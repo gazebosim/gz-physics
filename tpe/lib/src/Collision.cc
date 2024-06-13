@@ -81,6 +81,12 @@ void Collision::SetShape(const Shape &_shape)
       static_cast<const CapsuleShape *>(&_shape);
     this->dataPtr->shape.reset(new CapsuleShape(*typedShape));
   }
+  else if (_shape.GetType() == ShapeType::CONE)
+  {
+    const ConeShape *typedShape =
+      static_cast<const ConeShape *>(&_shape);
+    this->dataPtr->shape.reset(new ConeShape(*typedShape));
+  }
   else if (_shape.GetType() == ShapeType::CYLINDER)
   {
     const CylinderShape *typedShape =
