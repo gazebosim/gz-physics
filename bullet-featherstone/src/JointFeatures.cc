@@ -509,11 +509,19 @@ void JointFeatures::SetJointTransformFromParent(
 
   if (jointInfo->fixedConstraint)
   {
-      auto tf = convertTf(_pose);
-      jointInfo->fixedConstraint->setPivotInA(
-        tf.getOrigin());
-      jointInfo->fixedConstraint->setFrameInA(
-        tf.getBasis());
+    Eigen::Isometry3d parentInertiaToLinkFrame = Eigen::Isometry3d::Identity();
+    if (jointInfo->parentLinkID.has_value())
+    {
+      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
+      parentInertiaToLinkFrame = parentLinkInfo->inertiaToLinkFrame;
+    }
+    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+    auto tf = convertTf(parentInertiaToLinkFrame * _pose *
+                        linkInfo->inertiaToLinkFrame.inverse());
+    jointInfo->fixedConstraint->setPivotInA(
+      tf.getOrigin());
+    jointInfo->fixedConstraint->setFrameInA(
+      tf.getBasis());
   }
 }
 
