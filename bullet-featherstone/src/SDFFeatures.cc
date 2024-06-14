@@ -1053,21 +1053,25 @@ bool SDFFeatures::AddSdfCollision(
         ::sdf::MeshOptimization::CONVEX_HULL)
     {
       std::size_t maxConvexHulls = 16u;
+      std::size_t voxelResolution = 200000u;
+      if (meshSdf->ConvexDecomposition())
+      {
+        // limit max number of convex hulls to generate
+        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
+        voxelResolution = meshSdf->ConvexDecomposition()->VoxelResolution();
+      }
       if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
       {
         /// create 1 convex hull for the whole submesh
         maxConvexHulls = 1u;
       }
-      else if (meshSdf->ConvexDecomposition())
-      {
-        // limit max number of convex hulls to generate
-        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
-      }
 
       // Check if MeshManager contains the decomposed mesh already. If not
       // add it to the MeshManager so we do not need to decompose it again.
       const std::string convexMeshName =
-          mesh->Name() + "_CONVEX_" + std::to_string(maxConvexHulls);
+          mesh->Name() + "_" + meshSdf->Submesh() + "_CONVEX_" +
+          std::to_string(maxConvexHulls) + "_" +
+          std::to_string(voxelResolution);
       auto *decomposedMesh = meshManager.MeshByName(convexMeshName);
       if (!decomposedMesh)
       {
@@ -1079,7 +1083,7 @@ bool SDFFeatures::AddSdfCollision(
           auto mergedSubmesh = mergedMesh->SubMeshByIndex(0u).lock();
           std::vector<common::SubMesh> decomposed =
             gz::common::MeshManager::ConvexDecomposition(
-            *mergedSubmesh.get(), maxConvexHulls);
+            *mergedSubmesh.get(), maxConvexHulls, voxelResolution);
           gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
                 <<  mesh->Name() << std::endl;
           // Create decomposed mesh and add it to MeshManager
