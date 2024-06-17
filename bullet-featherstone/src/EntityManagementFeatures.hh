@@ -37,9 +37,11 @@ struct EntityManagementFeatureList : gz::physics::FeatureList<
   GetJointFromModel,
   GetLinkFromModel,
   GetModelFromWorld,
+  GetNestedModelFromModel,
   GetShapeFromLink,
   GetWorldFromEngine,
-  RemoveModelFromWorld
+  RemoveEntities,
+  WorldModelFeature
 > { };
 
 class EntityManagementFeatures :
@@ -155,9 +157,28 @@ class EntityManagementFeatures :
 
   public: bool ModelRemoved(const Identity &_modelID) const override;
 
+  public: bool RemoveNestedModelByIndex(
+     const Identity &_modelID, std::size_t _nestedModelIndex) override;
+
+  public: bool RemoveNestedModelByName(
+      const Identity &_modelID, const std::string &_modelName) override;
+
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
       const Identity &_engineID, const std::string & _name) override;
+
+  // ----- GetNestedModelFromModel -----
+  public: std::size_t GetNestedModelCount(
+    const Identity &_modelID) const override;
+
+  public: Identity GetNestedModel(
+    const Identity &_modelID, std::size_t _modelIndex) const override;
+
+  public: Identity GetNestedModel(
+    const Identity &_modelID, const std::string &_modelName) const override;
+
+  // ----- World model feature -----
+  public: Identity GetWorldModel(const Identity &_worldID) const override;
 };
 
 }  // namespace bullet_featherstone

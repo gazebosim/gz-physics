@@ -54,8 +54,8 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
 
-  // The first link entity in the model is always the root link
-  const std::size_t rootID = model->linkEntityIds.front();
+  // btMultiBody user index stores the gz-phsics model root link id
+  std::size_t rootID = static_cast<std::size_t>(model->body->getUserIndex());
   return this->GenerateIdentity(rootID, this->links.at(rootID));
 }
 
@@ -66,7 +66,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
 
-  if (model != nullptr)
+  if (model)
   {
     model->body->setBaseOmega(convertVec(_angularVelocity));
   }
@@ -79,7 +79,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   // Set Base Vel
-  if(model)
+  if (model)
   {
     model->body->setBaseVel(convertVec(_linearVelocity));
   }
@@ -91,7 +91,10 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const PoseType &_pose)
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
-  model->body->setBaseWorldTransform(convertTf(_pose));
+  if (model)
+  {
+    model->body->setBaseWorldTransform(convertTf(_pose));
+  }
 }
 
 }  // namespace bullet_featherstone

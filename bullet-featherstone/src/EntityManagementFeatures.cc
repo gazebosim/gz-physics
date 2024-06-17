@@ -206,53 +206,16 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
   auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
-  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-  if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
-  {
-    // The model has already been removed at some point.
+  if (!model)
     return false;
-  }
-
-  world->modelNameToEntityId.erase(model->name);
-
-  // Remove all constraints related to this model
-  for (auto constraint_index : model->external_constraints)
-  {
-    const auto joint = this->joints.at(constraint_index);
-    const auto &constraint =
-      std::get<std::unique_ptr<btMultiBodyConstraint>>(joint->identifier);
-    world->world->removeMultiBodyConstraint(constraint.get());
-    this->joints.erase(constraint_index);
-  }
-
-  world->world->removeMultiBody(model->body.get());
-  for (const auto linkID : model->linkEntityIds)
-  {
-    const auto &link = this->links.at(linkID);
-    if (link->collider)
-    {
-      world->world->removeCollisionObject(link->collider.get());
-      for (const auto shapeID : link->collisionEntityIds)
-        this->collisions.erase(shapeID);
-    }
-
-    this->links.erase(linkID);
-  }
-
-  for (const auto jointID : model->jointEntityIds)
-    this->joints.erase(jointID);
-
-  this->models.erase(_modelID);
-  return true;
+  return this->RemoveModelImpl(model->world, _modelID);
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(
     const Identity &_modelID) const
 {
-  auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
-  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-  return world->modelIndexToEntityId.count(model->indexInWorld) == 0;
+  return this->models.find(_modelID) == this->models.end();
 }
 
 /////////////////////////////////////////////////
@@ -282,6 +245,55 @@ bool EntityManagementFeatures::RemoveModelByName(
   return this->RemoveModel(
     this->GenerateIdentity(it->second, this->models.at(it->second)));
 }
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByIndex(
+    const Identity &_modelID, std::size_t _nestedModelIndex)
+{
+  auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (!model)
+    return false;
+  if (_nestedModelIndex >= model->nestedModelEntityIds.size())
+    return false;
+  const auto nestedModelID = model->nestedModelEntityIds[_nestedModelIndex];
+
+  auto modelIt =  this->models.find(nestedModelID);
+  if (modelIt != this->models.end())
+  {
+    return RemoveModelImpl(_modelID,
+        this->GenerateIdentity(modelIt->first, modelIt->second));
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
+    const std::string &_modelName)
+{
+  auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (!model)
+    return false;
+
+  unsigned int nestedModelID = 0u;
+  auto nestedModelIt =  model->nestedModelNameToEntityId.find(_modelName);
+  if (nestedModelIt != model->nestedModelNameToEntityId.end())
+  {
+    nestedModelID = nestedModelIt->second;
+  }
+  else
+  {
+    return false;
+  }
+
+  auto modelIt =  this->models.find(nestedModelID);
+  if (modelIt != this->models.end())
+  {
+    return RemoveModelImpl(_modelID,
+        this->GenerateIdentity(modelIt->first, modelIt->second));
+  }
+  return false;
+}
+
 
 /////////////////////////////////////////////////
 const std::string &EntityManagementFeatures::GetEngineName(
@@ -359,9 +371,15 @@ Identity EntityManagementFeatures::GetEngineOfWorld(
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetModelCount(
-    const Identity &) const
+    const Identity &_worldID) const
 {
-  return this->models.size();
+  // Get world model and return its nested model count
+  auto modelIt = this->models.find(_worldID);
+  if (modelIt != this->models.end())
+  {
+    return modelIt->second->nestedModelEntityIds.size();
+  }
+  return 0u;
 }
 
 /////////////////////////////////////////////////
@@ -412,6 +430,58 @@ Identity EntityManagementFeatures::GetWorldOfModel(
     const Identity &_modelID) const
 {
   return this->ReferenceInterface<ModelInfo>(_modelID)->world;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetNestedModelCount(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(
+      _modelID)->nestedModelEntityIds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::size_t _modelIndex) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (_modelIndex >= modelInfo->nestedModelEntityIds.size())
+  {
+    return this->GenerateInvalidId();
+  }
+
+  const auto nestedModelID = modelInfo->nestedModelEntityIds[_modelIndex];
+
+  // If the model doesn't exist in "models", it means the containing entity has
+  // been removed.
+  if (this->models.find(nestedModelID) != this->models.end())
+  {
+    return this->GenerateIdentity(nestedModelID,
+                                  this->models.at(nestedModelID));
+  }
+  else
+  {
+    return this->GenerateInvalidId();
+  }
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetNestedModel(
+    const Identity &_modelID, const std::string &_modelName) const
+{
+  const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  auto modelIt = modelInfo->nestedModelNameToEntityId.find(_modelName);
+  if (modelIt == modelInfo->nestedModelNameToEntityId.end())
+    return this->GenerateInvalidId();
+  auto nestedModelID = modelIt->second;
+  return this->GenerateIdentity(nestedModelID,
+      this->models.at(nestedModelID));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorldModel(const Identity &_worldID) const
+{
+  return this->GenerateIdentity(_worldID, this->models.at(_worldID));
 }
 
 }  // namespace bullet_featherstone
