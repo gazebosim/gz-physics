@@ -165,5 +165,39 @@
         </visual>
       </link>
     </model>
+
+    <model name="cone">
+      <pose>0 -6.5 0.5 0 0 0</pose>
+      <link name="cone_link">
+        <inertial>
+          <inertia>
+            <ixx>2</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>2</iyy>
+            <iyz>0</iyz>
+            <izz>2</izz>
+          </inertia>
+          <mass>2.0</mass>
+          <pose>0 0 -0.275 0 0 0</pose>
+        </inertial>
+        <collision name="cone_collision">
+          <geometry>
+            <cone>
+              <radius>0.5</radius>
+              <length>1.1</length>
+            </cone>
+          </geometry>
+        </collision>
+        <visual name="cone_visual">
+          <geometry>
+            <cone>
+              <radius>0.5</radius>
+              <length>1.1</length>
+            </cone>
+          </geometry>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>

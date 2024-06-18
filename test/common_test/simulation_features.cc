@@ -36,14 +36,14 @@
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include "gz/physics/BoxShape.hh"
-#include <gz/physics/GetContacts.hh>
-#include <gz/physics/GetRayIntersection.hh>
 #include "gz/physics/ContactProperties.hh"
-#include "gz/physics/CylinderShape.hh"
 #include "gz/physics/CapsuleShape.hh"
+#include "gz/physics/ConeShape.hh"
+#include "gz/physics/CylinderShape.hh"
 #include "gz/physics/EllipsoidShape.hh"
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetBoundingBox.hh>
+#include <gz/physics/GetContacts.hh>
 #include "gz/physics/SphereShape.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -80,11 +80,13 @@ struct Features : gz::physics::FeatureList<
 
   gz::physics::AttachBoxShapeFeature,
   gz::physics::AttachSphereShapeFeature,
+  gz::physics::AttachConeShapeFeature,
   gz::physics::AttachCylinderShapeFeature,
   gz::physics::AttachEllipsoidShapeFeature,
   gz::physics::AttachCapsuleShapeFeature,
   gz::physics::GetSphereShapeProperties,
   gz::physics::GetBoxShapeProperties,
+  gz::physics::GetConeShapeProperties,
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
@@ -265,7 +267,7 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
     EXPECT_TRUE(checkedOutput);
 
     contacts = world->GetContactsFromLastStep();
-    EXPECT_EQ(4u, contacts.size());
+    EXPECT_EQ(5u, contacts.size());
 
     world->SetCollisionPairMaxContacts(0u);
     EXPECT_EQ(0u, world->GetCollisionPairMaxContacts());
@@ -373,11 +375,13 @@ struct FeaturesShapeFeatures : gz::physics::FeatureList<
 
   gz::physics::AttachBoxShapeFeature,
   gz::physics::AttachSphereShapeFeature,
+  gz::physics::AttachConeShapeFeature,
   gz::physics::AttachCylinderShapeFeature,
   gz::physics::AttachEllipsoidShapeFeature,
   gz::physics::AttachCapsuleShapeFeature,
   gz::physics::GetSphereShapeProperties,
   gz::physics::GetBoxShapeProperties,
+  gz::physics::GetConeShapeProperties,
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
@@ -446,6 +450,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
     auto cylinderLink = cylinder->GetLink(0);
     auto cylinderCollision = cylinderLink->GetShape(0);
     auto cylinderShape = cylinderCollision->CastToCylinderShape();
+    ASSERT_NE(nullptr, cylinderShape);
     EXPECT_NEAR(0.5, cylinderShape->GetRadius(), 1e-6);
     EXPECT_NEAR(1.1, cylinderShape->GetHeight(), 1e-6);
 
@@ -453,6 +458,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
         "cylinder2", 3.0, 4.0, Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, cylinderLink->GetShapeCount());
     EXPECT_EQ(cylinder2, cylinderLink->GetShape(1));
+    ASSERT_NE(nullptr, cylinderLink->GetShape(1)->CastToCylinderShape());
     EXPECT_NEAR(3.0,
         cylinderLink->GetShape(1)->CastToCylinderShape()->GetRadius(),
         1e-6);
@@ -464,6 +470,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
     auto ellipsoidLink = ellipsoid->GetLink(0);
     auto ellipsoidCollision = ellipsoidLink->GetShape(0);
     auto ellipsoidShape = ellipsoidCollision->CastToEllipsoidShape();
+    ASSERT_NE(nullptr, ellipsoidShape);
     EXPECT_TRUE(
       gz::math::Vector3d(0.2, 0.3, 0.5).Equal(
       gz::math::eigen3::convert(ellipsoidShape->GetRadii()), 0.1));
@@ -479,6 +486,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
     auto capsuleLink = capsule->GetLink(0);
     auto capsuleCollision = capsuleLink->GetShape(0);
     auto capsuleShape = capsuleCollision->CastToCapsuleShape();
+    ASSERT_NE(nullptr, capsuleShape);
     EXPECT_NEAR(0.2, capsuleShape->GetRadius(), 1e-6);
     EXPECT_NEAR(0.6, capsuleShape->GetLength(), 1e-6);
 
@@ -486,6 +494,26 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
         "capsule2", 0.2, 0.6, Eigen::Isometry3d::Identity());
     EXPECT_EQ(2u, capsuleLink->GetShapeCount());
     EXPECT_EQ(capsule2, capsuleLink->GetShape(1));
+
+    auto cone = world->GetModel("cone");
+    auto coneLink = cone->GetLink(0);
+    auto coneCollision = coneLink->GetShape(0);
+    auto coneShape = coneCollision->CastToConeShape();
+    ASSERT_NE(nullptr, coneShape);
+    EXPECT_NEAR(0.5, coneShape->GetRadius(), 1e-6);
+    EXPECT_NEAR(1.1, coneShape->GetHeight(), 1e-6);
+
+    auto cone2 = coneLink->AttachConeShape(
+        "cone2", 3.0, 4.0, Eigen::Isometry3d::Identity());
+    EXPECT_EQ(2u, coneLink->GetShapeCount());
+    EXPECT_EQ(cone2, coneLink->GetShape(1));
+    ASSERT_NE(nullptr, coneLink->GetShape(1)->CastToConeShape());
+    EXPECT_NEAR(3.0,
+        coneLink->GetShape(1)->CastToConeShape()->GetRadius(),
+        1e-6);
+    EXPECT_NEAR(4.0,
+        coneLink->GetShape(1)->CastToConeShape()->GetHeight(),
+        1e-6);
 
     // Test the bounding boxes in the local frames
     auto sphereAABB =
@@ -498,6 +526,8 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
       ellipsoidCollision->GetAxisAlignedBoundingBox(*ellipsoidCollision);
     auto capsuleAABB =
       capsuleCollision->GetAxisAlignedBoundingBox(*capsuleCollision);
+    auto coneAABB =
+      coneCollision->GetAxisAlignedBoundingBox(*coneCollision);
 
     EXPECT_TRUE(gz::math::Vector3d(-1, -1, -1).Equal(
                 gz::math::eigen3::convert(sphereAABB).Min(), 0.1));
@@ -519,6 +549,10 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
                 gz::math::eigen3::convert(capsuleAABB).Min(), 0.1));
     EXPECT_TRUE(gz::math::Vector3d(0.2, 0.2, 0.5).Equal(
                 gz::math::eigen3::convert(capsuleAABB).Max(), 0.1));
+    EXPECT_EQ(gz::math::Vector3d(-0.5, -0.5, -0.55),
+        gz::math::eigen3::convert(coneAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(0.5, 0.5, 0.55),
+        gz::math::eigen3::convert(coneAABB).Max());
 
     // check model AABB. By default, the AABBs are in world frame
     auto sphereModelAABB = sphere->GetAxisAlignedBoundingBox();
@@ -526,6 +560,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
     auto cylinderModelAABB = cylinder->GetAxisAlignedBoundingBox();
     auto ellipsoidModelAABB = ellipsoid->GetAxisAlignedBoundingBox();
     auto capsuleModelAABB = capsule->GetAxisAlignedBoundingBox();
+    auto coneModelAABB = cone->GetAxisAlignedBoundingBox();
 
     EXPECT_EQ(gz::math::Vector3d(-1, 0.5, -0.5),
         gz::math::eigen3::convert(sphereModelAABB).Min());
@@ -547,6 +582,10 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
         gz::math::eigen3::convert(capsuleModelAABB).Min());
     EXPECT_EQ(gz::math::Vector3d(0.2, -2.8, 1),
         gz::math::eigen3::convert(capsuleModelAABB).Max());
+    EXPECT_EQ(gz::math::Vector3d(-3, -9.5, -1.5),
+        gz::math::eigen3::convert(coneModelAABB).Min());
+    EXPECT_EQ(gz::math::Vector3d(3, -3.5, 2.5),
+        gz::math::eigen3::convert(coneModelAABB).Max());
   }
 }
 
@@ -781,6 +820,10 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     auto ellipsoidFreeGroup = ellipsoid->FindFreeGroup();
     EXPECT_NE(nullptr, ellipsoidFreeGroup);
 
+    auto cone = world->GetModel("cone");
+    auto coneFreeGroup = cone->FindFreeGroup();
+    EXPECT_NE(nullptr, coneFreeGroup);
+
     auto box = world->GetModel("box");
 
     // step and get contacts
@@ -795,6 +838,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     unsigned int contactBoxCylinder = 0u;
     unsigned int contactBoxCapsule = 0u;
     unsigned int contactBoxEllipsoid = 0u;
+    unsigned int contactBoxCone = 0u;
 
     for (auto &contact : contacts)
     {
@@ -828,6 +872,11 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
       {
         contactBoxEllipsoid++;
       }
+      else if ((m1->GetName() == "box" && m2->GetName() == "cone") ||
+          (m1->GetName() == "cone" && m2->GetName() == "box"))
+      {
+        contactBoxCone++;
+      }
       else
       {
         FAIL() << "There should not be contacts between: "
@@ -838,6 +887,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     EXPECT_NE(0u, contactBoxCylinder);
     EXPECT_NE(0u, contactBoxCapsule);
     EXPECT_NE(0u, contactBoxEllipsoid);
+    EXPECT_NE(0u, contactBoxCone);
 
     // move sphere away
     sphereFreeGroup->SetWorldPose(gz::math::eigen3::convert(
@@ -849,12 +899,13 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     contacts = world->GetContactsFromLastStep();
 
     // large box in the middle should be intersecting with cylinder, capsule,
-    // ellipsoid
+    // ellipsoid, cone
     EXPECT_NE(0u, contacts.size());
 
     contactBoxCylinder = 0u;
     contactBoxCapsule = 0u;
     contactBoxEllipsoid = 0u;
+    contactBoxCone = 0u;
     for (auto contact : contacts)
     {
       const auto &contactPoint =
@@ -882,6 +933,11 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
       {
         contactBoxEllipsoid++;
       }
+      else if ((m1->GetName() == "box" && m2->GetName() == "cone") ||
+          (m1->GetName() == "cone" && m2->GetName() == "box"))
+      {
+        contactBoxCone++;
+      }
       else
       {
         FAIL() << "There should only be contacts between box and cylinder";
@@ -890,6 +946,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     EXPECT_NE(0u, contactBoxCylinder);
     EXPECT_NE(0u, contactBoxCapsule);
     EXPECT_NE(0u, contactBoxEllipsoid);
+    EXPECT_NE(0u, contactBoxCone);
 
     // move cylinder away
     cylinderFreeGroup->SetWorldPose(gz::math::eigen3::convert(
@@ -902,6 +959,10 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     // move ellipsoid away
     ellipsoidFreeGroup->SetWorldPose(gz::math::eigen3::convert(
         gz::math::Pose3d(0, -100, -100, 0, 0, 0)));
+
+    // move cone away
+    coneFreeGroup->SetWorldPose(gz::math::eigen3::convert(
+        gz::math::Pose3d(100, -100, 0.5, 0, 0, 0)));
 
     // step and get contacts
     checkedOutput = StepWorld<Features>(world, false).first;

@@ -59,6 +59,9 @@ enum class GZ_PHYSICS_TPELIB_VISIBLE ShapeType
 
   /// \brief A ellipsoid shape.
   ELLIPSOID = 7,
+
+  /// \brief A cone shape.
+  CONE = 10,
 };
 
 
@@ -152,6 +155,42 @@ class GZ_PHYSICS_TPELIB_VISIBLE CapsuleShape : public Shape
   /// \brief Capsule length
   private: double length = 0.0;
 };
+
+/// \brief Cone geometry
+class GZ_PHYSICS_TPELIB_VISIBLE ConeShape : public Shape
+{
+  /// \brief Constructor
+  public: ConeShape();
+
+  /// \brief Destructor
+  public: virtual ~ConeShape() = default;
+
+  /// \brief Get cone radius
+  /// \return cone radius
+  public: double GetRadius() const;
+
+  /// \brief Set cone radius
+  /// \param[in] _radius Cone radius
+  public: void SetRadius(double _radius);
+
+  /// \brief Get cone length
+  /// \return Cone length
+  public: double GetLength() const;
+
+  /// \brief Set cone length
+  /// \param[in] _length Cone length
+  public: void SetLength(double _length);
+
+  // Documentation inherited
+  protected: virtual void UpdateBoundingBox() override;
+
+  /// \brief Cone radius
+  private: double radius = 0.0;
+
+  /// \brief Cone length
+  private: double length = 0.0;
+};
+
 
 /// \brief Cylinder geometry
 class GZ_PHYSICS_TPELIB_VISIBLE CylinderShape : public Shape
