@@ -36,6 +36,8 @@ const auto kFallingWorld = CommonTestWorld("falling.world");
 const auto kFallingAddedMassWorld = CommonTestWorld("falling_added_mass.world");
 const auto kGroundSdf = CommonTestWorld("ground.sdf");
 const auto kJointAcrossModelsSdf = CommonTestWorld("joint_across_models.sdf");
+const auto kJointAcrossModelsFixedSdf =
+    CommonTestWorld("joint_across_models_fixed.sdf");
 const auto kJointConstraintSdf = CommonTestWorld("joint_constraint.sdf");
 const auto kMimicFastSlowPendulumsWorld =
   CommonTestWorld("mimic_fast_slow_pendulums_world.sdf");
@@ -45,6 +47,7 @@ const auto kMimicUniversalWorld = CommonTestWorld("mimic_universal_world.sdf");
 const auto kMultipleCollisionsSdf = CommonTestWorld("multiple_collisions.sdf");
 const auto kPendulumJointWrenchSdf =
   CommonTestWorld("pendulum_joint_wrench.sdf");
+const auto kPoseOffsetSdf = CommonTestWorld("pose_offset.sdf");
 const auto kShapesWorld = CommonTestWorld("shapes.world");
 const auto kShapesBitmaskWorld = CommonTestWorld("shapes_bitmask.sdf");
 const auto kSlipComplianceSdf = CommonTestWorld("slip_compliance.sdf");

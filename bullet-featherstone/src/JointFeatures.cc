@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <unordered_map>
 
 #include <gz/common/Console.hh>
 #include <sdf/Joint.hh>
@@ -26,6 +27,85 @@
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/////////////////////////////////////////////////
+void makeColliderStatic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  // if link is already static or fixed, we do not need to change its
+  // collision flags
+  if (_linkInfo->isStaticOrFixed)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  childProxy->m_collisionFilterGroup = btBroadphaseProxy::StaticFilter;
+  childProxy->m_collisionFilterMask =
+      btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+#if BT_BULLET_VERSION >= 307
+  childCollider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#endif
+}
+
+/////////////////////////////////////////////////
+void makeColliderDynamic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  // If broadphase and collision object flags do not agree, the
+  // link was originally non-static but made static by AttachJoint
+  if (!_linkInfo->isStaticOrFixed &&
+      ((childProxy->m_collisionFilterGroup &
+      btBroadphaseProxy::StaticFilter) > 0))
+  {
+    childProxy->m_collisionFilterGroup =
+        btBroadphaseProxy::DefaultFilter;
+    childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
+#if BT_BULLET_VERSION >= 307
+    childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+#endif
+  }
+}
+
+/////////////////////////////////////////////////
+void updateColliderFlagsRecursive(std::size_t _linkID,
+  const std::unordered_map<std::size_t, std::shared_ptr<JointInfo>> &_joints,
+  const std::unordered_map<std::size_t, std::shared_ptr<LinkInfo>> &_links,
+  std::function<void(LinkInfo *)> _updateColliderCb)
+{
+  btMultiBodyFixedConstraint *fixedConstraint = nullptr;
+  std::size_t childLinkID = 0u;
+  for (const auto &joint : _joints)
+  {
+    if (!joint.second->fixedConstraint)
+      continue;
+    if (!joint.second->parentLinkID.has_value() ||
+        joint.second->parentLinkID.value() != _linkID)
+      continue;
+
+    fixedConstraint =  joint.second->fixedConstraint.get();
+    childLinkID = std::size_t(joint.second->childLinkID);
+  }
+
+  if (!fixedConstraint)
+    return;
+
+  auto childInfo = _links.at(childLinkID);
+  _updateColliderCb(childInfo.get());
+
+  updateColliderFlagsRecursive(childLinkID, _joints, _links, _updateColliderCb);
+}
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointPosition(
@@ -382,6 +462,31 @@ Identity JointFeatures::AttachFixedJoint(
   if (world != nullptr && world->world)
   {
     world->world->addMultiBodyConstraint(jointInfo->fixedConstraint.get());
+    jointInfo->fixedConstraint->setMaxAppliedImpulse(btScalar(1e9));
+
+    // Make child link static if parent is static
+    // This is done by updating collision flags
+    btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
+    btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
+    if (parentCollider && childCollider)
+    {
+      // disable collision between parent and child collider
+      // \todo(iche033) if self collide is true, extend this to
+      // disable collisions between all the links in the parent's model with
+      // all the links in the child's model.
+      parentCollider->setIgnoreCollisionCheck(childCollider, true);
+      childCollider->setIgnoreCollisionCheck(parentCollider, true);
+
+      // If parent link is static or fixed, recusively update child colliders
+      // collision flags to be static.
+      if (parentLinkInfo->isStaticOrFixed && !linkInfo->isStaticOrFixed)
+      {
+        makeColliderStatic(linkInfo);
+        updateColliderFlagsRecursive(std::size_t(_childID),
+            this->joints, this->links, makeColliderStatic);
+      }
+    }
+
     return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
 
@@ -394,6 +499,37 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
   if (jointInfo->fixedConstraint)
   {
+    // Make links dynamic again as they were originally not static
+    // This is done by reverting any collision flag changes
+    // made in AttachJoint
+    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+    if (jointInfo->parentLinkID.has_value())
+    {
+      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
+
+      btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
+      btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
+      if (parentCollider && childCollider)
+      {
+        parentCollider->setIgnoreCollisionCheck(childCollider, false);
+        childCollider->setIgnoreCollisionCheck(parentCollider, false);
+        btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+        if (childProxy)
+        {
+          // Recursively make child colliders dynamic if they were originally
+          // not static
+          if (!linkInfo->isStaticOrFixed &&
+              ((childProxy->m_collisionFilterGroup &
+              btBroadphaseProxy::StaticFilter) > 0))
+          {
+            makeColliderDynamic(linkInfo);
+            updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
+                this->joints, this->links, makeColliderDynamic);
+          }
+        }
+      }
+    }
+
     auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
     if (modelInfo)
     {
@@ -401,6 +537,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       world->world->removeMultiBodyConstraint(jointInfo->fixedConstraint.get());
       jointInfo->fixedConstraint.reset();
       jointInfo->fixedConstraint = nullptr;
+      modelInfo->body->wakeUp();
     }
   }
 }
@@ -413,11 +550,19 @@ void JointFeatures::SetJointTransformFromParent(
 
   if (jointInfo->fixedConstraint)
   {
-      auto tf = convertTf(_pose);
-      jointInfo->fixedConstraint->setPivotInA(
-        tf.getOrigin());
-      jointInfo->fixedConstraint->setFrameInA(
-        tf.getBasis());
+    Eigen::Isometry3d parentInertiaToLinkFrame = Eigen::Isometry3d::Identity();
+    if (jointInfo->parentLinkID.has_value())
+    {
+      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
+      parentInertiaToLinkFrame = parentLinkInfo->inertiaToLinkFrame;
+    }
+    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+    auto tf = convertTf(parentInertiaToLinkFrame * _pose *
+                        linkInfo->inertiaToLinkFrame.inverse());
+    jointInfo->fixedConstraint->setPivotInA(
+      tf.getOrigin());
+    jointInfo->fixedConstraint->setFrameInA(
+      tf.getBasis());
   }
 }
 

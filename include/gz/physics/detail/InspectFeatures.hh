@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_DETAIL_INSPECTFEATURES_HH
 #define GZ_PHYSICS_DETAIL_INSPECTFEATURES_HH
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <tuple>

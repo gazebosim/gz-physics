@@ -15,6 +15,7 @@
  *
 */
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -163,6 +164,45 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
   // next iteration. Re-setting this->prevLinkPoses with the contents of
   // newPoses ensures that we aren't caching data for links that were removed
   this->prevLinkPoses = std::move(newPoses);
+}
+
+SimulationFeatures::RayIntersection
+SimulationFeatures::GetRayIntersectionFromLastStep(
+  const Identity &_worldID,
+  const LinearVector3d &_from,
+  const LinearVector3d &_to) const
+{
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
+  auto collisionGroup = world->getConstraintSolver()->getCollisionGroup().get();
+
+  // Perform raycast
+  dart::collision::RaycastOption option;
+  dart::collision::RaycastResult result;
+  collisionDetector->raycast(collisionGroup, _from, _to, option, &result);
+
+  // Currently, raycast supports only the Bullet collision detector.
+  // For other collision detectors, the result will always be NaN.
+  SimulationFeatures::RayIntersection intersection;
+  if (result.hasHit())
+  {
+    // Store intersection data if there is a ray hit
+    const auto &firstHit = result.mRayHits[0];
+    intersection.point = firstHit.mPoint;
+    intersection.normal = firstHit.mNormal;
+    intersection.fraction = firstHit.mFraction;
+  }
+  else
+  {
+    // Set invalid measurements to NaN according to REP-117
+    intersection.point =
+      Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    intersection.normal =
+      Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+    intersection.fraction = std::numeric_limits<double>::quiet_NaN();
+  }
+
+  return intersection;
 }
 
 std::vector<SimulationFeatures::ContactInternal>
