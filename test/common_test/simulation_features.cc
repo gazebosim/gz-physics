@@ -44,6 +44,7 @@
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
+#include <gz/physics/GetRayIntersection.hh>
 #include "gz/physics/SphereShape.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
