@@ -37,14 +37,15 @@ void SimulationFeatures::WorldForwardStep(
   const auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   auto *dtDur =
     _u.Query<std::chrono::steady_clock::duration>();
+  double stepSize = 0.001;
   if (dtDur)
   {
     std::chrono::duration<double> dt = *dtDur;
     stepSize = dt.count();
   }
 
-  worldInfo->world->stepSimulation(static_cast<btScalar>(this->stepSize), 1,
-                                   static_cast<btScalar>(this->stepSize));
+  worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
+                                   static_cast<btScalar>(stepSize));
 
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());

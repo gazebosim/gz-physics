@@ -76,6 +76,8 @@ struct WorldInfo
   std::unordered_map<std::string, std::size_t> modelNameToEntityId;
   int nextModelIndex = 0;
 
+  double stepSize = 0.001;
+
   explicit WorldInfo(std::string name);
 };
 
@@ -189,7 +191,8 @@ struct JointInfo
   Identity model;
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
-  btScalar effort = 0;
+  double effortLimit = 0.0;
+  double velocityLimit = 0.0;
 
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;

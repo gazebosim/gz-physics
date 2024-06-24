@@ -409,17 +409,21 @@ void JointFeatures::SetJointVelocityCommand(
   auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
   if (!jointInfo->motor)
   {
+    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
     jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
       0,
       static_cast<btScalar>(0),
-      static_cast<btScalar>(jointInfo->effort));
-    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+      static_cast<btScalar>(jointInfo->effortLimit * world->stepSize));
     world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
 
-  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(_value));
+  // clamp the values
+  double velocity = std::clamp(_value,
+      -jointInfo->velocityLimit, jointInfo->velocityLimit);
+
+  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
 }
 

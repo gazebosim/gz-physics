@@ -88,6 +88,12 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
 
+  ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
+  if (physics)
+    worldInfo->stepSize = physics->MaxStepSize();
+  else
+    worldInfo->stepSize = 0.001;
+
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
     const ::sdf::Model *model = _sdfWorld.ModelByIndex(i);
@@ -769,6 +775,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
           ::sdf::JointType::REVOLUTE == joint->Type())
       {
+        // Note: These m_joint* properties below are currently not supported by
+        // bullet-featherstone and so setting them does not have any effect.
+        // The lower and uppper limit is supported via the
+        // btMultiBodyJointLimitConstraint.
         model->body->getLink(i).m_jointLowerLimit =
             static_cast<btScalar>(joint->Axis()->Lower());
         model->body->getLink(i).m_jointUpperLimit =
@@ -781,7 +791,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
             static_cast<btScalar>(joint->Axis()->MaxVelocity());
         model->body->getLink(i).m_jointMaxForce =
             static_cast<btScalar>(joint->Axis()->Effort());
-        jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
+
+        jointInfo->effortLimit = joint->Axis()->Effort();
+        jointInfo->velocityLimit = joint->Axis()->MaxVelocity();
 
         jointInfo->jointLimits =
           std::make_shared<btMultiBodyJointLimitConstraint>(
