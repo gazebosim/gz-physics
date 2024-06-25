@@ -603,6 +603,10 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     auto ellipsoidFreeGroup = ellipsoid->FindFreeGroup();
     EXPECT_NE(nullptr, ellipsoidFreeGroup);
 
+    auto cone = world->GetModel("cone");
+    auto coneFreeGroup = cone->FindFreeGroup();
+    EXPECT_NE(nullptr, coneFreeGroup);
+
     auto box = world->GetModel("box");
 
     // step and get contacts
@@ -611,12 +615,13 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     auto contacts = world->GetContactsFromLastStep();
 
     // large box in the middle should be intersecting with sphere, cylinder,
-    // capsule and ellipsoid
-    EXPECT_EQ(4u, contacts.size());
+    // capsule, ellipsoid, and cone
+    EXPECT_EQ(5u, contacts.size());
     unsigned int contactBoxSphere = 0u;
     unsigned int contactBoxCylinder = 0u;
     unsigned int contactBoxCapsule = 0u;
     unsigned int contactBoxEllipsoid = 0u;
+    unsigned int contactBoxCone = 0u;
 
     for (auto &contact : contacts)
     {
@@ -661,6 +666,16 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
         EXPECT_TRUE(physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
+      else if ((m1->GetName() == "box" && m2->GetName() == "cone") ||
+              (m1->GetName() == "cone" && m2->GetName() == "box"))
+      {
+        contactBoxCone++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -6.5, 0.5);
+        EXPECT_TRUE(physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6))
+            << "expected: " << expectedContactPos << "\n"
+            << "  actual: " << contactPoint.point;
+      }
       else
       {
         FAIL() << "There should not be contacts between: "
@@ -671,6 +686,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     EXPECT_EQ(1u, contactBoxCylinder);
     EXPECT_EQ(1u, contactBoxCapsule);
     EXPECT_EQ(1u, contactBoxEllipsoid);
+    EXPECT_EQ(1u, contactBoxCone);
 
     // move sphere away
     sphereFreeGroup->SetWorldPose(math::eigen3::convert(
@@ -682,12 +698,13 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     contacts = world->GetContactsFromLastStep();
 
     // large box in the middle should be intersecting with cylinder, capsule,
-    // ellipsoid
-    EXPECT_EQ(3u, contacts.size());
+    // ellipsoid, and cone
+    EXPECT_EQ(4u, contacts.size());
 
     contactBoxCylinder = 0u;
     contactBoxCapsule = 0u;
     contactBoxEllipsoid = 0u;
+    contactBoxCone = 0u;
     for (auto contact : contacts)
     {
       const auto &contactPoint = contact.Get<::TestContactPoint>();
@@ -723,6 +740,14 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
         EXPECT_TRUE(physics::test::Equal(expectedContactPos,
             contactPoint.point, 1e-6));
       }
+      else if ((m1->GetName() == "box" && m2->GetName() == "cone") ||
+              (m1->GetName() == "cone" && m2->GetName() == "box"))
+      {
+        contactBoxCone++;
+        Eigen::Vector3d expectedContactPos = Eigen::Vector3d(0.0, -6.5, 0.5);
+        EXPECT_TRUE(physics::test::Equal(expectedContactPos,
+            contactPoint.point, 1e-6));
+      }
       else
       {
         FAIL() << "There should only be contacts between box and cylinder";
@@ -731,6 +756,7 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     EXPECT_EQ(1u, contactBoxCylinder);
     EXPECT_EQ(1u, contactBoxCapsule);
     EXPECT_EQ(1u, contactBoxEllipsoid);
+    EXPECT_EQ(1u, contactBoxCone);
 
     // move cylinder away
     cylinderFreeGroup->SetWorldPose(math::eigen3::convert(
@@ -743,6 +769,10 @@ TEST_P(SimulationFeatures_TEST, RetrieveContacts)
     // move ellipsoid away
     ellipsoidFreeGroup->SetWorldPose(math::eigen3::convert(
         math::Pose3d(0, -100, -100, 0, 0, 0)));
+
+    // move cone away
+    coneFreeGroup->SetWorldPose(math::eigen3::convert(
+        math::Pose3d(0, -100, -200, 0, 0, 0)));
 
     // step and get contacts
     checkedOutput = StepWorld(world, false);
