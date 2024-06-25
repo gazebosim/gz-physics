@@ -23,6 +23,7 @@
 #include <gz/physics/Shape.hh>
 #include <gz/physics/BoxShape.hh>
 #include <gz/physics/CapsuleShape.hh>
+#include <gz/physics/ConeShape.hh>
 #include <gz/physics/CylinderShape.hh>
 #include <gz/physics/EllipsoidShape.hh>
 #include <gz/physics/mesh/MeshShape.hh>
@@ -41,6 +42,9 @@ struct ShapeFeatureList : FeatureList<
 
   GetCapsuleShapeProperties,
   AttachCapsuleShapeFeature,
+
+  GetConeShapeProperties,
+  AttachConeShapeFeature,
 
   GetCylinderShapeProperties,
   AttachCylinderShapeFeature,
@@ -89,6 +93,23 @@ class ShapeFeatures :
     double _length,
     const Pose3d &_pose) override;
 
+  // ----- Cone Features -----
+  public: Identity CastToConeShape(
+    const Identity &_shapeID) const override;
+
+  public: double GetConeShapeRadius(
+    const Identity &_coneID) const override;
+
+  public: double GetConeShapeHeight(
+    const Identity &_coneID) const override;
+
+  public: Identity AttachConeShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    double _radius,
+    double _height,
+    const Pose3d &_pose) override;
+
   // ----- Cylinder Features -----
   public: Identity CastToCylinderShape(
     const Identity &_shapeID) const override;
@@ -106,7 +127,7 @@ class ShapeFeatures :
     double _height,
     const Pose3d &_pose) override;
 
-  // ----- Capsule Features -----
+  // ----- Ellipsoid Features -----
   public: Identity CastToEllipsoidShape(
     const Identity &_shapeID) const override;
 

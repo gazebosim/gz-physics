@@ -83,19 +83,6 @@ Identity ShapeFeatures::AttachBoxShape(
 }
 
 /////////////////////////////////////////////////
-Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
-{
-  auto it = this->collisions.find(_shapeID);
-  if (it != this->collisions.end() && it->second != nullptr)
-  {
-    auto *shape = it->second->collision->GetShape();
-    if (shape != nullptr && dynamic_cast<tpelib::CylinderShape*>(shape))
-      return this->GenerateIdentity(_shapeID, it->second);
-  }
-  return this->GenerateInvalidId();
-}
-
-/////////////////////////////////////////////////
 Identity ShapeFeatures::CastToCapsuleShape(const Identity &_shapeID) const
 {
   auto it = this->collisions.find(_shapeID);
@@ -168,6 +155,96 @@ Identity ShapeFeatures::AttachCapsuleShape(
     collision.SetShape(capsuleshape);
 
     return this->AddCollision(_linkID, collision);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToConeShape(const Identity &_shapeID) const
+{
+  auto it = this->collisions.find(_shapeID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::ConeShape*>(shape))
+      return this->GenerateIdentity(_shapeID, it->second);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetConeShapeRadius(
+  const Identity &_coneID) const
+{
+  // assume _coneID ~= _collisionID
+  auto it = this->collisions.find(_coneID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *cone = static_cast<tpelib::ConeShape*>(shape);
+      return cone->GetRadius();
+    }
+  }
+  // return invalid radius if no collision found
+  return -1.0;
+}
+
+/////////////////////////////////////////////////
+double ShapeFeatures::GetConeShapeHeight(
+  const Identity &_coneID) const
+{
+  // assume _coneID ~= _collisionID
+  auto it = this->collisions.find(_coneID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr)
+    {
+      auto *cone = static_cast<tpelib::ConeShape*>(shape);
+      return cone->GetLength();
+    }
+  }
+  // return invalid height if no collision found
+  return -1.0;
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachConeShape(
+  const Identity &_linkID,
+  const std::string &_name,
+  const double _radius,
+  const double _height,
+  const Pose3d &_pose)
+{
+  auto it = this->links.find(_linkID);
+  if (it != this->links.end() && it->second != nullptr)
+  {
+    auto &collision = static_cast<tpelib::Collision&>(
+      it->second->link->AddCollision());
+    collision.SetName(_name);
+    collision.SetPose(math::eigen3::convert(_pose));
+
+    tpelib::ConeShape coneshape;
+    coneshape.SetRadius(_radius);
+    coneshape.SetLength(_height);
+    collision.SetShape(coneshape);
+
+    return this->AddCollision(_linkID, collision);
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
+{
+  auto it = this->collisions.find(_shapeID);
+  if (it != this->collisions.end() && it->second != nullptr)
+  {
+    auto *shape = it->second->collision->GetShape();
+    if (shape != nullptr && dynamic_cast<tpelib::CylinderShape*>(shape))
+      return this->GenerateIdentity(_shapeID, it->second);
   }
   return this->GenerateInvalidId();
 }
