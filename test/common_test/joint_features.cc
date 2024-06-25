@@ -598,6 +598,14 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetPositionLimitsWi
     {
       GTEST_SKIP();
     }
+    else if (this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+#ifdef BT_BULLET_VERSION_LE_307
+      // joint position limits does not work well with velocity control in
+      // bullet versions <= 3.07
+      GTEST_SKIP();
+#endif
+    }
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);

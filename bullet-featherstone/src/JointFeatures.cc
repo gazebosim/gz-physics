@@ -18,6 +18,8 @@
 #include "JointFeatures.hh"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <memory>
 #include <unordered_map>
 
