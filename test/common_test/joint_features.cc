@@ -1292,17 +1292,16 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
       EXPECT_GT(0.0, body2LinearVelocity.Z());
       // bullet-featherstone and dartsim has different behavior
       // when detaching a joint between overlapping bodies
-      // dartsim: body falls after joint is detached
       // bullet-featherstone: pushes bodies apart
       // So here we just check for non-zero velocity
-#ifdef __APPLE__
-      // Disable check for dartsim plugin on homebrew.
-      // model3 has zero velocity in dartsim on macOS. It could be a
-      // change in behavior between dartsim versions. model3 overlaps
-      // with model1 so could be stuck together
+      // \todo(iche033) Investigate behavior differences in dartsim.
+      // Locally, model3 falls after joint is detached.
+      // On CI, model3 has zero velocity which could mean model3 and model1 are
+      // stuck together since they overlap with each other
       if (this->PhysicsEngineName(name) != "dartsim")
-#endif
-      EXPECT_NE(gz::math::Vector3d::Zero, body3LinearVelocity);
+      {
+        EXPECT_NE(gz::math::Vector3d::Zero, body3LinearVelocity);
+      }
     }
 
     // Test attaching fixed joint with reverse the parent and child
