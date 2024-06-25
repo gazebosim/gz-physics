@@ -191,8 +191,14 @@ struct JointInfo
   Identity model;
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
-  double effortLimit = 0.0;
-  double velocityLimit = 0.0;
+
+  // joint limits
+  double minEffort = 0.0;
+  double maxEffort = 0.0;
+  double minVelocity = 0.0;
+  double maxVelocity = 0.0;
+  double axisLower = 0.0;
+  double axisUpper = 0.0;
 
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;

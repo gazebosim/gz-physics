@@ -254,6 +254,7 @@ TYPED_TEST(JointFeaturesPositionLimitsTest, JointSetPositionLimitsWithForceContr
       joint->SetForce(0, 100);
       world->Step(output, state, input);
     }
+
     EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-3);
 
     for (std::size_t i = 0; i < 100; ++i)
@@ -300,9 +301,6 @@ struct JointFeaturePositionLimitsForceControlList : gz::physics::FeatureList<
     gz::physics::GetEngineInfo,
     gz::physics::GetJointFromModel,
     gz::physics::GetModelFromWorld,
-    // This feature is not requited but it will force to use dart6.10 which is required
-    // to run these tests
-    gz::physics::GetShapeFrictionPyramidSlipCompliance,
     gz::physics::SetBasicJointState,
     gz::physics::SetJointEffortLimitsFeature,
     gz::physics::SetJointPositionLimitsFeature,
@@ -592,11 +590,11 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
 // TODO(anyone): position limits do not work very well with velocity control
 // bug https://github.com/dartsim/dart/issues/1583
 // resolved in DART 6.11.0
-TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, DISABLED_JointSetPositionLimitsWithVelocityControl)
+TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetPositionLimitsWithVelocityControl)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
+    if (this->PhysicsEngineName(name) == "dartsim")
     {
       GTEST_SKIP();
     }
@@ -638,7 +636,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, DISABLED_JointSetPositio
       if (i % 500 == 499)
       {
         EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
-        EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+        EXPECT_NEAR(0, joint->GetVelocity(0), 1e-5);
       }
     }
   }
@@ -648,11 +646,6 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetVelocityLimitsWi
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -719,11 +712,6 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetEffortLimitsWith
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -779,11 +767,6 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 

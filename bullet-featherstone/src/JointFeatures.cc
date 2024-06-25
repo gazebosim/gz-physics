@@ -277,8 +277,13 @@ void JointFeatures::SetJointForce(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+
+  // clamp the values
+  double force = std::clamp(_value,
+      joint->minEffort, joint->maxEffort);
+
   model->body->getJointTorqueMultiDof(
-    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(_value);
+    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(force);
   model->body->wakeUp();
 }
 
@@ -415,16 +420,177 @@ void JointFeatures::SetJointVelocityCommand(
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
       0,
       static_cast<btScalar>(0),
-      static_cast<btScalar>(jointInfo->effortLimit * world->stepSize));
+      static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
     world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
 
   // clamp the values
   double velocity = std::clamp(_value,
-      -jointInfo->velocityLimit, jointInfo->velocityLimit);
+      jointInfo->minVelocity, jointInfo->maxVelocity);
 
   jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
+
+  this->GetJointVelocity(_id, _dof);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinPosition(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint position value [" << _value
+           << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  jointInfo->axisLower = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+
+  if (jointInfo->jointLimits)
+  {
+    world->world->removeMultiBodyConstraint(jointInfo->jointLimits.get());
+    jointInfo->jointLimits.reset();
+  }
+
+  jointInfo->jointLimits =
+    std::make_shared<btMultiBodyJointLimitConstraint>(
+      modelInfo->body.get(), identifier->indexInBtModel,
+      static_cast<btScalar>(jointInfo->axisLower),
+      static_cast<btScalar>(jointInfo->axisUpper));
+
+  world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxPosition(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint position value [" << _value
+           << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  jointInfo->axisUpper = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+
+  if (jointInfo->jointLimits)
+  {
+    world->world->removeMultiBodyConstraint(jointInfo->jointLimits.get());
+    jointInfo->jointLimits.reset();
+  }
+
+  jointInfo->jointLimits =
+    std::make_shared<btMultiBodyJointLimitConstraint>(
+      modelInfo->body.get(), identifier->indexInBtModel,
+      static_cast<btScalar>(jointInfo->axisLower),
+      static_cast<btScalar>(jointInfo->axisUpper));
+  world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinVelocity(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->minVelocity = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxVelocity(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->maxVelocity = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinEffort(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint effort value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+
+    return;
+  }
+
+  // min effort is currently unused by bullet-featherstone
+  jointInfo->minEffort = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxEffort(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint effort value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  jointInfo->maxEffort = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+
+  if (jointInfo->motor)
+  {
+    world->world->removeMultiBodyConstraint(jointInfo->motor.get());
+    jointInfo->motor.reset();
+  }
+
+  jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
+    modelInfo->body.get(),
+    std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
+    0,
+    static_cast<btScalar>(0),
+    static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
+  world->world->addMultiBodyConstraint(jointInfo->motor.get());
 }
 
 /////////////////////////////////////////////////

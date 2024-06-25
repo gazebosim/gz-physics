@@ -32,6 +32,7 @@
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
 #include <sdf/Mesh.hh>
+#include <sdf/Physics.hh>
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
@@ -88,7 +89,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
 
-  ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
+  const ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
   if (physics)
     worldInfo->stepSize = physics->MaxStepSize();
   else
@@ -792,8 +793,12 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         model->body->getLink(i).m_jointMaxForce =
             static_cast<btScalar>(joint->Axis()->Effort());
 
-        jointInfo->effortLimit = joint->Axis()->Effort();
-        jointInfo->velocityLimit = joint->Axis()->MaxVelocity();
+        jointInfo->minEffort = -joint->Axis()->Effort();
+        jointInfo->maxEffort = joint->Axis()->Effort();
+        jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
+        jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
+        jointInfo->axisLower = joint->Axis()->Lower();
+        jointInfo->axisUpper = joint->Axis()->Upper();
 
         jointInfo->jointLimits =
           std::make_shared<btMultiBodyJointLimitConstraint>(
