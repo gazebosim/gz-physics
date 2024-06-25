@@ -430,8 +430,6 @@ void JointFeatures::SetJointVelocityCommand(
 
   jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
-
-  this->GetJointVelocity(_id, _dof);
 }
 
 /////////////////////////////////////////////////
