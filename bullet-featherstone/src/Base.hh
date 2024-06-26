@@ -193,6 +193,7 @@ struct JointInfo
   std::size_t indexInGzModel = 0;
 
   // joint limits
+  // \todo(iche033) Extend to support joints with more than 1 dof
   double minEffort = 0.0;
   double maxEffort = 0.0;
   double minVelocity = 0.0;

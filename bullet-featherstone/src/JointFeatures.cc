@@ -31,6 +31,29 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+void recreateJointLimitConstraint(JointInfo *_jointInfo, ModelInfo *_modelInfo,
+    WorldInfo *_worldInfo)
+{
+  const auto *identifier = std::get_if<InternalJoint>(&_jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  if (_jointInfo->jointLimits)
+  {
+    _worldInfo->world->removeMultiBodyConstraint(_jointInfo->jointLimits.get());
+    _jointInfo->jointLimits.reset();
+  }
+
+  _jointInfo->jointLimits =
+    std::make_shared<btMultiBodyJointLimitConstraint>(
+      _modelInfo->body.get(), identifier->indexInBtModel,
+      static_cast<btScalar>(_jointInfo->axisLower),
+      static_cast<btScalar>(_jointInfo->axisUpper));
+
+  _worldInfo->world->addMultiBodyConstraint(_jointInfo->jointLimits.get());
+}
+
+/////////////////////////////////////////////////
 void makeColliderStatic(LinkInfo *_linkInfo)
 {
   btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
@@ -446,28 +469,11 @@ void JointFeatures::SetJointMinPosition(
            << "]. The command will be ignored\n";
     return;
   }
-  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
-  if (!identifier)
-    return;
-
   jointInfo->axisLower = _value;
 
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
-  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
-
-  if (jointInfo->jointLimits)
-  {
-    world->world->removeMultiBodyConstraint(jointInfo->jointLimits.get());
-    jointInfo->jointLimits.reset();
-  }
-
-  jointInfo->jointLimits =
-    std::make_shared<btMultiBodyJointLimitConstraint>(
-      modelInfo->body.get(), identifier->indexInBtModel,
-      static_cast<btScalar>(jointInfo->axisLower),
-      static_cast<btScalar>(jointInfo->axisUpper));
-
-  world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  recreateJointLimitConstraint(jointInfo, modelInfo, worldInfo);
 }
 
 /////////////////////////////////////////////////
@@ -483,27 +489,11 @@ void JointFeatures::SetJointMaxPosition(
     return;
   }
 
-  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
-  if (!identifier)
-    return;
-
   jointInfo->axisUpper = _value;
 
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
-  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
-
-  if (jointInfo->jointLimits)
-  {
-    world->world->removeMultiBodyConstraint(jointInfo->jointLimits.get());
-    jointInfo->jointLimits.reset();
-  }
-
-  jointInfo->jointLimits =
-    std::make_shared<btMultiBodyJointLimitConstraint>(
-      modelInfo->body.get(), identifier->indexInBtModel,
-      static_cast<btScalar>(jointInfo->axisLower),
-      static_cast<btScalar>(jointInfo->axisUpper));
-  world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  recreateJointLimitConstraint(jointInfo, modelInfo, worldInfo);
 }
 
 /////////////////////////////////////////////////
@@ -552,7 +542,6 @@ void JointFeatures::SetJointMinEffort(
     return;
   }
 
-  // min effort is currently unused by bullet-featherstone
   jointInfo->minEffort = _value;
 }
 
