@@ -1,5 +1,52 @@
 ## Gazebo Physics 7.x
 
+### Gazebo Physics 7.3.0 (2024-06-25)
+
+1. Backport: Add Cone as a collision shape
+    * [Pull request #639](https://github.com/gazebosim/gz-physics/pull/639)
+
+1. [featherstone] Publish JointFeedback forces.
+    * [Pull request #628](https://github.com/gazebosim/gz-physics/pull/628)
+
+1. Parse voxel resolution when decomposing meshes
+    * [Pull request #655](https://github.com/gazebosim/gz-physics/pull/655)
+
+1. bullet-featherstone: Fix attaching fixed joint between models with inertial pose offset
+    * [Pull request #653](https://github.com/gazebosim/gz-physics/pull/653)
+
+1. Ray intersection simulation feature
+    * [Pull request #641](https://github.com/gazebosim/gz-physics/pull/641)
+
+1. bullet-featherstone: Fix bounding box for collisions with pose offset
+    * [Pull request #647](https://github.com/gazebosim/gz-physics/pull/647)
+
+1. bullet-featherstone: Update fixed constraint behavior
+    * [Pull request #632](https://github.com/gazebosim/gz-physics/pull/632)
+
+1. Update InspectFeatures.hh
+    * [Pull request #645](https://github.com/gazebosim/gz-physics/pull/645)
+
+1. bullet-featherstone: Fix convex hull shape's AABB
+    * [Pull request #637](https://github.com/gazebosim/gz-physics/pull/637)
+
+1. Add package.xml
+    * [Pull request #608](https://github.com/gazebosim/gz-physics/pull/608)
+
+1. bullet-featurestore: Enable auto deactivation
+    * [Pull request #630](https://github.com/gazebosim/gz-physics/pull/630)
+
+1. bullet-featherstone: Support convex decomposition for meshes
+    * [Pull request #606](https://github.com/gazebosim/gz-physics/pull/606)
+
+1. backport bullet-featherstone solver iters
+    * [Pull request #619](https://github.com/gazebosim/gz-physics/pull/619)
+
+1. bullet-featherstone: fix SetWorldPose with off-diagonal moment of inertia
+    * [Pull request #623](https://github.com/gazebosim/gz-physics/pull/623)
+
+1. Revert "Disable check in DetachableJointTest, CorrectAttachmentPoints for dartsim plugin on macOS (#613)"
+    * [Pull request #615](https://github.com/gazebosim/gz-physics/pull/615)
+
 ### Gazebo Physics 7.2.0 (2024-04-10)
 
 1. Use relative install paths for plugin shared libraries
