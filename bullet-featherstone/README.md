@@ -68,6 +68,8 @@ These are the specific physics API features implemented.
   * AttachBoxShapeFeature
   * GetCapsuleShapeProperties
   * AttachCapsuleShapeFeature
+  * GetConeShapeProperties
+  * AttachConeShapeFeature
   * GetCylinderShapeProperties
   * AttachCylinderShapeFeature
   * GetEllipsoidShapeProperties

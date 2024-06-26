@@ -116,6 +116,45 @@ void CapsuleShape::UpdateBoundingBox()
 }
 
 //////////////////////////////////////////////////
+ConeShape::ConeShape() : Shape()
+{
+  this->type = ShapeType::CONE;
+}
+
+//////////////////////////////////////////////////
+double ConeShape::GetRadius() const
+{
+  return this->radius;
+}
+
+//////////////////////////////////////////////////
+void ConeShape::SetRadius(double _radius)
+{
+  this->radius = _radius;
+  this->dirty = true;
+}
+
+//////////////////////////////////////////////////
+double ConeShape::GetLength() const
+{
+  return this->length;
+}
+
+//////////////////////////////////////////////////
+void ConeShape::SetLength(double _length)
+{
+  this->length = _length;
+  this->dirty = true;
+}
+
+//////////////////////////////////////////////////
+void ConeShape::UpdateBoundingBox()
+{
+  math::Vector3d halfSize(this->radius, this->radius, this->length*0.5);
+  this->bbox = math::AxisAlignedBox(-halfSize, halfSize);
+}
+
+//////////////////////////////////////////////////
 CylinderShape::CylinderShape() : Shape()
 {
   this->type = ShapeType::CYLINDER;
