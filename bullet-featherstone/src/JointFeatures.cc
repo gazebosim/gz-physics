@@ -440,6 +440,10 @@ void JointFeatures::SetJointVelocityCommand(
   if (!jointInfo->motor)
   {
     auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+    // \todo(iche033) The motor constraint is created with a max impulse
+    // computed by maxEffort * stepsize. However, our API supports
+    // stepping sim with varying dt. We should recompute max impulse
+    // if stepSize changes.
     jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,

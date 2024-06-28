@@ -44,6 +44,10 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  // \todo(iche033) Stepping sim with varying dt may not work properly.
+  // One example is the motor constraint that's created in
+  // JointFeatures::SetJointVelocityCommand which assumes a fixed step
+  // size.
   worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
                                    static_cast<btScalar>(stepSize));
 
