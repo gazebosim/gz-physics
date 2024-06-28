@@ -37,6 +37,9 @@ struct JointFeatureList : FeatureList<
   GetBasicJointProperties,
 
   SetJointVelocityCommandFeature,
+  SetJointPositionLimitsFeature,
+  SetJointVelocityLimitsFeature,
+  SetJointEffortLimitsFeature,
 
   SetJointTransformFromParentFeature,
   AttachFixedJointFeature,
@@ -126,6 +129,30 @@ class JointFeatures :
   public: void SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof,
     const double _value) override;
+
+  public: void SetJointMinPosition(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMaxPosition(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMinVelocity(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMaxVelocity(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMinEffort(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMaxEffort(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   // ----- AttachFixedJointFeature -----
   public: Identity AttachFixedJoint(
