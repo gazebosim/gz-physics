@@ -176,9 +176,9 @@ double JointFeatures::GetJointForce(
       // According to the documentation in btMultibodyLink.h,
       // m_axesTop[0] is the joint axis for revolute joints.
       Eigen::Vector3d axis = convert(link.getAxisTop(0));
-      math::Vector3 axis_converted(axis[0], axis[1], axis[2]);
+      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
       btVector3 angular = feedback->m_reactionForces.getAngular();
-      math::Vector3<double> angularTorque(
+      math::Vector3d angularTorque(
         angular.getX(),
         angular.getY(),
         angular.getZ());
@@ -193,9 +193,9 @@ double JointFeatures::GetJointForce(
     else if (link.m_jointType == btMultibodyLink::ePrismatic)
     {
       auto axis = convert(link.getAxisBottom(0));
-      math::Vector3 axis_converted(axis[0], axis[1], axis[2]);
+      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
       btVector3 linear = feedback->m_reactionForces.getLinear();
-      math::Vector3<double> linearForce(
+      math::Vector3d linearForce(
         linear.getX(),
         linear.getY(),
         linear.getZ());
