@@ -31,15 +31,12 @@ GzCollisionDispatcher::GzCollisionDispatcher(
 /////////////////////////////////////////////////
 GzCollisionDispatcher::~GzCollisionDispatcher()
 {
-  // Use a while loop because the releaseManifold call also loops through
-  // the manifoldsToKeep map
-  while (!this->manifoldsToKeep.empty())
+  for (auto& manifold : this->customManifolds)
   {
-    auto manifoldIt = this->manifoldsToKeep.begin();
-    bool ownsManifold = manifoldIt->second;
-    if (ownsManifold)
-      this->releaseManifold(manifoldIt->first);
+    btCollisionDispatcher::releaseManifold(manifold);
   }
+
+  this->customManifolds.clear();
   this->colPairManifolds.clear();
 }
 
@@ -48,24 +45,19 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     btCollisionObject *_colObj)
 {
   std::unordered_set<btPersistentManifold *> manifoldsToRemove;
-  for (const auto& manifoldIt : this->manifoldsToKeep)
+  for (const auto& manifold: this->customManifolds)
   {
-    bool ownsManifold = manifoldIt.second;
-    btPersistentManifold *manifold = manifoldIt.first;
     if (manifold->getBody0() == _colObj ||
         manifold->getBody1() == _colObj)
     {
-      if (ownsManifold)
-      {
-        manifoldsToRemove.insert(manifold);
-      }
+      manifoldsToRemove.insert(manifold);
     }
   }
 
   for (auto& manifold : manifoldsToRemove)
   {
-    this->releaseManifold(manifold);
-    this->manifoldsToKeep.erase(manifold);
+    btCollisionDispatcher::releaseManifold(manifold);
+    this->customManifolds.erase(manifold);
   }
 }
 
@@ -158,8 +150,8 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
         dynamic_cast<const btMultiBodyLinkCollider *>(
         contactManifold->getBody1());
 
-    if (this->manifoldsToKeep.find(contactManifold) !=
-        this->manifoldsToKeep.end())
+    if (this->customManifolds.find(contactManifold) !=
+        this->customManifolds.end())
     {
       contactManifold->refreshContactPoints(ob0->getWorldTransform(),
                                             ob1->getWorldTransform());
@@ -184,7 +176,7 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
          (!this->HasConvexHullChildShapes(colShape0) &&
           !this->HasConvexHullChildShapes(colShape1)))
       {
-        this->manifoldsToKeep[contactManifold] = false;
+        this->manifoldsToClear.insert(contactManifold);
         continue;
       }
 
@@ -196,7 +188,7 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
         colManifold = this->getNewManifold(ob0, ob1);
         this->colPairManifolds[colShape0][colShape1] = colManifold;
         this->colPairManifolds[colShape1][colShape0] = colManifold;
-        this->manifoldsToKeep[colManifold] = true;
+        this->customManifolds.insert(colManifold);
       }
       colManifold->addManifoldPoint(pt);
       colManifold->refreshContactPoints(ob0->getWorldTransform(),
@@ -205,8 +197,8 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
 
     // clear original manifolds so that bullet will only use the
     // new ones
-    if (this->manifoldsToKeep.find(contactManifold) ==
-        this->manifoldsToKeep.end())
+    if (this->manifoldsToClear.find(contactManifold) ==
+        this->manifoldsToClear.end())
       contactManifold->clearManifold();
   }
 }
@@ -214,9 +206,9 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
 /////////////////////////////////////////////////
 void GzCollisionDispatcher::releaseManifold(btPersistentManifold *_manifold)
 {
-  auto manifoldIt = this->manifoldsToKeep.find(_manifold);
-  if (manifoldIt != this->manifoldsToKeep.end())
-    this->manifoldsToKeep.erase(manifoldIt);
+  auto manifoldIt = this->manifoldsToClear.find(_manifold);
+  if (manifoldIt != this->manifoldsToClear.end())
+    this->manifoldsToClear.erase(manifoldIt);
 
   btCollisionDispatcher::releaseManifold(_manifold);
 }

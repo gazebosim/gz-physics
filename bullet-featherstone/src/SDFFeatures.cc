@@ -1368,12 +1368,18 @@ bool SDFFeatures::AddSdfCollision(
       // match the existing collider and issue a warning if they don't.
     }
 
-    this->AddCollision(
+    btCollisionShape *shapePtr = shape.get();
+    auto colID = this->AddCollision(
       CollisionInfo{
         _collision.Name(),
         std::move(shape),
         _linkID,
         linkFrameToCollision});
+
+    // use user index to store the collision id in gz-physics
+    // This is used by GetContactsFromLastStep to retrieve the collision id
+    // from btCollisionShape
+    shapePtr->setUserIndex(std::size_t(colID));
   }
 
   return true;

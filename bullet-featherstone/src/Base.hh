@@ -156,21 +156,21 @@ class GzCollisionDispatcher : public btCollisionDispatcher
   /// \param[in] _colObject Collision object being removed
   public: void RemoveManifoldByCollisionObject(btCollisionObject *_colObj);
 
-  /// \brief Helper function to check whether or not the input shape has child
-  /// convex hull shapes.
-  /// \param[in] _shape Shape to check
-  /// \return true if the shape has child convex hull shapes, false otherwise
-  private: bool HasConvexHullChildShapes(const btCollisionShape *_shape);
-
   /// \brief Helper function to find the btCollisionShape that represents a
   /// collision
   /// \param[in] _compoundShape Link collision shape
   /// \param[in] _childIndex Index of the child shape within the compound shape
   /// \return The btCollisionShape that represents the collision or null if
   /// the collision shape could not be found.
-  private: const btCollisionShape *FindCollisionShape(
+  public: const btCollisionShape *FindCollisionShape(
                const btCompoundShape *_compoundShape,
                int _childIndex);
+
+  /// \brief Helper function to check whether or not the input shape has child
+  /// convex hull shapes.
+  /// \param[in] _shape Shape to check
+  /// \return true if the shape has child convex hull shapes, false otherwise
+  private: bool HasConvexHullChildShapes(const btCollisionShape *_shape);
 
   /// \brief A map of collision object pairs and their contact manifold
   /// Note one manifold exists per collision object pair
@@ -178,8 +178,12 @@ class GzCollisionDispatcher : public btCollisionDispatcher
                std::unordered_map<const btCollisionShape *,
                btPersistentManifold *>> colPairManifolds;
 
-  /// \brief A map of contact manifolds and whether we own this manifold
-  private: std::unordered_map<btPersistentManifold *, bool> manifoldsToKeep;
+  /// \brief A set of original contact manifolds that need to be cleared
+  /// as they are replaced by a custom contact manifold
+  private: std::unordered_set<btPersistentManifold *> manifoldsToClear;
+
+  /// \brief A set of custom contact manifolds created and owned by gz-physics.
+  private: std::unordered_set<btPersistentManifold *> customManifolds;
 };
 
 /// Link information is embedded inside the model, so all we need to store here
