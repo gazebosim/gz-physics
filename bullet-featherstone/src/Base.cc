@@ -26,7 +26,7 @@ namespace bullet_featherstone {
 /////////////////////////////////////////////////
 GzCollisionDispatcher::GzCollisionDispatcher(
     btCollisionConfiguration *_collisionConfiguration)
-    : btCollisionDispatcher(_collisionConfiguration) {};
+    : btCollisionDispatcher(_collisionConfiguration) {}
 
 /////////////////////////////////////////////////
 GzCollisionDispatcher::~GzCollisionDispatcher()
