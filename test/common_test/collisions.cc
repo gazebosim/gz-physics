@@ -199,7 +199,7 @@ TEST_F(CollisionMeshTestFeaturesList, MeshOptimization)
   {
     // currently only bullet-featherstone supports mesh decomposition
     if (this->PhysicsEngineName(name) != "bullet-featherstone")
-      GTEST_SKIP();
+      continue;
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
@@ -445,7 +445,7 @@ TEST_F(CollisionMeshTestFeaturesList, MeshContacts)
   {
     // currently only bullet-featherstone supports mesh decomposition
     if (this->PhysicsEngineName(name) != "bullet-featherstone")
-      GTEST_SKIP();
+      continue;
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
@@ -625,7 +625,7 @@ TEST_F(CollisionStaticTestFeaturesList, StaticCollisions)
     // currently only bullet-featherstone skips collision checking between
     // static bodies and bodies with world fixed joint
     if (this->PhysicsEngineName(name) != "bullet-featherstone")
-      GTEST_SKIP();
+      continue;
 
     errors = root.LoadSdfString(getBoxFixedJointStr(
         "box_fixed_world_joint", gz::math::Pose3d::Zero));
