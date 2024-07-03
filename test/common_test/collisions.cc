@@ -34,7 +34,6 @@
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
-#include <gz/physics/FreeGroup.hh>
 #include <gz/physics/FreeJoint.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
@@ -153,8 +152,6 @@ TYPED_TEST(CollisionTest, MeshAndPlane)
 using CollisionMeshFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfWorld,
-  gz::physics::FindFreeGroupFeature,
-  gz::physics::SetFreeGroupWorldPose,
   gz::physics::LinkFrameSemantics,
   gz::physics::ForwardStep,
   gz::physics::GetContactsFromLastStepFeature,
@@ -480,8 +477,6 @@ TEST_F(CollisionMeshTestFeaturesList, MeshContacts)
 
     auto mesh = world->GetModel("mesh");
     ASSERT_NE(nullptr, mesh);
-    auto meshFreeGroup = mesh->FindFreeGroup();
-    EXPECT_NE(nullptr, meshFreeGroup);
 
     // step and get contacts
     gz::physics::ForwardStep::Output output;
