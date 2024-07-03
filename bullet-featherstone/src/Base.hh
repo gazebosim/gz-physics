@@ -130,6 +130,58 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
   }
 };
 
+/// \brief Custom gz collision dispatcher
+class GzCollisionDispatcher : public btCollisionDispatcher
+{
+  /// \brief Constructor
+  public: GzCollisionDispatcher(
+              btCollisionConfiguration *_collisionConfiguration);
+
+  /// \brief Destructor
+  public: ~GzCollisionDispatcher();
+
+  // Documentation Inherited.
+  // Override base function in order to limit the number of contacts for convex
+  // decomposed mesh collisions.
+  public: virtual void dispatchAllCollisionPairs(
+              btOverlappingPairCache* pairCache,
+              const btDispatcherInfo& dispatchInfo,
+              btDispatcher* dispatcher) override;
+
+  // Documentation Inherited.
+  public: virtual void releaseManifold(btPersistentManifold *_manifold)
+              override;
+
+  /// \brief Remove manifolds that hold pointers to the input collision object
+  /// \param[in] _colObject Collision object being removed
+  public: void RemoveManifoldByCollisionObject(btCollisionObject *_colObj);
+
+  /// \brief Helper function to check whether or not the input shape has child
+  /// convex hull shapes.
+  /// \param[in] _shape Shape to check
+  /// \return true if the shape has child convex hull shapes, false otherwise
+  private: bool HasConvexHullChildShapes(const btCollisionShape *_shape);
+
+  /// \brief Helper function to find the btCollisionShape that represents a
+  /// collision
+  /// \param[in] _compoundShape Link collision shape
+  /// \param[in] _childIndex Index of the child shape within the compound shape
+  /// \return The btCollisionShape that represents the collision or null if
+  /// the collision shape could not be found.
+  private: const btCollisionShape *FindCollisionShape(
+               const btCompoundShape *_compoundShape,
+               int _childIndex);
+
+  /// \brief A map of collision object pairs and their contact manifold
+  /// Note one manifold exists per collision object pair
+  private: std::unordered_map<const btCollisionShape *,
+               std::unordered_map<const btCollisionShape *,
+               btPersistentManifold *>> colPairManifolds;
+
+  /// \brief A map of contact manifolds and whether we own this manifold
+  private: std::unordered_map<btPersistentManifold *, bool> manifoldsToKeep;
+};
+
 /// Link information is embedded inside the model, so all we need to store here
 /// is a reference to the model and the index of this link inside of it.
 struct LinkInfo
@@ -490,6 +542,10 @@ class Base : public Implements3d<FeatureList<Feature>>
       if (link->collider)
       {
         world->world->removeCollisionObject(link->collider.get());
+        GzCollisionDispatcher *dispatcher =
+            dynamic_cast<GzCollisionDispatcher *>(
+            world->world->getDispatcher());
+        dispatcher->RemoveManifoldByCollisionObject(link->collider.get());
         for (const auto shapeID : link->collisionEntityIds)
           this->collisions.erase(shapeID);
       }
