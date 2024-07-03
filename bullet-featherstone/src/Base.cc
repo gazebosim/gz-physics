@@ -45,7 +45,7 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     btCollisionObject *_colObj)
 {
   std::unordered_set<btPersistentManifold *> manifoldsToRemove;
-  for (const auto& manifold: this->customManifolds)
+  for (const auto& manifold : this->customManifolds)
   {
     if (manifold->getBody0() == _colObj ||
         manifold->getBody1() == _colObj)
