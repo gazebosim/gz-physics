@@ -313,6 +313,15 @@
         <inertial>
           <mass>100</mass>
         </inertial>
+        <collision name="collision">
+          <pose>0 0 0 -1.57 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.2</length>
+            </cylinder>
+          </geometry>
+        </collision>
         <visual name="visual">
           <pose>0 0 0 -1.57 0 0</pose>
           <geometry>
@@ -328,12 +337,19 @@
         <inertial>
           <mass>1</mass>
         </inertial>
+        <collision name="visual">
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </collision>
         <visual name="visual">
           <geometry>
             <box>
               <size>0.1 0.1 0.1</size>
             </box>
-        </geometry>
+          </geometry>
         </visual>
       </link>
       <joint name="j0" type="fixed">
