@@ -25,6 +25,7 @@
 
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
+#include <sdf/Cone.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
@@ -32,6 +33,7 @@
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
 #include <sdf/Mesh.hh>
+#include <sdf/Physics.hh>
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
@@ -87,6 +89,12 @@ Identity SDFFeatures::ConstructSdfWorld(
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
 
   worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
+
+  const ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
+  if (physics)
+    worldInfo->stepSize = physics->MaxStepSize();
+  else
+    worldInfo->stepSize = 0.001;
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
@@ -815,6 +823,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
           ::sdf::JointType::REVOLUTE == joint->Type())
       {
+        // Note: These m_joint* properties below are currently not supported by
+        // bullet-featherstone and so setting them does not have any effect.
+        // The lower and uppper limit is supported via the
+        // btMultiBodyJointLimitConstraint.
         model->body->getLink(i).m_jointLowerLimit =
             static_cast<btScalar>(joint->Axis()->Lower());
         model->body->getLink(i).m_jointUpperLimit =
@@ -827,7 +839,13 @@ Identity SDFFeatures::ConstructSdfModelImpl(
             static_cast<btScalar>(joint->Axis()->MaxVelocity());
         model->body->getLink(i).m_jointMaxForce =
             static_cast<btScalar>(joint->Axis()->Effort());
-        jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
+
+        jointInfo->minEffort = -joint->Axis()->Effort();
+        jointInfo->maxEffort = joint->Axis()->Effort();
+        jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
+        jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
+        jointInfo->axisLower = joint->Axis()->Lower();
+        jointInfo->axisUpper = joint->Axis()->Upper();
 
         jointInfo->jointLimits =
           std::make_shared<btMultiBodyJointLimitConstraint>(
@@ -982,6 +1000,14 @@ bool SDFFeatures::AddSdfCollision(
     const auto radius = sphere->Radius();
     shape = std::make_unique<btSphereShape>(static_cast<btScalar>(radius));
   }
+  else if (const auto *cone = geom->ConeShape())
+  {
+    const auto radius = static_cast<btScalar>(cone->Radius());
+    const auto height = static_cast<btScalar>(cone->Length());
+    shape =
+      std::make_unique<btConeShapeZ>(radius, height);
+    shape->setMargin(0.0);
+  }
   else if (const auto *cylinder = geom->CylinderShape())
   {
     const auto radius = static_cast<btScalar>(cylinder->Radius());
@@ -1072,21 +1098,25 @@ bool SDFFeatures::AddSdfCollision(
         ::sdf::MeshOptimization::CONVEX_HULL)
     {
       std::size_t maxConvexHulls = 16u;
+      std::size_t voxelResolution = 200000u;
+      if (meshSdf->ConvexDecomposition())
+      {
+        // limit max number of convex hulls to generate
+        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
+        voxelResolution = meshSdf->ConvexDecomposition()->VoxelResolution();
+      }
       if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
       {
         /// create 1 convex hull for the whole submesh
         maxConvexHulls = 1u;
       }
-      else if (meshSdf->ConvexDecomposition())
-      {
-        // limit max number of convex hulls to generate
-        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
-      }
 
       // Check if MeshManager contains the decomposed mesh already. If not
       // add it to the MeshManager so we do not need to decompose it again.
       const std::string convexMeshName =
-          mesh->Name() + "_CONVEX_" + std::to_string(maxConvexHulls);
+          mesh->Name() + "_" + meshSdf->Submesh() + "_CONVEX_" +
+          std::to_string(maxConvexHulls) + "_" +
+          std::to_string(voxelResolution);
       auto *decomposedMesh = meshManager.MeshByName(convexMeshName);
       if (!decomposedMesh)
       {
@@ -1098,7 +1128,7 @@ bool SDFFeatures::AddSdfCollision(
           auto mergedSubmesh = mergedMesh->SubMeshByIndex(0u).lock();
           std::vector<common::SubMesh> decomposed =
             gz::common::MeshManager::ConvexDecomposition(
-            *mergedSubmesh.get(), maxConvexHulls);
+            *mergedSubmesh.get(), maxConvexHulls, voxelResolution);
           gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
                 <<  mesh->Name() << std::endl;
           // Create decomposed mesh and add it to MeshManager

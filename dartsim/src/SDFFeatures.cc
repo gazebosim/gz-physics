@@ -20,12 +20,14 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CapsuleShape.hpp>
+#include <dart/dynamics/ConeShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
@@ -49,6 +51,7 @@
 #include <sdf/Box.hh>
 #include <sdf/Collision.hh>
 #include <sdf/Capsule.hh>
+#include <sdf/Cone.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
@@ -65,6 +68,7 @@
 #include <sdf/World.hh>
 
 #include "AddedMassFeatures.hh"
+#include "CustomConeMeshShape.hh"
 #include "CustomMeshShape.hh"
 
 namespace gz {
@@ -340,11 +344,27 @@ static ShapeAndTransform ConstructGeometry(
   {
     return ConstructCapsule(*_geometry.CapsuleShape());
   }
+  else if (_geometry.ConeShape())
+  {
+    // TODO(anyone): Replace this code when Cone is supported by DART
+    gzwarn << "DART: Cone is not a supported collision geomerty"
+           << " primitive, using generated mesh of a cone instead"
+           << std::endl;
+    auto mesh =
+      std::make_shared<CustomConeMeshShape>(_geometry.ConeShape()->Shape());
+    auto mesh2 = std::dynamic_pointer_cast<dart::dynamics::MeshShape>(mesh);
+    return {mesh2};
+  }
   else if (_geometry.CylinderShape())
+  {
     return ConstructCylinder(*_geometry.CylinderShape());
+  }
   else if (_geometry.EllipsoidShape())
   {
     // TODO(anyone): Replace this code when Ellipsoid is supported by DART
+    gzwarn << "DART: Ellipsoid is not a supported collision geomerty"
+           << " primitive, using generated mesh of an ellipsoid instead"
+           << std::endl;
     common::MeshManager *meshMgr = common::MeshManager::Instance();
     std::string ellipsoidMeshName = std::string("ellipsoid_mesh")
       + "_" + std::to_string(_geometry.EllipsoidShape()->Radii().X())

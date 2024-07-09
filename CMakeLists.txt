@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics7 VERSION 7.2.0)
+project(gz-physics7 VERSION 7.3.0)
 
 #============================================================================
 # Find gz-cmake
@@ -78,7 +78,7 @@ gz_find_package(DART
     utils
     utils-urdf
   CONFIG
-  VERSION 6.9
+  VERSION 6.10
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
