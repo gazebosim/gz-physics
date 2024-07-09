@@ -1294,9 +1294,9 @@ bool SDFFeatures::AddSdfCollision(
 
     if (!linkInfo->collider)
     {
-      this->CreateLinkCollider(_linkID, _isStatic);
+      this->CreateLinkCollider(_linkID, _isStatic, shape.get(),
+          btInertialToCollision);
 
-      linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
       linkInfo->collider->setRollingFriction(
         static_cast<btScalar>(rollingFriction));
@@ -1437,7 +1437,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 }
 
 /////////////////////////////////////////////////
-void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic)
+void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
+    btCollisionShape *_shape, const btTransform &_shapeTF)
 {
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
@@ -1450,6 +1451,10 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic)
     modelInfo->body.get(), linkIndexInModel);
 
   linkInfo->shape = std::make_unique<btCompoundShape>();
+
+  if (_shape)
+    linkInfo->shape->addChildShape(_shapeTF, _shape);
+
   linkInfo->collider->setCollisionShape(linkInfo->shape.get());
 
   if (linkIndexInModel >= 0)
