@@ -78,6 +78,15 @@ class SDFFeatures :
   /// \return The entity identity if constructed otherwise an invalid identity
   private: Identity ConstructSdfModelImpl(std::size_t _parentID,
                                           const ::sdf::Model &_sdfModel);
+
+  /// \brief Create and initialze the link collider in link info
+  /// \param[in] _linkID ID of link to create the collider for
+  /// \param[in] _isStatic True if the link is static
+  /// \param[in] _shape Collision shape to attach to link
+  private: void CreateLinkCollider(const Identity &_linkID,
+      bool _isStatic);
+      // bool _isStatic, std::unique_ptr<btCollisionShape> _shape);
+
 };
 
 }  // namespace bullet_featherstone
