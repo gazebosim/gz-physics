@@ -85,8 +85,6 @@ class SDFFeatures :
   /// \param[in] _shape Collision shape to attach to link
   private: void CreateLinkCollider(const Identity &_linkID,
       bool _isStatic);
-      // bool _isStatic, std::unique_ptr<btCollisionShape> _shape);
-
 };
 
 }  // namespace bullet_featherstone
