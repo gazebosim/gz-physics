@@ -158,11 +158,19 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
         dynamic_cast<const btMultiBodyLinkCollider *>(
         contactManifold->getBody1());
 
+    // if it's a custom manifold, just refresh contacts, no need to
+    // loop through and check them.
     if (this->customManifolds.find(contactManifold) !=
         this->customManifolds.end())
     {
       contactManifold->refreshContactPoints(ob0->getWorldTransform(),
                                             ob1->getWorldTransform());
+      continue;
+    }
+
+    if (this->manifoldsToKeep.find(contactManifold) !=
+        this->manifoldsToKeep.end())
+    {
       continue;
     }
 
@@ -184,7 +192,7 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
          (!this->HasConvexHullChildShapes(colShape0) &&
           !this->HasConvexHullChildShapes(colShape1)))
       {
-        this->manifoldsToClear.insert(contactManifold);
+        this->manifoldsToKeep.insert(contactManifold);
         continue;
       }
 
@@ -203,10 +211,9 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
                                         ob1->getWorldTransform());
     }
 
-    // clear original manifolds so that bullet will only use the
-    // new ones
-    if (this->manifoldsToClear.find(contactManifold) ==
-        this->manifoldsToClear.end())
+    // clear manifolds that are replaced by custom ones
+    if (this->manifoldsToKeep.find(contactManifold) ==
+        this->manifoldsToKeep.end())
       contactManifold->clearManifold();
   }
 }
@@ -215,9 +222,9 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
 void GzCollisionDispatcher::releaseManifold(btPersistentManifold *_manifold)
 {
   std::cerr << " ========== GzCollisionDispatcher release manifold" << std::endl;
-  auto manifoldIt = this->manifoldsToClear.find(_manifold);
-  if (manifoldIt != this->manifoldsToClear.end())
-    this->manifoldsToClear.erase(manifoldIt);
+  auto manifoldIt = this->manifoldsToKeep.find(_manifold);
+  if (manifoldIt != this->manifoldsToKeep.end())
+    this->manifoldsToKeep.erase(manifoldIt);
 
   std::cerr << " ========== GzCollisionDispatcher release manifold 0 " << std::endl;
   btCollisionDispatcher::releaseManifold(_manifold);

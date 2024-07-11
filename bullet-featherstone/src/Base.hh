@@ -102,7 +102,7 @@ class GzCollisionDispatcher : public btCollisionDispatcher
 
   /// \brief A set of original contact manifolds that need to be cleared
   /// as they are replaced by a custom contact manifold
-  private: std::unordered_set<btPersistentManifold *> manifoldsToClear;
+  private: std::unordered_set<btPersistentManifold *> manifoldsToKeep;
 
   /// \brief A set of custom contact manifolds created and owned by gz-physics.
   private: std::unordered_set<btPersistentManifold *> customManifolds;
