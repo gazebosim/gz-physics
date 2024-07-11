@@ -219,18 +219,8 @@ WorldInfo::WorldInfo(std::string name_)
 {
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
-#ifdef _WIN32
-    // Use original btCollisionDispatcher on window as GzCollisionDispatcher
-    // causes tests to crash.
-    // \todo(iche033) Investigate cause of crash
-  this->dispatcher =
-    std::make_unique<btCollisionDispatcher>(collisionConfiguration.get());
-#else
-  // Use custom GzCollisionDispatcher that reduces number of contact points
-  // for convex decomposed mesh collisions.
   this->dispatcher =
     std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
-#endif
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
