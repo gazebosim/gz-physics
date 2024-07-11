@@ -65,6 +65,7 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
 bool GzCollisionDispatcher::HasConvexHullChildShapes(
     const btCollisionShape *_shape)
 {
+  return false;
   if (!_shape || !_shape->isCompound())
     return false;
 
@@ -166,11 +167,13 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; ++j)
     {
+      std::cerr << " get contact manifold point " << std::endl;
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
       const btCollisionShape *colShape0 = this->FindCollisionShape(
           compoundShape0, pt.m_index0);
       const btCollisionShape *colShape1 = this->FindCollisionShape(
           compoundShape1, pt.m_index1);
+      std::cerr << " found col shapes" << std::endl;
 
       if (!colShape0 || !colShape1 ||
          (!this->HasConvexHullChildShapes(colShape0) &&
@@ -180,17 +183,21 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
         continue;
       }
 
+      std::cerr << " retrieving contact manifold " << std::endl;
       btPersistentManifold* colManifold =
           this->colPairManifolds[colShape0][colShape1];
       if (!colManifold)
       {
+        std::cerr << " creating contact manifold " << std::endl;
         // create new custom manifold for the collision pair
         colManifold = this->getNewManifold(ob0, ob1);
         this->colPairManifolds[colShape0][colShape1] = colManifold;
         this->colPairManifolds[colShape1][colShape0] = colManifold;
         this->customManifolds.insert(colManifold);
       }
+      std::cerr << " adding contact manifold " << std::endl;
       colManifold->addManifoldPoint(pt);
+      std::cerr << " adding contact manifold done " << std::endl;
       colManifold->refreshContactPoints(ob0->getWorldTransform(),
                                         ob1->getWorldTransform());
     }
