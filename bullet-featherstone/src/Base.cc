@@ -34,6 +34,7 @@ GzCollisionDispatcher::GzCollisionDispatcher(
 /////////////////////////////////////////////////
 GzCollisionDispatcher::~GzCollisionDispatcher()
 {
+  std::cerr << " ========== GzCollisionDispatcher destructor " << std::endl;
   for (auto& manifold : this->customManifolds)
   {
     btCollisionDispatcher::releaseManifold(manifold);
@@ -41,12 +42,14 @@ GzCollisionDispatcher::~GzCollisionDispatcher()
 
   this->customManifolds.clear();
   this->colPairManifolds.clear();
+  std::cerr << " ========== GzCollisionDispatcher destructor done " << std::endl;
 }
 
 /////////////////////////////////////////////////
 void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     btCollisionObject *_colObj)
 {
+  std::cerr << " ========== GzCollisionDispatcher remove manifold by col " << std::endl;
   std::unordered_set<btPersistentManifold *> manifoldsToRemove;
   for (const auto& manifold : this->customManifolds)
   {
@@ -62,6 +65,7 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     btCollisionDispatcher::releaseManifold(manifold);
     this->customManifolds.erase(manifold);
   }
+  std::cerr << " ========== GzCollisionDispatcher remove manifold by col done " << std::endl;
 }
 
 /////////////////////////////////////////////////
@@ -215,7 +219,9 @@ void GzCollisionDispatcher::releaseManifold(btPersistentManifold *_manifold)
   if (manifoldIt != this->manifoldsToClear.end())
     this->manifoldsToClear.erase(manifoldIt);
 
+  std::cerr << " ========== GzCollisionDispatcher release manifold 0 " << std::endl;
   btCollisionDispatcher::releaseManifold(_manifold);
+  std::cerr << " ========== GzCollisionDispatcher release manifold done" << std::endl;
 }
 
 /////////////////////////////////////////////////
