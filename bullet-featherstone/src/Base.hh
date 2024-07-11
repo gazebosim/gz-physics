@@ -53,6 +53,61 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
+/// \brief Custom gz collision dispatcher
+class GzCollisionDispatcher : public btCollisionDispatcher
+{
+  /// \brief Constructor
+  public: GzCollisionDispatcher(
+              btCollisionConfiguration *_collisionConfiguration);
+
+  /// \brief Destructor
+  public: ~GzCollisionDispatcher();
+
+  // Documentation Inherited.
+  // Override base function in order to limit the number of contacts for convex
+  // decomposed mesh collisions.
+  public: void dispatchAllCollisionPairs(
+              btOverlappingPairCache* pairCache,
+              const btDispatcherInfo& dispatchInfo,
+              btDispatcher* dispatcher) override;
+
+  // Documentation Inherited.
+  public: void releaseManifold(btPersistentManifold *_manifold) override;
+
+  /// \brief Remove manifolds that hold pointers to the input collision object
+  /// \param[in] _colObject Collision object being removed
+  public: void RemoveManifoldByCollisionObject(btCollisionObject *_colObj);
+
+  /// \brief Helper function to find the btCollisionShape that represents a
+  /// collision
+  /// \param[in] _compoundShape Link collision shape
+  /// \param[in] _childIndex Index of the child shape within the compound shape
+  /// \return The btCollisionShape that represents the collision or null if
+  /// the collision shape could not be found.
+  public: const btCollisionShape *FindCollisionShape(
+               const btCompoundShape *_compoundShape,
+               int _childIndex);
+
+  /// \brief Helper function to check whether or not the input shape has child
+  /// convex hull shapes.
+  /// \param[in] _shape Shape to check
+  /// \return true if the shape has child convex hull shapes, false otherwise
+  private: bool HasConvexHullChildShapes(const btCollisionShape *_shape);
+
+  /// \brief A map of collision object pairs and their contact manifold
+  /// Note one manifold exists per collision object pair
+  private: std::unordered_map<const btCollisionShape *,
+               std::unordered_map<const btCollisionShape *,
+               btPersistentManifold *>> colPairManifolds;
+
+  /// \brief A set of original contact manifolds that need to be cleared
+  /// as they are replaced by a custom contact manifold
+  private: std::unordered_set<btPersistentManifold *> manifoldsToClear;
+
+  /// \brief A set of custom contact manifolds created and owned by gz-physics.
+  private: std::unordered_set<btPersistentManifold *> customManifolds;
+};
+
 /// \brief The Info structs are used for three reasons:
 /// 1) Holding extra information such as the name
 ///    that will be different from the underlying engine
@@ -67,7 +122,7 @@ struct WorldInfo
 {
   std::string name;
   std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-  std::unique_ptr<btCollisionDispatcher> dispatcher;
+  std::unique_ptr<GzCollisionDispatcher> dispatcher;
   std::unique_ptr<btBroadphaseInterface> broadphase;
   std::unique_ptr<btMultiBodyConstraintSolver> solver;
   std::unique_ptr<btMultiBodyDynamicsWorld> world;
@@ -130,62 +185,6 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
     return btMultiBodyLinkCollider::checkCollideWithOverride(_co) &&
            btCollisionObject::checkCollideWithOverride(_co);
   }
-};
-
-/// \brief Custom gz collision dispatcher
-class GzCollisionDispatcher : public btCollisionDispatcher
-{
-  /// \brief Constructor
-  public: GzCollisionDispatcher(
-              btCollisionConfiguration *_collisionConfiguration);
-
-  /// \brief Destructor
-  public: ~GzCollisionDispatcher();
-
-  // Documentation Inherited.
-  // Override base function in order to limit the number of contacts for convex
-  // decomposed mesh collisions.
-  public: virtual void dispatchAllCollisionPairs(
-              btOverlappingPairCache* pairCache,
-              const btDispatcherInfo& dispatchInfo,
-              btDispatcher* dispatcher) override;
-
-  // Documentation Inherited.
-  public: virtual void releaseManifold(btPersistentManifold *_manifold)
-              override;
-
-  /// \brief Remove manifolds that hold pointers to the input collision object
-  /// \param[in] _colObject Collision object being removed
-  public: void RemoveManifoldByCollisionObject(btCollisionObject *_colObj);
-
-  /// \brief Helper function to find the btCollisionShape that represents a
-  /// collision
-  /// \param[in] _compoundShape Link collision shape
-  /// \param[in] _childIndex Index of the child shape within the compound shape
-  /// \return The btCollisionShape that represents the collision or null if
-  /// the collision shape could not be found.
-  public: const btCollisionShape *FindCollisionShape(
-               const btCompoundShape *_compoundShape,
-               int _childIndex);
-
-  /// \brief Helper function to check whether or not the input shape has child
-  /// convex hull shapes.
-  /// \param[in] _shape Shape to check
-  /// \return true if the shape has child convex hull shapes, false otherwise
-  private: bool HasConvexHullChildShapes(const btCollisionShape *_shape);
-
-  /// \brief A map of collision object pairs and their contact manifold
-  /// Note one manifold exists per collision object pair
-  private: std::unordered_map<const btCollisionShape *,
-               std::unordered_map<const btCollisionShape *,
-               btPersistentManifold *>> colPairManifolds;
-
-  /// \brief A set of original contact manifolds that need to be cleared
-  /// as they are replaced by a custom contact manifold
-  private: std::unordered_set<btPersistentManifold *> manifoldsToClear;
-
-  /// \brief A set of custom contact manifolds created and owned by gz-physics.
-  private: std::unordered_set<btPersistentManifold *> customManifolds;
 };
 
 /// Link information is embedded inside the model, so all we need to store here

@@ -26,7 +26,10 @@ namespace bullet_featherstone {
 /////////////////////////////////////////////////
 GzCollisionDispatcher::GzCollisionDispatcher(
     btCollisionConfiguration *_collisionConfiguration)
-    : btCollisionDispatcher(_collisionConfiguration) {}
+    : btCollisionDispatcher(_collisionConfiguration)
+{
+  std::cerr << " ========== GzCollisionDispatcher constructor " << std::endl;
+}
 
 /////////////////////////////////////////////////
 GzCollisionDispatcher::~GzCollisionDispatcher()
@@ -65,7 +68,6 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
 bool GzCollisionDispatcher::HasConvexHullChildShapes(
     const btCollisionShape *_shape)
 {
-  return false;
   if (!_shape || !_shape->isCompound())
     return false;
 
@@ -129,6 +131,7 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
     const btDispatcherInfo& dispatchInfo,
     btDispatcher* dispatcher)
 {
+  std::cerr << " ========== GzCollisionDispatcher dispatch all collision pairs" << std::endl;
   btCollisionDispatcher::dispatchAllCollisionPairs(
       pairCache, dispatchInfo, dispatcher);
 
@@ -167,13 +170,11 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; ++j)
     {
-      std::cerr << " get contact manifold point " << std::endl;
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
       const btCollisionShape *colShape0 = this->FindCollisionShape(
           compoundShape0, pt.m_index0);
       const btCollisionShape *colShape1 = this->FindCollisionShape(
           compoundShape1, pt.m_index1);
-      std::cerr << " found col shapes" << std::endl;
 
       if (!colShape0 || !colShape1 ||
          (!this->HasConvexHullChildShapes(colShape0) &&
@@ -183,21 +184,17 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
         continue;
       }
 
-      std::cerr << " retrieving contact manifold " << std::endl;
       btPersistentManifold* colManifold =
           this->colPairManifolds[colShape0][colShape1];
       if (!colManifold)
       {
-        std::cerr << " creating contact manifold " << std::endl;
         // create new custom manifold for the collision pair
         colManifold = this->getNewManifold(ob0, ob1);
         this->colPairManifolds[colShape0][colShape1] = colManifold;
         this->colPairManifolds[colShape1][colShape0] = colManifold;
         this->customManifolds.insert(colManifold);
       }
-      std::cerr << " adding contact manifold " << std::endl;
       colManifold->addManifoldPoint(pt);
-      std::cerr << " adding contact manifold done " << std::endl;
       colManifold->refreshContactPoints(ob0->getWorldTransform(),
                                         ob1->getWorldTransform());
     }
@@ -213,6 +210,7 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
 /////////////////////////////////////////////////
 void GzCollisionDispatcher::releaseManifold(btPersistentManifold *_manifold)
 {
+  std::cerr << " ========== GzCollisionDispatcher release manifold" << std::endl;
   auto manifoldIt = this->manifoldsToClear.find(_manifold);
   if (manifoldIt != this->manifoldsToClear.end())
     this->manifoldsToClear.erase(manifoldIt);
@@ -226,8 +224,10 @@ WorldInfo::WorldInfo(std::string name_)
 {
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
+  std::cerr << " ========================= creating dispatcher " << std::endl;
   this->dispatcher =
     std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
+  std::cerr << " ========================= creating dispatcher done " << std::endl;
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
