@@ -69,7 +69,7 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   GzCollisionDispatcher *dispatcher =
     dynamic_cast<GzCollisionDispatcher *>(world->world->getDispatcher());
   if (!dispatcher)
-    return;
+    return outContacts;
 
   int numManifolds = world->world->getDispatcher()->getNumManifolds();
   for (int i = 0; i < numManifolds; i++)
