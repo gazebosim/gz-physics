@@ -59,6 +59,7 @@ void SimulationFeatures::WorldForwardStep(
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
+  std::cerr << " get contacts from last step " << std::endl;
   std::vector<SimulationFeatures::ContactInternal> outContacts;
   auto *const world = this->ReferenceInterface<WorldInfo>(_worldID);
   if (!world)
@@ -67,6 +68,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   }
   GzCollisionDispatcher *dispatcher =
     dynamic_cast<GzCollisionDispatcher *>(world->world->getDispatcher());
+  if (!dispatcher)
+    return;
 
   int numManifolds = world->world->getDispatcher()->getNumManifolds();
   for (int i = 0; i < numManifolds; i++)
@@ -122,6 +125,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
         convert(pt.getPositionWorldOnA()), extraData});
       }
   }
+
+  std::cerr << " get contacts from last step done " << std::endl;
   return outContacts;
 }
 

@@ -520,6 +520,7 @@ TEST_F(CollisionMeshTestFeaturesList, MeshContacts)
       EXPECT_LT(contactSize, contacts.size());
     }
   }
+  std::cerr << " ======== done with mesh contacts test " << std::endl;
 }
 
 using CollisionStaticFeaturesList = gz::physics::FeatureList<
