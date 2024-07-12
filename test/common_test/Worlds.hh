@@ -39,6 +39,8 @@ const auto kJointAcrossModelsSdf = CommonTestWorld("joint_across_models.sdf");
 const auto kJointAcrossModelsFixedSdf =
     CommonTestWorld("joint_across_models_fixed.sdf");
 const auto kJointConstraintSdf = CommonTestWorld("joint_constraint.sdf");
+const auto kJointOffsetEmptyLinksSdf =
+    CommonTestWorld("joint_offset_empty_links.sdf");
 const auto kMimicFastSlowPendulumsWorld =
   CommonTestWorld("mimic_fast_slow_pendulums_world.sdf");
 const auto kMimicPendulumWorld = CommonTestWorld("mimic_pendulum_world.sdf");
