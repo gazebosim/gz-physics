@@ -28,13 +28,11 @@ GzCollisionDispatcher::GzCollisionDispatcher(
     btCollisionConfiguration *_collisionConfiguration)
     : btCollisionDispatcher(_collisionConfiguration)
 {
-  std::cerr << " ========== GzCollisionDispatcher constructor " << std::endl;
 }
 
 /////////////////////////////////////////////////
 GzCollisionDispatcher::~GzCollisionDispatcher()
 {
-  std::cerr << " ========== GzCollisionDispatcher destructor " << std::endl;
   for (auto& manifold : this->customManifolds)
   {
     btCollisionDispatcher::releaseManifold(manifold);
@@ -42,14 +40,12 @@ GzCollisionDispatcher::~GzCollisionDispatcher()
 
   this->customManifolds.clear();
   this->colPairManifolds.clear();
-  std::cerr << " ========== GzCollisionDispatcher destructor done " << std::endl;
 }
 
 /////////////////////////////////////////////////
 void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     btCollisionObject *_colObj)
 {
-  std::cerr << " ========== GzCollisionDispatcher remove manifold by col " << std::endl;
   std::unordered_set<btPersistentManifold *> manifoldsToRemove;
   for (const auto& manifold : this->customManifolds)
   {
@@ -65,7 +61,6 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     btCollisionDispatcher::releaseManifold(manifold);
     this->customManifolds.erase(manifold);
   }
-  std::cerr << " ========== GzCollisionDispatcher remove manifold by col done " << std::endl;
 }
 
 /////////////////////////////////////////////////
@@ -135,9 +130,9 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
     const btDispatcherInfo& dispatchInfo,
     btDispatcher* dispatcher)
 {
-  std::cerr << " ========== GzCollisionDispatcher dispatch all collision pairs" << std::endl;
   btCollisionDispatcher::dispatchAllCollisionPairs(
       pairCache, dispatchInfo, dispatcher);
+  return;
 
   // Loop through all the contact manifolds.
   // Find convex decomposed mesh collision shapes.
@@ -221,14 +216,11 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
 /////////////////////////////////////////////////
 void GzCollisionDispatcher::releaseManifold(btPersistentManifold *_manifold)
 {
-  std::cerr << " ========== GzCollisionDispatcher release manifold" << std::endl;
   auto manifoldIt = this->manifoldsToKeep.find(_manifold);
   if (manifoldIt != this->manifoldsToKeep.end())
     this->manifoldsToKeep.erase(manifoldIt);
 
-  std::cerr << " ========== GzCollisionDispatcher release manifold 0 " << std::endl;
   btCollisionDispatcher::releaseManifold(_manifold);
-  std::cerr << " ========== GzCollisionDispatcher release manifold done" << std::endl;
 }
 
 /////////////////////////////////////////////////
@@ -237,10 +229,8 @@ WorldInfo::WorldInfo(std::string name_)
 {
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
-  std::cerr << " ========================= creating dispatcher " << std::endl;
   this->dispatcher =
     std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
-  std::cerr << " ========================= creating dispatcher done " << std::endl;
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
