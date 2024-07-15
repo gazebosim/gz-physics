@@ -826,6 +826,12 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest,
 {
   for (const std::string &name : this->pluginNames)
   {
+    // This test requires https://github.com/bulletphysics/bullet3/pull/4462
+#ifdef BT_BULLET_VERSION_LE_325
+    if (this->PhysicsEngineName(name) == "bullet-featherstone")
+      GTEST_SKIP();
+#endif
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
