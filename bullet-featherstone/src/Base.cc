@@ -71,7 +71,7 @@ bool GzCollisionDispatcher::HasConvexHullChildShapes(
     return false;
 
   const btCompoundShape *compoundShape =
-      dynamic_cast<const btCompoundShape *>(_shape);
+      static_cast<const btCompoundShape *>(_shape);
   return (compoundShape->getNumChildShapes() > 0 &&
       compoundShape->getChildShape(0)->getShapeType() ==
       CONVEX_HULL_SHAPE_PROXYTYPE);
