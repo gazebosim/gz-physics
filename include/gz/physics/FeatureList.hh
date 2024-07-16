@@ -22,6 +22,16 @@
 
 #include <gz/physics/Feature.hh>
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+/// Suppress warnings about "base-class is already a base-class"
+/// Typically, this would indicate a diamond pattern in inheritance,
+/// but there are uses in the plugin mechanism recursive templates.
+/// The templates have no base classes, so there are no ambiguity
+/// concerns, so we can safely suppress the warning here.
+#pragma warning(disable: 4584)
+#endif  // defined(_MSC_VER)
+
 namespace ignition
 {
   namespace physics
@@ -111,4 +121,7 @@ namespace ignition
 
 #include <gz/physics/detail/FeatureList.hh>
 
-#endif
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif  // defined(_MSC_VER)
+#endif  // GZ_PHYSICS_FEATURELIST_HH_
