@@ -132,7 +132,6 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
 {
   btCollisionDispatcher::dispatchAllCollisionPairs(
       pairCache, dispatchInfo, dispatcher);
-  return;
 
   // Loop through all the contact manifolds.
   // Find convex decomposed mesh collision shapes.
