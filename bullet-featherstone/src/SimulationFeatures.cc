@@ -106,12 +106,30 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
      std::cerr << " get contacts from last step cast to link col shape "
                << std::endl;
 
+     std::cerr << " get contacts from last step is compound 0 "
+               << std::endl;
+     std::cerr << linkShape0->isCompound()
+               << std::endl;
+     std::cerr << " get contacts from last step is compound 1 "
+               << std::endl;
+     std::cerr << linkShape1->isCompound()
+               << std::endl;
+     std::cerr << " get contacts from last step is compound done "
+               << std::endl;
+
     if (!linkShape0 || !linkShape1 ||
         !linkShape0->isCompound() || !linkShape1->isCompound())
       continue;
 
+     std::cerr << " get contacts from last step cast to link col before cast 0"
+               << std::endl;
+
     const btCompoundShape *compoundShape0 =
         dynamic_cast<const btCompoundShape *>(linkShape0);
+
+     std::cerr << " get contacts from last step cast to link col before cast 1"
+               << std::endl;
+
     const btCompoundShape *compoundShape1 =
         dynamic_cast<const btCompoundShape *>(linkShape1);
 
