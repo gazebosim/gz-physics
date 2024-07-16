@@ -125,13 +125,13 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
                << std::endl;
 
     const btCompoundShape *compoundShape0 =
-        dynamic_cast<const btCompoundShape *>(linkShape0);
+        static_cast<const btCompoundShape *>(linkShape0);
 
      std::cerr << " get contacts from last step cast to link col before cast 1"
                << std::endl;
 
     const btCompoundShape *compoundShape1 =
-        dynamic_cast<const btCompoundShape *>(linkShape1);
+        static_cast<const btCompoundShape *>(linkShape1);
 
      std::cerr << " get contacts from last step cast to link col shape done "
                << std::endl;

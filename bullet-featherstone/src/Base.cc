@@ -170,9 +170,9 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
     }
 
     const btCompoundShape *compoundShape0 =
-        dynamic_cast<const btCompoundShape *>(ob0->getCollisionShape());
+        static_cast<const btCompoundShape *>(ob0->getCollisionShape());
     const btCompoundShape *compoundShape1 =
-        dynamic_cast<const btCompoundShape *>(ob1->getCollisionShape());
+        static_cast<const btCompoundShape *>(ob1->getCollisionShape());
 
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; ++j)
