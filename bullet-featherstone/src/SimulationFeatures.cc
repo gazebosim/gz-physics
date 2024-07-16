@@ -93,14 +93,38 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     std::cerr << " get contacts from last step cast compound shape " << i << ": "
               << contactManifold->getNumContacts() << std::endl;
 
+    /////////////
+     std::cerr << " get contacts from last step cast ob0 ob1 "
+              << ob0 << " " << ob1 << std::endl;
+
+    if (!ob0 || !ob1)
+      continue;
+
+    const btCollisionShape *linkShape0 = ob0->getCollisionShape();
+    const btCollisionShape *linkShape1 = ob1->getCollisionShape();
+
+     std::cerr << " get contacts from last step cast to link col shape "
+               << std::endl;
+
+    if (!linkShape0 || !linkShape1 ||
+        !linkShape0->isCompound() || !linkShape1->isCompound())
+      continue;
+
     const btCompoundShape *compoundShape0 =
-        dynamic_cast<const btCompoundShape *>(ob0->getCollisionShape());
+        dynamic_cast<const btCompoundShape *>(linkShape0);
     const btCompoundShape *compoundShape1 =
-        dynamic_cast<const btCompoundShape *>(ob1->getCollisionShape());
+        dynamic_cast<const btCompoundShape *>(linkShape1);
+
+     std::cerr << " get contacts from last step cast to link col shape done "
+               << std::endl;
+
 
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; j++)
     {
+     std::cerr << " get contacts from last step get contact point "
+               << std::endl;
+
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
 
       std::cerr << " get contacts from last step find col shape 0 " << j << std::endl;
