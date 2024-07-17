@@ -59,7 +59,6 @@ void SimulationFeatures::WorldForwardStep(
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
-  std::cerr << " get contacts from last step " << std::endl;
   std::vector<SimulationFeatures::ContactInternal> outContacts;
   auto *const world = this->ReferenceInterface<WorldInfo>(_worldID);
   if (!world)
@@ -67,15 +66,11 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     return outContacts;
   }
 
-  std::cerr << " get contacts from last step getting dispatcher " << std::endl;
   GzCollisionDispatcher *dispatcher =
     dynamic_cast<GzCollisionDispatcher *>(world->world->getDispatcher());
 
-  std::cerr << " get contacts from last step getting dispatcher 1 " << std::endl;
   if (!dispatcher)
     return outContacts;
-
-  std::cerr << " get contacts from last step getting dispatcher done " << std::endl;
 
   int numManifolds = world->world->getDispatcher()->getNumManifolds();
   for (int i = 0; i < numManifolds; i++)
@@ -83,19 +78,10 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     btPersistentManifold* contactManifold =
       world->world->getDispatcher()->getManifoldByIndexInternal(i);
 
-    std::cerr << " get contacts from last step get multi body link collider " << i << std::endl;
-
     const btMultiBodyLinkCollider* ob0 =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
     const btMultiBodyLinkCollider* ob1 =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-
-    std::cerr << " get contacts from last step cast compound shape " << i << ": "
-              << contactManifold->getNumContacts() << std::endl;
-
-    /////////////
-     std::cerr << " get contacts from last step cast ob0 ob1 "
-              << ob0 << " " << ob1 << std::endl;
 
     if (!ob0 || !ob1)
       continue;
@@ -103,52 +89,22 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     const btCollisionShape *linkShape0 = ob0->getCollisionShape();
     const btCollisionShape *linkShape1 = ob1->getCollisionShape();
 
-     std::cerr << " get contacts from last step cast to link col shape "
-               << std::endl;
-
-     std::cerr << " get contacts from last step is compound 0 "
-               << std::endl;
-     std::cerr << linkShape0->isCompound()
-               << std::endl;
-     std::cerr << " get contacts from last step is compound 1 "
-               << std::endl;
-     std::cerr << linkShape1->isCompound()
-               << std::endl;
-     std::cerr << " get contacts from last step is compound done "
-               << std::endl;
-
     if (!linkShape0 || !linkShape1 ||
         !linkShape0->isCompound() || !linkShape1->isCompound())
       continue;
 
-     std::cerr << " get contacts from last step cast to link col before cast 0"
-               << std::endl;
-
     const btCompoundShape *compoundShape0 =
         static_cast<const btCompoundShape *>(linkShape0);
-
-     std::cerr << " get contacts from last step cast to link col before cast 1"
-               << std::endl;
-
     const btCompoundShape *compoundShape1 =
         static_cast<const btCompoundShape *>(linkShape1);
-
-     std::cerr << " get contacts from last step cast to link col shape done "
-               << std::endl;
-
 
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; j++)
     {
-     std::cerr << " get contacts from last step get contact point "
-               << std::endl;
-
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
 
-      std::cerr << " get contacts from last step find col shape 0 " << j << std::endl;
       const btCollisionShape *colShape0 = dispatcher->FindCollisionShape(
           compoundShape0, pt.m_index0);
-      std::cerr << " get contacts from last step find col shape 1" << j << std::endl;
       const btCollisionShape *colShape1 = dispatcher->FindCollisionShape(
           compoundShape1, pt.m_index1);
 
@@ -182,7 +138,6 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       }
   }
 
-  std::cerr << " get contacts from last step done " << std::endl;
   return outContacts;
 }
 
