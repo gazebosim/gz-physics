@@ -25,6 +25,7 @@
 
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
+#include <sdf/Cone.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Ellipsoid.hh>
 #include <sdf/Geometry.hh>
@@ -974,6 +975,14 @@ bool SDFFeatures::AddSdfCollision(
   {
     const auto radius = sphere->Radius();
     shape = std::make_unique<btSphereShape>(static_cast<btScalar>(radius));
+  }
+  else if (const auto *cone = geom->ConeShape())
+  {
+    const auto radius = static_cast<btScalar>(cone->Radius());
+    const auto height = static_cast<btScalar>(cone->Length());
+    shape =
+      std::make_unique<btConeShapeZ>(radius, height);
+    shape->setMargin(0.0);
   }
   else if (const auto *cylinder = geom->CylinderShape())
   {

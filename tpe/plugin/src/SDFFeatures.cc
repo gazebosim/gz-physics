@@ -19,6 +19,7 @@
 
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
+#include <sdf/Cone.hh>
 #include <sdf/Cylinder.hh>
 #include <sdf/Ellipsoid.hh>
 #include <sdf/Sphere.hh>
@@ -290,6 +291,14 @@ Identity SDFFeatures::ConstructSdfCollision(
     tpelib::CapsuleShape shape;
     shape.SetRadius(capsuleSdf->Radius());
     shape.SetLength(capsuleSdf->Length());
+    collision->SetShape(shape);
+  }
+  else if (geom->Type() == ::sdf::GeometryType::CONE)
+  {
+    const auto coneSdf = geom->ConeShape();
+    tpelib::ConeShape shape;
+    shape.SetRadius(coneSdf->Radius());
+    shape.SetLength(coneSdf->Length());
     collision->SetShape(shape);
   }
   else if (geom->Type() == ::sdf::GeometryType::CYLINDER)
