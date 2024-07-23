@@ -33,9 +33,10 @@ namespace gz
       class Link : public virtual Feature::Link<PolicyT, FeaturesT>
       {
         /// \brief Set link to be kinematic.
-        /// A kinematic link does not react to forces, e.g. gravity or other dynamic
-        /// objects. It reacts to pose or velocity commands that are set on the link
-        /// (via a FreeGroup) or on the joint that connects the kinematic links.
+        /// A kinematic link does not react to forces, e.g. gravity or other
+        /// dynamic objects. It reacts to pose or velocity commands that are
+        /// set on the link (via a FreeGroup) or on the joint that connects the
+        /// kinematic links.
         /// \param[i] _kinematic True to make this link kinematic.
         public: void SetKinematic(bool _kinematic);
 
