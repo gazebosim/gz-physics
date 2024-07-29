@@ -29,6 +29,7 @@ Gazebo.
   depth is the distance from a contact point to the surface.
 
   depth > 0 :: inside the object
+
   depth < 0 :: outside the object
 
 - The process of computing contact points for a pair of objects is often called
@@ -54,6 +55,7 @@ limit contact depth.
 - The constraint is unilateral:
 
   depth < 0 ==> `F_N` = 0
+
   `F_N` > 0 ==> depth >= 0
 
 - Constraint relaxation parameters allow tuning the relationship between normal
