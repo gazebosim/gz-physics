@@ -18,10 +18,66 @@
 #include "FreeGroupFeatures.hh"
 
 #include <memory>
+#include <unordered_map>
 
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/////////////////////////////////////////////////
+btTransform getWorldTransformForLink(btMultiBody *_body, int _linkIndex)
+{
+  if (_linkIndex == -1)
+  {
+    return _body->getBaseWorldTransform();
+  }
+  else
+  {
+    btMultiBodyLinkCollider *collider = _body->getLinkCollider(_linkIndex);
+    return collider->getWorldTransform();
+  }
+}
+
+/////////////////////////////////////////////////
+void enforceFixedConstraint(
+    btMultiBodyFixedConstraint *_fixedConstraint,
+    const std::unordered_map<std::size_t, Base::JointInfoPtr> &_allJoints)
+{
+  // Update fixed constraint's child link pose to maintain a fixed transform
+  // from the parent link.
+  btMultiBody *parent = _fixedConstraint->getMultiBodyA();
+  btMultiBody *child = _fixedConstraint->getMultiBodyB();
+
+  btTransform parentToChildTf;
+  parentToChildTf.setOrigin(_fixedConstraint->getPivotInA());
+  parentToChildTf.setBasis(_fixedConstraint->getFrameInA());
+
+  int parentLinkIndex = _fixedConstraint->getLinkA();
+  int childLinkIndex = _fixedConstraint->getLinkB();
+
+  btTransform parentLinkTf = getWorldTransformForLink(parent, parentLinkIndex);
+  btTransform childLinkTf = getWorldTransformForLink(child, childLinkIndex);
+
+  btTransform expectedChildLinkTf = parentLinkTf * parentToChildTf;
+  btTransform childBaseTf =  child->getBaseWorldTransform();
+  btTransform childBaseToLink =
+      childBaseTf.inverse() * childLinkTf;
+  btTransform newChildBaseTf =
+      expectedChildLinkTf * childBaseToLink.inverse();
+  child->setBaseWorldTransform(newChildBaseTf);
+  for (const auto &joint : _allJoints)
+  {
+    if (joint.second->fixedConstraint)
+    {
+      // Recursively enforce constraints where the child here is a parent to
+      // other constraints.
+      if (joint.second->fixedConstraint->getMultiBodyA() == child)
+      {
+        enforceFixedConstraint(joint.second->fixedConstraint.get(), _allJoints);
+      }
+    }
+  }
+}
 
 /////////////////////////////////////////////////
 Identity FreeGroupFeatures::FindFreeGroupForModel(
@@ -32,6 +88,20 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   // Reject if the model has fixed base
   if (model->body->hasFixedBase())
     return this->GenerateInvalidId();
+
+  // Also reject if the model is a child of a fixed constraint
+  // (detachable joint)
+  for (const auto & joint : this->joints)
+  {
+    if (joint.second->fixedConstraint)
+    {
+      if (joint.second->fixedConstraint->getMultiBodyB() == model->body.get())
+      {
+        return this->GenerateInvalidId();
+      }
+    }
+  }
+
 
   return _modelID;
 }
@@ -69,6 +139,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   if (model)
   {
     model->body->setBaseOmega(convertVec(_angularVelocity));
+    model->body->wakeUp();
   }
 }
 
@@ -82,6 +153,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   if (model)
   {
     model->body->setBaseVel(convertVec(_linearVelocity));
+    model->body->wakeUp();
   }
 }
 
@@ -95,6 +167,25 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   {
     model->body->setBaseWorldTransform(
         convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
+
+    model->body->wakeUp();
+
+    for (auto & joint : this->joints)
+    {
+      if (joint.second->fixedConstraint)
+      {
+        // Only the parent body of a fixed joint can be moved but we need to
+        // enforce the fixed constraint by updating the child pose so it
+        // remains at a fixed transform from parent. We do this recursively to
+        // account for other constraints attached to the child.
+        btMultiBody *parent = joint.second->fixedConstraint->getMultiBodyA();
+        if (parent == model->body.get())
+        {
+          enforceFixedConstraint(joint.second->fixedConstraint.get(),
+              this->joints);
+        }
+      }
+    }
   }
 }
 

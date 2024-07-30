@@ -78,7 +78,7 @@ gz_find_package(DART
     utils
     utils-urdf
   CONFIG
-  VERSION 6.9
+  VERSION 6.10
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)

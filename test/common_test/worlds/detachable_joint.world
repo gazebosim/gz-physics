@@ -101,6 +101,7 @@
       <link name="link2">
         <inertial>
           <mass>1.0</mass>
+          <pose>0.0 0 0.3 0 0 0</pose>
           <inertia>
             <ixx>0.0068</ixx>
             <ixy>0</ixy>

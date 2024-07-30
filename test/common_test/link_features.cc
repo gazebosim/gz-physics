@@ -293,14 +293,26 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
   }
 }
 
-TYPED_TEST(LinkFeaturesTest, AxisAlignedBoundingBox)
+using LinkBoundingBoxFeaturesList = gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::GetEntities,
+    gz::physics::GetLinkBoundingBox,
+    gz::physics::GetModelBoundingBox
+>;
+
+using LinkBoundingBoxFeaturesTestTypes =
+  LinkFeaturesTest<LinkBoundingBoxFeaturesList>;
+
+TEST_F(LinkBoundingBoxFeaturesTestTypes, AxisAlignedBoundingBox)
 {
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
+    auto engine =
+        gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -312,9 +324,6 @@ TYPED_TEST(LinkFeaturesTest, AxisAlignedBoundingBox)
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
     EXPECT_NE(nullptr, world);
-
-    EXPECT_NE(nullptr, world);
-    world->SetGravity(Eigen::Vector3d{0, 0, -9.8});
 
     auto model = world->GetModel("double_pendulum_with_base");
     auto baseLink = model->GetLink("base");
@@ -363,9 +372,6 @@ TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
     EXPECT_NE(nullptr, world);
-
-    EXPECT_NE(nullptr, world);
-    world->SetGravity(Eigen::Vector3d{0, 0, -9.8});
 
     auto model = world->GetModel("sphere");
     auto bbox = model->GetAxisAlignedBoundingBox();

@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="pose_offset">
+    <model name="model">
+      <pose>1 0 0 0 0 0</pose>
+      <link name="base">
+        <pose>0 1 0 0 0 0</pose>
+        <inertial>
+          <mass>100</mass>
+        </inertial>
+        <collision name="base_collision">
+          <pose>0 0 0.01 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.8</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+      <link name="link">
+        <pose>0 0 2.1 -1.5708 0 0</pose>
+        <self_collide>0</self_collide>
+        <inertial>
+          <pose>0 0 0.5 0 0 0</pose>
+        </inertial>
+        <collision name="link_collision">
+          <pose>-0.05 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.3</length>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+      <joint name="joint" type="fixed">
+        <parent>base</parent>
+        <child>link</child>
+        <axis>
+          <xyz>1.0 0 0</xyz>
+        </axis>
+      </joint>
+    </model>
+  </world>
+</sdf>
