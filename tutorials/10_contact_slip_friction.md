@@ -11,6 +11,9 @@ Gazebo.
 ## Conceptual definitions
 
 - **Contact** occurs when two objects are touching.
+
+![Illustration of pairs of shapes touching: two boxes, a box and circle, and two circles.](img/contact_boxes_circles.svg)
+
 - **Slip** is a measure of relative tangential motion between contacting surfaces.
 - **Friction** is a physical effect that restricts relative tangential motion
   between contacting surfaces.
