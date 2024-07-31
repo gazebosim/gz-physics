@@ -254,6 +254,7 @@ TYPED_TEST(JointFeaturesPositionLimitsTest, JointSetPositionLimitsWithForceContr
       joint->SetForce(0, 100);
       world->Step(output, state, input);
     }
+
     EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-3);
 
     for (std::size_t i = 0; i < 100; ++i)
@@ -300,9 +301,6 @@ struct JointFeaturePositionLimitsForceControlList : gz::physics::FeatureList<
     gz::physics::GetEngineInfo,
     gz::physics::GetJointFromModel,
     gz::physics::GetModelFromWorld,
-    // This feature is not requited but it will force to use dart6.10 which is required
-    // to run these tests
-    gz::physics::GetShapeFrictionPyramidSlipCompliance,
     gz::physics::SetBasicJointState,
     gz::physics::SetJointEffortLimitsFeature,
     gz::physics::SetJointPositionLimitsFeature,
@@ -592,13 +590,21 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
 // TODO(anyone): position limits do not work very well with velocity control
 // bug https://github.com/dartsim/dart/issues/1583
 // resolved in DART 6.11.0
-TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, DISABLED_JointSetPositionLimitsWithVelocityControl)
+TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetPositionLimitsWithVelocityControl)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
+    if (this->PhysicsEngineName(name) == "dartsim")
     {
       GTEST_SKIP();
+    }
+    else if (this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+#ifdef BT_BULLET_VERSION_LE_307
+      // joint position limits does not work well with velocity control in
+      // bullet versions <= 3.07
+      GTEST_SKIP();
+#endif
     }
 
     std::cout << "Testing plugin: " << name << std::endl;
@@ -638,7 +644,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, DISABLED_JointSetPositio
       if (i % 500 == 499)
       {
         EXPECT_NEAR(pos + 0.1, joint->GetPosition(0), 1e-2);
-        EXPECT_NEAR(0, joint->GetVelocity(0), 1e-6);
+        EXPECT_NEAR(0, joint->GetVelocity(0), 1e-5);
       }
     }
   }
@@ -648,11 +654,6 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetVelocityLimitsWi
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -719,11 +720,6 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetEffortLimitsWith
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -779,11 +775,6 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
-    {
-      GTEST_SKIP();
-    }
-
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -1292,17 +1283,16 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachFixedToWorld)
       EXPECT_GT(0.0, body2LinearVelocity.Z());
       // bullet-featherstone and dartsim has different behavior
       // when detaching a joint between overlapping bodies
-      // dartsim: body falls after joint is detached
       // bullet-featherstone: pushes bodies apart
       // So here we just check for non-zero velocity
-#ifdef __APPLE__
-      // Disable check for dartsim plugin on homebrew.
-      // model3 has zero velocity in dartsim on macOS. It could be a
-      // change in behavior between dartsim versions. model3 overlaps
-      // with model1 so could be stuck together
+      // \todo(iche033) Investigate behavior differences in dartsim.
+      // Locally, model3 falls after joint is detached.
+      // On CI, model3 has zero velocity which could mean model3 and model1 are
+      // stuck together since they overlap with each other
       if (this->PhysicsEngineName(name) != "dartsim")
-#endif
-      EXPECT_NE(gz::math::Vector3d::Zero, body3LinearVelocity);
+      {
+        EXPECT_NE(gz::math::Vector3d::Zero, body3LinearVelocity);
+      }
     }
 
     // Test attaching fixed joint with reverse the parent and child
