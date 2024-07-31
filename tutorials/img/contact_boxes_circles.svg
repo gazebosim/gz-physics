@@ -1,11 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 132 88" fill="none">
-  <!-- Left box and box -->
-  <rect x="8" y="43.5" width="36" height="36" rx="2" fill="#F97316"/>
-  <rect x="8" y="8" width="36" height="36" rx="2" fill="#AA2288"/>
-  <!-- Center box and circle -->
-  <rect x="48" y="43.5" width="36" height="36" rx="2" fill="#F97316"/>
-  <circle cx="66" cy="26" r="18.0" fill="#AA2288"/>
-  <!-- Right box and circle -->
-  <circle cx="106" cy="26" r="18.0" fill="#AA2288"/>
-  <circle cx="106" cy="61.5" r="18.0" fill="#F97316"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 140 88" fill="none">
+  <!-- Bottom: orange box, box, circle -->
+  <g fill="#F97316" transform="translate(70, 61.5)">
+    <rect x="-62" y="-18" width="36" height="36" rx="2"/>
+    <rect x="-18" y="-18" width="36" height="36" rx="2"/>
+    <circle cx="44" cy="0" r="18.0"/>
+  </g>
+  <!-- Top: purple box, circle, circle -->
+  <g fill="#AA2288" transform="translate(70, 26)">
+    <rect x="-62" y="-18" width="36" height="36" rx="2"/>
+    <circle cx="0" cy="0" r="18.0"/>
+    <circle cx="44" cy="0" r="18.0"/>
+  </g>
 </svg>
