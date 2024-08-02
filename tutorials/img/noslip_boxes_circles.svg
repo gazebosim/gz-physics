@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="475" height="200" viewBox="0 0 209 88" fill="none">
+  <!-- Bottom: orange box, box, circle -->
+  <g fill="#F97316" transform="translate(104.5, 61.5)">
+    <rect x="-96.5" y="-18" width="36" height="36" rx="2"/>
+    <!-- Wider ground box -->
+    <rect x="-52.5" y="-18" width="108" height="36" rx="2"/>
+    <!-- Spinning circle with reference point -->
+    <g>
+      <circle cx="79" cy="0" r="18.0"/>
+      <circle cx="79" cy="18" r="2" fill-opacity="0" stroke="#000"/>
+      <animateTransform attributeName="transform"
+        begin="0s" dur="5s"
+        type="rotate" from="0 79 0" to="360 79 0"
+        repeatCount="indefinite"/>
+    </g>
+  </g>
+  <!-- Top: purple box, circle, circle -->
+  <g fill="#AA2288" transform="translate(104.5, 26)">
+    <rect x="-96.5" y="-18" width="36" height="36" rx="2"/>
+    <!-- Rolling circle with reference point -->
+    <g>
+      <g>
+        <circle cx="-36" cy="3" r="15.0"/>
+        <circle cx="-36" cy="-12" r="2" fill-opacity="0" stroke="#000"/>
+        <animateTransform attributeName="transform"
+          begin="0s" dur="10s"
+          type="rotate" from="0 -36 3" to="270 -36 3"
+          repeatCount="indefinite"/>
+      </g>
+      <animateTransform attributeName="transform"
+          begin="0s" dur="10s"
+          type="translate" from="0 0" to="70.68 0"
+          repeatCount="indefinite"/>
+    </g>
+    <!-- Spinning circle with reference point -->
+    <g>
+      <circle cx="79" cy="0" r="18.0"/>
+      <circle cx="79" cy="-18" r="2" fill-opacity="0" stroke="#000"/>
+      <animateTransform attributeName="transform"
+        begin="0s" dur="5s"
+        type="rotate" from="0 79 0" to="-360 79 0"
+        repeatCount="indefinite"/>
+    </g>
+  </g>
+</svg>
