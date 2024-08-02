@@ -11,12 +11,17 @@
   </g>
   <!-- Top: purple box, circle, circle -->
   <g fill="#AA2288" transform="translate(104.5, 26)">
-    <rect x="-96.5" y="-18" width="36" height="36" rx="2"/>
-    <!-- Sliding circle with reference point -->
     <g>
+      <!-- Sliding box -->
+      <rect x="-96.5" y="-18" width="36" height="36" rx="2"/>
+      <!-- Sliding circle with reference point -->
       <g>
         <circle cx="-36" cy="3" r="15.0"/>
-        <circle cx="-36" cy="18" r="2" fill-opacity="0" stroke="#000"/>
+        <circle cx="-36" cy="-12" r="2" fill-opacity="0" stroke="#000"/>
+        <animateTransform attributeName="transform"
+          begin="0s" dur="10s"
+          type="rotate" from="0 -36 3" to="-270 -36 3"
+          repeatCount="indefinite"/>
       </g>
       <animateTransform attributeName="transform"
           begin="0s" dur="10s"

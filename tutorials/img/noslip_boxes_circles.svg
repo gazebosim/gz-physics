@@ -15,9 +15,10 @@
   </g>
   <!-- Top: purple box, circle, circle -->
   <g fill="#AA2288" transform="translate(104.5, 26)">
+    <!-- Stationary box -->
     <rect x="-96.5" y="-18" width="36" height="36" rx="2"/>
-    <!-- Rolling circle with reference point -->
     <g>
+      <!-- Rolling circle with reference point -->
       <g>
         <circle cx="-36" cy="3" r="15.0"/>
         <circle cx="-36" cy="-12" r="2" fill-opacity="0" stroke="#000"/>
