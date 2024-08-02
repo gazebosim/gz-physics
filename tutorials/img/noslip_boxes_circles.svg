@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="475" height="200" viewBox="0 0 209 88" fill="none">
-  <!-- Bottom: orange box, box, circle -->
+  <!-- Bottom: orange box and circle -->
   <g fill="#F97316" transform="translate(104.5, 61.5)">
-    <rect x="-96.5" y="-18" width="36" height="36" rx="2"/>
-    <!-- Wider ground box -->
-    <rect x="-52.5" y="-18" width="108" height="36" rx="2"/>
+    <!-- Wide ground box -->
+    <rect x="-96.5" y="-18" width="152" height="36" rx="2"/>
     <!-- Spinning circle with reference point -->
     <g>
       <circle cx="79" cy="0" r="18.0"/>
