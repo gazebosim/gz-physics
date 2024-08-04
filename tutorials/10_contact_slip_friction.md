@@ -12,9 +12,20 @@ Gazebo.
 
 - **Contact** occurs when two objects are touching.
 
-![Illustration of pairs of shapes touching: two boxes, a box and circle, and two circles.](img/contact_boxes_circles.svg)
+![Illustration of shapes touching: a long box touching a smaller box and a circle, and two circles touching each other.](img/contact_boxes_circles.svg)
 
-- **Slip** is a measure of relative tangential motion between contacting surfaces.
+- **Slip** is a measure of relative motion along the surface of contacting objects.
+  It can have units of meters/second for translational slip or radians/second
+  for rotational slip.
+
+    - Illustration of objects in contact without slip
+
+![Illustration of shapes touching without slip: two stationary boxes, a circle rolling on top of a stationary box, and two circles rolling against each other.](img/noslip_boxes_circles.svg)
+
+    - Illustration of objects in contact with slip
+
+![Illustration of shapes touching with slip: a box sliding along the surface of a longer box, a circle sliding and counter-rotating on top of a stationary box, and a circle sninning in place on top of a stationary circle.](img/noslip_boxes_circles.svg)
+
 - **Friction** is a physical effect that restricts relative tangential motion
   between contacting surfaces.
 
