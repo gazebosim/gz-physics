@@ -627,9 +627,6 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
-    ASSERT_NE(nullptr, freeGroup->CanonicalLink());
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
@@ -1273,10 +1270,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
     auto model = world->GetModel("box");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
-      ASSERT_NE(nullptr, freeGroup->CanonicalLink());
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
-      ASSERT_NE(nullptr, freeGroup->RootLink());
+    ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("box_link");
     auto freeGroupLink = link->FindFreeGroup();
