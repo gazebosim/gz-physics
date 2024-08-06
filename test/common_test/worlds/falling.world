@@ -71,5 +71,17 @@
         </visual>
       </link>
     </model>
+    <model name='sphere_no_gravity'>
+      <link name='link'>
+        <gravity>false</gravity>
+        <pose>10 10 10 0 0 0</pose>
+        <visual name='visual'>
+          <geometry><sphere><radius>1</radius></sphere></geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry><sphere><radius>1</radius></sphere></geometry>
+        </collision>
+      </link>
+    </model>
   </world>
 </sdf>
