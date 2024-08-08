@@ -674,6 +674,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
+  bodyProperties.mGravityMode = _sdfLink.EnableGravity();
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
