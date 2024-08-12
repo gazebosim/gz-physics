@@ -76,6 +76,16 @@ foreach(test ${tests})
       "BT_BULLET_VERSION_LE_325"
     )
   endif()
+  if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.06)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_LE_306"
+    )
+  endif()
+  if (bullet_version_check_VERSION VERSION_LESS_EQUAL 3.07)
+    target_compile_definitions(${test_executable} PRIVATE
+      "BT_BULLET_VERSION_LE_307"
+    )
+  endif()
 
   if (DART_HAS_CONTACT_SURFACE_HEADER)
     target_compile_definitions(${test_executable} PRIVATE DART_HAS_CONTACT_SURFACE)

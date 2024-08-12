@@ -2,7 +2,7 @@
 
 This component enables the use of this [Bullet Physics](https://github.com/bulletphysics/bullet3) `btMultiBody` Featherstone implementation.
 The Featherstone uses minimal coordinates to represent articulated bodies and efficiently simulate them.
- 
+
 # Features
 
 Originally tracked via: [Bullet featherstone meta-ticket](https://github.com/gazebosim/gz-physics/issues/423)
@@ -11,7 +11,7 @@ Originally tracked via: [Bullet featherstone meta-ticket](https://github.com/gaz
 
 * Constructing SDF Models
 * Constructing SDF Worlds
-* Joint Types: 
+* Joint Types:
   * Fixed
   * Prismatic
   * Revolute
@@ -25,7 +25,7 @@ Originally tracked via: [Bullet featherstone meta-ticket](https://github.com/gaz
 
 These are the specific physics API features implemented.
 
-* Entity Management Features 
+* Entity Management Features
   * ConstructEmptyWorldFeature
   * GetEngineInfo
   * GetJointFromModel
@@ -47,6 +47,9 @@ These are the specific physics API features implemented.
   * SetBasicJointState
   * GetBasicJointProperties
   * SetJointVelocityCommandFeature
+  * SetJointPositionLimitsFeature,
+  * SetJointVelocityLimitsFeature,
+  * SetJointEffortLimitsFeature,
   * SetJointTransformFromParentFeature
   * AttachFixedJointFeature
   * DetachJointFeature
@@ -65,6 +68,8 @@ These are the specific physics API features implemented.
   * AttachBoxShapeFeature
   * GetCapsuleShapeProperties
   * AttachCapsuleShapeFeature
+  * GetConeShapeProperties
+  * AttachConeShapeFeature
   * GetCylinderShapeProperties
   * AttachCylinderShapeFeature
   * GetEllipsoidShapeProperties

@@ -30,7 +30,8 @@ namespace bullet_featherstone {
 struct KinematicsFeatureList : gz::physics::FeatureList<
   LinkFrameSemantics,
   ModelFrameSemantics,
-  FreeGroupFrameSemantics
+  FreeGroupFrameSemantics,
+  ShapeFrameSemantics
 > { };
 
 class KinematicsFeatures :

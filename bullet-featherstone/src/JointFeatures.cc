@@ -18,7 +18,10 @@
 #include "JointFeatures.hh"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <memory>
+#include <unordered_map>
 
 #include <gz/common/Console.hh>
 #include <sdf/Joint.hh>
@@ -26,6 +29,108 @@
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/////////////////////////////////////////////////
+void recreateJointLimitConstraint(JointInfo *_jointInfo, ModelInfo *_modelInfo,
+    WorldInfo *_worldInfo)
+{
+  const auto *identifier = std::get_if<InternalJoint>(&_jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  if (_jointInfo->jointLimits)
+  {
+    _worldInfo->world->removeMultiBodyConstraint(_jointInfo->jointLimits.get());
+    _jointInfo->jointLimits.reset();
+  }
+
+  _jointInfo->jointLimits =
+    std::make_shared<btMultiBodyJointLimitConstraint>(
+      _modelInfo->body.get(), identifier->indexInBtModel,
+      static_cast<btScalar>(_jointInfo->axisLower),
+      static_cast<btScalar>(_jointInfo->axisUpper));
+
+  _worldInfo->world->addMultiBodyConstraint(_jointInfo->jointLimits.get());
+}
+
+/////////////////////////////////////////////////
+void makeColliderStatic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  // if link is already static or fixed, we do not need to change its
+  // collision flags
+  if (_linkInfo->isStaticOrFixed)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  childProxy->m_collisionFilterGroup = btBroadphaseProxy::StaticFilter;
+  childProxy->m_collisionFilterMask =
+      btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+#if BT_BULLET_VERSION >= 307
+  childCollider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#endif
+}
+
+/////////////////////////////////////////////////
+void makeColliderDynamic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  // If broadphase and collision object flags do not agree, the
+  // link was originally non-static but made static by AttachJoint
+  if (!_linkInfo->isStaticOrFixed &&
+      ((childProxy->m_collisionFilterGroup &
+      btBroadphaseProxy::StaticFilter) > 0))
+  {
+    childProxy->m_collisionFilterGroup =
+        btBroadphaseProxy::DefaultFilter;
+    childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
+#if BT_BULLET_VERSION >= 307
+    childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+#endif
+  }
+}
+
+/////////////////////////////////////////////////
+void updateColliderFlagsRecursive(std::size_t _linkID,
+  const std::unordered_map<std::size_t, std::shared_ptr<JointInfo>> &_joints,
+  const std::unordered_map<std::size_t, std::shared_ptr<LinkInfo>> &_links,
+  std::function<void(LinkInfo *)> _updateColliderCb)
+{
+  btMultiBodyFixedConstraint *fixedConstraint = nullptr;
+  std::size_t childLinkID = 0u;
+  for (const auto &joint : _joints)
+  {
+    if (!joint.second->fixedConstraint)
+      continue;
+    if (!joint.second->parentLinkID.has_value() ||
+        joint.second->parentLinkID.value() != _linkID)
+      continue;
+
+    fixedConstraint =  joint.second->fixedConstraint.get();
+    childLinkID = std::size_t(joint.second->childLinkID);
+  }
+
+  if (!fixedConstraint)
+    return;
+
+  auto childInfo = _links.at(childLinkID);
+  _updateColliderCb(childInfo.get());
+
+  updateColliderFlagsRecursive(childLinkID, _joints, _links, _updateColliderCb);
+}
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointPosition(
@@ -78,18 +183,59 @@ double JointFeatures::GetJointAcceleration(
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
-    const Identity &_id, const std::size_t _dof) const
+    const Identity &_id, const std::size_t /*_dof*/) const
 {
+  double results = gz::math::NAN_D;
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
+
   if (identifier)
   {
     const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->getJointTorqueMultiDof(
-          identifier->indexInBtModel)[_dof];
+    auto feedback = model->body->getLink(
+      identifier->indexInBtModel).m_jointFeedback;
+    const auto &link = model->body->getLink(identifier->indexInBtModel);
+    results = 0.0;
+    if (link.m_jointType == btMultibodyLink::eRevolute)
+    {
+      // According to the documentation in btMultibodyLink.h,
+      // m_axesTop[0] is the joint axis for revolute joints.
+      Eigen::Vector3d axis = convert(link.getAxisTop(0));
+      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
+      btVector3 angular = feedback->m_reactionForces.getAngular();
+      math::Vector3d angularTorque(
+        angular.getX(),
+        angular.getY(),
+        angular.getZ());
+      results += axis_converted.Dot(angularTorque);
+      #if BT_BULLET_VERSION < 326
+        // not always true
+        return results / 2.0;
+      #else
+        return results;
+      #endif
+    }
+    else if (link.m_jointType == btMultibodyLink::ePrismatic)
+    {
+      auto axis = convert(link.getAxisBottom(0));
+      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
+      btVector3 linear = feedback->m_reactionForces.getLinear();
+      math::Vector3d linearForce(
+        linear.getX(),
+        linear.getY(),
+        linear.getZ());
+      results += axis_converted.Dot(linearForce);
+      #if BT_BULLET_VERSION < 326
+        // Not always true see for reference:
+        // https://github.com/bulletphysics/bullet3/discussions/3713
+        // https://github.com/gazebosim/gz-physics/issues/565
+        return results / 2.0;
+      #else
+        return results;
+      #endif
+    }
   }
-
-  return gz::math::NAN_D;
+  return results;
 }
 
 /////////////////////////////////////////////////
@@ -156,8 +302,13 @@ void JointFeatures::SetJointForce(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+
+  // clamp the values
+  double force = std::clamp(_value,
+      joint->minEffort, joint->maxEffort);
+
   model->body->getJointTorqueMultiDof(
-    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(_value);
+    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(force);
   model->body->wakeUp();
 }
 
@@ -288,18 +439,151 @@ void JointFeatures::SetJointVelocityCommand(
   auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
   if (!jointInfo->motor)
   {
+    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+    // \todo(iche033) The motor constraint is created with a max impulse
+    // computed by maxEffort * stepsize. However, our API supports
+    // stepping sim with varying dt. We should recompute max impulse
+    // if stepSize changes.
     jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
       0,
       static_cast<btScalar>(0),
-      static_cast<btScalar>(jointInfo->effort));
-    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+      static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
     world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
 
-  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(_value));
+  // clamp the values
+  double velocity = std::clamp(_value,
+      jointInfo->minVelocity, jointInfo->maxVelocity);
+
+  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinPosition(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint position value [" << _value
+           << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+  jointInfo->axisLower = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  recreateJointLimitConstraint(jointInfo, modelInfo, worldInfo);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxPosition(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint position value [" << _value
+           << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->axisUpper = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  recreateJointLimitConstraint(jointInfo, modelInfo, worldInfo);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinVelocity(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->minVelocity = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxVelocity(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->maxVelocity = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinEffort(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint effort value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+
+    return;
+  }
+
+  jointInfo->minEffort = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxEffort(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint effort value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  jointInfo->maxEffort = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+
+  if (jointInfo->motor)
+  {
+    world->world->removeMultiBodyConstraint(jointInfo->motor.get());
+    jointInfo->motor.reset();
+  }
+
+  jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
+    modelInfo->body.get(),
+    std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
+    0,
+    static_cast<btScalar>(0),
+    static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
+  world->world->addMultiBodyConstraint(jointInfo->motor.get());
 }
 
 /////////////////////////////////////////////////
@@ -341,6 +625,31 @@ Identity JointFeatures::AttachFixedJoint(
   if (world != nullptr && world->world)
   {
     world->world->addMultiBodyConstraint(jointInfo->fixedConstraint.get());
+    jointInfo->fixedConstraint->setMaxAppliedImpulse(btScalar(1e9));
+
+    // Make child link static if parent is static
+    // This is done by updating collision flags
+    btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
+    btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
+    if (parentCollider && childCollider)
+    {
+      // disable collision between parent and child collider
+      // \todo(iche033) if self collide is true, extend this to
+      // disable collisions between all the links in the parent's model with
+      // all the links in the child's model.
+      parentCollider->setIgnoreCollisionCheck(childCollider, true);
+      childCollider->setIgnoreCollisionCheck(parentCollider, true);
+
+      // If parent link is static or fixed, recusively update child colliders
+      // collision flags to be static.
+      if (parentLinkInfo->isStaticOrFixed && !linkInfo->isStaticOrFixed)
+      {
+        makeColliderStatic(linkInfo);
+        updateColliderFlagsRecursive(std::size_t(_childID),
+            this->joints, this->links, makeColliderStatic);
+      }
+    }
+
     return this->GenerateIdentity(jointID, this->joints.at(jointID));
   }
 
@@ -353,6 +662,37 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
   if (jointInfo->fixedConstraint)
   {
+    // Make links dynamic again as they were originally not static
+    // This is done by reverting any collision flag changes
+    // made in AttachJoint
+    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+    if (jointInfo->parentLinkID.has_value())
+    {
+      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
+
+      btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
+      btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
+      if (parentCollider && childCollider)
+      {
+        parentCollider->setIgnoreCollisionCheck(childCollider, false);
+        childCollider->setIgnoreCollisionCheck(parentCollider, false);
+        btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+        if (childProxy)
+        {
+          // Recursively make child colliders dynamic if they were originally
+          // not static
+          if (!linkInfo->isStaticOrFixed &&
+              ((childProxy->m_collisionFilterGroup &
+              btBroadphaseProxy::StaticFilter) > 0))
+          {
+            makeColliderDynamic(linkInfo);
+            updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
+                this->joints, this->links, makeColliderDynamic);
+          }
+        }
+      }
+    }
+
     auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
     if (modelInfo)
     {
@@ -360,6 +700,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       world->world->removeMultiBodyConstraint(jointInfo->fixedConstraint.get());
       jointInfo->fixedConstraint.reset();
       jointInfo->fixedConstraint = nullptr;
+      modelInfo->body->wakeUp();
     }
   }
 }
@@ -372,11 +713,19 @@ void JointFeatures::SetJointTransformFromParent(
 
   if (jointInfo->fixedConstraint)
   {
-      auto tf = convertTf(_pose);
-      jointInfo->fixedConstraint->setPivotInA(
-        tf.getOrigin());
-      jointInfo->fixedConstraint->setFrameInA(
-        tf.getBasis());
+    Eigen::Isometry3d parentInertiaToLinkFrame = Eigen::Isometry3d::Identity();
+    if (jointInfo->parentLinkID.has_value())
+    {
+      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
+      parentInertiaToLinkFrame = parentLinkInfo->inertiaToLinkFrame;
+    }
+    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+    auto tf = convertTf(parentInertiaToLinkFrame * _pose *
+                        linkInfo->inertiaToLinkFrame.inverse());
+    jointInfo->fixedConstraint->setPivotInA(
+      tf.getOrigin());
+    jointInfo->fixedConstraint->setFrameInA(
+      tf.getBasis());
   }
 }
 
