@@ -742,6 +742,37 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
     jointInfo->jointFeedback->m_reactionForces.getLinear());
   wrenchOut.torque = jointInfo->tf_to_child.rotation() * convert(
     jointInfo->jointFeedback->m_reactionForces.getAngular());
+
+  // If a constraint is used to move the joint, e.g motor constraint,
+  // account for the applied constraint forces and torques.
+  // \todo(iche033) Check whether this is also needed for gearbox constraint
+  if (jointInfo->motor)
+  {
+    auto linkInfo = this->ReferenceInterface<LinkInfo>(
+        jointInfo->childLinkID);
+
+    // link index in model should be >=0 because we expect the base link in
+    // btMultibody to always be a parent link of a joint
+    // (except when it's fixed to world)
+    int linkIndexInModel = -1;
+    if (linkInfo->indexInModel.has_value())
+      linkIndexInModel = *linkInfo->indexInModel;
+    if (linkIndexInModel >= 0)
+    {
+      auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+      btMultibodyLink &link = modelInfo->body->getLink(linkIndexInModel);
+
+      wrenchOut.force +=
+          jointInfo->tf_to_child.rotation().inverse() *
+          convert(link.m_cachedWorldTransform.getBasis().inverse() *
+          link.m_appliedConstraintForce);
+      wrenchOut.torque +=
+          jointInfo->tf_to_child.rotation().inverse() *
+          convert(link.m_cachedWorldTransform.getBasis().inverse() *
+          link.m_appliedConstraintTorque);
+    }
+  }
+
   return wrenchOut;
 }
 
