@@ -7,7 +7,26 @@ considerations for simulating wheel-terrain contact in Gazebo.
 
 - \ref contactoverview "Overview of contact, slip, and friction"
 
-## Choosing a terrain collision shape
+## Contact simulation: special considerations for wheels and terrain
+
+### Choosing a wheel collision shape
+
+One can choose a cylinder, ellipsoid, sphere or triangle mesh for a wheel
+collision shape. Keys to consider are:
+
+- The actual shape of the wheel you are trying to model
+- The quality of contact points that will be generated with the chosen terrain
+  shape
+
+For example with a heightmap terrain shape in Gazebo-Classic using
+Open Dynamics Engine (ODE), there are known issues
+([odedevs/ode#71](https://bitbucket.org/odedevs/ode/issues/71/small-spheres-fall-through-convex-edges-of)
+and [gazebo-classic#684](https://github.com/gazebosim/gazebo-classic/issues/684))
+with all of the mentioned wheel shapes, but for spheres and heightmaps,
+the issue of a sphere falling though a convex edge can be avoided if the
+radius of the sphere is larger than the resolution of the heightmap grid.
+
+### Choosing a terrain collision shape
 
 - For flat terrain, a combination of boxes and a ground plane can be used,
   which are simple and will have reasonable contact points.
@@ -23,22 +42,15 @@ considerations for simulating wheel-terrain contact in Gazebo.
   [odedevs/ode#71](https://bitbucket.org/odedevs/ode/issues/71/small-spheres-fall-through-convex-edges-of)
   and [gazebo-classic#684](https://github.com/gazebosim/gazebo-classic/issues/684).
 
-## Choosing a wheel collision shape
+## Slip calculation for wheels
 
-One can choose a cylinder, ellipsoid, sphere or triangle mesh for a wheel
-collision shape. Keys to consider are:
-
-- The actual shape of the wheel you are trying to model
-- The quality of contact points that will be generated with the chosen terrain
-  shape
-
-For example with a heightmap terrain shape in Gazebo-Classic using
-Open Dynamics Engine (ODE), there are known issues with all of the mentioned
-wheel shapes, but for spheres and heightmaps, the issue of a sphere falling
-though a convex edge can be avoided if the radius of the sphere is larger than
-the resolution of the heightmap grid.
-  
-## Nondimensional wheel slip
+When simulating wheel-terrain contact, it is common to use two nondimensional
+representations of slip: the longitudinal wheel slip and the slip angle.
+See Brach & Brach, 2009 (DOI: [10.4271/2009-01-0102](https://dx.doi.org/10.4271/2009-01-0102))
+for an example of use in tire modeling for accident reconstruction and
+Yoshida and Hamano, 2002
+(DOI: [10.1109/ROBOT.2002.1013712](https://dx.doi.org/10.1109/ROBOT.2002.1013712))
+for an example in modeling tire-soil interaction of interplanetary rovers.
 
 Two forms: accelerating and braking
 
