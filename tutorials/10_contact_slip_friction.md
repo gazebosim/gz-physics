@@ -30,9 +30,17 @@ Gazebo.
 
 <!-- illustrate torsional slip? -->
 
-- **Friction** is a physical effect that restricts slip.
+- **Friction** is a physical effect that restricts slip. Friction causes a
+  force to restrict translational slip and a torque to restrict rotational
+  slip. Friction can both act to reduce existing slip and to prevent slip from
+  occurring.
 
-<!-- image of boxes touching, slipping -->
+    - Illustration of a box at rest on an inclined surface with downward
+      gravity and a friction force between the box and inclined surface that
+      holds the box in place.
+
+    - Illustration of a sliding box and a circle rolling with slip and
+      friction forces opposing the slip.
 
 ## Contact simulation
 
@@ -58,7 +66,8 @@ Gazebo.
   the contact tangent plane.
 
     - Illustration of contact normals / tangent planes for overlapping boxes and spheres.
-    - Contact illustration from ODE?
+    - Illustration of contact coordinate frame from Open Dynamics Engine manual
+    - ![Illustration of contact coordinate frame from Open Dynamics Engine manual](https://ode.org/wiki/images/b/b9/Contact.jpg)
 
 - Contact depth is defined as the distance from a contact point to the surface,
   with the following sign convention:
@@ -110,11 +119,12 @@ limit contact depth.
 
 - Translational slip is computed at each contact point as follows:
     - Compute the linear velocity of each shape at the contact point.
-    - Compute the relative linear velocity as the difference of these
-      velocities.
-    - The translational slip is relative linear velocity in the contact
-      tangent plane with units of `m/s`, which is computed by subtracting the
-      velocity component parallel to the normal direction.
+    - Compute the relative linear velocity as the difference between the
+      velocity of each shape.
+    - Compute the projection into the contact tangent plane of the relative
+      linear velocity at the contact point.
+    - The translational slip is the relative linear velocity with units of
+      `m/s` projected into the contact tangent plane.
 - Torsional slip is computed at each contact point as follows:
     - Compute the angular velocity of each shape.
     - Compute the relative angular velocity as the difference of these
@@ -136,7 +146,10 @@ limit contact depth.
 
 - Friction is dissipative, removes energy from a system.
 - Friction force magnitude is limited and proportional to the contact normal
-  force.
+  force. A geometric interpretation of this relationship is the "friction
+  cone" concept.
+    - Illustration of friction cone from Open Dynamics Engine manual.
+    - ![Illustration of friction cone from Open Dynamics Engine manual](https://ode.org/wiki/images/4/49/Cone_frottement.jpg)
 
 ### Approximations for mathematical model of friction
 
@@ -148,14 +161,25 @@ limit contact depth.
 
   `t_2 = n \cross t_1`
 
+    - Illustration of contact coordinate frame with friction directions from Open Dynamics Engine manual
+    - ![Illustration of contact coordinate frame with friction directions from Open Dynamics Engine manual](https://ode.org/wiki/images/b/b9/Contact.jpg)
+
 - There are several options when choosing friction directions:
-    - Fixed to a global frame
-    - Fixed to a rigid body frame
-    - Aligned with the slip velocity (which reproduces the "friction cone")
-- The choice of friction directions can be significant
-    - [Comparison of boxes sliding with pyramid vs cone friction](https://classic.gazebosim.org/tutorials?tut=physics_params&cat=physics#Frictionparameters)
-    - Careful selection of a body-fixed friction direction allows [simulation
-      of omni-directional Mecanum wheels](https://github.com/gazebosim/gz-sim/blob/gz-sim8/examples/worlds/mecanum_drive.sdf)
+    - Aligned with the slip velocity. This has the advantage of reproducing
+      the "friction cone" behavior, but is undefined for objects at rest.
+    - Fixed to a rigid body frame. This is useful for bodies with distinct
+      anisotropic friction behavior (such as the longitudinal and lateral
+      friction behavior of pneumatic tires or for
+      [simulation of omni-directional Mecanum wheels](https://github.com/gazebosim/gz-sim/blob/gz-sim8/examples/worlds/mecanum_drive.sdf)),
+      but more logic is required to
+      determine which body-fixed frame to use if two objects come into
+      contact that each prefer to use a friction direction defined in their
+      own body-fixed frames.
+    - The corner cases of the previous two approaches can be avoided by
+      aligning the friction directions with a fixed frame. This is logically
+      simpler and is the default behavior in gazebo-classic for this reason,
+      though it has known limitations (see the
+      [comparison of boxes sliding with pyramid vs cone friction](https://classic.gazebosim.org/tutorials?tut=physics_params&cat=physics#Frictionparameters)).
 
 ### Numerical representation of friction
 
