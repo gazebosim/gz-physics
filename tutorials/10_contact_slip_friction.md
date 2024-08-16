@@ -11,11 +11,36 @@ Gazebo.
 ## Conceptual definitions
 
 - **Contact** occurs when two objects are touching.
-- **Slip** is a measure of relative tangential motion between contacting surfaces.
-- **Friction** is a physical effect that restricts relative tangential motion
-  between contacting surfaces.
 
-<!-- image of boxes touching, slipping -->
+    - Illustration of shapes touching: a long box touching a smaller box and a circle, and two circles touching each other.
+
+    - ![Illustration of shapes touching: a long box touching a smaller box and a circle, and two circles touching each other.](img/contact_boxes_circles.svg)
+
+- **Slip** is a measure of relative motion along the surface of contacting objects.
+  It can have units of meters/second for translational slip or radians/second
+  for rotational slip.
+
+    - Illustration of shapes touching without slip: two stationary boxes, a circle rolling on top of a stationary box, and two circles rolling against each other.
+
+    - ![Illustration of shapes touching without slip: two stationary boxes, a circle rolling on top of a stationary box, and two circles rolling against each other.](img/noslip_boxes_circles.svg)
+
+    - Illustration of shapes touching with slip: a box sliding along the surface of a longer box, a circle sliding and counter-rotating on top of a stationary box, and a circle sninning in place on top of a stationary circle.
+
+    - ![Illustration of shapes touching with slip: a box sliding along the surface of a longer box, a circle sliding and counter-rotating on top of a stationary box, and a circle sninning in place on top of a stationary circle.](img/slip_boxes_circles.svg)
+
+<!-- illustrate torsional slip? -->
+
+- **Friction** is a physical effect that restricts slip. Friction causes a
+  force to restrict translational slip and a torque to restrict rotational
+  slip. Friction can both act to reduce existing slip and to prevent slip from
+  occurring.
+
+    - Illustration of a box at rest on an inclined surface with downward
+      gravity and a friction force between the box and inclined surface that
+      holds the box in place.
+
+    - Illustration of a sliding box and a circle rolling with slip and
+      friction forces opposing the slip.
 
 ## Contact simulation
 
@@ -23,27 +48,51 @@ Gazebo.
 
 - Object shapes are non-deformable
 - Volumetric overlap / interpenetration of shapes is allowed
-- Contact between a pair of objects is represented by a set of contact points,
-  which must be inside or on the surface of both objects. A normal direction is
-  defined for each contact point, with an implied tangent plane. The contact
-  depth is the distance from a contact point to the surface.
 
-  depth > 0 :: inside the object
-  depth < 0 :: outside the object
+    - Illustration of overlapping boxes and spheres.
+
+- Contact between a pair of objects is represented by a set of contact points,
+  which must be inside or on the surface of both objects.
+
+    - Illustration of contact points for overlapping boxes and spheres.
+    <!--
+      Sphere-sphere: one point
+      Sphere-box face: one point
+      Box face-box face: two points?
+    -->
+
+- A normal direction is defined for each contact point. The plane orthogonal
+  to the normal direction that passes through the contact point is defined as
+  the contact tangent plane.
+
+    - Illustration of contact normals / tangent planes for overlapping boxes and spheres.
+    - Illustration of contact coordinate frame from Open Dynamics Engine manual
+    - ![Illustration of contact coordinate frame from Open Dynamics Engine manual](https://ode.org/wiki/images/b/b9/Contact.jpg)
+
+- Contact depth is defined as the distance from a contact point to the surface,
+  with the following sign convention:
+
+    - depth > 0 :: inside the object
+
+    - depth = 0 :: on surface of the object
+
+    - depth < 0 :: outside the object
 
 - The process of computing contact points for a pair of objects is often called
   **collision checking**.
 
-#### Commentary on collision checking
+#### Commentary on contact point approximation / collision checking
 
-- Checking for collisions between `N` objects requires checking `O(N^2)` pairs
-  of shapes, which can be computationally expensive.
-- A common trick to reduce this computational burden is to approximate each
-  shape with an axis-aligned bounding box (AABB) and check pairs of the AABB
-  shapes for overlap. This is a **broadphase collision check**, which can
-  quickly rule out collisions between pairs of objects that are far apart.
-  For objects whose AABB approximations overlap, a more accurate **narrowphase
-  collision check** is performed, which computes contact points.
+- Computational cost
+    - Checking for collisions between `N` objects requires checking `O(N^2)` pairs
+      of shapes, which can be computationally expensive.
+    - A common trick to reduce this computational burden is to approximate each
+      shape with an axis-aligned bounding box (AABB) and check pairs of the AABB
+      shapes for overlap. This is a **broadphase collision check**, which can
+      quickly rule out collisions between pairs of objects that are far apart.
+      For objects whose AABB approximations overlap, a more accurate **narrowphase
+      collision check** is performed, which computes contact points.
+- Uniqueness, quality
 
 ### Numerical representation of contact
 
@@ -54,24 +103,37 @@ limit contact depth.
 - The constraint is unilateral:
 
   depth < 0 ==> `F_N` = 0
+
   `F_N` > 0 ==> depth >= 0
 
 - Constraint relaxation parameters allow tuning the relationship between normal
-  force and depth.
-- The contact depth is analogous to sinkage in deformable terrain, but this is
-  not a terramechanics model.
-- Some parameters used by the Open Dynamics Engine in Gazebo-Classic include
+  force and depth (see the
+  [Soft Constraints presentation at GDC2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf)
+  for a good discussion of the ERP and CFM constraint relaxation parameters
+  and how they map to linear stiffness `kp` and damping `kd` parameters).
+  Some parameters used by the Open Dynamics Engine in Gazebo-Classic include
   the `kp`, `kd`, `min_depth`, and `max_vel` parameters in
-  [//surface/contact](http://sdformat.org/spec?ver=1.11&elem=collision#surface_contact).
+  [//surface/contact](http://sdformat.org/spec?ver=1.11&elem=collision#surface_contact)
+  (see also the Physics parameters tutorial for Gazebo Classic).
+- The contact depth is analogous to sinkage in deformable terrain but is not
+  computed from a terramechanics model.
 
 ## Slip calculation
 
-- Slip is computed at each contact point as the relative linear velocity
-  between the contacting objects projected into the contact tangent plane
-  with units of `m/s`.
-- Torsional slip is computed at each contact point from the relative angular
-  velocity between the contacting objects projected into the direction of the
-  contact normal with units of `rad/s`.
+- Translational slip is computed at each contact point as follows:
+    - Compute the linear velocity of each shape at the contact point.
+    - Compute the relative linear velocity as the difference between the
+      velocity of each shape.
+    - Compute the projection into the contact tangent plane of the relative
+      linear velocity at the contact point.
+    - The translational slip is the relative linear velocity with units of
+      `m/s` projected into the contact tangent plane.
+- Torsional slip is computed at each contact point as follows:
+    - Compute the angular velocity of each shape.
+    - Compute the relative angular velocity as the difference of these
+      velocities.
+    - The rotational slip is the relative angular velocity component parallel
+      to the normal direction with units of `rad/s`.
 - When simulating wheels, it is common to use a nondimensional measure of slip.
   This will be detailed in a later section focusing specifically on simulation
   of wheels in contact.
@@ -87,7 +149,10 @@ limit contact depth.
 
 - Friction is dissipative, removes energy from a system.
 - Friction force magnitude is limited and proportional to the contact normal
-  force.
+  force. A geometric interpretation of this relationship is the "friction
+  cone" concept.
+    - Illustration of friction cone from Open Dynamics Engine manual.
+    - ![Illustration of friction cone from Open Dynamics Engine manual](https://ode.org/wiki/images/4/49/Cone_frottement.jpg)
 
 ### Approximations for mathematical model of friction
 
@@ -99,14 +164,25 @@ limit contact depth.
 
   `t_2 = n \cross t_1`
 
+    - Illustration of contact coordinate frame with friction directions from Open Dynamics Engine manual
+    - ![Illustration of contact coordinate frame with friction directions from Open Dynamics Engine manual](https://ode.org/wiki/images/b/b9/Contact.jpg)
+
 - There are several options when choosing friction directions:
-    - Fixed to a global frame
-    - Fixed to a rigid body frame
-    - Aligned with the slip velocity (which reproduces the "friction cone")
-- The choice of friction directions can be significant
-    - [Comparison of boxes sliding with pyramid vs cone friction](https://classic.gazebosim.org/tutorials?tut=physics_params&cat=physics#Frictionparameters)
-    - Careful selection of a body-fixed friction direction allows [simulation
-      of omni-directional Mecanum wheels](https://github.com/gazebosim/gz-sim/blob/gz-sim8/examples/worlds/mecanum_drive.sdf)
+    - Aligned with the slip velocity. This has the advantage of reproducing
+      the "friction cone" behavior, but is undefined for objects at rest.
+    - Fixed to a rigid body frame. This is useful for bodies with distinct
+      anisotropic friction behavior (such as the longitudinal and lateral
+      friction behavior of pneumatic tires or for
+      [simulation of omni-directional Mecanum wheels](https://github.com/gazebosim/gz-sim/blob/gz-sim8/examples/worlds/mecanum_drive.sdf)),
+      but more logic is required to
+      determine which body-fixed frame to use if two objects come into
+      contact that each prefer to use a friction direction defined in their
+      own body-fixed frames.
+    - The corner cases of the previous two approaches can be avoided by
+      aligning the friction directions with a fixed frame. This is logically
+      simpler and is the default behavior in gazebo-classic for this reason,
+      though it has known limitations (see the
+      [comparison of boxes sliding with pyramid vs cone friction](https://classic.gazebosim.org/tutorials?tut=physics_params&cat=physics#Frictionparameters)).
 
 ### Numerical representation of friction
 
@@ -119,6 +195,64 @@ to limit slip.
   `-µ F_N <= F_f <= µ F_N`
 
 - The constraint force attempts to drive the slip velocity to zero.
-- Constraint relaxation parameters allow tuning the friction response.
+  Constraint relaxation parameters allow tuning the friction response.
+
+    - For a very "stiff" friction model, the maximum available friction force
+      could be applied when any slip is detected at all, with friction force
+      as a step function of slip velocity, as shown in the plot below.
+
+~~~
+                | friction force (N)
+                |
+                |
+----------------| maximum friction force µ F_N
+                |
+                |
+                |
+                |
+                |
+                |
+----------------+-------------------------- slip (m/s)
+                |
+                |
+                |
+                |
+                |
+                |
+                |----------------------- minimum friction force -µ F_N
+~~~
+
+    - A more compliant friction model is generated by applying a constraint
+      relaxation parameter that changes the relationship between slip and
+      friction force to represent a saturated linear function, as shown in the
+      plot below. For the step function in the previous plot, the slope at
+      the origin is infinite, whereas a finite slope allows friction forces
+      less than the maximum value to be applied for small slip values.
+    - In Open Dynamics Engine, the relevant parameters for relaxation of the
+      friction constraint are named "Force-dependent-slip (FDS)" and
+      represent the inverse value of the slope of the friction vs slip curve
+      with units of `m/s/N`. In Gazebo these parameters are referred to as
+      "slip compliance."
+
+~~~
+                | friction force (N)
+                |
+                |
+----------      | maximum friction force µ F_N
+          \     |
+           \    |
+            \   |
+             \  |
+              \ |
+               \|
+----------------+-------------------------- slip (m/s)
+                |\
+                | \
+                |  \
+                |   \-┐ slope is inverse of
+                |    \| slip compliance
+                |     \
+                |      ----------------- minimum friction force -µ F_N
+~~~
 
 <!-- plot showing effect of slip compliance -->
