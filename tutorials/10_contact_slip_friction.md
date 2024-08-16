@@ -107,13 +107,16 @@ limit contact depth.
   `F_N` > 0 ==> depth >= 0
 
 - Constraint relaxation parameters allow tuning the relationship between normal
-  force and depth.
-- The contact depth is analogous to sinkage in deformable terrain, but this is
-  not a terramechanics model.
-- Some parameters used by the Open Dynamics Engine in Gazebo-Classic include
+  force and depth (see the
+  [Soft Constraints presentation at GDC2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf)
+  for a good discussion of the ERP and CFM constraint relaxation parameters
+  and how they map to linear stiffness `kp` and damping `kd` parameters).
+  Some parameters used by the Open Dynamics Engine in Gazebo-Classic include
   the `kp`, `kd`, `min_depth`, and `max_vel` parameters in
   [//surface/contact](http://sdformat.org/spec?ver=1.11&elem=collision#surface_contact)
   (see also the Physics parameters tutorial for Gazebo Classic).
+- The contact depth is analogous to sinkage in deformable terrain but is not
+  computed from a terramechanics model.
 
 ## Slip calculation
 
@@ -192,6 +195,19 @@ to limit slip.
   `-µ F_N <= F_f <= µ F_N`
 
 - The constraint force attempts to drive the slip velocity to zero.
-- Constraint relaxation parameters allow tuning the friction response.
+  Constraint relaxation parameters allow tuning the friction response.
+
+~~~
+  | friction force (N)
+  |
+--+-------------------------- slip (m/s)
+  |\
+  | \
+  |  \
+  |   \-┐ slope is inverse of
+  |    \| slip compliance
+  |     \
+  |      ----------------- maximum friction force
+~~~
 
 <!-- plot showing effect of slip compliance -->
