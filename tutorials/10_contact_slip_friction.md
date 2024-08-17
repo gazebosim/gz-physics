@@ -92,7 +92,7 @@ Gazebo.
       quickly rule out collisions between pairs of objects that are far apart.
       For objects whose AABB approximations overlap, a more accurate **narrowphase
       collision check** is performed, which computes contact points.
-- Uniqueness, quality
+- Uniqueness, quality, ability of constraint solver to converge
 
 ### Numerical representation of contact
 
@@ -140,7 +140,7 @@ limit contact depth.
 
 ## Friction simulation
 
-### Assumptions for mathematical model of friction
+### Principled assumptions for mathematical model of friction
 
 - Friction causes a force `F_f` to act in the contact tangent plane that
   opposes the slip velocity `v_s`.
@@ -148,19 +148,27 @@ limit contact depth.
   `F_f * v_s <= 0`
 
 - Friction is dissipative, removes energy from a system.
+
 - Friction force magnitude is limited and proportional to the contact normal
-  force. A geometric interpretation of this relationship is the "friction
-  cone" concept.
-    - Illustration of friction cone from Open Dynamics Engine manual.
+  force.
+    - A generic mathematical expression of this limit in the two dimensions of
+      the contact tangent plane requires a nonlinear constraint.
+    - A geometric interpretation of this relationship is the "friction
+      cone" concept.
+    - Illustration of friction cone from
+      [Open Dynamics Engine manual](http://ode.org/wiki/index.php?title=Manual#Friction_Approximation).
     - ![Illustration of friction cone from Open Dynamics Engine manual](https://ode.org/wiki/images/4/49/Cone_frottement.jpg)
 
 ### Approximations for mathematical model of friction
 
-- Friction behavior in the two dimensions of the contact tangent plane can be
-  decoupled and computed independently along two "friction directions."
+- To reduce the complexity of the friction constraint, the nonlinear friction
+  constraint representing behavior in the two dimensions of the contact
+  tangent plane is decoupled into two independent linear constraints along two
+  orthogonal "friction directions."
   This is known as the "friction pyramid" approximation of the more general
   "friction cone" model.
-  By choosing the "first friction direction," the second direction is implied.
+  With the normal direction `n` given, by choosing the "first friction
+  direction" `t_1`, the second direction `t_2` is implied.
 
   `t_2 = n \cross t_1`
 
@@ -170,6 +178,16 @@ limit contact depth.
 - There are several options when choosing friction directions:
     - Aligned with the slip velocity. This has the advantage of reproducing
       the "friction cone" behavior, but is undefined for objects at rest.
+      Support for this depends on the underlying physics engine. For the fork
+      of Open Dynamics Engine (ODE) used in Gazebo Classic, the friction cone
+      model can be enabled by setting the
+      [//physics/ode/solver/friction_model](http://sdformat.org/spec?ver=1.6&elem=physics#solver_friction_model)
+      element to `cone_model`. See further documentation in the
+      [Gazebo Classic Physics Parameters tutorial](https://classic.gazebosim.org/tutorials?tut=physics_params&cat=physics#Frictionparameters)
+      and an example world
+      [friction\_cone.world](https://github.com/gazebosim/gazebo-classic/blob/e4b4d0fb752c7e43e34ab97d0e01a2a3eaca1ed4/test/worlds/friction_cone.world#L16)
+      that is used in the
+      [MaximumDissipation physics friction test](https://github.com/gazebosim/gazebo-classic/blob/e4b4d0fb752c7e43e34ab97d0e01a2a3eaca1ed4/test/integration/physics_friction.cc#L300).
     - Fixed to a rigid body frame. This is useful for bodies with distinct
       anisotropic friction behavior (such as the longitudinal and lateral
       friction behavior of pneumatic tires or for
@@ -178,6 +196,9 @@ limit contact depth.
       determine which body-fixed frame to use if two objects come into
       contact that each prefer to use a friction direction defined in their
       own body-fixed frames.
+      To specify a friction direction in the body-fixed frame, use the
+      `//collision`
+      <!-- pull content from https://github.com/osrf/gazebo_tutorials/pull/174 -->
     - The corner cases of the previous two approaches can be avoided by
       aligning the friction directions with a fixed frame. This is logically
       simpler and is the default behavior in gazebo-classic for this reason,
@@ -196,6 +217,8 @@ to limit slip.
 
 - The constraint force attempts to drive the slip velocity to zero.
   Constraint relaxation parameters allow tuning the friction response.
+
+- Stiff friction model example
 
     - For a very "stiff" friction model, the maximum available friction force
       could be applied when any slip is detected at all, with friction force
@@ -221,6 +244,8 @@ to limit slip.
                 |
                 |----------------------- minimum friction force -µ F_N
 ~~~
+
+- Compliant friction model example
 
     - A more compliant friction model is generated by applying a constraint
       relaxation parameter that changes the relationship between slip and
