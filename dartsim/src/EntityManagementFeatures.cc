@@ -28,7 +28,7 @@
 #include <dart/collision/CollisionFilter.hpp>
 #include <dart/collision/CollisionObject.hpp>
 
-#include "GzOdeCollisionDetector.hh"
+#include <dart/collision/dart/DARTCollisionDetector.hpp>
 
 namespace gz {
 namespace physics {
@@ -725,7 +725,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
   const auto &world = std::make_shared<dart::simulation::World>(_name);
-  auto collisionDetector = dart::collision::GzOdeCollisionDetector::create();
+  auto collisionDetector = dart::collision::DARTCollisionDetector::create();
   world->getConstraintSolver()->setCollisionDetector(collisionDetector);
 
   auto &collOpt = world->getConstraintSolver()->getCollisionOption();

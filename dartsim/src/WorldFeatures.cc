@@ -62,6 +62,7 @@ void WorldFeatures::SetWorldCollisionDetector(
   }
   else
   {
+    collisionDetector = dart::collision::GzOdeCollisionDetector::create();
     gzerr << "Collision detector [" << _collisionDetector
            << "] is not supported, defaulting to ["
            << collisionDetector->getType() << "]." << std::endl;
