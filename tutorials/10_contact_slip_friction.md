@@ -150,6 +150,11 @@ limit contact depth.
 
 - Friction force magnitude is limited and proportional to the contact normal
   force.
+    - The friction coefficient µ is used to represent the maximum ratio of
+      friction forces to normal forces `T / N` for a given contact.
+    - For a geometric interpretation, the arc-tangent of µ represents the
+      maximum angle of a sloped surface for which a box can rest on the surface
+      without sliding down due to gravity.
     - A generic mathematical expression of this limit in the two dimensions of
       the contact tangent plane requires a nonlinear constraint, for example
       with `T_x` and `T_y` representing the friction force x and y
