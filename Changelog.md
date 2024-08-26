@@ -1,6 +1,36 @@
 ## Gazebo Physics 8.x
 
-### Gazebo Physics 8.0.0 (2023-XX-XX)
+### Gazebo Physics 8.0.0 (2024-09-XX)
+
+1. Remove deprecated functions
+    * [Pull request #673](https://github.com/gazebosim/gz-physics/pull/673)
+
+1. Enable 24.04 CI, require cmake 3.22.1
+    * [Pull request #671](https://github.com/gazebosim/gz-physics/pull/671)
+
+1. Find python directly instead of using GzPython
+    * [Pull request #625](https://github.com/gazebosim/gz-physics/pull/625)
+
+1. Fix unused variable warning
+    * [Pull request #624](https://github.com/gazebosim/gz-physics/pull/624)
+
+1. Support setting solver iterations
+    * [Pull request #609](https://github.com/gazebosim/gz-physics/pull/609)
+
+1. Define `GZ_PHYSICS_VERSION_NAMESPACE` in config.hh
+    * [Pull request #597](https://github.com/gazebosim/gz-physics/pull/597)
+
+1. Remove `HIDE_SYMBOLS_BY_DEFAULT`: replace by a default configuration in gz-cmake.
+    * [Pull request #588](https://github.com/gazebosim/gz-physics/pull/588)
+
+1. Use `HIDE_SYMBOLS_BY_DEFAULT`
+    * [Pull request #576](https://github.com/gazebosim/gz-physics/pull/576)
+
+1. Bump dependency versions: gz-cmake4, gz-common6, gz-math8, gz-plugin3, gz-utils3, sdformat15
+    * [Pull request #561](https://github.com/gazebosim/gz-physics/pull/561)
+
+1. Bump major version to 8
+    * [Pull request #560](https://github.com/gazebosim/gz-physics/pull/560)
 
 ## Gazebo Physics 7.x
 
