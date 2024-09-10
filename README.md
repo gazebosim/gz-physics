@@ -69,7 +69,7 @@ Gazebo Physics provides the following functionality:
 
 # Install
 
-See the [installation tutorial](https://gazebosim.org/api/physics/5.0/installation.html).
+See the [installation tutorial](https://gazebosim.org/api/physics/8/installation.html).
 
 # Usage
 
