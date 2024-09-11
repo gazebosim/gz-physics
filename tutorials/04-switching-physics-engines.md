@@ -87,7 +87,7 @@ gz sim --physics-engine CustomEngine
 ### From C++ API
 
 All features available through the command line are also available through
-[gz::sim::ServerConfig](https://gazebosim.org/api/gazebo/4.0/classignition_1_1gazebo_1_1ServerConfig.html).
+[gz::sim::ServerConfig](https://gazebosim.org/api/sim/9/classgz_1_1sim_1_1ServerConfig.html).
 When instantiating a server programmatically, a physics engine can be passed to
 the constructor, for example:
 
