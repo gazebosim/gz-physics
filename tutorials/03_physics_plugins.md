@@ -84,23 +84,27 @@ Since Bullet supports two different APIs - a rigid-body API and a multibody API 
 
 ### Entity Comparison
 
-The following is a table of `Entity` names used in Gazebo Physics plugin interface, Dart and TPE.
+The following is a table of `Entity` names used in the Gazebo Physics plugin interface, mapped to corresonding types in each supported physics engine.
 Entities are arranged in top-down hierarchical order.
 
-| Physics Plugin | Dart  | TPE |
-|:-:|:-:|:-:|
-| Engine  | Engine  | Engine  |
-| World  | World  | World  |
-| Frame  | Frame  | N/A  |
-| Model  | Skeleton  | Model |
-| Joint  | Joint  | N/A |
-| Link  | BodyNode  | Link |
-| Shape  | Shape  | Collision |
-| Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder/Mesh etc. |
+| Physics Plugin | Dart  | TPE | Bullet | Bullet Featherstone |
+|:-:|:-:|:-:|:-:|
+| Engine  | Engine  | Engine  | Engine  | Engine  |
+| World  | World  | World  | btDiscreteDynamicsWorld | btMultiBodyDynamicsWorld |
+| Frame  | Frame  | N/A  | N/A^* | N/A^* |
+| Model  | Skeleton  | Model | N/A^# | btMultiBody |
+| Joint  | Joint  | N/A | btTypedConstraint | btMultiBodyJoint^+ |
+| Link  | BodyNode  | Link | btRigidBody | btMultiBodyLink |
+| Shape  | Shape  | Collision | btCollisionShape | btCollisionShape |
+| Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. | Box/Sphere/Cylinder etc. |
+
+^* Frames are implicitly attached to joints, links, collisions or models in the Bullet physics engine.
+^# The Bullet rigid-body API does not have a concept of a Model, but the plugin maintains a collection of Links and Joints in the engine associated with a Model.
+^+ There are multiple types in the Bullet Featherstone API to interact with joints, such as btMultiBodyJointLimitConstraint, btMultiBodyJointMotor and btMultiBodyJointFeedback.
 
 ### Feature Comparison
 
 For a list of all available `Features` in the Gazebo Physics library, check the classes inherited from `Feature` in the [Gazebo Physics API](https://gazebosim.org/api/physics/8/hierarchy.html).
 To check if a physics plugin implements a particular `Feature`, check the `FeatureLists` supported by that plugin as specified in the plugin.cc file, for example, [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/plugin.cc).
 
-Next, check out the tutorial on \ref pluginloading "Loading physics plugins" on how to access a specific `Feature` interface for a plugin programatically.
+Next, check out the tutorial on \ref pluginloading "Loading physics plugins" on how to load a plugin and access a specific `Feature` interface of the plugin programatically.
