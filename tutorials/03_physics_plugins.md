@@ -110,4 +110,3 @@ For a list of all available `Features` in the Gazebo Physics library, check the 
 To check if a physics plugin implements a particular `Feature`, check the `FeatureLists` supported by that plugin as specified in the plugin.cc file, for example, [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/plugin.cc).
 
 Next, check out the tutorial on \ref pluginloading "Loading physics plugins" on how to load a plugin and access a specific `Feature` interface of the plugin programatically.
-e
