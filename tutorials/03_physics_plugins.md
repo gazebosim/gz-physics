@@ -109,4 +109,4 @@ Entities are arranged in top-down hierarchical order.
 For a list of all available `Features` in the Gazebo Physics library, check the classes inherited from `Feature` in the [Gazebo Physics API](https://gazebosim.org/api/physics/8/hierarchy.html).
 To check if a physics plugin implements a particular `Feature`, check the `FeatureLists` supported by that plugin as specified in the plugin.cc file, for example, [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/plugin.cc).
 
-Next, check out the tutorial on \ref pluginloading "Loading physics plugins" on how to load a plugin and access a specific `Feature` interface of the plugin programatically.
+Next, check out the tutorial on \ref pluginloading "Loading physics plugins" on how to load a plugin and access a specific `Feature` interface of the plugin programmatically.
