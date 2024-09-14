@@ -84,7 +84,7 @@ Since Bullet supports two different APIs - a rigid-body API and a multibody API 
 
 ### Entity Comparison
 
-The following is a table of `Entity` names used in the Gazebo Physics plugin interface, mapped to corresonding types in each supported physics engine.
+The following is a table of `Entity` names used in the Gazebo Physics plugin interface, mapped to corresponding types in each supported physics engine.
 Entities are arranged in top-down hierarchical order.
 
 | Physics Plugin | Dart  | TPE | Bullet | Bullet Featherstone |
