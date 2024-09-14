@@ -34,7 +34,7 @@ The implementation of the physics plugin revolves around four key elements.
     FeaturePolicy is a "policy class" used to provide metadata to features about what kind of simulation engine they are going to be used in.
     Many physics simulations software libraries model 3-dimensional systems, though some (like Box2d) only consider 2-dimensional systems.
     A FeaturePolicy is used to customize Gazebo Physics' APIs by the number of dimensions (2 or 3) and also the floating point scalar type (float or double).
-    (All of the currently supported physics engine use FeaturePolicy3d i.e. 3 dimensions and double.)
+    (All of the currently supported physics engines use FeaturePolicy3d i.e. 3 dimensions and double.)
 
 3. \ref gz::physics::Feature "Feature"
 
