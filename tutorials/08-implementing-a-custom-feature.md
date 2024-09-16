@@ -49,14 +49,13 @@ Looking closer to a plugin folder, for example, the `dartsim` (DART) plugin:
 dartsim
 ├── worlds                            Example SDF files for testing dartsim plugin functionalities.
 ├── src                               Main implementation files of the plugin features interfacing the physics engines API
-├── include/gz/physics/dartsim  Header files for the plugin features.
 └── CMakeLists.txt                    CMake plugin build script.
 ```
 
 Basically, new implementation of \ref gz::physics::Feature "Feature" or
 \ref gz::physics::FeatureList "FeatureList", which is corresponded to a
 functionality of the external physics engine can be defined as a header in
-`include/gz/physics/<plugin_name>` folder. The custom feature could
+`src` folder. The custom feature could
 be added in a \ref gz::physics::FeatureList "FeatureList"
 and implemented its functionalities in `src` folder.
 
@@ -159,9 +158,8 @@ dartsim
 ├── src
 │    ├── CustomFeatures.hh
 │    ├── CustomFeatures.cc
+|    ├──  World.hh
 │    └── ...
-├── include/gz/physics/dartsim
-│    └──  World.hh
 └── CMakeLists.txt
 ```
 
@@ -208,6 +206,5 @@ dartsim
 │    ├── CustomFeatures.hh
 │    ├── CustomFeatures.cc
 │    ├── ...
-├── include/gz/physics/dartsim
 └── CMakeLists.txt
 ```
