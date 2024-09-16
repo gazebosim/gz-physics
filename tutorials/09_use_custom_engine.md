@@ -165,7 +165,7 @@ feel free to take a look here:
 
 Clone the source code, create a build directory and use `cmake` to compile the code:
 
-```{.sh}
+```bash
 git clone https://github.com/gazebosim/gz-physics
 cd gz-physics/examples/simple_plugin
 mkdir build
@@ -179,7 +179,7 @@ cmake --build . --target PluginTest --config Release
 
 Run the test to verify the new physis plugin:
 
-```{.sh}
+```bash
 # Linux
 ./PluginTest
 
@@ -189,7 +189,7 @@ Run the test to verify the new physis plugin:
 
 You'll see:
 
-```{.sh}
+```bash
 $ ./PluginTest
 Created empty world!
 ```
