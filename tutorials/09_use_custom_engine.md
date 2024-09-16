@@ -158,13 +158,56 @@ While we won't go into detail, here is an example to test our new
 
 To get a more comprehensive view of how `EntityManagementFeatures` are constructed in TPE and Dartsim,
 feel free to take a look here:
-- Dartsim: [EntityManagementFeatures.hh](https://github.com/gazebosim/gz-physics/blob/ign-physics2/dartsim/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/gazebosim/gz-physics/blob/ign-physics2/dartsim/src/EntityManagementFeatures.cc)
-- TPE: [EntityManagementFeatures.hh](https://github.com/gazebosim/gz-physics/blob/ign-physics2/tpe/plugin/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/gazebosim/gz-physics/blob/ign-physics2/tpe/plugin/src/EntityManagementFeatures.cc)
+- Dartsim: [EntityManagementFeatures.hh](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/EntityManagementFeatures.cc)
+- TPE: [EntityManagementFeatures.hh](https://github.com/gazebosim/gz-physics/blob/main/tpe/plugin/src/EntityManagementFeatures.hh) and [EntityManagementFeatures.cc](https://github.com/gazebosim/gz-physics/blob/main/tpe/plugin/src/EntityManagementFeatures.cc)
 
-## Load and test
+## Compile and run the example
 
-Please follow the previous tutorial \ref installation "Installation" to build
-`gz-physics` from source again for our new feature to be compiled.
+Clone the source code, create a build directory and use `cmake` to compile the code:
 
-Now we can load the new physics plugin named `gz-physics-tpe-plugin`
-to test it on Gazebo by following this \ref physicsengine "Use different physics engines" tutorial.
+```{.sh}
+git clone https://github.com/gazebosim/gz-physics
+cd gz-physics/examples/simple_plugin
+mkdir build
+cd build
+cmake ..
+# Linux
+cmake --build . --target PluginTest
+# Windows
+cmake --build . --target PluginTest --config Release
+```
+
+Run the test to verify the new physis plugin:
+
+```{.sh}
+# Linux
+./PluginTest
+
+# Windows
+.\Release\PluginTest.exe
+```
+
+You'll see:
+
+```{.sh}
+$ ./PluginTest
+Created empty world!
+```
+
+Once you implement more features, you could try passing `SimplePlugin` as the physics engine
+to Gazebo Sim following \ref physicsengine "Use different physics engines" tutorial, e.g. setting
+
+    # Linux
+    export GZ_SIM_PHYSICS_ENGINE_PATH=$GZ_SIM_PHYSICS_ENGINE_PATH:$(pwd)/build
+    # Windows
+    set GZ_SIM_PHYSICS_ENGINE_PATH=<PATH_TO_THE_EXAMPLE_DIR>\build\Release
+
+And run Gazebo sim with
+
+    gz sim -v4 -s --physics-engine SimplePlugin
+
+However, with the poor one feature we have implemented in this tutorial, you will only see an error,
+because Gazebo Sim needs much more features:
+
+    [error] [Physics.cc:854] No physics plugins implementing required interface found in library
+    [D:\programming\gz9-ws\gz-ws\src\gz-physics\examples\simple_plugin\build\Release\SimplePlugin.dll].
