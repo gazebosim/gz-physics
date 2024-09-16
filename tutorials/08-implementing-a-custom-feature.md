@@ -133,7 +133,7 @@ will not run at the same time when requested.
 
 ### Define custom feature template
 
-With the requirements and restrictions above, we first need to define a feature template for the custom feature. In this case, this feature will be responsible for retrieving world pointer from the physics engine. The template is placed in [World.hh](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/World.hh):
+With the requirements and restrictions above, we first need to define a feature template for the custom feature. In this case, this feature will be responsible for retrieving world pointer from the physics engine. The template is placed in [World.hh](https://github.com/gazebosim/gz-physics/blob/gz-physics8/dartsim/src/World.hh):
 
 \snippet dartsim/src/World.hh feature template
 
@@ -176,24 +176,24 @@ After defining the feature template, we can add it to a custom
 The custom feature `RetrieveWorld` is added to `CustomFeatureList`, other custom
 features could also be added here.
 The `CustomFeatures` "FeatureList" here uses data structures and classes from:
-- [Base.hh](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/Base.hh), which defines structures that contain information to create `Model`, `Joint`, `Link`, and `Shape` objects in Dartsim API.
+- [Base.hh](https://github.com/gazebosim/gz-physics/blob/gz-physics8/dartsim/src/Base.hh), which defines structures that contain information to create `Model`, `Joint`, `Link`, and `Shape` objects in Dartsim API.
 They act as an interface between Gazebo Physics Library and the actual physics engine.
 - \ref gz::physics::Implements3d "Implements3d" for implementing the
 custom feature with \ref gz::physics::FeaturePolicy3d "FeaturePolicy3d"
 ("FeaturePolicy" of 3 dimensions and scalar type `double`).
 
-We will then implement the actual function with Dartsim API in [CustomFeatures.cc](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/CustomFeatures.cc) to override the member function
+We will then implement the actual function with Dartsim API in [CustomFeatures.cc](https://github.com/gazebosim/gz-physics/blob/gz-physics8/dartsim/src/CustomFeatures.cc) to override the member function
 declared in the custom feature header file:
 
 \snippet dartsim/src/CustomFeatures.cc implementation
 
 Here, we implement the behavior of `GetDartsimWorld` with Dartsim API to return the
 world pointer from `EntityStorage` object storing world pointers of `dartsim` in
-[Base](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/Base.hh) class.
+[Base](https://github.com/gazebosim/gz-physics/blob/gz-physics8/dartsim/src/Base.hh) class.
 
 In the end, we add the implemented `CustomFeatures` "FeatureList" together with
 other \ref gz::physics::FeatureList "FeatureList" to final `DartsimFeatures`
-"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/plugin.cc)
+"FeatureList" as in [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/gz-physics8/dartsim/src/plugin.cc)
 (please see the \ref createphysicsplugin "Implement a physics feature" tutorial
 for registering the plugin to Gazebo Physics).
 
