@@ -52,7 +52,8 @@ Gazebo.
     - Illustration of overlapping boxes and spheres.
 
 - Contact between a pair of objects is represented by a set of contact points,
-  which must be inside or on the surface of both objects.
+  which must be inside or on the surface of both objects. Equal and opposite
+  contact forces act on each object at each contact point.
 
     - Illustration of contact points for overlapping boxes and spheres.
     <!--
@@ -78,11 +79,36 @@ Gazebo.
 
     - depth < 0 :: outside the object
 
-- The process of computing contact points for a pair of objects is often called
-  **collision checking**.
+- The process of computing contact points and normals for a pair of objects
+  is often called **collision checking**.
 
 #### Commentary on contact point approximation / collision checking
 
+- Accuracy of contact point approximations
+    - In reality, objects *are* deformable and do not overlap when they are in
+      contact but rather deform so that portions of their surfaces are in
+      contact.
+    - The portions of their surfaces where they deform and touch are contact
+      patches with contact pressure and shear stress acting between the bodies.
+    - A contact point may represent a good approximation of a contact patch if
+      placed at the center of pressure, but in general contact points are a
+      useful fiction for simulation, not a precise representation of reality.
+- Non-uniqueness and consistency of contact point representation
+    - In general, there is a non-unique set of contact points that result
+      in equivalent simulated contact behavior. For example, with a cube
+      at rest on a ground plane, contact can be represented with a single
+      contact point below the center of mass or with 4 contact points
+      distributed at each corner of the cube.
+    - In some applications, there is value in maintaining consistent contact
+      point locations for successive time steps when a pair of objects have
+      similar relative pose. For the cube on ground plane example, if another
+      external force acts on the cube, the location of the single stable
+      contact point would change, whereas the 4 contact points at each corner
+      would still allow a stable distribution of contact forces.
+    - For contacting objects with very little overlap, small changes in object
+      pose can cause overlap to disappear and reappear over successive
+      timesteps. This results in "flickering" contact points and can be a
+      source of noise in contact simulation.
 - Computational cost
     - Checking for collisions between `N` objects requires checking `O(N^2)` pairs
       of shapes, which can be computationally expensive.
@@ -91,8 +117,7 @@ Gazebo.
       shapes for overlap. This is a **broadphase collision check**, which can
       quickly rule out collisions between pairs of objects that are far apart.
       For objects whose AABB approximations overlap, a more accurate **narrowphase
-      collision check** is performed, which computes contact points.
-- Uniqueness, quality, ability of constraint solver to converge
+      collision check** is performed, which computes contact points and normals.
 
 ### Numerical representation of contact
 
@@ -115,6 +140,7 @@ limit contact depth.
   the `kp`, `kd`, `min_depth`, and `max_vel` parameters in
   [//surface/contact](http://sdformat.org/spec?ver=1.11&elem=collision#surface_contact)
   (see also the Physics parameters tutorial for Gazebo Classic).
+  These parameters can mitigate the effect of contact point "flickering."
 - The contact depth is analogous to sinkage in deformable terrain but is not
   computed from a terramechanics model.
 
@@ -139,7 +165,7 @@ limit contact depth.
 
 ## Friction simulation
 
-### Principled assumptions for mathematical model of friction
+### Principled assumptions for mathematical model of friction cone
 
 - Friction causes a force `T` to act in the contact tangent plane that
   opposes the slip velocity `v_t`.
@@ -166,7 +192,7 @@ limit contact depth.
       [Open Dynamics Engine manual](http://ode.org/wiki/index.php?title=Manual#Friction_Approximation).
     - ![Illustration of friction cone from Open Dynamics Engine manual](https://ode.org/wiki/images/4/49/Cone_frottement.jpg)
 
-### Approximations for mathematical model of friction
+### Simplifying approximations for mathematical model of friction pyramid
 
 - To reduce the complexity of the friction constraint, the nonlinear
   constraint representing behavior in the two dimensions of the contact
@@ -186,7 +212,7 @@ limit contact depth.
   though it must not be parallel to the normal direction `n`.
     - Given `n` and the user-provided "first friction direction" `fdir1`,
       a vector `t_1` orthogonal to `n` is computed by subtracting the component
-      of `fdir1` orthogonal to `n` and normalizing to unit length.
+      of `fdir1` parallel to `n` and normalizing to unit length.
     - Given `n` and `t_1`, the second direction `t_2` can be computed directly:
       `t_2 = n \cross t_1`
 
@@ -238,7 +264,7 @@ to limit slip.
 
     - For a very "stiff" friction model, the maximum available friction force
       could be applied when any slip is detected at all, with friction force
-      as a step function of slip velocity `T = -sgn(v_t)`, as illustrated
+      as a step function of slip velocity `T = -µN sgn(v_t)`, as illustrated
       in the plot below.
 
 ~~~
@@ -328,7 +354,7 @@ o o o o o o o o o maximum friction force µN
 
 - The reason for the dependence on the number of contact points is that each
   additional contact point with non-zero slip compliance acts like an
-  additional viscous damper in acting on the model in parallel.
+  additional viscous damper acting on the model in parallel.
   An attempt was made to normalize the effect of multiple contact points for a
   single collision shape, such as a box on a plane
   (but not a model with multiple spheres), in
