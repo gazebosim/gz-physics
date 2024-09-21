@@ -64,6 +64,8 @@ the wheel's rolling axis."
 The axes can be defined mathematically for a wheel in contact with terrain
 as follows:
 
+<!-- need a figure illustrating a wheel with these terms -->
+
 * Define `W` as the center of a wheel with radius `R`.
 * Define `w` as the body-fixed axis about which the wheel rotates
   (typically an axis of symmetry) with rotational speed `ω`.
