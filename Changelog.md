@@ -1,8 +1,19 @@
 ## Gazebo Physics 8.x
 
-### Gazebo Physics 8.0.0 (2024-09-XX)
+### Gazebo Physics 8.0.0 (2024-09-25)
 
 1. **Baseline:** this includes all changes from 7.3.0 and earlier.
+
+1. Miscellaneous documentation fixes
+    * [Pull request #691](https://github.com/gazebosim/gz-physics/pull/691)
+    * [Pull request #689](https://github.com/gazebosim/gz-physics/pull/689)
+    * [Pull request #690](https://github.com/gazebosim/gz-physics/pull/690)
+    * [Pull request #688](https://github.com/gazebosim/gz-physics/pull/688)
+    * [Pull request #686](https://github.com/gazebosim/gz-physics/pull/686)
+    * [Pull request #684](https://github.com/gazebosim/gz-physics/pull/684)
+    * [Pull request #683](https://github.com/gazebosim/gz-physics/pull/683)
+    * [Pull request #682](https://github.com/gazebosim/gz-physics/pull/682)
+    * [Pull request #681](https://github.com/gazebosim/gz-physics/pull/681)
 
 1. Remove deprecated functions
     * [Pull request #673](https://github.com/gazebosim/gz-physics/pull/673)
