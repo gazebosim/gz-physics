@@ -78,11 +78,11 @@ as follows:
 * The wheel contact coordinate frame has its origin at `C` with orthogonal
   axis directions `n`, `t_lat`, and `t_lon`.
 
-The translational slip at `C` in units of `m/s` is given as `V_C`, with
+The translational slip at `C` in units of `m/s` is given as `v_t`, with
 components in each tangent plane direction defined as:
 
-* Longitudinal slip velocity `V_C,lon`
-* Lateral slip velocity `V_C,lat`
+* Longitudinal slip velocity `v_t,lon`
+* Lateral slip velocity `v_t,lat`
 
 ### Definition of nondimensional longitudinal wheel slip
 
@@ -93,51 +93,51 @@ For illustration, consider the case when the wheel center `W` lies a distance
 with a flat surface).
 In this case, the longitudinal slip velocity can be expressed as the difference
 between the longitudinal wheel center velocity and the linear "spin speed" of
-the wheel `V_C,lon = V_W,lon - R*ω`.
+the wheel `v_t,lon = v_W,lon - R*ω`.
 
 In Yoshida and Hamano, 2002
 (DOI: [10.1109/ROBOT.2002.1013712](https://dx.doi.org/10.1109/ROBOT.2002.1013712)),
 the two slip conditions used for defining nondimensional longitudinal wheel
 slip are
 
-* `R * ω > V_W,lon`: the wheel is spinning faster than its translational speed
+* `R * ω > v_W,lon`: the wheel is spinning faster than its translational speed
   and is accelerating.
-* `R * ω < V_W,lon`: the wheel is spinning slower than its translational speed
+* `R * ω < v_W,lon`: the wheel is spinning slower than its translational speed
   and is braking.
 
 Nondimensional longitudinal wheel slip `s` is defined as follows for each
 slip condition:
 
-* Accelerating: `s = (R * ω - V_W,lon) / (R * ω)`
-* Braking: `s = (R * ω - V_W,lon) / (V_W,lon)`
+* Accelerating: `s = (R * ω - v_W,lon) / (R * ω)`
+* Braking: `s = (R * ω - v_W,lon) / (v_W,lon)`
 
 In each case, the numerator is the negative of longitudinal slip velocity
-`-V_C,lon`, and the denominator varies.
+`-v_t,lon`, and the denominator varies.
 
-When the wheel is rolling without slip (`V_C,lon = 0`), the longitudinal wheel
-center velocity matches the linear "spin speed" `V_W,lon = R * <D-c>ω` and `s = 0`.
+When the wheel is rolling without slip (`v_t,lon = 0`), the longitudinal wheel
+center velocity matches the linear "spin speed" `v_W,lon = R * ω` and `s = 0`.
 
 During acceleration, if the wheel is turning (`ω > 0`) but is not producing any
-forward motion relative to the ground (`V_W,lon = 0`), then `s = 1`.
+forward motion relative to the ground (`v_W,lon = 0`), then `s = 1`.
 
 During braking, if the brakes are fully engaged(`ω = 0`) but the wheel keeps
-moving forward (`V_W,lon > 0`), then `s = -1`.
+moving forward (`v_W,lon > 0`), then `s = -1`.
 
 Using the slip definition from [Yoshida and Hamano, 2002](https://dx.doi.org/10.1109/ROBOT.2002.1013712),
 the nondimensional longitudinal slip `s` is in the interval [-1, 1] provided
-that `R * ω` and `V_W,lon` are both positive.
+that `R * ω` and `v_W,lon` are both positive.
 The definition of `s` can be generalized to account for driving in reverse as
 follows:
 
-* if `|R * ω| > |V_W,lon|`, Accelerating: `s = (R * ω - V_W,lon) / (R * ω)`
-* if `|R * ω| < |V_W,lon|`, Braking: `s = (R * ω - V_W,lon) / (V_W,lon)`
+* if `|R * ω| > |v_W,lon|`, Accelerating: `s = (R * ω - v_W,lon) / (R * ω)`
+* if `|R * ω| < |v_W,lon|`, Braking: `s = (R * ω - v_W,lon) / (v_W,lon)`
 
 With this generalized definition,
 the nondimensional longitudinal slip `s` is in the interval [-1, 1] provided
-that `R * ω` and `V_W,lon` have the same sign (`R * ω` and `V_W,lon >= 0`).
+that `R * ω` and `v_W,lon` have the same sign (`R * ω * v_W,lon >= 0`).
 However when the velocity values have different signs, the magnitude of `s` is
 greater than 1. For example, when attempting to drive up a steep slope with
-`R * ω > 0`, if the vehicle actually slides backwards with `V_W,lon < 0`, the
+`R * ω > 0`, if the vehicle actually slides backwards with `v_W,lon < 0`, the
 slip value will be greater than 1.
 
 ### Definition of nondimensional lateral wheel slip
@@ -145,7 +145,7 @@ slip value will be greater than 1.
 The lateral slip velocity is represented in nondimensional form by projecting
 the wheel center velocity into the contact tangent plane and computing the angle
 α between the projected velocity vector and the longitudinal wheel contact
-direction: `α = arctan(V_W,lat / V_W,lon)`.
+direction: `α = arctan(v_W,lat / v_W,lon)`.
 
 ## Friction modeling for wheels
 
