@@ -176,8 +176,24 @@ in gazebo-classic and the [WheelSlip system](https://github.com/gazebosim/gz-sim
 in gz-sim have been written to dynamically update the dimensional slip
 compliance parameters to emulate the use of nondimensional slip.
 
-Document wheel slip plugin
+Recall from \ref contactoverview the relaxed model of friction force
+as a piecewise linear function of slip velocity
+`T = -v_t / slip_compliance ∀ |v_t| ≤ µN * slip_compliance`,
+`T = -µN sgn(v_t) ∀ |v_t| > µN * slip_compliance`.
+This model applies for each direction of the friction pyramid and can be tuned
+with Gazebo parameters for the friction coefficient `µ` (unitless) and slip
+compliance (units of `m/s/N`).
 
+Define a nondimensional slip compliance parameter `unitless_slip_compliance`
+and an estimate of the contact normal force `N_est`
+and at each time step update the `slip_compliance` parameter as
+`slip_compliance = unitless_slip_compliance * R * ω / N_est`.
+This changes the linear portion of the friction model to a linear relation
+between the tangential force ratio `T / N_est` and the nondimensional slip
+during acceleration:
+`T/N_est = -s / unitless_slip_compliance ∀ |s| ≤ µN/N_est * unitless_slip_compliance`,
+`T/N_est = -µN/N_est sgn(v_t) ∀ |s| > µN/N_est * unitless_slip_compliance`.
+`
 ## Contact pressure distributions
 
 deformability
