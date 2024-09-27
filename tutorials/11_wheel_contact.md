@@ -7,6 +7,44 @@ considerations for simulating wheel-terrain contact in Gazebo.
 
 - \ref contactoverview "Overview of contact, slip, and friction"
 
+## Definition of wheel directions and wheel contact coordinate frame
+
+The longitudinal direction of a wheel can be loosely defined as the
+"rolling direction" of the wheel and the lateral direction as "parallel to
+the wheel's rolling axis."
+The axes can be defined mathematically for a wheel in contact with terrain
+as follows:
+
+* Define `W` as the center of a wheel with radius `R`.
+* Define `w` as the body-fixed axis about which the wheel rotates
+  (typically an axis of symmetry) with rotational speed `ω`.
+* At each contact point `C` with normal direction `n`, define a wheel contact
+  coordinate frame whose origin is `C` and one of the axes is `n`.
+  If `w` is not parallel to `n`, then the lateral wheel contact direction
+  `t_lat` is defined by projecting `w` into the contact tangent plane of `C`
+  and normalizing to unit length. The longitudinal wheel contact direction
+  `t_lon` is then computed directly as `t_lon = n \cross t_lat`.
+* The wheel contact coordinate frame has its origin at `C` with orthogonal
+  axis directions `n`, `t_lat`, and `t_lon`.
+
+![Illustration of a wheel with contact coordinate frame illustrated.](img/wheel_coordinates.svg)
+
+The translational slip at `C` in units of `m/s` is given as `v_t`, with
+components in each tangent plane direction defined as:
+
+Quantity                    | Variable name
+--------------------------- | -------------
+Longitudinal slip velocity  | `v_t,lon`
+Lateral slip velocity       | `v_t,lat`
+
+The linear velocity at the wheel center `W` in units of `m/s` is given as
+`v_W`, with components expressed in the contact tangent plane directions as:
+
+Quantity                            | Variable name
+----------------------------------- | -------------
+Longitudinal wheel center velocity  | `v_W,lon`
+Lateral wheel center velocity       | `v_W,lat`
+
 ## Contact simulation: special considerations for wheels and terrain
 
 ### Choosing a wheel collision shape
@@ -118,15 +156,53 @@ behavior shown in the right side of the figure above (see Gazebo Classic
 To enable the plowing effect, custom SDFormat tags must be added to the
 terrain collision (`//collision/gz:plowing_terrain`) and the wheel collisions
 (`//collision/gz:plowing_wheel`), and the wheel collisions must specify a
-body-fixed friction direction in the wheel's lateral direction with the
+body-fixed friction direction with the
 [`//collision/surface/friction/ode/fdir1` SDFormat parameter](http://sdformat.org/spec?ver=1.11&elem=collision#ode_fdir1).
+The model assumes that the center of the wheel is at the origin of the wheel
+collision frame, and that the first friction direction (`fdir1`) points in the
+wheel's lateral direction.
 
-Figure showing displacement of contact points and inclination of normal direction
-by a constant angle
+The plowing model computes a plowing angle `p` such that `p = 0` when the
+longitudinal linear speed of the wheel center `abs(v_W,lon)` is below a
+threshold `v_d` (`//gz:plowing_wheel/deadband_velocity`), and `p` increases in
+proportion to `v_W,lon` above that threshold to reach the maximum plowing
+angle `p_max` (`//gz:plowing_wheel/max_degrees`) at the saturation velocity
+`v_s` (`//gz:plowing_wheel/saturation_velocity`). The `max_degrees` and
+`saturation_velocity` parameters are required in the `//gz:plowing_wheel`
+SDFormat element, while the `deadband_velocity` is optional, defaulting to `0`
+if unspecified.
 
-Figure plotting plowing angle as a saturated linear function of the
-longitudinal linear speed of the wheel center.
+~~~
+                    ^
+                    | plowing angle `p` (units: deg)
+                    |
+                    |
+                    |          o o o o o o o o o maximum plowing angle p_max
+                    |         o
+                    |        o
+                    |       o
+                    |      o
+                    |     o                          longitudinal velocity
+       -v_s         |    o    v_s                    at wheel center
+---------+------o-o-o-o-o------+-------------------> v_W,lon (units: m/s)
+               o    |
+              o     |
+             o      |
+            o       |
+           o        |
+          o         |
+ o o o o o          | minimum plowing angle -p_max
+                    |
+                    |
+~~~
 
+For each contact point `C`, both the normal direction `n` and the displacement
+vector from the collision origin (wheel center) to the contact point `C_W`
+are rotated about the first friction direction (`fdir1`, lateral wheel axis)
+by the plowing angle `p` to create a modified contact point `C_p` and
+inclined normal direction `n_p` that oppose the motion of the wheel.
+
+![Illustration of displacement of a contact point and inclination of normal direction by the plowing angle.](img/plowing_angles.svg)
 
 ## Slip calculation for wheels
 
@@ -138,36 +214,6 @@ When simulating wheel-terrain contact, it is common to use a nondimensional
 representation of slip and to compute slip differently along the rolling
 direction (also known as the longitudinal direction) and the non-rolling
 lateral direction.
-
-### Definition of wheel directions and wheel contact coordinate frame
-
-The longitudinal direction of a wheel can be loosely defined as the
-"rolling direction" of the wheel and the lateral direction as "parallel to
-the wheel's rolling axis."
-The axes can be defined mathematically for a wheel in contact with terrain
-as follows:
-
-<!-- need a figure illustrating a wheel with these terms -->
-
-* Define `W` as the center of a wheel with radius `R`.
-* Define `w` as the body-fixed axis about which the wheel rotates
-  (typically an axis of symmetry) with rotational speed `ω`.
-* At each contact point `C` with normal direction `n`, define a wheel contact
-  coordinate frame whose origin is `C` and one of the axes is `n`.
-  If `w` is not parallel to `n`, then the lateral wheel contact direction
-  `t_lat` is defined by projecting `w` into the contact tangent plane of `C`
-  and normalizing to unit length. The longitudinal wheel contact direction
-  `t_lon` is then computed directly as `t_lon = n \cross t_lat`.
-* The wheel contact coordinate frame has its origin at `C` with orthogonal
-  axis directions `n`, `t_lat`, and `t_lon`.
-
-The translational slip at `C` in units of `m/s` is given as `v_t`, with
-components in each tangent plane direction defined as:
-
-Quantity                    | Variable name
---------------------------- | -------------
-Longitudinal slip velocity  | `v_t,lon`
-Lateral slip velocity       | `v_t,lat`
 
 ### Definition of nondimensional longitudinal wheel slip
 
