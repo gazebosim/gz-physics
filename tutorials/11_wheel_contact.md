@@ -216,10 +216,10 @@ that `R * ω` and `v_W,lon` are both positive.
 The definition of `s` can be generalized to account for driving in reverse as
 follows:
 
-Rolling case | Speed comparison       | Slip definition
------------- | ---------------------- | ---------------
-Accelerating | `|R * ω| > |v_W,lon|`  | `s = (R * ω - v_W,lon) / (R * ω)`
-Braking      | `|R * ω| < |v_W,lon|`  | `s = (R * ω - v_W,lon) / (v_W,lon)`
+Rolling case | Speed comparison             | Slip definition
+------------ | ---------------------------- | ---------------
+Accelerating | `abs(R * ω) > abs(v_W,lon)`  | `s = (R * ω - v_W,lon) / (R * ω)`
+Braking      | `abs(R * ω) < abs(v_W,lon)`  | `s = (R * ω - v_W,lon) / (v_W,lon)`
 
 With this generalized definition,
 the nondimensional longitudinal slip `s` is in the interval [-1, 1] provided
@@ -270,8 +270,8 @@ as a piecewise linear function of slip velocity:
 
 Friction force model          | Domain
 ----------------------------- | -------------------------------
-`T = -v_t / slip_compliance`  | `∀ |v_t| ≤ µN * slip_compliance`
-`T = -µN sgn(v_t)`            | `∀ |v_t| > µN * slip_compliance`
+`T = -v_t / slip_compliance`  | `∀ abs(v_t) ≤ µN * slip_compliance`
+`T = -µN sgn(v_t)`            | `∀ abs(v_t) > µN * slip_compliance`
 
 This model applies for each direction of the friction pyramid and can be tuned
 with Gazebo parameters for the friction coefficient `µ` (unitless) and slip
@@ -287,8 +287,8 @@ during acceleration:
 
 Friction force model                              | Domain
 ------------------------------------------------- | ---------------------------
-`T/N_est = -s sgn(ω) / unitless_slip_compliance`  | `∀ |s| ≤ µN/N_est * unitless_slip_compliance`,
-`T/N_est = -µN/N_est sgn(v_t)`                    | `∀ |s| > µN/N_est * unitless_slip_compliance`
+`T/N_est = -s sgn(ω) / unitless_slip_compliance`  | `∀ abs(s) ≤ µN/N_est * unitless_slip_compliance`
+`T/N_est = -µN/N_est sgn(v_t)`                    | `∀ abs(s) > µN/N_est * unitless_slip_compliance`
 
 ### Nonlinear friction model modifying slip compliance based on terrain slope
 
