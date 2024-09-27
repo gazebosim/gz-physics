@@ -45,6 +45,89 @@ radius of the sphere is larger than the resolution of the heightmap grid.
   [odedevs/ode#71](https://bitbucket.org/odedevs/ode/issues/71/small-spheres-fall-through-convex-edges-of)
   and [gazebo-classic#684](https://github.com/gazebosim/gazebo-classic/issues/684).
 
+### Contact pressure distributions
+
+As mentioned in \ref contactoverview, Gazebo simulates contact with overlap of
+nondeformable shapes, while in reality objects do deform when they touch,
+creating contact patches with surface pressure and shear stress.
+Contact points can approximate a contact patch well if placed at
+the center of pressure. This section discusses how wheel and terrain
+deformability affect contact patch properties and how well contact points can
+approximate these contact patches. These examples currently focus on
+longitudinal dynamics.
+
+#### Rigid wheel on rigid terrain
+
+As a baseline, consider a rigid wheel resting on a flat rigid surface at a
+single point. The contact patch in this idealized case is a single point.
+An illustration is provided in the figure below.
+
+![Illustration of a rigid wheel resting on a flat rigid surface with point contact.](img/rigid_wheel_terrain.png)
+
+#### Deformable wheel on rigid terrain
+
+Now consider a deformable wheel (such as a wheel with a pneumatic tire) in
+contact with a flat rigid terrain surface.
+Rather than contacting at a single point, the bottom of the tire deforms to
+create a flat contact patch.
+At rest, the contact patch may have a symmetric distribution of normal contact
+pressure, such that the center of pressure is directly below the wheel center,
+as illustrated in the left portion of the figure below.
+While rolling, the wheel deformation may "bunch up" in the direction of travel
+(due to [hysteresis of the material](https://en.wikipedia.org/wiki/Rolling_resistance))
+and bias the contact pressure distribution, such that the center of pressure
+is in front of the wheel center, generating a rolling resistance torque.
+The illustration below shows a deformable wheel at rest and a wheel rolling.
+
+![Illustration of a deformable wheel in contact with a flat rigid surface at rest and while rolling.](img/deformable_wheel.png)
+
+The rolling resistance torque can be modeled numerically as a friction
+constraint, though it is not yet supported in Gazebo (see
+[gazebo-classic#3084](https://github.com/gazebosim/gazebo-classic/issues/3084)).
+The change in the height of the wheel above the terrain can be modeled using
+the linear stiffness (`kp`) and linear damping (`kd`) parameters in the SDFormat
+[//surface/contact](http://sdformat.org/spec?ver=1.11&elem=collision#surface_contact)
+element.
+
+#### Rigid wheel on deformable terrain
+
+Now consider a rigid wheel in contact with a deformable terrain surface
+(such as sand or a soft soil).
+At rest, the wheel may sink into the surface with a symmetric distribution of
+normal contact pressure, such that the center of pressure is directly below
+the wheel center, as illustrated in the left portion of the figure below.
+While rolling, the sinkage of the wheel may cause a plowing effect, in which
+the terrain material is bunched up in the direction of travel and compacted
+in its wake.
+This can cause a significant forward bias in the distribution of normal contact
+pressure and an equivalent normal force vector that is inclined relative to the
+undisturbed surface normal.
+In the right portion of the illustration below, the equivalent normal force
+opposes the motion of the wheel, requiring travtive torque to be applied in
+order to maintain a steady velocity.
+Even when flat, this plowing effect can make driving on a deformable surface
+energetically equivalent to driving uphill on a rigid surface.
+
+![Illustration of a rigid wheel in contact with a deformable surface at rest and while rolling with a plowing effect.](img/deformable_terrain.png)
+
+This longitudinal plowing effect has been approximated in Gazebo Classic by
+displacing contact points and inclining the contact normals to replicate the
+behavior shown in the right side of the figure above (see Gazebo Classic
+[issue #3085](https://github.com/gazebosim/gazebo-classic/issues/3085) and
+[pull request #3164](https://github.com/gazebosim/gazebo-classic/pull/3164)).
+To enable the plowing effect, custom SDFormat tags must be added to the
+terrain collision (`//collision/gz:plowing_terrain`) and the wheel collisions
+(`//collision/gz:plowing_wheel`), and the wheel collisions must specify a
+body-fixed friction direction in the wheel's lateral direction with the
+[`//collision/surface/friction/ode/fdir1` SDFormat parameter](http://sdformat.org/spec?ver=1.11&elem=collision#ode_fdir1).
+
+Figure showing displacement of contact points and inclination of normal direction
+by a constant angle
+
+Figure plotting plowing angle as a saturated linear function of the
+longitudinal linear speed of the wheel center.
+
+
 ## Slip calculation for wheels
 
 From the Overview of contact, slip, and friction documentation, slip is defined
@@ -81,8 +164,10 @@ as follows:
 The translational slip at `C` in units of `m/s` is given as `v_t`, with
 components in each tangent plane direction defined as:
 
-* Longitudinal slip velocity `v_t,lon`
-* Lateral slip velocity `v_t,lat`
+Quantity                    | Variable name
+--------------------------- | -------------
+Longitudinal slip velocity  | `v_t,lon`
+Lateral slip velocity       | `v_t,lat`
 
 ### Definition of nondimensional longitudinal wheel slip
 
@@ -100,19 +185,21 @@ In Yoshida and Hamano, 2002
 the two slip conditions used for defining nondimensional longitudinal wheel
 slip are
 
-* `R * ω > v_W,lon`: the wheel is spinning faster than its translational speed
-  and is accelerating.
-* `R * ω < v_W,lon`: the wheel is spinning slower than its translational speed
-  and is braking.
+Speed comparison  | Interpretation
+----------------- | ------------------------
+`R * ω > v_W,lon` | the wheel is spinning faster than its translational speed and is accelerating.
+`R * ω < v_W,lon` | the wheel is spinning slower than its translational speed and is braking.
 
 Nondimensional longitudinal wheel slip `s` is defined as follows for each
 slip condition:
 
-* Accelerating: `s = (R * ω - v_W,lon) / (R * ω)`
-* Braking: `s = (R * ω - v_W,lon) / (v_W,lon)`
+Rolling case  | Slip definition
+------------- | ---------------
+Accelerating  | `s = (R * ω - v_W,lon) / (R * ω)`
+Braking       | `s = (R * ω - v_W,lon) / (v_W,lon)`
 
 In each case, the numerator is the negative of longitudinal slip velocity
-`-v_t,lon`, and the denominator varies.
+`-v_t,lon`.
 
 When the wheel is rolling without slip (`v_t,lon = 0`), the longitudinal wheel
 center velocity matches the linear "spin speed" `v_W,lon = R * ω` and `s = 0`.
@@ -129,8 +216,10 @@ that `R * ω` and `v_W,lon` are both positive.
 The definition of `s` can be generalized to account for driving in reverse as
 follows:
 
-* if `|R * ω| > |v_W,lon|`, Accelerating: `s = (R * ω - v_W,lon) / (R * ω)`
-* if `|R * ω| < |v_W,lon|`, Braking: `s = (R * ω - v_W,lon) / (v_W,lon)`
+Rolling case | Speed comparison       | Slip definition
+------------ | ---------------------- | ---------------
+Accelerating | `|R * ω| > |v_W,lon|`  | `s = (R * ω - v_W,lon) / (R * ω)`
+Braking      | `|R * ω| < |v_W,lon|`  | `s = (R * ω - v_W,lon) / (v_W,lon)`
 
 With this generalized definition,
 the nondimensional longitudinal slip `s` is in the interval [-1, 1] provided
@@ -167,7 +256,7 @@ parameter to be parallel to the revolute joint axis corresponding to the wheel
 axle. With this approach, specify lateral friction / slip parameters in first
 friction direction and longitudinal parameters in 2nd direction.
 
-### WheelSlipPlugin / WheelSlip system
+### Nondimensional saturated linear friction model with WheelSlipPlugin / WheelSlip system
 
 Since the slip compliance parameters used by Gazebo's physics engines apply
 forces based on slip velocity rather than nondimensional slip, Gazebo's
@@ -177,33 +266,32 @@ in gz-sim have been written to dynamically update the dimensional slip
 compliance parameters to emulate the use of nondimensional slip.
 
 Recall from \ref contactoverview the relaxed model of friction force
-as a piecewise linear function of slip velocity
-`T = -v_t / slip_compliance ∀ |v_t| ≤ µN * slip_compliance`,
-`T = -µN sgn(v_t) ∀ |v_t| > µN * slip_compliance`.
+as a piecewise linear function of slip velocity:
+
+Friction force model          | Domain
+----------------------------- | -------------------------------
+`T = -v_t / slip_compliance`  | `∀ |v_t| ≤ µN * slip_compliance`
+`T = -µN sgn(v_t)`            | `∀ |v_t| > µN * slip_compliance`
+
 This model applies for each direction of the friction pyramid and can be tuned
 with Gazebo parameters for the friction coefficient `µ` (unitless) and slip
 compliance (units of `m/s/N`).
 
-Define a nondimensional slip compliance parameter `unitless_slip_compliance`
-and an estimate of the contact normal force `N_est`
-and at each time step update the `slip_compliance` parameter as
-`slip_compliance = unitless_slip_compliance * R * ω / N_est`.
+Given a nondimensional slip compliance parameter `unitless_slip_compliance`
+and an estimate of the contact normal force `N_est`, these plugins
+update the `slip_compliance` parameter at each time step as
+`slip_compliance = unitless_slip_compliance * R * |ω| / N_est`.
 This changes the linear portion of the friction model to a linear relation
 between the tangential force ratio `T / N_est` and the nondimensional slip
 during acceleration:
-`T/N_est = -s / unitless_slip_compliance ∀ |s| ≤ µN/N_est * unitless_slip_compliance`,
-`T/N_est = -µN/N_est sgn(v_t) ∀ |s| > µN/N_est * unitless_slip_compliance`.
-`
-## Contact pressure distributions
 
-deformability
-https://github.com/gazebosim/gazebo-classic/issues/3084
-https://github.com/gazebosim/gazebo-classic/issues/3085
+Friction force model                              | Domain
+------------------------------------------------- | ---------------------------
+`T/N_est = -s sgn(ω) / unitless_slip_compliance`  | `∀ |s| ≤ µN/N_est * unitless_slip_compliance`,
+`T/N_est = -µN/N_est sgn(v_t)`                    | `∀ |s| > µN/N_est * unitless_slip_compliance`
 
-### Approximate deformable wheels with rolling friction
+### Nonlinear friction model modifying slip compliance based on terrain slope
 
-### Approximate deformable terrain with plowing angle
-
-by changing contact point, normal
+Saturated nonlinear friction model
 
 and changing slip compliance based on gravity component in contact tangent plane
