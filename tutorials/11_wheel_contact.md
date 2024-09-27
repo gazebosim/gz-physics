@@ -190,44 +190,46 @@ Speed comparison  | Interpretation
 `R * ω > v_W,lon` | the wheel is spinning faster than its translational speed and is accelerating.
 `R * ω < v_W,lon` | the wheel is spinning slower than its translational speed and is braking.
 
-Nondimensional longitudinal wheel slip `s` is defined as follows for each
-slip condition:
+Nondimensional longitudinal wheel slip `s_a` and `s_b` are defined as follows
+for each slip condition:
 
 Rolling case  | Slip definition
 ------------- | ---------------
-Accelerating  | `s = (R * ω - v_W,lon) / (R * ω)`
-Braking       | `s = (R * ω - v_W,lon) / (v_W,lon)`
+Accelerating  | `s_a = (R * ω - v_W,lon) / (R * ω)`
+Braking       | `s_b = (R * ω - v_W,lon) / (v_W,lon)`
 
 In each case, the numerator is the negative of longitudinal slip velocity
 `-v_t,lon`.
 
 When the wheel is rolling without slip (`v_t,lon = 0`), the longitudinal wheel
-center velocity matches the linear "spin speed" `v_W,lon = R * ω` and `s = 0`.
+center velocity matches the linear "spin speed" `v_W,lon = R * ω` and
+`s_a = s_b = 0`.
 
 During acceleration, if the wheel is turning (`ω > 0`) but is not producing any
-forward motion relative to the ground (`v_W,lon = 0`), then `s = 1`.
+forward motion relative to the ground (`v_W,lon = 0`), then `s_a = 1`.
 
 During braking, if the brakes are fully engaged(`ω = 0`) but the wheel keeps
-moving forward (`v_W,lon > 0`), then `s = -1`.
+moving forward (`v_W,lon > 0`), then `s_b = -1`.
 
-Using the slip definition from [Yoshida and Hamano, 2002](https://dx.doi.org/10.1109/ROBOT.2002.1013712),
-the nondimensional longitudinal slip `s` is in the interval [-1, 1] provided
+Both nondimensional slip definitions `s_a` and `s_b` are in the interval
+`[-1, 1]` for the speed conditions defined above, provided
 that `R * ω` and `v_W,lon` are both positive.
-The definition of `s` can be generalized to account for driving in reverse as
-follows:
+The definition of `s_a` and `s_b` can be generalized to account for driving in
+reverse as follows:
 
 Rolling case | Speed comparison             | Slip definition
 ------------ | ---------------------------- | ---------------
-Accelerating | `abs(R * ω) > abs(v_W,lon)`  | `s = (R * ω - v_W,lon) / (R * ω)`
-Braking      | `abs(R * ω) < abs(v_W,lon)`  | `s = (R * ω - v_W,lon) / (v_W,lon)`
+Accelerating | `abs(R * ω) > abs(v_W,lon)`  | `s_a = (R * ω - v_W,lon) / (R * ω)`
+Braking      | `abs(R * ω) < abs(v_W,lon)`  | `s_b = (R * ω - v_W,lon) / (v_W,lon)`
 
-With this generalized definition,
-the nondimensional longitudinal slip `s` is in the interval [-1, 1] provided
+With these generalized speed conditions,
+the nondimensional longitudinal slip values are in the interval [-1, 1] provided
 that `R * ω` and `v_W,lon` have the same sign (`R * ω * v_W,lon >= 0`).
-However when the velocity values have different signs, the magnitude of `s` is
+However when the velocity values have different signs,
+the magnitude of `s_a` or `s_b` is
 greater than 1. For example, when attempting to drive up a steep slope with
 `R * ω > 0`, if the vehicle actually slides backwards with `v_W,lon < 0`, the
-slip value will be greater than 1.
+slip value `s_a` will be greater than 1.
 
 ### Definition of nondimensional lateral wheel slip
 
@@ -283,12 +285,27 @@ update the `slip_compliance` parameter at each time step as
 `slip_compliance = unitless_slip_compliance * R * |ω| / N_est`.
 This changes the linear portion of the friction model to a linear relation
 between the tangential force ratio `T / N_est` and the nondimensional slip
-during acceleration:
+during acceleration `s_a`:
 
-Friction force model                              | Domain
-------------------------------------------------- | ---------------------------
-`T/N_est = -s sgn(ω) / unitless_slip_compliance`  | `∀ abs(s) ≤ µN/N_est * unitless_slip_compliance`
-`T/N_est = -µN/N_est sgn(v_t)`                    | `∀ abs(s) > µN/N_est * unitless_slip_compliance`
+Friction force model                                | Domain
+--------------------------------------------------- | ---------------------------
+`T/N_est = -s_a sgn(ω) / unitless_slip_compliance`  | `∀ abs(s_a) ≤ µN/N_est * unitless_slip_compliance`
+`T/N_est = -µN/N_est sgn(v_t)`                      | `∀ abs(s_a) > µN/N_est * unitless_slip_compliance`
+
+The quantity `s_a sgn(w)` is equivalent to `(R * ω - v_W,lon) / (R * abs(ω))`.
+Defining this slip quantity as `S_a = (R * ω - v_W,lon) / (R * abs(ω))`,
+the friction forces can be rewritten as:
+
+Friction force model                        | Domain
+------------------------------------------- | ---------------------------
+`T/N_est = -S_a / unitless_slip_compliance` | `∀ abs(S_a) ≤ µN/N_est * unitless_slip_compliance`
+`T/N_est = -µN/N_est sgn(S_a)`              | `∀ abs(S_a) > µN/N_est * unitless_slip_compliance`
+
+Though it is common in the literature to define friction forces based on the
+dual definitions of slip `s_a` and `s_b` depending on the speed conditions,
+these plugins exclusively use the modified nondimensional slip value under
+acceleration `S_a` since it was found to perform better at low speed,
+particularly in holding position on a slope when braking is applied (`ω = 0`).
 
 ### Nonlinear friction model modifying slip compliance based on terrain slope
 
