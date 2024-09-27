@@ -204,6 +204,15 @@ inclined normal direction `n_p` that oppose the motion of the wheel.
 
 ![Illustration of displacement of a contact point and inclination of normal direction by the plowing angle.](img/plowing_angles.svg)
 
+Care should be taken when tuning parameters to ensure that the modified
+contact point `C_p` is not displaced outside of the overlapping volume of the
+contacting objects, which would cause flickering instability of the contact
+points. The maximum plowing angle should not be excessive, and
+the linear stiffness (`kp`) and linear damping (`kd`) parameters in the SDFormat
+[//surface/contact](http://sdformat.org/spec?ver=1.11&elem=collision#surface_contact)
+element may be softened to allow more "sinkage" or overlap between the
+plowing wheel and the terrain.
+
 ## Slip calculation for wheels
 
 From the Overview of contact, slip, and friction documentation, slip is defined
@@ -355,6 +364,28 @@ particularly in holding position on a slope when braking is applied (`ω = 0`).
 
 ### Nonlinear friction model modifying slip compliance based on terrain slope
 
-Saturated nonlinear friction model
+A common way to characterize wheel slip properties of a low-speed
+vehicle driving on soft terrain is to drive up and down slopes of different
+inclination angles and measure the wheel slip for each slope. If the slip vs
+slope data closely resembles a saturated linear function, then tuning the
+parameters for the WheelSlip plugin should be sufficient to match the
+measured behavior.
+If the slip vs slope data more closely resembles a saturated nonlinear function,
+such as a smoother curve like a sigmoid or arc-tangent, then additional
+friction model parameters would be needed to match the measured behavior.
 
-and changing slip compliance based on gravity component in contact tangent plane
+A nonlinear extension of the WheelSlipPlugin was demonstrated for Gazebo Classic
+(see [gazebo-classic#3342](https://github.com/gazebosim/gazebo-classic/pull/3342)
+and [gazebo-classic#3399](https://github.com/gazebosim/gazebo-classic/pull/3399)),
+but it has not been merged due to breaking changes to the application binary
+interface (ABI).
+The extension is implemented in the collision callback in `ODEPhysics::Collide`,
+which executes after the `WheelSlipPlugin` has non-dimensionalized the
+`slip_compliance` parameter.
+A multiplier for the `slip_compliance` parameter is calculated as a function of
+the terrain slope in the longitudinal direction at each contact point.
+The multiplier defaults to a value of `1.0` (which would leave the
+`slip_compliance` unchanged), but can be specified as a piecewise linear
+function of the terrain slope.
+See the documentation in [ODECollision.hh](https://github.com/gazebosim/gazebo-classic/blob/89eaf90dcc00f476edb5c8eada30c12a24eff827/gazebo/physics/ode/ODECollision.hh#L60-L164)
+from the prototype branch for more details.
