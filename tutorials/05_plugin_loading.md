@@ -114,7 +114,7 @@ And you'll see the engine info:
 
 ```bash
 Testing plugin: gz::physics::dartsim::Plugin
-  engine name: dartsim-6.10.0
+  engine name: dartsim-6.13.2
 ```
 
 At the time of writing, Gazebo Physics is shipped with
