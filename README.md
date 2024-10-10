@@ -73,7 +73,7 @@ See the [installation tutorial](https://gazebosim.org/api/physics/8/installation
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/gz-physics8/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/main/examples/).
 
 # Documentation
 
@@ -90,13 +90,13 @@ On Ubuntu, you can also generate the documentation from a clone of this reposito
 2. Install dependencies
    ```
    sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
-   sudo apt-get build-dep -y libgz-physics8-dev
+   sudo apt-get build-dep -y libgz-physics9-dev
    ```
 
 3. Clone the repository
 
     ```
-    git clone https://github.com/gazebosim/gz-physics -b gz-physics8
+    git clone https://github.com/gazebosim/gz-physics -b main
     ```
 
 4. Configure and build the documentation.
