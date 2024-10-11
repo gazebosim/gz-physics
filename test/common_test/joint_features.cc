@@ -860,7 +860,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest,
         static_cast<int>(positionGoal / velocityLimit / dt);
     // Take the expected number of steps.
     gzdbg << "Taking " << expectedSteps << " steps "
-              << "to reach the goal.";
+          << "to reach the goal." << std::endl;
 
     gz::physics::ForwardStep::Output output;
     gz::physics::ForwardStep::State state;
@@ -868,7 +868,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest,
 
     for (int i = 0; i < expectedSteps; ++i)
     {
-      joint->SetVelocityCommand(0, 100);
+      joint->SetVelocityCommand(0, velocityLimit);
       world->Step(output, state, input);
     }
 
