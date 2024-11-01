@@ -107,7 +107,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 {
   // Free groups in bullet-featherstone are currently represented by ModelInfo
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
-  return FindFreeGroupForModel(link->model)
+  return this->FindFreeGroupForModel(link->model);
 }
 
 /////////////////////////////////////////////////
