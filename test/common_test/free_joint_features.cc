@@ -316,6 +316,71 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
   }
 }
 
+TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticModel)
+{
+  const std::string modelStr = R"(
+    <sdf version="1.11">
+      <model name="sphere">
+        <static>true</static>
+        <pose>1 2 3.0 0 0 0</pose>
+        <link name="link">
+          <collision name="coll_sphere">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+  for (const std::string &name : pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(
+      common_test::worlds::kGroundSdf);
+    EXPECT_EQ(0u, errors.size()) << errors;
+
+    EXPECT_EQ(1u, root.WorldCount());
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, sdfWorld);
+
+    auto world = engine->ConstructWorld(*sdfWorld);
+    ASSERT_NE(nullptr, world);
+
+    // create the model
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto frameDataLink = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(gz::math::Pose3d(1, 2, 3, 0, 0, 0),
+              gz::math::eigen3::convert(frameDataLink.pose));
+
+    // get free group and set new pose
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    gz::math::Pose3d newPose(4, 5, 6, 0, 0, 1.57);
+    freeGroup->SetWorldPose(
+        gz::math::eigen3::convert(newPose));
+    frameDataLink = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(newPose,
+              gz::math::eigen3::convert(frameDataLink.pose));
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

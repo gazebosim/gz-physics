@@ -85,10 +85,6 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
 
-  // Reject if the model has fixed base
-  if (model->body->hasFixedBase())
-    return this->GenerateInvalidId();
-
   // Also reject if the model is a child of a fixed constraint
   // (detachable joint)
   for (const auto & joint : this->joints)
@@ -102,7 +98,6 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
     }
   }
 
-
   return _modelID;
 }
 
@@ -110,12 +105,9 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
+  // Free groups in bullet-featherstone are currently represented by ModelInfo
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
-  const auto *model = this->ReferenceInterface<ModelInfo>(link->model);
-  if (model->body->hasFixedBase())
-    return this->GenerateInvalidId();
-
-  return link->model;
+  return FindFreeGroupForModel(link->model)
 }
 
 /////////////////////////////////////////////////
