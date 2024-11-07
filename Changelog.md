@@ -6,10 +6,8 @@
     * [Pull request #633](https://github.com/gazebosim/gz-physics/pull/633)
 
 1. Disable test failing due to ODE/libccd (backport #621)
-    * [Pull request #621](https://github.com/gazebosim/gz-physics/pull/621)
-
-1. Disable test failing due to ODE/libccd (backport)
     * [Pull request #642](https://github.com/gazebosim/gz-physics/pull/642)
+    * [Pull request #621](https://github.com/gazebosim/gz-physics/pull/621)
 
 1. Remove @mxgrey as code owner
     * [Pull request #605](https://github.com/gazebosim/gz-physics/pull/605)
