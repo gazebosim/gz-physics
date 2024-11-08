@@ -30,9 +30,6 @@
 1. Disable test failing due to ODE/libccd (backport #621)
     * [Pull request #621](https://github.com/gazebosim/gz-physics/pull/621)
 
-1. Require gz-math 6.13 for ign->gz transition
-    * [Pull request #601](https://github.com/gazebosim/gz-physics/pull/601)
-
 ### Gazebo Physics 7.3.0 (2024-06-25)
 
 1. Backport: Add Cone as a collision shape
