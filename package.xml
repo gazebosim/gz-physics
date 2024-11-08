@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>gz-physics7</name>
-  <version>7.3.0</version>
+  <version>7.4.0</version>
   <description>Gazebo Physics : Physics classes and functions for robot applications</description>
   <maintainer email="scpeters@openrobotics.org">Steve Peters</maintainer>
   <license>Apache License 2.0</license>
