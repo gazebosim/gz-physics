@@ -1,5 +1,20 @@
 ## Gazebo Physics 6.x
 
+### Gazebo Physics 6.7.0 (2024-11-07)
+
+1. Add no gravity link support
+    * [Pull request #633](https://github.com/gazebosim/gz-physics/pull/633)
+
+1. Disable test failing due to ODE/libccd (backport #621)
+    * [Pull request #642](https://github.com/gazebosim/gz-physics/pull/642)
+    * [Pull request #621](https://github.com/gazebosim/gz-physics/pull/621)
+
+1. Remove @mxgrey as code owner
+    * [Pull request #605](https://github.com/gazebosim/gz-physics/pull/605)
+
+1. Require gz-math 6.13 for ign->gz transition
+    * [Pull request #601](https://github.com/gazebosim/gz-physics/pull/601)
+
 ### Gazebo Physics 6.6.0 (2024-06-11)
 
 1. dartsim: optimize picking contact points with ODE collision detector
