@@ -578,7 +578,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   // Add world joint
   if (structure.rootJoint)
   {
-    std::cerr << " adding root joint " << structure.rootJoint->Name() << std::endl;
     const auto &parentInfo = structure.parentOf.at(structure.rootLink);
     this->AddJoint(
           JointInfo{

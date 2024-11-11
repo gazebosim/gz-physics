@@ -85,7 +85,6 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
 
-  std::cerr <<  "joints " << this->joints.size() << std::endl;
   for (const auto & joint : this->joints)
   {
     // Also reject if the model is a child of a fixed constraint

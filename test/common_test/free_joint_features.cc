@@ -356,7 +356,6 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
       </model>
     </sdf>)";
 
-
   for (const std::string &name : pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
