@@ -316,7 +316,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
   }
 }
 
-TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticModel)
+TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
 {
   const std::string modelStr = R"(
     <sdf version="1.11">
@@ -334,6 +334,28 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticModel)
         </link>
       </model>
     </sdf>)";
+
+  const std::string modelWorldFixedStr = R"(
+    <sdf version="1.11">
+      <model name="sphere_world_fixed">
+        <static>false</static>
+        <pose>3 2 3.0 0 0 0</pose>
+        <link name="link">
+          <collision name="coll_sphere">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="world_fixed" type="fixed">
+          <parent>world</parent>
+          <child>link</child>
+        </joint>
+      </model>
+    </sdf>)";
+
 
   for (const std::string &name : pluginNames)
   {
@@ -355,29 +377,58 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticModel)
     auto world = engine->ConstructWorld(*sdfWorld);
     ASSERT_NE(nullptr, world);
 
-    // create the model
+    // create the static model
     errors = root.LoadSdfString(modelStr);
     ASSERT_TRUE(errors.empty()) << errors;
     ASSERT_NE(nullptr, root.Model());
     world->ConstructModel(*root.Model());
 
-    auto model = world->GetModel("sphere");
-    ASSERT_NE(nullptr, model);
-    auto link = model->GetLink("link");
+    auto modelStatic = world->GetModel("sphere");
+    ASSERT_NE(nullptr, modelStatic);
+    auto link = modelStatic->GetLink("link");
     ASSERT_NE(nullptr, link);
     auto frameDataLink = link->FrameDataRelativeToWorld();
     EXPECT_EQ(gz::math::Pose3d(1, 2, 3, 0, 0, 0),
               gz::math::eigen3::convert(frameDataLink.pose));
 
     // get free group and set new pose
-    auto freeGroup = model->FindFreeGroup();
+    auto freeGroup = modelStatic->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
     gz::math::Pose3d newPose(4, 5, 6, 0, 0, 1.57);
     freeGroup->SetWorldPose(
         gz::math::eigen3::convert(newPose));
     frameDataLink = link->FrameDataRelativeToWorld();
+    // static model should move to new pose
     EXPECT_EQ(newPose,
               gz::math::eigen3::convert(frameDataLink.pose));
+
+    // create the model with world joint
+    errors = root.LoadSdfString(modelWorldFixedStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto modelFixed = world->GetModel("sphere_world_fixed");
+    ASSERT_NE(nullptr, modelFixed);
+    link = modelFixed->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    frameDataLink = link->FrameDataRelativeToWorld();
+    gz::math::Pose3d origPose(3, 2, 3, 0, 0, 0);
+    EXPECT_EQ(origPose,
+              gz::math::eigen3::convert(frameDataLink.pose));
+
+    // get free group and set new pose
+    freeGroup = modelFixed->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    freeGroup->SetWorldPose(
+        gz::math::eigen3::convert(newPose));
+    frameDataLink = link->FrameDataRelativeToWorld();
+    // world fixed model should not be able to move to new pose
+    if (this->PhysicsEngineName(name) != "tpe")
+    {
+      EXPECT_EQ(origPose,
+                gz::math::eigen3::convert(frameDataLink.pose));
+    }
   }
 }
 

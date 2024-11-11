@@ -85,13 +85,24 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
 
-  // Also reject if the model is a child of a fixed constraint
-  // (detachable joint)
+  std::cerr <<  "joints " << this->joints.size() << std::endl;
   for (const auto & joint : this->joints)
   {
+    // Also reject if the model is a child of a fixed constraint
+    // (detachable joint)
     if (joint.second->fixedConstraint)
     {
       if (joint.second->fixedConstraint->getMultiBodyB() == model->body.get())
+      {
+        return this->GenerateInvalidId();
+      }
+    }
+    // Reject if the model has a world joint
+    if (std::size_t(joint.second->model) == std::size_t(_modelID))
+    {
+      const auto *identifier =
+          std::get_if<RootJoint>(&joint.second->identifier);
+      if (identifier)
       {
         return this->GenerateInvalidId();
       }
