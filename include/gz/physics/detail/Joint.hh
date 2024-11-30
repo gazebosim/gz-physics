@@ -218,6 +218,42 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    void SetJointFrictionFeature::Joint<PolicyT, FeaturesT>::
+    SetFriction(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointEffortLimitsFeature>()
+        ->SetJointFriction(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointDampingCoefficientFeature::Joint<PolicyT, FeaturesT>::
+    SetDampingCoefficient(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointEffortLimitsFeature>()
+        ->SetJointDampingCoefficient(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointSpringStiffnessFeature::Joint<PolicyT, FeaturesT>::
+    SetSpringStiffness(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointEffortLimitsFeature>()
+        ->SetJointSpringStiffness(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointRestPositionFeature::Joint<PolicyT, FeaturesT>::
+    SetRestPosition(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointEffortLimitsFeature>()
+        ->SetJointRestPosition(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     bool SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
     SetMimicConstraint(
       std::size_t _dof,
