@@ -43,7 +43,7 @@ struct EntityManagementFeatureList : FeatureList<
   WorldModelFeature
 > { };
 
-class EntityManagementFeatures :
+class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {

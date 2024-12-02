@@ -50,7 +50,7 @@ struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfVisual
 > { };
 
-class SDFFeatures :
+class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE SDFFeatures :
     public virtual EntityManagementFeatures,
     public virtual Implements3d<SDFFeatureList>
 {
