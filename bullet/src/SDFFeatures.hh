@@ -25,6 +25,7 @@
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 #include <gz/physics/sdf/ConstructCollision.hh>
+#include <gz/physics/dartsim-plugin/Export.hh>
 
 #include <gz/physics/Implements.hh>
 

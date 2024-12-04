@@ -25,6 +25,7 @@
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/Implements.hh>
+#include <gz/physics/dartsim-plugin/Export.hh>
 
 #include "Base.hh"
 
