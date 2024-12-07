@@ -318,7 +318,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
 
 TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
 {
-  const std::string modelStr = R"(
+  const std::string modelStaticStr = R"(
     <sdf version="1.11">
       <model name="sphere">
         <static>true</static>
@@ -377,7 +377,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
     ASSERT_NE(nullptr, world);
 
     // create the static model
-    errors = root.LoadSdfString(modelStr);
+    errors = root.LoadSdfString(modelStaticStr);
     ASSERT_TRUE(errors.empty()) << errors;
     ASSERT_NE(nullptr, root.Model());
     world->ConstructModel(*root.Model());
