@@ -29,6 +29,8 @@
 #define GZ_PHYSICS_VERSION_FULL "${PROJECT_VERSION_FULL}"
 #define GZ_PHYSICS_VERSION_NAMESPACE v${PROJECT_VERSION_MAJOR}
 
+#define GZ_PHYSICS_ENGINE_INSTALL_DIR _Pragma ("GCC warning \"'GZ_PHYSICS_ENGINE_INSTALL_DIR' macro is deprecated, use gz::physics::getEngineInstallDir() function instead. \"") "${GZ_PHYSICS_ENGINE_INSTALL_DIR}"
+
 #define GZ_PHYSICS_VERSION_HEADER "Gazebo Physics, version ${PROJECT_VERSION_FULL}\nCopyright (C) 2017 Open Source Robotics Foundation.\nReleased under the Apache 2.0 License.\n\n"
 
 #endif
