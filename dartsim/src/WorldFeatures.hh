@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_DARTSIM_SRC_WORLDFEATURES_HH_
 #define GZ_PHYSICS_DARTSIM_SRC_WORLDFEATURES_HH_
 
+#include <cstddef>
 #include <string>
 
 #include <gz/physics/World.hh>
@@ -68,6 +69,14 @@ class WorldFeatures :
 
   // Documentation inherited
   public: const std::string &GetWorldSolver(const Identity &_id) const override;
+
+  // Documentation inherited
+  public: void SetWorldSolverIterations(const Identity &_id, std::size_t)
+      override;
+
+  // Documentation inherited
+  public: std::size_t GetWorldSolverIterations(const Identity &_id) const
+      override;
 };
 
 }

@@ -9,10 +9,10 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics7/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics7)
-Ubuntu Jammy  | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics7-jammy-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics7-jammy-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics7-homebrew-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics7-homebrew-amd64)
-Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-7-win)](https://build.osrfoundation.org/job/gz_physics-7-win)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics8/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics8)
+Ubuntu Noble  | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics8-noble-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics8-noble-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics8-homebrew-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics8-homebrew-amd64)
+Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-8-win)](https://build.osrfoundation.org/job/gz_physics-8-win)
 
 Gazebo Physics, a component of [Gazebo](https://gazebosim.org), provides an abstract physics interface
 designed to support simulation and rapid development of robot applications.
@@ -69,37 +69,43 @@ Gazebo Physics provides the following functionality:
 
 # Install
 
-See the [installation tutorial](https://gazebosim.org/api/physics/5.0/installation.html).
+See the [installation tutorial](https://gazebosim.org/api/physics/8/installation.html).
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/main/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/gz-physics8/examples/).
 
 # Documentation
 
 API and tutorials can be found at [https://gazebosim.org/libs/physics](https://gazebosim.org/libs/physics).
 
-You can also generate the documentation from a clone of this repository by following these steps.
+On Ubuntu, you can also generate the documentation from a clone of this repository by following these steps.
 
-1. You will need Doxygen. On Ubuntu Doxygen can be installed using
+1. You will need Doxygen, which can be installed using
 
     ```
     sudo apt-get install doxygen
     ```
 
-2. Clone the repository
+2. Install dependencies
+   ```
+   sudo apt-add-repository -s "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -c -s) main"
+   sudo apt-get build-dep -y libgz-physics8-dev
+   ```
+
+3. Clone the repository
 
     ```
-    git clone https://github.com/gazebosim/gz-physics -b main
+    git clone https://github.com/gazebosim/gz-physics -b gz-physics8
     ```
 
-3. Configure and build the documentation.
+4. Configure and build the documentation.
 
     ```
-    cd gz-physics; mkdir build; cd build; cmake ../; make doc
+    cd gz-physics; mkdir build; cd build; cmake ..; make doc
     ```
 
-4. View the documentation by running the following command from the build directory.
+5. View the documentation by running the following command from the build directory.
 
     ```
     firefox doxygen/html/index.html
@@ -109,7 +115,7 @@ You can also generate the documentation from a clone of this repository by follo
 
 Follow these steps to run tests and static code analysis in your clone of this repository.
 
-1. Follow the [source install instruction](#source-install).
+1. Follow the "Source Installation" instructions in the [installation tutorial](https://gazebosim.org/api/physics/8/installation.html).
 
 2. Run tests.
 
@@ -132,19 +138,21 @@ gz-physics
 ├── bullet                    Files for bullet plugin component.
 ├── bullet-featherstone       Files for bullet-featherstone plugin component.
 ├── dartsim                   Files for dartsim plugin component.
-├── example                   Examples about how to use the library
+├── examples                  Examples about how to use the library.
 ├── heightmap                 Heightmap related header files.
 ├── include/gz/physics        Header files.
 ├── mesh                      Files for mesh component.
-├── resources                 Model and mesh resource files used by tests.
 ├── sdf                       Files for sdf component.
 ├── src                       Source files and unit tests.
 ├── test
 │    ├── benchmark            Benchmark tests.
+│    ├── common_test          Tests common to multiple physics plugins.
+│    ├── include              Header files for tests.
 │    ├── integration          Integration tests.
 │    ├── performance          Performance tests.
 │    ├── plugins              Plugins used in tests.
 │    ├── regression           Regression tests.
+│    ├── resources            Models and mesh resource files.
 │    └── static_assert        Tests involving compilation failures.
 ├── tpe
 │    ├── lib                  Implementation of TPE engine.
@@ -164,7 +172,7 @@ Please see
 
 # Versioning
 
-This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Gazebo project](https://gazebosim.org) which periodically releases a versioned set of compatible and complimentary libraries. See the [Gazebo website](https://gazebosim.org) for version and release information.
+This library uses [Semantic Versioning](https://semver.org/). Additionally, this library is part of the [Gazebo project](https://gazebosim.org) which periodically releases a versioned set of compatible and complementary libraries. See the [Gazebo website](https://gazebosim.org) for version and release information.
 
 # License
 

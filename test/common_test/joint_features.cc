@@ -174,14 +174,11 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-2);
     }
 
-    if(this->PhysicsEngineName(name) == "dartsim")
+    for (std::size_t i = 0; i < numSteps; ++i)
     {
-      for (std::size_t i = 0; i < numSteps; ++i)
-      {
-        // expect joint to freeze in subsequent steps without SetVelocityCommand
-        world->Step(output, state, input);
-        EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-1);
-      }
+      // expect joint to freeze in subsequent steps without SetVelocityCommand
+      world->Step(output, state, input);
+      EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-1);
     }
 
     // Check that invalid velocity commands don't cause collisions to fail

@@ -13,7 +13,7 @@ Users can request for physics engines that support a set of features and the plu
 loading mechanism loads only the engines that implement the requested features.
 Besides, a user-selected physics engine can be integrated into the existing
 code-base by writing a compatible plugin interface, which enables
-Gazebo Physics extensibility and modularity.  
+Gazebo Physics extensibility and modularity.
 
 ## Overview
 
@@ -56,31 +56,3 @@ different physics engines.
 
 For a list of supported physics engines and their descriptions, please refer
 to \ref physicsplugin
-
-## Development timeline
-
-### Features logs
-
-**Gazebo Physics 1.x**
-
-- Initial release
-- Define base concepts: Entity, FeaturePolicy, Feature and FeatureList.
-- Add features for `dartsim` physics engines (more detail in \ref physicsplugin).
-- Add RequestFeatures API for casting the features of an entity to a new feature set when possible.
-- Enforce joint effort limit in `dartsim-plugin`.
-
-**Gazebo Physics 2.x**
-
-- Support SDFormat 1.7 frame semantics.
-- Support compiling against DART 6.9.
-- Trivial Physics Engine (TPE)- partial implementation
-- Add features for TPE physics engines (more detail in \ref physicsplugin).
-- Extend contact data with force, normal, and penetration depth.
-- Add Base and EntityManagement to `tpeplugin`
-
-**Gazebo Physics 3.x**
-
-### Future roadmap
-
-Gazebo Physics evolves closely with the Gazebo ecosystem.
-For a broader overview, please visit [Gazebo's roadmap](https://gazebosim.org/about).

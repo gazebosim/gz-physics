@@ -52,6 +52,51 @@ WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
     return WorldFeatures::LinearVectorType(0, 0, 0);
   }
 }
+
+/////////////////////////////////////////////////
+void WorldFeatures::SetWorldSolver(const Identity &,
+    const std::string &_solver)
+{
+  // bullet-featherstone implementation uses btMultiBodyDynamicsWorld
+  // so currently only supports BT_MULTIBODY_SOLVER
+  if (_solver != "MultiBodySolver")
+  {
+    gzwarn << "bullet-featherstone implementation currently only supports "
+           << "MultiBodySolver (BT_MULTIBODY_SOLVER)" << std::endl;
+  }
+}
+
+/////////////////////////////////////////////////
+const std::string &WorldFeatures::GetWorldSolver(const Identity &) const
+{
+  // bullet-featherstone implementation uses btMultiBodyDynamicsWorld
+  // so currently only supports BT_MULTIBODY_SOLVER
+  static std::string solverType = "MultiBodySolver";
+  return solverType;
+}
+
+/////////////////////////////////////////////////
+void WorldFeatures::SetWorldSolverIterations(const Identity &_id,
+    std::size_t _iterations)
+{
+  const auto worldInfo = this->ReferenceInterface<WorldInfo>(_id);
+  if (worldInfo)
+  {
+    worldInfo->world->getSolverInfo().m_numIterations = _iterations;
+  }
+}
+
+/////////////////////////////////////////////////
+std::size_t WorldFeatures::GetWorldSolverIterations(const Identity &_id) const
+{
+  const auto worldInfo = this->ReferenceInterface<WorldInfo>(_id);
+  if (worldInfo)
+  {
+    return worldInfo->world->getSolverInfo().m_numIterations;
+  }
+  return 0u;
+}
+
 }
 }
 }

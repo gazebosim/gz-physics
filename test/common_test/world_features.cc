@@ -15,6 +15,7 @@
  *
 */
 #include <gtest/gtest.h>
+#include <string>
 
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
@@ -39,6 +40,7 @@
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
+#include <sdf/Types.hh>
 
 using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
 
@@ -123,6 +125,12 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     auto link = model->GetLink(0);
     ASSERT_NE(nullptr, link);
 
+    auto modelNoGravity = world->GetModel("sphere_no_gravity");
+    ASSERT_NE(nullptr, modelNoGravity);
+
+    auto linkNoGravity = modelNoGravity->GetLink(0);
+    ASSERT_NE(nullptr, linkNoGravity);
+
     AssertVectorApprox vectorPredicate6(1e-6);
 
     // initial link pose
@@ -175,6 +183,16 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
       EXPECT_PRED_FORMAT2(vectorPredicate2,
                           Eigen::Vector3d(0.5, 0, 2.5),
                           pos);
+
+      if (this->PhysicsEngineName(name) == "dartsim")
+      {
+        // pose for link without gravity should not change
+        Eigen::Vector3d posNoGravity = linkNoGravity->FrameDataRelativeToWorld()
+                            .pose.translation();
+        EXPECT_PRED_FORMAT2(vectorPredicate2,
+                            Eigen::Vector3d(10, 10, 10),
+                            posNoGravity);
+      }
     }
   }
 }
@@ -454,6 +472,55 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
     }
     EXPECT_EQ(0u, world->GetModelCount());
     EXPECT_EQ(0u, worldModel->GetNestedModelCount());
+  }
+}
+
+struct WorldSolverFeatureList : gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::Solver,
+  gz::physics::sdf::ConstructSdfWorld
+> { };
+
+class WorldSolverTest : public WorldFeaturesTest<WorldSolverFeatureList>
+{
+  public: gz::physics::World3dPtr<WorldSolverFeatureList> LoadWorld(
+      const std::string &_pluginName)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(_pluginName);
+
+    auto engine =
+        gz::physics::RequestEngine3d<WorldSolverFeatureList>::From(plugin);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kEmptySdf);
+    EXPECT_TRUE(errors.empty()) << errors;
+    if (errors.empty())
+    {
+      auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+      return world;
+    }
+    return nullptr;
+  }
+};
+
+TEST_F(WorldSolverTest, WorldSolver)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = this->LoadWorld(name);
+    ASSERT_NE(nullptr, world);
+
+    EXPECT_FALSE(world->GetSolver().empty());
+    EXPECT_NO_THROW(world->SetSolver("invalid"));
+    EXPECT_NE("invalid", world->GetSolver());
+
+    if (PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      EXPECT_LT(0u, world->GetSolverIterations());
+      world->SetSolverIterations(100u);
+      EXPECT_EQ(100u, world->GetSolverIterations());
+    }
   }
 }
 
