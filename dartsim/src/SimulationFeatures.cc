@@ -15,8 +15,10 @@
  *
 */
 
+#include <Eigen/Geometry>
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -30,6 +32,7 @@
 #include <dart/constraint/ContactSurface.hpp>
 #endif
 
+#include <gz/common/Console.hh>
 #include <gz/common/Profiler.hh>
 
 #include <gz/math/Pose3.hh>
@@ -106,6 +109,36 @@ void SimulationFeatures::WorldForwardStep(
 
   // TODO(MXG): Parse input
   world->step();
+
+  for (auto &[ignore, modelInfo] : this->models.idToObject)
+  {
+    Eigen::VectorXd positions = modelInfo->model->getPositions();
+    if (positions.hasNaN())
+    {
+      std::stringstream ss;
+      ss << "Some links in model '" << modelInfo->localName
+         << "' have invalid poses. ";
+      if (modelInfo->lastGoodPositions)
+      {
+        ss << "Resetting to last known poses.";
+        modelInfo->model->setPositions(*modelInfo->lastGoodPositions);
+      }
+      else
+      {
+        ss << "Resetting to zero poses.";
+        modelInfo->model->resetPositions();
+      }
+      gzerr << ss.str()
+            << " Also resetting velocities and accelerations to zero."
+            << std::endl;
+      modelInfo->model->resetVelocities();
+      modelInfo->model->resetAccelerations();
+    }
+    else
+    {
+      modelInfo->lastGoodPositions = positions;
+    }
+  }
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
   // TODO(MXG): Fill in state
