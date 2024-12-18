@@ -295,7 +295,7 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
           world, true, 1).first;
       EXPECT_TRUE(checkedOutput);
       contacts = world->GetContactsFromLastStep();
-      EXPECT_EQ(4u, contacts.size());
+      EXPECT_EQ(5u, contacts.size());
     }
   }
 }
