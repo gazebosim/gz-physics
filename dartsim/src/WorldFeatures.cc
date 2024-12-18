@@ -105,27 +105,17 @@ void WorldFeatures::SetWorldCollisionPairMaxContacts(
   auto collisionDetector =
     world->getConstraintSolver()->getCollisionDetector();
 
-  auto odeCollisionDetector =
-    std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
+ auto gzCollisionDetector =
+    std::dynamic_pointer_cast<dart::collision::GzCollisionDetector>(
     collisionDetector);
-  if (odeCollisionDetector)
+  if (gzCollisionDetector)
   {
-    odeCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
+    gzCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
   }
   else
   {
-    auto bulletCollisionDetector =
-      std::dynamic_pointer_cast<dart::collision::GzBulletCollisionDetector>(
-      collisionDetector);
-    if (bulletCollisionDetector)
-    {
-      bulletCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
-    }
-    else
-    {
-      gzwarn << "Currently max contacts feature is only supported by the "
-             << "bullet and ode collision detector in dartsim." << std::endl;
-    }
+    gzwarn << "Currently max contacts feature is only supported by the "
+           << "bullet and ode collision detector in dartsim." << std::endl;
   }
 }
 
