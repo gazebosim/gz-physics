@@ -112,7 +112,7 @@ void SimulationFeatures::WorldForwardStep(
 
   for (auto &[ignore, modelInfo] : this->models.idToObject)
   {
-    Eigen::VectorXd positions = modelInfo->model->getPositions();
+    const Eigen::VectorXd &positions = modelInfo->model->getPositions();
     if (positions.hasNaN())
     {
       std::stringstream ss;
