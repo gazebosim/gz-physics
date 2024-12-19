@@ -9,7 +9,7 @@ release will remove the deprecated code.
 
 ### Deprecations
 
-* The macro `GZ_PHYSICS_ENGINE_INSTALL_DIR` is deprecated. Use
+* The macro `GZ_PHYSICS_ENGINE_INSTALL_DIR` has been removed. Use
 `gz::physics::getEngineInstallDir()` instead.
 
 ## Gazebo Physics 5.X to 6.X
