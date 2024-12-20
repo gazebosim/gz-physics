@@ -228,6 +228,7 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesCollisionPairMaxContacts : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::CollisionDetector,
   gz::physics::CollisionPairMaxContacts,
   gz::physics::FindFreeGroupFeature,
   gz::physics::ForwardStep,
@@ -282,6 +283,20 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
 
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
+
+    if (name == "gz::physics::dartsim::Plugin")
+    {
+      EXPECT_EQ("ode", world->GetCollisionDetector());
+      world->SetCollisionDetector("bullet");
+      EXPECT_EQ("bullet", world->GetCollisionDetector());
+      world->SetCollisionPairMaxContacts(1u);
+      EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+      checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+          world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+      contacts = world->GetContactsFromLastStep();
+      EXPECT_EQ(5u, contacts.size());
+    }
   }
 }
 
