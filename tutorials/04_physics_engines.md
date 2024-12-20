@@ -1,3 +1,3 @@
 \page physicsengine Use different physics engines
 
-See [Physics engines tutorial](https://gazebosim.org/api/gazebo/6/physics.html) in Gazebo.
+See [Physics engines tutorial](https://gazebosim.org/api/physics/7/physicsplugin.html) in Gazebo.
