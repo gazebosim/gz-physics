@@ -33,55 +33,7 @@ GzCollisionDetector::GzCollisionDetector()
 }
 
 /////////////////////////////////////////////////
-<<<<<<< HEAD:dartsim/src/GzOdeCollisionDetector.cc
-GzOdeCollisionDetector::Registrar<GzOdeCollisionDetector>
-    GzOdeCollisionDetector::mRegistrar{
-        GzOdeCollisionDetector::getStaticType(),
-        []() -> std::shared_ptr<GzOdeCollisionDetector> {
-          return GzOdeCollisionDetector::create();
-        }};
-
-/////////////////////////////////////////////////
-std::shared_ptr<GzOdeCollisionDetector> GzOdeCollisionDetector::create()
-{
-  // GzOdeCollisionDetector constructor calls the OdeCollisionDetector
-  // constructor, that calls the non-thread safe dInitODE2(0).
-  // To mitigate this problem, we use a static mutex to ensure that
-  // each GzOdeCollisionDetector constructor is called not at the same time.
-  // See https://github.com/gazebosim/gz-sim/issues/18 for more info.
-  static std::mutex odeInitMutex;
-  std::unique_lock<std::mutex> lock(odeInitMutex);
-  return std::shared_ptr<GzOdeCollisionDetector>(new GzOdeCollisionDetector());
-}
-
-/////////////////////////////////////////////////
-bool GzOdeCollisionDetector::collide(
-    CollisionGroup *_group,
-    const CollisionOption &_option,
-    CollisionResult *_result)
-{
-  bool ret = OdeCollisionDetector::collide(_group, _option, _result);
-  this->LimitCollisionPairMaxContacts(_result);
-  return ret;
-}
-
-/////////////////////////////////////////////////
-bool GzOdeCollisionDetector::collide(
-    CollisionGroup *_group1,
-    CollisionGroup *_group2,
-    const CollisionOption &_option,
-    CollisionResult *_result)
-{
-  bool ret = OdeCollisionDetector::collide(_group1, _group2, _option, _result);
-  this->LimitCollisionPairMaxContacts(_result);
-  return ret;
-}
-
-/////////////////////////////////////////////////
-void GzOdeCollisionDetector::SetCollisionPairMaxContacts(
-=======
 void GzCollisionDetector::SetCollisionPairMaxContacts(
->>>>>>> a4eee2f (Support setting max contacts in dart's bullet collision detector  (#593)):dartsim/src/GzCollisionDetector.cc
     std::size_t _maxContacts)
 {
   this->maxCollisionPairContacts = _maxContacts;
@@ -164,6 +116,13 @@ GzOdeCollisionDetector::Registrar<GzOdeCollisionDetector>
 /////////////////////////////////////////////////
 std::shared_ptr<GzOdeCollisionDetector> GzOdeCollisionDetector::create()
 {
+  // GzOdeCollisionDetector constructor calls the OdeCollisionDetector
+  // constructor, that calls the non-thread safe dInitODE2(0).
+  // To mitigate this problem, we use a static mutex to ensure that
+  // each GzOdeCollisionDetector constructor is called not at the same time.
+  // See https://github.com/gazebosim/gz-sim/issues/18 for more info.
+  static std::mutex odeInitMutex;
+  std::unique_lock<std::mutex> lock(odeInitMutex);
   return std::shared_ptr<GzOdeCollisionDetector>(new GzOdeCollisionDetector());
 }
 
