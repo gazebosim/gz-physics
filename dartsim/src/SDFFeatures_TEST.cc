@@ -361,17 +361,6 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
          std::numeric_limits<double>::infinity(),
          std::numeric_limits<double>::infinity());
 
-  /// \todo (anyone) getBodyNode("blah")->getFrictionCoeff is deprecated,
-  /// disabling these tests.
-  /*
-  EXPECT_DOUBLE_EQ(1.1, skeleton->getBodyNode("base")->getFrictionCoeff());
-  // The last collision element overwrites the value set by previous collision
-  // elements. We expect mu=1, the default value, instead of 0.1.
-  EXPECT_DOUBLE_EQ(1, skeleton->getBodyNode("upper_link")->getFrictionCoeff());
-  // Gets the default value when the <surface> tag is missing
-  EXPECT_DOUBLE_EQ(1, skeleton->getBodyNode("lower_link")->getFrictionCoeff());
-  */
-
   for (const auto * joint : {skeleton->getJoint(1), skeleton->getJoint(2)})
   {
     const auto * revolute =
