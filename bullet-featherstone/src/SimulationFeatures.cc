@@ -51,6 +51,16 @@ void SimulationFeatures::WorldForwardStep(
   worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
                                    static_cast<btScalar>(stepSize));
 
+  // Reset joint velocity target after each step to be consistent with dart's
+  // joint velocity command behavior
+  for (auto & joint : this->joints)
+  {
+    if (joint.second->motor)
+    {
+      joint.second->motor->setVelocityTarget(btScalar(0));
+    }
+  }
+
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
 }
