@@ -113,10 +113,17 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   FrameData data;
   if (model && model->body)
   {
-    data.pose = convert(model->body->getBaseWorldTransform());
-    if (!isModel)
-      data.pose = data.pose * model->baseInertiaToLinkFrame;
-    if (isCollision)
+    data.pose = convert(model->body->getBaseWorldTransform())
+        * model->baseInertiaToLinkFrame;
+    if (isModel)
+    {
+      data.pose = model->modelToRootLinkTf.inverse() * data.pose;
+      if (model->isNestedModel)
+      {
+        data.pose = data.pose * model->nestedModelFromRootModelTf;
+      }
+    }
+    else if (isCollision)
       data.pose = data.pose * collisionPoseOffset;
     data.linearVelocity = convert(model->body->getBaseVel());
     data.angularVelocity = convert(model->body->getBaseOmega());
