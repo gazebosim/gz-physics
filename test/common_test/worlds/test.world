@@ -500,9 +500,6 @@
         <child>upper_link</child>
         <axis>
           <xyz>1.0 0 0</xyz>
-          <dynamics>
-            <damping>3.0</damping>
-          </dynamics>
         </axis>
       </joint>
      

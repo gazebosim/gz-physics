@@ -815,6 +815,112 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
     EXPECT_NEAR(-0.5, joint->GetVelocity(0), 1e-6);
   }
 }
+
+struct JointFeatureFrictionList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointFrictionFeature,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointFeaturesFrictionTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesFrictionTestTypes =
+  ::testing::Types<JointFeatureFrictionList>;
+TYPED_TEST_SUITE(JointFeaturesFrictionTest,
+                 JointFeaturesFrictionTestTypes);
+
+TYPED_TEST(JointFeaturesFrictionTest, JointSetFriction)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<JointFeatureFrictionList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto model = world->GetModel("pendulum_with_base");
+    auto joint = model->GetJoint("upper_joint");
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    world->Step(output, state, input);
+
+    joint->SetPosition(0, -GZ_PI/2);
+     
+    // default friction value is zero
+    // so oscillations are expected
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    EXPECT_NE(joint->GetPosition(0), -GZ_PI/2);
+    EXPECT_NE(0, joint->GetVelocity(0));
+     
+    // setting very high friction value
+    // pendulum shouldn't move much (expected)
+    joint->SetPosition(0, -GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), -GZ_PI/2);
+
+    joint->SetVelocity(0, 1);
+    ASSERT_EQ(joint->GetVelocity(0), 1);
+    joint->SetFriction(0, 100);
+
+    // running simulation for longer to make sure
+    // joint position doesn't changes (expected)
+    for (std::size_t i = 0; i < 1000; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    auto joint_pos1 = joint->GetPosition(0);
+
+    EXPECT_NEAR(0, joint->GetVelocity(0), 1e-10);
+  
+    // setting some moderate value of joint friction
+    joint->SetPosition(0, -GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), -GZ_PI/2);
+
+    joint->SetVelocity(0, 1);
+    ASSERT_EQ(joint->GetVelocity(0), 1);
+    
+    joint->SetFriction(0, 5);
+
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    auto joint_pos2 = joint->GetPosition(0);
+
+    // with good enough simulation time for moderate
+    // value of friction, joint position should converge
+    // to zero (expected)
+    EXPECT_NEAR(0, joint->GetVelocity(0), 1e-10);
+    EXPECT_GT(joint_pos2, joint_pos1);
+  }
+}
 ///////////// DARTSIM > 6.10 end
 
 
