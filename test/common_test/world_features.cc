@@ -125,6 +125,12 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     auto link = model->GetLink(0);
     ASSERT_NE(nullptr, link);
 
+    auto modelNoGravity = world->GetModel("sphere_no_gravity");
+    ASSERT_NE(nullptr, modelNoGravity);
+
+    auto linkNoGravity = modelNoGravity->GetLink(0);
+    ASSERT_NE(nullptr, linkNoGravity);
+
     AssertVectorApprox vectorPredicate6(1e-6);
 
     // initial link pose
@@ -177,6 +183,16 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
       EXPECT_PRED_FORMAT2(vectorPredicate2,
                           Eigen::Vector3d(0.5, 0, 2.5),
                           pos);
+
+      if (this->PhysicsEngineName(name) == "dartsim")
+      {
+        // pose for link without gravity should not change
+        Eigen::Vector3d posNoGravity = linkNoGravity->FrameDataRelativeToWorld()
+                            .pose.translation();
+        EXPECT_PRED_FORMAT2(vectorPredicate2,
+                            Eigen::Vector3d(10, 10, 10),
+                            posNoGravity);
+      }
     }
   }
 }

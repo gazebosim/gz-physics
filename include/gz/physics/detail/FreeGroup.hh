@@ -86,22 +86,6 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    LinkPtr<PolicyT, FeaturesT>
-    FindFreeGroupFeature::FreeGroup<PolicyT, FeaturesT>::CanonicalLink()
-    {
-      return this->RootLink();
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
-    ConstLinkPtr<PolicyT, FeaturesT>
-    FindFreeGroupFeature::FreeGroup<PolicyT, FeaturesT>::CanonicalLink() const
-    {
-      return this->RootLink();
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
     void SetFreeGroupWorldPose::FreeGroup<PolicyT, FeaturesT>::SetWorldPose(
         const PoseType &_pose)
     {

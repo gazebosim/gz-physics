@@ -83,11 +83,8 @@ system requirements.
 
 ## Binary Installation
 
-1. Install Homebrew, which should also prompt you to install the XCode
-command-line tools:
-  ```
-  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-  ```
+1. Install [Homebrew](https://brew.sh/), which should also prompt you to install the XCode
+command-line tools.
 
 2. Run the following commands
   ```

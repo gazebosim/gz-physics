@@ -33,6 +33,7 @@
 #include <sdf/JointAxis.hh>
 #include <sdf/Link.hh>
 #include <sdf/Mesh.hh>
+#include <sdf/Physics.hh>
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
@@ -88,6 +89,12 @@ Identity SDFFeatures::ConstructSdfWorld(
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
 
   worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
+
+  const ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
+  if (physics)
+    worldInfo->stepSize = physics->MaxStepSize();
+  else
+    worldInfo->stepSize = 0.001;
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
@@ -770,6 +777,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
           ::sdf::JointType::REVOLUTE == joint->Type())
       {
+        // Note: These m_joint* properties below are currently not supported by
+        // bullet-featherstone and so setting them does not have any effect.
+        // The lower and uppper limit is supported via the
+        // btMultiBodyJointLimitConstraint.
         model->body->getLink(i).m_jointLowerLimit =
             static_cast<btScalar>(joint->Axis()->Lower());
         model->body->getLink(i).m_jointUpperLimit =
@@ -782,7 +793,13 @@ Identity SDFFeatures::ConstructSdfModelImpl(
             static_cast<btScalar>(joint->Axis()->MaxVelocity());
         model->body->getLink(i).m_jointMaxForce =
             static_cast<btScalar>(joint->Axis()->Effort());
-        jointInfo->effort = static_cast<btScalar>(joint->Axis()->Effort());
+
+        jointInfo->minEffort = -joint->Axis()->Effort();
+        jointInfo->maxEffort = joint->Axis()->Effort();
+        jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
+        jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
+        jointInfo->axisLower = joint->Axis()->Lower();
+        jointInfo->axisUpper = joint->Axis()->Upper();
 
         jointInfo->jointLimits =
           std::make_shared<btMultiBodyJointLimitConstraint>(
@@ -873,12 +890,21 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   for (const auto& [linkSdf, linkID] : linkIDs)
   {
-    for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
+    if (linkSdf->CollisionCount() == 0u)
     {
-      // If we fail to add the collision, just keep building the model. It may
-      // need to be constructed outside of the SDF generation pipeline, e.g.
-      // with AttachHeightmap.
-      this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
+      // create empty link collider and compound shape if there are no
+      // collisions
+      this->CreateLinkCollider(linkID, isStatic);
+    }
+    else
+    {
+      for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
+      {
+        // If we fail to add the collision, just keep building the model. It may
+        // need to be constructed outside of the SDF generation pipeline, e.g.
+        // with AttachHeightmap.
+        this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
+      }
     }
 
 #if BT_BULLET_VERSION >= 307
@@ -950,7 +976,7 @@ Identity SDFFeatures::ConstructSdfModel(
 bool SDFFeatures::AddSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_collision,
-    bool isStatic)
+    bool _isStatic)
 {
   if (!_collision.Geom())
   {
@@ -1074,21 +1100,25 @@ bool SDFFeatures::AddSdfCollision(
         ::sdf::MeshOptimization::CONVEX_HULL)
     {
       std::size_t maxConvexHulls = 16u;
+      std::size_t voxelResolution = 200000u;
+      if (meshSdf->ConvexDecomposition())
+      {
+        // limit max number of convex hulls to generate
+        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
+        voxelResolution = meshSdf->ConvexDecomposition()->VoxelResolution();
+      }
       if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
       {
         /// create 1 convex hull for the whole submesh
         maxConvexHulls = 1u;
       }
-      else if (meshSdf->ConvexDecomposition())
-      {
-        // limit max number of convex hulls to generate
-        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
-      }
 
       // Check if MeshManager contains the decomposed mesh already. If not
       // add it to the MeshManager so we do not need to decompose it again.
       const std::string convexMeshName =
-          mesh->Name() + "_CONVEX_" + std::to_string(maxConvexHulls);
+          mesh->Name() + "_" + meshSdf->Submesh() + "_CONVEX_" +
+          std::to_string(maxConvexHulls) + "_" +
+          std::to_string(voxelResolution);
       auto *decomposedMesh = meshManager.MeshByName(convexMeshName);
       if (!decomposedMesh)
       {
@@ -1100,7 +1130,7 @@ bool SDFFeatures::AddSdfCollision(
           auto mergedSubmesh = mergedMesh->SubMeshByIndex(0u).lock();
           std::vector<common::SubMesh> decomposed =
             gz::common::MeshManager::ConvexDecomposition(
-            *mergedSubmesh.get(), maxConvexHulls);
+            *mergedSubmesh.get(), maxConvexHulls, voxelResolution);
           gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
                 <<  mesh->Name() << std::endl;
           // Create decomposed mesh and add it to MeshManager
@@ -1145,6 +1175,8 @@ bool SDFFeatures::AddSdfCollision(
               &(vertices[0].getX()), vertices.size()));
           auto *convexShape = this->meshesConvex.back().get();
           convexShape->setMargin(collisionMargin);
+          convexShape->recalcLocalAabb();
+          convexShape->optimizeConvexHull();
 
           btTransform trans;
           trans.setIdentity();
@@ -1272,22 +1304,11 @@ bool SDFFeatures::AddSdfCollision(
     const btTransform btInertialToCollision =
       convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
 
-    int linkIndexInModel = -1;
-    if (linkInfo->indexInModel.has_value())
-      linkIndexInModel = *linkInfo->indexInModel;
-
     if (!linkInfo->collider)
     {
-      linkInfo->shape = std::make_unique<btCompoundShape>();
+      this->CreateLinkCollider(_linkID, _isStatic, shape.get(),
+          btInertialToCollision);
 
-      // NOTE: Bullet does not appear to support different surface properties
-      // for different shapes attached to the same link.
-      linkInfo->collider = std::make_unique<btMultiBodyLinkCollider>(
-        model->body.get(), linkIndexInModel);
-
-      linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
-
-      linkInfo->collider->setCollisionShape(linkInfo->shape.get());
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
       linkInfo->collider->setRollingFriction(
         static_cast<btScalar>(rollingFriction));
@@ -1305,57 +1326,6 @@ bool SDFFeatures::AddSdfCollision(
         const btScalar kp = btScalar(1e15);
         const btScalar kd = btScalar(1e14);
         linkInfo->collider->setContactStiffnessAndDamping(kp, kd);
-      }
-
-      if (linkIndexInModel >= 0)
-      {
-        model->body->getLink(linkIndexInModel).m_collider =
-          linkInfo->collider.get();
-        const auto p = model->body->localPosToWorld(
-          linkIndexInModel, btVector3(0, 0, 0));
-        const auto rot = model->body->localFrameToWorld(
-          linkIndexInModel, btMatrix3x3::getIdentity());
-        linkInfo->collider->setWorldTransform(btTransform(rot, p));
-      }
-      else
-      {
-        model->body->setBaseCollider(linkInfo->collider.get());
-        linkInfo->collider->setWorldTransform(
-          model->body->getBaseWorldTransform());
-      }
-
-      auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-
-      // Set static filter for collisions in
-      // 1) a static model
-      // 2) a fixed base link
-      // 3) a (non-base) link with zero dofs
-      bool isFixed = false;
-      if (model->body->hasFixedBase())
-      {
-        // check if it's a base link
-        isFixed = std::size_t(_linkID) ==
-            static_cast<std::size_t>(model->body->getUserIndex());
-        // check if link has zero dofs
-        if (!isFixed && linkInfo->indexInModel.has_value())
-        {
-           isFixed = model->body->getLink(
-              linkInfo->indexInModel.value()).m_dofCount == 0;
-        }
-      }
-      if (isStatic || isFixed)
-      {
-        world->world->addCollisionObject(
-          linkInfo->collider.get(),
-          btBroadphaseProxy::StaticFilter,
-          btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
-      }
-      else
-      {
-        world->world->addCollisionObject(
-          linkInfo->collider.get(),
-          btBroadphaseProxy::DefaultFilter,
-          btBroadphaseProxy::AllFilter);
       }
     }
     else if (linkInfo->shape)
@@ -1478,6 +1448,82 @@ Identity SDFFeatures::ConstructSdfJoint(
   return this->GenerateInvalidId();
 }
 
+/////////////////////////////////////////////////
+void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
+    btCollisionShape *_shape, const btTransform &_shapeTF)
+{
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  int linkIndexInModel = -1;
+
+  if (linkInfo->indexInModel.has_value())
+    linkIndexInModel = *linkInfo->indexInModel;
+  linkInfo->collider = std::make_unique<GzMultiBodyLinkCollider>(
+    modelInfo->body.get(), linkIndexInModel);
+
+  linkInfo->shape = std::make_unique<btCompoundShape>();
+
+  if (_shape)
+    linkInfo->shape->addChildShape(_shapeTF, _shape);
+
+  linkInfo->collider->setCollisionShape(linkInfo->shape.get());
+
+  if (linkIndexInModel >= 0)
+  {
+    modelInfo->body->getLink(linkIndexInModel).m_collider =
+      linkInfo->collider.get();
+    const auto p = modelInfo->body->localPosToWorld(
+      linkIndexInModel, btVector3(0, 0, 0));
+    const auto rot = modelInfo->body->localFrameToWorld(
+      linkIndexInModel, btMatrix3x3::getIdentity());
+    linkInfo->collider->setWorldTransform(btTransform(rot, p));
+  }
+  else
+  {
+    modelInfo->body->setBaseCollider(linkInfo->collider.get());
+    linkInfo->collider->setWorldTransform(
+      modelInfo->body->getBaseWorldTransform());
+  }
+
+  // Set static filter for collisions in
+  // 1) a static model
+  // 2) a fixed base link
+  // 3) a (non-base) link with zero dofs
+  bool isFixed = false;
+  if (modelInfo->body->hasFixedBase())
+  {
+    // check if it's a base link
+    isFixed = std::size_t(_linkID) ==
+        static_cast<std::size_t>(modelInfo->body->getUserIndex());
+    // check if link has zero dofs
+    if (!isFixed && linkInfo->indexInModel.has_value())
+    {
+       isFixed = modelInfo->body->getLink(
+          linkInfo->indexInModel.value()).m_dofCount == 0;
+    }
+  }
+  if (_isStatic || isFixed)
+  {
+    worldInfo->world->addCollisionObject(
+      linkInfo->collider.get(),
+      btBroadphaseProxy::StaticFilter,
+      btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
+      linkInfo->isStaticOrFixed = true;
+
+    // Set collider collision flags
+#if BT_BULLET_VERSION >= 307
+    linkInfo->collider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#endif
+  }
+  else
+  {
+    worldInfo->world->addCollisionObject(
+      linkInfo->collider.get(),
+      btBroadphaseProxy::DefaultFilter,
+      btBroadphaseProxy::AllFilter);
+  }
+}
 
 }  // namespace bullet_featherstone
 }  // namespace physics

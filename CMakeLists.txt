@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics8 VERSION 8.0.0)
+project(gz-physics9 VERSION 9.0.0)
 
 #============================================================================
 # Find gz-cmake
@@ -16,7 +16,7 @@ find_package(gz-cmake4 REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-gz_configure_project(VERSION_SUFFIX)
+gz_configure_project(VERSION_SUFFIX pre1)
 
 #============================================================================
 # Set project-specific options
@@ -78,7 +78,7 @@ gz_find_package(DART
     utils
     utils-urdf
   CONFIG
-  VERSION 6.9
+  VERSION 6.10
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)

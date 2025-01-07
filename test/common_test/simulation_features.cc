@@ -44,6 +44,7 @@
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
+#include <gz/physics/GetRayIntersection.hh>
 #include "gz/physics/SphereShape.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -227,9 +228,13 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesCollisionPairMaxContacts : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
-  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::CollisionPairMaxContacts,
+  gz::physics::FindFreeGroupFeature,
   gz::physics::ForwardStep,
-  gz::physics::CollisionPairMaxContacts
+  gz::physics::FreeGroupFrameSemantics,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::GetModelFromWorld,
+  gz::physics::SetFreeGroupWorldPose
 > {};
 
 template <class T>
@@ -277,6 +282,92 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
 
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
+    CollisionPairMaxContactsSelection)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxContacts>(
+      this->loader,
+      name,
+      common_test::worlds::kCollisionPairContactPointSdf);
+    auto checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    // Verify initial pose
+    const gz::math::Pose3d initialPose = gz::math::Pose3d::Zero;
+    auto ellipsoid = world->GetModel("ellipsoid");
+    ASSERT_NE(nullptr, ellipsoid);
+    auto ellipsoidFreeGroup = ellipsoid->FindFreeGroup();
+    ASSERT_NE(nullptr, ellipsoidFreeGroup);
+    auto box = world->GetModel("box");
+    ASSERT_NE(nullptr, box);
+    auto boxFreeGroup = box->FindFreeGroup();
+    ASSERT_NE(nullptr, boxFreeGroup);
+    auto ellipsoidFrameData = ellipsoidFreeGroup->FrameDataRelativeToWorld();
+    auto boxFrameData = boxFreeGroup->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(ellipsoidFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(boxFrameData.pose));
+
+    // Get all contacts between box and ellipsoid
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(),
+              world->GetCollisionPairMaxContacts());
+    EXPECT_GT(contacts.size(), 30u);
+
+    // Find contact point with max penetration depth
+    double maxDepth = 0;
+    for (const auto &contact : contacts)
+    {
+      const auto* extraContactData =
+          contact.template Query<
+          gz::physics::World3d<
+          FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+      ASSERT_NE(nullptr, extraContactData);
+      if (extraContactData->depth > maxDepth)
+        maxDepth = extraContactData->depth;
+    }
+    EXPECT_GT(maxDepth, 0.0);
+
+    // Reset pose back to initial pose
+    ellipsoidFreeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+    boxFreeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+    ellipsoidFrameData = ellipsoidFreeGroup->FrameDataRelativeToWorld();
+    boxFrameData = boxFreeGroup->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(ellipsoidFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(boxFrameData.pose));
+
+    // Set max contact between collision pairs to be 1
+    world->SetCollisionPairMaxContacts(1u);
+    EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(1u, contacts.size());
+
+    // Verify that the physics engine picked the contact with max penetration
+    // depth
+    auto contact = contacts[0];
+    const auto* extraContactData =
+        contact.template Query<
+        gz::physics::World3d<
+        FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+    ASSERT_NE(nullptr, extraContactData);
+    EXPECT_FLOAT_EQ(maxDepth, extraContactData->depth);
   }
 }
 
@@ -626,9 +717,6 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     auto model = world->GetModel("sphere");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
-    ASSERT_NE(nullptr, freeGroup->CanonicalLink());
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
@@ -1272,10 +1360,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
     auto model = world->GetModel("box");
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
-      ASSERT_NE(nullptr, freeGroup->CanonicalLink());
-    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
-      ASSERT_NE(nullptr, freeGroup->RootLink());
+    ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("box_link");
     auto freeGroupLink = link->FindFreeGroup();
@@ -1292,6 +1377,103 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
     gz::math::Pose3d framePose = gz::math::eigen3::convert(frameData.pose);
 
     EXPECT_NEAR(0.5, framePose.Z(), 0.1);
+  }
+}
+
+/////////////////////////////////////////////////
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesRayIntersections : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetRayIntersectionFromLastStepFeature,
+  gz::physics::CollisionDetector,
+  gz::physics::ForwardStep
+> {};
+
+template <class T>
+class SimulationFeaturesRayIntersectionTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesRayIntersectionTestTypes =
+    ::testing::Types<FeaturesRayIntersections>;
+TYPED_TEST_SUITE(SimulationFeaturesRayIntersectionTest,
+                 SimulationFeaturesRayIntersectionTestTypes);
+
+TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
+{
+  std::vector<std::string> supportedCollisionDetectors = {"bullet"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
+    for (const std::string &collisionDetector : supportedCollisionDetectors) {
+      auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput = StepWorld<FeaturesRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      // ray hits the sphere
+      auto result =
+        world->GetRayIntersectionFromLastStep(
+            Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2));
+
+      auto rayIntersection =
+          result.template
+            Get<gz::physics::World3d<FeaturesRayIntersections>::RayIntersection>();
+
+      double epsilon = 1e-3;
+      EXPECT_TRUE(
+          rayIntersection.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon));
+      EXPECT_TRUE(
+          rayIntersection.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon));
+      EXPECT_DOUBLE_EQ(rayIntersection.fraction, 0.25);
+
+      // ray does not hit the sphere
+      result = world->GetRayIntersectionFromLastStep(
+          Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10));
+      rayIntersection =
+          result.template
+            Get<gz::physics::World3d<FeaturesRayIntersections>::RayIntersection>();
+
+      ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
+      ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
+      ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+    }
+  }
+}
+
+TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
+{
+  std::vector<std::string> unsupportedCollisionDetectors = {"ode", "dart", "fcl", "banana"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
+    for (const std::string &collisionDetector : unsupportedCollisionDetectors) {
+      auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput = StepWorld<FeaturesRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      // ray would hit the sphere, but the collision detector does
+      // not support ray intersection
+      auto result = world->GetRayIntersectionFromLastStep(
+          Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2));
+
+      auto rayIntersection =
+          result.template
+            Get<gz::physics::World3d<FeaturesRayIntersections>::RayIntersection>();
+
+      ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
+      ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
+      ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+    }
   }
 }
 

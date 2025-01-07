@@ -34,6 +34,7 @@
 
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetContacts.hh>
+#include <gz/physics/GetRayIntersection.hh>
 #include <gz/physics/ContactProperties.hh>
 #include <gz/physics/SpecifyData.hh>
 
@@ -56,7 +57,8 @@ struct SimulationFeatureList : FeatureList<
 #ifdef DART_HAS_CONTACT_SURFACE
   SetContactPropertiesCallbackFeature,
 #endif
-  GetContactsFromLastStepFeature
+  GetContactsFromLastStepFeature,
+  GetRayIntersectionFromLastStepFeature
 > { };
 
 #ifdef DART_HAS_CONTACT_SURFACE
@@ -97,6 +99,9 @@ class SimulationFeatures :
   public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
     ::ContactInternal;
 
+  public: using GetRayIntersectionFromLastStepFeature::Implementation<
+    FeaturePolicy3d>::RayIntersection;
+
   public: SimulationFeatures() = default;
   public: ~SimulationFeatures() override = default;
 
@@ -112,6 +117,11 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
+
+  public: RayIntersection GetRayIntersectionFromLastStep(
+      const Identity &_worldID,
+      const LinearVector3d &_from,
+      const LinearVector3d &_end) const override;
 
   /// \brief link poses from the most recent pose change/update.
   /// The key is the link's ID, and the value is the link's pose

@@ -85,18 +85,6 @@ namespace gz
 
         /// \brief const version of RootLink()
         public: ConstLinkPtr<PolicyT, FeaturesT> RootLink() const;
-
-        /// \brief The root link of this FreeGroup. This link is the root of one
-        /// of the kinematic trees represented by this FreeGroup. Getting and
-        /// setting properties (like poses and velocities) on the group will be
-        /// done in terms of this link.
-        /// DEPRECATED. Please use RootLink()
-        public: LinkPtr<PolicyT, FeaturesT> GZ_DEPRECATED(4.0) CanonicalLink();
-
-        /// \brief const version of CanonicalLink()
-        /// DEPRECATED. Please use RootLink()
-        public: ConstLinkPtr<PolicyT, FeaturesT> GZ_DEPRECATED(4.0)
-                    CanonicalLink() const;
       };
 
       public: template <typename PolicyT>

@@ -37,8 +37,6 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
     t.setIdentity();
     btVector3 minBox(0, 0, 0);
     btVector3 maxBox(0, 0, 0);
-    btVector3 minBox2(0, 0, 0);
-    btVector3 maxBox2(0, 0, 0);
     collider->collider->getAabb(t, minBox, maxBox);
     return math::eigen3::convert(math::AxisAlignedBox(
       math::Vector3d(minBox[0], minBox[1], minBox[2]),

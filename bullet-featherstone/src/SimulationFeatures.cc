@@ -37,33 +37,19 @@ void SimulationFeatures::WorldForwardStep(
   const auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   auto *dtDur =
     _u.Query<std::chrono::steady_clock::duration>();
+  double stepSize = 0.001;
   if (dtDur)
   {
     std::chrono::duration<double> dt = *dtDur;
     stepSize = dt.count();
   }
 
-  worldInfo->world->stepSimulation(static_cast<btScalar>(this->stepSize), 1,
-                                   static_cast<btScalar>(this->stepSize));
-
-  for (auto & m : this->models)
-  {
-    if (m.second->body)
-    {
-      m.second->body->checkMotionAndSleepIfRequired(
-          static_cast<btScalar>(this->stepSize));
-      btMultiBodyLinkCollider* col = m.second->body->getBaseCollider();
-      if (col && col->getActivationState() != DISABLE_DEACTIVATION)
-        col->setActivationState(ACTIVE_TAG);
-
-      for (int b = 0; b < m.second->body->getNumLinks(); b++)
-      {
-        col =  m.second->body->getLink(b).m_collider;
-        if (col && col->getActivationState() != DISABLE_DEACTIVATION)
-          col->setActivationState(ACTIVE_TAG);
-      }
-    }
-  }
+  // \todo(iche033) Stepping sim with varying dt may not work properly.
+  // One example is the motor constraint that's created in
+  // JointFeatures::SetJointVelocityCommand which assumes a fixed step
+  // size.
+  worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
+                                   static_cast<btScalar>(stepSize));
 
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());

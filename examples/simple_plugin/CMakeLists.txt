@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 project(gz-physics-simple-plugin)
 
 find_package(gz-plugin3 REQUIRED COMPONENTS all)
 set(GZ_PLUGIN_VER ${gz-plugin3_VERSION_MAJOR})
 
-find_package(gz-physics8 REQUIRED)
-set(GZ_PHYSICS_VER ${gz-physics8_VERSION_MAJOR})
+find_package(gz-physics9 REQUIRED)
+set(GZ_PHYSICS_VER ${gz-physics9_VERSION_MAJOR})
 
 add_library(SimplePlugin SHARED plugin.cc EntityManagementFeatures.cc)
 target_link_libraries(SimplePlugin
