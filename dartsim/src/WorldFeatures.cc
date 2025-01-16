@@ -29,7 +29,7 @@
 
 #include <gz/common/Console.hh>
 
-#include "GzOdeCollisionDetector.hh"
+#include "GzCollisionDetector.hh"
 #include "WorldFeatures.hh"
 
 
@@ -46,7 +46,7 @@ void WorldFeatures::SetWorldCollisionDetector(
        world->getConstraintSolver()->getCollisionDetector();
   if (_collisionDetector == "bullet")
   {
-    collisionDetector = dart::collision::BulletCollisionDetector::create();
+    collisionDetector = dart::collision::GzBulletCollisionDetector::create();
   }
   else if (_collisionDetector == "fcl")
   {
@@ -105,17 +105,17 @@ void WorldFeatures::SetWorldCollisionPairMaxContacts(
   auto collisionDetector =
     world->getConstraintSolver()->getCollisionDetector();
 
-  auto odeCollisionDetector =
-    std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
+ auto gzCollisionDetector =
+    std::dynamic_pointer_cast<dart::collision::GzCollisionDetector>(
     collisionDetector);
-  if (odeCollisionDetector)
+  if (gzCollisionDetector)
   {
-    odeCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
+    gzCollisionDetector->SetCollisionPairMaxContacts(_maxContacts);
   }
   else
   {
     gzwarn << "Currently max contacts feature is only supported by the "
-           << "ode collision detector in dartsim." << std::endl;
+           << "bullet and ode collision detector in dartsim." << std::endl;
   }
 }
 
@@ -126,12 +126,18 @@ std::size_t WorldFeatures::GetWorldCollisionPairMaxContacts(
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
   auto collisionDetector =
     world->getConstraintSolver()->getCollisionDetector();
-  auto odeCollisionDetector =
-    std::dynamic_pointer_cast<dart::collision::GzOdeCollisionDetector>(
+
+ auto gzCollisionDetector =
+    std::dynamic_pointer_cast<dart::collision::GzCollisionDetector>(
     collisionDetector);
-  if (odeCollisionDetector)
+  if (gzCollisionDetector)
   {
-    return odeCollisionDetector->GetCollisionPairMaxContacts();
+    return gzCollisionDetector->GetCollisionPairMaxContacts();
+  }
+  else
+  {
+    gzwarn << "Currently max contacts feature is only supported by the "
+           << "bullet and ode collision detector in dartsim." << std::endl;
   }
 
   return 0u;
