@@ -22,6 +22,8 @@
 #include <string>
 #include <utility>
 
+#include <gz/physics/dartsim-plugin/Export.hh>
+
 #include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructJoint.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
