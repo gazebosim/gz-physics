@@ -271,6 +271,7 @@ void JointFeatures::SetJointVelocity(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+
   model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
   model->body->wakeUp();
@@ -287,11 +288,11 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  auto *joint = this->ReferenceInterface<JointInfo>(_id);
 
   if (!std::isfinite(_value))
   {
-    gzerr << "Invalid joint velocity value [" << _value
+    gzerr << "Invalid joint force value [" << _value
            << "] commanded on joint [" << joint->name << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -301,7 +302,15 @@ void JointFeatures::SetJointForce(
   if (!identifier)
     return;
 
-  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+
+  // Disable velocity control by removing joint motor constraint
+  if (joint->motor)
+  {
+    world->world->removeMultiBodyConstraint(joint->motor.get());
+    joint->motor.reset();
+  }
 
   // clamp the values
   double force = std::clamp(_value,
