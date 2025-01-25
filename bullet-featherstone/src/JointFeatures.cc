@@ -271,7 +271,6 @@ void JointFeatures::SetJointVelocity(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-
   model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
   model->body->wakeUp();
@@ -302,7 +301,7 @@ void JointFeatures::SetJointForce(
   if (!identifier)
     return;
 
-  auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   auto *world = this->ReferenceInterface<WorldInfo>(model->world);
 
   // Disable velocity control by removing joint motor constraint
