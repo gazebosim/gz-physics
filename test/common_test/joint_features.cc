@@ -146,7 +146,7 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     auto base_link = model->GetLink("base");
     ASSERT_NE(nullptr, base_link);
 
-    // Check that invalid velocity commands don't cause collisions to fail
+    // Check that invalid force commands don't cause collisions to fail
     for (std::size_t i = 0; i < 1000; ++i)
     {
       // Silence console spam
@@ -179,6 +179,15 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       // expect joint to freeze in subsequent steps without SetVelocityCommand
       world->Step(output, state, input);
       EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-1);
+    }
+
+    // Set joint force to 0 and expect that the velocity command is no
+    // longer enforced, i.e. joint should not freeze in subsequent steps
+    joint->SetForce(0, 0.0);
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+      EXPECT_LT(0.0, std::fabs(joint->GetVelocity(0)));
     }
 
     // Check that invalid velocity commands don't cause collisions to fail
