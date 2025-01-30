@@ -1,5 +1,22 @@
 ## Gazebo Physics 7.x
 
+### Gazebo Physics 7.5.0 (2025-01-30)
+
+1. bullet-featherstone: Remove joint motor constraint on joint force cmd
+    * [Pull request #713](https://github.com/gazebosim/gz-physics/pull/713)
+
+1. Visibility fixes for DART on Windows
+    * [Pull request #711](https://github.com/gazebosim/gz-physics/pull/711)
+
+1. Support setting max contacts in dart's bullet collision detector
+    * [Pull request #593](https://github.com/gazebosim/gz-physics/pull/593)
+
+1. Remove unreferenced switching-physics-engine tutorial and fix broken link in 04_physics_engines
+    * [Pull request #684](https://github.com/gazebosim/gz-physics/pull/684)
+
+1. Prevent crash when objects move to invalid poses
+    * [Pull request #706](https://github.com/gazebosim/gz-physics/pull/706)
+
 ### Gazebo Physics 7.4.0 (2024-11-08)
 
 1. bullet-featherstone: Reset joint motor constraint's velocity target after each step
