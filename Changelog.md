@@ -1,5 +1,28 @@
 ## Gazebo Physics 8.x
 
+### Gazebo Physics 8.1.0 (2025-02-12)
+
+1. bullet-featherstone: Remove joint motor constraint on joint force cmd
+    * [Pull request #713](https://github.com/gazebosim/gz-physics/pull/713)
+
+1. ci.yml: run cppcheck, cpplint on noble
+    * [Pull request #710](https://github.com/gazebosim/gz-physics/pull/710)
+
+1. Support setting max contacts in dart's bullet collision detector
+    * [Pull request #593](https://github.com/gazebosim/gz-physics/pull/593)
+
+1. Prevent crash when objects move to invalid poses
+    * [Pull request #706](https://github.com/gazebosim/gz-physics/pull/706)
+
+1. bullet-featherstone: Fix finding free group for a body with fixed base
+    * [Pull request #700](https://github.com/gazebosim/gz-physics/pull/700)
+
+1. bullet-featherstone: Reset joint motor constraint's velocity target after each step
+    * [Pull request #699](https://github.com/gazebosim/gz-physics/pull/699)
+
+1. Update physics_plugins tutorial
+    * [Pull request #687](https://github.com/gazebosim/gz-physics/pull/687)
+
 ### Gazebo Physics 8.0.0 (2024-09-25)
 
 1. **Baseline:** this includes all changes from 7.3.0 and earlier.
