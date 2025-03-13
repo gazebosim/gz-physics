@@ -113,7 +113,7 @@ void DoublePendulum_TEST(gz::plugin::PluginPtr _plugin)
   gz::math::PID pid0(100, 0, 10);
   gz::math::PID pid1(10, 0, 5);
   const std::chrono::duration<double> settleTime(std::chrono::seconds(4));
-  unsigned int settleSteps = settleTime / dt;
+  unsigned int settleSteps = static_cast<unsigned int>(settleTime / dt);
   for (unsigned int i = 0; i < settleSteps; ++i)
   {
     auto positions = output.Get<JointPositions>();
