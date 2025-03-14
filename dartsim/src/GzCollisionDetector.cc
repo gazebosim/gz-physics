@@ -16,6 +16,7 @@
 */
 
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <utility>
 
@@ -115,6 +116,13 @@ GzOdeCollisionDetector::Registrar<GzOdeCollisionDetector>
 /////////////////////////////////////////////////
 std::shared_ptr<GzOdeCollisionDetector> GzOdeCollisionDetector::create()
 {
+  // GzOdeCollisionDetector constructor calls the OdeCollisionDetector
+  // constructor, that calls the non-thread safe dInitODE2(0).
+  // To mitigate this problem, we use a static mutex to ensure that
+  // each GzOdeCollisionDetector constructor is called not at the same time.
+  // See https://github.com/gazebosim/gz-sim/issues/18 for more info.
+  static std::mutex odeInitMutex;
+  std::unique_lock<std::mutex> lock(odeInitMutex);
   return std::shared_ptr<GzOdeCollisionDetector>(new GzOdeCollisionDetector());
 }
 
