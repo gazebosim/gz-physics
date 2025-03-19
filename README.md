@@ -12,7 +12,7 @@ Build | Status
 Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics8/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics8)
 Ubuntu Noble  | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics8-noble-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics8-noble-amd64)
 Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics8-homebrew-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics8-homebrew-amd64)
-Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-8-win)](https://build.osrfoundation.org/job/gz_physics-8-win)
+Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-8-clowin)](https://build.osrfoundation.org/job/gz_physics-8-clowin)
 
 Gazebo Physics, a component of [Gazebo](https://gazebosim.org), provides an abstract physics interface
 designed to support simulation and rapid development of robot applications.
