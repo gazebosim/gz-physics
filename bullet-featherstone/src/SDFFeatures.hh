@@ -83,6 +83,7 @@ class SDFFeatures :
   /// \param[in] _linkID ID of link to create the collider for
   /// \param[in] _isStatic True if the link is static
   /// \param[in] _shape Collision shape to attach to link
+  /// \param[in] _shapeTF Collision shape local transform in link collider frame
   private: void CreateLinkCollider(const Identity &_linkID,
       bool _isStatic, btCollisionShape *_shape = nullptr,
       const btTransform &_shapeTF = btTransform::getIdentity());
