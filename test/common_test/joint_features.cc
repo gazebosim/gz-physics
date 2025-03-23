@@ -1125,16 +1125,28 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     world->SetGravity(Eigen::Vector3d::Zero());
 
     world->Step(output, state, input);
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
     // setting joint position to start from bottom 
     // pendulum position
     joint->SetPosition(0, GZ_PI/2);
     ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
+<<<<<<< HEAD
 
     // settting joint velocity to zero 
     joint->SetVelocity(0, 0);
     ASSERT_EQ(joint->GetVelocity(0), 0);
 
+=======
+     
+    // settting joint velocity to zero 
+    joint->SetVelocity(0, 0);
+    ASSERT_EQ(joint->GetVelocity(0), 0);
+     
+>>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
     // without reference joint position joint should stay 
     // at GZ_PI/2
     for (std::size_t i = 0; i < 2500; ++i)
@@ -1155,7 +1167,11 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
 
     // setting joint rest position to pendulum upright position
     joint->SetRestPosition(0, -GZ_PI/2);
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
     // setting joint stiffness 
     joint->SetSpringStiffness(0, 60);
 
@@ -1169,7 +1185,11 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     {
       world->Step(output, state, input);
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
     // checking if joint position is same 
     // as rest position
     ASSERT_NEAR(joint->GetPosition(0), -GZ_PI/2, 1e-4);
@@ -1178,7 +1198,10 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
   }
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
 ///////////// DARTSIM > 6.10 end
 
 
