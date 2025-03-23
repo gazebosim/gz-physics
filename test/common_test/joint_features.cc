@@ -147,7 +147,7 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     auto base_link = model->GetLink("base");
     ASSERT_NE(nullptr, base_link);
 
-    // Check that invalid velocity commands don't cause collisions to fail
+    // Check that invalid force commands don't cause collisions to fail
     for (std::size_t i = 0; i < 1000; ++i)
     {
       // Silence console spam
@@ -180,6 +180,15 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       // expect joint to freeze in subsequent steps without SetVelocityCommand
       world->Step(output, state, input);
       EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-1);
+    }
+
+    // Set joint force to 0 and expect that the velocity command is no
+    // longer enforced, i.e. joint should not freeze in subsequent steps
+    joint->SetForce(0, 0.0);
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+      EXPECT_LT(0.0, std::fabs(joint->GetVelocity(0)));
     }
 
     // Check that invalid velocity commands don't cause collisions to fail
@@ -298,6 +307,7 @@ struct JointFeaturePositionLimitsForceControlList : gz::physics::FeatureList<
     gz::physics::GetBasicJointState,
     gz::physics::GetEngineInfo,
     gz::physics::GetJointFromModel,
+    gz::physics::GetJointTransmittedWrench,
     gz::physics::GetModelFromWorld,
     gz::physics::SetBasicJointState,
     gz::physics::SetJointEffortLimitsFeature,
@@ -679,6 +689,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetVelocityLimitsWi
       joint->SetVelocityCommand(0, 1);
       world->Step(output, state, input);
     }
+
     EXPECT_NEAR(0.1, joint->GetVelocity(0), 1e-6);
 
     for (std::size_t i = 0; i < 10; ++i)
@@ -817,6 +828,141 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
   }
 }
 
+TYPED_TEST(JointFeaturesPositionLimitsForceControlTest,
+           JointTransmittedWrenchWithVelocityControl)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // This test requires https://github.com/bulletphysics/bullet3/pull/4462
+#ifdef BT_BULLET_VERSION_LE_325
+    if (this->PhysicsEngineName(name) == "bullet-featherstone")
+      GTEST_SKIP();
+#endif
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<JointFeaturePositionLimitsForceControlList>::
+      From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors =
+        root.Load(common_test::worlds::kJointOffsetEmptyLinksSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto model = world->GetModel("model");
+    auto joint = model->GetJoint("J0");
+
+    // default step size: 1ms
+    double dt = 1e-3;
+    // velocity limit set in SDF
+    double velocityLimit = 4;
+    const double positionGoal = 0.1;
+    // Calculate number of time steps expected to reach the position goal at
+    // the maximum joint velocity.
+    const int expectedSteps =
+        static_cast<int>(positionGoal / velocityLimit / dt);
+    // Take the expected number of steps.
+    gzdbg << "Taking " << expectedSteps << " steps "
+          << "to reach the goal." << std::endl;
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    for (int i = 0; i < expectedSteps; ++i)
+    {
+      joint->SetVelocityCommand(0, velocityLimit);
+      world->Step(output, state, input);
+    }
+
+    // Read wrench from force_torque_status and expect it to be consistent with
+    // the dynamic state of the model.
+    //
+    // Summary of dynamic state at this time in the test:
+    // - The base link is fixed to the world.
+    // - The child link is attached to the base link via the revolute joint J0.
+    // - The child link has a mass of 1 kg and its center of mass is located
+    //   0.5 m from joint J0.
+    //     m = 1 kg
+    //     L = 0.5 m
+    // - The joint velocity command moves the joint at its maximum velocity of
+    //   4 rad/s about the X-axis of the joint to reach its goal position
+    //   of 0.1 rad. With a constant angular velocity, the angular acceleration
+    //   is zero.
+    //     pos_J0 = 0.1 rad (approximately)
+    //     vel_J0 = 4 rad/s
+    //     acc_J0 = 0 rad/s^2
+    // - The child link is rotating about the joint like a pendulum with a
+    //   linear acceleration consisting of centripetal acceleration since its
+    //   angular acceleration is zero. When expressed in coordinates of the
+    //   joint frame, the linear acceleration is in the y direction.
+    //     a_child = {0, m * L * vel_J0^2, 0}
+    // - Gravity is acting in the negative Z direction of the world frame with a
+    //   magnitude of 9.8 m/s^2.
+    //     g = 9.8 m/s^2
+    // - The force of gravity is expressed in coordinates of the joint frame as
+    //     F_gravity = {0, - m * g * sin(pos_J0), - m * g * cos(pos_J0)}.
+    // - The joint transmitted wrench is the wrench applied from the base link
+    //   to the child link at joint J0 and expressed in coordinates of
+    //   the frame, which happens to coincide with the joint frame.
+    // - First apply conservation of linear momentum:
+    //   - The sum of forces acting on the child link is equal to the product of
+    //     mass and the linear acceleration of its center of mass.
+    //       F_child = m * a_child
+    //   - The forces acting on the child link include the force of gravity and
+    //     the reaction force from the joint:
+    //       F_child = F_gravity + F_joint
+    //   - The joint reaction force is thus equal to:
+    //       F_joint = m * a_child - F_gravity
+    //   - which can be expressed in coordinates of the joint frame as:
+    //       F_joint = m * {0, L * vel_J0^2 + g * sin(pos_J0), g * cos(pos_J0)}
+    // - Now apply conservation of angular momentum with respect to the origin
+    //   of the joint frame J0:
+    //   - Since the origin of the joint frame J0 is fixed with respect to an
+    //     inertial frame, conservation of angular momentum about that point
+    //     implies that the sum of torques acting on the child link at the joint
+    //     origin (T_child_J0) is equal to the product of its moment of inertia
+    //     with respect to the joint origin (I_J0) and its angular acceleration
+    //     (which is zero).
+    //     Thus the sum of torques acting on the child link is zero.
+    //       T_child_J0 = I_J0 * alpha_child = 0
+    //   - The torques acting on the child link with respect to the origin of
+    //     the joint frame include the torque due to gravity and the reaction
+    //     torque at the joint:
+    //       T_child_J0 = T_gravity_J0 + T_joint_J0
+    //       T_gravity_J0 = {m * g * L * cos(pos_J0), 0, 0}
+    //       T_joint_J0 = {-m * g * L cos(pos_J0), 0, 0}
+    //
+    // After substitution of known constants, the expected wrench is therefore:
+    const double expectedForceX = 0;
+    // expectedForceY = m * L * vel_J0^2 + g * sin(pos_J0)
+    // expectedForceY = 1 * 0.5 * 4^2 + 9.8 * sin(0.1)
+    const double expectedForceY = 8 + 9.8 * sin(positionGoal);
+    // expectedForceZ = m * g * cos(pos_J0)
+    // expectedForceZ = 1 * 9.8 * cos(0.1)
+    const double expectedForceZ = 9.8 * cos(positionGoal);
+    // expectedTorqueX = -m * g * L cos(pos_J0)
+    // expectedTorqueX = -1 * 9.8 * 0.5 cos(0.1)
+    const double expectedTorqueX = -4.9 * cos(positionGoal);
+    const double expectedTorqueY = 0;
+    const double expectedTorqueZ = 0;
+    gzdbg << "Checking that wrench values match the dynamic state."
+          << std::endl;
+    auto wrench = joint->GetTransmittedWrench();
+    EXPECT_NEAR(expectedForceX, wrench.force.x(), 1e-6);
+    // Looser tolerances are needed for the nonzero terms
+    EXPECT_NEAR(expectedForceY, wrench.force.y(), 1e-1);
+    EXPECT_NEAR(expectedForceZ, wrench.force.z(), 1e-2);
+    EXPECT_NEAR(expectedTorqueX, wrench.torque.x(), 1e-2);
+    EXPECT_NEAR(expectedTorqueY, wrench.torque.y(), 1e-6);
+    EXPECT_NEAR(expectedTorqueZ, wrench.torque.z(), 1e-6);
+  }
+}
+
 struct JointFeatureFrictionList : gz::physics::FeatureList<
     gz::physics::ForwardStep,
     gz::physics::GetBasicJointProperties,
@@ -868,7 +1014,7 @@ TYPED_TEST(JointFeaturesFrictionTest, JointSetFriction)
     world->Step(output, state, input);
 
     joint->SetPosition(0, -GZ_PI/2);
-     
+
     // default friction value is zero
     // so oscillations are expected
     for (std::size_t i = 0; i < 100; ++i)
@@ -878,7 +1024,7 @@ TYPED_TEST(JointFeaturesFrictionTest, JointSetFriction)
 
     EXPECT_NE(joint->GetPosition(0), -GZ_PI/2);
     EXPECT_NE(0, joint->GetVelocity(0));
-     
+
     // setting very high friction value
     // pendulum shouldn't move much (expected)
     joint->SetPosition(0, -GZ_PI/2);
@@ -898,14 +1044,14 @@ TYPED_TEST(JointFeaturesFrictionTest, JointSetFriction)
     auto joint_pos1 = joint->GetPosition(0);
 
     EXPECT_NEAR(0, joint->GetVelocity(0), 1e-10);
-  
+
     // setting some moderate value of joint friction
     joint->SetPosition(0, -GZ_PI/2);
     ASSERT_EQ(joint->GetPosition(0), -GZ_PI/2);
 
     joint->SetVelocity(0, 1);
     ASSERT_EQ(joint->GetVelocity(0), 1);
-    
+
     joint->SetFriction(0, 5);
 
     for (std::size_t i = 0; i < 500; ++i)
@@ -979,16 +1125,16 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     world->SetGravity(Eigen::Vector3d::Zero());
 
     world->Step(output, state, input);
-    
+
     // setting joint position to start from bottom 
     // pendulum position
     joint->SetPosition(0, GZ_PI/2);
     ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
-     
+
     // settting joint velocity to zero 
     joint->SetVelocity(0, 0);
     ASSERT_EQ(joint->GetVelocity(0), 0);
-     
+
     // without reference joint position joint should stay 
     // at GZ_PI/2
     for (std::size_t i = 0; i < 2500; ++i)
@@ -1009,7 +1155,7 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
 
     // setting joint rest position to pendulum upright position
     joint->SetRestPosition(0, -GZ_PI/2);
-    
+
     // setting joint stiffness 
     joint->SetSpringStiffness(0, 60);
 
@@ -1023,7 +1169,7 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     {
       world->Step(output, state, input);
     }
-    
+
     // checking if joint position is same 
     // as rest position
     ASSERT_NEAR(joint->GetPosition(0), -GZ_PI/2, 1e-4);
@@ -1032,6 +1178,7 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
   }
 }
+
 ///////////// DARTSIM > 6.10 end
 
 
