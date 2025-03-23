@@ -45,6 +45,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/RevoluteJoint.hh>
 #include <gz/physics/Shape.hh>
+#include <gz/physics/World.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
@@ -907,7 +908,7 @@ TYPED_TEST(JointFeaturesFrictionTest, JointSetFriction)
     
     joint->SetFriction(0, 5);
 
-    for (std::size_t i = 0; i < 100; ++i)
+    for (std::size_t i = 0; i < 500; ++i)
     {
       world->Step(output, state, input);
     }
@@ -919,6 +920,116 @@ TYPED_TEST(JointFeaturesFrictionTest, JointSetFriction)
     // to zero (expected)
     EXPECT_NEAR(0, joint->GetVelocity(0), 1e-10);
     EXPECT_GT(joint_pos2, joint_pos1);
+  }
+}
+
+struct JointFeatureSpringStiffnessList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::Gravity,
+    gz::physics::GetModelFromWorld,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointSpringStiffnessFeature,
+    gz::physics::SetJointRestPositionFeature,
+    gz::physics::SetJointDampingCoefficientFeature,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointFeaturesSpringStiffnessTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesSpringStiffnessTestTypes =
+  ::testing::Types<JointFeatureSpringStiffnessList>;
+TYPED_TEST_SUITE(JointFeaturesSpringStiffnessTest,
+                 JointFeaturesSpringStiffnessTestTypes);
+
+TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<JointFeatureSpringStiffnessList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto model = world->GetModel("pendulum_with_base");
+    auto joint = model->GetJoint("upper_joint");
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // turning off gravity so that system behaves 
+    // like mass-damper
+    world->SetGravity(Eigen::Vector3d::Zero());
+
+    world->Step(output, state, input);
+    
+    // setting joint position to start from bottom 
+    // pendulum position
+    joint->SetPosition(0, GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
+     
+    // settting joint velocity to zero 
+    joint->SetVelocity(0, 0);
+    ASSERT_EQ(joint->GetVelocity(0), 0);
+     
+    // without reference joint position joint should stay 
+    // at GZ_PI/2
+    for (std::size_t i = 0; i < 2500; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // checking if link has moved
+    ASSERT_NEAR(joint->GetPosition(0), GZ_PI/2, 1e-5);
+    ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
+
+    // resetting joint position and velocity
+    joint->SetPosition(0, GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
+
+    joint->SetVelocity(0, 0);
+    ASSERT_EQ(joint->GetVelocity(0), 0);
+
+    // setting joint rest position to pendulum upright position
+    joint->SetRestPosition(0, -GZ_PI/2);
+    
+    // setting joint stiffness 
+    joint->SetSpringStiffness(0, 60);
+
+    // setting jont damping to stablize about joint's
+    // rest position
+    joint->SetDampingCoefficient(0, 17);
+
+    // running simulation for longer to make sure
+    // joint reaches equilibrium 
+    for (std::size_t i = 0; i < 2500; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    
+    // checking if joint position is same 
+    // as rest position
+    ASSERT_NEAR(joint->GetPosition(0), -GZ_PI/2, 1e-4);
+
+    // checking if link has reached equilibrium
+    ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
   }
 }
 ///////////// DARTSIM > 6.10 end
