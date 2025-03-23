@@ -1035,7 +1035,7 @@ TYPED_TEST(JointFeaturesFrictionTest, JointSetFriction)
     joint->SetFriction(0, 100);
 
     // running simulation for longer to make sure
-    // joint position doesn't changes (expected)
+    // joint position doesn't change (expected)
     for (std::size_t i = 0; i < 1000; ++i)
     {
       world->Step(output, state, input);
@@ -1120,33 +1120,22 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Input input;
 
-    // turning off gravity so that system behaves 
+    // turning off gravity so that the system behaves 
     // like mass-damper
     world->SetGravity(Eigen::Vector3d::Zero());
 
     world->Step(output, state, input);
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
-    // setting joint position to start from bottom 
+    // setting joint position to start from the bottom 
     // pendulum position
     joint->SetPosition(0, GZ_PI/2);
     ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
-<<<<<<< HEAD
 
-    // settting joint velocity to zero 
+    // setting joint velocity to zero 
     joint->SetVelocity(0, 0);
     ASSERT_EQ(joint->GetVelocity(0), 0);
-
-=======
-     
-    // settting joint velocity to zero 
+    // setting joint velocity to zero 
     joint->SetVelocity(0, 0);
     ASSERT_EQ(joint->GetVelocity(0), 0);
-     
->>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
     // without reference joint position joint should stay 
     // at GZ_PI/2
     for (std::size_t i = 0; i < 2500; ++i)
@@ -1154,7 +1143,7 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
       world->Step(output, state, input);
     }
 
-    // checking if link has moved
+    // checking if the link has moved
     ASSERT_NEAR(joint->GetPosition(0), GZ_PI/2, 1e-5);
     ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
 
@@ -1167,15 +1156,11 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
 
     // setting joint rest position to pendulum upright position
     joint->SetRestPosition(0, -GZ_PI/2);
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
     // setting joint stiffness 
     joint->SetSpringStiffness(0, 60);
 
-    // setting jont damping to stablize about joint's
+    // setting joint damping to stabilize the joint's
     // rest position
     joint->SetDampingCoefficient(0, 17);
 
@@ -1185,23 +1170,15 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
     {
       world->Step(output, state, input);
     }
-<<<<<<< HEAD
-
-=======
     
->>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
-    // checking if joint position is same 
+    // checking if the joint position is the same 
     // as rest position
     ASSERT_NEAR(joint->GetPosition(0), -GZ_PI/2, 1e-4);
 
-    // checking if link has reached equilibrium
+    // checking if the link has reached equilibrium
     ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
   }
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> b97e4cb84bffe2d415aa209e16640ac052fef250
 ///////////// DARTSIM > 6.10 end
 
 
