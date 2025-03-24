@@ -18,9 +18,11 @@
 #ifndef GZ_PHYSICS_JOINT_HH_
 #define GZ_PHYSICS_JOINT_HH_
 
+#include <cstddef>
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/Geometry.hh>
+
 
 #include <string>
 
