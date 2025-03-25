@@ -58,7 +58,7 @@ struct JointFeatureList : FeatureList<
   SetJointEffortLimitsFeature,
   SetJointFrictionFeature,
   SetJointDampingCoefficientFeature,
-  SetJointSpringStiffnessFeature, 
+  SetJointSpringStiffnessFeature,
   SetJointRestPositionFeature,
   GetJointTransmittedWrench
 > { };
@@ -208,20 +208,20 @@ class JointFeatures :
 
   public: void SetJointFriction(
        const Identity &_id, std::size_t _dof,
-       double _value) override; 
+       double _value) override;
 
-  public: void SetJointDampingCoefficient(
+public: void SetJointDampingCoefficient(
        const Identity &_id, std::size_t _dof,
-       double _value) override; 
+       double _value) override;
 
   public: void SetJointSpringStiffness(
        const Identity &_id, std::size_t _dof,
-       double _value) override; 
+       double _value) override;
 
   public: void SetJointRestPosition(
        const Identity &_id, std::size_t _dof,
-       double _value) override; 
-  
+       double _value) override;
+
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
       const Identity &_id) const override;

@@ -23,7 +23,6 @@
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/Geometry.hh>
 
-
 #include <string>
 
 namespace gz
@@ -543,7 +542,7 @@ namespace gz
             const std::size_t _dof, const Scalar _value);
       };
 
-      /// \private The implementation API for setting joint friction 
+      /// \private The implementation API for setting joint friction
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
@@ -571,7 +570,7 @@ namespace gz
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
-        ///   The damping coefficient value which needs to be applied for a joint
+        /// The damping coefficient value which needs to be applied for a joint
         public: void SetDampingCoefficient(
             const std::size_t _dof, const Scalar _value);
       };
@@ -622,7 +621,7 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature sets the rest position of this joint 
+    /// \brief This feature sets the rest position of this joint
     class GZ_PHYSICS_VISIBLE SetJointRestPositionFeature
         : public virtual Feature
     {
