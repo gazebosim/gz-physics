@@ -648,7 +648,7 @@ namespace gz
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        // See Joint::SetSpringStiffness above
+        // See Joint::SetRestPosition above
         public: virtual void SetJointRestPosition(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
