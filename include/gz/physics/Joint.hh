@@ -621,23 +621,23 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature sets the rest position of this joint
-    class GZ_PHYSICS_VISIBLE SetJointRestPositionFeature
+    /// \brief This feature sets the spring rest position of this joint
+    class GZ_PHYSICS_VISIBLE SetJointSpringRestPositionFeature
         : public virtual Feature
     {
-      /// \brief The Joint API for setting rest position of a joint.
+      /// \brief The Joint API for setting spring rest position of a joint.
       public: template <typename PolicyT, typename FeaturesT>
       class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        /// \brief Set the rest position value for a particular joint.
+        /// \brief Set the spring rest position value for a particular joint.
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
         ///   The rest position value which needs to be applied for a joint
-        public: void SetRestPosition(
+        public: void SetSpringRestPosition(
             const std::size_t _dof, const Scalar _value);
       };
 
@@ -648,7 +648,7 @@ namespace gz
         public: using Scalar = typename PolicyT::Scalar;
 
         // See Joint::SetRestPosition above
-        public: virtual void SetJointRestPosition(
+        public: virtual void SetJointSpringRestPosition(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };

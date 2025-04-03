@@ -245,11 +245,11 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetJointRestPositionFeature::Joint<PolicyT, FeaturesT>::
-    SetRestPosition(const std::size_t _dof, const Scalar _value)
+    void SetJointSpringRestPositionFeature::Joint<PolicyT, FeaturesT>::
+    SetSpringRestPosition(const std::size_t _dof, const Scalar _value)
     {
-      this->template Interface<SetJointRestPositionFeature>()
-        ->SetJointRestPosition(this->identity, _dof, _value);
+      this->template Interface<SetJointSpringRestPositionFeature>()
+        ->SetJointSpringRestPosition(this->identity, _dof, _value);
     }
 
     /////////////////////////////////////////////////
