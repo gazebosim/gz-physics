@@ -1091,7 +1091,7 @@ using JointFeaturesSpringStiffnessTestTypes =
 TYPED_TEST_SUITE(JointFeaturesSpringStiffnessTest,
                  JointFeaturesSpringStiffnessTestTypes);
 
-TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetFriction)
+TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetSpringStiffness)
 {
   for (const std::string &name : this->pluginNames)
   {
