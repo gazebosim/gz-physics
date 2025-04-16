@@ -266,8 +266,9 @@ TYPED_TEST(JointFeaturesTest, JointSetPositionWithContact)
       world->Step(output, state, input);
     }
 
-    // Sanity check that the pendulum is at rest
-    EXPECT_NEAR(0.0, motorJoint->GetVelocity(0), 1e-3);
+    // Sanity check that the pendulum is at rest. A small non-zero threshold is
+    // set to accommodate small joint velocity due to error reduction.
+    EXPECT_NEAR(0.0, motorJoint->GetVelocity(0), 2e-3);
 
     contacts = world->GetContactsFromLastStep();
     EXPECT_LT(numInitialContacts, contacts.size());
