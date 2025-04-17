@@ -81,13 +81,54 @@ struct WorldInfo
   explicit WorldInfo(std::string name);
 };
 
+/// \brief Custom `GzMultiBody` wrapper for `btMultiBody` to ensure that a flag
+/// is set whenever joint position is set or base transform is set indicating
+/// that collision transforms need to be updated.
+class GzMultiBody: public btMultiBody
+{
+  using btMultiBody::btMultiBody;
+
+  /// \brief Set position for a particular joint dof and set a flag that the
+  /// collision world transforms need to be updated before performing collision
+  /// queries. Use this method to set a joint dof position instead of the base
+  /// class methods `setJointPos`/ `setJointPosMultiDof`/
+  /// (non-const)`getJointPosMultiDof` to ensure that collision queries after
+  /// setting joint positions are accurate.
+  public: void SetJointPosForDof(
+    int _jointIndex,
+    std::size_t _dof,
+    btScalar _value);
+  private: using btMultiBody::setJointPos;
+  private: using btMultiBody::setJointPosMultiDof;
+  private: using btMultiBody::getJointPosMultiDof;
+
+  /// \brief Get the position of a particular joint dof.
+  /// This method is needed because the private using-declaration above hides
+  /// both the const and non-const overloads of
+  /// `btMultiBody::getJointPosMultiDof`.
+  public: btScalar GetJointPosForDof(int _jointIndex, std::size_t _dof) const;
+
+  /// \brief Set base transform in world.
+  /// Use this method to set the transform for a moving base model instead of
+  /// the base class method `setBaseWorldTransform` to ensure that collision
+  /// queries after setting the transform are accurate.
+  public: void SetBaseWorldTransform(const btTransform &_pose);
+  private: using btMultiBody::setBaseWorldTransform;
+
+  /// \brief Update collision transforms if `needsCollisionTransformsUpdate` is
+  /// set and reset the flag.
+  public: void UpdateCollisionTransformsIfNeeded();
+
+  private: bool needsCollisionTransformsUpdate = false;
+};
+
 struct ModelInfo
 {
   std::string name;
   Identity world;
   int indexInWorld;
   Eigen::Isometry3d baseInertiaToLinkFrame;
-  std::shared_ptr<btMultiBody> body;
+  std::shared_ptr<GzMultiBody> body;
 
   std::vector<std::size_t> linkEntityIds;
   std::vector<std::size_t> jointEntityIds;
@@ -104,7 +145,7 @@ struct ModelInfo
     std::string _name,
     Identity _world,
     Eigen::Isometry3d _baseInertiaToLinkFrame,
-    std::shared_ptr<btMultiBody> _body)
+    std::shared_ptr<GzMultiBody> _body)
     : name(std::move(_name)),
       world(std::move(_world)),
       baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
@@ -324,7 +365,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     std::string _name,
     Identity _worldID,
     Eigen::Isometry3d _baseInertialToLinkFrame,
-    std::shared_ptr<btMultiBody> _body)
+    std::shared_ptr<GzMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
@@ -349,7 +390,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     Identity _parentID,
     Identity _worldID,
     Eigen::Isometry3d _baseInertialToLinkFrame,
-    std::shared_ptr<btMultiBody> _body)
+    std::shared_ptr<GzMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
