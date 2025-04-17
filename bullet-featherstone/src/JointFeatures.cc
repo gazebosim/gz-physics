@@ -141,7 +141,7 @@ double JointFeatures::GetJointPosition(
   if (identifier)
   {
     const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof];
+    return model->body->GetJointPosForDof(identifier->indexInBtModel, _dof);
   }
 
   // The base joint never really has a position. It is either a Free Joint or
@@ -256,8 +256,7 @@ void JointFeatures::SetJointPosition(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof] =
-      static_cast<btScalar>(_value);
+  model->body->SetJointPosForDof(identifier->indexInBtModel, _dof, _value);
   model->body->wakeUp();
 }
 

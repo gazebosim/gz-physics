@@ -44,6 +44,17 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  // Bullet updates collision transforms *after* forward integration. But in
+  // some case (e.g. if joint positions were updated), collision transforms may
+  // need to be manually updated before stepping the Bullet simulation.
+  for (auto & model : this->models)
+  {
+    if (model.second->body)
+    {
+      model.second->body->UpdateCollisionTransformsIfNeeded();
+    }
+  }
+
   // \todo(iche033) Stepping sim with varying dt may not work properly.
   // One example is the motor constraint that's created in
   // JointFeatures::SetJointVelocityCommand which assumes a fixed step
