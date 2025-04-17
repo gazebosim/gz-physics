@@ -81,15 +81,19 @@ struct WorldInfo
   explicit WorldInfo(std::string name);
 };
 
-class GzMultiBody: public btMultiBody {
+/// \brief Custom `GzMultiBody` wrapper for `btMultiBody` to ensure that a flag
+/// is set whenever joint position is set or base transform is set indicating
+/// that collision transforms need to be updated.
+class GzMultiBody: public btMultiBody
+{
   using btMultiBody::btMultiBody;
 
-  // Set position for a particular joint dof and set a flag that the collision
-  // world transforms need to be updated before performing collision queries.
-  // Use this method to set a joint dof position instead of the base class
-  // methods `setJointPos`/ `setJointPosMultiDof`/
-  // (non-const)`getJointPosMultiDof` to ensure that collision queries after
-  // setting joint positions are accurate.
+  /// \brief Set position for a particular joint dof and set a flag that the
+  /// collision world transforms need to be updated before performing collision
+  /// queries. Use this method to set a joint dof position instead of the base
+  /// class methods `setJointPos`/ `setJointPosMultiDof`/
+  /// (non-const)`getJointPosMultiDof` to ensure that collision queries after
+  /// setting joint positions are accurate.
   public: void SetJointPosForDof(
     int _jointIndex,
     std::size_t _dof,
@@ -98,21 +102,21 @@ class GzMultiBody: public btMultiBody {
   private: using btMultiBody::setJointPosMultiDof;
   private: using btMultiBody::getJointPosMultiDof;
 
-  // Get the position of a particular joint dof.
-  // This method is needed because the private using-declaration above hides
-  // both the const and non-const overloads of
-  // `btMultiBody::getJointPosMultiDof`.
+  /// \brief Get the position of a particular joint dof.
+  /// This method is needed because the private using-declaration above hides
+  /// both the const and non-const overloads of
+  /// `btMultiBody::getJointPosMultiDof`.
   public: btScalar GetJointPosForDof(int _jointIndex, std::size_t _dof) const;
 
-  // Set base transform in world.
-  // Use this method to set the transform for a moving base model instead of
-  // the base class method `setBaseWorldTransform` to ensure that collision
-  // queries after setting the transform are accurate.
+  /// \brief Set base transform in world.
+  /// Use this method to set the transform for a moving base model instead of
+  /// the base class method `setBaseWorldTransform` to ensure that collision
+  /// queries after setting the transform are accurate.
   public: void SetBaseWorldTransform(const btTransform &_pose);
   private: using btMultiBody::setBaseWorldTransform;
 
-  // Update collision transforms if `needsCollisionTransformsUpdate` is set and
-  // reset the flag.
+  /// \brief Update collision transforms if `needsCollisionTransformsUpdate` is
+  /// set and reset the flag.
   public: void UpdateCollisionTransformsIfNeeded();
 
   private: bool needsCollisionTransformsUpdate = false;

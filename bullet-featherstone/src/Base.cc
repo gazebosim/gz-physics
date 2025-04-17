@@ -87,7 +87,8 @@ void GzMultiBody::SetBaseWorldTransform(const btTransform &_pose)
 
 void GzMultiBody::UpdateCollisionTransformsIfNeeded()
 {
-  if (this->needsCollisionTransformsUpdate) {
+  if (this->needsCollisionTransformsUpdate)
+  {
     btAlignedObjectArray<btQuaternion> scratchWorldToLocal;
     btAlignedObjectArray<btVector3> scratchLocalOrigin;
     this->updateCollisionObjectWorldTransforms(
