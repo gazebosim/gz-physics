@@ -18,7 +18,15 @@
 #include <memory>
 #include <unordered_map>
 
+// Suppressing a -Wreturn-type warning in octomap
+// https://github.com/OctoMap/octomap/issues/431
+#include <gz/utils/SuppressWarning.hh>
+#ifndef _MSC_VER
+DETAIL_GZ_UTILS_BEGIN_WARNING_SUPPRESSION("-Wreturn-type")
 #include <dart/dart.hpp>
+DETAIL_GZ_UTILS_WARN_RESUME
+#endif  // _MSC_VER
+
 #include <dart/utils/utils.hpp>
 #include <dart/utils/urdf/urdf.hpp>
 
