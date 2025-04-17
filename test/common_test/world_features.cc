@@ -95,14 +95,12 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
                 std::string::npos);
 
-    std::cout << "Here1 " << name << std::endl;
     sdf::Root root;
     const sdf::Errors errors = root.Load(common_test::worlds::kFallingWorld);
     EXPECT_TRUE(errors.empty()) << errors;
     const sdf::World *sdfWorld = root.WorldByIndex(0);
     EXPECT_NE(nullptr, sdfWorld);
 
-    std::cout << "Here2 " << name << std::endl;
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
     EXPECT_NE(nullptr, world);
 
@@ -115,7 +113,6 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     EXPECT_PRED_FORMAT2(vectorPredicate, gravity,
                         world->GetGravity());
 
-    std::cout << "Here3 " << name << std::endl;
     world->SetGravity({8, 4, 3});
     EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d(8, 4, 3),
                         world->GetGravity());
@@ -134,7 +131,6 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     auto linkNoGravity = modelNoGravity->GetLink(0);
     ASSERT_NE(nullptr, linkNoGravity);
 
-    std::cout << "Here4 " << name << std::endl;
     AssertVectorApprox vectorPredicate6(1e-6);
 
     // initial link pose
@@ -160,7 +156,6 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
                         Eigen::Vector3d(1, 0, -1),
                         world->GetGravity());
 
-    std::cout << "Here5 " << name << std::endl;
     // test other SetGravity API
     // set gravity along Z axis of linked frame, which is pitched by pi/4
     gz::physics::RelativeForce3d relativeGravity(
@@ -176,14 +171,12 @@ TEST_F(WorldFeaturesTestGravity, GravityFeatures)
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Output output;
 
-    std::cout << "Here6 " << name << std::endl;
     const size_t numSteps = 1000;
     for (size_t i = 0; i < numSteps; ++i)
     {
       world->Step(output, state, input);
     }
 
-    std::cout << "Here7 " << name << std::endl;
     AssertVectorApprox vectorPredicate2(1e-2);
     {
       Eigen::Vector3d pos = link->FrameDataRelativeToWorld().pose.translation();
