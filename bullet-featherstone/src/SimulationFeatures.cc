@@ -47,7 +47,7 @@ void SimulationFeatures::WorldForwardStep(
   // Bullet updates collision transforms *after* forward integration. But in
   // some case (e.g. if joint positions were updated), collision transforms may
   // need to be manually updated before stepping the Bullet simulation.
-  for (auto & model: this->models)
+  for (auto & model : this->models)
   {
     if (model.second->body)
     {
