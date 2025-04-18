@@ -20,7 +20,18 @@
 
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
 #include <dart/collision/dart/DARTCollisionDetector.hpp>
+
+// Suppressing a -Wreturn-type warning in octomap
+// https://github.com/OctoMap/octomap/issues/431
+#include <gz/utils/SuppressWarning.hh>
+#ifndef _MSC_VER
+DETAIL_IGN_UTILS_BEGIN_WARNING_SUPPRESSION("-Wreturn-type")
+#endif  // _MSC_VER
 #include <dart/collision/fcl/FCLCollisionDetector.hpp>
+#ifndef _MSC_VER
+DETAIL_IGN_UTILS_WARN_RESUME
+#endif  // _MSC_VER
+
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 #include <dart/constraint/BoxedLcpConstraintSolver.hpp>
 #include <dart/constraint/ConstraintSolver.hpp>
