@@ -26,7 +26,9 @@
 #include <gz/utils/SuppressWarning.hh>
 #ifndef _MSC_VER
 DETAIL_GZ_UTILS_BEGIN_WARNING_SUPPRESSION("-Wreturn-type")
+#endif  // _MSC_VER
 #include <dart/collision/fcl/FCLCollisionDetector.hpp>
+#ifndef _MSC_VER
 DETAIL_GZ_UTILS_WARN_RESUME
 #endif  // _MSC_VER
 
