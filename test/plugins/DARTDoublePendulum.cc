@@ -18,7 +18,11 @@
 #include <memory>
 #include <unordered_map>
 
-#include <dart/dart.hpp>
+#include <dart/dynamics/BodyNode.hpp>
+#include <dart/dynamics/Joint.hpp>
+#include <dart/dynamics/Skeleton.hpp>
+#include <dart/dynamics/SmartPointer.hpp>
+#include <dart/simulation/World.hpp>
 #include <dart/utils/utils.hpp>
 #include <dart/utils/urdf/urdf.hpp>
 
