@@ -43,7 +43,7 @@ namespace dart
 {
 namespace collision
 {
-class Contact;
+struct Contact;
 }
 }
 
