@@ -44,12 +44,33 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  // Bullet updates collision transforms *after* forward integration. But in
+  // some case (e.g. if joint positions were updated), collision transforms may
+  // need to be manually updated before stepping the Bullet simulation.
+  for (auto & model : this->models)
+  {
+    if (model.second->body)
+    {
+      model.second->body->UpdateCollisionTransformsIfNeeded();
+    }
+  }
+
   // \todo(iche033) Stepping sim with varying dt may not work properly.
   // One example is the motor constraint that's created in
   // JointFeatures::SetJointVelocityCommand which assumes a fixed step
   // size.
   worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
                                    static_cast<btScalar>(stepSize));
+
+  // Reset joint velocity target after each step to be consistent with dart's
+  // joint velocity command behavior
+  for (auto & joint : this->joints)
+  {
+    if (joint.second->motor)
+    {
+      joint.second->motor->setVelocityTarget(btScalar(0));
+    }
+  }
 
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());

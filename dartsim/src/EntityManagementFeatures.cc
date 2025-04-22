@@ -28,7 +28,7 @@
 #include <dart/collision/CollisionFilter.hpp>
 #include <dart/collision/CollisionObject.hpp>
 
-#include "GzOdeCollisionDetector.hh"
+#include "GzCollisionDetector.hh"
 
 namespace gz {
 namespace physics {

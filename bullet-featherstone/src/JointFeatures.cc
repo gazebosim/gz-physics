@@ -141,7 +141,7 @@ double JointFeatures::GetJointPosition(
   if (identifier)
   {
     const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof];
+    return model->body->GetJointPosForDof(identifier->indexInBtModel, _dof);
   }
 
   // The base joint never really has a position. It is either a Free Joint or
@@ -256,8 +256,7 @@ void JointFeatures::SetJointPosition(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof] =
-      static_cast<btScalar>(_value);
+  model->body->SetJointPosForDof(identifier->indexInBtModel, _dof, _value);
   model->body->wakeUp();
 }
 
@@ -287,11 +286,11 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  auto *joint = this->ReferenceInterface<JointInfo>(_id);
 
   if (!std::isfinite(_value))
   {
-    gzerr << "Invalid joint velocity value [" << _value
+    gzerr << "Invalid joint force value [" << _value
            << "] commanded on joint [" << joint->name << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -302,6 +301,14 @@ void JointFeatures::SetJointForce(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+
+  // Disable velocity control by removing joint motor constraint
+  if (joint->motor)
+  {
+    world->world->removeMultiBodyConstraint(joint->motor.get());
+    joint->motor.reset();
+  }
 
   // clamp the values
   double force = std::clamp(_value,
@@ -742,6 +749,37 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
     jointInfo->jointFeedback->m_reactionForces.getLinear());
   wrenchOut.torque = jointInfo->tf_to_child.rotation() * convert(
     jointInfo->jointFeedback->m_reactionForces.getAngular());
+
+  // If a constraint is used to move the joint, e.g motor constraint,
+  // account for the applied constraint forces and torques.
+  // \todo(iche033) Check whether this is also needed for gearbox constraint
+  if (jointInfo->motor)
+  {
+    auto linkInfo = this->ReferenceInterface<LinkInfo>(
+        jointInfo->childLinkID);
+
+    // link index in model should be >=0 because we expect the base link in
+    // btMultibody to always be a parent link of a joint
+    // (except when it's fixed to world)
+    int linkIndexInModel = -1;
+    if (linkInfo->indexInModel.has_value())
+      linkIndexInModel = *linkInfo->indexInModel;
+    if (linkIndexInModel >= 0)
+    {
+      auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+      btMultibodyLink &link = modelInfo->body->getLink(linkIndexInModel);
+
+      wrenchOut.force +=
+          jointInfo->tf_to_child.rotation().inverse() *
+          convert(link.m_cachedWorldTransform.getBasis().inverse() *
+          link.m_appliedConstraintForce);
+      wrenchOut.torque +=
+          jointInfo->tf_to_child.rotation().inverse() *
+          convert(link.m_cachedWorldTransform.getBasis().inverse() *
+          link.m_appliedConstraintTorque);
+    }
+  }
+
   return wrenchOut;
 }
 
