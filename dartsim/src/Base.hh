@@ -97,6 +97,7 @@ struct ModelInfo
   std::vector<std::shared_ptr<LinkInfo>> links {};
   std::vector<std::shared_ptr<JointInfo>> joints {};
   std::vector<std::size_t> nestedModels = {};
+  std::optional<Eigen::VectorXd> lastGoodPositions = {};
 };
 
 struct ShapeInfo
