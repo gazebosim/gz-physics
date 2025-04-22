@@ -202,8 +202,8 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    //static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
-    //    ->setLinearVelocity(_linearVelocity);
+    static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+        ->setLinearVelocity(_linearVelocity);
 
     info.link->setGravityMode(false); // Disable gravity
     info.link->clearExternalForces(); // Clear external forces
