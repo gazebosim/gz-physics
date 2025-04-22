@@ -37,10 +37,9 @@ void KinematicFeatures::SetLinkKinematic(
     model->body->setLinkDynamicType(link->indexInModel.value(), collisionFlags);
     if (_kinematic)
     {
-      model->body->getLink(
-          link->indexInModel.value()).m_absFrameTotVelocity.setZero();
-      model->body->getLink(
-          link->indexInModel.value()).m_absFrameLocVelocity.setZero();
+      auto clink = model->body->getLink(link->indexInModel.value());
+      //clink.m_absFrameTotVelocity.setZero();
+      //clink.m_absFrameLocVelocity.setZero();
     }
   }
   else
@@ -48,6 +47,8 @@ void KinematicFeatures::SetLinkKinematic(
     model->body->setBaseDynamicType(collisionFlags);
     if (_kinematic)
     {
+      //HACK
+      //model->body->setJointPos(link->indexInModel.value(), 1.0);
       model->body->clearVelocities();
     }
   }

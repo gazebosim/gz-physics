@@ -663,18 +663,35 @@ Identity SDFFeatures::ConstructSdfLink(
   bodyProperties.mName = _sdfLink.Name();
 
   const math::Inertiald &sdfInertia = _sdfLink.Inertial();
-  bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
+  const math::Inertiald sdfInertia2;// = _sdfLink.Inertial();
 
   const Eigen::Matrix3d I_link = math::eigen3::convert(sdfInertia.Moi());
-
-  bodyProperties.mInertia.setMoment(I_link);
 
   const Eigen::Vector3d localCom =
       math::eigen3::convert(sdfInertia.Pose().Pos());
 
-  bodyProperties.mInertia.setLocalCOM(localCom);
+  bool isKinematic = _sdfLink.Kinematic();
 
-  bodyProperties.mGravityMode = _sdfLink.EnableGravity();
+  if(isKinematic){
+    const Eigen::Matrix3d I_link2 = Eigen::Matrix3d::Identity() * 1e-6; // Small positive values
+    gzerr << "Kinematic tag found" << bodyProperties.mName << std::endl;
+    //gzwarn << "Kinematic tag found" << bodyProperties.mInertia<< std::endl;
+    bodyProperties.mInertia.setMass(1e+6);//sdfInertia.MassMatrix().Mass());
+    bodyProperties.mGravityMode = false;
+    //bodyProperties.mInertia.setLocalCOM(localCom);  
+    bodyProperties.mInertia.setMoment(I_link.inverse());
+    //const Eigen::Vector3d localCom2 =
+    //  math::eigen3::convert(sdfInertia.Pose().Inverse().Pos());
+    //bodyProperties.mInertia.setLocalCOM(localCom2);  
+  }
+  else{
+    gzerr << "Kinematic tag not found " << bodyProperties.mName << std::endl;
+    bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
+    bodyProperties.mInertia.setMoment(I_link);
+    bodyProperties.mInertia.setLocalCOM(localCom);  
+    bodyProperties.mGravityMode = _sdfLink.EnableGravity();
+  }
+  bodyProperties.mFrictionCoeff = 0;
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
@@ -708,7 +725,9 @@ Identity SDFFeatures::ConstructSdfLink(
   const std::string fullName = ::sdf::JoinName(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
-  const std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
+  const std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia2);
+
+  gzwarn << "FULL NAME SDF Feature " << fullName << std::endl;
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
@@ -746,7 +765,7 @@ Identity SDFFeatures::ConstructSdfLink(
   {
     const auto collision = _sdfLink.CollisionByIndex(i);
     if (collision)
-      this->ConstructSdfCollision(linkIdentity, *collision);
+        this->ConstructSdfCollision(linkIdentity, *collision);
   }
 
   // gz-physics is currently ignoring visuals, so we won't parse them from the
@@ -757,6 +776,21 @@ Identity SDFFeatures::ConstructSdfLink(
 //    if (visual)
 //      this->ConstructSdfVisual(linkID, *visual);
 //  }
+
+  // Propagate the kinematic property to child links
+  /*
+  if (isKinematic)
+  {
+    for (std::size_t i = 0; i < _sdfLink.ChildLinkCount(); ++i)
+    {
+      const auto childLink = _sdfLink.ChildLinkByIndex(i);
+      if (childLink)
+      {
+        childLink->SetKinematic(true); // Mark child link as kinematic
+        this->ConstructSdfLink(_modelID, *childLink); // Recursively construct child link
+      }
+    }
+  }*/
 
   return linkIdentity;
 }
@@ -1202,7 +1236,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   const std::string fullJointName =
       this->FullyScopedJointName(_modelID, jointName);
-
+  
+  //gzerr <<" TEST " << joint->getSkeleton()->getExternalForces()<<std::endl;
   const std::size_t jointID = this->AddJoint(joint, fullJointName, _modelID);
   // Increment BodyNode version since the child could be moved to a new skeleton
   // when a joint is created.

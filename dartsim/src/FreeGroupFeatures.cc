@@ -202,21 +202,35 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
-        ->setLinearVelocity(_linearVelocity);
+    //static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+    //    ->setLinearVelocity(_linearVelocity);
+
+    info.link->setGravityMode(false); // Disable gravity
+    info.link->clearExternalForces(); // Clear external forces
+    info.link->clearInternalForces(); // Clear internal forces
     return;
   }
 
   const Eigen::Vector3d delta_v =
       _linearVelocity - info.link->getLinearVelocity();
 
+
+  gzwarn << "MIRACLE 2 " << info.link->getName() << std::endl;
+  gzwarn << "MIRACLE 2 " << delta_v << std::endl;
+  
   for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
   {
     auto *bn = info.model->getRootBodyNode(i);
+ 
+    // Clear forces and disable dynamics
+    bn->setGravityMode(false); // Disable gravity
+    bn->clearExternalForces(); // Clear external forces
+    bn->clearInternalForces(); // Clear internal forces
+ 
     const Eigen::Vector3d new_v = bn->getLinearVelocity() + delta_v;
 
-    static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint())
-        ->setLinearVelocity(new_v);
+    //static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint())
+    //    ->setLinearVelocity(new_v);
   }
 }
 
@@ -227,11 +241,18 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
-        ->setAngularVelocity(_angularVelocity);
+    info.link->setGravityMode(false); // Disable gravity
+    info.link->clearExternalForces(); // Clear external forces
+    info.link->clearInternalForces(); // Clear internal forces
+    //static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+    //->setAngularVelocity(_angularVelocity);
     return;
   }
 
+  //gzwarn << "MIRACLE 3" << info.link->getName() << std::endl;
+  info.link->clearExternalForces();
+  info.link->clearInternalForces();
+  
   const Eigen::Vector3d delta_w =
       _angularVelocity - info.link->getAngularVelocity();
   const Eigen::Vector3d origin = info.link->getTransform().translation();
@@ -246,8 +267,9 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     dart::dynamics::FreeJoint *fj =
         static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint());
 
-    fj->setLinearVelocity(v + delta_w.cross(r));
-    fj->setAngularVelocity(w + delta_w);
+    //gzerr << "MIRACLE 4.1 " << v << std::endl;
+    //fj->setLinearVelocity(v + delta_w.cross(r));
+    //fj->setAngularVelocity(w + delta_w);
   }
 }
 

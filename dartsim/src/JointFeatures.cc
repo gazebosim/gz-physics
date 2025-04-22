@@ -180,6 +180,7 @@ void JointFeatures::SetJointVelocityCommand(
       informed = true;
     }
   }
+  //joint->setActuatorType(dart::dynamics::Joint::VELOCITY);
 
   joint->setCommand(_dof, _value);
 }

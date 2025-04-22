@@ -31,6 +31,8 @@ void LinkFeatures::AddLinkExternalForceInWorld(
 
   auto F = convertVec(_force);
 
+  gzwarn << "AAAA " << std::endl;
+  exit(1);
   if (link->indexInModel.has_value())
   {
     btVector3 forceWorld = F;
@@ -61,7 +63,10 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 
   const btVector3 T = convertVec(_torque);
+  return;
 
+  gzwarn << "BBB " << std::endl;
+  exit(1);
   if (link->indexInModel.has_value())
   {
     btVector3 torqueWorld =

@@ -88,7 +88,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
 
-  worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
+  //worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
 
   const ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
   if (physics)
@@ -912,6 +912,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     // Do this after adding collisions
     if (linkSdf->Kinematic())
     {
+      //TODO Review this
       auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
       int indexInModel = linkInfo->indexInModel.value_or(-1);
       model->body->setLinkDynamicType(indexInModel,
