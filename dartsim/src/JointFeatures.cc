@@ -136,10 +136,10 @@ void JointFeatures::SetJointForce(
            << "]. The value will be ignored\n";
     return;
   }
-  if (joint->getActuatorType() != dart::dynamics::Joint::FORCE)
-  {
-    joint->setActuatorType(dart::dynamics::Joint::FORCE);
-  }
+  //if (joint->getActuatorType() != dart::dynamics::Joint::FORCE)
+  //{
+  //  joint->setActuatorType(dart::dynamics::Joint::FORCE);
+  //}
   this->ReferenceInterface<JointInfo>(_id)->joint->setCommand(_dof, _value);
 }
 
@@ -181,6 +181,7 @@ void JointFeatures::SetJointVelocityCommand(
     }
   }
   //joint->setActuatorType(dart::dynamics::Joint::VELOCITY);
+  gzerror << "THIS IS CALLED " << joint->getName() << std::endl;
 
   joint->setCommand(_dof, _value);
 }

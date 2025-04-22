@@ -215,9 +215,11 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
       _linearVelocity - info.link->getLinearVelocity();
 
 
-  gzwarn << "MIRACLE 2 " << info.link->getName() << std::endl;
-  gzwarn << "MIRACLE 2 " << delta_v << std::endl;
-  
+  gzwarn <<"SetFreeGroupWorldLinearVelocity" << info.link->getName() << std::endl;
+  Eigen::Vector3d forces = Eigen::Vector3d::Zero();
+  //info.model->setForces(forces)
+  gzwarn <<"2222222222222 " << info.model->getVelocities() << std::endl;
+
   for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
   {
     auto *bn = info.model->getRootBodyNode(i);
@@ -226,11 +228,12 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
     bn->setGravityMode(false); // Disable gravity
     bn->clearExternalForces(); // Clear external forces
     bn->clearInternalForces(); // Clear internal forces
- 
+    gzerr << "Joint: " << bn->getName() << std::endl;
+
     const Eigen::Vector3d new_v = bn->getLinearVelocity() + delta_v;
 
-    //static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint())
-    //    ->setLinearVelocity(new_v);
+    static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint())
+        ->setLinearVelocity(new_v);
   }
 }
 
@@ -244,12 +247,12 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     info.link->setGravityMode(false); // Disable gravity
     info.link->clearExternalForces(); // Clear external forces
     info.link->clearInternalForces(); // Clear internal forces
-    //static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
-    //->setAngularVelocity(_angularVelocity);
+    static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+    ->setAngularVelocity(_angularVelocity);
     return;
   }
 
-  //gzwarn << "MIRACLE 3" << info.link->getName() << std::endl;
+  gzwarn <<"SetFreeGroupWorldAngularVelocity" << info.link->getName() << std::endl;
   info.link->clearExternalForces();
   info.link->clearInternalForces();
   
@@ -267,9 +270,9 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     dart::dynamics::FreeJoint *fj =
         static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint());
 
-    //gzerr << "MIRACLE 4.1 " << v << std::endl;
-    //fj->setLinearVelocity(v + delta_w.cross(r));
-    //fj->setAngularVelocity(w + delta_w);
+    gzerr << "Joint: " << bn->getName() << std::endl;
+    fj->setLinearVelocity(v + delta_w.cross(r));
+    fj->setAngularVelocity(w + delta_w);
   }
 }
 
