@@ -45,6 +45,7 @@
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetRayIntersection.hh>
+#include <gz/physics/Joint.hh>
 #include "gz/physics/SphereShape.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -469,6 +470,108 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
   }
 }
 
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesDynamics : public  gz::physics::FeatureList<
+  gz::physics::ForwardStep,
+  gz::physics::GetBasicJointState,
+  gz::physics::GetJointFromModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld
+> {};
+
+template <class T>
+class SimulationFeaturesDynamicsTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesDynamicsTestTypes =
+  ::testing::Types<FeaturesDynamics>;
+TYPED_TEST_SUITE(SimulationFeaturesDynamicsTest,
+                 SimulationFeaturesDynamicsTestTypes);
+
+TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
+{
+  auto getModelStr = [](const std::string &_name,
+      const gz::math::Pose3d &_pose, double _damping)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="body">
+          <inertial>
+            <mass>2</mass>
+          </inertial>
+        </link>
+        <joint name="test_joint" type="prismatic">
+          <parent>base</parent>
+          <child>body</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <dynamics>
+              <damping>)";
+    modelStr << _damping;
+    modelStr << R"(</damping>
+            </dynamics>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // The `bullet` plugin does not support prismatic joints.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    auto world = LoadPluginAndWorld<FeaturesDynamics>(
+        this->loader, name, common_test::worlds::kEmptySdf);
+
+    auto addModel = [getModelStr, world](const std::string &_name,
+        const gz::math::Pose3d &_pose, double _damping)
+    {
+      sdf::Root root;
+      sdf::Errors errors =
+          root.LoadSdfString(getModelStr(_name, _pose, _damping));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    };
+    addModel("model1", {}, 5.0);
+    addModel("model2", gz::math::Pose3d(1, 0, 0, 0, 0, 0), 0.0);
+
+    auto [checkedOutput, output] =
+      StepWorld<FeaturesDynamics>(world, true, 3000);
+    EXPECT_TRUE(checkedOutput);
+
+    const auto jointWithDamping =
+        world->GetModel("model1")->GetJoint("test_joint");
+    const auto jointWithoutDamping =
+        world->GetModel("model2")->GetJoint("test_joint");
+
+    auto posWithDamping = jointWithDamping->GetPosition(0);
+    auto posWithoutDamping = jointWithoutDamping->GetPosition(0);
+    EXPECT_GT(posWithDamping, posWithoutDamping);
+
+    auto velWithDamping = jointWithDamping->GetVelocity(0);
+    auto velWithoutDamping = jointWithoutDamping->GetVelocity(0);
+    EXPECT_GT(velWithDamping, velWithoutDamping);
+
+    // Verify that velocity with joint damping matches terminal velocity
+    // = mg/d
+    double expectedTerminalVel = -9.8*2.0/5.0;
+    EXPECT_NEAR(expectedTerminalVel, velWithDamping, 0.1);
+  }
+}
 
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesShapeFeatures : gz::physics::FeatureList<
