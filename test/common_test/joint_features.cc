@@ -948,7 +948,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest,
       world->Step(output, state, input);
     }
 
-    // Read wrench from force_torque_status and expect it to be consistent with
+    // Read joint wrench and expect it to be consistent with
     // the dynamic state of the model.
     //
     // Summary of dynamic state at this time in the test:
