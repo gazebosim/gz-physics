@@ -39,6 +39,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/FreeJoint.hh>
+#include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Joint.hh>
 #include <gz/physics/RemoveEntities.hh>
@@ -87,15 +88,18 @@ class JointFeaturesTest:
 };
 
 struct JointFeatureList : gz::physics::FeatureList<
+    gz::physics::FindFreeGroupFeature,
     gz::physics::ForwardStep,
     gz::physics::GetBasicJointProperties,
     gz::physics::GetBasicJointState,
+    gz::physics::GetContactsFromLastStepFeature,
     gz::physics::GetEngineInfo,
     gz::physics::GetJointFromModel,
     gz::physics::GetLinkFromModel,
     gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
     gz::physics::SetBasicJointState,
+    gz::physics::SetFreeGroupWorldPose,
     gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfWorld
 > { };
@@ -203,6 +207,72 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       auto frameData = base_link->FrameDataRelativeToWorld();
       EXPECT_NEAR(0.0, frameData.pose.translation().z(), 1e-3);
     }
+  }
+}
+
+TYPED_TEST(JointFeaturesTest, JointSetPositionWithContact)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<JointFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kPendulumJointWrenchSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("pendulum");
+    ASSERT_NE(nullptr, model);
+    auto motorJoint = model->GetJoint("motor_joint");
+    ASSERT_NE(nullptr, motorJoint);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    world->Step(output, state, input);
+    auto contacts = world->GetContactsFromLastStep();
+    const std::size_t numInitialContacts = contacts.size();
+
+    // Place box such that it is in collision with the pendulum arm at joint
+    // position 0.
+    auto box = world->GetModel("box");
+    ASSERT_NE(nullptr, box);
+    auto boxFreeGroup = box->FindFreeGroup();
+    ASSERT_NE(nullptr, boxFreeGroup);
+    gz::physics::Pose3d X_WB(Eigen::Translation3d(0.5, 0, 0.65));
+    boxFreeGroup->SetWorldPose(X_WB);
+
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_LT(numInitialContacts, contacts.size());
+
+    // Move pendulum away from box.
+    motorJoint->SetPosition(0, GZ_DTOR(90.0));
+
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(numInitialContacts, contacts.size());
+
+    // Step until pendulum falls and rests again on the box.
+    for (int i = 0; i < 1000; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // Sanity check that the pendulum is at rest. A small non-zero threshold is
+    // set to accommodate small joint velocity due to error reduction.
+    EXPECT_NEAR(0.0, motorJoint->GetVelocity(0), 2e-3);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_LT(numInitialContacts, contacts.size());
   }
 }
 
