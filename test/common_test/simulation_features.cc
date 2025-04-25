@@ -546,29 +546,58 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
       ASSERT_NE(nullptr, root.Model());
       world->ConstructModel(*root.Model());
     };
-    addModel("model1", {}, 5.0);
+    constexpr double kGravityAcc = 9.8;
+    constexpr double kMass = 2.0;
+    constexpr double kDamping = 5.0;
+    addModel("model1", {}, kDamping);
     addModel("model2", gz::math::Pose3d(1, 0, 0, 0, 0, 0), 0.0);
-
-    auto [checkedOutput, output] =
-      StepWorld<FeaturesDynamics>(world, true, 3000);
-    EXPECT_TRUE(checkedOutput);
 
     const auto jointWithDamping =
         world->GetModel("model1")->GetJoint("test_joint");
     const auto jointWithoutDamping =
         world->GetModel("model2")->GetJoint("test_joint");
 
+    // Step for a small amount of time (< 1s) and verify that the damped joint
+    // moved to a smaller position and velocity compared to the undamped joint.
+    auto [checkedOutput, output] =
+      StepWorld<FeaturesDynamics>(world, true, 500);
+    EXPECT_TRUE(checkedOutput);
+
+    // Default dt is 0.001s.
+    double tElapsed = 0.5;
+
+    // Compute the expected difference in position between damped and undamped
+    // joints by taking the 4th order taylor series approximation. This is a
+    // slight under-estimation of the expected difference (5th order approx.
+    // would over estimate).
+    double expectedPosDiff =
+        kGravityAcc * kDamping / kMass * std::pow(tElapsed, 3) / 6.0 *
+        (1 - tElapsed * kDamping / kMass / 4.0);
+
     auto posWithDamping = jointWithDamping->GetPosition(0);
     auto posWithoutDamping = jointWithoutDamping->GetPosition(0);
-    EXPECT_GT(posWithDamping, posWithoutDamping);
+    EXPECT_GT(posWithDamping, expectedPosDiff + posWithoutDamping);
+
+    // Compute the expected difference in velocity between damped and undamped
+    // joints by taking the 3rd order taylor series approximation. This is a
+    // slight under-estimation of the expected difference (4th order approx.
+    // would over estimate).
+    double expectedVelDiff =
+        kGravityAcc * kDamping / kMass * std::pow(tElapsed, 2) / 2.0 *
+        (1 - tElapsed * kDamping / kMass / 3.0);
 
     auto velWithDamping = jointWithDamping->GetVelocity(0);
     auto velWithoutDamping = jointWithoutDamping->GetVelocity(0);
-    EXPECT_GT(velWithDamping, velWithoutDamping);
+    EXPECT_GT(velWithDamping, expectedVelDiff + velWithoutDamping);
+
+    // Step again for a long time so that the damped joint achieves close to
+    // terminal velocity.
+    StepWorld<FeaturesDynamics>(world, false, 2500);
 
     // Verify that velocity with joint damping matches terminal velocity
     // = mg/d
-    double expectedTerminalVel = -9.8*2.0/5.0;
+    double expectedTerminalVel = -kGravityAcc*kMass/kDamping;
+    velWithDamping = jointWithDamping->GetVelocity(0);
     EXPECT_NEAR(expectedTerminalVel, velWithDamping, 0.1);
   }
 }
