@@ -1078,7 +1078,7 @@ struct JointFeatureSpringStiffnessList : gz::physics::FeatureList<
     gz::physics::GetModelFromWorld,
     gz::physics::SetBasicJointState,
     gz::physics::SetJointSpringStiffnessFeature,
-    gz::physics::SetJointSpringRestPositionFeature,
+    gz::physics::SetJointSpringReferenceFeature,
     gz::physics::SetJointDampingCoefficientFeature,
     gz::physics::sdf::ConstructSdfWorld
 > { };
@@ -1154,7 +1154,7 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetSpringStiffness)
     ASSERT_EQ(joint->GetVelocity(0), 0);
 
     // setting joint rest position to pendulum upright position
-    joint->SetSpringRestPosition(0, -GZ_PI/2);
+    joint->SetSpringReference(0, -GZ_PI/2);
 
     // setting joint stiffness 
     joint->SetSpringStiffness(0, 60);

@@ -59,7 +59,7 @@ struct JointFeatureList : FeatureList<
   SetJointFrictionFeature,
   SetJointDampingCoefficientFeature,
   SetJointSpringStiffnessFeature,
-  SetJointSpringRestPositionFeature,
+  SetJointSpringReferenceFeature,
   GetJointTransmittedWrench
 > { };
 
@@ -218,7 +218,7 @@ public: void SetJointDampingCoefficient(
        const Identity &_id, std::size_t _dof,
        double _value) override;
 
-  public: void SetJointSpringRestPosition(
+  public: void SetJointSpringReference(
        const Identity &_id, std::size_t _dof,
        double _value) override;
 

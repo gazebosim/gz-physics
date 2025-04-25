@@ -390,7 +390,7 @@ void JointFeatures::SetJointSpringStiffness(
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointSpringRestPosition(
+void JointFeatures::SetJointSpringReference(
        const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;

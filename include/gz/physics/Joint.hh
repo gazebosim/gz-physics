@@ -523,6 +523,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature sets friction of this Joint.
+    ///  Refer to //joint/axis/dynamics/friction SDF tag
     class GZ_PHYSICS_VISIBLE SetJointFrictionFeature
         : public virtual Feature
     {
@@ -556,6 +557,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the damping coefficient for this Joint.
+     ///  Refer to //joint/axis/dynamics/damping SDF tag
     class GZ_PHYSICS_VISIBLE SetJointDampingCoefficientFeature
         : public virtual Feature
     {
@@ -589,6 +591,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the spring stiffness of this Joint.
+     ///  Refer to //joint/axis/dynamics/spring_stiffness SDF tag
     class GZ_PHYSICS_VISIBLE SetJointSpringStiffnessFeature
         : public virtual Feature
     {
@@ -621,8 +624,9 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    /// \brief This feature sets the spring rest position of this joint
-    class GZ_PHYSICS_VISIBLE SetJointSpringRestPositionFeature
+    /// \brief This feature sets the spring reference position of this joint.
+     ///  Refer to //joint/axis/dynamics/spring_reference SDF tag
+    class GZ_PHYSICS_VISIBLE SetJointSpringReferenceFeature
         : public virtual Feature
     {
       /// \brief The Joint API for setting spring rest position of a joint.
@@ -631,13 +635,13 @@ namespace gz
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        /// \brief Set the spring rest position value for a particular joint.
+        /// \brief Set the spring reference position value for a particular joint.
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
         /// \param[in] _value
         ///   The rest position value which needs to be applied for a joint
-        public: void SetSpringRestPosition(
+        public: void SetSpringReference(
             const std::size_t _dof, const Scalar _value);
       };
 
@@ -648,7 +652,7 @@ namespace gz
         public: using Scalar = typename PolicyT::Scalar;
 
         // See Joint::SetRestPosition above
-        public: virtual void SetJointSpringRestPosition(
+        public: virtual void SetJointSpringReference(
             const Identity &_id, std::size_t _dof, Scalar _value) = 0;
       };
     };
