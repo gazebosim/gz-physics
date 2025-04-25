@@ -523,7 +523,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature sets friction of this Joint.
-    ///  Refer to //joint/axis/dynamics/friction SDF tag
+    ///  Refer to //joint/axis/dynamics/friction SDF tag.
     class GZ_PHYSICS_VISIBLE SetJointFrictionFeature
         : public virtual Feature
     {
@@ -557,7 +557,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the damping coefficient for this Joint.
-     ///  Refer to //joint/axis/dynamics/damping SDF tag
+     ///  Refer to //joint/axis/dynamics/damping SDF tag.
     class GZ_PHYSICS_VISIBLE SetJointDampingCoefficientFeature
         : public virtual Feature
     {
@@ -591,7 +591,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the spring stiffness of this Joint.
-     ///  Refer to //joint/axis/dynamics/spring_stiffness SDF tag
+     ///  Refer to //joint/axis/dynamics/spring_stiffness SDF tag.
     class GZ_PHYSICS_VISIBLE SetJointSpringStiffnessFeature
         : public virtual Feature
     {
@@ -625,7 +625,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This feature sets the spring reference position of this joint.
-     ///  Refer to //joint/axis/dynamics/spring_reference SDF tag
+     ///  Refer to //joint/axis/dynamics/spring_reference SDF tag.
     class GZ_PHYSICS_VISIBLE SetJointSpringReferenceFeature
         : public virtual Feature
     {
