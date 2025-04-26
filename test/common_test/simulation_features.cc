@@ -567,7 +567,7 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
     // Assuming m, g, d and t denote mass, gravity, damping and time
     // respectively, the motions can be analytically computed as follows:
     //
-    // m * dot(v) + d * v = m * g
+    // m * dot(v) + d * v = -m * g
     // dot(z) = v
     // where v and z denote joint velocity and position respectively.
     //
