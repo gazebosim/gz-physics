@@ -610,7 +610,7 @@ Identity JointFeatures::AttachFixedJoint(
   auto jointID = this->addConstraint(
     JointInfo{
       _name + "_" + parentLinkInfo->name + "_" + linkInfo->name,
-      InternalJoint{0},
+      FixedConstraintJoint{},
       _parent->FullIdentity().id,
       _childID,
       Eigen::Isometry3d(),
