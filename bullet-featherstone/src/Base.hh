@@ -81,9 +81,11 @@ struct WorldInfo
   explicit WorldInfo(std::string name);
 };
 
-/// \brief Custom `GzMultiBody` wrapper for `btMultiBody` to ensure that a flag
-/// is set whenever joint position is set or base transform is set indicating
-/// that collision transforms need to be updated.
+/// \brief Custom `GzMultiBody` wrapper for `btMultiBody` used for the following
+/// purposes where the btMultiBody API falls short:
+/// - to ensure that a flag is set whenever joint position is set or base
+/// transform is set indicating that collision transforms need to be updated.
+/// - to apply explicit joint damping torques before stepping simulation.
 class GzMultiBody: public btMultiBody
 {
   using btMultiBody::btMultiBody;
@@ -118,6 +120,9 @@ class GzMultiBody: public btMultiBody
   /// \brief Update collision transforms if `needsCollisionTransformsUpdate` is
   /// set and reset the flag.
   public: void UpdateCollisionTransformsIfNeeded();
+
+  /// \brief Add joint damping torque to the specified joint index on all dofs.
+  public: void AddJointDampingTorque(int _jointIndex, double _damping);
 
   private: bool needsCollisionTransformsUpdate = false;
 };
@@ -205,6 +210,8 @@ struct InternalJoint
 
 struct RootJoint {};
 
+struct FixedConstraintJoint {};
+
 struct JointInfo
 {
   std::string name;
@@ -215,7 +222,7 @@ struct JointInfo
     std::monostate,
     RootJoint,
     InternalJoint,
-    std::unique_ptr<btMultiBodyConstraint>> identifier;
+    FixedConstraintJoint> identifier;
 
   /// If the parent link is nullopt then the joint attaches its child to the
   /// world
@@ -241,6 +248,9 @@ struct JointInfo
   double maxVelocity = 0.0;
   double axisLower = 0.0;
   double axisUpper = 0.0;
+
+  // joint damping
+  double damping = 0.0;
 
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
