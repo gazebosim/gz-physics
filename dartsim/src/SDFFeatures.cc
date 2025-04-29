@@ -676,11 +676,11 @@ Identity SDFFeatures::ConstructSdfLink(
     const Eigen::Matrix3d I_link2 = Eigen::Matrix3d::Identity() * 1e-6; // Small positive values
     gzerr << "Kinematic tag found" << bodyProperties.mName << std::endl;
     //gzwarn << "Kinematic tag found" << bodyProperties.mInertia<< std::endl;
-    bodyProperties.mInertia.setMass(1e-6);//1.0/sdfInertia.MassMatrix().Mass());
+    bodyProperties.mInertia.setMass(1e+6);//sdfInertia.MassMatrix().Mass());
     bodyProperties.mGravityMode = false;
     //modelInfo.model->SetStatic(true);
     //bodyProperties.mInertia.setLocalCOM(localCom);  
-    bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity()*1e+6);
+    bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity()*1e-6);
     const Eigen::Vector3d localCom2 =
       math::eigen3::convert(sdfInertia2.Pose().Inverse().Pos());
     //bodyProperties.mInertia.setLocalCOM(localCom2);  
@@ -704,6 +704,24 @@ Identity SDFFeatures::ConstructSdfLink(
   // constraints, those will be added later.
   const auto result = modelInfo.model->createJointAndBodyNodePair<
       dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
+
+  //const auto result_tmp = modelInfo.model->createJointAndBodyNodePair<
+  //    dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
+
+  //dart::dynamics::BodyNode * const bn_tmp = result_tmp.second;
+
+  /*
+  auto skeleton = bn_tmp->getSkeleton();
+  auto parentJoint = bn_tmp->getParentJoint();
+  auto parentBodyNode = bn_tmp->getParentBodyNode();
+  */
+
+  // Create a WeldJoint to replace the current joint
+  //dart::dynamics::WeldJoint::Properties weldJointProperties;
+  //weldJointProperties.mName = parentJoint->getName();
+
+  //const auto result = modelInfo.model->createJointAndBodyNodePair<
+  //  dart::dynamics::WeldJoint>(parentBodyNode, jointProperties, bodyProperties);
 
   dart::dynamics::FreeJoint * const joint = result.first;
   const Eigen::Isometry3d tf =
@@ -1151,7 +1169,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     //gzerr << "JTYPE " << _child->getType() << std::endl;
     gzerr << "NAME " << childsParentJoint->getName() << std::endl;
     gzerr << "TYPE " << childsParentJoint->getActuatorType() << std::endl;
-    childsParentJoint->setActuatorType(dart::dynamics::Joint::ActuatorType::VELOCITY);
+    childsParentJoint->setActuatorType(dart::dynamics::Joint::ActuatorType::LOCKED);
     gzerr << "TYPE " << childsParentJoint->getActuatorType() << std::endl;
 
     std::string parentName = worldParent? "world" : _parent->getName();

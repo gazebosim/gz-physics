@@ -215,17 +215,17 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
       _linearVelocity - info.link->getLinearVelocity();
 
 
-  gzwarn <<"SetFreeGroupWorldLinearVelocity" << info.link->getName() << std::endl;
+  gzwarn <<"WorldLinearVelocity" << info.link->getName() << std::endl;
   Eigen::Vector3d forces = Eigen::Vector3d::Zero();
-  //info.model->setForces(forces)
-  gzwarn <<"2222222222222 " << info.model->getVelocities() << std::endl;
+  //info.model->setForces(forces);
+  gzwarn <<"Vels: " << info.model->getVelocities() << std::endl;
 
   for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
   {
     auto *bn = info.model->getRootBodyNode(i);
  
     // Clear forces and disable dynamics
-    bn->setGravityMode(false); // Disable gravity
+    //bn->setGravityMode(false); // Disable gravity
     bn->clearExternalForces(); // Clear external forces
     bn->clearInternalForces(); // Clear internal forces
     gzerr << "Joint: " << bn->getName() << std::endl;
