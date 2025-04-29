@@ -55,6 +55,23 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
+  // Add joint damping torque.
+  // TODO(https://github.com/bulletphysics/bullet3/issues/4709) Remove this
+  // once upstream Bullet supports internal joint damping and set
+  // `model->body->getLink(i).m_jointDamping` directly in SDFFeatures.cc.
+  for (auto & joint : this->joints)
+  {
+    const auto *model =
+        this->ReferenceInterface<ModelInfo>(joint.second->model);
+    const auto *identifier =
+        std::get_if<InternalJoint>(&joint.second->identifier);
+    if (model != nullptr && model->body != nullptr && identifier != nullptr)
+    {
+      model->body->AddJointDampingTorque(identifier->indexInBtModel,
+                                         joint.second->damping);
+    }
+  }
+
   // \todo(iche033) Stepping sim with varying dt may not work properly.
   // One example is the motor constraint that's created in
   // JointFeatures::SetJointVelocityCommand which assumes a fixed step
