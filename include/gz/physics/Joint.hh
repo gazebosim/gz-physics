@@ -635,7 +635,7 @@ namespace gz
       {
         public: using Scalar = typename PolicyT::Scalar;
 
-        /// \brief Set the spring reference position value for a particular joint.
+        /// \brief Set the spring reference position value for this joint.
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
