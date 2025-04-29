@@ -676,11 +676,11 @@ Identity SDFFeatures::ConstructSdfLink(
     const Eigen::Matrix3d I_link2 = Eigen::Matrix3d::Identity() * 1e-6; // Small positive values
     gzerr << "Kinematic tag found" << bodyProperties.mName << std::endl;
     //gzwarn << "Kinematic tag found" << bodyProperties.mInertia<< std::endl;
-    bodyProperties.mInertia.setMass(1e+6);//1.0/sdfInertia.MassMatrix().Mass());
+    bodyProperties.mInertia.setMass(1e-6);//1.0/sdfInertia.MassMatrix().Mass());
     bodyProperties.mGravityMode = false;
     //modelInfo.model->SetStatic(true);
     //bodyProperties.mInertia.setLocalCOM(localCom);  
-    bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity()*0.1);
+    bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity()*1e+6);
     const Eigen::Vector3d localCom2 =
       math::eigen3::convert(sdfInertia2.Pose().Inverse().Pos());
     //bodyProperties.mInertia.setLocalCOM(localCom2);  
