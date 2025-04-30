@@ -785,8 +785,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
             static_cast<btScalar>(joint->Axis()->Lower());
         model->body->getLink(i).m_jointUpperLimit =
             static_cast<btScalar>(joint->Axis()->Upper());
-        model->body->getLink(i).m_jointDamping =
-            static_cast<btScalar>(joint->Axis()->Damping());
         model->body->getLink(i).m_jointFriction =
             static_cast<btScalar>(joint->Axis()->Friction());
         model->body->getLink(i).m_jointMaxVelocity =
@@ -800,6 +798,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
         jointInfo->axisLower = joint->Axis()->Lower();
         jointInfo->axisUpper = joint->Axis()->Upper();
+        jointInfo->damping = joint->Axis()->Damping();
 
         jointInfo->jointLimits =
           std::make_shared<btMultiBodyJointLimitConstraint>(
