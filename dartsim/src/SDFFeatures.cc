@@ -673,16 +673,14 @@ Identity SDFFeatures::ConstructSdfLink(
   bool isKinematic = _sdfLink.Kinematic();
 
   if(isKinematic){
-    const Eigen::Matrix3d I_link2 = Eigen::Matrix3d::Identity() * 1e-6; // Small positive values
     gzerr << "Kinematic tag found" << bodyProperties.mName << std::endl;
     //gzwarn << "Kinematic tag found" << bodyProperties.mInertia<< std::endl;
-    bodyProperties.mInertia.setMass(1e+6);//sdfInertia.MassMatrix().Mass());
+    bodyProperties.mInertia.setMass(1e+10);//sdfInertia.MassMatrix().Mass());
     bodyProperties.mGravityMode = false;
     //modelInfo.model->SetStatic(true);
     //bodyProperties.mInertia.setLocalCOM(localCom);  
     bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity()*1e-6);
-    const Eigen::Vector3d localCom2 =
-      math::eigen3::convert(sdfInertia2.Pose().Inverse().Pos());
+    bodyProperties.mInertia.setLocalCOM(localCom);  
     //bodyProperties.mInertia.setLocalCOM(localCom2);  
   }
   else{
@@ -702,8 +700,12 @@ Identity SDFFeatures::ConstructSdfLink(
   // Note: When constructing a link from this function, we always instantiate
   // it as a standalone free body within the model. If it should have any joint
   // constraints, those will be added later.
+  //const auto result = modelInfo.model->createJointAndBodyNodePair<
+  //    dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
+  dart::dynamics::WeldJoint::Properties weldJointProperties;
+  weldJointProperties.mName = bodyProperties.mName + "_WeldJoint";
   const auto result = modelInfo.model->createJointAndBodyNodePair<
-      dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
+      dart::dynamics::WeldJoint>(nullptr, weldJointProperties, bodyProperties);
 
   //const auto result_tmp = modelInfo.model->createJointAndBodyNodePair<
   //    dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
@@ -723,11 +725,16 @@ Identity SDFFeatures::ConstructSdfLink(
   //const auto result = modelInfo.model->createJointAndBodyNodePair<
   //  dart::dynamics::WeldJoint>(parentBodyNode, jointProperties, bodyProperties);
 
-  dart::dynamics::FreeJoint * const joint = result.first;
+  //dart::dynamics::FreeJoint * const joint = result.first;
+
+  dart::dynamics::WeldJoint * const joint = result.first;
   const Eigen::Isometry3d tf =
       GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink.SemanticPose());
 
-  joint->setTransform(tf);
+  //joint->setTransform(tf);
+  joint->setTransformFromParentBodyNode(tf);
+  joint->setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
+
 
   dart::dynamics::BodyNode * const bn = result.second;
 
@@ -745,16 +752,9 @@ Identity SDFFeatures::ConstructSdfLink(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
 
-  std::size_t linkID;
+  std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
 
-  if (isKinematic){
-    linkID = this->AddLink(bn, fullName, _modelID);
-  }
-  else{
-    linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
-  }
-
-  gzwarn << "FULL NAME SDF Feature " << fullName << std::endl;
+  gzwarn << "FULL NAME SDF Feature " << fullName << " " << linkID << std::endl;
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
@@ -831,7 +831,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (_sdfJoint.ChildName() == "world")
   {
-    gzerr << "Asked to create a joint with the world as the child in model "
+    gzerr << "AAAAAsked to create a joint with the world as the child in model "
            << "[" << modelInfo.model->getName() << "]. This is currently not "
            << "supported\n";
 
@@ -1127,6 +1127,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // joint is connected to the world
   bool worldParent = (!_parent && _sdfJoint.ParentName() == "world");
   bool worldChild = (!_child && _sdfJoint.ChildName() == "world");
+  gzwarn << _sdfJoint.ParentName() << " " << _sdfJoint.ChildName() << _child << std::endl;
 
   if (worldChild)
   {
@@ -1169,11 +1170,10 @@ Identity SDFFeatures::ConstructSdfJoint(
     //gzerr << "JTYPE " << _child->getType() << std::endl;
     gzerr << "NAME " << childsParentJoint->getName() << std::endl;
     gzerr << "TYPE " << childsParentJoint->getActuatorType() << std::endl;
-    childsParentJoint->setActuatorType(dart::dynamics::Joint::ActuatorType::LOCKED);
-    gzerr << "TYPE " << childsParentJoint->getActuatorType() << std::endl;
+    //childsParentJoint->setActuatorType(dart::dynamics::Joint::ActuatorType::LOCKED);
 
     std::string parentName = worldParent? "world" : _parent->getName();
-    if (childsParentJoint->getType() != "FreeJoint")
+    if (childsParentJoint->getType() != "FreeJoint" && childsParentJoint->getType() != "WeldJoint")
     {
       gzerr << "Asked to create a joint between links "
              << "[" << parentName << "] as parent and ["
@@ -1210,6 +1210,8 @@ Identity SDFFeatures::ConstructSdfJoint(
     // care of below. All other properties like joint limits, stiffness, etc,
     // will be the default values of +/- infinity or 0.0.
     joint = _child->moveTo<dart::dynamics::BallJoint>(_parent);
+    gzerr << "Joint type: BALL" << std::endl;
+
   }
   // TODO(MXG): Consider adding dartsim support for a CONTINUOUS joint type.
   // Alternatively, support the CONTINUOUS joint type by wrapping the
@@ -1219,11 +1221,13 @@ Identity SDFFeatures::ConstructSdfJoint(
   // wrapping a RevoluteJoint type.
   else if (::sdf::JointType::PRISMATIC == type)
   {
+    gzerr << "Joint type: PRISMATIC" << std::endl;
     joint = ConstructSingleAxisJoint<dart::dynamics::PrismaticJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }
   else if (::sdf::JointType::REVOLUTE == type)
   {
+    gzerr << "Joint type: REVOLUTE" << std::endl;
     joint = ConstructSingleAxisJoint<dart::dynamics::RevoluteJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }
@@ -1232,6 +1236,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   // RevoluteJoint objects into one.
   else if (::sdf::JointType::SCREW == type)
   {
+    gzerr << "Joint type: SCREW" << std::endl;
     auto *screw = ConstructSingleAxisJoint<dart::dynamics::ScrewJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
 
@@ -1240,6 +1245,7 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else if (::sdf::JointType::UNIVERSAL == type)
   {
+    gzerr << "Joint type: UNIVERSAL" << std::endl;
     joint = ConstructUniversalJoint(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }
@@ -1254,6 +1260,7 @@ Identity SDFFeatures::ConstructSdfJoint(
              << "Creating a FIXED joint instead\n";
     }
 
+    gzerr << "Joint type: FIXED" << std::endl;
     // A fixed joint does not have any properties besides the name and relative
     // transforms to its parent and child, which will be taken care of below.
     joint = _child->moveTo<dart::dynamics::WeldJoint>(_parent);
