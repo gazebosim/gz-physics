@@ -218,6 +218,42 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    void SetJointFrictionFeature::Joint<PolicyT, FeaturesT>::
+    SetFriction(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointFrictionFeature>()
+        ->SetJointFriction(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointDampingCoefficientFeature::Joint<PolicyT, FeaturesT>::
+    SetDampingCoefficient(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointDampingCoefficientFeature>()
+        ->SetJointDampingCoefficient(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointSpringStiffnessFeature::Joint<PolicyT, FeaturesT>::
+    SetSpringStiffness(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointSpringStiffnessFeature>()
+        ->SetJointSpringStiffness(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetJointSpringReferenceFeature::Joint<PolicyT, FeaturesT>::
+    SetSpringReference(const std::size_t _dof, const Scalar _value)
+    {
+      this->template Interface<SetJointSpringReferenceFeature>()
+        ->SetJointSpringReference(this->identity, _dof, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     bool SetMimicConstraintFeature::Joint<PolicyT, FeaturesT>::
     SetMimicConstraint(
       std::size_t _dof,

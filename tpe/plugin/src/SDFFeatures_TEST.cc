@@ -95,7 +95,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
   auto tpeWorld = world.GetTpeLibWorld();
   ASSERT_NE(nullptr, tpeWorld);
 
-  ASSERT_EQ(7u, tpeWorld->GetChildCount());
+  ASSERT_EQ(8u, tpeWorld->GetChildCount());
 
   // check model 01
   {
