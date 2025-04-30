@@ -671,17 +671,27 @@ Identity SDFFeatures::ConstructSdfLink(
       math::eigen3::convert(sdfInertia.Pose().Pos());
 
   bool isKinematic = _sdfLink.Kinematic();
+  dart::dynamics::FreeJoint::Properties jointProperties;
+  jointProperties.mName = bodyProperties.mName + "_FreeJoint";
+  std::pair<dart::dynamics::Joint*, dart::dynamics::BodyNode*> result;
 
   if(isKinematic){
     gzerr << "Kinematic tag found" << bodyProperties.mName << std::endl;
     //gzwarn << "Kinematic tag found" << bodyProperties.mInertia<< std::endl;
-    bodyProperties.mInertia.setMass(1e+10);//sdfInertia.MassMatrix().Mass());
+    bodyProperties.mInertia.setMass(1e3);///sdfInertia.MassMatrix().Mass());
     bodyProperties.mGravityMode = false;
     //modelInfo.model->SetStatic(true);
     //bodyProperties.mInertia.setLocalCOM(localCom);  
-    bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity()*1e-6);
+    bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity());
     bodyProperties.mInertia.setLocalCOM(localCom);  
     //bodyProperties.mInertia.setLocalCOM(localCom2);  
+    bodyProperties.mFrictionCoeff = 0;
+
+    dart::dynamics::WeldJoint::Properties weldJointProperties;
+    weldJointProperties.mName = bodyProperties.mName + "_WeldJoint";
+    result = modelInfo.model->createJointAndBodyNodePair<
+        dart::dynamics::WeldJoint>(nullptr, weldJointProperties, bodyProperties);
+  
   }
   else{
     gzerr << "Kinematic tag not found " << bodyProperties.mName << std::endl;
@@ -689,52 +699,32 @@ Identity SDFFeatures::ConstructSdfLink(
     bodyProperties.mInertia.setMoment(I_link);
     bodyProperties.mInertia.setLocalCOM(localCom);  
     bodyProperties.mGravityMode = _sdfLink.EnableGravity();
+    bodyProperties.mFrictionCoeff = 0;
+    result = modelInfo.model->createJointAndBodyNodePair<
+      dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
   }
-  bodyProperties.mFrictionCoeff = 0;
 
-  dart::dynamics::FreeJoint::Properties jointProperties;
-  jointProperties.mName = bodyProperties.mName + "_FreeJoint";
   // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
   // potential (albeit unlikely) name collisions.
 
   // Note: When constructing a link from this function, we always instantiate
   // it as a standalone free body within the model. If it should have any joint
   // constraints, those will be added later.
-  //const auto result = modelInfo.model->createJointAndBodyNodePair<
-  //    dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
-  dart::dynamics::WeldJoint::Properties weldJointProperties;
-  weldJointProperties.mName = bodyProperties.mName + "_WeldJoint";
-  const auto result = modelInfo.model->createJointAndBodyNodePair<
-      dart::dynamics::WeldJoint>(nullptr, weldJointProperties, bodyProperties);
 
-  //const auto result_tmp = modelInfo.model->createJointAndBodyNodePair<
-  //    dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
-
-  //dart::dynamics::BodyNode * const bn_tmp = result_tmp.second;
-
-  /*
-  auto skeleton = bn_tmp->getSkeleton();
-  auto parentJoint = bn_tmp->getParentJoint();
-  auto parentBodyNode = bn_tmp->getParentBodyNode();
-  */
-
-  // Create a WeldJoint to replace the current joint
-  //dart::dynamics::WeldJoint::Properties weldJointProperties;
-  //weldJointProperties.mName = parentJoint->getName();
-
-  //const auto result = modelInfo.model->createJointAndBodyNodePair<
-  //  dart::dynamics::WeldJoint>(parentBodyNode, jointProperties, bodyProperties);
-
-  //dart::dynamics::FreeJoint * const joint = result.first;
-
-  dart::dynamics::WeldJoint * const joint = result.first;
+  auto * const joint = result.first;
   const Eigen::Isometry3d tf =
       GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink.SemanticPose());
 
-  //joint->setTransform(tf);
-  joint->setTransformFromParentBodyNode(tf);
-  joint->setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
-
+  
+  if (isKinematic)
+  {
+    joint->setTransformFromParentBodyNode(tf);
+    joint->setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());  
+  }
+  else
+  {
+    joint->setTransformFromParentBodyNode(tf);
+  }
 
   dart::dynamics::BodyNode * const bn = result.second;
 
@@ -752,8 +742,14 @@ Identity SDFFeatures::ConstructSdfLink(
       world->getName(),
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
 
-  std::size_t linkID = this->AddLink(bn, fullName, _modelID, sdfInertia);
-
+  std::size_t linkID;
+  
+  if (isKinematic){
+    linkID = this->AddLink(bn, fullName, _modelID);
+  }
+  else{
+    linkID = this->AddLink(bn, fullName, _modelID);
+  }
   gzwarn << "FULL NAME SDF Feature " << fullName << " " << linkID << std::endl;
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));

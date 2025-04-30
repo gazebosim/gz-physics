@@ -136,9 +136,9 @@ void JointFeatures::SetJointForce(
            << "]. The value will be ignored\n";
     return;
   }
-  if (joint->getActuatorType() != dart::dynamics::Joint::FORCE)
+  if (joint->getActuatorType() != dart::dynamics::Joint::VELOCITY)
   {
-    joint->setActuatorType(dart::dynamics::Joint::FORCE);
+    joint->setActuatorType(dart::dynamics::Joint::VELOCITY);
   }
   gzwarn << "FORCE JOINT " << joint->getName() << joint->getVelocities() << " " << _value << " FORCES " << joint->getForces()<<std::endl;
   this->ReferenceInterface<JointInfo>(_id)->joint->setCommand(_dof, _value);
