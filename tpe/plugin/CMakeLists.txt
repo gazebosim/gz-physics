@@ -24,11 +24,11 @@ target_link_libraries(${tpe_plugin}
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    gz-math${GZ_MATH_VER}::eigen3
+    gz-common::gz-common
+    gz-math::eigen3
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
-    gz-common${GZ_COMMON_VER}::profiler
+    gz-common::profiler
 )
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
@@ -56,7 +56,7 @@ gz_build_tests(
   LIB_DEPS
     ${features}
     gz-physics-test
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+    gz-common::gz-common
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
   TEST_LIST tests
