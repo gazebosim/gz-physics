@@ -46,6 +46,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/RevoluteJoint.hh>
 #include <gz/physics/Shape.hh>
+#include <gz/physics/World.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
@@ -948,7 +949,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest,
       world->Step(output, state, input);
     }
 
-    // Read wrench from force_torque_status and expect it to be consistent with
+    // Read joint wrench and expect it to be consistent with
     // the dynamic state of the model.
     //
     // Summary of dynamic state at this time in the test:
@@ -1032,6 +1033,221 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest,
   }
 }
 
+struct JointFeatureFrictionList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointFrictionFeature,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointFeaturesFrictionTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesFrictionTestTypes =
+  ::testing::Types<JointFeatureFrictionList>;
+TYPED_TEST_SUITE(JointFeaturesFrictionTest,
+                 JointFeaturesFrictionTestTypes);
+
+TYPED_TEST(JointFeaturesFrictionTest, JointSetSpringStiffness)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<JointFeatureFrictionList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto model = world->GetModel("pendulum_with_base");
+    auto joint = model->GetJoint("upper_joint");
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    world->Step(output, state, input);
+
+    joint->SetPosition(0, -GZ_PI/2);
+
+    // default friction value is zero
+    // so oscillations are expected
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    EXPECT_LT(joint->GetPosition(0), -1.54);
+    EXPECT_LT(joint->GetVelocity(0), 1e-2);
+
+    // setting very high friction value
+    // pendulum shouldn't move much (expected)
+    joint->SetPosition(0, -GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), -GZ_PI/2);
+
+    joint->SetVelocity(0, 1);
+    ASSERT_EQ(joint->GetVelocity(0), 1);
+    joint->SetFriction(0, 100);
+
+    // running simulation for longer to make sure
+    // joint position doesn't change (expected)
+    for (std::size_t i = 0; i < 1000; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    auto joint_pos1 = joint->GetPosition(0);
+
+    EXPECT_NEAR(0, joint->GetVelocity(0), 1e-10);
+
+    // setting some moderate value of joint friction
+    joint->SetPosition(0, -GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), -GZ_PI/2);
+
+    joint->SetVelocity(0, 1);
+    ASSERT_EQ(joint->GetVelocity(0), 1);
+
+    joint->SetFriction(0, 5);
+
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    auto joint_pos2 = joint->GetPosition(0);
+
+    // with good enough simulation time for moderate
+    // value of friction, joint position should converge
+    // to zero (expected)
+    EXPECT_LT(joint->GetVelocity(0), 1e-5);
+    EXPECT_LT(joint_pos1, joint_pos2 + 0.1);
+  }
+}
+
+struct JointFeatureSpringStiffnessList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::Gravity,
+    gz::physics::GetModelFromWorld,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetJointSpringStiffnessFeature,
+    gz::physics::SetJointSpringReferenceFeature,
+    gz::physics::SetJointDampingCoefficientFeature,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointFeaturesSpringStiffnessTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesSpringStiffnessTestTypes =
+  ::testing::Types<JointFeatureSpringStiffnessList>;
+TYPED_TEST_SUITE(JointFeaturesSpringStiffnessTest,
+                 JointFeaturesSpringStiffnessTestTypes);
+
+TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetSpringStiffness)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<JointFeatureSpringStiffnessList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto model = world->GetModel("pendulum_with_base");
+    auto joint = model->GetJoint("upper_joint");
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // turning off gravity so that the system behaves 
+    // like mass-damper
+    world->SetGravity(Eigen::Vector3d::Zero());
+
+    world->Step(output, state, input);
+    // setting joint position to start from the bottom 
+    // pendulum position
+    joint->SetPosition(0, GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
+
+    // setting joint velocity to zero 
+    joint->SetVelocity(0, 0);
+    ASSERT_EQ(joint->GetVelocity(0), 0);
+    // setting joint velocity to zero 
+    joint->SetVelocity(0, 0);
+    ASSERT_EQ(joint->GetVelocity(0), 0);
+    // without reference joint position joint should stay 
+    // at GZ_PI/2
+    for (std::size_t i = 0; i < 2500; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // checking if the link has moved
+    ASSERT_NEAR(joint->GetPosition(0), GZ_PI/2, 1e-5);
+    ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
+
+    // resetting joint position and velocity
+    joint->SetPosition(0, GZ_PI/2);
+    ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
+
+    joint->SetVelocity(0, 0);
+    ASSERT_EQ(joint->GetVelocity(0), 0);
+
+    // setting joint rest position to pendulum upright position
+    joint->SetSpringReference(0, -GZ_PI/2);
+
+    // setting joint stiffness 
+    joint->SetSpringStiffness(0, 60);
+
+    // setting joint damping to stabilize the joint's
+    // rest position
+    joint->SetDampingCoefficient(0, 17);
+
+    // running simulation for longer to make sure
+    // joint reaches equilibrium 
+    for (std::size_t i = 0; i < 2500; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    
+    // checking if the joint position is the same 
+    // as rest position
+    ASSERT_NEAR(joint->GetPosition(0), -GZ_PI/2, 1e-4);
+
+    // checking if the link has reached equilibrium
+    ASSERT_NEAR(joint->GetVelocity(0), 0, 1e-5);
+  }
+}
 ///////////// DARTSIM > 6.10 end
 
 

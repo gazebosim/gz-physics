@@ -97,6 +97,17 @@ void GzMultiBody::UpdateCollisionTransformsIfNeeded()
   }
 }
 
+void GzMultiBody::AddJointDampingTorque(int _jointIndex, double _damping)
+{
+  const btMultibodyLink& link = this->getLink(_jointIndex);
+  for (int dof = 0; dof < link.m_dofCount; ++dof)
+  {
+    btScalar currVel = this->getJointVelMultiDof(_jointIndex)[dof];
+    btScalar torque = -static_cast<btScalar>(_damping) * currVel;
+    this->addJointTorqueMultiDof(_jointIndex, dof, torque);
+  }
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

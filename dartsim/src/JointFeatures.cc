@@ -15,6 +15,8 @@
  *
 */
 
+#include <cmath>
+#include <cstddef>
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/Joint.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
@@ -322,6 +324,89 @@ void JointFeatures::SetJointMaxEffort(
   }
   // We do not check min/max mismatch, we leave that to DART.
   joint->setForceUpperLimit(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointFriction(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint friction value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setCoulombFriction(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointDampingCoefficient(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint damping value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setDampingCoefficient(_dof, _value);
+}
+
+////////////////////////////////////////////////
+void JointFeatures::SetJointSpringStiffness(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint spring stiffness value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setSpringStiffness(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointSpringReference(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint spring stiffness value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setRestPosition(_dof, _value);
 }
 
 /////////////////////////////////////////////////
