@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gz-physics8</name>
-  <version>8.1.0</version>
+  <name>gz-physics</name>
+  <version>9.0.0</version>
   <description>Gazebo Physics : Physics classes and functions for robot applications</description>
   <maintainer email="scpeters@openrobotics.org">Steve Peters</maintainer>
   <license>Apache License 2.0</license>
@@ -9,17 +9,17 @@
 
   <buildtool_depend>cmake</buildtool_depend>
 
-  <build_depend>gz-cmake4</build_depend>
+  <build_depend>gz-cmake</build_depend>
 
   <depend>benchmark</depend>
   <depend>bullet</depend>
   <depend>DART</depend>
   <depend>eigen</depend>
-  <depend>gz-common6</depend>
-  <depend>gz-math8</depend>
-  <depend>gz-plugin3</depend>
-  <depend>gz-utils3</depend>
-  <depend>sdformat15</depend>
+  <depend>gz-common</depend>
+  <depend>gz-math</depend>
+  <depend>gz-plugin</depend>
+  <depend>gz-utils</depend>
+  <depend>sdformat</depend>
 
   <export>
     <build_type>cmake</build_type>

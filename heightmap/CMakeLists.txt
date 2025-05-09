@@ -3,7 +3,7 @@ gz_add_component(heightmap INTERFACE
 
 target_link_libraries(${heightmap}
   INTERFACE
-    gz-common${GZ_COMMON_VER}::geospatial)
+    gz-common::geospatial)
 
 install(
   DIRECTORY include/

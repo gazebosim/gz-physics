@@ -21,8 +21,8 @@ target_link_libraries(${bullet_plugin}
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    gz-math${GZ_MATH_VER}::eigen3)
+    gz-common::gz-common
+    gz-math::eigen3)
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})

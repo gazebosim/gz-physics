@@ -12,16 +12,16 @@ gz_add_component(tpelib
 target_link_libraries(${tpelib_target}
   PUBLIC
   PRIVATE
-    gz-common${GZ_COMMON_VER}::requested
-    gz-math${GZ_MATH_VER}::eigen3
+    gz-common::requested
+    gz-math::eigen3
 )
 
 gz_build_tests(
   TYPE UNIT_tpelib
   SOURCES ${test_sources}
   LIB_DEPS
-    gz-plugin${GZ_PLUGIN_VER}::loader
-    gz-common${GZ_COMMON_VER}::requested
+    gz-plugin::loader
+    gz-common::requested
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     ${tpelib_target}

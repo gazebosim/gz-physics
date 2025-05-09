@@ -26,12 +26,12 @@ target_link_libraries(${dartsim_plugin}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    gz-common${GZ_COMMON_VER}::geospatial
-    gz-math${GZ_MATH_VER}::eigen3
+    gz-common::gz-common
+    gz-common::geospatial
+    gz-math::eigen3
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
-    gz-common${GZ_COMMON_VER}::profiler
+    gz-common::profiler
 )
 
 # The Gazebo fork of DART contains additional code that allows customizing
@@ -81,7 +81,7 @@ gz_build_tests(
     ${features}
     ${dartsim_plugin}
     gz-physics-test
-    gz-common${GZ_COMMON_VER}::geospatial
+    gz-common::geospatial
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
