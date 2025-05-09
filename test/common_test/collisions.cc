@@ -154,6 +154,7 @@ using CollisionMeshFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::LinkFrameSemantics,
   gz::physics::ForwardStep,
+  gz::physics::GetContactsFromLastStepFeature,
   gz::physics::GetEntities
 >;
 
@@ -199,6 +200,7 @@ TEST_F(CollisionMeshTestFeaturesList, MeshOptimization)
     // currently only bullet-featherstone supports mesh decomposition
     if (this->PhysicsEngineName(name) != "bullet-featherstone")
       continue;
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -387,6 +389,136 @@ TEST_F(CollisionMeshTestFeaturesList, MeshDecomposition)
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.x(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.y(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.z(), 1e-3);
+  }
+}
+
+TEST_F(CollisionMeshTestFeaturesList, MeshContacts)
+{
+  auto getMeshModelStr = [](const std::string &_optimization,
+                            const std::string &_name,
+                            const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="body">
+          <collision name="collision">
+            <geometry>
+              <mesh optimization=")";
+    modelStr << _optimization;
+    modelStr << R"(">
+                <uri>)";
+    modelStr << gz::physics::test::resources::kChassisDae;
+    modelStr << R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  std::string boxModelStr = R"(
+  <sdf version="1.6">
+    <model name="model">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="body">
+        <collision name="coll_box">
+          <geometry>
+            <box>
+              <size>10 10 10</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // currently only bullet-featherstone supports mesh decomposition
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld;
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionMeshFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    sdf::Root root;
+    gz::math::Pose3d initialModelPose(0, 0, 0, 0, 0, 0);
+    sdf::Errors errors = root.LoadSdfString(getMeshModelStr(
+        "", "mesh", initialModelPose));
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    errors = root.LoadSdfString(boxModelStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto mesh = world->GetModel("mesh");
+    ASSERT_NE(nullptr, mesh);
+
+    // step and get contacts
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    world->Step(output, state, input);
+
+    auto contacts = world->GetContactsFromLastStep();
+
+    // large box should be intersecting mesh
+    EXPECT_FALSE(contacts.empty());
+
+    // step and get contacts
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+
+    std::size_t contactSize =  contacts.size();
+    EXPECT_NE(0u, contactSize);
+
+    // try with a decomposed mesh
+    errors = root.LoadSdfString(getMeshModelStr(
+        "convex_decomposition", "mesh_decomposed",
+        gz::math::Pose3d(0, 0, 3, 0, 0, 0)));
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    // step and get contacts
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+    {
+      // convex decomposed meshes in bullet-featherstone should generate only
+      // 1 contact manifold and (up to) 4 contact points
+      EXPECT_EQ(contactSize + 4, contacts.size());
+    }
+    else
+    {
+      EXPECT_LT(contactSize, contacts.size());
+    }
   }
 }
 
