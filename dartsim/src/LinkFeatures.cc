@@ -17,6 +17,7 @@
 
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+#include <dart/dynamics/KinematicJoint.hpp>
 
 #include "LinkFeatures.hh"
 

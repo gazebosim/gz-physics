@@ -30,6 +30,7 @@
 #include <dart/dynamics/ConeShape.hpp>
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
+#include <dart/dynamics/KinematicJoint.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <dart/dynamics/HeightmapShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
@@ -663,7 +664,6 @@ Identity SDFFeatures::ConstructSdfLink(
   bodyProperties.mName = _sdfLink.Name();
 
   const math::Inertiald &sdfInertia = _sdfLink.Inertial();
-  const math::Inertiald sdfInertia2;//; = math::eigen3::;//_sdfLink.Inertial();
 
   const Eigen::Matrix3d I_link = math::eigen3::convert(sdfInertia.Moi());
 
@@ -678,22 +678,27 @@ Identity SDFFeatures::ConstructSdfLink(
   if(isKinematic){
     gzerr << "Kinematic tag found" << bodyProperties.mName << std::endl;
     //gzwarn << "Kinematic tag found" << bodyProperties.mInertia<< std::endl;
-    bodyProperties.mInertia.setMass(1e3);///sdfInertia.MassMatrix().Mass());
-    bodyProperties.mGravityMode = false;
+    bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
+    bodyProperties.mGravityMode = _sdfLink.EnableGravity();
     //modelInfo.model->SetStatic(true);
     //bodyProperties.mInertia.setLocalCOM(localCom);  
-    bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity());
+    bodyProperties.mInertia.setMoment(I_link);
+    //bodyProperties.mInertia.setMoment(Eigen::Matrix3d::Identity());
+
     bodyProperties.mInertia.setLocalCOM(localCom);  
     //bodyProperties.mInertia.setLocalCOM(localCom2);  
     bodyProperties.mFrictionCoeff = 0;
 
-    dart::dynamics::WeldJoint::Properties weldJointProperties;
-    weldJointProperties.mName = bodyProperties.mName + "_WeldJoint";
+    //jointProperties.mActuatorType = dart::dynamics::Joint::ActuatorType::PASSIVE;
+    //jointProperties.mName = bodyProperties.mName + "_KinematicJoint";
+
     result = modelInfo.model->createJointAndBodyNodePair<
-        dart::dynamics::WeldJoint>(nullptr, weldJointProperties, bodyProperties);
-  
-  }
-  else{
+      dart::dynamics::KinematicJoint>(nullptr, jointProperties, bodyProperties);
+      // result.first->setAccelerations(Eigen::Vector6d::Zero());
+      //`result.second->setAccelerations(Eigen::Vector6d::Zero());
+    }
+    
+      else{
     gzerr << "Kinematic tag not found " << bodyProperties.mName << std::endl;
     bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
     bodyProperties.mInertia.setMoment(I_link);
@@ -716,15 +721,7 @@ Identity SDFFeatures::ConstructSdfLink(
       GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink.SemanticPose());
 
   
-  if (isKinematic)
-  {
-    joint->setTransformFromParentBodyNode(tf);
-    joint->setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());  
-  }
-  else
-  {
-    joint->setTransformFromParentBodyNode(tf);
-  }
+  joint->setTransformFromParentBodyNode(tf);
 
   dart::dynamics::BodyNode * const bn = result.second;
 
@@ -743,14 +740,8 @@ Identity SDFFeatures::ConstructSdfLink(
       ::sdf::JoinName(modelInfo.model->getName(), bn->getName()));
 
   std::size_t linkID;
-  
-  if (isKinematic){
-    linkID = this->AddLink(bn, fullName, _modelID);
-  }
-  else{
-    linkID = this->AddLink(bn, fullName, _modelID);
-  }
-  gzwarn << "FULL NAME SDF Feature " << fullName << " " << linkID << std::endl;
+
+  linkID = this->AddLink(bn, fullName, _modelID);
 
   auto linkIdentity = this->GenerateIdentity(linkID, this->links.at(linkID));
 
@@ -814,6 +805,7 @@ Identity SDFFeatures::ConstructSdfLink(
       }
     }
   }*/
+ gzwarn << "EMD FUNCTION " << bodyProperties.mName << std::endl;
 
   return linkIdentity;
 }
@@ -1107,6 +1099,8 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     }
     return nullptr;
   }
+  gzerr << "Link [" << _linkName << "] found in model ["
+         << _sdfModel.Name() << "]. Constructing link from SDF.\n";
 
   return this->links.at(this->ConstructSdfLink(_modelID, *sdfLink))->link.get();
 }
@@ -1163,13 +1157,9 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   {
     auto childsParentJoint = _child->getParentJoint();
-    //gzerr << "JTYPE " << _child->getType() << std::endl;
-    gzerr << "NAME " << childsParentJoint->getName() << std::endl;
-    gzerr << "TYPE " << childsParentJoint->getActuatorType() << std::endl;
-    //childsParentJoint->setActuatorType(dart::dynamics::Joint::ActuatorType::LOCKED);
 
     std::string parentName = worldParent? "world" : _parent->getName();
-    if (childsParentJoint->getType() != "FreeJoint" && childsParentJoint->getType() != "WeldJoint")
+    if (childsParentJoint->getType() != "FreeJoint" && childsParentJoint->getType() != "KinematicJoint")
     {
       gzerr << "Asked to create a joint between links "
              << "[" << parentName << "] as parent and ["
@@ -1206,8 +1196,6 @@ Identity SDFFeatures::ConstructSdfJoint(
     // care of below. All other properties like joint limits, stiffness, etc,
     // will be the default values of +/- infinity or 0.0.
     joint = _child->moveTo<dart::dynamics::BallJoint>(_parent);
-    gzerr << "Joint type: BALL" << std::endl;
-
   }
   // TODO(MXG): Consider adding dartsim support for a CONTINUOUS joint type.
   // Alternatively, support the CONTINUOUS joint type by wrapping the
@@ -1217,13 +1205,11 @@ Identity SDFFeatures::ConstructSdfJoint(
   // wrapping a RevoluteJoint type.
   else if (::sdf::JointType::PRISMATIC == type)
   {
-    gzerr << "Joint type: PRISMATIC" << std::endl;
     joint = ConstructSingleAxisJoint<dart::dynamics::PrismaticJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }
   else if (::sdf::JointType::REVOLUTE == type)
   {
-    gzerr << "Joint type: REVOLUTE" << std::endl;
     joint = ConstructSingleAxisJoint<dart::dynamics::RevoluteJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }
@@ -1232,7 +1218,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   // RevoluteJoint objects into one.
   else if (::sdf::JointType::SCREW == type)
   {
-    gzerr << "Joint type: SCREW" << std::endl;
     auto *screw = ConstructSingleAxisJoint<dart::dynamics::ScrewJoint>(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
 
@@ -1241,7 +1226,6 @@ Identity SDFFeatures::ConstructSdfJoint(
   }
   else if (::sdf::JointType::UNIVERSAL == type)
   {
-    gzerr << "Joint type: UNIVERSAL" << std::endl;
     joint = ConstructUniversalJoint(
           _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }

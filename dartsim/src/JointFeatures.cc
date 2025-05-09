@@ -18,6 +18,7 @@
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/Joint.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+#include <dart/dynamics/KinematicJoint.hpp>
 #include <dart/dynamics/PrismaticJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
@@ -136,11 +137,11 @@ void JointFeatures::SetJointForce(
            << "]. The value will be ignored\n";
     return;
   }
-  if (joint->getActuatorType() != dart::dynamics::Joint::VELOCITY)
+  if (joint->getActuatorType() != dart::dynamics::Joint::FORCE)
   {
-    joint->setActuatorType(dart::dynamics::Joint::VELOCITY);
+    joint->setActuatorType(dart::dynamics::Joint::FORCE);
   }
-  gzwarn << "FORCE JOINT " << joint->getName() << joint->getVelocities() << " " << _value << " FORCES " << joint->getForces()<<std::endl;
+  //gzerr << "FORCE JOINT " << joint->getName() << joint->getForces() << " " << _value <<std::endl;
   this->ReferenceInterface<JointInfo>(_id)->joint->setCommand(_dof, _value);
 }
 
@@ -163,7 +164,7 @@ void JointFeatures::SetJointVelocityCommand(
   if (joint->getActuatorType() != dart::dynamics::Joint::SERVO)
   {
     joint->setActuatorType(dart::dynamics::Joint::SERVO);
-  } 
+  }
   // warn about bug https://github.com/dartsim/dart/issues/1583
   if ((joint->getPositionLowerLimit(_dof) > -1e16 ||
        joint->getPositionUpperLimit(_dof) < 1e16 ) &&
@@ -181,8 +182,6 @@ void JointFeatures::SetJointVelocityCommand(
       informed = true;
     }
   }
-  gzerr << "VELOCITY JOINT " << joint->getName() << joint->getVelocities() << " " << _value << " FORCES " << joint->getForces()<<std::endl;
-
   joint->setCommand(_dof, _value);
 }
 
@@ -366,7 +365,7 @@ void JointFeatures::SetJointTransformToChild(
 void JointFeatures::DetachJoint(const Identity &_jointId)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_jointId)->joint;
-  if (joint->getType() == "FreeJoint")
+  if (joint->getType() == "FreeJoint" || joint->getType() == "KinematicJoint")
   {
     // don't need to do anything, joint is already a FreeJoint
     return;
@@ -435,6 +434,9 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   }
 
   dart::dynamics::FreeJoint *freeJoint;
+  // TODO Check for KinematicJoint
+  gzerr << "Creating free joint with name [" << childLinkInfo->name
+         << "] for link [" << child->getName() << "]\n";
   if (skeleton)
   {
     freeJoint = child->moveTo<dart::dynamics::FreeJoint>(skeleton, nullptr);

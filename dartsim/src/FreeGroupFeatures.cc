@@ -18,6 +18,7 @@
 #include "FreeGroupFeatures.hh"
 
 #include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/dynamics/KinematicJoint.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <gz/common/Console.hh>
 
@@ -29,6 +30,7 @@ namespace dartsim {
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
+  gzwarn << "FindFreeGroupForModel" << std::endl;
   const auto modelInfo = this->models.at(_modelID);
   // Verify that the model qualifies as a FreeGroup
   const dart::dynamics::ConstSkeletonPtr &skeleton = modelInfo->model;
@@ -42,8 +44,15 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   for (std::size_t i = 0; i < skeleton->getNumTrees(); ++i)
   {
     if (skeleton->getRootJoint(i)->getType()
-        != dart::dynamics::FreeJoint::getStaticType())
+        != dart::dynamics::FreeJoint::getStaticType()  &&
+        skeleton->getRootJoint(i)->getType()
+        != dart::dynamics::KinematicJoint::getStaticType()
+      )
     {
+      gzerr << "FindFreeGroupForModel: model [" << modelInfo->localName
+             << "] has a root joint [" << skeleton->getRootJoint(i)->getName()
+             << "] that is not a FreeJoint. Returning an invalid identity."
+             << std::endl;
       return this->GenerateInvalidId();
     }
   }
@@ -79,6 +88,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
+
   const dart::dynamics::BodyNode* bn = this->links.at(_linkID)->link;
 
   // Move towards the root of the tree looking for a FreeJoint
@@ -90,12 +100,20 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
       break;
     }
 
+    if (bn->getParentJoint()->getType()
+        == dart::dynamics::KinematicJoint::getStaticType())
+    {
+      break;
+    }
+
+
     bn = bn->getParentBodyNode();
   }
 
-  if (bn == nullptr)
+  if (bn == nullptr){
     return this->GenerateInvalidId();
-
+  }
+    
   // TODO(MXG): When the dartsim plugin supports closed-loop constraints, verify
   // that this sub-tree does not have any constraints that attach it to any
   // links outside of the tree.
@@ -113,12 +131,17 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 FreeGroupFeatures::FreeGroupInfo FreeGroupFeatures::GetCanonicalInfo(
     const Identity &_groupID) const
 {
+  //gzwarn <<"GetCanonicalInfo" << std::endl;
+
   const auto model_it = this->models.idToObject.find(_groupID);
   if (model_it != this->models.idToObject.end())
   {
     const auto &modelInfo = model_it->second;
     if (modelInfo->model->getNumBodyNodes() > 0)
     {
+      gzerr << "GetCanonicalInfo: model [" << modelInfo->localName
+             << "] has " << modelInfo->model->getNumBodyNodes()
+             << " BodyNodes. Returning the root link." << std::endl;
       return FreeGroupInfo{
         modelInfo->model->getRootBodyNode(),
           modelInfo->model.get()};
@@ -151,12 +174,13 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
 {
+  gzerr << "SetFreeGroupWorldPose" << std::endl;
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
     if (nullptr != info.link)
     {
-      static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+      static_cast<dart::dynamics::KinematicJoint*>(info.link->getParentJoint())
         ->setTransform(_pose);
     }
     else
@@ -175,7 +199,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     auto *bn = info.model->getRootBodyNode(i);
     const Eigen::Isometry3d new_tf = tfChange * bn->getTransform();
 
-    static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint())
+    static_cast<dart::dynamics::KinematicJoint*>(bn->getParentJoint())
         ->setTransform(new_tf);
   }
 
@@ -202,23 +226,29 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
-        ->setLinearVelocity(_linearVelocity);
+    if (info.link->getParentJoint()->getType()
+        == dart::dynamics::KinematicJoint::getStaticType()){
+      static_cast<dart::dynamics::KinematicJoint*>(info.link->getParentJoint())
+        ->setLinearVelocity(_linearVelocity);  
+    }
 
-    info.link->setGravityMode(false); // Disable gravity
-    info.link->clearExternalForces(); // Clear external forces
-    info.link->clearInternalForces(); // Clear internal forces
+    if (info.link->getParentJoint()->getType()
+      == dart::dynamics::FreeJoint::getStaticType()){
+      static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+        ->setLinearVelocity(_linearVelocity);  
+    }
+ 
+    //info.link->setGravityMode(false); // Disable gravity
+    //info.link->clearExternalForces(); // Clear external forces
+    //info.link->clearInternalForces(); // Clear internal forces
     return;
   }
 
   const Eigen::Vector3d delta_v =
       _linearVelocity - info.link->getLinearVelocity();
 
-
-  gzwarn <<"WorldLinearVelocity" << info.link->getName() << std::endl;
   Eigen::Vector3d forces = Eigen::Vector3d::Zero();
   //info.model->setForces(forces);
-  gzwarn <<"Vels: " << info.model->getVelocities() << std::endl;
 
   for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
   {
@@ -226,13 +256,12 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
  
     // Clear forces and disable dynamics
     //bn->setGravityMode(false); // Disable gravity
-    bn->clearExternalForces(); // Clear external forces
-    bn->clearInternalForces(); // Clear internal forces
-    gzerr << "Joint: " << bn->getName() << std::endl;
-
+    //bn->clearExternalForces(); // Clear external forces
+    //bn->clearInternalForces(); // Clear internal forces
     const Eigen::Vector3d new_v = bn->getLinearVelocity() + delta_v;
-
-    static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint())
+    gzerr << "Joint: " << bn->getName() << std::endl;
+    // TODO FINISHED
+    static_cast<dart::dynamics::KinematicJoint*>(bn->getParentJoint())
         ->setLinearVelocity(new_v);
   }
 }
@@ -244,17 +273,17 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    info.link->setGravityMode(false); // Disable gravity
-    info.link->clearExternalForces(); // Clear external forces
-    info.link->clearInternalForces(); // Clear internal forces
-    static_cast<dart::dynamics::FreeJoint*>(info.link->getParentJoint())
+    //info.link->setGravityMode(false); // Disable gravity
+    //info.link->clearExternalForces(); // Clear external forces
+    //info.link->clearInternalForces(); // Clear internal forces
+    static_cast<dart::dynamics::KinematicJoint*>(info.link->getParentJoint())
     ->setAngularVelocity(_angularVelocity);
     return;
   }
 
-  gzwarn <<"SetFreeGroupWorldAngularVelocity" << info.link->getName() << std::endl;
-  info.link->clearExternalForces();
-  info.link->clearInternalForces();
+  //gzwarn <<"SetFreeGroupWorldAngularVelocity" << info.link->getName() << std::endl;
+  //info.link->clearExternalForces();
+  //info.link->clearInternalForces();
   
   const Eigen::Vector3d delta_w =
       _angularVelocity - info.link->getAngularVelocity();
@@ -267,8 +296,8 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     const Eigen::Vector3d v = bn->getLinearVelocity();
     const Eigen::Vector3d w = bn->getAngularVelocity();
 
-    dart::dynamics::FreeJoint *fj =
-        static_cast<dart::dynamics::FreeJoint*>(bn->getParentJoint());
+    dart::dynamics::KinematicJoint *fj =
+        static_cast<dart::dynamics::KinematicJoint*>(bn->getParentJoint());
 
     gzerr << "Joint: " << bn->getName() << std::endl;
     fj->setLinearVelocity(v + delta_w.cross(r));
