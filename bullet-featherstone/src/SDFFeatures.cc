@@ -88,7 +88,7 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
 
-  //worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
+  worldInfo->world->setGravity(convertVec(_sdfWorld.Gravity()));
 
   const ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
   if (physics)
@@ -905,19 +905,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
       }
     }
-
-#if BT_BULLET_VERSION >= 307
-    // Set kinematic mode
-    // Do this after adding collisions
-    if (linkSdf->Kinematic())
-    {
-      //TODO Review this
-      auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
-      int indexInModel = linkInfo->indexInModel.value_or(-1);
-      model->body->setLinkDynamicType(indexInModel,
-          btCollisionObject::CF_KINEMATIC_OBJECT);
-    }
-#endif
   }
 
   // Add the remaining links in the model without constructing the bullet
