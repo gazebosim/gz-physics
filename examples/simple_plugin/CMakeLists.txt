@@ -4,7 +4,8 @@ project(gz-physics-simple-plugin)
 
 find_package(gz-plugin REQUIRED COMPONENTS all)
 
-find_package(gz-physics REQUIRED)
+find_package(gz-physics9 REQUIRED)
+set(GZ_PHYSICS_VER ${gz-physics9_VERSION_MAJOR})
 
 add_library(SimplePlugin SHARED plugin.cc EntityManagementFeatures.cc)
 target_link_libraries(SimplePlugin

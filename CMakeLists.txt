@@ -3,7 +3,11 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
+<<<<<<< HEAD
 project(gz-physics VERSION 9.0.0)
+=======
+project(gz-physics9 VERSION 9.0.0)
+>>>>>>> 1bfdcbe0 (bump main to 9.0.0~pre1 (#696))
 
 #============================================================================
 # Find gz-cmake
