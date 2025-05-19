@@ -18,6 +18,7 @@
 #include "FreeGroupFeatures.hh"
 
 #include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/dynamics/KinematicJoint.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <gz/common/Console.hh>
 
@@ -38,11 +39,13 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   if (skeleton->getNumBodyNodes() == 0 && modelInfo->nestedModels.empty())
     return this->GenerateInvalidId();
 
-  // Verify that all root joints are FreeJoints
+  // Verify that all root joints are FreeJoints or KinematicJoints
   for (std::size_t i = 0; i < skeleton->getNumTrees(); ++i)
   {
     if (skeleton->getRootJoint(i)->getType()
-        != dart::dynamics::FreeJoint::getStaticType())
+        != dart::dynamics::FreeJoint::getStaticType() &&
+        skeleton->getRootJoint(i)->getType()
+        != dart::dynamics::KinematicJoint::getStaticType())
     {
       return this->GenerateInvalidId();
     }
@@ -85,7 +88,9 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
   while (bn)
   {
     if (bn->getParentJoint()->getType()
-        == dart::dynamics::FreeJoint::getStaticType())
+        == dart::dynamics::FreeJoint::getStaticType() ||
+        bn->getParentJoint()->getType()
+        == dart::dynamics::KinematicJoint::getStaticType())
     {
       break;
     }
