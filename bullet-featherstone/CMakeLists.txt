@@ -26,3 +26,8 @@ target_link_libraries(${bullet_plugin}
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})
+
+if (WIN32)
+  # disable MSVC inherit via dominance warning
+  target_compile_options(${bullet_plugin} PUBLIC "/wd4250")
+endif()

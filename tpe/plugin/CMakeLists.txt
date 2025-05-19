@@ -34,6 +34,11 @@ target_link_libraries(${tpe_plugin}
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${tpe_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})
 
+if (WIN32)
+  # disable MSVC inherit via dominance warning
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250")
+endif()
+
 gz_build_tests(
   TYPE UNIT_tpe
   SOURCES ${test_sources}
