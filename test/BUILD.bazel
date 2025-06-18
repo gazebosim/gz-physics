@@ -21,6 +21,7 @@ cc_library(
     deps = [
         "//:gz-physics",
         "@eigen",
+        "@googletest//:gtest",
         "@gz-common//:gz-common",
         "@gz-common//testing:testing",
         "@gz-math//:gz-math",
