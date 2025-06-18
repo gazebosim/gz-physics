@@ -64,6 +64,7 @@ class Plugin :
 
 namespace {
 
+#ifndef BAZEL_DARTSIM_DISABLE_UNREGISTER_COLLISION_DETECTORS
 // This is done as a partial fix for
 // https://github.com/gazebosim/gz-physics/issues/442. The issue seems like the
 // destructors for the concrete collision detectors get unloaded and deleted
@@ -85,6 +86,7 @@ struct UnregisterCollisionDetectors
 };
 
 UnregisterCollisionDetectors unregisterAtUnload;
+#endif
 }
 
 GZ_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)

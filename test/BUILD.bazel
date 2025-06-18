@@ -1,0 +1,493 @@
+package(
+    default_applicable_licenses = ["//:license"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
+
+cc_library(
+    name = "test_headers",
+    hdrs = glob(["include/**/*.hh"]),
+    copts = [
+        "-Wno-c99-extensions",
+    ],
+    defines = [
+        'dartsim_plugin_LIB=\\"dartsim/libgz-physics-dartsim-plugin.so\\"',
+        'tpe_plugin_LIB=\\"tpe/libgz-physics-tpe-plugin.so\\"',
+    ],
+    includes = ["include"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//:gz-physics",
+        "@eigen",
+        "@gz-common//:gz-common",
+        "@gz-common//testing:testing",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:loader",
+        "@gz-utils//:Environment",
+    ],
+)
+
+cc_library(
+    name = "common_test",
+    hdrs = ["common_test/Worlds.hh"],
+    data = [
+        "common_test/worlds",
+        ":resources",
+    ],
+    includes = ["common_test"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":test_headers",
+        "@gz-common//testing:testing",
+    ],
+)
+
+exports_files(["common_test/worlds"])
+
+exports_files(["resources"])
+
+cc_library(
+    name = "common_test_dartsim",
+    data = [
+        "//dartsim:libgz-physics-dartsim-plugin.so",
+    ],
+    deps = [
+        ":common_test",
+    ],
+)
+
+cc_library(
+    name = "common_test_bullet-featherstone",
+    data = [
+        "//bullet-featherstone:libgz-physics-bullet-featherstone-plugin.so",
+    ],
+    deps = [
+        ":common_test",
+    ],
+)
+
+common_tests = glob(
+    include = [
+        "common_test/*.cc",
+    ],
+)
+
+[cc_test(
+    name = "%s_dartsim" % test.replace("/", "_").replace(".cc", ""),
+    srcs = [
+        "%s" % test,
+    ],
+    defines = [
+        "DART_ODE_CCD_WITH_BOX_CYLINDER_COLLISION",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "LIB_TO_TEST": "dartsim/libgz-physics-dartsim-plugin.so",
+    },
+    deps = [
+        ":common_test",
+        ":common_test_dartsim",
+        ":test_headers",
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-common//:gz-common",
+        "@gz-common//graphics:graphics",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+        "@sdformat",
+    ],
+) for test in common_tests]
+
+[cc_test(
+    name = "%s_bullet-featherstone" % test.replace("/", "_").replace(".cc", ""),
+    srcs = [
+        "%s" % test,
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+        "LIB_TO_TEST": "bullet-featherstone/libgz-physics-bullet-featherstone-plugin.so",
+    },
+    deps = [
+        ":common_test",
+        ":common_test_bullet-featherstone",
+        ":test_headers",
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-common//:gz-common",
+        "@gz-common//graphics:graphics",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+        "@sdformat",
+    ],
+) for test in common_tests]
+
+mock_entities_hdrs = [
+    "include/mock/MockCenterOfMass.hh",
+    "include/mock/MockFeatures.hh",
+    "include/mock/MockGetByName.hh",
+    "include/mock/MockSetName.hh",
+]
+
+cc_binary(
+    name = "MockEntities.so",
+    testonly = 1,
+    srcs = ["plugins/MockEntities.cc"] + mock_entities_hdrs,
+    includes = ["include"],
+    linkshared = True,
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//:gz-physics",
+        "@eigen",
+        "@gz-plugin//:register",
+    ],
+)
+
+mock_joints_hdrs = [
+    "include/mock/MockJoints.hh",
+]
+
+cc_binary(
+    name = "MockJoints.so",
+    testonly = 1,
+    srcs = ["plugins/MockJoints.cc"] + mock_joints_hdrs,
+    includes = ["include"],
+    linkshared = True,
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//:gz-physics",
+        "@gz-plugin//:register",
+    ],
+)
+
+mock_frames_hdrs = [
+    "include/mock/MockCreateEntities.hh",
+    "include/mock/MockFrameSemantics.hh",
+]
+
+cc_binary(
+    name = "MockFrames.so",
+    testonly = 1,
+    srcs = ["plugins/frames.cc"] + mock_frames_hdrs,
+    includes = ["include"],
+    linkshared = True,
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//:gz-physics",
+        "@gz-plugin//:register",
+    ],
+)
+
+# DoublePendulum plugin and tests are disabled as they need to parse an urdf
+# file but @dartsim//:dart-utils is built without urdf dependency
+#
+# mock_double_pendulum_headers = [
+#     "include/mock/MockDoublePendulum.hh",
+#     "include/test/Resources.hh",
+# ]
+#
+# cc_binary(
+#     name = "MockDoublePendulum.so",
+#     srcs = ["plugins/DARTDoublePendulum.cc"]
+#         + mock_double_pendulum_headers,
+#     linkshared = True,
+#     includes = ["include"],
+#     deps = [
+#         "//dartsim:dartsim",
+#         "//:gz-physics",
+#         "@dartsim//:dart-utils",
+#         "@gz-common//testing:testing",
+#         "@gz-plugin//:register",
+#     ],
+#     visibility = ["//:__subpackages__"]
+#     testonly = 1,
+# )
+#
+# cc_test(
+#     name = "INTEGRATION_DoublePendulum",
+#     srcs = ["integration/DoublePendulum.cc"]
+#         + mock_double_pendulum_headers,
+#     env = {
+#         "GZ_BAZEL": "1",
+#     },
+#     defines = [
+#         'MockDoublePendulum_LIB=\\"test/MockDoublePendulum.so\\"',
+#     ],
+#     data = [
+#          ":MockDoublePendulum.so"
+#     ],
+#     includes = ["include"],
+#     deps = [
+#         "//:gz-physics",
+#         "@gz-common//testing:testing",
+#         "@googletest//:gtest",
+#         "@googletest//:gtest_main",
+#     ],
+# )
+
+cc_test(
+    name = "INTEGRATION_FeatureSystem",
+    srcs = ["integration/FeatureSystem.cc"] + mock_entities_hdrs,
+    data = [
+        ":MockEntities.so",
+    ],
+    defines = [
+        'MockEntities_LIB=\\"test/MockEntities.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        "//:gz-physics",
+        "@eigen",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_FrameSemantics2d",
+    srcs = [
+        "integration/FrameSemantics.hh",
+        "integration/FrameSemantics2d.cc",
+    ],
+    data = [
+        ":MockFrames.so",
+    ],
+    defines = [
+        'MockFrames_LIB=\\"test/MockFrames.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_FrameSemantics2f",
+    srcs = [
+        "integration/FrameSemantics.hh",
+        "integration/FrameSemantics2f.cc",
+    ],
+    data = [
+        ":MockFrames.so",
+    ],
+    defines = [
+        'MockFrames_LIB=\\"test/MockFrames.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_FrameSemantics3d",
+    srcs = [
+        "integration/FrameSemantics.hh",
+        "integration/FrameSemantics3d.cc",
+    ],
+    data = [
+        ":MockFrames.so",
+    ],
+    defines = [
+        'MockFrames_LIB=\\"test/MockFrames.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_FrameSemantics3f",
+    srcs = [
+        "integration/FrameSemantics.hh",
+        "integration/FrameSemantics3f.cc",
+    ],
+    data = [
+        ":MockFrames.so",
+    ],
+    defines = [
+        'MockFrames_LIB=\\"test/MockFrames.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_JointTypes2d",
+    srcs = [
+        "integration/JointTypes.hh",
+        "integration/JointTypes2d.cc",
+    ],
+    data = [
+        ":MockJoints.so",
+    ],
+    defines = [
+        'MockJoints_LIB=\\"test/MockJoints.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_JointTypes2f",
+    srcs = [
+        "integration/JointTypes.hh",
+        "integration/JointTypes2f.cc",
+    ],
+    data = [
+        ":MockJoints.so",
+    ],
+    defines = [
+        'MockJoints_LIB=\\"test/MockJoints.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_JointTypes3d",
+    srcs = [
+        "integration/JointTypes.hh",
+        "integration/JointTypes3d.cc",
+    ],
+    data = [
+        ":MockJoints.so",
+    ],
+    defines = [
+        'MockJoints_LIB=\\"test/MockJoints.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_JointTypes3f",
+    srcs = [
+        "integration/JointTypes.hh",
+        "integration/JointTypes3f.cc",
+    ],
+    data = [
+        ":MockJoints.so",
+    ],
+    defines = [
+        'MockJoints_LIB=\\"test/MockJoints.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    includes = ["include"],
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)
+
+cc_test(
+    name = "INTEGRATION_RequestFeatures",
+    srcs = ["integration/RequestFeatures.cc"],
+    data = [
+        ":MockEntities.so",
+    ],
+    defines = [
+        'MockEntities_LIB=\\"test/MockEntities.so\\"',
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    deps = [
+        ":test_headers",
+        "//:gz-physics",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+    ],
+)

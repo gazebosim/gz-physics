@@ -91,6 +91,11 @@ foreach(test ${tests})
     target_compile_definitions(${test_executable} PRIVATE DART_HAS_CONTACT_SURFACE)
   endif()
 
+  if (APPLE)
+    # see https://github.com/gazebosim/gz-physics/issues/620
+    target_compile_definitions(${test_executable} PRIVATE DART_ODE_CCD_WITH_BOX_CYLINDER_COLLISION)
+  endif()
+
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
 
   configure_common_test("bullet" ${test_executable})

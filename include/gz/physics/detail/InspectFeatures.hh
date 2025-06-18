@@ -25,6 +25,8 @@
 
 #include <gz/plugin/PluginPtr.hh>
 
+#include "gz/physics/detail/FeatureList.hh"
+
 namespace gz
 {
   namespace physics
