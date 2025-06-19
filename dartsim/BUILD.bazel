@@ -104,12 +104,13 @@ cc_binary(
 )
 
 cc_test(
-    name = "dartsim_WorldFeatures_TEST",
+    name = "dartsim_Base_TEST",
     srcs = [
-        "src/WorldFeatures_TEST.cc",
+        "src/Base_TEST.cc",
     ] + private_headers,
     data = [
         "//dartsim:libgz-physics-dartsim-plugin.so",
+        "//test:resources",
     ],
     env = {
         "GZ_BAZEL": "1",
@@ -134,15 +135,58 @@ cc_test(
         "@gz-common//:gz-common",
         "@gz-common//geospatial:geospatial",
         "@gz-common//graphics:graphics",
+        "@gz-common//testing:testing",
         "@gz-math//:gz-math",
         "@gz-math//eigen3:eigen3",
         "@gz-plugin//:core",
         "@gz-plugin//:loader",
         "@sdformat",
     ],
+)
+
+cc_test(
+    name = "dartsim_AddedMassFeatures_TEST",
+    srcs = [
+        "src/AddedMassFeatures_TEST.cc",
+        "src/Worlds.hh",
+    ] + private_headers,
+    data = [
+        "worlds",
+        "//dartsim:libgz-physics-dartsim-plugin.so",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
     # Marked manual because with gcc, the test crashes on exit when
     # unloading the dartsim plugin. The test however passes with clang.
     tags = ["manual"],
+    deps = [
+        "//:gz-physics",
+        "//:heightmap",
+        "//:mesh",
+        "//:sdf",
+        "//dartsim",
+        "//test:common_test",
+        "//test:test_headers",
+        "@dartsim//:dart-collision-bullet",
+        "@dartsim//:dart-collision-core",
+        "@dartsim//:dart-collision-ode",
+        "@dartsim//:dart-config",
+        "@dartsim//:dart-constraint",
+        "@dartsim//:dart-dynamics",
+        "@dartsim//:dart-simulation",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-common//:gz-common",
+        "@gz-common//geospatial:geospatial",
+        "@gz-common//graphics:graphics",
+        "@gz-common//testing:testing",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+        "@sdformat",
+    ],
 )
 
 cc_test(
@@ -159,6 +203,9 @@ cc_test(
     env = {
         "GZ_BAZEL": "1",
     },
+    # Marked manual because with gcc, the test crashes on exit when
+    # unloading the dartsim plugin. The test however passes with clang.
+    tags = ["manual"],
     deps = [
         "//:gz-physics",
         "//:heightmap",
@@ -186,24 +233,22 @@ cc_test(
         "@gz-plugin//:loader",
         "@sdformat",
     ],
-    # Marked manual because with gcc, the test crashes on exit when
-    # unloading the dartsim plugin. The test however passes with clang.
-    tags = ["manual"],
 )
 
 cc_test(
-    name = "dartsim_AddedMassFeatures_TEST",
+    name = "dartsim_WorldFeatures_TEST",
     srcs = [
-        "src/AddedMassFeatures_TEST.cc",
-        "src/Worlds.hh",
+        "src/WorldFeatures_TEST.cc",
     ] + private_headers,
     data = [
-        "worlds",
         "//dartsim:libgz-physics-dartsim-plugin.so",
     ],
     env = {
         "GZ_BAZEL": "1",
     },
+    # Marked manual because with gcc, the test crashes on exit when
+    # unloading the dartsim plugin. The test however passes with clang.
+    tags = ["manual"],
     deps = [
         "//:gz-physics",
         "//:heightmap",
@@ -224,14 +269,54 @@ cc_test(
         "@gz-common//:gz-common",
         "@gz-common//geospatial:geospatial",
         "@gz-common//graphics:graphics",
-        "@gz-common//testing:testing",
         "@gz-math//:gz-math",
         "@gz-math//eigen3:eigen3",
         "@gz-plugin//:core",
         "@gz-plugin//:loader",
         "@sdformat",
     ],
-    # Marked manual because with gcc, the test crashes on exit when
-    # unloading the dartsim plugin. The test however passes with clang.
-    tags = ["manual"],
 )
+
+# Disabled because this test request DEM support in gz-common's geospatial
+# component
+# cc_test(
+#     name = "dartsim_EntityManagement_TEST",
+#     srcs = [
+#         "src/EntityManagement_TEST.cc",
+#     ] + private_headers,
+#     data = [
+#         "//dartsim:libgz-physics-dartsim-plugin.so",
+#     ],
+#     env = {
+#         "GZ_BAZEL": "1",
+#     },
+#     deps = [
+#         "//:gz-physics",
+#         "//:heightmap",
+#         "//:mesh",
+#         "//:sdf",
+#         "//dartsim",
+#         "//test:test_headers",
+#         "@dartsim//:dart-collision-bullet",
+#         "@dartsim//:dart-collision-core",
+#         "@dartsim//:dart-collision-ode",
+#         "@dartsim//:dart-config",
+#         "@dartsim//:dart-constraint",
+#         "@dartsim//:dart-dynamics",
+#         "@dartsim//:dart-simulation",
+#         "@googletest//:gtest",
+#         "@googletest//:gtest_main",
+#         "@gz-common//:gz-common",
+#         "@gz-common//geospatial:geospatial",
+#         "@gz-common//graphics:graphics",
+#         "@gz-common//testing:testing",
+#         "@gz-math//:gz-math",
+#         "@gz-math//eigen3:eigen3",
+#         "@gz-plugin//:core",
+#         "@gz-plugin//:loader",
+#         "@sdformat",
+#     ],
+#     # Marked manual because with gcc, the test crashes on exit when
+#     # unloading the dartsim plugin. The test however passes with clang.
+#     tags = ["manual"],
+# )
