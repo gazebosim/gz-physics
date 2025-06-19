@@ -140,6 +140,10 @@ cc_test(
         "@gz-plugin//:loader",
         "@sdformat",
     ],
+    # Marked manual because when built with gcc, the test crashes on exit when
+    # unloading the dartsim plugin. The test however passes with clang.
+    # Related issue: https://github.com/gazebosim/gz-physics/issues/442
+    tags = ["manual"],
 )
 
 cc_test(
@@ -183,6 +187,10 @@ cc_test(
         "@gz-plugin//:loader",
         "@sdformat",
     ],
+    # Marked manual because when built with gcc, the test crashes on exit when
+    # unloading the dartsim plugin. The test however passes with clang.
+    # Related issue: https://github.com/gazebosim/gz-physics/issues/442
+    tags = ["manual"],
 )
 
 cc_test(
@@ -225,4 +233,8 @@ cc_test(
         "@gz-plugin//:loader",
         "@sdformat",
     ],
+    # Marked manual because when built with gcc, the test crashes on exit when
+    # unloading the dartsim plugin. The test however passes with clang.
+    # Related issue: https://github.com/gazebosim/gz-physics/issues/442
+    tags = ["manual"],
 )

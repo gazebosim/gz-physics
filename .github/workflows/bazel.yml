@@ -21,3 +21,4 @@ jobs:
         [
           {"folder": ".", "bzlmodEnabled": false},
         ]
+      bazel_test_command: "bazel test -c opt //..."
