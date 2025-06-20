@@ -8,15 +8,23 @@ package(
 
 cc_library(
     name = "test_headers",
-    hdrs = glob(["include/**/*.hh"]),
+    hdrs = glob(["include/**/*.hh"]) + ["common_test/Worlds.hh"],
     copts = [
         "-Wno-c99-extensions",
+    ],
+    data = [
+        "common_test_worlds",
+        ":resources",
     ],
     defines = [
         'dartsim_plugin_LIB=\\"dartsim/libgz-physics-dartsim-plugin.so\\"',
         'tpe_plugin_LIB=\\"tpe/libgz-physics-tpe-plugin.so\\"',
     ],
-    includes = ["include"],
+    includes = [
+        ".",
+        "common_test",
+        "include",
+    ],
     visibility = ["//:__subpackages__"],
     deps = [
         "//:gz-physics",
@@ -30,43 +38,20 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "common_test",
-    hdrs = ["common_test/Worlds.hh"],
-    data = [
-        "common_test/worlds",
-        ":resources",
-    ],
-    includes = ["common_test"],
+filegroup(
+    name = "common_test_worlds",
+    srcs = glob([
+        "common_test/worlds/*",
+    ]),
     visibility = ["//:__subpackages__"],
-    deps = [
-        ":test_headers",
-        "@gz-common//testing:testing",
-    ],
 )
 
-exports_files(["common_test/worlds"])
-
-exports_files(["resources"])
-
-cc_library(
-    name = "common_test_dartsim",
-    data = [
-        "//dartsim:libgz-physics-dartsim-plugin.so",
-    ],
-    deps = [
-        ":common_test",
-    ],
-)
-
-cc_library(
-    name = "common_test_bullet-featherstone",
-    data = [
-        "//bullet-featherstone:libgz-physics-bullet-featherstone-plugin.so",
-    ],
-    deps = [
-        ":common_test",
-    ],
+filegroup(
+    name = "resources",
+    srcs = glob([
+        "resources/*",
+    ]),
+    visibility = ["//:__subpackages__"],
 )
 
 common_tests = glob(
@@ -80,7 +65,13 @@ common_tests = glob(
     srcs = [
         "%s" % test,
     ],
+    data = [
+        "//dartsim:libgz-physics-dartsim-plugin.so",
+    ],
     defines = [
+        # This flag disables some test expectations for dartsim with ode
+        # version >= 0.16.5,
+        # see https://github.com/gazebosim/gz-physics/issues/620.
         "DART_ODE_CCD_WITH_BOX_CYLINDER_COLLISION",
     ],
     env = {
@@ -88,8 +79,6 @@ common_tests = glob(
         "LIB_TO_TEST": "dartsim/libgz-physics-dartsim-plugin.so",
     },
     deps = [
-        ":common_test",
-        ":common_test_dartsim",
         ":test_headers",
         "//:gz-physics",
         "//:mesh",
@@ -111,13 +100,14 @@ common_tests = glob(
     srcs = [
         "%s" % test,
     ],
+    data = [
+        "//bullet-featherstone:libgz-physics-bullet-featherstone-plugin.so",
+    ],
     env = {
         "GZ_BAZEL": "1",
         "LIB_TO_TEST": "bullet-featherstone/libgz-physics-bullet-featherstone-plugin.so",
     },
     deps = [
-        ":common_test",
-        ":common_test_bullet-featherstone",
         ":test_headers",
         "//:gz-physics",
         "//:mesh",
@@ -147,7 +137,6 @@ cc_binary(
     srcs = ["plugins/MockEntities.cc"] + mock_entities_hdrs,
     includes = ["include"],
     linkshared = True,
-    visibility = ["//:__subpackages__"],
     deps = [
         "//:gz-physics",
         "@eigen",
@@ -155,35 +144,31 @@ cc_binary(
     ],
 )
 
-mock_joints_hdrs = [
-    "include/mock/MockJoints.hh",
-]
-
 cc_binary(
     name = "MockJoints.so",
     testonly = 1,
-    srcs = ["plugins/MockJoints.cc"] + mock_joints_hdrs,
+    srcs = [
+        "include/mock/MockJoints.hh",
+        "plugins/MockJoints.cc",
+    ],
     includes = ["include"],
     linkshared = True,
-    visibility = ["//:__subpackages__"],
     deps = [
         "//:gz-physics",
         "@gz-plugin//:register",
     ],
 )
 
-mock_frames_hdrs = [
-    "include/mock/MockCreateEntities.hh",
-    "include/mock/MockFrameSemantics.hh",
-]
-
 cc_binary(
     name = "MockFrames.so",
     testonly = 1,
-    srcs = ["plugins/frames.cc"] + mock_frames_hdrs,
+    srcs = [
+        "include/mock/MockCreateEntities.hh",
+        "include/mock/MockFrameSemantics.hh",
+        "plugins/frames.cc",
+    ],
     includes = ["include"],
     linkshared = True,
-    visibility = ["//:__subpackages__"],
     deps = [
         "//:gz-physics",
         "@gz-plugin//:register",

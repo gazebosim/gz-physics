@@ -69,47 +69,6 @@ public_headers = public_headers_no_gen + [
 ]
 
 cc_library(
-    name = "heightmap",
-    hdrs = glob([
-        "heightmap/include/gz/physics/heightmap/*.hh",
-        "heightmap/include/gz/physics/heightmap/**/*.hh",
-    ]),
-    includes = ["heightmap/include"],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        ":gz-physics",
-        "@gz-common//geospatial:geospatial",
-    ],
-)
-
-cc_library(
-    name = "mesh",
-    hdrs = glob([
-        "mesh/include/gz/physics/mesh/*.hh",
-        "mesh/include/gz/physics/mesh/**/*.hh",
-    ]),
-    includes = ["mesh/include"],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        ":gz-physics",
-        "@gz-common//graphics:graphics",
-    ],
-)
-
-cc_library(
-    name = "sdf",
-    hdrs = glob([
-        "sdf/include/gz/physics/sdf/*.hh",
-    ]),
-    includes = ["sdf/include"],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        ":gz-physics",
-        "@sdformat",
-    ],
-)
-
-cc_library(
     name = "gz-physics",
     srcs = sources,
     hdrs = public_headers,
@@ -124,6 +83,45 @@ cc_library(
         "@gz-utils//:ImplPtr",
         "@gz-utils//:SuppressWarning",
         "@gz-utils//log:Logger",
+    ],
+)
+
+cc_library(
+    name = "heightmap",
+    hdrs = glob([
+        "heightmap/include/gz/physics/heightmap/**/*.hh",
+    ]),
+    includes = ["heightmap/include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gz-physics",
+        "@gz-common//geospatial:geospatial",
+    ],
+)
+
+cc_library(
+    name = "mesh",
+    hdrs = glob([
+        "mesh/include/gz/physics/mesh/**/*.hh",
+    ]),
+    includes = ["mesh/include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gz-physics",
+        "@gz-common//graphics:graphics",
+    ],
+)
+
+cc_library(
+    name = "sdf",
+    hdrs = glob([
+        "sdf/include/gz/physics/sdf/*.hh",
+    ]),
+    includes = ["sdf/include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gz-physics",
+        "@sdformat",
     ],
 )
 

@@ -165,13 +165,16 @@ cc_test(
     env = {
         "GZ_BAZEL": "1",
     },
+    # Marked manual because with gcc, the test crashes on exit when
+    # unloading the tpe plugin. The test however passes with clang.
+    tags = ["manual"],
     deps = [
         ":Export-tpelib",
         ":tpe",
         "//:gz-physics",
         "//:mesh",
         "//:sdf",
-        "//test:common_test",
+        "//test:test_headers",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@gz-common//graphics:graphics",
@@ -181,9 +184,6 @@ cc_test(
         "@gz-plugin//:loader",
         "@gz-utils//:SuppressWarning",
     ],
-    # Marked manual because with gcc, the test crashes on exit when
-    # unloading the tpe plugin. The test however passes with clang.
-    tags = ["manual"],
 )
 
 cc_test(
@@ -197,13 +197,15 @@ cc_test(
     env = {
         "GZ_BAZEL": "1",
     },
+    # Marked manual because with gcc, the test crashes on exit when
+    # unloading the tpe plugin. The test however passes with clang.
+    tags = ["manual"],
     deps = [
         ":Export-tpelib",
         ":tpe",
         "//:gz-physics",
         "//:mesh",
         "//:sdf",
-        "//test:common_test",
         "//test:test_headers",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
@@ -215,7 +217,4 @@ cc_test(
         "@gz-utils//:SuppressWarning",
         "@sdformat",
     ],
-    # Marked manual because with gcc, the test crashes on exit when
-    # unloading the tpe plugin. The test however passes with clang.
-    tags = ["manual"],
 )
