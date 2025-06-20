@@ -31,8 +31,8 @@
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 
-#include "test/Utils.hh"
 #include "test/common_test/Worlds.hh"
+#include "test/Utils.hh"
 
 struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::CollisionDetector,

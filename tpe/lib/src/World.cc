@@ -83,8 +83,7 @@ void World::Step()
   // check colliisions
   // the last bool arg tells the collision checker to return one single contact
   // point for each pair of collisions
-  this->contacts = std::move(
-      this->collisionDetector.CheckCollisions(children, true));
+  this->contacts = this->collisionDetector.CheckCollisions(children, true);
 
   for (auto it = children.begin(); it != children.end(); ++it)
     it->second->ResetPoseDirty();

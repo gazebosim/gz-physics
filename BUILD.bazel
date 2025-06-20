@@ -1,0 +1,153 @@
+load("@rules_gazebo//gazebo:headers.bzl", "gz_configure_header", "gz_export_header", "gz_include_header")
+load("@rules_license//rules:license.bzl", "license")
+
+package(
+    default_applicable_licenses = [":license"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
+
+license(
+    name = "license",
+    package_name = "gz-physics",
+)
+
+licenses(["notice"])
+
+exports_files([
+    "package.xml",
+    "LICENSE",
+    "MODULE.bazel",
+])
+
+gz_configure_header(
+    name = "Config",
+    src = "include/gz/physics/config.hh.in",
+    defines = {
+        "GZ_PHYSICS_ENGINE_INSTALL_DIR": "unused",
+    },
+    package_xml = "package.xml",
+)
+
+gz_export_header(
+    name = "Export",
+    out = "include/gz/physics/Export.hh",
+    export_base = "GZ_PHYSICS",
+    lib_name = "gz-physics",
+)
+
+public_headers_no_gen = glob(
+    include = [
+        "include/gz/physics/*.hh",
+        "include/gz/physics/detail/*.hh",
+    ],
+)
+
+gz_include_header(
+    name = "Include",
+    out = "include/gz/physics.hh",
+    hdrs = public_headers_no_gen + ["include/gz/physics/config.hh"],
+)
+
+sources = glob(
+    include = [
+        "src/*.cc",
+        "src/bazel/*.cc",
+    ],
+    exclude = [
+        "src/*_TEST.cc",
+        "src/InstallationDirectories.cc",
+    ],
+)
+
+public_headers = public_headers_no_gen + [
+    "include/gz/physics.hh",
+    "include/gz/physics/config.hh",
+    "include/gz/physics/Export.hh",
+]
+
+cc_library(
+    name = "gz-physics",
+    srcs = sources,
+    hdrs = public_headers,
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@eigen",
+        "@gz-common",
+        "@gz-math",
+        "@gz-plugin//:core",
+        "@gz-plugin//:register",
+        "@gz-utils//:ImplPtr",
+        "@gz-utils//:SuppressWarning",
+        "@gz-utils//log:Logger",
+    ],
+)
+
+cc_library(
+    name = "heightmap",
+    hdrs = glob([
+        "heightmap/include/gz/physics/heightmap/**/*.hh",
+    ]),
+    includes = ["heightmap/include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gz-physics",
+        "@gz-common//geospatial:geospatial",
+    ],
+)
+
+cc_library(
+    name = "mesh",
+    hdrs = glob([
+        "mesh/include/gz/physics/mesh/**/*.hh",
+    ]),
+    includes = ["mesh/include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gz-physics",
+        "@gz-common//graphics:graphics",
+    ],
+)
+
+cc_library(
+    name = "sdf",
+    hdrs = glob([
+        "sdf/include/gz/physics/sdf/*.hh",
+    ]),
+    includes = ["sdf/include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gz-physics",
+        "@sdformat",
+    ],
+)
+
+test_sources = glob(
+    include = ["src/*_TEST.cc"],
+)
+
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [src],
+    data = [
+        "//bullet:libgz-physics-bullet-plugin.so",
+        "//bullet-featherstone:libgz-physics-bullet-featherstone-plugin.so",
+        "//dartsim:libgz-physics-dartsim-plugin.so",
+        "//tpe:libgz-physics-tpe-plugin.so",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    deps = [
+        ":gz-physics",
+        "//test:test_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-common//graphics:graphics",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:loader",
+    ],
+) for src in test_sources]
