@@ -5,3 +5,6 @@ build_*
 # OS generated files
 .DS_Store
 *.swp
+
+# Bazel generated files
+bazel-*

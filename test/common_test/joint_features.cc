@@ -1189,23 +1189,23 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetSpringStiffness)
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Input input;
 
-    // turning off gravity so that the system behaves 
+    // turning off gravity so that the system behaves
     // like mass-damper
     world->SetGravity(Eigen::Vector3d::Zero());
 
     world->Step(output, state, input);
-    // setting joint position to start from the bottom 
+    // setting joint position to start from the bottom
     // pendulum position
     joint->SetPosition(0, GZ_PI/2);
     ASSERT_EQ(joint->GetPosition(0), GZ_PI/2);
 
-    // setting joint velocity to zero 
+    // setting joint velocity to zero
     joint->SetVelocity(0, 0);
     ASSERT_EQ(joint->GetVelocity(0), 0);
-    // setting joint velocity to zero 
+    // setting joint velocity to zero
     joint->SetVelocity(0, 0);
     ASSERT_EQ(joint->GetVelocity(0), 0);
-    // without reference joint position joint should stay 
+    // without reference joint position joint should stay
     // at GZ_PI/2
     for (std::size_t i = 0; i < 2500; ++i)
     {
@@ -1226,7 +1226,7 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetSpringStiffness)
     // setting joint rest position to pendulum upright position
     joint->SetSpringReference(0, -GZ_PI/2);
 
-    // setting joint stiffness 
+    // setting joint stiffness
     joint->SetSpringStiffness(0, 60);
 
     // setting joint damping to stabilize the joint's
@@ -1234,13 +1234,13 @@ TYPED_TEST(JointFeaturesSpringStiffnessTest, JointSetSpringStiffness)
     joint->SetDampingCoefficient(0, 17);
 
     // running simulation for longer to make sure
-    // joint reaches equilibrium 
+    // joint reaches equilibrium
     for (std::size_t i = 0; i < 2500; ++i)
     {
       world->Step(output, state, input);
     }
-    
-    // checking if the joint position is the same 
+
+    // checking if the joint position is the same
     // as rest position
     ASSERT_NEAR(joint->GetPosition(0), -GZ_PI/2, 1e-4);
 
@@ -1392,8 +1392,8 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
     // sanity check on velocity values
     EXPECT_LT(1e-5, upperLinkLinearVelocity.Z());
     EXPECT_GT(-0.03, upperLinkAngularVelocity.X());
-#ifdef __APPLE__
-    // Disable some expectations for dartsim plugin on homebrew,
+#ifdef DART_ODE_CCD_WITH_BOX_CYLINDER_COLLISION
+    // Disable some expectations for dartsim plugin with ode version >= 0.16.5,
     // see https://github.com/gazebosim/gz-physics/issues/620.
     if (this->PhysicsEngineName(name) != "dartsim")
 #endif
@@ -1401,8 +1401,8 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
       EXPECT_NEAR(0.0, upperLinkLinearVelocity.X(), 1e-6);
     }
     EXPECT_NEAR(0.0, upperLinkLinearVelocity.Y(), 1e-6);
-#ifdef __APPLE__
-    // Disable some expectations for dartsim plugin on homebrew,
+#ifdef DART_ODE_CCD_WITH_BOX_CYLINDER_COLLISION
+    // Disable some expectations for dartsim plugin with ode version >= 0.16.5,
     // see https://github.com/gazebosim/gz-physics/issues/620.
     if (this->PhysicsEngineName(name) != "dartsim")
 #endif
