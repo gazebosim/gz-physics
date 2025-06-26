@@ -22,26 +22,14 @@
 1. Fix collision checking issues in bullet-featherstone
     * [Pull request #727](https://github.com/gazebosim/gz-physics/pull/727)
 
-1. Update Windows badges in README.md [skip ci]
-    * [Pull request #Update Windows badges in README.md [skip ci]](https://github.com/gazebosim/gz-physics/pull/Update Windows badges in README.md [skip ci])
-
 1. Fix windows warnings
     * [Pull request #720](https://github.com/gazebosim/gz-physics/pull/720)
-
-1. Fix windows warnings
-    * [Pull request #720](https://github.com/gazebosim/gz-physics/pull/720)
-
-1. Prepare for 7.5.0
-    * [Pull request #715](https://github.com/gazebosim/gz-physics/pull/715)
 
 1. bullet-featherstone: Remove joint motor constraint on joint force cmd
     * [Pull request #713](https://github.com/gazebosim/gz-physics/pull/713)
 
 1. Visibility fixes for DART on Windows
     * [Pull request #711](https://github.com/gazebosim/gz-physics/pull/711)
-
-1. resolve conflicts
-    * [Pull request #resolve conflicts](https://github.com/gazebosim/gz-physics/pull/resolve conflicts)
 
 1. Support setting max contacts in dart's bullet collision detector
     * [Pull request #593](https://github.com/gazebosim/gz-physics/pull/593)
@@ -51,12 +39,6 @@
 
 1. Prevent crash when objects move to invalid poses
     * [Pull request #706](https://github.com/gazebosim/gz-physics/pull/706)
-
-1. Prepare for 7.4.0 Release (update changelog)
-    * [Pull request #704](https://github.com/gazebosim/gz-physics/pull/704)
-
-1. Prepare for 7.4.0
-    * [Pull request #703](https://github.com/gazebosim/gz-physics/pull/703)
 
 1. bullet-featherstone: Reset joint motor constraint's velocity target after each step
     * [Pull request #699](https://github.com/gazebosim/gz-physics/pull/699)
