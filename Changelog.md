@@ -1,5 +1,72 @@
 ## Gazebo Physics 8.x
 
+### Gazebo Physics 8.2.0 (2025-06-26)
+
+1. **Baseline:** this includes all changes from 8.1.0 and earlier.
+
+1. Add bazel build files
+    * [Pull request #748](https://github.com/gazebosim/gz-physics/pull/748)
+
+1. Features to change joint properties at run-time
+    * [Pull request #723](https://github.com/gazebosim/gz-physics/pull/723)
+
+1. Add joint damping support in bullet-featherstone plugin
+    * [Pull request #738](https://github.com/gazebosim/gz-physics/pull/738)
+
+1. Clean up comment in joint wrench test
+    * [Pull request #739](https://github.com/gazebosim/gz-physics/pull/739)
+
+1. Suppress -Wreturn-type warning from octomap
+    * [Pull request #728](https://github.com/gazebosim/gz-physics/pull/728)
+
+1. Fix collision checking issues in bullet-featherstone
+    * [Pull request #727](https://github.com/gazebosim/gz-physics/pull/727)
+
+1. Update Windows badges in README.md [skip ci]
+    * [Pull request #Update Windows badges in README.md [skip ci]](https://github.com/gazebosim/gz-physics/pull/Update Windows badges in README.md [skip ci])
+
+1. Fix windows warnings
+    * [Pull request #720](https://github.com/gazebosim/gz-physics/pull/720)
+
+1. Fix windows warnings
+    * [Pull request #720](https://github.com/gazebosim/gz-physics/pull/720)
+
+1. Prepare for 7.5.0
+    * [Pull request #715](https://github.com/gazebosim/gz-physics/pull/715)
+
+1. bullet-featherstone: Remove joint motor constraint on joint force cmd
+    * [Pull request #713](https://github.com/gazebosim/gz-physics/pull/713)
+
+1. Visibility fixes for DART on Windows
+    * [Pull request #711](https://github.com/gazebosim/gz-physics/pull/711)
+
+1. resolve conflicts
+    * [Pull request #resolve conflicts](https://github.com/gazebosim/gz-physics/pull/resolve conflicts)
+
+1. Support setting max contacts in dart's bullet collision detector
+    * [Pull request #593](https://github.com/gazebosim/gz-physics/pull/593)
+
+1. Remove unreferenced switching-physics-engine tutorial and fix broken link in 04_physics_engines
+    * [Pull request #684](https://github.com/gazebosim/gz-physics/pull/684)
+
+1. Prevent crash when objects move to invalid poses
+    * [Pull request #706](https://github.com/gazebosim/gz-physics/pull/706)
+
+1. Prepare for 7.4.0 Release (update changelog)
+    * [Pull request #704](https://github.com/gazebosim/gz-physics/pull/704)
+
+1. Prepare for 7.4.0
+    * [Pull request #703](https://github.com/gazebosim/gz-physics/pull/703)
+
+1. bullet-featherstone: Reset joint motor constraint's velocity target after each step
+    * [Pull request #699](https://github.com/gazebosim/gz-physics/pull/699)
+
+1. GzOdeCollisionDetector: Use static mutex in create
+    * [Pull request #675](https://github.com/gazebosim/gz-physics/pull/675)
+
+1. bullet-featherstone - add applied constraint to joint transmitted wrench
+    * [Pull request #668](https://github.com/gazebosim/gz-physics/pull/668)
+
 ### Gazebo Physics 8.1.0 (2025-02-12)
 
 1. bullet-featherstone: Remove joint motor constraint on joint force cmd
