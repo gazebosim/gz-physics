@@ -815,7 +815,7 @@ void JointFeatures::SetConstraintForceMixing(const Identity &_childID,
     double _value)
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
-  for (auto&& item :  linkInfo->weldedNodes)
+  for (auto&& item : linkInfo->weldedNodes)
   {
     auto constraint = item.second;
     gzdbg << "SetConstraintForceMixing: " << _value << std::endl;
@@ -829,7 +829,7 @@ void JointFeatures::SetErrorReductionParameter(const Identity &_childID,
     double _value)
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
-  for (auto&& item :  linkInfo->weldedNodes)
+  for (auto&& item : linkInfo->weldedNodes)
   {
     auto constraint = item.second;
     gzdbg << "SetErrorReductionParameter: " << _value << std::endl;
