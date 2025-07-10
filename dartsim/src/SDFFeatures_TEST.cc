@@ -17,6 +17,7 @@
 
 #include <type_traits>
 
+#include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/DegreeOfFreedom.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
@@ -417,6 +418,14 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
       screwJointTest->getJoint(1));
   ASSERT_NE(nullptr, screwJoint);
   EXPECT_DOUBLE_EQ(-GZ_PI, screwJoint->getPitch());
+
+  const dart::dynamics::SkeletonPtr ballJointTest =
+      dartWorld->getSkeleton("ball_joint_test");
+  ASSERT_NE(nullptr, ballJointTest);
+  ASSERT_EQ(2u, ballJointTest->getNumBodyNodes());
+  const auto *ballJoint = dynamic_cast<const dart::dynamics::BallJoint*>(
+      ballJointTest->getJoint(1));
+  ASSERT_NE(nullptr, ballJoint);
 }
 
 /////////////////////////////////////////////////

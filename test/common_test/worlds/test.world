@@ -358,6 +358,17 @@
         <thread_pitch>2</thread_pitch>
       </joint>
     </model>
+    <model name="ball_joint_test">
+      <link name="link0"/>
+      <link name="link1"/>
+      <joint name="j0" type="ball">
+        <parent>link0</parent>
+        <child>link1</child>
+        <axis>
+          <damping>0.1</damping>
+        </axis>
+      </joint>
+    </model>
     <!-- Remove joint types as they get supported -->
     <model name="unsupported_joint_test">
       <link name="link0"/>
