@@ -249,11 +249,11 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
 /////////////////////////////////////////////////
 template <typename JointType>
 static JointType *ConstructBallJoint(
-    const ModelInfo &_modelInfo,
+    const ModelInfo &/*_modelInfo*/,
     const ::sdf::Joint &_sdfJoint,
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child,
-    const Eigen::Isometry3d &_T_joint)
+    const Eigen::Isometry3d &/*_T_joint*/)
 {
   // SDF does not support any of the properties for ball joint, besides the
   // name and relative transforms to its parent and child.
