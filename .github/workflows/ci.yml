@@ -7,6 +7,7 @@ on:
       - 'ign-physics[0-9]'
       - 'gz-physics[1-9]?[0-9]'
       - 'main'
+      - 'iche033/pr-ball-joint-properties'
 
 jobs:
   jammy-ci:
