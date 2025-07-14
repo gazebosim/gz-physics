@@ -702,17 +702,12 @@ Identity SDFFeatures::ConstructSdfLink(
     jointProperties.mName = bodyProperties.mName + "_KinematicJoint";
     bodyProperties.mGravityMode = false;
 
-    //jointProperties.mActuatorType = dart::dynamics::Joint::ActuatorType::PASSIVE;
-    //jointProperties.mName = bodyProperties.mName + "_KinematicJoint";
-
     auto result = modelInfo.model->createJointAndBodyNodePair<
-      dart::dynamics::KinematicJoint>(nullptr, jointProperties, bodyProperties);
-      // result.first->setAccelerations(Eigen::Vector6d::Zero());
-      //`result.second->setAccelerations(Eigen::Vector6d::Zero());
+      gz::dynamics::KinematicJoint>(nullptr, jointProperties, bodyProperties);
 
-    dart::dynamics::KinematicJoint * const joint = result.first;  
+    auto const joint = result.first;  
     joint->setTransform(tf);
-
+    
     bn = result.second;
   }
     
