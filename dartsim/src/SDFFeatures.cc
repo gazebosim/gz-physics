@@ -31,6 +31,7 @@
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
+#include <dart/dynamics/KinematicJoint.hpp>
 #include <dart/dynamics/HeightmapShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
@@ -672,7 +673,7 @@ Identity SDFFeatures::ConstructSdfLink(
   const Eigen::Vector3d localCom =
       math::eigen3::convert(sdfInertia.Pose().Pos());
 
-  const bool isKinematic = true; //TODO temporal fix for kinematic tag //_sdfLink.Kinematic();
+  const bool isKinematic = _sdfLink.Kinematic();
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
