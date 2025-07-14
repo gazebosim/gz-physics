@@ -18,7 +18,6 @@
 #include "FreeGroupFeatures.hh"
 
 #include <dart/constraint/ConstraintSolver.hpp>
-#include <dart/dynamics/KinematicJoint.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <gz/common/Console.hh>
 
@@ -45,7 +44,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
     if (skeleton->getRootJoint(i)->getType()
         != dart::dynamics::FreeJoint::getStaticType() &&
         skeleton->getRootJoint(i)->getType()
-        != dart::dynamics::KinematicJoint::getStaticType())
+        != "KinematicJoint" )//gz::dynamics::KinematicJoint::getStaticType())
     {
       return this->GenerateInvalidId();
     }

@@ -31,7 +31,6 @@
 #include <dart/dynamics/CylinderShape.hpp>
 #include <dart/dynamics/EllipsoidShape.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
-#include <dart/dynamics/KinematicJoint.hpp>
 #include <dart/dynamics/HeightmapShape.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <dart/dynamics/PlaneShape.hpp>
