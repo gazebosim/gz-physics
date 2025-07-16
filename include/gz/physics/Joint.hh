@@ -805,7 +805,7 @@ namespace gz
         /// kinematic chain. If false, the fixed joint constraint is enforced
         /// by applying forces to both the parent and child links.
         /// By default when a fixed joint constraint is created, this property
-        /// is set to true.
+        /// is set to false.
         /// \param[in] _weldChildToParent True to weld the child link to the
         /// parent link.
         public: void SetWeldChildToParent(bool _weldChildToParent);
