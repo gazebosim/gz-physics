@@ -110,7 +110,8 @@ WorldPtr LoadWorldWhole(const std::string &_world)
 
   if (gPrint)
   {
-    std::cerr << " ============================= SDF ============= " << std::endl;
+    std::cerr << " ============================= SDF ============= "
+              << std::endl;
     std::cerr << root.Element()->ToString("") << std::endl;;
   }
 
@@ -437,7 +438,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
       ballJointTest->getJoint(1));
   ASSERT_NE(nullptr, ballJoint);
 }
-/*
+
 /////////////////////////////////////////////////
 // Test that joint limits are working by running the simulation
 TEST_P(SDFFeatures_TEST, CheckJointLimitEnforcement)
@@ -1003,4 +1004,3 @@ TEST_P(SDFFeatures_TEST, Shapes)
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
   }
 }
-*/
