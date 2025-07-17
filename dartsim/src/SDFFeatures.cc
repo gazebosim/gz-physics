@@ -587,7 +587,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 {
   auto worldID = _parentID;
   std::string modelName = _sdfModel.Name();
-
   const bool isNested = this->models.HasEntity(_parentID);
   // If this is a nested model, find the world assocated with the model
   if (isNested)
