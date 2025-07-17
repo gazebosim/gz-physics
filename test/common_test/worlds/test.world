@@ -364,9 +364,9 @@
       <joint name="j0" type="ball">
         <parent>link0</parent>
         <child>link1</child>
-        <!--<axis>
+        <axis>
           <damping>0.1</damping>
-        </axis>-->
+        </axis>
       </joint>
     </model>
     <!-- Remove joint types as they get supported -->

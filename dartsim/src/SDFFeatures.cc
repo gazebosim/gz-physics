@@ -530,6 +530,7 @@ Identity SDFFeatures::ConstructSdfWorld(
   // information here. For now, we'll just use dartsim's default physics
   // parameters.
 
+  std::cerr << "  =====  model count " << _sdfWorld.ModelCount() << std::endl;
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
     const ::sdf::Model *model = _sdfWorld.ModelByIndex(i);
@@ -587,6 +588,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 {
   auto worldID = _parentID;
   std::string modelName = _sdfModel.Name();
+
+  std::cerr << "  =====  model name " << modelName << std::endl;
   const bool isNested = this->models.HasEntity(_parentID);
   // If this is a nested model, find the world assocated with the model
   if (isNested)

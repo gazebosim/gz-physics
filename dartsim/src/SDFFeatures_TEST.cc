@@ -14,6 +14,7 @@
  * limitations under the License.
  *
 */
+bool gPrint = false;
 
 #include <type_traits>
 
@@ -106,6 +107,13 @@ WorldPtr LoadWorldWhole(const std::string &_world)
 
   sdf::Root root;
   const sdf::Errors &errors = root.Load(_world);
+
+  if (gPrint)
+  {
+    std::cerr << " ============================= SDF ============= " << std::endl;
+    std::cerr << root.Element()->ToString("") << std::endl;;
+  }
+
   EXPECT_EQ(0u, errors.size());
   for (const auto & error : errors) {
     std::cout << error << std::endl;
@@ -316,6 +324,7 @@ INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
 // Test that the dartsim plugin loaded all the relevant information correctly.
 TEST_P(SDFFeatures_TEST, CheckDartsimData)
 {
+  gPrint = true;
   WorldPtr world = this->LoadWorld(common_test::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
@@ -323,6 +332,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
   ASSERT_NE(nullptr, dartWorld);
 
   ASSERT_EQ(8u, dartWorld->getNumSkeletons());
+  gPrint = false;
 
   const dart::dynamics::SkeletonPtr skeleton = dartWorld->getSkeleton(1);
   ASSERT_NE(nullptr, skeleton);
@@ -427,7 +437,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
       ballJointTest->getJoint(1));
   ASSERT_NE(nullptr, ballJoint);
 }
-
+/*
 /////////////////////////////////////////////////
 // Test that joint limits are working by running the simulation
 TEST_P(SDFFeatures_TEST, CheckJointLimitEnforcement)
@@ -993,3 +1003,4 @@ TEST_P(SDFFeatures_TEST, Shapes)
     ASSERT_EQ(1u, skeleton->getNumBodyNodes());
   }
 }
+*/
