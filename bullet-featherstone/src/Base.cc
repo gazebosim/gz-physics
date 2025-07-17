@@ -17,6 +17,9 @@
 
 #include "Base.hh"
 
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btQuaternion.h>
+
 #include <utility>
 
 namespace gz {
@@ -54,6 +57,55 @@ WorldInfo::WorldInfo(std::string name_)
   // //world/physics/solver/bullet/iters
   // (default in bullet is 10)
   this->world->getSolverInfo().m_numIterations = 50u;
+}
+
+void GzMultiBody::SetJointPosForDof(
+  int _jointIndex,
+  std::size_t _dof,
+  btScalar _value)
+{
+  btScalar *positions =
+      this->getJointPosMultiDof(_jointIndex);
+  positions[_dof] = static_cast<btScalar>(_value);
+
+  // Call setJointPosMultiDof to ensure that the link pose cache is updated.
+  this->setJointPosMultiDof(_jointIndex, positions);
+
+  this->needsCollisionTransformsUpdate = true;
+}
+
+btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof) const
+{
+  return this->getJointPosMultiDof(_jointIndex)[_dof];
+}
+
+void GzMultiBody::SetBaseWorldTransform(const btTransform &_pose)
+{
+  this->setBaseWorldTransform(_pose);
+  this->needsCollisionTransformsUpdate = true;
+}
+
+void GzMultiBody::UpdateCollisionTransformsIfNeeded()
+{
+  if (this->needsCollisionTransformsUpdate)
+  {
+    btAlignedObjectArray<btQuaternion> scratchWorldToLocal;
+    btAlignedObjectArray<btVector3> scratchLocalOrigin;
+    this->updateCollisionObjectWorldTransforms(
+      scratchWorldToLocal, scratchLocalOrigin);
+    this->needsCollisionTransformsUpdate = false;
+  }
+}
+
+void GzMultiBody::AddJointDampingTorque(int _jointIndex, double _damping)
+{
+  const btMultibodyLink& link = this->getLink(_jointIndex);
+  for (int dof = 0; dof < link.m_dofCount; ++dof)
+  {
+    btScalar currVel = this->getJointVelMultiDof(_jointIndex)[dof];
+    btScalar torque = -static_cast<btScalar>(_damping) * currVel;
+    this->addJointTorqueMultiDof(_jointIndex, dof, torque);
+  }
 }
 
 }  // namespace bullet_featherstone

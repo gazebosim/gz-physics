@@ -85,14 +85,10 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
 
-  // Reject if the model has fixed base
-  if (model->body->hasFixedBase())
-    return this->GenerateInvalidId();
-
-  // Also reject if the model is a child of a fixed constraint
-  // (detachable joint)
   for (const auto & joint : this->joints)
   {
+    // Also reject if the model is a child of a fixed constraint
+    // (detachable joint)
     if (joint.second->fixedConstraint)
     {
       if (joint.second->fixedConstraint->getMultiBodyB() == model->body.get())
@@ -100,8 +96,17 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
         return this->GenerateInvalidId();
       }
     }
+    // Reject if the model has a world joint
+    if (std::size_t(joint.second->model) == std::size_t(_modelID))
+    {
+      const auto *identifier =
+          std::get_if<RootJoint>(&joint.second->identifier);
+      if (identifier)
+      {
+        return this->GenerateInvalidId();
+      }
+    }
   }
-
 
   return _modelID;
 }
@@ -110,12 +115,9 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
+  // Free groups in bullet-featherstone are currently represented by ModelInfo
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
-  const auto *model = this->ReferenceInterface<ModelInfo>(link->model);
-  if (model->body->hasFixedBase())
-    return this->GenerateInvalidId();
-
-  return link->model;
+  return this->FindFreeGroupForModel(link->model);
 }
 
 /////////////////////////////////////////////////
@@ -165,8 +167,8 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model)
   {
-    model->body->setBaseWorldTransform(
-        convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
+    model->body->SetBaseWorldTransform(
+      convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
 
     model->body->wakeUp();
 
