@@ -14,6 +14,7 @@
  * limitations under the License.
  *
 */
+
 #include <type_traits>
 
 #include <dart/dynamics/BallJoint.hpp>
@@ -105,7 +106,6 @@ WorldPtr LoadWorldWhole(const std::string &_world)
 
   sdf::Root root;
   const sdf::Errors &errors = root.Load(_world);
-
   EXPECT_EQ(0u, errors.size());
   for (const auto & error : errors) {
     std::cout << error << std::endl;
