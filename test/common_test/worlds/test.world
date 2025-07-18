@@ -464,7 +464,7 @@
             <ambient>1 1 0 1</ambient>
           </material>
         </visual>
-      
+
         <visual name="vis_cylinder">
           <pose>0 0 0.5 0 0 0</pose>
           <geometry>
@@ -493,7 +493,7 @@
             </friction>
           </surface>
         </collision>
-    
+
         <collision name="col_cylinder">
           <pose>0 0 0.5 0 0 0</pose>
           <geometry>
@@ -504,7 +504,7 @@
           </geometry>
         </collision>
       </link>
-      
+
       <!-- pin joint for upper link, at origin of upper link -->
       <joint name="upper_joint" type="revolute">
         <parent>base</parent>
@@ -513,7 +513,7 @@
           <xyz>1.0 0 0</xyz>
         </axis>
       </joint>
-     
+
     </model>
   </world>
 </sdf>
