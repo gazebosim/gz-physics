@@ -672,7 +672,11 @@ Identity SDFFeatures::ConstructSdfLink(
   const Eigen::Vector3d localCom =
       math::eigen3::convert(sdfInertia.Pose().Pos());
 
+<<<<<<< HEAD
   const bool isKinematic = _sdfLink.Kinematic();
+=======
+  const bool isKinematic = false; //TODO temporal fix for kinematic tag //_sdfLink.Kinematic();
+>>>>>>> 72e1caf4 (clean for tests)
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
