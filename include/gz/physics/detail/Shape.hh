@@ -55,6 +55,24 @@ namespace gz
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     auto GetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
+    ::GetPrimaryFrictionCoefficient() const
+    {
+      return this->template Interface<GetShapeCollisionProperties>()
+          ->GetShapePrimaryFrictionCoefficient(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
+    ::GetSecondaryFrictionCoefficient() const
+    {
+      return this->template Interface<GetShapeCollisionProperties>()
+          ->GetShapeSecondaryFrictionCoefficient(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    auto GetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
     ::GetRestitutionCoefficient(const BaseShapePtr<PolicyT> &_other) const
     -> Scalar
     {
@@ -88,6 +106,24 @@ namespace gz
     {
       this->template Interface<SetShapeCollisionProperties>()
           ->SetShapeFrictionCoefficient(this->identity, _other, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
+    ::SetPrimaryFrictionCoefficient(Scalar _value)
+    {
+      this->template Interface<SetShapeCollisionProperties>()
+          ->SetShapePrimaryFrictionCoefficient(this->identity, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetShapeCollisionProperties::Shape<PolicyT, FeaturesT>
+    ::SetSecondaryFrictionCoefficient(Scalar _value)
+    {
+      this->template Interface<SetShapeCollisionProperties>()
+          ->SetShapeSecondaryFrictionCoefficient(this->identity, _value);
     }
 
     /////////////////////////////////////////////////

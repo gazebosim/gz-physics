@@ -108,6 +108,16 @@ namespace gz
         public: Scalar GetFrictionCoefficient(
             const BaseShapePtr<PolicyT> &_other) const;
 
+        /// \brief Get the primary coefficient of friction of  this shape.
+        /// \return The primary coefficient of friction of this shape.
+        public: Scalar GetPrimaryFrictionCoefficient(
+            const BaseShapePtr<PolicyT> &_other) const;
+
+        /// \brief Get the secondary coefficient of friction of this shape.
+        /// \return The primary coefficient of friction of this shape.
+        public: Scalar GetSecondaryFrictionCoefficient(
+            const BaseShapePtr<PolicyT> &_other) const;
+
         /// \brief Get the coefficient of restitution between this shape and
         /// another shape.
         /// \param[in] _other
@@ -126,6 +136,12 @@ namespace gz
 
         public: virtual Scalar GetFrictionCoefficient(
             const Identity &_shape0, const Identity &_shape1) const = 0;
+
+        public: virtual Scalar GetShapePrimaryFrictionCoefficient(
+            const Identity &_shapeID) const = 0;
+
+        public: virtual Scalar GetShapeSecondaryFrictionCoefficient(
+            const Identity &_shapeID) const = 0;
 
         public: virtual Scalar GetRestitutionCoefficient(
             const Identity &_shape0, const Identity &_shape1) const = 0;
@@ -193,6 +209,14 @@ namespace gz
         public: void SetFrictionCoefficient(
             const BaseShapePtr<PolicyT> &_other, Scalar _value);
 
+        /// \brief Set the primary coefficient of friction of this shape.
+        /// \param[in] _value The value to set the coefficient to.
+        public: void SetPrimaryFrictionCoefficient(Scalar _value);
+
+        /// \brief Set the secondary coefficient of friction of this shape.
+        /// \param[in] _value The value to set the coefficient to.
+        public: void SetSecondaryFrictionCoefficient(Scalar _value);
+
         /// \brief Set the coefficient of restitution between this shape and
         /// another shape.
         /// \param[in] _other
@@ -213,6 +237,12 @@ namespace gz
             const Identity &_shape0,
             const Identity &_shape1,
             Scalar _value) = 0;
+
+        public: virtual void SetShapePrimaryFrictionCoefficient(
+            const Identity &_shapeID, Scalar _value) = 0;
+
+        public: virtual void SetShapeSecondaryFrictionCoefficient(
+            const Identity &_shapeID, Scalar _value) = 0;
 
         public: virtual void SetShapeRestitutionCoefficient(
             const Identity &_shape0,
