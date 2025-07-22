@@ -31,13 +31,13 @@ namespace gz
     {
       template <typename PluginT, typename FeaturePolicyT,
                 typename FeatureListOrTuple>
-      struct Registrar;
+      struct StaticRegistrar;
 
       template <typename PluginT, typename FeaturePolicyT,
                 typename FeatureListT>
-      struct Registrar
+      struct StaticRegistrar
       {
-        static void StaticRegisterPlugin()
+        static void RegisterPlugin()
         {
           StaticRegistrar<PluginT, FeaturePolicyT,
               typename FeatureListT::Features>::RegisterPlugin();
@@ -48,7 +48,7 @@ namespace gz
                 typename... Features>
       struct StaticRegistrar<PluginT, FeaturePolicyT, std::tuple<Features...>>
       {
-        static void StaticRegisterPlugin()
+        static void RegisterPlugin()
         {
           gz::plugin::detail::StaticRegistrar<
                 PluginT, Feature::Implementation<FeaturePolicyT>,
@@ -70,17 +70,17 @@ namespace gz
   { \
   namespace \
   { \
-    struct ExecuteWhenLoadingLibrary##UniqueID \
+    struct RegisterStaticPlugin##UniqueID \
     { \
-      ExecuteWhenLoadingLibrary##UniqueID() \
+      RegisterStaticPlugin##UniqueID() \
       { \
         ::gz::physics::detail::StaticRegistrar< \
             PluginType, FeaturePolicyT, FeatureListT>:: \
-            StaticRegisterPlugin(); \
+            RegisterPlugin(); \
       } \
     }; \
   \
-    static ExecuteWhenLoadingLibrary##UniqueID execute##UniqueID; \
+    static RegisterStaticPlugin##UniqueID execute##UniqueID; \
   }  /* namespace */ \
   }
 

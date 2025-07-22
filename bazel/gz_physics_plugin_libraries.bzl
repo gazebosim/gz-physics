@@ -12,8 +12,8 @@ def _generate_static_plugin_src_impl(ctx):
             "GZ_PHYSICS_ADD_PLUGIN": "GZ_PHYSICS_ADD_STATIC_PLUGIN",
             "GZ_PHYSICS_ADD_PLUGIN_ALIAS": "GZ_PHYSICS_ADD_STATIC_PLUGIN_ALIAS",
             # Header substitutions:
-            # "plugin/Register.hh": "plugin/RegisterStatic.hh",
-            # "plugin/RegisterMore.hh": "plugin/RegisterStatic.hh",
+            "gz/physics/Register.hh": "gz/physics/RegisterStatic.hh",
+            "gz/physics/RegisterMore.hh": "gz/physics/RegisterStatic.hh",
         },
     )
 
@@ -42,15 +42,9 @@ def gz_physics_plugin_libraries(static_lib_name, so_lib_name, srcs, includes = [
         so_lib_name: Name of the `cc_binary` shared library target which can be
           loaded at runtime. Set this to empty string if the shared library
           target should not be added.
-        srcs: List of source files including private headers. For example, this
-          can be a globbed list of *.cc and *.hh files.
+        srcs: List of source files including private headers. For example:
           ```
-          srcs = glob(
-              [
-                  "dartsim/src/*.cc",
-                  "dartsim/src/*.hh",
-              ],
-          ),
+          srcs = glob(["src/*.hh"] + ["src/plugin.cc"],
           ```
           Any test files should be excluded and can be added to separate
            `cc_test` targets.
