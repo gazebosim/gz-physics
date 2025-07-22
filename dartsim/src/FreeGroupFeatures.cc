@@ -44,7 +44,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
     if (skeleton->getRootJoint(i)->getType()
         != dart::dynamics::FreeJoint::getStaticType() &&
         skeleton->getRootJoint(i)->getType()
-        != "KinematicJoint" )//gz::dynamics::KinematicJoint::getStaticType())
+        != gz::dynamics::KinematicJoint::getStaticType())
     {
       return this->GenerateInvalidId();
     }
@@ -89,7 +89,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
     if (bn->getParentJoint()->getType()
         == dart::dynamics::FreeJoint::getStaticType() ||
         bn->getParentJoint()->getType()
-        == "KinematicTag" ) //gz::dynamics::KinematicJoint::getStaticType())
+        == gz::dynamics::KinematicJoint::getStaticType())
     {
       break;
     }
