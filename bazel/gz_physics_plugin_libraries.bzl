@@ -34,7 +34,7 @@ def gz_physics_plugin_libraries(static_lib_name, so_lib_name, srcs, includes = [
     Args:
         static_lib_name: Name of the `cc_library` target with static linking.
           Note that the plugin registration macro is substituted with
-          `GZ_ADD_STATIC_PLUGIN` in the source file for this target to register
+          `GZ_PHYSICS_ADD_STATIC_PLUGIN` in the source file for this target to register
           the plugin with the static registry.
           The `alwayslink` attribute of this target is set to True, so that
           downstream linking preserves symbols which are not referenced
