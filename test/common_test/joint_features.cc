@@ -2609,6 +2609,9 @@ TEST_F(FixedJointWeldFeatureTestTypes, FixedJointWeldFall)
     auto model1Body = model1->GetLink(bodyName);
     auto model2Body = model2->GetLink(bodyName);
 
+    // \todo(iche033) Extend test to use pose with rotations and
+    // verify that the relative pose between parent and child entities
+    // are enforced.
     const gz::math::Pose3d model1Pose(0, -1, 1.0, 0, 0, 0.0);
     const gz::math::Pose3d model2Pose(0, 1, 1.0, 0, 0, 0.0);
     const gz::math::Pose3d bodyPose(0, 1, 0.25, 0, 0, 0.0);
