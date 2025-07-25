@@ -18,6 +18,7 @@
 #include "SDFFeatures.hh"
 
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <string>
@@ -243,6 +244,36 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
   }
 
   return _child->moveTo<dart::dynamics::UniversalJoint>(_parent, properties);
+}
+
+/////////////////////////////////////////////////
+template <typename JointType>
+static JointType *ConstructBallJoint(
+    const ModelInfo &/*_modelInfo*/,
+    const ::sdf::Joint &_sdfJoint,
+    dart::dynamics::BodyNode * const _parent,
+    dart::dynamics::BodyNode * const _child,
+    const Eigen::Isometry3d &/*_T_joint*/)
+{
+  // SDF does not support any of the properties for ball joint, besides the
+  // name and relative transforms to its parent and child.
+  //
+  // To set other properties like joint limits, stiffness, etc,
+  // apply values in <axis> to all 3 DoF.
+  typename JointType::Properties properties;
+
+  const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(0);
+
+  // use default properties if sdfAxis is not set, otherwise apply to all DoF
+  if (sdfAxis)
+  {
+    for (const std::size_t index : {0u, 1u, 2u})
+    {
+      CopyStandardJointAxisProperties(index, properties, sdfAxis);
+    }
+  }
+
+  return _child->moveTo<JointType>(_parent, properties);
 }
 
 /////////////////////////////////////////////////
@@ -1169,11 +1200,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (::sdf::JointType::BALL == type)
   {
-    // SDF does not support any of the properties for ball joint, besides the
-    // name and relative transforms to its parent and child, which will be taken
-    // care of below. All other properties like joint limits, stiffness, etc,
-    // will be the default values of +/- infinity or 0.0.
-    joint = _child->moveTo<dart::dynamics::BallJoint>(_parent);
+    joint = ConstructBallJoint<dart::dynamics::BallJoint>(
+          _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }
   // TODO(MXG): Consider adding dartsim support for a CONTINUOUS joint type.
   // Alternatively, support the CONTINUOUS joint type by wrapping the
