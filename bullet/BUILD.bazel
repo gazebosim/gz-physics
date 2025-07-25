@@ -1,4 +1,5 @@
 load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
+load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -49,10 +50,10 @@ cc_library(
     ],
 )
 
-cc_binary(
-    name = "libgz-physics-bullet-plugin.so",
+gz_physics_plugin_libraries(
     srcs = ["src/plugin.cc"] + private_headers,
-    linkshared = True,
+    so_lib_name = "libgz-physics-bullet-plugin.so",
+    static_lib_name = "libgz-physics-bullet-plugin-static",
     visibility = ["//visibility:public"],
     deps = [
         ":bullet",

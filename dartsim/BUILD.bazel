@@ -1,4 +1,5 @@
 load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
+load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -67,13 +68,13 @@ cc_library(
     ],
 )
 
-cc_binary(
-    name = "libgz-physics-dartsim-plugin.so",
+gz_physics_plugin_libraries(
     srcs = ["src/plugin.cc"] + private_headers,
+    so_lib_name = "libgz-physics-dartsim-plugin.so",
+    static_lib_name = "libgz-physics-dartsim-plugin-static",
     defines = [
         "BAZEL_DARTSIM_DISABLE_UNREGISTER_COLLISION_DETECTORS",
     ],
-    linkshared = True,
     visibility = ["//visibility:public"],
     deps = [
         ":dartsim",
