@@ -28,6 +28,69 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+void enforceFixedConstraint(
+    btMultiBodyFixedConstraint *_fixedConstraint)
+{
+  // Update fixed constraint's child link pose to maintain a fixed transform
+  // from the parent link.
+  GzMultiBody *parent =
+      dynamic_cast<GzMultiBody*> (_fixedConstraint->getMultiBodyA());
+  if (parent == nullptr)
+  {
+    std::cerr << "Internal error: Failed to cast parent btMultiBody to "
+                 "GzMultiBody!" << std::endl;
+    return;
+  }
+
+  GzMultiBody *child =
+      dynamic_cast<GzMultiBody*> (_fixedConstraint->getMultiBodyB());
+  if (child == nullptr)
+  {
+    std::cerr << "Internal error: Failed to cast child btMultiBody to "
+                  "GzMultiBody!" << std::endl;
+    return;
+  }
+
+  btTransform parentToChildTf;
+  parentToChildTf.setOrigin(_fixedConstraint->getPivotInA());
+  parentToChildTf.setBasis(_fixedConstraint->getFrameInA());
+
+  int parentLinkIndex = _fixedConstraint->getLinkA();
+  int childLinkIndex = _fixedConstraint->getLinkB();
+
+  btTransform parentLinkTf;
+  btTransform childLinkTf;
+  if (parentLinkIndex == -1)
+  {
+    parentLinkTf = parent->getBaseWorldTransform();
+  }
+  else
+  {
+    btMultiBodyLinkCollider *collider =
+        parent->getLinkCollider(parentLinkIndex);
+    parentLinkTf = collider->getWorldTransform();
+  }
+  if (childLinkIndex == -1)
+  {
+    childLinkTf = child->getBaseWorldTransform();
+  }
+  else
+  {
+    btMultiBodyLinkCollider *collider =
+        child->getLinkCollider(childLinkIndex);
+    childLinkTf = collider->getWorldTransform();
+  }
+
+  btTransform expectedChildLinkTf = parentLinkTf * parentToChildTf;
+  btTransform childBaseTf =  child->getBaseWorldTransform();
+  btTransform childBaseToLink =
+      childBaseTf.inverse() * childLinkTf;
+  btTransform newChildBaseTf =
+      expectedChildLinkTf * childBaseToLink.inverse();
+  child->SetBaseWorldTransform(newChildBaseTf);
+}
+
+/////////////////////////////////////////////////
 void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
     ForwardStep::Output & _h,
@@ -42,6 +105,18 @@ void SimulationFeatures::WorldForwardStep(
   {
     std::chrono::duration<double> dt = *dtDur;
     stepSize = dt.count();
+  }
+
+  // Update fixed constraint behavior to weld child to parent.
+  // Do this before stepping, i.e. before physics engine tries to solve and
+  // enforce the constraint
+  for (auto & joint : this->joints)
+  {
+    if (joint.second->fixedConstraint &&
+        joint.second->fixedConstraintWeldChildToParent)
+    {
+      enforceFixedConstraint(joint.second->fixedConstraint.get());
+    }
   }
 
   // Bullet updates collision transforms *after* forward integration. But in
