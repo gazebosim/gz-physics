@@ -252,6 +252,10 @@ struct JointInfo
   // joint damping
   double damping = 0.0;
 
+  // True if the fixed constraint's child link is welded to parent link as if
+  // they are part of the same body.
+  bool fixedConstraintWeldChildToParent = false;
+
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
