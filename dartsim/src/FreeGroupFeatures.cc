@@ -147,6 +147,52 @@ FreeGroupFeatures::FreeGroupInfo FreeGroupFeatures::GetCanonicalInfo(
 }
 
 /////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupStaticState(
+    const Identity &_groupID,
+    bool _state)
+{
+  const auto modelInfo = this->models.at(_groupID);
+  // Verify that the model qualifies as a FreeGroup
+  dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
+
+  std::cout << "SetFreeGroupStaticState " << std::endl;
+
+  if (skeleton) {
+    skeleton->setMobile(!_state);
+  } else {
+  }
+}
+
+/////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupGravityEnabled(
+    const Identity &_groupID,
+    bool _enabled)
+{
+  const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
+  if (!info.model)
+  {
+    info.link->setGravityMode(_enabled);
+    return;
+  }
+
+  for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
+  {
+    auto *bn = info.model->getRootBodyNode(i);
+    bn->setGravityMode(_enabled);
+  }
+  // const auto modelInfo = this->models.at(_groupID);
+  // // Verify that the model qualifies as a FreeGroup
+  // dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
+
+  // std::cout << "SetFreeGroupStaticState " << std::endl;
+
+  // if (skeleton) {
+  //   skeleton->setGravity(_gravity);
+  // } else {
+  // }
+}
+
+/////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)

@@ -162,6 +162,58 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
+    /// \brief This features sets the FreeGroup static state.
+    class GZ_PHYSICS_VISIBLE SetFreeGroupStaticState
+        : public virtual FeatureWithRequirements<FindFreeGroupFeature>
+    {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
+      {
+        /// \brief Set this FreeGroup pose in world frame.
+        public: void SetStaticState(bool _state);
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void SetFreeGroupStaticState(
+            const Identity &_groupID,
+            bool _state) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This features sets the FreeGroup gravity.
+    class GZ_PHYSICS_VISIBLE SetFreeGroupGravityEnabled
+        : public virtual FeatureWithRequirements<FindFreeGroupFeature>
+    {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
+      {
+        /// \brief Set this FreeGroup pose in world frame.
+        public: void SetGravityEnabled(bool _enabled);
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void SetFreeGroupGravityEnabled(
+            const Identity &_groupID,
+            bool _enabled) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
     /// \brief This features sets the FreeGroup linear and angular velocity in
     /// world frame.
     class GZ_PHYSICS_VISIBLE SetFreeGroupWorldVelocity

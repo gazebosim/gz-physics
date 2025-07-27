@@ -111,6 +111,24 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    void SetFreeGroupStaticState::FreeGroup<PolicyT, FeaturesT>::SetStaticState(
+        bool _state)
+    {
+      this->template Interface<SetFreeGroupStaticState>()
+        ->SetFreeGroupStaticState(this->identity, _state);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetFreeGroupGravityEnabled::FreeGroup<PolicyT, FeaturesT>::SetGravityEnabled(
+        bool _enabled)
+    {
+      this->template Interface<SetFreeGroupGravityEnabled>()
+        ->SetFreeGroupGravityEnabled(this->identity, _enabled);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void SetFreeGroupWorldVelocity::FreeGroup<PolicyT, FeaturesT>::
     SetWorldLinearVelocity(const LinearVelocity &_linearVelocity)
     {
