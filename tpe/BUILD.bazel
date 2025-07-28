@@ -1,4 +1,5 @@
 load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
+load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -108,10 +109,10 @@ cc_library(
     ],
 )
 
-cc_binary(
-    name = "libgz-physics-tpe-plugin.so",
+gz_physics_plugin_libraries(
     srcs = ["plugin/src/plugin.cc"] + private_headers + tpelib_private_headers,
-    linkshared = True,
+    so_lib_name = "libgz-physics-tpe-plugin.so",
+    static_lib_name = "libgz-physics-tpe-plugin-static",
     visibility = ["//visibility:public"],
     deps = [
         ":Export-tpelib",
