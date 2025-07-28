@@ -857,6 +857,19 @@ bool JointFeatures::SetJointMimicConstraint(
   world->world->addMultiBodyConstraint(followerJoint->gearConstraint.get());
   return true;
 }
+
+/////////////////////////////////////////////////
+void JointFeatures::SetFixedJointWeldChildToParent(
+    const Identity &_id, bool _weldChildToParent)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+  if (jointInfo->fixedConstraint)
+  {
+    jointInfo->fixedConstraintWeldChildToParent = _weldChildToParent;
+  }
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz
