@@ -181,6 +181,27 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
 }
 
 /////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupCollisionEnabled(
+      const Identity &_groupID,
+      bool _enabled)
+{
+  const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
+  if (!info.model)
+  {
+    // info.link->setColliding(_enabled);
+    info.link->setCollidable(_enabled);
+    return;
+  }
+
+  for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
+  {
+    auto *bn = info.model->getRootBodyNode(i);
+    // bn->setColliding(_enabled);
+    bn->setCollidable(_enabled);
+  }
+}
+
+/////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)

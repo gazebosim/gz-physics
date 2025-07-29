@@ -31,7 +31,8 @@ struct FreeGroupFeatureList : FeatureList<
   SetFreeGroupWorldPose,
   SetFreeGroupWorldVelocity,
   SetFreeGroupStaticState,
-  SetFreeGroupGravityEnabled
+  SetFreeGroupGravityEnabled,
+  SetFreeGroupCollisionEnabled
   // Note: FreeGroupFrameSemantics is covered in KinematicsFeatures.hh
 > { };
 
@@ -67,6 +68,10 @@ class FreeGroupFeatures
       bool _state) override;
 
   void SetFreeGroupGravityEnabled(
+      const Identity &_groupID,
+      bool _enabled) override;
+
+  void SetFreeGroupCollisionEnabled(
       const Identity &_groupID,
       bool _enabled) override;
 
