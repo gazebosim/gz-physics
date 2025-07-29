@@ -180,16 +180,27 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
     auto *bn = info.model->getRootBodyNode(i);
     bn->setGravityMode(_enabled);
   }
-  // const auto modelInfo = this->models.at(_groupID);
-  // // Verify that the model qualifies as a FreeGroup
-  // dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
+}
 
-  // std::cout << "SetFreeGroupStaticState " << std::endl;
+/////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupCollisionEnabled(
+      const Identity &_groupID,
+      bool _enabled)
+{
+  const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
+  if (!info.model)
+  {
+    // info.link->setColliding(_enabled);
+    info.link->setCollidable(_enabled);
+    return;
+  }
 
-  // if (skeleton) {
-  //   skeleton->setGravity(_gravity);
-  // } else {
-  // }
+  for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
+  {
+    auto *bn = info.model->getRootBodyNode(i);
+    // bn->setColliding(_enabled);
+    bn->setCollidable(_enabled);
+  }
 }
 
 /////////////////////////////////////////////////

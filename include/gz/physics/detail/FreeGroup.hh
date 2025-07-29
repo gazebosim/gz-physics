@@ -129,6 +129,15 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    void SetFreeGroupCollisionEnabled::FreeGroup<PolicyT, FeaturesT>::
+    SetCollisionEnabled(bool _enabled)
+    {
+      this->template Interface<SetFreeGroupCollisionEnabled>()
+        ->SetFreeGroupCollisionEnabled(this->identity, _enabled);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void SetFreeGroupWorldVelocity::FreeGroup<PolicyT, FeaturesT>::
     SetWorldLinearVelocity(const LinearVelocity &_linearVelocity)
     {

@@ -214,6 +214,32 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
+    /// \brief This features sets the FreeGroup collision enabled.
+    class GZ_PHYSICS_VISIBLE SetFreeGroupCollisionEnabled
+        : public virtual FeatureWithRequirements<FindFreeGroupFeature>
+    {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
+      {
+        /// \brief Set this FreeGroup pose in world frame.
+        public: void SetCollisionEnabled(bool _enabled);
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void SetFreeGroupCollisionEnabled(
+            const Identity &_groupID,
+            bool _enabled) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
     /// \brief This features sets the FreeGroup linear and angular velocity in
     /// world frame.
     class GZ_PHYSICS_VISIBLE SetFreeGroupWorldVelocity
