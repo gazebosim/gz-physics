@@ -120,8 +120,8 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    void SetFreeGroupGravityEnabled::FreeGroup<PolicyT, FeaturesT>::SetGravityEnabled(
-        bool _enabled)
+    void SetFreeGroupGravityEnabled::FreeGroup<PolicyT, FeaturesT>::
+    SetGravityEnabled(bool _enabled)
     {
       this->template Interface<SetFreeGroupGravityEnabled>()
         ->SetFreeGroupGravityEnabled(this->identity, _enabled);
