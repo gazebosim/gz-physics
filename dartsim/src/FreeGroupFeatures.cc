@@ -106,7 +106,10 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
-  return this->GenerateIdentity(this->links.IdentityOf(info.link));
+  if (info.link)
+    return this->GenerateIdentity(this->links.IdentityOf(info.link));
+  else
+    return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
