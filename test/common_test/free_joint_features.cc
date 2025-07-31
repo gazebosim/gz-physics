@@ -240,6 +240,61 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
   }
 }
 
+TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
+{
+  const std::string modelStr = R"(
+    <sdf version="1.11">
+      <model name="box">
+        <pose>1 2 3.0 0 0 0</pose>
+        <model name="nested_box"/>
+      </model>
+    </sdf>)";
+
+  for (const std::string &name : pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(
+      common_test::worlds::kGroundSdf);
+    EXPECT_EQ(0u, errors.size()) << errors;
+
+    EXPECT_EQ(1u, root.WorldCount());
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, sdfWorld);
+
+    auto world = engine->ConstructWorld(*sdfWorld);
+    ASSERT_NE(nullptr, world);
+
+    // Create the model with no links
+    sdf::ParserConfig parserConfig;
+    parserConfig.SetWarningsPolicy(sdf::EnforcementPolicy::WARN);
+    errors = root.LoadSdfString(modelStr, parserConfig);
+    EXPECT_FALSE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto model = world->GetModel("box");
+    // bullet-featherstone strictly does not allow models with no links.
+    if (this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      EXPECT_EQ(nullptr, model);
+    }
+    else
+    {
+      EXPECT_NE(nullptr, model);
+
+      // Free group should not be available
+      auto freeGroup = model->FindFreeGroup();
+      EXPECT_EQ(nullptr, freeGroup);
+    }
+  }
+}
+
 TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
 {
   const std::string modelStr = R"(
