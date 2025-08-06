@@ -245,8 +245,11 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
   const std::string modelStr = R"(
     <sdf version="1.11">
       <model name="box">
+        <static>true</static>
         <pose>1 2 3.0 0 0 0</pose>
-        <model name="nested_box"/>
+        <model name="nested_box">
+          <static>true</static>
+        </model>
       </model>
     </sdf>)";
 
@@ -271,12 +274,11 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
     ASSERT_NE(nullptr, world);
 
     // Create the model with no links
-    sdf::ParserConfig parserConfig;
-    parserConfig.SetWarningsPolicy(sdf::EnforcementPolicy::WARN);
-    errors = root.LoadSdfString(modelStr, parserConfig);
-    EXPECT_FALSE(errors.empty()) << errors;
-    ASSERT_NE(nullptr, root.Model());
-    world->ConstructModel(*root.Model());
+    sdf::Root rootNested;
+    sdf::Errors errorsNested = rootNested.LoadSdfString(modelStr);
+    EXPECT_TRUE(errorsNested.empty()) << errorsNested;
+    ASSERT_NE(nullptr, rootNested.Model());
+    world->ConstructModel(*rootNested.Model());
 
     auto model = world->GetModel("box");
     // bullet-featherstone strictly does not allow models with no links.
