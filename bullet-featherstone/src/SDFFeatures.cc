@@ -506,7 +506,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   std::unordered_map<const ::sdf::Model*, Identity> modelIDs;
   std::size_t rootModelID = 0u;
-  std::shared_ptr<btMultiBody> rootMultiBody;
+  std::shared_ptr<GzMultiBody> rootMultiBody;
 
   auto getModelScopedName = [&](const ::sdf::Model *_targetModel,
     const ::sdf::Model *_parentModel, const std::string &_prefix,
@@ -569,7 +569,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         {
           auto worldIdentity = this->GenerateIdentity(
               _modelOrWorldID, worldIt->second);
-          rootMultiBody = std::make_shared<btMultiBody>(
+          rootMultiBody = std::make_shared<GzMultiBody>(
                 static_cast<int>(structure.flatLinks.size()),
                 structure.mass,
                 structure.inertia,
@@ -831,8 +831,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
             static_cast<btScalar>(joint->Axis()->Lower());
         model->body->getLink(i).m_jointUpperLimit =
             static_cast<btScalar>(joint->Axis()->Upper());
-        model->body->getLink(i).m_jointDamping =
-            static_cast<btScalar>(joint->Axis()->Damping());
         model->body->getLink(i).m_jointFriction =
             static_cast<btScalar>(joint->Axis()->Friction());
         model->body->getLink(i).m_jointMaxVelocity =
@@ -846,6 +844,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
         jointInfo->axisLower = joint->Axis()->Lower();
         jointInfo->axisUpper = joint->Axis()->Upper();
+        jointInfo->damping = joint->Axis()->Damping();
 
         jointInfo->jointLimits =
           std::make_shared<btMultiBodyJointLimitConstraint>(
@@ -891,7 +890,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     *worldToModel * modelToNestedModel * *modelToRootLink *
     rootInertialToLink.inverse();
 
-  model->body->setBaseWorldTransform(convertTf(worldToRootCom));
+  model->body->SetBaseWorldTransform(convertTf(worldToRootCom));
   model->body->setBaseVel(btVector3(0, 0, 0));
   model->body->setBaseOmega(btVector3(0, 0, 0));
 
@@ -1503,11 +1502,12 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
     // check if it's a base link
     isFixed = std::size_t(_linkID) ==
         static_cast<std::size_t>(modelInfo->body->getUserIndex());
-    // check if link has zero dofs
+    // check if link has zero dofs from model base.
     if (!isFixed && linkInfo->indexInModel.has_value())
     {
-       isFixed = modelInfo->body->getLink(
-          linkInfo->indexInModel.value()).m_dofCount == 0;
+      auto link = modelInfo->body->getLink(linkInfo->indexInModel.value());
+      int totalLinkDofs = link.m_dofOffset + link.m_dofCount;
+      isFixed = totalLinkDofs == 0;
     }
   }
   if (_isStatic || isFixed)
