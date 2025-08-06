@@ -34,6 +34,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
+#include <gz/physics/sdf/ConstructModel.hh>
 #include <sdf/Root.hh>
 
 template <class T>
@@ -237,6 +238,205 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
     EXPECT_EQ(expectedColWorldPose.Pos(), linkColPose.Pos());
     EXPECT_EQ(expectedColWorldPose.Rot().Euler(),
         linkColPose.Rot().Euler());
+  }
+}
+
+// Kinematic Tag Test
+using SetKinematicFeaturesList = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::ForwardStep,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetJointFromModel,
+  gz::physics::SetBasicJointState,
+  gz::physics::SetJointVelocityCommandFeature,
+  gz::physics::GetModelFromWorld,
+  gz::physics::LinkFrameSemantics
+>;
+
+using SetKinematicTestFeaturesList =
+  KinematicFeaturesTest<SetKinematicFeaturesList>;
+
+TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    // currently only dartsim is supported
+    if (this->PhysicsEngineName(name) != "dartsim")
+      continue;
+
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<SetKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+
+    const std::string modelStr = R"(
+    <sdf version="1.6">
+      <model name="box">
+        <pose>0 0 5.0 0 0 0</pose>
+        <link name="parent">
+          <kinematic>false</kinematic>
+        </link>
+        <link name="child">
+          <collision name="collision2">
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.5 </size>
+              </box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto model = world->GetModel("box");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("parent");
+    ASSERT_NE(nullptr, link);
+    auto joint = model->GetJoint("joint");
+    ASSERT_NE(nullptr, joint);
+
+    // verify box initial state
+    gz::math::Pose3d initialPose(0, 0, 5, 0, 0, 0);
+    auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose, gz::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+
+    double time = 1.0;
+    double stepSize = 0.001;
+    std::size_t steps = static_cast<std::size_t>(time / stepSize);
+
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    for (std::size_t i = 0; i < steps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    // BOX does not falls
+    frameData = link->FrameDataRelativeToWorld();
+    // Falling box falls at a spped of 1 m/s
+    gzerr << "AFTER " << frameData.pose.translation().x() << std::endl;
+    gzerr << "AFTER " << frameData.pose.translation().y() << std::endl;
+    gzerr << "AFTER " << frameData.pose.translation().z() << std::endl;
+    gzerr << "AFTER " << frameData.linearVelocity.x() << std::endl;
+    gzerr << "AFTER " << frameData.linearVelocity.y() << std::endl;
+    gzerr << "AFTER " << frameData.linearVelocity.z() << std::endl;
+    gzerr << "AFTER " << frameData.angularVelocity.x() << std::endl;
+    gzerr << "AFTER " << frameData.angularVelocity.y() << std::endl;
+    gzerr << "AFTER " << frameData.angularVelocity.z() << std::endl;
+
+    // Verify the sphere did not move
+    EXPECT_NEAR(0.0, frameData.pose.translation().x(), 1e-3);
+    EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-3);
+    
+    //Falls and should be close to the floor
+    EXPECT_NEAR(0.0,
+                frameData.pose.translation().z(), 1e-2);
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+  }
+}
+
+TEST_F(SetKinematicTestFeaturesList, SetTrueKinematic)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    // currently only dartsim is supported
+    if (this->PhysicsEngineName(name) != "dartsim")
+      continue;
+
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<SetKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+
+    const std::string modelStr = R"(
+    <sdf version="1.6">
+      <model name="box">
+        <pose>0 0 5.0 0 0 0</pose>
+        <link name="parent">
+          <kinematic>true</kinematic>
+        </link>
+        <link name="child">
+          <collision name="collision2">
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.5 </size>
+              </box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto model = world->GetModel("box");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("parent");
+    ASSERT_NE(nullptr, link);
+    auto joint = model->GetJoint("joint");
+    ASSERT_NE(nullptr, joint);
+
+    // verify box initial state
+    gz::math::Pose3d initialPose(0, 0, 5, 0, 0, 0);
+    auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose, gz::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+
+    double time = 1.0;
+    double stepSize = 0.001;
+    std::size_t steps = static_cast<std::size_t>(time / stepSize);
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    for (std::size_t i = 0; i < steps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    // BOX does not falls
+    frameData = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose, gz::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+
   }
 }
 
