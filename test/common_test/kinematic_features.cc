@@ -330,19 +330,8 @@ TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
     {
       world->Step(output, state, input);
     }
-    // BOX does not falls
+    // BOX falls
     frameData = link->FrameDataRelativeToWorld();
-    // Falling box falls at a spped of 1 m/s
-    gzerr << "AFTER " << frameData.pose.translation().x() << std::endl;
-    gzerr << "AFTER " << frameData.pose.translation().y() << std::endl;
-    gzerr << "AFTER " << frameData.pose.translation().z() << std::endl;
-    gzerr << "AFTER " << frameData.linearVelocity.x() << std::endl;
-    gzerr << "AFTER " << frameData.linearVelocity.y() << std::endl;
-    gzerr << "AFTER " << frameData.linearVelocity.z() << std::endl;
-    gzerr << "AFTER " << frameData.angularVelocity.x() << std::endl;
-    gzerr << "AFTER " << frameData.angularVelocity.y() << std::endl;
-    gzerr << "AFTER " << frameData.angularVelocity.z() << std::endl;
-
     // Verify the sphere did not move
     EXPECT_NEAR(0.0, frameData.pose.translation().x(), 1e-3);
     EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-3);
