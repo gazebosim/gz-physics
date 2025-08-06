@@ -45,6 +45,7 @@
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetRayIntersection.hh>
+#include <gz/physics/Joint.hh>
 #include "gz/physics/SphereShape.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -228,6 +229,7 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesCollisionPairMaxContacts : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::CollisionDetector,
   gz::physics::CollisionPairMaxContacts,
   gz::physics::FindFreeGroupFeature,
   gz::physics::ForwardStep,
@@ -282,6 +284,20 @@ TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
 
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
+
+    if (name == "gz::physics::dartsim::Plugin")
+    {
+      EXPECT_EQ("ode", world->GetCollisionDetector());
+      world->SetCollisionDetector("bullet");
+      EXPECT_EQ("bullet", world->GetCollisionDetector());
+      world->SetCollisionPairMaxContacts(1u);
+      EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+      checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+          world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+      contacts = world->GetContactsFromLastStep();
+      EXPECT_EQ(5u, contacts.size());
+    }
   }
 }
 
@@ -454,6 +470,173 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
   }
 }
 
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesDynamics : public  gz::physics::FeatureList<
+  gz::physics::ForwardStep,
+  gz::physics::GetBasicJointState,
+  gz::physics::GetJointFromModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld
+> {};
+
+template <class T>
+class SimulationFeaturesDynamicsTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesDynamicsTestTypes =
+  ::testing::Types<FeaturesDynamics>;
+TYPED_TEST_SUITE(SimulationFeaturesDynamicsTest,
+                 SimulationFeaturesDynamicsTestTypes);
+
+TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
+{
+  auto getModelStr = [](const std::string &_name,
+      const gz::math::Pose3d &_pose, double _damping)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="body">
+          <inertial>
+            <mass>2</mass>
+          </inertial>
+        </link>
+        <joint name="test_joint" type="prismatic">
+          <parent>base</parent>
+          <child>body</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <dynamics>
+              <damping>)";
+    modelStr << _damping;
+    modelStr << R"(</damping>
+            </dynamics>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // The `bullet` plugin does not support prismatic joints.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    auto world = LoadPluginAndWorld<FeaturesDynamics>(
+        this->loader, name, common_test::worlds::kEmptySdf);
+
+    auto addModel = [getModelStr, world](const std::string &_name,
+        const gz::math::Pose3d &_pose, double _damping)
+    {
+      sdf::Root root;
+      sdf::Errors errors =
+          root.LoadSdfString(getModelStr(_name, _pose, _damping));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    };
+    constexpr double kGravityAcc = 9.8;
+    constexpr double kMass = 2.0;
+    constexpr double kDamping = 5.0;
+    addModel("model1", {}, kDamping);
+    addModel("model2", gz::math::Pose3d(1, 0, 0, 0, 0, 0), 0.0);
+
+    const auto jointWithDamping =
+        world->GetModel("model1")->GetJoint("test_joint");
+    const auto jointWithoutDamping =
+        world->GetModel("model2")->GetJoint("test_joint");
+
+    // The following section verifies that the dynamics of the two models with
+    // and without damping are computed correctly upto integration errors.
+    //
+    // Each model has a prismatic joint whose axis is aligned with gravity, so
+    // each link has a downward force due to gravity, and the damped link also
+    // has a linear damping force. Initial position and velocity are 0 for both
+    // joints.
+    // Assuming m, g, d and t denote mass, gravity, damping and time
+    // respectively, the motions can be analytically computed as follows:
+    //
+    // m * dot(v) + d * v = -m * g
+    // dot(z) = v
+    // where v and z denote joint velocity and position respectively.
+    //
+    // On integrating, we get for the damped (d ≠ 0) and undamped (d = 0)
+    // joints:
+    //
+    // v_undamped(t) = -g * t
+    // z_undamped(t) = -0.5 * g * t^2
+    //
+    // v_damped(t) = -g * m / d * (1 - exp(-d * t / m))
+    // z_damped(t) = -g * m / d * (t - m / d * (1 - exp(-d * t / m)))
+
+    auto vUndamped = [&](double t)
+    {
+      return -kGravityAcc * t;
+    };
+    auto zUndamped = [&](double t)
+    {
+      return -0.5 * kGravityAcc * t * t;
+    };
+    auto vDamped = [&](double t)
+    {
+      return -kGravityAcc * kMass / kDamping *
+          (1 - std::exp(-kDamping * t / kMass));
+    };
+    auto zDamped = [&](double t)
+    {
+      return -kGravityAcc * kMass / kDamping *
+          (t - kMass / kDamping * (1 - std::exp(-kDamping * t / kMass)));
+    };
+
+    // Step and verify that the position and velocity of both joints match the
+    // above formulae up to numerical errors.
+    // Default dt is 0.001s.
+    double tElapsed = 0;
+    for (int i = 1; i < 4; ++i)
+    {
+      StepWorld<FeaturesDynamics>(world, true, 1000);
+      tElapsed += 1.0;
+
+      double expectedVUndamped = vUndamped(tElapsed);
+      double expectedZUndamped = zUndamped(tElapsed);
+      double expectedVDamped = vDamped(tElapsed);
+      double expectedZDamped = zDamped(tElapsed);
+
+      auto posUndamped = jointWithoutDamping->GetPosition(0);
+      auto posDamped = jointWithDamping->GetPosition(0);
+
+      EXPECT_NEAR(expectedZUndamped, posUndamped, i * 1e-2);
+      EXPECT_NEAR(expectedZDamped, posDamped, i * 1e-2);
+
+      auto velUndamped = jointWithoutDamping->GetVelocity(0);
+      auto velDamped = jointWithDamping->GetVelocity(0);
+
+      EXPECT_NEAR(expectedVUndamped, velUndamped, i * 2e-3);
+      EXPECT_NEAR(expectedVDamped, velDamped, i * 2e-3);
+    }
+
+    // Step again for a long time so that the damped joint achieves close to
+    // terminal velocity.
+    StepWorld<FeaturesDynamics>(world, false, 2000);
+
+    // Verify that velocity with joint damping matches terminal velocity
+    // = m * g / d
+    double expectedTerminalVel = -kGravityAcc * kMass / kDamping;
+    auto velDamped = jointWithDamping->GetVelocity(0);
+    EXPECT_NEAR(expectedTerminalVel, velDamped, 1e-2);
+  }
+}
 
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesShapeFeatures : gz::physics::FeatureList<

@@ -587,6 +587,9 @@ TEST_F(CollisionStaticTestFeaturesList, StaticCollisions)
 
   for (const std::string &name : this->pluginNames)
   {
+    // TPE does not support collision checking with plane shapes.
+    if (this->PhysicsEngineName(name) == "tpe") continue;
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
@@ -638,6 +641,104 @@ TEST_F(CollisionStaticTestFeaturesList, StaticCollisions)
     // verify there are still no contacts.
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
+  }
+}
+
+TEST_F(CollisionStaticTestFeaturesList, StaticCollisionsWithFixedBaseMovingLink)
+{
+  auto getBoxStr = [](const std::string &_name,
+    const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="body" />
+        <joint name="world_fixed" type="fixed">
+          <parent>world</parent>
+          <child>body</child>
+        </joint>
+        <link name="moving1">
+          <collision name="collision">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="slider" type="prismatic">
+          <parent>body</parent>
+          <child>moving1</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+          </axis>
+        </joint>
+        <link name="moving2">
+          <pose>2 0 0 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="moving1_fixed" type="fixed">
+          <parent>moving1</parent>
+          <child>moving2</child>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // TPE does not support collision checking with plane shapes.
+    if (this->PhysicsEngineName(name) == "tpe") continue;
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld.front();
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionStaticFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(getBoxStr(
+        "box_fixed_base_moving_links", gz::math::Pose3d::Zero));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    world->Step(output, state, input);
+
+    // box_fixed_base_moving_links overlaps with ground plane on both moving1
+    // and moving2 links, verify that contacts are present on both links.
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_LE(2u, contacts.size());
+
+    std::unordered_set<std::size_t> collisionIds;
+    using WorldShapeType = gz::physics::World<
+        gz::physics::FeaturePolicy3d, CollisionStaticFeaturesList>;
+    for (const auto &contact: contacts) {
+      const auto &contactPoint = contact.Get<WorldShapeType::ContactPoint>();
+      collisionIds.insert(contactPoint.collision1->EntityID());
+      collisionIds.insert(contactPoint.collision2->EntityID());
+    }
+    EXPECT_EQ(3u, collisionIds.size());
   }
 }
 
