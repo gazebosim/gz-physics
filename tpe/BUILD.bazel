@@ -1,0 +1,221 @@
+load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
+load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
+
+package(
+    default_applicable_licenses = ["//:license"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
+
+gz_export_header(
+    name = "Export",
+    out = "include/gz/physics/tpe-plugin/Export.hh",
+    export_base = "GZ_PHYSICS_TPE_PLUGIN",
+    lib_name = "gz-physics-tpe",
+)
+
+gz_export_header(
+    name = "Export-tpelib",
+    out = "include/gz/physics/tpelib/Export.hh",
+    export_base = "GZ_PHYSICS_TPELIB",
+    lib_name = "gz-physics-tpelib",
+)
+
+cc_library(
+    name = "aabb_tree",
+    srcs = glob(["lib/src/aabb_tree/*.cc"]),
+    hdrs = glob(["lib/src/aabb_tree/*.h"]),
+    includes = ["lib/src"],
+    deps = [
+    ],
+)
+
+tpelib_private_headers = glob(["lib/src/*.hh"])
+
+tpelib_public_headers = [
+    "include/gz/physics/tpelib/Export.hh",
+]
+
+tpelib_sources = glob(
+    ["lib/src/*.cc"],
+    exclude = [
+        "lib/src/*_TEST.cc",
+    ],
+)
+
+cc_library(
+    name = "tpelib",
+    srcs = tpelib_sources + tpelib_private_headers,
+    hdrs = tpelib_public_headers,
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:gz-physics",
+        "//:sdf",
+        "//tpe:aabb_tree",
+        "@gz-common//:gz-common",
+        "@gz-common//graphics:graphics",
+        "@gz-common//profiler:profiler",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@gz-utils//:SuppressWarning",
+    ],
+)
+
+sources = glob(
+    include = [
+        "plugin/src/*.cc",
+    ],
+    exclude = [
+        "plugin/src/*_TEST.cc",
+        "plugin/src/plugin.cc",
+    ],
+)
+
+private_headers = glob(
+    include = [
+        "plugin/src/*.hh",
+    ],
+)
+
+public_headers = [
+    "include/gz/physics/tpe-plugin/Export.hh",
+]
+
+cc_library(
+    name = "tpe",
+    srcs = sources + private_headers + tpelib_private_headers,
+    hdrs = public_headers,
+    includes = [
+        ".",
+        "plugin/include",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tpelib",
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "@eigen",
+        "@gz-common//:gz-common",
+        "@gz-common//graphics:graphics",
+        "@gz-common//profiler:profiler",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@gz-utils//:SuppressWarning",
+        "@sdformat",
+    ],
+)
+
+gz_physics_plugin_libraries(
+    srcs = ["plugin/src/plugin.cc"] + private_headers + tpelib_private_headers,
+    so_lib_name = "libgz-physics-tpe-plugin.so",
+    static_lib_name = "libgz-physics-tpe-plugin-static",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":Export-tpelib",
+        ":tpe",
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "@eigen",
+        "@gz-common//:gz-common",
+        "@gz-common//graphics:graphics",
+        "@gz-common//profiler:profiler",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@gz-plugin//:register",
+        "@gz-utils//:SuppressWarning",
+        "@sdformat",
+    ],
+)
+
+tpelib_test_sources = glob(
+    include = ["lib/src/*_TEST.cc"],
+)
+
+[cc_test(
+    name = src.replace("/", "_").replace(".cc", "").replace("src_", ""),
+    srcs = [src] + tpelib_private_headers,
+    data = [
+        "//tpe:libgz-physics-tpe-plugin.so",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    deps = [
+        ":tpelib",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-common//graphics:graphics",
+        "@gz-math//:gz-math",
+        "@gz-utils//:SuppressWarning",
+    ],
+) for src in tpelib_test_sources]
+
+cc_test(
+    name = "tpe_EntityManagement_TEST",
+    srcs = [
+        "plugin/src/EntityManagement_TEST.cc",
+    ] + private_headers + tpelib_private_headers,
+    data = [
+        "//tpe:libgz-physics-tpe-plugin.so",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    # Marked manual because with gcc, the test crashes on exit when
+    # unloading the tpe plugin. The test however passes with clang.
+    tags = ["manual"],
+    deps = [
+        ":Export-tpelib",
+        ":tpe",
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "//test:test_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-common//graphics:graphics",
+        "@gz-common//testing:testing",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+        "@gz-utils//:SuppressWarning",
+    ],
+)
+
+cc_test(
+    name = "tpe_SDFFeatures_TEST",
+    srcs = [
+        "plugin/src/SDFFeatures_TEST.cc",
+    ] + private_headers + tpelib_private_headers,
+    data = [
+        "//tpe:libgz-physics-tpe-plugin.so",
+    ],
+    env = {
+        "GZ_BAZEL": "1",
+    },
+    # Marked manual because with gcc, the test crashes on exit when
+    # unloading the tpe plugin. The test however passes with clang.
+    tags = ["manual"],
+    deps = [
+        ":Export-tpelib",
+        ":tpe",
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "//test:test_headers",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@gz-common//graphics:graphics",
+        "@gz-common//testing:testing",
+        "@gz-math//:gz-math",
+        "@gz-plugin//:core",
+        "@gz-plugin//:loader",
+        "@gz-utils//:SuppressWarning",
+        "@sdformat",
+    ],
+)

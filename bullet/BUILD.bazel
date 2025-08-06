@@ -1,0 +1,69 @@
+load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
+load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
+
+package(
+    default_applicable_licenses = ["//:license"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
+
+gz_export_header(
+    name = "Export",
+    out = "include/gz/physics/bullet-plugin/Export.hh",
+    export_base = "GZ_PHYSICS_BULLET_PLUGIN",
+    lib_name = "gz-physics-bullet",
+)
+
+public_headers = [
+    "include/gz/physics/bullet-plugin/Export.hh",
+]
+
+private_headers = glob(["src/*.hh"])
+
+sources = glob(
+    ["src/*.cc"],
+    exclude = [
+        "src/*_TEST.cc",
+        "src/plugin.cc",
+    ],
+)
+
+cc_library(
+    name = "bullet",
+    srcs = sources + private_headers,
+    hdrs = public_headers,
+    includes = ["src"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "@bullet//:BulletCollisionDoublePrecision",
+        "@bullet//:BulletDynamicsDoublePrecision",
+        "@eigen",
+        "@gz-common//:gz-common",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@sdformat",
+    ],
+)
+
+gz_physics_plugin_libraries(
+    srcs = ["src/plugin.cc"] + private_headers,
+    so_lib_name = "libgz-physics-bullet-plugin.so",
+    static_lib_name = "libgz-physics-bullet-plugin-static",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":bullet",
+        "//:gz-physics",
+        "//:mesh",
+        "//:sdf",
+        "@bullet//:BulletDynamicsDoublePrecision",
+        "@eigen",
+        "@gz-common//:gz-common",
+        "@gz-math//eigen3:eigen3",
+        "@gz-plugin//:register",
+    ],
+)

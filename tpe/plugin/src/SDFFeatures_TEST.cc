@@ -23,7 +23,6 @@
 #include <sdf/World.hh>
 
 #include <test/Utils.hh>
-#include <test/common_test/Worlds.hh>
 
 #include <gz/plugin/Loader.hh>
 
@@ -41,6 +40,8 @@
 #include "lib/src/Model.hh"
 #include "lib/src/World.hh"
 #include "World.hh"
+
+#include "test/common_test/Worlds.hh"
 
 using namespace gz;
 
@@ -95,7 +96,7 @@ TEST(SDFFeatures_TEST, CheckTpeData)
   auto tpeWorld = world.GetTpeLibWorld();
   ASSERT_NE(nullptr, tpeWorld);
 
-  ASSERT_EQ(7u, tpeWorld->GetChildCount());
+  ASSERT_EQ(9u, tpeWorld->GetChildCount());
 
   // check model 01
   {

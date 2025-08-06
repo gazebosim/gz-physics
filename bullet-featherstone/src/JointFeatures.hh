@@ -54,7 +54,7 @@ struct JointFeatureList : FeatureList<
 
   SetMimicConstraintFeature,
 
-  FixedJointCast
+  SetFixedJointWeldChildToParentFeature
 > { };
 
 class JointFeatures :
@@ -180,6 +180,10 @@ class JointFeatures :
       double _multiplier,
       double _offset,
       double _reference) override;
+
+  // ----- SetFixedJointWeldChildToParentFeature -----
+  public: void SetFixedJointWeldChildToParent(
+    const Identity &_id, bool _weldChildToParent) override;
 };
 }  // namespace bullet_featherstone
 }  // namespace physics

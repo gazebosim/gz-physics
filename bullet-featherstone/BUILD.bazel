@@ -1,0 +1,75 @@
+load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
+load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
+
+package(
+    default_applicable_licenses = ["//:license"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
+
+gz_export_header(
+    name = "Export",
+    out = "include/gz/physics/bullet-featherstone-plugin/Export.hh",
+    export_base = "GZ_PHYSICS_BULLET_FEATHERSTONE_PLUGIN",
+    lib_name = "gz-physics-bullet-featherstone",
+)
+
+public_headers = [
+    "include/gz/physics/bullet-featherstone-plugin/Export.hh",
+]
+
+private_headers = glob(["src/*.hh"])
+
+sources = glob(
+    ["src/*.cc"],
+    exclude = [
+        "src/*_TEST.cc",
+        "src/plugin.cc",
+    ],
+)
+
+cc_library(
+    name = "bullet-featherstone",
+    srcs = sources + private_headers,
+    hdrs = public_headers,
+    copts = ["-Wno-extra-tokens"],
+    includes = ["src"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:gz-physics",
+        "//:sdf",
+        "@bullet//:BulletCollisionDoublePrecision",
+        "@bullet//:BulletDynamicsDoublePrecision",
+        "@bullet//:LinearMathDoublePrecision",
+        "@eigen",
+        "@gz-common//:gz-common",
+        "@gz-common//graphics:graphics",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@sdformat",
+    ],
+)
+
+gz_physics_plugin_libraries(
+    srcs = ["src/plugin.cc"] + private_headers,
+    so_lib_name = "libgz-physics-bullet-featherstone-plugin.so",
+    static_lib_name = "libgz-physics-bullet-featherstone-plugin-static",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":bullet-featherstone",
+        "//:gz-physics",
+        "//:sdf",
+        "@bullet//:BulletCollisionDoublePrecision",
+        "@bullet//:BulletDynamicsDoublePrecision",
+        "@bullet//:LinearMathDoublePrecision",
+        "@eigen",
+        "@gz-common//:gz-common",
+        "@gz-common//graphics:graphics",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3:eigen3",
+        "@gz-plugin//:register",
+        "@sdformat",
+    ],
+)

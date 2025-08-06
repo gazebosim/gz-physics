@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_JOINT_HH_
 #define GZ_PHYSICS_JOINT_HH_
 
+#include <cstddef>
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/Geometry.hh>
@@ -520,6 +521,142 @@ namespace gz
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief This feature sets friction of this Joint.
+    ///  Refer to //joint/axis/dynamics/friction SDF tag.
+    class GZ_PHYSICS_VISIBLE SetJointFrictionFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting friction of a joint.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the friction value for a particular joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The friction value which needs to be applied for a joint
+        public: void SetFriction(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting joint friction
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetFriction above
+        public: virtual void SetJointFriction(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the damping coefficient for this Joint.
+     ///  Refer to //joint/axis/dynamics/damping SDF tag.
+    class GZ_PHYSICS_VISIBLE SetJointDampingCoefficientFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting damping coefficient of a joint.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the damping coefficient value for a particular joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        /// The damping coefficient value which needs to be applied for a joint
+        public: void SetDampingCoefficient(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting joint damping coefficient
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetDampingCoefficient above
+        public: virtual void SetJointDampingCoefficient(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the spring stiffness of this Joint.
+     ///  Refer to //joint/axis/dynamics/spring_stiffness SDF tag.
+    class GZ_PHYSICS_VISIBLE SetJointSpringStiffnessFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting spring stiffness of a Joint.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the spring stiffness value for a particular joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The spring stiffness value which needs to be applied for a joint
+        public: void SetSpringStiffness(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting joint spring stiffness
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetSpringStiffness above
+        public: virtual void SetJointSpringStiffness(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature sets the spring reference position of this joint.
+     ///  Refer to //joint/axis/dynamics/spring_reference SDF tag.
+    class GZ_PHYSICS_VISIBLE SetJointSpringReferenceFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting spring rest position of a joint.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the spring reference position value for this joint.
+        /// \param[in] _dof
+        ///   The desired generalized coordinate within this joint. Values start
+        ///   from 0 and stop before Joint::GetDegreesOfFreedom().
+        /// \param[in] _value
+        ///   The rest position value which needs to be applied for a joint
+        public: void SetSpringReference(
+            const std::size_t _dof, const Scalar _value);
+      };
+
+      /// \private The implementation API for setting joint rest position
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // See Joint::SetRestPosition above
+        public: virtual void SetJointSpringReference(
+            const Identity &_id, std::size_t _dof, Scalar _value) = 0;
+      };
+    };
+
     class GZ_PHYSICS_VISIBLE DetachJointFeature
         : public virtual Feature
     {
@@ -650,6 +787,38 @@ namespace gz
             Scalar _multiplier,
             Scalar _offset,
             Scalar _reference) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    class GZ_PHYSICS_VISIBLE SetFixedJointWeldChildToParentFeature
+        : public virtual Feature
+    {
+      /// \brief The Joint API for setting whether to weld a fixed joint's child
+      /// link to the parent link.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Joint : public virtual Feature::Joint<PolicyT, FeaturesT>
+      {
+        /// \brief Set whether to weld the fixed joint's child link to the
+        /// parent link. If true, the child link is welded and it will move /
+        /// with the parent link as if they are part of the same body
+        /// kinematic chain. If false, the fixed joint constraint is enforced
+        /// by applying forces to both the parent and child links.
+        /// By default when a fixed joint constraint is created, this property
+        /// is set to false.
+        /// \param[in] _weldChildToParent True to weld the child link to the
+        /// parent link.
+        public: void SetWeldChildToParent(bool _weldChildToParent);
+      };
+
+      /// \private The implementation API for setting whether to weld the fixed
+      /// joint's child link to the parent link.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        // see Joint::SetWeldChildToParent above
+        public: virtual void SetFixedJointWeldChildToParent(
+            const Identity &_id, bool _weldChildToParent) = 0;
       };
     };
   }
