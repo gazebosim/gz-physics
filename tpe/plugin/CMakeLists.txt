@@ -24,30 +24,19 @@ target_link_libraries(${tpe_plugin}
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    gz-math${GZ_MATH_VER}::eigen3
+    gz-common::gz-common
+    gz-math::eigen3
   PRIVATE
     # We need to link this, even when the profiler isn't used to get headers.
-    gz-common${GZ_COMMON_VER}::profiler
+    gz-common::profiler
 )
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${tpe_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})
 
-# The library created by `gz_add_component` includes the gz-physics version
-# (i.e. libgz-physics1-name-plugin.so), but for portability,
-# we also install an unversioned symlink into the same versioned folder.
-set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (WIN32)
   # disable MSVC inherit via dominance warning
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250")
-  INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
-      ${GZ_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
-      ${GZ_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
-else()
-  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned})
-  INSTALL(FILES ${PROJECT_BINARY_DIR}/${unversioned} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})
 endif()
 
 gz_build_tests(
@@ -56,7 +45,7 @@ gz_build_tests(
   LIB_DEPS
     ${features}
     gz-physics-test
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+    gz-common::gz-common
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
   TEST_LIST tests

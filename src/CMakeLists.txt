@@ -12,9 +12,9 @@ set_property(
 
 target_link_libraries(${PROJECT_LIBRARY_TARGET_NAME}
   PUBLIC
-    gz-math${GZ_MATH_VER}::gz-math${GZ_MATH_VER}
-    gz-utils${GZ_UTILS_VER}::gz-utils${GZ_UTILS_VER}
-    gz-plugin${GZ_PLUGIN_VER}::register
+    gz-math::gz-math
+    gz-utils::gz-utils
+    gz-plugin::register
     Eigen3::Eigen)
 
 if(WIN32)
@@ -33,5 +33,5 @@ gz_build_tests(
 
 if(TARGET UNIT_FindFeatures_TEST)
   target_link_libraries(UNIT_FindFeatures_TEST
-    gz-plugin${GZ_PLUGIN_VER}::loader)
+    gz-plugin::loader)
 endif()

@@ -25,9 +25,9 @@ target_compile_definitions(gz-physics-test INTERFACE
     "TESTING_PROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\""
 )
 target_link_libraries(gz-physics-test INTERFACE
-    gz-plugin${GZ_PLUGIN_VER}::loader
-    gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
-    gz-common${GZ_COMMON_VER}::testing
+    gz-plugin::loader
+    gz-common::gz-common
+    gz-common::testing
 )
 
 add_subdirectory(gtest_vendor)

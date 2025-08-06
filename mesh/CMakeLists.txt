@@ -3,7 +3,7 @@ gz_add_component(mesh INTERFACE
 
 target_link_libraries(${mesh}
   INTERFACE
-    gz-common${GZ_COMMON_VER}::graphics)
+    gz-common::graphics)
 
 install(
   DIRECTORY include/

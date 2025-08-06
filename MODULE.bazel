@@ -4,10 +4,12 @@ module(
     repo_name = "org_gazebosim_gz-physics",
 )
 
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "bullet", version = "3.26.0-rc0")
-bazel_dep(name = "dartsim", version = "6.13.2")
+bazel_dep(name = "dartsim", version = "6.13.2.bcr.1")
 bazel_dep(name = "eigen", version = "3.4.0.bcr.3")
 bazel_dep(name = "googletest", version = "1.14.0")
+bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 
 # Gazebo Dependencies
@@ -20,30 +22,30 @@ bazel_dep(name = "sdformat")
 
 archive_override(
     module_name = "gz-common",
-    strip_prefix = "gz-common-gz-common6",
-    urls = ["https://github.com/gazebosim/gz-common/archive/refs/heads/gz-common6.tar.gz"],
+    strip_prefix = "gz-common-main",
+    urls = ["https://github.com/gazebosim/gz-common/archive/refs/heads/main.tar.gz"],
 )
 
 archive_override(
     module_name = "gz-math",
-    strip_prefix = "gz-math-gz-math8",
-    urls = ["https://github.com/gazebosim/gz-math/archive/refs/heads/gz-math8.tar.gz"],
+    strip_prefix = "gz-math-main",
+    urls = ["https://github.com/gazebosim/gz-math/archive/refs/heads/main.tar.gz"],
 )
 
 archive_override(
     module_name = "gz-plugin",
-    strip_prefix = "gz-plugin-gz-plugin3",
-    urls = ["https://github.com/gazebosim/gz-plugin/archive/refs/heads/gz-plugin3.tar.gz"],
+    strip_prefix = "gz-plugin-main",
+    urls = ["https://github.com/gazebosim/gz-plugin/archive/refs/heads/main.tar.gz"],
 )
 
 archive_override(
     module_name = "gz-utils",
-    strip_prefix = "gz-utils-gz-utils3",
-    urls = ["https://github.com/gazebosim/gz-utils/archive/refs/heads/gz-utils3.tar.gz"],
+    strip_prefix = "gz-utils-main",
+    urls = ["https://github.com/gazebosim/gz-utils/archive/refs/heads/main.tar.gz"],
 )
 
 archive_override(
     module_name = "sdformat",
-    strip_prefix = "sdformat-sdf15",
-    urls = ["https://github.com/gazebosim/sdformat/archive/refs/heads/sdf15.tar.gz"],
+    strip_prefix = "sdformat-main",
+    urls = ["https://github.com/gazebosim/sdformat/archive/refs/heads/main.tar.gz"],
 )

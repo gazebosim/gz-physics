@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics8 VERSION 8.2.0)
+project(gz-physics VERSION 9.0.0)
 
 #============================================================================
 # Find gz-cmake
 #============================================================================
-find_package(gz-cmake4 REQUIRED)
+find_package(gz-cmake REQUIRED)
 
 #============================================================================
 # Configure the project
@@ -16,7 +16,7 @@ find_package(gz-cmake4 REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-gz_configure_project(VERSION_SUFFIX)
+gz_configure_project(VERSION_SUFFIX pre1)
 
 #============================================================================
 # Set project-specific options
@@ -37,28 +37,24 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find gz-common
-gz_find_package(gz-common6
+gz_find_package(gz-common
   COMPONENTS geospatial graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
-set(GZ_COMMON_VER ${gz-common6_VERSION_MAJOR})
 
 # This is only used for test support
-gz_find_package(gz-common6 REQUIRED COMPONENTS testing)
+gz_find_package(gz-common REQUIRED COMPONENTS testing)
 
 #--------------------------------------
 # Find gz-math
-gz_find_package(gz-math8 REQUIRED COMPONENTS eigen3)
-set(GZ_MATH_VER ${gz-math8_VERSION_MAJOR})
+gz_find_package(gz-math REQUIRED COMPONENTS eigen3)
 
 #--------------------------------------
 # Find gz-plugin
-gz_find_package(gz-plugin3 REQUIRED COMPONENTS all)
-set(GZ_PLUGIN_VER ${gz-plugin3_VERSION_MAJOR})
+gz_find_package(gz-plugin REQUIRED COMPONENTS all)
 
 #--------------------------------------
 # Find gz-utils
-gz_find_package(gz-utils3 REQUIRED COMPONENTS cli)
-set(GZ_UTILS_VER ${gz-utils3_VERSION_MAJOR})
+gz_find_package(gz-utils REQUIRED COMPONENTS cli)
 
 #--------------------------------------
 # Find Eigen
@@ -66,7 +62,7 @@ gz_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-gz_find_package(sdformat15
+gz_find_package(sdformat
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
