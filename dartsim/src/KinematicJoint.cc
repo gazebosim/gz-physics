@@ -38,7 +38,6 @@ using namespace gz::dynamics;
 using namespace dart::dynamics;
 using namespace dart::math;
 
-//==============================================================================
 Eigen::Vector6d KinematicJoint::convertToPositions(const Eigen::Isometry3d& _tf)
 {
   Eigen::Vector6d x;
@@ -47,7 +46,6 @@ Eigen::Vector6d KinematicJoint::convertToPositions(const Eigen::Isometry3d& _tf)
   return x;
 }
 
-//==============================================================================
 Eigen::Isometry3d KinematicJoint::convertToTransform(
     const Eigen::Vector6d& _positions)
 {
@@ -57,7 +55,6 @@ Eigen::Isometry3d KinematicJoint::convertToTransform(
   return tf;
 }
 
-//==============================================================================
 void KinematicJoint::setTransformOf(
     Joint* joint, const Eigen::Isometry3d& tf, const Frame* withRespectTo)
 {
@@ -78,7 +75,6 @@ void KinematicJoint::setTransformOf(
   kinematicJoint->setTransform(tf, withRespectTo);
 }
 
-//==============================================================================
 void KinematicJoint::setTransformOf(
     BodyNode* bodyNode, const Eigen::Isometry3d& tf, const Frame* withRespectTo)
 {
@@ -88,7 +84,6 @@ void KinematicJoint::setTransformOf(
   setTransformOf(bodyNode->getParentJoint(), tf, withRespectTo);
 }
 
-//==============================================================================
 void KinematicJoint::setTransformOf(
     Skeleton* skeleton,
     const Eigen::Isometry3d& tf,
@@ -110,7 +105,6 @@ void KinematicJoint::setTransformOf(
   }
 }
 
-//==============================================================================
 void KinematicJoint::setSpatialMotion(
     const Eigen::Isometry3d* newTransform,
     const Frame* withRespectTo,
@@ -125,7 +119,6 @@ void KinematicJoint::setSpatialMotion(
     setSpatialVelocity(*newSpatialVelocity, velRelativeTo, velInCoordinatesOf);
 }
 
-//==============================================================================
 void KinematicJoint::setRelativeTransform(const Eigen::Isometry3d& newTransform)
 {
   setPositionsStatic(convertToPositions(
@@ -133,14 +126,12 @@ void KinematicJoint::setRelativeTransform(const Eigen::Isometry3d& newTransform)
       * Joint::mAspectProperties.mT_ChildBodyToJoint));
 }
 
-//==============================================================================
 void KinematicJoint::setRelativeSpatialVelocity(
     const Eigen::Vector6d& newSpatialVelocity)
 {
   setVelocitiesStatic(newSpatialVelocity);
 }
 
-//==============================================================================
 void KinematicJoint::setRelativeSpatialVelocity(
     const Eigen::Vector6d& newSpatialVelocity, const Frame* inCoordinatesOf)
 {
@@ -156,7 +147,6 @@ void KinematicJoint::setRelativeSpatialVelocity(
   }
 }
 
-//==============================================================================
 void KinematicJoint::setSpatialVelocity(
     const Eigen::Vector6d& newSpatialVelocity,
     const Frame* relativeTo,
@@ -197,7 +187,6 @@ void KinematicJoint::setSpatialVelocity(
   setRelativeSpatialVelocity(targetRelSpatialVel);
 }
 
-//==============================================================================
 void KinematicJoint::setTransform(
     const Eigen::Isometry3d& newTransform, const Frame* withRespectTo)
 {
@@ -208,7 +197,6 @@ void KinematicJoint::setTransform(
       * newTransform);
 }
 
-//==============================================================================
 void KinematicJoint::setLinearVelocity(
     const Eigen::Vector3d& newLinearVelocity, const Frame* relativeTo)
 {
@@ -230,7 +218,6 @@ void KinematicJoint::setLinearVelocity(
   setSpatialVelocity(targetSpatialVelocity, relativeTo, getChildBodyNode());
 }
 
-//==============================================================================
 void KinematicJoint::setAngularVelocity(
     const Eigen::Vector3d& newAngularVelocity,
     const Frame* relativeTo,
@@ -261,14 +248,12 @@ void KinematicJoint::setAngularVelocity(
   setSpatialVelocity(targetSpatialVelocity, relativeTo, getChildBodyNode());
 }
 
-//==============================================================================
 Eigen::Matrix6d KinematicJoint::getRelativeJacobianStatic(
     const Eigen::Vector6d& /*positions*/) const
 {
   return mJacobian;
 }
 
-//==============================================================================
 Eigen::Vector6d KinematicJoint::getPositionDifferencesStatic(
     const Eigen::Vector6d& _q2, const Eigen::Vector6d& _q1) const
 {
@@ -278,7 +263,6 @@ Eigen::Vector6d KinematicJoint::getPositionDifferencesStatic(
   return convertToPositions(T1.inverse() * T2);
 }
 
-//==============================================================================
 KinematicJoint::KinematicJoint(const Properties& properties)
   : Base(properties), 
     mQ(Eigen::Isometry3d::Identity())
@@ -291,33 +275,28 @@ KinematicJoint::KinematicJoint(const Properties& properties)
   createJointAspect(properties);
 }
 
-//==============================================================================
 Joint* KinematicJoint::clone() const
 {
   return new KinematicJoint(getGenericJointProperties());
 }
 
-//==============================================================================
 const std::string& KinematicJoint::getType() const
 {
   return getStaticType();
 }
 
-//==============================================================================
 const std::string& KinematicJoint::getStaticType()
 {
   static const std::string name = "KinematicJoint";
   return name;
 }
 
-//==============================================================================
 bool KinematicJoint::isCyclic(std::size_t _index) const
 {
   return _index < 3 && !hasPositionLimit(0) && !hasPositionLimit(1)
          && !hasPositionLimit(2);
 }
 
-//==============================================================================
 void KinematicJoint::integratePositions(double _dt)
 {
   const Eigen::Isometry3d Qdiff
@@ -329,20 +308,17 @@ void KinematicJoint::integratePositions(double _dt)
   setPositionsStatic(convertToPositions(Qnext));
 }
 
-//==============================================================================
 void KinematicJoint::integrateVelocities(double /*_dt*/)
 {
   setVelocitiesStatic(getVelocitiesStatic());
 }
 
-//==============================================================================
 void KinematicJoint::updateConstrainedTerms(double /*timeStep*/)
 {
   const Eigen::Vector6d& velBefore = getVelocitiesStatic();
   setVelocitiesStatic(velBefore);
 }
 
-//==============================================ss================================
 void KinematicJoint::updateDegreeOfFreedomNames()
 {
   static const char* suffixes[6]
@@ -354,7 +330,6 @@ void KinematicJoint::updateDegreeOfFreedomNames()
   }
 }
 
-//==============================================================================
 void KinematicJoint::updateRelativeTransform() const
 {
   mQ = convertToTransform(getPositionsStatic());
@@ -365,7 +340,6 @@ void KinematicJoint::updateRelativeTransform() const
   assert(verifyTransform(mT));
 }
 
-//==============================================================================
 void KinematicJoint::updateRelativeJacobian(bool _mandatory) const
 {
   if (_mandatory)
@@ -373,13 +347,11 @@ void KinematicJoint::updateRelativeJacobian(bool _mandatory) const
         = getAdTMatrix(Joint::mAspectProperties.mT_ChildBodyToJoint);
 }
 
-//==============================================================================
 void KinematicJoint::updateRelativeJacobianTimeDeriv() const
 {
   assert(Eigen::Matrix6d::Zero() == mJacobianDeriv);
 }
 
-//==============================================================================
 const Eigen::Isometry3d& KinematicJoint::getQ() const
 {
   if (mNeedTransformUpdate) {

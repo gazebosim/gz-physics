@@ -34,7 +34,6 @@
 #define GZ_DYNAMICS_KINEMATICJOINT_HPP_
 
 #include <dart/dynamics/FreeJoint.hpp>
-//#include "GenericJoint.hpp"
 #include <Eigen/Dense>
 
 #include <string>
@@ -62,8 +61,6 @@ public:
   /// Destructor
   virtual ~KinematicJoint() = default;
 
-  /// Get the Properties of this KinematicJoint
-  //Properties getKinematicJointProperties() const;
 
   // Documentation inherited
   const std::string& getType() const override;
@@ -211,7 +208,7 @@ public:
 
   /// Constructor called by Skeleton class
   // This must be public so that Skeleton can create KinematicJoints
-  KinematicJoint(const Properties& properties);
+  explicit KinematicJoint(const Properties& properties);
 
 protected:
 
@@ -246,7 +243,6 @@ protected:
   const Eigen::Isometry3d& getQ() const;
 
   /// Transformation matrix dependent on generalized coordinates
-  ///
   /// Do not use directly! Use getQ() to access this
   mutable Eigen::Isometry3d mQ;
 
@@ -254,7 +250,8 @@ public:
   // To get byte-aligned Eigen vectors
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
-} // namespace dynamics
-} // namespace dart
+}
+}
 
-#endif // DART_DYNAMICS_KinematicJoint_HPP_
+#endif
+
