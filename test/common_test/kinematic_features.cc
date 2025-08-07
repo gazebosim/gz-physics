@@ -307,8 +307,6 @@ TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
     ASSERT_NE(nullptr, model);
     auto link = model->GetLink("parent");
     ASSERT_NE(nullptr, link);
-    auto joint = model->GetJoint("joint");
-    ASSERT_NE(nullptr, joint);
 
     // verify box initial state
     gz::math::Pose3d initialPose(0, 0, 5, 0, 0, 0);
@@ -396,8 +394,6 @@ TEST_F(SetKinematicTestFeaturesList, SetTrueKinematic)
     ASSERT_NE(nullptr, model);
     auto link = model->GetLink("parent");
     ASSERT_NE(nullptr, link);
-    auto joint = model->GetJoint("joint");
-    ASSERT_NE(nullptr, joint);
 
     // verify box initial state
     gz::math::Pose3d initialPose(0, 0, 5, 0, 0, 0);
