@@ -317,7 +317,7 @@ TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
     EXPECT_EQ(gz::math::Vector3d::Zero,
               gz::math::eigen3::convert(frameData.angularVelocity));
 
-    double time = 1.0;
+    double time = 2.0;
     double stepSize = 0.001;
     std::size_t steps = static_cast<std::size_t>(time / stepSize);
 
