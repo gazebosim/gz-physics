@@ -29,6 +29,8 @@ inline std::string CommonTestWorld(const std::string &_world)
 
 namespace common_test::worlds
 {
+const auto kCollisionPairContactPointSdf =
+  CommonTestWorld("collision_pair_contact_point.sdf");
 const auto kContactSdf = CommonTestWorld("contact.sdf");
 const auto kDetachableJointWorld = CommonTestWorld("detachable_joint.world");
 const auto kEmptySdf = CommonTestWorld("empty.sdf");
@@ -39,6 +41,8 @@ const auto kJointAcrossModelsSdf = CommonTestWorld("joint_across_models.sdf");
 const auto kJointAcrossModelsFixedSdf =
     CommonTestWorld("joint_across_models_fixed.sdf");
 const auto kJointConstraintSdf = CommonTestWorld("joint_constraint.sdf");
+const auto kJointOffsetEmptyLinksSdf =
+    CommonTestWorld("joint_offset_empty_links.sdf");
 const auto kMimicFastSlowPendulumsWorld =
   CommonTestWorld("mimic_fast_slow_pendulums_world.sdf");
 const auto kMimicPendulumWorld = CommonTestWorld("mimic_pendulum_world.sdf");

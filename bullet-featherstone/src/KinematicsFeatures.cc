@@ -53,13 +53,13 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const auto &linkInfo = linkIt->second;
     model = this->ReferenceInterface<ModelInfo>(linkInfo->model);
 
+    // If indexInModel has value, then this is a non-base link
+    // otherwise, it is a base link and the calculations will be performed
+    // later below in this function
     if (linkInfo->indexInModel.has_value())
     {
       return getNonBaseLinkFrameData(model, linkInfo.get());
     }
-
-    // If indexInModel is nullopt then the link is the base link which will be
-    // calculated below.
   }
   else
   {
@@ -75,6 +75,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
         const auto &linkInfo2 = linkIt2->second;
         model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
         jointPoseOffset = jointInfo->tf_to_child.inverse();
+        // If indexInModel has value, then this is a joint connected to
+        // non-base link
         if (linkInfo2->indexInModel.has_value())
         {
           auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
@@ -97,6 +99,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
           const auto &linkInfo2 = linkIt2->second;
           model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
           collisionPoseOffset = collisionInfo->linkToCollision;
+          // If indexInModel has value, then this is a collision in a
+          // non-base link
           if (linkInfo2->indexInModel.has_value())
           {
             auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
@@ -117,19 +121,16 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     }
   }
 
+  // The function reached here so that means the entity is either
+  // a model, a base link, a collision in the base link, or a joint
+  // connected to a base link.
   FrameData data;
   if (model && model->body)
   {
     data.pose = convert(model->body->getBaseWorldTransform())
         * model->baseInertiaToLinkFrame;
     if (isModel)
-    {
-      data.pose = model->modelToRootLinkTf.inverse() * data.pose;
-      if (model->isNestedModel)
-      {
-        data.pose = data.pose * model->nestedModelFromRootModelTf;
-      }
-    }
+      data.pose = model->rootLinkToModelTf * data.pose;
     else if (isCollision)
       data.pose = data.pose * collisionPoseOffset;
     else if (isJoint)

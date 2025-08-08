@@ -18,6 +18,8 @@
 #include "JointFeatures.hh"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <memory>
 #include <unordered_map>
 
@@ -27,6 +29,29 @@
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/////////////////////////////////////////////////
+void recreateJointLimitConstraint(JointInfo *_jointInfo, ModelInfo *_modelInfo,
+    WorldInfo *_worldInfo)
+{
+  const auto *identifier = std::get_if<InternalJoint>(&_jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  if (_jointInfo->jointLimits)
+  {
+    _worldInfo->world->removeMultiBodyConstraint(_jointInfo->jointLimits.get());
+    _jointInfo->jointLimits.reset();
+  }
+
+  _jointInfo->jointLimits =
+    std::make_shared<btMultiBodyJointLimitConstraint>(
+      _modelInfo->body.get(), identifier->indexInBtModel,
+      static_cast<btScalar>(_jointInfo->axisLower),
+      static_cast<btScalar>(_jointInfo->axisUpper));
+
+  _worldInfo->world->addMultiBodyConstraint(_jointInfo->jointLimits.get());
+}
 
 /////////////////////////////////////////////////
 void makeColliderStatic(LinkInfo *_linkInfo)
@@ -116,7 +141,7 @@ double JointFeatures::GetJointPosition(
   if (identifier)
   {
     const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof];
+    return model->body->GetJointPosForDof(identifier->indexInBtModel, _dof);
   }
 
   // The base joint never really has a position. It is either a Free Joint or
@@ -158,18 +183,59 @@ double JointFeatures::GetJointAcceleration(
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
-    const Identity &_id, const std::size_t _dof) const
+    const Identity &_id, const std::size_t /*_dof*/) const
 {
+  double results = gz::math::NAN_D;
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
+
   if (identifier)
   {
     const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->getJointTorqueMultiDof(
-          identifier->indexInBtModel)[_dof];
+    auto feedback = model->body->getLink(
+      identifier->indexInBtModel).m_jointFeedback;
+    const auto &link = model->body->getLink(identifier->indexInBtModel);
+    results = 0.0;
+    if (link.m_jointType == btMultibodyLink::eRevolute)
+    {
+      // According to the documentation in btMultibodyLink.h,
+      // m_axesTop[0] is the joint axis for revolute joints.
+      Eigen::Vector3d axis = convert(link.getAxisTop(0));
+      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
+      btVector3 angular = feedback->m_reactionForces.getAngular();
+      math::Vector3d angularTorque(
+        angular.getX(),
+        angular.getY(),
+        angular.getZ());
+      results += axis_converted.Dot(angularTorque);
+      #if BT_BULLET_VERSION < 326
+        // not always true
+        return results / 2.0;
+      #else
+        return results;
+      #endif
+    }
+    else if (link.m_jointType == btMultibodyLink::ePrismatic)
+    {
+      auto axis = convert(link.getAxisBottom(0));
+      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
+      btVector3 linear = feedback->m_reactionForces.getLinear();
+      math::Vector3d linearForce(
+        linear.getX(),
+        linear.getY(),
+        linear.getZ());
+      results += axis_converted.Dot(linearForce);
+      #if BT_BULLET_VERSION < 326
+        // Not always true see for reference:
+        // https://github.com/bulletphysics/bullet3/discussions/3713
+        // https://github.com/gazebosim/gz-physics/issues/565
+        return results / 2.0;
+      #else
+        return results;
+      #endif
+    }
   }
-
-  return gz::math::NAN_D;
+  return results;
 }
 
 /////////////////////////////////////////////////
@@ -190,8 +256,7 @@ void JointFeatures::SetJointPosition(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->getJointPosMultiDof(identifier->indexInBtModel)[_dof] =
-      static_cast<btScalar>(_value);
+  model->body->SetJointPosForDof(identifier->indexInBtModel, _dof, _value);
   model->body->wakeUp();
 }
 
@@ -221,11 +286,11 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  auto *joint = this->ReferenceInterface<JointInfo>(_id);
 
   if (!std::isfinite(_value))
   {
-    gzerr << "Invalid joint velocity value [" << _value
+    gzerr << "Invalid joint force value [" << _value
            << "] commanded on joint [" << joint->name << " DOF " << _dof
            << "]. The command will be ignored\n";
     return;
@@ -236,8 +301,21 @@ void JointFeatures::SetJointForce(
     return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+
+  // Disable velocity control by removing joint motor constraint
+  if (joint->motor)
+  {
+    world->world->removeMultiBodyConstraint(joint->motor.get());
+    joint->motor.reset();
+  }
+
+  // clamp the values
+  double force = std::clamp(_value,
+      joint->minEffort, joint->maxEffort);
+
   model->body->getJointTorqueMultiDof(
-    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(_value);
+    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(force);
   model->body->wakeUp();
 }
 
@@ -368,18 +446,151 @@ void JointFeatures::SetJointVelocityCommand(
   auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
   if (!jointInfo->motor)
   {
+    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+    // \todo(iche033) The motor constraint is created with a max impulse
+    // computed by maxEffort * stepsize. However, our API supports
+    // stepping sim with varying dt. We should recompute max impulse
+    // if stepSize changes.
     jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
       0,
       static_cast<btScalar>(0),
-      static_cast<btScalar>(jointInfo->effort));
-    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+      static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
     world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
 
-  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(_value));
+  // clamp the values
+  double velocity = std::clamp(_value,
+      jointInfo->minVelocity, jointInfo->maxVelocity);
+
+  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinPosition(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint position value [" << _value
+           << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+  jointInfo->axisLower = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  recreateJointLimitConstraint(jointInfo, modelInfo, worldInfo);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxPosition(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint position value [" << _value
+           << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->axisUpper = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  recreateJointLimitConstraint(jointInfo, modelInfo, worldInfo);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinVelocity(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->minVelocity = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxVelocity(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  jointInfo->maxVelocity = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMinEffort(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid minimum joint effort value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+
+    return;
+  }
+
+  jointInfo->minEffort = _value;
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointMaxEffort(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid maximum joint effort value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF " << _dof
+          << "]. The command will be ignored\n";
+    return;
+  }
+
+  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
+  if (!identifier)
+    return;
+
+  jointInfo->maxEffort = _value;
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+
+  if (jointInfo->motor)
+  {
+    world->world->removeMultiBodyConstraint(jointInfo->motor.get());
+    jointInfo->motor.reset();
+  }
+
+  jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
+    modelInfo->body.get(),
+    std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
+    0,
+    static_cast<btScalar>(0),
+    static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
+  world->world->addMultiBodyConstraint(jointInfo->motor.get());
 }
 
 /////////////////////////////////////////////////
@@ -399,7 +610,7 @@ Identity JointFeatures::AttachFixedJoint(
   auto jointID = this->addConstraint(
     JointInfo{
       _name + "_" + parentLinkInfo->name + "_" + linkInfo->name,
-      InternalJoint{0},
+      FixedConstraintJoint{},
       _parent->FullIdentity().id,
       _childID,
       Eigen::Isometry3d(),
@@ -509,11 +720,19 @@ void JointFeatures::SetJointTransformFromParent(
 
   if (jointInfo->fixedConstraint)
   {
-      auto tf = convertTf(_pose);
-      jointInfo->fixedConstraint->setPivotInA(
-        tf.getOrigin());
-      jointInfo->fixedConstraint->setFrameInA(
-        tf.getBasis());
+    Eigen::Isometry3d parentInertiaToLinkFrame = Eigen::Isometry3d::Identity();
+    if (jointInfo->parentLinkID.has_value())
+    {
+      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
+      parentInertiaToLinkFrame = parentLinkInfo->inertiaToLinkFrame;
+    }
+    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+    auto tf = convertTf(parentInertiaToLinkFrame * _pose *
+                        linkInfo->inertiaToLinkFrame.inverse());
+    jointInfo->fixedConstraint->setPivotInA(
+      tf.getOrigin());
+    jointInfo->fixedConstraint->setFrameInA(
+      tf.getBasis());
   }
 }
 
@@ -530,6 +749,37 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
     jointInfo->jointFeedback->m_reactionForces.getLinear());
   wrenchOut.torque = jointInfo->tf_to_child.rotation() * convert(
     jointInfo->jointFeedback->m_reactionForces.getAngular());
+
+  // If a constraint is used to move the joint, e.g motor constraint,
+  // account for the applied constraint forces and torques.
+  // \todo(iche033) Check whether this is also needed for gearbox constraint
+  if (jointInfo->motor)
+  {
+    auto linkInfo = this->ReferenceInterface<LinkInfo>(
+        jointInfo->childLinkID);
+
+    // link index in model should be >=0 because we expect the base link in
+    // btMultibody to always be a parent link of a joint
+    // (except when it's fixed to world)
+    int linkIndexInModel = -1;
+    if (linkInfo->indexInModel.has_value())
+      linkIndexInModel = *linkInfo->indexInModel;
+    if (linkIndexInModel >= 0)
+    {
+      auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+      btMultibodyLink &link = modelInfo->body->getLink(linkIndexInModel);
+
+      wrenchOut.force +=
+          jointInfo->tf_to_child.rotation().inverse() *
+          convert(link.m_cachedWorldTransform.getBasis().inverse() *
+          link.m_appliedConstraintForce);
+      wrenchOut.torque +=
+          jointInfo->tf_to_child.rotation().inverse() *
+          convert(link.m_cachedWorldTransform.getBasis().inverse() *
+          link.m_appliedConstraintTorque);
+    }
+  }
+
   return wrenchOut;
 }
 

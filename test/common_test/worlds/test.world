@@ -333,7 +333,7 @@
             <box>
               <size>0.1 0.1 0.1</size>
             </box>
-        </geometry>
+          </geometry>
         </visual>
       </link>
       <joint name="j0" type="fixed">

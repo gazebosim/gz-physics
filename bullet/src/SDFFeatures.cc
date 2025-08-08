@@ -22,9 +22,10 @@
 #include <sdf/Geometry.hh>
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
+#include <sdf/Cone.hh>
+#include <sdf/Cylinder.hh>
 #include <sdf/Ellipsoid.hh>
 #include <sdf/Sphere.hh>
-#include <sdf/Cylinder.hh>
 #include <sdf/Plane.hh>
 #include <sdf/JointAxis.hh>
 
@@ -227,6 +228,14 @@ Identity SDFFeatures::ConstructSdfCollision(
     const auto sphere = geom->SphereShape();
     const auto radius = static_cast<btScalar>(sphere->Radius());
     shape = std::make_shared<btSphereShape>(radius);
+  }
+  else if (geom->ConeShape())
+  {
+    const auto cone = geom->ConeShape();
+    const auto radius = static_cast<btScalar>(cone->Radius());
+    const auto height = static_cast<btScalar>(cone->Length());
+    shape =
+      std::make_shared<btConeShapeZ>(radius, height);
   }
   else if (geom->CylinderShape())
   {

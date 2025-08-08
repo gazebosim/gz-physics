@@ -76,7 +76,55 @@ struct WorldInfo
   std::unordered_map<std::string, std::size_t> modelNameToEntityId;
   int nextModelIndex = 0;
 
+  double stepSize = 0.001;
+
   explicit WorldInfo(std::string name);
+};
+
+/// \brief Custom `GzMultiBody` wrapper for `btMultiBody` used for the following
+/// purposes where the btMultiBody API falls short:
+/// - to ensure that a flag is set whenever joint position is set or base
+/// transform is set indicating that collision transforms need to be updated.
+/// - to apply explicit joint damping torques before stepping simulation.
+class GzMultiBody: public btMultiBody
+{
+  using btMultiBody::btMultiBody;
+
+  /// \brief Set position for a particular joint dof and set a flag that the
+  /// collision world transforms need to be updated before performing collision
+  /// queries. Use this method to set a joint dof position instead of the base
+  /// class methods `setJointPos`/ `setJointPosMultiDof`/
+  /// (non-const)`getJointPosMultiDof` to ensure that collision queries after
+  /// setting joint positions are accurate.
+  public: void SetJointPosForDof(
+    int _jointIndex,
+    std::size_t _dof,
+    btScalar _value);
+  private: using btMultiBody::setJointPos;
+  private: using btMultiBody::setJointPosMultiDof;
+  private: using btMultiBody::getJointPosMultiDof;
+
+  /// \brief Get the position of a particular joint dof.
+  /// This method is needed because the private using-declaration above hides
+  /// both the const and non-const overloads of
+  /// `btMultiBody::getJointPosMultiDof`.
+  public: btScalar GetJointPosForDof(int _jointIndex, std::size_t _dof) const;
+
+  /// \brief Set base transform in world.
+  /// Use this method to set the transform for a moving base model instead of
+  /// the base class method `setBaseWorldTransform` to ensure that collision
+  /// queries after setting the transform are accurate.
+  public: void SetBaseWorldTransform(const btTransform &_pose);
+  private: using btMultiBody::setBaseWorldTransform;
+
+  /// \brief Update collision transforms if `needsCollisionTransformsUpdate` is
+  /// set and reset the flag.
+  public: void UpdateCollisionTransformsIfNeeded();
+
+  /// \brief Add joint damping torque to the specified joint index on all dofs.
+  public: void AddJointDampingTorque(int _jointIndex, double _damping);
+
+  private: bool needsCollisionTransformsUpdate = false;
 };
 
 struct ModelInfo
@@ -84,10 +132,9 @@ struct ModelInfo
   std::string name;
   Identity world;
   int indexInWorld;
-  Eigen::Isometry3d modelToRootLinkTf;
+  Eigen::Isometry3d rootLinkToModelTf;
   Eigen::Isometry3d baseInertiaToLinkFrame;
-  Eigen::Isometry3d nestedModelFromRootModelTf;
-  std::shared_ptr<btMultiBody> body;
+  std::shared_ptr<GzMultiBody> body;
 
   bool isNestedModel = false;
 
@@ -105,15 +152,13 @@ struct ModelInfo
   ModelInfo(
     std::string _name,
     Identity _world,
-    Eigen::Isometry3d _modelToRootLinkTf,
+    Eigen::Isometry3d _rootLinkToModelTf,
     Eigen::Isometry3d _baseInertiaToLinkFrame,
-    Eigen::Isometry3d _nestedModelFromRootModelTf,
-    std::shared_ptr<btMultiBody> _body)
+    std::shared_ptr<GzMultiBody> _body)
     : name(std::move(_name)),
       world(std::move(_world)),
-      modelToRootLinkTf(_modelToRootLinkTf),
+      rootLinkToModelTf(_rootLinkToModelTf),
       baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
-      nestedModelFromRootModelTf(_nestedModelFromRootModelTf),
       body(std::move(_body))
   {
     // Do nothing
@@ -170,6 +215,8 @@ struct InternalJoint
 
 struct RootJoint {};
 
+struct FixedConstraintJoint {};
+
 struct JointInfo
 {
   std::string name;
@@ -180,7 +227,7 @@ struct JointInfo
     std::monostate,
     RootJoint,
     InternalJoint,
-    std::unique_ptr<btMultiBodyConstraint>> identifier;
+    FixedConstraintJoint> identifier;
 
   /// If the parent link is nullopt then the joint attaches its child to the
   /// world
@@ -197,7 +244,18 @@ struct JointInfo
   Identity model;
   // This field gets set by AddJoint
   std::size_t indexInGzModel = 0;
-  btScalar effort = 0;
+
+  // joint limits
+  // \todo(iche033) Extend to support joints with more than 1 dof
+  double minEffort = 0.0;
+  double maxEffort = 0.0;
+  double minVelocity = 0.0;
+  double maxVelocity = 0.0;
+  double axisLower = 0.0;
+  double axisUpper = 0.0;
+
+  // joint damping
+  double damping = 0.0;
 
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
@@ -309,7 +367,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
     auto worldModel = std::make_shared<ModelInfo>(
       world->name, worldID, Eigen::Isometry3d::Identity(),
-      Eigen::Isometry3d::Identity(), Eigen::Isometry3d::Identity(), nullptr);
+      Eigen::Isometry3d::Identity(), nullptr);
     this->models[id] = worldModel;
     world->modelNameToEntityId[worldModel->name] = id;
     worldModel->indexInWorld = -1;
@@ -321,16 +379,15 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline Identity AddModel(
     std::string _name,
     Identity _worldID,
-    Eigen::Isometry3d _modelToRootLinkTf,
+    Eigen::Isometry3d _rootLinkToModelTf,
     Eigen::Isometry3d _baseInertialToLinkFrame,
-    std::shared_ptr<btMultiBody> _body)
+    std::shared_ptr<GzMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
       std::move(_name), std::move(_worldID),
-      std::move(_modelToRootLinkTf),
+      std::move(_rootLinkToModelTf),
       std::move(_baseInertialToLinkFrame),
-      Eigen::Isometry3d::Identity(),
       std::move(_body));
 
     this->models[id] = model;
@@ -350,17 +407,15 @@ class Base : public Implements3d<FeatureList<Feature>>
     std::string _name,
     Identity _parentID,
     Identity _worldID,
-    Eigen::Isometry3d _modelToRootLinkTf,
+    Eigen::Isometry3d _rootLinkToModelTf,
     Eigen::Isometry3d _baseInertialToLinkFrame,
-    Eigen::Isometry3d _nestedModelFromRootModelTf,
-    std::shared_ptr<btMultiBody> _body)
+    std::shared_ptr<GzMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
       std::move(_name), std::move(_worldID),
-      std::move(_modelToRootLinkTf),
+      std::move(_rootLinkToModelTf),
       std::move(_baseInertialToLinkFrame),
-      std::move(_nestedModelFromRootModelTf),
       std::move(_body));
 
     model->isNestedModel = true;
