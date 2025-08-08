@@ -338,7 +338,7 @@ TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
     // z0 - 1/2 * g * t^2
     double expected_z = 5 - (0.5 * 9.8 * time * time);
     double expected_vz = - 9.8 * time;
-    gz::physics::Vector3d expected_v(0.0, 0.0, expected_vz);
+    gz::math::Vector3d expected_v(0.0, 0.0, expected_vz);
  
     EXPECT_NEAR(expected_z,
                 frameData.pose.translation().z(), 1e-2);
