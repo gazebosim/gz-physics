@@ -334,8 +334,10 @@ TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
     EXPECT_NEAR(0.0, frameData.pose.translation().x(), 1e-3);
     EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-3);
     
-    //Falls and should be below the floor
-    EXPECT_LT(0.0,
+    // Falls and should be below the floor
+    // z0 - 1/2 * g * t^2
+    double expected_z = 5 - (0.5 * 9.81 * 4);
+    EXPECT_NEAR(expected_z,
                 frameData.pose.translation().z(), 1e-2);
     EXPECT_EQ(gz::math::Vector3d::Zero,
               gz::math::eigen3::convert(frameData.linearVelocity));
