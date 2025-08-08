@@ -549,20 +549,20 @@ Identity SDFFeatures::ConstructSdfModelImpl(
               this->GenerateIdentity(_modelOrWorldID, modelIt->second);
 
           std::string modelScopedName;
-          math::Pose3d modelPose;
           if (!getModelScopedName(_model, &_sdfModel,
               _sdfModel.Name() + "::", modelScopedName, getModelScopedName))
             this->GenerateInvalidId();
+          math::Pose3d modelPose;
           auto errors = _sdfModel.SemanticPose().Resolve(modelPose,
               modelScopedName);
           if (!errors.empty())
             this->GenerateInvalidId();
           auto modelToNestedModel = math::eigen3::convert(modelPose).inverse();
-
+          auto nestedModelFromRootLink =
+              modelToRootLink->inverse() * modelToNestedModel;
           return this->AddNestedModel(
               _model->Name(), modelIdentity, worldIdentity,
-              *modelToRootLink, rootInertialToLink,
-              modelToNestedModel,
+              nestedModelFromRootLink, rootInertialToLink,
               rootMultiBody);
         }
         else
@@ -578,7 +578,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           world = this->ReferenceInterface<WorldInfo>(worldIdentity);
           auto id = this->AddModel(
               _model->Name(), worldIdentity,
-              *modelToRootLink,
+              modelToRootLink->inverse(),
               rootInertialToLink,
               rootMultiBody);
           rootModelID = id;
