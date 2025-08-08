@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICFEATURES_HH_
-#define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICFEATURES_HH_
+#ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICLINKFEATURES_HH_
+#define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICLINKFEATURES_HH_
 
 #include <gz/physics/Kinematic.hh>
 
@@ -27,13 +27,13 @@ namespace physics {
 namespace bullet_featherstone {
 
 #if BT_BULLET_VERSION >= 307
-struct KinematicFeatureList : FeatureList<
+struct KinematicLinkFeatureList : FeatureList<
   Kinematic
 > { };
 
-class KinematicFeatures :
+class KinematicLinkFeatures :
     public virtual Base,
-    public virtual Implements3d<KinematicFeatureList>
+    public virtual Implements3d<KinematicLinkFeatureList>
 {
   // ----- Set / Get Kinematic -----
   public: void SetLinkKinematic(

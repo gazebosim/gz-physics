@@ -15,7 +15,7 @@
  *
 */
 
-#include "KinematicFeatures.hh"
+#include "KinematicLinkFeatures.hh"
 
 namespace gz {
 namespace physics {
@@ -23,7 +23,7 @@ namespace bullet_featherstone {
 
 #if BT_BULLET_VERSION >= 307
 /////////////////////////////////////////////////
-void KinematicFeatures::SetLinkKinematic(
+void KinematicLinkFeatures::SetLinkKinematic(
     const Identity &_id, bool _kinematic)
 {
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
@@ -54,7 +54,7 @@ void KinematicFeatures::SetLinkKinematic(
 }
 
 /////////////////////////////////////////////////
-bool KinematicFeatures::GetLinkKinematic(const Identity &_id) const
+bool KinematicLinkFeatures::GetLinkKinematic(const Identity &_id) const
 {
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
