@@ -336,10 +336,13 @@ TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
     
     // Falls and should be below the floor
     // z0 - 1/2 * g * t^2
-    double expected_z = 5 - (0.5 * 9.8 * 4);
+    double expected_z = 5 - (0.5 * 9.8 * time * time);
+    double expected_vz = - 9.8 * time;
+    gz::physics::Vector3d expected_v(0.0, 0.0, expected_vz);
+ 
     EXPECT_NEAR(expected_z,
                 frameData.pose.translation().z(), 1e-2);
-    EXPECT_EQ(gz::math::Vector3d::Zero,
+    EXPECT_EQ(expected_v,
               gz::math::eigen3::convert(frameData.linearVelocity));
     EXPECT_EQ(gz::math::Vector3d::Zero,
               gz::math::eigen3::convert(frameData.angularVelocity));
