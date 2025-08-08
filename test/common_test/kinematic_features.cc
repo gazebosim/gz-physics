@@ -342,7 +342,7 @@ TEST_F(SetKinematicTestFeaturesList, SetFalseKinematic)
  
     EXPECT_NEAR(expected_z,
                 frameData.pose.translation().z(), 1e-2);
-    EXPECT_NEAR(expectedVelZ, frameData.linearVelocity.z(), 1e-2);
+    EXPECT_NEAR(expected_vz, frameData.linearVelocity.z(), 1e-2);
     EXPECT_EQ(gz::math::Vector3d::Zero,
               gz::math::eigen3::convert(frameData.angularVelocity));
   }
