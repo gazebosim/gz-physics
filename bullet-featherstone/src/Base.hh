@@ -136,8 +136,6 @@ struct ModelInfo
   Eigen::Isometry3d baseInertiaToLinkFrame;
   std::shared_ptr<GzMultiBody> body;
 
-  bool isNestedModel = false;
-
   std::vector<std::size_t> linkEntityIds;
   std::vector<std::size_t> jointEntityIds;
   std::vector<std::size_t> nestedModelEntityIds;
@@ -418,7 +416,6 @@ class Base : public Implements3d<FeatureList<Feature>>
       std::move(_baseInertialToLinkFrame),
       std::move(_body));
 
-    model->isNestedModel = true;
     this->models[id] = model;
     const auto parentModel = this->models.at(_parentID);
     parentModel->nestedModelEntityIds.push_back(id);
