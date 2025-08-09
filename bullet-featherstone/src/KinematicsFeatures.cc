@@ -70,6 +70,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       {
         const auto &linkInfo2 = linkIt2->second;
         model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
+        // If indexInModel has value, then this is a non-base link
         if (linkInfo2->indexInModel.has_value())
         {
           return getNonBaseLinkFrameData(model, linkInfo2.get());
@@ -90,6 +91,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
           const auto &linkInfo2 = linkIt2->second;
           model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
           collisionPoseOffset = collisionInfo->linkToCollision;
+          // If indexInModel has value, then this is a non-base link
           if (linkInfo2->indexInModel.has_value())
           {
             auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
@@ -110,13 +112,16 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     }
   }
 
+  // The function reached here so that means the entity is either
+  // a model, a base link, or a collision in the base link
   FrameData data;
   if (model && model->body)
   {
-    data.pose = convert(model->body->getBaseWorldTransform());
-    if (!isModel)
-      data.pose = data.pose * model->baseInertiaToLinkFrame;
-    if (isCollision)
+    data.pose = convert(model->body->getBaseWorldTransform())
+        * model->baseInertiaToLinkFrame;
+    if (isModel)
+      data.pose = data.pose * model->rootLinkToModelTf;
+    else if (isCollision)
       data.pose = data.pose * collisionPoseOffset;
     data.linearVelocity = convert(model->body->getBaseVel());
     data.angularVelocity = convert(model->body->getBaseOmega());
