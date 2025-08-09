@@ -57,11 +57,11 @@ namespace bullet_featherstone {
 class GzCollisionDispatcher : public btCollisionDispatcher
 {
   /// \brief Constructor
-  public: GzCollisionDispatcher(
+  public: explicit GzCollisionDispatcher(
               btCollisionConfiguration *_collisionConfiguration);
 
   /// \brief Destructor
-  public: ~GzCollisionDispatcher();
+  public: ~GzCollisionDispatcher() override;
 
   // Documentation Inherited.
   // Override base function in order to limit the number of contacts for convex
@@ -100,8 +100,7 @@ class GzCollisionDispatcher : public btCollisionDispatcher
                std::unordered_map<const btCollisionShape *,
                btPersistentManifold *>> colPairManifolds;
 
-  /// \brief A set of original contact manifolds that need to be cleared
-  /// as they are replaced by a custom contact manifold
+  /// \brief A set of original contact manifolds that should be kept
   private: std::unordered_set<btPersistentManifold *> manifoldsToKeep;
 
   /// \brief A set of custom contact manifolds created and owned by gz-physics.

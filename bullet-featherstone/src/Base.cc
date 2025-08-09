@@ -50,7 +50,7 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     btCollisionObject *_colObj)
 {
   std::unordered_set<btPersistentManifold *> manifoldsToRemove;
-  for (const auto& manifold : this->customManifolds)
+  for (const auto &manifold : this->customManifolds)
   {
     if (manifold->getBody0() == _colObj ||
         manifold->getBody1() == _colObj)
@@ -59,10 +59,27 @@ void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
     }
   }
 
-  for (auto& manifold : manifoldsToRemove)
+  for (auto &manifold : manifoldsToRemove)
   {
     btCollisionDispatcher::releaseManifold(manifold);
     this->customManifolds.erase(manifold);
+
+    for (auto pairIt = this->colPairManifolds.begin();
+        pairIt != this->colPairManifolds.end();)
+    {
+      bool erased = false;
+      for (auto &colManifold : pairIt->second)
+      {
+        if (colManifold.second == manifold)
+        {
+          pairIt = this->colPairManifolds.erase(pairIt);
+          erased = true;
+          break;
+        }
+      }
+      if (!erased)
+        ++pairIt;
+    }
   }
 }
 
@@ -100,7 +117,7 @@ const btCollisionShape *GzCollisionDispatcher::FindCollisionShape(
       // collisions alongside of other collisions. See following example:
       // parentLink -> boxShape0
       //            -> boxShape1
-      //            -> comopundShape -> convexShape0
+      //            -> compoundShape -> convexShape0
       //                             -> convexShape1
       // A _childIndex of 1 is ambiguous as it could refer to either
       // boxShape1 or convexShape1
@@ -145,15 +162,12 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
   int numManifolds = this->getNumManifolds();
   for (int i = 0; i < numManifolds; ++i)
   {
-    btPersistentManifold* contactManifold =
+    btPersistentManifold *contactManifold =
         this->getManifoldByIndexInternal(i);
-
     const btMultiBodyLinkCollider* ob0 =
-        dynamic_cast<const btMultiBodyLinkCollider *>(
-        contactManifold->getBody0());
+        btMultiBodyLinkCollider::upcast(contactManifold->getBody0());
     const btMultiBodyLinkCollider* ob1 =
-        dynamic_cast<const btMultiBodyLinkCollider *>(
-        contactManifold->getBody1());
+        btMultiBodyLinkCollider::upcast(contactManifold->getBody1());
 
     // if it's a custom manifold, just refresh contacts, no need to
     // loop through and check them.
@@ -179,7 +193,7 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; ++j)
     {
-      btManifoldPoint& pt = contactManifold->getContactPoint(j);
+      btManifoldPoint &pt = contactManifold->getContactPoint(j);
       const btCollisionShape *colShape0 = this->FindCollisionShape(
           compoundShape0, pt.m_index0);
       const btCollisionShape *colShape1 = this->FindCollisionShape(
@@ -193,7 +207,7 @@ void GzCollisionDispatcher::dispatchAllCollisionPairs(
         continue;
       }
 
-      btPersistentManifold* colManifold =
+      btPersistentManifold *colManifold =
           this->colPairManifolds[colShape0][colShape1];
       if (!colManifold)
       {

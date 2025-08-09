@@ -29,17 +29,18 @@
 #include "test/TestLibLoader.hh"
 #include "Worlds.hh"
 
-#include <gz/physics/FindFeatures.hh>
-#include <gz/physics/RequestEngine.hh>
 #include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/FindFeatures.hh>
+#include <gz/physics/FixedJoint.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/FreeJoint.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
-#include <gz/physics/mesh/MeshShape.hh>
 #include <gz/physics/PlaneShape.hh>
-#include <gz/physics/FixedJoint.hh>
+#include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/RequestEngine.hh>
+#include <gz/physics/mesh/MeshShape.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
@@ -155,7 +156,8 @@ using CollisionMeshFeaturesList = gz::physics::FeatureList<
   gz::physics::LinkFrameSemantics,
   gz::physics::ForwardStep,
   gz::physics::GetContactsFromLastStepFeature,
-  gz::physics::GetEntities
+  gz::physics::GetEntities,
+  gz::physics::RemoveEntities
 >;
 
 using CollisionMeshTestFeaturesList = CollisionTest<CollisionMeshFeaturesList>;
@@ -498,8 +500,9 @@ TEST_F(CollisionMeshTestFeaturesList, MeshContacts)
     EXPECT_NE(0u, contactSize);
 
     // try with a decomposed mesh
+    std::string modelName = "mesh_decomposed";
     errors = root.LoadSdfString(getMeshModelStr(
-        "convex_decomposition", "mesh_decomposed",
+        "convex_decomposition", modelName,
         gz::math::Pose3d(0, 0, 3, 0, 0, 0)));
     ASSERT_TRUE(errors.empty()) << errors;
     ASSERT_NE(nullptr, root.Model());
@@ -519,6 +522,11 @@ TEST_F(CollisionMeshTestFeaturesList, MeshContacts)
     {
       EXPECT_LT(contactSize, contacts.size());
     }
+
+    // Verify that we can remove the model with convex decomposed mesh
+    world->RemoveModel(modelName);
+    auto model = world->GetModel(modelName);
+    EXPECT_EQ(nullptr, model);
   }
 }
 
