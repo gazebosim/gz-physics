@@ -37,7 +37,7 @@
       </link>
 
       <model name="nested_model">
-        <pose>0 0 1 0 0 0</pose>
+        <pose>0 0 1 0 0 0.5</pose>
 
         <link name="nested_link">
           <pose>0 2 0 0 0 0</pose>

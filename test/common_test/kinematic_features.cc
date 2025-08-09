@@ -241,7 +241,7 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
     EXPECT_EQ(expectedColWorldPose.Rot().Euler(),
         linkColPose.Rot().Euler());
 
-    gz::math::Pose3d actualNestedModelLocalPose(0, 0, 1, 0, 0, 0);
+    gz::math::Pose3d actualNestedModelLocalPose(0, 0, 1, 0, 0, 0.5);
     if (this->PhysicsEngineName(name) == "bullet-featherstone")
     {
       auto nestedModelFrameData = nestedModel->FrameDataRelativeToWorld();

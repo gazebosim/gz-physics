@@ -130,7 +130,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     data.pose = convert(model->body->getBaseWorldTransform())
         * model->baseInertiaToLinkFrame;
     if (isModel)
-      data.pose = model->rootLinkToModelTf * data.pose;
+      data.pose = data.pose * model->rootLinkToModelTf;
     else if (isCollision)
       data.pose = data.pose * collisionPoseOffset;
     else if (isJoint)
