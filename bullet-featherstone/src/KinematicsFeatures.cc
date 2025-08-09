@@ -29,6 +29,7 @@ FrameData3d getNonBaseLinkFrameData(const ModelInfo *_modelInfo,
   const auto index = _linkInfo->indexInModel.value();
   FrameData3d data;
   data.pose = GetWorldTransformOfLink(*_modelInfo, *_linkInfo);
+
   const auto &link = _modelInfo->body->getLink(index);
   data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
   data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
@@ -41,8 +42,10 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 {
   bool isModel = false;
   bool isCollision = false;
+  bool isJoint = false;
   const ModelInfo *model = nullptr;
   Eigen::Isometry3d collisionPoseOffset = Eigen::Isometry3d();
+  Eigen::Isometry3d jointPoseOffset = Eigen::Isometry3d();
 
   const auto linkIt = this->links.find(_id.ID());
   if (linkIt != this->links.end())
@@ -50,19 +53,20 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const auto &linkInfo = linkIt->second;
     model = this->ReferenceInterface<ModelInfo>(linkInfo->model);
 
+    // If indexInModel has value, then this is a non-base link
+    // otherwise, it is a base link and the calculations will be performed
+    // later below in this function
     if (linkInfo->indexInModel.has_value())
     {
       return getNonBaseLinkFrameData(model, linkInfo.get());
     }
-
-    // If indexInModel is nullopt then the link is the base link which will be
-    // calculated below.
   }
   else
   {
     auto jointIt = this->joints.find(_id.ID());
     if (jointIt != this->joints.end())
     {
+      isJoint = true;
       const auto &jointInfo = jointIt->second;
 
       const auto linkIt2 = this->links.find(jointInfo->childLinkID);
@@ -70,10 +74,14 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       {
         const auto &linkInfo2 = linkIt2->second;
         model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
-        // If indexInModel has value, then this is a non-base link
+        jointPoseOffset = jointInfo->tf_to_child.inverse();
+        // If indexInModel has value, then this is a joint connected to
+        // non-base link
         if (linkInfo2->indexInModel.has_value())
         {
-          return getNonBaseLinkFrameData(model, linkInfo2.get());
+          auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
+          data.pose = data.pose * jointPoseOffset;
+          return data;
         }
       }
     }
@@ -91,7 +99,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
           const auto &linkInfo2 = linkIt2->second;
           model = this->ReferenceInterface<ModelInfo>(linkInfo2->model);
           collisionPoseOffset = collisionInfo->linkToCollision;
-          // If indexInModel has value, then this is a non-base link
+          // If indexInModel has value, then this is a collision in a
+          // non-base link
           if (linkInfo2->indexInModel.has_value())
           {
             auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
@@ -113,7 +122,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   }
 
   // The function reached here so that means the entity is either
-  // a model, a base link, or a collision in the base link
+  // a model, a base link, a collision in the base link, or a joint
+  // connected to a base link.
   FrameData data;
   if (model && model->body)
   {
@@ -123,6 +133,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
       data.pose = data.pose * model->rootLinkToModelTf;
     else if (isCollision)
       data.pose = data.pose * collisionPoseOffset;
+    else if (isJoint)
+      data.pose = data.pose * jointPoseOffset;
     data.linearVelocity = convert(model->body->getBaseVel());
     data.angularVelocity = convert(model->body->getBaseOmega());
   }

@@ -150,21 +150,9 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
 
     auto childLinkFrameData = childLink->FrameDataRelativeToWorld();
     EXPECT_EQ(
-          F_WCexpected.pose.rotation(),
-          childLinkFrameData.pose.rotation());
-    // TODO(ahcorde): Review this in bullet-featherstone
-    if (this->PhysicsEngineName(name) != "bullet-featherstone")
-    {
-      EXPECT_NEAR(
-            F_WCexpected.pose.translation().x(),
-            childLinkFrameData.pose.translation().x(), 1e-6);
-      EXPECT_NEAR(
-            F_WCexpected.pose.translation().y(),
-            childLinkFrameData.pose.translation().y(), 1e-6);
-      EXPECT_NEAR(
-            F_WCexpected.pose.translation().z(),
-            childLinkFrameData.pose.translation().z(), 1e-6);
-    }
+          gz::math::eigen3::convert(F_WCexpected.pose),
+          gz::math::eigen3::convert(childLinkFrameData.pose));
+
     EXPECT_TRUE(
       gz::physics::test::Equal(
           F_WCexpected.linearVelocity,
