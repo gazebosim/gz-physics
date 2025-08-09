@@ -205,11 +205,8 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
 
     gz::math::Pose3d actualModelPose(1, 0, 0, 0, 0, 0);
     auto modelFrameData = model->FrameDataRelativeToWorld();
-    if (this->PhysicsEngineName(name) == "bullet-featherstone")
-    {
-      EXPECT_EQ(actualModelPose,
-                gz::math::eigen3::convert(modelFrameData.pose));
-    }
+    EXPECT_EQ(actualModelPose,
+              gz::math::eigen3::convert(modelFrameData.pose));
     auto baseLinkFrameData = baseLink->FrameDataRelativeToWorld();
     auto baseLinkPose = gz::math::eigen3::convert(baseLinkFrameData.pose);
     gz::math::Pose3d actualLinkLocalPose(0, 1, 0, 0, 0, 0);
@@ -242,14 +239,11 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
         linkColPose.Rot().Euler());
 
     gz::math::Pose3d actualNestedModelLocalPose(0, 0, 1, 0, 0, 0.5);
-    if (this->PhysicsEngineName(name) == "bullet-featherstone")
-    {
-      auto nestedModelFrameData = nestedModel->FrameDataRelativeToWorld();
-      gz::math::Pose3d expectedNestedModelWorldPose =
-          actualModelPose * actualNestedModelLocalPose;
-      EXPECT_EQ(expectedNestedModelWorldPose,
-          gz::math::eigen3::convert(nestedModelFrameData.pose));
-    }
+    auto nestedModelFrameData = nestedModel->FrameDataRelativeToWorld();
+    gz::math::Pose3d expectedNestedModelWorldPose =
+        actualModelPose * actualNestedModelLocalPose;
+    EXPECT_EQ(expectedNestedModelWorldPose,
+        gz::math::eigen3::convert(nestedModelFrameData.pose));
 
     auto nestedLinkFrameData = nestedLink->FrameDataRelativeToWorld();
     auto nestedLinkPose = gz::math::eigen3::convert(nestedLinkFrameData.pose);
