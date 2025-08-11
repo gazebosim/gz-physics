@@ -28,7 +28,7 @@
 
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/Joint.hh>
-#include <gz/physics/Kinematic.hh>
+#include <gz/physics/KinematicLink.hh>
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/ForwardStep.hh>
@@ -251,7 +251,7 @@ using SetKinematicFeaturesList = gz::physics::FeatureList<
   gz::physics::ForwardStep,
   gz::physics::GetLinkFromModel,
   gz::physics::GetModelFromWorld,
-  gz::physics::Kinematic,
+  gz::physics::KinematicLink,
   gz::physics::LinkFrameSemantics
 >;
 

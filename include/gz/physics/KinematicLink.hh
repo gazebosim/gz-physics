@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef GZ_PHYSICS_KINEMATIC_HH_
-#define GZ_PHYSICS_KINEMATIC_HH_
+#ifndef GZ_PHYSICS_KINEMATICLINK_HH_
+#define GZ_PHYSICS_KINEMATICLINK_HH_
 
 #include <gz/physics/FeatureList.hh>
 
@@ -25,7 +25,7 @@ namespace gz
   namespace physics
   {
     /////////////////////////////////////////////////
-    class GZ_PHYSICS_VISIBLE Kinematic
+    class GZ_PHYSICS_VISIBLE KinematicLink
       : public virtual Feature
     {
       /// \brief The Link API for setting link to be kinematic
@@ -65,6 +65,6 @@ namespace gz
   }
 }
 
-#include <gz/physics/detail/Kinematic.hh>
+#include <gz/physics/detail/KinematicLink.hh>
 
 #endif

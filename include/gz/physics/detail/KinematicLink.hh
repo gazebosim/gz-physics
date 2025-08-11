@@ -15,10 +15,10 @@
  *
  */
 
-#ifndef GZ_PHYSICS_DETAIL_KINEMATIC_HH_
-#define GZ_PHYSICS_DETAIL_KINEMATIC_HH_
+#ifndef GZ_PHYSICS_DETAIL_KINEMATICLINK_HH_
+#define GZ_PHYSICS_DETAIL_KINEMATICLINK_HH_
 
-#include <gz/physics/Kinematic.hh>
+#include <gz/physics/KinematicLink.hh>
 #include <gz/physics/FeatureList.hh>
 
 namespace gz
@@ -27,17 +27,17 @@ namespace physics
 {
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-void Kinematic::Link<PolicyT, FeaturesT>::SetKinematic(bool _kinematic)
+void KinematicLink::Link<PolicyT, FeaturesT>::SetKinematic(bool _kinematic)
 {
-  this->template Interface<Kinematic>()
+  this->template Interface<KinematicLink>()
       ->SetLinkKinematic(this->identity, _kinematic);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-bool Kinematic::Link<PolicyT, FeaturesT>::GetKinematic() const
+bool KinematicLink::Link<PolicyT, FeaturesT>::GetKinematic() const
 {
-  return this->template Interface<Kinematic>()
+  return this->template Interface<KinematicLink>()
       ->GetLinkKinematic(this->identity);
 }
 }  // namespace physics

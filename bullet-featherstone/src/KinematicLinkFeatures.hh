@@ -18,7 +18,7 @@
 #ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICLINKFEATURES_HH_
 #define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_KINEMATICLINKFEATURES_HH_
 
-#include <gz/physics/Kinematic.hh>
+#include <gz/physics/KinematicLink.hh>
 
 #include "Base.hh"
 
@@ -28,7 +28,7 @@ namespace bullet_featherstone {
 
 #if BT_BULLET_VERSION >= 307
 struct KinematicLinkFeatureList : FeatureList<
-  Kinematic
+  KinematicLink
 > { };
 
 class KinematicLinkFeatures :
