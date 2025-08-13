@@ -492,6 +492,12 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   const bool isStatic = _sdfModel.Static();
   WorldInfo *world = nullptr;
+
+  const auto modelToRootLink =
+      ResolveSdfPose(structure.rootLink->SemanticPose());
+  if (!modelToRootLink)
+    return this->GenerateInvalidId();
+
   const auto rootInertialToLink =
     gz::math::eigen3::convert(structure.linkToPrincipalAxesPose).inverse();
 
@@ -501,7 +507,31 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   std::unordered_map<const ::sdf::Model*, Identity> modelIDs;
   std::size_t rootModelID = 0u;
   std::shared_ptr<GzMultiBody> rootMultiBody;
-  // Add all  models, including nested models
+
+  auto getModelScopedName = [&](const ::sdf::Model *_targetModel,
+    const ::sdf::Model *_parentModel, const std::string &_prefix,
+    std::string &_modelScopedName, auto &&_getModelScopedName)
+  {
+    for (std::size_t i = 0u; i < _parentModel->ModelCount(); ++i)
+    {
+      auto childModel = _parentModel->ModelByIndex(i);
+      if (childModel == _targetModel)
+      {
+        _modelScopedName = _prefix + childModel->Name();
+        return true;
+      }
+      else
+      {
+        if (_getModelScopedName(_targetModel, childModel,
+            _prefix + childModel->Name() + "::", _modelScopedName,
+           _getModelScopedName))
+          return true;
+      }
+    }
+    return false;
+  };
+
+  // Add all models, including nested models
   auto addModels = [&](std::size_t _modelOrWorldID, const ::sdf::Model *_model,
                        auto &&_addModels)
     {
@@ -517,8 +547,22 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           auto worldIdentity = modelIt->second->world;
           auto modelIdentity =
               this->GenerateIdentity(_modelOrWorldID, modelIt->second);
+
+          std::string modelScopedName;
+          if (!getModelScopedName(_model, &_sdfModel,
+              _sdfModel.Name() + "::", modelScopedName, getModelScopedName))
+            this->GenerateInvalidId();
+          math::Pose3d modelPose;
+          auto errors = _sdfModel.SemanticPose().Resolve(modelPose,
+              modelScopedName);
+          if (!errors.empty())
+            this->GenerateInvalidId();
+          auto modelToNestedModel = math::eigen3::convert(modelPose).inverse();
+          auto nestedModelFromRootLink =
+              modelToRootLink->inverse() * modelToNestedModel;
           return this->AddNestedModel(
-              _model->Name(), modelIdentity, worldIdentity, rootInertialToLink,
+              _model->Name(), modelIdentity, worldIdentity,
+              nestedModelFromRootLink, rootInertialToLink,
               rootMultiBody);
         }
         else
@@ -533,7 +577,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
                 true);
           world = this->ReferenceInterface<WorldInfo>(worldIdentity);
           auto id = this->AddModel(
-              _model->Name(), worldIdentity, rootInertialToLink,
+              _model->Name(), worldIdentity,
+              modelToRootLink->inverse(),
+              rootInertialToLink,
               rootMultiBody);
           rootModelID = id;
           return id;
@@ -828,31 +874,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     // get the scoped name of the model
     // This is used to resolve the model pose
     std::string modelScopedName;
-    auto getModelScopedName = [&](const ::sdf::Model *_targetModel,
-      const ::sdf::Model *_parentModel, const std::string &_prefix,
-      auto &&_getModelScopedName)
-    {
-      for (std::size_t i = 0u; i < _parentModel->ModelCount(); ++i)
-      {
-        auto childModel = _parentModel->ModelByIndex(i);
-        if (childModel == _targetModel)
-        {
-          modelScopedName = _prefix + childModel->Name();
-          return true;
-        }
-        else
-        {
-          if (_getModelScopedName(_targetModel, childModel,
-              _prefix + childModel->Name() + "::", _getModelScopedName))
-            return true;
-        }
-      }
-      return false;
-    };
-
     math::Pose3d modelPose;
     if (!getModelScopedName(structure.model, &_sdfModel,
-        _sdfModel.Name() + "::", getModelScopedName))
+        _sdfModel.Name() + "::", modelScopedName, getModelScopedName))
       return this->GenerateInvalidId();
 
     auto errors = _sdfModel.SemanticPose().Resolve(modelPose,
@@ -861,11 +885,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       return this->GenerateInvalidId();
     modelToNestedModel = math::eigen3::convert(modelPose).inverse();
   }
-
-  const auto modelToRootLink =
-    ResolveSdfPose(structure.rootLink->SemanticPose());
-  if (!modelToRootLink)
-    return this->GenerateInvalidId();
 
   const auto worldToRootCom =
     *worldToModel * modelToNestedModel * *modelToRootLink *
