@@ -38,11 +38,13 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
   if (skeleton->getNumBodyNodes() == 0 && modelInfo->nestedModels.empty())
     return this->GenerateInvalidId();
 
-  // Verify that all root joints are FreeJoints
+  // Verify that all root joints are FreeJoints or KinematicJoints
   for (std::size_t i = 0; i < skeleton->getNumTrees(); ++i)
   {
     if (skeleton->getRootJoint(i)->getType()
-        != dart::dynamics::FreeJoint::getStaticType())
+        != dart::dynamics::FreeJoint::getStaticType() &&
+        skeleton->getRootJoint(i)->getType()
+        != gz::dynamics::KinematicJoint::getStaticType())
     {
       return this->GenerateInvalidId();
     }
@@ -94,7 +96,9 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
   while (bn)
   {
     if (bn->getParentJoint()->getType()
-        == dart::dynamics::FreeJoint::getStaticType())
+        == dart::dynamics::FreeJoint::getStaticType() ||
+        bn->getParentJoint()->getType()
+        == gz::dynamics::KinematicJoint::getStaticType())
     {
       break;
     }
