@@ -35,21 +35,10 @@ void KinematicLinkFeatures::SetLinkKinematic(
   if (link->indexInModel.has_value())
   {
     model->body->setLinkDynamicType(link->indexInModel.value(), collisionFlags);
-    if (_kinematic)
-    {
-      model->body->getLink(
-          link->indexInModel.value()).m_absFrameTotVelocity.setZero();
-      model->body->getLink(
-          link->indexInModel.value()).m_absFrameLocVelocity.setZero();
-    }
   }
   else
   {
     model->body->setBaseDynamicType(collisionFlags);
-    if (_kinematic)
-    {
-      model->body->clearVelocities();
-    }
   }
 }
 

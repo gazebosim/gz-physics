@@ -261,8 +261,9 @@ using SetKinematicTestFeaturesList =
 TEST_F(SetKinematicTestFeaturesList, SetKinematic)
 {
   // Test toggling a link between kinematic and dynamic type.
-  // When dynamic, the link should fall due to gravity. It should also
-  // stop falling when made kinematic again.
+  // When dynamic, the link should fall due to gravity.
+  // When made kinematic again, the link should retain its previous velocity
+  // but it should no longer be accelerating.
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
@@ -371,8 +372,9 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematic)
     EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-3);
     EXPECT_NEAR(expectedPosZ,
                 frameData.pose.translation().z(), 1e-2);
-    EXPECT_EQ(gz::math::Vector3d::Zero,
-              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_NEAR(0.0, frameData.linearVelocity.x(), 1e-3);
+    EXPECT_NEAR(0.0, frameData.linearVelocity.y(), 1e-3);
+    EXPECT_NEAR(expectedVelZ, frameData.linearVelocity.z(), 1e-2);
     EXPECT_EQ(gz::math::Vector3d::Zero,
               gz::math::eigen3::convert(frameData.angularVelocity));
   }
