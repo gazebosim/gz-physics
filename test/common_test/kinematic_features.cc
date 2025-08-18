@@ -369,7 +369,7 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematic)
 
     // Verify that sphere is falling by checking its pos and vel
     double gravity = -9.8;
-    double distZ = 0.5 * gravity;
+    double distZ = 0.5 * gravity * time * time;
     double expectedPosZ =  initialPose.Pos().Z() + distZ;
     double expectedVelZ = gravity * time;
     EXPECT_NEAR(0.0, frameData.pose.translation().x(), 1e-3);
@@ -390,12 +390,22 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematic)
       world->Step(output, state, input);
     }
     frameData = link->FrameDataRelativeToWorld();
+    time += 1.0;
+    distZ = 0.5 * gravity * time * time;
 
-    // Verify the sphere did not move
+    // \todo(iche033) Kinematic links with linear / angular velocities do not
+    // move in bullet-feathersone yet. Bullet will report that the bodies have
+    // velocities but they remain still.
+    // https://github.com/gazebosim/gz-physics/issues/773
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+    {
+      expectedPosZ =  initialPose.Pos().Z() + distZ;
+    }
     EXPECT_NEAR(0.0, frameData.pose.translation().x(), 1e-3);
     EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-3);
     EXPECT_NEAR(expectedPosZ,
                 frameData.pose.translation().z(), 1e-2);
+
     EXPECT_NEAR(0.0, frameData.linearVelocity.x(), 1e-3);
     EXPECT_NEAR(0.0, frameData.linearVelocity.y(), 1e-3);
     EXPECT_NEAR(expectedVelZ, frameData.linearVelocity.z(), 1e-2);
