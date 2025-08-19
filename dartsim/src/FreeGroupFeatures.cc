@@ -50,6 +50,10 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
     }
   }
 
+  if (modelInfo->nestedModels.empty())
+    return _modelID;
+
+  bool nestedModelHasFreeGroup = false;
   for (const auto &nestedModel : modelInfo->nestedModels)
   {
     // Check that each nested model with BodyNodes or nested models has valid
@@ -67,13 +71,18 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
       {
         return this->GenerateInvalidId();
       }
+      else
+      {
+        nestedModelHasFreeGroup = true;
+      }
     }
   }
+  if (skeleton->getNumBodyNodes() == 0 && !nestedModelHasFreeGroup)
+    return this->GenerateInvalidId();
 
   // TODO(MXG): When the dartsim plugin supports closed-loop constraints, verify
   // that this model is not attached to the world or any other models. If it's
   // attached to anything external, then we should return an invalid identity.
-
   return _modelID;
 }
 
@@ -110,7 +119,10 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
-  return this->GenerateIdentity(this->links.IdentityOf(info.link));
+  if (info.link)
+    return this->GenerateIdentity(this->links.IdentityOf(info.link));
+
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
