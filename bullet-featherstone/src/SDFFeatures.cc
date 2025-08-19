@@ -924,6 +924,18 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
       }
     }
+
+#if BT_BULLET_VERSION >= 307
+    // Set kinematic mode
+    // Do this after adding collisions
+    if (linkSdf->Kinematic())
+    {
+      auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
+      int indexInModel = linkInfo->indexInModel.value_or(-1);
+      model->body->setLinkDynamicType(indexInModel,
+          btCollisionObject::CF_KINEMATIC_OBJECT);
+    }
+#endif
   }
 
   // Add the remaining links in the model without constructing the bullet
