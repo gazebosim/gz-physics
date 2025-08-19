@@ -717,8 +717,8 @@ Identity SDFFeatures::ConstructSdfLink(
   bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
   bodyProperties.mGravityMode = _sdfLink.EnableGravity();
   bodyProperties.mInertia.setMoment(I_link);
- 
-  bodyProperties.mInertia.setLocalCOM(localCom);  
+
+  bodyProperties.mInertia.setLocalCOM(localCom);
   bodyProperties.mFrictionCoeff = 0;
 
   const Eigen::Isometry3d tf =
@@ -734,17 +734,18 @@ Identity SDFFeatures::ConstructSdfLink(
 
     auto const joint = result.first;  
     joint->setTransform(tf);
-    
+
     bn = result.second;
   }
-    
-  else{
-    // Note: When constructing a link from this function, we always instantiate
-    // it as a standalone free body within the model. If it should have any joint
-    // constraints, those will be added later.
 
-    // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
-    // potential (albeit unlikely) name collisions.
+  else
+  {
+    // Note: When constructing a link from this function, we always instantiate
+    // it as a standalone free body within the model. If it should have any
+    // joint constraints, those will be added later.
+
+    // TODO(MXG): Consider adding a UUID to this joint name in order to avoid
+    // any sspotential (albeit unlikely) name collisions.
 
     auto result = modelInfo.model->createJointAndBodyNodePair<
       dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);

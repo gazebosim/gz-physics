@@ -249,7 +249,7 @@ void KinematicJoint::setAngularVelocity(
 }
 
 Eigen::Matrix6d KinematicJoint::getRelativeJacobianStatic(
-    const Eigen::Vector6d& /*positions*/) const
+    const Eigen::Vector6d& positions) const
 {
   return mJacobian;
 }
@@ -264,7 +264,7 @@ Eigen::Vector6d KinematicJoint::getPositionDifferencesStatic(
 }
 
 KinematicJoint::KinematicJoint(const Properties& properties)
-  : Base(properties), 
+  : Base(properties),
     mQ(Eigen::Isometry3d::Identity())
 {
   mJacobianDeriv = Eigen::Matrix6d::Zero();
@@ -308,12 +308,12 @@ void KinematicJoint::integratePositions(double _dt)
   setPositionsStatic(convertToPositions(Qnext));
 }
 
-void KinematicJoint::integrateVelocities(double /*_dt*/)
+void KinematicJoint::integrateVelocities(double _dt)
 {
   setVelocitiesStatic(getVelocitiesStatic());
 }
 
-void KinematicJoint::updateConstrainedTerms(double /*timeStep*/)
+void KinematicJoint::updateConstrainedTerms(double timeStep)
 {
   const Eigen::Vector6d& velBefore = getVelocitiesStatic();
   setVelocitiesStatic(velBefore);
