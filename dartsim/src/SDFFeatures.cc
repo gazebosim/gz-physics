@@ -732,7 +732,7 @@ Identity SDFFeatures::ConstructSdfLink(
     auto result = modelInfo.model->createJointAndBodyNodePair<
       gz::dynamics::KinematicJoint>(nullptr, jointProperties, bodyProperties);
 
-    auto const joint = result.first;  
+    auto const joint = result.first;
     joint->setTransform(tf);
 
     bn = result.second;
