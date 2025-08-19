@@ -703,28 +703,59 @@ Identity SDFFeatures::ConstructSdfLink(
   const Eigen::Vector3d localCom =
       math::eigen3::convert(sdfInertia.Pose().Pos());
 
+  const bool isKinematic = _sdfLink.Kinematic();
+
   bodyProperties.mInertia.setLocalCOM(localCom);
 
   bodyProperties.mGravityMode = _sdfLink.EnableGravity();
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
-  // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
-  // potential (albeit unlikely) name collisions.
 
-  // Note: When constructing a link from this function, we always instantiate
-  // it as a standalone free body within the model. If it should have any joint
-  // constraints, those will be added later.
-  const auto result = modelInfo.model->createJointAndBodyNodePair<
-      dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
+  dart::dynamics::BodyNode * bn;
 
-  dart::dynamics::FreeJoint * const joint = result.first;
+  bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
+  bodyProperties.mGravityMode = _sdfLink.EnableGravity();
+  bodyProperties.mInertia.setMoment(I_link);
+
+  bodyProperties.mInertia.setLocalCOM(localCom);
+  bodyProperties.mFrictionCoeff = 0;
+
   const Eigen::Isometry3d tf =
       GetParentModelFrame(modelInfo) * ResolveSdfPose(_sdfLink.SemanticPose());
 
-  joint->setTransform(tf);
+  if(isKinematic){
+    gzdbg << "Kinematic tag found -> " << bodyProperties.mName << std::endl;
+    jointProperties.mName = bodyProperties.mName + "_KinematicJoint";
+    bodyProperties.mGravityMode = false;
 
-  dart::dynamics::BodyNode * const bn = result.second;
+    auto result = modelInfo.model->createJointAndBodyNodePair<
+      gz::dynamics::KinematicJoint>(nullptr, jointProperties, bodyProperties);
+
+    auto const joint = result.first;
+    joint->setTransform(tf);
+
+    bn = result.second;
+  }
+
+  else
+  {
+    // Note: When constructing a link from this function, we always instantiate
+    // it as a standalone free body within the model. If it should have any
+    // joint constraints, those will be added later.
+
+    // TODO(MXG): Consider adding a UUID to this joint name in order to avoid
+    // any sspotential (albeit unlikely) name collisions.
+
+    auto result = modelInfo.model->createJointAndBodyNodePair<
+      dart::dynamics::FreeJoint>(nullptr, jointProperties, bodyProperties);
+
+    dart::dynamics::FreeJoint * const joint = result.first;
+    joint->setTransform(tf);
+
+    bn = result.second;
+  }
+
 
   auto worldID = this->GetWorldOfModelImpl(_modelID);
   if (worldID == INVALID_ENTITY_ID)
@@ -1137,7 +1168,8 @@ Identity SDFFeatures::ConstructSdfJoint(
   {
     auto childsParentJoint = _child->getParentJoint();
     std::string parentName = worldParent? "world" : _parent->getName();
-    if (childsParentJoint->getType() != "FreeJoint")
+    if (childsParentJoint->getType() != "FreeJoint" &&
+        childsParentJoint->getType() != "KinematicJoint")
     {
       gzerr << "Asked to create a joint between links "
              << "[" << parentName << "] as parent and ["
