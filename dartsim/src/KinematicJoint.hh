@@ -100,7 +100,7 @@ public:
 
   //
   void setTransform(
-    const Eigen::Isometry3d& newTransform, 
+    const Eigen::Isometry3d& newTransform,
     const Frame* withRespectTo = Frame::World());
 
   /// Apply setTransform(bodyNode, tf, withRespecTo) for all the root BodyNodes
@@ -214,8 +214,6 @@ protected:
 
   // Documentation inherited
   Joint* clone() const override;
-
-  //using Base::getRelativeJacobianStatic;
 
   // Documentation inherited
   void integratePositions(double _dt) override;
