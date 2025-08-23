@@ -1,6 +1,36 @@
 ## Gazebo Physics 9.x
 
-### Gazebo Physics 9.0.0 (20XX-XX-XX)
+### Gazebo Physics 9.0.0 (2025-09-24)
+
+1. **Baseline:** this includes all changes from 8.3.0 and earlier.
+
+1. bullet-featherstone: Add Kinematic feature
+    * [Pull request #618](https://github.com/gazebosim/gz-physics/pull/618)
+
+1.  Fix model frame data
+    * [Pull request #651](https://github.com/gazebosim/gz-physics/pull/651)
+
+1. bullet-featherstone: Fix joint frame data pose
+    * [Pull request #650](https://github.com/gazebosim/gz-physics/pull/650)
+
+1. bullet-featherstone: Fix model frame data pose
+    * [Pull request #649](https://github.com/gazebosim/gz-physics/pull/649)
+
+1. Add check for valid freegroup link in dartsim
+    * [Pull request #765](https://github.com/gazebosim/gz-physics/pull/765)
+
+1. Bump dependency versions of gz-cmake and others in jetty and remove version from package names
+    * [Pull request #743](https://github.com/gazebosim/gz-physics/pull/743)
+    * [Pull request #747](https://github.com/gazebosim/gz-physics/pull/747)
+
+1. Fix two warnings in gz_physics-main-cnlwin
+    * [Pull request #734](https://github.com/gazebosim/gz-physics/pull/734)
+
+1. Remove deprecations from config.hh and dartsim SDF Features test
+    * [Pull request #705](https://github.com/gazebosim/gz-physics/pull/705)
+
+1. Bump major version to 9
+    * [Pull request #696](https://github.com/gazebosim/gz-physics/pull/696)
 
 ## Gazebo Physics 8.x
 
