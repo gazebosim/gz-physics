@@ -9,10 +9,10 @@
 
 Build | Status
 -- | --
-Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/tree/main/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/tree/main)
-Ubuntu Noble  | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-main-noble-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-main-noble-amd64)
-Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-main-homebrew-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-main-homebrew-amd64)
-Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-main-clowin)](https://build.osrfoundation.org/job/gz_physics-main-clowin)
+Test coverage | [![codecov](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics9/graph/badge.svg)](https://codecov.io/gh/gazebosim/gz-physics/tree/gz-physics9)
+Ubuntu Noble  | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics9-noble-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics9-noble-amd64)
+Homebrew      | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-ci-gz-physics9-homebrew-amd64)](https://build.osrfoundation.org/job/gz_physics-ci-gz-physics9-homebrew-amd64)
+Windows       | [![Build Status](https://build.osrfoundation.org/buildStatus/icon?job=gz_physics-9-cnlwin)](https://build.osrfoundation.org/job/gz_physics-9-cnlwin)
 
 Gazebo Physics, a component of [Gazebo](https://gazebosim.org), provides an abstract physics interface
 designed to support simulation and rapid development of robot applications.
@@ -73,7 +73,7 @@ See the [installation tutorial](https://gazebosim.org/api/physics/8/installation
 
 # Usage
 
-Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/main/examples/).
+Please refer to the [examples directory](https://github.com/gazebosim/gz-physics/raw/gz-physics9/examples/).
 
 # Documentation
 
@@ -96,7 +96,7 @@ On Ubuntu, you can also generate the documentation from a clone of this reposito
 3. Clone the repository
 
     ```
-    git clone https://github.com/gazebosim/gz-physics -b main
+    git clone https://github.com/gazebosim/gz-physics -b gz-physics9
     ```
 
 4. Configure and build the documentation.
@@ -176,4 +176,4 @@ This library uses [Semantic Versioning](https://semver.org/). Additionally, this
 
 # License
 
-This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/gazebosim/gz-physics/blob/main/LICENSE) file.
+This library is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). See also the [LICENSE](https://github.com/gazebosim/gz-physics/blob/gz-physics9/LICENSE) file.

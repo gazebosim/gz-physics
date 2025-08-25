@@ -71,16 +71,16 @@ Plugin implementations for other engines may choose to organize features into `F
 
 Dart ([Dynamic Animation and Robotics Toolkit](https://dartsim.github.io/)) is an open source library that provides data structures and algorithms for kinematic and dynamic applications in robotics and computer animation.
 It is the default physics engine used in Gazebo Simulation.
-The source code for Dartsim plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/main) under `dartsim` directory.
+The source code for Dartsim plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/gz-physics9) under `dartsim` directory.
 
-TPE ([Trivial Physics Engine](https://github.com/gazebosim/gz-physics/tree/main/tpe)) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
+TPE ([Trivial Physics Engine](https://github.com/gazebosim/gz-physics/tree/gz-physics9/tpe)) is an open source library created by Open Robotics that enables fast, inexpensive kinematics simulation for entities at large scale.
 It supports higher-order fleet dynamics without real physics (eg. gravity, force, constraint etc.) and multi-machine synchronization.
-The source code for TPE plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/main) under the `tpe/plugin` directory.
+The source code for TPE plugin can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/gz-physics9) under the `tpe/plugin` directory.
 
 Bullet ([Bullet3 Physics Engine](https://github.com/bulletphysics/bullet3)) is an open source library that supports real-time collision detection and multi-physics simulation for robotics and other application domains.
 Since Bullet supports two different APIs - a rigid-body API and a multibody API - with different physics implementations, there are two available plugin implementations:
-- The `bullet` plugin implements the rigid-body API, and the source code can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/main) under the `bullet` directory.
-- The `bullet-featherstone` plugin implements the multibody API (based on Featherstone's algorithms), and the source code can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/main) under the `bullet-featherstone` directory.
+- The `bullet` plugin implements the rigid-body API, and the source code can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/gz-physics9) under the `bullet` directory.
+- The `bullet-featherstone` plugin implements the multibody API (based on Featherstone's algorithms), and the source code can be found in [Gazebo Physics repository](https://github.com/gazebosim/gz-physics/tree/gz-physics9) under the `bullet-featherstone` directory.
 
 ### Entity Comparison
 
@@ -107,6 +107,6 @@ Entities are arranged in top-down hierarchical order.
 ### Feature Comparison
 
 For a list of all available `Features` in the Gazebo Physics library, check the classes inherited from `Feature` in the [Gazebo Physics API](https://gazebosim.org/api/physics/8/hierarchy.html).
-To check if a physics plugin implements a particular `Feature`, check the `FeatureLists` supported by that plugin as specified in the plugin.cc file, for example, [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/main/dartsim/src/plugin.cc).
+To check if a physics plugin implements a particular `Feature`, check the `FeatureLists` supported by that plugin as specified in the plugin.cc file, for example, [dartsim/src/plugin.cc](https://github.com/gazebosim/gz-physics/blob/gz-physics9/dartsim/src/plugin.cc).
 
 Next, check out the tutorial on \ref pluginloading "Loading physics plugins" on how to load a plugin and access a specific `Feature` interface of the plugin programmatically.
