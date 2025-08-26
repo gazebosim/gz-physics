@@ -18,6 +18,7 @@
 #ifndef IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
 #define IGNITION_PHYSICS_DETAIL_INSPECTFEATURES_HH
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <tuple>
