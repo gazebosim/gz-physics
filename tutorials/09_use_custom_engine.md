@@ -166,5 +166,54 @@ feel free to take a look here:
 Please follow the previous tutorial \ref installation "Installation" to build
 `gz-physics` from source again for our new feature to be compiled.
 
+<<<<<<< HEAD
 Now we can load the new physics plugin named `gz-physics-tpe-plugin`
 to test it on Gazebo by following this \ref physicsengine "Use different physics engines" tutorial.
+=======
+```bash
+git clone https://github.com/gazebosim/gz-physics
+cd gz-physics/examples/simple_plugin
+mkdir build
+cd build
+cmake ..
+# Linux
+make
+# Windows
+cmake --build . --target PluginTest --config Release
+```
+
+Run the test to verify the new physis plugin:
+
+```bash
+# Linux
+./PluginTest
+
+# Windows
+.\Release\PluginTest.exe
+```
+
+You'll see:
+
+```bash
+$ ./PluginTest
+Created empty world!
+```
+
+Once you implement more features, you could try passing `SimplePlugin` as the physics engine
+to Gazebo Sim following \ref physicsengine "Use different physics engines" tutorial, e.g. setting
+
+    # Linux
+    export GZ_SIM_PHYSICS_ENGINE_PATH=$GZ_SIM_PHYSICS_ENGINE_PATH:$(pwd)/build
+    # Windows
+    set GZ_SIM_PHYSICS_ENGINE_PATH=<PATH_TO_THE_EXAMPLE_DIR>\build\Release
+
+And run Gazebo sim with
+
+    gz sim -v4 -s --physics-engine SimplePlugin
+
+However, with the poor one feature we have implemented in this tutorial, you will only see an error,
+because Gazebo Sim needs much more features:
+
+    [error] [Physics.cc:854] No physics plugins implementing required interface found in library
+    [D:\programming\gz9-ws\gz-ws\src\gz-physics\examples\simple_plugin\build\Release\SimplePlugin.dll].
+>>>>>>> 272e3d4 (Update 09_use_custom_engine.md build commands (#780))
