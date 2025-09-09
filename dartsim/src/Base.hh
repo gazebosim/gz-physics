@@ -522,6 +522,10 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: bool RemoveModelImpl(const std::size_t _worldID,
                                const std::size_t _modelID)
   {
+    if (!this->worlds.HasEntity(_worldID) || !this->models.HasEntity(_modelID))
+    {
+      return false;
+    }
     const auto &world = this->worlds.at(_worldID);
     auto modelInfo = this->models.at(_modelID);
     auto skel = modelInfo->model;
