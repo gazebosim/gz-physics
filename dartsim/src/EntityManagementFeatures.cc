@@ -659,6 +659,10 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
   if (this->models.HasEntity(_modelID))
   {
     auto worldID = this->GetWorldOfModelImpl(_modelID);
+    if (!this->worlds.HasEntity(worldID))
+    {
+      return false;
+    }
     auto model = this->models.at(_modelID)->model;
 
     auto filterPtr = GetFilterPtr(this, worldID);
