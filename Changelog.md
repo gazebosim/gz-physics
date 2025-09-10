@@ -4,6 +4,21 @@
 
 1. **Baseline:** this includes all changes from 8.3.0 and earlier.
 
+1. Fix crash when recursively deleting nested models
+    * [Pull request #781](https://github.com/gazebosim/gz-physics/pull/781)
+
+1. Update `09_use_custom_engine.md` build commands
+    * [Pull request #780](https://github.com/gazebosim/gz-physics/pull/780)
+
+1. Fix spelling in simulation concepts tutorial
+    * [Pull request #778](https://github.com/gazebosim/gz-physics/pull/778)
+
+1. Fix path in physics plugin implementation tutorial
+    * [Pull request #777](https://github.com/gazebosim/gz-physics/pull/777)
+
+1. [Bazel] Update bazel module to use jetty release branches
+    * [Pull request #776](https://github.com/gazebosim/gz-physics/pull/776)
+
 1. bullet-featherstone: Add Kinematic feature
     * [Pull request #618](https://github.com/gazebosim/gz-physics/pull/618)
 
