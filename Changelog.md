@@ -1,6 +1,6 @@
 ## Gazebo Physics 9.x
 
-### Gazebo Physics 9.0.0 (2025-09-24)
+### Gazebo Physics 9.0.0 (2025-09-30)
 
 1. **Baseline:** this includes all changes from 8.3.0 and earlier.
 
