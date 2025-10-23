@@ -1,5 +1,46 @@
 ## Gazebo Physics 7.x
 
+### Gazebo Physics 7.6.0 (2025-10-23)
+
+1. Update 09_use_custom_engine.md build commands
+    * [Pull request #780](https://github.com/gazebosim/gz-physics/pull/780)
+
+1. Fix spelling in simulation concepts tutorial
+    * [Pull request #778](https://github.com/gazebosim/gz-physics/pull/778)
+
+1. Fix path in physics plugin implementation tutorial
+    * [Pull request #777](https://github.com/gazebosim/gz-physics/pull/777)
+
+1. tutorials/09_use_custom_engine: Add actual build and run instructions
+    * [Pull request #689](https://github.com/gazebosim/gz-physics/pull/689)
+
+1. Fix crash when recursively deleting nested models
+    * [Pull request #785](https://github.com/gazebosim/gz-physics/pull/785)
+
+1. Fix model frame data
+    * [Pull request #651](https://github.com/gazebosim/gz-physics/pull/651)
+
+1. bullet-featherstone: Fix joint frame data pose
+    * [Pull request #650](https://github.com/gazebosim/gz-physics/pull/650)
+
+1. bullet-featherstone: Fix model frame data pose
+    * [Pull request #649](https://github.com/gazebosim/gz-physics/pull/649)
+
+1. Add joint damping support in bullet-featherstone plugin
+    * [Pull request #738](https://github.com/gazebosim/gz-physics/pull/738)
+
+1. Suppress -Wreturn-type warning from octomap
+    * [Pull request #728](https://github.com/gazebosim/gz-physics/pull/728)
+
+1. Fix collision checking issues in bullet-featherstone
+    * [Pull request #727](https://github.com/gazebosim/gz-physics/pull/727)
+
+1. bullet-featherstone: Fix finding free group for a body with fixed base
+    * [Pull request #700](https://github.com/gazebosim/gz-physics/pull/700)
+
+1. Fix windows warnings
+    * [Pull request #720](https://github.com/gazebosim/gz-physics/pull/720)
+
 ### Gazebo Physics 7.5.0 (2025-01-30)
 
 1. bullet-featherstone: Remove joint motor constraint on joint force cmd
