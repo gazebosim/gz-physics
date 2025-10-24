@@ -851,7 +851,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         {
           jointInfo->jointLimits =
             std::make_shared<btMultiBodyJointLimitConstraint>(
-              model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
+              model->body.get(), i,
+              static_cast<btScalar>(joint->Axis()->Lower()),
               static_cast<btScalar>(joint->Axis()->Upper()));
           world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
         }
