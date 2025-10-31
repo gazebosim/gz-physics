@@ -1,3 +1,5 @@
+load("@buildifier_prebuilt//:rules.bzl", "buildifier", "buildifier_test")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
 load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
 
@@ -218,4 +220,20 @@ cc_test(
         "@gz-utils//:SuppressWarning",
         "@sdformat",
     ],
+)
+
+buildifier(
+    name = "buildifier.fix",
+    exclude_patterns = ["./.git/*"],
+    lint_mode = "fix",
+    mode = "fix",
+)
+
+buildifier_test(
+    name = "buildifier.test",
+    exclude_patterns = ["./.git/*"],
+    lint_mode = "warn",
+    mode = "diff",
+    no_sandbox = True,
+    workspace = "//:MODULE.bazel",
 )
