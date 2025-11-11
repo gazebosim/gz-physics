@@ -60,7 +60,7 @@ struct GzCollisionFilterCallback : public btOverlapFilterCallback
 {
   /// \brief Overrides base struct's function for additional collision
   /// filtering based on surface contact parameters
-  virtual bool needBroadphaseCollision(btBroadphaseProxy *_proxy0,
+  bool needBroadphaseCollision(btBroadphaseProxy *_proxy0,
       btBroadphaseProxy *_proxy1) const override;
 };
 

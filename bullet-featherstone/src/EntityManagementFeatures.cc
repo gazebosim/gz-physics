@@ -17,6 +17,7 @@
 
 #include <btBulletDynamicsCommon.h>
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -226,8 +227,7 @@ void EntityManagementFeatures::RemoveCollisionFilterMask(
     const Identity &_shapeID)
 {
   // Reset to default value
-  this->SetCollisionFilterMask(_shapeID,
-      std::numeric_limits<uint16_t>::max());
+  this->SetCollisionFilterMask(_shapeID, std::numeric_limits<uint16_t>::max());
 }
 
 /////////////////////////////////////////////////
