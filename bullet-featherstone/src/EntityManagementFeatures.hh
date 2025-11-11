@@ -24,6 +24,7 @@
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/Shape.hh>
 
 #include "Base.hh"
 
@@ -32,6 +33,7 @@ namespace physics {
 namespace bullet_featherstone {
 
 struct EntityManagementFeatureList : gz::physics::FeatureList<
+  CollisionFilterMaskFeature,
   ConstructEmptyWorldFeature,
   GetEngineInfo,
   GetJointFromModel,
@@ -162,6 +164,15 @@ class EntityManagementFeatures :
 
   public: bool RemoveNestedModelByName(
       const Identity &_modelID, const std::string &_modelName) override;
+
+  // ----- Manage collision filter masks -----
+  public: void SetCollisionFilterMask(
+      const Identity &_shapeID, uint16_t _mask) override;
+
+  public: uint16_t GetCollisionFilterMask(
+      const Identity &_shapeID) const override;
+
+  public: void RemoveCollisionFilterMask(const Identity &_shapeID) override;
 
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(

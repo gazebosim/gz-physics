@@ -1021,11 +1021,24 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
   }
 }
 
-TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
+using FeaturesCollisionFilter =  gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetShapeFromLink,
+  gz::physics::ForwardStep,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::CollisionFilterMaskFeature
+>;
+
+using SimulationFeaturesCollisionFilter =
+    SimulationFeaturesTest<FeaturesCollisionFilter>;
+
+TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
 {
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<Features>(
+    auto world = LoadPluginAndWorld<FeaturesCollisionFilter>(
       this->loader,
       name,
       common_test::worlds::kShapesBitmaskWorld);
@@ -1034,20 +1047,41 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     auto filteredBox = world->GetModel("box_filtered");
     auto collidingBox = world->GetModel("box_colliding");
 
-    auto checkedOutput = StepWorld<Features>(world, true).first;
+    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
+    auto baseShape = baseBox->GetLink(0)->GetShape(0);
+    EXPECT_EQ(0x01, baseShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x02, filteredShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x03, collidingShape->GetCollisionFilterMask());
+    auto checkedOutput = StepWorld<FeaturesCollisionFilter>(world, true).first;
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
     // Only box_colliding should collide with box_base
     EXPECT_NE(0u, contacts.size());
+    for (auto &contact : contacts)
+    {
+      const auto &contactPoint = contact.template Get<
+          gz::physics::World3d<FeaturesCollisionFilter>::ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      auto m1 = c1->GetLink()->GetModel();
+      auto m2 = c2->GetLink()->GetModel();
+      std::cerr << m1->GetName() << " : " << m2->GetName() << std::endl;
+      EXPECT_TRUE(m1->GetName() == "box_base" ||
+                  m1->GetName() == "box_colliding");
+      EXPECT_TRUE(m2->GetName() == "box_base" ||
+                  m2->GetName() == "box_colliding");
+    }
 
     // Now disable collisions for the colliding box as well
-    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
-    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
     collidingShape->SetCollisionFilterMask(0xF0);
     // Also test the getter
     EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
     // Step and make sure there are no collisions
-    checkedOutput = StepWorld<Features>(world, false).first;
+    checkedOutput = StepWorld<FeaturesCollisionFilter>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
@@ -1056,14 +1090,13 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     // Equivalent to 0xFF
     collidingShape->RemoveCollisionFilterMask();
     filteredShape->RemoveCollisionFilterMask();
-    checkedOutput = StepWorld<Features>(world, false).first;
+    checkedOutput = StepWorld<FeaturesCollisionFilter>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     // Expect box_filtered and box_colliding to collide with box_base
     contacts = world->GetContactsFromLastStep();
     EXPECT_NE(0u, contacts.size());
   }
 }
-
 
 TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 {

@@ -43,6 +43,7 @@
 
 #include <LinearMath/btQuaternion.h>
 
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -1264,6 +1265,7 @@ bool SDFFeatures::AddSdfCollision(
   double restitution = 0.0;
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
+  uint32_t collideBitmask = std::numeric_limits<uint32_t>::max();
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1297,6 +1299,18 @@ bool SDFFeatures::AddSdfCollision(
       {
         if (const auto r = bounce->FindElement("restitution_coefficient"))
           restitution = r->Get<double>();
+      }
+
+      if (const auto contact = surfaceElement->FindElement("contact"))
+      {
+        // TODO(iche033) add support for category_bitmask as well
+        if (const auto bitmask = contact->FindElement("collide_bitmask"))
+        {
+          collideBitmask = bitmask->Get<uint32_t>();
+          // Clear overlapping pair cache if new collision flags are set
+          // so that new contacts are generated with up-to-date collision flags.
+          this->ClearOverlappingPairCache(model->world);
+        }
       }
     }
   }
@@ -1341,6 +1355,11 @@ bool SDFFeatures::AddSdfCollision(
       linkInfo->collider->setAnisotropicFriction(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
+      // Set the collideBimask variable in the GzMultiBodyLinkCollider class
+      // instead of calling setCollisionFlags so we don't override bullet's
+      // internal collision flags which are used to indicate whether a collision
+      // is static, dynamic, kinematic, etc
+      linkInfo->collider->collideBitmask = collideBitmask;
 
       if (geom->MeshShape())
       {

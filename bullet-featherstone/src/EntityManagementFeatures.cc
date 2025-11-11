@@ -195,6 +195,42 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 }
 
 /////////////////////////////////////////////////
+void EntityManagementFeatures::SetCollisionFilterMask(
+    const Identity &_shapeID, uint16_t _mask)
+{
+  auto *colInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(colInfo->link);
+
+  if (_mask != linkInfo->collider->collideBitmask)
+  {
+    linkInfo->collider->collideBitmask = _mask;
+
+    // Clear overlapping pair cache if new collision flags are set
+    // so that new contacts are generated with up-to-date collision flags.
+    auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+    this->ClearOverlappingPairCache(modelInfo->world);
+  }
+}
+
+/////////////////////////////////////////////////
+uint16_t EntityManagementFeatures::GetCollisionFilterMask(
+    const Identity &_shapeID) const
+{
+  auto *colInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(colInfo->link);
+  return linkInfo->collider->collideBitmask;
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::RemoveCollisionFilterMask(
+    const Identity &_shapeID)
+{
+  // Reset to default value
+  this->SetCollisionFilterMask(_shapeID,
+      std::numeric_limits<uint16_t>::max());
+}
+
+/////////////////////////////////////////////////
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
