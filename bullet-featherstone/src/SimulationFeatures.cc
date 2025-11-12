@@ -145,9 +145,8 @@ void SimulationFeatures::WorldForwardStep(
     if (model != nullptr && model->body != nullptr && identifier != nullptr)
     {
       model->body->AddJointDampingStiffnessTorque(identifier->indexInBtModel,
-                                                  joint.second->damping,
-                                                  joint.second->springStiffness,
-                                                  joint.second->springReference);
+          joint.second->damping, joint.second->springStiffness,
+          joint.second->springReference);
     }
   }
 
