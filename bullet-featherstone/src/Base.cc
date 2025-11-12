@@ -20,6 +20,9 @@
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 
+#include <gz/math/Quaternion.hh>
+#include <gz/math/Vector3.hh>
+
 #include <utility>
 
 namespace gz {

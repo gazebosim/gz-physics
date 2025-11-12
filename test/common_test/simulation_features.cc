@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <set>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 
