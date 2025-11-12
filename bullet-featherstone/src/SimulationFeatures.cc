@@ -130,10 +130,12 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
-  // Add joint damping torque.
+  // Add joint damping and spring stiffness torque.
   // TODO(https://github.com/bulletphysics/bullet3/issues/4709) Remove this
-  // once upstream Bullet supports internal joint damping and set
-  // `model->body->getLink(i).m_jointDamping` directly in SDFFeatures.cc.
+  // once upstream Bullet supports internal joint damping and spring stiffness.
+  // e.g. set `model->body->getLink(i).m_jointDamping` directly in
+  // SDFFeatures.cc. Note: there is currently no `m_jointSpringStiffness`
+  // property.
   for (auto & joint : this->joints)
   {
     const auto *model =
@@ -142,8 +144,10 @@ void SimulationFeatures::WorldForwardStep(
         std::get_if<InternalJoint>(&joint.second->identifier);
     if (model != nullptr && model->body != nullptr && identifier != nullptr)
     {
-      model->body->AddJointDampingTorque(identifier->indexInBtModel,
-                                         joint.second->damping);
+      model->body->AddJointDampingStiffnessTorque(identifier->indexInBtModel,
+                                                  joint.second->damping,
+                                                  joint.second->springStiffness,
+                                                  joint.second->springReference);
     }
   }
 

@@ -76,6 +76,18 @@ void GzMultiBody::SetJointPosForDof(
 
 btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof) const
 {
+  if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
+  {
+    // Ball joints store joint pos as a quaternion (4 floats) instead of one
+    // joint angle in radians
+    const btScalar *jointPos = this->getJointPosMultiDof(_jointIndex);
+    math::Quaterniond quat(jointPos[3], jointPos[0], jointPos[1], jointPos[2]);
+    math::Vector3d axis;
+    double angle;
+    quat.AxisAngle(axis, angle);
+    return axis[_dof] * angle;
+  }
+
   return this->getJointPosMultiDof(_jointIndex)[_dof];
 }
 
@@ -97,13 +109,22 @@ void GzMultiBody::UpdateCollisionTransformsIfNeeded()
   }
 }
 
-void GzMultiBody::AddJointDampingTorque(int _jointIndex, double _damping)
+void GzMultiBody::AddJointDampingStiffnessTorque(int _jointIndex,
+    double _damping, double _springStiffness, double _springReference)
 {
   const btMultibodyLink& link = this->getLink(_jointIndex);
+
   for (int dof = 0; dof < link.m_dofCount; ++dof)
   {
     btScalar currVel = this->getJointVelMultiDof(_jointIndex)[dof];
+
+    // Appy damping
     btScalar torque = -static_cast<btScalar>(_damping) * currVel;
+
+    // Apply spring stiffness
+    torque += -_springStiffness *
+        (this->GetJointPosForDof(_jointIndex, dof) - _springReference);
+
     this->addJointTorqueMultiDof(_jointIndex, dof, torque);
   }
 }
