@@ -823,7 +823,7 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessRevolute)
 
   for (const std::string &name : this->pluginNames)
   {
-    // The `bullet` plugin does not support prismatic joints.
+    // The `bullet` plugin does not support spring stiffness
     CHECK_UNSUPPORTED_ENGINE(name, "bullet")
 
     auto world = LoadPluginAndWorld<FeaturesDynamics>(
