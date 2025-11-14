@@ -15,7 +15,7 @@
  *
 */
 
-#include "../MockFeatures.hh"
+#include "mock/MockFeatures.hh"
 
 #include <unordered_map>
 

@@ -49,27 +49,13 @@
         </visual>
       </link>
 
-      <joint name="joint1" type="fixed">
-         <parent>link1</parent>
-         <child>nested_model::nested_link1</child>
+      <joint name="joint1" type="revolute">
+        <parent>link1</parent>
+        <child>nested_model::nested_link1</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+        </axis>
       </joint>
-
-      <!-- Use duplicate link names for testing that these don't collide
-      with the links in the models above -->
-      <model name="nested_model2">
-        <link name="nested_link1"/>
-      </model>
-      <model name="nested_model3">
-        <link name="link1"/>
-      </model>
-    </model>
-
-    <model name="parent_model2">
-      <model name="child_model">
-        <model name="grand_child_model">
-          <link name="link1"/>
-        </model>
-      </model>
     </model>
   </world>
 </sdf>

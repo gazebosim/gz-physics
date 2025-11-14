@@ -284,14 +284,14 @@ void JointFeatures::SetJointVelocityCommand(
   if (!jointInfo->motor)
   {
     auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
-    jointInfo->motor = new btMultiBodyJointMotor(
+    jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
       0,
-      0,
-      jointInfo->effort);
+      static_cast<btScalar>(0),
+      static_cast<btScalar>(jointInfo->effort));
     auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
-    world->world->addMultiBodyConstraint(jointInfo->motor);
+    world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
 
   jointInfo->motor->setVelocityTarget(static_cast<btScalar>(_value));
@@ -303,11 +303,11 @@ Identity JointFeatures::AttachFixedJoint(
     const BaseLink3dPtr &_parent,
     const std::string &_name)
 {
-  auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
-  auto modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
-  auto parentLinkInfo = this->ReferenceInterface<LinkInfo>(
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+  auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
     _parent->FullIdentity());
-  auto parentModelInfo = this->ReferenceInterface<ModelInfo>(
+  auto *parentModelInfo = this->ReferenceInterface<ModelInfo>(
     parentLinkInfo->model);
   auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
 
@@ -322,16 +322,18 @@ Identity JointFeatures::AttachFixedJoint(
       linkInfo->model
     });
 
-  auto jointInfo = this->ReferenceInterface<JointInfo>(jointID);
+  auto parentLinkIdx = parentLinkInfo->indexInModel.value_or(-1);
+  auto childLinkIdx = linkInfo->indexInModel.value_or(-1);
+  auto *jointInfo = this->ReferenceInterface<JointInfo>(jointID);
 
   jointInfo->fixedConstraint = std::make_shared<btMultiBodyFixedConstraint>(
-    parentModelInfo->body.get(), -1,
-    modelInfo->body.get(), -1,
+    parentModelInfo->body.get(), parentLinkIdx,
+    modelInfo->body.get(), childLinkIdx,
     btVector3(0, 0, 0), btVector3(0, 0, 0),
     btMatrix3x3::getIdentity(),
     btMatrix3x3::getIdentity());
 
-  if (world && world->world)
+  if (world != nullptr && world->world)
   {
     world->world->addMultiBodyConstraint(jointInfo->fixedConstraint.get());
     return this->GenerateIdentity(jointID, this->joints.at(jointID));

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics6 VERSION 6.4.0)
+project(gz-physics6 VERSION 6.7.0)
 
 #============================================================================
 # Find gz-cmake
@@ -41,6 +41,9 @@ gz_find_package(gz-common5
   COMPONENTS geospatial graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
+
+# This is only used for test support
+gz_find_package(gz-common5 REQUIRED COMPONENTS testing)
 
 #--------------------------------------
 # Find gz-math
@@ -90,11 +93,12 @@ gz_find_package(GzBullet
 
 message(STATUS "-------------------------------------------\n")
 
-set(GZ_PHYSICS_RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
-
 # Plugin install dirs
+set(GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR
+  ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+)
 set(GZ_PHYSICS_ENGINE_INSTALL_DIR
-  ${CMAKE_INSTALL_PREFIX}/${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+  ${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR}
 )
 
 #============================================================================

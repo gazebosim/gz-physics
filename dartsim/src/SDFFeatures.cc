@@ -654,6 +654,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   bodyProperties.mInertia.setLocalCOM(localCom);
 
+  bodyProperties.mGravityMode = _sdfLink.EnableGravity();
 
   dart::dynamics::FreeJoint::Properties jointProperties;
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
@@ -840,8 +841,8 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
-    gzerr << "The geometry element of collision [" << _collision.Name() << "] "
-           << "couldn't be created\n";
+    gzdbg << "The geometry element of collision [" << _collision.Name() << "] "
+          << "couldn't be created\n";
     return this->GenerateInvalidId();
   }
 

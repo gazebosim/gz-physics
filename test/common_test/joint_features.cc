@@ -24,8 +24,9 @@
 #include <gz/math/Helpers.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include "gz/physics/FrameSemantics.hh"
 #include <gz/physics/FindFeatures.hh>
@@ -115,7 +116,7 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -143,7 +144,10 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     // Check that invalid velocity commands don't cause collisions to fail
     for (std::size_t i = 0; i < 1000; ++i)
     {
+      // Silence console spam
+      gz::common::Console::SetVerbosity(0);
       joint->SetForce(0, std::numeric_limits<double>::quiet_NaN());
+      gz::common::Console::SetVerbosity(4);
       // expect the position of the pendulum to stay above ground
       world->Step(output, state, input);
       auto frameData = base_link->FrameDataRelativeToWorld();
@@ -178,7 +182,10 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     // Check that invalid velocity commands don't cause collisions to fail
     for (std::size_t i = 0; i < 1000; ++i)
     {
+      // Silence console spam
+      gz::common::Console::SetVerbosity(0);
       joint->SetVelocityCommand(0, std::numeric_limits<double>::quiet_NaN());
+      gz::common::Console::SetVerbosity(4);
       // expect the position of the pendulum to stay above ground
       world->Step(output, state, input);
       auto frameData = base_link->FrameDataRelativeToWorld();
@@ -219,7 +226,7 @@ TYPED_TEST(JointFeaturesPositionLimitsTest, JointSetPositionLimitsWithForceContr
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -325,7 +332,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetVelocityLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -412,7 +419,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetEffortLimitsWith
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -489,7 +496,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -597,7 +604,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, DISABLED_JointSetPositio
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"simple_joint_test"};
@@ -649,7 +656,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetVelocityLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -720,7 +727,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetEffortLimitsWith
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -780,7 +787,7 @@ TYPED_TEST(JointFeaturesPositionLimitsForceControlTest, JointSetCombinedLimitsWi
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -855,7 +862,7 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "test.world"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     const std::string modelName{"double_pendulum_with_base"};
@@ -959,9 +966,23 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
     // sanity check on velocity values
     EXPECT_LT(1e-5, upperLinkLinearVelocity.Z());
     EXPECT_GT(-0.03, upperLinkAngularVelocity.X());
-    EXPECT_NEAR(0.0, upperLinkLinearVelocity.X(), 1e-6);
+#ifdef __APPLE__
+    // Disable some expectations for dartsim plugin on homebrew,
+    // see https://github.com/gazebosim/gz-physics/issues/620.
+    if (this->PhysicsEngineName(name) != "dartsim")
+#endif
+    {
+      EXPECT_NEAR(0.0, upperLinkLinearVelocity.X(), 1e-6);
+    }
     EXPECT_NEAR(0.0, upperLinkLinearVelocity.Y(), 1e-6);
-    EXPECT_NEAR(0.0, upperLinkAngularVelocity.Y(), 1e-6);
+#ifdef __APPLE__
+    // Disable some expectations for dartsim plugin on homebrew,
+    // see https://github.com/gazebosim/gz-physics/issues/620.
+    if (this->PhysicsEngineName(name) != "dartsim")
+#endif
+    {
+      EXPECT_NEAR(0.0, upperLinkAngularVelocity.Y(), 1e-6);
+    }
     EXPECT_NEAR(0.0, upperLinkAngularVelocity.Z(), 1e-6);
 
     upperJoint->Detach();
@@ -1016,7 +1037,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "joint_across_models.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointAcrossModelsSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1125,13 +1146,22 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     }
 
     // After a while, body2 should reach the ground and come to a stop
-    for (std::size_t i = 0; i < 1000; ++i)
+    std::size_t stepCount = 0u;
+    const std::size_t maxNumSteps = 1000u;
+    while (stepCount++ < maxNumSteps)
     {
       world->Step(output, state, input);
+      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+      // Expected Z height of model2 is 0.75 when both boxes are stacked on top
+      // of each other since each is 0.5 high.
+      if (fabs(frameDataModel2Body.pose.translation().z() - 0.75) < 2e-2 &&
+          fabs(frameDataModel2Body.linearVelocity.z()) < 1e-3)
+      {
+        break;
+      }
     }
-    frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
-
-    EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
+    EXPECT_GT(stepCount, 1u);
+    EXPECT_LT(stepCount, maxNumSteps);
   }
 }
 
@@ -1160,7 +1190,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "joint_constraint.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointConstraintSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1239,8 +1269,8 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
     EXPECT_EQ(initialModel3Pose,
               gz::math::eigen3::convert(frameDataModel3Body.pose));
 
+    // Step through initial transients
     const std::size_t numSteps = 100;
-    /// Step through initial transients
     for (std::size_t i = 0; i < numSteps; ++i)
     {
       world->Step(output, state, input);
@@ -1253,21 +1283,31 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
 
       // Expect all the bodies to be at rest.
       // (since they're held in place by the joints)
-      gz::math::Vector3d body1LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
-      gz::math::Vector3d body2LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
-      gz::math::Vector3d body3LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-      EXPECT_NEAR(0.0, body1LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body3LinearVelocity.Z(), 1e-3);
+      {
+        world->Step(output, state, input);
+        EXPECT_NEAR(initialModel1Pose.Z(),
+                    frameDataModel1Body.pose.translation().z(), 1e-3);
+        EXPECT_NEAR(initialModel2Pose.Z(),
+                    frameDataModel2Body.pose.translation().z(), 1e-3);
+        EXPECT_NEAR(initialModel3Pose.Z(),
+                    frameDataModel3Body.pose.translation().z(), 1e-3);
+        EXPECT_NEAR(0.0, frameDataModel1Body.linearVelocity.z(), 3e-3);
+        EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
+        EXPECT_NEAR(0.0, frameDataModel3Body.linearVelocity.z(), 3e-3);
+      }
     }
 
     // Detach the joints. M1 and M3 should fall as there is now nothing stopping
     // them from falling.
     fixedJoint_m2m1->Detach();
     fixedJoint_m2m3->Detach();
+
+    frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+    frameDataModel3Body = model3Body->FrameDataRelativeToWorld();
+    const double preStepBody1LinearVelocityZ =
+        frameDataModel1Body.linearVelocity.z();
+    const double preStepBody3LinearVelocityZ =
+        frameDataModel3Body.linearVelocity.z();
 
     /// Step through initial transients
     for (std::size_t i = 0; i < numSteps; ++i)
@@ -1282,16 +1322,11 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachMultiple)
 
       // Expect the middle box to be still as it is already at rest.
       // Expect the two side boxes to fall away.
-      gz::math::Vector3d body1LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel1Body.linearVelocity);
-      gz::math::Vector3d body2LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel2Body.linearVelocity);
-      gz::math::Vector3d body3LinearVelocity =
-          gz::math::eigen3::convert(frameDataModel3Body.linearVelocity);
-
-      EXPECT_NEAR(dt * (numSteps) * -10, body1LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(0.0, body2LinearVelocity.Z(), 1e-3);
-      EXPECT_NEAR(dt * (numSteps) * -10, body3LinearVelocity.Z(), 1e-3);
+      EXPECT_NEAR(preStepBody1LinearVelocityZ + dt * (numSteps) * -10,
+                  frameDataModel1Body.linearVelocity.z(), 1e-3);
+      EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
+      EXPECT_NEAR(preStepBody3LinearVelocityZ + dt * (numSteps) * -10,
+                  frameDataModel3Body.linearVelocity.z(), 1e-3);
     }
   }
 }
@@ -1309,7 +1344,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, LinkCountsInJointAttachDetach)
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "joint_across_models.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointAcrossModelsSdf);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1406,7 +1441,7 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetachSpawnedModel)
       ASSERT_NE(nullptr, engine);
 
       sdf::Root root;
-      const sdf::Errors errors = root.Load(gz::common::joinPaths(TEST_WORLD_DIR, "ground.sdf"));
+      const sdf::Errors errors = root.Load(common_test::worlds::kGroundSdf);
       ASSERT_TRUE(errors.empty()) << errors.front();
 
       world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -1504,8 +1539,7 @@ class WorldModelTest : public JointFeaturesTest<WorldJointFeatureList>
         gz::physics::RequestEngine3d<WorldJointFeatureList>::From(plugin);
 
     sdf::Root root;
-    const sdf::Errors errors = root.Load(
-        gz::common::joinPaths(TEST_WORLD_DIR, "world_joint_test.sdf"));
+    const sdf::Errors errors = root.Load(common_test::worlds::kWorldJointTestSdf);
     EXPECT_TRUE(errors.empty()) << errors;
     if (errors.empty())
     {
@@ -1520,6 +1554,9 @@ TEST_F(WorldModelTest, JointSetCommand)
 {
   for (const std::string &name : this->pluginNames)
   {
+    // bullet-feathersone does not support joints between models yet
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
     auto world = this->LoadWorld(name);
     ASSERT_NE(nullptr, world);
 

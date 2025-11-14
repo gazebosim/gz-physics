@@ -25,8 +25,9 @@
 
 #include <gz/math/eigen3/Conversions.hh>
 
-#include "TestLibLoader.hh"
-#include "../Utils.hh"
+#include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+#include "Worlds.hh"
 
 #include <gz/physics/sdf/ConstructJoint.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
@@ -48,11 +49,12 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RequestEngine.hh>
+#include <gz/physics/World.hh>
 
 #include <sdf/Root.hh>
 
 // The features that an engine must have to be loaded by this loader.
-using Features = gz::physics::FeatureList<
+struct Features : gz::physics::FeatureList<
   gz::physics::ConstructEmptyWorldFeature,
 
   gz::physics::FindFreeGroupFeature,
@@ -84,7 +86,7 @@ using Features = gz::physics::FeatureList<
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
->;
+> {};
 
 template <class T>
 class SimulationFeaturesTest:
@@ -139,6 +141,8 @@ gz::physics::World3dPtr<T> LoadPluginAndWorld(
   return world;
 }
 
+using AssertVectorApprox = gz::physics::test::AssertVectorApprox;
+
 /// \brief Step forward in a world
 /// \param[in] _world The world to step in
 /// \param[in] _firstTime Whether this is the very first time this world is
@@ -184,11 +188,11 @@ std::pair<bool, gz::physics::ForwardStep::Output> StepWorld(
 }
 
 // The features that an engine must have to be loaded by this loader.
-using FeaturesContacts = gz::physics::FeatureList<
+struct FeaturesContacts : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetContactsFromLastStepFeature,
   gz::physics::ForwardStep
->;
+> {};
 
 template <class T>
 class SimulationFeaturesContactsTest :
@@ -206,22 +210,167 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     auto world = LoadPluginAndWorld<FeaturesContacts>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kShapesWorld);
     auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1).first;
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
-    // Only box_colliding should collide with box_base
+    // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
   }
 }
 
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesCollisionPairMaxContacts : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::CollisionPairMaxContacts,
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::ForwardStep,
+  gz::physics::FreeGroupFrameSemantics,
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::GetModelFromWorld,
+  gz::physics::SetFreeGroupWorldPose
+> {};
+
+template <class T>
+class SimulationFeaturesCollisionPairMaxContactsTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesCollisionPairMaxContactsTestTypes =
+  ::testing::Types<FeaturesCollisionPairMaxContacts>;
+TYPED_TEST_SUITE(SimulationFeaturesCollisionPairMaxContactsTest,
+                 SimulationFeaturesCollisionPairMaxContactsTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
+    CollisionPairMaxContacts)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxContacts>(
+      this->loader,
+      name,
+      common_test::worlds::kShapesWorld);
+    auto checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(),
+              world->GetCollisionPairMaxContacts());
+    // Large box collides with other shapes
+    EXPECT_GT(contacts.size(), 30u);
+
+    world->SetCollisionPairMaxContacts(1u);
+    EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(4u, contacts.size());
+
+    world->SetCollisionPairMaxContacts(0u);
+    EXPECT_EQ(0u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(0u, contacts.size());
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesCollisionPairMaxContactsTest,
+    CollisionPairMaxContactsSelection)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesCollisionPairMaxContacts>(
+      this->loader,
+      name,
+      common_test::worlds::kCollisionPairContactPointSdf);
+    auto checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    // Verify initial pose
+    const gz::math::Pose3d initialPose = gz::math::Pose3d::Zero;
+    auto ellipsoid = world->GetModel("ellipsoid");
+    ASSERT_NE(nullptr, ellipsoid);
+    auto ellipsoidFreeGroup = ellipsoid->FindFreeGroup();
+    ASSERT_NE(nullptr, ellipsoidFreeGroup);
+    auto box = world->GetModel("box");
+    ASSERT_NE(nullptr, box);
+    auto boxFreeGroup = box->FindFreeGroup();
+    ASSERT_NE(nullptr, boxFreeGroup);
+    auto ellipsoidFrameData = ellipsoidFreeGroup->FrameDataRelativeToWorld();
+    auto boxFrameData = boxFreeGroup->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(ellipsoidFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(boxFrameData.pose));
+
+    // Get all contacts between box and ellipsoid
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(std::numeric_limits<std::size_t>::max(),
+              world->GetCollisionPairMaxContacts());
+    EXPECT_GT(contacts.size(), 30u);
+
+    // Find contact point with max penetration depth
+    double maxDepth = 0;
+    for (const auto &contact : contacts)
+    {
+      const auto* extraContactData =
+          contact.template Query<
+          gz::physics::World3d<
+          FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+      ASSERT_NE(nullptr, extraContactData);
+      if (extraContactData->depth > maxDepth)
+        maxDepth = extraContactData->depth;
+    }
+    EXPECT_GT(maxDepth, 0.0);
+
+    // Reset pose back to initial pose
+    ellipsoidFreeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+    boxFreeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+    ellipsoidFrameData = ellipsoidFreeGroup->FrameDataRelativeToWorld();
+    boxFrameData = boxFreeGroup->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(ellipsoidFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(boxFrameData.pose));
+
+    // Set max contact between collision pairs to be 1
+    world->SetCollisionPairMaxContacts(1u);
+    EXPECT_EQ(1u, world->GetCollisionPairMaxContacts());
+    checkedOutput = StepWorld<FeaturesCollisionPairMaxContacts>(
+        world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(1u, contacts.size());
+
+    // Verify that the physics engine picked the contact with max penetration
+    // depth
+    auto contact = contacts[0];
+    const auto* extraContactData =
+        contact.template Query<
+        gz::physics::World3d<
+        FeaturesCollisionPairMaxContacts>::ExtraContactData>();
+    ASSERT_NE(nullptr, extraContactData);
+    EXPECT_FLOAT_EQ(maxDepth, extraContactData->depth);
+  }
+}
 
 // The features that an engine must have to be loaded by this loader.
-using FeaturesStep = gz::physics::FeatureList<
+struct FeaturesStep : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::ForwardStep
->;
+> {};
 
 template <class T>
 class SimulationFeaturesStepTest :
@@ -243,7 +392,7 @@ TYPED_TEST(SimulationFeaturesStepTest, StepWorld)
     auto world = LoadPluginAndWorld<FeaturesStep>(
       this->loader,
       name,
-    gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kShapesWorld);
     auto checkedOutput = StepWorld<FeaturesStep>(world, true, 1000).first;
     EXPECT_TRUE(checkedOutput);
   }
@@ -276,10 +425,9 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
     // See https://github.com/gazebosim/gz-physics/issues/483
     CHECK_UNSUPPORTED_ENGINE(name, "bullet")
 #endif
-
     auto world = LoadPluginAndWorld<FeaturesFalling>(
         this->loader, name,
-        gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+        common_test::worlds::kFallingWorld);
 
     auto [checkedOutput, output] =
       StepWorld<FeaturesFalling>(world, true, 1000);
@@ -303,7 +451,7 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
 
 
 // The features that an engine must have to be loaded by this loader.
-using FeaturesShapeFeatures = gz::physics::FeatureList<
+struct FeaturesShapeFeatures : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
@@ -321,7 +469,7 @@ using FeaturesShapeFeatures = gz::physics::FeatureList<
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
->;
+> {};
 
 template <class T>
 class SimulationFeaturesShapeFeaturesTest :
@@ -342,7 +490,7 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
 #endif
     auto world = LoadPluginAndWorld<FeaturesShapeFeatures>(
         this->loader, name,
-        gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+        common_test::worlds::kShapesWorld);
     std::cerr << "world model count " << world->GetModelCount() << '\n';
     // test ShapeFeatures
     auto sphere = world->GetModel("sphere");
@@ -490,22 +638,38 @@ TYPED_TEST(SimulationFeaturesShapeFeaturesTest, ShapeFeatures)
   }
 }
 
-template <class T>
-class SimulationFeaturesTestBasic :
-  public SimulationFeaturesTest<T>{};
-using SimulationFeaturesTestBasicTypes =
-  ::testing::Types<Features>;
-TYPED_TEST_SUITE(SimulationFeaturesTestBasic,
-                 SimulationFeaturesTestBasicTypes);
+struct FreeGroupFeatures : gz::physics::FeatureList<
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::SetFreeGroupWorldPose,
+  gz::physics::SetFreeGroupWorldVelocity,
 
-TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+
+  gz::physics::FreeGroupFrameSemantics,
+  gz::physics::LinkFrameSemantics,
+
+  gz::physics::sdf::ConstructSdfWorld,
+
+  gz::physics::ForwardStep
+> {};
+
+template <class T>
+class SimulationFeaturesTestFreeGroup :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestFreeGroupTypes =
+  ::testing::Types<FreeGroupFeatures>;
+TYPED_TEST_SUITE(SimulationFeaturesTestFreeGroup,
+                 SimulationFeaturesTestFreeGroupTypes);
+
+TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 {
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<Features>(
+    auto world = LoadPluginAndWorld<FreeGroupFeatures>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kSphereSdf);
 
     // model free group test
     auto model = world->GetModel("sphere");
@@ -520,30 +684,71 @@ TYPED_TEST(SimulationFeaturesTestBasic, FreeGroup)
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 
-    StepWorld<Features>(world, true);
+    StepWorld<FreeGroupFeatures>(world, true);
 
+    // Set initial pose.
+    const gz::math::Pose3d initialPose{0, 0, 2, 0, 0, 0};
     freeGroup->SetWorldPose(
-      gz::math::eigen3::convert(
-        gz::math::Pose3d(0, 0, 2, 0, 0, 0)));
-    freeGroup->SetWorldLinearVelocity(
-      gz::math::eigen3::convert(gz::math::Vector3d(0.1, 0.2, 0.3)));
-    freeGroup->SetWorldAngularVelocity(
-      gz::math::eigen3::convert(gz::math::Vector3d(0.4, 0.5, 0.6)));
+      gz::math::eigen3::convert(initialPose));
 
-    auto frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-    EXPECT_EQ(gz::math::Pose3d(0, 0, 2, 0, 0, 0),
-              gz::math::eigen3::convert(frameData.pose));
+    // Set initial velocities.
+    const Eigen::Vector3d initialLinearVelocity{0.1, 0.2, 0.3};
+    const Eigen::Vector3d initialAngularVelocity{0.4, 0.5, 0.6};
+    freeGroup->SetWorldLinearVelocity(initialLinearVelocity);
+    freeGroup->SetWorldAngularVelocity(initialAngularVelocity);
+
+    auto freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    auto linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Before stepping, check that pose matches what was set.
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Before stepping, check that velocities match what was set.
+    AssertVectorApprox vectorPredicateVelocity(1e-7);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialLinearVelocity,
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialLinearVelocity,
+      linkFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      freeGroupFrameData.angularVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      linkFrameData.angularVelocity);
 
     // Step the world
-    StepWorld<Features>(world, false);
-    // Check that the first link's velocities are updated
-    frameData = model->GetLink(0)->FrameDataRelativeToWorld();
-    EXPECT_TRUE(gz::math::Vector3d(0.1, 0.2, 0.3).Equal(
-                gz::math::eigen3::convert(frameData.linearVelocity), 0.1));
-    EXPECT_EQ(gz::math::Vector3d(0.4, 0.5, 0.6),
-              gz::math::eigen3::convert(frameData.angularVelocity));
+    StepWorld<FreeGroupFeatures>(world, false);
+
+    // Check the velocities again.
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialLinearVelocity,
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialLinearVelocity,
+      linkFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      freeGroupFrameData.angularVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicateVelocity,
+      initialAngularVelocity,
+      linkFrameData.angularVelocity);
   }
 }
+
+template <class T>
+class SimulationFeaturesTestBasic :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestBasicTypes =
+  ::testing::Types<Features>;
+TYPED_TEST_SUITE(SimulationFeaturesTestBasic,
+                 SimulationFeaturesTestBasicTypes);
 
 TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
 {
@@ -552,7 +757,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "falling.world"));
+      common_test::worlds::kFallingWorld);
     auto sphere = world->GetModel("sphere");
     auto sphereCollision = sphere->GetLink(0)->GetShape(0);
     auto ground = world->GetModel("box");
@@ -601,7 +806,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes_bitmask.sdf"));
+      common_test::worlds::kShapesBitmaskWorld);
 
     auto baseBox = world->GetModel("box_base");
     auto filteredBox = world->GetModel("box_filtered");
@@ -646,7 +851,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
     LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "shapes.world"));
+      common_test::worlds::kShapesWorld);
 
     auto sphere = world->GetModel("sphere");
     auto sphereFreeGroup = sphere->FindFreeGroup();
@@ -796,7 +1001,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
   }
 }
 
-using FeaturesContactPropertiesCallback = gz::physics::FeatureList<
+struct FeaturesContactPropertiesCallback : gz::physics::FeatureList<
   gz::physics::ConstructEmptyWorldFeature,
 
   gz::physics::FindFreeGroupFeature,
@@ -833,7 +1038,7 @@ using FeaturesContactPropertiesCallback = gz::physics::FeatureList<
   gz::physics::GetCylinderShapeProperties,
   gz::physics::GetCapsuleShapeProperties,
   gz::physics::GetEllipsoidShapeProperties
->;
+> {};
 
 #ifdef DART_HAS_CONTACT_SURFACE
 using ContactSurfaceParams =
@@ -858,7 +1063,7 @@ TYPED_TEST(SimulationFeaturesTestFeaturesContactPropertiesCallback, ContactPrope
       LoadPluginAndWorld<FeaturesContactPropertiesCallback>(
           this->loader,
           name,
-          gz::common::joinPaths(TEST_WORLD_DIR, "contact.sdf"));
+          common_test::worlds::kContactSdf);
 
     auto sphere = world->GetModel("sphere");
     auto groundPlane = world->GetModel("ground_plane");
@@ -1088,7 +1293,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
     auto world = LoadPluginAndWorld<Features>(
       this->loader,
       name,
-      gz::common::joinPaths(TEST_WORLD_DIR, "multiple_collisions.sdf"));
+      common_test::worlds::kMultipleCollisionsSdf);
 
     // model free group test
     auto model = world->GetModel("box");
