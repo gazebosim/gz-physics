@@ -60,7 +60,9 @@ struct JointFeatureList : FeatureList<
   SetJointDampingCoefficientFeature,
   SetJointSpringStiffnessFeature,
   SetJointSpringReferenceFeature,
-  GetJointTransmittedWrench
+  GetJointTransmittedWrench,
+
+  SetMimicConstraintFeature
 > { };
 
 class JointFeatures :
@@ -225,6 +227,16 @@ public: void SetJointDampingCoefficient(
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
       const Identity &_id) const override;
+
+  // ----- Mimic joint constraint -----
+  public: void SetJointMimicConstraint(
+      const Identity &_id,
+      const std::size_t _dof,
+      const std::string &_joint,
+      const std::string &_axis,
+      const double _multiplier,
+      const double _offset,
+      const double _reference) override;
 };
 
 }
