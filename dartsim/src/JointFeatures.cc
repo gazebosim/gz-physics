@@ -810,52 +810,65 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
 }
 
 /////////////////////////////////////////////////
-void JointFeatures::SetJointMimicConstraint(
+bool JointFeatures::SetJointMimicConstraint(
     const Identity &_id,
-    const std::size_t /*_dof*/,  // follower dof not supported by dart API yet
-    const std::string &_joint,
-    const std::string &/*_axis*/,
-    const double _multiplier,
-    const double _offset,
-    const double _reference)
+    std::size_t _dof,
+    const BaseJoint3dPtr &_leaderJoint,
+    std::size_t _leaderAxisDof,
+    double _multiplier,
+    double _offset,
+    double _reference)
 {
-  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
-  auto jointMimic = joint->getSkeleton()->getJoint(_joint);
+  if (_dof != 0 || _leaderAxisDof != 0)
+  {
+    gzerr << "Failed to set mimic constraint for follower axis " << _dof
+          << " and leader axis " << _leaderAxisDof
+          << " because dartsim doesn't yet support mimic "
+          << " constraints for multi-axis joints."
+          << std::endl;
+    return false;
+  }
+
+  auto followerJoint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  auto leaderJointId = _leaderJoint->FullIdentity();
+  auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId)->joint;
 
   // Take extra care that the value is valid. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
   // collisions to fail
   if (std::isnan(_multiplier))
   {
-    gzerr << "Invalid value found in multiplier [" << _multiplier
-           << "] for joint [" << joint->getName()
-           << "]. The command will be ignored\n";
-    return;
+    gzerr << "Invalid value found in mimic constraint multiplier ["
+          << _multiplier
+          << "] for follower joint [" << followerJoint->getName()
+          << "]. The command will be ignored\n";
+    return false;
   }
   if (std::isnan(_offset))
   {
-    gzerr << "Invalid value found in offset [" << _offset
-           << "] for joint [" << joint->getName()
-           << "]. The command will be ignored\n";
-    return;
+    gzerr << "Invalid value found in mimic constraint offset [" << _offset
+          << "] for follower joint [" << followerJoint->getName()
+          << "]. The command will be ignored\n";
+    return false;
   }
   // Check if the joint tries to mimic itself.
-  if (joint == jointMimic)
+  if (followerJoint == leaderJoint)
   {
     gzerr << "Leader and follower joints for the mimic constraint"
       << " should not be the same. The constraint will be ignored"
       << std::endl;
   }
   // Check for degrees of freedom.
-  if (joint->getNumDofs() != jointMimic->getNumDofs())
+  if (followerJoint->getNumDofs() != leaderJoint->getNumDofs())
   {
     gzerr << "Mimic constraint pair of joints should have the same"
       << " degress of freedom. The constraint will be ignored"
       << std::endl;
   }
 
-  joint->setActuatorType(dart::dynamics::Joint::MIMIC);
-  joint->setMimicJoint(jointMimic, _multiplier,
+  followerJoint->setActuatorType(dart::dynamics::Joint::MIMIC);
+  followerJoint->setUseCouplerConstraint(true);
+  followerJoint->setMimicJoint(leaderJoint, _multiplier,
       _offset - _multiplier * _reference);
 }
 

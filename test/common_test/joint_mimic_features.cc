@@ -334,7 +334,10 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
           EXPECT_NEAR(
               multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
               followerJoint->GetPosition(0),
-              positionTolerance);
+              positionTolerance)
+            << " multiplier " << multiplier
+            << ", offset " << offset
+            << ", reference " << reference;;
         }
       };
 
