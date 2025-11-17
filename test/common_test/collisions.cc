@@ -262,8 +262,10 @@ TEST_F(CollisionMeshTestFeaturesList, MeshOptimization)
       // convex decomposition gives more accurate results
       double tol = (optimizationStr == "convex_decomposition") ? 1e-3 : 1e-2;
       EXPECT_NEAR(0.1,
-                  frameDataModelOptimizedBody.pose.translation().z(), tol);
-      EXPECT_NEAR(0.0, frameDataModelOptimizedBody.linearVelocity.z(), tol);
+                  frameDataModelOptimizedBody.pose.translation().z(), tol)
+          << optimizationStr;
+      EXPECT_NEAR(0.0, frameDataModelOptimizedBody.linearVelocity.z(), tol)
+          << optimizationStr;
 
       initialModelPose.Pos() += gz::math::Vector3d(0, 2, 0);
     }
