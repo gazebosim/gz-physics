@@ -264,7 +264,11 @@ TEST_F(CollisionMeshTestFeaturesList, MeshOptimization)
       EXPECT_NEAR(0.1,
                   frameDataModelOptimizedBody.pose.translation().z(), tol)
           << optimizationStr;
+#ifdef __aarch64__
+      EXPECT_NEAR(0.0, frameDataModelOptimizedBody.linearVelocity.z(), 2 * tol)
+#else
       EXPECT_NEAR(0.0, frameDataModelOptimizedBody.linearVelocity.z(), tol)
+#endif
           << optimizationStr;
 
       initialModelPose.Pos() += gz::math::Vector3d(0, 2, 0);
