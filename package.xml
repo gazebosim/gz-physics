@@ -20,6 +20,7 @@
   <depend>gz-plugin</depend>
   <depend>gz-utils</depend>
   <depend>sdformat</depend>
+  <depend>mujoco</depend>
 
   <export>
     <build_type>cmake</build_type>
