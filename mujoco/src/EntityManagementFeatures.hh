@@ -30,6 +30,8 @@ namespace physics {
 namespace mujoco {
 
 struct EntityManagementFeatureList : FeatureList<
+  GetEngineInfo,
+  GetWorldFromEngine,
   // GetEntities
   // RemoveEntities,
   ConstructEmptyWorldFeature
@@ -44,7 +46,34 @@ class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
-  public: Identity ConstructEmptyWorld(const Identity &_engineID, const std::string &_name) override;
+  // ----- Get entities -----
+  public: const std::string &GetEngineName(const Identity &) const override
+  {
+    return this->engineName;
+  }
+
+  public: std::size_t GetEngineIndex(const Identity &) const override
+  {
+    return 0;
+  }
+
+  public: std::size_t GetWorldCount(const Identity &) const override;
+
+  public: Identity GetWorld(
+      const Identity &, std::size_t _worldIndex) const override;
+
+  public: Identity GetWorld(
+      const Identity &, const std::string &_worldName) const override;
+
+  public: const std::string &GetWorldName(
+      const Identity &_worldID) const override;
+
+  public: std::size_t GetWorldIndex(const Identity &_worldID) const override;
+
+  public: Identity GetEngineOfWorld(const Identity &_worldID) const override;
+
+  public: Identity ConstructEmptyWorld(
+    const Identity &_engineID, const std::string &_name) override;
 };
 
 }

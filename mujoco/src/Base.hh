@@ -31,25 +31,30 @@ namespace physics
 namespace mujoco
 {
 
-struct LinkInfo {
-  mjsBody* body;
+struct LinkInfo
+{
+  mjsBody *body;
 };
 
-struct JointInfo {
-  mjsJoint* joint;
+struct JointInfo
+{
+  mjsJoint *joint;
 };
 
-struct ModelInfo {
-  mjsBody* body;
+struct ModelInfo
+{
+  mjsBody *body;
   std::vector<std::shared_ptr<LinkInfo>> links{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
 };
 
-struct WorldInfo {
-  mjsBody* body;
+struct WorldInfo
+{
+  mjsBody *body;
   mjSpec *mjSpecObj;
   mjModel *mjModelObj;
   mjData *mjDataObj;
+  std::string name;
   std::vector<std::shared_ptr<ModelInfo>> links{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
 };
@@ -59,6 +64,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: Identity InitiateEngine(std::size_t /*_engineID*/) override;
 
   public: std::vector<std::shared_ptr<WorldInfo>> worlds;
+
+  public: std::string engineName{"mujoco"};
 };
 }  // namespace mujoco
 }  // namespace physics
