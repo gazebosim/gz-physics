@@ -18,7 +18,11 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
+#include <mujoco/mjspec.h>
+#include <mujoco/mujoco.h>
+
 #include <gz/physics/Implements.hh>
+#include <memory>
 
 namespace gz
 {
@@ -26,10 +30,35 @@ namespace physics
 {
 namespace mujoco
 {
+
+struct LinkInfo {
+  mjsBody* body;
+};
+
+struct JointInfo {
+  mjsJoint* joint;
+};
+
+struct ModelInfo {
+  mjsBody* body;
+  std::vector<std::shared_ptr<LinkInfo>> links{};
+  std::vector<std::shared_ptr<JointInfo>> joints{};
+};
+
+struct WorldInfo {
+  mjsBody* body;
+  mjSpec *mjSpecObj;
+  mjModel *mjModelObj;
+  mjData *mjDataObj;
+  std::vector<std::shared_ptr<ModelInfo>> links{};
+  std::vector<std::shared_ptr<JointInfo>> joints{};
+};
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
   public: Identity InitiateEngine(std::size_t /*_engineID*/) override;
 
+  public: std::vector<std::shared_ptr<WorldInfo>> worlds;
 };
 }  // namespace mujoco
 }  // namespace physics

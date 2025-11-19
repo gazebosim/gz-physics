@@ -18,8 +18,6 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 
-#include <gz/physics/ConstructEmpty.hh>
-
 #include "Base.hh"
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/Shape.hh>
@@ -34,7 +32,7 @@ namespace mujoco {
 struct EntityManagementFeatureList : FeatureList<
   // GetEntities
   // RemoveEntities,
-  // ConstructEmptyWorldFeature,
+  ConstructEmptyWorldFeature
   // ConstructEmptyModelFeature,
   // ConstructEmptyNestedModelFeature,
   // ConstructEmptyLinkFeature
@@ -46,7 +44,7 @@ class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
-
+  public: Identity ConstructEmptyWorld(const Identity &_engineID, const std::string &_name) override;
 };
 
 }
