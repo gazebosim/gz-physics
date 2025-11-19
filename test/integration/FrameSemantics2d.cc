@@ -32,7 +32,13 @@ TEST(FrameSemantics_TEST, RelativeAlignedBox2d)
 /////////////////////////////////////////////////
 TEST(FrameSemantics_TEST, FrameID2d)
 {
+#ifdef __aarch64__
+  // Relax tolerance for arm64
+  // See https://github.com/gazebosim/gz-physics/issues/790
+  TestFrameID<ignition::physics::FeaturePolicy2d>(3e-12, "2d");
+#else
   TestFrameID<ignition::physics::FeaturePolicy2d>(1e-12, "2d");
+#endif
 }
 
 /////////////////////////////////////////////////
