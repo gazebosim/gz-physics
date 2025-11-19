@@ -87,6 +87,13 @@ gz_find_package(GzBullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
+#--------------------------------------
+# Find mujoco for the mujoco plugin wrapper
+gz_find_package(mujoco
+  REQUIRED_BY mujoco
+  PKGCONFIG_IGNORE # TODO(azeey) Revisit this
+  CONFIG)
+
 message(STATUS "-------------------------------------------\n")
 
 # Plugin install dirs
