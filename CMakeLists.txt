@@ -108,7 +108,7 @@ set(GZ_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 gz_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone mujoco)
 
 
 #============================================================================
