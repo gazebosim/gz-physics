@@ -17,7 +17,7 @@
 
 #include "EntityManagementFeatures.hh"
 
-#include <mujoco/mjspec.h>
+#include <mujoco/mujoco.h>
 
 #include <string>
 
@@ -26,15 +26,64 @@ namespace gz {
 namespace physics {
 namespace mujoco {
 
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetWorldCount(
+    const Identity &/*_engineID*/) const
+{
+  return this->worlds.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, std::size_t _worldIndex) const
+{
+  const auto &worldInfo = this->worlds[_worldIndex];
+  auto worldID = static_cast<std::size_t>(mjs_getId(worldInfo->body->element));
+  return this->GenerateIdentity(worldID, worldInfo);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetWorld(
+    const Identity &, const std::string &_worldName) const
+{
+  // TODO(azeey) Get world by name
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetWorldName(
+    const Identity &_worldID) const
+{
+  return this->ReferenceInterface<WorldInfo>(_worldID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetWorldIndex(
+    const Identity &_worldID) const
+{
+  // TODO(azeey) Implement GetWorldIndex
+  return 0;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetEngineOfWorld(
+    const Identity &/*_worldID*/) const
+{
+  return this->GenerateIdentity(0);
+}
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
-  auto &worldInfo = this->worlds.emplace_back();
-  auto spec = mj_makeSpec();
-  mjs_setName(spec->element, _name.c_str());
+  auto worldInfo = std::make_shared<WorldInfo>();
+  this->worlds.push_back(worldInfo);
 
+  mjSpec *spec = mj_makeSpec();
   worldInfo->mjSpecObj = spec;
+  worldInfo->mjModelObj = mj_compile(spec, nullptr);
+  worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
+  mjs_setName(worldInfo->body->element, _name.c_str());
+  worldInfo->name = _name;
   auto worldID = static_cast<std::size_t>(mjs_getId(worldInfo->body->element));
   return this->GenerateIdentity(worldID, worldInfo);
 }
