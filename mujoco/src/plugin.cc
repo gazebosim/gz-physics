@@ -19,6 +19,7 @@
 
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
+#include "SDFFeatures.hh"
 
 namespace gz
 {
@@ -28,12 +29,12 @@ namespace mujoco
 {
 
 struct MujocoFeatures : FeatureList<
-  EntityManagementFeatureList
+  EntityManagementFeatureList,
   // FreeGroupFeatureList,
   // JointFeatureList,
   // KinematicsFeatureList,
   // LinkFeatureList,
-  // SDFFeatureList,
+  SDFFeatureList
   // ShapeFeatureList,
   // SimulationFeatureList,
   // WorldFeatureList
@@ -41,12 +42,12 @@ struct MujocoFeatures : FeatureList<
 
 class Plugin :
     public virtual Base,
-    public virtual EntityManagementFeatures
+    public virtual EntityManagementFeatures,
     // public virtual FreeGroupFeatures,
     // public virtual JointFeatures,
     // public virtual KinematicsFeatures,
     // public virtual LinkFeatures,
-    // public virtual SDFFeatures,
+    public virtual SDFFeatures
     // public virtual ShapeFeatures,
     // public virtual SimulationFeatures,
     // public virtual WorldFeatures

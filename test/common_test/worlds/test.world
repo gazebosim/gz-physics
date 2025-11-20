@@ -355,7 +355,7 @@
       <joint name="j0" type="screw">
         <parent>link0</parent>
         <child>link1</child>
-        <thread_pitch>2</thread_pitch>
+        <screw_thread_pitch>2</screw_thread_pitch>
       </joint>
     </model>
     <model name="ball_joint_test">
@@ -365,7 +365,9 @@
         <parent>link0</parent>
         <child>link1</child>
         <axis>
-          <damping>0.1</damping>
+          <dynamics>
+            <damping>0.1</damping>
+          </dynamics>
         </axis>
       </joint>
     </model>
