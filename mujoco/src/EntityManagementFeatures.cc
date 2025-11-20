@@ -22,7 +22,9 @@
 #include <algorithm>
 #include <gz/physics/Entity.hh>
 #include <memory>
+#include <sdf/Types.hh>
 #include <string>
+
 #include "Base.hh"
 
 namespace gz
@@ -119,8 +121,8 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
   return this->GenerateInvalidId();
 }
 /////////////////////////////////////////////////
-Identity EntityManagementFeatures::GetModel(
-    const Identity &_worldID, const std::string &_modelName) const
+Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
+                                            const std::string &_modelName) const
 {
   // TODO(azeey): Imeplement GetModel
   return this->GenerateInvalidId();
@@ -157,24 +159,27 @@ std::size_t EntityManagementFeatures::GetLinkCount(
 }
 
 /////////////////////////////////////////////////
-Identity EntityManagementFeatures::GetLink(
-  const Identity &_modelID, std::size_t _linkIndex) const
+Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
+                                           std::size_t _linkIndex) const
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_linkIndex >= model->links.size())
     return this->GenerateInvalidId();
 
   const auto linkInfo = model->links[_linkIndex];
-  const auto linkID =  static_cast<std::size_t>(mjs_getId(linkInfo->body->element));
+  const auto linkID =
+      static_cast<std::size_t>(mjs_getId(linkInfo->body->element));
   return this->GenerateIdentity(linkID, linkInfo);
 }
 
 /////////////////////////////////////////////////
-Identity EntityManagementFeatures::GetLink(
-    const Identity &_modelID, const std::string &_linkName) const
+Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
+                                           const std::string &_linkName) const
 {
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
-  const auto *child = mjs_findChild(modelInfo->parentBody, _linkName.c_str());
+  const auto *child =
+      mjs_findChild(modelInfo->parentBody,
+                    ::sdf::JoinName(modelInfo->name, _linkName).c_str());
 
   if (!child)
   {
@@ -189,7 +194,7 @@ Identity EntityManagementFeatures::GetLink(
     return this->GenerateInvalidId();
   }
 
-  const auto linkID =  static_cast<std::size_t>(mjs_getId(child->element));
+  const auto linkID = static_cast<std::size_t>(mjs_getId(child->element));
   return this->GenerateIdentity(linkID, *it);
 }
 

@@ -110,7 +110,7 @@ struct ModelKinematicStructure
 
     const auto *link = this->links[_index];
     auto child = mjs_addBody(parent, nullptr);
-    mjs_setName(child->element, link->Name().c_str());
+    mjs_setName(child->element, ::sdf::JoinName(_modelInfo.name, link->Name()).c_str());
     auto linkInfo = std::make_shared<LinkInfo>();
     linkInfo->body = child;
     _modelInfo.links.push_back(linkInfo);
