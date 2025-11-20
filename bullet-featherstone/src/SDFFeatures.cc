@@ -846,6 +846,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         jointInfo->axisLower = joint->Axis()->Lower();
         jointInfo->axisUpper = joint->Axis()->Upper();
         jointInfo->damping = joint->Axis()->Damping();
+        jointInfo->springStiffness = joint->Axis()->SpringStiffness();
+        jointInfo->springReference = joint->Axis()->SpringReference();
 
         if (::sdf::JointType::BALL != joint->Type())
         {
