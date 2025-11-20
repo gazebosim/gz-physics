@@ -16,15 +16,32 @@
  */
 
 #include "SDFFeatures.hh"
+
+#include <mujoco/mjmodel.h>
 #include <mujoco/mjspec.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <gz/common/Console.hh>
 #include <gz/physics/Entity.hh>
 #include <iterator>
-#include <sdf/Model.hh>
-#include <sdf/Link.hh>
+#include <sdf/Box.hh>
+#include <sdf/Capsule.hh>
+#include <sdf/Collision.hh>
+#include <sdf/Cone.hh>
+#include <sdf/Cylinder.hh>
+#include <sdf/Ellipsoid.hh>
+#include <sdf/Geometry.hh>
 #include <sdf/Joint.hh>
+#include <sdf/JointAxis.hh>
+#include <sdf/Link.hh>
+#include <sdf/Mesh.hh>
+#include <sdf/Model.hh>
+#include <sdf/Physics.hh>
+#include <sdf/Plane.hh>
+#include <sdf/Sphere.hh>
+#include <sdf/Surface.hh>
+
 #include "gz/physics/detail/Identity.hh"
 
 namespace gz
@@ -35,9 +52,8 @@ namespace mujoco
 {
 
 /////////////////////////////////////////////////
-Identity SDFFeatures::ConstructSdfModel(
-    const Identity &_parentID,
-    const ::sdf::Model &_sdfModel)
+Identity SDFFeatures::ConstructSdfModel(const Identity &_parentID,
+                                        const ::sdf::Model &_sdfModel)
 {
   return this->ConstructSdfModelImpl(_parentID, _sdfModel);
 }
@@ -45,16 +61,16 @@ Identity SDFFeatures::ConstructSdfModel(
 /////////////////////////////////////////////////
 struct ModelKinematicStructure
 {
-  std::vector<const ::sdf::Link*> links;
-  std::vector<const ::sdf::Link*> parents;
+  std::vector<const ::sdf::Link *> links;
+  std::vector<const ::sdf::Link *> parents;
   std::vector<std::vector<std::size_t>> children;
-  // For index i, parentInJoint[i]->parent = links[i], unless the link is "world"
-  // or that link is not referenced by any joint.
+  // For index i, parentInJoint[i]->parent = links[i], unless the link is
+  // "world" or that link is not referenced by any joint.
   // TODO(azeey) This might not be needed at all.
-  std::vector<const ::sdf::Joint*> parentInJoint;
+  std::vector<const ::sdf::Joint *> parentInJoint;
   // For index i, childJInoint[i]->parent = links[i], unless that link is not
   // referenced by any joint as a child.
-  std::vector<const ::sdf::Joint*> childInJoint;
+  std::vector<const ::sdf::Joint *> childInJoint;
 
   std::optional<std::size_t> FindLinkByName(const std::string &_name)
   {
@@ -70,17 +86,21 @@ struct ModelKinematicStructure
 
   void AddToSpec(mjSpec *_spec, std::size_t _index)
   {
-    mjsBody* parent;
+    mjsBody *parent;
     auto *world = mjs_findBody(_spec, "world");
     const auto *parentLink = this->parents[_index];
     // Find parent
-    if (!this->parents[_index]) {
+    if (!this->parents[_index])
+    {
       parent = world;
-    } else {
+    }
+    else
+    {
       parent = mjs_findChild(world, parentLink->Name().c_str());
     }
 
-    if (!parent) {
+    if (!parent)
+    {
       // TODO (azeey) Better error message
       gzerr << "Error finding parent\n";
       return;
@@ -102,6 +122,73 @@ struct ModelKinematicStructure
     child->fullinertia[5] = moi(1, 2);
     // TODO(azeey) Apply pose of inertia frame.
 
+    // Parse collisions
+    for (std::size_t i = 0; i < link->CollisionCount(); ++i)
+    {
+      const auto *collision = link->CollisionByIndex(i);
+      auto *shape = collision->Geom();
+      mjsGeom *geom = nullptr;
+
+      switch (shape->Type())
+      {
+        case ::sdf::GeometryType::BOX:
+          geom = mjs_addGeom(child, nullptr);
+          geom->type = mjGEOM_BOX;
+          for (int j = 0; j < 3; ++j)
+          {
+            geom->size[j] = shape->BoxShape()->Size()[j] / 2.0;
+          }
+          break;
+        case ::sdf::GeometryType::CYLINDER:
+          geom = mjs_addGeom(child, nullptr);
+          geom->type = mjGEOM_CYLINDER;
+          geom->size[0] = shape->CylinderShape()->Radius();
+          geom->size[1] = shape->CylinderShape()->Length() / 2.0;
+          break;
+        case ::sdf::GeometryType::PLANE:
+          geom = mjs_addGeom(child, nullptr);
+          geom->type = mjGEOM_PLANE;
+          for (int j = 0; j < 2; ++j)
+          {
+            geom->size[j] = shape->PlaneShape()->Size()[j] / 2.0;
+          }
+          geom->size[2] = 1.0;
+          break;
+        case ::sdf::GeometryType::SPHERE:
+          geom = mjs_addGeom(child, nullptr);
+          geom->type = mjGEOM_SPHERE;
+          geom->size[0] = shape->SphereShape()->Radius();
+          break;
+        case ::sdf::GeometryType::CAPSULE:
+          geom = mjs_addGeom(child, nullptr);
+          geom->type = mjGEOM_CAPSULE;
+          geom->size[0] = shape->CapsuleShape()->Radius();
+          geom->size[1] = shape->CapsuleShape()->Length() / 2.0;
+          break;
+        case ::sdf::GeometryType::ELLIPSOID:
+          geom = mjs_addGeom(child, nullptr);
+          geom->type = mjGEOM_ELLIPSOID;
+          for (int j = 0; j < 3; ++j)
+          {
+            geom->size[j] = shape->EllipsoidShape()->Radii()[j];
+          }
+          break;
+        case ::sdf::GeometryType::HEIGHTMAP:
+        case ::sdf::GeometryType::MESH:
+        case ::sdf::GeometryType::POLYLINE:
+        case ::sdf::GeometryType::CONE:
+        default:
+          gzwarn << "Shape type " << static_cast<int>(shape->Type())
+                 << " not supported\n";
+          continue;
+      }
+      if (geom)
+      {
+        geom->contype = 1;
+        geom->conaffinity = 1;
+        mjs_setName(geom->element, collision->Name().c_str());
+      }
+    }
     if (!this->childInJoint[_index])
     {
       // No joint has this link as a child, so we add a freejoint.
@@ -109,19 +196,20 @@ struct ModelKinematicStructure
     }
 
     // Recursively add children
-    for (std::size_t i=0; i < this->children[_index].size(); ++i){
+    for (std::size_t i = 0; i < this->children[_index].size(); ++i)
+    {
       this->AddToSpec(_spec, this->children[_index][i]);
     }
   }
 };
 
 /////////////////////////////////////////////////
-Identity SDFFeatures::ConstructSdfModelImpl(
-    Identity _parentID,
-    const ::sdf::Model &_sdfModel)
+Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
+                                            const ::sdf::Model &_sdfModel)
 {
   auto *worldInfo = this->ReferenceInterface<WorldInfo>(_parentID);
-  if (!worldInfo) {
+  if (!worldInfo)
+  {
     gzerr << "Parent of model is not a world\n";
     return this->GenerateInvalidId();
   }
@@ -129,7 +217,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   auto *spec = worldInfo->mjSpecObj;
   ModelKinematicStructure kinTree;
   kinTree.links.reserve(_sdfModel.LinkCount());
-  for (std::size_t i=0; i < _sdfModel.LinkCount(); ++i) {
+  for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
+  {
     kinTree.links.push_back(_sdfModel.LinkByIndex(i));
   }
   kinTree.parents.resize(_sdfModel.LinkCount(), nullptr);
@@ -138,7 +227,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   kinTree.children.resize(_sdfModel.LinkCount(), {});
 
   // Now go through the joints and update parent and children
-  for (std::size_t i=0; i < _sdfModel.JointCount(); ++i) {
+  for (std::size_t i = 0; i < _sdfModel.JointCount(); ++i)
+  {
     const auto *joint = _sdfModel.JointByIndex(i);
     std::string parentLinkName;
     // TODO(azeey) Handle errors
@@ -148,7 +238,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       continue;
     }
     auto parentIndex = kinTree.FindLinkByName(parentLinkName);
-    if (!parentIndex) {
+    if (!parentIndex)
+    {
       gzerr << "Error finding link " << parentLinkName << "\n";
       return this->GenerateInvalidId();
     }
@@ -157,7 +248,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     // TODO(azeey) Handle errors
     joint->ResolveChildLink(childLinkName);
     auto childIndex = kinTree.FindLinkByName(childLinkName);
-    if (!childIndex) {
+    if (!childIndex)
+    {
       gzerr << "Error finding link " << childLinkName << "\n";
       return this->GenerateInvalidId();
     }
@@ -168,13 +260,17 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     kinTree.childInJoint[*childIndex] = joint;
   }
 
-  for (std::size_t i=0; i < kinTree.parents.size(); ++i){
-    if (!kinTree.parents[i]) {
+  for (std::size_t i = 0; i < kinTree.parents.size(); ++i)
+  {
+    if (!kinTree.parents[i])
+    {
       kinTree.AddToSpec(spec, i);
     }
   }
-  int rc = mj_recompile(spec, nullptr, worldInfo->mjModelObj, worldInfo->mjDataObj);
-  if (rc != 0) {
+  int rc =
+      mj_recompile(spec, nullptr, worldInfo->mjModelObj, worldInfo->mjDataObj);
+  if (rc != 0)
+  {
     gzerr << "Error compiling:" << mjs_getError(spec) << "\n";
   }
   mj_saveXML(spec, "/tmp/mujoco_model.xml", nullptr, 0);
@@ -182,9 +278,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 }
 
 /////////////////////////////////////////////////
-Identity SDFFeatures::ConstructSdfWorld(
-      const Identity &_engine,
-      const ::sdf::World &_sdfWorld)
+Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
+                                        const ::sdf::World &_sdfWorld)
 {
   const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
@@ -201,6 +296,6 @@ Identity SDFFeatures::ConstructSdfWorld(
   return worldID;
 }
 
-}
+}  // namespace mujoco
 }  // namespace physics
 }  // namespace gz
