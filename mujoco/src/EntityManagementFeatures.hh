@@ -33,7 +33,8 @@ namespace mujoco {
 struct EntityManagementFeatureList : FeatureList<
   GetEngineInfo,
   GetWorldFromEngine,
-  // GetEntities
+  GetLinkFromModel,
+  GetModelFromWorld,
   // RemoveEntities,
   ConstructEmptyWorldFeature
   // ConstructEmptyModelFeature,
@@ -75,6 +76,43 @@ class EntityManagementFeatures :
 
   public: Identity ConstructEmptyWorld(
     const Identity &_engineID, const std::string &_name) override;
+
+  // ----- GetModelFromWorld -----
+  public: virtual std::size_t GetModelCount(
+      const Identity &_worldID) const override;
+
+  public: virtual Identity GetModel(
+      const Identity &_worldID, std::size_t _modelIndex) const override;
+
+  public: virtual Identity GetModel(
+      const Identity &_worldID, const std::string &_modelName) const override;
+
+  public: virtual const std::string &GetModelName(
+      const Identity &_modelID) const override;
+
+  public: virtual std::size_t GetModelIndex(
+      const Identity &_modelID) const override;
+
+  public: virtual Identity GetWorldOfModel(
+      const Identity &_modelID) const override;
+
+  // ----- GetLinkFromModel -----
+  public: std::size_t GetLinkCount(
+      const Identity &_modelID) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, std::size_t _linkIndex) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, const std::string &_linkName) const override;
+
+  public: const std::string &GetLinkName(
+      const Identity &_linkID) const override;
+
+  public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
+
+  public: Identity GetModelOfLink(const Identity &_linkID) const override;
+
 };
 
 }  // namespace mujoco

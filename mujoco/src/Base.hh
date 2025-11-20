@@ -20,6 +20,7 @@
 
 #include <mujoco/mujoco.h>
 
+#include <cstddef>
 #include <gz/physics/Implements.hh>
 #include <memory>
 
@@ -40,21 +41,25 @@ struct JointInfo
   mjsJoint *joint;
 };
 
+struct WorldInfo;
+
 struct ModelInfo
 {
-  mjsBody *body;
+  mjsBody *body{nullptr};
+  mjsBody *parentBody{nullptr};
+  std::string name;
   std::vector<std::shared_ptr<LinkInfo>> links{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
 };
 
 struct WorldInfo
 {
-  mjsBody *body;
+  mjsBody *body{nullptr};
   mjSpec *mjSpecObj;
   mjModel *mjModelObj;
   mjData *mjDataObj;
   std::string name;
-  std::vector<std::shared_ptr<ModelInfo>> links{};
+  std::vector<std::shared_ptr<ModelInfo>> models{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
 };
 

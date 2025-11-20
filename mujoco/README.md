@@ -9,6 +9,8 @@ These are the specific physics API features implemented.
 - GetEngineInfo
 - GetWorldFromEngine
 - ConstructEmptyWorldFeature
+- ConstructSdfModel
+- ConstructSdfWorld
 
 ## Notes
 
