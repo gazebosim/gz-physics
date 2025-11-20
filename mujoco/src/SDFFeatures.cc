@@ -25,6 +25,7 @@
 #include <gz/common/Console.hh>
 #include <gz/physics/Entity.hh>
 #include <iterator>
+#include <memory>
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
 #include <sdf/Collision.hh>
@@ -42,6 +43,7 @@
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
 
+#include "Base.hh"
 #include "gz/physics/detail/Identity.hh"
 
 namespace gz
@@ -84,7 +86,7 @@ struct ModelKinematicStructure
     return std::distance(links.begin(), it);
   }
 
-  void AddToSpec(mjSpec *_spec, std::size_t _index)
+  void AddToSpec(mjSpec *_spec, std::size_t _index, ModelInfo &_modelInfo)
   {
     mjsBody *parent;
     auto *world = mjs_findBody(_spec, "world");
@@ -109,6 +111,16 @@ struct ModelKinematicStructure
     const auto *link = this->links[_index];
     auto child = mjs_addBody(parent, nullptr);
     mjs_setName(child->element, link->Name().c_str());
+    auto linkInfo = std::make_shared<LinkInfo>();
+    linkInfo->body = child;
+    _modelInfo.links.push_back(linkInfo);
+    // TODO(azeey) This will end up assigning the first root level link as the
+    // body associated with the model. We should probably consider using the
+    // canonical link here instead.
+    if (!_modelInfo.body) {
+      _modelInfo.body = child;
+    }
+
     child->explicitinertial = true;
     const auto &massM = link->Inertial().MassMatrix();
     const math::Matrix3d &moi = link->Inertial().Moi();
@@ -198,7 +210,7 @@ struct ModelKinematicStructure
     // Recursively add children
     for (std::size_t i = 0; i < this->children[_index].size(); ++i)
     {
-      this->AddToSpec(_spec, this->children[_index][i]);
+      this->AddToSpec(_spec, this->children[_index][i], _modelInfo);
     }
   }
 };
@@ -260,11 +272,16 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     kinTree.childInJoint[*childIndex] = joint;
   }
 
+  auto modelInfo = std::make_shared<ModelInfo>();
+  modelInfo->name = _sdfModel.Name();
+  // TODO(azeey) Change this when we support nested models.
+  modelInfo->parentBody = mjs_findBody(spec, "world");
+  worldInfo->models.push_back(modelInfo);
   for (std::size_t i = 0; i < kinTree.parents.size(); ++i)
   {
     if (!kinTree.parents[i])
     {
-      kinTree.AddToSpec(spec, i);
+      kinTree.AddToSpec(spec, i, *modelInfo);
     }
   }
   int rc =
@@ -273,8 +290,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     gzerr << "Error compiling:" << mjs_getError(spec) << "\n";
   }
+
   mj_saveXML(spec, "/tmp/mujoco_model.xml", nullptr, 0);
-  return this->GenerateInvalidId();
+  if (!modelInfo->body) {
+    gzerr << "There was no body associated with the model\n";
+    return this->GenerateInvalidId();
+  }
+
+  auto modelID = static_cast<std::size_t>(mjs_getId(modelInfo->body->element));
+  return this->GenerateIdentity(modelID, modelInfo);
 }
 
 /////////////////////////////////////////////////
@@ -289,8 +313,8 @@ Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
 
     if (!model)
       continue;
-
     this->ConstructSdfModel(worldID, *model);
+
   }
 
   return worldID;

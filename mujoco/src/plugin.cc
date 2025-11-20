@@ -19,6 +19,7 @@
 
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
+#include "KinematicsFeatures.hh"
 #include "SDFFeatures.hh"
 
 namespace gz
@@ -32,7 +33,7 @@ struct MujocoFeatures : FeatureList<
   EntityManagementFeatureList,
   // FreeGroupFeatureList,
   // JointFeatureList,
-  // KinematicsFeatureList,
+  KinematicsFeatureList,
   // LinkFeatureList,
   SDFFeatureList
   // ShapeFeatureList,
@@ -45,7 +46,7 @@ class Plugin :
     public virtual EntityManagementFeatures,
     // public virtual FreeGroupFeatures,
     // public virtual JointFeatures,
-    // public virtual KinematicsFeatures,
+    public virtual KinematicsFeatures,
     // public virtual LinkFeatures,
     public virtual SDFFeatures
     // public virtual ShapeFeatures,
