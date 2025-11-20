@@ -86,7 +86,7 @@ struct ModelKinematicStructure
     return std::distance(links.begin(), it);
   }
 
-  void AddToSpec(mjSpec *_spec, std::size_t _index, ModelInfo &_modelInfo)
+  void AddToSpec(mjSpec *_spec, std::size_t _index, const std::shared_ptr<ModelInfo> &_modelInfo)
   {
     mjsBody *parent;
     auto *world = mjs_findBody(_spec, "world");
@@ -110,15 +110,16 @@ struct ModelKinematicStructure
 
     const auto *link = this->links[_index];
     auto child = mjs_addBody(parent, nullptr);
-    mjs_setName(child->element, ::sdf::JoinName(_modelInfo.name, link->Name()).c_str());
+    mjs_setName(child->element, ::sdf::JoinName(_modelInfo->name, link->Name()).c_str());
     auto linkInfo = std::make_shared<LinkInfo>();
     linkInfo->body = child;
-    _modelInfo.links.push_back(linkInfo);
+    linkInfo->modelInfo = _modelInfo;
+    _modelInfo->links.push_back(linkInfo);
     // TODO(azeey) This will end up assigning the first root level link as the
     // body associated with the model. We should probably consider using the
     // canonical link here instead.
-    if (!_modelInfo.body) {
-      _modelInfo.body = child;
+    if (!_modelInfo->body) {
+      _modelInfo->body = child;
     }
 
     child->explicitinertial = true;
@@ -281,7 +282,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     if (!kinTree.parents[i])
     {
-      kinTree.AddToSpec(spec, i, *modelInfo);
+      kinTree.AddToSpec(spec, i, modelInfo);
     }
   }
   int rc =
