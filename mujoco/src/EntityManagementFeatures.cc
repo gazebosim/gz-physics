@@ -17,6 +17,7 @@
 
 #include "EntityManagementFeatures.hh"
 
+#include <gz/physics/Entity.hh>
 #include <mujoco/mujoco.h>
 
 #include <string>
@@ -82,7 +83,8 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   worldInfo->mjModelObj = mj_compile(spec, nullptr);
   worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
-  mjs_setName(worldInfo->body->element, _name.c_str());
+  // We record the name of the world, but we don't change the name in the
+  // worldbody so that it is easy to find it with mjs_findBody(s, "world") elsewhere.
   worldInfo->name = _name;
   auto worldID = static_cast<std::size_t>(mjs_getId(worldInfo->body->element));
   return this->GenerateIdentity(worldID, worldInfo);

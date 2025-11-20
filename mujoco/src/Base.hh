@@ -18,7 +18,6 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
-#include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
 
 #include <gz/physics/Implements.hh>

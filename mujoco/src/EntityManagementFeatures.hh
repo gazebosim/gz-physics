@@ -18,12 +18,13 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 
-#include "Base.hh"
 #include <gz/physics/ConstructEmpty.hh>
-#include <gz/physics/Shape.hh>
 #include <gz/physics/GetEntities.hh>
-#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/Implements.hh>
+#include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/Shape.hh>
+
+#include "Base.hh"
 
 namespace gz {
 namespace physics {
@@ -76,7 +77,7 @@ class EntityManagementFeatures :
     const Identity &_engineID, const std::string &_name) override;
 };
 
-}
-}
-}
+}  // namespace mujoco
+}  // namespace physics
+}  // namespace gz
 #endif
