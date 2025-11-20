@@ -70,6 +70,8 @@ void GzMultiBody::SetJointPosForDof(
   btScalar *positions =
       this->getJointPosMultiDof(_jointIndex);
 
+  // Ball joints store joint pos as a quaternion (4 floats) instead of one
+  // joint angle in radians
   if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
   {
     math::Quaterniond quat(positions[3], positions[0], positions[1],
@@ -80,21 +82,29 @@ void GzMultiBody::SetJointPosForDof(
     math::Vector3 posVec = axis * angle;
     posVec[_dof] = _value;
     angle = posVec.Length();
-    posVec /= angle;
-    math::Quaterniond newQuat(posVec, angle);
-    positions[0] = newQuat.X();
-    positions[1] = newQuat.Y();
-    positions[2] = newQuat.Z();
-    positions[3] = newQuat.W();
-    this->setJointPosMultiDof(_jointIndex, positions);
+    if (math::equal(angle, 0.0, 1e-10))
+    {
+      positions[0] = 0;
+      positions[1] = 0;
+      positions[2] = 0;
+      positions[3] = 1;
+    }
+    else
+    {
+      posVec /= angle;
+      math::Quaterniond newQuat(posVec, angle);
+      positions[0] = newQuat.X();
+      positions[1] = newQuat.Y();
+      positions[2] = newQuat.Z();
+      positions[3] = newQuat.W();
+    }
   }
   else
   {
     positions[_dof] = static_cast<btScalar>(_value);
-
-    // Call setJointPosMultiDof to ensure that the link pose cache is updated.
-    this->setJointPosMultiDof(_jointIndex, positions);
   }
+  // Call setJointPosMultiDof to ensure that the link pose cache is updated.
+  this->setJointPosMultiDof(_jointIndex, positions);
 
   this->needsCollisionTransformsUpdate = true;
 }
