@@ -186,16 +186,13 @@ Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
     return this->GenerateInvalidId();
   }
 
-  auto it = std::find_if(modelInfo->links.begin(), modelInfo->links.end(),
-                         [child](const std::shared_ptr<LinkInfo> &_linkInfo)
-                         { return child == _linkInfo->body; });
-  if (it == modelInfo->links.end())
-  {
+  auto linkInfo = modelInfo->LinkFromBody(child);
+  if (!linkInfo) {
     return this->GenerateInvalidId();
   }
 
   const auto linkID = static_cast<std::size_t>(mjs_getId(child->element));
-  return this->GenerateIdentity(linkID, *it);
+  return this->GenerateIdentity(linkID, linkInfo);
 }
 
 /////////////////////////////////////////////////

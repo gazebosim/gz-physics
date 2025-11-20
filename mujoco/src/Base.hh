@@ -31,9 +31,12 @@ namespace physics
 namespace mujoco
 {
 
+struct ModelInfo;
+
 struct LinkInfo
 {
   mjsBody *body;
+  std::weak_ptr<ModelInfo> modelInfo;
 };
 
 struct JointInfo
@@ -50,6 +53,20 @@ struct ModelInfo
   std::string name;
   std::vector<std::shared_ptr<LinkInfo>> links{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
+
+  std::shared_ptr<LinkInfo> LinkFromBody(const mjsBody *_body) const {
+
+    auto it = std::find_if(this->links.begin(), this->links.end(),
+                           [_body](const std::shared_ptr<LinkInfo> &_linkInfo)
+                           { return _body == _linkInfo->body; });
+    if (it == this->links.end())
+    {
+      return nullptr;
+    }
+
+    return *it;
+  }
+
 };
 
 struct WorldInfo
@@ -70,6 +87,12 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::vector<std::shared_ptr<WorldInfo>> worlds;
 
   public: std::string engineName{"mujoco"};
+
+  public: template <typename Info>
+  Identity IdentityFromBody(const mjsBody *_body, std::shared_ptr<Info> info) const {
+    auto id = static_cast<std::size_t>(mjs_getId(_body->element));
+    return this->GenerateIdentity(id, info);
+  }
 };
 }  // namespace mujoco
 }  // namespace physics
