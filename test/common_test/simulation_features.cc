@@ -719,47 +719,51 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessPrismatic)
     double posNoSpringInitialPos = jointWithoutSpringStiffness->GetPosition(0);
 
     constexpr double kTol = 0.01;
-    int velSpringDir = 1;
-    int velNoSpringDir = 1;
-    int cyclesSpring = 0;
-    int cyclesNoSpring = 0;
+    int velSpringDir = -1;
+    int velNoSpringDir = -1;
+    int dirChangeSpring = 0;
+    int dirChangeNoSpring = 0;
     for (int i = 1; i < 2000; ++i)
     {
       StepWorld<FeaturesDynamics>(world, false, 1);
       double velNoSpring = jointWithoutSpringStiffness->GetVelocity(0);
       double velSpring = jointWithSpringStiffness->GetVelocity(0);
-      // count up and down cycles
+      // count number of velocity direction changes
       // Joint with spring stiffness
       if (velSpring > kTol && velSpringDir < 0)
       {
-        cyclesSpring++;
+        dirChangeSpring++;
         velSpringDir = 1;
       }
       else if (velSpring < -kTol && velSpringDir > 0)
       {
-        cyclesSpring++;
+        dirChangeSpring++;
         velSpringDir = -1;
       }
 
       // Joint without spring stiffness
       if (velNoSpring > kTol && velNoSpringDir < 0)
       {
-        cyclesNoSpring++;
+        dirChangeNoSpring++;
         velNoSpringDir = 1;
       }
       else if (velNoSpring < -kTol && velNoSpringDir > 0)
       {
-        cyclesNoSpring++;
+        dirChangeNoSpring++;
         velNoSpringDir = -1;
       }
     }
 
     // Model with spring stiffness should oscillate up and down,
-    // i.e. multiple cycles
-    EXPECT_EQ(5, cyclesSpring);
+    // Undamped oscillation frequency in Hz is:
+    //     1/(2*pi)*sqrt(k/m) = 1.12Hz
+    // where k (spring stiffness) = 100.0, and m (mass) = 2.0.
+    // So we expect 2.24 complete cycles in 2 seconds,
+    // which is about 4 direction changes
+    EXPECT_EQ(4, dirChangeSpring);
     // Model without spring stiffness should only have one downward moving
-    // direction, i.e. 1 cycle
-    EXPECT_EQ(1, cyclesNoSpring);
+    // direction
+    EXPECT_EQ(0, dirChangeNoSpring);
 
     // Verify joint spring pos. Model without spring stiffness should continue
     // to fall and so has larger negative joint pos than model with spring
@@ -861,47 +865,52 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessRevolute)
     double posNoSpringInitialPos = jointWithoutSpringStiffness->GetPosition(0);
 
     constexpr double kTol = 0.01;
-    int velSpringDir = 1;
-    int velNoSpringDir = 1;
-    int cyclesSpring = 0;
-    int cyclesNoSpring = 0;
+    int velSpringDir = -1;
+    int velNoSpringDir = -1;
+    int dirChangeSpring = 0;
+    int dirChangeNoSpring = 0;
     for (int i = 1; i < 1000; ++i)
     {
       StepWorld<FeaturesDynamics>(world, false, 1);
       double velNoSpring = jointWithoutSpringStiffness->GetVelocity(0);
       double velSpring = jointWithSpringStiffness->GetVelocity(0);
-      // count up and down cycles
+      // count number of velocity direction changes
       // Joint with spring stiffness
       if (velSpring > kTol && velSpringDir < 0)
       {
-        cyclesSpring++;
+        dirChangeSpring++;
         velSpringDir = 1;
       }
       else if (velSpring < -kTol && velSpringDir > 0)
       {
-        cyclesSpring++;
+        dirChangeSpring++;
         velSpringDir = -1;
       }
 
       // Joint without spring stiffness
       if (velNoSpring > kTol && velNoSpringDir < 0)
       {
-        cyclesNoSpring++;
+        dirChangeNoSpring++;
         velNoSpringDir = 1;
       }
       else if (velNoSpring < -kTol && velNoSpringDir > 0)
       {
-        cyclesNoSpring++;
+        dirChangeNoSpring++;
         velNoSpringDir = -1;
       }
     }
 
-    // Model with spring stiffness should oscillate up and down,
-    // i.e. multiple cycles
-    EXPECT_EQ(4, cyclesSpring);
+    // Model with spring stiffness should swing around an axis,
+    // Undamped oscillation frequency in Hz is:
+    //     1/(2*pi)*sqrt(k/I_joint) = 1.58Hz,
+    // where k (spring stiffness) =  100.0, and
+    // I_joint is the moment of inertia around the axis of rotation (-y):
+    //     I_joint = I_yy + joint_pos_x^2*mass.
+    // where I_yy = 0.01, joint_pos_x = -1.0, and mass = 1.0
+    // So 3 direction switches in 1 second.
+    EXPECT_EQ(3, dirChangeSpring);
     // Model without spring stiffness should only swing in one direction
-    // i.e. 1 cycle
-    EXPECT_EQ(1, cyclesNoSpring);
+    EXPECT_EQ(0, dirChangeNoSpring);
 
     // Verify joint spring pos. Model without spring stiffness should continue
     // to fall and so has larger negative joint pos than model with spring

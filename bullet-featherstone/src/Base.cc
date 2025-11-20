@@ -69,15 +69,38 @@ void GzMultiBody::SetJointPosForDof(
 {
   btScalar *positions =
       this->getJointPosMultiDof(_jointIndex);
-  positions[_dof] = static_cast<btScalar>(_value);
 
-  // Call setJointPosMultiDof to ensure that the link pose cache is updated.
-  this->setJointPosMultiDof(_jointIndex, positions);
+  if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
+  {
+    math::Quaterniond quat(positions[3], positions[0], positions[1],
+                           positions[2]);
+    math::Vector3d axis;
+    double angle;
+    quat.AxisAngle(axis, angle);
+    math::Vector3 posVec = axis * angle;
+    posVec[_dof] = _value;
+    angle = posVec.Length();
+    posVec /= angle;
+    math::Quaterniond newQuat(posVec, angle);
+    positions[0] = newQuat.X();
+    positions[1] = newQuat.Y();
+    positions[2] = newQuat.Z();
+    positions[3] = newQuat.W();
+    this->setJointPosMultiDof(_jointIndex, positions);
+  }
+  else
+  {
+    positions[_dof] = static_cast<btScalar>(_value);
+
+    // Call setJointPosMultiDof to ensure that the link pose cache is updated.
+    this->setJointPosMultiDof(_jointIndex, positions);
+  }
 
   this->needsCollisionTransformsUpdate = true;
 }
 
-btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof) const
+btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof)
+    const
 {
   if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
   {
@@ -121,7 +144,7 @@ void GzMultiBody::AddJointDampingStiffnessTorque(int _jointIndex,
   {
     btScalar currVel = this->getJointVelMultiDof(_jointIndex)[dof];
 
-    // Appy damping
+    // Apply damping
     btScalar torque = -static_cast<btScalar>(_damping) * currVel;
 
     // Apply spring stiffness
