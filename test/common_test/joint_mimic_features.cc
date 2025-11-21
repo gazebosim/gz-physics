@@ -111,7 +111,8 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
   // prismatic_joint_3 : Mimics revolute_joint_1
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "bullet-featherstone")
+    if (this->PhysicsEngineName(name) != "bullet-featherstone" &&
+        this->PhysicsEngineName(name) != "dartsim")
     {
       GTEST_SKIP();
     }
@@ -271,7 +272,8 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "bullet-featherstone")
+    if (this->PhysicsEngineName(name) != "bullet-featherstone" &&
+        this->PhysicsEngineName(name) != "dartsim")
     {
       GTEST_SKIP();
     }
@@ -332,7 +334,10 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
           EXPECT_NEAR(
               multiplier * (leaderJoint->GetPosition(0) - reference) + offset,
               followerJoint->GetPosition(0),
-              positionTolerance);
+              positionTolerance)
+            << " multiplier " << multiplier
+            << ", offset " << offset
+            << ", reference " << reference;;
         }
       };
 
@@ -361,7 +366,8 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "bullet-featherstone")
+    if (this->PhysicsEngineName(name) != "bullet-featherstone" &&
+        this->PhysicsEngineName(name) != "dartsim")
     {
       GTEST_SKIP();
     }
