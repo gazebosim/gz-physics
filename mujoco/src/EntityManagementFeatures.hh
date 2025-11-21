@@ -35,7 +35,7 @@ struct EntityManagementFeatureList : FeatureList<
   GetWorldFromEngine,
   GetLinkFromModel,
   GetModelFromWorld,
-  // RemoveEntities,
+  RemoveEntities,
   ConstructEmptyWorldFeature
   // ConstructEmptyModelFeature,
   // ConstructEmptyNestedModelFeature,
@@ -113,6 +113,23 @@ class EntityManagementFeatures :
 
   public: Identity GetModelOfLink(const Identity &_linkID) const override;
 
+  // ----- Remove entities -----
+  public: bool RemoveModelByIndex(
+      const Identity &_worldID, std::size_t _modelIndex) override;
+
+  public: bool RemoveModelByName(
+      const Identity &_worldID,
+      const std::string &_modelName) override;
+
+  public: bool RemoveModel(const Identity &_modelID) override;
+
+  public: bool ModelRemoved(const Identity &_modelID) const override;
+
+  public: bool RemoveNestedModelByIndex(
+     const Identity &_modelID, std::size_t _nestedModelIndex) override;
+
+  public: bool RemoveNestedModelByName(
+      const Identity &_modelID, const std::string &_modelName) override;
 };
 
 }  // namespace mujoco

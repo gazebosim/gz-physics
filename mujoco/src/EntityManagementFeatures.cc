@@ -213,6 +213,52 @@ Identity EntityManagementFeatures::GetModelOfLink(const Identity &_linkID) const
   return this->GenerateInvalidId();
 }
 
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
+{
+  // TODO(azeey) Implement RemoveModel
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::ModelRemoved(
+    const Identity &_modelID) const
+{
+  // TODO(azeey) Implement RemoveModel
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelByIndex(
+    const Identity & _worldID, std::size_t _modelIndex)
+{
+  // TODO(azeey) Implement RemoveModelByIndex
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelByName(
+    const Identity & _worldID, const std::string & _modelName )
+{
+  // TODO(azeey) Implement RemoveModelByName
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByIndex(
+    const Identity &_modelID, std::size_t _nestedModelIndex)
+{
+  // TODO(azeey) Implement RemoveNestedModelByIndex
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
+    const std::string &_modelName)
+{
+  // TODO(azeey) Implement RemoveNestedModelByName
+  return false;
+}
 }  // namespace mujoco
 }  // namespace physics
 }  // namespace gz

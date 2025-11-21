@@ -33,8 +33,8 @@ namespace mujoco
 struct KinematicsFeatureList : FeatureList<
   LinkFrameSemantics,
   ShapeFrameSemantics,
-  JointFrameSemantics
-  // FreeGroupFrameSemantics
+  JointFrameSemantics,
+  FreeGroupFrameSemantics
 > { };
 // clang-format on
 
