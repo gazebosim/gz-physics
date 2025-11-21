@@ -21,6 +21,7 @@
 #include <mujoco/mjspec.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <gz/common/Console.hh>
 #include <gz/physics/Entity.hh>
@@ -87,7 +88,9 @@ struct ModelKinematicStructure
     return std::distance(links.begin(), it);
   }
 
-  void AddToSpec(Base& _base, mjSpec *_spec, std::size_t _index, const std::shared_ptr<ModelInfo> &_modelInfo)
+  void AddToSpec(Base &_base, const ::sdf::Model &_sdfModel, mjSpec *_spec,
+                 std::size_t _index,
+                 const std::shared_ptr<ModelInfo> &_modelInfo)
   {
     mjsBody *parent;
     auto *world = mjs_findBody(_spec, "world");
@@ -111,15 +114,31 @@ struct ModelKinematicStructure
 
     const auto *link = this->links[_index];
     auto child = mjs_addBody(parent, nullptr);
-    mjs_setName(child->element, ::sdf::JoinName(_modelInfo->name, link->Name()).c_str());
-    auto linkInfo = std::make_shared<LinkInfo>(_base.GetNextEntity(), _modelInfo);
+    const std::string body_name =
+        ::sdf::JoinName(_modelInfo->name, link->Name());
+    mjs_setName(child->element, body_name.c_str());
+    auto linkInfo =
+        std::make_shared<LinkInfo>(_base.GetNextEntity(), _modelInfo);
     linkInfo->body = child;
+    linkInfo->name = link->Name();
     _modelInfo->links.push_back(linkInfo);
     // TODO(azeey) This will end up assigning the first root level link as the
     // body associated with the model. We should probably consider using the
     // canonical link here instead.
-    if (!_modelInfo->body) {
+    if (!_modelInfo->body)
+    {
       _modelInfo->body = child;
+      // TODO(azeey): Resolve link poses
+      const auto &pose = _sdfModel.RawPose() * link->RawPose();
+      gzdbg << "--- Pose: " << pose << "\n";
+      child->pos[0] = pose.X();
+      child->pos[1] = pose.Y();
+      child->pos[2] = pose.Z();
+
+      child->quat[0] = pose.Rot().W();
+      child->quat[1] = pose.Rot().X();
+      child->quat[2] = pose.Rot().Y();
+      child->quat[3] = pose.Rot().Z();
     }
 
     child->explicitinertial = true;
@@ -133,6 +152,29 @@ struct ModelKinematicStructure
     child->fullinertia[3] = moi(0, 1);
     child->fullinertia[4] = moi(0, 2);
     child->fullinertia[5] = moi(1, 2);
+    auto inertialPose = link->Inertial().Pose();
+    child->ipos[0] = inertialPose.X();
+    child->ipos[1] = inertialPose.Y();
+    child->ipos[2] = inertialPose.Z();
+
+    child->iquat[0] = inertialPose.Rot().W();
+    child->iquat[1] = inertialPose.Rot().X();
+    child->iquat[2] = inertialPose.Rot().Y();
+    child->iquat[3] = inertialPose.Rot().Z();
+
+    // TODO(azeey): Apply link poses
+    if (_modelInfo->body != child)
+    {
+      const auto &pose = link->RawPose();
+      child->pos[0] = pose.X();
+      child->pos[1] = pose.Y();
+      child->pos[2] = pose.Z();
+
+      child->quat[0] = pose.Rot().W();
+      child->quat[1] = pose.Rot().X();
+      child->quat[2] = pose.Rot().Y();
+      child->quat[3] = pose.Rot().Z();
+    }
     // TODO(azeey) Apply pose of inertia frame.
 
     // Parse collisions
@@ -160,6 +202,7 @@ struct ModelKinematicStructure
           break;
         case ::sdf::GeometryType::PLANE:
           geom = mjs_addGeom(child, nullptr);
+          // Set mass to 0 to mark the body as static
           geom->type = mjGEOM_PLANE;
           for (int j = 0; j < 2; ++j)
           {
@@ -199,10 +242,15 @@ struct ModelKinematicStructure
       {
         geom->contype = 1;
         geom->conaffinity = 1;
-        mjs_setName(geom->element, collision->Name().c_str());
+        mjs_setName(geom->element,
+                    ::sdf::JoinName(body_name, collision->Name()).c_str());
+        auto shapeInfo = std::make_shared<ShapeInfo> (_base.GetNextEntity(), linkInfo);
+        shapeInfo->geom = geom;
+        shapeInfo->name = collision->Name();
+        linkInfo->shapes.push_back(shapeInfo);
       }
     }
-    if (!this->childInJoint[_index])
+    if (!this->childInJoint[_index] && !_sdfModel.Static())
     {
       // No joint has this link as a child, so we add a freejoint.
       mjs_addFreeJoint(child);
@@ -211,7 +259,8 @@ struct ModelKinematicStructure
     // Recursively add children
     for (std::size_t i = 0; i < this->children[_index].size(); ++i)
     {
-      this->AddToSpec(_base, _spec, this->children[_index][i], _modelInfo);
+      this->AddToSpec(_base, _sdfModel, _spec, this->children[_index][i],
+                      _modelInfo);
     }
   }
 };
@@ -220,6 +269,7 @@ struct ModelKinematicStructure
 Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
                                             const ::sdf::Model &_sdfModel)
 {
+  auto start = std::chrono::high_resolution_clock::now();
   auto *worldInfo = this->ReferenceInterface<WorldInfo>(_parentID);
   if (!worldInfo)
   {
@@ -228,6 +278,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   auto *spec = worldInfo->mjSpecObj;
+  worldInfo->specDirety = true;
   ModelKinematicStructure kinTree;
   kinTree.links.reserve(_sdfModel.LinkCount());
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
@@ -285,22 +336,17 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     if (!kinTree.parents[i])
     {
-      kinTree.AddToSpec(*this, spec, i, modelInfo);
+      kinTree.AddToSpec(*this, _sdfModel, spec, i, modelInfo);
     }
   }
-  int rc =
-      mj_recompile(spec, nullptr, worldInfo->mjModelObj, worldInfo->mjDataObj);
-  if (rc != 0)
+  if (!modelInfo->body)
   {
-    gzerr << "Error compiling:" << mjs_getError(spec) << "\n";
-  }
-
-  mj_saveXML(spec, "/tmp/mujoco_model.xml", nullptr, 0);
-  if (!modelInfo->body) {
     gzerr << "There was no body associated with the model\n";
     return this->GenerateInvalidId();
   }
 
+  auto end = std::chrono::high_resolution_clock::now();
+  std::cout << "Model: " << _sdfModel.Name() << " constructed in " << std::chrono::duration<double>(end - start).count() << "\n";
   return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
 
@@ -317,7 +363,6 @@ Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
     if (!model)
       continue;
     this->ConstructSdfModel(worldID, *model);
-
   }
 
   return worldID;

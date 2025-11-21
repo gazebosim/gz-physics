@@ -17,7 +17,9 @@
  */
 
 #include "SimulationFeatures.hh"
+
 #include <mujoco/mjdata.h>
+
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
@@ -29,15 +31,14 @@ namespace mujoco
 {
 
 /////////////////////////////////////////////////
-void SimulationFeatures::WorldForwardStep(
-    const Identity &_worldID,
-    ForwardStep::Output & _h,
-    ForwardStep::State & /*_x*/,
-    const ForwardStep::Input & _u)
+void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
+                                          ForwardStep::Output &_h,
+                                          ForwardStep::State & /*_x*/,
+                                          const ForwardStep::Input &_u)
 {
   const auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  auto *dtDur =
-    _u.Query<std::chrono::steady_clock::duration>();
+  this->RecompileSpec(*worldInfo);
+  auto *dtDur = _u.Query<std::chrono::steady_clock::duration>();
   double stepSize = 0.001;
   if (dtDur)
   {
@@ -45,40 +46,40 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  worldInfo->mjModelObj->opt.timestep = stepSize;
+
   mj_step(worldInfo->mjModelObj, worldInfo->mjDataObj);
 
   auto &worldPoses = _h.Get<WorldPoses>();
-  const mjData* d = worldInfo->mjDataObj;
-  for (const auto &model: worldInfo->models)
+  worldPoses.entries.clear();
+  const mjModel *m = worldInfo->mjModelObj;
+  mjData *d = worldInfo->mjDataObj;
+  for (const auto &model : worldInfo->models)
   {
-    for (const auto &link: model->links)
+    for (const auto &link : model->links)
     {
       auto bodyId = mjs_getId(link->body->element);
       WorldPose wp;
-      math::Vector3d pos{d->xpos[0], d->xpos[1], d->xpos[2]};
-      math::Quaterniond quat{d->xquat[0], d->xquat[1], d->xquat[2], d->xquat[3]};
+      math::Vector3d pos{d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
+                         d->xpos[3 * bodyId + 2]};
+      math::Quaterniond quat{d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
+                             d->xquat[4 * bodyId + 2],
+                             d->xquat[4 * bodyId + 3]};
+      // gzdbg << link->entityId  << ": " << bodyId << ": " << *mjs_getName(link->body->element) << " " << pos
+      //       << "\n";
       wp.pose.Set(pos, quat);
-      wp.body = bodyId;
+      wp.body = link->entityId;
       worldPoses.entries.push_back(wp);
     }
   }
+  // TODO(azeey) This simply copies all links instead of only the ones with changed poses.
+  auto &changedPoses = _h.Get<ChangedWorldPoses>();
+  changedPoses.entries = worldPoses.entries;
 }
 
 /////////////////////////////////////////////////
 void SimulationFeatures::Write(WorldPoses &_worldPoses) const
 {
-  // remove link poses from the previous iteration
-  // _worldPoses.entries.clear();
-  // _worldPoses.entries.reserve(this->links.size());
-  //
-  // for (const auto &[id, info] : this->links)
-  // {
-  //   const auto &model = this->ReferenceInterface<ModelInfo>(info->model);
-  //   WorldPose wp;
-  //   wp.pose = gz::math::eigen3::convert(GetWorldTransformOfLink(*model, *info));
-  //   wp.body = id;
-  //   _worldPoses.entries.push_back(wp);
-  // }
 }
 
 }  // namespace mujoco

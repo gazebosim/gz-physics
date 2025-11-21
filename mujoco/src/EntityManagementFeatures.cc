@@ -229,6 +229,70 @@ bool EntityManagementFeatures::ModelRemoved(
 }
 
 /////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeCount(
+  const Identity &_linkID) const
+{
+  return this->ReferenceInterface<LinkInfo>(_linkID)->shapes.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+  const Identity &_linkID, std::size_t _shapeIndex) const
+{
+  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
+  if (_shapeIndex >= link->shapes.size())
+    return this->GenerateInvalidId();
+
+  const auto shapeInfo = link->shapes[_shapeIndex];
+  return this->GenerateIdentity(shapeInfo->entityId, shapeInfo);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetShape(
+  const Identity &_linkID, const std::string &_shapeName) const
+{
+  // TODO(azeey) Return an invalid ID here otherwise, gz-sim will incorrectly assume the ConstructSdfCollision feature is implemented (bug).
+  return this->GenerateInvalidId();
+  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto it = std::find_if(link->shapes.begin(), link->shapes.end(), [&](const std::shared_ptr<ShapeInfo> &_shapeInfo) {
+    if (_shapeName == _shapeInfo->name) {
+      return true;
+    }
+    return false;
+  });
+
+  if (it == link->shapes.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity((*it)->entityId, *it);
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetShapeName(
+  const Identity &_shapeID) const
+{
+  return this->ReferenceInterface<ShapeInfo>(_shapeID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetShapeIndex(
+  const Identity &_shapeID) const
+{
+  // TODO(azeey): Implement GetShapeIndex
+  return 0;
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetLinkOfShape(
+  const Identity &_shapeID) const
+{
+  auto linkInfo = this->ReferenceInterface<ShapeInfo>(_shapeID)->linkInfo.lock();
+  if (!linkInfo)
+    return this->GenerateInvalidId();
+  return this->GenerateIdentity(linkInfo->entityId, linkInfo);
+}
+
+/////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity & _worldID, std::size_t _modelIndex)
 {

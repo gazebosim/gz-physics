@@ -31,6 +31,24 @@ Identity Base::InitiateEngine(std::size_t)
   return this->GenerateIdentity(0);
 }
 
+bool Base::RecompileSpec(const WorldInfo &_worldInfo) const
+{
+  if (!_worldInfo.specDirety)
+    return true;
+
+  int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
+                        _worldInfo.mjDataObj);
+  if (rc != 0)
+  {
+    gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
+    return false;
+  }
+  mj_saveXML(_worldInfo.mjSpecObj, "/tmp/mujoco_model.xml", nullptr, 0);
+
+  mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
+  return true;
+}
+
 }  // namespace mujoco
 }  // namespace physics
 }  // namespace gz
