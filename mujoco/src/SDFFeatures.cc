@@ -24,6 +24,9 @@
 #include <chrono>
 #include <cstddef>
 #include <gz/common/Console.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/common/SubMesh.hh>
 #include <gz/physics/Entity.hh>
 #include <iostream>
 #include <iterator>
@@ -44,9 +47,9 @@
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
+#include <string>
 
 #include "Base.hh"
-#include "gz/physics/detail/Identity.hh"
 
 namespace gz
 {
@@ -88,6 +91,45 @@ struct ModelKinematicStructure
     return std::distance(links.begin(), it);
   }
 
+  bool AddMesh(mjSpec *_spec, mjsBody *_body, const ::sdf::Mesh *_meshSdf)
+  {
+    auto &meshManager = *gz::common::MeshManager::Instance();
+    auto *mesh = meshManager.Load(_meshSdf->Uri());
+    if (nullptr == mesh)
+    {
+      gzwarn << "Failed to load mesh from [" << _meshSdf->Uri() << "]."
+             << std::endl;
+      return false;
+    }
+
+    auto geom = mjs_addGeom(_body, nullptr);
+    geom->type = mjGEOM_MESH;
+    auto meshName = mesh->Name();
+    mjs_setString(geom->meshname, meshName.c_str());
+
+    auto *muMesh = mjs_addMesh(_spec, nullptr);
+    mjs_setName(muMesh->element, meshName.c_str());
+
+    std::copy(_meshSdf->Scale().Data(), _meshSdf->Scale().Data() + 3,
+              muMesh->scale);
+    double *verts{nullptr};
+    int *indices{nullptr};
+
+    mesh->FillArrays(&verts, &indices);
+    auto nverts = mesh->VertexCount();
+    muMesh->uservert->assign(3 * nverts, 0.0);
+    for (int i=0; i < nverts/3; ++i) {
+      std::cout << verts[3*i] << " " << verts[3*i + 1] <<  " " << verts[3*i + 2] << std::endl;
+    }
+    std::copy(verts, verts + 3* nverts, muMesh->uservert->begin());
+
+    mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
+
+    delete[] verts;
+    delete[] indices;
+    return true;
+  }
+
   void AddToSpec(Base &_base, const ::sdf::Model &_sdfModel, mjSpec *_spec,
                  std::size_t _index,
                  const std::shared_ptr<ModelInfo> &_modelInfo)
@@ -109,6 +151,14 @@ struct ModelKinematicStructure
     {
       // TODO (azeey) Better error message
       gzerr << "Error finding parent\n";
+      return;
+    }
+
+    auto worldInfo = _modelInfo->worldInfo.lock();
+    if (!worldInfo)
+    {
+      // TODO (azeey) Better error message
+      gzerr << "Error getting worldInfo\n";
       return;
     }
 
@@ -229,8 +279,11 @@ struct ModelKinematicStructure
             geom->size[j] = shape->EllipsoidShape()->Radii()[j];
           }
           break;
-        case ::sdf::GeometryType::HEIGHTMAP:
         case ::sdf::GeometryType::MESH:
+          this->AddMesh(worldInfo->mjSpecObj, child, shape->MeshShape());
+          break;
+
+        case ::sdf::GeometryType::HEIGHTMAP:
         case ::sdf::GeometryType::POLYLINE:
         case ::sdf::GeometryType::CONE:
         default:
@@ -244,7 +297,8 @@ struct ModelKinematicStructure
         geom->conaffinity = 1;
         mjs_setName(geom->element,
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
-        auto shapeInfo = std::make_shared<ShapeInfo> (_base.GetNextEntity(), linkInfo);
+        auto shapeInfo =
+            std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
         linkInfo->shapes.push_back(shapeInfo);
@@ -346,7 +400,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   auto end = std::chrono::high_resolution_clock::now();
-  std::cout << "Model: " << _sdfModel.Name() << " constructed in " << std::chrono::duration<double>(end - start).count() << "\n";
+  std::cout << "Model: " << _sdfModel.Name() << " constructed in "
+            << std::chrono::duration<double>(end - start).count() << "\n";
   return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
 
