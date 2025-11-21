@@ -34,7 +34,22 @@ namespace physics
 namespace mujoco
 {
 
+// Forward declarations
+struct LinkInfo;
 struct ModelInfo;
+struct WorldInfo;
+
+struct ShapeInfo
+{
+  ShapeInfo(std::size_t _entityId, std::shared_ptr<LinkInfo> _linkInfo)
+      : entityId(_entityId), linkInfo(_linkInfo)
+  {
+  }
+  std::size_t entityId;
+  mjsGeom *geom;
+  std::string name;
+  std::weak_ptr<LinkInfo> linkInfo;
+};
 
 struct LinkInfo
 {
@@ -44,7 +59,9 @@ struct LinkInfo
   }
   std::size_t entityId;
   mjsBody *body;
+  std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
+  std::vector<std::shared_ptr<ShapeInfo>> shapes;
 };
 
 struct JointInfo
@@ -56,10 +73,10 @@ struct JointInfo
   }
   std::size_t entityId;
   mjsJoint *joint;
+  std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
 };
 
-struct WorldInfo;
 
 struct ModelInfo
 { ModelInfo(std::size_t _entityId, std::shared_ptr<WorldInfo> _worldInfo)
@@ -95,6 +112,7 @@ struct WorldInfo
   mjSpec *mjSpecObj;
   mjModel *mjModelObj;
   mjData *mjDataObj;
+  bool specDirety{false};
   std::string name;
   std::vector<std::shared_ptr<ModelInfo>> models{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
@@ -120,6 +138,8 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public:
   std::string engineName{"mujoco"};
+
+  public: bool RecompileSpec(const WorldInfo &_worldInfo) const;
 };
 }  // namespace mujoco
 }  // namespace physics
