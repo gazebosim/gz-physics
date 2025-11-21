@@ -46,8 +46,7 @@ Identity EntityManagementFeatures::GetWorld(const Identity &,
                                             std::size_t _worldIndex) const
 {
   const auto &worldInfo = this->worlds[_worldIndex];
-  auto worldID = static_cast<std::size_t>(mjs_getId(worldInfo->body->element));
-  return this->GenerateIdentity(worldID, worldInfo);
+  return this->GenerateIdentity(worldInfo->entityId, worldInfo);
 }
 
 /////////////////////////////////////////////////
@@ -83,6 +82,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity & /*_engineID*/, const std::string &_name)
 {
   auto worldInfo = std::make_shared<WorldInfo>();
+  worldInfo->entityId = this->GetNextEntity();
   this->worlds.push_back(worldInfo);
 
   mjSpec *spec = mj_makeSpec();
@@ -94,8 +94,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   // worldbody so that it is easy to find it with mjs_findBody(s, "world")
   // elsewhere.
   worldInfo->name = _name;
-  auto worldID = static_cast<std::size_t>(mjs_getId(worldInfo->body->element));
-  return this->GenerateIdentity(worldID, worldInfo);
+  return this->GenerateIdentity(worldInfo->entityId, worldInfo);
 }
 
 /////////////////////////////////////////////////
@@ -114,9 +113,7 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
   if (_modelIndex < worldInfo->models.size())
   {
     auto modelInfo = worldInfo->models[_modelIndex];
-    auto modelID =
-        static_cast<std::size_t>(mjs_getId(modelInfo->body->element));
-    return this->GenerateIdentity(modelID, modelInfo);
+    return this->GenerateIdentity(modelInfo->entityId, modelInfo);
   }
   return this->GenerateInvalidId();
 }
@@ -167,9 +164,7 @@ Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
     return this->GenerateInvalidId();
 
   const auto linkInfo = model->links[_linkIndex];
-  const auto linkID =
-      static_cast<std::size_t>(mjs_getId(linkInfo->body->element));
-  return this->GenerateIdentity(linkID, linkInfo);
+  return this->GenerateIdentity(linkInfo->entityId, linkInfo);
 }
 
 /////////////////////////////////////////////////
@@ -191,8 +186,7 @@ Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
     return this->GenerateInvalidId();
   }
 
-  const auto linkID = static_cast<std::size_t>(mjs_getId(child->element));
-  return this->GenerateIdentity(linkID, linkInfo);
+  return this->GenerateIdentity(linkInfo->entityId, linkInfo);
 }
 
 /////////////////////////////////////////////////
