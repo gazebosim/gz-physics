@@ -47,7 +47,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
     return this->GenerateInvalidId();
   }
 
-  return this->IdentityFromBody(modelInfo->body, modelInfo);
+  return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
 
 /////////////////////////////////////////////////
@@ -59,7 +59,7 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
   if (!linkInfo) {
     return this->GenerateInvalidId();
   }
-  return this->IdentityFromBody(modelInfo->body, linkInfo);
+  return this->GenerateIdentity(linkInfo->entityId, linkInfo);
 }
 
 /////////////////////////////////////////////////

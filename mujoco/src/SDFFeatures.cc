@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <gz/common/Console.hh>
 #include <gz/physics/Entity.hh>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <sdf/Box.hh>
@@ -86,7 +87,7 @@ struct ModelKinematicStructure
     return std::distance(links.begin(), it);
   }
 
-  void AddToSpec(mjSpec *_spec, std::size_t _index, const std::shared_ptr<ModelInfo> &_modelInfo)
+  void AddToSpec(Base& _base, mjSpec *_spec, std::size_t _index, const std::shared_ptr<ModelInfo> &_modelInfo)
   {
     mjsBody *parent;
     auto *world = mjs_findBody(_spec, "world");
@@ -111,9 +112,8 @@ struct ModelKinematicStructure
     const auto *link = this->links[_index];
     auto child = mjs_addBody(parent, nullptr);
     mjs_setName(child->element, ::sdf::JoinName(_modelInfo->name, link->Name()).c_str());
-    auto linkInfo = std::make_shared<LinkInfo>();
+    auto linkInfo = std::make_shared<LinkInfo>(_base.GetNextEntity(), _modelInfo);
     linkInfo->body = child;
-    linkInfo->modelInfo = _modelInfo;
     _modelInfo->links.push_back(linkInfo);
     // TODO(azeey) This will end up assigning the first root level link as the
     // body associated with the model. We should probably consider using the
@@ -211,7 +211,7 @@ struct ModelKinematicStructure
     // Recursively add children
     for (std::size_t i = 0; i < this->children[_index].size(); ++i)
     {
-      this->AddToSpec(_spec, this->children[_index][i], _modelInfo);
+      this->AddToSpec(_base, _spec, this->children[_index][i], _modelInfo);
     }
   }
 };
@@ -273,7 +273,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     kinTree.childInJoint[*childIndex] = joint;
   }
 
-  auto modelInfo = std::make_shared<ModelInfo>();
+  auto modelInfo = std::make_shared<ModelInfo>(
+      this->GetNextEntity(),
+      std::reinterpret_pointer_cast<WorldInfo>(this->Reference(_parentID)));
+  modelInfo->entityId = this->GetNextEntity();
   modelInfo->name = _sdfModel.Name();
   // TODO(azeey) Change this when we support nested models.
   modelInfo->parentBody = mjs_findBody(spec, "world");
@@ -282,7 +285,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     if (!kinTree.parents[i])
     {
-      kinTree.AddToSpec(spec, i, modelInfo);
+      kinTree.AddToSpec(*this, spec, i, modelInfo);
     }
   }
   int rc =
@@ -298,8 +301,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     return this->GenerateInvalidId();
   }
 
-  auto modelID = static_cast<std::size_t>(mjs_getId(modelInfo->body->element));
-  return this->GenerateIdentity(modelID, modelInfo);
+  return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
 
 /////////////////////////////////////////////////
