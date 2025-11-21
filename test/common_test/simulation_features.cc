@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <set>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 
@@ -635,6 +636,290 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
     double expectedTerminalVel = -kGravityAcc * kMass / kDamping;
     auto velDamped = jointWithDamping->GetVelocity(0);
     EXPECT_NEAR(expectedTerminalVel, velDamped, 1e-2);
+  }
+}
+
+TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessPrismatic)
+{
+  auto getModelStr = [](const std::string &_name,
+      const gz::math::Pose3d &_pose, double _springStiffness)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="body">
+          <inertial>
+            <mass>2</mass>
+          </inertial>
+        </link>
+        <joint name="test_joint" type="prismatic">
+          <parent>base</parent>
+          <child>body</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <dynamics>
+              <spring_stiffness>)";
+    modelStr << _springStiffness;
+    modelStr << R"(</spring_stiffness>
+            </dynamics>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // The `bullet` plugin does not support prismatic joints.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    auto world = LoadPluginAndWorld<FeaturesDynamics>(
+        this->loader, name, common_test::worlds::kEmptySdf);
+
+    auto addModel = [getModelStr, world](const std::string &_name,
+        const gz::math::Pose3d &_pose, double _springStiffness)
+    {
+      sdf::Root root;
+      sdf::Errors errors =
+          root.LoadSdfString(getModelStr(_name, _pose, _springStiffness));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    };
+
+    // The test consists of two models in the world, one has a prismatic joint
+    // with spring stiffness while the other also has a prismatic joint but
+    // with no spring stiffness. When the world is stepped, the links in both
+    // models should begin to slide down due to gravity. However, the link
+    // connected by the joint with spring stiffness should start to oscillate up
+    // and down, while the link in the model without joint spring stiffness
+    // should continue to fall.
+    constexpr double kSpringStiffness = 100.0;
+    addModel("model1", {}, kSpringStiffness);
+    addModel("model2", gz::math::Pose3d(1, 0, 0, 0, 0, 0), 0.0);
+
+    const auto jointWithSpringStiffness =
+        world->GetModel("model1")->GetJoint("test_joint");
+    const auto jointWithoutSpringStiffness =
+        world->GetModel("model2")->GetJoint("test_joint");
+
+    StepWorld<FeaturesDynamics>(world, true, 1);
+    double posSpringInitialPos = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpringInitialPos = jointWithoutSpringStiffness->GetPosition(0);
+
+    constexpr double kTol = 0.01;
+    int velSpringDir = -1;
+    int velNoSpringDir = -1;
+    int dirChangeSpring = 0;
+    int dirChangeNoSpring = 0;
+    for (int i = 1; i < 2000; ++i)
+    {
+      StepWorld<FeaturesDynamics>(world, false, 1);
+      double velNoSpring = jointWithoutSpringStiffness->GetVelocity(0);
+      double velSpring = jointWithSpringStiffness->GetVelocity(0);
+      // count number of velocity direction changes
+      // Joint with spring stiffness
+      if (velSpring > kTol && velSpringDir < 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = 1;
+      }
+      else if (velSpring < -kTol && velSpringDir > 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = -1;
+      }
+
+      // Joint without spring stiffness
+      if (velNoSpring > kTol && velNoSpringDir < 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = 1;
+      }
+      else if (velNoSpring < -kTol && velNoSpringDir > 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = -1;
+      }
+    }
+
+    // Model with spring stiffness should oscillate up and down,
+    // Undamped oscillation frequency in Hz is:
+    //     1/(2*pi)*sqrt(k/m) = 1.12Hz
+    // where k (spring stiffness) = 100.0, and m (mass) = 2.0.
+    // So we expect 2.24 complete cycles in 2 seconds,
+    // which is about 4 direction changes
+    EXPECT_EQ(4, dirChangeSpring);
+    // Model without spring stiffness should only have one downward moving
+    // direction
+    EXPECT_EQ(0, dirChangeNoSpring);
+
+    // Verify joint spring pos. Model without spring stiffness should continue
+    // to fall and so has larger negative joint pos than model with spring
+    // stiffness
+    double posSpring = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpring = jointWithoutSpringStiffness->GetPosition(0);
+    EXPECT_GT(posSpringInitialPos, posSpring);
+    EXPECT_GT(posNoSpringInitialPos, posNoSpring);
+    EXPECT_GT(posSpring, posNoSpring);
+  }
+}
+
+TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessRevolute)
+{
+  auto getModelStr = [](const std::string &_name,
+      const gz::math::Pose3d &_pose, double _springStiffness)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="body">
+          <inertial>
+            <inertia>
+              <ixx>0.01</ixx>
+              <ixy>0.0</ixy>
+              <ixz>0.0</ixz>
+              <iyy>0.01</iyy>
+              <iyz>0.0</iyz>
+              <izz>0.01</izz>
+            </inertia>
+            <mass>1.0</mass>
+          </inertial>
+        </link>
+        <joint name="test_joint" type="revolute">
+          <pose>-1.0 0.0 0 0.0 0.0 0.0</pose>
+          <parent>base</parent>
+          <child>body</child>
+          <axis>
+            <xyz>0 -1 0</xyz>
+            <dynamics>
+              <spring_stiffness>)";
+    modelStr << _springStiffness;
+    modelStr << R"(</spring_stiffness>
+            </dynamics>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // The `bullet` plugin does not support spring stiffness
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    auto world = LoadPluginAndWorld<FeaturesDynamics>(
+        this->loader, name, common_test::worlds::kEmptySdf);
+
+    auto addModel = [getModelStr, world](const std::string &_name,
+        const gz::math::Pose3d &_pose, double _springStiffness)
+    {
+      sdf::Root root;
+      sdf::Errors errors =
+          root.LoadSdfString(getModelStr(_name, _pose, _springStiffness));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    };
+
+    // The test consists of two models in the world, one has a revolute joint
+    // with spring stiffness while the other also has a revolute joint but
+    // with no spring stiffness. The joint is at an offset so that when the
+    // world is stepped, the links should begin to swing due to gravity.
+    // However, the link connected by the joint with spring stiffness should
+    // oscillate up and down, while the link in the model without joint spring
+    // stiffness should continue to swing freely.
+    constexpr double kSpringStiffness = 100.0;
+    addModel("model1", {}, kSpringStiffness);
+    addModel("model2", gz::math::Pose3d(1, 0, 0, 0, 0, 0), 0.0);
+
+    const auto jointWithSpringStiffness =
+        world->GetModel("model1")->GetJoint("test_joint");
+    const auto jointWithoutSpringStiffness =
+        world->GetModel("model2")->GetJoint("test_joint");
+
+    StepWorld<FeaturesDynamics>(world, true, 1);
+    double posSpringInitialPos = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpringInitialPos = jointWithoutSpringStiffness->GetPosition(0);
+
+    constexpr double kTol = 0.01;
+    int velSpringDir = -1;
+    int velNoSpringDir = -1;
+    int dirChangeSpring = 0;
+    int dirChangeNoSpring = 0;
+    for (int i = 1; i < 1000; ++i)
+    {
+      StepWorld<FeaturesDynamics>(world, false, 1);
+      double velNoSpring = jointWithoutSpringStiffness->GetVelocity(0);
+      double velSpring = jointWithSpringStiffness->GetVelocity(0);
+      // count number of velocity direction changes
+      // Joint with spring stiffness
+      if (velSpring > kTol && velSpringDir < 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = 1;
+      }
+      else if (velSpring < -kTol && velSpringDir > 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = -1;
+      }
+
+      // Joint without spring stiffness
+      if (velNoSpring > kTol && velNoSpringDir < 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = 1;
+      }
+      else if (velNoSpring < -kTol && velNoSpringDir > 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = -1;
+      }
+    }
+
+    // Model with spring stiffness should swing around an axis,
+    // Undamped oscillation frequency in Hz is:
+    //     1/(2*pi)*sqrt(k/I_joint) = 1.58Hz,
+    // where k (spring stiffness) =  100.0, and
+    // I_joint is the moment of inertia around the axis of rotation (-y):
+    //     I_joint = I_yy + joint_pos_x^2*mass.
+    // where I_yy = 0.01, joint_pos_x = -1.0, and mass = 1.0
+    // So 3 direction switches in 1 second.
+    EXPECT_EQ(3, dirChangeSpring);
+    // Model without spring stiffness should only swing in one direction
+    EXPECT_EQ(0, dirChangeNoSpring);
+
+    // Verify joint spring pos. Model without spring stiffness should continue
+    // to fall and so has larger negative joint pos than model with spring
+    // stiffness
+    double posSpring = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpring = jointWithoutSpringStiffness->GetPosition(0);
+    EXPECT_GT(posSpringInitialPos, posSpring);
+    EXPECT_GT(posNoSpringInitialPos, posNoSpring);
+    EXPECT_GT(posSpring, posNoSpring);
   }
 }
 

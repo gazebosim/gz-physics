@@ -146,8 +146,14 @@ class GzMultiBody: public btMultiBody
   /// set and reset the flag.
   public: void UpdateCollisionTransformsIfNeeded();
 
-  /// \brief Add joint damping torque to the specified joint index on all dofs.
-  public: void AddJointDampingTorque(int _jointIndex, double _damping);
+  /// \brief Add joint damping and spring stiffness torque to the specified
+  /// joint index on all dofs.
+  /// \param[in] _jointIndex Joint index
+  /// \param[in] _damping Joint damping coefficient
+  /// \param[in] _springStiffness Joint spring stiffness
+  /// \param[in] _springReference Joint spring reference
+  public: void AddJointDampingStiffnessTorque(int _jointIndex, double _damping,
+      double _springStiffness, double _springReference);
 
   private: bool needsCollisionTransformsUpdate = false;
 };
@@ -282,8 +288,10 @@ struct JointInfo
   double axisLower = 0.0;
   double axisUpper = 0.0;
 
-  // joint damping
+  // joint damping, spring stiffness and reference
   double damping = 0.0;
+  double springStiffness = 0.0;
+  double springReference = 0.0;
 
   // True if the fixed constraint's child link is welded to parent link as if
   // they are part of the same body.
