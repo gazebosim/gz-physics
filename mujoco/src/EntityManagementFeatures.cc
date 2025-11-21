@@ -87,6 +87,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 
   mjSpec *spec = mj_makeSpec();
   worldInfo->mjSpecObj = spec;
+  worldInfo->mjSpecObj->option.timestep = 0.001;
   worldInfo->mjModelObj = mj_compile(spec, nullptr);
   worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
