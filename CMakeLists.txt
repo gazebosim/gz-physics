@@ -69,12 +69,10 @@ gz_find_package(sdformat
 # Find dartsim for the dartsim plugin wrapper
 gz_find_package(DART
   COMPONENTS
-    collision-bullet
-    collision-ode
     utils
     utils-urdf
   CONFIG
-  VERSION 6.10
+  VERSION 7
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
