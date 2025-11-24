@@ -87,6 +87,13 @@ gz_find_package(GzBullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
+#--------------------------------------
+# Find mujoco for the mujoco plugin wrapper
+gz_find_package(mujoco
+  REQUIRED_BY mujoco
+  PKGCONFIG_IGNORE # TODO(azeey) Revisit this
+  CONFIG)
+
 message(STATUS "-------------------------------------------\n")
 
 # Plugin install dirs
@@ -101,7 +108,7 @@ set(GZ_PHYSICS_ENGINE_INSTALL_DIR
 # Configure the build
 #============================================================================
 gz_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone mujoco)
 
 
 #============================================================================

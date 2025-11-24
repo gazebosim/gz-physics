@@ -1,0 +1,155 @@
+/*
+ * Copyright (C) 2025 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+#ifndef GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
+#define GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
+
+#include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/GetEntities.hh>
+#include <gz/physics/Implements.hh>
+#include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/Shape.hh>
+
+#include "Base.hh"
+
+namespace gz {
+namespace physics {
+namespace mujoco {
+
+struct EntityManagementFeatureList : FeatureList<
+  GetEngineInfo,
+  GetWorldFromEngine,
+  GetLinkFromModel,
+  GetModelFromWorld,
+  GetShapeFromLink,
+  RemoveEntities,
+  ConstructEmptyWorldFeature
+  // ConstructEmptyModelFeature,
+  // ConstructEmptyNestedModelFeature,
+  // ConstructEmptyLinkFeature
+  // CollisionFilterMaskFeature,
+  // WorldModelFeature
+> { };
+
+class EntityManagementFeatures :
+    public virtual Base,
+    public virtual Implements3d<EntityManagementFeatureList>
+{
+  // ----- Get entities -----
+  public: const std::string &GetEngineName(const Identity &) const override
+  {
+    return this->engineName;
+  }
+
+  public: std::size_t GetEngineIndex(const Identity &) const override
+  {
+    return 0;
+  }
+
+  public: std::size_t GetWorldCount(const Identity &) const override;
+
+  public: Identity GetWorld(
+      const Identity &, std::size_t _worldIndex) const override;
+
+  public: Identity GetWorld(
+      const Identity &, const std::string &_worldName) const override;
+
+  public: const std::string &GetWorldName(
+      const Identity &_worldID) const override;
+
+  public: std::size_t GetWorldIndex(const Identity &_worldID) const override;
+
+  public: Identity GetEngineOfWorld(const Identity &_worldID) const override;
+
+  public: Identity ConstructEmptyWorld(
+    const Identity &_engineID, const std::string &_name) override;
+
+  // ----- GetModelFromWorld -----
+  public: virtual std::size_t GetModelCount(
+      const Identity &_worldID) const override;
+
+  public: virtual Identity GetModel(
+      const Identity &_worldID, std::size_t _modelIndex) const override;
+
+  public: virtual Identity GetModel(
+      const Identity &_worldID, const std::string &_modelName) const override;
+
+  public: virtual const std::string &GetModelName(
+      const Identity &_modelID) const override;
+
+  public: virtual std::size_t GetModelIndex(
+      const Identity &_modelID) const override;
+
+  public: virtual Identity GetWorldOfModel(
+      const Identity &_modelID) const override;
+
+  // ----- GetLinkFromModel -----
+  public: std::size_t GetLinkCount(
+      const Identity &_modelID) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, std::size_t _linkIndex) const override;
+
+  public: Identity GetLink(
+      const Identity &_modelID, const std::string &_linkName) const override;
+
+  public: const std::string &GetLinkName(
+      const Identity &_linkID) const override;
+
+  public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
+
+  public: Identity GetModelOfLink(const Identity &_linkID) const override;
+
+  // ----- GetShapeFromLink -----
+  public: std::size_t GetShapeCount(const Identity &_linkID) const override;
+
+  public: Identity GetShape(
+      const Identity &_linkID, std::size_t _shapeIndex) const override;
+
+  public: Identity GetShape(
+      const Identity &_linkID, const std::string &_shapeName) const override;
+
+  const std::string &GetShapeName(
+      const Identity &_shapeID) const override;
+
+  std::size_t GetShapeIndex(const Identity &_shapeID) const override;
+
+  Identity GetLinkOfShape(const Identity &_shapeID) const override;
+
+  // ----- Remove entities -----
+  public: bool RemoveModelByIndex(
+      const Identity &_worldID, std::size_t _modelIndex) override;
+
+  public: bool RemoveModelByName(
+      const Identity &_worldID,
+      const std::string &_modelName) override;
+
+  public: bool RemoveModel(const Identity &_modelID) override;
+
+  public: bool ModelRemoved(const Identity &_modelID) const override;
+
+  public: bool RemoveNestedModelByIndex(
+     const Identity &_modelID, std::size_t _nestedModelIndex) override;
+
+  public: bool RemoveNestedModelByName(
+      const Identity &_modelID, const std::string &_modelName) override;
+};
+
+}  // namespace mujoco
+}  // namespace physics
+}  // namespace gz
+#endif
