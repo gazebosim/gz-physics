@@ -118,10 +118,12 @@ struct ModelKinematicStructure
     mesh->FillArrays(&verts, &indices);
     auto nverts = mesh->VertexCount();
     muMesh->uservert->assign(3 * nverts, 0.0);
-    for (int i=0; i < nverts/3; ++i) {
-      std::cout << verts[3*i] << " " << verts[3*i + 1] <<  " " << verts[3*i + 2] << std::endl;
+    for (int i = 0; i < nverts / 3; ++i)
+    {
+      std::cout << verts[3 * i] << " " << verts[3 * i + 1] << " "
+                << verts[3 * i + 2] << std::endl;
     }
-    std::copy(verts, verts + 3* nverts, muMesh->uservert->begin());
+    std::copy(verts, verts + 3 * nverts, muMesh->uservert->begin());
 
     mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
 
@@ -228,15 +230,18 @@ struct ModelKinematicStructure
     // TODO(azeey) Apply pose of inertia frame.
 
     // Parse collisions
+    std::size_t meshCounter = 0;
     for (std::size_t i = 0; i < link->CollisionCount(); ++i)
     {
       const auto *collision = link->CollisionByIndex(i);
       auto *shape = collision->Geom();
       mjsGeom *geom = nullptr;
+      // TODO(azeey): Apply pose of collision
 
       switch (shape->Type())
       {
         case ::sdf::GeometryType::BOX:
+        {
           geom = mjs_addGeom(child, nullptr);
           geom->type = mjGEOM_BOX;
           for (int j = 0; j < 3; ++j)
@@ -244,13 +249,34 @@ struct ModelKinematicStructure
             geom->size[j] = shape->BoxShape()->Size()[j] / 2.0;
           }
           break;
+        }
+        case ::sdf::GeometryType::CONE:
+        {
+          geom = mjs_addGeom(child, nullptr);
+          geom->type = mjGEOM_MESH;
+          const std::string meshName =
+              collision->Name() + "_cone_" + std::to_string(meshCounter++);
+          auto *muMesh = mjs_addMesh(_spec, nullptr);
+          mjs_setName(muMesh->element, meshName.c_str());
+          mjs_setString(geom->meshname, meshName.c_str());
+          muMesh->scale[0] = shape->ConeShape()->Radius();
+          muMesh->scale[1] = shape->ConeShape()->Radius();
+          muMesh->scale[2] = shape->ConeShape()->Length() / 2.0;
+          // 36 is the number of segments in the DART plugin implementation
+          double params[3] = {36, 0};
+          mjs_makeMesh(muMesh, mjMESH_BUILTIN_CONE, params, 2);
+          break;
+        }
         case ::sdf::GeometryType::CYLINDER:
+        {
           geom = mjs_addGeom(child, nullptr);
           geom->type = mjGEOM_CYLINDER;
           geom->size[0] = shape->CylinderShape()->Radius();
           geom->size[1] = shape->CylinderShape()->Length() / 2.0;
           break;
+        }
         case ::sdf::GeometryType::PLANE:
+        {
           geom = mjs_addGeom(child, nullptr);
           // Set mass to 0 to mark the body as static
           geom->type = mjGEOM_PLANE;
@@ -260,18 +286,24 @@ struct ModelKinematicStructure
           }
           geom->size[2] = 1.0;
           break;
+        }
         case ::sdf::GeometryType::SPHERE:
+        {
           geom = mjs_addGeom(child, nullptr);
           geom->type = mjGEOM_SPHERE;
           geom->size[0] = shape->SphereShape()->Radius();
           break;
+        }
         case ::sdf::GeometryType::CAPSULE:
+        {
           geom = mjs_addGeom(child, nullptr);
           geom->type = mjGEOM_CAPSULE;
           geom->size[0] = shape->CapsuleShape()->Radius();
           geom->size[1] = shape->CapsuleShape()->Length() / 2.0;
           break;
+        }
         case ::sdf::GeometryType::ELLIPSOID:
+        {
           geom = mjs_addGeom(child, nullptr);
           geom->type = mjGEOM_ELLIPSOID;
           for (int j = 0; j < 3; ++j)
@@ -279,13 +311,14 @@ struct ModelKinematicStructure
             geom->size[j] = shape->EllipsoidShape()->Radii()[j];
           }
           break;
+        }
         case ::sdf::GeometryType::MESH:
+        {
           this->AddMesh(worldInfo->mjSpecObj, child, shape->MeshShape());
           break;
-
+        }
         case ::sdf::GeometryType::HEIGHTMAP:
         case ::sdf::GeometryType::POLYLINE:
-        case ::sdf::GeometryType::CONE:
         default:
           gzwarn << "Shape type " << static_cast<int>(shape->Type())
                  << " not supported\n";
