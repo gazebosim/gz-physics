@@ -155,11 +155,8 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
   // Verify that the model qualifies as a FreeGroup
   dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
 
-  std::cout << "SetFreeGroupStaticState " << std::endl;
-
   if (skeleton) {
     skeleton->setMobile(!_state);
-  } else {
   }
 }
 
@@ -180,16 +177,6 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
     auto *bn = info.model->getRootBodyNode(i);
     bn->setGravityMode(_enabled);
   }
-  // const auto modelInfo = this->models.at(_groupID);
-  // // Verify that the model qualifies as a FreeGroup
-  // dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
-
-  // std::cout << "SetFreeGroupStaticState " << std::endl;
-
-  // if (skeleton) {
-  //   skeleton->setGravity(_gravity);
-  // } else {
-  // }
 }
 
 /////////////////////////////////////////////////

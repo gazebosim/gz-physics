@@ -174,7 +174,7 @@ namespace gz
       public: template <typename PolicyT, typename FeaturesT>
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
-        /// \brief Set this FreeGroup pose in world frame.
+        /// \brief Set this FreeGroup static state.
         public: void SetStaticState(bool _state);
       };
 
@@ -200,7 +200,7 @@ namespace gz
       public: template <typename PolicyT, typename FeaturesT>
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
-        /// \brief Set this FreeGroup pose in world frame.
+        /// \brief Set this FreeGroup Gravity enabled.
         public: void SetGravityEnabled(bool _enabled);
       };
 
