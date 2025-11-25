@@ -821,7 +821,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       }
 
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
-          ::sdf::JointType::REVOLUTE == joint->Type())
+          ::sdf::JointType::REVOLUTE == joint->Type() ||
+          ::sdf::JointType::BALL == joint->Type())
       {
         // Note: These m_joint* properties below are currently not supported by
         // bullet-featherstone and so setting them does not have any effect.
@@ -845,12 +846,18 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         jointInfo->axisLower = joint->Axis()->Lower();
         jointInfo->axisUpper = joint->Axis()->Upper();
         jointInfo->damping = joint->Axis()->Damping();
+        jointInfo->springStiffness = joint->Axis()->SpringStiffness();
+        jointInfo->springReference = joint->Axis()->SpringReference();
 
-        jointInfo->jointLimits =
-          std::make_shared<btMultiBodyJointLimitConstraint>(
-            model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
-            static_cast<btScalar>(joint->Axis()->Upper()));
-        world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+        if (::sdf::JointType::BALL != joint->Type())
+        {
+          jointInfo->jointLimits =
+            std::make_shared<btMultiBodyJointLimitConstraint>(
+              model->body.get(), i,
+              static_cast<btScalar>(joint->Axis()->Lower()),
+              static_cast<btScalar>(joint->Axis()->Upper()));
+          world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+        }
       }
 
       jointInfo->jointFeedback = std::make_shared<btMultiBodyJointFeedback>();
