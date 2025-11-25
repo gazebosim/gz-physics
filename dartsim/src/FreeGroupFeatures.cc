@@ -155,7 +155,8 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
   // Verify that the model qualifies as a FreeGroup
   dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
 
-  if (skeleton) {
+  if (skeleton)
+  {
     skeleton->setMobile(!_state);
   }
 }
