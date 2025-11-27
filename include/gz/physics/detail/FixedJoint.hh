@@ -36,6 +36,24 @@ namespace gz
             this->template Interface<AttachFixedJointFeature>()
                 ->AttachFixedJoint(this->identity, _parent, _name));
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetDynamicJointConstraintPropertiesFeature::Link<PolicyT, FeaturesT>::
+    SetConstraintForceMixing(const Scalar _value)
+    {
+      this->template Interface<SetDynamicJointConstraintPropertiesFeature>()
+        ->SetConstraintForceMixing(this->identity, _value);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetDynamicJointConstraintPropertiesFeature::Link<PolicyT, FeaturesT>::
+    SetErrorReductionParameter(const Scalar _value)
+    {
+      this->template Interface<SetDynamicJointConstraintPropertiesFeature>()
+        ->SetErrorReductionParameter(this->identity, _value);
+    }
   }
 }
 
