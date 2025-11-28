@@ -63,7 +63,7 @@ namespace gz
         public: using Scalar = typename PolicyT::Scalar;
 
         /// \brief Set the radius of this SphereShape
-        /// \param[in] _value
+        /// \param[in] _radius
         ///   The desired radius of this SphereShape
         public: void SetRadius(Scalar _radius);
       };
@@ -96,6 +96,8 @@ namespace gz
         public: using ShapePtrType = SphereShapePtr<PolicyT, FeaturesT>;
 
         /// \brief Rigidly attach a SphereShape to this link.
+        /// \param[in] _name
+        ///   The name of the BoxShape.
         /// \param[in] _radius
         ///   The radius of the sphere.
         /// \param[in] _pose
