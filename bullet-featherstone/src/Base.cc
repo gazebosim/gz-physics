@@ -30,13 +30,226 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+GzCollisionDispatcher::GzCollisionDispatcher(
+    btCollisionConfiguration *_collisionConfiguration)
+    : btCollisionDispatcher(_collisionConfiguration)
+{
+}
+
+/////////////////////////////////////////////////
+GzCollisionDispatcher::~GzCollisionDispatcher()
+{
+  for (auto& manifold : this->customManifolds)
+  {
+    btCollisionDispatcher::releaseManifold(manifold);
+  }
+
+  this->customManifolds.clear();
+  this->colPairManifolds.clear();
+}
+
+/////////////////////////////////////////////////
+void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
+    btCollisionObject *_colObj)
+{
+  std::unordered_set<btPersistentManifold *> manifoldsToRemove;
+  for (const auto &manifold : this->customManifolds)
+  {
+    if (manifold->getBody0() == _colObj ||
+        manifold->getBody1() == _colObj)
+    {
+      manifoldsToRemove.insert(manifold);
+    }
+  }
+
+  for (auto &manifold : manifoldsToRemove)
+  {
+    btCollisionDispatcher::releaseManifold(manifold);
+    this->customManifolds.erase(manifold);
+
+    for (auto pairIt = this->colPairManifolds.begin();
+        pairIt != this->colPairManifolds.end();)
+    {
+      bool erased = false;
+      for (auto &colManifold : pairIt->second)
+      {
+        if (colManifold.second == manifold)
+        {
+          pairIt = this->colPairManifolds.erase(pairIt);
+          erased = true;
+          break;
+        }
+      }
+      if (!erased)
+        ++pairIt;
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+bool GzCollisionDispatcher::HasConvexHullChildShapes(
+    const btCollisionShape *_shape)
+{
+  if (!_shape || !_shape->isCompound())
+    return false;
+
+  const btCompoundShape *compoundShape =
+      static_cast<const btCompoundShape *>(_shape);
+  return (compoundShape->getNumChildShapes() > 0 &&
+      compoundShape->getChildShape(0)->getShapeType() ==
+      CONVEX_HULL_SHAPE_PROXYTYPE);
+}
+
+/////////////////////////////////////////////////
+const btCollisionShape *GzCollisionDispatcher::FindCollisionShape(
+    const btCompoundShape *_compoundShape, int _childIndex)
+{
+  // _childIndex should give us the index of the child shape within
+  // _compoundShape which represents the collision.
+  // One exception is when the collision is a convex decomposed mesh.
+  // In this case, the child shape is another btCompoundShape (nested), and
+  // _childIndex is the index of one of the decomposed convex hulls
+  // in the nested compound shape. The nested compound shape is the collision.
+  int childCount = _compoundShape->getNumChildShapes();
+  if (childCount > 0)
+  {
+    if (_childIndex >= 0 && _childIndex < childCount)
+    {
+      // todo(iche033) We do not have sufficient info to determine which
+      // child shape is the collision if the link has convex decomposed mesh
+      // collisions alongside of other collisions. See following example:
+      // parentLink -> boxShape0
+      //            -> boxShape1
+      //            -> compoundShape -> convexShape0
+      //                             -> convexShape1
+      // A _childIndex of 1 is ambiguous as it could refer to either
+      // boxShape1 or convexShape1
+      // return nullptr in this case to indicate ambiguity
+      if (childCount > 1)
+      {
+        for (int i = 0; i < childCount; ++i)
+        {
+          const btCollisionShape *shape = _compoundShape->getChildShape(i);
+          if (this->HasConvexHullChildShapes(shape))
+            return nullptr;
+        }
+      }
+
+      const btCollisionShape *shape =
+          _compoundShape->getChildShape(_childIndex);
+      return shape;
+    }
+    else
+    {
+      return _compoundShape->getChildShape(0);
+    }
+  }
+  return nullptr;
+}
+
+/////////////////////////////////////////////////
+void GzCollisionDispatcher::dispatchAllCollisionPairs(
+    btOverlappingPairCache* pairCache,
+    const btDispatcherInfo& dispatchInfo,
+    btDispatcher* dispatcher)
+{
+  btCollisionDispatcher::dispatchAllCollisionPairs(
+      pairCache, dispatchInfo, dispatcher);
+
+  // Loop through all the contact manifolds.
+  // Find convex decomposed mesh collision shapes.
+  // Create a shared contact manifold for all decomposed shapes.
+  // This is so that we can limit the number of contact points to 4
+  // for the collision shape. Otherwise it will generate up to
+  // (decomposed col count * 4) contact points.
+  int numManifolds = this->getNumManifolds();
+  for (int i = 0; i < numManifolds; ++i)
+  {
+    btPersistentManifold *contactManifold =
+        this->getManifoldByIndexInternal(i);
+    const btMultiBodyLinkCollider* ob0 =
+        btMultiBodyLinkCollider::upcast(contactManifold->getBody0());
+    const btMultiBodyLinkCollider* ob1 =
+        btMultiBodyLinkCollider::upcast(contactManifold->getBody1());
+
+    // if it's a custom manifold, just refresh contacts, no need to
+    // loop through and check them.
+    if (this->customManifolds.find(contactManifold) !=
+        this->customManifolds.end())
+    {
+      contactManifold->refreshContactPoints(ob0->getWorldTransform(),
+                                            ob1->getWorldTransform());
+      continue;
+    }
+
+    if (this->manifoldsToKeep.find(contactManifold) !=
+        this->manifoldsToKeep.end())
+    {
+      continue;
+    }
+
+    const btCompoundShape *compoundShape0 =
+        static_cast<const btCompoundShape *>(ob0->getCollisionShape());
+    const btCompoundShape *compoundShape1 =
+        static_cast<const btCompoundShape *>(ob1->getCollisionShape());
+
+    int numContacts = contactManifold->getNumContacts();
+    for (int j = 0; j < numContacts; ++j)
+    {
+      btManifoldPoint &pt = contactManifold->getContactPoint(j);
+      const btCollisionShape *colShape0 = this->FindCollisionShape(
+          compoundShape0, pt.m_index0);
+      const btCollisionShape *colShape1 = this->FindCollisionShape(
+          compoundShape1, pt.m_index1);
+
+      if (!colShape0 || !colShape1 ||
+         (!this->HasConvexHullChildShapes(colShape0) &&
+          !this->HasConvexHullChildShapes(colShape1)))
+      {
+        this->manifoldsToKeep.insert(contactManifold);
+        continue;
+      }
+
+      btPersistentManifold *colManifold =
+          this->colPairManifolds[colShape0][colShape1];
+      if (!colManifold)
+      {
+        // create new custom manifold for the collision pair
+        colManifold = this->getNewManifold(ob0, ob1);
+        this->colPairManifolds[colShape0][colShape1] = colManifold;
+        this->colPairManifolds[colShape1][colShape0] = colManifold;
+        this->customManifolds.insert(colManifold);
+      }
+      colManifold->addManifoldPoint(pt);
+      colManifold->refreshContactPoints(ob0->getWorldTransform(),
+                                        ob1->getWorldTransform());
+    }
+
+    // clear manifolds that are replaced by custom ones
+    if (this->manifoldsToKeep.find(contactManifold) ==
+        this->manifoldsToKeep.end())
+      contactManifold->clearManifold();
+  }
+}
+
+/////////////////////////////////////////////////
+void GzCollisionDispatcher::releaseManifold(btPersistentManifold *_manifold)
+{
+  auto manifoldIt = this->manifoldsToKeep.find(_manifold);
+  if (manifoldIt != this->manifoldsToKeep.end())
+    this->manifoldsToKeep.erase(manifoldIt);
+
+  btCollisionDispatcher::releaseManifold(_manifold);
+}
+
+/////////////////////////////////////////////////
 WorldInfo::WorldInfo(std::string name_)
   : name(std::move(name_))
 {
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
   this->dispatcher =
-    std::make_unique<btCollisionDispatcher>(collisionConfiguration.get());
+    std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(

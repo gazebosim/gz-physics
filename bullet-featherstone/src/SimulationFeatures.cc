@@ -107,39 +107,59 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     return outContacts;
   }
 
+  GzCollisionDispatcher *dispatcher =
+    dynamic_cast<GzCollisionDispatcher *>(world->world->getDispatcher());
+
+  if (!dispatcher)
+    return outContacts;
+
   int numManifolds = world->world->getDispatcher()->getNumManifolds();
   for (int i = 0; i < numManifolds; i++)
   {
     btPersistentManifold* contactManifold =
       world->world->getDispatcher()->getManifoldByIndexInternal(i);
-    const btMultiBodyLinkCollider* obA =
-      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
-    const btMultiBodyLinkCollider* obB =
-      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-    std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
-    std::size_t collision2ID = std::numeric_limits<std::size_t>::max();
 
-    for (const auto & link : this->links)
-    {
-      if (obA == link.second->collider.get())
-      {
-        for (const auto &v : link.second->collisionNameToEntityId)
-        {
-          collision1ID = v.second;
-        }
-      }
-      if (obB == link.second->collider.get())
-      {
-        for (const auto &v : link.second->collisionNameToEntityId)
-        {
-          collision2ID = v.second;
-        }
-      }
-    }
+    const btMultiBodyLinkCollider* ob0 =
+      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
+    const btMultiBodyLinkCollider* ob1 =
+      dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
+
+    if (!ob0 || !ob1)
+      continue;
+
+    const btCollisionShape *linkShape0 = ob0->getCollisionShape();
+    const btCollisionShape *linkShape1 = ob1->getCollisionShape();
+
+    if (!linkShape0 || !linkShape1 ||
+        !linkShape0->isCompound() || !linkShape1->isCompound())
+      continue;
+
+    const btCompoundShape *compoundShape0 =
+        static_cast<const btCompoundShape *>(linkShape0);
+    const btCompoundShape *compoundShape1 =
+        static_cast<const btCompoundShape *>(linkShape1);
+
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; j++)
     {
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
+
+      const btCollisionShape *colShape0 = dispatcher->FindCollisionShape(
+          compoundShape0, pt.m_index0);
+      const btCollisionShape *colShape1 = dispatcher->FindCollisionShape(
+          compoundShape1, pt.m_index1);
+
+      std::size_t collision0ID = std::numeric_limits<std::size_t>::max();
+      std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
+      if (colShape0)
+        collision0ID = colShape0->getUserIndex();
+      else if (compoundShape0->getNumChildShapes() > 0)
+        collision0ID = compoundShape0->getChildShape(0)->getUserIndex();
+      if (colShape1)
+        collision1ID = colShape1->getUserIndex();
+      else if (compoundShape1->getNumChildShapes() > 0)
+        collision1ID = compoundShape1->getChildShape(0)->getUserIndex();
+
       CompositeData extraData;
 
       // Add normal, depth and wrench to extraData.
@@ -153,11 +173,12 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       extraContactData.depth = pt.getDistance();
 
       outContacts.push_back(SimulationFeatures::ContactInternal {
+        this->GenerateIdentity(collision0ID, this->collisions.at(collision0ID)),
         this->GenerateIdentity(collision1ID, this->collisions.at(collision1ID)),
-        this->GenerateIdentity(collision2ID, this->collisions.at(collision2ID)),
         convert(pt.getPositionWorldOnA()), extraData});
       }
   }
+
   return outContacts;
 }
 
