@@ -32,6 +32,14 @@ const std::string &EntityManagementFeatures::GetEngineName(
   return engineName;
 }
 
+const std::string &EntityManagementFeatures::GetEngineVersion(
+  const Identity &) const
+{
+  // TPE versioning is internal to gz-physics, set the version here
+  static const std::string engineVersion = "1.0";
+  return engineVersion;
+}
+
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetEngineIndex(
   const Identity &) const

@@ -36,6 +36,15 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    const std::string &GetEngineInfo::Engine<PolicyT, FeaturesT>::GetVersion()
+        const
+    {
+      return this->template Interface<GetEngineInfo>()
+          ->GetEngineVersion(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     std::size_t GetEngineInfo::Engine<PolicyT, FeaturesT>::GetIndex() const
     {
       return this->template Interface<GetEngineInfo>()
