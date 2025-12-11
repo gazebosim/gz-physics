@@ -1,5 +1,16 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.1.0 ()
+
+1. Add `GetEngineVersion` to `GetEngineInfo` feature to separate engine name and version
+    * Adds `GetVersion()` method to `GetEngineInfo::Engine` API
+    * Adds `GetEngineVersion()` pure virtual method to `GetEngineInfo::Implementation`
+    * Implements `GetEngineVersion()` in all physics engine plugins:
+      - bullet and bullet-featherstone: parse `BT_BULLET_VERSION` macro (e.g., "3.24")
+      - dartsim: use `DART_VERSION` macro
+      - tpe: return "1.0"
+    * Updates dartsim `GetEngineName()` to return "dartsim" only (was "dartsim-" DART_VERSION)
+
 ### Gazebo Physics 9.0.0 (2025-09-30)
 
 1. **Baseline:** this includes all changes from 8.3.0 and earlier.
