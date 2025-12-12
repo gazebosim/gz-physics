@@ -37,6 +37,7 @@
 #include <Eigen/Geometry>
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -53,6 +54,29 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
+/// \brief Custom collision filter callback struct for handling
+/// collisions based on surface contact parameters
+struct GzCollisionFilterCallback : public btOverlapFilterCallback
+{
+  /// \brief Overrides base struct's function for additional collision
+  /// filtering based on surface contact parameters
+  bool needBroadphaseCollision(btBroadphaseProxy *_proxy0,
+      btBroadphaseProxy *_proxy1) const override;
+};
+
+/// \brief Custom gz collision dispatcher
+class GzCollisionDispatcher : public btCollisionDispatcher
+{
+  /// \brief Constructor
+  public: explicit GzCollisionDispatcher(
+              btCollisionConfiguration *_collisionConfiguration);
+
+  /// \brief Overrides base struct's function for additional collision
+  /// filtering based on surface contact parameters
+  public: virtual bool needsCollision(const btCollisionObject *_body0,
+                                      const btCollisionObject *_body1) override;
+};
+
 /// \brief The Info structs are used for three reasons:
 /// 1) Holding extra information such as the name
 ///    that will be different from the underlying engine
@@ -67,10 +91,11 @@ struct WorldInfo
 {
   std::string name;
   std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-  std::unique_ptr<btCollisionDispatcher> dispatcher;
+  std::unique_ptr<GzCollisionDispatcher> dispatcher;
   std::unique_ptr<btBroadphaseInterface> broadphase;
   std::unique_ptr<btMultiBodyConstraintSolver> solver;
   std::unique_ptr<btMultiBodyDynamicsWorld> world;
+  std::unique_ptr<GzCollisionFilterCallback> collisionFilterCallback;
 
   std::unordered_map<int, std::size_t> modelIndexToEntityId;
   std::unordered_map<std::string, std::size_t> modelNameToEntityId;
@@ -187,6 +212,9 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
     return btMultiBodyLinkCollider::checkCollideWithOverride(_co) &&
            btCollisionObject::checkCollideWithOverride(_co);
   }
+
+  /// \brief Collision contact surface collide bitmask parameter
+  public: uint32_t collideBitmask = std::numeric_limits<uint32_t>::max();
 };
 
 /// Link information is embedded inside the model, so all we need to store here
@@ -610,6 +638,18 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.clear();
     this->models.clear();
     this->worlds.clear();
+  }
+
+  void ClearOverlappingPairCache(Identity _worldID)
+  {
+    auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
+    btOverlappingPairCache* pairCache = world->world->getPairCache();
+    btBroadphasePairArray &pairArray = pairCache->getOverlappingPairArray();
+    for (int i = 0; i < pairArray.size(); i++)
+    {
+      pairCache->cleanOverlappingPair(pairArray[i],
+                                      world->world->getDispatcher());
+    }
   }
 
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;

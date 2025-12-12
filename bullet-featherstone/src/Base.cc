@@ -30,18 +30,75 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+bool GzCollisionFilterCallback::needBroadphaseCollision(
+    btBroadphaseProxy *_proxy0, btBroadphaseProxy *_proxy1) const
+{
+  GzMultiBodyLinkCollider *col0 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy0->m_clientObject);
+  GzMultiBodyLinkCollider *col1 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy1->m_clientObject);
+
+  // Early out if collide bitmask test fails
+  if ((col0 && col1) && !(col0->collideBitmask & col1->collideBitmask))
+  {
+    return false;
+  }
+
+  // Continue filtering collision based on logic in
+  // btOverlappingPairCache::needsBroadphaseCollision
+  bool collides = (_proxy0->m_collisionFilterGroup &
+                   _proxy1->m_collisionFilterMask) != 0;
+  collides = collides && (_proxy1->m_collisionFilterGroup &
+                          _proxy0->m_collisionFilterMask);
+  return collides;
+}
+
+/////////////////////////////////////////////////
+GzCollisionDispatcher::GzCollisionDispatcher(
+    btCollisionConfiguration *_collisionConfiguration)
+    : btCollisionDispatcher(_collisionConfiguration)
+{
+}
+
+/////////////////////////////////////////////////
+bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
+    const btCollisionObject *_body1)
+{
+  const GzMultiBodyLinkCollider *col0 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body0);
+  const GzMultiBodyLinkCollider *col1 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body1);
+
+  // Collision filtering in narrow phase.
+  // Early out if collide bitmask test fails
+  if ((col0 && col1) && !(col0->collideBitmask & col1->collideBitmask))
+  {
+    return false;
+  }
+  return btCollisionDispatcher::needsCollision(_body0, _body1);
+}
+
+/////////////////////////////////////////////////
 WorldInfo::WorldInfo(std::string name_)
   : name(std::move(name_))
 {
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
   this->dispatcher =
-    std::make_unique<btCollisionDispatcher>(collisionConfiguration.get());
+    std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
     dispatcher.get(), broadphase.get(), solver.get(),
     collisionConfiguration.get());
+
+  // Set custom collision filter callback for filtering based on
+  // surface contact parameters
+  this->collisionFilterCallback = std::make_unique<GzCollisionFilterCallback>();
+  btOverlappingPairCache* pairCache = this->world->getPairCache();
+  pairCache->setOverlapFilterCallback(this->collisionFilterCallback.get());
 
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
 
