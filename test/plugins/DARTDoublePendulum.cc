@@ -216,6 +216,13 @@ namespace mock
         return name;
       }
 
+      public: const std::string &GetEngineVersion(
+          const Identity &/*_engineID*/) const override
+      {
+        static const std::string version("1.0");
+        return version;
+      }
+
       public: std::size_t GetEngineIndex(
           const Identity &/*_engineID*/) const override
       {

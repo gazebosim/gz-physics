@@ -37,6 +37,10 @@ namespace gz
         /// is plugin-defined.
         public: const std::string &GetName() const;
 
+        /// \brief Get the version of this engine. The meaning of an engine
+        /// version is plugin-defined.
+        public: const std::string &GetVersion() const;
+
         /// \brief Get the index of this engine. The meaning of an engine index
         /// is plugin-defined.
         public: std::size_t GetIndex() const;
@@ -46,6 +50,9 @@ namespace gz
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual const std::string &GetEngineName(
+            const Identity &_engineID) const = 0;
+
+        public: virtual const std::string &GetEngineVersion(
             const Identity &_engineID) const = 0;
 
         public: virtual std::size_t GetEngineIndex(
