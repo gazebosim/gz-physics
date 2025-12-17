@@ -20,6 +20,7 @@
 
 #include <string>
 
+#include <gz/math/SemanticVersion.hh>
 #include <gz/physics/FeatureList.hh>
 
 namespace gz
@@ -39,7 +40,7 @@ namespace gz
 
         /// \brief Get the version of this engine. The meaning of an engine
         /// version is plugin-defined.
-        public: const std::string &GetVersion() const;
+        public: gz::math::SemanticVersion GetVersion() const;
 
         /// \brief Get the index of this engine. The meaning of an engine index
         /// is plugin-defined.
@@ -52,7 +53,7 @@ namespace gz
         public: virtual const std::string &GetEngineName(
             const Identity &_engineID) const = 0;
 
-        public: virtual const std::string &GetEngineVersion(
+        public: virtual gz::math::SemanticVersion GetEngineVersion(
             const Identity &_engineID) const = 0;
 
         public: virtual std::size_t GetEngineIndex(
