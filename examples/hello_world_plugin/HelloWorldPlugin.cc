@@ -58,6 +58,12 @@ namespace mock
       return this->engineName;
     }
 
+    public: gz::math::SemanticVersion GetEngineVersion(
+        const Identity &/*_id*/) const override
+    {
+      return gz::math::SemanticVersion(1, 0);
+    }
+
     std::string engineName;
   };
   //! [implementation]
