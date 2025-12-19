@@ -1,16 +1,156 @@
 # MuJoCo Physics Plugin
 
-# Features
-
 ## Physics features list
 
 These are the specific physics API features implemented.
 
-- GetEngineInfo
-- GetWorldFromEngine
-- ConstructEmptyWorldFeature
-- ConstructSdfModel
-- ConstructSdfWorld
+### EntityManagementFeatureList
+
+```c++
+
+struct EntityManagementFeatureList : FeatureList<
+  GetEngineInfo,
+  GetWorldFromEngine,
+  GetLinkFromModel,
+  GetModelFromWorld,
+  GetShapeFromLink,
+  RemoveEntities,
+  ConstructEmptyWorldFeature
+  // ConstructEmptyModelFeature,
+  // ConstructEmptyLinkFeature
+  // CollisionFilterMaskFeature,
+  // WorldModelFeature
+> { };
+
+```
+
+TODO:
+
+- [ ] (S) Get entities by name
+- [ ] (S) Get an entities index
+- [ ] (M) Remove models
+
+### FreeGroupFeatureList
+
+```c++
+struct FreeGroupFeatureList : gz::physics::FeatureList<
+  FindFreeGroupFeature,
+  SetFreeGroupWorldPose,
+  SetFreeGroupWorldVelocity
+> { };
+```
+
+This feature is mostly stubbed out, so all the actual `Set` functions
+need to be implemented.
+
+TODO:
+
+- [ ] (S) Implement checks to see if a given model has a freegroup in `FindFreeGroupFeature`.
+- [ ] (S) Set linear and angular velocities on a freegroup.
+- [ ] (S) Set pose on a freegroup
+
+### KinematicsFeatureList
+
+```c++
+struct KinematicsFeatureList : FeatureList<
+  LinkFrameSemantics,
+  ShapeFrameSemantics,
+  JointFrameSemantics,
+  FreeGroupFrameSemantics
+> { };
+```
+
+TODO:
+
+- [ ] (S) Compute frame data for shapes
+- [ ] (S) Compute frame data for joints
+  - I'm not sure if this is actually needed by gz-sim.
+
+### SDFFeatureList
+
+```c++
+struct SDFFeatureList : FeatureList<
+  sdf::ConstructSdfWorld,
+  sdf::ConstructSdfModel
+> { };
+```
+
+TODO:
+
+- [ ] (S) Resolve SDFormat frames before instead of using raw poses
+- [ ] (S) Apply poses of collisions
+- [ ] (M) Support nested models
+- [ ] (M) Support joints
+- [ ] (S) ConstructSdfCollisions
+
+### SimulationFeatureList
+
+```c++
+struct SimulationFeatureList : gz::physics::FeatureList<
+  ForwardStep
+> { };
+```
+
+TODO:
+
+- [ ] Report only links with changed poses instead of all the links.
+
+## Features to Implement for a fully viable engine, but with some missing features
+
+```c++
+
+struct JointFeatureList : FeatureList<
+  GetBasicJointState,
+  SetBasicJointState,
+  GetBasicJointProperties,
+
+  SetJointVelocityCommandFeature,
+  SetJointPositionLimitsFeature,
+  SetJointVelocityLimitsFeature,
+  SetJointEffortLimitsFeature,
+
+  SetJointTransformFromParentFeature,
+  AttachFixedJointFeature,
+  DetachJointFeature,
+
+  GetRevoluteJointProperties,
+  GetPrismaticJointProperties,
+  FixedJointCast,
+  GetJointTransmittedWrench,
+> { };
+```
+
+```c++
+struct KinematicLinkFeatureList : FeatureList<
+  KinematicLink
+> { };
+```
+
+```c++
+struct LinkFeatureList : FeatureList<
+  AddLinkExternalForceTorque
+> { };
+```
+
+
+```c++
+
+struct SimulationFeatureList : gz::physics::FeatureList<
+  ForwardStep,
+  GetContactsFromLastStepFeature
+> { };
+```
+
+- The  GetContactsFromLastStepFeature feature is missing
+
+```
+
+struct WorldFeatureList : FeatureList<
+  Gravity,
+> { };
+```
+
+
 
 ## Notes
 
@@ -64,6 +204,7 @@ implemented to evaluate MuJoCo in gz-sim.
 ```
 
 Not sure if this is needed for meshes.
+
 ```c++
   /// \brief Feature list to handle collisions.
   public: struct CollisionFeatureList : physics::FeatureList<
@@ -85,4 +226,3 @@ Not sure if this is needed for meshes.
             MinimumFeatureList,
             physics::sdf::ConstructSdfNestedModel>{};
 ```
-

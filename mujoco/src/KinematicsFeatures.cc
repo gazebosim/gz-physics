@@ -61,6 +61,9 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     data.pose.linear() = quat.matrix();
     return data;
   }
+
+  // TODO(azeey): Compute frame data for shapes
+  // TODO(azeey): Compute frame data for joints
   return data;
 }
 

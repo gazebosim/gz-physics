@@ -467,7 +467,7 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
         { return _wPose.body == link->EntityID(); });
     ASSERT_NE(poseIt, worldPoses.end());
     auto pos = poseIt->pose.Pos();
-    EXPECT_NEAR(pos.Z(), 1.0, 5e-2);
+    EXPECT_NEAR(pos.Z(), 1.0, 5e-2) << "link: " << link->EntityID();
   }
 }
 
