@@ -532,7 +532,8 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
   for (const std::string &name : this->pluginNames)
   {
     // The `bullet` plugin does not support prismatic joints.
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    // TPE is a kinematic engine that doesn't support joint dynamics.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "tpe")
 
     auto world = LoadPluginAndWorld<FeaturesDynamics>(
         this->loader, name, common_test::worlds::kEmptySdf);
@@ -682,7 +683,8 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessPrismatic)
   for (const std::string &name : this->pluginNames)
   {
     // The `bullet` plugin does not support prismatic joints.
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    // TPE is a kinematic engine that doesn't support joint dynamics.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "tpe")
 
     auto world = LoadPluginAndWorld<FeaturesDynamics>(
         this->loader, name, common_test::worlds::kEmptySdf);
@@ -827,8 +829,9 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessRevolute)
 
   for (const std::string &name : this->pluginNames)
   {
-    // The `bullet` plugin does not support spring stiffness
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    // The `bullet` plugin does not support spring stiffness.
+    // TPE is a kinematic engine that doesn't support joint dynamics.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "tpe")
 
     auto world = LoadPluginAndWorld<FeaturesDynamics>(
         this->loader, name, common_test::worlds::kEmptySdf);
