@@ -22,7 +22,10 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
+
+#include <gz/math/Pose3.hh>
 
 #include "lib/src/World.hh"
 #include "lib/src/Engine.hh"
@@ -57,6 +60,14 @@ struct LinkInfo
 struct CollisionInfo
 {
   tpelib::Collision *collision;
+};
+
+struct JointInfo
+{
+  std::size_t childLinkId;
+  std::optional<std::size_t> parentLinkId;  // nullopt = attached to world
+  math::Pose3d poseFromParent;
+  std::size_t childModelId;
 };
 
 class Base : public Implements3d<FeatureList<Feature>>
@@ -227,6 +238,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: std::map<std::size_t, std::shared_ptr<ModelInfo>> models;
   public: std::map<std::size_t, std::shared_ptr<LinkInfo>> links;
   public: std::map<std::size_t, std::shared_ptr<CollisionInfo>> collisions;
+  public: std::map<std::size_t, std::shared_ptr<JointInfo>> joints;
   public: std::map<std::size_t, std::size_t> childIdToParentId;
 };
 
