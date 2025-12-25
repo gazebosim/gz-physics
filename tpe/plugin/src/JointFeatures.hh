@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Open Source Robotics Foundation
+ * Copyright (C) 2025 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@
 #ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_JOINTFEATURES_HH_
 #define GZ_PHYSICS_TPE_PLUGIN_SRC_JOINTFEATURES_HH_
 
+#include <cstddef>
 #include <string>
+
 #include <gz/physics/FixedJoint.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Joint.hh>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Open Source Robotics Foundation
+ * Copyright (C) 2025 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,12 @@
  *
 */
 
+#include <cstddef>
+#include <string>
+
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/pose3.hh>
 
 #include "JointFeatures.hh"
 

@@ -17,9 +17,10 @@
 
 #ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
 #define GZ_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
-
+  
 #include <gz/physics/Implements.hh>
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <optional>
