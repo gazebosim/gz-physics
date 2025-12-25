@@ -20,7 +20,7 @@
 
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
-#include <gz/math/pose3.hh>
+#include <gz/math/Pose3.hh>
 
 #include "JointFeatures.hh"
 
