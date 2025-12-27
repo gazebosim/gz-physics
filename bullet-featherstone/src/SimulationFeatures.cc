@@ -98,6 +98,44 @@ void SimulationFeatures::WorldForwardStep(
     const ForwardStep::Input & _u)
 {
   const auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
+  if (worldInfo && worldInfo->world)
+  { 
+    // 1. Build a whitelist of valid MultiBodies currently in the world
+    std::set<btMultiBody *> validBodies;
+    int numBodies = worldInfo->world->getNumMultibodies();
+    for (int i = 0; i < numBodies; ++i)
+    {
+      validBodies.insert(worldInfo->world->getMultiBody(i));
+    }
+    // 2. Remove constraints referencing invalid (deleted) bodies
+    int numConstraints = worldInfo->world->getNumMultiBodyConstraints();
+    for (int i = numConstraints - 1; i >= 0; --i)
+    {
+      btMultiBodyConstraint *mbc = worldInfo->world->getMultiBodyConstraint(i);
+      if (!mbc)
+        continue;
+      btMultiBody *bodyA = mbc->getMultiBodyA();
+      btMultiBody *bodyB = mbc->getMultiBodyB();
+      bool invalidA = (bodyA != nullptr) &&
+                      (validBodies.find(bodyA) == validBodies.end());
+      bool invalidB = (bodyB != nullptr) &&
+                      (validBodies.find(bodyB) == validBodies.end());
+      if (invalidA || invalidB)
+      {
+        worldInfo->world->removeMultiBodyConstraint(mbc);
+      }
+    }
+    // 3. Force cleanup of the collision broadphase cache
+    btCollisionWorld *colWorld = worldInfo->world->getCollisionWorld();
+    if (colWorld)
+    {
+      btOverlappingPairCache *pairCache = colWorld->getPairCache();
+      if (pairCache)
+      {
+        pairCache->cleanProxyFromPairs(nullptr, worldInfo->world->getDispatcher());
+      }
+    }
+  }
   auto *dtDur =
     _u.Query<std::chrono::steady_clock::duration>();
   double stepSize = 0.001;
