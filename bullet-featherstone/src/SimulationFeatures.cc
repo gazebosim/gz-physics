@@ -20,6 +20,7 @@
 #include <gz/math/eigen3/Conversions.hh>
 
 #include <limits>
+#include <set>
 #include <unordered_map>
 #include <utility>
 
@@ -99,7 +100,7 @@ void SimulationFeatures::WorldForwardStep(
 {
   const auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   if (worldInfo && worldInfo->world)
-  { 
+  {
     // 1. Build a whitelist of valid MultiBodies currently in the world
     std::set<btMultiBody *> validBodies;
     int numBodies = worldInfo->world->getNumMultibodies();
