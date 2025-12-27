@@ -125,16 +125,6 @@ void SimulationFeatures::WorldForwardStep(
         worldInfo->world->removeMultiBodyConstraint(mbc);
       }
     }
-    // 3. Force cleanup of the collision broadphase cache
-    btCollisionWorld *colWorld = worldInfo->world->getCollisionWorld();
-    if (colWorld)
-    {
-      btOverlappingPairCache *pairCache = colWorld->getPairCache();
-      if (pairCache)
-      {
-        pairCache->cleanProxyFromPairs(nullptr, worldInfo->world->getDispatcher());
-      }
-    }
   }
   auto *dtDur =
     _u.Query<std::chrono::steady_clock::duration>();
