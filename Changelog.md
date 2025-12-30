@@ -1,3 +1,7 @@
+## Gazebo Physics 10.x
+
+### Gazebo Physics 10.0.0 (20XX-XX-XX)
+
 ## Gazebo Physics 9.x
 
 ### Gazebo Physics 9.0.0 (2025-09-24)
