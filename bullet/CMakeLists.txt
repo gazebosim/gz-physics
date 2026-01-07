@@ -62,6 +62,11 @@ foreach(test ${tests})
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
 
+  if (MSVC)
+    # disable MSVC inherit via dominance warning
+    target_compile_options(${test} PRIVATE "/wd4250")
+  endif()
+
 endforeach()
 
 if(TARGET UNIT_FindFeatures_TEST)

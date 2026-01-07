@@ -41,7 +41,7 @@ set(versioned ${CMAKE_SHARED_LIBRARY_PREFIX}${tpe_plugin}${CMAKE_SHARED_LIBRARY_
 set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${engine_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (WIN32)
   # disable MSVC inherit via dominance warning
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250")
+  target_compile_options(${tpe_plugin} PUBLIC "/wd4250")
   INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
       ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${versioned}
       ${IGNITION_PHYSICS_ENGINE_INSTALL_DIR}\/${unversioned})")
@@ -68,5 +68,10 @@ foreach(test ${tests})
     "tpe_plugin_LIB=\"$<TARGET_FILE:${tpe_plugin}>\""
     "TEST_WORLD_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/worlds/\""
     "IGNITION_PHYSICS_RESOURCE_DIR=\"${IGNITION_PHYSICS_RESOURCE_DIR}\"")
+
+  if (MSVC)
+    # disable MSVC inherit via dominance warning
+    target_compile_options(${test} PRIVATE "/wd4250")
+  endif()
 
 endforeach()
