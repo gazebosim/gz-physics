@@ -8,7 +8,7 @@ project(gz-physics VERSION 9.0.0)
 #============================================================================
 # Find gz-cmake
 #============================================================================
-find_package(gz-cmake REQUIRED)
+find_package(gz-cmake 5 REQUIRED)
 
 #============================================================================
 # Configure the project
@@ -37,24 +37,24 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # Find gz-common
-gz_find_package(gz-common
+gz_find_package(gz-common VERSION 7
   COMPONENTS geospatial graphics profiler
   REQUIRED_BY heightmap mesh dartsim tpe tpelib bullet)
 
 # This is only used for test support
-gz_find_package(gz-common REQUIRED COMPONENTS testing)
+gz_find_package(gz-common VERSION 7 REQUIRED COMPONENTS testing)
 
 #--------------------------------------
 # Find gz-math
-gz_find_package(gz-math REQUIRED COMPONENTS eigen3)
+gz_find_package(gz-math VERSION 9 REQUIRED COMPONENTS eigen3)
 
 #--------------------------------------
 # Find gz-plugin
-gz_find_package(gz-plugin REQUIRED COMPONENTS all)
+gz_find_package(gz-plugin VERSION 4 REQUIRED COMPONENTS all)
 
 #--------------------------------------
 # Find gz-utils
-gz_find_package(gz-utils REQUIRED COMPONENTS cli)
+gz_find_package(gz-utils VERSION 4 REQUIRED COMPONENTS cli)
 
 #--------------------------------------
 # Find Eigen
@@ -62,7 +62,7 @@ gz_find_package(EIGEN3 REQUIRED)
 
 #--------------------------------------
 # Find SDFormat for the SDF features
-gz_find_package(sdformat
+gz_find_package(sdformat VERSION 16
   REQUIRED_BY sdf dartsim tpe bullet)
 
 #--------------------------------------
