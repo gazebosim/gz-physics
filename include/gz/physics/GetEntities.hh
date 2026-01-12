@@ -40,7 +40,7 @@ namespace gz
 
         /// \brief Get the version of this engine. The meaning of an engine
         /// version is plugin-defined.
-        public: gz::math::SemanticVersion GetVersion() const;
+        public: const gz::math::SemanticVersion &GetVersion() const;
 
         /// \brief Get the index of this engine. The meaning of an engine index
         /// is plugin-defined.
