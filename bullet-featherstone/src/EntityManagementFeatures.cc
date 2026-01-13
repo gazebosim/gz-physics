@@ -305,12 +305,13 @@ const std::string &EntityManagementFeatures::GetEngineName(
   return engineName;
 }
 
-gz::math::SemanticVersion EntityManagementFeatures::GetEngineVersion(
+const gz::math::SemanticVersion &EntityManagementFeatures::GetEngineVersion(
   const Identity &) const
 {
   // BT_BULLET_VERSION is an integer like 324 representing version 3.24
   int ver = BT_BULLET_VERSION;
-  return gz::math::SemanticVersion(ver / 100, ver % 100);
+  static const gz::math::SemanticVersion version(ver / 100, ver % 100);
+  return version;
 }
 
 /////////////////////////////////////////////////

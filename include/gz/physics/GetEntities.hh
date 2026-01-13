@@ -53,7 +53,7 @@ namespace gz
         public: virtual const std::string &GetEngineName(
             const Identity &_engineID) const = 0;
 
-        public: virtual gz::math::SemanticVersion GetEngineVersion(
+        public: virtual const gz::math::SemanticVersion &GetEngineVersion(
             const Identity &_engineID) const = 0;
 
         public: virtual std::size_t GetEngineIndex(

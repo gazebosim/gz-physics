@@ -36,7 +36,7 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    gz::math::SemanticVersion
+    const gz::math::SemanticVersion &
     GetEngineInfo::Engine<PolicyT, FeaturesT>::GetVersion() const
     {
       return this->template Interface<GetEngineInfo>()

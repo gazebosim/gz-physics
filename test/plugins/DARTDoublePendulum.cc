@@ -216,10 +216,11 @@ namespace mock
         return name;
       }
 
-      public: gz::math::SemanticVersion GetEngineVersion(
+      public: const gz::math::SemanticVersion &GetEngineVersion(
           const Identity &/*_engineID*/) const override
       {
-        return gz::math::SemanticVersion(1, 0);
+        static const gz::math::SemanticVersion version(1, 0);
+        return version;
       }
 
       public: std::size_t GetEngineIndex(
