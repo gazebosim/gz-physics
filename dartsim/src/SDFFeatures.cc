@@ -220,11 +220,11 @@ static JointType *ConstructSingleAxisJoint(
     // Check for negative damping
     if (properties.mDampingCoefficients[0] < 0.0)
     {
-      gzerr << "Detected negative damping coefficient (" 
-             << properties.mDampingCoefficients[0] 
-             << ") for joint [" << _sdfJoint.Name() 
-             << "]. Damping must be non-negative. "
-             << "Setting damping to zero." << std::endl;
+      gzerr << "Detected negative damping coefficient ("
+            << properties.mDampingCoefficients[0]
+            << ") for joint [" << _sdfJoint.Name()
+            << "]. Damping must be non-negative. "
+            << "Setting damping to zero." << std::endl;
       properties.mDampingCoefficients[0] = 0.0;
     }
   }
