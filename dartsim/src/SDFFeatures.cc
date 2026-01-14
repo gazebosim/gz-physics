@@ -217,6 +217,16 @@ static JointType *ConstructSingleAxisJoint(
   {
     properties.mAxis = ConvertJointAxis(sdfAxis, _modelInfo, _T_joint);
     CopyStandardJointAxisProperties(0, properties, sdfAxis);
+    // Check for negative damping
+    if (properties.mDampingCoefficients[0] < 0.0)
+    {
+      gzerr << "Detected negative damping coefficient (" 
+             << properties.mDampingCoefficients[0] 
+             << ") for joint [" << _sdfJoint.Name() 
+             << "]. Damping must be non-negative. "
+             << "Setting damping to zero." << std::endl;
+      properties.mDampingCoefficients[0] = 0.0;
+    }
   }
 
   return _child->moveTo<JointType>(_parent, properties);
