@@ -2,26 +2,20 @@
 
 ### Gazebo Physics 9.1.0 (2026-01-20)
 
-1. [bazel] Fix CI on MacOS
-    * [Pull request #842](https://github.com/gazebosim/gz-physics/pull/842)
-
 1. Find jetty packages with explicit version
     * [Pull request #836](https://github.com/gazebosim/gz-physics/pull/836)
 
-1. [bazel/infra] Add manual BCR release workflow
-    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
-
 1. Bazel updates: prep for BCR release automation
+    * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
     * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
+    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
+    * [Pull request #842](https://github.com/gazebosim/gz-physics/pull/842)
 
 1. bullet-featherstone: Support joint spring stiffness
     * [Pull request #805](https://github.com/gazebosim/gz-physics/pull/805)
 
 1. Relax tolerances for failing tests on arm64
     * [Pull request #806](https://github.com/gazebosim/gz-physics/pull/806)
-
-1. Bazel maintenance updates
-    * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
 
 1. bullet-featherstone: Support ball joint damping
     * [Pull request #797](https://github.com/gazebosim/gz-physics/pull/797)
