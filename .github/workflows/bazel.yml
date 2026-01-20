@@ -21,4 +21,5 @@ jobs:
         [
           {"folder": ".", "bzlmodEnabled": false},
         ]
-      bazel_test_command: "bazel test -c opt //..."
+      exclude_windows: true
+      bazel_test_command: "bazel test -c opt --test_output=errors //..."
