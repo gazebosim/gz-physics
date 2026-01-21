@@ -5,7 +5,7 @@
 1. Find jetty packages with explicit version
     * [Pull request #836](https://github.com/gazebosim/gz-physics/pull/836)
 
-1. Bazel updates: prep for BCR release automation
+1. Bazel updates
     * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
     * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
     * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
