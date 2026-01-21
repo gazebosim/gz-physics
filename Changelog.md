@@ -1,5 +1,25 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.1.0 (2026-01-20)
+
+1. Find jetty packages with explicit version
+    * [Pull request #836](https://github.com/gazebosim/gz-physics/pull/836)
+
+1. Bazel updates
+    * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
+    * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
+    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
+    * [Pull request #842](https://github.com/gazebosim/gz-physics/pull/842)
+
+1. bullet-featherstone: Support joint spring stiffness
+    * [Pull request #805](https://github.com/gazebosim/gz-physics/pull/805)
+
+1. Relax tolerances for failing tests on arm64
+    * [Pull request #806](https://github.com/gazebosim/gz-physics/pull/806)
+
+1. bullet-featherstone: Support ball joint damping
+    * [Pull request #797](https://github.com/gazebosim/gz-physics/pull/797)
+
 ### Gazebo Physics 9.0.0 (2025-09-30)
 
 1. **Baseline:** this includes all changes from 8.3.0 and earlier.
