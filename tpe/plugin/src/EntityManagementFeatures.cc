@@ -35,9 +35,7 @@ const std::string &EntityManagementFeatures::GetEngineName(
 const gz::math::SemanticVersion &EntityManagementFeatures::GetEngineVersion(
   const Identity &) const
 {
-  // TPE versioning is internal to gz-physics, set the version here
-  static const gz::math::SemanticVersion version(1, 0);
-  return version;
+  return this->engineVersion;
 }
 
 /////////////////////////////////////////////////

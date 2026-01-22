@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
 #define GZ_PHYSICS_TPE_PLUGIN_SRC_BASE_HH_
 
+#include <gz/math/SemanticVersion.hh>
 #include <gz/physics/Implements.hh>
 
 #include <map>
@@ -61,6 +62,9 @@ struct CollisionInfo
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
+  // TPE versioning is internal to gz-physics
+  public: const gz::math::SemanticVersion engineVersion{1, 0};
+
   public: inline Identity InitiateEngine(std::size_t /*_engineID*/) override
   {
     return this->GenerateIdentity(0);
