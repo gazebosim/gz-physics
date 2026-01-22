@@ -140,12 +140,7 @@ const std::string &EntityManagementFeatures::GetEngineName(
 const gz::math::SemanticVersion &EntityManagementFeatures::GetEngineVersion(
     const Identity &/*_engineID*/) const
 {
-  static const gz::math::SemanticVersion version = [](){
-    gz::math::SemanticVersion v;
-    v.Parse(DART_VERSION);
-    return v;
-  }();
-  return version;
+  return this->engineVersion;
 }
 
 /////////////////////////////////////////////////
