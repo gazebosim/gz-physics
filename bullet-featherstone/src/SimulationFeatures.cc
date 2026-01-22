@@ -72,7 +72,12 @@ const btCollisionShape *findCollisionShape(
         {
           const btCollisionShape *shape = _compoundShape->getChildShape(i);
           if (hasConvexHullChildShapes(shape))
+          {
+            gzwarn << "Unable to determine the collision id for a link with "
+                   << "both simple primitive and convex shape collisions."
+                   << std::endl;
             return nullptr;
+          }
         }
       }
 

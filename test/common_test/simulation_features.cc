@@ -1556,7 +1556,7 @@ TEST_F(SimulationFeaturesCollisionContacts,
 {
   // This test verifies that the collision entities in contact points
   // are correct. Thest test world consists of a box model with a single
-  // link containining multiple collisions over ia ground plane. Verify
+  // link containining multiple collisions over a ground plane. Verify
   // that only the bottom collision in the box model should collide with
   // the ground plane.
 
