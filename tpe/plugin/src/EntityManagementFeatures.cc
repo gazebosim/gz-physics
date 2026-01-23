@@ -32,6 +32,12 @@ const std::string &EntityManagementFeatures::GetEngineName(
   return engineName;
 }
 
+const gz::math::SemanticVersion &EntityManagementFeatures::GetEngineVersion(
+  const Identity &) const
+{
+  return this->engineVersion;
+}
+
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetEngineIndex(
   const Identity &) const

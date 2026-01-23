@@ -132,8 +132,15 @@ static std::size_t GetWorldOfShapeNode(const EntityManagementFeatures *_emf,
 const std::string &EntityManagementFeatures::GetEngineName(
     const Identity &/*_engineID*/) const
 {
-  static const std::string engineName = "dartsim-" DART_VERSION;
+  static const std::string engineName = "dartsim";
   return engineName;
+}
+
+/////////////////////////////////////////////////
+const gz::math::SemanticVersion &EntityManagementFeatures::GetEngineVersion(
+    const Identity &/*_engineID*/) const
+{
+  return this->engineVersion;
 }
 
 /////////////////////////////////////////////////
