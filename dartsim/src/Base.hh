@@ -37,6 +37,7 @@
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Inertial.hh>
+#include <gz/math/SemanticVersion.hh>
 #include <gz/physics/Implements.hh>
 
 #include <sdf/Types.hh>
@@ -261,6 +262,12 @@ struct EntityStorage
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
+  public: const gz::math::SemanticVersion engineVersion = [](){
+    gz::math::SemanticVersion v;
+    v.Parse(DART_VERSION);
+    return v;
+  }();
+
   public: using DartWorld = dart::simulation::World;
   public: using DartWorldPtr = dart::simulation::WorldPtr;
   public: using DartSkeletonPtr = dart::dynamics::SkeletonPtr;
