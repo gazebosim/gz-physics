@@ -35,6 +35,11 @@ if (BUILD_TESTING)
 
     endforeach()
 
+    if (MSVC)
+      # disable MSVC inherit via dominance warning
+      target_compile_options(${test} PRIVATE "/wd4250")
+    endif()
+
   endforeach()
 endif()
 

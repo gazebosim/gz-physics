@@ -100,6 +100,11 @@ foreach(test ${tests})
     target_compile_definitions(${test} PRIVATE DART_HAS_CONTACT_SURFACE)
   endif()
 
+  if (MSVC)
+    # disable MSVC inherit via dominance warning from DART headers
+    target_compile_options(${test} PRIVATE "/wd4250")
+  endif()
+
   # Helps when we want to build a single test after making changes to dartsim_plugin
   add_dependencies(${test} ${dartsim_plugin})
 endforeach()
