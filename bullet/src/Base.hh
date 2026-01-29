@@ -29,6 +29,7 @@
 #include <map>
 
 #include <gz/common/Console.hh>
+#include <gz/math/SemanticVersion.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
@@ -174,6 +175,10 @@ inline math::Pose3d convertToGz(const btTransform &_pose)
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
+  // BT_BULLET_VERSION is an integer like 324 representing version 3.24
+  public: const gz::math::SemanticVersion engineVersion{
+      BT_BULLET_VERSION / 100, BT_BULLET_VERSION % 100};
+
   public: std::size_t entityCount = 0;
 
   public: inline std::size_t GetNextEntity()
