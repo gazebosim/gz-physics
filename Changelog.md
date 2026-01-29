@@ -1,5 +1,39 @@
 ## Ignition Physics 5.x
 
+### Ignition Physics 5.4.0 (2026-01-29)
+
+1. Relax tolerances for failing tests on arm64
+    * [Pull request #810](https://github.com/gazebosim/gz-physics/pull/810)
+
+1. Fix crash when recursively deleting nested models
+    * [Pull request #781](https://github.com/gazebosim/gz-physics/pull/781)
+
+1. Add missing algorithm include
+    * [Pull request #768](https://github.com/gazebosim/gz-physics/pull/768)
+
+1. Fix various warnings
+    * [Pull request #734](https://github.com/gazebosim/gz-physics/pull/734)
+    * [Pull request #728](https://github.com/gazebosim/gz-physics/pull/728)
+    * [Pull request #370](https://github.com/gazebosim/gz-physics/pull/370)
+    * [Pull request #837](https://github.com/gazebosim/gz-physics/pull/837)
+    * [Pull request #446](https://github.com/gazebosim/gz-physics/pull/446)
+
+1. Add no gravity link support
+    * [Pull request #633](https://github.com/gazebosim/gz-physics/pull/633)
+
+1. Disable test failing due to ODE/libccd
+    * [Pull request #621](https://github.com/gazebosim/gz-physics/pull/621)
+
+1. Require gz-math 6.13 for ign->gz transition
+    * [Pull request #601](https://github.com/gazebosim/gz-physics/pull/601)
+
+1. Unregister collision detectors when the darstim plugin is unloaded
+    * [Pull request #529](https://github.com/gazebosim/gz-physics/pull/529)
+
+1. Infrastructure
+    * [Pull request #859](https://github.com/gazebosim/gz-physics/pull/859)
+    * [Pull request #572](https://github.com/gazebosim/gz-physics/pull/572)
+
 ### Ignition Physics 5.3.2 (2023-09-01)
 
 1. Fix a crash due to an invalid pointer
