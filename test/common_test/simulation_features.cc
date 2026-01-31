@@ -1639,7 +1639,7 @@ TEST_F(SimulationFeaturesCollisionContacts,
       auto c1 = contactPoint.collision1;
       auto c2 = contactPoint.collision2;
       // Contacts should be between ground plane model's 'collision'
-      // and box model's box_'collision_bottom' collision
+      // and box model's 'box_collision_bottom' collision
       EXPECT_TRUE(c1->GetName() == "collision" ||
                   c1->GetName() == "box_collision_bottom");
     }
