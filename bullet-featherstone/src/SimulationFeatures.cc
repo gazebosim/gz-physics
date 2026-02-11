@@ -28,6 +28,77 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+bool hasConvexHullChildShapes(
+    const btCollisionShape *_shape)
+{
+  if (!_shape || !_shape->isCompound())
+    return false;
+
+  const btCompoundShape *compoundShape =
+      static_cast<const btCompoundShape *>(_shape);
+  return (compoundShape->getNumChildShapes() > 0 &&
+      compoundShape->getChildShape(0)->getShapeType() ==
+      CONVEX_HULL_SHAPE_PROXYTYPE);
+}
+
+/////////////////////////////////////////////////
+const btCollisionShape *findCollisionShape(
+    const btCompoundShape *_compoundShape, int _childIndex)
+{
+  // _childIndex should give us the index of the child shape within
+  // _compoundShape which represents the collision.
+  // One exception is when the collision is a convex decomposed mesh.
+  // In this case, the child shape is another btCompoundShape (nested), and
+  // _childIndex is the index of one of the decomposed convex hulls
+  // in the nested compound shape. The nested compound shape is the collision.
+  int childCount = _compoundShape->getNumChildShapes();
+  if (childCount > 0)
+  {
+    if (_childIndex >= 0 && _childIndex < childCount)
+    {
+      // todo(iche033) We do not have sufficient info to determine which
+      // child shape is the collision if the link has convex decomposed mesh
+      // collisions alongside of other collisions. See following example:
+      // parentLink -> boxShape0
+      //            -> boxShape1
+      //            -> compoundShape -> convexShape0
+      //                             -> convexShape1
+      // A _childIndex of 1 is ambiguous as it could refer to either
+      // boxShape1 or convexShape1
+      // return nullptr in this case to indicate ambiguity
+      if (childCount > 1)
+      {
+        for (int i = 0; i < childCount; ++i)
+        {
+          const btCollisionShape *shape = _compoundShape->getChildShape(i);
+          if (hasConvexHullChildShapes(shape))
+          {
+            static bool informed{false};
+            if (!informed)
+            {
+              gzwarn << "Unable to determine the collision id for a link with "
+                     << "both simple primitive and convex shape collisions."
+                     << std::endl;
+              informed = true;
+            }
+            return nullptr;
+          }
+        }
+      }
+
+      const btCollisionShape *shape =
+          _compoundShape->getChildShape(_childIndex);
+      return shape;
+    }
+    else
+    {
+      return _compoundShape->getChildShape(0);
+    }
+  }
+  return nullptr;
+}
+
+/////////////////////////////////////////////////
 void enforceFixedConstraint(
     btMultiBodyFixedConstraint *_fixedConstraint)
 {
@@ -187,34 +258,47 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   {
     btPersistentManifold* contactManifold =
       world->world->getDispatcher()->getManifoldByIndexInternal(i);
-    const btMultiBodyLinkCollider* obA =
+    const btMultiBodyLinkCollider* ob0 =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
-    const btMultiBodyLinkCollider* obB =
+    const btMultiBodyLinkCollider* ob1 =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-    std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
-    std::size_t collision2ID = std::numeric_limits<std::size_t>::max();
 
-    for (const auto & link : this->links)
-    {
-      if (obA == link.second->collider.get())
-      {
-        for (const auto &v : link.second->collisionNameToEntityId)
-        {
-          collision1ID = v.second;
-        }
-      }
-      if (obB == link.second->collider.get())
-      {
-        for (const auto &v : link.second->collisionNameToEntityId)
-        {
-          collision2ID = v.second;
-        }
-      }
-    }
+    if (!ob0 || !ob1)
+      continue;
+
+    const btCollisionShape *linkShape0 = ob0->getCollisionShape();
+    const btCollisionShape *linkShape1 = ob1->getCollisionShape();
+
+    if (!linkShape0 || !linkShape1 ||
+        !linkShape0->isCompound() || !linkShape1->isCompound())
+      continue;
+
+    const btCompoundShape *compoundShape0 =
+        static_cast<const btCompoundShape *>(linkShape0);
+    const btCompoundShape *compoundShape1 =
+        static_cast<const btCompoundShape *>(linkShape1);
+
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; j++)
     {
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
+
+      const btCollisionShape *colShape0 = findCollisionShape(
+          compoundShape0, pt.m_index0);
+      const btCollisionShape *colShape1 = findCollisionShape(
+          compoundShape1, pt.m_index1);
+
+      std::size_t collision0ID = std::numeric_limits<std::size_t>::max();
+      std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
+      if (colShape0)
+        collision0ID = colShape0->getUserIndex();
+      else if (compoundShape0->getNumChildShapes() > 0)
+        collision0ID = compoundShape0->getChildShape(0)->getUserIndex();
+      if (colShape1)
+        collision1ID = colShape1->getUserIndex();
+      else if (compoundShape1->getNumChildShapes() > 0)
+        collision1ID = compoundShape1->getChildShape(0)->getUserIndex();
+
       CompositeData extraData;
 
       // Add normal, depth and wrench to extraData.
@@ -228,8 +312,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       extraContactData.depth = pt.getDistance();
 
       outContacts.push_back(SimulationFeatures::ContactInternal {
+        this->GenerateIdentity(collision0ID, this->collisions.at(collision0ID)),
         this->GenerateIdentity(collision1ID, this->collisions.at(collision1ID)),
-        this->GenerateIdentity(collision2ID, this->collisions.at(collision2ID)),
         convert(pt.getPositionWorldOnA()), extraData});
       }
   }
