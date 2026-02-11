@@ -54,6 +54,9 @@ class EntityManagementFeatures :
   public: const std::string &GetEngineName(
       const Identity &_engineID) const override;
 
+  public: const gz::math::SemanticVersion &GetEngineVersion(
+      const Identity &_engineID) const override;
+
   public: std::size_t GetEngineIndex(
       const Identity &_engineID) const override;
 
