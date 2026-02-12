@@ -63,17 +63,14 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
     for (const auto &link : model->links)
     {
       auto bodyId = mjs_getId(link->body->element);
-      WorldPose wp;
-      math::Vector3d pos{d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
-                         d->xpos[3 * bodyId + 2]};
-      math::Quaterniond quat{d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
-                             d->xquat[4 * bodyId + 2],
-                             d->xquat[4 * bodyId + 3]};
+      auto &wp = worldPoses.entries.emplace_back();
+      wp.pose.Pos().Set(d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
+                         d->xpos[3 * bodyId + 2]);
+      wp.pose.Rot().Set(d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
+                        d->xquat[4 * bodyId + 2], d->xquat[4 * bodyId + 3]);
       // gzdbg << link->entityId  << ": " << bodyId << ": " << *mjs_getName(link->body->element) << " " << pos
       //       << "\n";
-      wp.pose.Set(pos, quat);
       wp.body = link->entityId;
-      worldPoses.entries.push_back(wp);
     }
   }
   // TODO(azeey) This simply copies all links instead of only the ones with changed poses.

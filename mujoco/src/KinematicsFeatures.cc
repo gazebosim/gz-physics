@@ -32,7 +32,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   auto *linkInfo = this->FrameInterface<LinkInfo>(_id);
   if (linkInfo)
   {
-    auto worldInfo = linkInfo->modelInfo.lock()->worldInfo.lock();
+    auto worldInfo = linkInfo->worldInfo.lock();
     this->RecompileSpec(*worldInfo);
     mjData *d = worldInfo->mjDataObj;
 

@@ -61,6 +61,7 @@ struct LinkInfo
   mjsBody *body;
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
+  std::weak_ptr<WorldInfo> worldInfo;
   std::vector<std::shared_ptr<ShapeInfo>> shapes;
 };
 

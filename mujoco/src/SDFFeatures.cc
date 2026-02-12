@@ -173,6 +173,8 @@ struct ModelKinematicStructure
         std::make_shared<LinkInfo>(_base.GetNextEntity(), _modelInfo);
     linkInfo->body = child;
     linkInfo->name = link->Name();
+    linkInfo->modelInfo = _modelInfo;
+    linkInfo->worldInfo = worldInfo;
     _modelInfo->links.push_back(linkInfo);
     // TODO(azeey) This will end up assigning the first root level link as the
     // body associated with the model. We should probably consider using the
@@ -182,7 +184,7 @@ struct ModelKinematicStructure
       _modelInfo->body = child;
       // TODO(azeey): Resolve link poses
       const auto &pose = _sdfModel.RawPose() * link->RawPose();
-      gzdbg << "--- Pose: " << pose << "\n";
+      // gzdbg << "--- Pose: " << pose << "\n";
       child->pos[0] = pose.X();
       child->pos[1] = pose.Y();
       child->pos[2] = pose.Z();

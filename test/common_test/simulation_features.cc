@@ -1183,11 +1183,13 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 
     // model free group test
     auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
+    ASSERT_NE(nullptr, link);
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 

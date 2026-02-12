@@ -122,8 +122,18 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
 Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
                                             const std::string &_modelName) const
 {
-  // TODO(azeey): Imeplement GetModel
-  return this->GenerateInvalidId();
+  const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
+  const auto it = std::find_if(worldInfo->models.begin(), worldInfo->models.end(), [&](const std::shared_ptr<ModelInfo> &_modelInfo) {
+    if (_modelName == _modelInfo->name) {
+      return true;
+    }
+    return false;
+  });
+
+  if (it == worldInfo->models.end())
+    return this->GenerateInvalidId();
+
+  return this->GenerateIdentity((*it)->entityId, *it);
 }
 
 /////////////////////////////////////////////////

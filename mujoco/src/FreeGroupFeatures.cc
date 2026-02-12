@@ -21,6 +21,7 @@
 #include <gz/physics/FreeGroup.hh>
 
 #include "Base.hh"
+#include "mujoco/mujoco.h"
 namespace gz
 {
 namespace physics
@@ -40,6 +41,8 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
+  // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
+  // the case where there could be multiple free groups within a model
   const auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
   auto modelInfo = linkInfo->modelInfo.lock();
   if (!modelInfo)
@@ -53,10 +56,12 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 /////////////////////////////////////////////////
 Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
-  // Free groups in bullet-featherstone are always represented by ModelInfo
+  // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
+  // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
   auto linkInfo = modelInfo->LinkFromBody(modelInfo->body);
-  if (!linkInfo) {
+  if (!linkInfo)
+  {
     return this->GenerateInvalidId();
   }
   return this->GenerateIdentity(linkInfo->entityId, linkInfo);
@@ -66,14 +71,44 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     const Identity &_groupID, const AngularVelocity &_angularVelocity)
 {
-  // TODO(azeey): Implement SetFreeGroupWorldAngularVelocity
+  // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
+  // the case where there could be multiple free groups within a model
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
+  auto worldInfo = modelInfo->worldInfo.lock();
+  if (!worldInfo)
+  {
+    // TODO(azeey) Handle error
+    return;
+  }
+  auto *d = worldInfo->mjDataObj;
+  auto *m = worldInfo->mjModelObj;
+  const auto bodyId = mjs_getId(modelInfo->body->element);
+  const auto jntadr = m->body_jntadr[bodyId];
+  const auto qveladr = m->jnt_dofadr[jntadr];
+  mju_copy3(&d->qvel[qveladr] + 3, _angularVelocity.data());
+  mj_forward(m, d);
 }
 
 /////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
     const Identity &_groupID, const LinearVelocity &_linearVelocity)
 {
-  // TODO(azeey): Implement SetFreeGroupLinearAngularVelocity
+  // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
+  // the case where there could be multiple free groups within a model
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
+  auto worldInfo = modelInfo->worldInfo.lock();
+  if (!worldInfo)
+  {
+    // TODO(azeey) Handle error
+    return;
+  }
+  auto *d = worldInfo->mjDataObj;
+  auto *m = worldInfo->mjModelObj;
+  const auto bodyId = mjs_getId(modelInfo->body->element);
+  const auto jntadr = m->body_jntadr[bodyId];
+  const auto qveladr = m->jnt_dofadr[jntadr];
+  mju_copy3(&d->qvel[qveladr], _linearVelocity.data());
+  mj_forward(m, d);
 }
 
 /////////////////////////////////////////////////
@@ -81,7 +116,25 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
 {
-  // TODO(azeey): Implement SetFreeGroupWorldPose
+  // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
+  // the case where there could be multiple free groups within a model
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
+  auto worldInfo = modelInfo->worldInfo.lock();
+  if (!worldInfo)
+  {
+    // TODO(azeey) Handle error
+    return;
+  }
+  auto *d = worldInfo->mjDataObj;
+  auto *m = worldInfo->mjModelObj;
+  const auto bodyId = mjs_getId(modelInfo->body->element);
+  const auto jntadr = m->body_jntadr[bodyId];
+  const auto qposadr = m->jnt_qposadr[jntadr];
+  const Eigen::Quaterniond quat(_pose.rotation());
+  const double quatCoeffs[] = {quat.w(), quat.x(), quat.y(), quat.z()};
+  mju_copy3(&d->qpos[qposadr], _pose.translation().data());
+  mju_copy4(&d->qpos[qposadr]+3, quatCoeffs);
+  mj_forward(m, d);
 }
 }  // namespace mujoco
 }  // namespace physics
