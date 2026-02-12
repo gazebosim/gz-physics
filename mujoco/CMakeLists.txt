@@ -26,7 +26,7 @@ gz_build_tests(
   TYPE UNIT_mujoco
   SOURCES ${test_sources}
   LIB_DEPS
-    ${mujoco_plugin}
+    ${plugin_target}
     gz-physics-test
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
@@ -42,6 +42,6 @@ foreach(test ${tests})
   target_compile_definitions(${test} PRIVATE
     "mujoco_plugin_LIB=\"$<TARGET_FILE:${plugin_target}>\"")
 
-  # Helps when we want to build a single test after making changes to mujoco_plugin
-  add_dependencies(${test} ${mujoco_plugin})
+  # Helps when we want to build a single test after making changes to plugin_target
+  add_dependencies(${test} ${plugin_target})
 endforeach()
