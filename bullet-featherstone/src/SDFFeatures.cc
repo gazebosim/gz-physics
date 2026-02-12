@@ -828,26 +828,29 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         // bullet-featherstone and so setting them does not have any effect.
         // The lower and uppper limit is supported via the
         // btMultiBodyJointLimitConstraint.
-        model->body->getLink(i).m_jointLowerLimit =
-            static_cast<btScalar>(joint->Axis()->Lower());
-        model->body->getLink(i).m_jointUpperLimit =
-            static_cast<btScalar>(joint->Axis()->Upper());
-        model->body->getLink(i).m_jointFriction =
-            static_cast<btScalar>(joint->Axis()->Friction());
-        model->body->getLink(i).m_jointMaxVelocity =
-            static_cast<btScalar>(joint->Axis()->MaxVelocity());
-        model->body->getLink(i).m_jointMaxForce =
-            static_cast<btScalar>(joint->Axis()->Effort());
+        if (joint->Axis())
+        {
+          model->body->getLink(i).m_jointLowerLimit =
+              static_cast<btScalar>(joint->Axis()->Lower());
+          model->body->getLink(i).m_jointUpperLimit =
+              static_cast<btScalar>(joint->Axis()->Upper());
+          model->body->getLink(i).m_jointFriction =
+              static_cast<btScalar>(joint->Axis()->Friction());
+          model->body->getLink(i).m_jointMaxVelocity =
+              static_cast<btScalar>(joint->Axis()->MaxVelocity());
+          model->body->getLink(i).m_jointMaxForce =
+              static_cast<btScalar>(joint->Axis()->Effort());
 
-        jointInfo->minEffort = -joint->Axis()->Effort();
-        jointInfo->maxEffort = joint->Axis()->Effort();
-        jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
-        jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
-        jointInfo->axisLower = joint->Axis()->Lower();
-        jointInfo->axisUpper = joint->Axis()->Upper();
-        jointInfo->damping = joint->Axis()->Damping();
-        jointInfo->springStiffness = joint->Axis()->SpringStiffness();
-        jointInfo->springReference = joint->Axis()->SpringReference();
+          jointInfo->minEffort = -joint->Axis()->Effort();
+          jointInfo->maxEffort = joint->Axis()->Effort();
+          jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
+          jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
+          jointInfo->axisLower = joint->Axis()->Lower();
+          jointInfo->axisUpper = joint->Axis()->Upper();
+          jointInfo->damping = joint->Axis()->Damping();
+          jointInfo->springStiffness = joint->Axis()->SpringStiffness();
+          jointInfo->springReference = joint->Axis()->SpringReference();
+        }
 
         if (::sdf::JointType::BALL != joint->Type())
         {
