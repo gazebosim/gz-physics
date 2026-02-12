@@ -52,6 +52,9 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE EntityManagementFeatures :
   // ----- Get entities -----
   public: const std::string &GetEngineName(const Identity &) const override;
 
+  public: const gz::math::SemanticVersion &GetEngineVersion(
+      const Identity &) const override;
+
   public: std::size_t GetEngineIndex(const Identity &) const override;
 
   public: std::size_t GetWorldCount(const Identity &) const override;
