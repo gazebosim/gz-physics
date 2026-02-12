@@ -7,11 +7,13 @@ gz_add_component(mujoco-plugin
 
 target_link_libraries(${plugin_target}
   PUBLIC
-    mujoco::mujoco
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     gz-common::gz-common
+  PRIVATE
+    # mujoco::mujoco
+    mujoco_fetched
 )
 
 # Note that plugins are currently being installed in 2 places:
