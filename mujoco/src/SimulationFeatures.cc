@@ -20,6 +20,7 @@
 
 #include <mujoco/mjdata.h>
 
+#include <gz/common/Profiler.hh>
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
@@ -36,7 +37,9 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
                                           ForwardStep::State & /*_x*/,
                                           const ForwardStep::Input &_u)
 {
-  const auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
+  GZ_PROFILE("SimulationFeatures::WorldForwardStep");
+  GZ_PROFILE_BEGIN("Recompile");
+  auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   this->RecompileSpec(*worldInfo);
   auto *dtDur = _u.Query<std::chrono::steady_clock::duration>();
   double stepSize = 0.001;
@@ -45,6 +48,7 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
     std::chrono::duration<double> dt = *dtDur;
     stepSize = dt.count();
   }
+  GZ_PROFILE_END();
 
   worldInfo->mjModelObj->opt.timestep = stepSize;
 

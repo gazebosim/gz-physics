@@ -226,3 +226,26 @@ Not sure if this is needed for meshes.
             MinimumFeatureList,
             physics::sdf::ConstructSdfNestedModel>{};
 ```
+
+1. Critical gz-sim Requirements (Highest Priority)
+    - Set Model Pose: The `SetFreeGroupWorldPose` function is not implemented.
+    - Remove Models: The `RemoveModelFromWorld` function is not implemented.
+
+2. Major Missing Features
+    - Joints: The entire `JointFeatureList` is missing, which prevents all joint functionality (creation, state access, commanding, feedback).
+    - Contact Reporting: `GetContactsFromLastStepFeature` is not implemented, so contact sensor data is unavailable.
+    - External Forces: `AddLinkExternalForceTorque` is not implemented.
+    - World Properties: The `WorldFeatureList` (including Gravity) is not implemented.
+
+3. Incomplete Features & Specific Runtime Construction Limitations
+    - Whole Model Runtime Construction: This is supported. New, complete models can be added to the world after startup.
+    - Piecemeal Runtime Construction: The ability to add individual components to existing models at runtime is missing. This includes:
+        - `AttachMeshShapeFeature` (adding a mesh to an existing link).
+        - `ConstructSdfCollision` (adding a collision to an existing link).
+    - SDF & Model Loading Details:
+        - SDF frames are not fully resolved (uses `RawPose`).
+        - Support for nested models is incomplete.
+        - Heightmap and Polyline geometries are not supported.
+    - Entity Management: Functions to find entities by name or get their index are stubbed.
+    - Kinematics: Calculating frame data for shapes and joints is a TODO.
+    - Simulation Step: Pose updates are inefficient (all links are reported as changed).

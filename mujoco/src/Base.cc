@@ -31,13 +31,14 @@ Identity Base::InitiateEngine(std::size_t)
   return this->GenerateIdentity(0);
 }
 
-bool Base::RecompileSpec(const WorldInfo &_worldInfo) const
+bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 {
-  if (!_worldInfo.specDirety)
+  if (!_worldInfo.specDirty)
     return true;
 
   int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
                         _worldInfo.mjDataObj);
+  _worldInfo.specDirty = false;
   if (rc != 0)
   {
     gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";

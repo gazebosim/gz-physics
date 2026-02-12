@@ -112,7 +112,7 @@ struct WorldInfo
   mjSpec *mjSpecObj;
   mjModel *mjModelObj;
   mjData *mjDataObj;
-  bool specDirety{false};
+  bool specDirty{false};
   std::string name;
   std::vector<std::shared_ptr<ModelInfo>> models{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
@@ -139,7 +139,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   public:
   std::string engineName{"mujoco"};
 
-  public: bool RecompileSpec(const WorldInfo &_worldInfo) const;
+  public: bool RecompileSpec(WorldInfo &_worldInfo) const;
 };
 }  // namespace mujoco
 }  // namespace physics

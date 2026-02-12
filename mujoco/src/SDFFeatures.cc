@@ -91,7 +91,7 @@ struct ModelKinematicStructure
     return std::distance(links.begin(), it);
   }
 
-  bool AddMesh(mjSpec *_spec, mjsBody *_body, const ::sdf::Mesh *_meshSdf)
+  mjsGeom * AddMesh(mjSpec *_spec, mjsBody *_body, const ::sdf::Mesh *_meshSdf)
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(_meshSdf->Uri());
@@ -99,7 +99,7 @@ struct ModelKinematicStructure
     {
       gzwarn << "Failed to load mesh from [" << _meshSdf->Uri() << "]."
              << std::endl;
-      return false;
+      return nullptr;
     }
 
     auto geom = mjs_addGeom(_body, nullptr);
@@ -129,7 +129,7 @@ struct ModelKinematicStructure
 
     delete[] verts;
     delete[] indices;
-    return true;
+    return geom;
   }
 
   void AddToSpec(Base &_base, const ::sdf::Model &_sdfModel, mjSpec *_spec,
@@ -314,7 +314,7 @@ struct ModelKinematicStructure
         }
         case ::sdf::GeometryType::MESH:
         {
-          this->AddMesh(worldInfo->mjSpecObj, child, shape->MeshShape());
+          geom = this->AddMesh(worldInfo->mjSpecObj, child, shape->MeshShape());
           break;
         }
         case ::sdf::GeometryType::HEIGHTMAP:
@@ -365,7 +365,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   auto *spec = worldInfo->mjSpecObj;
-  worldInfo->specDirety = true;
+  worldInfo->specDirty = true;
   ModelKinematicStructure kinTree;
   kinTree.links.reserve(_sdfModel.LinkCount());
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
