@@ -1306,13 +1306,21 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
   }
 }
 
-using FeaturesCollisionFilter =  gz::physics::FeatureList<
+using FeaturesCollisionContacts=  gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
   gz::physics::GetShapeFromLink,
   gz::physics::ForwardStep,
-  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::GetContactsFromLastStepFeature
+>;
+
+using SimulationFeaturesCollisionContacts =
+    SimulationFeaturesTest<FeaturesCollisionContacts>;
+
+using FeaturesCollisionFilter =  gz::physics::FeatureList<
+  FeaturesCollisionContacts,
   gz::physics::CollisionFilterMaskFeature
 >;
 
@@ -1560,6 +1568,101 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 
     // no entities should be colliding
     EXPECT_TRUE(contacts.empty());
+  }
+}
+
+TEST_F(SimulationFeaturesCollisionContacts,
+       ContactsForLinkWithMultipleCollisions)
+{
+  // This test verifies that the collision entities in contact points
+  // are correct. Thest test world consists of a box model with a single
+  // link containining multiple collisions over a ground plane. Verify
+  // that only the bottom collision in the box model should collide with
+  // the ground plane.
+
+  auto getModelStr = [](const std::string &_name,
+                            const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStaticStr;
+    modelStaticStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStaticStr << _name << R"(">
+        <pose>)";
+    modelStaticStr << _pose;
+    modelStaticStr << R"(</pose>
+        <link name="body">
+          <collision name="box_collision_mid">
+            <pose>0 0 1.0 0 0 0</pose>
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+          <collision name="box_collision_bottom">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+          <collision name="box_collision_top">
+            <pose>0 0 2.0 0 0 0</pose>
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <static>false</static>
+      </model>
+    </sdf>)";
+    return modelStaticStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // TPE does not support collision checking with plane shapes.
+    if (this->PhysicsEngineName(name) == "tpe") continue;
+
+    auto world =
+      LoadPluginAndWorld<FeaturesCollisionContacts>(
+        this->loader,
+        name,
+        common_test::worlds::kGroundSdf);
+    ASSERT_NE(nullptr, world);
+
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(getModelStr(
+        "boxes", gz::math::Pose3d(0, 0, 0.5, 0, 0, 0)));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (std::size_t i = 0; i < 10; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // box lands on ground plane
+    // verify contacts
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_LT(0u, contacts.size());
+
+    for (auto contact : contacts)
+    {
+      const auto &contactPoint = contact.template Get<
+          gz::physics::World3d<FeaturesCollisionContacts>::ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      // Contacts should be between ground plane model's 'collision'
+      // and box model's 'box_collision_bottom' collision
+      EXPECT_TRUE(c1->GetName() == "collision" ||
+                  c1->GetName() == "box_collision_bottom");
+    }
   }
 }
 
