@@ -568,6 +568,10 @@ class Base : public Implements3d<FeatureList<Feature>>
       {
         world->world->removeMultiBodyConstraint(joint->jointLimits.get());
       }
+      if (joint->gearConstraint)
+      {
+        world->world->removeMultiBodyConstraint(joint->gearConstraint.get());
+      }
       this->joints.erase(jointID);
     }
     // \todo(iche033) Remove external constraints related to this model
