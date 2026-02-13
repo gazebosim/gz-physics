@@ -16,8 +16,10 @@
 */
 
 #include <btBulletDynamicsCommon.h>
+#include <LinearMath/btScalar.h>
 
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 
@@ -115,6 +117,12 @@ const std::string &EntityManagementFeatures::GetEngineName(
 {
   static const std::string engineName = "bullet";
   return engineName;
+}
+
+const gz::math::SemanticVersion &EntityManagementFeatures::GetEngineVersion(
+  const Identity &) const
+{
+  return this->engineVersion;
 }
 
 std::size_t EntityManagementFeatures::GetEngineIndex(const Identity &) const
