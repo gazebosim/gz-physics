@@ -36,7 +36,8 @@ auto GetRayIntersectionFromLastStepFeature::World<
     this->template Interface<GetRayIntersectionFromLastStepFeature>()
         ->GetRayIntersectionFromLastStep(this->identity, _from, _to);
 
-  RayIntersection intersection{result.point, result.fraction, result.normal};
+  RayIntersection intersection{
+    result.point, result.fraction, result.normal, result.collisionShapeId};
 
   RayIntersectionData output;
   output.template Get<RayIntersection>() = std::move(intersection);
