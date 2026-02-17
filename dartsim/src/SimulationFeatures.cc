@@ -38,6 +38,7 @@
 #include <gz/math/Pose3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
+#include "gz/physics/GetBatchRayIntersection.hh"
 #include "gz/physics/GetContacts.hh"
 
 #include "SimulationFeatures.hh"
@@ -236,6 +237,54 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   }
 
   return intersection;
+}
+
+std::vector<SimulationFeatures::BatchRayIntersection>
+SimulationFeatures::GetBatchRayIntersectionFromLastStep(
+  const Identity &_worldID,
+  const std::vector<SimulationFeatures::BatchRayQuery> &_rays) const
+{
+  std::vector<SimulationFeatures::BatchRayIntersection> results;
+  results.reserve(_rays.size());
+
+  if (_rays.empty())
+    return results;
+
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
+  auto collisionGroup = world->getConstraintSolver()->getCollisionGroup().get();
+
+  // Reuse option for every ray in the batch — zero overhead from repeated
+  // construction of this lightweight value type.
+  dart::collision::RaycastOption option;
+
+  for (const auto &ray : _rays)
+  {
+    dart::collision::RaycastResult dartResult;
+    collisionDetector->raycast(
+      collisionGroup, ray.origin, ray.target, option, &dartResult);
+
+    SimulationFeatures::BatchRayIntersection intersection;
+    if (dartResult.hasHit())
+    {
+      const auto &firstHit = dartResult.mRayHits[0];
+      intersection.point = firstHit.mPoint;
+      intersection.normal = firstHit.mNormal;
+      intersection.fraction = firstHit.mFraction;
+    }
+    else
+    {
+      // Set invalid measurements to NaN according to REP-117
+      intersection.point =
+        Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+      intersection.normal =
+        Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
+      intersection.fraction = std::numeric_limits<double>::quiet_NaN();
+    }
+    results.push_back(std::move(intersection));
+  }
+
+  return results;
 }
 
 std::vector<SimulationFeatures::ContactInternal>

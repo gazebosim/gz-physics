@@ -33,6 +33,7 @@
 #include <gz/physics/CanWriteData.hh>
 
 #include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetBatchRayIntersection.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetRayIntersection.hh>
 #include <gz/physics/ContactProperties.hh>
@@ -58,7 +59,8 @@ struct SimulationFeatureList : FeatureList<
   SetContactPropertiesCallbackFeature,
 #endif
   GetContactsFromLastStepFeature,
-  GetRayIntersectionFromLastStepFeature
+  GetRayIntersectionFromLastStepFeature,
+  GetBatchRayIntersectionFromLastStepFeature
 > { };
 
 #ifdef DART_HAS_CONTACT_SURFACE
@@ -102,6 +104,14 @@ class SimulationFeatures :
   public: using GetRayIntersectionFromLastStepFeature::Implementation<
     FeaturePolicy3d>::RayIntersection;
 
+  public: using BatchRayIntersection =
+    GetBatchRayIntersectionFromLastStepFeature::Implementation<
+      FeaturePolicy3d>::RayIntersection;
+
+  public: using BatchRayQuery =
+    GetBatchRayIntersectionFromLastStepFeature::Implementation<
+      FeaturePolicy3d>::RayQuery;
+
   public: SimulationFeatures() = default;
   public: ~SimulationFeatures() override = default;
 
@@ -122,6 +132,10 @@ class SimulationFeatures :
       const Identity &_worldID,
       const LinearVector3d &_from,
       const LinearVector3d &_end) const override;
+
+  public: std::vector<BatchRayIntersection> GetBatchRayIntersectionFromLastStep(
+      const Identity &_worldID,
+      const std::vector<BatchRayQuery> &_rays) const override;
 
   /// \brief link poses from the most recent pose change/update.
   /// The key is the link's ID, and the value is the link's pose

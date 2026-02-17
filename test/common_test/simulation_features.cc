@@ -45,6 +45,7 @@
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
+#include <gz/physics/GetBatchRayIntersection.hh>
 #include <gz/physics/GetRayIntersection.hh>
 #include <gz/physics/Joint.hh>
 #include "gz/physics/SphereShape.hh"
@@ -2057,6 +2058,147 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
       ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
       ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
       ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+    }
+  }
+}
+
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesBatchRayIntersections : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetBatchRayIntersectionFromLastStepFeature,
+  gz::physics::CollisionDetector,
+  gz::physics::ForwardStep
+> {};
+
+template <class T>
+class SimulationFeaturesBatchRayIntersectionTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesBatchRayIntersectionTestTypes =
+    ::testing::Types<FeaturesBatchRayIntersections>;
+TYPED_TEST_SUITE(SimulationFeaturesBatchRayIntersectionTest,
+                 SimulationFeaturesBatchRayIntersectionTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
+           SupportedBatchRayIntersections)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
+    auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+        this->loader,
+        name,
+        common_test::worlds::kSphereSdf);
+    world->SetCollisionDetector("bullet");
+    auto checkedOutput =
+      StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+    using RayQuery = World::RayQuery;
+    using RayIntersection = World::RayIntersection;
+
+    // Build a batch: first ray hits the sphere, second misses
+    std::vector<RayQuery> rays = {
+      {Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2)},   // hit
+      {Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10)},  // miss
+    };
+
+    std::vector<RayIntersection> results =
+      world->GetBatchRayIntersectionFromLastStep(rays);
+
+    ASSERT_EQ(2u, results.size());
+
+    // Ray 0 — hits the unit sphere centred at (0,0,2)
+    {
+      const auto &hit = results[0];
+      double epsilon = 1e-3;
+      EXPECT_TRUE(hit.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon))
+        << "hit point: " << hit.point.transpose();
+      EXPECT_TRUE(hit.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon))
+        << "hit normal: " << hit.normal.transpose();
+      EXPECT_DOUBLE_EQ(0.25, hit.fraction);
+    }
+
+    // Ray 1 — misses; all fields must be NaN (REP-117)
+    {
+      const auto &miss = results[1];
+      EXPECT_TRUE(miss.point.array().isNaN().any())
+        << "miss point should be NaN: " << miss.point.transpose();
+      EXPECT_TRUE(miss.normal.array().isNaN().any())
+        << "miss normal should be NaN: " << miss.normal.transpose();
+      EXPECT_TRUE(std::isnan(miss.fraction))
+        << "miss fraction should be NaN: " << miss.fraction;
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
+           EmptyBatchRayIntersections)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
+    auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+        this->loader,
+        name,
+        common_test::worlds::kSphereSdf);
+    world->SetCollisionDetector("bullet");
+    auto checkedOutput =
+      StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+    EXPECT_TRUE(checkedOutput);
+
+    using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+    using RayQuery = World::RayQuery;
+
+    std::vector<RayQuery> rays;  // intentionally empty
+    auto results = world->GetBatchRayIntersectionFromLastStep(rays);
+    EXPECT_TRUE(results.empty());
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
+           UnsupportedBatchRayIntersections)
+{
+  std::vector<std::string> unsupportedCollisionDetectors =
+    {"ode", "dart", "fcl", "banana"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
+    for (const std::string &collisionDetector : unsupportedCollisionDetectors)
+    {
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+
+      // ray would hit the sphere, but the collision detector does not
+      // support ray intersection — results must be NaN
+      std::vector<RayQuery> rays = {
+        {Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2)},
+      };
+
+      std::vector<RayIntersection> results =
+        world->GetBatchRayIntersectionFromLastStep(rays);
+
+      ASSERT_EQ(1u, results.size());
+      EXPECT_TRUE(results[0].point.array().isNaN().any());
+      EXPECT_TRUE(results[0].normal.array().isNaN().any());
+      EXPECT_TRUE(std::isnan(results[0].fraction));
     }
   }
 }
