@@ -38,7 +38,6 @@
 #include <gz/math/Pose3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include <BulletCollision/BroadphaseCollision/btBroadphaseInterface.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
 #include "gz/physics/GetBatchRayIntersection.hh"
@@ -261,13 +260,13 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   auto *const rawGroup =
     world->getConstraintSolver()->getCollisionGroup().get();
 
-  // Broadphase-accelerated path — replicates ODE Classic's dSpaceCollide2:
-  //   1. Compute the AABB that encloses the entire ray bundle.
-  //   2. Query the Bullet broadphase once → small candidate list C (C << N).
-  //   3. Per-ray: call rayTestSingle() against C objects only.
+  // Bullet-native path: call btCollisionWorld::rayTest() directly for each
+  // ray, bypassing DART's raycast() which wraps every ray in a temporary
+  // btCollisionObject+shape (createBulletCollisionShape) — the actual
+  // bottleneck shown by profiling.
   //
-  // Cost: O(1) broadphase + O(rays × candidates) vs O(rays × log(world))
-  // for N independent rayTest() calls.
+  // btCollisionWorld::rayTest() uses Bullet's own broadphase + BVH traversal
+  // natively, no shape allocation required.
   auto *gzGroup =
     dynamic_cast<dart::collision::GzBulletCollisionGroup *>(rawGroup);
 
@@ -275,46 +274,6 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   {
     btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
 
-    // Step 1 — bounding box of the whole ray bundle
-    btVector3 bundleMin(
-      std::numeric_limits<btScalar>::max(),
-      std::numeric_limits<btScalar>::max(),
-      std::numeric_limits<btScalar>::max());
-    btVector3 bundleMax(
-      -std::numeric_limits<btScalar>::max(),
-      -std::numeric_limits<btScalar>::max(),
-      -std::numeric_limits<btScalar>::max());
-
-    for (const auto &ray : _rays)
-    {
-      const btVector3 o(
-        static_cast<btScalar>(ray.origin.x()),
-        static_cast<btScalar>(ray.origin.y()),
-        static_cast<btScalar>(ray.origin.z()));
-      const btVector3 t(
-        static_cast<btScalar>(ray.target.x()),
-        static_cast<btScalar>(ray.target.y()),
-        static_cast<btScalar>(ray.target.z()));
-      bundleMin.setMin(o); bundleMin.setMin(t);
-      bundleMax.setMax(o); bundleMax.setMax(t);
-    }
-
-    // Step 2 — single broadphase AABB query collects candidate objects
-    std::vector<btCollisionObject *> candidates;
-    struct AabbCb : public btBroadphaseAabbCallback
-    {
-      std::vector<btCollisionObject *> &objects;
-      explicit AabbCb(std::vector<btCollisionObject *> &o) : objects(o) {}
-      bool process(const btBroadphaseProxy *proxy) override
-      {
-        objects.push_back(
-          static_cast<btCollisionObject *>(proxy->m_clientObject));
-        return true;
-      }
-    } aabbCb(candidates);
-    btWorld->getBroadphase()->aabbTest(bundleMin, bundleMax, aabbCb);
-
-    // Step 3 — per-ray test against candidates only
     for (const auto &ray : _rays)
     {
       const btVector3 btFrom(
@@ -326,20 +285,8 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
         static_cast<btScalar>(ray.target.y()),
         static_cast<btScalar>(ray.target.z()));
 
-      // One ClosestRayResultCallback per ray; shared across candidates so
-      // m_closestHitFraction acts as an early-exit threshold for each new
-      // rayTestSingle call — mirrors dCollide + closest-hit logic in ODE.
       btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
-      const btTransform rayFromTrans(btQuaternion::getIdentity(), btFrom);
-      const btTransform rayToTrans(btQuaternion::getIdentity(), btTo);
-
-      for (btCollisionObject *obj : candidates)
-      {
-        btCollisionWorld::rayTestSingle(
-          rayFromTrans, rayToTrans,
-          obj, obj->getCollisionShape(), obj->getWorldTransform(),
-          rayCallback);
-      }
+      btWorld->rayTest(btFrom, btTo, rayCallback);
 
       SimulationFeatures::BatchRayIntersection intersection;
       if (rayCallback.hasHit())
@@ -353,7 +300,6 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
       }
       else
       {
-        // Set invalid measurements to NaN according to REP-117
         intersection.point    = kNaNVec;
         intersection.normal   = kNaNVec;
         intersection.fraction = kNaN;
