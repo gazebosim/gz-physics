@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 
@@ -310,35 +311,30 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
     return results;
   }
 
-  // Fallback — non-Bullet detector or unexpected group type:
-  // revert to individual DART raycast() calls (returns NaN for unsupported
-  // detectors, matches single-ray behaviour).
+  // Fallback — non-Bullet collision detector.
+  //
+  // Only the Bullet collision detector is supported for raycasting in
+  // dartsim. ODE, FCL, and the native DART detector do not implement
+  // raycast() and will log a per-ray warning from inside DART itself,
+  // which would produce thousands of log lines per scan.
+  //
+  // Emit a single diagnostic here and return NaN for all rays, avoiding
+  // the log flood while giving the user a clear, actionable message.
   auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
-  dart::collision::RaycastOption option;
-
-  for (const auto &ray : _rays)
+  static std::unordered_set<std::string> warnedDetectors;
+  const std::string detectorType = collisionDetector->getType();
+  if (warnedDetectors.find(detectorType) == warnedDetectors.end())
   {
-    dart::collision::RaycastResult dartResult;
-    collisionDetector->raycast(rawGroup, ray.origin, ray.target,
-                               option, &dartResult);
-
-    SimulationFeatures::BatchRayIntersection intersection;
-    if (dartResult.hasHit())
-    {
-      const auto &firstHit = dartResult.mRayHits[0];
-      intersection.point    = firstHit.mPoint;
-      intersection.normal   = firstHit.mNormal;
-      intersection.fraction = firstHit.mFraction;
-    }
-    else
-    {
-      intersection.point    = kNaNVec;
-      intersection.normal   = kNaNVec;
-      intersection.fraction = kNaN;
-    }
-    results.push_back(std::move(intersection));
+    warnedDetectors.insert(detectorType);
+    gzwarn << "GetBatchRayIntersectionFromLastStep: collision detector ["
+           << detectorType << "] does not support raycasting. "
+           << "CPU lidar requires the [bullet] collision detector in dartsim. "
+           << "All ray results will be NaN. "
+           << "Set <collision_detector>bullet</collision_detector> in the "
+           << "world's <physics> element.\n";
   }
 
+  results.assign(_rays.size(), {kNaNVec, kNaN, kNaNVec});
   return results;
 }
 
