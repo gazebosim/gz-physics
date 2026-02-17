@@ -47,6 +47,10 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
 
     /// \brief The normal at the hit point in the world coordinates
     VectorType normal;
+    
+    /// \brief The identity of the collision shape that was hit.
+    /// Set to 0 if no shape was hit or not supported by the physics engine.
+    std::size_t collisionShapeId{0};
   };
 
   public: template <typename PolicyT, typename FeaturesT>

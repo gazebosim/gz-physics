@@ -224,7 +224,18 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
     intersection.point = firstHit.mPoint;
     intersection.normal = firstHit.mNormal;
     intersection.fraction = firstHit.mFraction;
-  }
+
+    // Map DART CollisionObject to gz-physics shape identity
+    if (firstHit.mCollisionObject)
+    {
+      auto *dtShapeFrame = firstHit.mCollisionObject->getShapeFrame();
+      if (dtShapeFrame && this->shapes.HasEntity(dtShapeFrame->asShapeNode()))
+      {
+        intersection.collisionShapeId =
+            this->shapes.IdentityOf(dtShapeFrame->asShapeNode());
+      }
+    }
+}
   else
   {
     // Set invalid measurements to NaN according to REP-117
