@@ -24,6 +24,7 @@
 
 #include <dart/collision/CollisionResult.hpp>
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
+#include <dart/collision/bullet/BulletCollisionGroup.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 
 namespace dart {
@@ -83,6 +84,18 @@ class GzOdeCollisionDetector :
   private: static Registrar<GzOdeCollisionDetector> mRegistrar;
 };
 
+/// \brief Exposes the protected BulletCollisionGroup::getBulletCollisionWorld()
+/// so that GzBulletCollisionDetector can perform broadphase-accelerated batch
+/// raycasting without modifying upstream DART.
+class GzBulletCollisionGroup : public dart::collision::BulletCollisionGroup
+{
+  public: explicit GzBulletCollisionGroup(
+      const dart::collision::CollisionDetectorPtr &_detector);
+
+  /// \brief Public accessor to the underlying btCollisionWorld.
+  public: btCollisionWorld *getCollisionWorld();
+};
+
 class GzBulletCollisionDetector :
     public dart::collision::BulletCollisionDetector,
     public dart::collision::GzCollisionDetector
@@ -99,6 +112,10 @@ class GzBulletCollisionDetector :
       CollisionGroup* group2,
       const CollisionOption& option = CollisionOption(false, 1u, nullptr),
       CollisionResult* result = nullptr) override;
+
+  /// \brief Overridden to produce GzBulletCollisionGroup instances, which
+  /// expose the underlying btCollisionWorld for broadphase AABB queries.
+  public: std::unique_ptr<CollisionGroup> createCollisionGroup() override;
 
   /// \brief Create the GzBulletCollisionDetector
   public: static std::shared_ptr<GzBulletCollisionDetector> create();

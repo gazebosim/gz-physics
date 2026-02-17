@@ -150,9 +150,31 @@ bool GzOdeCollisionDetector::collide(
 }
 
 /////////////////////////////////////////////////
+GzBulletCollisionGroup::GzBulletCollisionGroup(
+    const dart::collision::CollisionDetectorPtr &_detector)
+  : dart::collision::BulletCollisionGroup(_detector)
+{
+}
+
+/////////////////////////////////////////////////
+btCollisionWorld *GzBulletCollisionGroup::getCollisionWorld()
+{
+  // getBulletCollisionWorld() is protected on BulletCollisionGroup.
+  // Being a derived class gives us access without patching upstream DART.
+  return this->getBulletCollisionWorld();
+}
+
+/////////////////////////////////////////////////
 GzBulletCollisionDetector::GzBulletCollisionDetector()
   : BulletCollisionDetector(), GzCollisionDetector()
 {
+}
+
+/////////////////////////////////////////////////
+std::unique_ptr<dart::collision::CollisionGroup>
+GzBulletCollisionDetector::createCollisionGroup()
+{
+  return std::make_unique<GzBulletCollisionGroup>(this->shared_from_this());
 }
 
 /////////////////////////////////////////////////
