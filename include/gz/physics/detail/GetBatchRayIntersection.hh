@@ -18,6 +18,8 @@
 #ifndef GZ_PHYSICS_DETAIL_GETBATCHRAYINTERSECTION_HH_
 #define GZ_PHYSICS_DETAIL_GETBATCHRAYINTERSECTION_HH_
 
+#include <vector>
+
 #include <gz/physics/GetBatchRayIntersection.hh>
 
 namespace gz
