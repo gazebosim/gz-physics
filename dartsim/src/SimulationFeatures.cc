@@ -243,6 +243,7 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   return intersection;
 }
 
+/////////////////////////////////////////////////
 std::vector<SimulationFeatures::BatchRayIntersection>
 SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   const Identity &_worldID,
@@ -288,15 +289,15 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
       {
         const btVector3 &hp = rayCallback.m_hitPointWorld;
         const btVector3 &hn = rayCallback.m_hitNormalWorld;
-        intersection.point  << hp.x(), hp.y(), hp.z();
+        intersection.point << hp.x(), hp.y(), hp.z();
         intersection.normal << hn.x(), hn.y(), hn.z();
         intersection.fraction =
           static_cast<double>(rayCallback.m_closestHitFraction);
       }
       else
       {
-        intersection.point    = kNaNVec;
-        intersection.normal   = kNaNVec;
+        intersection.point = kNaNVec;
+        intersection.normal = kNaNVec;
         intersection.fraction = kNaN;
       }
       results.push_back(std::move(intersection));
