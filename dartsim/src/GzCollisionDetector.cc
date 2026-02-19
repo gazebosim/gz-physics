@@ -159,8 +159,7 @@ GzBulletCollisionGroup::GzBulletCollisionGroup(
 /////////////////////////////////////////////////
 btCollisionWorld *GzBulletCollisionGroup::getCollisionWorld()
 {
-  // getBulletCollisionWorld() is protected on BulletCollisionGroup.
-  // Being a derived class gives us access without patching upstream DART.
+  // getBulletCollisionWorld() is protected in BulletCollisionGroup.
   return this->getBulletCollisionWorld();
 }
 

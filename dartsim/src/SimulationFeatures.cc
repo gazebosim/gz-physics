@@ -261,13 +261,7 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   auto *const rawGroup =
     world->getConstraintSolver()->getCollisionGroup().get();
 
-  // Bullet-native path: call btCollisionWorld::rayTest() directly for each
-  // ray, bypassing DART's raycast() which wraps every ray in a temporary
-  // btCollisionObject+shape (createBulletCollisionShape) — the actual
-  // bottleneck shown by profiling.
-  //
-  // btCollisionWorld::rayTest() uses Bullet's own broadphase + BVH traversal
-  // natively, no shape allocation required.
+  // Use btCollisionWorld::rayTest() directly when available.
   auto *gzGroup =
     dynamic_cast<dart::collision::GzBulletCollisionGroup *>(rawGroup);
 
@@ -311,15 +305,8 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
     return results;
   }
 
-  // Fallback — non-Bullet collision detector.
-  //
-  // Only the Bullet collision detector is supported for raycasting in
-  // dartsim. ODE, FCL, and the native DART detector do not implement
-  // raycast() and will log a per-ray warning from inside DART itself,
-  // which would produce thousands of log lines per scan.
-  //
-  // Emit a single diagnostic here and return NaN for all rays, avoiding
-  // the log flood while giving the user a clear, actionable message.
+  // Non-Bullet collision detectors do not support raycasting.
+  // Warn once per detector type and return NaN for all rays.
   auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
   static std::unordered_set<std::string> warnedDetectors;
   const std::string detectorType = collisionDetector->getType();
@@ -328,10 +315,8 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
     warnedDetectors.insert(detectorType);
     gzwarn << "GetBatchRayIntersectionFromLastStep: collision detector ["
            << detectorType << "] does not support raycasting. "
-           << "CPU lidar requires the [bullet] collision detector in dartsim. "
-           << "All ray results will be NaN. "
-           << "Set <collision_detector>bullet</collision_detector> in the "
-           << "world's <physics> element.\n";
+           << "Raycasting requires the [bullet] collision detector. "
+           << "All ray results will be NaN.\n";
   }
 
   results.assign(_rays.size(), {kNaNVec, kNaN, kNaNVec});

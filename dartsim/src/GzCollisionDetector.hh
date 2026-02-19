@@ -84,15 +84,14 @@ class GzOdeCollisionDetector :
   private: static Registrar<GzOdeCollisionDetector> mRegistrar;
 };
 
-/// \brief Exposes the protected BulletCollisionGroup::getBulletCollisionWorld()
-/// so that GzBulletCollisionDetector can perform broadphase-accelerated batch
-/// raycasting without modifying upstream DART.
+/// \brief Exposes BulletCollisionGroup::getBulletCollisionWorld() which
+/// is protected in the base class.
 class GzBulletCollisionGroup : public dart::collision::BulletCollisionGroup
 {
   public: explicit GzBulletCollisionGroup(
       const dart::collision::CollisionDetectorPtr &_detector);
 
-  /// \brief Public accessor to the underlying btCollisionWorld.
+  /// \brief Return the underlying btCollisionWorld
   public: btCollisionWorld *getCollisionWorld();
 };
 
@@ -113,8 +112,7 @@ class GzBulletCollisionDetector :
       const CollisionOption& option = CollisionOption(false, 1u, nullptr),
       CollisionResult* result = nullptr) override;
 
-  /// \brief Overridden to produce GzBulletCollisionGroup instances, which
-  /// expose the underlying btCollisionWorld for broadphase AABB queries.
+  // Documentation inherited
   public: std::unique_ptr<CollisionGroup> createCollisionGroup() override;
 
   /// \brief Create the GzBulletCollisionDetector
