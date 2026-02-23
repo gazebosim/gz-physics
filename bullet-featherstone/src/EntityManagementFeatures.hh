@@ -34,6 +34,7 @@ namespace bullet_featherstone {
 struct EntityManagementFeatureList : gz::physics::FeatureList<
   ConstructEmptyWorldFeature,
   GetEngineInfo,
+  GetEngineVersionInfo,
   GetJointFromModel,
   GetLinkFromModel,
   GetModelFromWorld,

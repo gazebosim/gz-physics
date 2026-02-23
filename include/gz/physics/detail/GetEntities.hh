@@ -36,15 +36,6 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    const gz::math::SemanticVersion &
-    GetEngineInfo::Engine<PolicyT, FeaturesT>::GetVersion() const
-    {
-      return this->template Interface<GetEngineInfo>()
-          ->GetEngineVersion(this->identity);
-    }
-
-    /////////////////////////////////////////////////
-    template <typename PolicyT, typename FeaturesT>
     std::size_t GetEngineInfo::Engine<PolicyT, FeaturesT>::GetIndex() const
     {
       return this->template Interface<GetEngineInfo>()
@@ -549,6 +540,15 @@ namespace gz
       return ConstModelPtrType(this->pimpl,
             this->template Interface<WorldModelFeature>()
               ->GetWorldModel(this->identity));
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    const gz::math::SemanticVersion &
+    GetEngineVersionInfo::Engine<PolicyT, FeaturesT>::GetVersion() const
+    {
+      return this->template Interface<GetEngineVersionInfo>()
+          ->GetEngineVersion(this->identity);
     }
   }
 }

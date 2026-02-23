@@ -33,6 +33,7 @@ namespace bullet {
 
 struct EntityManagementFeatureList : gz::physics::FeatureList<
   GetEngineInfo,
+  GetEngineVersionInfo,
   GetWorldFromEngine,
   GetModelFromWorld,
   GetLinkFromModel,

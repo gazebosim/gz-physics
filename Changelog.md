@@ -2,14 +2,15 @@
 
 ### Gazebo Physics 10.0.0 ()
 
-1. Add `GetEngineVersion` to `GetEngineInfo` feature to separate engine name and version
-    * Adds `GetVersion()` method to `GetEngineInfo::Engine` API returning `gz::math::SemanticVersion`
-    * Adds `GetEngineVersion()` pure virtual method to `GetEngineInfo::Implementation`
-    * Implements `GetEngineVersion()` in all physics engine plugins:
+1. Add `GetEngineVersionInfo` feature for engine version reporting
+    * Adds new `GetEngineVersionInfo` feature as a separate, opt-in feature
+    * Adds `GetVersion()` method to `GetEngineVersionInfo::Engine` API returning `gz::math::SemanticVersion`
+    * Adds `GetEngineVersion()` pure virtual method to `GetEngineVersionInfo::Implementation`
+    * Implements `GetEngineVersionInfo` in all physics engine plugins:
       - bullet and bullet-featherstone: parse `BT_BULLET_VERSION` macro to return SemanticVersion(3, 24)
       - dartsim: parse `DART_VERSION` macro string to SemanticVersion
       - tpe: return SemanticVersion(1, 0)
-    * Updates dartsim `GetEngineName()` to return "dartsim" only (was "dartsim-" DART_VERSION)
+    * Leaves `GetEngineInfo` unchanged to avoid breaking 3rd-party plugins
 
 ### Gazebo Physics 9.1.0 (2026-01-20)
 

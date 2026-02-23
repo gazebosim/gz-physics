@@ -36,6 +36,7 @@ namespace dartsim {
 
 struct EntityManagementFeatureList : FeatureList<
   GetEntities,
+  GetEngineVersionInfo,
   RemoveEntities,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,

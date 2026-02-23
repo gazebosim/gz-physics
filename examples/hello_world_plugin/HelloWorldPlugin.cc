@@ -29,7 +29,8 @@ namespace mock
   //! [feature list]
   // List of all features that this plugin will implement
   struct HelloWorldFeatureList : gz::physics::FeatureList<
-      gz::physics::GetEngineInfo
+      gz::physics::GetEngineInfo,
+      gz::physics::GetEngineVersionInfo
   > { };
   //! [feature list]
 

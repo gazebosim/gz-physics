@@ -34,6 +34,7 @@ namespace tpeplugin {
 
 struct EntityManagementFeatureList : FeatureList<
   GetEngineInfo,
+  GetEngineVersionInfo,
   GetWorldFromEngine,
   GetModelFromWorld,
   GetNestedModelFromModel,
