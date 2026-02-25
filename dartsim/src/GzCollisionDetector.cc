@@ -157,7 +157,7 @@ GzBulletCollisionGroup::GzBulletCollisionGroup(
 }
 
 /////////////////////////////////////////////////
-btCollisionWorld *GzBulletCollisionGroup::getCollisionWorld()
+const btCollisionWorld *GzBulletCollisionGroup::getCollisionWorld() const
 {
   // getBulletCollisionWorld() is protected in BulletCollisionGroup.
   return this->getBulletCollisionWorld();

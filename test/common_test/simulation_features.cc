@@ -2084,8 +2084,6 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 {
   for (const std::string &name : this->pluginNames)
   {
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
-
     auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
         this->loader,
         name,
@@ -2113,6 +2111,7 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
     // Ray 0 — hits the unit sphere centred at (0,0,2)
     {
       const auto &hit = results[0];
+      EXPECT_TRUE(hit.hit);
       double epsilon = 1e-3;
       EXPECT_TRUE(hit.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon))
         << "hit point: " << hit.point.transpose();
@@ -2121,12 +2120,13 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
       EXPECT_DOUBLE_EQ(0.25, hit.fraction);
     }
 
-    // Ray 1 — misses; all fields must be NaN (REP-117)
+    // Ray 1 — misses; hit must be false, numeric fields NaN (REP-117)
     {
       const auto &miss = results[1];
-      EXPECT_TRUE(miss.point.array().isNaN().any())
+      EXPECT_FALSE(miss.hit);
+      EXPECT_TRUE(miss.point.array().isNaN().all())
         << "miss point should be NaN: " << miss.point.transpose();
-      EXPECT_TRUE(miss.normal.array().isNaN().any())
+      EXPECT_TRUE(miss.normal.array().isNaN().all())
         << "miss normal should be NaN: " << miss.normal.transpose();
       EXPECT_TRUE(std::isnan(miss.fraction))
         << "miss fraction should be NaN: " << miss.fraction;
@@ -2140,8 +2140,6 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 {
   for (const std::string &name : this->pluginNames)
   {
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
-
     auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
         this->loader,
         name,
@@ -2169,8 +2167,6 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 
   for (const std::string &name : this->pluginNames)
   {
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
-
     for (const std::string &collisionDetector : unsupportedCollisionDetectors)
     {
       auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
@@ -2196,8 +2192,9 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
         world->GetBatchRayIntersectionFromLastStep(rays);
 
       ASSERT_EQ(1u, results.size());
-      EXPECT_TRUE(results[0].point.array().isNaN().any());
-      EXPECT_TRUE(results[0].normal.array().isNaN().any());
+      EXPECT_FALSE(results[0].hit);
+      EXPECT_TRUE(results[0].point.array().isNaN().all());
+      EXPECT_TRUE(results[0].normal.array().isNaN().all());
       EXPECT_TRUE(std::isnan(results[0].fraction));
     }
   }

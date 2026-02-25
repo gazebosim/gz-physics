@@ -260,16 +260,21 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
 
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
-  auto *const rawGroup =
-    world->getConstraintSolver()->getCollisionGroup().get();
+  auto *const solver = world->getConstraintSolver();
+  auto *const rawGroup = solver->getCollisionGroup().get();
 
   // Use btCollisionWorld::rayTest() directly when available.
-  auto *gzGroup =
-    dynamic_cast<dart::collision::GzBulletCollisionGroup *>(rawGroup);
+  const auto *gzGroup =
+    dynamic_cast<const dart::collision::GzBulletCollisionGroup *>(rawGroup);
 
   if (gzGroup)
   {
-    btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
+    const btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
+    if (!btWorld)
+    {
+      results.assign(_rays.size(), {false, kNaNVec, kNaN, kNaNVec});
+      return results;
+    }
 
     for (const auto &ray : _rays)
     {
@@ -290,6 +295,7 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
       {
         const btVector3 &hp = rayCallback.m_hitPointWorld;
         const btVector3 &hn = rayCallback.m_hitNormalWorld;
+        intersection.hit = true;
         intersection.point << hp.x(), hp.y(), hp.z();
         intersection.normal << hn.x(), hn.y(), hn.z();
         intersection.fraction =
@@ -297,6 +303,7 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
       }
       else
       {
+        intersection.hit = false;
         intersection.point = kNaNVec;
         intersection.normal = kNaNVec;
         intersection.fraction = kNaN;
@@ -309,7 +316,7 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
 
   // Non-Bullet collision detectors do not support raycasting.
   // Warn once per detector type and return NaN for all rays.
-  auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
+  auto collisionDetector = solver->getCollisionDetector();
   static std::unordered_set<std::string> warnedDetectors;
   const std::string detectorType = collisionDetector->getType();
   if (warnedDetectors.find(detectorType) == warnedDetectors.end())
@@ -321,7 +328,7 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
            << "All ray results will be NaN.\n";
   }
 
-  results.assign(_rays.size(), {kNaNVec, kNaN, kNaNVec});
+  results.assign(_rays.size(), {false, kNaNVec, kNaN, kNaNVec});
   return results;
 }
 

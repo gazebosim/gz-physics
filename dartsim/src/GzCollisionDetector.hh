@@ -92,7 +92,7 @@ class GzBulletCollisionGroup : public dart::collision::BulletCollisionGroup
       const dart::collision::CollisionDetectorPtr &_detector);
 
   /// \brief Return the underlying btCollisionWorld
-  public: btCollisionWorld *getCollisionWorld();
+  public: const btCollisionWorld *getCollisionWorld() const;
 };
 
 class GzBulletCollisionDetector :
