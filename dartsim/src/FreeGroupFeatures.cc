@@ -205,7 +205,14 @@ bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
     return info.link->getGravityMode();
   }
 
-  return false;
+  bool gravityMode = false;
+  for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
+  {
+    auto *bn = info.model->getRootBodyNode(i);
+    gravityMode = gravityMode || bn->getGravityMode();
+  }
+
+  return gravityMode;
 }
 
 /////////////////////////////////////////////////
