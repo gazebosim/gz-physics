@@ -120,7 +120,8 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
-    bool GetFreeGroupStaticState::FreeGroup<PolicyT, FeaturesT>::GetStaticState()
+    bool GetFreeGroupStaticState::FreeGroup<PolicyT, FeaturesT>::
+    GetStaticState()
     {
       return this->template Interface<GetFreeGroupStaticState>()
         ->GetFreeGroupStaticState(this->identity);
