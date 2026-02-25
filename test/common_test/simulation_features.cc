@@ -1342,7 +1342,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
     freeGroup->SetGravityEnabled(true);
 
     // Step the world
-    StepWorld<FreeGroupFeatures>(world, false, 1000);
+    StepWorld<FreeGroupFeatures>(world, false, 10000);
 
     EXPECT_TRUE(freeGroup->GetGravityEnabled());
 
