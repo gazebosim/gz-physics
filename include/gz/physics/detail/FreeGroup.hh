@@ -120,11 +120,28 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    bool GetFreeGroupStaticState::FreeGroup<PolicyT, FeaturesT>::GetStaticState()
+    {
+      return this->template Interface<GetFreeGroupStaticState>()
+        ->GetFreeGroupStaticState(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     void SetFreeGroupGravityEnabled::FreeGroup<PolicyT, FeaturesT>::
     SetGravityEnabled(bool _enabled)
     {
       this->template Interface<SetFreeGroupGravityEnabled>()
         ->SetFreeGroupGravityEnabled(this->identity, _enabled);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    bool GetFreeGroupGravityEnabled::FreeGroup<PolicyT, FeaturesT>::
+    GetGravityEnabled()
+    {
+      return this->template Interface<GetFreeGroupGravityEnabled>()
+        ->GetFreeGroupGravityEnabled(this->identity);
     }
 
     /////////////////////////////////////////////////

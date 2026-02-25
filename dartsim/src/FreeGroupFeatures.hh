@@ -28,6 +28,8 @@ namespace dartsim {
 
 struct FreeGroupFeatureList : FeatureList<
   FindFreeGroupFeature,
+  GetFreeGroupStaticState,
+  GetFreeGroupGravityEnabled,
   SetFreeGroupWorldPose,
   SetFreeGroupWorldVelocity,
   SetFreeGroupStaticState,
@@ -66,9 +68,15 @@ class FreeGroupFeatures
       const Identity &_groupID,
       bool _state) override;
 
+  bool GetFreeGroupStaticState(
+      const Identity &_groupID) override;
+
   void SetFreeGroupGravityEnabled(
       const Identity &_groupID,
       bool _enabled) override;
+
+  bool GetFreeGroupGravityEnabled(
+      const Identity &_groupID) override;
 
   void SetFreeGroupWorldLinearVelocity(
       const Identity &_groupID,

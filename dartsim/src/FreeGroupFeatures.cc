@@ -162,6 +162,21 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
 }
 
 /////////////////////////////////////////////////
+bool FreeGroupFeatures::GetFreeGroupStaticState(
+    const Identity &_groupID)
+{
+  const auto modelInfo = this->models.at(_groupID);
+  // Verify that the model qualifies as a FreeGroup
+  dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
+
+  if (skeleton)
+  {
+    return skeleton->isMobile();
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupGravityEnabled(
     const Identity &_groupID,
     bool _enabled)
@@ -178,6 +193,19 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
     auto *bn = info.model->getRootBodyNode(i);
     bn->setGravityMode(_enabled);
   }
+}
+
+/////////////////////////////////////////////////
+bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
+    const Identity &_groupID)
+{
+  const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
+  if (!info.model)
+  {
+    return info.link->getGravityMode();
+  }
+
+  return false;
 }
 
 /////////////////////////////////////////////////

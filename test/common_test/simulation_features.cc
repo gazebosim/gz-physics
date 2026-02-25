@@ -1254,6 +1254,8 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 
 struct FreeGroupPhysicsFeatures : gz::physics::FeatureList<
   gz::physics::FindFreeGroupFeature,
+  gz::physics::GetFreeGroupStaticState,
+  gz::physics::GetFreeGroupGravityEnabled,
   gz::physics::SetFreeGroupWorldPose,
   gz::physics::SetFreeGroupWorldVelocity,
   gz::physics::SetFreeGroupStaticState,
@@ -1308,6 +1310,8 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
 
     StepWorld<FreeGroupFeatures>(world, true);
 
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+
     // Set initial pose.
     const gz::math::Pose3d initialPose{0, 0, 2, 0, 0, 0};
     freeGroup->SetWorldPose(
@@ -1340,6 +1344,8 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
     // Step the world
     StepWorld<FreeGroupFeatures>(world, false, 1000);
 
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+
     // The sphere is not in the same position gravity is working
     freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
     linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
@@ -1352,7 +1358,10 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
     // Now the model is static
     freeGroup->SetWorldPose(
       gz::math::eigen3::convert(initialPose));
+
+    EXPECT_TRUE(freeGroup->GetStaticState());
     freeGroup->SetStaticState(true);
+    EXPECT_FALSE(freeGroup->GetStaticState());
 
     freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
     linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
