@@ -72,8 +72,6 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
-    public: using VectorType =
-      typename FromPolicy<PolicyT>::template Use<LinearVector>;
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using RayQuery = RayT<PolicyT>;
 
@@ -90,8 +88,6 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
   {
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using RayQuery = RayT<PolicyT>;
-    public: using VectorType =
-      typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
     public: virtual std::vector<RayIntersection>
       GetBatchRayIntersectionFromLastStep(
