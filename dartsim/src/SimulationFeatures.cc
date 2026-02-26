@@ -40,8 +40,6 @@
 #include <gz/math/Pose3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
-#include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
-
 #include "gz/physics/GetBatchRayIntersection.hh"
 #include "gz/physics/GetContacts.hh"
 
@@ -261,70 +259,44 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
 
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   auto *const solver = world->getConstraintSolver();
-  auto *const rawGroup = solver->getCollisionGroup().get();
 
-  // Use btCollisionWorld::rayTest() directly when available.
-  const auto *gzGroup =
-    dynamic_cast<const dart::collision::GzBulletCollisionGroup *>(rawGroup);
+  auto detector = solver->getCollisionDetector();
+  auto *gzDetector =
+    dynamic_cast<dart::collision::GzCollisionDetector *>(detector.get());
 
-  if (gzGroup)
+  if (gzDetector)
   {
-    const btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
-    if (!btWorld)
+    std::vector<dart::collision::GzRay> gzRays;
+    gzRays.reserve(_rays.size());
+    for (const auto &ray : _rays)
+      gzRays.push_back({ray.origin, ray.target});
+
+    std::vector<dart::collision::GzRayResult> gzResults;
+    if (gzDetector->BatchRaycast(
+          solver->getCollisionGroup().get(), gzRays, gzResults))
     {
-      results.assign(_rays.size(), {false, kNaNVec, kNaN, kNaNVec});
+      for (const auto &r : gzResults)
+      {
+        SimulationFeatures::BatchRayIntersection intersection;
+        intersection.hit = r.hit;
+        intersection.point = r.point;
+        intersection.fraction = r.fraction;
+        intersection.normal = r.normal;
+        results.push_back(std::move(intersection));
+      }
       return results;
     }
-
-    for (const auto &ray : _rays)
-    {
-      const btVector3 btFrom(
-        static_cast<btScalar>(ray.origin.x()),
-        static_cast<btScalar>(ray.origin.y()),
-        static_cast<btScalar>(ray.origin.z()));
-      const btVector3 btTo(
-        static_cast<btScalar>(ray.target.x()),
-        static_cast<btScalar>(ray.target.y()),
-        static_cast<btScalar>(ray.target.z()));
-
-      btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
-      btWorld->rayTest(btFrom, btTo, rayCallback);
-
-      SimulationFeatures::BatchRayIntersection intersection;
-      if (rayCallback.hasHit())
-      {
-        const btVector3 &hp = rayCallback.m_hitPointWorld;
-        const btVector3 &hn = rayCallback.m_hitNormalWorld;
-        intersection.hit = true;
-        intersection.point << hp.x(), hp.y(), hp.z();
-        intersection.normal << hn.x(), hn.y(), hn.z();
-        intersection.fraction =
-          static_cast<double>(rayCallback.m_closestHitFraction);
-      }
-      else
-      {
-        intersection.hit = false;
-        intersection.point = kNaNVec;
-        intersection.normal = kNaNVec;
-        intersection.fraction = kNaN;
-      }
-      results.push_back(std::move(intersection));
-    }
-
-    return results;
   }
 
-  // Non-Bullet collision detectors do not support raycasting.
+  // Collision detector does not support batch raycasting.
   // Warn once per detector type and return NaN for all rays.
-  auto collisionDetector = solver->getCollisionDetector();
   static std::unordered_set<std::string> warnedDetectors;
-  const std::string detectorType = collisionDetector->getType();
+  const std::string detectorType = detector->getType();
   if (warnedDetectors.find(detectorType) == warnedDetectors.end())
   {
     warnedDetectors.insert(detectorType);
     gzwarn << "GetBatchRayIntersectionFromLastStep: collision detector ["
-           << detectorType << "] does not support raycasting. "
-           << "Raycasting requires the [bullet] collision detector. "
+           << detectorType << "] does not support batch raycasting. "
            << "All ray results will be NaN.\n";
   }
 

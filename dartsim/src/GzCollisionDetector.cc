@@ -22,6 +22,8 @@
 
 #include <dart/collision/CollisionObject.hpp>
 
+#include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
+
 #include "GzCollisionDetector.hh"
 
 using namespace dart;
@@ -97,6 +99,16 @@ void GzCollisionDetector::LimitCollisionPairMaxContacts(
       }
     }
   }
+}
+
+/////////////////////////////////////////////////
+bool GzCollisionDetector::BatchRaycast(
+    CollisionGroup */*_group*/,
+    const std::vector<GzRay> &/*_rays*/,
+    std::vector<GzRayResult> &_results) const
+{
+  _results.clear();
+  return false;
 }
 
 /////////////////////////////////////////////////
@@ -213,4 +225,57 @@ bool GzBulletCollisionDetector::collide(
       _group1, _group2, _option, _result);
   this->LimitCollisionPairMaxContacts(_result);
   return ret;
+}
+
+/////////////////////////////////////////////////
+bool GzBulletCollisionDetector::BatchRaycast(
+    CollisionGroup *_group,
+    const std::vector<GzRay> &_rays,
+    std::vector<GzRayResult> &_results) const
+{
+  _results.clear();
+  _results.reserve(_rays.size());
+
+  auto *gzGroup = dynamic_cast<GzBulletCollisionGroup *>(_group);
+  if (!gzGroup)
+  {
+    _results.resize(_rays.size());
+    return true;
+  }
+
+  const btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
+  if (!btWorld)
+  {
+    _results.resize(_rays.size());
+    return true;
+  }
+
+  for (const auto &ray : _rays)
+  {
+    const btVector3 btFrom(
+      static_cast<btScalar>(ray.from.x()),
+      static_cast<btScalar>(ray.from.y()),
+      static_cast<btScalar>(ray.from.z()));
+    const btVector3 btTo(
+      static_cast<btScalar>(ray.to.x()),
+      static_cast<btScalar>(ray.to.y()),
+      static_cast<btScalar>(ray.to.z()));
+
+    btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
+    btWorld->rayTest(btFrom, btTo, rayCallback);
+
+    GzRayResult result;
+    if (rayCallback.hasHit())
+    {
+      const btVector3 &hp = rayCallback.m_hitPointWorld;
+      const btVector3 &hn = rayCallback.m_hitNormalWorld;
+      result.hit = true;
+      result.point << hp.x(), hp.y(), hp.z();
+      result.normal << hn.x(), hn.y(), hn.z();
+      result.fraction = static_cast<double>(rayCallback.m_closestHitFraction);
+    }
+    _results.push_back(std::move(result));
+  }
+
+  return true;
 }

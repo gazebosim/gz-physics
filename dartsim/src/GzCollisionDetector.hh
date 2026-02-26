@@ -21,6 +21,9 @@
 #include <cstdio>
 #include <limits>
 #include <memory>
+#include <vector>
+
+#include <Eigen/Core>
 
 #include <dart/collision/CollisionResult.hpp>
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
@@ -29,6 +32,24 @@
 
 namespace dart {
 namespace collision {
+
+/// \brief Single ray query: origin and target in world coordinates.
+struct GzRay
+{
+  Eigen::Vector3d from;
+  Eigen::Vector3d to;
+};
+
+/// \brief Result of a single ray query.
+struct GzRayResult
+{
+  bool hit{false};
+  Eigen::Vector3d point{
+    Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())};
+  double fraction{std::numeric_limits<double>::quiet_NaN()};
+  Eigen::Vector3d normal{
+    Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())};
+};
 
 class GzCollisionDetector
 {
@@ -42,6 +63,20 @@ class GzCollisionDetector
   /// objects
   /// \return Maximum number of contacts between a pair of collision objects.
   public: virtual std::size_t GetCollisionPairMaxContacts() const;
+
+  /// \brief Cast multiple rays against a collision group.
+  /// \param[in] _group The collision group to test against.
+  /// \param[in] _rays The rays to cast.
+  /// \param[out] _results One result per input ray, in the same order.
+  /// \return True if the detector supports batch raycasting, false otherwise.
+  ///   When false, _results is left empty and the caller should fall back.
+  public: virtual bool BatchRaycast(
+      CollisionGroup *_group,
+      const std::vector<GzRay> &_rays,
+      std::vector<GzRayResult> &_results) const;
+
+  /// Destructor
+  public: virtual ~GzCollisionDetector() = default;
 
   /// Constructor
   protected: GzCollisionDetector();
@@ -114,6 +149,12 @@ class GzBulletCollisionDetector :
 
   // Documentation inherited
   public: std::unique_ptr<CollisionGroup> createCollisionGroup() override;
+
+  // Documentation inherited
+  public: bool BatchRaycast(
+      CollisionGroup *_group,
+      const std::vector<GzRay> &_rays,
+      std::vector<GzRayResult> &_results) const override;
 
   /// \brief Create the GzBulletCollisionDetector
   public: static std::shared_ptr<GzBulletCollisionDetector> create();
