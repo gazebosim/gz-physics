@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
+#include <gz/math/SemanticVersion.hh>
 #include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
 
@@ -137,8 +138,8 @@ class Base : public Implements3d<FeatureList<Feature>>
   public:
   std::vector<std::shared_ptr<WorldInfo>> worlds;
 
-  public:
-  std::string engineName{"mujoco"};
+  public: const std::string engineName{"mujoco"};
+  public: const gz::math::SemanticVersion engineVersion{mj_versionString()};
 
   public: bool RecompileSpec(WorldInfo &_worldInfo) const;
 };
