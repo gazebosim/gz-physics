@@ -44,7 +44,7 @@ include(FetchContent)
 FetchContent_Declare(
   mujoco
   GIT_REPOSITORY https://github.com/google-deepmind/mujoco
-  GIT_TAG 3.4.0
+  GIT_TAG 3.5.0
 )
 set(MUJOCO_BUILD_EXAMPLES OFF)
 set(MUJOCO_BUILD_TESTS OFF)
