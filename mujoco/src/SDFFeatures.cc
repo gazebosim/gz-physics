@@ -48,6 +48,7 @@
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
 #include <string>
+#include <vector>
 
 #include "Base.hh"
 #include "mujoco/mujoco.h"
@@ -152,7 +153,7 @@ struct ModelKinematicStructure
 
     if (!parent)
     {
-      // TODO (azeey) Better error message
+      // TODO(azeey): Better error message
       gzerr << "Error finding parent\n";
       return;
     }
@@ -172,7 +173,8 @@ struct ModelKinematicStructure
     linkInfo->worldInfo = worldInfo;
 
     auto childSite = mjs_addSite(child, nullptr);
-    _base.frames[linkInfo->entityId] = std::make_shared<FrameInfo>(childSite, worldInfo);
+    _base.frames[linkInfo->entityId] =
+        std::make_shared<FrameInfo>(childSite, worldInfo);
 
     _modelInfo->links.push_back(linkInfo);
     // TODO(azeey) This will end up assigning the first root level link as the
@@ -193,7 +195,8 @@ struct ModelKinematicStructure
       child->quat[2] = pose.Rot().Y();
       child->quat[3] = pose.Rot().Z();
 
-    _base.frames[_modelInfo->entityId] = std::make_shared<FrameInfo>(childSite, worldInfo);
+      _base.frames[_modelInfo->entityId] =
+          std::make_shared<FrameInfo>(childSite, worldInfo);
     }
 
     child->explicitinertial = true;

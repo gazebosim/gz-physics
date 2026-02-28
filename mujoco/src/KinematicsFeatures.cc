@@ -36,7 +36,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   if (it == this->frames.end())
   {
     std::cerr << "Frame not found error\n";
-    // TODO (azeey): Frame not found error
+    // TODO(azeey): Frame not found error
     return data;
   }
   auto worldInfo = it->second->worldInfo;
@@ -45,9 +45,11 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 
   auto d = worldInfo->mjDataObj;
   // mju_printMat(&d->xpos[3 * siteId], 1, 3);
-  data.pose.translation() = Eigen::Map<Eigen::Vector3d>(&d->site_xpos[3 * siteId]);
+  data.pose.translation() =
+      Eigen::Map<Eigen::Vector3d>(&d->site_xpos[3 * siteId]);
   // Eigen defaults to column-major, so we first create a map
-  Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> rotMatMap(&d->site_xmat[9 * siteId]);
+  Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> rotMatMap(
+      &d->site_xmat[9 * siteId]);
   data.pose.linear() = rotMatMap;
   // std::cout << "Pose:\n" << data.pose.matrix() << "\n";
 

@@ -18,17 +18,17 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
-#include "gz/physics/Geometry.hh"
-#include <gz/math/SemanticVersion.hh>
 #include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
 
 #include <cstddef>
 #include <gz/common/Console.hh>
+#include <gz/math/SemanticVersion.hh>
 #include <gz/physics/Implements.hh>
-#include <iostream>
 #include <memory>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace gz
 {
@@ -83,7 +83,7 @@ struct JointInfo
 
 
 struct ModelInfo
-{ 
+{
   ModelInfo(std::size_t _entityId, WorldInfo *_worldInfo)
       : entityId(_entityId), worldInfo(_worldInfo)
   {

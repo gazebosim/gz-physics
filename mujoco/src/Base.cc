@@ -40,9 +40,9 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
                         _worldInfo.mjDataObj);
   _worldInfo.specDirty = false;
 
-  if (rc != 0)
-  {
-    std::cerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
+  if (rc != 0) {
+    std::cerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj)
+              << "\n";
     return false;
   }
   mj_saveXML(_worldInfo.mjSpecObj, "/tmp/mujoco_model.xml", nullptr, 0);

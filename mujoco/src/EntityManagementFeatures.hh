@@ -24,6 +24,8 @@
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/Shape.hh>
 
+#include <string>
+
 #include "Base.hh"
 
 namespace gz {
@@ -151,8 +153,8 @@ class EntityManagementFeatures :
   public: bool RemoveNestedModelByIndex(
      const Identity &_modelID, std::size_t _nestedModelIndex) override;
 
-  public: bool RemoveNestedModelByName(
-      const Identity &_modelID, const std::string &_modelName) override;
+  public: bool RemoveNestedModelByName(const Identity &_modelID,
+     const std::string &_modelName) override;
 };
 
 }  // namespace mujoco

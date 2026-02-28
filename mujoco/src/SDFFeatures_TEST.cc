@@ -175,7 +175,7 @@ static sdf::JointAxis ResolveJointAxis(const sdf::JointAxis &_unresolvedAxis)
 //   {
 //     const auto *model = sdfWorld->ModelByIndex(i);
 //     createModel(model);
-//     for (uint64_t nestedInd = 0; nestedInd < model->ModelCount(); ++nestedInd)
+//     for (uint64_t nestedInd = 0; nestedInd < model->ModelCount(); ++nestedInd)  // NOLINT
 //     {
 //       createModel(model->ModelByIndex(nestedInd), model);
 //     }

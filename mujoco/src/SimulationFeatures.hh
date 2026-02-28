@@ -53,7 +53,7 @@ class SimulationFeatures :
 
   /// \brief link poses from the most recent pose change/update.
   /// The key is the link's ID, and the value is the link's pose
-  // private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
+  // private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses; // NOLINT
 };
 
 }

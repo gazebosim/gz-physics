@@ -128,12 +128,16 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
                                             const std::string &_modelName) const
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  const auto it = std::find_if(worldInfo->models.begin(), worldInfo->models.end(), [&](const std::shared_ptr<ModelInfo> &_modelInfo) {
-    if (_modelName == _modelInfo->name) {
+  auto predicate = [&](const std::shared_ptr<ModelInfo> &_modelInfo)
+  {
+    if (_modelName == _modelInfo->name)
+    {
       return true;
     }
     return false;
-  });
+  };
+  const auto it = std::find_if(worldInfo->models.begin(),
+                               worldInfo->models.end(), predicate);
 
   if (it == worldInfo->models.end())
     return this->GenerateInvalidId();
@@ -267,15 +271,20 @@ Identity EntityManagementFeatures::GetShape(
 Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, const std::string &_shapeName) const
 {
-  // TODO(azeey) Return an invalid ID here otherwise, gz-sim will incorrectly assume the ConstructSdfCollision feature is implemented (bug).
+  // TODO(azeey) Return an invalid ID here otherwise, gz-sim will incorrectly
+  // assume the ConstructSdfCollision feature is implemented (bug).
   return this->GenerateInvalidId();
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
-  const auto it = std::find_if(link->shapes.begin(), link->shapes.end(), [&](const std::shared_ptr<ShapeInfo> &_shapeInfo) {
-    if (_shapeName == _shapeInfo->name) {
+  auto predicate = [&](const std::shared_ptr<ShapeInfo> &_shapeInfo)
+  {
+    if (_shapeName == _shapeInfo->name)
+    {
       return true;
     }
     return false;
-  });
+  };
+  const auto it =
+      std::find_if(link->shapes.begin(), link->shapes.end(), predicate);
 
   if (it == link->shapes.end())
     return this->GenerateInvalidId();
@@ -302,7 +311,8 @@ std::size_t EntityManagementFeatures::GetShapeIndex(
 Identity EntityManagementFeatures::GetLinkOfShape(
   const Identity &_shapeID) const
 {
-  auto linkInfo = this->ReferenceInterface<ShapeInfo>(_shapeID)->linkInfo.lock();
+  auto linkInfo =
+      this->ReferenceInterface<ShapeInfo>(_shapeID)->linkInfo.lock();
   if (!linkInfo)
     return this->GenerateInvalidId();
   return this->GenerateIdentity(linkInfo->entityId, linkInfo);
