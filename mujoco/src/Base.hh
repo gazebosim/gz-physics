@@ -64,7 +64,7 @@ struct LinkInfo
   mjsBody *body;
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
-  std::weak_ptr<WorldInfo> worldInfo;
+  WorldInfo *worldInfo;
   std::vector<std::shared_ptr<ShapeInfo>> shapes;
 };
 
@@ -84,13 +84,13 @@ struct JointInfo
 
 struct ModelInfo
 { 
-  ModelInfo(std::size_t _entityId, std::shared_ptr<WorldInfo> _worldInfo)
+  ModelInfo(std::size_t _entityId, WorldInfo *_worldInfo)
       : entityId(_entityId), worldInfo(_worldInfo)
   {
   }
   std::size_t entityId;
   mjsBody *body{nullptr};
-  std::weak_ptr<WorldInfo> worldInfo;
+  WorldInfo *worldInfo;
   mjsBody *parentBody{nullptr};
   std::string name;
   std::vector<std::shared_ptr<LinkInfo>> links{};
@@ -112,12 +112,12 @@ struct ModelInfo
 
 struct FrameInfo
 {
-  FrameInfo(mjsSite *_site, std::shared_ptr<WorldInfo> _worldInfo)
+  FrameInfo(mjsSite *_site, WorldInfo* _worldInfo)
       : site(_site), worldInfo(_worldInfo)
   {
   }
   mjsSite * site{nullptr};
-  std::weak_ptr<WorldInfo> worldInfo;
+  WorldInfo* worldInfo;
 };
 
 struct WorldInfo
@@ -149,7 +149,7 @@ class Base : public Implements3d<FeatureList<Feature>>
   Identity InitiateEngine(std::size_t /*_engineID*/) override;
 
   public:
-  std::vector<std::shared_ptr<WorldInfo>> worlds;
+  std::unordered_map<std::size_t, std::shared_ptr<WorldInfo>> worlds;
   std::unordered_map<std::size_t, std::shared_ptr<FrameInfo>> frames{};
 
   public: const std::string engineName{"mujoco"};

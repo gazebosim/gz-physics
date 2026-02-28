@@ -39,13 +39,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     // TODO (azeey): Frame not found error
     return data;
   }
-  auto worldInfo = it->second->worldInfo.lock();
-  if (!worldInfo)
-  {
-    // TODO(azeey): WorldInfo weak ptr could not be locked
-    std::cerr << "WorldInfo weak ptr could not be locked\n";
-    return data;
-  }
+  auto worldInfo = it->second->worldInfo;
   auto * site = it->second->site;
   auto siteId = mjs_getId(site->element);
 

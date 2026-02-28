@@ -157,13 +157,7 @@ struct ModelKinematicStructure
       return;
     }
 
-    auto worldInfo = _modelInfo->worldInfo.lock();
-    if (!worldInfo)
-    {
-      // TODO (azeey) Better error message
-      gzerr << "Error getting worldInfo\n";
-      return;
-    }
+    auto worldInfo = _modelInfo->worldInfo;
 
     const auto *link = this->links[_index];
     auto child = mjs_addBody(parent, nullptr);
@@ -421,8 +415,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   auto modelInfo = std::make_shared<ModelInfo>(
-      this->GetNextEntity(),
-      std::reinterpret_pointer_cast<WorldInfo>(this->Reference(_parentID)));
+      this->GetNextEntity(), this->ReferenceInterface<WorldInfo>(_parentID));
 
   modelInfo->entityId = this->GetNextEntity();
   modelInfo->name = _sdfModel.Name();

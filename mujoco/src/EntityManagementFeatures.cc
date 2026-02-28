@@ -45,8 +45,13 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 Identity EntityManagementFeatures::GetWorld(const Identity &,
                                             std::size_t _worldIndex) const
 {
-  const auto &worldInfo = this->worlds[_worldIndex];
-  return this->GenerateIdentity(worldInfo->entityId, worldInfo);
+  if (this->worlds.empty())
+  {
+    return this->GenerateInvalidId();
+  }
+  // TODO(azeey): We assume only a single world for now
+  const auto &it = this->worlds.begin();
+  return this->GenerateIdentity(it->second->entityId, it->second);
 }
 
 /////////////////////////////////////////////////
@@ -83,7 +88,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 {
   auto worldInfo = std::make_shared<WorldInfo>();
   worldInfo->entityId = this->GetNextEntity();
-  this->worlds.push_back(worldInfo);
+  this->worlds[worldInfo->entityId] = worldInfo;
 
   mjSpec *spec = mj_makeSpec();
   worldInfo->mjSpecObj = spec;

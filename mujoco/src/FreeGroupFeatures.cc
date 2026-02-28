@@ -74,12 +74,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
-  auto worldInfo = modelInfo->worldInfo.lock();
-  if (!worldInfo)
-  {
-    // TODO(azeey) Handle error
-    return;
-  }
+  auto worldInfo = modelInfo->worldInfo;
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
@@ -96,12 +91,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
-  auto worldInfo = modelInfo->worldInfo.lock();
-  if (!worldInfo)
-  {
-    // TODO(azeey) Handle error
-    return;
-  }
+  auto worldInfo = modelInfo->worldInfo;
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
@@ -119,12 +109,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
-  auto worldInfo = modelInfo->worldInfo.lock();
-  if (!worldInfo)
-  {
-    // TODO(azeey) Handle error
-    return;
-  }
+  auto worldInfo = modelInfo->worldInfo;
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
