@@ -112,13 +112,12 @@ struct ModelInfo
 
 struct FrameInfo
 {
-  FrameInfo(mjsBody *_body, std::shared_ptr<WorldInfo> _worldInfo, Pose3d _offset = Pose3d::Identity())
-      : body(_body), worldInfo(_worldInfo), offset(_offset)
+  FrameInfo(mjsSite *_site, std::shared_ptr<WorldInfo> _worldInfo)
+      : site(_site), worldInfo(_worldInfo)
   {
   }
-  mjsBody * body{nullptr};
+  mjsSite * site{nullptr};
   std::weak_ptr<WorldInfo> worldInfo;
-  Pose3d offset;
 };
 
 struct WorldInfo

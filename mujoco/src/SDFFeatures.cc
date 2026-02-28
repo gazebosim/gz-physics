@@ -50,6 +50,7 @@
 #include <string>
 
 #include "Base.hh"
+#include "mujoco/mujoco.h"
 
 namespace gz
 {
@@ -176,7 +177,8 @@ struct ModelKinematicStructure
     linkInfo->modelInfo = _modelInfo;
     linkInfo->worldInfo = worldInfo;
 
-    _base.frames[linkInfo->entityId] = std::make_shared<FrameInfo>(child, worldInfo);
+    auto childSite = mjs_addSite(child, nullptr);
+    _base.frames[linkInfo->entityId] = std::make_shared<FrameInfo>(childSite, worldInfo);
 
     _modelInfo->links.push_back(linkInfo);
     // TODO(azeey) This will end up assigning the first root level link as the
@@ -197,7 +199,7 @@ struct ModelKinematicStructure
       child->quat[2] = pose.Rot().Y();
       child->quat[3] = pose.Rot().Z();
 
-    _base.frames[_modelInfo->entityId] = std::make_shared<FrameInfo>(child, worldInfo);
+    _base.frames[_modelInfo->entityId] = std::make_shared<FrameInfo>(childSite, worldInfo);
     }
 
     child->explicitinertial = true;

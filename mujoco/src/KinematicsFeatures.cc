@@ -46,20 +46,19 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     std::cerr << "WorldInfo weak ptr could not be locked\n";
     return data;
   }
-  auto * body = it->second->body;
-  auto bodyId = mjs_getId(body->element);
+  auto * site = it->second->site;
+  auto siteId = mjs_getId(site->element);
 
   auto d = worldInfo->mjDataObj;
-  // mju_printMat(&d->xpos[3 * bodyId], 1, 3);
-  data.pose.translation() = Eigen::Map<Eigen::Vector3d>(&d->xpos[3 * bodyId]);
+  // mju_printMat(&d->xpos[3 * siteId], 1, 3);
+  data.pose.translation() = Eigen::Map<Eigen::Vector3d>(&d->site_xpos[3 * siteId]);
   // Eigen defaults to column-major, so we first create a map
-  Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> rotMatMap(&d->xmat[9 * bodyId]);
+  Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> rotMatMap(&d->site_xmat[9 * siteId]);
   data.pose.linear() = rotMatMap;
-  data.pose = data.pose * it->second->offset;
   // std::cout << "Pose:\n" << data.pose.matrix() << "\n";
 
   mjtNum velocity[6];
-  mj_objectVelocity(worldInfo->mjModelObj, d, mjOBJ_XBODY, bodyId, velocity, 0);
+  mj_objectVelocity(worldInfo->mjModelObj, d, mjOBJ_SITE, siteId, velocity, 0);
   mju_copy3(data.angularVelocity.data(), velocity);
   mju_copy3(data.linearVelocity.data(), velocity+3);
   return data;
