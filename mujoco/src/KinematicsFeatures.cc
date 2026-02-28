@@ -18,6 +18,9 @@
 #include "KinematicsFeatures.hh"
 
 #include "gz/physics/FrameData.hh"
+#include "mujoco/mujoco.h"
+#include <gz/common/Console.hh>
+#include <iostream>
 namespace gz
 {
 namespace physics
@@ -29,41 +32,40 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const FrameID &_id) const
 {
   FrameData3d data;
-  auto *linkInfo = this->FrameInterface<LinkInfo>(_id);
-  if (linkInfo)
+  auto it = this->frames.find(_id.ID());
+  if (it == this->frames.end())
   {
-    auto worldInfo = linkInfo->worldInfo.lock();
-    this->RecompileSpec(*worldInfo);
-    mjData *d = worldInfo->mjDataObj;
-
-    auto bodyId = mjs_getId(linkInfo->body->element);
-    data.pose.translation() << d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
-        d->xpos[3 * bodyId + 2];
-
-    Eigen::Quaterniond quat{d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
-                            d->xquat[4 * bodyId + 2], d->xquat[4 * bodyId + 3]};
-    data.pose.linear() = quat.matrix();
+    std::cerr << "Frame not found error\n";
+    // TODO (azeey): Frame not found error
     return data;
   }
-
-  auto *modelInfo = this->FrameInterface<ModelInfo>(_id);
-  if (modelInfo)
+  auto worldInfo = it->second->worldInfo.lock();
+  if (!worldInfo)
   {
-    auto worldInfo = modelInfo->worldInfo.lock();
-    this->RecompileSpec(*worldInfo);
-    mjData *d = worldInfo->mjDataObj;
-
-    auto bodyId = mjs_getId(modelInfo->body->element);
-    data.pose.translation() << d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
-        d->xpos[3 * bodyId + 2];
-    Eigen::Quaterniond quat{d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
-                            d->xquat[4 * bodyId + 2], d->xquat[4 * bodyId + 3]};
-    data.pose.linear() = quat.matrix();
+    // TODO(azeey): WorldInfo weak ptr could not be locked
+    std::cerr << "WorldInfo weak ptr could not be locked\n";
     return data;
   }
+  auto * body = it->second->body;
+  auto bodyId = mjs_getId(body->element);
 
-  // TODO(azeey): Compute frame data for shapes
-  // TODO(azeey): Compute frame data for joints
+  auto d = worldInfo->mjDataObj;
+
+  // this->RecompileSpec(*worldInfo);
+  mju_printMat(&d->xpos[3 * bodyId], 1, 3);
+  data.pose.translation() << d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
+      d->xpos[3 * bodyId + 2];
+
+  Eigen::Quaterniond quat{d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
+                          d->xquat[4 * bodyId + 2], d->xquat[4 * bodyId + 3]};
+  data.pose.linear() = quat.matrix();
+  data.pose = data.pose * it->second->offset;
+  std::cout << "Pose:\n" << data.pose.matrix() << "\n";
+
+  mjtNum velocity[6];
+  mj_objectVelocity(worldInfo->mjModelObj, d, mjOBJ_XBODY, bodyId, velocity, 0);
+  mju_copy3(data.angularVelocity.data(), velocity);
+  mju_copy3(data.linearVelocity.data(), velocity+3);
   return data;
 }
 

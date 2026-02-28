@@ -175,6 +175,9 @@ struct ModelKinematicStructure
     linkInfo->name = link->Name();
     linkInfo->modelInfo = _modelInfo;
     linkInfo->worldInfo = worldInfo;
+
+    _base.frames[linkInfo->entityId] = std::make_shared<FrameInfo>(child, worldInfo);
+
     _modelInfo->links.push_back(linkInfo);
     // TODO(azeey) This will end up assigning the first root level link as the
     // body associated with the model. We should probably consider using the
@@ -193,6 +196,8 @@ struct ModelKinematicStructure
       child->quat[1] = pose.Rot().X();
       child->quat[2] = pose.Rot().Y();
       child->quat[3] = pose.Rot().Z();
+
+    _base.frames[_modelInfo->entityId] = std::make_shared<FrameInfo>(child, worldInfo);
     }
 
     child->explicitinertial = true;
@@ -416,6 +421,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   auto modelInfo = std::make_shared<ModelInfo>(
       this->GetNextEntity(),
       std::reinterpret_pointer_cast<WorldInfo>(this->Reference(_parentID)));
+
   modelInfo->entityId = this->GetNextEntity();
   modelInfo->name = _sdfModel.Name();
   // TODO(azeey) Change this when we support nested models.

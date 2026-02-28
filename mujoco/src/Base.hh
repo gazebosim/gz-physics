@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
+#include "gz/physics/Geometry.hh"
 #include <gz/math/SemanticVersion.hh>
 #include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
@@ -27,6 +28,7 @@
 #include <gz/physics/Implements.hh>
 #include <iostream>
 #include <memory>
+#include <unordered_map>
 
 namespace gz
 {
@@ -81,7 +83,8 @@ struct JointInfo
 
 
 struct ModelInfo
-{ ModelInfo(std::size_t _entityId, std::shared_ptr<WorldInfo> _worldInfo)
+{ 
+  ModelInfo(std::size_t _entityId, std::shared_ptr<WorldInfo> _worldInfo)
       : entityId(_entityId), worldInfo(_worldInfo)
   {
   }
@@ -107,6 +110,17 @@ struct ModelInfo
   }
 };
 
+struct FrameInfo
+{
+  FrameInfo(mjsBody *_body, std::shared_ptr<WorldInfo> _worldInfo, Pose3d _offset = Pose3d::Identity())
+      : body(_body), worldInfo(_worldInfo), offset(_offset)
+  {
+  }
+  mjsBody * body{nullptr};
+  std::weak_ptr<WorldInfo> worldInfo;
+  Pose3d offset;
+};
+
 struct WorldInfo
 {
   std::size_t entityId;
@@ -114,7 +128,7 @@ struct WorldInfo
   mjSpec *mjSpecObj;
   mjModel *mjModelObj;
   mjData *mjDataObj;
-  bool specDirty{false};
+  bool specDirty{true};
   std::string name;
   std::vector<std::shared_ptr<ModelInfo>> models{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
@@ -137,6 +151,7 @@ class Base : public Implements3d<FeatureList<Feature>>
 
   public:
   std::vector<std::shared_ptr<WorldInfo>> worlds;
+  std::unordered_map<std::size_t, std::shared_ptr<FrameInfo>> frames{};
 
   public: const std::string engineName{"mujoco"};
   public: const gz::math::SemanticVersion engineVersion{mj_versionString()};
