@@ -50,17 +50,13 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   auto bodyId = mjs_getId(body->element);
 
   auto d = worldInfo->mjDataObj;
-
-  // this->RecompileSpec(*worldInfo);
-  mju_printMat(&d->xpos[3 * bodyId], 1, 3);
-  data.pose.translation() << d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
-      d->xpos[3 * bodyId + 2];
-
-  Eigen::Quaterniond quat{d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
-                          d->xquat[4 * bodyId + 2], d->xquat[4 * bodyId + 3]};
-  data.pose.linear() = quat.matrix();
+  // mju_printMat(&d->xpos[3 * bodyId], 1, 3);
+  data.pose.translation() = Eigen::Map<Eigen::Vector3d>(&d->xpos[3 * bodyId]);
+  // Eigen defaults to column-major, so we first create a map
+  Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> rotMatMap(&d->xmat[9 * bodyId]);
+  data.pose.linear() = rotMatMap;
   data.pose = data.pose * it->second->offset;
-  std::cout << "Pose:\n" << data.pose.matrix() << "\n";
+  // std::cout << "Pose:\n" << data.pose.matrix() << "\n";
 
   mjtNum velocity[6];
   mj_objectVelocity(worldInfo->mjModelObj, d, mjOBJ_XBODY, bodyId, velocity, 0);
