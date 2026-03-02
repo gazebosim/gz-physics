@@ -22,6 +22,8 @@
 
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/bullet/BulletCollisionGroup.hpp>
+#include <dart/collision/ode/OdeCollisionGroup.hpp>
+#include <gz/common/Console.hh>
 
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
@@ -124,6 +126,7 @@ bool GzCollisionDetector::BatchRaycast(
 GzOdeCollisionDetector::GzOdeCollisionDetector()
   : OdeCollisionDetector(), GzCollisionDetector()
 {
+
 }
 
 /////////////////////////////////////////////////
@@ -147,6 +150,21 @@ std::shared_ptr<GzOdeCollisionDetector> GzOdeCollisionDetector::create()
   return std::shared_ptr<GzOdeCollisionDetector>(new GzOdeCollisionDetector());
 }
 
+class GzOdeCollisionGroup : public OdeCollisionGroup
+{
+  friend class GzOdeCollisionDetector;
+public:
+  /// Constructor
+  using OdeCollisionGroup::OdeCollisionGroup;
+
+  using OdeCollisionGroup::getOdeSpaceId;
+};
+
+std::unique_ptr<CollisionGroup> GzOdeCollisionDetector::createCollisionGroup()
+{
+  return std::make_unique<GzOdeCollisionGroup>(shared_from_this());
+}
+
 /////////////////////////////////////////////////
 bool GzOdeCollisionDetector::collide(
     CollisionGroup *_group,
@@ -168,6 +186,148 @@ bool GzOdeCollisionDetector::collide(
   bool ret = OdeCollisionDetector::collide(_group1, _group2, _option, _result);
   this->LimitCollisionPairMaxContacts(_result);
   return ret;
+}
+
+void NearCallback(void *_data, dGeomID _o1, dGeomID _o2)
+{
+  // Check space
+  if (dGeomIsSpace(_o1) || dGeomIsSpace(_o2))
+  {
+    dSpaceCollide2(_o1, _o2, _data, &NearCallback);
+    return;
+  }
+
+  // Identify the ray
+  dGeomID ray = nullptr;
+  dGeomID other = nullptr;
+
+  if (dGeomGetClass(_o1) == dRayClass)
+  {
+    ray = _o1;
+    other = _o2;
+  }
+  if (dGeomGetClass(_o2) == dRayClass)
+  {
+    ray = _o2;
+    other = _o1;
+  }
+
+  if(ray == nullptr)
+  {
+    // should not happen, but to be safe...
+    return;
+  }
+
+  dContactGeom contact;
+
+  RaycastResult* result = static_cast<RaycastResult*>(_data);
+
+  auto setResult = [&](dart::collision::RayHit &rayHit)
+  {
+      auto geomData = dGeomGetData(other);
+      rayHit.mFraction = contact.depth;
+      rayHit.mNormal = Eigen::Vector3d(contact.normal);
+      rayHit.mPoint = Eigen::Vector3d(contact.pos);
+      rayHit.mCollisionObject = static_cast<dart::collision::CollisionObject*>(geomData);
+  };
+
+  // param 3 makes sure that we only generate one collision per call
+  if(dCollide(ray, other, 1, &contact, sizeof(dContactGeom)) > 0)
+  {
+    if(result->mRayHits.empty())
+    {
+      setResult(result->mRayHits.emplace_back());
+    }
+    else
+    {
+      setResult(result->mRayHits.front());
+    }
+  }
+}
+
+bool GzOdeCollisionDetector::raycast(
+      CollisionGroup* group,
+      const Eigen::Vector3d& from,
+      const Eigen::Vector3d& to,
+      const RaycastOption& option,
+      RaycastResult* result)
+{
+  if(option.mEnableAllHits)
+  {
+      gzwarn << "raycast multihit support is not implemented for ODE" << std::endl;
+      return false;
+  }
+
+  auto odeGroup = static_cast<GzOdeCollisionGroup *>(group);
+
+  dGeomID rayId = dCreateRay(odeGroup->getOdeSpaceId(), 1.0);
+
+  const Eigen::Vector3d dirNonNormalized(to - from);
+  const double length = dirNonNormalized.norm();
+  if(length <= 1e-7)
+  {
+    return false;
+  }
+
+  const Eigen::Vector3d dir(dirNonNormalized / length);
+
+  dGeomRaySet(rayId, from.x(), from.y(), from.z(), dir.x(), dir.y(), dir.z());
+  dGeomRaySetLength(rayId, length);
+
+  dGeomRaySetClosestHit(rayId, 1);
+
+  dSpaceCollide2(rayId, reinterpret_cast<dGeomID>(odeGroup->getOdeSpaceId()), result,
+         &NearCallback);
+
+  dGeomDestroy(rayId);
+
+  // near callback updated our ray hit result now (or not)
+  return !result->mRayHits.empty();
+}
+
+bool GzOdeCollisionDetector::BatchRaycast(
+      CollisionGroup *_group,
+      const std::vector<GzRay> &_rays,
+      std::vector<GzRayResult> &_results) const
+{
+  auto odeGroup = static_cast<GzOdeCollisionGroup *>(_group);
+
+  dGeomID rayId = dCreateRay(odeGroup->getOdeSpaceId(), 1.0);
+  dGeomRaySetClosestHit(rayId, 1);
+
+  _results.reserve(_rays.size());
+  RaycastResult result;
+  for(const GzRay &ray : _rays)
+  {
+    const Eigen::Vector3d dirNonNormalized(ray.target - ray.origin);
+    const double length = dirNonNormalized.norm();
+    result.clear();
+    if(length > 1e-7)
+    {
+      const Eigen::Vector3d dir(dirNonNormalized / length);
+
+      dGeomRaySet(rayId, ray.origin.x(), ray.origin.y(), ray.origin.z(), dir.x(), dir.y(), dir.z());
+      dGeomRaySetLength(rayId, length);
+
+      dSpaceCollide2(rayId, reinterpret_cast<dGeomID>(odeGroup->getOdeSpaceId()), &result,
+            &NearCallback);
+    }
+
+    // near callback updated our ray hit result now (or not)
+    if(result.hasHit())
+    {
+      RayHit &rayHit(result.mRayHits.front());
+      _results.emplace_back(GzRayResult{rayHit.mPoint, rayHit.mFraction , rayHit.mNormal});
+    }
+    else
+    {
+      _results.emplace_back(GzRayResult{Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN()), std::numeric_limits<double>::infinity() , Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())});
+    }
+  }
+
+  dGeomDestroy(rayId);
+
+  return true;
 }
 
 /// \brief Exposes BulletCollisionGroup::getBulletCollisionWorld() which
