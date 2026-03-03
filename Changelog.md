@@ -11,44 +11,9 @@
       - tpe: return SemanticVersion(1, 0)
     * Updates dartsim `GetEngineName()` to return "dartsim" only (was "dartsim-" DART_VERSION)
 
-### Gazebo Physics 9.1.0 (2026-01-20)
-
-1. Find jetty packages with explicit version
-    * [Pull request #836](https://github.com/gazebosim/gz-physics/pull/836)
-
-1. Bazel updates
-    * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
-    * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
-    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
-    * [Pull request #842](https://github.com/gazebosim/gz-physics/pull/842)
-
-1. bullet-featherstone: Support joint spring stiffness
-    * [Pull request #805](https://github.com/gazebosim/gz-physics/pull/805)
-
-1. Relax tolerances for failing tests on arm64
-    * [Pull request #806](https://github.com/gazebosim/gz-physics/pull/806)
-
-1. bullet-featherstone: Support ball joint damping
-    * [Pull request #797](https://github.com/gazebosim/gz-physics/pull/797)
-
-### Gazebo Physics 9.0.0 (2025-09-30)
+### Gazebo Physics 9.0.0 (2025-09-24)
 
 1. **Baseline:** this includes all changes from 8.3.0 and earlier.
-
-1. Fix crash when recursively deleting nested models
-    * [Pull request #781](https://github.com/gazebosim/gz-physics/pull/781)
-
-1. Update `09_use_custom_engine.md` build commands
-    * [Pull request #780](https://github.com/gazebosim/gz-physics/pull/780)
-
-1. Fix spelling in simulation concepts tutorial
-    * [Pull request #778](https://github.com/gazebosim/gz-physics/pull/778)
-
-1. Fix path in physics plugin implementation tutorial
-    * [Pull request #777](https://github.com/gazebosim/gz-physics/pull/777)
-
-1. [Bazel] Update bazel module to use jetty release branches
-    * [Pull request #776](https://github.com/gazebosim/gz-physics/pull/776)
 
 1. bullet-featherstone: Add Kinematic feature
     * [Pull request #618](https://github.com/gazebosim/gz-physics/pull/618)
