@@ -728,7 +728,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   }
 
-// Note: When constructing a link from this function, we always instantiate
+  // Note: When constructing a link from this function, we always instantiate
   // it as a standalone free body within the model. If it should have any joint
   // constraints, those will be added later.
   const auto result = modelInfo.model->createJointAndBodyNodePair<
@@ -740,7 +740,7 @@ Identity SDFFeatures::ConstructSdfLink(
 
   joint->setTransform(tf);
 
-  dart::dynamics::BodyNode * bn = result.second;
+  dart::dynamics::BodyNode * const bn = result.second;
 
   auto worldID = this->GetWorldOfModelImpl(_modelID);
   if (worldID == INVALID_ENTITY_ID)
