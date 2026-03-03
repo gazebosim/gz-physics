@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_SDFFEATURES_HH_
 #define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_SDFFEATURES_HH_
 
+#include <limits>
 #include <string>
 
 #include <gz/physics/sdf/ConstructCollision.hh>
