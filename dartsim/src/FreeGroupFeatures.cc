@@ -171,7 +171,7 @@ bool FreeGroupFeatures::GetFreeGroupStaticState(
 
   if (skeleton)
   {
-    return skeleton->isMobile();
+    return !skeleton->isMobile();
   }
   return false;
 }
@@ -184,7 +184,8 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    info.link->setGravityMode(_enabled);
+    if (info.link)
+      info.link->setGravityMode(_enabled);
     return;
   }
 
@@ -205,11 +206,11 @@ bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
     return info.link->getGravityMode();
   }
 
-  bool gravityMode = false;
+  bool gravityMode = true;
   for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
   {
     auto *bn = info.model->getRootBodyNode(i);
-    gravityMode = gravityMode || bn->getGravityMode();
+    gravityMode = gravityMode && bn->getGravityMode();
   }
 
   return gravityMode;

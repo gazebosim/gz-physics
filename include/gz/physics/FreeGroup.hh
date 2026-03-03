@@ -218,7 +218,8 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This features sets the FreeGroup gravity.
-    /// If set to true, the model is not affected by gravity
+    /// If set to true, the model is affected by gravity, otherwise the model
+    /// is not affected by the gravity.
     class GZ_PHYSICS_VISIBLE SetFreeGroupGravityEnabled
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {
@@ -245,7 +246,8 @@ namespace gz
 
     /////////////////////////////////////////////////
     /// \brief This features gets the FreeGroup gravity.
-    /// If return true, the model is not affected by gravity
+    /// If return true, the model is affected by gravity, otherwise the model
+    /// is not affected by the gravity.
     class GZ_PHYSICS_VISIBLE GetFreeGroupGravityEnabled
         : public virtual FeatureWithRequirements<FindFreeGroupFeature>
     {

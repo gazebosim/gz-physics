@@ -1308,7 +1308,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
     // Disable gravity.
     freeGroup->SetGravityEnabled(false);
 
-    StepWorld<FreeGroupFeatures>(world, true);
+    StepWorld<FreeGroupPhysicsFeatures>(world, true);
 
     EXPECT_FALSE(freeGroup->GetGravityEnabled());
 
@@ -1327,7 +1327,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
               gz::math::eigen3::convert(linkFrameData.pose));
 
     // Step the world
-    StepWorld<FreeGroupFeatures>(world, false, 1000);
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
 
     // The sphere is in the same position gravity is not working
     freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
@@ -1342,7 +1342,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
     freeGroup->SetGravityEnabled(true);
 
     // Step the world
-    StepWorld<FreeGroupFeatures>(world, false, 10000);
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
 
     EXPECT_TRUE(freeGroup->GetGravityEnabled());
 
@@ -1355,13 +1355,13 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
     EXPECT_NE(initialPose,
               gz::math::eigen3::convert(linkFrameData.pose));
 
-    // Now the model is static
     freeGroup->SetWorldPose(
       gz::math::eigen3::convert(initialPose));
 
-    EXPECT_TRUE(freeGroup->GetStaticState());
-    freeGroup->SetStaticState(true);
     EXPECT_FALSE(freeGroup->GetStaticState());
+    // Now the model is static
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
 
     freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
     linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
@@ -1378,7 +1378,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
               gz::math::eigen3::convert(linkFrameData.pose));
 
     // Step the world
-    StepWorld<FreeGroupFeatures>(world, false, 1000);
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
 
     // sphere should be in the same position
     freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
