@@ -19,7 +19,6 @@
 #define GZ_PHYSICS_DARTSIM_SRC_FREEGROUPFEATURES_HH_
 
 #include <gz/physics/FreeGroup.hh>
-#include "KinematicJoint.hh"
 
 #include "Base.hh"
 

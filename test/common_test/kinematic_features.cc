@@ -48,7 +48,6 @@
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
-#include <gz/physics/sdf/ConstructModel.hh>
 #include <sdf/Root.hh>
 
 template <class T>
