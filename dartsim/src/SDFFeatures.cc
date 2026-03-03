@@ -745,7 +745,6 @@ Identity SDFFeatures::ConstructSdfLink(
     gzdbg << "Kinematic tag found -> " << bodyProperties.mName << std::endl;
     jointProperties.mName = bodyProperties.mName + "_KinematicJoint";
     bodyProperties.mGravityMode = false;
-
   }
 
   // Note: When constructing a link from this function, we always instantiate
