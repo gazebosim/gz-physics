@@ -17,7 +17,7 @@ plugin using \ref gz::physics "Gazebo Physics" API.
 
 ## Write a simple loader
 
-We will use a simplified physics plugin example for this tutorial. Source code can be found at [gz-physics/examples](https://github.com/gazebosim/gz-physics/tree/main/examples/hello_world_loader) folder.
+We will use a simplified physics plugin example for this tutorial. Source code can be found at [gz-physics/examples](https://github.com/gazebosim/gz-physics/tree/gz-physics9/examples/hello_world_loader) folder.
 
 First, create a workspace for the example plugin loader.
 
@@ -30,7 +30,7 @@ cd hello_world_loader
 Then download the example loader into your current directory by:
 
 ```bash
-wget https://raw.githubusercontent.com/gazebosim/gz-physics/main/examples/hello_world_loader/hello_world_loader.cc
+wget https://raw.githubusercontent.com/gazebosim/gz-physics/gz-physics9/examples/hello_world_loader/hello_world_loader.cc
 ```
 
 ### Examine the code
