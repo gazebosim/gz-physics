@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <gz/common/Console.hh>
 #include <gz/math/SemanticVersion.hh>
+#include <gz/physics/EntityStorage.hh>
 #include <gz/physics/Implements.hh>
 #include <memory>
 #include <string>
@@ -129,28 +130,31 @@ struct WorldInfo
   mjData *mjDataObj;
   bool specDirty{true};
   std::string name;
-  std::vector<std::shared_ptr<ModelInfo>> models{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
+  // Key2 is the scoped name of the model, including the world name
+  EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
 };
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
   // Note: Entity ID 0 is reserved for the "engine"
-  public:
-  std::size_t entityCount = 1;
+  public: std::size_t entityCount = 1;
 
-  public:
-  inline std::size_t GetNextEntity()
+  public: inline std::size_t GetNextEntity()
   {
     return entityCount++;
   }
 
-  public:
-  Identity InitiateEngine(std::size_t /*_engineID*/) override;
+  public: std::string JoinNames(const std::string &_parent,
+                                const std::string &_name) const
+  {
+    return _parent + "::" + _name;
+  }
 
-  public:
-  std::unordered_map<std::size_t, std::shared_ptr<WorldInfo>> worlds;
-  std::unordered_map<std::size_t, std::shared_ptr<FrameInfo>> frames{};
+  public: Identity InitiateEngine(std::size_t /*_engineID*/) override;
+
+  public: EntityStorage<std::shared_ptr<WorldInfo>, std::string> worlds;
+  public: std::unordered_map<std::size_t, std::shared_ptr<FrameInfo>> frames{};
 
   public: const std::string engineName{"mujoco"};
   public: const gz::math::SemanticVersion engineVersion{mj_versionString()};

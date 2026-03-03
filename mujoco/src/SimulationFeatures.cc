@@ -58,7 +58,7 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   worldPoses.entries.clear();
   const mjModel *m = worldInfo->mjModelObj;
   mjData *d = worldInfo->mjDataObj;
-  for (const auto &model : worldInfo->models)
+  for (const auto &[modelId, model] : worldInfo->models.idToObject)
   {
     for (const auto &link : model->links)
     {

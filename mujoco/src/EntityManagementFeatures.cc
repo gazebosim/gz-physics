@@ -45,21 +45,25 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 Identity EntityManagementFeatures::GetWorld(const Identity &,
                                             std::size_t _worldIndex) const
 {
-  if (this->worlds.empty())
+  if (this->worlds.indexInContainerToID.empty())
   {
     return this->GenerateInvalidId();
   }
-  // TODO(azeey): We assume only a single world for now
-  const auto &it = this->worlds.begin();
-  return this->GenerateIdentity(it->second->entityId, it->second);
+  if (this->worlds.indexInContainerToID.begin()->second.size() <= _worldIndex)
+  {
+    return this->GenerateInvalidId();
+  }
+  const std::size_t id =
+      this->worlds.indexInContainerToID.begin()->second[_worldIndex];
+  return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorld(const Identity &,
                                             const std::string &_worldName) const
 {
-  // TODO(azeey) Get world by name
-  return this->GenerateInvalidId();
+  const std::size_t id = this->worlds.IdentityOf(_worldName);
+  return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
 }
 
 /////////////////////////////////////////////////
@@ -73,8 +77,7 @@ const std::string &EntityManagementFeatures::GetWorldName(
 std::size_t EntityManagementFeatures::GetWorldIndex(
     const Identity &_worldID) const
 {
-  // TODO(azeey) Implement GetWorldIndex
-  return 0;
+  return this->worlds.idToIndexInContainer.at(_worldID);
 }
 
 /////////////////////////////////////////////////
@@ -88,7 +91,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 {
   auto worldInfo = std::make_shared<WorldInfo>();
   worldInfo->entityId = this->GetNextEntity();
-  this->worlds[worldInfo->entityId] = worldInfo;
+  this->worlds.AddEntity(worldInfo->entityId, worldInfo, _name, 0);
 
   mjSpec *spec = mj_makeSpec();
   worldInfo->mjSpecObj = spec;
@@ -116,33 +119,22 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
                                             std::size_t _modelIndex) const
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  if (_modelIndex < worldInfo->models.size())
+  const auto &models = worldInfo->models;
+  if (models.indexInContainerToID.begin()->second.size() <= _modelIndex)
   {
-    auto modelInfo = worldInfo->models[_modelIndex];
-    return this->GenerateIdentity(modelInfo->entityId, modelInfo);
+    return this->GenerateInvalidId();
   }
-  return this->GenerateInvalidId();
+  const std::size_t id = models.indexInContainerToID.begin()->second[_modelIndex];
+  return this->GenerateIdentity(id, models.at(id));
 }
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
                                             const std::string &_modelName) const
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  auto predicate = [&](const std::shared_ptr<ModelInfo> &_modelInfo)
-  {
-    if (_modelName == _modelInfo->name)
-    {
-      return true;
-    }
-    return false;
-  };
-  const auto it = std::find_if(worldInfo->models.begin(),
-                               worldInfo->models.end(), predicate);
-
-  if (it == worldInfo->models.end())
-    return this->GenerateInvalidId();
-
-  return this->GenerateIdentity((*it)->entityId, *it);
+  const std::string scopedName = this->JoinNames(worldInfo->name, _modelName);
+  const std::size_t id = worldInfo->models.IdentityOf(scopedName);
+  return this->GenerateIdentity(id, worldInfo->models.at(id));
 }
 
 /////////////////////////////////////////////////
@@ -156,16 +148,17 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
     const Identity &_modelID) const
 {
-  // TODO(azeey): Implement GetModelIndex
-  return 0;
+  const auto *worldInfo = this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
+  return worldInfo->models.idToIndexInContainer.at(_modelID);
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorldOfModel(
     const Identity &_modelID) const
 {
-  // TODO(azeey) Implement GetWorldOfModel
-  return this->GenerateInvalidId();
+  const auto *worldInfo = this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
+  auto worldInfoSharedPtr = this->worlds.at(worldInfo->entityId);
+  return GenerateIdentity(worldInfoSharedPtr->entityId, worldInfoSharedPtr);
 }
 
 /////////////////////////////////////////////////

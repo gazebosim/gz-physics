@@ -424,7 +424,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   modelInfo->name = _sdfModel.Name();
   // TODO(azeey) Change this when we support nested models.
   modelInfo->parentBody = mjs_findBody(spec, "world");
-  worldInfo->models.push_back(modelInfo);
+  worldInfo->models.AddEntity(modelInfo->entityId, modelInfo,
+                              JoinNames(worldInfo->name, modelInfo->name),
+                              worldInfo->entityId);
+
   for (std::size_t i = 0; i < kinTree.parents.size(); ++i)
   {
     if (!kinTree.parents[i])
