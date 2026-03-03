@@ -35,8 +35,6 @@
 #include <gz/physics/Implements.hh>
 #include <sdf/Joint.hh>
 
-#include "KinematicJoint.hh"
-
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
 
