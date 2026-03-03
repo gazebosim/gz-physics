@@ -109,7 +109,7 @@ to create a simple loader. Then we test our plugin using the loader as follow:
 
 ```bash
 cd ~
-./hello_world_loader/build/hello_world_loader hello_world_plugin/build/libHelloWorldPlugin.so
+./hello_world_loader/build/hello_world_loader simple_plugin/build/libHelloWorldPlugin.so
 ```
 
 And you will see the engine info of our plugin:
@@ -118,4 +118,3 @@ And you will see the engine info of our plugin:
 Testing plugin: mock::HelloWorldPlugin
   engine name: HelloWorld
 ```
-

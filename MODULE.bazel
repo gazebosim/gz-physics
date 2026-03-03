@@ -19,3 +19,35 @@ bazel_dep(name = "gz-math", version = "9.0.0")
 bazel_dep(name = "gz-plugin", version = "4.0.0")
 bazel_dep(name = "gz-utils", version = "4.0.0")
 bazel_dep(name = "sdformat", version = "16.0.0")
+
+# Override Gz deps to be pulled from the `main` branches so that CI uses deps
+# from HEAD on `main`.
+archive_override(
+    module_name = "gz-common",
+    strip_prefix = "gz-common-main",
+    urls = ["https://github.com/gazebosim/gz-common/archive/refs/heads/main.tar.gz"],
+)
+
+archive_override(
+    module_name = "gz-math",
+    strip_prefix = "gz-math-main",
+    urls = ["https://github.com/gazebosim/gz-math/archive/refs/heads/main.tar.gz"],
+)
+
+archive_override(
+    module_name = "gz-plugin",
+    strip_prefix = "gz-plugin-main",
+    urls = ["https://github.com/gazebosim/gz-plugin/archive/refs/heads/main.tar.gz"],
+)
+
+archive_override(
+    module_name = "gz-utils",
+    strip_prefix = "gz-utils-main",
+    urls = ["https://github.com/gazebosim/gz-utils/archive/refs/heads/main.tar.gz"],
+)
+
+archive_override(
+    module_name = "sdformat",
+    strip_prefix = "sdformat-main",
+    urls = ["https://github.com/gazebosim/sdformat/archive/refs/heads/main.tar.gz"],
+)
