@@ -60,7 +60,7 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   mjData *d = worldInfo->mjDataObj;
   for (const auto &[modelId, model] : worldInfo->models.idToObject)
   {
-    for (const auto &link : model->links)
+    for (const auto &[linkId, link] : model->links.idToObject)
     {
       auto bodyId = mjs_getId(link->body->element);
       auto &wp = worldPoses.entries.emplace_back();

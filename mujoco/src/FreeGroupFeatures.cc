@@ -59,7 +59,7 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
   // TODO(azeey) This assumes the freegroup encompasses the entire model. Handle
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
-  auto linkInfo = modelInfo->LinkFromBody(modelInfo->body);
+  auto linkInfo = modelInfo->links.at(modelInfo->body);
   if (!linkInfo)
   {
     return this->GenerateInvalidId();

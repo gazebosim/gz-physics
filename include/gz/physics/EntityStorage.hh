@@ -21,6 +21,21 @@
 #include <unordered_map>
 #include <vector>
 
+/// \brief A class used to store mappings between entity ids and objects that
+/// represent the entity in the physics engine
+/// \tparam Value1 This is typically the ``*Info` struct that contains the
+/// underlying pointer to the physics object as well as other information such
+/// as local name of the entity.
+/// \tparam Key2 A secondary key that can be used to lookup the entity. For
+/// example, this could be a std::string so that we can do a lookup based on the
+/// name of the entity.
+///
+/// \note This class can be used to store entities across multiple worlds as
+/// long as the IDs are unique. As such, the IndexMap type is a map from the
+/// parent ID to a vector of object IDs. This is used to determine the index of
+/// an entity within the container. However, if EntityStorage objects are
+/// hierarchically stored in `*Info` structs, the indexInContainerToID will only
+/// have one entry. See the Mujoco plugin implementation for reference.
 template <typename Value1, typename Key2 = Value1>
 struct EntityStorage
 {
@@ -163,5 +178,5 @@ struct EntityStorage
   }
 };
 
-#endif // GZ_PHYSICS_ENTITY_STORAGE_HH!
+#endif
 

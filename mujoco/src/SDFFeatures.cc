@@ -176,7 +176,8 @@ struct ModelKinematicStructure
     _base.frames[linkInfo->entityId] =
         std::make_shared<FrameInfo>(childSite, worldInfo);
 
-    _modelInfo->links.push_back(linkInfo);
+    _modelInfo->links.AddEntity(linkInfo->entityId, linkInfo, child,
+                                _modelInfo->entityId);
     // TODO(azeey) This will end up assigning the first root level link as the
     // body associated with the model. We should probably consider using the
     // canonical link here instead.

@@ -124,7 +124,8 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
   {
     return this->GenerateInvalidId();
   }
-  const std::size_t id = models.indexInContainerToID.begin()->second[_modelIndex];
+  const std::size_t id =
+      models.indexInContainerToID.begin()->second[_modelIndex];
   return this->GenerateIdentity(id, models.at(id));
 }
 /////////////////////////////////////////////////
@@ -148,7 +149,8 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
     const Identity &_modelID) const
 {
-  const auto *worldInfo = this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
+  const auto *worldInfo =
+      this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
   return worldInfo->models.idToIndexInContainer.at(_modelID);
 }
 
@@ -156,7 +158,8 @@ std::size_t EntityManagementFeatures::GetModelIndex(
 Identity EntityManagementFeatures::GetWorldOfModel(
     const Identity &_modelID) const
 {
-  const auto *worldInfo = this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
+  const auto *worldInfo =
+      this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
   auto worldInfoSharedPtr = this->worlds.at(worldInfo->entityId);
   return GenerateIdentity(worldInfoSharedPtr->entityId, worldInfoSharedPtr);
 }
@@ -173,11 +176,14 @@ Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
                                            std::size_t _linkIndex) const
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
-  if (_linkIndex >= model->links.size())
+  if (_linkIndex >= model->links.indexInContainerToID.size())
+  {
     return this->GenerateInvalidId();
+  }
 
-  const auto linkInfo = model->links[_linkIndex];
-  return this->GenerateIdentity(linkInfo->entityId, linkInfo);
+  const std::size_t id =
+      model->links.indexInContainerToID.begin()->second[_linkIndex];
+  return this->GenerateIdentity(id, model->links.at(id));
 }
 
 /////////////////////////////////////////////////
@@ -194,8 +200,9 @@ Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
     return this->GenerateInvalidId();
   }
 
-  auto linkInfo = modelInfo->LinkFromBody(child);
-  if (!linkInfo) {
+  auto linkInfo = modelInfo->links.at(child);
+  if (!linkInfo)
+  {
     return this->GenerateInvalidId();
   }
 

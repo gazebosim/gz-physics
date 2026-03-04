@@ -94,21 +94,8 @@ struct ModelInfo
   WorldInfo *worldInfo;
   mjsBody *parentBody{nullptr};
   std::string name;
-  std::vector<std::shared_ptr<LinkInfo>> links{};
+  EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
-
-  std::shared_ptr<LinkInfo> LinkFromBody(const mjsBody *_body) const
-  {
-    auto it = std::find_if(this->links.begin(), this->links.end(),
-                           [_body](const std::shared_ptr<LinkInfo> &_linkInfo)
-                           { return _body == _linkInfo->body; });
-    if (it == this->links.end())
-    {
-      return nullptr;
-    }
-
-    return *it;
-  }
 };
 
 struct FrameInfo
