@@ -205,14 +205,18 @@ namespace gz
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
         /// \brief Get this FreeGroup static state.
-        public: bool GetStaticState();
+        public: bool GetStaticState() const;
       };
 
+      /// \brief Implementation interface for the FreeGroup feature.
+      ///
+      /// This class defines the interface that physics engine plugins must
+      /// implement to support the FreeGroup feature functionality.
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual bool GetFreeGroupStaticState(
-            const Identity &_groupID) = 0;
+            const Identity &_groupID) const = 0;
       };
     };
 
@@ -235,6 +239,10 @@ namespace gz
         public: void SetGravityEnabled(bool _enabled);
       };
 
+      /// \brief Implementation interface for the FreeGroup feature.
+      ///
+      /// This class defines the interface that physics engine plugins must
+      /// implement to support the FreeGroup feature functionality.
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
@@ -260,14 +268,14 @@ namespace gz
       class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
       {
         /// \brief Get this FreeGroup Gravity enabled.
-        public: bool GetGravityEnabled();
+        public: bool GetGravityEnabled() const;
       };
 
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
         public: virtual bool GetFreeGroupGravityEnabled(
-            const Identity &_groupID) = 0;
+            const Identity &_groupID) const = 0;
       };
     };
 

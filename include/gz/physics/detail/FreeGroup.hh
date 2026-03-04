@@ -121,7 +121,7 @@ namespace gz
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     bool GetFreeGroupStaticState::FreeGroup<PolicyT, FeaturesT>::
-    GetStaticState()
+    GetStaticState() const
     {
       return this->template Interface<GetFreeGroupStaticState>()
         ->GetFreeGroupStaticState(this->identity);
@@ -139,7 +139,7 @@ namespace gz
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
     bool GetFreeGroupGravityEnabled::FreeGroup<PolicyT, FeaturesT>::
-    GetGravityEnabled()
+    GetGravityEnabled() const
     {
       return this->template Interface<GetFreeGroupGravityEnabled>()
         ->GetFreeGroupGravityEnabled(this->identity);
