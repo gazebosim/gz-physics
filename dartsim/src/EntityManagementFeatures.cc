@@ -44,6 +44,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
   public: using DartShapeConstPtr = const dart::dynamics::ShapeNode*;
 
   private: std::unordered_map<DartShapeConstPtr, uint16_t> bitmaskMap;
+  private: std::unordered_map<DartShapeConstPtr, uint16_t> categoryBitmaskMap;
 
   public: bool ignoresCollision(
       DartCollisionConstPtr _object1,
@@ -58,9 +59,20 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
     auto shape1Iter = bitmaskMap.find(shapeNode1);
     auto shape2Iter = bitmaskMap.find(shapeNode2);
-    if (shape1Iter != bitmaskMap.end() && shape2Iter != bitmaskMap.end() &&
-        ((shape1Iter->second & shape2Iter->second) == 0))
-      return true;
+    if (shape1Iter != bitmaskMap.end() && shape2Iter != bitmaskMap.end())
+    {
+      // For backward compatibility, if category bitmask is not yet, it
+      // defaults to the same value as collide bitmask.
+      auto category1Iter = categoryBitmaskMap.find(shapeNode1);
+      auto category2Iter = categoryBitmaskMap.find(shapeNode2);
+      uint16_t categoryMask1 = (category1Iter != categoryBitmaskMap.end()) ?
+          category1Iter->second : shape1Iter->second;
+      uint16_t categoryMask2 = (category2Iter != categoryBitmaskMap.end()) ?
+          category2Iter->second : shape2Iter->second;
+
+      return !((categoryMask1 & shape2Iter->second) |
+             (categoryMask2 & shape1Iter->second));
+    }
 
     return false;
   }
@@ -83,6 +95,28 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
     auto shapeIter = bitmaskMap.find(_shapePtr);
     if (shapeIter != bitmaskMap.end())
       bitmaskMap.erase(shapeIter);
+  }
+
+  public: void SetIgnoredCategory(DartShapeConstPtr _shapePtr, uint16_t _mask)
+  {
+    categoryBitmaskMap[_shapePtr] = _mask;
+  }
+
+  public: uint16_t GetIgnoredCategory(DartShapeConstPtr _shapePtr) const
+  {
+    auto shapeIter = categoryBitmaskMap.find(_shapePtr);
+    if (shapeIter != categoryBitmaskMap.end())
+      return shapeIter->second;
+    // For backward compatibility, if category bitmask is not yet, it
+    // defaults to the same value as collide bitmask.
+    return GetIgnoredCollision(_shapePtr);
+  }
+
+  public: void RemoveIgnoredCategory(DartShapeConstPtr _shapePtr)
+  {
+    auto shapeIter = categoryBitmaskMap.find(_shapePtr);
+    if (shapeIter != categoryBitmaskMap.end())
+      categoryBitmaskMap.erase(shapeIter);
   }
 
   public: void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skelPtr)
@@ -855,6 +889,33 @@ void EntityManagementFeatures::RemoveCollisionFilterMask(
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filterPtr = GetFilterPtr(this, worldID);
   filterPtr->RemoveIgnoredCollision(shapeNode);
+}
+
+void EntityManagementFeatures::SetCategoryFilterMask(
+    const Identity &_shapeID, uint16_t _mask)
+{
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->SetIgnoredCategory(shapeNode, _mask);
+}
+
+uint16_t EntityManagementFeatures::GetCategoryFilterMask(
+    const Identity &_shapeID) const
+{
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  return filterPtr->GetIgnoredCategory(shapeNode);
+}
+
+void EntityManagementFeatures::RemoveCategoryFilterMask(
+    const Identity &_shapeID)
+{
+  const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
+  const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
+  const auto filterPtr = GetFilterPtr(this, worldID);
+  filterPtr->RemoveIgnoredCategory(shapeNode);
 }
 
 Identity EntityManagementFeatures::GetWorldModel(const Identity &_worldID) const
