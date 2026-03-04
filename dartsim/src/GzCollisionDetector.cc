@@ -17,12 +17,16 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 
 #include <dart/collision/CollisionObject.hpp>
+#include <dart/collision/bullet/BulletCollisionGroup.hpp>
 
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
+
+#include <gz/common/Console.hh>
 
 #include "GzCollisionDetector.hh"
 
@@ -102,13 +106,18 @@ void GzCollisionDetector::LimitCollisionPairMaxContacts(
 }
 
 /////////////////////////////////////////////////
-bool GzCollisionDetector::BatchRaycast(
+std::optional<std::vector<GzRayResult>> GzCollisionDetector::BatchRaycast(
     CollisionGroup */*_group*/,
-    const std::vector<GzRay> &/*_rays*/,
-    std::vector<GzRayResult> &_results) const
+    const std::vector<GzRay> &/*_rays*/) const
 {
-  _results.clear();
-  return false;
+  static bool warned = false;
+  if (!warned)
+  {
+    warned = true;
+    gzwarn << "BatchRaycast: collision detector does not support batch "
+           << "raycasting. All ray results will be NaN." << std::endl;
+  }
+  return std::nullopt;
 }
 
 /////////////////////////////////////////////////
@@ -160,6 +169,17 @@ bool GzOdeCollisionDetector::collide(
   this->LimitCollisionPairMaxContacts(_result);
   return ret;
 }
+
+/// \brief Exposes BulletCollisionGroup::getBulletCollisionWorld() which
+/// is protected in the base class.
+class GzBulletCollisionGroup : public dart::collision::BulletCollisionGroup
+{
+  public: explicit GzBulletCollisionGroup(
+      const dart::collision::CollisionDetectorPtr &_detector);
+
+  /// \brief Return the underlying btCollisionWorld
+  public: const btCollisionWorld *getCollisionWorld() const;
+};
 
 /////////////////////////////////////////////////
 GzBulletCollisionGroup::GzBulletCollisionGroup(
@@ -228,26 +248,25 @@ bool GzBulletCollisionDetector::collide(
 }
 
 /////////////////////////////////////////////////
-bool GzBulletCollisionDetector::BatchRaycast(
+std::optional<std::vector<GzRayResult>> GzBulletCollisionDetector::BatchRaycast(
     CollisionGroup *_group,
-    const std::vector<GzRay> &_rays,
-    std::vector<GzRayResult> &_results) const
+    const std::vector<GzRay> &_rays) const
 {
-  _results.clear();
-  _results.reserve(_rays.size());
+  std::vector<GzRayResult> results;
+  results.reserve(_rays.size());
 
   auto *gzGroup = dynamic_cast<GzBulletCollisionGroup *>(_group);
   if (!gzGroup)
   {
-    _results.resize(_rays.size());
-    return true;
+    results.resize(_rays.size());
+    return results;
   }
 
   const btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
   if (!btWorld)
   {
-    _results.resize(_rays.size());
-    return true;
+    results.resize(_rays.size());
+    return results;
   }
 
   for (const auto &ray : _rays)
@@ -274,8 +293,15 @@ bool GzBulletCollisionDetector::BatchRaycast(
       result.normal << hn.x(), hn.y(), hn.z();
       result.fraction = static_cast<double>(rayCallback.m_closestHitFraction);
     }
-    _results.push_back(std::move(result));
+    else
+    {
+      constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+      result.point = Eigen::Vector3d::Constant(kNaN);
+      result.fraction = kNaN;
+      result.normal = Eigen::Vector3d::Constant(kNaN);
+    }
+    results.push_back(std::move(result));
   }
 
-  return true;
+  return results;
 }

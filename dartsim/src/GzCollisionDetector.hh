@@ -21,13 +21,13 @@
 #include <cstdio>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <Eigen/Core>
 
 #include <dart/collision/CollisionResult.hpp>
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
-#include <dart/collision/bullet/BulletCollisionGroup.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 
 namespace dart {
@@ -41,14 +41,13 @@ struct GzRay
 };
 
 /// \brief Result of a single ray query.
+/// Fields other than \c hit are only valid when \c hit is true.
 struct GzRayResult
 {
   bool hit{false};
-  Eigen::Vector3d point{
-    Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())};
-  double fraction{std::numeric_limits<double>::quiet_NaN()};
-  Eigen::Vector3d normal{
-    Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())};
+  Eigen::Vector3d point;
+  double fraction;
+  Eigen::Vector3d normal;
 };
 
 class GzCollisionDetector
@@ -67,13 +66,11 @@ class GzCollisionDetector
   /// \brief Cast multiple rays against a collision group.
   /// \param[in] _group The collision group to test against.
   /// \param[in] _rays The rays to cast.
-  /// \param[out] _results One result per input ray, in the same order.
-  /// \return True if the detector supports batch raycasting, false otherwise.
-  ///   When false, _results is left empty and the caller should fall back.
-  public: virtual bool BatchRaycast(
+  /// \return Results for each ray if supported, or std::nullopt if this
+  ///   detector does not support batch raycasting.
+  public: virtual std::optional<std::vector<GzRayResult>> BatchRaycast(
       CollisionGroup *_group,
-      const std::vector<GzRay> &_rays,
-      std::vector<GzRayResult> &_results) const;
+      const std::vector<GzRay> &_rays) const;
 
   /// Destructor
   public: virtual ~GzCollisionDetector() = default;
@@ -119,17 +116,6 @@ class GzOdeCollisionDetector :
   private: static Registrar<GzOdeCollisionDetector> mRegistrar;
 };
 
-/// \brief Exposes BulletCollisionGroup::getBulletCollisionWorld() which
-/// is protected in the base class.
-class GzBulletCollisionGroup : public dart::collision::BulletCollisionGroup
-{
-  public: explicit GzBulletCollisionGroup(
-      const dart::collision::CollisionDetectorPtr &_detector);
-
-  /// \brief Return the underlying btCollisionWorld
-  public: const btCollisionWorld *getCollisionWorld() const;
-};
-
 class GzBulletCollisionDetector :
     public dart::collision::BulletCollisionDetector,
     public dart::collision::GzCollisionDetector
@@ -151,10 +137,9 @@ class GzBulletCollisionDetector :
   public: std::unique_ptr<CollisionGroup> createCollisionGroup() override;
 
   // Documentation inherited
-  public: bool BatchRaycast(
+  public: std::optional<std::vector<GzRayResult>> BatchRaycast(
       CollisionGroup *_group,
-      const std::vector<GzRay> &_rays,
-      std::vector<GzRayResult> &_results) const override;
+      const std::vector<GzRay> &_rays) const override;
 
   /// \brief Create the GzBulletCollisionDetector
   public: static std::shared_ptr<GzBulletCollisionDetector> create();

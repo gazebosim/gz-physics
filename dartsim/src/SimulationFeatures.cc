@@ -21,7 +21,6 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -271,33 +270,17 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
     for (const auto &ray : _rays)
       gzRays.push_back({ray.origin, ray.target});
 
-    std::vector<dart::collision::GzRayResult> gzResults;
-    if (gzDetector->BatchRaycast(
-          solver->getCollisionGroup().get(), gzRays, gzResults))
+    auto gzResults = gzDetector->BatchRaycast(
+        solver->getCollisionGroup().get(), gzRays);
+    if (gzResults)
     {
-      for (const auto &r : gzResults)
+      for (const auto &r : *gzResults)
       {
-        SimulationFeatures::BatchRayIntersection intersection;
-        intersection.hit = r.hit;
-        intersection.point = r.point;
-        intersection.fraction = r.fraction;
-        intersection.normal = r.normal;
-        results.push_back(std::move(intersection));
+        results.emplace_back(SimulationFeatures::BatchRayIntersection{
+            r.hit, r.point, r.fraction, r.normal});
       }
       return results;
     }
-  }
-
-  // Collision detector does not support batch raycasting.
-  // Warn once per detector type and return NaN for all rays.
-  static std::unordered_set<std::string> warnedDetectors;
-  const std::string detectorType = detector->getType();
-  if (warnedDetectors.find(detectorType) == warnedDetectors.end())
-  {
-    warnedDetectors.insert(detectorType);
-    gzwarn << "GetBatchRayIntersectionFromLastStep: collision detector ["
-           << detectorType << "] does not support batch raycasting. "
-           << "All ray results will be NaN.\n";
   }
 
   results.assign(_rays.size(), {false, kNaNVec, kNaN, kNaNVec});
