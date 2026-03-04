@@ -1479,7 +1479,6 @@ TEST_F(SimulationFeaturesCategoryFilter, CategoryBitmasks)
         auto c2 = contactPoint.collision2;
         auto m1 = c1->GetLink()->GetModel();
         auto m2 = c2->GetLink()->GetModel();
-        std::cerr << m1->GetName() << " : " << m2->GetName() << std::endl;
         auto m1It = _expectedCollisions.find(m1->GetName());
         EXPECT_NE(_expectedCollisions.end(), m1It);
         const std::vector<std::string> &model1CollidingShapes = m1It->second;
