@@ -24,6 +24,58 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
+namespace
+{
+/////////////////////////////////////////////////
+void MakeLinkColliderStatic(LinkInfo *_linkInfo)
+{
+  if (!_linkInfo || !_linkInfo->collider)
+    return;
+
+  std::cout << "MakeLinkColliderStatic: " << _linkInfo->name << " " << _linkInfo->isStaticOrFixed << std::endl;
+  if (_linkInfo->isStaticOrFixed)
+    return;
+
+  btBroadphaseProxy *proxy = _linkInfo->collider->getBroadphaseHandle();
+  if (!proxy)
+    return;
+
+  proxy->m_collisionFilterGroup = btBroadphaseProxy::StaticFilter;
+  proxy->m_collisionFilterMask =
+      btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+#if BT_BULLET_VERSION >= 307
+  _linkInfo->collider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#endif
+}
+
+/////////////////////////////////////////////////
+void MakeLinkColliderDynamic(LinkInfo *_linkInfo)
+{
+  if (!_linkInfo || !_linkInfo->collider)
+    return;
+
+  btBroadphaseProxy *proxy = _linkInfo->collider->getBroadphaseHandle();
+  if (!proxy)
+    return;
+
+  std::cout << "MakeLinkColliderDynamic: " << _linkInfo->name << " " << _linkInfo->isStaticOrFixed << std::endl;
+  if (_linkInfo->isStaticOrFixed)
+    return;
+
+  if ((proxy->m_collisionFilterGroup &
+      btBroadphaseProxy::StaticFilter) == 0)
+  {
+    return;
+  }
+
+  proxy->m_collisionFilterGroup = btBroadphaseProxy::DefaultFilter;
+  proxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
+#if BT_BULLET_VERSION >= 307
+  _linkInfo->collider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+#endif
+}
+}  // namespace
+
 /////////////////////////////////////////////////
 btTransform getWorldTransformForLink(btMultiBody *_body, int _linkIndex)
 {
@@ -163,12 +215,96 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 void FreeGroupFeatures::SetFreeGroupGravityEnabled(
     const Identity &_groupID, bool _enabled)
 {
+  auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
+  if (!model)
+    return;
+
+  if (model->body)
+  {
+    auto *worldInfo = this->ReferenceInterface<WorldInfo>(model->world);
+    if (worldInfo && worldInfo->world)
+    {
+      if (worldInfo->gravityEnabled)
+      {
+        worldInfo->gravity = worldInfo->world->getGravity();
+      }
+      if (_enabled)
+      {
+        worldInfo->world->setGravity(worldInfo->gravity);
+      }
+      else
+      {
+        worldInfo->world->setGravity(btVector3(0, 0, 0));
+      }
+      worldInfo->gravityEnabled = _enabled;
+    }
+    model->body->wakeUp();
+  }
+
+  for (const auto nestedModelID : model->nestedModelEntityIds)
+  {
+    auto nestedModelIt = this->models.find(nestedModelID);
+    if (nestedModelIt == this->models.end())
+      continue;
+    auto nestedIdentity = this->GenerateIdentity(
+        nestedModelID, nestedModelIt->second);
+    this->SetFreeGroupGravityEnabled(nestedIdentity, _enabled);
+  }
+}
+
+/////////////////////////////////////////////////
+bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
+    const Identity &_groupID)
+{
+  const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
+  if (!model)
+    return false;
+
+  bool gravityEnabled = false;
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(model->world);
+  if (worldInfo)
+  {
+      gravityEnabled = worldInfo->gravityEnabled;
+  }
+
+  for (const auto nestedModelID : model->nestedModelEntityIds)
+  {
+    auto nestedModelIt = this->models.find(nestedModelID);
+    if (nestedModelIt == this->models.end())
+      continue;
+    auto nestedIdentity = this->GenerateIdentity(
+        nestedModelID, nestedModelIt->second);
+    gravityEnabled = gravityEnabled &&
+        this->GetFreeGroupGravityEnabled(nestedIdentity);
+  }
+
+  return gravityEnabled;
 }
 
 /////////////////////////////////////////////////
 bool FreeGroupFeatures::GetFreeGroupStaticState(
     const Identity &_groupID)
 {
+  const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
+  if (!model)
+    return false;
+
+  bool isStatic = true;
+  if (model->body)
+    isStatic = model->body->hasFixedBase();
+
+  for (const auto nestedModelID : model->nestedModelEntityIds)
+  {
+    auto nestedModelIt = this->models.find(nestedModelID);
+    if (nestedModelIt == this->models.end())
+      continue;
+    auto nestedIdentity = this->GenerateIdentity(
+        nestedModelID, nestedModelIt->second);
+    isStatic = isStatic &&
+        this->GetFreeGroupStaticState(nestedIdentity);
+  }
+
+  return isStatic;
 }
 
 /////////////////////////////////////////////////
@@ -176,12 +312,38 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
     const Identity &_groupID,
     bool _enabled)
 {
-}
+  auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
+  if (!model)
+    return;
 
-/////////////////////////////////////////////////
-bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
-    const Identity &_groupID)
-{
+  if (model->body)
+  {
+    model->body->setFixedBase(_enabled);
+    std::cout << "SetFreeGroupStaticState: " << _enabled << std::endl;
+    model->body->wakeUp();
+  }
+
+  for (const auto linkID : model->linkEntityIds)
+  {
+    auto linkIt = this->links.find(linkID);
+    if (linkIt == this->links.end())
+      continue;
+
+    if (_enabled)
+      MakeLinkColliderStatic(linkIt->second.get());
+    else
+      MakeLinkColliderDynamic(linkIt->second.get());
+  }
+
+  for (const auto nestedModelID : model->nestedModelEntityIds)
+  {
+    auto nestedModelIt = this->models.find(nestedModelID);
+    if (nestedModelIt == this->models.end())
+      continue;
+    auto nestedIdentity = this->GenerateIdentity(
+        nestedModelID, nestedModelIt->second);
+    this->SetFreeGroupStaticState(nestedIdentity, _enabled);
+  }
 }
 
 /////////////////////////////////////////////////

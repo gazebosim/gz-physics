@@ -78,6 +78,9 @@ struct WorldInfo
 
   double stepSize = 0.001;
 
+  bool gravityEnabled = true;
+  btVector3 gravity = {0, 0, -9.8};
+
   explicit WorldInfo(std::string name);
 };
 

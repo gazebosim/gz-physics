@@ -1285,7 +1285,6 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
   for (const std::string &name : this->pluginNames)
   {
     CHECK_UNSUPPORTED_ENGINE(name, "tpe")
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
 
     auto world = LoadPluginAndWorld<FreeGroupPhysicsFeatures>(
       this->loader,
@@ -1396,7 +1395,6 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroupNested)
   for (const std::string &name : this->pluginNames)
   {
     CHECK_UNSUPPORTED_ENGINE(name, "tpe")
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
 
     auto world = LoadPluginAndWorld<FreeGroupPhysicsFeatures>(
       this->loader,
