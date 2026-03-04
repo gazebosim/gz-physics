@@ -160,31 +160,6 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 }
 
 /////////////////////////////////////////////////
-void FreeGroupFeatures::SetFreeGroupGravityEnabled(
-    const Identity &_groupID, bool _enabled)
-{
-}
-
-/////////////////////////////////////////////////
-bool FreeGroupFeatures::GetFreeGroupStaticState(
-    const Identity &_groupID)
-{
-}
-
-/////////////////////////////////////////////////
-void FreeGroupFeatures::SetFreeGroupStaticState(
-    const Identity &_groupID,
-    bool _enabled)
-{
-}
-
-/////////////////////////////////////////////////
-bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
-    const Identity &_groupID)
-{
-}
-
-/////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
