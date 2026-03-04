@@ -1391,6 +1391,117 @@ TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
   }
 }
 
+TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroupNested)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    auto world = LoadPluginAndWorld<FreeGroupPhysicsFeatures>(
+      this->loader,
+      name,
+      common_test::worlds::kWorldSingleNestedModelSdf);
+
+    // model free group test
+    auto model = world->GetModel("parent_model");
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->CanonicalLink());
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->RootLink());
+
+    auto link = model->GetLink("link1");
+    auto freeGroupLink = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroupLink);
+
+    // Disable gravity.
+    freeGroup->SetGravityEnabled(false);
+
+    StepWorld<FreeGroupPhysicsFeatures>(world, true);
+
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+
+    // Set initial pose.
+    const gz::math::Pose3d initialPose{0, 0, 2, 0, 0, 0};
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    auto freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    auto linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Before stepping, check that pose matches what was set.
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // The sphere is in the same position gravity is not working
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Enable gravity
+    freeGroup->SetGravityEnabled(true);
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+
+    // The sphere is not in the same position gravity is working
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    EXPECT_FALSE(freeGroup->GetStaticState());
+    // Now the model is static
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
+
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Gravity is enabled and we also set some velocities.
+    const Eigen::Vector3d initialLinearVelocity{0.1, 0.2, 0.3};
+    const Eigen::Vector3d initialAngularVelocity{0.4, 0.5, 0.6};
+    freeGroup->SetWorldLinearVelocity(initialLinearVelocity);
+    freeGroup->SetWorldAngularVelocity(initialAngularVelocity);
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // sphere should be in the same position
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+  }
+}
+
 template <class T>
 class SimulationFeaturesTestBasic :
   public SimulationFeaturesTest<T>{};
