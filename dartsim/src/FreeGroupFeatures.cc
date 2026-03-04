@@ -165,7 +165,8 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
   {
     auto nestedModelIdentity = this->GenerateIdentity(nestedModel);
     const auto &nestedModelInfo = this->models.at(nestedModel);
-    // Only set static state if the nested model has BodyNodes or further nested models
+    // Only set static state if the nested model has BodyNodes or
+    // further nested models
     if (nestedModelInfo->model->getNumBodyNodes() > 0 ||
         !nestedModelInfo->nestedModels.empty())
     {
