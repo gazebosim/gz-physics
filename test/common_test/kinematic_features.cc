@@ -594,17 +594,6 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematicLinksWithJoint)
 }
 
 // Kinematic Tag Test
-using SetKinematicFeaturesList = gz::physics::FeatureList<
-  gz::physics::sdf::ConstructSdfModel,
-  gz::physics::sdf::ConstructSdfWorld,
-  gz::physics::ForwardStep,
-  gz::physics::GetLinkFromModel,
-  gz::physics::GetJointFromModel,
-  gz::physics::SetBasicJointState,
-  gz::physics::SetJointVelocityCommandFeature,
-  gz::physics::GetModelFromWorld,
-  gz::physics::LinkFrameSemantics
->;
 
 using SetKinematicTestFeaturesList =
   KinematicFeaturesTest<SetKinematicFeaturesList>;
