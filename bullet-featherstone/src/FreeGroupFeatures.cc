@@ -32,7 +32,6 @@ void MakeLinkColliderStatic(LinkInfo *_linkInfo)
   if (!_linkInfo || !_linkInfo->collider)
     return;
 
-  std::cout << "MakeLinkColliderStatic: " << _linkInfo->name << " " << _linkInfo->isStaticOrFixed << std::endl;
   if (_linkInfo->isStaticOrFixed)
     return;
 
@@ -58,7 +57,6 @@ void MakeLinkColliderDynamic(LinkInfo *_linkInfo)
   if (!proxy)
     return;
 
-  std::cout << "MakeLinkColliderDynamic: " << _linkInfo->name << " " << _linkInfo->isStaticOrFixed << std::endl;
   if (_linkInfo->isStaticOrFixed)
     return;
 
@@ -190,8 +188,11 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
 
-  if (model)
+  if (model && model->body)
   {
+    // Do not set velocity on a static (fixed-base) model
+    if (model->body->hasFixedBase())
+      return;
     model->body->setBaseOmega(convertVec(_angularVelocity));
     model->body->wakeUp();
   }
@@ -204,8 +205,11 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   // Set Base Vel
-  if (model)
+  if (model && model->body)
   {
+    // Do not set velocity on a static (fixed-base) model
+    if (model->body->hasFixedBase())
+      return;
     model->body->setBaseVel(convertVec(_linearVelocity));
     model->body->wakeUp();
   }
@@ -254,7 +258,7 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
 
 /////////////////////////////////////////////////
 bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
-    const Identity &_groupID)
+    const Identity &_groupID) const
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (!model)
@@ -283,7 +287,7 @@ bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
 
 /////////////////////////////////////////////////
 bool FreeGroupFeatures::GetFreeGroupStaticState(
-    const Identity &_groupID)
+    const Identity &_groupID) const
 {
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (!model)
@@ -318,8 +322,25 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
 
   if (model->body)
   {
+    // setFixedBase toggles the fixed-base flag and updates the base
+    // collider's dynamic type (CF_STATIC_OBJECT / CF_DYNAMIC_OBJECT).
+    // The Featherstone ABA checks this flag every step, so no need to
+    // remove/re-add the multibody from the world.
     model->body->setFixedBase(_enabled);
-    std::cout << "SetFreeGroupStaticState: " << _enabled << std::endl;
+
+    if (_enabled)
+    {
+      // btMultiBody::stepPositionsMultiDof still integrates existing
+      // base velocities even for a static base (it only guards on
+      // isBaseKinematic, not isBaseStaticOrKinematic).  Zero them
+      // explicitly so the body doesn't drift.
+      model->body->setBaseVel(btVector3(0, 0, 0));
+      model->body->setBaseOmega(btVector3(0, 0, 0));
+      model->body->clearForcesAndTorques();
+      model->body->clearConstraintForces();
+      model->body->clearVelocities();
+    }
+
     model->body->wakeUp();
   }
 

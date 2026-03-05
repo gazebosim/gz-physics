@@ -37,12 +37,22 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
 
-  const auto linkID = _id.ID();
+  auto linkID = _id.ID();
 
+  // If the ID doesn't correspond to a link, it may be a model (e.g. from a
+  // FreeGroup). Resolve to the model's root link.
   if (this->links.find(linkID) == this->links.end())
   {
-    gzerr << "Given a FrameID not belonging to a link.\n";
-    return data;
+    const auto modelIt = this->models.find(linkID);
+    if (modelIt != this->models.end() && !modelIt->second->links.empty())
+    {
+      linkID = modelIt->second->links.front();
+    }
+    else
+    {
+      gzerr << "Given a FrameID not belonging to a link or model.\n";
+      return data;
+    }
   }
   const auto &linkInfo = this->links.at(linkID);
   const auto &rigidBody = linkInfo->link;

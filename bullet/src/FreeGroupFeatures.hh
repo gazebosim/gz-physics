@@ -52,14 +52,14 @@ class FreeGroupFeatures
       bool _state) override;
 
   bool GetFreeGroupStaticState(
-      const Identity &_groupID) override;
+      const Identity &_groupID) const  override;
 
   void SetFreeGroupGravityEnabled(
       const Identity &_groupID,
       bool _enabled) override;
 
   bool GetFreeGroupGravityEnabled(
-      const Identity &_groupID) override;
+      const Identity &_groupID) const override;
 
   // ----- SetFreeGroupWorldPose -----
   void SetFreeGroupWorldPose(

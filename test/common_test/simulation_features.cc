@@ -1276,7 +1276,7 @@ template <class T>
 class SimulationFeaturesTestFreeGroupPhysics :
   public SimulationFeaturesTest<T>{};
 using SimulationFeaturesTestFreeGroupPhysicsTypes =
-  ::testing::Types<FreeGroupFeatures>;
+  ::testing::Types<FreeGroupPhysicsFeatures>;
 TYPED_TEST_SUITE(SimulationFeaturesTestFreeGroupPhysics,
                  SimulationFeaturesTestFreeGroupPhysicsTypes);
 

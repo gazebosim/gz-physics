@@ -101,7 +101,14 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
     auto body = linkIt->second->link.get();
     body->setGravity(gravity);
     if (!_enabled)
-      body->setActivationState(ACTIVE_TAG);
+    {
+      // Zero out velocities and forces so the body doesn't drift
+      // from residual momentum when gravity is disabled
+      body->setLinearVelocity(btVector3(0, 0, 0));
+      body->setAngularVelocity(btVector3(0, 0, 0));
+      body->clearForces();
+    }
+    body->setActivationState(ACTIVE_TAG);
   }
 
   gravityStates[static_cast<std::size_t>(_groupID)] = _enabled;
@@ -109,7 +116,7 @@ void FreeGroupFeatures::SetFreeGroupGravityEnabled(
 
 /////////////////////////////////////////////////
 bool FreeGroupFeatures::GetFreeGroupStaticState(
-    const Identity &_groupID)
+    const Identity &_groupID) const
 {
   auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model == nullptr)
@@ -142,15 +149,16 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
           body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
       body->setLinearVelocity(btVector3(0, 0, 0));
       body->setAngularVelocity(btVector3(0, 0, 0));
+      body->clearForces();
       body->setActivationState(DISABLE_SIMULATION);
     }
     else
     {
       body->setCollisionFlags(
           body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
-      auto *linkInfo = this->ReferenceInterface<LinkInfo>(_groupID);
-      if (linkInfo != nullptr)
-        body->setMassProps(linkInfo->mass, linkInfo->inertia);
+      // Restore mass/inertia from this link's own LinkInfo
+      body->setMassProps(linkIt->second->mass, linkIt->second->inertia);
+      body->updateInertiaTensor();
       body->setActivationState(ACTIVE_TAG);
     }
   }
@@ -158,7 +166,7 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
 
 /////////////////////////////////////////////////
 bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
-    const Identity &_groupID)
+    const Identity &_groupID) const
 {
   auto it = gravityStates.find(static_cast<std::size_t>(_groupID));
   if (it != gravityStates.end())
@@ -172,18 +180,63 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
 {
-  // Convert pose
-  const auto poseTranslation = _pose.translation();
-  const auto poseLinear = _pose.linear();
-  btTransform baseTransform;
-  baseTransform.setOrigin(convertVec(poseTranslation));
-  baseTransform.setBasis(convertMat(poseLinear));
-
-  // Set base transform
   const auto &model = this->models.at(_groupID);
-  for (auto link : model->links)
+  if (model->links.empty())
+    return;
+
+  // Get the current world pose of the root link (link frame, not COM frame)
+  const auto rootLinkID = model->links.front();
+  const auto &rootLinkInfo = this->links.at(rootLinkID);
+  btTransform currentRootCOM =
+    rootLinkInfo->link->getCenterOfMassTransform();
+
+  // Root link world pose = currentRootCOM * inertialPose.Inverse()
+  const auto rootInertialPose =
+    gz::math::eigen3::convert(rootLinkInfo->inertialPose);
+  btTransform rootInertialBt;
+  rootInertialBt.setOrigin(convertVec(rootInertialPose.translation()));
+  rootInertialBt.setBasis(convertMat(rootInertialPose.linear()));
+
+  btTransform currentRootWorldPose = currentRootCOM * rootInertialBt.inverse();
+
+  // Desired new world pose for the root link
+  btTransform newRootWorldPose;
+  newRootWorldPose.setOrigin(convertVec(_pose.translation()));
+  newRootWorldPose.setBasis(convertMat(_pose.linear()));
+
+  // Compute the relative transform change
+  btTransform tfChange = newRootWorldPose * currentRootWorldPose.inverse();
+
+  // Apply the transform change to all links
+  for (const auto linkID : model->links)
   {
-    this->links.at(link)->link->setCenterOfMassTransform(baseTransform);
+    const auto &linkInfo = this->links.at(linkID);
+    auto body = linkInfo->link.get();
+
+    // Current link world pose (link frame)
+    btTransform linkInertialBt;
+    const auto linkInertialPose =
+      gz::math::eigen3::convert(linkInfo->inertialPose);
+    linkInertialBt.setOrigin(convertVec(linkInertialPose.translation()));
+    linkInertialBt.setBasis(convertMat(linkInertialPose.linear()));
+
+    btTransform currentLinkCOM = body->getCenterOfMassTransform();
+    btTransform currentLinkWorld = currentLinkCOM * linkInertialBt.inverse();
+
+    // Apply the change to get new link world pose, then convert back to COM
+    btTransform newLinkWorld = tfChange * currentLinkWorld;
+    btTransform newLinkCOM = newLinkWorld * linkInertialBt;
+
+    body->setCenterOfMassTransform(newLinkCOM);
+    // Also update the motion state so Bullet doesn't reset the pose
+    if (body->getMotionState())
+    {
+      body->getMotionState()->setWorldTransform(newLinkCOM);
+    }
+    body->setLinearVelocity(btVector3(0, 0, 0));
+    body->setAngularVelocity(btVector3(0, 0, 0));
+    body->clearForces();
+    body->setActivationState(ACTIVE_TAG);
   }
 }
 
@@ -193,6 +246,10 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 {
   auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model == nullptr)
+    return;
+
+  // Do not set velocity on a static model
+  if (model->fixed)
     return;
 
   const btVector3 velocity = convertVec(_linearVelocity);
@@ -214,6 +271,10 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
 {
   auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model == nullptr)
+    return;
+
+  // Do not set velocity on a static model
+  if (model->fixed)
     return;
 
   const btVector3 angular = convertVec(_angularVelocity);

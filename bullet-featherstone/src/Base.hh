@@ -144,6 +144,8 @@ struct ModelInfo
   Eigen::Isometry3d rootLinkToModelTf;
   Eigen::Isometry3d baseInertiaToLinkFrame;
   std::shared_ptr<GzMultiBody> body;
+  double baseMass = 0.0;
+  btVector3 baseInertia = btVector3(0, 0, 0);
 
   bool isNestedModel = false;
 
@@ -200,6 +202,8 @@ struct LinkInfo
   std::optional<int> indexInModel;
   Identity model;
   Eigen::Isometry3d inertiaToLinkFrame;
+  double mass = 0.0;
+  Eigen::Vector3d inertia = Eigen::Vector3d::Zero();
   std::unique_ptr<GzMultiBodyLinkCollider> collider = nullptr;
   std::unique_ptr<btCompoundShape> shape = nullptr;
   std::vector<std::size_t> collisionEntityIds = {};
