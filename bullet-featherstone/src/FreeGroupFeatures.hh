@@ -28,12 +28,8 @@ namespace bullet_featherstone {
 
 struct FreeGroupFeatureList : gz::physics::FeatureList<
   FindFreeGroupFeature,
-  GetFreeGroupStaticState,
-  GetFreeGroupGravityEnabled,
   SetFreeGroupWorldPose,
-  SetFreeGroupWorldVelocity,
-  SetFreeGroupStaticState,
-  SetFreeGroupGravityEnabled
+  SetFreeGroupWorldVelocity
 > { };
 
 class FreeGroupFeatures
