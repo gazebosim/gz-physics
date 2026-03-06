@@ -213,28 +213,29 @@ Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
 const std::string &EntityManagementFeatures::GetLinkName(
     const Identity &_linkID) const
 {
-  // TODO(azeey) Implement GetLinkName
-  static std::string name = "";
-  return name;
+  return this->ReferenceInterface<LinkInfo>(_linkID)->name;
 }
 
 /////////////////////////////////////////////////
 std::size_t EntityManagementFeatures::GetLinkIndex(
     const Identity &_linkID) const
 {
-  // TODO(azeey) Implement GetLinkIndex
-  return 0;
+  const auto modelInfo =
+      this->ReferenceInterface<LinkInfo>(_linkID)->modelInfo.lock();
+  return modelInfo->links.idToIndexInContainer.at(_linkID);
 }
 
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetModelOfLink(const Identity &_linkID) const
 {
-  // TODO(azeey) Implement GetModelOfLink
-  return this->GenerateInvalidId();
+  const auto modelInfo =
+      this->ReferenceInterface<LinkInfo>(_linkID)->modelInfo.lock();
+
+  return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
 
 /////////////////////////////////////////////////
-bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
+bool EntityManagementFeatures::RemoveModel(const Identity &/* _modelID */)
 {
   // TODO(azeey) Implement RemoveModel
   return false;
@@ -242,7 +243,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(
-    const Identity &_modelID) const
+    const Identity &/* _modelID */) const
 {
   // TODO(azeey) Implement RemoveModel
   return false;
@@ -259,12 +260,14 @@ std::size_t EntityManagementFeatures::GetShapeCount(
 Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, std::size_t _shapeIndex) const
 {
-  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
-  if (_shapeIndex >= link->shapes.size())
+  const auto linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
+  if (_shapeIndex >= linkInfo->shapes.indexInContainerToID.size())
+  {
     return this->GenerateInvalidId();
-
-  const auto shapeInfo = link->shapes[_shapeIndex];
-  return this->GenerateIdentity(shapeInfo->entityId, shapeInfo);
+  }
+  const std::size_t id =
+      linkInfo->shapes.indexInContainerToID.begin()->second[_shapeIndex];
+  return this->GenerateIdentity(id, linkInfo->shapes.at(id));
 }
 
 /////////////////////////////////////////////////
@@ -274,22 +277,27 @@ Identity EntityManagementFeatures::GetShape(
   // TODO(azeey) Return an invalid ID here otherwise, gz-sim will incorrectly
   // assume the ConstructSdfCollision feature is implemented (bug).
   return this->GenerateInvalidId();
-  const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
-  auto predicate = [&](const std::shared_ptr<ShapeInfo> &_shapeInfo)
+  const auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
+  auto bodyName = mjs_getName(linkInfo->body->element);
+  if (!bodyName)
   {
-    if (_shapeName == _shapeInfo->name)
-    {
-      return true;
-    }
-    return false;
-  };
-  const auto it =
-      std::find_if(link->shapes.begin(), link->shapes.end(), predicate);
-
-  if (it == link->shapes.end())
     return this->GenerateInvalidId();
+  }
+  const auto *child = mjs_asGeom(mjs_findElement(linkInfo->worldInfo->mjSpecObj,
+      mjOBJ_GEOM, JoinNames(*bodyName, _shapeName).c_str()));
 
-  return this->GenerateIdentity((*it)->entityId, *it);
+  if (!child)
+  {
+    return this->GenerateInvalidId();
+  }
+
+  auto shapeInfo = linkInfo->shapes.at(child);
+  if (!shapeInfo)
+  {
+    return this->GenerateInvalidId();
+  }
+
+  return this->GenerateIdentity(shapeInfo->entityId, shapeInfo);
 }
 
 /////////////////////////////////////////////////
@@ -303,8 +311,9 @@ const std::string &EntityManagementFeatures::GetShapeName(
 std::size_t EntityManagementFeatures::GetShapeIndex(
   const Identity &_shapeID) const
 {
-  // TODO(azeey): Implement GetShapeIndex
-  return 0;
+  const auto linkInfo =
+      this->ReferenceInterface<ShapeInfo>(_shapeID)->linkInfo.lock();
+  return linkInfo->shapes.idToIndexInContainer.at(_shapeID);
 }
 
 /////////////////////////////////////////////////
@@ -320,7 +329,7 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByIndex(
-    const Identity & _worldID, std::size_t _modelIndex)
+    const Identity & /* _worldID */, std::size_t /* _modelIndex */)
 {
   // TODO(azeey) Implement RemoveModelByIndex
   return false;
@@ -328,7 +337,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByName(
-    const Identity & _worldID, const std::string & _modelName )
+    const Identity & /* _worldID */, const std::string & /* _modelName  */)
 {
   // TODO(azeey) Implement RemoveModelByName
   return false;
@@ -336,15 +345,15 @@ bool EntityManagementFeatures::RemoveModelByName(
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveNestedModelByIndex(
-    const Identity &_modelID, std::size_t _nestedModelIndex)
+    const Identity &/* _modelID */, std::size_t /* _nestedModelIndex */)
 {
   // TODO(azeey) Implement RemoveNestedModelByIndex
   return false;
 }
 
 /////////////////////////////////////////////////
-bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
-    const std::string &_modelName)
+bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &/* _modelID */,
+    const std::string &/* _modelName */)
 {
   // TODO(azeey) Implement RemoveNestedModelByName
   return false;

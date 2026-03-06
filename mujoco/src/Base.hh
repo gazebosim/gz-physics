@@ -66,7 +66,7 @@ struct LinkInfo
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
   WorldInfo *worldInfo;
-  std::vector<std::shared_ptr<ShapeInfo>> shapes;
+  EntityStorage<std::shared_ptr<ShapeInfo>, const mjsGeom *> shapes{};
 };
 
 struct JointInfo

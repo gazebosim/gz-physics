@@ -120,11 +120,11 @@ struct ModelKinematicStructure
     mesh->FillArrays(&verts, &indices);
     auto nverts = mesh->VertexCount();
     muMesh->uservert->assign(3 * nverts, 0.0);
-    for (int i = 0; i < nverts / 3; ++i)
-    {
-      std::cout << verts[3 * i] << " " << verts[3 * i + 1] << " "
-                << verts[3 * i + 2] << std::endl;
-    }
+    // for (int i = 0; i < nverts / 3; ++i)
+    // {
+    //   std::cout << verts[3 * i] << " " << verts[3 * i + 1] << " "
+    //             << verts[3 * i + 2] << std::endl;
+    // }
     std::copy(verts, verts + 3 * nverts, muMesh->uservert->begin());
 
     mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
@@ -203,7 +203,6 @@ struct ModelKinematicStructure
     child->explicitinertial = true;
     const auto &massM = link->Inertial().MassMatrix();
     const math::Matrix3d &moi = link->Inertial().Moi();
-    const math::Vector3d &com = link->Inertial().Pose().Pos();
     child->mass = massM.Mass();
     child->fullinertia[0] = moi(0, 0);
     child->fullinertia[1] = moi(1, 1);
@@ -341,7 +340,7 @@ struct ModelKinematicStructure
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
-        linkInfo->shapes.push_back(shapeInfo);
+        linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom, linkInfo->entityId);
       }
     }
     if (!this->childInJoint[_index] && !_sdfModel.Static())
