@@ -18,9 +18,11 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_SIMULATIONFEATURES_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_SIMULATIONFEATURES_HH_
 
+#include <vector>
 
 #include <gz/physics/CanWriteData.hh>
 #include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetContacts.hh>
 
 #include "Base.hh"
 
@@ -32,7 +34,8 @@ namespace mujoco
 {
 
 struct SimulationFeatureList : gz::physics::FeatureList<
-  ForwardStep
+  ForwardStep,
+  GetContactsFromLastStepFeature
 > { };
 
 class SimulationFeatures :
@@ -42,6 +45,9 @@ class SimulationFeatures :
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
+  public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
+    ::ContactInternal;
+
   public: void WorldForwardStep(
       const Identity &_worldID,
       ForwardStep::Output &_h,
@@ -50,6 +56,9 @@ class SimulationFeatures :
 
   public: void Write(WorldPoses &_worldPoses) const;
   // public: void Write(ChangedWorldPoses &_changedPoses) const;
+
+  public: std::vector<ContactInternal> GetContactsFromLastStep(
+      const Identity &_worldID) const override;
 
   /// \brief link poses from the most recent pose change/update.
   /// The key is the link's ID, and the value is the link's pose

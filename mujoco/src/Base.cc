@@ -18,6 +18,7 @@
 #include "Base.hh"
 
 #include <gz/physics/Implements.hh>
+#include <sdf/Types.hh>
 
 namespace gz
 {
@@ -46,6 +47,28 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
     return false;
   }
   // mj_saveXML(_worldInfo.mjSpecObj, "/tmp/mujoco_model.xml", nullptr, 0);
+
+  // Build the geomIdToShapeInfo map
+  _worldInfo.geomIdToShapeInfo.clear();
+  for (const auto &[modelId, modelInfo] : _worldInfo.models.idToObject)
+  {
+    for (const auto &[linkId, linkInfo] : modelInfo->links.idToObject)
+    {
+      const std::string bodyName =
+          ::sdf::JoinName(modelInfo->name, linkInfo->name);
+      for (const auto &[shapeId, shapeInfo] : linkInfo->shapes.idToObject)
+      {
+        const std::string geomName =
+            ::sdf::JoinName(bodyName, shapeInfo->name);
+        int geomId = mj_name2id(_worldInfo.mjModelObj, mjOBJ_GEOM,
+                                 geomName.c_str());
+        if (geomId != -1)
+        {
+          _worldInfo.geomIdToShapeInfo[geomId] = shapeInfo;
+        }
+      }
+    }
+  }
 
   mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
   return true;
