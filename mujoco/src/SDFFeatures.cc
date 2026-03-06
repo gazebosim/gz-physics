@@ -340,7 +340,8 @@ struct ModelKinematicStructure
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
-        linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom, linkInfo->entityId);
+        linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
+                                   linkInfo->entityId);
       }
     }
     if (!this->childInJoint[_index] && !_sdfModel.Static())

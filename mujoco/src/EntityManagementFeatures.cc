@@ -352,8 +352,8 @@ bool EntityManagementFeatures::RemoveNestedModelByIndex(
 }
 
 /////////////////////////////////////////////////
-bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &/* _modelID */,
-    const std::string &/* _modelName */)
+bool EntityManagementFeatures::RemoveNestedModelByName(
+    const Identity & /* _modelID */, const std::string & /* _modelName */)
 {
   // TODO(azeey) Implement RemoveNestedModelByName
   return false;
