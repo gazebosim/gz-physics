@@ -445,6 +445,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   auto end = std::chrono::high_resolution_clock::now();
   std::cout << "Model: " << _sdfModel.Name() << " constructed in "
             << std::chrono::duration<double>(end - start).count() << "\n";
+  this->RecompileSpec(*worldInfo);
   return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
 
