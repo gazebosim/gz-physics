@@ -40,6 +40,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
   auto worldInfo = it->second->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto * site = it->second->site;
   auto siteId = mjs_getId(site->element);
 
