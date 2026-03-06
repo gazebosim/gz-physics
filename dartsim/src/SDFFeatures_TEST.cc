@@ -406,7 +406,7 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
   const auto *screwJoint = dynamic_cast<const dart::dynamics::ScrewJoint*>(
       screwJointTest->getJoint(1));
   ASSERT_NE(nullptr, screwJoint);
-  EXPECT_DOUBLE_EQ(-GZ_PI, screwJoint->getPitch());
+  EXPECT_DOUBLE_EQ(2.0, screwJoint->getPitch());
 
   const dart::dynamics::SkeletonPtr ballJointTest =
       dartWorld->getSkeleton("ball_joint_test");

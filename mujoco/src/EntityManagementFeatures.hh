@@ -58,7 +58,7 @@ class EntityManagementFeatures :
   }
 
   public: const gz::math::SemanticVersion &GetEngineVersion(
-            const Identity &_engineID) const override
+            const Identity &) const override
   {
     return this->engineVersion;
   }

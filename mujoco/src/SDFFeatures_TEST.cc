@@ -90,29 +90,29 @@ WorldPtr LoadWorldWhole(const std::string &_world)
 }
 
 /////////////////////////////////////////////////
-static gz::math::Pose3d ResolveSdfPose(
-    const ::sdf::SemanticPose &_semPose)
-{
-  gz::math::Pose3d pose;
-  ::sdf::Errors errors = _semPose.Resolve(pose);
-  EXPECT_TRUE(errors.empty()) << errors;
-  return pose;
-}
+// static gz::math::Pose3d ResolveSdfPose(
+//     const ::sdf::SemanticPose &_semPose)
+// {
+//   gz::math::Pose3d pose;
+//   ::sdf::Errors errors = _semPose.Resolve(pose);
+//   EXPECT_TRUE(errors.empty()) << errors;
+//   return pose;
+// }
 
-static sdf::JointAxis ResolveJointAxis(const sdf::JointAxis &_unresolvedAxis)
-{
-  gz::math::Vector3d axisXyz;
-  const sdf::Errors resolveAxisErrors = _unresolvedAxis.ResolveXyz(axisXyz);
-  EXPECT_TRUE(resolveAxisErrors.empty()) << resolveAxisErrors;
-
-  sdf::JointAxis resolvedAxis = _unresolvedAxis;
-
-  const sdf::Errors setXyzErrors = resolvedAxis.SetXyz(axisXyz);
-  EXPECT_TRUE(setXyzErrors.empty()) << setXyzErrors;
-
-  resolvedAxis.SetXyzExpressedIn("");
-  return resolvedAxis;
-}
+// static sdf::JointAxis ResolveJointAxis(const sdf::JointAxis &_unresolvedAxis)
+// {
+//   gz::math::Vector3d axisXyz;
+//   const sdf::Errors resolveAxisErrors = _unresolvedAxis.ResolveXyz(axisXyz);
+//   EXPECT_TRUE(resolveAxisErrors.empty()) << resolveAxisErrors;
+//
+//   sdf::JointAxis resolvedAxis = _unresolvedAxis;
+//
+//   const sdf::Errors setXyzErrors = resolvedAxis.SetXyz(axisXyz);
+//   EXPECT_TRUE(setXyzErrors.empty()) << setXyzErrors;
+//
+//   resolvedAxis.SetXyzExpressedIn("");
+//   return resolvedAxis;
+// }
 
 /////////////////////////////////////////////////
 /// Downstream applications, like gz-sim, use this way of world construction

@@ -56,7 +56,6 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 
   auto &worldPoses = _h.Get<WorldPoses>();
   worldPoses.entries.clear();
-  const mjModel *m = worldInfo->mjModelObj;
   mjData *d = worldInfo->mjDataObj;
   for (const auto &[modelId, model] : worldInfo->models.idToObject)
   {
@@ -78,7 +77,7 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 }
 
 /////////////////////////////////////////////////
-void SimulationFeatures::Write(WorldPoses &_worldPoses) const
+void SimulationFeatures::Write(WorldPoses &/* _worldPoses */) const
 {
 }
 
