@@ -227,6 +227,9 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
     // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
 
+    // TPE does not support generate contact force, normal, depth data.
+    if (this->PhysicsEngineName(name) == "tpe") continue;
+
     bool checkedForces = false;
     for (const auto &contact : contacts)
     {
