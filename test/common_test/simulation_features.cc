@@ -218,12 +218,34 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
       this->loader,
       name,
       common_test::worlds::kShapesWorld);
-    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1).first;
+
+    // Step for contact data to be populated
+    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 5).first;
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
     // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
+
+    bool checkedForces = false;
+    for (const auto &contact : contacts)
+    {
+      const auto *extraContactData =
+          contact.template Query<
+              gz::physics::World3d<FeaturesContacts>::ExtraContactData>();
+      ASSERT_NE(nullptr, extraContactData);
+      EXPECT_FALSE(extraContactData->normal.isZero());
+      EXPECT_GE(extraContactData->depth, 0.0);
+
+      // check that force and normal are in the same direction if force is
+      // non-zero
+      if (!extraContactData->force.isZero())
+      {
+        EXPECT_GT(extraContactData->force.dot(extraContactData->normal), 0.0);
+        checkedForces = true;
+      }
+    }
+    EXPECT_TRUE(checkedForces);
   }
 }
 
