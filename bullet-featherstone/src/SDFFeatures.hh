@@ -81,10 +81,14 @@ class SDFFeatures :
 
   /// \brief Create and initialze the link collider in link info
   /// \param[in] _linkID ID of link to create the collider for
+  /// \param[in] _collideBitmask Collide bitmask
+  /// \param[in] _categoryBitmask Category bitmask
   /// \param[in] _isStatic True if the link is static
   /// \param[in] _shape Collision shape to attach to link
-  private: void CreateLinkCollider(const Identity &_linkID,
-      bool _isStatic, btCollisionShape *_shape = nullptr,
+  private: void CreateLinkCollider(const Identity &_linkID, bool _isStatic,
+      uint32_t _collideBitmask = std::numeric_limits<uint32_t>::max(),
+      std::optional<uint32_t> _categoryBitmask = std::nullopt,
+      btCollisionShape *_shape = nullptr,
       const btTransform &_shapeTF = btTransform::getIdentity());
 };
 
