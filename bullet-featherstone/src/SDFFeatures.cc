@@ -1501,7 +1501,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
-    uint32_t _collideBitmask, std::optional<uint32_t> _categoryBitmask,
+    uint16_t _collideBitmask, std::optional<uint16_t> _categoryBitmask,
     btCollisionShape *_shape, const btTransform &_shapeTF)
 {
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);

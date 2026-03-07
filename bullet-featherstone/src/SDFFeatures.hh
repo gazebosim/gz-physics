@@ -87,8 +87,8 @@ class SDFFeatures :
   /// \param[in] _categoryBitmask Category bitmask
   /// \param[in] _shape Collision shape to attach to link
   private: void CreateLinkCollider(const Identity &_linkID, bool _isStatic,
-      uint32_t _collideBitmask = std::numeric_limits<uint32_t>::max(),
-      std::optional<uint32_t> _categoryBitmask = std::nullopt,
+      uint16_t _collideBitmask = std::numeric_limits<uint16_t>::max(),
+      std::optional<uint16_t> _categoryBitmask = std::nullopt,
       btCollisionShape *_shape = nullptr,
       const btTransform &_shapeTF = btTransform::getIdentity());
 };
