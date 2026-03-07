@@ -1311,7 +1311,8 @@ bool SDFFeatures::AddSdfCollision(
         // TODO(iche033) add support for category_bitmask as well
         if (const auto bitmask = contact->FindElement("collide_bitmask"))
         {
-          collideBitmask = bitmask->Get<uint16_t>();
+          // Get only supports uint32_t so cast back to uint16_t
+          collideBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
           // Clear overlapping pair cache if new collision flags are set
           // so that new contacts are generated with up-to-date collision flags.
           this->ClearOverlappingPairCache(model->world);
