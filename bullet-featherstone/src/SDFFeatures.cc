@@ -1311,11 +1311,12 @@ bool SDFFeatures::AddSdfCollision(
       {
         if (const auto bitmask = contact->FindElement("collide_bitmask"))
         {
-          collideBitmask = bitmask->Get<uint16_t>();
+          // Get only supports uint32_t so cast back to uint16_t
+          collideBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
         }
         if (const auto bitmask = contact->FindElement("category_bitmask"))
         {
-          categoryBitmask = bitmask->Get<uint16_t>();
+          categoryBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
         }
       }
     }
