@@ -1362,7 +1362,6 @@ TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
       auto c2 = contactPoint.collision2;
       auto m1 = c1->GetLink()->GetModel();
       auto m2 = c2->GetLink()->GetModel();
-      std::cerr << m1->GetName() << " : " << m2->GetName() << std::endl;
       EXPECT_TRUE(m1->GetName() == "box_base" ||
                   m1->GetName() == "box_colliding");
       EXPECT_TRUE(m2->GetName() == "box_base" ||

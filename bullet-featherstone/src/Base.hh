@@ -74,8 +74,8 @@ class GzCollisionDispatcher : public btCollisionDispatcher
 
   /// \brief Overrides base struct's function for additional collision
   /// filtering based on surface contact parameters
-  public: virtual bool needsCollision(const btCollisionObject *_body0,
-                                      const btCollisionObject *_body1) override;
+  public: bool needsCollision(const btCollisionObject *_body0,
+                              const btCollisionObject *_body1) override;
 };
 
 /// \brief The Info structs are used for three reasons:
@@ -215,7 +215,7 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
   }
 
   /// \brief Collision contact surface collide bitmask parameter
-  public: uint32_t collideBitmask = std::numeric_limits<uint32_t>::max();
+  public: uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
 };
 
 /// Link information is embedded inside the model, so all we need to store here

@@ -1270,7 +1270,7 @@ bool SDFFeatures::AddSdfCollision(
   double restitution = 0.0;
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
-  uint32_t collideBitmask = std::numeric_limits<uint32_t>::max();
+  uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1311,7 +1311,7 @@ bool SDFFeatures::AddSdfCollision(
         // TODO(iche033) add support for category_bitmask as well
         if (const auto bitmask = contact->FindElement("collide_bitmask"))
         {
-          collideBitmask = bitmask->Get<uint32_t>();
+          collideBitmask = bitmask->Get<uint16_t>();
           // Clear overlapping pair cache if new collision flags are set
           // so that new contacts are generated with up-to-date collision flags.
           this->ClearOverlappingPairCache(model->world);
