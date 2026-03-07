@@ -61,7 +61,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
     auto shape2Iter = bitmaskMap.find(shapeNode2);
     if (shape1Iter != bitmaskMap.end() && shape2Iter != bitmaskMap.end())
     {
-      // For backward compatibility, if category bitmask is not yet, it
+      // For backward compatibility, if category bitmask is not set, it
       // defaults to the same value as collide bitmask.
       auto category1Iter = categoryBitmaskMap.find(shapeNode1);
       auto category2Iter = categoryBitmaskMap.find(shapeNode2);
