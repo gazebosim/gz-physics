@@ -35,7 +35,7 @@ bool doCollide(uint32_t _categoryBitmask0, uint32_t _collideBitmask0,
          (_categoryBitmask1 & _collideBitmask0);
 }
 
-}
+}  // namespace
 
 namespace gz {
 namespace physics {
@@ -54,7 +54,7 @@ bool GzCollisionFilterCallback::needBroadphaseCollision(
 
   if (col0 && col1)
   {
-    // For backward compatibility, if category bitmask is not yet, it
+    // For backward compatibility, if category bitmask is not set, it
     // defaults to the same value as collide bitmask.
     uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
         col0->categoryBitmask.value() : col0->collideBitmask;
@@ -96,7 +96,7 @@ bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
   // Collision filtering in narrow phase.
   if (col0 && col1)
   {
-    // For backward compatibility, if category bitmask is not yet, it
+    // For backward compatibility, if category bitmask is not set, it
     // defaults to the same value as collide bitmask.
     uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
         col0->categoryBitmask.value() : col0->collideBitmask;

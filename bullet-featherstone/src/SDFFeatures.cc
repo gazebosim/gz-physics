@@ -1271,7 +1271,7 @@ bool SDFFeatures::AddSdfCollision(
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
   uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
-  std::optional<uint32_t> categoryBitmask;
+  std::optional<uint16_t> categoryBitmask;
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1315,7 +1315,7 @@ bool SDFFeatures::AddSdfCollision(
         }
         if (const auto bitmask = contact->FindElement("category_bitmask"))
         {
-          categoryBitmask = bitmask->Get<uint32_t>();
+          categoryBitmask = bitmask->Get<uint16_t>();
         }
       }
     }
@@ -1562,7 +1562,7 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   // internal collision flags which are used to indicate whether a collision
   // is static, dynamic, kinematic, etc
   // Set these masks before calling addCollisionObject so that
-  // the masks are avialable during the needBroadPhaseCollision check
+  // the masks are available during the needBroadPhaseCollision check
   linkInfo->collider->collideBitmask = _collideBitmask;
   linkInfo->collider->categoryBitmask = _categoryBitmask;
 

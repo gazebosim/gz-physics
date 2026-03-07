@@ -258,7 +258,7 @@ uint16_t EntityManagementFeatures::GetCategoryFilterMask(
 {
   auto *colInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(colInfo->link);
-  // For backward compatibility, if category bitmask is not yet, it
+  // For backward compatibility, if category bitmask is not set, it
   // defaults to the same value as collide bitmask.
   return linkInfo->collider->categoryBitmask.has_value() ?
       linkInfo->collider->categoryBitmask.value() :

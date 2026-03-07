@@ -219,7 +219,7 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
   public: uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
 
   /// \brief Collision contact surface category bitmask parameter
-  public: std::optional<uint32_t> categoryBitmask;
+  public: std::optional<uint16_t> categoryBitmask;
 };
 
 /// Link information is embedded inside the model, so all we need to store here

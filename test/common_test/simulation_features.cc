@@ -1405,7 +1405,7 @@ TEST_F(SimulationFeaturesCategoryFilter, CategoryBitmasks)
 {
   for (const std::string &name : this->pluginNames)
   {
-    // World consists of 2 cateory A shapes, 2 category B shapes,
+    // World consists of 2 category A shapes, 2 category B shapes,
     // and 1 category C shape. The shapes in the same category
     // should not collide with each other.
     auto world = LoadPluginAndWorld<FeaturesCategoryFilter>(
