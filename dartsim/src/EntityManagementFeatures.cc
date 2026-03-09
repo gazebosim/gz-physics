@@ -125,6 +125,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
     {
       auto shapePtr = _skelPtr->getShapeNode(i);
       this->RemoveIgnoredCollision(shapePtr);
+      this->RemoveIgnoredCategory(shapePtr);
     }
   }
 
