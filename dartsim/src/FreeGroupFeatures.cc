@@ -158,6 +158,12 @@ void FreeGroupFeatures::SetFreeGroupStaticState(
   if (skeleton)
   {
     skeleton->setMobile(!_state);
+    // When going static, zero out all velocities so they are not
+    // reported as non-zero and so residual momentum doesn't persist.
+    if (_state)
+    {
+      skeleton->setVelocities(Eigen::VectorXd::Zero(skeleton->getNumDofs()));
+    }
   }
 
   // Recursively set static state for all nested models
@@ -329,6 +335,10 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
 void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
     const Identity &_groupID, const LinearVelocity &_linearVelocity)
 {
+  // Do not set velocity on a static model
+  if (this->GetFreeGroupStaticState(_groupID))
+    return;
+
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
@@ -354,6 +364,10 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     const Identity &_groupID, const AngularVelocity &_angularVelocity)
 {
+  // Do not set velocity on a static model
+  if (this->GetFreeGroupStaticState(_groupID))
+    return;
+
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
