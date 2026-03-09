@@ -1252,6 +1252,459 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
   }
 }
 
+struct FreeGroupPhysicsFeatures : gz::physics::FeatureList<
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::GetFreeGroupStaticState,
+  gz::physics::GetFreeGroupGravityEnabled,
+  gz::physics::SetFreeGroupWorldPose,
+  gz::physics::SetFreeGroupWorldVelocity,
+  gz::physics::SetFreeGroupStaticState,
+  gz::physics::SetFreeGroupGravityEnabled,
+
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+
+  gz::physics::FreeGroupFrameSemantics,
+  gz::physics::LinkFrameSemantics,
+
+  gz::physics::sdf::ConstructSdfWorld,
+
+  gz::physics::ForwardStep
+> {};
+
+template <class T>
+class SimulationFeaturesTestFreeGroupPhysics :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesTestFreeGroupPhysicsTypes =
+  ::testing::Types<FreeGroupPhysicsFeatures>;
+TYPED_TEST_SUITE(SimulationFeaturesTestFreeGroupPhysics,
+                 SimulationFeaturesTestFreeGroupPhysicsTypes);
+
+TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroup)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    auto world = LoadPluginAndWorld<FreeGroupPhysicsFeatures>(
+      this->loader,
+      name,
+      common_test::worlds::kSphereGravitySdf);
+
+    // model free group test
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->CanonicalLink());
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->RootLink());
+
+    auto link = model->GetLink("sphere_link");
+    ASSERT_NE(nullptr, link);
+    auto freeGroupLink = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroupLink);
+
+    // Verify initial gravity state is enabled before disabling
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+
+    // Disable gravity.
+    freeGroup->SetGravityEnabled(false);
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+
+    StepWorld<FreeGroupPhysicsFeatures>(world, true);
+
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+
+    // Set initial pose.
+    const gz::math::Pose3d initialPose{0, 0, 2, 0, 0, 0};
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    auto freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    auto linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Before stepping, check that pose matches what was set.
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify initial velocity is zero
+    AssertVectorApprox vectorPredicate(1e-7);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.angularVelocity);
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // The sphere is in the same position because gravity is not working
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify velocity is still zero since gravity is disabled
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.linearVelocity);
+
+    // Enable gravity
+    freeGroup->SetGravityEnabled(true);
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+
+    // Reset pose before stepping with gravity enabled
+    freeGroup->SetWorldPose(gz::math::eigen3::convert(initialPose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // The sphere is not in the same position because gravity is working
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Sphere should have fallen (z position should be less than initial)
+    auto currentPose = gz::math::eigen3::convert(freeGroupFrameData.pose);
+    EXPECT_LT(currentPose.Pos().Z(), initialPose.Pos().Z());
+
+    // Verify the sphere has downward velocity due to gravity
+    EXPECT_LT(freeGroupFrameData.linearVelocity.z(), 0.0);
+
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    EXPECT_FALSE(freeGroup->GetStaticState());
+
+    // Now the model is static
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
+
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Gravity is enabled and we also set some velocities.
+    const Eigen::Vector3d initialLinearVelocity{0.1, 0.2, 0.3};
+    const Eigen::Vector3d initialAngularVelocity{0.4, 0.5, 0.6};
+    freeGroup->SetWorldLinearVelocity(initialLinearVelocity);
+    freeGroup->SetWorldAngularVelocity(initialAngularVelocity);
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // sphere should be in the same position because it is static
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify velocity is zero for static model (velocities should be ignored)
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.angularVelocity);
+
+    // Now the model is dynamic again
+    freeGroup->SetStaticState(false);
+    EXPECT_FALSE(freeGroup->GetStaticState());
+
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Gravity is enabled and we also set some velocities.
+    freeGroup->SetWorldLinearVelocity(initialLinearVelocity);
+    freeGroup->SetWorldAngularVelocity(initialAngularVelocity);
+
+    // Verify velocities were set correctly
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      initialLinearVelocity,
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      initialAngularVelocity,
+      freeGroupFrameData.angularVelocity);
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // sphere should NOT be in the same position since it is dynamic with
+    // gravity enabled and non-zero initial velocity
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify that freeGroup and link frame data are consistent
+    EXPECT_EQ(gz::math::eigen3::convert(freeGroupFrameData.pose),
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Test toggling static state multiple times
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
+    freeGroup->SetStaticState(false);
+    EXPECT_FALSE(freeGroup->GetStaticState());
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
+
+    // Test toggling gravity multiple times
+    freeGroup->SetGravityEnabled(false);
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+    freeGroup->SetGravityEnabled(true);
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+    freeGroup->SetGravityEnabled(false);
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+  }
+}
+
+TYPED_TEST(SimulationFeaturesTestFreeGroupPhysics, FreeGroupNested)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    auto world = LoadPluginAndWorld<FreeGroupPhysicsFeatures>(
+      this->loader,
+      name,
+      common_test::worlds::kWorldSingleNestedModelSdf);
+
+    // model free group test
+    auto model = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, model);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->CanonicalLink());
+    GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
+    ASSERT_NE(nullptr, freeGroup->RootLink());
+
+    auto link = model->GetLink("link1");
+    ASSERT_NE(nullptr, link);
+    auto freeGroupLink = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroupLink);
+
+    // Verify initial gravity state is enabled before disabling
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+
+    // Disable gravity.
+    freeGroup->SetGravityEnabled(false);
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+
+    StepWorld<FreeGroupPhysicsFeatures>(world, true);
+
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+
+    // Set initial pose.
+    const gz::math::Pose3d initialPose{0, 0, 2, 0, 0, 0};
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    auto freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    auto linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Before stepping, check that pose matches what was set.
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify initial velocity is zero
+    AssertVectorApprox vectorPredicate(1e-7);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.angularVelocity);
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // The model is in the same position because gravity is not working
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify velocity is still zero since gravity is disabled
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.linearVelocity);
+
+    // Enable gravity
+    freeGroup->SetGravityEnabled(true);
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+
+    // Reset pose before stepping with gravity enabled
+    freeGroup->SetWorldPose(gz::math::eigen3::convert(initialPose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+
+    // The model is not in the same position because gravity is working
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Model should have fallen (z position should be less than initial)
+    auto currentPose = gz::math::eigen3::convert(freeGroupFrameData.pose);
+    EXPECT_LT(currentPose.Pos().Z(), initialPose.Pos().Z());
+
+    // Verify the model has downward velocity due to gravity
+    EXPECT_LT(freeGroupFrameData.linearVelocity.z(), 0.0);
+
+    // Verify that freeGroup and link frame data are consistent
+    EXPECT_EQ(gz::math::eigen3::convert(freeGroupFrameData.pose),
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    EXPECT_FALSE(freeGroup->GetStaticState());
+    // Now the model is static
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
+
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Gravity is enabled and we also set some velocities.
+    const Eigen::Vector3d initialLinearVelocity{0.1, 0.2, 0.3};
+    const Eigen::Vector3d initialAngularVelocity{0.4, 0.5, 0.6};
+    freeGroup->SetWorldLinearVelocity(initialLinearVelocity);
+    freeGroup->SetWorldAngularVelocity(initialAngularVelocity);
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // model should be in the same position because it is static
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify velocity is zero for static model (velocities should be ignored)
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      Eigen::Vector3d::Zero(),
+      freeGroupFrameData.angularVelocity);
+
+    // Now the model is dynamic again
+    freeGroup->SetStaticState(false);
+    EXPECT_FALSE(freeGroup->GetStaticState());
+
+    freeGroup->SetWorldPose(
+      gz::math::eigen3::convert(initialPose));
+
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    // Gravity is enabled and we also set some velocities.
+    freeGroup->SetWorldLinearVelocity(initialLinearVelocity);
+    freeGroup->SetWorldAngularVelocity(initialAngularVelocity);
+
+    // Verify velocities were set correctly
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      initialLinearVelocity,
+      freeGroupFrameData.linearVelocity);
+    EXPECT_PRED_FORMAT2(vectorPredicate,
+      initialAngularVelocity,
+      freeGroupFrameData.angularVelocity);
+
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_EQ(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Step the world
+    StepWorld<FreeGroupPhysicsFeatures>(world, false, 1000);
+
+    // model should NOT be in the same position since it is dynamic with
+    // gravity enabled and non-zero initial velocity
+    freeGroupFrameData = freeGroup->FrameDataRelativeToWorld();
+    linkFrameData = model->GetLink(0)->FrameDataRelativeToWorld();
+
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(freeGroupFrameData.pose));
+    EXPECT_NE(initialPose,
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Verify that freeGroup and link frame data are consistent
+    EXPECT_EQ(gz::math::eigen3::convert(freeGroupFrameData.pose),
+              gz::math::eigen3::convert(linkFrameData.pose));
+
+    // Test toggling static state multiple times
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
+    freeGroup->SetStaticState(false);
+    EXPECT_FALSE(freeGroup->GetStaticState());
+    freeGroup->SetStaticState(true);
+    EXPECT_TRUE(freeGroup->GetStaticState());
+
+    // Test toggling gravity multiple times
+    freeGroup->SetGravityEnabled(false);
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+    freeGroup->SetGravityEnabled(true);
+    EXPECT_TRUE(freeGroup->GetGravityEnabled());
+    freeGroup->SetGravityEnabled(false);
+    EXPECT_FALSE(freeGroup->GetGravityEnabled());
+  }
+}
+
 template <class T>
 class SimulationFeaturesTestBasic :
   public SimulationFeaturesTest<T>{};

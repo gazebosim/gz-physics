@@ -162,6 +162,129 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
+    /// \brief This features sets the FreeGroup static state.
+    /// If set to true, the model is immovable; i.e., a dynamics engine
+    /// will not update its position.
+    class GZ_PHYSICS_VISIBLE SetFreeGroupStaticState
+        : public virtual FeatureWithRequirements<FindFreeGroupFeature>
+    {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
+      {
+        /// \brief Set this FreeGroup static state.
+        public: void SetStaticState(bool _state);
+      };
+
+      /// \brief Implementation interface for the SetFreeGroupStaticState
+      /// feature.
+      /// This class defines the interface that physics engine plugins must
+      /// implement to support the SetFreeGroupStaticState feature
+      /// functionality.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void SetFreeGroupStaticState(
+            const Identity &_groupID,
+            bool _state) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This features gets the FreeGroup static state.
+    /// If return true, the model is immovable; i.e., a dynamics engine
+    /// will not update its position.
+    class GZ_PHYSICS_VISIBLE GetFreeGroupStaticState
+        : public virtual FeatureWithRequirements<FindFreeGroupFeature>
+    {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
+      {
+        /// \brief Get this FreeGroup static state.
+        public: bool GetStaticState() const;
+      };
+
+      /// \brief Implementation interface for the FreeGroup feature.
+      ///
+      /// This class defines the interface that physics engine plugins must
+      /// implement to support the FreeGroup feature functionality.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual bool GetFreeGroupStaticState(
+            const Identity &_groupID) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This features sets the FreeGroup gravity.
+    /// If set to true, the model is affected by gravity, otherwise the model
+    /// is not affected by the gravity.
+    class GZ_PHYSICS_VISIBLE SetFreeGroupGravityEnabled
+        : public virtual FeatureWithRequirements<FindFreeGroupFeature>
+    {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
+      {
+        /// \brief Set this FreeGroup Gravity enabled.
+        public: void SetGravityEnabled(bool _enabled);
+      };
+
+      /// \brief Implementation interface for the FreeGroup feature.
+      ///
+      /// This class defines the interface that physics engine plugins must
+      /// implement to support the FreeGroup feature functionality.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void SetFreeGroupGravityEnabled(
+            const Identity &_groupID,
+            bool _enabled) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This features gets the FreeGroup gravity.
+    /// If return true, the model is affected by gravity, otherwise the model
+    /// is not affected by the gravity.
+    class GZ_PHYSICS_VISIBLE GetFreeGroupGravityEnabled
+        : public virtual FeatureWithRequirements<FindFreeGroupFeature>
+    {
+      /// \brief This class defines the FreeGroup concept, which represents a
+      /// group of links that are not connected to the world with any kinematic
+      /// constraints. This class also provides a rough definition of this
+      /// FreeGroup pose in world frame. See FindFreeGroupFeature class
+      /// documentation for more detail.
+      public: template <typename PolicyT, typename FeaturesT>
+      class FreeGroup : public virtual Entity<PolicyT, FeaturesT>
+      {
+        /// \brief Get this FreeGroup Gravity enabled.
+        public: bool GetGravityEnabled() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual bool GetFreeGroupGravityEnabled(
+            const Identity &_groupID) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
     /// \brief This features sets the FreeGroup linear and angular velocity in
     /// world frame.
     class GZ_PHYSICS_VISIBLE SetFreeGroupWorldVelocity
