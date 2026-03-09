@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
@@ -36,9 +37,13 @@ using namespace gz;
 
 struct TestFeatureList : physics::FeatureList<
     // physics::GetEntities,
+    physics::GetEngineInfo,
+    physics::GetWorldFromEngine,
+    physics::GetModelFromWorld,
     physics::sdf::ConstructSdfModel,
     // physics::sdf::ConstructSdfNestedModel,
-    physics::sdf::ConstructSdfWorld
+    physics::sdf::ConstructSdfWorld,
+    physics::RemoveEntities
 > { };
 
 using World = physics::World3d<TestFeatureList>;
@@ -281,6 +286,35 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
   WorldPtr world = this->LoadWorld(common_test::worlds::kShapesWorld);
   ASSERT_NE(nullptr, world);
 
+  // Check the number of models
+  EXPECT_EQ(6u, world->GetModelCount());
+}
+
+/////////////////////////////////////////////////
+// Test that models can be removed from the world.
+TEST_P(SDFFeatures_TEST, ModelRemoval)
+{
+  WorldPtr world = this->LoadWorld(common_test::worlds::kShapesWorld);
+  ASSERT_NE(nullptr, world);
+
+  std::size_t modelCount = world->GetModelCount();
+  EXPECT_GT(modelCount, 0u);
+
+  // Get a specific model
+  const std::string modelName = "box";
+  ModelPtr model = world->GetModel(modelName);
+  ASSERT_NE(nullptr, model);
+
+  EXPECT_TRUE(world->RemoveModel(model));
+
+  // The model should be removed from the world's model list immediately
+  EXPECT_EQ(modelCount - 1, world->GetModelCount());
+
+  // Try to get it again, should return nullptr
+  EXPECT_EQ(nullptr, world->GetModel(modelName));
+
+  // Try to remove it again, should return false
+  EXPECT_FALSE(world->RemoveModel(modelName));
 }
 
 // Run with different load world functions
