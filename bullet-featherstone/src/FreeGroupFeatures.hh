@@ -48,6 +48,20 @@ class FreeGroupFeatures
       const Identity &_groupID,
       const PoseType &_pose) override;
 
+  void SetFreeGroupStaticState(
+      const Identity &_groupID,
+      bool _state) override;
+
+  bool GetFreeGroupStaticState(
+      const Identity &_groupID) const override;
+
+  void SetFreeGroupGravityEnabled(
+      const Identity &_groupID,
+      bool _enabled) override;
+
+  bool GetFreeGroupGravityEnabled(
+      const Identity &_groupID) const override;
+
   // ----- SetFreeGroupWorldVelocity -----
   void SetFreeGroupWorldLinearVelocity(
       const Identity &_groupID,

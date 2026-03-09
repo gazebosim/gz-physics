@@ -27,8 +27,13 @@ namespace physics {
 namespace bullet {
 
 struct FreeGroupFeatureList : gz::physics::FeatureList<
+  GetFreeGroupStaticState,
+  GetFreeGroupGravityEnabled,
   FindFreeGroupFeature,
-  SetFreeGroupWorldPose
+  SetFreeGroupWorldPose,
+  SetFreeGroupWorldVelocity,
+  SetFreeGroupStaticState,
+  SetFreeGroupGravityEnabled
 > { };
 
 class FreeGroupFeatures
@@ -42,10 +47,33 @@ class FreeGroupFeatures
 
   Identity GetFreeGroupRootLink(const Identity &_groupID) const override;
 
+  void SetFreeGroupStaticState(
+      const Identity &_groupID,
+      bool _state) override;
+
+  bool GetFreeGroupStaticState(
+      const Identity &_groupID) const  override;
+
+  void SetFreeGroupGravityEnabled(
+      const Identity &_groupID,
+      bool _enabled) override;
+
+  bool GetFreeGroupGravityEnabled(
+      const Identity &_groupID) const override;
+
   // ----- SetFreeGroupWorldPose -----
   void SetFreeGroupWorldPose(
       const Identity &_groupID,
       const PoseType &_pose) override;
+
+  // ----- SetFreeGroupWorldVelocity -----
+  void SetFreeGroupWorldLinearVelocity(
+      const Identity &_groupID,
+      const LinearVelocity &_linearVelocity) override;
+
+  void SetFreeGroupWorldAngularVelocity(
+      const Identity &_groupID,
+      const AngularVelocity &_angularVelocity) override;
 };
 
 }  // namespace bullet

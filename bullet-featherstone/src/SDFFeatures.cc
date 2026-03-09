@@ -617,9 +617,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     });
   rootMultiBody->setUserIndex(std::size_t(rootID));
 
-  auto modelID =
+    auto modelID =
       this->GenerateIdentity(rootModelID, this->models[rootModelID]);
-  const auto *model = this->ReferenceInterface<ModelInfo>(modelID);
+    auto *model = this->ReferenceInterface<ModelInfo>(modelID);
 
   // Add world joint
   if (structure.rootJoint)
@@ -662,6 +662,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         this->GenerateIdentity(parentModelID, this->models.at(parentModelID)),
         linkToComTf.inverse()});
       linkIDs.insert(std::make_pair(link, linkID));
+    }
+
+    if (auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkIDs.at(link)))
+    {
+      linkInfo->mass = static_cast<double>(mass);
+      linkInfo->inertia = Eigen::Vector3d(
+        static_cast<double>(inertia[0]),
+        static_cast<double>(inertia[1]),
+        static_cast<double>(inertia[2]));
     }
 
     if (!structure.parentOf.empty())
@@ -912,6 +921,13 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     extractInertial(link->Inertial(), mass, inertia, linkToPrincipalAxesPose);
     model->body->setBaseMass(mass);
     model->body->setBaseInertia(inertia);
+    model->baseMass = mass;
+    model->baseInertia = inertia;
+    if (auto *linkInfo = this->ReferenceInterface<LinkInfo>(rootID))
+    {
+      linkInfo->mass = static_cast<double>(mass);
+      linkInfo->inertia = Eigen::Vector3d(inertia[0], inertia[1], inertia[2]);
+    }
   }
 
   world->world->addMultiBody(model->body.get());
