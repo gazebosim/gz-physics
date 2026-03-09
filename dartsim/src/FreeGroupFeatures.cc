@@ -187,6 +187,10 @@ bool FreeGroupFeatures::GetFreeGroupStaticState(
   {
     isStatic = !skeleton->isMobile();
   }
+  else if (!modelInfo->nestedModels.empty())
+  {
+    isStatic = true;
+  }
 
   for (const auto &nestedModel : modelInfo->nestedModels)
   {
@@ -245,13 +249,15 @@ bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
-    return info.link->getGravityMode();
+    if (info.link)
+      return info.link->getGravityMode();
+    return false;
   }
 
   bool gravityMode = true;
-  for (std::size_t i = 0; i < info.model->getNumTrees(); ++i)
+  for (std::size_t i = 0; i < info.model->getNumBodyNodes(); ++i)
   {
-    auto *bn = info.model->getRootBodyNode(i);
+    auto *bn = info.model->getBodyNode(i);
     gravityMode = gravityMode && bn->getGravityMode();
   }
 

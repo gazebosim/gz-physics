@@ -180,6 +180,10 @@ namespace gz
         public: void SetStaticState(bool _state);
       };
 
+      /// \brief Implementation interface for the SetFreeGroupStaticState feature.
+      ///
+      /// This class defines the interface that physics engine plugins must
+      /// implement to support the SetFreeGroupStaticState feature functionality.
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
