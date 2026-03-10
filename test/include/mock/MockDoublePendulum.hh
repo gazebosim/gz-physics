@@ -28,6 +28,7 @@ namespace mock
   using MockDoublePendulumList = gz::physics::FeatureList<
     gz::physics::ForwardStep,
     gz::physics::GetEngineInfo,
+    gz::physics::GetEngineVersionInfo,
     gz::physics::GetWorldFromEngine
   >;
 

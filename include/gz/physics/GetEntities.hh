@@ -20,6 +20,7 @@
 
 #include <string>
 
+#include <gz/math/SemanticVersion.hh>
 #include <gz/physics/FeatureList.hh>
 
 namespace gz
@@ -49,6 +50,26 @@ namespace gz
             const Identity &_engineID) const = 0;
 
         public: virtual std::size_t GetEngineIndex(
+            const Identity &_engineID) const = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature retrieves the physics engine version.
+    class GZ_PHYSICS_VISIBLE GetEngineVersionInfo : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
+      {
+        /// \brief Get the version of this engine. The meaning of an engine
+        /// version is plugin-defined.
+        public: const gz::math::SemanticVersion &GetVersion() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual const gz::math::SemanticVersion &GetEngineVersion(
             const Identity &_engineID) const = 0;
       };
     };
