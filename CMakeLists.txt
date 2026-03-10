@@ -36,57 +36,8 @@ endif()
 message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
-# Use Fetchcontent for Mujoco during development since a binary package is not
-# available yet.
 # TODO(azeey) Remove this and depend on a system package before release
-#
-include(FetchContent)
-FetchContent_Declare(
-  mujoco
-  GIT_REPOSITORY https://github.com/google-deepmind/mujoco
-  GIT_TAG 3.5.0
-)
-
-set(MUJOCO_BUILD_EXAMPLES OFF)
-set(MUJOCO_BUILD_TESTS OFF)
-set(MUJOCO_BUILD_SIMULATE OFF)
-set(MUJOCO_TEST_PYTHON_UTIL OFF)
-FetchContent_MakeAvailable(mujoco)
-
-# Ensure LTO is disabled for the mujoco target and its dependencies so it
-# builds a standard shared library
-if(TARGET mujoco)
-  set_target_properties(mujoco PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
-
-  # Workaround for https://github.com/google-deepmind/mujoco/pull/3069
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(mujoco PRIVATE -Wno-error=stringop-truncation)
-  endif()
-
-  # MuJoCo's build system forces CMAKE_INTERPROCEDURAL_OPTIMIZATION ON for its
-  # dependencies (ccd, lodepng, etc.). We need to disable it for them too,
-  # otherwise they are built as LTO bitcode which cannot be properly bundled
-  # into a non-LTO shared library using --whole-archive.
-  # See, issue: https://github.com/google-deepmind/mujoco/issues/2904
-  set(MUJOCO_DEPS ccd lodepng qhullstatic_r tinyobjloader tinyxml2)
-  foreach(dep ${MUJOCO_DEPS})
-    if(TARGET ${dep})
-      set_target_properties(${dep} PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
-    endif()
-  endforeach()
-
-  if(NOT APPLE AND NOT MSVC)
-    # Prevent bundled static libraries (like tinyxml2) from exporting symbols,
-    # avoiding conflicts with system versions.
-    target_link_options(mujoco PRIVATE "-Wl,--exclude-libs,ALL")
-  endif()
-endif()
-
-# We use target_link_libraries to use the proper mujoco::mujoco alias
-add_library(mujoco_fetched INTERFACE IMPORTED)
-target_link_libraries(mujoco_fetched INTERFACE mujoco::mujoco)
-target_link_options(mujoco_fetched INTERFACE
-  "-Wl,-rpath,$<TARGET_FILE_DIR:mujoco>")
+add_subdirectory(third_party/mujoco_vendor)
 
 #--------------------------------------
 # Find gz-common
