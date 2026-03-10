@@ -467,7 +467,7 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
         { return _wPose.body == link->EntityID(); });
     ASSERT_NE(poseIt, worldPoses.end());
     auto pos = poseIt->pose.Pos();
-    EXPECT_NEAR(pos.Z(), 1.0, 5e-2);
+    EXPECT_NEAR(pos.Z(), 1.0, 5e-2) << "link: " << link->EntityID();
   }
 }
 
@@ -1183,6 +1183,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 
     // model free group test
     auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
     GZ_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
@@ -1191,6 +1192,7 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
+    ASSERT_NE(nullptr, link);
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 
