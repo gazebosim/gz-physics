@@ -37,6 +37,11 @@
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Inertial.hh>
+<<<<<<< HEAD
+=======
+#include <gz/math/SemanticVersion.hh>
+#include <gz/physics/detail/EntityStorage.hh>
+>>>>>>> a9ea56c (Extract EntityStorage to a shared location so it can be used by other physics engines (#894))
 #include <gz/physics/Implements.hh>
 
 #include <sdf/Types.hh>
@@ -117,147 +122,6 @@ struct ShapeInfo
   Eigen::Isometry3d tf_offset = Eigen::Isometry3d::Identity();
 };
 
-template <typename Value1, typename Key2 = Value1>
-struct EntityStorage
-{
-  /// \brief Map from an entity ID to its corresponding object
-  std::unordered_map<std::size_t, Value1> idToObject;
-
-  /// \brief Map from an object pointer (or other unique key) to its entity ID
-  std::unordered_map<Key2, std::size_t> objectToID;
-
-  using IndexMap = std::unordered_map<std::size_t, std::vector<std::size_t>>;
-  /// \brief The key represents the parent ID. The value represents a vector of
-  /// the objects' IDs. The key of the vector is the object's index within its
-  /// container. This is used by World and Model objects, which don't know their
-  /// own indices within their containers as well as Links, whose indices might
-  /// change when constructing joints.
-  ///
-  /// The container type for World is Engine.
-  /// The container type for Model is World.
-  /// The container type for Link is Model.
-  ///
-  /// Joints are contained in Models, but they know their own indices within
-  /// their Models, so we do not need to use this field for Joints
-  IndexMap indexInContainerToID;
-
-  /// \brief Map from an entity ID to its index within its container
-  std::unordered_map<std::size_t, std::size_t> idToIndexInContainer;
-
-  /// \brief Map from an entity ID to the ID of its container
-  std::unordered_map<std::size_t, std::size_t> idToContainerID;
-
-  Value1 &operator[](const std::size_t _id)
-  {
-    return idToObject[_id];
-  }
-
-  Value1 &at(const std::size_t _id)
-  {
-    return idToObject.at(_id);
-  }
-
-  const Value1 &at(const std::size_t _id) const
-  {
-    return idToObject.at(_id);
-  }
-
-  std::optional<Value1> MaybeAt(const std::size_t _id) const
-  {
-    auto it = this->idToObject.find(_id);
-    if (it != this->idToObject.end())
-    {
-      return it->second;
-    }
-    return std::nullopt;
-  }
-
-  Value1 &at(const Key2 &_key)
-  {
-    return idToObject.at(objectToID.at(_key));
-  }
-
-  const Value1 &at(const Key2 &_key) const
-  {
-    return idToObject.at(objectToID.at(_key));
-  }
-
-  std::size_t size() const
-  {
-    return idToObject.size();
-  }
-
-  std::size_t IdentityOf(const Key2 &_key) const
-  {
-    return objectToID.at(_key);
-  }
-
-  bool HasEntity(const Key2 &_key) const
-  {
-    return objectToID.find(_key) != objectToID.end();
-  }
-
-  bool HasEntity(const std::size_t _id) const
-  {
-    return idToObject.find(_id) != idToObject.end();
-  }
-
-  void AddEntity(std::size_t _id, const Value1 &_value1, const Key2 &_key,
-                 std::size_t _containerID)
-  {
-    this->idToObject[_id] = _value1;
-    this->objectToID[_key] = _id;
-    std::vector<std::size_t> &indexInContainerToIDVector =
-        this->indexInContainerToID[_containerID];
-    const std::size_t indexInContainer = indexInContainerToIDVector.size();
-
-    this->idToIndexInContainer[_id] = indexInContainer;
-    indexInContainerToIDVector.push_back(_id);
-    this->idToContainerID[_id] = _containerID;
-  }
-
-  bool RemoveEntity(const Key2 &_key)
-  {
-    auto entIter = this->objectToID.find(_key);
-    if (entIter!= this->objectToID.end())
-    {
-      std::size_t entId = entIter->second;
-
-      // Check if we are keeping track of the index of this entity in its
-      // container
-      auto contIter = this->idToContainerID.find(entId);
-      if (contIter != this->idToContainerID.end())
-      {
-        std::size_t contId = contIter->second;
-        std::size_t entIndex = this->idToIndexInContainer.at(entId);
-
-        // house keeping
-        // The key in indexInContainerToID is the index of the vector so erasing
-        // the element automatically decrements the index of the rest of the
-        // elements of the vector. The indices in idToIndexInContainer, however,
-        // are stored as numbers (as values in the map). We need to decrement
-        // all the indices greater than the index of the model we are removing.
-        for (auto indIter =
-                 this->indexInContainerToID[contId].begin() + entIndex + 1;
-             indIter != this->indexInContainerToID[contId].end(); ++indIter)
-        {
-          // decrement the index (the value of the map)
-          --this->idToIndexInContainer[*indIter];
-        }
-
-        this->idToIndexInContainer.erase(entId);
-        this->indexInContainerToID[contId].erase(
-            this->indexInContainerToID[contId].begin() + entIndex);
-        this->idToContainerID.erase(entId);
-      }
-
-      this->objectToID.erase(entIter);
-      this->idToObject.erase(entId);
-      return true;
-    }
-    return false;
-  }
-};
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
@@ -659,13 +523,13 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->models.at(_modelID);
   }
 
-  public: EntityStorage<DartWorldPtr, std::string> worlds;
-  public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
-  public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
-  public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
-  public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
+  public: detail::EntityStorage<DartWorldPtr, std::string> worlds;
+  public: detail::EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
+  public: detail::EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
+  public: detail::EntityStorage<JointInfoPtr, const DartJoint*> joints;
+  public: detail::EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
-  public: EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
+  public: detail::EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
 
   /// \brief Map from the fully qualified link name (including the world name)
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even
