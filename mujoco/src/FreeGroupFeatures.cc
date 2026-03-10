@@ -16,7 +16,6 @@
  */
 
 #include "FreeGroupFeatures.hh"
-#include <unistd.h>
 
 #include <gz/physics/FreeGroup.hh>
 

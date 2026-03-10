@@ -407,7 +407,6 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
       screwJointTest->getJoint(1));
   ASSERT_NE(nullptr, screwJoint);
   EXPECT_DOUBLE_EQ(2.0, screwJoint->getPitch());
-
   const dart::dynamics::SkeletonPtr ballJointTest =
       dartWorld->getSkeleton("ball_joint_test");
   ASSERT_NE(nullptr, ballJointTest);
