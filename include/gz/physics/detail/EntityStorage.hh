@@ -45,7 +45,7 @@ namespace detail
 /// parent ID to a vector of object IDs. This is used to determine the index of
 /// an entity within the container. However, if EntityStorage objects are
 /// hierarchically stored in `*Info` structs, the indexInContainerToID will only
-/// have one entry. See the Mujoco plugin implementation for reference.
+/// have one entry.
 template <typename Value1, typename Key2 = Value1>
 struct EntityStorage
 {
