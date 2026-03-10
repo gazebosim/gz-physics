@@ -12,8 +12,7 @@ target_link_libraries(${plugin_target}
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     gz-common::gz-common
   PRIVATE
-    # mujoco::mujoco
-    mujoco_fetched
+    mujoco::mujoco
 )
 
 # Note that plugins are currently being installed in 2 places:

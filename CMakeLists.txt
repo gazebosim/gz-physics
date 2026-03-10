@@ -36,23 +36,8 @@ endif()
 message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
-# Use Fetchcontent for Mujoco during development since a binary package is not
-# available yet.
 # TODO(azeey) Remove this and depend on a system package before release
-#
-include(FetchContent)
-FetchContent_Declare(
-  mujoco
-  GIT_REPOSITORY https://github.com/google-deepmind/mujoco
-  GIT_TAG 3.5.0
-)
-set(MUJOCO_BUILD_EXAMPLES OFF)
-set(MUJOCO_BUILD_TESTS OFF)
-set(MUJOCO_BUILD_SIMULATE OFF)
-set(MUJOCO_TEST_PYTHON_UTIL OFF)
-FetchContent_MakeAvailable(mujoco)
-add_library(mujoco_fetched INTERFACE IMPORTED)
-target_link_libraries(mujoco_fetched INTERFACE mujoco::mujoco)
+add_subdirectory(third_party/mujoco_vendor)
 
 #--------------------------------------
 # Find gz-common
