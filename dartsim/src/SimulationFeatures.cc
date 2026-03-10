@@ -274,12 +274,7 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
         solver->getCollisionGroup().get(), gzRays);
     if (gzResults)
     {
-      for (const auto &r : *gzResults)
-      {
-        results.emplace_back(SimulationFeatures::BatchRayIntersection{
-            r.hit, r.point, r.fraction, r.normal});
-      }
-      return results;
+      return std::move(*gzResults);
     }
   }
 

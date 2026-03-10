@@ -30,6 +30,9 @@
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 
+#include <gz/physics/FeaturePolicy.hh>
+#include <gz/physics/GetBatchRayIntersection.hh>
+
 namespace dart {
 namespace collision {
 
@@ -41,14 +44,10 @@ struct GzRay
 };
 
 /// \brief Result of a single ray query.
-/// Fields other than \c hit are only valid when \c hit is true.
-struct GzRayResult
-{
-  bool hit{false};
-  Eigen::Vector3d point;
-  double fraction;
-  Eigen::Vector3d normal;
-};
+/// Alias for the gz-physics RayIntersection type to avoid redundant copies.
+using GzRayResult =
+    gz::physics::GetBatchRayIntersectionFromLastStepFeature
+    ::RayIntersectionT<gz::physics::FeaturePolicy3d>;
 
 class GzCollisionDetector
 {
