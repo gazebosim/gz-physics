@@ -257,17 +257,11 @@ std::optional<std::vector<GzRayResult>> GzBulletCollisionDetector::BatchRaycast(
 
   auto *gzGroup = dynamic_cast<GzBulletCollisionGroup *>(_group);
   if (!gzGroup)
-  {
-    results.resize(_rays.size());
-    return results;
-  }
+    return std::nullopt;
 
   const btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
   if (!btWorld)
-  {
-    results.resize(_rays.size());
-    return results;
-  }
+    return std::nullopt;
 
   for (const auto &ray : _rays)
   {
