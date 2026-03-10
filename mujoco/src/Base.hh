@@ -23,6 +23,7 @@
 
 #include <cstddef>
 #include <gz/common/Console.hh>
+#include <gz/math/Pose3.hh>
 #include <gz/math/SemanticVersion.hh>
 #include <gz/physics/EntityStorage.hh>
 #include <gz/physics/Implements.hh>
@@ -123,6 +124,10 @@ struct WorldInfo
 
   // Map from mjModel geom index to ShapeInfo
   std::unordered_map<int, std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
+
+  /// \brief link poses from the most recent pose change/update.
+  /// The key is the link's ID, and the value is the link's pose
+  std::unordered_map<std::size_t, gz::math::Pose3d> prevLinkPoses;
 };
 
 class Base : public Implements3d<FeatureList<Feature>>
