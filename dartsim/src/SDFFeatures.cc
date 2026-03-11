@@ -724,7 +724,7 @@ Identity SDFFeatures::ConstructSdfLink(
   if(isKinematic){
     gzdbg << "Kinematic tag found -> " << bodyProperties.mName << std::endl;
     jointProperties.mName = bodyProperties.mName + "_KinematicJoint";
-    bodyProperties.mGravityMode = false;
+    jointProperties.mActuatorType = dart::dynamics::Joint::ACCELERATION;
   }
 
   // Note: When constructing a link from this function, we always instantiate
