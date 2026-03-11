@@ -19,18 +19,22 @@
 
 #include <mujoco/mjmodel.h>
 #include <mujoco/mjspec.h>
+#include <mujoco/mujoco.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <gz/common/Console.hh>
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/SubMesh.hh>
 #include <gz/physics/Entity.hh>
-#include <iostream>
-#include <iterator>
-#include <memory>
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
 #include <sdf/Collision.hh>
@@ -47,11 +51,8 @@
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
-#include <string>
-#include <vector>
 
 #include "Base.hh"
-#include "mujoco/mujoco.h"
 
 namespace gz
 {

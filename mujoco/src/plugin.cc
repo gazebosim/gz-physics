@@ -16,13 +16,12 @@
  */
 #include <gz/physics/Register.hh>
 
-
 #include "Base.hh"
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
 #include "KinematicsFeatures.hh"
-#include "SimulationFeatures.hh"
 #include "SDFFeatures.hh"
+#include "SimulationFeatures.hh"
 
 namespace gz
 {

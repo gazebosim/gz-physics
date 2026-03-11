@@ -18,7 +18,6 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_SIMULATIONFEATURES_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_SIMULATIONFEATURES_HH_
 
-
 #include <gz/physics/CanWriteData.hh>
 #include <gz/physics/ForwardStep.hh>
 

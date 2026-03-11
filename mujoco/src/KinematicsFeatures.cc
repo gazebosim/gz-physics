@@ -17,10 +17,11 @@
 
 #include "KinematicsFeatures.hh"
 
-#include "gz/physics/FrameData.hh"
-#include "mujoco/mujoco.h"
+#include <mujoco/mujoco.h>
+
 #include <gz/common/Console.hh>
-#include <iostream>
+
+#include "gz/physics/FrameData.hh"
 namespace gz
 {
 namespace physics

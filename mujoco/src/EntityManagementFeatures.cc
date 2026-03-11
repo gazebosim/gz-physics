@@ -19,11 +19,11 @@
 
 #include <mujoco/mujoco.h>
 
-#include <algorithm>
-#include <gz/physics/Entity.hh>
 #include <memory>
-#include <sdf/Types.hh>
 #include <string>
+
+#include <gz/physics/Entity.hh>
+#include <sdf/Types.hh>
 
 #include "Base.hh"
 
