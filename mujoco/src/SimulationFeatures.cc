@@ -81,6 +81,66 @@ void SimulationFeatures::Write(WorldPoses &/* _worldPoses */) const
 {
 }
 
+/////////////////////////////////////////////////
+std::vector<SimulationFeatures::ContactInternal>
+SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
+{
+  std::vector<SimulationFeatures::ContactInternal> outContacts;
+  auto *const worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
+
+  if (!worldInfo || !worldInfo->mjDataObj || !worldInfo->mjModelObj)
+    return outContacts;
+
+  const mjModel *m = worldInfo->mjModelObj;
+  const mjData *d = worldInfo->mjDataObj;
+
+  for (int i = 0; i < d->ncon; ++i)
+  {
+    const mjContact *con = d->contact + i;
+
+    auto it1 = worldInfo->geomIdToShapeInfo.find(con->geom1);
+    auto it2 = worldInfo->geomIdToShapeInfo.find(con->geom2);
+
+    if (it1 != worldInfo->geomIdToShapeInfo.end() &&
+        it2 != worldInfo->geomIdToShapeInfo.end())
+    {
+      const auto &shape1 = it1->second;
+      const auto &shape2 = it2->second;
+
+      CompositeData extraData;
+      auto &extraContactData =
+          extraData.Get<SimulationFeatures::ExtraContactData>();
+
+      mjtNum contactForce[6];
+      mj_contactForce(m, d, i, contactForce);
+
+      mjtNum forceInWorldFrame[3];
+      for (int j = 0; j < 3; ++j)
+      {
+        forceInWorldFrame[j] = con->frame[j] * contactForce[0] +
+                               con->frame[3 + j] * contactForce[1] +
+                               con->frame[6 + j] * contactForce[2];
+      }
+
+      extraContactData.force =
+          Eigen::Vector3d(forceInWorldFrame[0], forceInWorldFrame[1],
+                          forceInWorldFrame[2]);
+      extraContactData.normal = Eigen::Vector3d(con->frame[0], con->frame[1],
+                                                con->frame[2]);
+      extraContactData.depth = -con->dist;
+
+      outContacts.push_back(SimulationFeatures::ContactInternal {
+          this->GenerateIdentity(shape1->entityId, shape1),
+          this->GenerateIdentity(shape2->entityId, shape2),
+          Eigen::Vector3d(con->pos[0], con->pos[1], con->pos[2]),
+          extraData
+      });
+    }
+  }
+
+  return outContacts;
+}
+
 }  // namespace mujoco
 }  // namespace physics
 }  // namespace gz
