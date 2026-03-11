@@ -40,14 +40,11 @@ struct FreeGroupFeatureList : gz::physics::FeatureList<
 > { };
 ```
 
-This feature is mostly stubbed out, so all the actual `Set` functions
-need to be implemented.
-
 TODO:
 
 - [ ] (S) Implement checks to see if a given model has a freegroup in `FindFreeGroupFeature`.
-- [ ] (S) Set linear and angular velocities on a freegroup.
-- [ ] (S) Set pose on a freegroup
+- [x] (S) Set linear and angular velocities on a freegroup.
+- [x] (S) Set pose on a freegroup
 
 ### KinematicsFeatureList
 

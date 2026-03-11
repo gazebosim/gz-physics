@@ -45,7 +45,9 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
               << "\n";
     return false;
   }
-  // mj_saveXML(_worldInfo.mjSpecObj, "/tmp/mujoco_model.xml", nullptr, 0);
+  // TODO(azeey): Saving the resulting MJCF is useful for debugging, but should
+  // be removed once the plugin is finalized mj_saveXML(_worldInfo.mjSpecObj,
+  // "/tmp/mujoco_model.xml", nullptr, 0);
 
   mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
   return true;

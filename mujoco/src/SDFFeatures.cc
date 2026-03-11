@@ -120,11 +120,6 @@ struct ModelKinematicStructure
     mesh->FillArrays(&verts, &indices);
     auto nverts = mesh->VertexCount();
     muMesh->uservert->assign(3 * nverts, 0.0);
-    // for (int i = 0; i < nverts / 3; ++i)
-    // {
-    //   std::cout << verts[3 * i] << " " << verts[3 * i + 1] << " "
-    //             << verts[3 * i + 2] << std::endl;
-    // }
     std::copy(verts, verts + 3 * nverts, muMesh->uservert->begin());
 
     mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
@@ -443,7 +438,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   auto end = std::chrono::high_resolution_clock::now();
-  std::cout << "Model: " << _sdfModel.Name() << " constructed in "
+  gztrace << "Model: " << _sdfModel.Name() << " constructed in "
             << std::chrono::duration<double>(end - start).count() << "\n";
   return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
