@@ -1342,15 +1342,35 @@ TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
     auto filteredBox = world->GetModel("box_filtered");
     auto collidingBox = world->GetModel("box_colliding");
 
+    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
+    auto baseShape = baseBox->GetLink(0)->GetShape(0);
+    EXPECT_EQ(0x01, baseShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x02, filteredShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x03, collidingShape->GetCollisionFilterMask());
     auto checkedOutput = StepWorld<FeaturesCollisionFilter>(world, true).first;
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
     // Only box_colliding should collide with box_base
     EXPECT_NE(0u, contacts.size());
+    for (auto &contact : contacts)
+    {
+      const auto &contactPoint = contact.template Get<
+          gz::physics::World3d<FeaturesCollisionFilter>::ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      auto m1 = c1->GetLink()->GetModel();
+      auto m2 = c2->GetLink()->GetModel();
+      EXPECT_TRUE(m1->GetName() == "box_base" ||
+                  m1->GetName() == "box_colliding");
+      EXPECT_TRUE(m2->GetName() == "box_base" ||
+                  m2->GetName() == "box_colliding");
+    }
 
     // Now disable collisions for the colliding box as well
-    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
-    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
     collidingShape->SetCollisionFilterMask(0xF0);
     // Also test the getter
     EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
@@ -1371,7 +1391,6 @@ TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
     EXPECT_NE(0u, contacts.size());
   }
 }
-
 
 TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 {
