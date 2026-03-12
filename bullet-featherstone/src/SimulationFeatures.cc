@@ -161,6 +161,19 @@ void enforceFixedConstraint(
   child->SetBaseWorldTransform(newChildBaseTf);
 }
 
+void clearCollisionCache(btMultiBodyDynamicsWorld *_world)
+{
+  btDispatcher* dispatcher = _world->getDispatcher();
+  btOverlappingPairCache* pairCache =
+      _world->getBroadphase()->getOverlappingPairCache();
+  btBroadphasePairArray &pairArray = pairCache->getOverlappingPairArray();
+  // Iterate backwards to safely handle removals from the array
+  for (int i = pairArray.size() - 1; i >= 0; --i)
+  {
+    pairCache->cleanOverlappingPair(pairArray[i], dispatcher);
+  }
+}
+
 /////////////////////////////////////////////////
 void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
@@ -221,6 +234,12 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
+  // Regenerate the cache if the collision masks have been updated.
+  if (worldInfo->collisionMasksDirty)
+  {
+    clearCollisionCache(worldInfo->world.get());
+  }
+
   // \todo(iche033) Stepping sim with varying dt may not work properly.
   // One example is the motor constraint that's created in
   // JointFeatures::SetJointVelocityCommand which assumes a fixed step
@@ -236,6 +255,14 @@ void SimulationFeatures::WorldForwardStep(
     {
       joint.second->motor->setVelocityTarget(btScalar(0));
     }
+  }
+
+  if (worldInfo->collisionMasksDirty)
+  {
+    // manual sync to get up-to-date contacts for the current frame
+    // by forcing collision detection again
+    worldInfo->world->getCollisionWorld()->performDiscreteCollisionDetection();
+    worldInfo->collisionMasksDirty = false;
   }
 
   this->WriteRequiredData(_h);
