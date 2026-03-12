@@ -33,6 +33,7 @@ namespace physics {
 namespace bullet_featherstone {
 
 struct EntityManagementFeatureList : gz::physics::FeatureList<
+  CategoryFilterMaskFeature,
   CollisionFilterMaskFeature,
   ConstructEmptyWorldFeature,
   GetEngineInfo,
@@ -173,6 +174,15 @@ class EntityManagementFeatures :
       const Identity &_shapeID) const override;
 
   public: void RemoveCollisionFilterMask(const Identity &_shapeID) override;
+
+  // ----- Manage category filter masks -----
+  public: void SetCategoryFilterMask(
+      const Identity &_shapeID, uint16_t _mask) override;
+
+  public: uint16_t GetCategoryFilterMask(
+      const Identity &_shapeID) const override;
+
+  public: void RemoveCategoryFilterMask(const Identity &_shapeID) override;
 
   // ----- Construct empty entities -----
   public: Identity ConstructEmptyWorld(
