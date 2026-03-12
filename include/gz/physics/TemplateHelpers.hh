@@ -36,6 +36,42 @@ namespace gz
     template <typename...>
     using void_t = void;
 
+    /// \brief A minimal variadic template container for types.
+    /// This is used instead of std::tuple for intermediate template metaprogramming
+    /// to drastically reduce compiler memory and instantiation times.
+    template <typename... Ts>
+    struct TypeList {
+      static constexpr std::size_t size = sizeof...(Ts);
+    };
+
+    /// \brief Concatenate multiple TypeLists into a single TypeList.
+    template <typename... Lists>
+    struct TypeListCat;
+
+    template <>
+    struct TypeListCat<> {
+      using type = TypeList<>;
+    };
+
+    template <typename... Ts>
+    struct TypeListCat<TypeList<Ts...>> {
+      using type = TypeList<Ts...>;
+    };
+
+    template <typename... T1, typename... T2, typename... Rest>
+    struct TypeListCat<TypeList<T1...>, TypeList<T2...>, Rest...> {
+      using type = typename TypeListCat<TypeList<T1..., T2...>, Rest...>::type;
+    };
+
+    /// \brief Convert a TypeList to a std::tuple
+    template <typename T>
+    struct ToTuple;
+
+    template <typename... Ts>
+    struct ToTuple<TypeList<Ts...>> {
+      using type = std::tuple<Ts...>;
+    };
+
     /////////////////////////////////////////////////
     /// \brief Contains a static constexpr field named `value` which will be
     /// true if the type `From` has a const-quality less than or equal to the
