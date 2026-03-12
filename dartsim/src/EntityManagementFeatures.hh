@@ -37,6 +37,7 @@ namespace dartsim {
 struct EntityManagementFeatureList : FeatureList<
   GetEntities,
   RemoveEntities,
+  CategoryFilterMaskFeature,
   ConstructEmptyWorldFeature,
   ConstructEmptyModelFeature,
   ConstructEmptyNestedModelFeature,
@@ -177,6 +178,15 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE EntityManagementFeatures :
       const Identity &_shapeID) const override;
 
   public: void RemoveCollisionFilterMask(const Identity &_shapeID) override;
+
+  // ----- Manage category filter masks -----
+  public: void SetCategoryFilterMask(
+      const Identity &_shapeID, uint16_t _mask) override;
+
+  public: uint16_t GetCategoryFilterMask(
+      const Identity &_shapeID) const override;
+
+  public: void RemoveCategoryFilterMask(const Identity &_shapeID) override;
 
   // ----- World model feature -----
   public: Identity GetWorldModel(const Identity &_worldID) const override;
