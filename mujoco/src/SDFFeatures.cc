@@ -417,7 +417,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   auto modelInfo = std::make_shared<ModelInfo>(
       this->GetNextEntity(), this->ReferenceInterface<WorldInfo>(_parentID));
 
-  modelInfo->entityId = this->GetNextEntity();
   modelInfo->name = _sdfModel.Name();
   // TODO(azeey) Change this when we support nested models.
   modelInfo->parentBody = mjs_findBody(spec, "world");
