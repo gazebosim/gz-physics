@@ -44,41 +44,21 @@ namespace gz
       /// argument will fail to compile.
       template <typename T, typename... Types>
       struct TupleContainsBase<T, std::tuple<Types...>>
-          : std::integral_constant<bool,
-              !std::is_same<
-                std::tuple<typename std::conditional<
-                  std::is_base_of<T, Types>::value, Empty, Types>::type...>,
-                std::tuple<Types...>
-              >::value> { };
+          : std::integral_constant<bool, (std::is_base_of_v<T, Types> || ...)> { };
 
       /////////////////////////////////////////////////
       template <typename ToFeatureTuple, typename FromFeatureList>
       struct HasAllFeaturesImpl;
 
-      template <typename FromFeatureList,
-                typename ToFeature1, typename... RemainingFeatures>
-      struct HasAllFeaturesImpl<
-          std::tuple<ToFeature1, RemainingFeatures...>, FromFeatureList>
+      template <typename... ToFeatures, typename FromFeatureList>
+      struct HasAllFeaturesImpl<std::tuple<ToFeatures...>, FromFeatureList>
       {
-        static constexpr bool innerValue =
-            FromFeatureList::template HasFeature<ToFeature1>();
-
-        static constexpr bool value = innerValue
-            && HasAllFeaturesImpl<std::tuple<RemainingFeatures...>,
-                                  FromFeatureList>::value;
-
+        static constexpr bool value = (FromFeatureList::template HasFeature<ToFeatures>() && ...);
         static_assert(
-            innerValue,
+            value || sizeof...(ToFeatures) == 0,
             "YOU CANNOT IMPLICITLY UPCAST TO THIS ENTITY TYPE, BECAUSE IT "
             "CONTAINS A FEATURE THAT IS NOT INCLUDED IN THE ENTITY THAT YOU "
             "ARE CASTING FROM.");
-      };
-
-      /////////////////////////////////////////////////
-      template <typename FromFeatureList>
-      struct HasAllFeaturesImpl<std::tuple<>, FromFeatureList>
-      {
-        static constexpr bool value = true;
       };
 
       /////////////////////////////////////////////////
