@@ -102,6 +102,7 @@ struct WorldInfo
   int nextModelIndex = 0;
 
   double stepSize = 0.001;
+  bool collisionMasksDirty = false;
 
   explicit WorldInfo(std::string name);
 };
@@ -215,6 +216,9 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
 
   /// \brief Collision contact surface collide bitmask parameter
   public: uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
+
+  /// \brief Collision contact surface category bitmask parameter
+  public: std::optional<uint16_t> categoryBitmask;
 };
 
 /// Link information is embedded inside the model, so all we need to store here
@@ -642,18 +646,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     this->links.clear();
     this->models.clear();
     this->worlds.clear();
-  }
-
-  void ClearOverlappingPairCache(Identity _worldID)
-  {
-    auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
-    btOverlappingPairCache* pairCache = world->world->getPairCache();
-    btBroadphasePairArray &pairArray = pairCache->getOverlappingPairArray();
-    for (int i = 0; i < pairArray.size(); i++)
-    {
-      pairCache->cleanOverlappingPair(pairArray[i],
-                                      world->world->getDispatcher());
-    }
   }
 
   public: using WorldInfoPtr = std::shared_ptr<WorldInfo>;

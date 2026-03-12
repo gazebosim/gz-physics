@@ -1271,6 +1271,7 @@ bool SDFFeatures::AddSdfCollision(
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
   uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
+  std::optional<uint16_t> categoryBitmask;
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1308,14 +1309,14 @@ bool SDFFeatures::AddSdfCollision(
 
       if (const auto contact = surfaceElement->FindElement("contact"))
       {
-        // TODO(iche033) add support for category_bitmask as well
         if (const auto bitmask = contact->FindElement("collide_bitmask"))
         {
           // Get only supports uint32_t so cast back to uint16_t
           collideBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
-          // Clear overlapping pair cache if new collision flags are set
-          // so that new contacts are generated with up-to-date collision flags.
-          this->ClearOverlappingPairCache(model->world);
+        }
+        if (const auto bitmask = contact->FindElement("category_bitmask"))
+        {
+          categoryBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
         }
       }
     }
@@ -1349,7 +1350,9 @@ bool SDFFeatures::AddSdfCollision(
 
     if (!linkInfo->collider)
     {
-      this->CreateLinkCollider(_linkID, _isStatic, shape.get(),
+
+      this->CreateLinkCollider(_linkID, _isStatic, collideBitmask,
+          categoryBitmask, shape.get(),
           btInertialToCollision);
 
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
@@ -1361,11 +1364,6 @@ bool SDFFeatures::AddSdfCollision(
       linkInfo->collider->setAnisotropicFriction(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
-      // Set the collideBimask variable in the GzMultiBodyLinkCollider class
-      // instead of calling setCollisionFlags so we don't override bullet's
-      // internal collision flags which are used to indicate whether a collision
-      // is static, dynamic, kinematic, etc
-      linkInfo->collider->collideBitmask = collideBitmask;
 
       if (geom->MeshShape())
       {
@@ -1504,6 +1502,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
+    uint16_t _collideBitmask, std::optional<uint16_t> _categoryBitmask,
     btCollisionShape *_shape, const btTransform &_shapeTF)
 {
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
@@ -1558,6 +1557,16 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
       isFixed = totalLinkDofs == 0;
     }
   }
+
+  // Set the collideBimask variable in the GzMultiBodyLinkCollider class
+  // instead of calling setCollisionFlags so we don't override bullet's
+  // internal collision flags which are used to indicate whether a collision
+  // is static, dynamic, kinematic, etc
+  // Set these masks before calling addCollisionObject so that
+  // the masks are available during the needBroadPhaseCollision check
+  linkInfo->collider->collideBitmask = _collideBitmask;
+  linkInfo->collider->categoryBitmask = _categoryBitmask;
+
   if (_isStatic || isFixed)
   {
     worldInfo->world->addCollisionObject(
