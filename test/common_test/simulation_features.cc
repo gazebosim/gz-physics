@@ -16,9 +16,12 @@
 */
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <unordered_map>
 #include <unordered_set>
 
 #include <gz/common/Console.hh>
@@ -1389,6 +1392,154 @@ TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
     // Expect box_filtered and box_colliding to collide with box_base
     contacts = world->GetContactsFromLastStep();
     EXPECT_NE(0u, contacts.size());
+  }
+}
+
+using FeaturesCategoryFilter =  gz::physics::FeatureList<
+  FeaturesCollisionFilter,
+  gz::physics::CategoryFilterMaskFeature
+>;
+
+using SimulationFeaturesCategoryFilter =
+    SimulationFeaturesTest<FeaturesCategoryFilter>;
+
+TEST_F(SimulationFeaturesCategoryFilter, CategoryBitmasks)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // World consists of 2 category A shapes, 2 category B shapes,
+    // and 1 category C shape. The shapes in the same category
+    // should not collide with each other.
+    auto world = LoadPluginAndWorld<FeaturesCategoryFilter>(
+      this->loader,
+      name,
+      common_test::worlds::kShapesCategoryBitmaskWorld);
+
+    auto categoryABox0 = world->GetModel("category_a_box_0");
+    auto categoryABox1 = world->GetModel("category_a_box_1");
+    auto categoryBBox0 = world->GetModel("category_b_box_0");
+    auto categoryBBox1 = world->GetModel("category_b_box_1");
+    auto categoryCBox0 = world->GetModel("category_c_box_0");
+
+    auto categoryABox0Shape = categoryABox0->GetLink(0)->GetShape(0);
+    auto categoryABox1Shape = categoryABox1->GetLink(0)->GetShape(0);
+    auto categoryBBox0Shape = categoryBBox0->GetLink(0)->GetShape(0);
+    auto categoryBBox1Shape = categoryBBox1->GetLink(0)->GetShape(0);
+    auto categoryCBox0Shape = categoryCBox0->GetLink(0)->GetShape(0);
+
+    EXPECT_EQ(1, categoryABox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(6, categoryABox0Shape->GetCollisionFilterMask());
+    EXPECT_EQ(1, categoryABox1Shape->GetCategoryFilterMask());
+    EXPECT_EQ(6, categoryABox1Shape->GetCollisionFilterMask());
+    EXPECT_EQ(2, categoryBBox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(5, categoryBBox0Shape->GetCollisionFilterMask());
+    EXPECT_EQ(2, categoryBBox1Shape->GetCategoryFilterMask());
+    EXPECT_EQ(5, categoryBBox1Shape->GetCollisionFilterMask());
+    EXPECT_EQ(4, categoryCBox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(3, categoryCBox0Shape->GetCollisionFilterMask());
+
+    auto checkedOutput = StepWorld<FeaturesCategoryFilter>(world, true).first;
+    EXPECT_TRUE(checkedOutput);
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts.size());
+
+    // Here is a map of contact collision pairs that we expect to see.
+    // The first element is the collision name, and the second element
+    // is a list of collisions that we expect it to collide with.
+    std::unordered_map<std::string, std::vector<std::string>>
+        expectedCollisions;
+    expectedCollisions["category_a_box_0"] = {"category_b_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_a_box_1"] = {"category_b_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_b_box_0"] = {"category_c_box_0"};
+    expectedCollisions["category_b_box_1"] = {"category_a_box_0",
+                                              "category_a_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_c_box_0"] = {"category_a_box_0",
+                                              "category_a_box_1",
+                                              "category_b_box_0",
+                                              "ground_plane"};
+    expectedCollisions["ground_plane"] = {"category_c_box_0"};
+
+
+    // Verify expected collisions against actual contacts reported by the
+    // physics engine
+    auto checkCollisions = [](
+        decltype(contacts) _contacts,
+        const std::unordered_map<std::string, std::vector<std::string>>
+            &_expectedCollisions)
+    {
+      for (auto &contact : _contacts)
+      {
+        const auto &contactPoint = contact.template Get<
+            gz::physics::World3d<FeaturesCategoryFilter>::ContactPoint>();
+        ASSERT_TRUE(contactPoint.collision1);
+        ASSERT_TRUE(contactPoint.collision2);
+        EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+        auto c1 = contactPoint.collision1;
+        auto c2 = contactPoint.collision2;
+        auto m1 = c1->GetLink()->GetModel();
+        auto m2 = c2->GetLink()->GetModel();
+        auto m1It = _expectedCollisions.find(m1->GetName());
+        EXPECT_NE(_expectedCollisions.end(), m1It);
+        const std::vector<std::string> &model1CollidingShapes = m1It->second;
+        auto m2It = std::find(model1CollidingShapes.begin(),
+                              model1CollidingShapes.end(),
+                              m2->GetName());
+        EXPECT_NE(model1CollidingShapes.end(), m2It);
+      }
+    };
+
+    checkCollisions(contacts, expectedCollisions);
+
+    // Now set category and collide bitmasks for cateory_b_box_1 to be the same
+    // as the shapes in Category A
+    categoryBBox1Shape->SetCategoryFilterMask(1);
+    categoryBBox1Shape->SetCollisionFilterMask(6);
+    EXPECT_EQ(1, categoryBBox1Shape->GetCategoryFilterMask());
+    // Step and check collisions
+    checkedOutput = StepWorld<FeaturesCategoryFilter>(world, false).first;
+    EXPECT_FALSE(checkedOutput);
+    auto contacts2 = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts2.size());
+
+    // Update the list of expected collision pairs and verify.
+    // category_b_box_1 should start colliding with the other category B shape.
+    expectedCollisions["category_b_box_0"].push_back("category_b_box_1");
+    expectedCollisions["category_b_box_1"].push_back("category_b_box_0");
+    // category_b_box_1 should no longer collide with category A shapes.
+    auto &catABox0Collisions = expectedCollisions["category_a_box_0"];
+    catABox0Collisions.erase(std::remove(catABox0Collisions.begin(),
+        catABox0Collisions.end(), "category_b_box_1"), catABox0Collisions.end());
+    auto &catABox1Collisions = expectedCollisions["category_a_box_1"];
+    catABox1Collisions.erase(std::remove(catABox1Collisions.begin(),
+        catABox1Collisions.end(), "category_b_box_1"), catABox1Collisions.end());
+
+    checkCollisions(contacts2, expectedCollisions);
+
+    // Now remove category bitmask for category_a_box_0 and verify that it
+    // returns its is now the same as its collide bitmask
+    categoryABox0Shape->RemoveCategoryFilterMask();
+    EXPECT_EQ(categoryABox0Shape->GetCollisionFilterMask(),
+              categoryABox0Shape->GetCategoryFilterMask());
+    // Step and check collisions
+    checkedOutput = StepWorld<FeaturesCategoryFilter>(world, false).first;
+    EXPECT_FALSE(checkedOutput);
+    auto contacts3 = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts3.size());
+    // There should be more contacts
+    EXPECT_LT(contacts2.size(), contacts3.size());
+
+    // Update the list of expected collision pairs and verify.
+    // Category A shapes should start colliding with each other
+    expectedCollisions["category_a_box_0"].push_back("category_a_box_1");
+    expectedCollisions["category_a_box_1"].push_back("category_a_box_0");
+    // It should also start colliding with category_b_box_1 which wa
+    //  previously updated to category A masks.
+    expectedCollisions["category_a_box_0"].push_back("category_b_box_1");
+
+    checkCollisions(contacts3, expectedCollisions);
   }
 }
 
