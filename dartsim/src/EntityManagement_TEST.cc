@@ -376,3 +376,52 @@ TEST(EntityManagement_TEST, ModelByIndexWithNestedModels)
   ASSERT_NE(nullptr, model2Again);
   EXPECT_EQ(2ul, model2Again->GetIndex());
 }
+
+// Tests that removing a parent model with nested models doesn't crash.
+// See https://github.com/gazebosim/gz-sim/issues/3080
+TEST(EntityManagement_TEST, RemoveNestedModelCrash)
+{
+  plugin::Loader loader;
+  loader.LoadLib(dartsim_plugin_LIB);
+
+  plugin::PluginPtr dartsim =
+      loader.Instantiate("gz::physics::dartsim::Plugin");
+
+  auto engine =
+      physics::RequestEngine3d<TestFeatureList>::From(dartsim);
+  ASSERT_NE(nullptr, engine);
+
+  auto world = engine->ConstructEmptyWorld("empty world");
+  ASSERT_NE(nullptr, world);
+
+  auto parentModel = world->ConstructEmptyModel("parent model");
+  ASSERT_NE(nullptr, parentModel);
+
+  // Create several nested models to trigger the old
+  // RemoveModelImpl iterator invalidation bug.
+  using NestedModelPtr =
+      decltype(parentModel->ConstructEmptyNestedModel(""));
+  std::vector<NestedModelPtr> nestedModels;
+  for (int i = 0; i < 6; ++i)
+  {
+    auto nm = parentModel->ConstructEmptyNestedModel(
+        "nested_" + std::to_string(i));
+    ASSERT_NE(nullptr, nm);
+    nestedModels.push_back(nm);
+  }
+
+  // First remove the parent model. Older code could leave some
+  // nested models orphaned due to iterator invalidation.
+  EXPECT_NO_THROW({
+    parentModel->Remove();
+  });
+
+  // Then mimic gz-sim removing the remaining nested models.
+  EXPECT_NO_THROW({
+    for (auto &nm : nestedModels)
+    {
+      nm->Remove();
+    }
+  });
+}
+
