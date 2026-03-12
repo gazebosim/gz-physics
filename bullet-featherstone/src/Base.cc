@@ -25,6 +25,18 @@
 
 #include <utility>
 
+namespace
+{
+
+bool doCollide(uint32_t _categoryBitmask0, uint32_t _collideBitmask0,
+               uint32_t _categoryBitmask1, uint32_t _collideBitmask1)
+{
+  return (_categoryBitmask0 & _collideBitmask1) |
+         (_categoryBitmask1 & _collideBitmask0);
+}
+
+}  // namespace
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -40,10 +52,20 @@ bool GzCollisionFilterCallback::needBroadphaseCollision(
           static_cast<GzMultiBodyLinkCollider *>(
           _proxy1->m_clientObject);
 
-  // Early out if collide bitmask test fails
-  if ((col0 && col1) && !(col0->collideBitmask & col1->collideBitmask))
+  if (col0 && col1)
   {
-    return false;
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
   }
 
   // Continue filtering collision based on logic in
@@ -72,11 +94,22 @@ bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
           static_cast<const GzMultiBodyLinkCollider *>(_body1);
 
   // Collision filtering in narrow phase.
-  // Early out if collide bitmask test fails
-  if ((col0 && col1) && !(col0->collideBitmask & col1->collideBitmask))
+  if (col0 && col1)
   {
-    return false;
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
   }
+
   return btCollisionDispatcher::needsCollision(_body0, _body1);
 }
 
