@@ -608,11 +608,13 @@ namespace gz
     GZ_PHYSICS_CREATE_SELECTOR(X) \
     /* Symbol used by X-types to identify other X-types */ \
     struct X ## Identifier { }; \
+    template <typename PolicyT, typename FeaturesT> \
+    struct X ## _API : public ::gz::physics::detail::ExtractAPI< \
+          detail::Select ## X, FeaturesT> \
+            ::template type<PolicyT, FeaturesT> { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
-  class X : public ::gz::physics::detail::ExtractAPI< \
-        detail::Select ## X, FeaturesT> \
-          ::template type<PolicyT, FeaturesT>, \
+  class X : public detail:: X ## _API <PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
   { \
     public: using Identifier = detail:: X ## Identifier; \
