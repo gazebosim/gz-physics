@@ -233,8 +233,10 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
       auto *dtShapeFrame = firstHit.mCollisionObject->getShapeFrame();
       if (dtShapeFrame && this->shapes.HasEntity(dtShapeFrame->asShapeNode()))
       {
-        auto &extra = extraData.Get<SimulationFeatures::ExtraRayIntersectionData>();
-        extra.collisionShapeId = this->shapes.IdentityOf(dtShapeFrame->asShapeNode());
+        auto &extra =
+            extraData.Get<SimulationFeatures::ExtraRayIntersectionData>();
+        extra.collisionShapeId =
+            this->shapes.IdentityOf(dtShapeFrame->asShapeNode());
       }
     }
 }

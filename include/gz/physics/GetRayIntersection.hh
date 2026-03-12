@@ -64,8 +64,10 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
     public: using VectorType =
       typename FromPolicy<PolicyT>::template Use<LinearVector>;
     public: using RayIntersection = RayIntersectionT<PolicyT>;
+
     public: using RayIntersectionData =
-      SpecifyData<RequireData<RayIntersection>, ExpectData<ExtraRayIntersectionData> >;
+        SpecifyData<RequireData<RayIntersection>,
+                    ExpectData<ExtraRayIntersectionData>>;
 
     /// \brief Get ray intersection generated in the previous simulation step
     /// \param[in] _from The start point of the ray in world coordinates
@@ -86,7 +88,7 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
     {
       RayIntersection intersection;
       CompositeData extraData;
-    };  
+    };
 
     public: virtual RayIntersectionInternal GetRayIntersectionFromLastStep(
       const Identity &_worldID,
