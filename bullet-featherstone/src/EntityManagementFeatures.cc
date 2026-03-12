@@ -208,10 +208,11 @@ void EntityManagementFeatures::SetCollisionFilterMask(
   {
     linkInfo->collider->collideBitmask = _mask;
 
-    // Clear overlapping pair cache if new collision flags are set
-    // so that new contacts are generated with up-to-date collision flags.
+    // Mark dirty if new collision flags are set so that new contacts are
+    // generated with up-to-date collision flags.
     auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
-    this->ClearOverlappingPairCache(modelInfo->world);
+    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+    world->collisionMasksDirty = true;
   }
 }
 
@@ -230,6 +231,51 @@ void EntityManagementFeatures::RemoveCollisionFilterMask(
 {
   // Reset to default value
   this->SetCollisionFilterMask(_shapeID, std::numeric_limits<uint16_t>::max());
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::SetCategoryFilterMask(
+    const Identity &_shapeID, uint16_t _mask)
+{
+  auto *colInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(colInfo->link);
+
+  if (_mask != linkInfo->collider->categoryBitmask)
+  {
+    linkInfo->collider->categoryBitmask = _mask;
+
+    // Mark dirty if new collision flags are set so that new contacts are
+    // generated with up-to-date collision flags.
+    auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+    world->collisionMasksDirty = true;
+  }
+}
+
+/////////////////////////////////////////////////
+uint16_t EntityManagementFeatures::GetCategoryFilterMask(
+    const Identity &_shapeID) const
+{
+  auto *colInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(colInfo->link);
+  // For backward compatibility, if category bitmask is not set, it
+  // defaults to the same value as collide bitmask.
+  return linkInfo->collider->categoryBitmask.has_value() ?
+      linkInfo->collider->categoryBitmask.value() :
+      linkInfo->collider->collideBitmask;
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::RemoveCategoryFilterMask(
+    const Identity &_shapeID)
+{
+  auto *colInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(colInfo->link);
+  linkInfo->collider->categoryBitmask.reset();
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+  world->collisionMasksDirty = true;
 }
 
 /////////////////////////////////////////////////
