@@ -11,6 +11,8 @@
       - tpe: return SemanticVersion(1, 0)
     * Updates dartsim `GetEngineName()` to return "dartsim" only (was "dartsim-" DART_VERSION)
 
+## Gazebo Physics 9.x
+
 ### Gazebo Physics 9.0.0 (2025-09-24)
 
 1. **Baseline:** this includes all changes from 8.3.0 and earlier.
