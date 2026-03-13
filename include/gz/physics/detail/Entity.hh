@@ -37,21 +37,21 @@ namespace gz
       /// This class provides a static constexpr member named `value` which is
       /// true if T is one of the entries of Tuple, and false otherwise.
       template <typename T, typename Tuple>
-      struct TupleContainsBase;
+      struct TypeListContainsBase;
 
-      /// \private This specialization implements TupleContainsBase. It only
-      /// works if Tuple is a std::tuple; any other type for the second template
+      /// \private This specialization implements TypeListContainsBase. It only
+      /// works if List is a TypeList; any other type for the second template
       /// argument will fail to compile.
       template <typename T, typename... Types>
-      struct TupleContainsBase<T, std::tuple<Types...>>
+      struct TypeListContainsBase<T, TypeList<Types...>>
           : std::integral_constant<bool, (std::is_base_of_v<T, Types> || ...)> { };
 
       /////////////////////////////////////////////////
-      template <typename ToFeatureTuple, typename FromFeatureList>
+      template <typename ToFeatureList, typename FromFeatureList>
       struct HasAllFeaturesImpl;
 
       template <typename... ToFeatures, typename FromFeatureList>
-      struct HasAllFeaturesImpl<std::tuple<ToFeatures...>, FromFeatureList>
+      struct HasAllFeaturesImpl<TypeList<ToFeatures...>, FromFeatureList>
       {
         static constexpr bool value = (FromFeatureList::template HasFeature<ToFeatures>() && ...);
         static_assert(
@@ -72,7 +72,7 @@ namespace gz
 
         static constexpr bool value =
             HasAllFeaturesImpl<
-                typename ToFeatures::Features,
+                typename ToFeatures::FeatureTypeList,
                 FromFeatures>::value;
       };
 
@@ -81,7 +81,7 @@ namespace gz
       struct CheckForDowncastableMessage
       {
         static constexpr bool value =
-            TupleContainsBase<typename To::Identifier,
+            TypeListContainsBase<typename To::Identifier,
                               typename From::UpcastIdentifiers>::value;
 
         static_assert(
@@ -96,7 +96,7 @@ namespace gz
       struct CheckForDowncastableMessage<To, From, true>
       {
         static constexpr bool value =
-            TupleContainsBase<typename To::Identifier,
+            TypeListContainsBase<typename To::Identifier,
                               typename From::UpcastIdentifiers>::value;
 
         static_assert(
@@ -120,7 +120,7 @@ namespace gz
         static_assert(HasAllFeatures<To, From>::value);
 
         static_assert(CheckForDowncastableMessage<To, From,
-                      TupleContainsBase<
+                      TypeListContainsBase<
                         typename From::Identifier,
                         typename To::UpcastIdentifiers>::value>::value);
 

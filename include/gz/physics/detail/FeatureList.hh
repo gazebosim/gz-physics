@@ -36,24 +36,24 @@ namespace gz
     namespace detail
     {
       /////////////////////////////////////////////////
-      template <typename T>
-      struct IterateTuple;
+      template <typename>
+      struct IterateList;
 
       template <typename Current, typename... T>
-      struct IterateTuple<std::tuple<Current, T...>>
+      struct IterateList<TypeList<Current, T...>>
       {
         using CurrentTupleEntry = Current;
-        using NextTupleEntry = IterateTuple<std::tuple<T...>>;
+        using NextTupleEntry = IterateList<TypeList<T...>>;
       };
 
       template <typename Current>
-      struct IterateTuple<std::tuple<Current>>
+      struct IterateList<TypeList<Current>>
       {
         using CurrentTupleEntry = Current;
       };
 
       template <>
-      struct IterateTuple<std::tuple<>>
+      struct IterateList<TypeList<>>
       {
         using CurrentTupleEntry = void;
       };
@@ -139,12 +139,7 @@ namespace gz
       ///
       /// This default definition will only be used when F is empty.
       
-      template <typename T, typename List>
-      struct TypeListContainsBase;
 
-      template <typename T, typename... Types>
-      struct TypeListContainsBase<T, TypeList<Types...>>
-          : std::integral_constant<bool, (std::is_base_of_v<T, Types> || ...)> { };
 
       template <typename... F>
       class VerifyFeatures { };
@@ -216,7 +211,7 @@ namespace gz
       };
 
       /////////////////////////////////////////////////
-      /// \private This struct wraps the TupleContainsBase class to create a
+      /// \private This struct wraps the TypeListContainsBase class to create a
       /// tuple filter that can be passed to FilterTuple.
       template <typename DiscardList>
       struct RedundantListFilter
@@ -391,7 +386,7 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private This class helps to implement the function
       /// FeatureList::ConflictsWith(). Its implementation is conceptually
-      /// similar to TupleContainsBase.
+      /// similar to TypeListContainsBase.
       template <typename SomeFeatureList, bool AssertNoConflict, typename Tuple>
       struct ConflictingLists;
 
@@ -400,15 +395,10 @@ namespace gz
       template <typename SomeFeatureList, bool AssertNoConflict,
                 typename... Features>
       struct ConflictingLists<
-          SomeFeatureList, AssertNoConflict, std::tuple<Features...>>
+          SomeFeatureList, AssertNoConflict, TypeList<Features...>>
           : std::integral_constant<bool,
-              !std::is_same<
-                std::tuple<typename std::conditional<
-                  Features::template ConflictsWith<
-                    SomeFeatureList, AssertNoConflict>(),
-                  Empty, Features>::type...>,
-              std::tuple<Features...>
-            >::value> { };
+              (Features::template ConflictsWith<
+                SomeFeatureList, AssertNoConflict>() || ...)> { };
 
       /////////////////////////////////////////////////
       /// \private Check whether any feature within a std::tuple of features
@@ -478,11 +468,9 @@ namespace gz
         template <typename... Features, typename... T>
         struct Select<TypeList<Features...>, T...>
         {
-          using type = typename ToTuple<
-            typename RemoveListRedundancies<
+          using type = typename RemoveListRedundancies<
               TypeList<typename Selector<Features>::template type<T...>...>
-            >::type
-          >::type;
+            >::type;
         };
 
         template <typename T>
@@ -498,25 +486,17 @@ namespace gz
               T...
             >::type;
 
-        template <typename... T>
-        struct S : std::tuple_size<Bases<T...>> { };
-
-        template <typename... T>
-        using IndexSequence = std::make_index_sequence<S<T...>::value>;
-
-        template <typename>
+        template <typename List, typename... T>
         struct Impl;
 
-        template <std::size_t... I>
-        struct Impl<std::index_sequence<I...>>
+        template <typename... B, typename... T>
+        struct Impl<TypeList<B...>, T...>
         {
-          template<typename... T>
-          class type
-              : public virtual std::tuple_element<I, Bases<T...>>::type... { };
+          class type : public virtual B... { };
         };
 
         template <typename... T>
-        using type = typename Impl<IndexSequence<T...>>::template type<T...>;
+        using type = typename Impl<Bases<T...>, T...>::type;
       };
     }
 
@@ -525,7 +505,7 @@ namespace gz
     template <typename F>
     constexpr bool FeatureList<FeaturesT...>::HasFeature()
     {
-      return detail::TupleContainsBase<F, Features>::value;
+      return detail::TypeListContainsBase<F, FeatureTypeList>::value;
     }
 
     /////////////////////////////////////////////////
@@ -536,10 +516,10 @@ namespace gz
       // TODO(MXG): Replace this with a simple fold expression once we use C++17
       return
           detail::ConflictingLists<
-              SomeFeatureList, AssertNoConflict, Features>::value
+              SomeFeatureList, AssertNoConflict, FeatureTypeList>::value
        || detail::ConflictingLists<
               FeatureList<FeaturesT...>, AssertNoConflict,
-              typename FeatureList<SomeFeatureList>::Features>::value;
+              typename FeatureList<SomeFeatureList>::FeatureTypeList>::value;
     }
 
     /////////////////////////////////////////////////
@@ -618,7 +598,7 @@ namespace gz
       public virtual Entity<PolicyT, FeaturesT> \
   { \
     public: using Identifier = detail:: X ## Identifier; \
-    public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
+    public: using UpcastIdentifiers = TypeList<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
     \
     public: X(const X&) = default; \
