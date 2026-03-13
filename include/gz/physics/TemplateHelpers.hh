@@ -31,11 +31,6 @@ namespace gz
     /// is useful for template metaprogramming.
     template <class... T> struct type { };
 
-    /// TODO(MXG): Remove this and use std::void_t instead when migrating to
-    /// C++17
-    template <typename...>
-    using void_t = void;
-
     /// \brief A minimal variadic template container for types.
     /// This is used instead of std::tuple for intermediate template metaprogramming
     /// to drastically reduce compiler memory and instantiation times.
@@ -128,7 +123,7 @@ namespace gz
   struct Select ## X \
   { \
     template<typename F, typename PolicyT, typename FeaturesT, \
-             typename = ::gz::physics::void_t<>> \
+             typename = std::void_t<>> \
     struct Implementation \
     { \
       using type = ::gz::physics::Empty; \
@@ -136,7 +131,7 @@ namespace gz
     \
     template<typename F, typename PolicyT, typename FeaturesT> \
     struct Implementation<F, PolicyT, FeaturesT, \
-                          ::gz::physics::void_t< \
+                          std::void_t< \
                               typename F::template X <PolicyT, FeaturesT>>> \
     { \
       using type = typename F::template X <PolicyT, FeaturesT>; \
