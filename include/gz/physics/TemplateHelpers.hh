@@ -72,6 +72,15 @@ namespace gz
       using type = std::tuple<Ts...>;
     };
 
+    /// \brief Convert a std::tuple to a TypeList
+    template <typename T>
+    struct TupleToTypeList;
+
+    template <typename... Ts>
+    struct TupleToTypeList<std::tuple<Ts...>> {
+      using type = TypeList<Ts...>;
+    };
+
     /////////////////////////////////////////////////
     /// \brief Contains a static constexpr field named `value` which will be
     /// true if the type `From` has a const-quality less than or equal to the
