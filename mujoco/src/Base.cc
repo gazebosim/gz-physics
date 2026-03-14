@@ -26,11 +26,6 @@ namespace physics
 namespace mujoco
 {
 
-Identity Base::InitiateEngine(std::size_t)
-{
-  return this->GenerateIdentity(0);
-}
-
 bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 {
   if (!_worldInfo.specDirty)

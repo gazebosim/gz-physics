@@ -122,7 +122,7 @@ struct WorldInfo
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
 };
 
-class Base : public Implements3d<FeatureList<Feature>>
+class Base
 {
   // Note: Entity ID 0 is reserved for the "engine"
   public: std::size_t entityCount = 1;
@@ -138,7 +138,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     return _parent + "::" + _name;
   }
 
-  public: Identity InitiateEngine(std::size_t /*_engineID*/) override;
 
   public: detail::EntityStorage<std::shared_ptr<WorldInfo>, std::string> worlds;
   public: std::unordered_map<std::size_t, std::shared_ptr<FrameInfo>> frames{};

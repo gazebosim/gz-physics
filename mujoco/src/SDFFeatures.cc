@@ -121,7 +121,8 @@ struct ModelKinematicStructure
     mesh->FillArrays(&verts, &indices);
     auto nverts = mesh->VertexCount();
     muMesh->uservert->assign(3 * nverts, 0.0);
-    std::copy(verts, verts + 3 * nverts, muMesh->uservert->begin());
+    std::transform(verts, verts + 3 * nverts, muMesh->uservert->begin(),
+        [](double val) {return static_cast<float>(val);});
 
     mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
 
