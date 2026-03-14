@@ -4,6 +4,10 @@ if (NOT DART_FOUND)
   list(REMOVE_ITEM tests DoublePendulum.cc)
 endif()
 
+if (WIN32)
+  list(REMOVE_ITEM tests ExamplesBuild_TEST.cc)
+endif()
+
 configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
 
 gz_build_tests(
