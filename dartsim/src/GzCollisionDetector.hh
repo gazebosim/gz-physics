@@ -21,13 +21,33 @@
 #include <cstdio>
 #include <limits>
 #include <memory>
+#include <optional>
+#include <vector>
+
+#include <Eigen/Core>
 
 #include <dart/collision/CollisionResult.hpp>
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
 #include <dart/collision/ode/OdeCollisionDetector.hpp>
 
+#include <gz/physics/FeaturePolicy.hh>
+#include <gz/physics/GetBatchRayIntersection.hh>
+
 namespace dart {
 namespace collision {
+
+/// \brief Single ray query: origin and target in world coordinates.
+struct GzRay
+{
+  Eigen::Vector3d from;
+  Eigen::Vector3d to;
+};
+
+/// \brief Result of a single ray query.
+/// Alias for the gz-physics RayIntersection type to avoid redundant copies.
+using GzRayResult =
+    gz::physics::GetBatchRayIntersectionFromLastStepFeature
+    ::RayIntersectionT<gz::physics::FeaturePolicy3d>;
 
 class GzCollisionDetector
 {
@@ -41,6 +61,18 @@ class GzCollisionDetector
   /// objects
   /// \return Maximum number of contacts between a pair of collision objects.
   public: virtual std::size_t GetCollisionPairMaxContacts() const;
+
+  /// \brief Cast multiple rays against a collision group.
+  /// \param[in] _group The collision group to test against.
+  /// \param[in] _rays The rays to cast.
+  /// \return Results for each ray if supported, or std::nullopt if this
+  ///   detector does not support batch raycasting.
+  public: virtual std::optional<std::vector<GzRayResult>> BatchRaycast(
+      CollisionGroup *_group,
+      const std::vector<GzRay> &_rays) const;
+
+  /// Destructor
+  public: virtual ~GzCollisionDetector() = default;
 
   /// Constructor
   protected: GzCollisionDetector();
@@ -99,6 +131,14 @@ class GzBulletCollisionDetector :
       CollisionGroup* group2,
       const CollisionOption& option = CollisionOption(false, 1u, nullptr),
       CollisionResult* result = nullptr) override;
+
+  // Documentation inherited
+  public: std::unique_ptr<CollisionGroup> createCollisionGroup() override;
+
+  // Documentation inherited
+  public: std::optional<std::vector<GzRayResult>> BatchRaycast(
+      CollisionGroup *_group,
+      const std::vector<GzRay> &_rays) const override;
 
   /// \brief Create the GzBulletCollisionDetector
   public: static std::shared_ptr<GzBulletCollisionDetector> create();
