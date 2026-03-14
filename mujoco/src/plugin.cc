@@ -53,7 +53,7 @@ class Plugin :
     // public virtual ShapeFeatures,
     public virtual SimulationFeatures
     // public virtual WorldFeatures
-{ 
+{
     public: Identity InitiateEngine(std::size_t /*_engineID*/) override
     {
       return this->GenerateIdentity(0);
