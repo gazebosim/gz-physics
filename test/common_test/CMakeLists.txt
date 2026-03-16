@@ -19,7 +19,7 @@ set(tests
   world_features
 )
 
-set(TEST_INSTALL_DIR ${CMAKE_INSTALL_LIBEXECDIR}/gz/${GZ_DESIGNATION}${PROJECT_VERSION_MAJOR}/)
+set(TEST_INSTALL_DIR ${CMAKE_INSTALL_LIBEXECDIR}/gz/${GZ_DESIGNATION}/)
 
 # Find the Python interpreter for running the
 # check_test_ran.py script
@@ -102,4 +102,5 @@ foreach(test ${tests})
   configure_common_test("bullet-featherstone" ${test_executable})
   configure_common_test("dartsim" ${test_executable})
   configure_common_test("tpe" ${test_executable})
+  configure_common_test("mujoco" ${test_executable})
 endforeach()

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Open Source Robotics Foundation
+ * Copyright (C) 2025 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
-#ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_GETENTITIESFEATURE_HH_
-#define GZ_PHYSICS_BULLET_FEATHERSTONE_SRC_GETENTITIESFEATURE_HH_
+#ifndef GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
+#define GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 
+#include <cstddef>
 #include <string>
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -30,36 +31,61 @@
 
 namespace gz {
 namespace physics {
-namespace bullet_featherstone {
+namespace mujoco {
 
-struct EntityManagementFeatureList : gz::physics::FeatureList<
-  CategoryFilterMaskFeature,
-  CollisionFilterMaskFeature,
-  ConstructEmptyWorldFeature,
+struct EntityManagementFeatureList : FeatureList<
   GetEngineInfo,
-  GetJointFromModel,
+  GetWorldFromEngine,
   GetLinkFromModel,
   GetModelFromWorld,
-  GetNestedModelFromModel,
   GetShapeFromLink,
-  GetWorldFromEngine,
   RemoveEntities,
-  WorldModelFeature
+  ConstructEmptyWorldFeature
+  // ConstructEmptyModelFeature,
+  // ConstructEmptyNestedModelFeature,
+  // ConstructEmptyLinkFeature
+  // CollisionFilterMaskFeature,
+  // WorldModelFeature
 > { };
 
 class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
-  // ----- GetEngineInfo -----
-  public: const std::string &GetEngineName(
-      const Identity &_engineID) const override;
+  // ----- Get entities -----
+  public: const std::string &GetEngineName(const Identity &) const override
+  {
+    return this->engineName;
+  }
 
   public: const gz::math::SemanticVersion &GetEngineVersion(
-      const Identity &_engineID) const override;
+            const Identity &) const override
+  {
+    return this->engineVersion;
+  }
 
-  public: std::size_t GetEngineIndex(
-      const Identity &_engineID) const override;
+  public: std::size_t GetEngineIndex(const Identity &) const override
+  {
+    return 0;
+  }
+
+  public: std::size_t GetWorldCount(const Identity &) const override;
+
+  public: Identity GetWorld(
+      const Identity &, std::size_t _worldIndex) const override;
+
+  public: Identity GetWorld(
+      const Identity &, const std::string &_worldName) const override;
+
+  public: const std::string &GetWorldName(
+      const Identity &_worldID) const override;
+
+  public: std::size_t GetWorldIndex(const Identity &_worldID) const override;
+
+  public: Identity GetEngineOfWorld(const Identity &_worldID) const override;
+
+  public: Identity ConstructEmptyWorld(
+    const Identity &_engineID, const std::string &_name) override;
 
   // ----- GetModelFromWorld -----
   public: virtual std::size_t GetModelCount(
@@ -80,25 +106,6 @@ class EntityManagementFeatures :
   public: virtual Identity GetWorldOfModel(
       const Identity &_modelID) const override;
 
-  // ----- GetWorldFromEngine -----
-  public: virtual std::size_t GetWorldCount(
-      const Identity &_engineID) const override;
-
-  public: virtual Identity GetWorld(
-      const Identity &_engineID, std::size_t _worldIndex) const override;
-
-  public: virtual Identity GetWorld(
-      const Identity &_engineID, const std::string &_worldName) const override;
-
-  public: virtual const std::string &GetWorldName(
-      const Identity &_worldID) const override;
-
-  public: virtual std::size_t GetWorldIndex(
-      const Identity &_worldID) const override;
-
-  public: virtual Identity GetEngineOfWorld(
-      const Identity &_worldID) const override;
-
   // ----- GetLinkFromModel -----
   public: std::size_t GetLinkCount(
       const Identity &_modelID) const override;
@@ -115,25 +122,6 @@ class EntityManagementFeatures :
   public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
 
   public: Identity GetModelOfLink(const Identity &_linkID) const override;
-
-  // ----- GetJointFromModel -----
-  public: std::size_t GetJointCount(
-      const Identity &_modelID) const override;
-
-  public: Identity GetJoint(
-      const Identity &_modelID, std::size_t _jointIndex) const override;
-
-  public: Identity GetJoint(
-      const Identity &_modelID, const std::string &_jointName) const override;
-
-  public: const std::string &GetJointName(
-      const Identity &_jointID) const override;
-
-  public: std::size_t GetJointIndex(
-      const Identity &_jointID) const override;
-
-  public: Identity GetModelOfJoint(
-      const Identity &_jointID) const override;
 
   // ----- GetShapeFromLink -----
   public: std::size_t GetShapeCount(const Identity &_linkID) const override;
@@ -166,47 +154,10 @@ class EntityManagementFeatures :
   public: bool RemoveNestedModelByIndex(
      const Identity &_modelID, std::size_t _nestedModelIndex) override;
 
-  public: bool RemoveNestedModelByName(
-      const Identity &_modelID, const std::string &_modelName) override;
-
-  // ----- Manage collision filter masks -----
-  public: void SetCollisionFilterMask(
-      const Identity &_shapeID, uint16_t _mask) override;
-
-  public: uint16_t GetCollisionFilterMask(
-      const Identity &_shapeID) const override;
-
-  public: void RemoveCollisionFilterMask(const Identity &_shapeID) override;
-
-  // ----- Manage category filter masks -----
-  public: void SetCategoryFilterMask(
-      const Identity &_shapeID, uint16_t _mask) override;
-
-  public: uint16_t GetCategoryFilterMask(
-      const Identity &_shapeID) const override;
-
-  public: void RemoveCategoryFilterMask(const Identity &_shapeID) override;
-
-  // ----- Construct empty entities -----
-  public: Identity ConstructEmptyWorld(
-      const Identity &_engineID, const std::string & _name) override;
-
-  // ----- GetNestedModelFromModel -----
-  public: std::size_t GetNestedModelCount(
-    const Identity &_modelID) const override;
-
-  public: Identity GetNestedModel(
-    const Identity &_modelID, std::size_t _modelIndex) const override;
-
-  public: Identity GetNestedModel(
-    const Identity &_modelID, const std::string &_modelName) const override;
-
-  // ----- World model feature -----
-  public: Identity GetWorldModel(const Identity &_worldID) const override;
+  public: bool RemoveNestedModelByName(const Identity &_modelID,
+     const std::string &_modelName) override;
 };
-
-}  // namespace bullet_featherstone
+}  // namespace mujoco
 }  // namespace physics
 }  // namespace gz
-
 #endif
