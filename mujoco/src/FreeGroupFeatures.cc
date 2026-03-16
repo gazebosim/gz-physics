@@ -16,12 +16,12 @@
  */
 
 #include "FreeGroupFeatures.hh"
-#include <unistd.h>
+
+#include <mujoco/mujoco.h>
 
 #include <gz/physics/FreeGroup.hh>
 
 #include "Base.hh"
-#include "mujoco/mujoco.h"
 namespace gz
 {
 namespace physics

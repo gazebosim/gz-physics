@@ -18,13 +18,14 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 
+#include <cstddef>
+#include <string>
+
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/Shape.hh>
-
-#include <string>
 
 #include "Base.hh"
 
@@ -156,7 +157,6 @@ class EntityManagementFeatures :
   public: bool RemoveNestedModelByName(const Identity &_modelID,
      const std::string &_modelName) override;
 };
-
 }  // namespace mujoco
 }  // namespace physics
 }  // namespace gz

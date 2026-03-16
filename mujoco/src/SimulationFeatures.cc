@@ -160,19 +160,20 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       auto &extraContactData =
           extraData.Get<SimulationFeatures::ExtraContactData>();
 
-      mjtNum f_contact[6];
-      mj_contactForce(m, d, i, f_contact);
+      mjtNum contactForce[6];
+      mj_contactForce(m, d, i, contactForce);
 
-      mjtNum f_world[3];
+      mjtNum forceInWorldFrame[3];
       for (int j = 0; j < 3; ++j)
       {
-        f_world[j] = con->frame[j] * f_contact[0] +
-                     con->frame[3 + j] * f_contact[1] +
-                     con->frame[6 + j] * f_contact[2];
+        forceInWorldFrame[j] = con->frame[j] * contactForce[0] +
+                               con->frame[3 + j] * contactForce[1] +
+                               con->frame[6 + j] * contactForce[2];
       }
 
       extraContactData.force =
-          Eigen::Vector3d(f_world[0], f_world[1], f_world[2]);
+          Eigen::Vector3d(forceInWorldFrame[0], forceInWorldFrame[1],
+                          forceInWorldFrame[2]);
       extraContactData.normal = Eigen::Vector3d(con->frame[0], con->frame[1],
                                                 con->frame[2]);
       extraContactData.depth = -con->dist;
