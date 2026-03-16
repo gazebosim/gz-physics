@@ -18,7 +18,6 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
-#include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
 
 #include <cstddef>
@@ -51,7 +50,7 @@ struct ShapeInfo
   {
   }
   std::size_t entityId;
-  mjsGeom *geom;
+  mjsGeom *geom{nullptr};
   std::string name;
   std::weak_ptr<LinkInfo> linkInfo;
 };
@@ -63,10 +62,10 @@ struct LinkInfo
   {
   }
   std::size_t entityId;
-  mjsBody *body;
+  mjsBody *body{nullptr};
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
-  WorldInfo *worldInfo;
+  WorldInfo *worldInfo{nullptr};
   detail::EntityStorage<std::shared_ptr<ShapeInfo>, const mjsGeom *> shapes{};
 };
 
@@ -113,9 +112,9 @@ struct WorldInfo
 {
   std::size_t entityId;
   mjsBody *body{nullptr};
-  mjSpec *mjSpecObj;
-  mjModel *mjModelObj;
-  mjData *mjDataObj;
+  mjSpec *mjSpecObj{nullptr};
+  mjModel *mjModelObj{nullptr};
+  mjData *mjDataObj{nullptr};
   bool specDirty{true};
   std::string name;
   std::vector<std::shared_ptr<JointInfo>> joints{};
@@ -126,7 +125,7 @@ struct WorldInfo
   std::unordered_map<int, std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
 };
 
-class Base : public Implements3d<FeatureList<Feature>>
+class Base
 {
   // Note: Entity ID 0 is reserved for the "engine"
   public: std::size_t entityCount = 1;
@@ -142,7 +141,6 @@ class Base : public Implements3d<FeatureList<Feature>>
     return _parent + "::" + _name;
   }
 
-  public: Identity InitiateEngine(std::size_t /*_engineID*/) override;
 
   public: detail::EntityStorage<std::shared_ptr<WorldInfo>, std::string> worlds;
   public: std::unordered_map<std::size_t, std::shared_ptr<FrameInfo>> frames{};

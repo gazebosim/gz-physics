@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics VERSION 9.0.0)
+project(gz-physics VERSION 10.0.0)
 
 #============================================================================
 # Find gz-cmake
@@ -102,7 +102,7 @@ message(STATUS "-------------------------------------------\n")
 
 # Plugin install dirs
 set(GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR
-  ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
+  ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}/engine-plugins
 )
 set(GZ_PHYSICS_ENGINE_INSTALL_DIR
   ${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR}

@@ -20,6 +20,8 @@ ExternalProject_Add(
   GIT_TAG 3.5.0
   INSTALL_DIR    "${MUJOCO_INSTALL_DIR}"
   BUILD_BYPRODUCTS ${MUJOCO_BYPRODUCTS} # Needed for Ninja
+  LOG_BUILD ON
+  LOG_OUTPUT_ON_FAILURE ON
   CMAKE_ARGS
     -Wno-dev # Suppress any CMake warnings from mujoco
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
