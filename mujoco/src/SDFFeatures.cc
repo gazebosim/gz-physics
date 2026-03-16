@@ -19,18 +19,22 @@
 
 #include <mujoco/mjmodel.h>
 #include <mujoco/mjspec.h>
+#include <mujoco/mujoco.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <gz/common/Console.hh>
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/SubMesh.hh>
 #include <gz/physics/Entity.hh>
-#include <iostream>
-#include <iterator>
-#include <memory>
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
 #include <sdf/Collision.hh>
@@ -47,11 +51,8 @@
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
-#include <string>
-#include <vector>
 
 #include "Base.hh"
-#include "mujoco/mujoco.h"
 
 namespace gz
 {
@@ -121,12 +122,8 @@ struct ModelKinematicStructure
     mesh->FillArrays(&verts, &indices);
     auto nverts = mesh->VertexCount();
     muMesh->uservert->assign(3 * nverts, 0.0);
-    // for (int i = 0; i < nverts / 3; ++i)
-    // {
-    //   std::cout << verts[3 * i] << " " << verts[3 * i + 1] << " "
-    //             << verts[3 * i + 2] << std::endl;
-    // }
-    std::copy(verts, verts + 3 * nverts, muMesh->uservert->begin());
+    std::transform(verts, verts + 3 * nverts, muMesh->uservert->begin(),
+        [](double val) {return static_cast<float>(val);});
 
     mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
 
@@ -140,17 +137,16 @@ struct ModelKinematicStructure
                  const std::shared_ptr<ModelInfo> &_modelInfo)
   {
     mjsBody *parent;
-    auto *world = _modelInfo->worldInfo->body;
+    auto *world = mjs_findBody(_spec, "world");
     const auto *parentLink = this->parents[_index];
     // Find parent
-    if (!parentLink)
+    if (!this->parents[_index])
     {
       parent = world;
     }
     else
     {
-      auto parentIndex = this->FindLinkByName(parentLink->Name());
-      parent = this->bodies[*parentIndex];
+      parent = mjs_findChild(world, parentLink->Name().c_str());
     }
 
     if (!parent)
@@ -447,9 +443,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   auto end = std::chrono::high_resolution_clock::now();
-  std::cout << "Model: " << _sdfModel.Name() << " constructed in "
+  gztrace << "Model: " << _sdfModel.Name() << " constructed in "
             << std::chrono::duration<double>(end - start).count() << "\n";
-  this->RecompileSpec(*worldInfo);
   return this->GenerateIdentity(modelInfo->entityId, modelInfo);
 }
 

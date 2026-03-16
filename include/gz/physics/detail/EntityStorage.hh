@@ -15,11 +15,21 @@
  *
  */
 
-#ifndef GZ_PHYSICS_ENTITY_STORAGE_HH
-#define GZ_PHYSICS_ENTITY_STORAGE_HH
+#ifndef GZ_PHYSICS_DETAIL_ENTITY_STORAGE_HH
+#define GZ_PHYSICS_DETAIL_ENTITY_STORAGE_HH
 
+#include <cstddef>
+#include <optional>
 #include <unordered_map>
 #include <vector>
+
+namespace gz
+{
+namespace physics
+{
+namespace detail
+{
+// INTERNAL IMPLEMENTATION. DO NOT USE OUTSIDE OF gz-physics
 
 /// \brief A class used to store mappings between entity ids and objects that
 /// represent the entity in the physics engine
@@ -178,5 +188,9 @@ struct EntityStorage
   }
 };
 
+}
+}
+
+}
 #endif
 

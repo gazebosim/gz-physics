@@ -38,7 +38,7 @@
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Inertial.hh>
 #include <gz/math/SemanticVersion.hh>
-#include <gz/physics/EntityStorage.hh>
+#include <gz/physics/detail/EntityStorage.hh>
 #include <gz/physics/Implements.hh>
 
 #include <sdf/Types.hh>
@@ -526,13 +526,13 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->models.at(_modelID);
   }
 
-  public: EntityStorage<DartWorldPtr, std::string> worlds;
-  public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
-  public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
-  public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
-  public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
+  public: detail::EntityStorage<DartWorldPtr, std::string> worlds;
+  public: detail::EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
+  public: detail::EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
+  public: detail::EntityStorage<JointInfoPtr, const DartJoint*> joints;
+  public: detail::EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
-  public: EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
+  public: detail::EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
 
   /// \brief Map from the fully qualified link name (including the world name)
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even

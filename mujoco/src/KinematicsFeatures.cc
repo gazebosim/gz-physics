@@ -17,10 +17,11 @@
 
 #include "KinematicsFeatures.hh"
 
-#include "gz/physics/FrameData.hh"
-#include "mujoco/mujoco.h"
+#include <mujoco/mujoco.h>
+
 #include <gz/common/Console.hh>
-#include <iostream>
+
+#include "gz/physics/FrameData.hh"
 namespace gz
 {
 namespace physics
@@ -35,23 +36,21 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   auto it = this->frames.find(_id.ID());
   if (it == this->frames.end())
   {
-    std::cerr << "Frame not found error\n";
-    // TODO(azeey): Frame not found error
+    gzerr << "Frame [" << _id.ID() << "] not found\n";
     return data;
   }
   auto worldInfo = it->second->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto * site = it->second->site;
   auto siteId = mjs_getId(site->element);
 
   auto d = worldInfo->mjDataObj;
-  // mju_printMat(&d->xpos[3 * siteId], 1, 3);
   data.pose.translation() =
       Eigen::Map<Eigen::Vector3d>(&d->site_xpos[3 * siteId]);
   // Eigen defaults to column-major, so we first create a map
   Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> rotMatMap(
       &d->site_xmat[9 * siteId]);
   data.pose.linear() = rotMatMap;
-  // std::cout << "Pose:\n" << data.pose.matrix() << "\n";
 
   mjtNum velocity[6];
   mj_objectVelocity(worldInfo->mjModelObj, d, mjOBJ_SITE, siteId, velocity, 0);

@@ -27,11 +27,6 @@ namespace physics
 namespace mujoco
 {
 
-Identity Base::InitiateEngine(std::size_t)
-{
-  return this->GenerateIdentity(0);
-}
-
 bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 {
   if (!_worldInfo.specDirty)
@@ -46,7 +41,9 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
               << "\n";
     return false;
   }
-  // mj_saveXML(_worldInfo.mjSpecObj, "/tmp/mujoco_model.xml", nullptr, 0);
+  // TODO(azeey): Saving the resulting MJCF is useful for debugging, but should
+  // be removed once the plugin is finalized mj_saveXML(_worldInfo.mjSpecObj,
+  // "/tmp/mujoco_model.xml", nullptr, 0);
 
   // Build the geomIdToShapeInfo map
   _worldInfo.geomIdToShapeInfo.clear();
