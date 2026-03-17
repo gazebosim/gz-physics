@@ -1,0 +1,53 @@
+/*
+ * Copyright (C) 2025 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+#include "Base.hh"
+
+#include <gz/physics/Implements.hh>
+
+namespace gz
+{
+namespace physics
+{
+namespace mujoco
+{
+
+bool Base::RecompileSpec(WorldInfo &_worldInfo) const
+{
+  if (!_worldInfo.specDirty)
+    return true;
+
+  int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
+                        _worldInfo.mjDataObj);
+  _worldInfo.specDirty = false;
+
+  if (rc != 0) {
+    std::cerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj)
+              << "\n";
+    return false;
+  }
+  // TODO(azeey): Saving the resulting MJCF is useful for debugging, but should
+  // be removed once the plugin is finalized mj_saveXML(_worldInfo.mjSpecObj,
+  // "/tmp/mujoco_model.xml", nullptr, 0);
+
+  mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
+  return true;
+}
+
+}  // namespace mujoco
+}  // namespace physics
+}  // namespace gz
