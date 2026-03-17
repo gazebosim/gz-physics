@@ -20,6 +20,9 @@
 
 #include <mujoco/mjdata.h>
 
+#include <unordered_map>
+#include <utility>
+
 #include <gz/common/Profiler.hh>
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
