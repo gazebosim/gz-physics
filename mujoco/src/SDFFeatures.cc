@@ -34,6 +34,8 @@
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/SubMesh.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Vector3.hh>
 #include <gz/physics/Entity.hh>
 #include <sdf/Box.hh>
 #include <sdf/Capsule.hh>
@@ -53,6 +55,7 @@
 #include <sdf/Surface.hh>
 
 #include "Base.hh"
+#include "mujoco/mjtnum.h"
 
 namespace gz
 {
@@ -68,17 +71,79 @@ Identity SDFFeatures::ConstructSdfModel(const Identity &_parentID,
   return this->ConstructSdfModelImpl(_parentID, _sdfModel);
 }
 
+namespace {
+
+/////////////////////////////////////////////////
+void convertJointAxis(const ::sdf::JointAxis *_sdfAxis, double *axis)
+{
+  math::Vector3d resolvedAxis;
+  ::sdf::Errors errors = _sdfAxis->ResolveXyz(resolvedAxis);
+  if (!errors.empty())
+  {
+    gzerr << "There was an error in JointAxis::ResolveXyz\n";
+    gzerr << errors << std::endl;
+    return;
+  }
+  std::copy(resolvedAxis.Data(), resolvedAxis.Data() + 3, axis);
+}
+
+/////////////////////////////////////////////////
+double infIfNeg(const double _value)
+{
+  if (_value < 0.0)
+    return std::numeric_limits<double>::infinity();
+
+  return _value;
+}
+
+/////////////////////////////////////////////////
+void copyStandardJointAxisProperties(
+    mjsJoint * _joint,
+    const ::sdf::JointAxis *_sdfAxis)
+{
+  _joint->damping = _sdfAxis->Damping();
+  _joint->frictionloss = _sdfAxis->Friction();
+  _joint->springref = _sdfAxis->SpringReference();
+  _joint->stiffness = _sdfAxis->SpringStiffness();
+  _joint->limited = static_cast<int>(!std::isinf(infIfNeg(_sdfAxis->Lower())) &&
+                                     !std::isinf(infIfNeg(_sdfAxis->Upper())));
+  if (_joint->limited)
+  {
+    std::cout << "axis: " << _sdfAxis->Lower() << " " << _sdfAxis->Upper() << "\n";
+    _joint->range[0] = infIfNeg(_sdfAxis->Lower());
+    _joint->range[1] = infIfNeg(_sdfAxis->Upper());
+  }
+
+  _joint->actfrclimited =
+      static_cast<int>(std::isinf(infIfNeg(_sdfAxis->Effort())));
+  if (_joint->actfrclimited)
+  {
+    _joint->actfrcrange[0] = -infIfNeg(_sdfAxis->Effort());
+    _joint->actfrcrange[1] = infIfNeg(_sdfAxis->Effort());
+  }
+
+  // TODO(azeey) Investigate whether velocity limits can be supported
+  if (!std::isinf(_sdfAxis->MaxVelocity()))
+  {
+    gzerr << "The MuJoCo physics engine plugin does not support velocity "
+             "limits\n";
+  }
+}
 /////////////////////////////////////////////////
 struct ModelKinematicStructure
 {
+  std::string name;
+
   std::vector<const ::sdf::Link *> links;
+  // For index i, parents[i]  is the parent link of link[i]
   std::vector<const ::sdf::Link *> parents;
+  // For index i, children[i] contains the list of children of link[i]
   std::vector<std::vector<std::size_t>> children;
   // For index i, parentInJoint[i]->parent = links[i], unless the link is
   // "world" or that link is not referenced by any joint.
   // TODO(azeey) This might not be needed at all.
   std::vector<const ::sdf::Joint *> parentInJoint;
-  // For index i, childInJoint[i]->parent = links[i], unless that link is not
+  // For index i, childInJoint[i]->child = links[i], unless that link is not
   // referenced by any joint as a child.
   std::vector<const ::sdf::Joint *> childInJoint;
 
@@ -92,6 +157,28 @@ struct ModelKinematicStructure
       return {};
     }
     return std::distance(links.begin(), it);
+  }
+
+  void PrintGraph()
+  {
+    std::cout << "digraph << " << name << " {\n";
+    for (auto i = 0; i < links.size(); ++i)
+    {
+      if (!parents[i])
+      {
+        std::cout << "world";
+      }
+      else
+      {
+        std::cout << parents[i]->Name();
+      }
+      if (childInJoint[i])
+      {
+        std::cout << " -> " <<  childInJoint[i]->Name();
+      }
+      std::cout << " -> " <<  links[i]->Name() << "\n";
+    }
+    std::cout << "}\n";
   }
 
   mjsGeom * AddMesh(mjSpec *_spec, mjsBody *_body, const ::sdf::Mesh *_meshSdf)
@@ -133,33 +220,12 @@ struct ModelKinematicStructure
 
   void AddToSpec(Base &_base, const ::sdf::Model &_sdfModel, mjSpec *_spec,
                  std::size_t _index,
-                 const std::shared_ptr<ModelInfo> &_modelInfo)
+                 const std::shared_ptr<ModelInfo> &_modelInfo, mjsBody * _parentBody)
   {
-    mjsBody *parent;
-    auto *world = mjs_findBody(_spec, "world");
-    const auto *parentLink = this->parents[_index];
-    // Find parent
-    if (!this->parents[_index])
-    {
-      parent = world;
-    }
-    else
-    {
-      parent = mjs_findChild(world, parentLink->Name().c_str());
-    }
-
-    if (!parent)
-    {
-      // TODO(azeey): Better error message
-      gzerr << "Error finding parent (world: " << world << " parentLink: "
-            << (parentLink ? parentLink->Name() : "NULL") << ")\n";
-      return;
-    }
-
     auto worldInfo = _modelInfo->worldInfo;
 
     const auto *link = this->links[_index];
-    auto child = mjs_addBody(parent, nullptr);
+    auto child = mjs_addBody(_parentBody, nullptr);
     const std::string body_name =
         ::sdf::JoinName(_modelInfo->name, link->Name());
     mjs_setName(child->element, body_name.c_str());
@@ -342,21 +408,67 @@ struct ModelKinematicStructure
                                    linkInfo->entityId);
       }
     }
-    if (!this->childInJoint[_index] && !_sdfModel.Static())
+
+    // Add joints
+    if (!_sdfModel.Static())
     {
-      // No joint has this link as a child, so we add a freejoint.
-      mjs_addFreeJoint(child);
+      const auto *sdfJoint = childInJoint[_index];
+      if (!sdfJoint)
+      {
+        // No joint has this link as a child, so we add a freejoint.
+        mjs_addFreeJoint(child);
+      }
+      else
+      {
+        mjsJoint * joint{nullptr};
+        // TODO(azeey): Resolve joint pose
+        if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
+        {
+          auto joint = mjs_addJoint(child, nullptr);
+          joint->type = mjJNT_HINGE;
+          const auto *sdfAxis = sdfJoint->Axis(0);
+          convertJointAxis(sdfAxis, joint->axis);
+          copyStandardJointAxisProperties(joint, sdfAxis);
+        }
+        else if (sdfJoint->Type() != ::sdf::JointType::FIXED)
+        {
+          gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
+                 << " in joint [" << sdfJoint->Name() << "] not supported\n";
+        }
+
+        // Note that no joints will be created when processing a fixed joint.
+        if (joint)
+        {
+          const std::string mjJointName =
+            ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
+          mjs_setName(joint->element, mjJointName.c_str());
+        }
+        auto jointInfo =
+          std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
+        jointInfo->name = sdfJoint->Name();
+        jointInfo->modelInfo = _modelInfo;
+        jointInfo->worldInfo = worldInfo;
+
+        // auto childSite = mjs_addSite(child, nullptr);
+        // _base.frames[linkInfo->entityId] =
+        //   std::make_shared<FrameInfo>(childSite, worldInfo);
+
+        _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo, jointInfo->name,
+                                     _modelInfo->entityId);
+      }
     }
+
 
     // Recursively add children
     for (std::size_t i = 0; i < this->children[_index].size(); ++i)
     {
       this->AddToSpec(_base, _sdfModel, _spec, this->children[_index][i],
-                      _modelInfo);
+                      _modelInfo, child);
     }
   }
 };
 
+}
 /////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
                                             const ::sdf::Model &_sdfModel)
@@ -372,6 +484,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   auto *spec = worldInfo->mjSpecObj;
   worldInfo->specDirty = true;
   ModelKinematicStructure kinTree;
+  kinTree.name = _sdfModel.Name();
   kinTree.links.reserve(_sdfModel.LinkCount());
   for (std::size_t i = 0; i < _sdfModel.LinkCount(); ++i)
   {
@@ -419,18 +532,21 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   auto modelInfo = std::make_shared<ModelInfo>(
       this->GetNextEntity(), this->ReferenceInterface<WorldInfo>(_parentID));
 
+  auto *worldBody = mjs_findBody(spec, "world");
   modelInfo->name = _sdfModel.Name();
   // TODO(azeey) Change this when we support nested models.
-  modelInfo->parentBody = mjs_findBody(spec, "world");
+  modelInfo->parentBody = worldBody;
   worldInfo->models.AddEntity(modelInfo->entityId, modelInfo,
                               JoinNames(worldInfo->name, modelInfo->name),
                               worldInfo->entityId);
+
+  kinTree.PrintGraph();
 
   for (std::size_t i = 0; i < kinTree.parents.size(); ++i)
   {
     if (!kinTree.parents[i])
     {
-      kinTree.AddToSpec(*this, _sdfModel, spec, i, modelInfo);
+      kinTree.AddToSpec(*this, _sdfModel, spec, i, modelInfo, worldBody);
     }
   }
   if (!modelInfo->body)

@@ -73,15 +73,16 @@ struct LinkInfo
 
 struct JointInfo
 {
-  JointInfo(std::size_t _entityId, mjsJoint *_joint,
+  JointInfo(std::size_t _entityId,
            std::shared_ptr<ModelInfo> _modelInfo)
-      : entityId(_entityId), joint(_joint), modelInfo(_modelInfo)
+      : entityId(_entityId), modelInfo(_modelInfo)
   {
   }
   std::size_t entityId;
   mjsJoint *joint;
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
+  WorldInfo* worldInfo{nullptr};
 };
 
 
@@ -97,7 +98,7 @@ struct ModelInfo
   mjsBody *parentBody{nullptr};
   std::string name;
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
-  std::vector<std::shared_ptr<JointInfo>> joints{};
+  detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
 };
 
 struct FrameInfo
