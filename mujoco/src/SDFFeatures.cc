@@ -73,6 +73,32 @@ Identity SDFFeatures::ConstructSdfModel(const Identity &_parentID,
 
 namespace {
 
+
+/////////////////////////////////////////////////
+/// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
+/// frame. If that fails, return the raw pose
+math::Pose3d resolveSdfPose(const ::sdf::SemanticPose &_semPose, const std::string &_resolveTo = "")
+{
+  math::Pose3d pose;
+  ::sdf::Errors errors = _semPose.Resolve(pose, _resolveTo);
+  if (!errors.empty())
+  {
+    if (!_semPose.RelativeTo().empty())
+    {
+      gzerr << "There was an error in SemanticPose::Resolve\n";
+      for (const auto &err : errors)
+      {
+        gzerr << err.Message() << std::endl;
+      }
+      gzerr << "There is no optimal fallback since the relative_to attribute["
+             << _semPose.RelativeTo() << "] of the pose is not empty. "
+             << "Falling back to using the raw Pose.\n";
+    }
+    pose = _semPose.RawPose();
+  }
+
+  return pose;
+}
 /////////////////////////////////////////////////
 void convertJointAxis(const ::sdf::JointAxis *_sdfAxis, double *axis)
 {
@@ -115,7 +141,7 @@ void copyStandardJointAxisProperties(
   }
 
   _joint->actfrclimited =
-      static_cast<int>(std::isinf(infIfNeg(_sdfAxis->Effort())));
+      static_cast<int>(!std::isinf(infIfNeg(_sdfAxis->Effort())));
   if (_joint->actfrclimited)
   {
     _joint->actfrcrange[0] = -infIfNeg(_sdfAxis->Effort());
@@ -284,10 +310,14 @@ struct ModelKinematicStructure
     child->iquat[2] = inertialPose.Rot().Y();
     child->iquat[3] = inertialPose.Rot().Z();
 
-    // TODO(azeey): Apply link poses
     if (_modelInfo->body != child)
     {
-      const auto &pose = link->RawPose();
+      std::string resolveTo = "";
+      if (this->parents[_index])
+      {
+        resolveTo = this->parents[_index]->Name();
+      }
+      const auto pose = resolveSdfPose(link->SemanticPose(), resolveTo);
       child->pos[0] = pose.X();
       child->pos[1] = pose.Y();
       child->pos[2] = pose.Z();
@@ -306,7 +336,6 @@ struct ModelKinematicStructure
       const auto *collision = link->CollisionByIndex(i);
       auto *shape = collision->Geom();
       mjsGeom *geom = nullptr;
-      // TODO(azeey): Apply pose of collision
 
       switch (shape->Type())
       {
@@ -402,6 +431,12 @@ struct ModelKinematicStructure
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
         auto shapeInfo =
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
+        auto pose = resolveSdfPose(collision->SemanticPose());
+        std::copy(pose.Pos().Data(), pose.Pos().Data()+3, geom->pos);
+        geom->quat[0] = pose.Rot().W();
+        geom->quat[1] = pose.Rot().X();
+        geom->quat[2] = pose.Rot().Y();
+        geom->quat[3] = pose.Rot().Z();
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
@@ -421,7 +456,6 @@ struct ModelKinematicStructure
       else
       {
         mjsJoint * joint{nullptr};
-        // TODO(azeey): Resolve joint pose
         if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
         {
           auto joint = mjs_addJoint(child, nullptr);
@@ -442,6 +476,11 @@ struct ModelKinematicStructure
           const std::string mjJointName =
             ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
           mjs_setName(joint->element, mjJointName.c_str());
+
+          // Resolve the position of the joint relative to the body with which it's associated.
+          // Note that this body is the child link of the joint in SDF terms.
+          math::Vector3d jointAnchor = resolveSdfPose(sdfJoint->SemanticPose()).Pos();
+          std::copy(jointAnchor.Data(), jointAnchor.Data() + 3, joint->pos);
         }
         auto jointInfo =
           std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
