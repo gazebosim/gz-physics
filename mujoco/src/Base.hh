@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -125,9 +126,9 @@ struct WorldInfo
   // Map from mjModel geom index to ShapeInfo
   std::unordered_map<int, std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
 
-  /// \brief link poses from the most recent pose change/update.
-  /// The key is the link's ID, and the value is the link's pose
-  std::unordered_map<std::size_t, gz::math::Pose3d> prevLinkPoses;
+  /// \brief body poses from the most recent pose change/update.
+  /// The index is the MuJoCo body ID, and the value is the body's pose.
+  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
 };
 
 class Base

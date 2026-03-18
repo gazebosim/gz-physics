@@ -104,32 +104,31 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
   for (const auto &[worldId, worldInfo] : this->worlds.idToObject)
   {
     mjData *d = worldInfo->mjDataObj;
-    std::unordered_map<std::size_t, math::Pose3d> newPoses;
 
     for (const auto &[modelId, model] : worldInfo->models.idToObject)
     {
       for (const auto &[linkId, link] : model->links.idToObject)
       {
         int bodyId = mjs_getId(link->body->element);
+        if (bodyId < 0 || static_cast<std::size_t>(bodyId) >= worldInfo->prevBodyPoses.size())
+          continue;
+
         WorldPose wp;
         wp.pose = getBodyWorldPoseFromMjData(d, bodyId);
         wp.body = linkId;
 
-        // If the link's pose is new or has changed, save this new pose and
-        // add it to the output poses. Otherwise, keep the existing link pose
-        auto iter = worldInfo->prevLinkPoses.find(linkId);
-        if ((iter == worldInfo->prevLinkPoses.end()) ||
-            !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
-            !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
+        // If the body's pose is new or has changed, save this new pose and
+        // add it to the output poses. Otherwise, keep the existing body pose
+        auto &prevPose = worldInfo->prevBodyPoses[bodyId];
+        if (!prevPose.has_value() ||
+            !prevPose->Pos().Equal(wp.pose.Pos(), 1e-6) ||
+            !prevPose->Rot().Equal(wp.pose.Rot(), 1e-6))
         {
           _changedPoses.entries.push_back(wp);
-          newPoses[linkId] = wp.pose;
+          prevPose = wp.pose;
         }
-        else
-          newPoses[linkId] = iter->second;
       }
     }
-    worldInfo->prevLinkPoses = std::move(newPoses);
   }
 }
 
