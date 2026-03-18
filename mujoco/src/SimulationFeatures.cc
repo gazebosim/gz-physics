@@ -98,14 +98,20 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   {
     const mjContact *con = d->contact + i;
 
-    auto it1 = worldInfo->geomIdToShapeInfo.find(con->geom1);
-    auto it2 = worldInfo->geomIdToShapeInfo.find(con->geom2);
+    std::shared_ptr<ShapeInfo> shape1 = nullptr;
+    std::shared_ptr<ShapeInfo> shape2 = nullptr;
 
-    if (it1 != worldInfo->geomIdToShapeInfo.end() &&
-        it2 != worldInfo->geomIdToShapeInfo.end())
+    if (con->geom[0] >= 0 &&
+        static_cast<std::size_t>(con->geom[0]) <
+            worldInfo->geomIdToShapeInfo.size())
+      shape1 = worldInfo->geomIdToShapeInfo[con->geom[0]];
+    if (con->geom[1] >= 0 &&
+        static_cast<std::size_t>(con->geom[1]) <
+            worldInfo->geomIdToShapeInfo.size())
+      shape2 = worldInfo->geomIdToShapeInfo[con->geom[1]];
+
+    if (shape1 && shape2)
     {
-      const auto &shape1 = it1->second;
-      const auto &shape2 = it2->second;
 
       CompositeData extraData;
       auto &extraContactData =
@@ -114,17 +120,12 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       mjtNum contactForce[6];
       mj_contactForce(m, d, i, contactForce);
 
-      mjtNum forceInWorldFrame[3];
-      for (int j = 0; j < 3; ++j)
-      {
-        forceInWorldFrame[j] = con->frame[j] * contactForce[0] +
-                               con->frame[3 + j] * contactForce[1] +
-                               con->frame[6 + j] * contactForce[2];
-      }
+      using Matrix3RowMajor = Eigen::Matrix<mjtNum, 3, 3, Eigen::RowMajor>;
+      Eigen::Map<const Matrix3RowMajor> contactFrame(con->frame);
+      Eigen::Map<const Eigen::Vector<mjtNum, 3>> localForce(contactForce);
 
       extraContactData.force =
-          Eigen::Vector3d(forceInWorldFrame[0], forceInWorldFrame[1],
-                          forceInWorldFrame[2]);
+          (contactFrame.transpose() * localForce).cast<double>();
       extraContactData.normal = Eigen::Vector3d(con->frame[0], con->frame[1],
                                                 con->frame[2]);
       extraContactData.depth = -con->dist;

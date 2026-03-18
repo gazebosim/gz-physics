@@ -121,8 +121,8 @@ struct WorldInfo
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
 
-  // Map from mjModel geom index to ShapeInfo
-  std::unordered_map<int, std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
+  // Vector of ShapeInfo, indexed by mujoco geom id
+  std::vector<std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
 };
 
 class Base
