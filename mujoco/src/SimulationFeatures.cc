@@ -120,6 +120,10 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       mjtNum contactForce[6];
       mj_contactForce(m, d, i, contactForce);
 
+      // In mujoco, con->frame is a rotation matrix that transforms vectors
+      // from the world frame to the contact frame (storing local axes as rows).
+      // We multiply the local contact force by its transpose (inverse) to
+      // transform the force back into the world frame.
       using Matrix3RowMajor = Eigen::Matrix<mjtNum, 3, 3, Eigen::RowMajor>;
       Eigen::Map<const Matrix3RowMajor> contactFrame(con->frame);
       Eigen::Map<const Eigen::Vector<mjtNum, 3>> localForce(contactForce);
