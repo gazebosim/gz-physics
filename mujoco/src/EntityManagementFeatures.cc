@@ -263,14 +263,9 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
-  for (const auto &[worldId, worldInfo] : this->worlds.idToObject)
-  {
-    if (worldInfo->models.HasEntity(_modelID))
-    {
-      return false;
-    }
-  }
-  return true;
+  const auto *worldInfo =
+      this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
+  return !worldInfo->models.HasEntity(_modelID);
 }
 
 /////////////////////////////////////////////////
