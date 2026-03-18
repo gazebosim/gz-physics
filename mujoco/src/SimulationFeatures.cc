@@ -110,7 +110,8 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
       for (const auto &[linkId, link] : model->links.idToObject)
       {
         int bodyId = mjs_getId(link->body->element);
-        if (bodyId < 0 || static_cast<std::size_t>(bodyId) >= worldInfo->prevBodyPoses.size())
+        if (bodyId < 0 ||
+            static_cast<std::size_t>(bodyId) >= worldInfo->prevBodyPoses.size())
           continue;
 
         WorldPose wp;
