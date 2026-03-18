@@ -112,7 +112,6 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 
     if (shape1 && shape2)
     {
-
       CompositeData extraData;
       auto &extraContactData =
           extraData.Get<SimulationFeatures::ExtraContactData>();
