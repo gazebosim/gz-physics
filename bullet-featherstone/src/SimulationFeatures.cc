@@ -333,9 +333,8 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
         extraData.Get<SimulationFeatures::ExtraContactData>();
 
       const Eigen::Vector3d normal = convert(pt.m_normalWorldOnB);
-      const double stepSize = world->world->getSolverInfo().m_timeStep;
       extraContactData.force =
-          normal * (pt.m_appliedImpulse / stepSize);
+          normal * (pt.m_appliedImpulse / world->stepSize);
       extraContactData.normal = normal;
       extraContactData.depth = -pt.getDistance();
 
