@@ -81,7 +81,6 @@ struct ModelKinematicStructure
   // For index i, childInJoint[i]->parent = links[i], unless that link is not
   // referenced by any joint as a child.
   std::vector<const ::sdf::Joint *> childInJoint;
-  std::vector<mjsBody *> bodies;
 
   std::optional<std::size_t> FindLinkByName(const std::string &_name)
   {
@@ -161,7 +160,6 @@ struct ModelKinematicStructure
 
     const auto *link = this->links[_index];
     auto child = mjs_addBody(parent, nullptr);
-    this->bodies[_index] = child;
     const std::string body_name =
         ::sdf::JoinName(_modelInfo->name, link->Name());
     mjs_setName(child->element, body_name.c_str());
@@ -382,7 +380,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   kinTree.parents.resize(_sdfModel.LinkCount(), nullptr);
   kinTree.parentInJoint.resize(_sdfModel.LinkCount(), nullptr);
   kinTree.childInJoint.resize(_sdfModel.LinkCount(), nullptr);
-  kinTree.bodies.resize(_sdfModel.LinkCount(), nullptr);
   kinTree.children.resize(_sdfModel.LinkCount(), {});
 
   // Now go through the joints and update parent and children
