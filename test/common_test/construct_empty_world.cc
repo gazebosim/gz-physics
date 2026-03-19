@@ -461,6 +461,7 @@ TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToConstructJointsAndShapes,
                  ConstructEmptyWorldTestUpToConstructJointsAndShapesTypes);
 
 /////////////////////////////////////////////////
+// Cover manual joint and primitive-shape construction in an empty world.
 TYPED_TEST(ConstructEmptyWorldTestUpToConstructJointsAndShapes,
            ConstructJointsAndShapes)
 {
@@ -568,6 +569,7 @@ TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToMeshAndHeightmaps,
                  ConstructEmptyWorldTestUpToMeshAndHeightmapsTypes);
 
 /////////////////////////////////////////////////
+// Cover mesh, image heightmap, and DEM heightmap attachment paths.
 TYPED_TEST(ConstructEmptyWorldTestUpToMeshAndHeightmaps,
            ConstructMeshAndHeightmaps)
 {
@@ -689,6 +691,7 @@ TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToRemoveNestedModelCrash,
                  ConstructEmptyWorldTestUpToRemoveNestedModelCrashTypes);
 
 /////////////////////////////////////////////////
+// Guard against crashes when removing a parent model with nested models.
 TYPED_TEST(ConstructEmptyWorldTestUpToRemoveNestedModelCrash,
            RemoveNestedModelCrash)
 {
