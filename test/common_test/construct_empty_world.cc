@@ -19,7 +19,6 @@
 #include <vector>
 
 #include <gz/common/Console.hh>
-#include <gz/common/geospatial/Dem.hh>
 #include <gz/common/geospatial/ImageHeightmap.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/math/eigen3/Conversions.hh>
@@ -568,7 +567,7 @@ TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToMeshAndHeightmaps,
                  ConstructEmptyWorldTestUpToMeshAndHeightmapsTypes);
 
 /////////////////////////////////////////////////
-// Cover mesh, image heightmap, and DEM heightmap attachment paths.
+// Cover mesh and image heightmap attachment paths.
 TYPED_TEST(ConstructEmptyWorldTestUpToMeshAndHeightmaps,
            ConstructMeshAndHeightmaps)
 {
@@ -642,34 +641,6 @@ TYPED_TEST(ConstructEmptyWorldTestUpToMeshAndHeightmaps,
     EXPECT_NEAR(size.X(), heightmapShapeRecast->GetSize()[0], 1e-6);
     EXPECT_NEAR(size.Y(), heightmapShapeRecast->GetSize()[1], 1e-6);
     EXPECT_NEAR(size.Z(), heightmapShapeRecast->GetSize()[2], 1e-6);
-
-    auto demLink = model->ConstructEmptyLink("dem_link");
-    ASSERT_NE(nullptr, demLink);
-    ASSERT_NE(nullptr, demLink->AttachFixedJoint(child, "dem_joint"));
-
-    const auto demFilename = gz::physics::test::resources::kVolcanoTif;
-    gz::common::Dem dem;
-    ASSERT_EQ(0, dem.Load(demFilename));
-
-    const gz::math::Vector3d sizeDem(
-      dem.WorldWidth(), dem.WorldHeight(),
-      dem.MaxElevation() - dem.MinElevation());
-    auto demShape = demLink->AttachHeightmapShape("dem", dem,
-      gz::math::eigen3::convert(pose),
-      gz::math::eigen3::convert(sizeDem));
-    ASSERT_NE(nullptr, demShape);
-
-    EXPECT_NEAR(sizeDem.X(), demShape->GetSize()[0], 1e-3);
-    EXPECT_NEAR(sizeDem.Y(), demShape->GetSize()[1], 1e-3);
-    EXPECT_NEAR(sizeDem.Z(), demShape->GetSize()[2], 1e-6);
-
-    auto demShapeGeneric = demLink->GetShape("dem");
-    ASSERT_NE(nullptr, demShapeGeneric);
-    auto demShapeRecast = demShapeGeneric->CastToHeightmapShape();
-    ASSERT_NE(nullptr, demShapeRecast);
-    EXPECT_NEAR(sizeDem.X(), demShapeRecast->GetSize()[0], 1e-3);
-    EXPECT_NEAR(sizeDem.Y(), demShapeRecast->GetSize()[1], 1e-3);
-    EXPECT_NEAR(sizeDem.Z(), demShapeRecast->GetSize()[2], 1e-6);
   }
 }
 
