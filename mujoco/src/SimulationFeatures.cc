@@ -20,6 +20,8 @@
 
 #include <mujoco/mjdata.h>
 
+#include <memory>
+
 #include <gz/common/Profiler.hh>
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
@@ -79,6 +81,70 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 /////////////////////////////////////////////////
 void SimulationFeatures::Write(WorldPoses &/* _worldPoses */) const
 {
+}
+
+/////////////////////////////////////////////////
+std::vector<SimulationFeatures::ContactInternal>
+SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
+{
+  std::vector<SimulationFeatures::ContactInternal> outContacts;
+  auto *const worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
+
+  if (!worldInfo || !worldInfo->mjDataObj || !worldInfo->mjModelObj)
+    return outContacts;
+
+  const mjModel *m = worldInfo->mjModelObj;
+  const mjData *d = worldInfo->mjDataObj;
+
+  for (int i = 0; i < d->ncon; ++i)
+  {
+    const mjContact *con = d->contact + i;
+
+    std::shared_ptr<ShapeInfo> shape1 = nullptr;
+    std::shared_ptr<ShapeInfo> shape2 = nullptr;
+
+    if (con->geom[0] >= 0 &&
+        static_cast<std::size_t>(con->geom[0]) <
+            worldInfo->geomIdToShapeInfo.size())
+      shape1 = worldInfo->geomIdToShapeInfo[con->geom[0]];
+    if (con->geom[1] >= 0 &&
+        static_cast<std::size_t>(con->geom[1]) <
+            worldInfo->geomIdToShapeInfo.size())
+      shape2 = worldInfo->geomIdToShapeInfo[con->geom[1]];
+
+    if (shape1 && shape2)
+    {
+      CompositeData extraData;
+      auto &extraContactData =
+          extraData.Get<SimulationFeatures::ExtraContactData>();
+
+      mjtNum contactForce[6];
+      mj_contactForce(m, d, i, contactForce);
+
+      // In mujoco, con->frame is a rotation matrix that transforms vectors
+      // from the world frame to the contact frame (storing local axes as rows).
+      // We multiply the local contact force by its transpose (inverse) to
+      // transform the force back into the world frame.
+      using Matrix3RowMajor = Eigen::Matrix<mjtNum, 3, 3, Eigen::RowMajor>;
+      Eigen::Map<const Matrix3RowMajor> contactFrame(con->frame);
+      Eigen::Map<const Eigen::Vector<mjtNum, 3>> localForce(contactForce);
+
+      extraContactData.force =
+          (contactFrame.transpose() * localForce).cast<double>();
+      extraContactData.normal = Eigen::Vector3d(con->frame[0], con->frame[1],
+                                                con->frame[2]);
+      extraContactData.depth = -con->dist;
+
+      outContacts.push_back(SimulationFeatures::ContactInternal {
+          this->GenerateIdentity(shape1->entityId, shape1),
+          this->GenerateIdentity(shape2->entityId, shape2),
+          Eigen::Vector3d(con->pos[0], con->pos[1], con->pos[2]),
+          extraData
+      });
+    }
+  }
+
+  return outContacts;
 }
 
 }  // namespace mujoco
