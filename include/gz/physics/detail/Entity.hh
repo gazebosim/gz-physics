@@ -44,7 +44,9 @@ namespace gz
       /// argument will fail to compile.
       template <typename T, typename... Types>
       struct TypeListContainsBase<T, TypeList<Types...>>
-          : std::integral_constant<bool, (std::is_base_of_v<T, Types> || ...)> { };
+          : std::integral_constant<bool, (std::is_base_of_v<T, Types> || ...)>
+      {
+      };
 
       /////////////////////////////////////////////////
       template <typename ToFeatureList, typename FromFeatureList>
@@ -53,7 +55,8 @@ namespace gz
       template <typename... ToFeatures, typename FromFeatureList>
       struct HasAllFeaturesImpl<TypeList<ToFeatures...>, FromFeatureList>
       {
-        static constexpr bool value = (FromFeatureList::template HasFeature<ToFeatures>() && ...);
+        static constexpr bool value =
+            (FromFeatureList::template HasFeature<ToFeatures>() && ...);
         static_assert(
             value || sizeof...(ToFeatures) == 0,
             "YOU CANNOT IMPLICITLY UPCAST TO THIS ENTITY TYPE, BECAUSE IT "

@@ -111,7 +111,8 @@ namespace gz
         template <typename PtrT>
         static bool Verify(const PtrT &_pimpl)
         {
-          return (InspectFeatures<PolicyT, Features>::Verify(_pimpl) && ... && true);
+          return (InspectFeatures<PolicyT, Features>::Verify(_pimpl) && ... &&
+                  true);
         }
 
         template <typename LoaderT, typename ContainerT>
@@ -119,14 +120,17 @@ namespace gz
             const LoaderT &_loader,
             ContainerT &_plugins)
         {
-          (InspectFeatures<PolicyT, Features>::EraseIfMissing(_loader, _plugins), ...);
+          (InspectFeatures<PolicyT, Features>::EraseIfMissing(_loader,
+                                                              _plugins),
+           ...);
         }
 
         template <typename PtrT>
         static void MissingNames(const PtrT &_pimpl,
                                  std::set<std::string> &_names)
         {
-          (InspectFeatures<PolicyT, Features>::MissingNames(_pimpl, _names), ...);
+          (InspectFeatures<PolicyT, Features>::MissingNames(_pimpl, _names),
+           ...);
         }
       };
 

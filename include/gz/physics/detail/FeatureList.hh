@@ -138,9 +138,6 @@ namespace gz
       /// language-level support for Concepts.
       ///
       /// This default definition will only be used when F is empty.
-      
-
-
       template <typename... F>
       class VerifyFeatures { };
 
@@ -193,7 +190,11 @@ namespace gz
       };
 
       template <typename T> struct TupleToTypeList;
-      template <typename... Ts> struct TupleToTypeList<std::tuple<Ts...>> { using type = TypeList<Ts...>; };
+      template <typename... Ts>
+      struct TupleToTypeList<std::tuple<Ts...>>
+      {
+        using type = TypeList<Ts...>;
+      };
 
       template <typename SomeFeatureList>
       class ExtractFeatures<
@@ -201,7 +202,8 @@ namespace gz
               std::void_t<typename SomeFeatureList::Features>>
           : public VerifyFeatures<typename SomeFeatureList::Features>
       {
-        public: using type = typename TupleToTypeList<typename SomeFeatureList::Features>::type;
+        public: using type =
+            typename TupleToTypeList<typename SomeFeatureList::Features>::type;
       };
 
       template <>
@@ -268,7 +270,8 @@ namespace gz
               TypeList<F1>
             >;
 
-        using NextAcc = typename TypeListCat<TypeList<Acc...>, PartialResult>::type;
+        using NextAcc =
+            typename TypeListCat<TypeList<Acc...>, PartialResult>::type;
 
         using type = typename TypeListCat<
             PartialResult,
@@ -309,7 +312,8 @@ namespace gz
       template <typename List>
       struct ExpandFeatures<List, std::void_t<typename List::FeatureTuple>>
       {
-        using type = typename FlattenFeatures<typename List::FeatureTuple>::type;
+        using type =
+            typename FlattenFeatures<typename List::FeatureTuple>::type;
       };
 
       template <typename FeatureListT>
