@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_TEMPLATEHELPERS_HH_
 #define GZ_PHYSICS_TEMPLATEHELPERS_HH_
 
+#include <tuple>
 #include <type_traits>
 
 namespace gz
@@ -32,8 +33,9 @@ namespace gz
     template <class... T> struct type { };
 
     /// \brief A minimal variadic template container for types.
-    /// This is used instead of std::tuple for intermediate template metaprogramming
-    /// to drastically reduce compiler memory and instantiation times.
+    /// This is used instead of std::tuple for intermediate template
+    /// metaprogramming to drastically reduce compiler memory and instantiation
+    /// times.
     template <typename... Ts>
     struct TypeList {
       static constexpr std::size_t size = sizeof...(Ts);
