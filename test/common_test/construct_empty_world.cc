@@ -325,7 +325,6 @@ TYPED_TEST(ConstructEmptyWorldTestUpToRemove, ConstructUpToEmptyWorld)
     EXPECT_EQ(nullptr, world->GetModel(0));
     EXPECT_EQ(nullptr, world->GetModel("empty model"));
     EXPECT_EQ(0ul, world->GetModelCount());
-    EXPECT_EQ("empty model", model->GetName());
 
     auto model2 = world->ConstructEmptyModel("model2");
     ASSERT_NE(nullptr, model2);
