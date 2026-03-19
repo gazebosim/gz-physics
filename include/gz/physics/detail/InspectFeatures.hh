@@ -108,6 +108,7 @@ namespace gz
       template <typename PolicyT, typename... Features>
       struct InspectFeatures<PolicyT, TypeList<Features...>>
       {
+        /// \brief Check that each feature is provided by the plugin.
         template <typename PtrT>
         static bool Verify(const PtrT &_pimpl)
         {

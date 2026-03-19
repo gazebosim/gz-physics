@@ -175,6 +175,9 @@ namespace gz
         public: using type = TypeList<F>;
       };
 
+      /// \private This specialization of ExtractFeatures is used to wipe away
+      /// a tuple that is currently holding a set of features, then verify those
+      /// features, and finally repackage them as a TypeList.
       template <typename... F>
       class ExtractFeatures<std::tuple<F...>>
           : public VerifyFeatures<F...>
@@ -182,6 +185,9 @@ namespace gz
         public: using type = TypeList<F...>;
       };
 
+      /// \private This specialization of ExtractFeatures is used to wipe away
+      /// a TypeList that is currently holding a set of features, then verify
+      /// those features, and finally repackage them as a TypeList.
       template <typename... F>
       class ExtractFeatures<TypeList<F...>>
           : public VerifyFeatures<F...>
@@ -196,6 +202,10 @@ namespace gz
         using type = TypeList<Ts...>;
       };
 
+      /// \private This specialization of ExtractFeatures is used to wipe away
+      /// the FeatureList that is currently holding a set of features, then
+      /// verify those features, and finally repackage them as the raw feature
+      /// TypeList that is being held by the FeatureList.
       template <typename SomeFeatureList>
       class ExtractFeatures<
               SomeFeatureList,
@@ -206,6 +216,9 @@ namespace gz
             typename TupleToTypeList<typename SomeFeatureList::Features>::type;
       };
 
+      /// \private This specialization skips over any void entries. This allows
+      /// users or template metaprograms to place `void` into feature entries
+      /// and have those entries be gracefully skipped over.
       template <>
       class ExtractFeatures<void>
       {
@@ -214,7 +227,7 @@ namespace gz
 
       /////////////////////////////////////////////////
       /// \private This struct wraps the TypeListContainsBase class to create a
-      /// tuple filter that can be passed to FilterTuple.
+      /// TypeList filter that can be passed to FilterList.
       template <typename DiscardList>
       struct RedundantListFilter
       {
@@ -222,9 +235,14 @@ namespace gz
         struct Apply : TypeListContainsBase<T, DiscardList> { };
       };
 
+      /////////////////////////////////////////////////
       template <template <typename> class Filter, typename InputList>
       struct FilterList;
 
+      /////////////////////////////////////////////////
+      /// \private This class will apply a Filter to a TypeList and produce a
+      /// new TypeList that only includes the TypeList elements which were
+      /// ignored by the Filter.
       template <template <typename> class Filter, typename... InputTypes>
       struct FilterList<Filter, TypeList<InputTypes...>>
       {
@@ -237,6 +255,9 @@ namespace gz
         >::type;
       };
 
+      /////////////////////////////////////////////////
+      /// \private Use this struct to remove the TypeList elements of one
+      /// TypeList from another TypeList
       template <typename DiscardList>
       struct SubtractList
       {
@@ -244,13 +265,16 @@ namespace gz
         using Filter =
             typename RedundantListFilter<DiscardList>::template Apply<T>;
 
+        /// This struct will contain a nested struct called `type` which will be
+        /// a TypeList with all the elements of FromList that are not present in
+        /// DiscardList
         template <typename FromList>
         struct From : FilterList<Filter, FromList> { };
       };
 
       /////////////////////////////////////////////////
-      /// \private This template takes in a tuple as InputTuple and gives back
-      /// a tuple where every element type is only present once.
+      /// \private This template takes in a TypeList as InputList and gives back
+      /// a TypeList where every element type is only present once.
       template <typename InputList, typename AccumulatedList = TypeList<>>
       struct RemoveListRedundancies;
 
@@ -296,6 +320,8 @@ namespace gz
       template <typename FeatureTuple, typename = std::void_t<>>
       struct FlattenFeatures;
 
+      /////////////////////////////////////////////////
+      /// \private This template is a helper for FlattenFeatures
       template <typename FeatureOrList, typename = std::void_t<>>
       struct ExpandFeatures
       {
@@ -309,6 +335,7 @@ namespace gz
         >;
       };
 
+      /////////////////////////////////////////////////
       template <typename List>
       struct ExpandFeatures<List, std::void_t<typename List::FeatureTuple>>
       {
@@ -316,6 +343,7 @@ namespace gz
             typename FlattenFeatures<typename List::FeatureTuple>::type;
       };
 
+      /////////////////////////////////////////////////
       template <typename FeatureListT>
       struct FlattenFeatures<
           FeatureListT, std::void_t<typename FeatureListT::FeatureTuple>>
@@ -324,6 +352,7 @@ namespace gz
             typename FlattenFeatures<typename FeatureListT::FeatureTuple>::type;
       };
 
+      /////////////////////////////////////////////////
       template <typename... Features>
       struct FlattenFeatures<std::tuple<Features...>, std::void_t<>>
       {
@@ -331,6 +360,7 @@ namespace gz
             typename ExpandFeatures<Features>::type...>::type;
       };
 
+      /////////////////////////////////////////////////
       template <typename... Features>
       struct FlattenFeatures<TypeList<Features...>, std::void_t<>>
       {
@@ -338,6 +368,7 @@ namespace gz
             typename ExpandFeatures<Features>::type...>::type;
       };
 
+      /////////////////////////////////////////////////
       template <>
       struct FlattenFeatures<void>
       {
@@ -360,10 +391,14 @@ namespace gz
       template <typename ParentResultInput, typename F1, typename... Others>
       struct CombineListsImpl<ParentResultInput, F1, Others...>
       {
+        // Add the features of the feature list F1, while filtering out any
+        // repeated features.
         using InitialResult =
             typename SubtractList<ParentResultInput>
             ::template From<typename ExtractFeatures<F1>::type>::type;
 
+        // Add the features that are required by F1, while filtering out any
+        // repeated features.
         using PartialResult = typename TypeListCat<
             InitialResult,
             typename SubtractList<
@@ -372,14 +407,21 @@ namespace gz
                 typename ExtractFeatures<typename F1::RequiredFeatures>::type
             >::type>::type;
 
+        // Define the TypeList that the child should use to filter its list
         using ChildFilter =
             typename TypeListCat<ParentResultInput, PartialResult>::type;
 
+        // Construct the final result
         using type = typename TypeListCat<
             PartialResult,
             typename CombineListsImpl<ChildFilter, Others...>::type>::type;
       };
 
+      /// \private CombineLists is used to take variadic lists of features,
+      /// FeatureLists, or TypeLists of features, and collapse them into a
+      /// serialized std::tuple of features.
+      ///
+      /// This class works recursively.
       template <typename... FeatureLists>
       struct CombineLists
       {
@@ -395,7 +437,7 @@ namespace gz
       struct ConflictingLists;
 
       /// \private Implementation of ConflictingLists. If the Tuple argument is
-      /// not a std::tuple, this class will be undefined.
+      /// not a TypeList, this class will be undefined.
       template <typename SomeFeatureList, bool AssertNoConflict,
                 typename... Features>
       struct ConflictingLists<
@@ -405,8 +447,8 @@ namespace gz
                 SomeFeatureList, AssertNoConflict>() || ...)> { };
 
       /////////////////////////////////////////////////
-      /// \private Check whether any feature within a std::tuple of features
-      /// conflicts with any other feature in that tuple.
+      /// \private Check whether any feature within a TypeList of features
+      /// conflicts with any other feature in that TypeList.
       template <bool AssertNoConflict, typename... FeatureLists>
       struct SelfConflict;
 
