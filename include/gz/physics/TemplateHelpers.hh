@@ -42,6 +42,14 @@ namespace gz
     };
 
     /// \brief Concatenate multiple TypeLists into a single TypeList.
+    ///
+    /// This uses an O(log N) tree-based recursion instead of an O(N) linear
+    /// recursion. When concatenating many lists (e.g., during feature
+    /// flattening), a linear recursion would instantiate a deeply nested stack
+    /// of templates, which can quickly exceed the compiler's maximum
+    /// instantiation depth or heap space limits (especially on MSVC).
+    /// By pairing elements and recursing down, we keep the instantiation stack
+    /// shallow and dramatically reduce compiler memory consumption.
     template <typename... Lists>
     struct TypeListCat;
 
@@ -55,9 +63,20 @@ namespace gz
       using type = TypeList<Ts...>;
     };
 
-    template <typename... T1, typename... T2, typename... Rest>
-    struct TypeListCat<TypeList<T1...>, TypeList<T2...>, Rest...> {
-      using type = typename TypeListCat<TypeList<T1..., T2...>, Rest...>::type;
+    template <typename... T1, typename... T2>
+    struct TypeListCat<TypeList<T1...>, TypeList<T2...>> {
+      using type = TypeList<T1..., T2...>;
+    };
+
+    // We explicitly require at least 3 lists (L1, L2, L3) to use this
+    // recursive specialization. This prevents an ambiguity error with the
+    // 2-element base case `TypeListCat<TypeList<T1...>, TypeList<T2...>>`
+    // when exactly 2 lists are provided.
+    template <typename L1, typename L2, typename L3, typename... Rest>
+    struct TypeListCat<L1, L2, L3, Rest...> {
+      using type = typename TypeListCat<
+          typename TypeListCat<L1, L2>::type,
+          typename TypeListCat<L3, Rest...>::type>::type;
     };
 
     /// \brief Convert a TypeList to a std::tuple
