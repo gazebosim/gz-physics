@@ -289,15 +289,15 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 
       CompositeData extraData;
 
-      // Add normal, depth and wrench to extraData.
+      // Add normal, depth and force to extraData.
       auto& extraContactData =
         extraData.Get<SimulationFeatures::ExtraContactData>();
+
+      const Eigen::Vector3d normal = convert(pt.m_normalWorldOnB);
       extraContactData.force =
-        convert(btVector3(pt.m_appliedImpulse,
-                          pt.m_appliedImpulse,
-                          pt.m_appliedImpulse));
-      extraContactData.normal = convert(pt.m_normalWorldOnB);
-      extraContactData.depth = pt.getDistance();
+          normal * (pt.m_appliedImpulse / world->stepSize);
+      extraContactData.normal = normal;
+      extraContactData.depth = -pt.getDistance();
 
       outContacts.push_back(SimulationFeatures::ContactInternal {
         this->GenerateIdentity(collision0ID, this->collisions.at(collision0ID)),
