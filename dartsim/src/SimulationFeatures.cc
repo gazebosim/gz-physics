@@ -22,6 +22,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 
 #include <dart/collision/CollisionObject.hpp>
@@ -38,8 +39,10 @@
 #include <gz/math/Pose3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
+#include "gz/physics/GetBatchRayIntersection.hh"
 #include "gz/physics/GetContacts.hh"
 
+#include "GzCollisionDetector.hh"
 #include "SimulationFeatures.hh"
 
 #if DART_VERSION_AT_LEAST(6, 13, 0)
@@ -236,6 +239,47 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   }
 
   return intersection;
+}
+
+/////////////////////////////////////////////////
+std::vector<SimulationFeatures::BatchRayIntersection>
+SimulationFeatures::GetBatchRayIntersectionFromLastStep(
+  const Identity &_worldID,
+  const std::vector<SimulationFeatures::BatchRayQuery> &_rays) const
+{
+  std::vector<SimulationFeatures::BatchRayIntersection> results;
+  results.reserve(_rays.size());
+
+  if (_rays.empty())
+    return results;
+
+  constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+  const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
+
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto *const solver = world->getConstraintSolver();
+
+  auto detector = solver->getCollisionDetector();
+  auto *gzDetector =
+    dynamic_cast<dart::collision::GzCollisionDetector *>(detector.get());
+
+  if (gzDetector)
+  {
+    std::vector<dart::collision::GzRay> gzRays;
+    gzRays.reserve(_rays.size());
+    for (const auto &ray : _rays)
+      gzRays.push_back({ray.origin, ray.target});
+
+    auto gzResults = gzDetector->BatchRaycast(
+        solver->getCollisionGroup().get(), gzRays);
+    if (gzResults)
+    {
+      return std::move(*gzResults);
+    }
+  }
+
+  results.assign(_rays.size(), {false, kNaNVec, kNaN, kNaNVec});
+  return results;
 }
 
 std::vector<SimulationFeatures::ContactInternal>
