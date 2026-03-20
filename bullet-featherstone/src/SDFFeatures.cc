@@ -43,6 +43,7 @@
 
 #include <LinearMath/btQuaternion.h>
 
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -1257,6 +1258,8 @@ bool SDFFeatures::AddSdfCollision(
   double restitution = 0.0;
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
+  uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
+  std::optional<uint16_t> categoryBitmask;
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1291,6 +1294,19 @@ bool SDFFeatures::AddSdfCollision(
         if (const auto r = bounce->FindElement("restitution_coefficient"))
           restitution = r->Get<double>();
       }
+
+      if (const auto contact = surfaceElement->FindElement("contact"))
+      {
+        if (const auto bitmask = contact->FindElement("collide_bitmask"))
+        {
+          // Get only supports uint32_t so cast back to uint16_t
+          collideBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
+        }
+        if (const auto bitmask = contact->FindElement("category_bitmask"))
+        {
+          categoryBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
+        }
+      }
     }
   }
 
@@ -1322,7 +1338,9 @@ bool SDFFeatures::AddSdfCollision(
 
     if (!linkInfo->collider)
     {
-      this->CreateLinkCollider(_linkID, _isStatic, shape.get(),
+
+      this->CreateLinkCollider(_linkID, _isStatic, collideBitmask,
+          categoryBitmask, shape.get(),
           btInertialToCollision);
 
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
@@ -1472,6 +1490,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
+    uint16_t _collideBitmask, std::optional<uint16_t> _categoryBitmask,
     btCollisionShape *_shape, const btTransform &_shapeTF)
 {
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
@@ -1526,6 +1545,16 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
       isFixed = totalLinkDofs == 0;
     }
   }
+
+  // Set the collideBimask variable in the GzMultiBodyLinkCollider class
+  // instead of calling setCollisionFlags so we don't override bullet's
+  // internal collision flags which are used to indicate whether a collision
+  // is static, dynamic, kinematic, etc
+  // Set these masks before calling addCollisionObject so that
+  // the masks are available during the needBroadPhaseCollision check
+  linkInfo->collider->collideBitmask = _collideBitmask;
+  linkInfo->collider->categoryBitmask = _categoryBitmask;
+
   if (_isStatic || isFixed)
   {
     worldInfo->world->addCollisionObject(

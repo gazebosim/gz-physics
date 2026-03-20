@@ -25,9 +25,93 @@
 
 #include <utility>
 
+namespace
+{
+
+bool doCollide(uint32_t _categoryBitmask0, uint32_t _collideBitmask0,
+               uint32_t _categoryBitmask1, uint32_t _collideBitmask1)
+{
+  return (_categoryBitmask0 & _collideBitmask1) |
+         (_categoryBitmask1 & _collideBitmask0);
+}
+
+}  // namespace
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/////////////////////////////////////////////////
+bool GzCollisionFilterCallback::needBroadphaseCollision(
+    btBroadphaseProxy *_proxy0, btBroadphaseProxy *_proxy1) const
+{
+  GzMultiBodyLinkCollider *col0 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy0->m_clientObject);
+  GzMultiBodyLinkCollider *col1 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy1->m_clientObject);
+
+  if (col0 && col1)
+  {
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
+  }
+
+  // Continue filtering collision based on logic in
+  // btOverlappingPairCache::needsBroadphaseCollision
+  bool collides = (_proxy0->m_collisionFilterGroup &
+                   _proxy1->m_collisionFilterMask) != 0;
+  collides = collides && (_proxy1->m_collisionFilterGroup &
+                          _proxy0->m_collisionFilterMask);
+  return collides;
+}
+
+/////////////////////////////////////////////////
+GzCollisionDispatcher::GzCollisionDispatcher(
+    btCollisionConfiguration *_collisionConfiguration)
+    : btCollisionDispatcher(_collisionConfiguration)
+{
+}
+
+/////////////////////////////////////////////////
+bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
+    const btCollisionObject *_body1)
+{
+  const GzMultiBodyLinkCollider *col0 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body0);
+  const GzMultiBodyLinkCollider *col1 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body1);
+
+  // Collision filtering in narrow phase.
+  if (col0 && col1)
+  {
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
+  }
+
+  return btCollisionDispatcher::needsCollision(_body0, _body1);
+}
 
 /////////////////////////////////////////////////
 WorldInfo::WorldInfo(std::string name_)
@@ -36,12 +120,18 @@ WorldInfo::WorldInfo(std::string name_)
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
   this->dispatcher =
-    std::make_unique<btCollisionDispatcher>(collisionConfiguration.get());
+    std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
     dispatcher.get(), broadphase.get(), solver.get(),
     collisionConfiguration.get());
+
+  // Set custom collision filter callback for filtering based on
+  // surface contact parameters
+  this->collisionFilterCallback = std::make_unique<GzCollisionFilterCallback>();
+  btOverlappingPairCache* pairCache = this->world->getPairCache();
+  pairCache->setOverlapFilterCallback(this->collisionFilterCallback.get());
 
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
 
