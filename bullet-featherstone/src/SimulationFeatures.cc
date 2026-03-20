@@ -178,6 +178,18 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  // Update fixed constraint behavior to weld child to parent.
+  // Do this before stepping, i.e. before physics engine tries to solve and
+  // enforce the constraint
+  for (auto & joint : this->joints)
+  {
+    if (joint.second->fixedConstraint &&
+        joint.second->fixedConstraintWeldChildToParent)
+    {
+      enforceFixedConstraint(joint.second->fixedConstraint.get());
+    }
+  }
+
   // Bullet updates collision transforms *after* forward integration. But in
   // some case (e.g. if joint positions were updated), collision transforms may
   // need to be manually updated before stepping the Bullet simulation.
@@ -213,6 +225,33 @@ void SimulationFeatures::WorldForwardStep(
   // One example is the motor constraint that's created in
   // JointFeatures::SetJointVelocityCommand which assumes a fixed step
   // size.
+      double frictionLimit = model->body->getLink(btIndex).m_jointFriction;
+
+      if (frictionLimit > 0)
+      {
+        double vel = model->body->getJointVel(btIndex);
+        double epsilon = 1e-3; // Threshold to prevent jittering
+        double frictionTorque = 0.0;
+
+        if (std::abs(vel) > epsilon)
+        {
+          // Apply constant friction force opposing velocity
+          frictionTorque = (vel > 0) ? -frictionLimit : frictionLimit;
+        }
+        else
+        {
+          // "Sticky" region: gradually reduce force to zero to stop oscillation
+          frictionTorque = -frictionLimit * (vel / epsilon);
+        }
+
+        // Apply the calculated force to the Bullet body
+        model->body->addJointTorque(btIndex, static_cast<btScalar>(frictionTorque));
+      }
+      
+      
+    }
+  }
+
   worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
                                    static_cast<btScalar>(stepSize));
 
