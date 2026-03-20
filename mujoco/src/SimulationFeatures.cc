@@ -26,6 +26,22 @@
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
+namespace
+{
+
+gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
+{
+  return gz::math::Pose3d(_d->xpos[3 * _bodyId],
+                          _d->xpos[3 * _bodyId + 1],
+                          _d->xpos[3 * _bodyId + 2],
+                          _d->xquat[4 * _bodyId],
+                          _d->xquat[4 * _bodyId + 1],
+                          _d->xquat[4 * _bodyId + 2],
+                          _d->xquat[4 * _bodyId + 3]);
+}
+
+}  // namespace
+
 namespace gz
 {
 namespace physics
@@ -56,31 +72,64 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 
   mj_step(worldInfo->mjModelObj, worldInfo->mjDataObj);
 
-  auto &worldPoses = _h.Get<WorldPoses>();
-  worldPoses.entries.clear();
-  mjData *d = worldInfo->mjDataObj;
-  for (const auto &[modelId, model] : worldInfo->models.idToObject)
-  {
-    for (const auto &[linkId, link] : model->links.idToObject)
-    {
-      auto bodyId = mjs_getId(link->body->element);
-      auto &wp = worldPoses.entries.emplace_back();
-      wp.pose.Pos().Set(d->xpos[3 * bodyId], d->xpos[3 * bodyId + 1],
-                        d->xpos[3 * bodyId + 2]);
-      wp.pose.Rot().Set(d->xquat[4 * bodyId], d->xquat[4 * bodyId + 1],
-                        d->xquat[4 * bodyId + 2], d->xquat[4 * bodyId + 3]);
-      wp.body = link->entityId;
-    }
-  }
-  // TODO(azeey) This simply copies all links instead of only the ones with
-  // changed poses.
-  auto &changedPoses = _h.Get<ChangedWorldPoses>();
-  changedPoses.entries = worldPoses.entries;
+  this->WriteRequiredData(_h);
+  this->Write(_h.Get<ChangedWorldPoses>());
 }
 
 /////////////////////////////////////////////////
-void SimulationFeatures::Write(WorldPoses &/* _worldPoses */) const
+void SimulationFeatures::Write(WorldPoses &_worldPoses) const
 {
+  _worldPoses.entries.clear();
+  for (const auto &[worldId, worldInfo] : this->worlds.idToObject)
+  {
+    mjData *d = worldInfo->mjDataObj;
+    for (const auto &[modelId, model] : worldInfo->models.idToObject)
+    {
+      for (const auto &[linkId, link] : model->links.idToObject)
+      {
+        int bodyId = mjs_getId(link->body->element);
+        auto &wp = _worldPoses.entries.emplace_back();
+        wp.pose = getBodyWorldPoseFromMjData(d, bodyId);
+        wp.body = link->entityId;
+      }
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
+{
+  _changedPoses.entries.clear();
+  for (const auto &[worldId, worldInfo] : this->worlds.idToObject)
+  {
+    mjData *d = worldInfo->mjDataObj;
+
+    for (const auto &[modelId, model] : worldInfo->models.idToObject)
+    {
+      for (const auto &[linkId, link] : model->links.idToObject)
+      {
+        int bodyId = mjs_getId(link->body->element);
+        if (bodyId < 0 ||
+            static_cast<std::size_t>(bodyId) >= worldInfo->prevBodyPoses.size())
+          continue;
+
+        WorldPose wp;
+        wp.pose = getBodyWorldPoseFromMjData(d, bodyId);
+        wp.body = linkId;
+
+        // If the body's pose is new or has changed, save this new pose and
+        // add it to the output poses. Otherwise, keep the existing body pose
+        auto &prevPose = worldInfo->prevBodyPoses[bodyId];
+        if (!prevPose.has_value() ||
+            !prevPose->Pos().Equal(wp.pose.Pos(), 1e-6) ||
+            !prevPose->Rot().Equal(wp.pose.Rot(), 1e-6))
+        {
+          _changedPoses.entries.push_back(wp);
+          prevPose = wp.pose;
+        }
+      }
+    }
+  }
 }
 
 /////////////////////////////////////////////////
