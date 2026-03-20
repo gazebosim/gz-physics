@@ -16,16 +16,30 @@
 */
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include <gz/common/Console.hh>
+#include <gz/common/geospatial/ImageHeightmap.hh>
+#include <gz/common/MeshManager.hh>
+#include <gz/math/eigen3/Conversions.hh>
 #include <gz/plugin/Loader.hh>
 
+#include "test/Resources.hh"
 #include "test/TestLibLoader.hh"
 
+#include <gz/physics/FixedJoint.hh>
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/FindFeatures.hh>
+#include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/Joint.hh>
+#include <gz/physics/PrismaticJoint.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/RemoveEntities.hh>
+#include <gz/physics/RevoluteJoint.hh>
+#include <gz/physics/SphereShape.hh>
+#include <gz/physics/heightmap/HeightmapShape.hh>
+#include <gz/physics/mesh/MeshShape.hh>
 
 #include "gz/physics/BoxShape.hh"
 
@@ -412,6 +426,274 @@ TYPED_TEST(ConstructEmptyWorldTestUpToEmptyNestedModelFeature2,
     auto model2Again = world->ConstructEmptyModel("model2_again");
     ASSERT_NE(nullptr, model2Again);
     EXPECT_EQ(2ul, model2Again->GetIndex());
+  }
+}
+
+using FeaturesUpToConstructJointsAndShapes = gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ConstructEmptyModelFeature,
+  gz::physics::ConstructEmptyLinkFeature,
+  gz::physics::GetEntities,
+  gz::physics::AttachRevoluteJointFeature,
+  gz::physics::GetRevoluteJointProperties,
+  gz::physics::SetRevoluteJointProperties,
+  gz::physics::AttachPrismaticJointFeature,
+  gz::physics::GetPrismaticJointProperties,
+  gz::physics::GetBasicJointState,
+  gz::physics::SetBasicJointState,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::ShapeFrameSemantics,
+  gz::physics::GetBoxShapeProperties,
+  gz::physics::AttachBoxShapeFeature,
+  gz::physics::GetSphereShapeProperties,
+  gz::physics::AttachSphereShapeFeature
+>;
+
+template <class T>
+class ConstructEmptyWorldTestUpToConstructJointsAndShapes :
+  public ConstructEmptyWorldTest<T>{};
+using ConstructEmptyWorldTestUpToConstructJointsAndShapesTypes =
+  ::testing::Types<FeaturesUpToConstructJointsAndShapes>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToConstructJointsAndShapes,
+                 ConstructEmptyWorldTestUpToConstructJointsAndShapesTypes);
+
+/////////////////////////////////////////////////
+// Cover manual joint and primitive-shape construction in an empty world.
+TYPED_TEST(ConstructEmptyWorldTestUpToConstructJointsAndShapes,
+           ConstructJointsAndShapes)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
+
+    auto model = world->ConstructEmptyModel("empty model");
+    ASSERT_NE(nullptr, model);
+
+    auto link = model->ConstructEmptyLink("empty link");
+    ASSERT_NE(nullptr, link);
+    EXPECT_EQ(0u, link->GetIndex());
+
+    auto revolute = link->AttachRevoluteJoint(nullptr);
+    ASSERT_NE(nullptr, revolute);
+    EXPECT_NEAR(
+      (Eigen::Vector3d::UnitX() - revolute->GetAxis()).norm(), 0.0, 1e-6);
+    EXPECT_DOUBLE_EQ(0.0, revolute->GetPosition(0));
+
+    revolute->SetAxis(Eigen::Vector3d::UnitZ());
+    EXPECT_NEAR(
+      (Eigen::Vector3d::UnitZ() - revolute->GetAxis()).norm(), 0.0, 1e-6);
+
+    auto child = model->ConstructEmptyLink("child link");
+    ASSERT_NE(nullptr, child);
+
+    const std::string boxName = "box";
+    const Eigen::Vector3d boxSize(0.1, 0.2, 0.3);
+    auto box = link->AttachBoxShape(boxName, boxSize);
+    ASSERT_NE(nullptr, box);
+    EXPECT_EQ(boxName, box->GetName());
+    EXPECT_NEAR((boxSize - box->GetSize()).norm(), 0.0, 1e-6);
+
+    EXPECT_EQ(1u, link->GetShapeCount());
+    EXPECT_EQ(box, link->GetShape(0u));
+
+    auto prismatic = child->AttachPrismaticJoint(
+      link, "prismatic", Eigen::Vector3d::UnitZ());
+    ASSERT_NE(nullptr, prismatic);
+
+    const double zPos = 2.5;
+    const double zVel = 9.1;
+    const double zAcc = 10.2;
+    prismatic->SetPosition(0, zPos);
+    prismatic->SetVelocity(0, zVel);
+    prismatic->SetAcceleration(0, zAcc);
+
+    const auto childData = child->FrameDataRelativeToWorld();
+    EXPECT_DOUBLE_EQ(0.0, childData.pose.translation().x());
+    EXPECT_DOUBLE_EQ(0.0, childData.pose.translation().y());
+    EXPECT_DOUBLE_EQ(zPos, childData.pose.translation().z());
+    EXPECT_DOUBLE_EQ(0.0, childData.linearVelocity.x());
+    EXPECT_DOUBLE_EQ(0.0, childData.linearVelocity.y());
+    EXPECT_DOUBLE_EQ(zVel, childData.linearVelocity.z());
+    EXPECT_DOUBLE_EQ(0.0, childData.linearAcceleration.x());
+    EXPECT_DOUBLE_EQ(0.0, childData.linearAcceleration.y());
+    EXPECT_DOUBLE_EQ(zAcc, childData.linearAcceleration.z());
+
+    const double yPos = 11.5;
+    Eigen::Isometry3d childSpherePose = Eigen::Isometry3d::Identity();
+    childSpherePose.translate(Eigen::Vector3d(0.0, yPos, 0.0));
+    auto sphere = child->AttachSphereShape("child sphere", 1.0, childSpherePose);
+    ASSERT_NE(nullptr, sphere);
+
+    const auto sphereData = sphere->FrameDataRelativeToWorld();
+    EXPECT_DOUBLE_EQ(0.0, sphereData.pose.translation().x());
+    EXPECT_DOUBLE_EQ(yPos, sphereData.pose.translation().y());
+    EXPECT_DOUBLE_EQ(zPos, sphereData.pose.translation().z());
+    EXPECT_DOUBLE_EQ(0.0, sphereData.linearVelocity.x());
+    EXPECT_DOUBLE_EQ(0.0, sphereData.linearVelocity.y());
+    EXPECT_DOUBLE_EQ(zVel, sphereData.linearVelocity.z());
+    EXPECT_DOUBLE_EQ(0.0, sphereData.linearAcceleration.x());
+    EXPECT_DOUBLE_EQ(0.0, sphereData.linearAcceleration.y());
+    EXPECT_DOUBLE_EQ(zAcc, sphereData.linearAcceleration.z());
+
+    const auto relativeSphereData = sphere->FrameDataRelativeTo(*child);
+    EXPECT_DOUBLE_EQ(0.0, relativeSphereData.pose.translation().x());
+    EXPECT_DOUBLE_EQ(yPos, relativeSphereData.pose.translation().y());
+    EXPECT_DOUBLE_EQ(0.0, relativeSphereData.pose.translation().z());
+  }
+}
+
+using FeaturesUpToMeshAndHeightmaps = gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ConstructEmptyModelFeature,
+  gz::physics::ConstructEmptyLinkFeature,
+  gz::physics::GetEntities,
+  gz::physics::AttachFixedJointFeature,
+  gz::physics::mesh::GetMeshShapeProperties,
+  gz::physics::mesh::AttachMeshShapeFeature,
+  gz::physics::heightmap::GetHeightmapShapeProperties,
+  gz::physics::heightmap::AttachHeightmapShapeFeature
+>;
+
+template <class T>
+class ConstructEmptyWorldTestUpToMeshAndHeightmaps :
+  public ConstructEmptyWorldTest<T>{};
+using ConstructEmptyWorldTestUpToMeshAndHeightmapsTypes =
+  ::testing::Types<FeaturesUpToMeshAndHeightmaps>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToMeshAndHeightmaps,
+                 ConstructEmptyWorldTestUpToMeshAndHeightmapsTypes);
+
+/////////////////////////////////////////////////
+// Cover mesh and image heightmap attachment paths.
+TYPED_TEST(ConstructEmptyWorldTestUpToMeshAndHeightmaps,
+           ConstructMeshAndHeightmaps)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
+
+    auto model = world->ConstructEmptyModel("empty model");
+    ASSERT_NE(nullptr, model);
+
+    auto child = model->ConstructEmptyLink("child link");
+    ASSERT_NE(nullptr, child);
+
+    auto meshLink = model->ConstructEmptyLink("mesh_link");
+    ASSERT_NE(nullptr, meshLink);
+    ASSERT_NE(nullptr, meshLink->AttachFixedJoint(child, "fixed"));
+
+    const auto meshFilename = gz::physics::test::resources::kChassisDae;
+    auto &meshManager = *gz::common::MeshManager::Instance();
+    auto *mesh = meshManager.Load(meshFilename);
+    ASSERT_NE(nullptr, mesh);
+
+    auto meshShape = meshLink->AttachMeshShape("chassis", *mesh);
+    ASSERT_NE(nullptr, meshShape);
+    const auto originalMeshSize = mesh->Max() - mesh->Min();
+    const auto meshShapeSize = meshShape->GetSize();
+
+    for (std::size_t i = 0; i < 3; ++i)
+    {
+      EXPECT_NEAR(originalMeshSize[i], meshShapeSize[i], 1e-6);
+    }
+
+    const gz::math::Pose3d pose(0, 0, 0.2, 0, 0, 0);
+    const gz::math::Vector3d scale(0.5, 1.0, 0.25);
+    auto meshShapeScaled = meshLink->AttachMeshShape("small_chassis", *mesh,
+      gz::math::eigen3::convert(pose),
+      gz::math::eigen3::convert(scale));
+    ASSERT_NE(nullptr, meshShapeScaled);
+    const auto meshShapeScaledSize = meshShapeScaled->GetSize();
+
+    for (std::size_t i = 0; i < 3; ++i)
+    {
+      EXPECT_NEAR(originalMeshSize[i] * scale[i], meshShapeScaledSize[i], 1e-6);
+    }
+
+    auto heightmapLink = model->ConstructEmptyLink("heightmap_link");
+    ASSERT_NE(nullptr, heightmapLink);
+    ASSERT_NE(nullptr, heightmapLink->AttachFixedJoint(child, "heightmap_joint"));
+
+    const auto heightmapFilename =
+      gz::physics::test::resources::kHeightmapBowlPng;
+    gz::common::ImageHeightmap data;
+    ASSERT_EQ(0, data.Load(heightmapFilename));
+
+    const gz::math::Vector3d size(129, 129, 10);
+    auto heightmapShape = heightmapLink->AttachHeightmapShape("heightmap", data,
+      gz::math::eigen3::convert(pose),
+      gz::math::eigen3::convert(size));
+    ASSERT_NE(nullptr, heightmapShape);
+
+    EXPECT_NEAR(size.X(), heightmapShape->GetSize()[0], 1e-6);
+    EXPECT_NEAR(size.Y(), heightmapShape->GetSize()[1], 1e-6);
+    EXPECT_NEAR(size.Z(), heightmapShape->GetSize()[2], 1e-6);
+
+    auto heightmapShapeGeneric = heightmapLink->GetShape("heightmap");
+    ASSERT_NE(nullptr, heightmapShapeGeneric);
+    auto heightmapShapeRecast = heightmapShapeGeneric->CastToHeightmapShape();
+    ASSERT_NE(nullptr, heightmapShapeRecast);
+    EXPECT_NEAR(size.X(), heightmapShapeRecast->GetSize()[0], 1e-6);
+    EXPECT_NEAR(size.Y(), heightmapShapeRecast->GetSize()[1], 1e-6);
+    EXPECT_NEAR(size.Z(), heightmapShapeRecast->GetSize()[2], 1e-6);
+  }
+}
+
+using FeaturesUpToRemoveNestedModelCrash = gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::ConstructEmptyModelFeature,
+  gz::physics::ConstructEmptyNestedModelFeature,
+  gz::physics::RemoveEntities
+>;
+
+template <class T>
+class ConstructEmptyWorldTestUpToRemoveNestedModelCrash :
+  public ConstructEmptyWorldTest<T>{};
+using ConstructEmptyWorldTestUpToRemoveNestedModelCrashTypes =
+  ::testing::Types<FeaturesUpToRemoveNestedModelCrash>;
+TYPED_TEST_SUITE(ConstructEmptyWorldTestUpToRemoveNestedModelCrash,
+                 ConstructEmptyWorldTestUpToRemoveNestedModelCrashTypes);
+
+/////////////////////////////////////////////////
+// Guard against crashes when removing a parent model with nested models.
+TYPED_TEST(ConstructEmptyWorldTestUpToRemoveNestedModelCrash,
+           RemoveNestedModelCrash)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::physics::EnginePtr<FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<FeaturePolicy3d, TypeParam> world;
+    this->MakeEmptyWorld(name, engine, world);
+
+    auto parentModel = world->ConstructEmptyModel("parent model");
+    ASSERT_NE(nullptr, parentModel);
+
+    using NestedModelPtr = decltype(parentModel->ConstructEmptyNestedModel(""));
+    std::vector<NestedModelPtr> nestedModels;
+    for (int i = 0; i < 6; ++i)
+    {
+      auto nestedModel =
+        parentModel->ConstructEmptyNestedModel("nested_" + std::to_string(i));
+      ASSERT_NE(nullptr, nestedModel);
+      nestedModels.push_back(nestedModel);
+    }
+
+    EXPECT_NO_THROW({
+      parentModel->Remove();
+    });
+
+    EXPECT_NO_THROW({
+      for (auto &nestedModel : nestedModels)
+      {
+        nestedModel->Remove();
+      }
+    });
   }
 }
 
