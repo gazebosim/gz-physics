@@ -17,11 +17,12 @@ endif()
 ExternalProject_Add(
   mujoco_ext
   GIT_REPOSITORY https://github.com/google-deepmind/mujoco
-  GIT_TAG 3.5.0
+  GIT_TAG 881544c0c58dc2e95fbd132a5ec90b99e012b6f7 # 3.5.0
   INSTALL_DIR    "${MUJOCO_INSTALL_DIR}"
   BUILD_BYPRODUCTS ${MUJOCO_BYPRODUCTS} # Needed for Ninja
   LOG_BUILD ON
   LOG_OUTPUT_ON_FAILURE ON
+  UPDATE_DISCONNECTED ON # Avoids configure/build steps everytime gz-physics built
   CMAKE_ARGS
     -Wno-dev # Suppress any CMake warnings from mujoco
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
