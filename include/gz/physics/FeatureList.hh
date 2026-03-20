@@ -41,7 +41,7 @@ namespace gz
       // Forward declarations
       template <typename...> struct CombineLists;
       template <bool, typename...> struct SelfConflict;
-      template <typename> struct IterateTuple;
+      template <typename> struct IterateList;
     }
 
     /////////////////////////////////////////////////
@@ -58,7 +58,7 @@ namespace gz
     /// using AdvancedList = FeatureList<BasicList, AdvancedA, AdvancedB>;
     /// \endcode
     template <typename... FeaturesT>
-    struct FeatureList : detail::IterateTuple<std::tuple<FeaturesT...>>
+    struct FeatureList : detail::IterateList<TypeList<FeaturesT...>>
     {
       /// Features is a std::tuple containing all the feature classes that are
       /// bundled in this list. This list is fully seralialized; any hierarchy
@@ -68,6 +68,7 @@ namespace gz
           typename detail::CombineLists<FeaturesT...>::Result;
 
       public: using FeatureTuple = std::tuple<FeaturesT...>;
+      public: using FeatureTypeList = typename TupleToTypeList<Features>::type;
 
       /// \brief A static constexpr function which indicates whether a given
       /// Feature, F, is contained in this list.

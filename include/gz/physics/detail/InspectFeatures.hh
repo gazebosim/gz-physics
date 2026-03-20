@@ -36,7 +36,7 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private This class is used to inspect what features are provided by
       /// a plugin. It implements the API of RequestEngine.
-      template <typename PolicyT, typename FeatureT, typename = void_t<> >
+      template <typename PolicyT, typename FeatureT, typename = std::void_t<> >
       struct InspectFeatures
       {
         using Interface = typename FeatureT::template Implementation<PolicyT>;
@@ -78,7 +78,7 @@ namespace gz
       };
 
       template <typename PolicyT>
-      struct InspectFeatures<PolicyT, void, void_t<> >
+      struct InspectFeatures<PolicyT, void, std::void_t<> >
       {
         template <typename PtrT>
         static bool Verify(const PtrT &/*_pimpl*/)
@@ -104,21 +104,16 @@ namespace gz
         }
       };
 
-      /// \private Implementation of InspectFeatures.
-      template <typename PolicyT, typename FeatureListT>
-      struct InspectFeatures<PolicyT, FeatureListT,
-          void_t<typename FeatureListT::CurrentTupleEntry>>
+      /// \private Implementation of InspectFeatures for TypeList.
+      template <typename PolicyT, typename... Features>
+      struct InspectFeatures<PolicyT, TypeList<Features...>>
       {
-        using Branch1 = InspectFeatures<PolicyT,
-            typename FeatureListT::CurrentTupleEntry>;
-        using Branch2 = InspectFeatures<PolicyT,
-            typename GetNext<FeatureListT>::n>;
-
         /// \brief Check that each feature is provided by the plugin.
         template <typename PtrT>
         static bool Verify(const PtrT &_pimpl)
         {
-          return Branch1::Verify(_pimpl) && Branch2::Verify(_pimpl);
+          return (InspectFeatures<PolicyT, Features>::Verify(_pimpl) && ... &&
+                  true);
         }
 
         template <typename LoaderT, typename ContainerT>
@@ -126,18 +121,26 @@ namespace gz
             const LoaderT &_loader,
             ContainerT &_plugins)
         {
-          Branch1::EraseIfMissing(_loader, _plugins);
-          Branch2::EraseIfMissing(_loader, _plugins);
+          (InspectFeatures<PolicyT, Features>::EraseIfMissing(_loader,
+                                                              _plugins),
+           ...);
         }
 
         template <typename PtrT>
         static void MissingNames(const PtrT &_pimpl,
                                  std::set<std::string> &_names)
         {
-          Branch1::MissingNames(_pimpl, _names);
-          Branch2::MissingNames(_pimpl, _names);
+          (InspectFeatures<PolicyT, Features>::MissingNames(_pimpl, _names),
+           ...);
         }
       };
+
+      /// \private Implementation of InspectFeatures for FeatureLists.
+      template <typename PolicyT, typename FeatureListT>
+      struct InspectFeatures<PolicyT, FeatureListT,
+          std::void_t<typename FeatureListT::FeatureTypeList>>
+          : InspectFeatures<PolicyT, typename FeatureListT::FeatureTypeList>
+      { };
     }
   }
 }
