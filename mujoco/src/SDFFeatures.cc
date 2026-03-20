@@ -449,7 +449,20 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
 Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
                                         const ::sdf::World &_sdfWorld)
 {
-  const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
+  const Identity worldID =
+      this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
+
+  // Set gravity to value from SDF.
+  // Note: there is a small difference between the default gravity
+  // z magnitude in mujoco (-9.81) vs the  default value in SDF (-9.8).
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(worldID);
+  if (worldInfo && worldInfo->mjModelObj)
+  {
+    const auto &gravity = _sdfWorld.Gravity();
+    worldInfo->mjModelObj->opt.gravity[0] = gravity[0];
+    worldInfo->mjModelObj->opt.gravity[1] = gravity[1];
+    worldInfo->mjModelObj->opt.gravity[2] = gravity[2];
+  }
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
