@@ -28,8 +28,12 @@ namespace dartsim {
 
 struct FreeGroupFeatureList : FeatureList<
   FindFreeGroupFeature,
+  GetFreeGroupStaticState,
+  GetFreeGroupGravityEnabled,
   SetFreeGroupWorldPose,
-  SetFreeGroupWorldVelocity
+  SetFreeGroupWorldVelocity,
+  SetFreeGroupStaticState,
+  SetFreeGroupGravityEnabled
   // Note: FreeGroupFrameSemantics is covered in KinematicsFeatures.hh
 > { };
 
@@ -59,6 +63,20 @@ class FreeGroupFeatures
   void SetFreeGroupWorldPose(
       const Identity &_groupID,
       const PoseType &_pose) override;
+
+  void SetFreeGroupStaticState(
+      const Identity &_groupID,
+      bool _state) override;
+
+  bool GetFreeGroupStaticState(
+      const Identity &_groupID) const override;
+
+  void SetFreeGroupGravityEnabled(
+      const Identity &_groupID,
+      bool _enabled) override;
+
+  bool GetFreeGroupGravityEnabled(
+      const Identity &_groupID) const override;
 
   void SetFreeGroupWorldLinearVelocity(
       const Identity &_groupID,

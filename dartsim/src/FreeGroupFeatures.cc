@@ -147,6 +147,142 @@ FreeGroupFeatures::FreeGroupInfo FreeGroupFeatures::GetCanonicalInfo(
 }
 
 /////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupStaticState(
+    const Identity &_groupID,
+    bool _state)
+{
+  const auto modelInfo = this->models.at(_groupID);
+  // Verify that the model qualifies as a FreeGroup
+  dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
+
+  if (skeleton)
+  {
+    skeleton->setMobile(!_state);
+    // When going static, zero out all velocities so they are not
+    // reported as non-zero and so residual momentum doesn't persist.
+    if (_state)
+    {
+      skeleton->setVelocities(Eigen::VectorXd::Zero(skeleton->getNumDofs()));
+    }
+  }
+
+  // Recursively set static state for all nested models
+  for (const auto &nestedModel : modelInfo->nestedModels)
+  {
+    auto nestedModelIdentity = this->GenerateIdentity(nestedModel);
+    const auto &nestedModelInfo = this->models.at(nestedModel);
+    // Only set static state if the nested model has BodyNodes or
+    // further nested models
+    if (nestedModelInfo->model->getNumBodyNodes() > 0 ||
+        !nestedModelInfo->nestedModels.empty())
+    {
+      this->SetFreeGroupStaticState(nestedModelIdentity, _state);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+bool FreeGroupFeatures::GetFreeGroupStaticState(
+    const Identity &_groupID) const
+{
+  const auto modelInfo = this->models.at(_groupID);
+  // Verify that the model qualifies as a FreeGroup
+  dart::dynamics::SkeletonPtr &skeleton = modelInfo->model;
+  bool isStatic = false;
+  if (skeleton)
+  {
+    isStatic = !skeleton->isMobile();
+  }
+  else if (!modelInfo->nestedModels.empty())
+  {
+    isStatic = true;
+  }
+
+  for (const auto &nestedModel : modelInfo->nestedModels)
+  {
+    auto nestedIdentity = this->GenerateIdentity(nestedModel);
+    const auto &nestedModelInfo = this->models.at(nestedModel);
+    if (nestedModelInfo->model->getNumBodyNodes() > 0 ||
+        !nestedModelInfo->nestedModels.empty())
+    {
+      isStatic = isStatic &&
+        this->GetFreeGroupStaticState(nestedIdentity);
+    }
+  }
+
+  return isStatic;
+}
+
+/////////////////////////////////////////////////
+void FreeGroupFeatures::SetFreeGroupGravityEnabled(
+    const Identity &_groupID,
+    bool _enabled)
+{
+  const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
+  if (!info.model)
+  {
+    if (info.link)
+      info.link->setGravityMode(_enabled);
+    return;
+  }
+  // Set gravity for all BodyNodes in the skeleton (not just roots)
+  for (std::size_t i = 0; i < info.model->getNumBodyNodes(); ++i)
+  {
+    auto *bn = info.model->getBodyNode(i);
+    if (bn)
+      bn->setGravityMode(_enabled);
+  }
+
+  auto modelInfo = this->models.at(_groupID);
+  for (const auto &nestedModel : modelInfo->nestedModels)
+  {
+    auto nestedModelIdentity = this->GenerateIdentity(nestedModel);
+    const FreeGroupInfo &nestedInfo = GetCanonicalInfo(nestedModelIdentity);
+    // If nestedInfo.link is a nullptr, we skip this model because means the
+    // BodyNodes in this skeleton have been moved to another skeleton and their
+    // pose update will be handled there.
+    if (nullptr != nestedInfo.link && nestedInfo.link != info.link)
+    {
+      this->SetFreeGroupGravityEnabled(nestedModelIdentity, _enabled);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+bool FreeGroupFeatures::GetFreeGroupGravityEnabled(
+    const Identity &_groupID) const
+{
+  const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
+  if (!info.model)
+  {
+    if (info.link)
+      return info.link->getGravityMode();
+    return false;
+  }
+
+  bool gravityMode = true;
+  for (std::size_t i = 0; i < info.model->getNumBodyNodes(); ++i)
+  {
+    auto *bn = info.model->getBodyNode(i);
+    gravityMode = gravityMode && bn->getGravityMode();
+  }
+
+  auto modelInfo = this->models.at(_groupID);
+  for (const auto &nestedModel : modelInfo->nestedModels)
+  {
+    auto nestedModelIdentity = this->GenerateIdentity(nestedModel);
+    const FreeGroupInfo &nestedInfo = GetCanonicalInfo(nestedModelIdentity);
+    if (nullptr != nestedInfo.link && nestedInfo.link != info.link)
+    {
+      gravityMode = gravityMode &&
+        this->GetFreeGroupGravityEnabled(nestedModelIdentity);
+    }
+  }
+
+  return gravityMode;
+}
+
+/////////////////////////////////////////////////
 void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
@@ -199,6 +335,10 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
 void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
     const Identity &_groupID, const LinearVelocity &_linearVelocity)
 {
+  // Do not set velocity on a static model
+  if (this->GetFreeGroupStaticState(_groupID))
+    return;
+
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
@@ -224,6 +364,10 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     const Identity &_groupID, const AngularVelocity &_angularVelocity)
 {
+  // Do not set velocity on a static model
+  if (this->GetFreeGroupStaticState(_groupID))
+    return;
+
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
