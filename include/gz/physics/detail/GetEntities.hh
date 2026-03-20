@@ -541,6 +541,15 @@ namespace gz
             this->template Interface<WorldModelFeature>()
               ->GetWorldModel(this->identity));
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    const gz::math::SemanticVersion &
+    GetEngineVersionInfo::Engine<PolicyT, FeaturesT>::GetVersion() const
+    {
+      return this->template Interface<GetEngineVersionInfo>()
+          ->GetEngineVersion(this->identity);
+    }
   }
 }
 
