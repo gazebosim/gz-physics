@@ -111,6 +111,7 @@ set(GZ_PHYSICS_ENGINE_INSTALL_DIR
 #============================================================================
 # Configure the build
 #============================================================================
+set(GZ_MSVC_WPO OFF CACHE BOOL "Disable WPO")
 gz_configure_build(QUIT_IF_BUILD_ERRORS
   COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone mujoco)
 
