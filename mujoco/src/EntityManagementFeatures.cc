@@ -99,6 +99,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   worldInfo->mjModelObj = mj_compile(spec, nullptr);
   worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
+
   // We record the name of the world, but we don't change the name in the
   // worldbody so that it is easy to find it with mjs_findBody(s, "world")
   // elsewhere.

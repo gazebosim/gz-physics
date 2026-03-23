@@ -78,7 +78,7 @@ struct ModelKinematicStructure
   // "world" or that link is not referenced by any joint.
   // TODO(azeey) This might not be needed at all.
   std::vector<const ::sdf::Joint *> parentInJoint;
-  // For index i, childJInoint[i]->parent = links[i], unless that link is not
+  // For index i, childInJoint[i]->parent = links[i], unless that link is not
   // referenced by any joint as a child.
   std::vector<const ::sdf::Joint *> childInJoint;
 
@@ -151,7 +151,8 @@ struct ModelKinematicStructure
     if (!parent)
     {
       // TODO(azeey): Better error message
-      gzerr << "Error finding parent\n";
+      gzerr << "Error finding parent (world: " << world << " parentLink: "
+            << (parentLink ? parentLink->Name() : "NULL") << ")\n";
       return;
     }
 

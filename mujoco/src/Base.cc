@@ -18,6 +18,7 @@
 #include "Base.hh"
 
 #include <gz/physics/Implements.hh>
+#include <sdf/Types.hh>
 
 namespace gz
 {
@@ -40,9 +41,35 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
               << "\n";
     return false;
   }
+
+  // Ensure prevBodyPoses is sized correctly for the new model
+  _worldInfo.prevBodyPoses.clear();
+  _worldInfo.prevBodyPoses.resize(_worldInfo.mjModelObj->nbody);
+
   // TODO(azeey): Saving the resulting MJCF is useful for debugging, but should
   // be removed once the plugin is finalized mj_saveXML(_worldInfo.mjSpecObj,
   // "/tmp/mujoco_model.xml", nullptr, 0);
+
+  // Build the geomIdToShapeInfo map
+  _worldInfo.geomIdToShapeInfo.clear();
+  _worldInfo.geomIdToShapeInfo.resize(_worldInfo.mjModelObj->ngeom);
+  for (const auto &[modelId, modelInfo] : _worldInfo.models.idToObject)
+  {
+    for (const auto &[linkId, linkInfo] : modelInfo->links.idToObject)
+    {
+      for (const auto &[shapeId, shapeInfo] : linkInfo->shapes.idToObject)
+      {
+        if (shapeInfo->geom)
+        {
+          int geomId = mjs_getId(shapeInfo->geom->element);
+          if (geomId != -1)
+          {
+            _worldInfo.geomIdToShapeInfo[geomId] = shapeInfo;
+          }
+        }
+      }
+    }
+  }
 
   mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
   return true;

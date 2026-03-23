@@ -570,7 +570,10 @@ TEST_F(CollisionStaticTestFeaturesList, StaticCollisionsWithFixedBaseMovingLink)
   for (const std::string &name : this->pluginNames)
   {
     // TPE does not support collision checking with plane shapes.
-    if (this->PhysicsEngineName(name) == "tpe") continue;
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+
+    // mujoco does not support joints yet
+    CHECK_UNSUPPORTED_ENGINE(name, "mujoco")
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);

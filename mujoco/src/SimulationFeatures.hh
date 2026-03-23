@@ -18,8 +18,11 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_SIMULATIONFEATURES_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_SIMULATIONFEATURES_HH_
 
+#include <vector>
+
 #include <gz/physics/CanWriteData.hh>
 #include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetContacts.hh>
 
 #include "Base.hh"
 
@@ -31,16 +34,20 @@ namespace mujoco
 {
 
 struct SimulationFeatureList : gz::physics::FeatureList<
-  ForwardStep
+  ForwardStep,
+  GetContactsFromLastStepFeature
 > { };
 
 class SimulationFeatures :
     public CanWriteRequiredData<SimulationFeatures, RequireData<WorldPoses>>,
-    // public CanWriteExpectedData<SimulationFeatures,
-    //   ExpectData<ChangedWorldPoses>>,
+    public CanWriteExpectedData<SimulationFeatures,
+      ExpectData<ChangedWorldPoses>>,
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
+  public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
+    ::ContactInternal;
+
   public: void WorldForwardStep(
       const Identity &_worldID,
       ForwardStep::Output &_h,
@@ -48,15 +55,13 @@ class SimulationFeatures :
       const ForwardStep::Input &_u) override;
 
   public: void Write(WorldPoses &_worldPoses) const;
-  // public: void Write(ChangedWorldPoses &_changedPoses) const;
+  public: void Write(ChangedWorldPoses &_changedPoses) const;
 
-  /// \brief link poses from the most recent pose change/update.
-  /// The key is the link's ID, and the value is the link's pose
-  // private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses; // NOLINT
+  public: std::vector<ContactInternal> GetContactsFromLastStep(
+      const Identity &_worldID) const override;
 };
 
 }
 }  // namespace physics
 }  // namespace gz
 #endif
-
