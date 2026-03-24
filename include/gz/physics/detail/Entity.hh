@@ -55,6 +55,9 @@ namespace gz
       template <typename... ToFeatures, typename FromFeatureList>
       struct HasAllFeaturesImpl<TypeList<ToFeatures...>, FromFeatureList>
       {
+        // Note: For an empty TypeList (base case), the C++17 fold expression
+        // over `&&` evaluates to `true` by definition.
+        // See: https://en.cppreference.com/w/cpp/language/fold
         static constexpr bool value =
             (FromFeatureList::template HasFeature<ToFeatures>() && ...);
         static_assert(
