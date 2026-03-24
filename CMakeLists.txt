@@ -97,6 +97,9 @@ set(GZ_PHYSICS_ENGINE_INSTALL_DIR
   ${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR}
 )
 
+# Disable Whole Program Optimization (WPO) to reduce build time
+set(GZ_MSVC_WPO OFF CACHE BOOL "Disable WPO")
+
 #============================================================================
 # Configure the build
 #============================================================================
