@@ -36,7 +36,7 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private This class is used to inspect what features are provided by
       /// a plugin. It implements the API of RequestEngine.
-      template <typename PolicyT, typename FeatureT, typename = void_t<> >
+      template <typename PolicyT, typename FeatureT, typename = std::void_t<> >
       struct InspectFeatures
       {
         using Interface = typename FeatureT::template Implementation<PolicyT>;
@@ -78,7 +78,7 @@ namespace gz
       };
 
       template <typename PolicyT>
-      struct InspectFeatures<PolicyT, void, void_t<> >
+      struct InspectFeatures<PolicyT, void, std::void_t<> >
       {
         template <typename PtrT>
         static bool Verify(const PtrT &/*_pimpl*/)
@@ -107,7 +107,7 @@ namespace gz
       /// \private Implementation of InspectFeatures.
       template <typename PolicyT, typename FeatureListT>
       struct InspectFeatures<PolicyT, FeatureListT,
-          void_t<typename FeatureListT::CurrentTupleEntry>>
+          std::void_t<typename FeatureListT::CurrentTupleEntry>>
       {
         using Branch1 = InspectFeatures<PolicyT,
             typename FeatureListT::CurrentTupleEntry>;
