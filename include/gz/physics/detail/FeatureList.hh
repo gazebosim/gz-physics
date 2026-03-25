@@ -58,14 +58,14 @@ namespace gz
         using CurrentTupleEntry = void;
       };
 
-      template <typename Iterable, typename = void_t<>>
+      template <typename Iterable, typename = std::void_t<>>
       struct GetNext
       {
         using n = void;
       };
 
       template <typename Iterable>
-      struct GetNext<Iterable, void_t<typename Iterable::NextTupleEntry>>
+      struct GetNext<Iterable, std::void_t<typename Iterable::NextTupleEntry>>
       {
         // This struct is intentionally named with only one letter, because its
         // name will be repeated many times in the symbol names of aggregated
@@ -75,7 +75,7 @@ namespace gz
         struct n : Iterable::NextTupleEntry { };
       };
 
-      template <typename Policy, typename Feature, typename = void_t<>>
+      template <typename Policy, typename Feature, typename = std::void_t<>>
       struct ComposePlugin;
 
       template <typename Policy, typename Feature, bool HasRequirements>
@@ -104,7 +104,7 @@ namespace gz
 
       template <typename Policy, typename Iterable>
       struct ComposePlugin<Policy, Iterable,
-          void_t<typename Iterable::CurrentTupleEntry>>
+          std::void_t<typename Iterable::CurrentTupleEntry>>
       {
         struct type :
             ComposePlugin<Policy, typename Iterable::CurrentTupleEntry>::type,
@@ -112,7 +112,7 @@ namespace gz
       };
 
       template <typename Policy>
-      struct ComposePlugin<Policy, void, void_t<>>
+      struct ComposePlugin<Policy, void, std::void_t<>>
       {
         struct type { };
       };
@@ -168,7 +168,7 @@ namespace gz
       /// This default implementation simply takes in a single feature and puts
       /// it into a tuple of size one. This allows us to use std::tuple_cat on
       /// it later to combine it with tuples that may contain multiple features.
-      template <typename F, typename = void_t<> >
+      template <typename F, typename = std::void_t<> >
       class ExtractFeatures
           : public VerifyFeatures<F>
       {
@@ -192,7 +192,7 @@ namespace gz
       template <typename SomeFeatureList>
       class ExtractFeatures<
               SomeFeatureList,
-              void_t<typename SomeFeatureList::Features>>
+              std::void_t<typename SomeFeatureList::Features>>
           : public VerifyFeatures<typename SomeFeatureList::Features>
       {
         public: using type = typename SomeFeatureList::Features;
@@ -315,12 +315,12 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private This template is used to take a hierarchy of FeatureLists and
       /// flatten them into a single tuple.
-      template <typename FeatureTuple, typename = void_t<>>
+      template <typename FeatureTuple, typename = std::void_t<>>
       struct FlattenFeatures;
 
       /////////////////////////////////////////////////
       /// \private This template is a helper for FlattenFeatures
-      template <typename FeatureOrList, typename = void_t<>>
+      template <typename FeatureOrList, typename = std::void_t<>>
       struct ExpandFeatures
       {
         using type = std::conditional_t<
@@ -335,7 +335,7 @@ namespace gz
 
       /////////////////////////////////////////////////
       template <typename List>
-      struct ExpandFeatures<List, void_t<typename List::Features>>
+      struct ExpandFeatures<List, std::void_t<typename List::Features>>
       {
         using type = typename FlattenFeatures<typename List::Features>::type;
       };
@@ -343,7 +343,7 @@ namespace gz
       /////////////////////////////////////////////////
       template <typename FeatureListT>
       struct FlattenFeatures<
-          FeatureListT, void_t<typename FeatureListT::FeatureTuple>>
+          FeatureListT, std::void_t<typename FeatureListT::FeatureTuple>>
       {
         using type =
             typename FlattenFeatures<typename FeatureListT::FeatureTuple>::type;
@@ -351,7 +351,7 @@ namespace gz
 
       /////////////////////////////////////////////////
       template <typename... Features>
-      struct FlattenFeatures<std::tuple<Features...>, void_t<>>
+      struct FlattenFeatures<std::tuple<Features...>, std::void_t<>>
       {
         using type = decltype(std::tuple_cat(
             typename ExpandFeatures<Features>::type()...));
@@ -468,7 +468,7 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private Extract the API out of a FeatureList
       template <template<typename> class Selector,
-                typename FeatureT, typename = void_t<>>
+                typename FeatureT, typename = std::void_t<>>
       struct Aggregate
       {
         public: template<typename... T>
@@ -480,7 +480,7 @@ namespace gz
       };
 
       template <template<typename> class Selector>
-      struct Aggregate<Selector, void, void_t<>>
+      struct Aggregate<Selector, void, std::void_t<>>
       {
         public: template<typename... T>
         struct type { };
@@ -488,7 +488,7 @@ namespace gz
 
       template <template<typename> class Selector, typename Iterable>
       struct Aggregate<Selector, Iterable,
-            void_t<typename Iterable::CurrentTupleEntry>>
+            std::void_t<typename Iterable::CurrentTupleEntry>>
       {
         public: template <typename... T>
         struct type
