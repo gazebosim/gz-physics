@@ -31,11 +31,6 @@ namespace ignition
     /// is useful for template metaprogramming.
     template <class... T> struct type { };
 
-    /// TODO(MXG): Remove this and use std::void_t instead when migrating to
-    /// C++17
-    template <typename...>
-    using void_t = void;
-
     /////////////////////////////////////////////////
     /// \brief Contains a static constexpr field named `value` which will be
     /// true if the type `From` has a const-quality less than or equal to the
@@ -83,7 +78,7 @@ namespace ignition
   struct Select ## X \
   { \
     template<typename F, typename PolicyT, typename FeaturesT, \
-             typename = ::ignition::physics::void_t<>> \
+             typename = std::void_t<>> \
     struct Implementation \
     { \
       using type = ::ignition::physics::Empty; \
@@ -91,7 +86,7 @@ namespace ignition
     \
     template<typename F, typename PolicyT, typename FeaturesT> \
     struct Implementation<F, PolicyT, FeaturesT, \
-                          ::ignition::physics::void_t< \
+                          std::void_t< \
                               typename F::template X <PolicyT, FeaturesT>>> \
     { \
       using type = typename F::template X <PolicyT, FeaturesT>; \
