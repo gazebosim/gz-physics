@@ -67,7 +67,9 @@ namespace gz
       public: using Features =
           typename detail::CombineLists<FeaturesT...>::Result;
 
-      public: using FlatFeatureTypeList = typename TupleToTypeList<Features>::type;
+      /// This is the same as Features, but using TypeList
+      public: using FlatFeatureTypeList =
+          typename TupleToTypeList<Features>::type;
 
       public: using FeatureTuple = std::tuple<FeaturesT...>;
 

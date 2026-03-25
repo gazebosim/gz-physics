@@ -564,13 +564,13 @@ namespace gz
     template <typename SomeFeatureList, bool AssertNoConflict>
     constexpr bool FeatureList<FeaturesT...>::ConflictsWith()
     {
-      // TODO(MXG): Replace this with a simple fold expression once we use C++17
       return
           detail::ConflictingLists<
               SomeFeatureList, AssertNoConflict, FlatFeatureTypeList>::value
        || detail::ConflictingLists<
               FeatureList<FeaturesT...>, AssertNoConflict,
-              typename FeatureList<SomeFeatureList>::FlatFeatureTypeList>::value;
+              typename FeatureList<SomeFeatureList>::FlatFeatureTypeList>::
+              value;
     }
 
     /////////////////////////////////////////////////
