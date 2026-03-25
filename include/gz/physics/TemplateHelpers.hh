@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_TEMPLATEHELPERS_HH_
 #define GZ_PHYSICS_TEMPLATEHELPERS_HH_
 
+#include <tuple>
 #include <type_traits>
 
 namespace gz
@@ -30,6 +31,71 @@ namespace gz
     /// \brief This can be used to turn a type into a function argument, which
     /// is useful for template metaprogramming.
     template <class... T> struct type { };
+
+    /// \brief A minimal variadic template container for types.
+    /// This is used instead of std::tuple for intermediate template
+    /// metaprogramming to drastically reduce compiler memory and instantiation
+    /// times.
+    template <typename... Ts>
+    struct TypeList {
+      static constexpr std::size_t size = sizeof...(Ts);
+    };
+
+    /// \brief Concatenate multiple TypeLists into a single TypeList.
+    ///
+    /// This uses an O(log N) tree-based recursion instead of an O(N) linear
+    /// recursion. When concatenating many lists (e.g., during feature
+    /// flattening), a linear recursion would instantiate a deeply nested stack
+    /// of templates, which can quickly exceed the compiler's maximum
+    /// instantiation depth or heap space limits (especially on MSVC).
+    /// By pairing elements and recursing down, we keep the instantiation stack
+    /// shallow and dramatically reduce compiler memory consumption.
+    template <typename... Lists>
+    struct TypeListCat;
+
+    template <>
+    struct TypeListCat<> {
+      using type = TypeList<>;
+    };
+
+    template <typename... Ts>
+    struct TypeListCat<TypeList<Ts...>> {
+      using type = TypeList<Ts...>;
+    };
+
+    template <typename... T1, typename... T2>
+    struct TypeListCat<TypeList<T1...>, TypeList<T2...>> {
+      using type = TypeList<T1..., T2...>;
+    };
+
+    // We explicitly require at least 3 lists (L1, L2, L3) to use this
+    // recursive specialization. This prevents an ambiguity error with the
+    // 2-element base case `TypeListCat<TypeList<T1...>, TypeList<T2...>>`
+    // when exactly 2 lists are provided.
+    template <typename L1, typename L2, typename L3, typename... Rest>
+    struct TypeListCat<L1, L2, L3, Rest...> {
+      using type = typename TypeListCat<
+          typename TypeListCat<L1, L2>::type,
+          typename TypeListCat<L3, Rest...>::type>::type;
+    };
+
+    /// \brief Convert a TypeList to a std::tuple
+    template <typename T>
+    struct ToTuple;
+
+    template <typename... Ts>
+    struct ToTuple<TypeList<Ts...>> {
+      using type = std::tuple<Ts...>;
+    };
+
+    /// \brief Convert a std::tuple to a TypeList
+    template <typename T>
+    struct TupleToTypeList;
+
+    template <typename... Ts>
+    struct TupleToTypeList<std::tuple<Ts...>> {
+      using type = TypeList<Ts...>;
+    };
 
     /////////////////////////////////////////////////
     /// \brief Contains a static constexpr field named `value` which will be
