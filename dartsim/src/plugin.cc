@@ -28,6 +28,7 @@
 #include "SimulationFeatures.hh"
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
+#include "ModelFeatures.hh"
 #include "WorldFeatures.hh"
 
 namespace gz {
@@ -40,6 +41,7 @@ struct DartsimFeatures : FeatureList<
   EntityManagementFeatureList,
   FreeGroupFeatureList,
   JointFeatureList,
+  ModelFeatureList,
   KinematicsFeatureList,
   LinkFeatureList,
   SDFFeatureList,
@@ -55,6 +57,7 @@ class Plugin :
     public virtual EntityManagementFeatures,
     public virtual FreeGroupFeatures,
     public virtual JointFeatures,
+    public virtual ModelFeatures,
     public virtual KinematicsFeatures,
     public virtual LinkFeatures,
     public virtual SDFFeatures,
