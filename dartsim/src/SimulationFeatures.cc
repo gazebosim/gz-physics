@@ -239,7 +239,7 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
             this->shapes.IdentityOf(dtShapeFrame->asShapeNode());
       }
     }
-}
+  }
   else
   {
     // Set invalid measurements to NaN according to REP-117
