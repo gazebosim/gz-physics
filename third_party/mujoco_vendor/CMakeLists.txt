@@ -1,10 +1,14 @@
 # Using FetchContent causes dependencies of mujoco to leak into with gz-physics.
+include(CMakePackageConfigHelpers)
 include(ExternalProject)
-set(MUJOCO_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/install")
+set(MUJOCO_INSTALL_DIR "${GZ_PHYSICS_MUJOCO_BUILD_DIR}")
+set(MUJOCO_VENDOR_PACKAGE_NAME "gz-physics-mujoco_vendor")
+set(MUJOCO_VENDOR_CMAKE_INSTALL_DIR
+  "${GZ_LIB_INSTALL_DIR}/cmake/${MUJOCO_VENDOR_PACKAGE_NAME}")
 
 if(WIN32)
-    set(MUJOCO_IMPLIB_FILE "${MUJOCO_INSTALL_DIR}/lib/mujoco.lib")
-    set(MUJOCO_SHARED_FILE "${MUJOCO_INSTALL_DIR}/bin/mujoco.dll")
+  set(MUJOCO_IMPLIB_FILE "${MUJOCO_INSTALL_DIR}/lib/mujoco.lib")
+  set(MUJOCO_SHARED_FILE "${MUJOCO_INSTALL_DIR}/bin/mujoco.dll")
     set(MUJOCO_BYPRODUCTS "${MUJOCO_SHARED_FILE}" "${MUJOCO_IMPLIB_FILE}")
 elseif(APPLE)
     set(MUJOCO_SHARED_FILE "${MUJOCO_INSTALL_DIR}/lib/libmujoco.dylib")
@@ -33,31 +37,67 @@ ExternalProject_Add(
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 )
 
-# Create the IMPORTED target for gz-physics to link against
-add_library(mujoco_internal INTERFACE)
-add_dependencies(mujoco_internal mujoco_ext)
+add_library(mujoco_vendor INTERFACE)
+add_dependencies(mujoco_vendor mujoco_ext)
 
 # Create the missing include directory so CMake doesn't complain at configure time
-file(MAKE_DIRECTORY "${MUJOCO_INSTALL_DIR}/include")
+file(MAKE_DIRECTORY "${GZ_PHYSICS_MUJOCO_BUILD_INCLUDE_DIR}")
+file(MAKE_DIRECTORY "${GZ_PHYSICS_MUJOCO_BUILD_LIBRARY_DIR}")
 
-target_include_directories(mujoco_internal INTERFACE "${MUJOCO_INSTALL_DIR}/include")
+target_include_directories(mujoco_vendor
+  INTERFACE
+    $<BUILD_INTERFACE:${GZ_PHYSICS_MUJOCO_BUILD_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${GZ_PHYSICS_MUJOCO_INCLUDE_RELATIVE_INSTALL_DIR}>)
+
+target_link_directories(mujoco_vendor
+  INTERFACE
+    $<BUILD_INTERFACE:${GZ_PHYSICS_MUJOCO_BUILD_LIBRARY_DIR}>
+    $<INSTALL_INTERFACE:${GZ_PHYSICS_MUJOCO_LIBRARY_RELATIVE_INSTALL_DIR}>)
+
+target_link_libraries(mujoco_vendor INTERFACE mujoco)
+
+install(TARGETS mujoco_vendor
+  EXPORT ${MUJOCO_VENDOR_PACKAGE_NAME}-targets)
+
+install(DIRECTORY "${GZ_PHYSICS_MUJOCO_BUILD_INCLUDE_DIR}/mujoco"
+  DESTINATION "${GZ_PHYSICS_MUJOCO_INCLUDE_RELATIVE_INSTALL_DIR}")
 
 if(WIN32)
-    # Windows links against the .lib, but needs the .dll at runtime
-    target_link_libraries(mujoco_internal INTERFACE "${MUJOCO_IMPLIB_FILE}")
-    install(PROGRAMS "${MUJOCO_SHARED_FILE}" DESTINATION bin)
-    install(FILES "${MUJOCO_IMPLIB_FILE}" DESTINATION lib)
+  install(PROGRAMS "${MUJOCO_SHARED_FILE}"
+    DESTINATION "${GZ_PHYSICS_MUJOCO_RUNTIME_RELATIVE_INSTALL_DIR}")
+  install(FILES "${MUJOCO_IMPLIB_FILE}"
+    DESTINATION "${GZ_PHYSICS_MUJOCO_LIBRARY_RELATIVE_INSTALL_DIR}")
 else()
-    # Unix links directly against the .so / .dylib
-    target_link_libraries(mujoco_internal INTERFACE "${MUJOCO_SHARED_FILE}")
-    install(DIRECTORY "${MUJOCO_INSTALL_DIR}/lib/"
-            DESTINATION lib
-            FILES_MATCHING 
-            PATTERN "*mujoco.so*"
-            PATTERN "*mujoco*.dylib*"
-    )
+  install(DIRECTORY "${GZ_PHYSICS_MUJOCO_BUILD_LIBRARY_DIR}/"
+    DESTINATION "${GZ_PHYSICS_MUJOCO_LIBRARY_RELATIVE_INSTALL_DIR}"
+    FILES_MATCHING
+    PATTERN "*mujoco.so*"
+    PATTERN "*mujoco*.dylib*")
 endif()
 
-# Create the nice namespace alias for the main project to use. This is also
-# what the target would be if mujoco was built/installed externally.
-add_library(mujoco::mujoco ALIAS mujoco_internal)
+export(EXPORT ${MUJOCO_VENDOR_PACKAGE_NAME}-targets
+  NAMESPACE gz-physics::
+  FILE "${PROJECT_BINARY_DIR}/cmake/${MUJOCO_VENDOR_PACKAGE_NAME}-targets.cmake")
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/${MUJOCO_VENDOR_PACKAGE_NAME}-config.cmake.in"
+  "${PROJECT_BINARY_DIR}/cmake/${MUJOCO_VENDOR_PACKAGE_NAME}-config.cmake"
+  INSTALL_DESTINATION "${MUJOCO_VENDOR_CMAKE_INSTALL_DIR}")
+
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/cmake/${MUJOCO_VENDOR_PACKAGE_NAME}-config-version.cmake"
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY SameMajorVersion)
+
+install(EXPORT ${MUJOCO_VENDOR_PACKAGE_NAME}-targets
+  NAMESPACE gz-physics::
+  DESTINATION "${MUJOCO_VENDOR_CMAKE_INSTALL_DIR}"
+  FILE "${MUJOCO_VENDOR_PACKAGE_NAME}-targets.cmake")
+
+install(FILES
+  "${PROJECT_BINARY_DIR}/cmake/${MUJOCO_VENDOR_PACKAGE_NAME}-config.cmake"
+  "${PROJECT_BINARY_DIR}/cmake/${MUJOCO_VENDOR_PACKAGE_NAME}-config-version.cmake"
+  DESTINATION "${MUJOCO_VENDOR_CMAKE_INSTALL_DIR}")
+
+# Create the private alias that the plugin uses inside this repository.
+add_library(mujoco::mujoco ALIAS mujoco_vendor)

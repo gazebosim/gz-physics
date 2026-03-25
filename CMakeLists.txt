@@ -35,6 +35,23 @@ endif()
 #============================================================================
 message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
+# Keep the vendored MuJoCo payload isolated from system packages that install
+# the same files into the top-level include/lib/bin directories.
+set(GZ_PHYSICS_MUJOCO_BUILD_DIR
+  ${PROJECT_BINARY_DIR}/third_party/mujoco_vendor/install)
+set(GZ_PHYSICS_MUJOCO_BUILD_INCLUDE_DIR
+  ${GZ_PHYSICS_MUJOCO_BUILD_DIR}/include)
+set(GZ_PHYSICS_MUJOCO_BUILD_LIBRARY_DIR
+  ${GZ_PHYSICS_MUJOCO_BUILD_DIR}/lib)
+set(GZ_PHYSICS_MUJOCO_BUILD_RUNTIME_DIR
+  ${GZ_PHYSICS_MUJOCO_BUILD_DIR}/bin)
+set(GZ_PHYSICS_MUJOCO_INCLUDE_RELATIVE_INSTALL_DIR
+  ${CMAKE_INSTALL_INCLUDEDIR}/gz/physics${PROJECT_VERSION_MAJOR}/vendors)
+set(GZ_PHYSICS_MUJOCO_LIBRARY_RELATIVE_INSTALL_DIR
+  ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}/vendors/mujoco/lib)
+set(GZ_PHYSICS_MUJOCO_RUNTIME_RELATIVE_INSTALL_DIR
+  ${GZ_LIB_INSTALL_DIR}/gz-${GZ_DESIGNATION}/vendors/mujoco/bin)
+
 #--------------------------------------
 # TODO(azeey) Remove this and depend on a system package before release
 add_subdirectory(third_party/mujoco_vendor)
@@ -92,7 +109,8 @@ gz_find_package(GzBullet
   PKGCONFIG_VER_COMPARISON >=)
 
 #--------------------------------------
-# Find mujoco for the mujoco plugin wrapper
+# Find mujoco for the mujoco plugin wrapper once the vendored fallback can be
+# removed and the install layout no longer needs to coexist with distro packages.
 # gz_find_package(mujoco
 #   REQUIRED_BY mujoco
 #   PKGCONFIG_IGNORE # TODO(azeey) Revisit this

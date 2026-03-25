@@ -1,5 +1,16 @@
 # MuJoCo Physics Plugin
 
+## Vendored dependency layout
+
+When `gz-physics` builds MuJoCo from `third_party/mujoco_vendor`, it installs
+the vendored headers and libraries into `gz-physics`-scoped subdirectories so
+they can coexist with the distro `mujoco` package instead of colliding with its
+top-level `include/`, `lib/`, or `bin/` payload.
+
+Downstream CMake users that need that vendored copy can request the
+`mujoco_vendor` component from `gz-physics` and link against the exported
+`gz-physics::mujoco_vendor` target.
+
 ## Physics features list
 
 These are the specific physics API features implemented.
