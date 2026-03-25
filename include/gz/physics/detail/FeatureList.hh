@@ -248,9 +248,14 @@ namespace gz
       {
         using type = typename TypeListCat<
             std::conditional_t<
+              // If the input type is a base class of anything that should be
+              // discared ...
               Filter<InputTypes>::value,
+              // ... then we should leave it out of the final TypeList ...
               TypeList<>,
+              // ... otherwise, include it.
               TypeList<InputTypes>
+            // Do this for each type in the InputTypes parameter pack.
             >...
         >::type;
       };
@@ -551,7 +556,7 @@ namespace gz
     template <typename F>
     constexpr bool FeatureList<FeaturesT...>::HasFeature()
     {
-      return detail::TypeListContainsBase<F, FeatureTypeList>::value;
+      return detail::TypeListContainsBase<F, FlatFeatureTypeList>::value;
     }
 
     /////////////////////////////////////////////////
@@ -562,10 +567,10 @@ namespace gz
       // TODO(MXG): Replace this with a simple fold expression once we use C++17
       return
           detail::ConflictingLists<
-              SomeFeatureList, AssertNoConflict, FeatureTypeList>::value
+              SomeFeatureList, AssertNoConflict, FlatFeatureTypeList>::value
        || detail::ConflictingLists<
               FeatureList<FeaturesT...>, AssertNoConflict,
-              typename FeatureList<SomeFeatureList>::FeatureTypeList>::value;
+              typename FeatureList<SomeFeatureList>::FlatFeatureTypeList>::value;
     }
 
     /////////////////////////////////////////////////

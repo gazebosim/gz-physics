@@ -78,7 +78,7 @@ namespace gz
 
         static constexpr bool value =
             HasAllFeaturesImpl<
-                typename ToFeatures::FeatureTypeList,
+                typename ToFeatures::FlatFeatureTypeList,
                 FromFeatures>::value;
       };
 

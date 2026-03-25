@@ -67,8 +67,9 @@ namespace gz
       public: using Features =
           typename detail::CombineLists<FeaturesT...>::Result;
 
+      public: using FlatFeatureTypeList = typename TupleToTypeList<Features>::type;
+
       public: using FeatureTuple = std::tuple<FeaturesT...>;
-      public: using FeatureTypeList = typename TupleToTypeList<Features>::type;
 
       /// \brief A static constexpr function which indicates whether a given
       /// Feature, F, is contained in this list.
@@ -80,7 +81,7 @@ namespace gz
 
       /// \brief A static constexpr function which indicates whether any
       /// features in SomeFeatureList conflict with any features in
-      /// SomeFeatureList.
+      /// this list.
       ///
       /// \tparam SomeFeatureList
       ///   The list to compare against for conflicts.

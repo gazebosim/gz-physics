@@ -138,8 +138,8 @@ namespace gz
       /// \private Implementation of InspectFeatures for FeatureLists.
       template <typename PolicyT, typename FeatureListT>
       struct InspectFeatures<PolicyT, FeatureListT,
-          std::void_t<typename FeatureListT::FeatureTypeList>>
-          : InspectFeatures<PolicyT, typename FeatureListT::FeatureTypeList>
+          std::void_t<typename FeatureListT::FlatFeatureTypeList>>
+          : InspectFeatures<PolicyT, typename FeatureListT::FlatFeatureTypeList>
       { };
     }
   }
