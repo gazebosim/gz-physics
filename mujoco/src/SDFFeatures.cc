@@ -454,16 +454,13 @@ Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
 
   // Set gravity to value from SDF.
   // Note: there is a small difference between the default gravity
-  // z magnitude in mujoco (-9.81) vs the  default value in SDF (-9.8).
+  // z magnitude in mujoco (-9.81) vs the default value in SDF (-9.8).
   auto *worldInfo = this->ReferenceInterface<WorldInfo>(worldID);
   if (worldInfo && worldInfo->mjModelObj)
   {
-    // Update both the model and the spec so that gravity persists across
-    // spec recompilation.
+    // Update just the mjSpecObj. The values should be compiled to mjModelObj
+    // after world construction.
     const auto &gravity = _sdfWorld.Gravity();
-    worldInfo->mjModelObj->opt.gravity[0] = gravity[0];
-    worldInfo->mjModelObj->opt.gravity[1] = gravity[1];
-    worldInfo->mjModelObj->opt.gravity[2] = gravity[2];
     worldInfo->mjSpecObj->option.gravity[0] = gravity[0];
     worldInfo->mjSpecObj->option.gravity[1] = gravity[1];
     worldInfo->mjSpecObj->option.gravity[2] = gravity[2];
