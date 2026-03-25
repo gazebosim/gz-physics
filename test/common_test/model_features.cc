@@ -222,6 +222,11 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStatePreventsMotion)
 
     // Re-enable mobility: gravity now integrates and the sphere falls.
     model->SetStatic(false);
+    // Re-apply angular velocity after the static→dynamic transition
+    // (DART resets velocity state when the skeleton becomes mobile again).
+    const Eigen::Vector3d angVel(0.0, 0.0, 1.0);
+    freeGroup->SetWorldAngularVelocity(angVel);
+
     const double afterDynamicZ =
         StepAndGetPosition<ModelFeaturesFeatureList>(world, link, 100).z();
     EXPECT_LT(afterDynamicZ, initialZ);
@@ -229,8 +234,8 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStatePreventsMotion)
     // Gravity must have pulled the sphere downward: Z linear velocity < 0.
     const auto dynamicFrameData = link->FrameDataRelativeToWorld();
     EXPECT_LT(dynamicFrameData.linearVelocity.z(), 0.0);
-    // Angular velocity should remain near the initially-set value (no torques).
-    EXPECT_NEAR(1.0, dynamicFrameData.angularVelocity.norm(), 1e-3);
+    // Angular velocity should remain near the set value (no torques acting).
+    EXPECT_NEAR(angVel.norm(), dynamicFrameData.angularVelocity.norm(), 1e-3);
   }
 }
 

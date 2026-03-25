@@ -25,8 +25,23 @@ namespace dartsim {
 void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
 {
   auto modelInfo = this->GetModelInfo(_id);
+  auto skeleton = modelInfo->model;
+  const bool wasStatic = !skeleton->isMobile();
+
   // In DART, isMobile=false means the skeleton is fixed (static).
-  modelInfo->model->setMobile(!_static);
+  skeleton->setMobile(!_static);
+
+  // When transitioning from static (kinematic) to dynamic, zero out any
+  // velocities and accelerations that DART may have stored on the skeleton
+  // while it was kinematic. Without this the stored state is released as
+  // momentum when the body becomes dynamic.
+  if (wasStatic && !_static)
+  {
+    skeleton->resetVelocities();
+    skeleton->resetAccelerations();
+    skeleton->clearExternalForces();
+    skeleton->clearInternalForces();
+  }
 
   // Also apply to nested models recursively.
   for (const std::size_t nestedID : modelInfo->nestedModels)
