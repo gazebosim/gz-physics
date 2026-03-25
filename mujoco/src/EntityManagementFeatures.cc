@@ -358,15 +358,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 bool EntityManagementFeatures::RemoveModelByName(
     const Identity &_worldID, const std::string &_modelName)
 {
-  const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  const std::string scopedName = this->JoinNames(worldInfo->name, _modelName);
-
-  if (!worldInfo->models.HasEntity(scopedName))
-  {
-    return false;
-  }
-
-  const std::size_t modelId = worldInfo->models.IdentityOf(scopedName);
+  const std::size_t modelId = this->GetModel(_worldID, _modelName);
   return this->RemoveModelImpl(_worldID.id, modelId);
 }
 
