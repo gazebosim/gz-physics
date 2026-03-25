@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics VERSION 9.0.0)
+project(gz-physics VERSION 10.0.0)
 
 #============================================================================
 # Find gz-cmake
@@ -34,6 +34,10 @@ endif()
 # Search for project-specific dependencies
 #============================================================================
 message(STATUS "\n\n-- ====== Finding Dependencies ======")
+
+#--------------------------------------
+# TODO(azeey) Remove this and depend on a system package before release
+add_subdirectory(third_party/mujoco_vendor)
 
 #--------------------------------------
 # Find gz-common
@@ -87,6 +91,13 @@ gz_find_package(GzBullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
+#--------------------------------------
+# Find mujoco for the mujoco plugin wrapper
+# gz_find_package(mujoco
+#   REQUIRED_BY mujoco
+#   PKGCONFIG_IGNORE # TODO(azeey) Revisit this
+#   CONFIG)
+
 message(STATUS "-------------------------------------------\n")
 
 # Plugin install dirs
@@ -97,11 +108,14 @@ set(GZ_PHYSICS_ENGINE_INSTALL_DIR
   ${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR}
 )
 
+# Disable Whole Program Optimization (WPO) to reduce build time
+set(GZ_MSVC_WPO OFF CACHE BOOL "Disable WPO")
+
 #============================================================================
 # Configure the build
 #============================================================================
 gz_configure_build(QUIT_IF_BUILD_ERRORS
-  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone)
+  COMPONENTS sdf heightmap mesh dartsim tpe bullet bullet-featherstone mujoco)
 
 
 #============================================================================
