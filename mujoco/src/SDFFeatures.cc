@@ -458,10 +458,15 @@ Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
   auto *worldInfo = this->ReferenceInterface<WorldInfo>(worldID);
   if (worldInfo && worldInfo->mjModelObj)
   {
+    // Update both the model and the spec so that gravity persists across
+    // spec recompilation.
     const auto &gravity = _sdfWorld.Gravity();
     worldInfo->mjModelObj->opt.gravity[0] = gravity[0];
     worldInfo->mjModelObj->opt.gravity[1] = gravity[1];
     worldInfo->mjModelObj->opt.gravity[2] = gravity[2];
+    worldInfo->mjSpecObj->option.gravity[0] = gravity[0];
+    worldInfo->mjSpecObj->option.gravity[1] = gravity[1];
+    worldInfo->mjSpecObj->option.gravity[2] = gravity[2];
   }
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
