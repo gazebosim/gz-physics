@@ -34,7 +34,7 @@ using Result = physics::detail::SubtractList<Filter>
 using UnfilteredResult =
     physics::detail::SubtractList<physics::TypeList<>>::From<Input>::type;
 
-TEST(FilterTuple_TEST, FilterTupleResult)
+TEST(FilterTypeList_TEST, FilterTypeListResult)
 {
   // ClassA and ClassD should be filtered out because they are in Filter.
   // ClassB should be filtered out because it is a base class of ClassD.
@@ -62,7 +62,7 @@ using SingleCombineListsChildFilter =
   physics::detail::CombineListsImpl<
       physics::TypeList<>, ClassA>::ChildFilter;
 
-TEST(FilterTuple_TEST, CombineListsResult)
+TEST(FilterTypeList_TEST, CombineListsResult)
 {
   EXPECT_EQ(1u, SingleCombineListsInitial::size);
   EXPECT_EQ(1u, SingleCombineListsPartial::size);

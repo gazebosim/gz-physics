@@ -195,13 +195,6 @@ namespace gz
         public: using type = TypeList<F...>;
       };
 
-      template <typename T> struct TupleToTypeList;
-      template <typename... Ts>
-      struct TupleToTypeList<std::tuple<Ts...>>
-      {
-        using type = TypeList<Ts...>;
-      };
-
       /// \private This specialization of ExtractFeatures is used to wipe away
       /// the FeatureList that is currently holding a set of features, then
       /// verify those features, and finally repackage them as the raw feature
@@ -438,10 +431,10 @@ namespace gz
       /// \private This class helps to implement the function
       /// FeatureList::ConflictsWith(). Its implementation is conceptually
       /// similar to TypeListContainsBase.
-      template <typename SomeFeatureList, bool AssertNoConflict, typename Tuple>
+      template <typename SomeFeatureList, bool AssertNoConflict, typename List>
       struct ConflictingLists;
 
-      /// \private Implementation of ConflictingLists. If the Tuple argument is
+      /// \private Implementation of ConflictingLists. If the List argument is
       /// not a TypeList, this class will be undefined.
       template <typename SomeFeatureList, bool AssertNoConflict,
                 typename... Features>
@@ -513,7 +506,7 @@ namespace gz
       template <template<typename> class Selector, typename FeatureListT>
       struct ExtractAPI
       {
-        template <typename FeatureTuple, typename... T>
+        template <typename FeatureTypeList, typename... T>
         struct Select;
 
         template <typename... Features, typename... T>

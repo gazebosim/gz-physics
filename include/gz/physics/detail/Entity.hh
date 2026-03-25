@@ -35,8 +35,8 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private Inspired by https://stackoverflow.com/a/26288164
       /// This class provides a static constexpr member named `value` which is
-      /// true if T is one of the entries of Tuple, and false otherwise.
-      template <typename T, typename Tuple>
+      /// true if T is one of the entries of List, and false otherwise.
+      template <typename T, typename List>
       struct TypeListContainsBase;
 
       /// \private This specialization implements TypeListContainsBase. It only

@@ -232,10 +232,10 @@ TEST(FeatureList_TEST, Hierarchy)
   // As long as the line below can compile, the test is passed.
   HierarchyLevel3();
 
-  using Level3Tuple = detail::FlattenFeatures<HierarchyLevel3>::type;
-  EXPECT_TRUE((detail::TypeListContainsBase<FeatureA, Level3Tuple>::value));
-  EXPECT_TRUE((detail::TypeListContainsBase<FeatureB, Level3Tuple>::value));
-  EXPECT_TRUE((detail::TypeListContainsBase<FeatureC, Level3Tuple>::value));
-  EXPECT_TRUE((detail::TypeListContainsBase<Conflict1, Level3Tuple>::value));
-  EXPECT_TRUE((detail::TypeListContainsBase<Conflict2, Level3Tuple>::value));
+  using Level3TypeList = detail::FlattenFeatures<HierarchyLevel3>::type;
+  EXPECT_TRUE((detail::TypeListContainsBase<FeatureA, Level3TypeList>::value));
+  EXPECT_TRUE((detail::TypeListContainsBase<FeatureB, Level3TypeList>::value));
+  EXPECT_TRUE((detail::TypeListContainsBase<FeatureC, Level3TypeList>::value));
+  EXPECT_TRUE((detail::TypeListContainsBase<Conflict1, Level3TypeList>::value));
+  EXPECT_TRUE((detail::TypeListContainsBase<Conflict2, Level3TypeList>::value));
 }
