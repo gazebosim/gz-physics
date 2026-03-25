@@ -41,7 +41,6 @@ namespace gz
       // Forward declarations
       template <typename...> struct CombineLists;
       template <bool, typename...> struct SelfConflict;
-      template <typename> struct IterateList;
     }
 
     /////////////////////////////////////////////////
@@ -58,7 +57,7 @@ namespace gz
     /// using AdvancedList = FeatureList<BasicList, AdvancedA, AdvancedB>;
     /// \endcode
     template <typename... FeaturesT>
-    struct FeatureList : detail::IterateList<TypeList<FeaturesT...>>
+    struct FeatureList
     {
       /// Features is a std::tuple containing all the feature classes that are
       /// bundled in this list. This list is fully seralialized; any hierarchy
@@ -67,6 +66,7 @@ namespace gz
       public: using Features =
           typename detail::CombineLists<FeaturesT...>::Result;
 
+      /// This is the same as Features, but using TypeList
       public: using FlatFeatureTypeList =
           typename TupleToTypeList<Features>::type;
 

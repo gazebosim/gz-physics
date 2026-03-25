@@ -36,100 +36,34 @@ namespace gz
     namespace detail
     {
       /////////////////////////////////////////////////
-      template <typename>
-      struct IterateList;
+      /// \private ComposePluginFromList takes a TypeList of fully-instantiated
+      /// Feature Implementation classes (e.g.,
+      /// FeatureA::Implementation<Policy>, FeatureB::Implementation<Policy>)
+      /// and generates a linear inheritance chain of SpecializedPlugin
+      /// instances.
+      ///
+      /// This tail-recursive linear chain avoids the "Ambiguous Base Class"
+      /// compiler error that would occur with flat multiple inheritance if
+      /// multiple features happen to share the same underlying base class from
+      /// gz-plugin.
+      template <typename List>
+      struct ComposePluginFromList;
 
-      template <typename Current, typename... T>
-      struct IterateList<TypeList<Current, T...>>
+      template <typename Impl, typename... Others>
+      struct ComposePluginFromList<TypeList<Impl, Others...>>
       {
-        using CurrentTupleEntry = Current;
-        using NextTupleEntry = IterateList<TypeList<T...>>;
-      };
-
-      template <typename Current>
-      struct IterateList<TypeList<Current>>
-      {
-        using CurrentTupleEntry = Current;
+        struct type :
+            ::gz::plugin::SpecializedPlugin<Impl>,
+            ComposePluginFromList<TypeList<Others...>>::type { };
       };
 
       template <>
-      struct IterateList<TypeList<>>
-      {
-        using CurrentTupleEntry = void;
-      };
-
-      template <typename Iterable, typename = std::void_t<>>
-      struct GetNext
-      {
-        using n = void;
-      };
-
-      template <typename Iterable>
-      struct GetNext<Iterable, std::void_t<typename Iterable::NextTupleEntry>>
-      {
-        // This struct is intentionally named with only one letter, because its
-        // name will be repeated many times in the symbol names of aggregated
-        // types. Do not change this name to anything longer than 1 letter or
-        // else the compiled symbol names will be needlessly long, and that can
-        // be costly to memory and performance.
-        struct n : Iterable::NextTupleEntry { };
-      };
-
-      template <typename Policy, typename Feature, typename = std::void_t<>>
-      struct ComposePlugin;
-
-      template <typename Policy, typename Feature, bool HasRequirements>
-      struct CheckRequirements
-      {
-        using type =
-            ::gz::plugin::SpecializedPlugin<
-                typename Feature::template Implementation<Policy>>;
-      };
-
-      template <typename Policy, typename Feature>
-      struct CheckRequirements<Policy, Feature, true>
-      {
-        struct type :
-            ::gz::plugin::SpecializedPlugin<
-                typename Feature::template Implementation<Policy>>,
-            ComposePlugin<Policy, typename Feature::RequiredFeatures>::type { };
-      };
-
-      template <typename Policy, typename Feature, typename>
-      struct ComposePlugin
-      {
-        struct type : CheckRequirements<Policy, Feature,
-            !std::is_void_v<typename Feature::RequiredFeatures>>::type { };
-      };
-
-      template <typename Policy, typename Iterable>
-      struct ComposePlugin<Policy, Iterable,
-          std::void_t<typename Iterable::CurrentTupleEntry>>
-      {
-        struct type :
-            ComposePlugin<Policy, typename Iterable::CurrentTupleEntry>::type,
-            ComposePlugin<Policy, typename GetNext<Iterable>::n> { };
-      };
-
-      template <typename Policy>
-      struct ComposePlugin<Policy, void, std::void_t<>>
+      struct ComposePluginFromList<TypeList<>>
       {
         struct type { };
       };
 
-      /////////////////////////////////////////////////
-      /// \private This class is used to determine what type of
-      /// SpecializedPluginPtr should be used by the entities provided by a
-      /// plugin.
-      template <typename Policy, typename FeaturesT>
-      struct DeterminePlugin
-      {
-        struct Specializer
-            : ::gz::plugin::detail::SelectSpecializers<
-              typename ComposePlugin<Policy, FeaturesT>::type> { };
 
-        using type = ::gz::plugin::TemplatePluginPtr<Specializer>;
-      };
 
       /////////////////////////////////////////////////
       /// \private This class provides a sanity check to make sure at compile
@@ -476,38 +410,7 @@ namespace gz
       struct SelfConflict<AssertNoConflict>
           : std::integral_constant<bool, false> {};
 
-      /////////////////////////////////////////////////
-      /// \private Extract the API out of a FeatureList
-      template <template<typename> class Selector,
-                typename FeatureT, typename = std::void_t<>>
-      struct Aggregate
-      {
-        public: template<typename... T>
-        struct type
-            : public virtual Selector<FeatureT>::template type<T...>,
-              public virtual Aggregate<Selector,
-                typename FeatureT::RequiredFeatures>::template type<T...>
-        { };
-      };
 
-      template <template<typename> class Selector>
-      struct Aggregate<Selector, void, std::void_t<>>
-      {
-        public: template<typename... T>
-        struct type { };
-      };
-
-      template <template<typename> class Selector, typename Iterable>
-      struct Aggregate<Selector, Iterable,
-            std::void_t<typename Iterable::CurrentTupleEntry>>
-      {
-        public: template <typename... T>
-        struct type
-            : public virtual Aggregate<Selector,
-                  typename Iterable::CurrentTupleEntry>::template type<T...>,
-              public virtual Aggregate<Selector,
-                  typename GetNext<Iterable>::n>::template type<T...> { };
-      };
 
       /////////////////////////////////////////////////
       template <template<typename> class Selector, typename FeatureListT>
@@ -564,7 +467,6 @@ namespace gz
     template <typename SomeFeatureList, bool AssertNoConflict>
     constexpr bool FeatureList<FeaturesT...>::ConflictsWith()
     {
-      // TODO(MXG): Replace this with a simple fold expression once we use C++17
       return
           detail::ConflictingLists<
               SomeFeatureList, AssertNoConflict, FlatFeatureTypeList>::value
@@ -715,6 +617,30 @@ namespace gz
       using ExtractImplementation =
         typename ExtractAPI<ImplementationSelector, List>
             ::template type<PolicyT>;
+
+      /////////////////////////////////////////////////
+      /// \private This class is used to determine what type of
+      /// SpecializedPluginPtr should be used by the entities provided by a
+      /// plugin.
+      template <typename Policy, typename FeaturesT>
+      struct DeterminePlugin
+      {
+        template <typename T>
+        struct Selector
+        {
+          template <typename PolicyT>
+          using type = typename T::template Implementation<PolicyT>;
+        };
+
+        struct Specializer
+            : ::gz::plugin::detail::SelectSpecializers<
+              typename ComposePluginFromList<
+                  typename ExtractAPI<Selector, FeaturesT>
+                      ::template Bases<Policy>
+              >::type> { };
+
+        using type = ::gz::plugin::TemplatePluginPtr<Specializer>;
+      };
     }
   }
 }
