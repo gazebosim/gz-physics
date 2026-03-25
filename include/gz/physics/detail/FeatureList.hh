@@ -537,17 +537,17 @@ namespace gz
               T...
             >::type;
 
-        template <typename List, typename... T>
+        template <typename List>
         struct Impl;
 
-        template <typename... B, typename... T>
-        struct Impl<TypeList<B...>, T...>
+        template <typename... B>
+        struct Impl<TypeList<B...>>
         {
           class type : public virtual B... { };
         };
 
         template <typename... T>
-        using type = typename Impl<Bases<T...>, T...>::type;
+        using type = typename Impl<Bases<T...>>::type;
       };
     }
 
