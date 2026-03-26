@@ -22,6 +22,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/SpecifyData.hh>
+#include <gz/physics/Entity.hh>
 
 namespace gz
 {
@@ -32,6 +33,13 @@ namespace physics
 class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
+  public: template <typename PolicyT>
+  struct ExtraRayIntersectionDataT
+  {
+    /// \brief The identity of the collision shape that was hit.
+    std::size_t collisionShapeId{INVALID_ENTITY_ID};
+  };
+
   public: template <typename PolicyT>
   struct RayIntersectionT
   {
@@ -52,11 +60,14 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
+    public: using ExtraRayIntersectionData = ExtraRayIntersectionDataT<PolicyT>;
     public: using VectorType =
       typename FromPolicy<PolicyT>::template Use<LinearVector>;
     public: using RayIntersection = RayIntersectionT<PolicyT>;
+
     public: using RayIntersectionData =
-      SpecifyData<RequireData<RayIntersection>>;
+        SpecifyData<RequireData<RayIntersection>,
+                    ExpectData<ExtraRayIntersectionData>>;
 
     /// \brief Get ray intersection generated in the previous simulation step
     /// \param[in] _from The start point of the ray in world coordinates
@@ -68,11 +79,18 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
   public: template <typename PolicyT>
   class Implementation : public virtual Feature::Implementation<PolicyT>
   {
+    public: using ExtraRayIntersectionData = ExtraRayIntersectionDataT<PolicyT>;
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using VectorType =
       typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-    public: virtual RayIntersection GetRayIntersectionFromLastStep(
+    public: struct RayIntersectionInternal
+    {
+      RayIntersection intersection;
+      CompositeData extraData;
+    };
+
+    public: virtual RayIntersectionInternal GetRayIntersectionFromLastStep(
       const Identity &_worldID,
       const VectorType &_from,
       const VectorType &_to) const = 0;
