@@ -684,16 +684,12 @@ TYPED_TEST(ConstructEmptyWorldTestUpToRemoveNestedModelCrash,
       nestedModels.push_back(nestedModel);
     }
 
-    EXPECT_NO_THROW({
-      parentModel->Remove();
-    });
+    EXPECT_TRUE(parentModel->Remove());
 
-    EXPECT_NO_THROW({
-      for (auto &nestedModel : nestedModels)
-      {
-        nestedModel->Remove();
-      }
-    });
+    for(auto &nestedModel : nestedModels)
+    {
+      EXPECT_FALSE(nestedModel->Remove());
+    }
   }
 }
 
