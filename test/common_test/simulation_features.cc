@@ -2232,10 +2232,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
       // Check that extra data has no valid collision shape ID for a miss
       auto *extraDataMiss = result.template
           Query<gz::physics::World3d<FeaturesRayIntersections>::ExtraRayIntersectionData>();
-      if (extraDataMiss)
-      {
-        EXPECT_EQ(0u, extraDataMiss->collisionShapeId);
-      }      
+      EXPECT_EQ(nullptr, extraDataMiss);      
     }
   }
 }
@@ -2272,10 +2269,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 
       auto *extraData = result.template
           Query<gz::physics::World3d<FeaturesRayIntersections>::ExtraRayIntersectionData>();
-      if (extraData)
-      {
-        EXPECT_EQ(0u, extraData->collisionShapeId);
-      }
+      EXPECT_EQ(nullptr, extraData);
       
     }
   }

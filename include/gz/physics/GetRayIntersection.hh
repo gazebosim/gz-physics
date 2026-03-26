@@ -22,6 +22,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/SpecifyData.hh>
+#include <gz/physics/Entity.hh>
 
 namespace gz
 {
@@ -36,8 +37,7 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
   struct ExtraRayIntersectionDataT
   {
     /// \brief The identity of the collision shape that was hit.
-    /// Set to 0 if no shape was hit.
-    std::size_t collisionShapeId{0};
+    std::size_t collisionShapeId{INVALID_ENTITY_ID};
   };
 
   public: template <typename PolicyT>
