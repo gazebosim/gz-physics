@@ -156,6 +156,9 @@ class EntityManagementFeatures :
 
   public: bool RemoveNestedModelByName(const Identity &_modelID,
      const std::string &_modelName) override;
+
+  private: bool RemoveModelImpl(const std::size_t _worldID,
+                                const std::size_t _modelID);
 };
 }  // namespace mujoco
 }  // namespace physics

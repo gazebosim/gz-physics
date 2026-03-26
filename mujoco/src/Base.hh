@@ -22,11 +22,13 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <gz/common/Console.hh>
+#include <gz/math/Pose3.hh>
 #include <gz/math/SemanticVersion.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
@@ -123,6 +125,10 @@ struct WorldInfo
 
   // Vector of ShapeInfo, indexed by mujoco geom id
   std::vector<std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
+
+  /// \brief body poses from the most recent pose change/update.
+  /// The index is the MuJoCo body ID, and the value is the body's pose.
+  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
 };
 
 class Base

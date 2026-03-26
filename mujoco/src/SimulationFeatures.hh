@@ -40,8 +40,8 @@ struct SimulationFeatureList : gz::physics::FeatureList<
 
 class SimulationFeatures :
     public CanWriteRequiredData<SimulationFeatures, RequireData<WorldPoses>>,
-    // public CanWriteExpectedData<SimulationFeatures,
-    //   ExpectData<ChangedWorldPoses>>,
+    public CanWriteExpectedData<SimulationFeatures,
+      ExpectData<ChangedWorldPoses>>,
     public virtual Base,
     public virtual Implements3d<SimulationFeatureList>
 {
@@ -55,18 +55,13 @@ class SimulationFeatures :
       const ForwardStep::Input &_u) override;
 
   public: void Write(WorldPoses &_worldPoses) const;
-  // public: void Write(ChangedWorldPoses &_changedPoses) const;
+  public: void Write(ChangedWorldPoses &_changedPoses) const;
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
-
-  /// \brief link poses from the most recent pose change/update.
-  /// The key is the link's ID, and the value is the link's pose
-  // private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses; // NOLINT
 };
 
 }
 }  // namespace physics
 }  // namespace gz
 #endif
-
