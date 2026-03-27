@@ -18,6 +18,7 @@
 #include "ShapeFeatures.hh"
 
 #include <mujoco/mujoco.h>
+#include <algorithm>
 #include <gz/math/eigen3/Conversions.hh>
 
 namespace gz {
@@ -153,7 +154,8 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
     }
     default:
     {
-      gzwarn << "Bounding box for geom type " << geomType << " not implemented\n";
+      gzwarn << "Bounding box for geom type " << geomType << " not implemented";
+             << std::endl;
       return AlignedBox3d();
     }
   }
