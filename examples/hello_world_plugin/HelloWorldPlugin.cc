@@ -29,7 +29,8 @@ namespace mock
   //! [feature list]
   // List of all features that this plugin will implement
   struct HelloWorldFeatureList : gz::physics::FeatureList<
-      gz::physics::GetEngineInfo
+      gz::physics::GetEngineInfo,
+      gz::physics::GetEngineVersionInfo
   > { };
   //! [feature list]
 
@@ -56,6 +57,13 @@ namespace mock
     public: const std::string &GetEngineName(const Identity &/*_id*/) const override
     {
       return this->engineName;
+    }
+
+    public: const gz::math::SemanticVersion &GetEngineVersion(
+        const Identity &/*_id*/) const override
+    {
+      static const gz::math::SemanticVersion version(1, 0);
+      return version;
     }
 
     std::string engineName;

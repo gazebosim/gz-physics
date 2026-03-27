@@ -37,6 +37,7 @@ struct EntityManagementFeatureList : gz::physics::FeatureList<
   CollisionFilterMaskFeature,
   ConstructEmptyWorldFeature,
   GetEngineInfo,
+  GetEngineVersionInfo,
   GetJointFromModel,
   GetLinkFromModel,
   GetModelFromWorld,
@@ -53,6 +54,9 @@ class EntityManagementFeatures :
 {
   // ----- GetEngineInfo -----
   public: const std::string &GetEngineName(
+      const Identity &_engineID) const override;
+
+  public: const gz::math::SemanticVersion &GetEngineVersion(
       const Identity &_engineID) const override;
 
   public: std::size_t GetEngineIndex(
