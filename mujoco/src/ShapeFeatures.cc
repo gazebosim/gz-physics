@@ -154,7 +154,7 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
     }
     default:
     {
-      gzwarn << "Bounding box for geom type " << geomType << " not implemented";
+      gzwarn << "Bounding box for geom type " << geomType << " not implemented."
              << std::endl;
       return AlignedBox3d();
     }
