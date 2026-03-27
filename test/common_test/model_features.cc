@@ -42,6 +42,7 @@ struct ModelFeaturesFeatureList : gz::physics::FeatureList<
   gz::physics::SetFreeGroupWorldVelocity,
   gz::physics::ForwardStep,
   gz::physics::GetEntities,
+  gz::physics::GetNestedModelFromModel,
   gz::physics::LinkFrameSemantics,
   gz::physics::ModelStaticState,
   gz::physics::ModelGravityEnabled,
@@ -361,6 +362,221 @@ TYPED_TEST(ModelFeaturesTest, ModelGravityDisabledPreventsMotion)
     EXPECT_LT(gravFrameData.linearVelocity.z(), 0.0);
     // X velocity is still positive.
     EXPECT_GT(gravFrameData.linearVelocity.x(), 0.0);
+  }
+}
+
+//////////////////////////////////////////////////
+TYPED_TEST(ModelFeaturesTest, NestedModelGravityPropagates)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelFeaturesFeatureList>(
+        engine, common_test::worlds::kWorldSingleNestedModelSdf);
+    ASSERT_NE(nullptr, world);
+
+    auto parentModel = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, parentModel);
+
+    auto nestedModel = parentModel->GetNestedModel("nested_model");
+    ASSERT_NE(nullptr, nestedModel);
+
+    // Disable gravity on the parent: nested model must follow.
+    parentModel->SetGravityEnabled(false);
+    EXPECT_FALSE(parentModel->GetGravityEnabled());
+    EXPECT_FALSE(nestedModel->GetGravityEnabled());
+
+    // Re-enable gravity on the parent: nested model must follow.
+    parentModel->SetGravityEnabled(true);
+    EXPECT_TRUE(parentModel->GetGravityEnabled());
+    EXPECT_TRUE(nestedModel->GetGravityEnabled());
+  }
+}
+
+//////////////////////////////////////////////////
+TYPED_TEST(ModelFeaturesTest, NestedModelStaticPropagates)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelFeaturesFeatureList>(
+        engine, common_test::worlds::kWorldSingleNestedModelSdf);
+    ASSERT_NE(nullptr, world);
+
+    auto parentModel = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, parentModel);
+
+    auto nestedModel = parentModel->GetNestedModel("nested_model");
+    ASSERT_NE(nullptr, nestedModel);
+
+    // Make the parent static: nested model must follow.
+    parentModel->SetStatic(true);
+    EXPECT_TRUE(parentModel->GetStatic());
+    EXPECT_TRUE(nestedModel->GetStatic());
+
+    // Make the parent dynamic again: nested model must follow.
+    parentModel->SetStatic(false);
+    EXPECT_FALSE(parentModel->GetStatic());
+    EXPECT_FALSE(nestedModel->GetStatic());
+  }
+}
+
+//////////////////////////////////////////////////
+// Verify that toggling static does not silently re-enable gravity.
+// Sequence: disable gravity → make static → make dynamic → gravity still off.
+TYPED_TEST(ModelFeaturesTest, GravityPreservedAcrossStaticToggle)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelFeaturesFeatureList>(
+        engine, common_test::worlds::kSphereGravitySdf);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+
+    auto link = model->GetLink("sphere_link");
+    ASSERT_NE(nullptr, link);
+
+    // Step 1: disable gravity.
+    model->SetGravityEnabled(false);
+    EXPECT_FALSE(model->GetGravityEnabled());
+
+    // Step 2: make static.
+    model->SetStatic(true);
+    EXPECT_TRUE(model->GetStatic());
+    EXPECT_FALSE(model->GetGravityEnabled());
+
+    // Step 3: make dynamic again.
+    model->SetStatic(false);
+    EXPECT_FALSE(model->GetStatic());
+
+    // Step 4: gravity must still be disabled.
+    EXPECT_FALSE(model->GetGravityEnabled());
+
+    // Confirm no downward motion: the sphere must not fall.
+    const double initialZ =
+        link->FrameDataRelativeToWorld().pose.translation().z();
+    const double afterZ =
+        StepAndGetPosition<ModelFeaturesFeatureList>(world, link, 100).z();
+    EXPECT_NEAR(initialZ, afterZ, 1e-6);
+  }
+}
+
+//////////////////////////////////////////////////
+// GetModelGravityEnabled must return true for a model whose only link has
+// fluid added mass configured, even though SetLinkAddedMass forces DART
+// gravity off internally on that body node.
+// SetModelGravityEnabled skips added-mass links entirely, so for an
+// all-added-mass model calling Set has no effect and the getter stays true.
+TYPED_TEST(ModelFeaturesTest, AddedMassLinkDoesNotPollutGravityGetter)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelFeaturesFeatureList>(
+        engine, common_test::worlds::kSphereAddedMassGravitySdf);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("sphere_added_mass");
+    ASSERT_NE(nullptr, model);
+
+    // Despite the added-mass link having DART gravity mode = false internally,
+    // the user-visible flag must read as enabled (user never called
+    // SetGravityEnabled(false)).
+    EXPECT_TRUE(model->GetGravityEnabled());
+
+    // All links are added-mass links so SetGravityEnabled is a no-op;
+    // the getter must not be corrupted by the internal DART flag.
+    model->SetGravityEnabled(false);
+    EXPECT_TRUE(model->GetGravityEnabled());
+
+    model->SetGravityEnabled(true);
+    EXPECT_TRUE(model->GetGravityEnabled());
+  }
+}
+
+//////////////////////////////////////////////////
+// SetModelGravityEnabled(true) must not re-enable DART's built-in gravity on
+// an added-mass link. If it did, gravity would be applied twice (DART's
+// built-in pass + the manual F=ma in SimulationFeatures) and the model would
+// fall faster than a plain sphere of the same mass.
+TYPED_TEST(ModelFeaturesTest, AddedMassLinkGravityInvariantPreserved)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelFeaturesFeatureList>(
+        engine, common_test::worlds::kSphereAddedMassGravitySdf);
+    ASSERT_NE(nullptr, world);
+
+    // Plain sphere: no added mass, reference fall rate.
+    auto plainModel = world->GetModel("sphere");
+    ASSERT_NE(nullptr, plainModel);
+    auto plainLink = plainModel->GetLink("sphere_link");
+    ASSERT_NE(nullptr, plainLink);
+
+    // Added-mass sphere: same mass (1 kg), same starting height (z=10).
+    auto amModel = world->GetModel("sphere_added_mass");
+    ASSERT_NE(nullptr, amModel);
+    auto amLink = amModel->GetLink("sphere_link");
+    ASSERT_NE(nullptr, amLink);
+
+    // Explicitly call SetGravityEnabled(true) to exercise the code path that
+    // must NOT re-enable DART's built-in gravity on the added-mass body node.
+    amModel->SetGravityEnabled(true);
+    EXPECT_TRUE(amModel->GetGravityEnabled());
+
+    // Step both models forward and compare heights. With added mass zz=1 and
+    // body mass=1, effective inertial mass for vertical motion is 2 kg, so the
+    // added-mass sphere falls more slowly (a = F/m_eff = 10/2 = 5 m/s^2)
+    // compared to the plain sphere (a = 10 m/s^2). If SetGravityEnabled(true)
+    // incorrectly re-enabled DART's built-in gravity, the added-mass sphere
+    // would receive gravity twice and fall faster than the plain one.
+    const std::size_t steps = 100;
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    for (std::size_t i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    const double plainZ =
+        plainLink->FrameDataRelativeToWorld().pose.translation().z();
+    const double amZ =
+        amLink->FrameDataRelativeToWorld().pose.translation().z();
+
+    // The added-mass sphere must not have fallen faster than the plain one.
+    // (If the invariant is broken, amZ < plainZ.)
+    EXPECT_GE(amZ, plainZ)
+        << "Added-mass sphere fell faster than plain sphere, suggesting "
+           "SetGravityEnabled(true) incorrectly re-enabled DART built-in "
+           "gravity on the added-mass link (double gravity applied).";
   }
 }
 
