@@ -30,7 +30,7 @@ namespace gz
     namespace detail
     {
       template <typename PluginT, typename FeaturePolicyT,
-                typename FeatureListOrTuple>
+                typename FeatureListOrTypeList>
       struct StaticRegistrar;
 
       template <typename PluginT, typename FeaturePolicyT,

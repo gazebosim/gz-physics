@@ -36,24 +36,24 @@ namespace gz
     namespace detail
     {
       /////////////////////////////////////////////////
-      template <typename T>
-      struct IterateTuple;
+      template <typename>
+      struct IterateList;
 
       template <typename Current, typename... T>
-      struct IterateTuple<std::tuple<Current, T...>>
+      struct IterateList<TypeList<Current, T...>>
       {
         using CurrentTupleEntry = Current;
-        using NextTupleEntry = IterateTuple<std::tuple<T...>>;
+        using NextTupleEntry = IterateList<TypeList<T...>>;
       };
 
       template <typename Current>
-      struct IterateTuple<std::tuple<Current>>
+      struct IterateList<TypeList<Current>>
       {
         using CurrentTupleEntry = Current;
       };
 
       template <>
-      struct IterateTuple<std::tuple<>>
+      struct IterateList<TypeList<>>
       {
         using CurrentTupleEntry = void;
       };
@@ -172,30 +172,41 @@ namespace gz
       class ExtractFeatures
           : public VerifyFeatures<F>
       {
-        public: using type = std::tuple<F>;
+        public: using type = TypeList<F>;
       };
 
       /// \private This specialization of ExtractFeatures is used to wipe away
       /// a tuple that is currently holding a set of features, then verify those
-      /// features, and finally repackage them as a tuple.
+      /// features, and finally repackage them as a TypeList.
       template <typename... F>
       class ExtractFeatures<std::tuple<F...>>
           : public VerifyFeatures<F...>
       {
-        public: using type = std::tuple<F...>;
+        public: using type = TypeList<F...>;
+      };
+
+      /// \private This specialization of ExtractFeatures is used to wipe away
+      /// a TypeList that is currently holding a set of features, then verify
+      /// those features, and finally repackage them as a TypeList.
+      template <typename... F>
+      class ExtractFeatures<TypeList<F...>>
+          : public VerifyFeatures<F...>
+      {
+        public: using type = TypeList<F...>;
       };
 
       /// \private This specialization of ExtractFeatures is used to wipe away
       /// the FeatureList that is currently holding a set of features, then
       /// verify those features, and finally repackage them as the raw feature
-      /// tuple that is being held by the FeatureList.
+      /// TypeList that is being held by the FeatureList.
       template <typename SomeFeatureList>
       class ExtractFeatures<
               SomeFeatureList,
               std::void_t<typename SomeFeatureList::Features>>
           : public VerifyFeatures<typename SomeFeatureList::Features>
       {
-        public: using type = typename SomeFeatureList::Features;
+        public: using type =
+            typename TupleToTypeList<typename SomeFeatureList::Features>::type;
       };
 
       /// \private This specialization skips over any void entries. This allows
@@ -204,112 +215,101 @@ namespace gz
       template <>
       class ExtractFeatures<void>
       {
-        public: using type = std::tuple<>;
+        public: using type = TypeList<>;
       };
 
       /////////////////////////////////////////////////
-      /// \private This struct wraps the TupleContainsBase class to create a
-      /// tuple filter that can be passed to FilterTuple.
-      template <typename DiscardTuple>
-      struct RedundantTupleFilter
+      /// \private This struct wraps the TypeListContainsBase class to create a
+      /// TypeList filter that can be passed to FilterList.
+      template <typename DiscardList>
+      struct RedundantListFilter
       {
         template <typename T>
-        struct Apply : TupleContainsBase<T, DiscardTuple> { };
+        struct Apply : TypeListContainsBase<T, DiscardList> { };
       };
 
       /////////////////////////////////////////////////
-      template <template <typename> class Filter, typename InputTuple>
-      struct FilterTuple;
+      template <template <typename> class Filter, typename InputList>
+      struct FilterList;
 
       /////////////////////////////////////////////////
-      /// \private This class will apply a Filter to a tuple and produce a new
-      /// tuple that only includes the tuple elements which were ignored by the
-      /// Filter.
+      /// \private This class will apply a Filter to a TypeList and produce a
+      /// new TypeList that only includes the TypeList elements which were
+      /// ignored by the Filter.
       template <template <typename> class Filter, typename... InputTypes>
-      struct FilterTuple<Filter, std::tuple<InputTypes...>>
+      struct FilterList<Filter, TypeList<InputTypes...>>
       {
-        using type = decltype(std::tuple_cat(
+        using type = typename TypeListCat<
             std::conditional_t<
               // If the input type is a base class of anything that should be
               // discared ...
               Filter<InputTypes>::value,
-              // ... then we should leave it out of the final tuple ...
-              std::tuple<>,
+              // ... then we should leave it out of the final TypeList ...
+              TypeList<>,
               // ... otherwise, include it.
-              std::tuple<InputTypes>
+              TypeList<InputTypes>
             // Do this for each type in the InputTypes parameter pack.
-            >()...));
+            >...
+        >::type;
       };
 
       /////////////////////////////////////////////////
-      /// \private Use this struct to remove the tuple elements of one tuple
-      /// from another tuple
-      template <typename DiscardTuple>
-      struct SubtractTuple
+      /// \private Use this struct to remove the TypeList elements of one
+      /// TypeList from another TypeList
+      template <typename DiscardList>
+      struct SubtractList
       {
         template <typename T>
         using Filter =
-            typename RedundantTupleFilter<DiscardTuple>::template Apply<T>;
+            typename RedundantListFilter<DiscardList>::template Apply<T>;
 
         /// This struct will contain a nested struct called `type` which will be
-        /// a tuple with all the elements of FromTuple that are not present in
-        /// DiscardTuple
-        template <typename FromTuple>
-        struct From : FilterTuple<Filter, FromTuple> { };
+        /// a TypeList with all the elements of FromList that are not present in
+        /// DiscardList
+        template <typename FromList>
+        struct From : FilterList<Filter, FromList> { };
       };
 
       /////////////////////////////////////////////////
-      /// \private This template takes in a tuple as InputTuple and gives back
-      /// a tuple where every element type is only present once.
+      /// \private This template takes in a TypeList as InputList and gives back
+      /// a TypeList where every element type is only present once.
+      template <typename InputList, typename AccumulatedList = TypeList<>>
+      struct RemoveListRedundancies;
+
+      template <typename AccumulatedList>
+      struct RemoveListRedundancies<TypeList<>, AccumulatedList>
+      {
+        using type = TypeList<>;
+      };
+
+      template <typename F1, typename... Others, typename... Acc>
+      struct RemoveListRedundancies<TypeList<F1, Others...>, TypeList<Acc...>>
+      {
+        using PartialResult =
+            std::conditional_t<
+              TypeListContainsBase<F1, TypeList<Acc...>>::value,
+              TypeList<>,
+              TypeList<F1>
+            >;
+
+        using NextAcc =
+            typename TypeListCat<TypeList<Acc...>, PartialResult>::type;
+
+        using type = typename TypeListCat<
+            PartialResult,
+            typename RemoveListRedundancies<TypeList<Others...>, NextAcc>::type
+        >::type;
+      };
+
       template <typename InputTuple>
       struct RemoveTupleRedundancies;
-
-      template <typename T>
-      struct wrap { };
-
-      template <typename Tuple>
-      struct unwrap;
-
-      template <typename... T>
-      struct unwrap<std::tuple<wrap<T>...>>
-      {
-        using type = std::tuple<T...>;
-      };
 
       template <typename... InputTupleArgs>
       struct RemoveTupleRedundancies<std::tuple<InputTupleArgs...>>
       {
-        template <typename PartialResultInput, typename...>
-        struct Impl;
-
-        template <typename PartialResultInput>
-        struct Impl<PartialResultInput>
-        {
-          using type = std::tuple<>;
-        };
-
-        template <typename ParentResultInput, typename F1, typename... Others>
-        struct Impl<ParentResultInput, F1, Others...>
-        {
-          using PartialResult =
-              std::conditional_t<
-                TupleContainsBase<wrap<F1>, ParentResultInput>::value,
-                std::tuple<>,
-                std::tuple<wrap<F1>>
-              >;
-
-          using AggregateResult = decltype(std::tuple_cat(
-              ParentResultInput(), PartialResult()));
-
-          using type = decltype(std::tuple_cat(
-              PartialResult(),
-              typename Impl<AggregateResult, Others...>::type()));
-        };
-
-        using type =
-          typename unwrap<
-            typename Impl<std::tuple<>, InputTupleArgs...>::type
-          >::type;
+        using type = typename ToTuple<
+            typename RemoveListRedundancies<TypeList<InputTupleArgs...>>::type
+        >::type;
       };
 
       /////////////////////////////////////////////////
@@ -325,19 +325,20 @@ namespace gz
       {
         using type = std::conditional_t<
             std::is_void_v<typename FeatureOrList::RequiredFeatures>,
-            std::tuple<FeatureOrList>,
-            decltype(std::tuple_cat(
-              std::tuple<FeatureOrList>(),
+            TypeList<FeatureOrList>,
+            typename TypeListCat<
+              TypeList<FeatureOrList>,
               typename FlattenFeatures<
-                typename FeatureOrList::RequiredFeatures>::type()))
+                typename FeatureOrList::RequiredFeatures>::type>::type
         >;
       };
 
       /////////////////////////////////////////////////
       template <typename List>
-      struct ExpandFeatures<List, std::void_t<typename List::Features>>
+      struct ExpandFeatures<List, std::void_t<typename List::FeatureTuple>>
       {
-        using type = typename FlattenFeatures<typename List::Features>::type;
+        using type =
+            typename FlattenFeatures<typename List::FeatureTuple>::type;
       };
 
       /////////////////////////////////////////////////
@@ -353,15 +354,23 @@ namespace gz
       template <typename... Features>
       struct FlattenFeatures<std::tuple<Features...>, std::void_t<>>
       {
-        using type = decltype(std::tuple_cat(
-            typename ExpandFeatures<Features>::type()...));
+        using type = typename TypeListCat<
+            typename ExpandFeatures<Features>::type...>::type;
+      };
+
+      /////////////////////////////////////////////////
+      template <typename... Features>
+      struct FlattenFeatures<TypeList<Features...>, std::void_t<>>
+      {
+        using type = typename TypeListCat<
+            typename ExpandFeatures<Features>::type...>::type;
       };
 
       /////////////////////////////////////////////////
       template <>
       struct FlattenFeatures<void>
       {
-        using type = std::tuple<>;
+        using type = TypeList<>;
       };
 
       /////////////////////////////////////////////////
@@ -374,7 +383,7 @@ namespace gz
       template <typename PartialResultInput>
       struct CombineListsImpl<PartialResultInput>
       {
-        using type = std::tuple<>;
+        using type = TypeList<>;
       };
 
       template <typename ParentResultInput, typename F1, typename... Others>
@@ -383,66 +392,61 @@ namespace gz
         // Add the features of the feature list F1, while filtering out any
         // repeated features.
         using InitialResult =
-            typename SubtractTuple<ParentResultInput>
+            typename SubtractList<ParentResultInput>
             ::template From<typename ExtractFeatures<F1>::type>::type;
 
         // Add the features that are required by F1, while filtering out any
         // repeated features.
-        using PartialResult = decltype(std::tuple_cat(
-            InitialResult(),
-            typename SubtractTuple<
-              decltype(std::tuple_cat(ParentResultInput(), InitialResult()))>
+        using PartialResult = typename TypeListCat<
+            InitialResult,
+            typename SubtractList<
+              typename TypeListCat<ParentResultInput, InitialResult>::type>
               ::template From<
                 typename ExtractFeatures<typename F1::RequiredFeatures>::type
-            >::type()));
+            >::type>::type;
 
-        // Define the tuple that the child should use to filter its list
+        // Define the TypeList that the child should use to filter its list
         using ChildFilter =
-            decltype(std::tuple_cat(ParentResultInput(), PartialResult()));
+            typename TypeListCat<ParentResultInput, PartialResult>::type;
 
         // Construct the final result
-        using type = decltype(std::tuple_cat(
-            PartialResult(),
-            typename CombineListsImpl<ChildFilter, Others...>::type()));
+        using type = typename TypeListCat<
+            PartialResult,
+            typename CombineListsImpl<ChildFilter, Others...>::type>::type;
       };
 
       /// \private CombineLists is used to take variadic lists of features,
-      /// FeatureLists, or std::tuples of features, and collapse them into a
+      /// FeatureLists, or TypeLists of features, and collapse them into a
       /// serialized std::tuple of features.
       ///
       /// This class works recursively.
       template <typename... FeatureLists>
       struct CombineLists
       {
-        public: using Result =
-            typename CombineListsImpl<std::tuple<>, FeatureLists...>::type;
+        public: using Result = typename ToTuple<
+            typename CombineListsImpl<TypeList<>, FeatureLists...>::type>::type;
       };
 
       /////////////////////////////////////////////////
       /// \private This class helps to implement the function
       /// FeatureList::ConflictsWith(). Its implementation is conceptually
-      /// similar to TupleContainsBase.
-      template <typename SomeFeatureList, bool AssertNoConflict, typename Tuple>
+      /// similar to TypeListContainsBase.
+      template <typename SomeFeatureList, bool AssertNoConflict, typename List>
       struct ConflictingLists;
 
-      /// \private Implementation of ConflictingLists. If the Tuple argument is
-      /// not a std::tuple, this class will be undefined.
+      /// \private Implementation of ConflictingLists. If the List argument is
+      /// not a TypeList, this class will be undefined.
       template <typename SomeFeatureList, bool AssertNoConflict,
                 typename... Features>
       struct ConflictingLists<
-          SomeFeatureList, AssertNoConflict, std::tuple<Features...>>
+          SomeFeatureList, AssertNoConflict, TypeList<Features...>>
           : std::integral_constant<bool,
-              !std::is_same<
-                std::tuple<typename std::conditional<
-                  Features::template ConflictsWith<
-                    SomeFeatureList, AssertNoConflict>(),
-                  Empty, Features>::type...>,
-              std::tuple<Features...>
-            >::value> { };
+              (Features::template ConflictsWith<
+                SomeFeatureList, AssertNoConflict>() || ...)> { };
 
       /////////////////////////////////////////////////
-      /// \private Check whether any feature within a std::tuple of features
-      /// conflicts with any other feature in that tuple.
+      /// \private Check whether any feature within a TypeList of features
+      /// conflicts with any other feature in that TypeList.
       template <bool AssertNoConflict, typename... FeatureLists>
       struct SelfConflict;
 
@@ -502,15 +506,14 @@ namespace gz
       template <template<typename> class Selector, typename FeatureListT>
       struct ExtractAPI
       {
-        template <typename FeatureTuple, typename... T>
+        template <typename FeatureTypeList, typename... T>
         struct Select;
 
         template <typename... Features, typename... T>
-        struct Select<std::tuple<Features...>, T...>
+        struct Select<TypeList<Features...>, T...>
         {
-          using type =
-            typename RemoveTupleRedundancies<
-              std::tuple<typename Selector<Features>::template type<T...>...>
+          using type = typename RemoveListRedundancies<
+              TypeList<typename Selector<Features>::template type<T...>...>
             >::type;
         };
 
@@ -520,32 +523,24 @@ namespace gz
         template <typename... T>
         using Bases =
             typename Select<
-              typename FilterTuple<
+              typename FilterList<
                 Filter,
                 typename FlattenFeatures<FeatureListT>::type
               >::type,
               T...
             >::type;
 
-        template <typename... T>
-        struct S : std::tuple_size<Bases<T...>> { };
-
-        template <typename... T>
-        using IndexSequence = std::make_index_sequence<S<T...>::value>;
-
-        template <typename>
+        template <typename List>
         struct Impl;
 
-        template <std::size_t... I>
-        struct Impl<std::index_sequence<I...>>
+        template <typename... B>
+        struct Impl<TypeList<B...>>
         {
-          template<typename... T>
-          class type
-              : public virtual std::tuple_element<I, Bases<T...>>::type... { };
+          class type : public virtual B... { };
         };
 
         template <typename... T>
-        using type = typename Impl<IndexSequence<T...>>::template type<T...>;
+        using type = typename Impl<Bases<T...>>::type;
       };
     }
 
@@ -554,7 +549,7 @@ namespace gz
     template <typename F>
     constexpr bool FeatureList<FeaturesT...>::HasFeature()
     {
-      return detail::TupleContainsBase<F, Features>::value;
+      return detail::TypeListContainsBase<F, FlatFeatureTypeList>::value;
     }
 
     /////////////////////////////////////////////////
@@ -565,10 +560,11 @@ namespace gz
       // TODO(MXG): Replace this with a simple fold expression once we use C++17
       return
           detail::ConflictingLists<
-              SomeFeatureList, AssertNoConflict, Features>::value
+              SomeFeatureList, AssertNoConflict, FlatFeatureTypeList>::value
        || detail::ConflictingLists<
               FeatureList<FeaturesT...>, AssertNoConflict,
-              typename FeatureList<SomeFeatureList>::Features>::value;
+              typename FeatureList<SomeFeatureList>::FlatFeatureTypeList>::
+              value;
     }
 
     /////////////////////////////////////////////////
@@ -637,15 +633,17 @@ namespace gz
     GZ_PHYSICS_CREATE_SELECTOR(X) \
     /* Symbol used by X-types to identify other X-types */ \
     struct X ## Identifier { }; \
+    template <typename PolicyT, typename FeaturesT> \
+    struct X ## _API : public ::gz::physics::detail::ExtractAPI< \
+          detail::Select ## X, FeaturesT> \
+            ::template type<PolicyT, FeaturesT> { }; \
   } \
   template <typename PolicyT, typename FeaturesT> \
-  class X : public ::gz::physics::detail::ExtractAPI< \
-        detail::Select ## X, FeaturesT> \
-          ::template type<PolicyT, FeaturesT>, \
+  class X : public detail:: X ## _API <PolicyT, FeaturesT>, \
       public virtual Entity<PolicyT, FeaturesT> \
   { \
     public: using Identifier = detail:: X ## Identifier; \
-    public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
+    public: using UpcastIdentifiers = TypeList<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
     \
     public: X(const X&) = default; \
