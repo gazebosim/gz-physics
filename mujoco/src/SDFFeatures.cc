@@ -145,7 +145,9 @@ struct ModelKinematicStructure
     }
     else
     {
-      parent = mjs_findChild(world, parentLink->Name().c_str());
+      parent = mjs_findChild(
+          world,
+          ::sdf::JoinName(_modelInfo->name, parentLink->Name()).c_str());
     }
 
     if (!parent)
@@ -334,12 +336,31 @@ struct ModelKinematicStructure
         geom->conaffinity = 1;
         mjs_setName(geom->element,
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
+
+        const auto &pose = collision->RawPose();
+        geom->pos[0] = pose.Pos().X();
+        geom->pos[1] = pose.Pos().Y();
+        geom->pos[2] = pose.Pos().Z();
+        geom->quat[0] = pose.Rot().W();
+        geom->quat[1] = pose.Rot().X();
+        geom->quat[2] = pose.Rot().Y();
+        geom->quat[3] = pose.Rot().Z();
+
         auto shapeInfo =
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
                                    linkInfo->entityId);
+
+        // Add a site for the shape and register it in the frames map. This is
+        // required for FrameSemantics to correctly transform the local
+        // axis-aligned bounding box of the shape.
+        auto shapeSite = mjs_addSite(child, nullptr);
+        mju_copy3(shapeSite->pos, geom->pos);
+        mju_copy4(shapeSite->quat, geom->quat);
+        _base.frames[shapeInfo->entityId] =
+            std::make_shared<FrameInfo>(shapeSite, worldInfo);
       }
     }
     if (!this->childInJoint[_index] && !_sdfModel.Static())

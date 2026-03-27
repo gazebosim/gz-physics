@@ -20,6 +20,9 @@
 
 #include <mujoco/mujoco.h>
 
+#include <gz/math/AxisAlignedBox.hh>
+#include <gz/physics/Geometry.hh>
+
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -55,6 +58,9 @@ struct ShapeInfo
   mjsGeom *geom{nullptr};
   std::string name;
   std::weak_ptr<LinkInfo> linkInfo;
+
+  /// \brief Cached axis-aligned bounding box. Currently only used for meshes.
+  mutable std::optional<gz::physics::AlignedBox3d> cachedAABB;
 };
 
 struct LinkInfo

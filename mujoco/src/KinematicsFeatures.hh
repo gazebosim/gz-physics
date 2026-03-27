@@ -34,6 +34,7 @@ struct KinematicsFeatureList : FeatureList<
   LinkFrameSemantics,
   ShapeFrameSemantics,
   JointFrameSemantics,
+  ModelFrameSemantics,
   FreeGroupFrameSemantics
 > { };
 // clang-format on

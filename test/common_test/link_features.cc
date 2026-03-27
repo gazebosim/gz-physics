@@ -296,7 +296,12 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
 using LinkBoundingBoxFeaturesList = gz::physics::FeatureList<
     gz::physics::ForwardStep,
     gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetEntities,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetWorldFromEngine,
+    gz::physics::GetModelFromWorld,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetShapeFromLink,
+    gz::physics::GetShapeBoundingBox,
     gz::physics::GetLinkBoundingBox,
     gz::physics::GetModelBoundingBox
 >;
