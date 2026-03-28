@@ -58,6 +58,7 @@ foreach(test ${tests})
     PUBLIC
       gz-physics-test
       ${PROJECT_LIBRARY_TARGET_NAME}
+      ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
       ${PROJECT_LIBRARY_TARGET_NAME}-sdf
       ${PROJECT_LIBRARY_TARGET_NAME}-mesh
       gtest
