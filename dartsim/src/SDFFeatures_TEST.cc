@@ -416,7 +416,18 @@ TEST_P(SDFFeatures_TEST, CheckDartsimData)
   const auto *screwJoint = dynamic_cast<const dart::dynamics::ScrewJoint*>(
       screwJointTest->getJoint(1));
   ASSERT_NE(nullptr, screwJoint);
+<<<<<<< HEAD
   EXPECT_DOUBLE_EQ(-GZ_PI, screwJoint->getPitch());
+=======
+  EXPECT_DOUBLE_EQ(2.0, screwJoint->getPitch());
+  const dart::dynamics::SkeletonPtr ballJointTest =
+      dartWorld->getSkeleton("ball_joint_test");
+  ASSERT_NE(nullptr, ballJointTest);
+  ASSERT_EQ(2u, ballJointTest->getNumBodyNodes());
+  const auto *ballJoint = dynamic_cast<const dart::dynamics::BallJoint*>(
+      ballJointTest->getJoint(1));
+  ASSERT_NE(nullptr, ballJoint);
+>>>>>>> a9ea56c (Extract EntityStorage to a shared location so it can be used by other physics engines (#894))
 }
 
 /////////////////////////////////////////////////

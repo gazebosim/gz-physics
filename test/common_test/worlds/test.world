@@ -355,9 +355,25 @@
       <joint name="j0" type="screw">
         <parent>link0</parent>
         <child>link1</child>
-        <thread_pitch>2</thread_pitch>
+        <screw_thread_pitch>2</screw_thread_pitch>
       </joint>
     </model>
+<<<<<<< HEAD
+=======
+    <model name="ball_joint_test">
+      <link name="link0"/>
+      <link name="link1"/>
+      <joint name="j0" type="ball">
+        <parent>link0</parent>
+        <child>link1</child>
+        <axis>
+          <dynamics>
+            <damping>0.1</damping>
+          </dynamics>
+        </axis>
+      </joint>
+    </model>
+>>>>>>> a9ea56c (Extract EntityStorage to a shared location so it can be used by other physics engines (#894))
     <!-- Remove joint types as they get supported -->
     <model name="unsupported_joint_test">
       <link name="link0"/>
