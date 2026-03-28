@@ -87,6 +87,25 @@ gz_find_package(GzBullet
   PKGCONFIG bullet
   PKGCONFIG_VER_COMPARISON >=)
 
+# Check if Bullet has double precision enabled
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_INCLUDES ${BULLET_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${BULLET_LIBRARIES})
+check_cxx_source_compiles("
+#define BT_USE_DOUBLE_PRECISION
+#include <bullet/BulletCollision/CollisionShapes/btCapsuleShape.h>
+int main() {
+    btCapsuleShapeZ shape(1.0, 1.0);
+    return 0;
+}
+" BULLET_HAS_DOUBLE_PRECISION)
+if(BULLET_HAS_DOUBLE_PRECISION)
+  message(STATUS "Bullet library detected as Double Precision")
+  add_compile_definitions(BT_USE_DOUBLE_PRECISION)
+else()
+  message(STATUS "Bullet library detected as Single Precision")
+endif()
+
 message(STATUS "-------------------------------------------\n")
 
 # Plugin install dirs
