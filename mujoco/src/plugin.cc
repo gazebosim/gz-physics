@@ -22,6 +22,7 @@
 #include "KinematicsFeatures.hh"
 #include "SDFFeatures.hh"
 #include "SimulationFeatures.hh"
+#include "WorldFeatures.hh"
 
 namespace gz
 {
@@ -38,8 +39,8 @@ struct MujocoFeatures : FeatureList<
   // LinkFeatureList,
   SDFFeatureList,
   // ShapeFeatureList,
-  SimulationFeatureList
-  // WorldFeatureList
+  SimulationFeatureList,
+  WorldFeatureList
 > { };
 
 class Plugin :
@@ -51,8 +52,8 @@ class Plugin :
     // public virtual LinkFeatures,
     public virtual SDFFeatures,
     // public virtual ShapeFeatures,
-    public virtual SimulationFeatures
-    // public virtual WorldFeatures
+    public virtual SimulationFeatures,
+    public virtual WorldFeatures
 {
     public: Identity InitiateEngine(std::size_t /*_engineID*/) override
     {

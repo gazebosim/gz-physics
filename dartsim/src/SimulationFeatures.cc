@@ -202,7 +202,7 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
   this->prevLinkPoses = std::move(newPoses);
 }
 
-SimulationFeatures::RayIntersection
+SimulationFeatures::RayIntersectionInternal
 SimulationFeatures::GetRayIntersectionFromLastStep(
   const Identity &_worldID,
   const LinearVector3d &_from,
@@ -220,6 +220,8 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   // Currently, raycast supports only the Bullet collision detector.
   // For other collision detectors, the result will always be NaN.
   SimulationFeatures::RayIntersection intersection;
+  CompositeData extraData;
+
   if (result.hasHit())
   {
     // Store intersection data if there is a ray hit
@@ -227,6 +229,19 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
     intersection.point = firstHit.mPoint;
     intersection.normal = firstHit.mNormal;
     intersection.fraction = firstHit.mFraction;
+
+    // Map DART CollisionObject to gz-physics shape identity
+    if (firstHit.mCollisionObject)
+    {
+      auto *dtShapeFrame = firstHit.mCollisionObject->getShapeFrame();
+      if (dtShapeFrame && this->shapes.HasEntity(dtShapeFrame->asShapeNode()))
+      {
+        auto &extra =
+            extraData.Get<SimulationFeatures::ExtraRayIntersectionData>();
+        extra.collisionShapeId =
+            this->shapes.IdentityOf(dtShapeFrame->asShapeNode());
+      }
+    }
   }
   else
   {
@@ -238,7 +253,7 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
     intersection.fraction = std::numeric_limits<double>::quiet_NaN();
   }
 
-  return intersection;
+  return {intersection, extraData};
 }
 
 /////////////////////////////////////////////////

@@ -419,7 +419,7 @@ TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
   {
     gzwarn << "ContactForces test is skipped. "
 #if BT_BULLET_VERSION_LE_325
-           <<  "Requires bullet3 version >= 3.25."
+           <<  "Requires bullet3 version > 3.25."
     // This test requires https://github.com/bulletphysics/bullet3/pull/4462
 #else
            <<  "See https://github.com/gazebosim/gz-physics/issues/726."

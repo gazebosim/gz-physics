@@ -128,7 +128,7 @@ class SimulationFeatures :
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
 
-  public: RayIntersection GetRayIntersectionFromLastStep(
+  public: RayIntersectionInternal GetRayIntersectionFromLastStep(
       const Identity &_worldID,
       const LinearVector3d &_from,
       const LinearVector3d &_end) const override;
