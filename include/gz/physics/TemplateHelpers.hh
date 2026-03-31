@@ -79,23 +79,26 @@ namespace gz
           typename TypeListCat<L3, Rest...>::type>::type;
     };
 
-    /// \brief Convert a TypeList to a std::tuple
-    template <typename T>
-    struct ToTuple;
+    namespace detail
+    {
+      /// \brief Convert a TypeList to a std::tuple
+      template <typename T>
+      struct ToTuple;
 
-    template <typename... Ts>
-    struct ToTuple<TypeList<Ts...>> {
-      using type = std::tuple<Ts...>;
-    };
+      template <typename... Ts>
+      struct ToTuple<TypeList<Ts...>> {
+        using type = std::tuple<Ts...>;
+      };
 
-    /// \brief Convert a std::tuple to a TypeList
-    template <typename T>
-    struct TupleToTypeList;
+      /// \brief Convert a std::tuple to a TypeList
+      template <typename T>
+      struct TupleToTypeList;
 
-    template <typename... Ts>
-    struct TupleToTypeList<std::tuple<Ts...>> {
-      using type = TypeList<Ts...>;
-    };
+      template <typename... Ts>
+      struct TupleToTypeList<std::tuple<Ts...>> {
+        using type = TypeList<Ts...>;
+      };
+    }
 
     /////////////////////////////////////////////////
     /// \brief Contains a static constexpr field named `value` which will be

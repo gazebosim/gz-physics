@@ -60,16 +60,27 @@ namespace gz
     template <typename... FeaturesT>
     struct FeatureList : detail::IterateList<TypeList<FeaturesT...>>
     {
+      /// FlatFeatureTypeList is a TypeList containing all the feature classes
+      /// that are bundled in this list. This list is fully seralialized; any
+      /// hierarchy that was used to construct this FeatureList will be collapsed
+      /// in this member.
+      public: using FlatFeatureTypeList =
+          typename detail::CombineLists<FeaturesT...>::Result;
+
       /// Features is a std::tuple containing all the feature classes that are
       /// bundled in this list. This list is fully seralialized; any hierarchy
       /// that was used to construct this FeatureList will be collapsed in this
       /// member.
+      /// \note This tye is the same as FlatFeatureTypeList but the features are
+      /// contained in a std::tuple. Users are encouraged to use
+      /// FlatFeatureTypeList since it provides faster build times
       public: using Features =
-          typename detail::CombineLists<FeaturesT...>::Result;
+          typename detail::ToTuple<FlatFeatureTypeList>::type;
 
-      public: using FlatFeatureTypeList =
-          typename TupleToTypeList<Features>::type;
+      /// \brief TypeList containing the raw list of features
+      public: using FeatureTypeList = TypeList<FeaturesT...>;
 
+      /// \brief std::tuple containing the raw list of features
       public: using FeatureTuple = std::tuple<FeaturesT...>;
 
       /// \brief A static constexpr function which indicates whether a given

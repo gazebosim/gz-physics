@@ -39,8 +39,22 @@ namespace gz
       {
         static void RegisterPlugin()
         {
-          Registrar<PluginT, FeaturePolicyT, typename FeatureListT::Features>::
+          Registrar<PluginT, FeaturePolicyT,
+                    typename FeatureListT::FlatFeatureTypeList>::
               RegisterPlugin();
+        }
+      };
+
+      template <typename PluginT, typename FeaturePolicyT,
+                typename... Features>
+      struct Registrar<PluginT, FeaturePolicyT, TypeList<Features...>>
+      {
+        static void RegisterPlugin()
+        {
+          gz::plugin::detail::Registrar<
+                PluginT, Feature::Implementation<FeaturePolicyT>,
+                typename Features::template Implementation<FeaturePolicyT>...>::
+              Register();
         }
       };
 
@@ -50,10 +64,8 @@ namespace gz
       {
         static void RegisterPlugin()
         {
-          gz::plugin::detail::Registrar<
-                PluginT, Feature::Implementation<FeaturePolicyT>,
-                typename Features::template Implementation<FeaturePolicyT>...>::
-              Register();
+          Registrar<PluginT, FeaturePolicyT, TypeList<Features...>>::
+              RegisterPlugin();
         }
       };
     }

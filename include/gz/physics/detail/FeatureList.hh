@@ -162,12 +162,12 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private ExtractFeatures is used to wipe out any potential containers
       /// that might be packing a set of features (such as a tuple or a
-      /// FeatureList) and return a raw tuple of the features. This allows us to
+      /// FeatureList) and return a raw TypeList of the features. This allows us to
       /// easily get a serialized list of features at compile time.
       ///
       /// This default implementation simply takes in a single feature and puts
-      /// it into a tuple of size one. This allows us to use std::tuple_cat on
-      /// it later to combine it with tuples that may contain multiple features.
+      /// it into a TypeList of size one. This allows us to use TypeListCat on
+      /// it later to combine it with TypeLists that may contain multiple features.
       template <typename F, typename = std::void_t<> >
       class ExtractFeatures
           : public VerifyFeatures<F>
@@ -202,11 +202,10 @@ namespace gz
       template <typename SomeFeatureList>
       class ExtractFeatures<
               SomeFeatureList,
-              std::void_t<typename SomeFeatureList::Features>>
+              std::void_t<typename SomeFeatureList::FlatFeatureTypeList>>
           : public VerifyFeatures<typename SomeFeatureList::Features>
       {
-        public: using type =
-            typename TupleToTypeList<typename SomeFeatureList::Features>::type;
+        public: using type = typename SomeFeatureList::FlatFeatureTypeList;
       };
 
       /// \private This specialization skips over any void entries. This allows
@@ -301,21 +300,10 @@ namespace gz
         >::type;
       };
 
-      template <typename InputTuple>
-      struct RemoveTupleRedundancies;
-
-      template <typename... InputTupleArgs>
-      struct RemoveTupleRedundancies<std::tuple<InputTupleArgs...>>
-      {
-        using type = typename ToTuple<
-            typename RemoveListRedundancies<TypeList<InputTupleArgs...>>::type
-        >::type;
-      };
-
       /////////////////////////////////////////////////
       /// \private This template is used to take a hierarchy of FeatureLists and
-      /// flatten them into a single tuple.
-      template <typename FeatureTuple, typename = std::void_t<>>
+      /// flatten them into a single TypeList.
+      template <typename FeatureTypeList, typename = std::void_t<>>
       struct FlattenFeatures;
 
       /////////////////////////////////////////////////
@@ -335,19 +323,19 @@ namespace gz
 
       /////////////////////////////////////////////////
       template <typename List>
-      struct ExpandFeatures<List, std::void_t<typename List::FeatureTuple>>
+      struct ExpandFeatures<List, std::void_t<typename List::FeatureTypeList>>
       {
         using type =
-            typename FlattenFeatures<typename List::FeatureTuple>::type;
+            typename FlattenFeatures<typename List::FeatureTypeList>::type;
       };
 
       /////////////////////////////////////////////////
       template <typename FeatureListT>
       struct FlattenFeatures<
-          FeatureListT, std::void_t<typename FeatureListT::FeatureTuple>>
+          FeatureListT, std::void_t<typename FeatureListT::FeatureTypeList>>
       {
         using type =
-            typename FlattenFeatures<typename FeatureListT::FeatureTuple>::type;
+            typename FlattenFeatures<typename FeatureListT::FeatureTypeList>::type;
       };
 
       /////////////////////////////////////////////////
@@ -417,14 +405,14 @@ namespace gz
 
       /// \private CombineLists is used to take variadic lists of features,
       /// FeatureLists, or TypeLists of features, and collapse them into a
-      /// serialized std::tuple of features.
+      /// serialized TypeList of features.
       ///
       /// This class works recursively.
       template <typename... FeatureLists>
       struct CombineLists
       {
-        public: using Result = typename ToTuple<
-            typename CombineListsImpl<TypeList<>, FeatureLists...>::type>::type;
+        public: using Result =
+            typename CombineListsImpl<TypeList<>, FeatureLists...>::type;
       };
 
       /////////////////////////////////////////////////
