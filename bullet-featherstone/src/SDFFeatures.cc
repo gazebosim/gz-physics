@@ -1162,15 +1162,17 @@ bool SDFFeatures::AddSdfCollision(
             *mergedSubmesh.get(), maxConvexHulls, voxelResolution);
           gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
                 <<  mesh->Name() << std::endl;
-          // Create decomposed mesh and add it to MeshManager
-          // Note: MeshManager will call delete on this mesh in its destructor
-          // \todo(iche033) Consider updating MeshManager to accept
-          // unique pointers instead
-          common::Mesh *convexMesh = new common::Mesh;
-          convexMesh->SetName(convexMeshName);
-          for (const auto & submesh : decomposed)
-            convexMesh->AddSubMesh(submesh);
-          meshManager.AddMesh(convexMesh);
+
+          // Request MeshManager to allocate the mesh within gz-common.
+          // This allows MeshManager to strictly own the allocation, preventing
+          // cross-module DLL deletion crashes during teardown.
+          common::Mesh *convexMesh = meshManager.CreateMesh(convexMeshName);
+          if (convexMesh)
+          {
+            for (const auto & submesh : decomposed)
+              convexMesh->AddSubMesh(submesh);
+          }
+
           if (decomposed.empty())
           {
             // Print an error if convex decomposition returned empty submeshes
@@ -1179,7 +1181,7 @@ bool SDFFeatures::AddSdfCollision(
             gzerr << "Convex decomposition generated zero meshes: "
                    << mesh->Name() << std::endl;
           }
-          decomposedMesh = meshManager.MeshByName(convexMeshName);
+          decomposedMesh = convexMesh;
         }
       }
 

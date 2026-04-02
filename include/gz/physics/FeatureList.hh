@@ -62,8 +62,8 @@ namespace gz
     {
       /// FlatFeatureTypeList is a TypeList containing all the feature classes
       /// that are bundled in this list. This list is fully seralialized; any
-      /// hierarchy that was used to construct this FeatureList will be collapsed
-      /// in this member.
+      /// hierarchy that was used to construct this FeatureList will be
+      /// collapsed in this member.
       public: using FlatFeatureTypeList =
           typename detail::CombineLists<FeaturesT...>::Result;
 

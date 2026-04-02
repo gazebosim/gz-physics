@@ -162,12 +162,13 @@ namespace gz
       /////////////////////////////////////////////////
       /// \private ExtractFeatures is used to wipe out any potential containers
       /// that might be packing a set of features (such as a tuple or a
-      /// FeatureList) and return a raw TypeList of the features. This allows us to
-      /// easily get a serialized list of features at compile time.
+      /// FeatureList) and return a raw TypeList of the features. This allows us
+      /// to easily get a serialized list of features at compile time.
       ///
       /// This default implementation simply takes in a single feature and puts
       /// it into a TypeList of size one. This allows us to use TypeListCat on
-      /// it later to combine it with TypeLists that may contain multiple features.
+      /// it later to combine it with TypeLists that may contain multiple
+      /// features.
       template <typename F, typename = std::void_t<> >
       class ExtractFeatures
           : public VerifyFeatures<F>
@@ -334,8 +335,8 @@ namespace gz
       struct FlattenFeatures<
           FeatureListT, std::void_t<typename FeatureListT::FeatureTypeList>>
       {
-        using type =
-            typename FlattenFeatures<typename FeatureListT::FeatureTypeList>::type;
+        using type = typename FlattenFeatures<
+            typename FeatureListT::FeatureTypeList>::type;
       };
 
       /////////////////////////////////////////////////

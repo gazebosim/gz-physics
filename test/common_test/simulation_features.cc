@@ -2211,6 +2211,13 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
           rayIntersection.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon));
       EXPECT_DOUBLE_EQ(rayIntersection.fraction, 0.25);
 
+      // Check that the extra data contains a valid collision shape ID
+      auto *extraData = result.template
+          Query<gz::physics::World3d<FeaturesRayIntersections>::ExtraRayIntersectionData>();
+      ASSERT_NE(nullptr, extraData);
+      EXPECT_NE(0u, extraData->collisionShapeId);
+
+
       // ray does not hit the sphere
       result = world->GetRayIntersectionFromLastStep(
           Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10));
@@ -2221,6 +2228,11 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
       ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
       ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
       ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+
+      // Check that extra data has no valid collision shape ID for a miss
+      auto *extraDataMiss = result.template
+          Query<gz::physics::World3d<FeaturesRayIntersections>::ExtraRayIntersectionData>();
+      EXPECT_EQ(nullptr, extraDataMiss);      
     }
   }
 }
@@ -2254,6 +2266,11 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
       ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
       ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
       ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+
+      auto *extraData = result.template
+          Query<gz::physics::World3d<FeaturesRayIntersections>::ExtraRayIntersectionData>();
+      EXPECT_EQ(nullptr, extraData);
+      
     }
   }
 }

@@ -121,12 +121,13 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   const auto &models = worldInfo->models;
-  if (models.indexInContainerToID.begin()->second.size() <= _modelIndex)
+  const auto &indexInContainerToID =
+      models.indexInContainerToID.at(_worldID);
+  if (indexInContainerToID.size() <= _modelIndex)
   {
     return this->GenerateInvalidId();
   }
-  const std::size_t id =
-      models.indexInContainerToID.begin()->second[_modelIndex];
+  const std::size_t id = indexInContainerToID[_modelIndex];
   return this->GenerateIdentity(id, models.at(id));
 }
 /////////////////////////////////////////////////
@@ -135,6 +136,10 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   const std::string scopedName = this->JoinNames(worldInfo->name, _modelName);
+  if (!worldInfo->models.HasEntity(scopedName))
+  {
+    return this->GenerateInvalidId();
+  }
   const std::size_t id = worldInfo->models.IdentityOf(scopedName);
   return this->GenerateIdentity(id, worldInfo->models.at(id));
 }
@@ -176,15 +181,15 @@ std::size_t EntityManagementFeatures::GetLinkCount(
 Identity EntityManagementFeatures::GetLink(const Identity &_modelID,
                                            std::size_t _linkIndex) const
 {
-  const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
-  if (_linkIndex >= model->links.indexInContainerToID.size())
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo->links.indexInContainerToID.at(_modelID).size() <= _linkIndex)
   {
     return this->GenerateInvalidId();
   }
 
   const std::size_t id =
-      model->links.indexInContainerToID.begin()->second[_linkIndex];
-  return this->GenerateIdentity(id, model->links.at(id));
+      modelInfo->links.indexInContainerToID.at(_modelID)[_linkIndex];
+  return this->GenerateIdentity(id, modelInfo->links.at(id));
 }
 
 /////////////////////////////////////////////////
@@ -236,18 +241,24 @@ Identity EntityManagementFeatures::GetModelOfLink(const Identity &_linkID) const
 }
 
 /////////////////////////////////////////////////
-bool EntityManagementFeatures::RemoveModel(const Identity &/* _modelID */)
+bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
-  // TODO(azeey) Implement RemoveModel
-  return false;
+  if (this->ModelRemoved(_modelID))
+  {
+    return false;
+  }
+
+  const auto *worldInfo =
+      this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
+  return this->RemoveModelImpl(worldInfo->entityId, _modelID);
 }
 
 /////////////////////////////////////////////////
-bool EntityManagementFeatures::ModelRemoved(
-    const Identity &/* _modelID */) const
+bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
-  // TODO(azeey) Implement RemoveModel
-  return false;
+  const auto *worldInfo =
+      this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
+  return !worldInfo->models.HasEntity(_modelID);
 }
 
 /////////////////////////////////////////////////
@@ -262,12 +273,12 @@ Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, std::size_t _shapeIndex) const
 {
   const auto linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
-  if (_shapeIndex >= linkInfo->shapes.indexInContainerToID.size())
+  if (linkInfo->shapes.indexInContainerToID.at(_linkID).size() <= _shapeIndex)
   {
     return this->GenerateInvalidId();
   }
   const std::size_t id =
-      linkInfo->shapes.indexInContainerToID.begin()->second[_shapeIndex];
+      linkInfo->shapes.indexInContainerToID.at(_linkID)[_shapeIndex];
   return this->GenerateIdentity(id, linkInfo->shapes.at(id));
 }
 
@@ -330,18 +341,25 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByIndex(
-    const Identity & /* _worldID */, std::size_t /* _modelIndex */)
+    const Identity &_worldID, std::size_t _modelIndex)
 {
-  // TODO(azeey) Implement RemoveModelByIndex
-  return false;
+  const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
+  if (_modelIndex >= worldInfo->models.size())
+  {
+    return false;
+  }
+
+  const std::size_t modelId =
+      worldInfo->models.indexInContainerToID.at(_worldID)[_modelIndex];
+  return this->RemoveModelImpl(_worldID, modelId);
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModelByName(
-    const Identity & /* _worldID */, const std::string & /* _modelName  */)
+    const Identity &_worldID, const std::string &_modelName)
 {
-  // TODO(azeey) Implement RemoveModelByName
-  return false;
+  const std::size_t modelId = this->GetModel(_worldID, _modelName);
+  return this->RemoveModelImpl(_worldID.id, modelId);
 }
 
 /////////////////////////////////////////////////
@@ -358,6 +376,45 @@ bool EntityManagementFeatures::RemoveNestedModelByName(
 {
   // TODO(azeey) Implement RemoveNestedModelByName
   return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
+                                               const std::size_t _modelID)
+{
+  auto worldInfo = this->worlds.at(_worldID);
+  if (!worldInfo || !worldInfo->models.HasEntity(_modelID))
+  {
+    return false;
+  }
+
+  auto modelInfo = worldInfo->models.at(_modelID);
+  const std::string scopedName =
+      this->JoinNames(worldInfo->name, modelInfo->name);
+
+  // \todo(iche033) Remove nested models once supported.
+
+  for (const auto &[linkId, linkInfo] : modelInfo->links.idToObject)
+  {
+    for (const auto &[shapeId, shapeInfo] : linkInfo->shapes.idToObject)
+    {
+      this->frames.erase(shapeId);
+    }
+    this->frames.erase(linkId);
+  }
+
+  this->frames.erase(_modelID);
+
+  // Remove the body from mjSpec
+  if (modelInfo->body)
+  {
+    mjs_delete(worldInfo->mjSpecObj, modelInfo->body->element);
+  }
+
+  worldInfo->models.RemoveEntity(scopedName);
+  worldInfo->specDirty = true;
+
+  return true;
 }
 }  // namespace mujoco
 }  // namespace physics
