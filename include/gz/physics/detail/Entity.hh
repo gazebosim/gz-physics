@@ -69,7 +69,7 @@ namespace gz
 
       /////////////////////////////////////////////////
       /// \brief The entity type "From" must contain all the features that are
-      /// found within the enttiy type "To" in order for an upcast to be valid.
+      /// found within the entity type "To" in order for an upcast to be valid.
       template <typename To, typename From>
       struct HasAllFeatures
       {
