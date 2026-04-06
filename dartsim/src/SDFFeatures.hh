@@ -22,8 +22,6 @@
 #include <string>
 #include <utility>
 
-#include <gz/physics/dartsim-plugin/Export.hh>
-
 #include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructJoint.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
@@ -52,7 +50,7 @@ struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfVisual
 > { };
 
-class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE SDFFeatures :
+class SDFFeatures :
     public virtual EntityManagementFeatures,
     public virtual Implements3d<SDFFeatureList>
 {
