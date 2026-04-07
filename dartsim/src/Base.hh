@@ -39,6 +39,7 @@
 #include <gz/math/Inertial.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/dartsim-plugin/Export.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 #include <sdf/Types.hh>
 
@@ -661,6 +662,8 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
     return this->models.at(_modelID);
   }
 
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+
   public: EntityStorage<DartWorldPtr, std::string> worlds;
   public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
@@ -682,6 +685,8 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
   /// \brief Map from welded body nodes to the LinkInfo for the original link
   /// they are welded to. This is useful when detaching joints.
   public: std::unordered_map<DartBodyNode*, LinkInfo*> linkByWeldedNode;
+
+  GZ_UTILS_WARN_RESUME__DLL_INTERFACE_MISSING
 
   /// \brief A debug function to list the models and their immediate
   /// nested models, links and joints.
