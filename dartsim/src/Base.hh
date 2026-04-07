@@ -38,6 +38,7 @@
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Inertial.hh>
 #include <gz/physics/Implements.hh>
+#include <gz/physics/dartsim-plugin/Export.hh>
 
 #include <sdf/Types.hh>
 
@@ -259,7 +260,8 @@ struct EntityStorage
   }
 };
 
-class Base : public Implements3d<FeatureList<Feature>>
+class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
+    : public Implements3d<FeatureList<Feature>>
 {
   public: using DartWorld = dart::simulation::World;
   public: using DartWorldPtr = dart::simulation::WorldPtr;

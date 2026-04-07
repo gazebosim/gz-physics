@@ -20,6 +20,8 @@
 
 #include <string>
 
+#include <gz/physics/dartsim-plugin/Export.hh>
+
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/Shape.hh>
 #include <gz/physics/GetEntities.hh>
@@ -44,7 +46,7 @@ struct EntityManagementFeatureList : FeatureList<
   WorldModelFeature
 > { };
 
-class EntityManagementFeatures :
+class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
