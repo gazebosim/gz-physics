@@ -266,13 +266,13 @@ std::optional<std::vector<GzRayResult>> GzBulletCollisionDetector::BatchRaycast(
   for (const auto &ray : _rays)
   {
     const btVector3 btFrom(
-      static_cast<btScalar>(ray.from.x()),
-      static_cast<btScalar>(ray.from.y()),
-      static_cast<btScalar>(ray.from.z()));
+      static_cast<btScalar>(ray.origin.x()),
+      static_cast<btScalar>(ray.origin.y()),
+      static_cast<btScalar>(ray.origin.z()));
     const btVector3 btTo(
-      static_cast<btScalar>(ray.to.x()),
-      static_cast<btScalar>(ray.to.y()),
-      static_cast<btScalar>(ray.to.z()));
+      static_cast<btScalar>(ray.target.x()),
+      static_cast<btScalar>(ray.target.y()),
+      static_cast<btScalar>(ray.target.z()));
 
     btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
     btWorld->rayTest(btFrom, btTo, rayCallback);
@@ -288,9 +288,11 @@ std::optional<std::vector<GzRayResult>> GzBulletCollisionDetector::BatchRaycast(
     }
     else
     {
+      // No object in range: fraction is +INF per REP-117.
+      // point and normal are undefined (NaN) when there is no hit.
       constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
       result.point = Eigen::Vector3d::Constant(kNaN);
-      result.fraction = kNaN;
+      result.fraction = std::numeric_limits<double>::infinity();
       result.normal = Eigen::Vector3d::Constant(kNaN);
     }
     results.push_back(std::move(result));

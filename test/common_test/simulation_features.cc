@@ -2334,16 +2334,16 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
       EXPECT_DOUBLE_EQ(0.25, hit.fraction);
     }
 
-    // Ray 1 — misses; all numeric fields NaN (REP-117)
+    // Ray 1 — misses; fraction is +INF (no object in range, per REP-117).
+    // point and normal are undefined (NaN) when there is no hit.
     {
       const auto &miss = results[1];
-      EXPECT_TRUE(std::isnan(miss.fraction));
+      EXPECT_TRUE(std::isinf(miss.fraction))
+        << "miss fraction should be +INF: " << miss.fraction;
       EXPECT_TRUE(miss.point.array().isNaN().all())
         << "miss point should be NaN: " << miss.point.transpose();
       EXPECT_TRUE(miss.normal.array().isNaN().all())
         << "miss normal should be NaN: " << miss.normal.transpose();
-      EXPECT_TRUE(std::isnan(miss.fraction))
-        << "miss fraction should be NaN: " << miss.fraction;
     }
   }
 }
@@ -2406,10 +2406,9 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
         world->GetBatchRayIntersectionFromLastStep(rays);
 
       ASSERT_EQ(1u, results.size());
-      EXPECT_TRUE(std::isnan(results[0].fraction));
+      EXPECT_TRUE(std::isinf(results[0].fraction));
       EXPECT_TRUE(results[0].point.array().isNaN().all());
       EXPECT_TRUE(results[0].normal.array().isNaN().all());
-      EXPECT_TRUE(std::isnan(results[0].fraction));
     }
   }
 }
@@ -2465,7 +2464,7 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 
     for (std::size_t i = 0; i < cases.size(); ++i)
     {
-      EXPECT_EQ(cases[i].expectedHit, !std::isnan(results[i].fraction))
+      EXPECT_EQ(cases[i].expectedHit, !std::isinf(results[i].fraction))
         << "ray index " << i << " hit mismatch";
     }
   }
