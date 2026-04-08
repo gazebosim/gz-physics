@@ -1,0 +1,185 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <world name="single_pendulum_with_base">
+    <scene>
+      <ambient>0.2 0.2 0.2 1.0</ambient>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <emissive>0.8 0.8 0.8 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="pendulum_with_base">
+      <link name="base">
+        <inertial>
+          <mass>100</mass>
+        </inertial>
+        <visual name="vis_plate_on_ground">
+          <pose>0 0 0.01 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.8</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <diffuse>1 1 0 1</diffuse>
+          </material>
+        </visual>
+        <visual name="vis_pole">
+          <pose>0.275 0 1.1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 0.2 2.2</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>1 1 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name="col_plate_on_ground">
+          <pose>0 0 0.01 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.8</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <collision name="col_pole">
+          <pose>0.275 0 1.1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 0.2 2.2</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.1</mu>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+      </link>
+      <!-- arm, length 1, initial position 0 degrees (down) -->
+      <link name="arm">
+        <pose>0 0 2.1 0 0 0</pose>
+        <self_collide>0</self_collide>
+        <inertial>
+          <pose>0 0 -0.5 0 0 0</pose>
+          <mass>6.0</mass>
+          <inertia>
+            <ixx>.515</ixx>
+            <iyy>.515</iyy>
+            <izz>.03</izz>
+          </inertia>
+        </inertial>
+        <visual name="vis">
+          <pose>0.05 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.3</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <diffuse>1 1 0 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="vis_cylinder">
+          <pose>0 0 -0.5 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.9</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <diffuse>1 1 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name="col">
+          <pose>0.05 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.3</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.1</mu>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+
+        <collision name="col_cylinder">
+          <pose>0 0 -0.5 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.1</radius>
+              <length>0.9</length>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+
+      <!-- pin joint for arm, at origin of arm -->
+      <joint name="upper_joint" type="revolute">
+        <parent>base</parent>
+        <child>arm</child>
+        <axis>
+          <xyz>1.0 0 0</xyz>
+        </axis>
+      </joint>
+
+      <plugin
+        filename="gz-sim-joint-state-publisher-system"
+        name="gz::sim::systems::JointStatePublisher">
+        <topic>joint_state</topic>
+      </plugin>
+    </model>
+  </world>
+</sdf>
+

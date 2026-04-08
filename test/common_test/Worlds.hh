@@ -55,6 +55,7 @@ const auto kPoseOffsetSdf = CommonTestWorld("pose_offset.sdf");
 const auto kShapesCategoryBitmaskWorld = CommonTestWorld("shapes_category_bitmask.sdf");
 const auto kShapesBitmaskWorld = CommonTestWorld("shapes_bitmask.sdf");
 const auto kShapesWorld = CommonTestWorld("shapes.world");
+const auto kSinglePendulumWithBase = CommonTestWorld("single_pendulum_with_base.sdf");
 const auto kSlipComplianceSdf = CommonTestWorld("slip_compliance.sdf");
 const auto kSphereSdf = CommonTestWorld("sphere.sdf");
 const auto kStringPendulumSdf = CommonTestWorld("string_pendulum.sdf");
