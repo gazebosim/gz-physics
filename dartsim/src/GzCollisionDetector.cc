@@ -282,7 +282,6 @@ std::optional<std::vector<GzRayResult>> GzBulletCollisionDetector::BatchRaycast(
     {
       const btVector3 &hp = rayCallback.m_hitPointWorld;
       const btVector3 &hn = rayCallback.m_hitNormalWorld;
-      result.hit = true;
       result.point << hp.x(), hp.y(), hp.z();
       result.normal << hn.x(), hn.y(), hn.z();
       result.fraction = static_cast<double>(rayCallback.m_closestHitFraction);

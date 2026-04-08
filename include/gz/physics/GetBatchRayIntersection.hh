@@ -42,14 +42,11 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
     public: using VectorType =
       typename FromPolicy<PolicyT>::template Use<LinearVector>;
 
-    /// \brief True if the ray intersected an object; false on a miss.
-    /// When false, point, normal, and fraction carry no meaningful value.
-    bool hit{false};
-
     /// \brief The hit point in world coordinates
     VectorType point;
 
     /// \brief The fraction of the ray length at the intersection/hit point.
+    /// NaN if the ray did not intersect any object.
     Scalar fraction;
 
     /// \brief The normal at the hit point in world coordinates

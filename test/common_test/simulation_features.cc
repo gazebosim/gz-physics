@@ -2325,7 +2325,7 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
     // Ray 0 — hits the unit sphere centred at (0,0,2)
     {
       const auto &hit = results[0];
-      EXPECT_TRUE(hit.hit);
+      EXPECT_FALSE(std::isnan(hit.fraction));
       double epsilon = 1e-3;
       EXPECT_TRUE(hit.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon))
         << "hit point: " << hit.point.transpose();
@@ -2334,10 +2334,10 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
       EXPECT_DOUBLE_EQ(0.25, hit.fraction);
     }
 
-    // Ray 1 — misses; hit must be false, numeric fields NaN (REP-117)
+    // Ray 1 — misses; all numeric fields NaN (REP-117)
     {
       const auto &miss = results[1];
-      EXPECT_FALSE(miss.hit);
+      EXPECT_TRUE(std::isnan(miss.fraction));
       EXPECT_TRUE(miss.point.array().isNaN().all())
         << "miss point should be NaN: " << miss.point.transpose();
       EXPECT_TRUE(miss.normal.array().isNaN().all())
@@ -2406,7 +2406,7 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
         world->GetBatchRayIntersectionFromLastStep(rays);
 
       ASSERT_EQ(1u, results.size());
-      EXPECT_FALSE(results[0].hit);
+      EXPECT_TRUE(std::isnan(results[0].fraction));
       EXPECT_TRUE(results[0].point.array().isNaN().all());
       EXPECT_TRUE(results[0].normal.array().isNaN().all());
       EXPECT_TRUE(std::isnan(results[0].fraction));
@@ -2465,7 +2465,7 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 
     for (std::size_t i = 0; i < cases.size(); ++i)
     {
-      EXPECT_EQ(cases[i].expectedHit, results[i].hit)
+      EXPECT_EQ(cases[i].expectedHit, !std::isnan(results[i].fraction))
         << "ray index " << i << " hit mismatch";
     }
   }
