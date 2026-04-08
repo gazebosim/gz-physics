@@ -23,6 +23,7 @@
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/Geometry.hh>
+#include <gz/physics/RayIntersection.hh>
 
 namespace gz
 {
@@ -35,23 +36,9 @@ namespace physics
 class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
     : public virtual FeatureWithRequirements<ForwardStep>
 {
+  /// \brief Alias to the shared ray intersection result type.
   public: template <typename PolicyT>
-  struct RayIntersectionT
-  {
-    public: using Scalar = typename PolicyT::Scalar;
-    public: using VectorType =
-      typename FromPolicy<PolicyT>::template Use<LinearVector>;
-
-    /// \brief The hit point in world coordinates
-    VectorType point;
-
-    /// \brief The fraction of the ray length at the intersection/hit point.
-    /// NaN if the ray did not intersect any object.
-    Scalar fraction;
-
-    /// \brief The normal at the hit point in world coordinates
-    VectorType normal;
-  };
+  using RayIntersectionT = gz::physics::RayIntersectionT<PolicyT>;
 
   public: template <typename PolicyT>
   struct RayT
@@ -75,6 +62,7 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
     /// \brief Cast multiple rays and return one result per ray.
     /// \param[in] _rays Ray queries (origin + target) in world coordinates.
     /// \return One RayIntersection per input ray, in the same order.
+    ///   fraction is +INF for rays with no object in range (REP-117).
     public: std::vector<RayIntersection>
       GetBatchRayIntersectionFromLastStep(
         const std::vector<RayQuery> &_rays) const;

@@ -36,12 +36,11 @@
 namespace dart {
 namespace collision {
 
-/// \brief Single ray query: origin and target in world coordinates.
-struct GzRay
-{
-  Eigen::Vector3d from;
-  Eigen::Vector3d to;
-};
+/// \brief Single ray query: alias for the gz-physics batch ray query type
+/// to avoid a copy when passing rays to BatchRaycast.
+using GzRay =
+    gz::physics::GetBatchRayIntersectionFromLastStepFeature
+    ::RayT<gz::physics::FeaturePolicy3d>;
 
 /// \brief Result of a single ray query.
 /// Alias for the gz-physics RayIntersection type to avoid redundant copies.

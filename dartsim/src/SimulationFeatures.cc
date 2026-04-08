@@ -245,12 +245,12 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   }
   else
   {
-    // Set invalid measurements to NaN according to REP-117
-    intersection.point =
-      Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
-    intersection.normal =
-      Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN());
-    intersection.fraction = std::numeric_limits<double>::quiet_NaN();
+    // No object in range: fraction is +INF per REP-117.
+    // point and normal are undefined (NaN) when there is no hit.
+    constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+    intersection.point = Eigen::Vector3d::Constant(kNaN);
+    intersection.normal = Eigen::Vector3d::Constant(kNaN);
+    intersection.fraction = std::numeric_limits<double>::infinity();
   }
 
   return {intersection, extraData};
@@ -268,9 +268,6 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   if (_rays.empty())
     return results;
 
-  constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
-  const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
-
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   auto *const solver = world->getConstraintSolver();
 
@@ -280,20 +277,20 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
 
   if (gzDetector)
   {
-    std::vector<dart::collision::GzRay> gzRays;
-    gzRays.reserve(_rays.size());
-    for (const auto &ray : _rays)
-      gzRays.push_back({ray.origin, ray.target});
-
     auto gzResults = gzDetector->BatchRaycast(
-        solver->getCollisionGroup().get(), gzRays);
+        solver->getCollisionGroup().get(), _rays);
     if (gzResults)
     {
       return std::move(*gzResults);
     }
   }
 
-  results.assign(_rays.size(), {kNaNVec, kNaN, kNaNVec});
+  // Unsupported collision detector: all rays report no object in range (+INF)
+  // with undefined point and normal (NaN), per REP-117.
+  constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+  const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
+  results.assign(_rays.size(),
+      {kNaNVec, std::numeric_limits<double>::infinity(), kNaNVec});
   return results;
 }
 
