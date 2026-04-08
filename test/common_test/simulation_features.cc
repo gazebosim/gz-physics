@@ -2228,7 +2228,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 
       ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
       ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
-      ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+      ASSERT_TRUE(std::isinf(rayIntersection.fraction));
 
       // Check that extra data has no valid collision shape ID for a miss
       auto *extraDataMiss = result.template
@@ -2266,7 +2266,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 
       ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
       ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
-      ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+      ASSERT_TRUE(std::isinf(rayIntersection.fraction));
 
       auto *extraData = result.template
           Query<gz::physics::World3d<FeaturesRayIntersections>::ExtraRayIntersectionData>();
