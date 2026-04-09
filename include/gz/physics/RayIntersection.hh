@@ -25,16 +25,9 @@ namespace gz
 namespace physics
 {
 
-/// \brief Result of a single ray intersection query, shared by both
-/// GetRayIntersectionFromLastStepFeature and
-/// GetBatchRayIntersectionFromLastStepFeature.
-///
-/// The \c fraction field encodes the outcome per REP-117:
-///   - A finite value in [0, 1] indicates a hit at that fraction of the ray.
-///   - +INF indicates no object was in range (a valid "no-range" reading).
-///   - NaN indicates an erroneous or unsupported measurement.
-///
-/// \c point and \c normal are only meaningful when \c fraction is finite.
+/// \brief Ray intersection result shared by both ray intersection features.
+/// fraction is finite [0,1] on hit, +INF if no object in range (REP-117),
+/// or NaN on error. point and normal are valid only on a hit.
 template <typename PolicyT>
 struct RayIntersectionT
 {
@@ -45,8 +38,7 @@ struct RayIntersectionT
   /// \brief The hit point in world coordinates.
   VectorType point;
 
-  /// \brief Fraction of the ray length at the intersection/hit point.
-  /// +INF if no object was in range; NaN on error (see REP-117).
+  /// \brief Ray fraction [0,1] on hit; +INF if no object in range; NaN on error.
   Scalar fraction;
 
   /// \brief The normal at the hit point in world coordinates.

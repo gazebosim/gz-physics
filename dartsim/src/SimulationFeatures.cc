@@ -245,8 +245,7 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   }
   else
   {
-    // No object in range: fraction is +INF per REP-117.
-    // point and normal are undefined (NaN) when there is no hit.
+    // No object in range: +INF fraction, NaN point/normal.
     constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
     intersection.point = Eigen::Vector3d::Constant(kNaN);
     intersection.normal = Eigen::Vector3d::Constant(kNaN);
@@ -285,8 +284,7 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
     }
   }
 
-  // Unsupported collision detector: all rays report no object in range (+INF)
-  // with undefined point and normal (NaN), per REP-117.
+  // Unsupported detector: return +INF fraction, NaN point/normal.
   constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
   const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
   results.assign(_rays.size(),

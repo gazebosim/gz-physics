@@ -36,8 +36,6 @@
 namespace dart {
 namespace collision {
 
-/// \brief Single ray query: alias for the gz-physics batch ray query type
-/// to avoid a copy when passing rays to BatchRaycast.
 using GzRay =
     gz::physics::GetBatchRayIntersectionFromLastStepFeature
     ::RayT<gz::physics::FeaturePolicy3d>;

@@ -62,7 +62,6 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
     /// \brief Cast multiple rays and return one result per ray.
     /// \param[in] _rays Ray queries (origin + target) in world coordinates.
     /// \return One RayIntersection per input ray, in the same order.
-    ///   fraction is +INF for rays with no object in range (REP-117).
     public: std::vector<RayIntersection>
       GetBatchRayIntersectionFromLastStep(
         const std::vector<RayQuery> &_rays) const;

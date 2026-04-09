@@ -2334,8 +2334,7 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
       EXPECT_DOUBLE_EQ(0.25, hit.fraction);
     }
 
-    // Ray 1 — misses; fraction is +INF (no object in range, per REP-117).
-    // point and normal are undefined (NaN) when there is no hit.
+    // Ray 1 — misses; +INF fraction, NaN point/normal.
     {
       const auto &miss = results[1];
       EXPECT_TRUE(std::isinf(miss.fraction))
