@@ -26,6 +26,55 @@ namespace physics
 {
 namespace mujoco
 {
+namespace {
+
+// Store joint position, velocity, acceleration and force indices. This is an
+// optimiztion that avoids looking up these values in every simulation step.
+// Note: qvelAddr is also used for acceleration
+void resolveJointIndices(WorldInfo &_worldInfo)
+{
+  const auto &m = _worldInfo.mjModelObj;
+  for (const auto &model : _worldInfo.models.idToObject)
+  {
+    for (auto &joint: model.second->joints.idToObject)
+    {
+      auto &jointInfo = joint.second;
+      // Reset in case we encounter errors
+      jointInfo->qposAddr = -1;
+      jointInfo->qvelAccelAddr = -1;
+      int jointId = mjs_getId(jointInfo->joint->element);
+      if (jointId < 0 || jointId > m->njnt)
+      {
+        gzerr << "Error resolving the index of joint [" << jointInfo->name
+              << "] in the mjData \n";
+        continue;
+      }
+
+      int qposAddr = m->jnt_qposadr[jointId];
+      if (qposAddr < 0 || qposAddr > m->nq)
+      {
+        gzerr << "Error resolving the position index of joint ["
+              << jointInfo->name << "] in the mjData \n";
+        continue;
+      }
+      jointInfo->qposAddr = qposAddr;
+
+      // The qvel address is confusingly stored in jnt_dofadr, but the comment
+      // in the Mujoco documentation states: "jnt_dofadr: start addr in 'qvel'
+      // for joint's data".
+      int qvelAddr = m->jnt_dofadr[jointId];
+      if (qvelAddr < 0 || qvelAddr > m->nq)
+      {
+        gzerr << "Error resolving the velocity index of joint ["
+              << jointInfo->name << "] in the mjData \n";
+        continue;
+      }
+      jointInfo->qvelAccelAddr = qvelAddr;
+    }
+  }
+
+}
+}
 
 bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 {
@@ -70,6 +119,8 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
       }
     }
   }
+
+  resolveJointIndices(_worldInfo);
 
   mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
   return true;

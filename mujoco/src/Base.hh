@@ -80,6 +80,8 @@ struct JointInfo
   }
   std::size_t entityId;
   mjsJoint *joint;
+  int qposAddr{-1};
+  int qvelAccelAddr{-1};
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
   WorldInfo* worldInfo{nullptr};

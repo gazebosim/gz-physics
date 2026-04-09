@@ -23,6 +23,8 @@
 #include <dart/dynamics/PrismaticJoint.hpp>
 #include <dart/dynamics/RevoluteJoint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
+#include <gz/math/Helpers.hh>
+#include "Base.hh"
 
 #include "JointFeatures.hh"
 
@@ -34,23 +36,60 @@ namespace mujoco {
 double JointFeatures::GetJointPosition(
     const Identity &_id, std::size_t _dof) const
 {
-  return 0;
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set position on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return math::NAN_D;
+  }
+
+  if (jointInfo->qposAddr < 0)
+    return math::NAN_D;
+
+  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
+  // this joint
+  return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->qposAddr];
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointVelocity(
     const Identity &_id, std::size_t _dof) const
 {
-  return 0;
-  // return this->ReferenceInterface<JointInfo>(_id)->joint->getVelocity(_dof);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set position on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return math::NAN_D;
+  }
+
+  if (jointInfo->qvelAccelAddr < 0)
+    return math::NAN_D;
+
+  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
+  // this joint
+  return jointInfo->worldInfo->mjDataObj->qvel[jointInfo->qvelAccelAddr];
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointAcceleration(
     const Identity &_id, std::size_t _dof) const
 {
-  return 0;
-  // return this->ReferenceInterface<JointInfo>(_id)->joint->getAcceleration(_dof);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set position on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return math::NAN_D;
+  }
+
+  if (jointInfo->qvelAccelAddr < 0)
+    return math::NAN_D;
+
+  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
+  // this joint
+  return jointInfo->worldInfo->mjDataObj->qacc[jointInfo->qvelAccelAddr];
 }
 
 /////////////////////////////////////////////////
@@ -73,38 +112,60 @@ Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 void JointFeatures::SetJointPosition(
     const Identity &_id, std::size_t _dof, double _value)
 {
-  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
-  // Take extra care that the value is finite. A nan can cause the DART
-  // constraint solver to fail, which will in turn either cause a crash or
-  // collisions to fail
-  // if (!std::isfinite(_value))
-  // {
-  //   gzerr << "Invalid joint position value [" << _value << "] set on joint ["
-  //          << joint->getName() << " DOF " << _dof
-  //          << "]. The value will be ignored\n";
-  //   return;
-  // }
-  // TODO(azeey): Implement
+  // Take extra care that the value is finite. A nan might cause the physics
+  // engine to fail
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint position value [" << _value << "] set on joint ["
+           << jointInfo->name << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set position on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return;
+  }
+
+  if (jointInfo->qposAddr < 0)
+    return;
+
+  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
+  // this joint
+  jointInfo->worldInfo->mjDataObj->qpos[jointInfo->qposAddr] = _value;
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
-  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
-  // Take extra care that the value is finite. A nan can cause the DART
-  // constraint solver to fail, which will in turn either cause a crash or
-  // collisions to fail
-  // if (!std::isfinite(_value))
-  // {
-  //   gzerr << "Invalid joint velocity value [" << _value << "] set on joint ["
-  //          << joint->getName() << " DOF " << _dof
-  //          << "]. The value will be ignored\n";
-  //   return;
-  // }
-  // TODO(azeey): Implement
+  // Take extra care that the value is finite. A nan might cause the physics
+  // engine to fail
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint position value [" << _value << "] set on joint ["
+           << jointInfo->name << " DOF " << _dof
+           << "]. The value will be ignored\n";
+    return;
+  }
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set position on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return;
+  }
+
+  if (jointInfo->qvelAccelAddr < 0)
+    return;
+
+  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
+  // this joint
+  jointInfo->worldInfo->mjDataObj->qvel[jointInfo->qvelAccelAddr] = _value;
 }
 
 /////////////////////////////////////////////////

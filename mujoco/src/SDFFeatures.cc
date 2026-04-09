@@ -458,7 +458,7 @@ struct ModelKinematicStructure
         mjsJoint * joint{nullptr};
         if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
         {
-          auto joint = mjs_addJoint(child, nullptr);
+          joint = mjs_addJoint(child, nullptr);
           joint->type = mjJNT_HINGE;
           const auto *sdfAxis = sdfJoint->Axis(0);
           convertJointAxis(sdfAxis, joint->axis);
@@ -485,7 +485,7 @@ struct ModelKinematicStructure
         auto jointInfo =
           std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
         jointInfo->name = sdfJoint->Name();
-        jointInfo->modelInfo = _modelInfo;
+        jointInfo->joint = joint;
         jointInfo->worldInfo = worldInfo;
 
         // auto childSite = mjs_addSite(child, nullptr);
@@ -632,6 +632,8 @@ Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
       continue;
     this->ConstructSdfModel(worldID, *model);
   }
+
+  this->RecompileSpec(*worldInfo);
 
   return worldID;
 }
