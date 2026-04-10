@@ -39,17 +39,17 @@ double JointFeatures::GetJointPosition(
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (!jointInfo->joint)
   {
-    gzerr << "Cannot set position on joint [" << jointInfo->name
+    gzerr << "Cannot get position for joint [" << jointInfo->name
           << "] because it is a fixed joint.\n";
     return math::NAN_D;
   }
 
-  if (jointInfo->qposAddr < 0)
+  if (jointInfo->nq_index < 0)
     return math::NAN_D;
 
   // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
   // this joint
-  return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->qposAddr];
+  return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index];
 }
 
 /////////////////////////////////////////////////
@@ -59,17 +59,17 @@ double JointFeatures::GetJointVelocity(
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (!jointInfo->joint)
   {
-    gzerr << "Cannot set position on joint [" << jointInfo->name
+    gzerr << "Cannot get velocity for joint [" << jointInfo->name
           << "] because it is a fixed joint.\n";
     return math::NAN_D;
   }
 
-  if (jointInfo->qvelAccelAddr < 0)
+  if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
   // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
   // this joint
-  return jointInfo->worldInfo->mjDataObj->qvel[jointInfo->qvelAccelAddr];
+  return jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index];
 }
 
 /////////////////////////////////////////////////
@@ -79,17 +79,17 @@ double JointFeatures::GetJointAcceleration(
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (!jointInfo->joint)
   {
-    gzerr << "Cannot set position on joint [" << jointInfo->name
+    gzerr << "Cannot get acceleration for joint [" << jointInfo->name
           << "] because it is a fixed joint.\n";
     return math::NAN_D;
   }
 
-  if (jointInfo->qvelAccelAddr < 0)
+  if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
   // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
   // this joint
-  return jointInfo->worldInfo->mjDataObj->qacc[jointInfo->qvelAccelAddr];
+  return jointInfo->worldInfo->mjDataObj->qacc[jointInfo->nv_index];
 }
 
 /////////////////////////////////////////////////
@@ -130,12 +130,12 @@ void JointFeatures::SetJointPosition(
     return;
   }
 
-  if (jointInfo->qposAddr < 0)
+  if (jointInfo->nq_index < 0)
     return;
 
   // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
   // this joint
-  jointInfo->worldInfo->mjDataObj->qpos[jointInfo->qposAddr] = _value;
+  jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -148,24 +148,24 @@ void JointFeatures::SetJointVelocity(
   // engine to fail
   if (!std::isfinite(_value))
   {
-    gzerr << "Invalid joint position value [" << _value << "] set on joint ["
+    gzerr << "Invalid joint velocity value [" << _value << "] set on joint ["
            << jointInfo->name << " DOF " << _dof
            << "]. The value will be ignored\n";
     return;
   }
   if (!jointInfo->joint)
   {
-    gzerr << "Cannot set position on joint [" << jointInfo->name
+    gzerr << "Cannot set velocity on joint [" << jointInfo->name
           << "] because it is a fixed joint.\n";
     return;
   }
 
-  if (jointInfo->qvelAccelAddr < 0)
+  if (jointInfo->nv_index < 0)
     return;
 
   // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
   // this joint
-  jointInfo->worldInfo->mjDataObj->qvel[jointInfo->qvelAccelAddr] = _value;
+  jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -191,19 +191,30 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, std::size_t _dof, double _value)
 {
-  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
-  // Take extra care that the value is finite. A nan can cause the DART
-  // constraint solver to fail, which will in turn either cause a crash or
-  // collisions to fail
+  // Take extra care that the value is finite. A nan might cause the physics
+  // engine to fail
   if (!std::isfinite(_value))
   {
-    // gzerr << "Invalid joint force value [" << _value << "] set on joint ["
-    //        << joint->name << " DOF " << _dof
-    //        << "]. The value will be ignored\n";
+    gzerr << "Invalid joint force value [" << _value << "] set on joint ["
+           << jointInfo->name << " DOF " << _dof
+           << "]. The value will be ignored\n";
     return;
   }
-  // TODO(azeey): Implement
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set force on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return;
+  }
+
+  if (jointInfo->nv_index < 0)
+    return;
+
+  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
+  // this joint
+  jointInfo->worldInfo->mjDataObj->qfrc_applied[jointInfo->nv_index] = _value;
 }
 
 /////////////////////////////////////////////////

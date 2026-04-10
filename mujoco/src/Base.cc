@@ -36,12 +36,17 @@ void resolveJointIndices(WorldInfo &_worldInfo)
   const auto &m = _worldInfo.mjModelObj;
   for (const auto &model : _worldInfo.models.idToObject)
   {
-    for (auto &joint: model.second->joints.idToObject)
+    for (auto &joint : model.second->joints.idToObject)
     {
       auto &jointInfo = joint.second;
+      if (!jointInfo->joint)
+      {
+        // Fixed joint
+        continue;
+      }
       // Reset in case we encounter errors
-      jointInfo->qposAddr = -1;
-      jointInfo->qvelAccelAddr = -1;
+      jointInfo->nq_index = -1;
+      jointInfo->nv_index = -1;
       int jointId = mjs_getId(jointInfo->joint->element);
       if (jointId < 0 || jointId > m->njnt)
       {
@@ -57,7 +62,7 @@ void resolveJointIndices(WorldInfo &_worldInfo)
               << jointInfo->name << "] in the mjData \n";
         continue;
       }
-      jointInfo->qposAddr = qposAddr;
+      jointInfo->nq_index = qposAddr;
 
       // The qvel address is confusingly stored in jnt_dofadr, but the comment
       // in the Mujoco documentation states: "jnt_dofadr: start addr in 'qvel'
@@ -69,7 +74,7 @@ void resolveJointIndices(WorldInfo &_worldInfo)
               << jointInfo->name << "] in the mjData \n";
         continue;
       }
-      jointInfo->qvelAccelAddr = qvelAddr;
+      jointInfo->nv_index = qvelAddr;
     }
   }
 

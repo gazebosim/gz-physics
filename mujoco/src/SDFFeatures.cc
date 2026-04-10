@@ -26,8 +26,11 @@
 #include <cstddef>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <memory>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gz/common/Console.hh>
@@ -55,7 +58,6 @@
 #include <sdf/Surface.hh>
 
 #include "Base.hh"
-#include "mujoco/mjtnum.h"
 
 namespace gz
 {
@@ -77,7 +79,8 @@ namespace {
 /////////////////////////////////////////////////
 /// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
 /// frame. If that fails, return the raw pose
-math::Pose3d resolveSdfPose(const ::sdf::SemanticPose &_semPose, const std::string &_resolveTo = "")
+math::Pose3d resolveSdfPose(const ::sdf::SemanticPose &_semPose,
+                            const std::string &_resolveTo = "")
 {
   math::Pose3d pose;
   ::sdf::Errors errors = _semPose.Resolve(pose, _resolveTo);
@@ -135,7 +138,6 @@ void copyStandardJointAxisProperties(
                                      !std::isinf(infIfNeg(_sdfAxis->Upper())));
   if (_joint->limited)
   {
-    std::cout << "axis: " << _sdfAxis->Lower() << " " << _sdfAxis->Upper() << "\n";
     _joint->range[0] = infIfNeg(_sdfAxis->Lower());
     _joint->range[1] = infIfNeg(_sdfAxis->Upper());
   }
@@ -165,10 +167,6 @@ struct ModelKinematicStructure
   std::vector<const ::sdf::Link *> parents;
   // For index i, children[i] contains the list of children of link[i]
   std::vector<std::vector<std::size_t>> children;
-  // For index i, parentInJoint[i]->parent = links[i], unless the link is
-  // "world" or that link is not referenced by any joint.
-  // TODO(azeey) This might not be needed at all.
-  std::vector<const ::sdf::Joint *> parentInJoint;
   // For index i, childInJoint[i]->child = links[i], unless that link is not
   // referenced by any joint as a child.
   std::vector<const ::sdf::Joint *> childInJoint;
@@ -246,7 +244,8 @@ struct ModelKinematicStructure
 
   void AddToSpec(Base &_base, const ::sdf::Model &_sdfModel, mjSpec *_spec,
                  std::size_t _index,
-                 const std::shared_ptr<ModelInfo> &_modelInfo, mjsBody * _parentBody)
+                 const std::shared_ptr<ModelInfo> &_modelInfo,
+                 mjsBody *_parentBody)
   {
     auto worldInfo = _modelInfo->worldInfo;
 
@@ -468,6 +467,7 @@ struct ModelKinematicStructure
         {
           gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
                  << " in joint [" << sdfJoint->Name() << "] not supported\n";
+          return;
         }
 
         // Note that no joints will be created when processing a fixed joint.
@@ -477,10 +477,11 @@ struct ModelKinematicStructure
             ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
           mjs_setName(joint->element, mjJointName.c_str());
 
-          // Resolve the position of the joint relative to the body with which it's associated.
-          // Note that this body is the child link of the joint in SDF terms.
-          math::Vector3d jointAnchor = resolveSdfPose(sdfJoint->SemanticPose()).Pos();
-          std::copy(jointAnchor.Data(), jointAnchor.Data() + 3, joint->pos);
+          // Resolve the position of the joint relative to the body with which
+          // it's associated. Note that this body is the child link of the joint
+          // in SDF terms.
+          auto anchor = resolveSdfPose(sdfJoint->SemanticPose()).Pos();
+          std::copy(anchor.Data(), anchor.Data() + 3, joint->pos);
         }
         auto jointInfo =
           std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
@@ -488,12 +489,8 @@ struct ModelKinematicStructure
         jointInfo->joint = joint;
         jointInfo->worldInfo = worldInfo;
 
-        // auto childSite = mjs_addSite(child, nullptr);
-        // _base.frames[linkInfo->entityId] =
-        //   std::make_shared<FrameInfo>(childSite, worldInfo);
-
-        _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo, jointInfo->name,
-                                     _modelInfo->entityId);
+        _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
+                                     jointInfo->name, _modelInfo->entityId);
       }
     }
 
@@ -530,7 +527,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     kinTree.links.push_back(_sdfModel.LinkByIndex(i));
   }
   kinTree.parents.resize(_sdfModel.LinkCount(), nullptr);
-  kinTree.parentInJoint.resize(_sdfModel.LinkCount(), nullptr);
   kinTree.childInJoint.resize(_sdfModel.LinkCount(), nullptr);
   kinTree.children.resize(_sdfModel.LinkCount(), {});
 
@@ -538,20 +534,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   for (std::size_t i = 0; i < _sdfModel.JointCount(); ++i)
   {
     const auto *joint = _sdfModel.JointByIndex(i);
-    std::string parentLinkName;
-    // TODO(azeey) Handle errors
-    joint->ResolveParentLink(parentLinkName);
-    if (parentLinkName == "world")
-    {
-      continue;
-    }
-    auto parentIndex = kinTree.FindLinkByName(parentLinkName);
-    if (!parentIndex)
-    {
-      gzerr << "Error finding link " << parentLinkName << "\n";
-      return this->GenerateInvalidId();
-    }
-
     std::string childLinkName;
     // TODO(azeey) Handle errors
     joint->ResolveChildLink(childLinkName);
@@ -562,9 +544,23 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
       return this->GenerateInvalidId();
     }
 
+    std::string parentLinkName;
+    // TODO(azeey) Handle errors
+    joint->ResolveParentLink(parentLinkName);
+    if (parentLinkName == "world")
+    {
+      kinTree.childInJoint[*childIndex] = joint;
+      continue;
+    }
+    auto parentIndex = kinTree.FindLinkByName(parentLinkName);
+    if (!parentIndex)
+    {
+      gzerr << "Error finding link " << parentLinkName << "\n";
+      return this->GenerateInvalidId();
+    }
+
     kinTree.parents[*childIndex] = kinTree.links[*parentIndex];
     kinTree.children[*parentIndex].push_back(*childIndex);
-    kinTree.parentInJoint[*parentIndex] = joint;
     kinTree.childInJoint[*childIndex] = joint;
   }
 
@@ -594,6 +590,42 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     return this->GenerateInvalidId();
   }
 
+
+  if (!_sdfModel.SelfCollide())
+  {
+    // Mujoco requires explicitly declaring contact exclusions for body pairs
+    // in order to implement self-collide. If self collision is disabled, we
+    // need to add exclusions for every body pair in the model.
+    // Bodies in a parent-child relationship are already excluded, however, if
+    // the parent is attached to worldbody, then we need to explicitly add an
+    // exclusion since the geoms of the parent are considered part of worldbody.
+    // See https://mujoco.readthedocs.io/en/stable/computation/index.html#collision
+    // To avoid the complexity of determining that, we just add exclusions for
+    // every pair
+
+    // Avoid duplicating exclusions by tracking history. The key of this set is
+    // a pair where the first element is always less than the second.
+    std::set<std::pair<std::size_t, std::size_t>> history;
+    for (const auto [body1, id1] : modelInfo->links.objectToID)
+    {
+      for (const auto [body2, id2] : modelInfo->links.objectToID)
+      {
+        if (body1 == body2)
+          continue;
+
+        auto histKey = std::minmax(id1, id2);
+        if (history.count(histKey) > 0)
+          continue;
+
+        mjsExclude *exclude = mjs_addExclude(worldInfo->mjSpecObj);
+        mjs_setString(exclude->bodyname1,
+                      mjs_getString(mjs_getName(body1->element)));
+        mjs_setString(exclude->bodyname2,
+                      mjs_getString(mjs_getName(body2->element)));
+        history.insert(histKey);
+      }
+    }
+  }
   auto end = std::chrono::high_resolution_clock::now();
   gztrace << "Model: " << _sdfModel.Name() << " constructed in "
             << std::chrono::duration<double>(end - start).count() << "\n";

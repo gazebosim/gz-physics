@@ -70,7 +70,11 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 
   worldInfo->mjModelObj->opt.timestep = stepSize;
 
-  mj_step(worldInfo->mjModelObj, worldInfo->mjDataObj);
+  auto *m = worldInfo->mjModelObj;
+  auto *d = worldInfo->mjDataObj;
+  mj_step(m, d);
+  // Clear joint applied forces
+  std::fill(d->qfrc_applied, d->qfrc_applied + m->nv, 0.0);
 
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());

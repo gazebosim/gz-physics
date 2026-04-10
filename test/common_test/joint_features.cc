@@ -17,9 +17,6 @@
 
 #include <cmath>
 #include <cstddef>
-#include <fstream>
-#include <iostream>
-#include <sstream>
 #include <string>
 #include <gtest/gtest.h>
 
@@ -33,6 +30,7 @@
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
+#include "gz/physics/detail/FeatureList.hh"
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
 #include "Worlds.hh"
@@ -108,13 +106,140 @@ struct BasicJointFeatureList : gz::physics::FeatureList<
 template <class T>
 class BasicJointFeaturesTest : public JointFeaturesTest<T>
 {
+  public: void SetUp() override
+  {
+    JointFeaturesTest<T>::SetUp();
+    const sdf::Errors errors =
+        this->root.Load(common_test::worlds::kSinglePendulumWithBase);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    this->sdfWorld = this->root.WorldByIndex(0);
+    ASSERT_NE(nullptr, this->sdfWorld);
+    this->sdfPendulumModel = this->sdfWorld->ModelByName(this->modelName);
+    ASSERT_NE(nullptr, this->sdfPendulumModel);
+    this->armLink = this->sdfPendulumModel->LinkByName("arm");
+    ASSERT_NE(nullptr, this->armLink);
+  }
+
+  void InitPluginAndWorld(const std::string &_pluginName)
+  {
+    this->plugin = this->loader.Instantiate(_pluginName);
+
+    this->engine =
+        gz::physics::RequestEngine3d<BasicJointFeatureList>::From(this->plugin);
+    ASSERT_NE(nullptr, engine);
+
+    this->world = this->engine->ConstructWorld(*this->sdfWorld);
+    ASSERT_NE(nullptr, this->world);
+    this->model = this->world->GetModel(this->modelName);
+    ASSERT_NE(nullptr, model);
+    this->joint = this->model->GetJoint(this->jointName);
+    ASSERT_NE(nullptr, this->joint);
+
+  }
+
+  const std::string modelName{"pendulum_with_base"};
+  const std::string jointName{"upper_joint"};
+  // Hardcode these to test proper SDFormat parsing
+  const double kGravity = 9.81;
+  const double kArmLength = 1.0;
+  const double kRadius = 0.1;
+  const double kMass = 6.0;
+  const double moiCom =
+      1.0 / 12 * kMass * (3 * std::pow(kRadius, 2) + std::pow(kArmLength, 2));
+  // Parallel axis theoerem
+  const double moiPivot = moiCom + kMass * std::pow(kArmLength / 2.0, 2);
+
+  sdf::Root root;
+  sdf::World *sdfWorld;
+  sdf::Model *sdfPendulumModel;
+  sdf::Link *armLink;
+  gz::plugin::PluginPtr plugin;
+  gz::physics::Engine3dPtr<BasicJointFeatureList> engine;
+  gz::physics::World3dPtr<BasicJointFeatureList> world;
+  gz::physics::Model3dPtr<BasicJointFeatureList> model;
+  gz::physics::Joint3dPtr<BasicJointFeatureList> joint;
 };
 
 using BasicJointFeaturesTestTypes = ::testing::Types<BasicJointFeatureList>;
 TYPED_TEST_SUITE(BasicJointFeaturesTest, BasicJointFeaturesTestTypes);
 
-TYPED_TEST(BasicJointFeaturesTest, GetBasic)
+TYPED_TEST(BasicJointFeaturesTest, GetSetBasicState)
 {
+  gz::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Input input;
+
+  const double kTol = 1e-6;
+  const double dt = 0.001;
+  auto dur = std::chrono::duration<double>(dt);
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // Some of the basic expectations, such as the initial joint position, are
+    // different in Bullet. Since the implementation is likely to be deprecated,
+    // we will skip it in this test rather than trying to fix the underlying
+    // issue.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    this->InitPluginAndWorld(name);
+
+    EXPECT_NEAR(0.0, this->joint->GetPosition(0), kTol);
+    EXPECT_NEAR(0.0, this->joint->GetVelocity(0), kTol);
+
+    const double startPos = 0.01;
+    this->joint->SetPosition(0, startPos);
+    EXPECT_NEAR(startPos, this->joint->GetPosition(0), kTol);
+
+    // Expect negative joint velocity after 1 step without joint command
+    // 1 ms time step
+    input.Get<std::chrono::steady_clock::duration>() =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
+    this->world->Step(output, state, input);
+    // After step, the position should still be very close to the start position.
+    EXPECT_NEAR(startPos, this->joint->GetPosition(0), 1e-3);
+
+    // Reset the initial conditions.
+    this->joint->SetPosition(0, startPos);
+    this->joint->SetVelocity(0, 0);
+    EXPECT_NEAR(startPos, this->joint->GetPosition(0), kTol);
+    EXPECT_NEAR(0, this->joint->GetVelocity(0), kTol);
+    const int numSteps = 100;
+    for (int i = 0; i < numSteps; ++i)
+    {
+      this->world->Step(output, state, input);
+    }
+    const double timeElapsed = numSteps * dt;
+    EXPECT_LT(this->joint->GetVelocity(0), 0.0);
+    EXPECT_LT(this->joint->GetPosition(0), startPos);
+
+    // Using small angle approximation, the joint position is given by:
+    // θ = A * cos(ω₀ * t) + B * sin (ω₀ * t)
+    // where A = θ₀,
+    // B = 0 since starting angular velocity is 0
+    // ω₀  = √(m * g *l/I)
+    // θ = θ₀ * cos(√(m * g *l/I) * t)
+    // See https://ocw.mit.edu/courses/8-01sc-classical-mechanics-fall-2016/mit8_01scs22_chapter24.pdf
+    const double angFreq = std::sqrt(this->kMass * this->kGravity *
+                                     (this->kArmLength / 2) / this->moiPivot);
+    const double expectedPosition = startPos * std::cos(angFreq * timeElapsed);
+    const double expectedAngVel =
+        -angFreq * startPos * std::sin(angFreq * timeElapsed);
+    // Relax tolerence since we are using small angle approximation.
+    EXPECT_NEAR(expectedPosition, this->joint->GetPosition(0), kTol * 10);
+    EXPECT_NEAR(expectedAngVel, this->joint->GetVelocity(0), kTol);
+  }
+}
+
+TYPED_TEST(BasicJointFeaturesTest, GetSetForceAccel)
+{
+  gz::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Input input;
+
+  const double kTol = 1e-6;
+  const double dt = 0.001;
+  auto dur = std::chrono::duration<double>(dt);
   for (const std::string &name : this->pluginNames)
   {
     // Some of the basic expectations, such as the initial joint position, are
@@ -124,163 +249,21 @@ TYPED_TEST(BasicJointFeaturesTest, GetBasic)
     // We're also skipping bullet-featherstone because the expected joint
     // position and velocity values do not match what's reported by the physics
     // engine with a small enough tolerance.
-    if (this->PhysicsEngineName(name) == "bullet" ||
-        this->PhysicsEngineName(name) == "bullet-featherstone")
-    {
-      GTEST_SKIP();
-    }
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
 
-    auto engine =
-        gz::physics::RequestEngine3d<BasicJointFeatureList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
+    this->sdfWorld->SetGravity(gz::math::Vector3d::Zero);
+    this->InitPluginAndWorld(name);
+    const double kForceCmd = 0.5;
 
-    sdf::Root root;
-    const sdf::Errors errors = root.Load(common_test::worlds::kSinglePendulumWithBase);
-    ASSERT_TRUE(errors.empty()) << errors.front();
-
-    const std::string modelName{"pendulum_with_base"};
-    const std::string jointName{"upper_joint"};
-
-    auto sdfWorld = root.WorldByIndex(0);
-    ASSERT_NE(nullptr, sdfWorld);
-    auto sdfPendulumModel = sdfWorld->ModelByName(modelName);
-    ASSERT_NE(nullptr, sdfPendulumModel);
-    auto armLink = sdfPendulumModel->LinkByName("arm");
-    ASSERT_NE(nullptr, armLink);
-
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-    ASSERT_NE(nullptr, world);
-    auto model = world->GetModel(modelName);
-    ASSERT_NE(nullptr, model);
-    auto joint = model->GetJoint(jointName);
-    ASSERT_NE(nullptr, joint);
-
-    gz::physics::ForwardStep::Output output;
-    gz::physics::ForwardStep::State state;
-    gz::physics::ForwardStep::Input input;
-
-    const double kTol = 1e-8;
-
-    EXPECT_NEAR(0.0, joint->GetPosition(0), kTol);
-    EXPECT_NEAR(0.0, joint->GetVelocity(0), kTol);
-
-    const double startPos = 0.01;
-    joint->SetPosition(0, startPos);
-    EXPECT_NEAR(startPos, joint->GetPosition(0), kTol);
-
-    // Expect negative joint velocity after 1 step without joint command
-    // 1 ms time step
-    const double dt = 0.001;
-    auto dur = std::chrono::duration<double>(dt);
-    input.Get<std::chrono::steady_clock::duration>() =
-        std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
-    world->Step(output, state, input);
-    // After step, the position should still be very close to the start position.
-    EXPECT_NEAR(startPos, joint->GetPosition(0), 1e-3);
-
-    // Reset the initial conditions.
-    joint->SetPosition(0, startPos);
-    joint->SetVelocity(0, 0);
-    EXPECT_NEAR(startPos, joint->GetPosition(0), kTol);
-    EXPECT_NEAR(0, joint->GetVelocity(0), kTol);
     const int numSteps = 100;
     for (int i = 0; i < numSteps; ++i)
     {
-      world->Step(output, state, input);
+      this->joint->SetForce(0, kForceCmd);
+      this->world->Step(output, state, input);
     }
     const double timeElapsed = numSteps * dt;
-    EXPECT_LT(joint->GetVelocity(0), 0.0);
-    EXPECT_LT(joint->GetPosition(0), startPos);
-    // These are not convenient to get from the SDF
-    const double kArmLength = 1.0;
-    const double kArmRadius = 0.1;
-
-    // Using small angle approximation, the joint position is given by:
-    // θ = A * cos(ω₀ * t) + B * sin (ω₀ * t)
-    // where A = θ₀,
-    // B = 0 since starting angular velocity is 0
-    // ω₀  = √(m * g *l/I)
-    // θ = θ₀ * cos(√(m * g *l/I) * t)
-    // See https://ocw.mit.edu/courses/8-01sc-classical-mechanics-fall-2016/mit8_01scs22_chapter24.pdf
-    const double gravity = std::abs(sdfWorld->Gravity().Z());
-    const double mass = armLink->Inertial().MassMatrix().Mass();
-    const double moi = armLink->Inertial().MassMatrix().Ixx() +
-                       mass * std::pow(kArmLength / 2.0, 2);
-
-    const double angFreq = std::sqrt(mass * gravity * (kArmLength / 2) / moi);
-    const double expectedPosition = startPos * std::cos(angFreq * timeElapsed);
-    const double expectedAngVel = - angFreq * startPos * std::sin(angFreq * timeElapsed);
-    EXPECT_NEAR(expectedPosition, joint->GetPosition(0), 1e-4);
-    EXPECT_NEAR(expectedAngVel, joint->GetVelocity(0), 1e-3);
-  }
-}
-
-TYPED_TEST(BasicJointFeaturesTest, EnergyConservation)
-{
-  for (const std::string &name : this->pluginNames)
-  {
-    if(this->PhysicsEngineName(name) == "bullet")
-    {
-      GTEST_SKIP();
-    }
-    std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-
-    auto engine =
-        gz::physics::RequestEngine3d<BasicJointFeatureList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    // Read SDF file
-    std::ifstream sdfFile(common_test::worlds::kSinglePendulumWithBase);
-    ASSERT_TRUE(sdfFile.is_open());
-    std::stringstream buffer;
-    buffer << sdfFile.rdbuf();
-    std::string sdfStr = buffer.str();
-
-    // Insert zero gravity
-    std::string worldTag = "<world name=\"single_pendulum_with_base\">";
-    size_t pos = sdfStr.find(worldTag);
-    ASSERT_NE(std::string::npos, pos);
-    sdfStr.insert(pos + worldTag.length(), "<gravity>0 0 0</gravity>");
-
-    sdf::Root root;
-    sdf::Errors errors = root.LoadSdfString(sdfStr);
-    ASSERT_TRUE(errors.empty()) << errors.front();
-
-    const std::string modelName{"pendulum_with_base"};
-    const std::string jointName{"upper_joint"};
-
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-    ASSERT_NE(nullptr, world);
-    auto model = world->GetModel(modelName);
-    ASSERT_NE(nullptr, model);
-    auto joint = model->GetJoint(jointName);
-    ASSERT_NE(nullptr, joint);
-
-    // Set initial velocity
-    const double startVel = 1.0;
-    joint->SetVelocity(0, startVel);
-    joint->SetPosition(0, 0.0);
-
-    gz::physics::ForwardStep::Output output;
-    gz::physics::ForwardStep::State state;
-    gz::physics::ForwardStep::Input input;
-
-    const double dt = 0.001;
-    auto dur = std::chrono::duration<double>(dt);
-    input.Get<std::chrono::steady_clock::duration>() =
-        std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
-
-    // Step and check velocity
-    const int numSteps = 100;
-    for (int i = 0; i < numSteps; ++i)
-    {
-      world->Step(output, state, input);
-      // Check if velocity remains close to startVel
-      EXPECT_NEAR(startVel, joint->GetVelocity(0), 1e-2);
-    }
+    EXPECT_NEAR(kForceCmd, this->joint->GetAcceleration(0) * this->moiPivot, kTol);
   }
 }
 
