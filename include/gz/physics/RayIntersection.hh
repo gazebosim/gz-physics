@@ -40,7 +40,8 @@ struct RayIntersectionT
   /// \brief The hit point in world coordinates.
   VectorType point;
 
-  /// \brief Ray fraction [0,1] on hit; +INF if no object in range; NaN on error.
+  /// \brief Ray fraction [0,1] on hit; +INF if no object in range;
+  /// NaN on error.
   Scalar fraction;
 
   /// \brief The normal at the hit point in world coordinates.
