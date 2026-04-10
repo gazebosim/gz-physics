@@ -18,6 +18,8 @@
 #ifndef GZ_PHYSICS_RAYINTERSECTION_HH_
 #define GZ_PHYSICS_RAYINTERSECTION_HH_
 
+#include <cmath>
+
 #include <gz/physics/Geometry.hh>
 
 namespace gz
@@ -43,6 +45,9 @@ struct RayIntersectionT
 
   /// \brief The normal at the hit point in world coordinates.
   VectorType normal;
+
+  /// \brief Returns true if the ray intersected an object.
+  public: bool IsHit() const { return std::isfinite(fraction); }
 };
 
 }  // namespace physics
