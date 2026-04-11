@@ -229,8 +229,21 @@ void JointFeatures::SetJointForce(
 /////////////////////////////////////////////////
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
-  // return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();
-  return 0;
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+  if (!jointInfo->joint)
+  {
+    return 0;
+  }
+  auto m = jointInfo->worldInfo->mjModelObj;
+  int jntId = mjs_getId(jointInfo->joint->element);
+  if (jntId < 0 || jntId > m->njnt)
+    return 0;
+
+  int bodyId = m->jnt_bodyid[jntId];
+  if (bodyId < 0 || bodyId > m->nbody)
+    return 0;
+  return m->body_dofnum[bodyId];
 }
 
 /////////////////////////////////////////////////

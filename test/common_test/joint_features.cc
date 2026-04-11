@@ -119,6 +119,11 @@ class BasicJointFeaturesTest : public JointFeaturesTest<T>
     ASSERT_NE(nullptr, this->sdfPendulumModel);
     this->armLink = this->sdfPendulumModel->LinkByName("arm");
     ASSERT_NE(nullptr, this->armLink);
+
+    auto dur = std::chrono::duration<double>(dt);
+
+    this->input.Get<std::chrono::steady_clock::duration>() =
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
   }
 
   void InitPluginAndWorld(const std::string &_pluginName)
@@ -135,7 +140,11 @@ class BasicJointFeaturesTest : public JointFeaturesTest<T>
     ASSERT_NE(nullptr, model);
     this->joint = this->model->GetJoint(this->jointName);
     ASSERT_NE(nullptr, this->joint);
+  }
 
+  void Step()
+  {
+    this->world->Step(this->output, this->state, this->input);
   }
 
   const std::string modelName{"pendulum_with_base"};
@@ -149,6 +158,11 @@ class BasicJointFeaturesTest : public JointFeaturesTest<T>
       1.0 / 12 * kMass * (3 * std::pow(kRadius, 2) + std::pow(kArmLength, 2));
   // Parallel axis theoerem
   const double moiPivot = moiCom + kMass * std::pow(kArmLength / 2.0, 2);
+
+  const double dt = 0.001;
+  gz::physics::ForwardStep::Output output;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Input input;
 
   sdf::Root root;
   sdf::World *sdfWorld;
@@ -166,14 +180,7 @@ TYPED_TEST_SUITE(BasicJointFeaturesTest, BasicJointFeaturesTestTypes);
 
 TYPED_TEST(BasicJointFeaturesTest, GetSetBasicState)
 {
-  gz::physics::ForwardStep::Output output;
-  gz::physics::ForwardStep::State state;
-  gz::physics::ForwardStep::Input input;
-
   const double kTol = 1e-6;
-  const double dt = 0.001;
-  auto dur = std::chrono::duration<double>(dt);
-
   for (const std::string &name : this->pluginNames)
   {
     // Some of the basic expectations, such as the initial joint position, are
@@ -193,9 +200,7 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetBasicState)
 
     // Expect negative joint velocity after 1 step without joint command
     // 1 ms time step
-    input.Get<std::chrono::steady_clock::duration>() =
-        std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
-    this->world->Step(output, state, input);
+    this->Step();
     // After step, the position should still be very close to the start position.
     EXPECT_NEAR(startPos, this->joint->GetPosition(0), 1e-3);
 
@@ -207,9 +212,9 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetBasicState)
     const int numSteps = 100;
     for (int i = 0; i < numSteps; ++i)
     {
-      this->world->Step(output, state, input);
+      this->Step();
     }
-    const double timeElapsed = numSteps * dt;
+    const double timeElapsed = numSteps * this->dt;
     EXPECT_LT(this->joint->GetVelocity(0), 0.0);
     EXPECT_LT(this->joint->GetPosition(0), startPos);
 
@@ -233,15 +238,8 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetBasicState)
 
 TYPED_TEST(BasicJointFeaturesTest, GetSetForceAccel)
 {
-  gz::physics::ForwardStep::Output output;
-  gz::physics::ForwardStep::State state;
-  gz::physics::ForwardStep::Input input;
-
   const double kTol = 1e-6;
-  const double dt = 0.001;
-  auto dur = std::chrono::duration<double>(dt);
-  input.Get<std::chrono::steady_clock::duration>() =
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
+
   for (const std::string &name : this->pluginNames)
   {
     // Some of the basic expectations, such as the initial joint position, are
@@ -261,7 +259,7 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetForceAccel)
     // Setting the force should cause acceleration. We'll check the actual
     // valuelater.
     this->joint->SetForce(0, kForceCmd);
-    this->world->Step(output, state, input);
+    this->Step();
 
     // dartsim currently clears all joint forces after a step, so GetForce always return 0.
     if (this->PhysicsEngineName(name) != "dartsim")
@@ -271,7 +269,7 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetForceAccel)
     EXPECT_GT(this->joint->GetAcceleration(0), 0);
 
     // Stepping without setting force should produce no joint acceleration.
-    this->world->Step(output, state, input);
+    this->Step();
     EXPECT_NEAR(this->joint->GetAcceleration(0), 0, kTol);
     EXPECT_DOUBLE_EQ(0.0, this->joint->GetForce(0));
 
@@ -279,11 +277,27 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetForceAccel)
     for (int i = 0; i < numSteps; ++i)
     {
       this->joint->SetForce(0, kForceCmd);
-      this->world->Step(output, state, input);
+      this->Step();
     }
 
-    const double timeElapsed = numSteps * dt;
+    const double timeElapsed = numSteps * this->dt;
     EXPECT_NEAR(kForceCmd, this->joint->GetAcceleration(0) * this->moiPivot, kTol);
+  }
+}
+
+TYPED_TEST(BasicJointFeaturesTest, GetProperties)
+{
+  const double kTol = 1e-6;
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    this->InitPluginAndWorld(name);
+
+    EXPECT_EQ(2u, this->model->GetJointCount());
+    auto fixedJoint = this->model->GetJoint(0);
+    EXPECT_EQ(0u, fixedJoint->GetDegreesOfFreedom());
+    EXPECT_EQ(1u, this->joint->GetDegreesOfFreedom());
   }
 }
 
