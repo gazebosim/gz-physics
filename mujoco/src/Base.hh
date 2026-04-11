@@ -20,6 +20,7 @@
 
 #include <mujoco/mujoco.h>
 
+#include <Eigen/Geometry>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -29,11 +30,11 @@
 
 #include <gz/common/Console.hh>
 #include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
 #include <gz/math/SemanticVersion.hh>
+#include <gz/math/Vector3.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
-#include "mujoco/mjspec.h"
-#include "mujoco/mjtnum.h"
 
 namespace gz
 {
@@ -41,6 +42,45 @@ namespace physics
 {
 namespace mujoco
 {
+
+inline void copyPos(const math::Vector3d &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.X();
+  _dst[1] = _src.Y();
+  _dst[2] = _src.Z();
+}
+
+inline void copyQuat(const math::Quaterniond &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.W();
+  _dst[1] = _src.X();
+  _dst[2] = _src.Y();
+  _dst[3] = _src.Z();
+}
+
+inline Eigen::Vector3d convertPos(const mjtNum *_src)
+{
+  Eigen::Vector3d dst;
+  dst.x() = _src[0];
+  dst.y() = _src[1];
+  dst.z() = _src[2];
+  return dst;
+}
+
+inline Eigen::Quaterniond convertQuat(const mjtNum *_src)
+{
+  Eigen::Quaterniond dst;
+  dst.w() = _src[0];
+  dst.x() = _src[1];
+  dst.y() = _src[2];
+  dst.z() = _src[3];
+  return dst;
+}
+
+inline Eigen::Isometry3d convertPose(const mjtNum *_pos, const mjtNum *_quat)
+{
+  return Eigen::Translation3d(convertPos(_pos)) * convertQuat(_quat);
+}
 
 // Forward declarations
 struct LinkInfo;
@@ -82,6 +122,7 @@ struct JointInfo
   }
   std::size_t entityId;
   mjsJoint *joint;
+  mjsBody *childBody;
   mjsActuator *actuator;
   int nq_index{-1};
   int nv_index{-1};

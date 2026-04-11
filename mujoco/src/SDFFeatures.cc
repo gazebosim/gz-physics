@@ -276,14 +276,8 @@ struct ModelKinematicStructure
       // TODO(azeey): Resolve link poses
       const auto &pose = _sdfModel.RawPose() * link->RawPose();
       // gzdbg << "--- Pose: " << pose << "\n";
-      child->pos[0] = pose.X();
-      child->pos[1] = pose.Y();
-      child->pos[2] = pose.Z();
-
-      child->quat[0] = pose.Rot().W();
-      child->quat[1] = pose.Rot().X();
-      child->quat[2] = pose.Rot().Y();
-      child->quat[3] = pose.Rot().Z();
+      copyPos(pose.Pos(), child->pos);
+      copyQuat(pose.Rot(), child->quat);
 
       _base.frames[_modelInfo->entityId] =
           std::make_shared<FrameInfo>(childSite, worldInfo);
@@ -300,14 +294,8 @@ struct ModelKinematicStructure
     child->fullinertia[4] = moi(0, 2);
     child->fullinertia[5] = moi(1, 2);
     auto inertialPose = link->Inertial().Pose();
-    child->ipos[0] = inertialPose.X();
-    child->ipos[1] = inertialPose.Y();
-    child->ipos[2] = inertialPose.Z();
-
-    child->iquat[0] = inertialPose.Rot().W();
-    child->iquat[1] = inertialPose.Rot().X();
-    child->iquat[2] = inertialPose.Rot().Y();
-    child->iquat[3] = inertialPose.Rot().Z();
+    copyPos(inertialPose.Pos(), child->ipos);
+    copyQuat(inertialPose.Rot(), child->iquat);
 
     if (_modelInfo->body != child)
     {
@@ -317,14 +305,8 @@ struct ModelKinematicStructure
         resolveTo = this->parents[_index]->Name();
       }
       const auto pose = resolveSdfPose(link->SemanticPose(), resolveTo);
-      child->pos[0] = pose.X();
-      child->pos[1] = pose.Y();
-      child->pos[2] = pose.Z();
-
-      child->quat[0] = pose.Rot().W();
-      child->quat[1] = pose.Rot().X();
-      child->quat[2] = pose.Rot().Y();
-      child->quat[3] = pose.Rot().Z();
+      copyPos(pose.Pos(), child->pos);
+      copyQuat(pose.Rot(), child->quat);
     }
     // TODO(azeey) Apply pose of inertia frame.
 
@@ -431,11 +413,8 @@ struct ModelKinematicStructure
         auto shapeInfo =
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
         auto pose = resolveSdfPose(collision->SemanticPose());
-        std::copy(pose.Pos().Data(), pose.Pos().Data()+3, geom->pos);
-        geom->quat[0] = pose.Rot().W();
-        geom->quat[1] = pose.Rot().X();
-        geom->quat[2] = pose.Rot().Y();
-        geom->quat[3] = pose.Rot().Z();
+        copyPos(pose.Pos(), geom->pos);
+        copyQuat(pose.Rot(), geom->quat);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
@@ -471,6 +450,10 @@ struct ModelKinematicStructure
           return;
         }
 
+        // Resolve the pose of the joint relative to the body with which
+        // it's associated. Note that this body is the child link of the joint
+        // in SDF terms.
+        auto jointPose = resolveSdfPose(sdfJoint->SemanticPose());
         // Note that no joints will be created when processing a fixed joint.
         if (joint)
         {
@@ -482,18 +465,21 @@ struct ModelKinematicStructure
 
           mjs_setString(actuator->target, mjJointName.c_str());
 
-          // Resolve the position of the joint relative to the body with which
-          // it's associated. Note that this body is the child link of the joint
-          // in SDF terms.
-          auto anchor = resolveSdfPose(sdfJoint->SemanticPose()).Pos();
-          std::copy(anchor.Data(), anchor.Data() + 3, joint->pos);
+          copyPos(jointPose.Pos(), joint->pos);
         }
         auto jointInfo =
           std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
         jointInfo->name = sdfJoint->Name();
         jointInfo->joint = joint;
+        jointInfo->childBody = child;
         jointInfo->actuator = actuator;
         jointInfo->worldInfo = worldInfo;
+
+        auto jointSite = mjs_addSite(child, nullptr);
+        copyPos(jointPose.Pos(), jointSite->pos);
+        copyQuat(jointPose.Rot(), jointSite->quat);
+        _base.frames[jointInfo->entityId] =
+            std::make_shared<FrameInfo>(jointSite, worldInfo);
 
         _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
                                      jointInfo->name, _modelInfo->entityId);

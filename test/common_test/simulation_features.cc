@@ -583,8 +583,10 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
 
     const auto jointWithDamping =
         world->GetModel("model1")->GetJoint("test_joint");
+    ASSERT_TRUE(jointWithDamping);
     const auto jointWithoutDamping =
         world->GetModel("model2")->GetJoint("test_joint");
+    ASSERT_TRUE(jointWithoutDamping);
 
     // The following section verifies that the dynamics of the two models with
     // and without damping are computed correctly upto integration errors.
@@ -739,8 +741,10 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessPrismatic)
 
     const auto jointWithSpringStiffness =
         world->GetModel("model1")->GetJoint("test_joint");
+    ASSERT_TRUE(jointWithSpringStiffness);
     const auto jointWithoutSpringStiffness =
         world->GetModel("model2")->GetJoint("test_joint");
+    ASSERT_TRUE(jointWithoutSpringStiffness );
 
     StepWorld<FeaturesDynamics>(world, true, 1);
     double posSpringInitialPos = jointWithSpringStiffness->GetPosition(0);

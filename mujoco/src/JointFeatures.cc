@@ -25,6 +25,7 @@
 #include <dart/dynamics/WeldJoint.hpp>
 #include <gz/math/Helpers.hh>
 #include "Base.hh"
+#include "gz/physics/Geometry.hh"
 #include "mujoco/mujoco.h"
 
 #include "JointFeatures.hh"
@@ -236,11 +237,7 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
     return 0;
   }
   auto m = jointInfo->worldInfo->mjModelObj;
-  int jntId = mjs_getId(jointInfo->joint->element);
-  if (jntId < 0 || jntId > m->njnt)
-    return 0;
-
-  int bodyId = m->jnt_bodyid[jntId];
+  int bodyId = mjs_getId(jointInfo->childBody->element);
   if (bodyId < 0 || bodyId > m->nbody)
     return 0;
   return m->body_dofnum[bodyId];
@@ -249,16 +246,30 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
-  // return this->ReferenceInterface<JointInfo>(_id)
-  //     ->joint->getTransformFromParentBodyNode();
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  auto it = this->frames.find(_id);
+  if (it != this->frames.end())
+  {
+    Pose3d childInParent =
+        convertPose(jointInfo->childBody->pos, jointInfo->childBody->quat);
+    Pose3d jointInChild =
+        convertPose(it->second->site->pos, it->second->site->quat);
+
+    return childInParent * jointInChild;
+  }
   return {};
 }
 
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
-  // return this->ReferenceInterface<JointInfo>(_id)
-  //     ->joint->getTransformFromChildBodyNode().inverse();
+  auto it = this->frames.find(_id.id);
+  if (it != this->frames.end())
+  {
+    Pose3d jointInChild =
+        convertPose(it->second->site->pos, it->second->site->quat);
+    return jointInChild.inverse();
+  }
   return {};
 }
 }

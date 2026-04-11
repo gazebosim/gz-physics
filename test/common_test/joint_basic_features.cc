@@ -45,27 +45,30 @@
 
 #include "Worlds.hh"
 #include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
+
+using namespace gz;
 
 template <class T>
 class JointFeaturesTest:
-  public testing::Test, public gz::physics::TestLibLoader
+  public testing::Test, public physics::TestLibLoader
 {
-  public: using EnginePtr = gz::physics::Engine3dPtr<T>;
-  public: using WorldPtr = gz::physics::World3dPtr<T>;
-  public: using ModelPtr = gz::physics::Model3dPtr<T>;
-  public: using LinkPtr = gz::physics::Link3dPtr<T>;
-  public: using JointPtr = gz::physics::Joint3dPtr<T>;
+  public: using EnginePtr = physics::Engine3dPtr<T>;
+  public: using WorldPtr = physics::World3dPtr<T>;
+  public: using ModelPtr = physics::Model3dPtr<T>;
+  public: using LinkPtr = physics::Link3dPtr<T>;
+  public: using JointPtr = physics::Joint3dPtr<T>;
 
   // Documentation inherited
   public: void SetUp() override
   {
-    gz::common::Console::SetVerbosity(4);
+    common::Console::SetVerbosity(4);
 
     std::cerr << "TestLibLoader::GetLibToTest() "
               << TestLibLoader::GetLibToTest() << '\n';
 
     loader.LoadLib(TestLibLoader::GetLibToTest());
-    pluginNames = gz::physics::FindFeatures3d<T>::From(loader);
+    pluginNames = physics::FindFeatures3d<T>::From(loader);
     if (pluginNames.empty())
     {
       std::cerr << "No plugins with required features found in "
@@ -75,18 +78,18 @@ class JointFeaturesTest:
   }
 
   public: std::set<std::string> pluginNames;
-  public: gz::plugin::Loader loader;
+  public: plugin::Loader loader;
 };
 
 
-struct BasicJointFeatureList : gz::physics::FeatureList<
-    gz::physics::ForwardStep,
-    gz::physics::GetBasicJointProperties,
-    gz::physics::GetBasicJointState,
-    gz::physics::GetJointFromModel,
-    gz::physics::GetModelFromWorld,
-    gz::physics::SetBasicJointState,
-    gz::physics::sdf::ConstructSdfWorld
+struct BasicJointFeatureList : physics::FeatureList<
+    physics::ForwardStep,
+    physics::GetBasicJointProperties,
+    physics::GetBasicJointState,
+    physics::GetJointFromModel,
+    physics::GetModelFromWorld,
+    physics::SetBasicJointState,
+    physics::sdf::ConstructSdfWorld
 > { };
 
 class BasicJointFeaturesTest : public JointFeaturesTest<BasicJointFeatureList>
@@ -116,7 +119,7 @@ class BasicJointFeaturesTest : public JointFeaturesTest<BasicJointFeatureList>
     this->plugin = this->loader.Instantiate(_pluginName);
 
     this->engine =
-        gz::physics::RequestEngine3d<BasicJointFeatureList>::From(this->plugin);
+        physics::RequestEngine3d<BasicJointFeatureList>::From(this->plugin);
     ASSERT_NE(nullptr, engine);
 
     this->world = this->engine->ConstructWorld(*this->sdfWorld);
@@ -145,15 +148,15 @@ class BasicJointFeaturesTest : public JointFeaturesTest<BasicJointFeatureList>
   const double moiPivot = moiCom + kMass * std::pow(kArmLength / 2.0, 2);
 
   const double dt = 0.001;
-  gz::physics::ForwardStep::Output output;
-  gz::physics::ForwardStep::State state;
-  gz::physics::ForwardStep::Input input;
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
 
   sdf::Root root;
   sdf::World *sdfWorld;
   sdf::Model *sdfPendulumModel;
   sdf::Link *armLink;
-  gz::plugin::PluginPtr plugin;
+  plugin::PluginPtr plugin;
   EnginePtr engine;
   WorldPtr world;
   ModelPtr model;
@@ -236,7 +239,7 @@ TEST_F(BasicJointFeaturesTest, GetSetForceAccel)
     CHECK_UNSUPPORTED_ENGINE(name, "bullet")
     CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
 
-    this->sdfWorld->SetGravity(gz::math::Vector3d::Zero);
+    this->sdfWorld->SetGravity(math::Vector3d::Zero);
     this->InitPluginAndWorld(name);
     const double kForceCmd = 0.5;
 
@@ -284,13 +287,30 @@ TEST_F(BasicJointFeaturesTest, GetProperties)
     auto fixedJoint = this->model->GetJoint(0);
     EXPECT_EQ(0u, fixedJoint->GetDegreesOfFreedom());
     EXPECT_EQ(1u, this->joint->GetDegreesOfFreedom());
+
+    // Fixed joint
+    {
+      Eigen::Isometry3d expectedFromParent =
+          Eigen::Translation3d(1, 1, 1) *
+          Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ());
+      EXPECT_TRUE(physics::test::Equal(
+          expectedFromParent, fixedJoint->GetTransformFromParent(), 1e-3))
+          << expectedFromParent.matrix() << "\n\n" << fixedJoint->GetTransformFromParent().matrix();
+
+      Eigen::Isometry3d expectedFromChild =
+          Eigen::Translation3d(0, 0, -1) *
+          Eigen::AngleAxisd(-GZ_PI, Eigen::Vector3d::UnitZ());
+      EXPECT_TRUE(physics::test::Equal(
+          expectedFromChild, fixedJoint->GetTransformToChild(), 1e-3))
+          << expectedFromChild.matrix() << "\n\n" << fixedJoint->GetTransformToChild().matrix();
+    }
   }
 }
 
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  if (!gz::physics::TestLibLoader::init(argc, argv))
+  if (!physics::TestLibLoader::init(argc, argv))
     return -1;
   return RUN_ALL_TESTS();
 }

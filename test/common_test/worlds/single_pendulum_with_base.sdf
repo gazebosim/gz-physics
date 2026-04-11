@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<sdf version="1.7">
+<sdf version="1.9">
   <world name="single_pendulum_with_base">
     <gravity>0 0 -9.81</gravity>
     <scene>
@@ -21,11 +21,14 @@
     </light>
 
     <model name="pendulum_with_base">
+      <pose>1 0 0   0 0 0</pose>
       <joint name="fix_world" type="fixed">
+        <pose degrees="true">0 0 1   0 0 180</pose>
         <parent>world</parent>
         <child>base</child>
       </joint>
       <link name="base">
+        <pose>0 1 0   0 0 0</pose>
         <visual name="vis_plate_on_ground">
           <pose>0 0 0.01 0 0 0</pose>
           <geometry>
