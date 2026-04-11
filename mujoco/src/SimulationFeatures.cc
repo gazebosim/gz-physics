@@ -72,9 +72,28 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 
   auto *m = worldInfo->mjModelObj;
   auto *d = worldInfo->mjDataObj;
+  // gzdbg << "qfrc_applied: ";
+  // mju_printMat(d->qfrc_applied, 1, m->nv);
+  // gzdbg << "ctrl: ";
+  // mju_printMat(d->ctrl, 1, m->nu);
+  // gzdbg << "actuator_force: ";
+  // mju_printMat(d->actuator_force, 1, m->nu);
+  // gzdbg << "qfrc_actuator: ";
+  // mju_printMat(d->qfrc_actuator, 1, m->nv);
+
   mj_step(m, d);
-  // Clear joint applied forces
-  std::fill(d->qfrc_applied, d->qfrc_applied + m->nv, 0.0);
+  // Clear joint applied forces so that they are not applied in the next
+  // timestep, which is the expected behavior in Gazebo.
+  // gzmsg << "qfrc_applied: ";
+  // mju_printMat(d->qfrc_applied, 1, m->nv);
+  // gzmsg << "ctrl: ";
+  // mju_printMat(d->ctrl, 1, m->nu);
+  // gzmsg << "actuator_force: ";
+  // mju_printMat(d->actuator_force, 1, m->nu);
+  // gzmsg << "qfrc_actuator: ";
+  // mju_printMat(d->qfrc_actuator, 1, m->nv);
+
+  std::fill(d->ctrl, d->ctrl + m->nu, 0.0);
 
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());

@@ -240,6 +240,8 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetForceAccel)
   const double kTol = 1e-6;
   const double dt = 0.001;
   auto dur = std::chrono::duration<double>(dt);
+  input.Get<std::chrono::steady_clock::duration>() =
+    std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
   for (const std::string &name : this->pluginNames)
   {
     // Some of the basic expectations, such as the initial joint position, are
@@ -256,12 +258,30 @@ TYPED_TEST(BasicJointFeaturesTest, GetSetForceAccel)
     this->InitPluginAndWorld(name);
     const double kForceCmd = 0.5;
 
+    // Setting the force should cause acceleration. We'll check the actual
+    // valuelater.
+    this->joint->SetForce(0, kForceCmd);
+    this->world->Step(output, state, input);
+
+    // dartsim currently clears all joint forces after a step, so GetForce always return 0.
+    if (this->PhysicsEngineName(name) != "dartsim")
+    {
+      EXPECT_DOUBLE_EQ(kForceCmd, this->joint->GetForce(0));
+    }
+    EXPECT_GT(this->joint->GetAcceleration(0), 0);
+
+    // Stepping without setting force should produce no joint acceleration.
+    this->world->Step(output, state, input);
+    EXPECT_NEAR(this->joint->GetAcceleration(0), 0, kTol);
+    EXPECT_DOUBLE_EQ(0.0, this->joint->GetForce(0));
+
     const int numSteps = 100;
     for (int i = 0; i < numSteps; ++i)
     {
       this->joint->SetForce(0, kForceCmd);
       this->world->Step(output, state, input);
     }
+
     const double timeElapsed = numSteps * dt;
     EXPECT_NEAR(kForceCmd, this->joint->GetAcceleration(0) * this->moiPivot, kTol);
   }

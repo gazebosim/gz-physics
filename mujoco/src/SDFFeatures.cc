@@ -455,6 +455,7 @@ struct ModelKinematicStructure
       else
       {
         mjsJoint * joint{nullptr};
+        mjsActuator *actuator{nullptr};
         if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
         {
           joint = mjs_addJoint(child, nullptr);
@@ -476,6 +477,10 @@ struct ModelKinematicStructure
           const std::string mjJointName =
             ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
           mjs_setName(joint->element, mjJointName.c_str());
+          actuator = mjs_addActuator(_spec, nullptr);
+          actuator->trntype = mjtTrn::mjTRN_JOINT;
+
+          mjs_setString(actuator->target, mjJointName.c_str());
 
           // Resolve the position of the joint relative to the body with which
           // it's associated. Note that this body is the child link of the joint
@@ -487,6 +492,7 @@ struct ModelKinematicStructure
           std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
         jointInfo->name = sdfJoint->Name();
         jointInfo->joint = joint;
+        jointInfo->actuator = actuator;
         jointInfo->worldInfo = worldInfo;
 
         _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,

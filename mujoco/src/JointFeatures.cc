@@ -25,6 +25,7 @@
 #include <dart/dynamics/WeldJoint.hpp>
 #include <gz/math/Helpers.hh>
 #include "Base.hh"
+#include "mujoco/mujoco.h"
 
 #include "JointFeatures.hh"
 
@@ -96,8 +97,21 @@ double JointFeatures::GetJointAcceleration(
 double JointFeatures::GetJointForce(
     const Identity &_id, std::size_t _dof) const
 {
-  return 0;
-  // return this->ReferenceInterface<JointInfo>(_id)->joint->getForce(_dof);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot get force for joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return gz::math::NAN_D;
+  }
+
+  if (jointInfo->nv_index < 0)
+    return math::NAN_D;
+
+  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
+  // this joint
+  return jointInfo->worldInfo->mjDataObj->qfrc_actuator[jointInfo->nv_index];
 }
 
 /////////////////////////////////////////////////
@@ -172,19 +186,8 @@ void JointFeatures::SetJointVelocity(
 void JointFeatures::SetJointAcceleration(
     const Identity &_id, std::size_t _dof, double _value)
 {
-  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
-
-  // Take extra care that the value is finite. A nan can cause the DART
-  // constraint solver to fail, which will in turn either cause a crash or
-  // collisions to fail
-  // if (!std::isfinite(_value))
-  // {
-  //   gzerr << "Invalid joint acceleration value [" << _value
-  //          << "] set on joint [" << joint->getName() << " DOF " << _dof
-  //          << "]. The value will be ignored\n";
-  //   return;
-  // }
-  // TODO(azeey): Implement
+  gzerr << "Setting joint acceleration is not supported by the MuJoCo physics "
+           "plugin.\n";
 }
 
 /////////////////////////////////////////////////
@@ -209,12 +212,18 @@ void JointFeatures::SetJointForce(
     return;
   }
 
-  if (jointInfo->nv_index < 0)
+  if (!jointInfo->actuator)
+  {
+    gzerr << "No actuator set up for this joint\n";
+    return;
+  }
+  int ctrlIndex = mjs_getId(jointInfo->actuator->element);
+  if (ctrlIndex < 0)
     return;
 
   // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
   // this joint
-  jointInfo->worldInfo->mjDataObj->qfrc_applied[jointInfo->nv_index] = _value;
+  jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex] = _value;
 }
 
 /////////////////////////////////////////////////

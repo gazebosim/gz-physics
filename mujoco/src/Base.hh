@@ -32,6 +32,8 @@
 #include <gz/math/SemanticVersion.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
+#include "mujoco/mjspec.h"
+#include "mujoco/mjtnum.h"
 
 namespace gz
 {
@@ -80,6 +82,7 @@ struct JointInfo
   }
   std::size_t entityId;
   mjsJoint *joint;
+  mjsActuator *actuator;
   int nq_index{-1};
   int nv_index{-1};
   std::string name;

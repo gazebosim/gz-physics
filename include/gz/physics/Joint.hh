@@ -69,6 +69,10 @@ namespace gz
 
         /// \brief Get the generalized force of a specific generalized
         /// coordinate within this joint.
+        ///
+        /// \note The value returned by this function should be the force
+        /// applied on this joint in the last time step.
+        ///
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
