@@ -528,47 +528,44 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    // If nested, no need to remove multibody
-    // \todo(iche033) Remove links and joints in nested model
     bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
-    if (isNested)
-    {
-      return true;
-    }
 
-    // Remove model from world
+    // Remove model from world (only for top-level models)
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
     if (!world)
       return false;
-    if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
-    {
-      // The model has already been removed at some point
-      return false;
-    }
-    world->modelNameToEntityId.erase(model->name);
 
-    // Remove all constraints related to this model
-    for (const auto jointID : model->jointEntityIds)
+    if (!isNested)
     {
-      const auto joint = this->joints.at(jointID);
-      if (joint->motor)
+      if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
       {
-        world->world->removeMultiBodyConstraint(joint->motor.get());
+        // The model has already been removed at some point
+        return false;
       }
-      if (joint->fixedConstraint)
-      {
-        world->world->removeMultiBodyConstraint(joint->fixedConstraint.get());
-      }
-      if (joint->jointLimits)
-      {
-        world->world->removeMultiBodyConstraint(joint->jointLimits.get());
-      }
-      this->joints.erase(jointID);
-    }
-    // \todo(iche033) Remove external constraints related to this model
-    // (model->external_constraints) once this is supported
+      world->modelNameToEntityId.erase(model->name);
 
-    world->world->removeMultiBody(model->body.get());
+      // Remove all constraints related to this model
+      for (const auto jointID : model->jointEntityIds)
+      {
+        const auto joint = this->joints.at(jointID);
+        if (joint->motor)
+        {
+          world->world->removeMultiBodyConstraint(joint->motor.get());
+        }
+        if (joint->fixedConstraint)
+        {
+          world->world->removeMultiBodyConstraint(
+              joint->fixedConstraint.get());
+        }
+        if (joint->jointLimits)
+        {
+          world->world->removeMultiBodyConstraint(joint->jointLimits.get());
+        }
+        this->joints.erase(jointID);
+      }
+    }
+
+    // Remove collision objects and links for both top-level and nested models.
     for (const auto linkID : model->linkEntityIds)
     {
       const auto &link = this->links.at(linkID);
@@ -580,6 +577,11 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
 
       this->links.erase(linkID);
+    }
+
+    if (!isNested)
+    {
+      world->world->removeMultiBody(model->body.get());
     }
 
     this->models.erase(_modelID);
