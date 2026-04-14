@@ -635,6 +635,24 @@ class Base : public Implements3d<FeatureList<Feature>>
       world->world->removeMultiBody(model->body.get());
       this->models.erase(_modelID);
     }
+    else
+    {
+      // The btMultiBody is owned by the top-level parent and should not be
+      // removed here, but clean up link, collision, and joint map entries.
+      for (const auto linkID : model->linkEntityIds)
+      {
+        const auto &link = this->links.at(linkID);
+        if (link->collider)
+        {
+          for (const auto shapeID : link->collisionEntityIds)
+            this->collisions.erase(shapeID);
+        }
+        this->links.erase(linkID);
+      }
+      for (const auto jointID : model->jointEntityIds)
+        this->joints.erase(jointID);
+      this->models.erase(_modelID);
+    }
 
     return true;
   }
