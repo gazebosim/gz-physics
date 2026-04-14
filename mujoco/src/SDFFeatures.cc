@@ -150,10 +150,11 @@ void copyStandardJointAxisProperties(
     _joint->actfrcrange[1] = infIfNeg(_sdfAxis->Effort());
   }
 
-  // TODO(azeey) Investigate whether velocity limits can be supported
+  // TODO(azeey) MuJoCo does not natively support velocity limits.
+  // See https://github.com/google-deepmind/mujoco/discussions/2367
   if (!std::isinf(_sdfAxis->MaxVelocity()))
   {
-    gzerr << "The MuJoCo physics engine plugin does not support velocity "
+    gzwarn << "The MuJoCo physics engine plugin does not support velocity "
              "limits\n";
   }
 }
