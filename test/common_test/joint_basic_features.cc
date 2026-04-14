@@ -271,6 +271,14 @@ TEST_F(BasicJointFeaturesTest, GetSetForceAccel)
     const double timeElapsed = numSteps * this->dt;
     EXPECT_NEAR(kForceCmd, this->joint->GetAcceleration(0) * this->moiPivot,
                 kTol);
+
+    // Getting the force immediately after setting it without stepping should
+    // return the set force value.
+    this->joint->SetForce(0, kForceCmd * 10);
+    if (this->PhysicsEngineName(name) != "dartsim")
+    {
+      EXPECT_DOUBLE_EQ(kForceCmd * 10, this->joint->GetForce(0));
+    }
   }
 }
 
