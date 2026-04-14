@@ -538,8 +538,34 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (!model)
       return false;
 
-    // Remove nested models
-    for (auto &nestedModelID : model->nestedModelEntityIds)
+    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    if (!world)
+      return false;
+
+    // If it's a top-level model, remove its multibody from the dynamics world
+    // first to ensure that when we later delete colliders (which happens
+    // when we erase links from our map), the multibody is no longer in the
+    // world and won't have dangling pointers to these colliders.
+    bool isNested = this->worlds.find(_parentID) == this->worlds.end();
+    if (!isNested)
+    {
+      if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
+      {
+        // The model has already been removed at some point
+        return false;
+      }
+      world->modelNameToEntityId.erase(model->name);
+
+      if (model->body)
+      {
+        world->world->removeMultiBody(model->body.get());
+      }
+    }
+
+    // Remove nested models recursively using a copy of the ID vector to avoid
+    // iterator invalidation.
+    auto nestedModelEntityIds = model->nestedModelEntityIds;
+    for (auto &nestedModelID : nestedModelEntityIds)
     {
       this->RemoveModelImpl(_modelID, this->GenerateIdentity(nestedModelID,
                             this->models.at(nestedModelID)));
@@ -565,15 +591,9 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    bool isNested = this->worlds.find(_parentID) == this->worlds.end();
-
-    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-    if (!world)
-      return false;
-
-    // Remove collision objects from Bullet's broadphase for all models
-    // (including nested). Without this, nested model collision shapes persist
-    // as ghost colliders after the parent model is deleted.
+    // Remove collision objects from Bullet's broadphase for all links in this
+    // model (including nested). Without this, nested model collision shapes
+    // persist as ghost colliders after the parent model is deleted.
     for (const auto linkID : model->linkEntityIds)
     {
       const auto &link = this->links.at(linkID);
@@ -583,76 +603,44 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    // For top-level models, also clean up world bookkeeping, constraints,
-    // map entries, and the btMultiBody itself. Nested models share their
-    // parent's btMultiBody and their map entries are cleaned up during
-    // parent model removal.
-    if (!isNested)
+    // Cleanup joints
+    for (const auto jointID : model->jointEntityIds)
     {
-      if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
+      const auto joint = this->joints.at(jointID);
+      if (joint->motor)
       {
-        // The model has already been removed at some point
-        return false;
+        world->world->removeMultiBodyConstraint(joint->motor.get());
       }
-      world->modelNameToEntityId.erase(model->name);
-
-      // Remove all constraints related to this model
-      for (const auto jointID : model->jointEntityIds)
+      if (joint->fixedConstraint)
       {
-        const auto joint = this->joints.at(jointID);
-        if (joint->motor)
-        {
-          world->world->removeMultiBodyConstraint(joint->motor.get());
-        }
-        if (joint->fixedConstraint)
-        {
-          world->world->removeMultiBodyConstraint(joint->fixedConstraint.get());
-        }
-        if (joint->jointLimits)
-        {
-          world->world->removeMultiBodyConstraint(joint->jointLimits.get());
-        }
-        if (joint->gearConstraint)
-        {
-          world->world->removeMultiBodyConstraint(joint->gearConstraint.get());
-        }
-        this->joints.erase(jointID);
+        world->world->removeMultiBodyConstraint(joint->fixedConstraint.get());
       }
-      // \todo(iche033) Remove external constraints related to this model
-      // (model->external_constraints) once this is supported
-
-      for (const auto linkID : model->linkEntityIds)
+      if (joint->jointLimits)
       {
-        const auto &link = this->links.at(linkID);
-        if (link->collider)
-        {
-          for (const auto shapeID : link->collisionEntityIds)
-            this->collisions.erase(shapeID);
-        }
-        this->links.erase(linkID);
+        world->world->removeMultiBodyConstraint(joint->jointLimits.get());
       }
-
-      world->world->removeMultiBody(model->body.get());
-      this->models.erase(_modelID);
+      if (joint->gearConstraint)
+      {
+        world->world->removeMultiBodyConstraint(joint->gearConstraint.get());
+      }
+      this->joints.erase(jointID);
     }
-    else
+    model->jointEntityIds.clear();
+
+    // Cleanup links and their collisions
+    for (const auto linkID : model->linkEntityIds)
     {
-      // The btMultiBody is owned by the top-level parent and should not be
-      // removed here, but clean up link, collision, and joint map entries.
-      for (const auto linkID : model->linkEntityIds)
+      const auto &link = this->links.at(linkID);
+      if (link->collider)
       {
-        const auto &link = this->links.at(linkID);
-        if (link->collider)
-        {
-          for (const auto shapeID : link->collisionEntityIds)
-            this->collisions.erase(shapeID);
-        }
-        this->links.erase(linkID);
+        for (const auto shapeID : link->collisionEntityIds)
+          this->collisions.erase(shapeID);
       }
-      for (const auto jointID : model->jointEntityIds)
-        this->joints.erase(jointID);
-      this->models.erase(_modelID);
+      this->links.erase(linkID);
     }
+    model->linkEntityIds.clear();
+
+    this->models.erase(_modelID);
 
     return true;
   }
