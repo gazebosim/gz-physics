@@ -49,9 +49,13 @@ double JointFeatures::GetJointPosition(
   if (jointInfo->nq_index < 0)
     return math::NAN_D;
 
-  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
-  // this joint
-  return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index];
+  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof];
 }
 
 /////////////////////////////////////////////////
@@ -69,9 +73,13 @@ double JointFeatures::GetJointVelocity(
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
-  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
-  // this joint
-  return jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index];
+  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + _dof];
 }
 
 /////////////////////////////////////////////////
@@ -89,9 +97,13 @@ double JointFeatures::GetJointAcceleration(
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
-  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
-  // this joint
-  return jointInfo->worldInfo->mjDataObj->qacc[jointInfo->nv_index];
+  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->worldInfo->mjDataObj->qacc[jointInfo->nv_index + _dof];
 }
 
 /////////////////////////////////////////////////
@@ -110,9 +122,14 @@ double JointFeatures::GetJointForce(
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
-  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
-  // this joint
-  return jointInfo->worldInfo->mjDataObj->qfrc_actuator[jointInfo->nv_index];
+  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->worldInfo->mjDataObj
+      ->qfrc_actuator[jointInfo->nv_index + _dof];
 }
 
 /////////////////////////////////////////////////
@@ -148,9 +165,13 @@ void JointFeatures::SetJointPosition(
   if (jointInfo->nq_index < 0)
     return;
 
-  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
-  // this joint
-  jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index] = _value;
+  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return;
+  }
+  jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -178,9 +199,13 @@ void JointFeatures::SetJointVelocity(
   if (jointInfo->nv_index < 0)
     return;
 
-  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
-  // this joint
-  jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index] = _value;
+  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return;
+  }
+  jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + _dof] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -222,9 +247,13 @@ void JointFeatures::SetJointForce(
   if (ctrlIndex < 0)
     return;
 
-  // TODO(azeey) Check that _dof is equal to the DOF of the body associated with
-  // this joint
-  jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex] = _value;
+  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return;
+  }
+  jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
 }
 
 /////////////////////////////////////////////////
