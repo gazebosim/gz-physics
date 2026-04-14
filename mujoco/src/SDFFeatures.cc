@@ -243,6 +243,75 @@ struct ModelKinematicStructure
     return geom;
   }
 
+  void AddJoint(Base &_base, mjSpec *_spec, const ::sdf::Joint *sdfJoint,
+                mjsBody *child, const std::shared_ptr<ModelInfo> &_modelInfo)
+  {
+    auto worldInfo = _modelInfo->worldInfo;
+    if (!sdfJoint)
+    {
+      // No joint has this link as a child, so we add a freejoint.
+      mjs_addFreeJoint(child);
+    }
+    else
+    {
+      mjsJoint *joint{nullptr};
+      // It is possible to apply joint forces using `qfrc_applied`, but this
+      // makes it harder to retrieve the last applied forces on a joint when
+      // implementing GetJoint. Instead, we use actuators and `mjData::ctrl`.
+      // This allows us to use the same interface for setting velocity servo
+      // commands as well.
+      mjsActuator *actuator{nullptr};
+      if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
+      {
+        joint = mjs_addJoint(child, nullptr);
+        joint->type = mjJNT_HINGE;
+        const auto *sdfAxis = sdfJoint->Axis(0);
+        convertJointAxis(sdfAxis, joint->axis);
+        copyStandardJointAxisProperties(joint, sdfAxis);
+      }
+      else if (sdfJoint->Type() != ::sdf::JointType::FIXED)
+      {
+        gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
+               << " in joint [" << sdfJoint->Name() << "] not supported\n";
+        return;
+      }
+
+      // Resolve the pose of the joint relative to the body with which
+      // it's associated. Note that this body is the child link of the joint
+      // in SDF terms.
+      auto jointPose = resolveSdfPose(sdfJoint->SemanticPose());
+      // Note that no joints will be created when processing a fixed joint.
+      if (joint)
+      {
+        const std::string mjJointName =
+            ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
+        mjs_setName(joint->element, mjJointName.c_str());
+        actuator = mjs_addActuator(_spec, nullptr);
+        actuator->trntype = mjtTrn::mjTRN_JOINT;
+
+        mjs_setString(actuator->target, mjJointName.c_str());
+
+        copyPos(jointPose.Pos(), joint->pos);
+      }
+      auto jointInfo =
+          std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
+      jointInfo->name = sdfJoint->Name();
+      jointInfo->joint = joint;
+      jointInfo->childBody = child;
+      jointInfo->actuator = actuator;
+      jointInfo->worldInfo = worldInfo;
+
+      auto jointSite = mjs_addSite(child, nullptr);
+      copyPos(jointPose.Pos(), jointSite->pos);
+      copyQuat(jointPose.Rot(), jointSite->quat);
+      _base.frames[jointInfo->entityId] =
+          std::make_shared<FrameInfo>(jointSite, worldInfo);
+
+      _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
+                                   jointInfo->name, _modelInfo->entityId);
+    }
+  }
+
   void AddToSpec(Base &_base, const ::sdf::Model &_sdfModel, mjSpec *_spec,
                  std::size_t _index,
                  const std::shared_ptr<ModelInfo> &_modelInfo,
@@ -426,72 +495,8 @@ struct ModelKinematicStructure
     // Add joints
     if (!_sdfModel.Static())
     {
-      const auto *sdfJoint = childInJoint[_index];
-      if (!sdfJoint)
-      {
-        // No joint has this link as a child, so we add a freejoint.
-        mjs_addFreeJoint(child);
-      }
-      else
-      {
-        mjsJoint * joint{nullptr};
-        // It is possible to apply joint forces using `qfrc_applied`, but this
-        // makes it harder to retrieve the last applied forces on a joint when
-        // implementing GetJoint. Instead, we use actuators and `mjData::ctrl`.
-        // This allows us to use the same interface for setting velocity servo
-        // commands as well.
-        mjsActuator *actuator{nullptr};
-        if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
-        {
-          joint = mjs_addJoint(child, nullptr);
-          joint->type = mjJNT_HINGE;
-          const auto *sdfAxis = sdfJoint->Axis(0);
-          convertJointAxis(sdfAxis, joint->axis);
-          copyStandardJointAxisProperties(joint, sdfAxis);
-        }
-        else if (sdfJoint->Type() != ::sdf::JointType::FIXED)
-        {
-          gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
-                 << " in joint [" << sdfJoint->Name() << "] not supported\n";
-          return;
-        }
-
-        // Resolve the pose of the joint relative to the body with which
-        // it's associated. Note that this body is the child link of the joint
-        // in SDF terms.
-        auto jointPose = resolveSdfPose(sdfJoint->SemanticPose());
-        // Note that no joints will be created when processing a fixed joint.
-        if (joint)
-        {
-          const std::string mjJointName =
-            ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
-          mjs_setName(joint->element, mjJointName.c_str());
-          actuator = mjs_addActuator(_spec, nullptr);
-          actuator->trntype = mjtTrn::mjTRN_JOINT;
-
-          mjs_setString(actuator->target, mjJointName.c_str());
-
-          copyPos(jointPose.Pos(), joint->pos);
-        }
-        auto jointInfo =
-          std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
-        jointInfo->name = sdfJoint->Name();
-        jointInfo->joint = joint;
-        jointInfo->childBody = child;
-        jointInfo->actuator = actuator;
-        jointInfo->worldInfo = worldInfo;
-
-        auto jointSite = mjs_addSite(child, nullptr);
-        copyPos(jointPose.Pos(), jointSite->pos);
-        copyQuat(jointPose.Rot(), jointSite->quat);
-        _base.frames[jointInfo->entityId] =
-            std::make_shared<FrameInfo>(jointSite, worldInfo);
-
-        _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
-                                     jointInfo->name, _modelInfo->entityId);
-      }
+      this->AddJoint(_base, _spec, childInJoint[_index], child, _modelInfo);
     }
-
 
     // Recursively add children
     for (std::size_t i = 0; i < this->children[_index].size(); ++i)
