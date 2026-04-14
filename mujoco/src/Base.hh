@@ -144,8 +144,11 @@ struct JointInfo
   std::size_t entityId;
   mjsJoint *joint;
   mjsBody *childBody;
+  // A MuJoCo actuator is used for setting forces and velocity servo commands
   mjsActuator *actuator;
+  // Index of joint in mjData::qpos
   int nq_index{-1};
+  // Index of joint in mjData::qvel and mjData::qacc
   int nv_index{-1};
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;

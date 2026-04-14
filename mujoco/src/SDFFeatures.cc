@@ -435,6 +435,11 @@ struct ModelKinematicStructure
       else
       {
         mjsJoint * joint{nullptr};
+        // It is possible to apply joint forces using `qfrc_applied`, but this
+        // makes it harder to retrieve the last applied forces on a joint when
+        // implementing GetJoint. Instead, we use actuators and `mjData::ctrl`.
+        // This allows us to use the same interface for setting velocity servo
+        // commands as well.
         mjsActuator *actuator{nullptr};
         if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
         {
