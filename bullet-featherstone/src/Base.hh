@@ -565,65 +565,76 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    // If nested, no need to remove multibody
-    // \todo(iche033) Remove links and joints in nested model
-    bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
-    if (isNested)
-    {
-      return true;
-    }
+    bool isNested = this->worlds.find(_parentID) == this->worlds.end();
 
-    // Remove model from world
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
     if (!world)
       return false;
-    if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
-    {
-      // The model has already been removed at some point
-      return false;
-    }
-    world->modelNameToEntityId.erase(model->name);
 
-    // Remove all constraints related to this model
-    for (const auto jointID : model->jointEntityIds)
-    {
-      const auto joint = this->joints.at(jointID);
-      if (joint->motor)
-      {
-        world->world->removeMultiBodyConstraint(joint->motor.get());
-      }
-      if (joint->fixedConstraint)
-      {
-        world->world->removeMultiBodyConstraint(joint->fixedConstraint.get());
-      }
-      if (joint->jointLimits)
-      {
-        world->world->removeMultiBodyConstraint(joint->jointLimits.get());
-      }
-      if (joint->gearConstraint)
-      {
-        world->world->removeMultiBodyConstraint(joint->gearConstraint.get());
-      }
-      this->joints.erase(jointID);
-    }
-    // \todo(iche033) Remove external constraints related to this model
-    // (model->external_constraints) once this is supported
-
-    world->world->removeMultiBody(model->body.get());
+    // Remove collision objects from Bullet's broadphase for all models
+    // (including nested). Without this, nested model collision shapes persist
+    // as ghost colliders after the parent model is deleted.
     for (const auto linkID : model->linkEntityIds)
     {
       const auto &link = this->links.at(linkID);
       if (link->collider)
       {
         world->world->removeCollisionObject(link->collider.get());
-        for (const auto shapeID : link->collisionEntityIds)
-          this->collisions.erase(shapeID);
       }
-
-      this->links.erase(linkID);
     }
 
-    this->models.erase(_modelID);
+    // For top-level models, also clean up world bookkeeping, constraints,
+    // map entries, and the btMultiBody itself. Nested models share their
+    // parent's btMultiBody and their map entries are cleaned up during
+    // parent model removal.
+    if (!isNested)
+    {
+      if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
+      {
+        // The model has already been removed at some point
+        return false;
+      }
+      world->modelNameToEntityId.erase(model->name);
+
+      // Remove all constraints related to this model
+      for (const auto jointID : model->jointEntityIds)
+      {
+        const auto joint = this->joints.at(jointID);
+        if (joint->motor)
+        {
+          world->world->removeMultiBodyConstraint(joint->motor.get());
+        }
+        if (joint->fixedConstraint)
+        {
+          world->world->removeMultiBodyConstraint(joint->fixedConstraint.get());
+        }
+        if (joint->jointLimits)
+        {
+          world->world->removeMultiBodyConstraint(joint->jointLimits.get());
+        }
+        if (joint->gearConstraint)
+        {
+          world->world->removeMultiBodyConstraint(joint->gearConstraint.get());
+        }
+        this->joints.erase(jointID);
+      }
+      // \todo(iche033) Remove external constraints related to this model
+      // (model->external_constraints) once this is supported
+
+      for (const auto linkID : model->linkEntityIds)
+      {
+        const auto &link = this->links.at(linkID);
+        if (link->collider)
+        {
+          for (const auto shapeID : link->collisionEntityIds)
+            this->collisions.erase(shapeID);
+        }
+        this->links.erase(linkID);
+      }
+
+      world->world->removeMultiBody(model->body.get());
+      this->models.erase(_modelID);
+    }
 
     return true;
   }
