@@ -64,6 +64,7 @@ gz_physics_plugin_libraries(
         "@bullet//:BulletDynamicsDoublePrecision",
         "@eigen",
         "@gz-common//:gz-common",
+        "@gz-math//:gz-math",
         "@gz-math//eigen3:eigen3",
         "@gz-plugin//:register",
     ],
