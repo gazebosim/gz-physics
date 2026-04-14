@@ -561,6 +561,7 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
   {
     // The `bullet` plugin does not support prismatic joints.
     CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    CHECK_UNSUPPORTED_ENGINE(name, "mujoco")
 
     auto world = LoadPluginAndWorld<FeaturesDynamics>(
         this->loader, name, common_test::worlds::kEmptySdf);
@@ -713,6 +714,7 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessPrismatic)
   {
     // The `bullet` plugin does not support prismatic joints.
     CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    CHECK_UNSUPPORTED_ENGINE(name, "mujoco")
 
     auto world = LoadPluginAndWorld<FeaturesDynamics>(
         this->loader, name, common_test::worlds::kEmptySdf);
