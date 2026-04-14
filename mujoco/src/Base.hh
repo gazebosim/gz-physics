@@ -82,6 +82,27 @@ inline Eigen::Isometry3d convertPose(const mjtNum *_pos, const mjtNum *_quat)
   return Eigen::Translation3d(convertPos(_pos)) * convertQuat(_quat);
 }
 
+inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
+{
+  return gz::math::Pose3d(_d->xpos[3 * _bodyId],
+                          _d->xpos[3 * _bodyId + 1],
+                          _d->xpos[3 * _bodyId + 2],
+                          _d->xquat[4 * _bodyId],
+                          _d->xquat[4 * _bodyId + 1],
+                          _d->xquat[4 * _bodyId + 2],
+                          _d->xquat[4 * _bodyId + 3]);
+}
+
+inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(mjData *_d,
+                                                         int _bodyId)
+{
+  return Eigen::Translation3d(_d->xpos[3 * _bodyId], _d->xpos[3 * _bodyId + 1],
+                              _d->xpos[3 * _bodyId + 2]) *
+         Eigen::Quaterniond(_d->xquat[4 * _bodyId], _d->xquat[4 * _bodyId + 1],
+                            _d->xquat[4 * _bodyId + 2],
+                            _d->xquat[4 * _bodyId + 3]);
+}
+
 // Forward declarations
 struct LinkInfo;
 struct ModelInfo;

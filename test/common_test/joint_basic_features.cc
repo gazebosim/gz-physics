@@ -288,21 +288,76 @@ TEST_F(BasicJointFeaturesTest, GetProperties)
     EXPECT_EQ(0u, fixedJoint->GetDegreesOfFreedom());
     EXPECT_EQ(1u, this->joint->GetDegreesOfFreedom());
 
+    // TODO(azeey): There seems to be a bug in bullet-featherstone
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
     // Fixed joint
     {
       Eigen::Isometry3d expectedFromParent =
           Eigen::Translation3d(1, 1, 1) *
           Eigen::AngleAxisd(GZ_PI, Eigen::Vector3d::UnitZ());
       EXPECT_TRUE(physics::test::Equal(
-          expectedFromParent, fixedJoint->GetTransformFromParent(), 1e-3))
-          << expectedFromParent.matrix() << "\n\n" << fixedJoint->GetTransformFromParent().matrix();
+          expectedFromParent, fixedJoint->GetTransformFromParent(), kTol))
+          << expectedFromParent.matrix() << "\n\n"
+          << fixedJoint->GetTransformFromParent().matrix();
 
-      Eigen::Isometry3d expectedFromChild =
+      Eigen::Isometry3d expectedToChild =
           Eigen::Translation3d(0, 0, -1) *
           Eigen::AngleAxisd(-GZ_PI, Eigen::Vector3d::UnitZ());
+      EXPECT_TRUE(physics::test::Equal(expectedToChild,
+                                       fixedJoint->GetTransformToChild(), kTol))
+          << expectedToChild.matrix() << "\n\n"
+          << fixedJoint->GetTransformToChild().matrix();
+
+      Eigen::Isometry3d expectedFullTransform =
+          expectedFromParent * expectedToChild;
+      EXPECT_TRUE(physics::test::Equal(expectedFullTransform,
+                                       fixedJoint->GetTransform(), kTol))
+          << expectedFullTransform.matrix() << "\n\n"
+          << fixedJoint->GetTransform().matrix();
+    }
+
+    // Revolute joint initial
+    {
+      Eigen::Isometry3d expectedFromParent(Eigen::Translation3d(0, -1.0, 2.1));
       EXPECT_TRUE(physics::test::Equal(
-          expectedFromChild, fixedJoint->GetTransformToChild(), 1e-3))
-          << expectedFromChild.matrix() << "\n\n" << fixedJoint->GetTransformToChild().matrix();
+          expectedFromParent, this->joint->GetTransformFromParent(), kTol))
+          << expectedFromParent.matrix() << "\n\n"
+          << this->joint->GetTransformFromParent().matrix();
+
+      Eigen::Isometry3d expectedFromChild = Eigen::Isometry3d::Identity();
+      EXPECT_TRUE(physics::test::Equal(
+          expectedFromChild, this->joint->GetTransformToChild(), kTol))
+          << expectedFromChild.matrix() << "\n\n"
+          << this->joint->GetTransformToChild().matrix();
+
+      Eigen::Isometry3d expectedFullTransform =
+          expectedFromParent * expectedFromChild;
+      EXPECT_TRUE(physics::test::Equal(expectedFullTransform,
+                                       this->joint->GetTransform(), kTol))
+          << expectedFullTransform.matrix() << "\n\n"
+          << this->joint->GetTransform().matrix();
+    }
+
+    // Revolute joint with a set joint position
+    {
+      const double testPos = GZ_PI_2;
+      this->joint->SetPosition(0, testPos);
+      Eigen::Isometry3d expectedFullTransform =
+          Eigen::Translation3d(0, -1.0, 2.1) *
+          Eigen::AngleAxisd(testPos, Eigen::Vector3d::UnitX());
+
+      // Test before and after step. The values should be about the same.
+      EXPECT_TRUE(physics::test::Equal(expectedFullTransform,
+                                       this->joint->GetTransform(), kTol))
+          << expectedFullTransform.matrix() << "\n\n"
+          << this->joint->GetTransform().matrix();
+
+      this->Step();
+
+      EXPECT_TRUE(physics::test::Equal(expectedFullTransform,
+                                       this->joint->GetTransform(), 1e-4))
+          << expectedFullTransform.matrix() << "\n\n"
+          << this->joint->GetTransform().matrix();
     }
   }
 }

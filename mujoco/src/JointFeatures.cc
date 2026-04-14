@@ -135,9 +135,25 @@ double JointFeatures::GetJointForce(
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 {
-  return {};
-  // return this->ReferenceInterface<JointInfo>(_id)
-  //     ->joint->getRelativeTransform();
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (!jointInfo->joint)
+  {
+    return this->GetJointTransformFromParent(_id) *
+           this->GetJointTransformToChild(_id);
+  }
+  auto m = jointInfo->worldInfo->mjModelObj;
+  int childBodyId = mjs_getId(jointInfo->childBody->element);
+  if (childBodyId < 0 || childBodyId > m->nbody)
+    return {};
+
+  auto *parentBody = mjs_getParent(jointInfo->childBody->element);
+  int parentBodyId = mjs_getId(parentBody ->element);
+
+  auto d = jointInfo->worldInfo->mjDataObj;
+  Eigen::Isometry3d parentPose =
+      getBodyWorldPoseFromMjDataEigen(d, parentBodyId);
+  Eigen::Isometry3d childPose = getBodyWorldPoseFromMjDataEigen(d, childBodyId);
+  return parentPose.inverse() * childPose;
 }
 
 /////////////////////////////////////////////////
@@ -172,6 +188,7 @@ void JointFeatures::SetJointPosition(
     return;
   }
   jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof] = _value;
+  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 
 /////////////////////////////////////////////////
@@ -206,6 +223,7 @@ void JointFeatures::SetJointVelocity(
     return;
   }
   jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + _dof] = _value;
+  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 
 /////////////////////////////////////////////////
@@ -254,6 +272,7 @@ void JointFeatures::SetJointForce(
     return;
   }
   jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
+  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 
 /////////////////////////////////////////////////
