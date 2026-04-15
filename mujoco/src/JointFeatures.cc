@@ -17,12 +17,6 @@
 
 #include <cmath>
 #include <cstddef>
-#include <dart/dynamics/BodyNode.hpp>
-#include <dart/dynamics/Joint.hpp>
-#include <dart/dynamics/FreeJoint.hpp>
-#include <dart/dynamics/PrismaticJoint.hpp>
-#include <dart/dynamics/RevoluteJoint.hpp>
-#include <dart/dynamics/WeldJoint.hpp>
 #include <gz/math/Helpers.hh>
 #include "Base.hh"
 #include "gz/physics/Geometry.hh"
@@ -323,4 +317,3 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 }
 }
 }
-

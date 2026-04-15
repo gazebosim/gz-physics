@@ -164,7 +164,7 @@ struct ModelKinematicStructure
   std::string name;
 
   std::vector<const ::sdf::Link *> links;
-  // For index i, parents[i]  is the parent link of link[i]
+  // For index i, parents[i] is the parent link of link[i]
   std::vector<const ::sdf::Link *> parents;
   // For index i, children[i] contains the list of children of link[i]
   std::vector<std::vector<std::size_t>> children;
@@ -369,7 +369,7 @@ struct ModelKinematicStructure
 
     if (_modelInfo->body != child)
     {
-      std::string resolveTo = "";
+      std::string resolveTo;
       if (this->parents[_index])
       {
         resolveTo = this->parents[_index]->Name();

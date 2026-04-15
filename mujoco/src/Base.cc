@@ -29,7 +29,7 @@ namespace mujoco
 namespace {
 
 // Store joint position, velocity, acceleration and force indices. This is an
-// optimiztion that avoids looking up these values in every simulation step.
+// optimization that avoids looking up these values in every simulation step.
 // Note: qvelAddr is also used for acceleration
 void resolveJointIndices(WorldInfo &_worldInfo)
 {
