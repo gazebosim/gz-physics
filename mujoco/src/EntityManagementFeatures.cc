@@ -319,6 +319,12 @@ std::size_t EntityManagementFeatures::GetJointIndex(
 Identity EntityManagementFeatures::GetModelOfJoint(
     const Identity &_jointID) const
 {
+  auto modelInfo =
+      this->ReferenceInterface<JointInfo>(_jointID)->modelInfo.lock();
+  if (modelInfo)
+  {
+    return this->GenerateIdentity(modelInfo->entityId, modelInfo);
+  }
   return this->GenerateInvalidId();
 }
 
