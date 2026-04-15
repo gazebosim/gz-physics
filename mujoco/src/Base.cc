@@ -102,7 +102,7 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 
   // TODO(azeey): Saving the resulting MJCF is useful for debugging, but should
   // be removed once the plugin is finalized
-  mj_saveXML(_worldInfo.mjSpecObj, "/tmp/mujoco_model.xml", nullptr, 0);
+  // mj_saveXML(_worldInfo.mjSpecObj, "/tmp/mujoco_model.xml", nullptr, 0);
 
   // Build the geomIdToShapeInfo map
   _worldInfo.geomIdToShapeInfo.clear();
