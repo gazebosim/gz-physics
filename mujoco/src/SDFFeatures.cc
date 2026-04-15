@@ -187,7 +187,7 @@ struct ModelKinematicStructure
   void PrintGraph()
   {
     std::cout << "digraph << " << name << " {\n";
-    for (auto i = 0; i < links.size(); ++i)
+    for (std::size_t i = 0; i < links.size(); ++i)
     {
       if (!parents[i])
       {

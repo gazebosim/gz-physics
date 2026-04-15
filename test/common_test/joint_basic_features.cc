@@ -268,7 +268,6 @@ TEST_F(BasicJointFeaturesTest, GetSetForceAccel)
       this->Step();
     }
 
-    const double timeElapsed = numSteps * this->dt;
     EXPECT_NEAR(kForceCmd, this->joint->GetAcceleration(0) * this->moiPivot,
                 kTol);
 

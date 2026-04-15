@@ -222,7 +222,7 @@ void JointFeatures::SetJointVelocity(
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointAcceleration(
-    const Identity &_id, std::size_t _dof, double _value)
+    const Identity &/* _id */, std::size_t /* _dof */, double /* _value */)
 {
   gzerr << "Setting joint acceleration is not supported by the MuJoCo physics "
            "plugin.\n";
