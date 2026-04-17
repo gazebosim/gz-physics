@@ -591,17 +591,6 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    // Remove collision objects from Bullet's broadphase for all links in this
-    // model (including nested). Without this, nested model collision shapes
-    // persist as ghost colliders after the parent model is deleted.
-    for (const auto linkID : model->linkEntityIds)
-    {
-      const auto &link = this->links.at(linkID);
-      if (link->collider)
-      {
-        world->world->removeCollisionObject(link->collider.get());
-      }
-    }
 
     // Cleanup joints
     for (const auto jointID : model->jointEntityIds)
@@ -633,6 +622,7 @@ class Base : public Implements3d<FeatureList<Feature>>
       const auto &link = this->links.at(linkID);
       if (link->collider)
       {
+        world->world->removeCollisionObject(link->collider.get());
         for (const auto shapeID : link->collisionEntityIds)
           this->collisions.erase(shapeID);
       }
