@@ -71,7 +71,7 @@ namespace gz
       /// bundled in this list. This list is fully seralialized; any hierarchy
       /// that was used to construct this FeatureList will be collapsed in this
       /// member.
-      /// \note This tye is the same as FlatFeatureTypeList but the features are
+      /// \note This type is the same as FlatFeatureTypeList but the features are
       /// contained in a std::tuple. Users are encouraged to use
       /// FlatFeatureTypeList since it provides faster build times
       public: using Features =

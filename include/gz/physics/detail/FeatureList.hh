@@ -159,6 +159,12 @@ namespace gz
       class VerifyFeatures<std::tuple<F...>>
           : public VerifyFeatures<F...> { };
 
+      /// \private If VerifyFeatures is given a TypeList of features, this will
+      /// unpack them so that each feature can be verified individually.
+      template <typename... F>
+      class VerifyFeatures<TypeList<F...>>
+          : public VerifyFeatures<F...> { };
+
       /////////////////////////////////////////////////
       /// \private ExtractFeatures is used to wipe out any potential containers
       /// that might be packing a set of features (such as a tuple or a
@@ -204,7 +210,7 @@ namespace gz
       class ExtractFeatures<
               SomeFeatureList,
               std::void_t<typename SomeFeatureList::FlatFeatureTypeList>>
-          : public VerifyFeatures<typename SomeFeatureList::Features>
+          : public VerifyFeatures<typename SomeFeatureList::FlatFeatureTypeList>
       {
         public: using type = typename SomeFeatureList::FlatFeatureTypeList;
       };
