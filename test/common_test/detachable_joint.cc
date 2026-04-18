@@ -65,13 +65,6 @@ class DetachableJointTest:
                 << GetLibToTest() << std::endl;
       GTEST_SKIP();
     }
-    for (const std::string &name : this->pluginNames)
-    {
-      if(this->PhysicsEngineName(name) == "tpe")
-      {
-        GTEST_SKIP();
-      }
-    }
   }
 
   public: std::set<std::string> pluginNames;
@@ -109,6 +102,10 @@ TYPED_TEST(DetachableJointTest, CorrectAttachmentPoints)
     auto engine =
       gz::physics::RequestEngine3d<DetachableJointFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
+
+    // Check if this is a kinematic engine (like TPE) that doesn't have gravity
+    const bool isKinematicEngine =
+      (this->PhysicsEngineName(name) == "tpe");
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
@@ -163,6 +160,21 @@ TYPED_TEST(DetachableJointTest, CorrectAttachmentPoints)
       world->Step(output, state, input);
     }
 
+    if (isKinematicEngine)
+    {
+      // For kinematic engines (like TPE), verify relative pose is maintained
+      // after physics steps. These engines don't have gravity, so objects
+      // stay at their initial positions.
+      auto frameDataC1L1 = cylinder1_link1->FrameDataRelativeToWorld();
+      auto frameDataC2L2 = cylinder2_link2->FrameDataRelativeToWorld();
+      // Positions should remain at initial values (no gravity)
+      EXPECT_NEAR(2.0, frameDataC1L1.pose.translation().z(), 1e-2);
+      EXPECT_NEAR(1.5, frameDataC2L2.pose.translation().z(), 1e-2);
+      // Verify relative pose is maintained (0.5m difference)
+      EXPECT_NEAR(0.5, frameDataC1L1.pose.translation().z() -
+                       frameDataC2L2.pose.translation().z(), 1e-2);
+    }
+    else
     {
       // Check final conditions with joint attached
       // If the joint was attached correctly, the top cylinder should be
@@ -180,6 +192,16 @@ TYPED_TEST(DetachableJointTest, CorrectAttachmentPoints)
       world->Step(output, state, input);
     }
 
+    if (isKinematicEngine)
+    {
+      // For kinematic engines, after detach, positions remain unchanged
+      // (no gravity to cause movement)
+      auto frameDataC1L1 = cylinder1_link1->FrameDataRelativeToWorld();
+      auto frameDataC2L2 = cylinder2_link2->FrameDataRelativeToWorld();
+      EXPECT_NEAR(2.0, frameDataC1L1.pose.translation().z(), 1e-2);
+      EXPECT_NEAR(1.5, frameDataC2L2.pose.translation().z(), 1e-2);
+    }
+    else
     {
       // Check final conditions after joint detached
       // If the joint was detached correctly, the top cylinder should be
