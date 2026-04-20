@@ -57,7 +57,7 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   // array called mjModel::geom_size. It allocates exactly 3 slots in this array
   // for every geom, regardless of its type. We find the starting point for
   // any geom by multiplying its geomId by 3.
-  const mjtNum *size = m->geom_size + 3 * geomId;
+  const mjtNum *size = m->geom_size + static_cast<ptrdiff_t>(3) * geomId;
 
   Vector3d min = Vector3d::Zero();
   Vector3d max = Vector3d::Zero();
@@ -122,7 +122,8 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
         // flattened array called mjModel::mesh_vert. There are 3 coordinates
         // per vertex (x, y, z). Multiply vertAddress by 3 to find the start
         // of the mesh's data.
-        const float* vertices = m->mesh_vert + 3 * vertAddress;
+        const float* vertices = m->mesh_vert +
+                                static_cast<ptrdiff_t>(3) * vertAddress;
 
         if (vertCount > 0)
         {
@@ -134,17 +135,23 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
           for (int i = 1; i < vertCount; ++i)
           {
             min.x() = std::min(min.x(),
-                               static_cast<double>(vertices[3 * i + 0]));
+                               static_cast<double>(vertices[
+                                   static_cast<ptrdiff_t>(3) * i + 0]));
             min.y() = std::min(min.y(),
-                               static_cast<double>(vertices[3 * i + 1]));
+                               static_cast<double>(vertices[
+                                   static_cast<ptrdiff_t>(3) * i + 1]));
             min.z() = std::min(min.z(),
-                               static_cast<double>(vertices[3 * i + 2]));
+                               static_cast<double>(vertices[
+                                   static_cast<ptrdiff_t>(3) * i + 2]));
             max.x() = std::max(max.x(),
-                               static_cast<double>(vertices[3 * i + 0]));
+                               static_cast<double>(vertices[
+                                   static_cast<ptrdiff_t>(3) * i + 0]));
             max.y() = std::max(max.y(),
-                               static_cast<double>(vertices[3 * i + 1]));
+                               static_cast<double>(vertices[
+                                   static_cast<ptrdiff_t>(3) * i + 1]));
             max.z() = std::max(max.z(),
-                               static_cast<double>(vertices[3 * i + 2]));
+                               static_cast<double>(vertices[
+                                   static_cast<ptrdiff_t>(3) * i + 2]));
           }
           shapeInfo->cachedAABB = AlignedBox3d(min, max);
           return *shapeInfo->cachedAABB;
