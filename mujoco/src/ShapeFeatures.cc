@@ -19,6 +19,7 @@
 
 #include <mujoco/mujoco.h>
 #include <algorithm>
+#include <cstddef>
 #include <gz/math/eigen3/Conversions.hh>
 
 namespace gz {
@@ -124,6 +125,8 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
         // of the mesh's data.
         const float* vertices = m->mesh_vert +
                                 static_cast<ptrdiff_t>(3) * vertAddress;
+        const mjtNum* meshPos = m->mesh_pos +
+                                static_cast<ptrdiff_t>(3) * meshId;
 
         if (vertCount > 0)
         {
@@ -153,6 +156,12 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
                                static_cast<double>(vertices[
                                    static_cast<ptrdiff_t>(3) * i + 2]));
           }
+          // mesh_vert is in CoM-centered frame; mesh_pos is the CoM offset.
+          // Add the offset to get the AABB in the mesh's local frame.
+          const Vector3d offset(meshPos[0], meshPos[1], meshPos[2]);
+          min += offset;
+          max += offset;
+
           shapeInfo->cachedAABB = AlignedBox3d(min, max);
           return *shapeInfo->cachedAABB;
         }
