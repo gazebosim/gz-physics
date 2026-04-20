@@ -403,6 +403,12 @@ TEST_F(LinkBoundingBoxFeaturesTestTypes, ModelAxisAlignedBoundingBox)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
+    // bullet-featherstone does not support floating bodies
+    if(this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      GTEST_SKIP();
+    }
+
     auto engine =
         gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
