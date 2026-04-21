@@ -473,6 +473,104 @@ TEST_F(WorldNestedModelTest, WorldConstructNestedModel)
   }
 }
 
+struct NestedModelRemovalFeatureList : gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::ConstructEmptyWorldFeature,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::RemoveEntities,
+  gz::physics::ForwardStep
+> { };
+
+template <class T>
+class NestedModelRemovalTest : public WorldFeaturesTest<T> { };
+
+using NestedModelRemovalTestTypes =
+    ::testing::Types<NestedModelRemovalFeatureList>;
+TYPED_TEST_SUITE(NestedModelRemovalTest, NestedModelRemovalTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelCollisions)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // \todo(iche033) tpe test crashes. Need to investigate
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<TypeParam>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kWorldWithNestedModelSdf);
+    ASSERT_TRUE(errors.empty()) << errors;
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto parentModel = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, parentModel);
+
+    // Remove the parent model (which contains the nested model)
+    EXPECT_TRUE(parentModel->Remove());
+    EXPECT_TRUE(parentModel->Removed());
+
+    // Step simulation to ensure removal is processed
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    world->Step(output, state, input);
+
+    // Drop a sphere over where the nested model was (4, 3, 3)
+    // nested_model: (1, 2, 2)
+    // nested_link1: (3, 1, 1) relative to nested_model -> (4, 3, 3)
+    std::string sphereSdf = R"(
+      <?xml version="1.0" ?>
+      <sdf version="1.8">
+        <model name="falling_sphere">
+          <pose>4 3 10 0 0 0</pose>
+          <link name="link">
+            <collision name="collision">
+              <geometry>
+                <sphere><radius>0.1</radius></sphere>
+              </geometry>
+            </collision>
+          </link>
+        </model>
+      </sdf>)";
+
+    sdf::Root sphereRoot;
+    ASSERT_TRUE(sphereRoot.LoadSdfString(sphereSdf).empty());
+    auto fallingSphere = world->ConstructModel(*sphereRoot.Model());
+    ASSERT_NE(nullptr, fallingSphere);
+    auto fallingLink = fallingSphere->GetLink(0);
+    ASSERT_NE(nullptr, fallingLink);
+
+    // Step simulation for a while
+    const size_t numSteps = 2000;
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // The sphere should fall straight through, confirming that all
+    // collisions were removed.
+    double finalZ =
+        fallingLink->FrameDataRelativeToWorld().pose.translation().z();
+    std::cout << "Final Z position: " << finalZ << std::endl;
+
+    EXPECT_LT(finalZ, 0.0)
+        << "Sphere seems to have hit a phantom collision object!";
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
