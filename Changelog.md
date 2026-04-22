@@ -2,6 +2,9 @@
 
 ### Gazebo Physics 9.2.0 (2026-04-22)
 
+1. [bazel/infra] Minimize manual steps to publish to BCR
+    * [Pull request #962](https://github.com/gazebosim/gz-physics/pull/962)
+
 1. Disable Whole Program Optimization on MSVC (#915)
     * [Pull request #959](https://github.com/gazebosim/gz-physics/pull/959)
 
