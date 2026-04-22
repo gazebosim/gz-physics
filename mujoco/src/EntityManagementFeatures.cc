@@ -450,8 +450,7 @@ void EntityManagementFeatures::RemoveCategoryFilterMask(
   auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
   if (shapeInfo && shapeInfo->geom)
   {
-    shapeInfo->categoryMask.reset();
-    // Removing categority bitmaks means setting it to the same value as
+    // Removing categority bitmask means setting it to the same value as
     // collide bitmask
     this->SetCategoryFilterMask(
         _shapeID, static_cast<uint16_t>(shapeInfo->geom->conaffinity));

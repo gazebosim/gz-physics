@@ -365,10 +365,7 @@ struct ModelKinematicStructure
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
-        if (contypeOpt.has_value())
-        {
-          shapeInfo->categoryMask = *contypeOpt;
-        }
+        shapeInfo->categoryMask = contypeOpt;
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
                                    linkInfo->entityId);
       }

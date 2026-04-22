@@ -19,6 +19,7 @@
 #define GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 #include <gz/physics/ConstructEmpty.hh>
