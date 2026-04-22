@@ -38,6 +38,9 @@ gz_build_tests(
 )
 
 foreach(test ${tests})
+  target_include_directories(${test} PRIVATE
+    $<TARGET_PROPERTY:mujoco::mujoco,INTERFACE_INCLUDE_DIRECTORIES>)
+
   target_compile_definitions(${test} PRIVATE
     "mujoco_plugin_LIB=\"$<TARGET_FILE:${plugin_target}>\"")
 
