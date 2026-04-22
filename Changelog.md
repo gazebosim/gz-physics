@@ -1,5 +1,55 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.2.0 (2026-04-22)
+
+1. Disable Whole Program Optimization on MSVC
+    * [Pull request #915](https://github.com/gazebosim/gz-physics/pull/915)
+
+1. bullet-featherstone: Fix ghost collisions from nested model removal and add test
+    * [Pull request #939](https://github.com/gazebosim/gz-physics/pull/939)
+
+1. bullet-featherstone: Use Bullet shape type enum instead of dynamic_cast in CastTo*Shape
+    * [Pull request #941](https://github.com/gazebosim/gz-physics/pull/941)
+
+1. bullet: Add missing Bazel deps for layering_check on macOS
+    * [Pull request #942](https://github.com/gazebosim/gz-physics/pull/942)
+
+1. Use portable shebang (#!/usr/bin/env bash) for bash scripts
+    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933)
+
+1. Fix bullet version warning message
+    * [Pull request #924](https://github.com/gazebosim/gz-physics/pull/924)
+
+1. Optimize build: Modernize codebase with fold expressions and `std::void_t` (Part 1)
+    * [Pull request #916](https://github.com/gazebosim/gz-physics/pull/916)
+
+1. bullet-featherstone: Fix contact force and depth data
+    * [Pull request #890](https://github.com/gazebosim/gz-physics/pull/890)
+
+1. dartsim: Add support for category bitmask
+    * [Pull request #885](https://github.com/gazebosim/gz-physics/pull/885)
+
+1. bullet-featherstone: Add support for category bitmask
+    * [Pull request #884](https://github.com/gazebosim/gz-physics/pull/884)
+
+1. bullet-feathersone: Add support for collision filtering based on collide bitmasks
+    * [Pull request #804](https://github.com/gazebosim/gz-physics/pull/804)
+
+1. ci: Update DART to 6.16
+    * [Pull request #888](https://github.com/gazebosim/gz-physics/pull/888)
+
+1. Fix Bullet Featherstone model removal with mimic gear constraints
+    * [Pull request #872](https://github.com/gazebosim/gz-physics/pull/872)
+
+1. Fix segfault in Bullet Featherstone plugin when loading ball joint
+    * [Pull request #868](https://github.com/gazebosim/gz-physics/pull/868)
+
+1. bullet-featherstone: Fix get contacts
+    * [Pull request #838](https://github.com/gazebosim/gz-physics/pull/838)
+
+1. [bazel/infra] CI updates
+    * [Pull request #827](https://github.com/gazebosim/gz-physics/pull/827)
+
 ### Gazebo Physics 9.1.0 (2026-01-20)
 
 1. Find jetty packages with explicit version
