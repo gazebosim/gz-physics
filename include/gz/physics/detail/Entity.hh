@@ -39,11 +39,18 @@ namespace gz
       template <typename T, typename List>
       struct TypeListContainsBase;
 
-      /// \private This specialization implements TypeListContainsBase. It only
-      /// works if List is a TypeList; any other type for the second template
-      /// argument will fail to compile.
+      /// \private This specialization implements TypeListContainsBase for
+      /// TypeList.
       template <typename T, typename... Types>
       struct TypeListContainsBase<T, TypeList<Types...>>
+          : std::integral_constant<bool, (std::is_base_of_v<T, Types> || ...)>
+      {
+      };
+
+      /// \private This specialization implements TypeListContainsBase for
+      /// std::tuple.
+      template <typename T, typename... Types>
+      struct TypeListContainsBase<T, std::tuple<Types...>>
           : std::integral_constant<bool, (std::is_base_of_v<T, Types> || ...)>
       {
       };

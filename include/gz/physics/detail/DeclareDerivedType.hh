@@ -48,7 +48,7 @@
             template type<PolicyT, FeaturesT> \
     { \
       public: using Identifier = Derived ## Identifier; \
-      public: using UpcastIdentifiers = TypeList< \
+      public: using UpcastIdentifiers = std::tuple< \
           Derived ## Identifier, \
           /* Allow this derived type to be upcast to plain base types */ \
           ::gz::physics::detail:: Base ## Identifier>; \

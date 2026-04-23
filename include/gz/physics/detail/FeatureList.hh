@@ -638,7 +638,7 @@ namespace gz
       public virtual Entity<PolicyT, FeaturesT> \
   { \
     public: using Identifier = detail:: X ## Identifier; \
-    public: using UpcastIdentifiers = TypeList<detail:: X ## Identifier>; \
+    public: using UpcastIdentifiers = std::tuple<detail:: X ## Identifier>; \
     public: using Base = Entity<PolicyT, FeaturesT>; \
     \
     public: X(const X&) = default; \
