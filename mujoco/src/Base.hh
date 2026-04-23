@@ -119,6 +119,12 @@ struct WorldInfo
     mj_deleteSpec(this->mjSpecObj);
   }
 
+  WorldInfo() = default;
+  WorldInfo(const WorldInfo &) = delete;
+  WorldInfo &operator=(const WorldInfo &) = delete;
+  WorldInfo(WorldInfo &&) = default;
+  WorldInfo &operator=(WorldInfo &&) = default;
+
   std::size_t entityId;
   mjsBody *body{nullptr};
   mjSpec *mjSpecObj{nullptr};
