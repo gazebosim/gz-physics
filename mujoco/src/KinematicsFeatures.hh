@@ -20,6 +20,7 @@
 
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/FreeGroup.hh>
+#include <gz/physics/Implements.hh>
 
 #include "Base.hh"
 

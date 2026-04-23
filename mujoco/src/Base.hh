@@ -18,6 +18,9 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
+#include <mujoco/mjdata.h>
+#include <mujoco/mjmodel.h>
+#include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
 
 #include <cstddef>
@@ -27,10 +30,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include <gz/common/Console.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/SemanticVersion.hh>
-#include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
 
 namespace gz
