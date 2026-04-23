@@ -1,0 +1,216 @@
+/*
+ * Copyright (C) 2026 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+  */
+
+#ifndef GZ_PHYSICS_MUJOCO_SRC_JOINTFEATURES_HH_
+#define GZ_PHYSICS_MUJOCO_SRC_JOINTFEATURES_HH_
+
+#include <string>
+
+#include <gz/physics/Joint.hh>
+#include <gz/physics/FixedJoint.hh>
+#include <gz/physics/FreeJoint.hh>
+#include <gz/physics/PrismaticJoint.hh>
+#include <gz/physics/RevoluteJoint.hh>
+
+#include "Base.hh"
+
+namespace gz {
+namespace physics {
+namespace mujoco {
+
+struct JointFeatureList : FeatureList<
+  GetBasicJointState,
+  GetBasicJointProperties,
+  SetBasicJointState
+
+  // AttachFixedJointFeature,
+  // DetachJointFeature,
+  // GetJointTransmittedWrench,
+  // GetPrismaticJointProperties,
+  // GetRevoluteJointProperties,
+  // SetFreeJointRelativeTransformFeature,
+  // SetJointDampingCoefficientFeature,
+  // SetJointEffortLimitsFeature,
+  // SetJointFrictionFeature,
+  // SetJointPositionLimitsFeature,
+  // SetJointSpringReferenceFeature,
+  // SetJointSpringStiffnessFeature,
+  // SetJointTransformFromParentFeature,
+  // SetJointVelocityCommandFeature,
+  // SetJointVelocityLimitsFeature,
+  // SetMimicConstraintFeature,
+  // SetPrismaticJointProperties,
+  // SetRevoluteJointProperties
+> { };
+
+class JointFeatures :
+    public virtual Base,
+    public virtual Implements3d<JointFeatureList>
+{
+  // ----- Get Basic Joint State -----
+  public: double GetJointPosition(
+      const Identity &_id, std::size_t _dof) const override;
+
+  public: double GetJointVelocity(
+      const Identity &_id, std::size_t _dof) const override;
+
+  public: double GetJointAcceleration(
+      const Identity &_id, std::size_t _dof) const override;
+
+  public: double GetJointForce(
+      const Identity &_id, std::size_t _dof) const override;
+
+  public: Pose3d GetJointTransform(const Identity &_id) const override;
+
+  // ----- Set Basic Joint State -----
+  public: void SetJointPosition(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointVelocity(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointAcceleration(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointForce(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+
+  // ----- Get Basic Joint Properties -----
+  public: std::size_t GetJointDegreesOfFreedom(
+      const Identity &_id) const override;
+
+  public: Pose3d GetJointTransformFromParent(
+      const Identity &_id) const override;
+
+  public: Pose3d GetJointTransformToChild(
+      const Identity &_id) const override;
+
+
+  #if 0
+  // ----- Set Basic Joint Properties -----
+  public: void SetJointTransformFromParent(
+      const Identity &_id, const Pose3d &_pose) override;
+
+
+  // ----- Detach Joint -----
+  public: void DetachJoint(const Identity &_jointId) override;
+
+
+  // ----- Fixed Joint -----
+  public: Identity CastToFixedJoint(
+      const Identity &_jointID) const override;
+
+  public: Identity AttachFixedJoint(
+      const Identity &_childID,
+      const BaseLink3dPtr &_parent,
+      const std::string &_name) override;
+
+
+  // ----- Free Joint -----
+  public: Identity CastToFreeJoint(
+      const Identity &_jointID) const override;
+
+  public: void SetFreeJointRelativeTransform(
+      const Identity &_jointID, const Pose3d &_pose) override;
+
+
+  // ----- Revolute Joint -----
+  public: Identity CastToRevoluteJoint(
+      const Identity &_jointID) const override;
+
+  public: AngularVector3d GetRevoluteJointAxis(
+      const Identity &_jointID) const override;
+
+  public: void SetRevoluteJointAxis(
+      const Identity &_jointID, const AngularVector3d &_axis) override;
+
+
+  // ----- Prismatic Joint -----
+  public: Identity CastToPrismaticJoint(
+      const Identity &_jointID) const override;
+
+  public: LinearVector3d GetPrismaticJointAxis(
+      const Identity &_jointID) const override;
+
+  public: void SetPrismaticJointAxis(
+      const Identity &_jointID, const LinearVector3d &_axis) override;
+
+
+  // ----- Joint Commands -----
+  public: void SetJointVelocityCommand(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMinPosition(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMaxPosition(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMinVelocity(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMaxVelocity(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMinEffort(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  public: void SetJointMaxEffort(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
+
+  // ----- Joint passive force -----
+
+  public: void SetJointFriction(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
+
+public: void SetJointDampingCoefficient(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
+
+  public: void SetJointSpringStiffness(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
+
+  public: void SetJointSpringReference(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
+
+  // ----- Transmitted wrench -----
+  public: Wrench3d GetJointTransmittedWrenchInJointFrame(
+      const Identity &_id) const override;
+#endif
+};
+
+}
+}
+}
+
+#endif
+
