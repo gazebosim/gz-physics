@@ -112,6 +112,13 @@ struct FrameInfo
 
 struct WorldInfo
 {
+  ~WorldInfo()
+  {
+    mj_deleteData(this->mjDataObj);
+    mj_deleteModel(this->mjModelObj);
+    mj_deleteSpec(this->mjSpecObj);
+  }
+
   std::size_t entityId;
   mjsBody *body{nullptr};
   mjSpec *mjSpecObj{nullptr};
