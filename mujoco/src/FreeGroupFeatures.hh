@@ -19,6 +19,7 @@
 #define GZ_PHYSICS_MUJOCO_SRC_FREEGROUPFEATURES_HH_
 
 #include <gz/physics/FreeGroup.hh>
+#include <gz/physics/Implements.hh>
 
 #include "Base.hh"
 

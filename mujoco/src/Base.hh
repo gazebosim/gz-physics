@@ -18,6 +18,9 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
+#include <mujoco/mjdata.h>
+#include <mujoco/mjmodel.h>
+#include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
 
 #include <cstddef>
@@ -27,10 +30,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include <gz/common/Console.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/SemanticVersion.hh>
-#include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
 
 namespace gz
@@ -112,13 +113,26 @@ struct FrameInfo
 
 struct WorldInfo
 {
-  std::size_t entityId;
+  ~WorldInfo()
+  {
+    mj_deleteData(this->mjDataObj);
+    mj_deleteModel(this->mjModelObj);
+    mj_deleteSpec(this->mjSpecObj);
+  }
+
+  WorldInfo() = default;
+  WorldInfo(const WorldInfo &) = delete;
+  WorldInfo &operator=(const WorldInfo &) = delete;
+  WorldInfo(WorldInfo &&) = default;
+  WorldInfo &operator=(WorldInfo &&) = default;
+
+  std::size_t entityId{0};
   mjsBody *body{nullptr};
   mjSpec *mjSpecObj{nullptr};
   mjModel *mjModelObj{nullptr};
   mjData *mjDataObj{nullptr};
   bool specDirty{true};
-  std::string name;
+  std::string name{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
@@ -128,7 +142,7 @@ struct WorldInfo
 
   /// \brief body poses from the most recent pose change/update.
   /// The index is the MuJoCo body ID, and the value is the body's pose.
-  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
+  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses{};
 };
 
 class Base
