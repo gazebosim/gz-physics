@@ -125,13 +125,13 @@ struct WorldInfo
   WorldInfo(WorldInfo &&) = default;
   WorldInfo &operator=(WorldInfo &&) = default;
 
-  std::size_t entityId;
+  std::size_t entityId{0};
   mjsBody *body{nullptr};
   mjSpec *mjSpecObj{nullptr};
   mjModel *mjModelObj{nullptr};
   mjData *mjDataObj{nullptr};
   bool specDirty{true};
-  std::string name;
+  std::string name{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
@@ -141,7 +141,7 @@ struct WorldInfo
 
   /// \brief body poses from the most recent pose change/update.
   /// The index is the MuJoCo body ID, and the value is the body's pose.
-  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
+  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses{};
 };
 
 class Base
