@@ -55,6 +55,7 @@ struct ShapeInfo
   mjsGeom *geom{nullptr};
   std::string name;
   std::weak_ptr<LinkInfo> linkInfo;
+  std::optional<uint16_t> categoryMask;
 };
 
 struct LinkInfo

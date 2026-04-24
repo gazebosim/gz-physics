@@ -19,6 +19,7 @@
 #define GZ_PHYSICS_MUJOCO_SRC_GETENTITIESFEATURE_HH_
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -40,18 +41,34 @@ struct EntityManagementFeatureList : FeatureList<
   GetModelFromWorld,
   GetShapeFromLink,
   RemoveEntities,
-  ConstructEmptyWorldFeature
-  // ConstructEmptyModelFeature,
-  // ConstructEmptyNestedModelFeature,
-  // ConstructEmptyLinkFeature
-  // CollisionFilterMaskFeature,
-  // WorldModelFeature
+  ConstructEmptyWorldFeature,
+  CollisionFilterMaskFeature,
+  CategoryFilterMaskFeature
 > { };
 
 class EntityManagementFeatures :
     public virtual Base,
     public virtual Implements3d<EntityManagementFeatureList>
 {
+  // ----- CollisionFilterMaskFeature -----
+  public: void SetCollisionFilterMask(
+      const Identity &_shapeID, uint16_t _mask) override;
+
+  public: uint16_t GetCollisionFilterMask(
+      const Identity &_shapeID) const override;
+
+  public: void RemoveCollisionFilterMask(
+      const Identity &_shapeID) override;
+
+  // ----- CategoryFilterMaskFeature -----
+  public: void SetCategoryFilterMask(
+      const Identity &_shapeID, uint16_t _mask) override;
+
+  public: uint16_t GetCategoryFilterMask(
+      const Identity &_shapeID) const override;
+
+  public: void RemoveCategoryFilterMask(
+      const Identity &_shapeID) override;
   // ----- Get entities -----
   public: const std::string &GetEngineName(const Identity &) const override
   {
