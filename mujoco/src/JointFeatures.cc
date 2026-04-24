@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <Eigen/Geometry>
 #include <gz/math/Helpers.hh>
 #include "Base.hh"
 #include "gz/physics/Geometry.hh"
@@ -27,6 +28,32 @@
 namespace gz {
 namespace physics {
 namespace mujoco {
+
+namespace  {
+double &getJointPositionImpl(JointInfo *jointInfo, std::size_t _dof)
+{
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  if (jointInfo->joint->type == mjtJoint::mjJNT_BALL)
+  {
+    // Ball joints have to be handled differently because the three DOFs exposed
+    // in the public API actually represent the components of an Angle Axis
+    // representation. We allow setting invididual components (DOFs) here, but
+    // convert to quaternion and update mjData right before stepping in
+    // SimulationFeatures.
+    auto &cache = jointInfo->worldInfo->ballJointPositionsCache;
+    auto result = cache.try_emplace(jointInfo->nq_index);
+    if (result.second)
+    {
+      const double *mjQuat = &d->qpos[jointInfo->nq_index];
+      Eigen::AngleAxisd angleAxis{
+          Eigen::Quaterniond(mjQuat[0], mjQuat[1], mjQuat[2], mjQuat[3])};
+      result.first->second = angleAxis.axis() * angleAxis.angle();
+    }
+    return result.first->second[_dof];
+  }
+  return d->qpos[jointInfo->nq_index + _dof];
+}
+}
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointPosition(
@@ -49,7 +76,7 @@ double JointFeatures::GetJointPosition(
           << jointInfo->name << "]\n";
     return math::NAN_D;
   }
-  return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof];
+  return getJointPositionImpl(jointInfo, _dof);
 }
 
 /////////////////////////////////////////////////
@@ -181,7 +208,7 @@ void JointFeatures::SetJointPosition(
           << jointInfo->name << "]\n";
     return;
   }
-  jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof] = _value;
+  getJointPositionImpl(jointInfo, _dof) = _value;
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 

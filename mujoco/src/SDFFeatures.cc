@@ -272,6 +272,25 @@ struct ModelKinematicStructure
         convertJointAxis(sdfAxis, joint->axis);
         copyStandardJointAxisProperties(joint, sdfAxis);
       }
+      else if (sdfJoint->Type() == ::sdf::JointType::BALL)
+      {
+        joint = mjs_addJoint(child, nullptr);
+        joint->type = mjJNT_BALL;
+        const auto *sdfAxis = sdfJoint->Axis(0);
+        if (sdfAxis)
+        {
+          convertJointAxis(sdfAxis, joint->axis);
+          copyStandardJointAxisProperties(joint, sdfAxis);
+          // For ball joints, the first range parameter should always be set to
+          // zero.
+          if (joint->limited && joint->range[0] != 0.0)
+          {
+            gzwarn << "MuJoCo requires the lower joint position limit of ball "
+                      "joints to be zero.\n";
+            joint->range[0] = 0;
+          }
+        }
+      }
       else if (sdfJoint->Type() != ::sdf::JointType::FIXED)
       {
         gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
