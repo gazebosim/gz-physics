@@ -387,11 +387,7 @@ uint16_t EntityManagementFeatures::GetCollisionFilterMask(
     const Identity &_shapeID) const
 {
   auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
-  if (shapeInfo && shapeInfo->geom)
-  {
-    return static_cast<uint16_t>(shapeInfo->geom->conaffinity);
-  }
-  return std::numeric_limits<uint16_t>::max();
+  return static_cast<uint16_t>(shapeInfo->geom->conaffinity);
 }
 
 /////////////////////////////////////////////////
@@ -448,14 +444,15 @@ void EntityManagementFeatures::RemoveCategoryFilterMask(
     const Identity &_shapeID)
 {
   auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
-  if (shapeInfo && shapeInfo->geom)
-  {
-    // Removing categority bitmask means setting it to the same value as
-    // collide bitmask
-    this->SetCategoryFilterMask(
-        _shapeID, static_cast<uint16_t>(shapeInfo->geom->conaffinity));
-    shapeInfo->categoryMask.reset();
-  }
+  if (!shapeInfo || !shapeInfo->geom)
+    return;
+  // Removing categority bitmask means setting it to the same value as
+  // collide bitmask
+  // Do this by calling SetCategoryFilterMask so both the spec and the model
+  // are updated. Make sure to reset the categoryMask optional var afterwards.
+  this->SetCategoryFilterMask(
+      _shapeID, static_cast<uint16_t>(shapeInfo->geom->conaffinity));
+  shapeInfo->categoryMask.reset();
 }
 
 /////////////////////////////////////////////////
