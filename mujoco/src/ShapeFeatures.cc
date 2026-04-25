@@ -33,12 +33,16 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
   if (!shapeInfo || !shapeInfo->geom)
   {
+    gzerr << "Error computing shape bounding box. "
+          << "Unable to find shape " << _shapeID.id << std::endl;
     return AlignedBox3d();
   }
 
   const auto linkInfo = shapeInfo->linkInfo.lock();
   if (!linkInfo)
   {
+    gzerr << "Error computing shape bounding box. "
+          << "Unable to retrieve link for shape " << _shapeID.id << std::endl;
     return AlignedBox3d();
   }
 
@@ -49,6 +53,8 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   int geomId = mjs_getId(shapeInfo->geom->element);
   if (geomId < 0 || geomId >= m->ngeom)
   {
+    gzerr << "Error computing shape bounding box. "
+          << "Unable to retrieve geom for shape " << _shapeID.id << std::endl;
     return AlignedBox3d();
   }
 
