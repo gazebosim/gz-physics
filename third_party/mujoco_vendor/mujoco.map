@@ -1,0 +1,11 @@
+# Linker version script for MuJoCo in Gazebo.
+# This file restricts the exported symbols of libmujoco.so to only the public MuJoCo APIs.
+# This prevents internal dependencies like tinyxml2 from leaking into the global symbol table
+# and conflicting with other libraries in the same process (like libsdformat).
+
+{
+  global:
+    mj*;
+  local:
+    *; # Hide everything else
+};

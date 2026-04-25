@@ -14,6 +14,16 @@ else()
     set(MUJOCO_BYPRODUCTS "${MUJOCO_SHARED_FILE}")
 endif()
 
+# MuJoCo fetches its own tinyxml2 dependency which can clash with the system
+# tinyxml2 used by sdformat on Linux (flat namespace). To prevent symbol
+# collisions, we use a version script on Linux to only export MuJoCo's public
+# API symbols. macOS (two-level namespace) and Windows (isolated DLL exports)
+# do not need this.
+set(MUJOCO_LINK_FLAGS "")
+if(UNIX AND NOT APPLE)
+    set(MUJOCO_LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/mujoco.map")
+endif()
+
 ExternalProject_Add(
   mujoco_ext
   GIT_REPOSITORY https://github.com/google-deepmind/mujoco
@@ -27,6 +37,7 @@ ExternalProject_Add(
     -Wno-dev # Suppress any CMake warnings from mujoco
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
     -DBUILD_SHARED_LIBS=ON
+    -DCMAKE_SHARED_LINKER_FLAGS=${MUJOCO_LINK_FLAGS}
     -DMUJOCO_BUILD_EXAMPLES=OFF
     -DMUJOCO_BUILD_TESTS=OFF
     -DMUJOCO_BUILD_SIMULATE=OFF
