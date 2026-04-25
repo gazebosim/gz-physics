@@ -296,7 +296,12 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
 using LinkBoundingBoxFeaturesList = gz::physics::FeatureList<
     gz::physics::ForwardStep,
     gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetEntities,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetWorldFromEngine,
+    gz::physics::GetModelFromWorld,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetShapeFromLink,
+    gz::physics::GetShapeBoundingBox,
     gz::physics::GetLinkBoundingBox,
     gz::physics::GetModelBoundingBox
 >;
@@ -353,14 +358,59 @@ TEST_F(LinkBoundingBoxFeaturesTestTypes, AxisAlignedBoundingBox)
   }
 }
 
-TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
+TEST_F(LinkBoundingBoxFeaturesTestTypes, ConeBoundingBox)
 {
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
+    auto engine =
+        gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kShapesWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+
+    auto coneModel = world->GetModel("cone");
+    ASSERT_NE(nullptr, coneModel);
+    auto coneLink = coneModel->GetLink(0);
+    ASSERT_NE(nullptr, coneLink);
+    auto coneShape = coneLink->GetShape(0);
+    ASSERT_NE(nullptr, coneShape);
+
+    // shapes.world cone: radius=0.5, length=1.1
+    // expected AABB ±(0.5, 0.5, 0.55)
+    auto aabb = coneShape->GetAxisAlignedBoundingBox(*coneShape);
+    const double tol = 0.05;
+    EXPECT_NEAR(-0.5,  aabb.min().x(), tol);
+    EXPECT_NEAR(-0.5,  aabb.min().y(), tol);
+    EXPECT_NEAR(-0.55, aabb.min().z(), tol);
+    EXPECT_NEAR( 0.5,  aabb.max().x(), tol);
+    EXPECT_NEAR( 0.5,  aabb.max().y(), tol);
+    EXPECT_NEAR( 0.55, aabb.max().z(), tol);
+  }
+}
+
+TEST_F(LinkBoundingBoxFeaturesTestTypes, ModelAxisAlignedBoundingBox)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    // bullet-featherstone does not support floating bodies
+    if(this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      GTEST_SKIP();
+    }
+
+    auto engine =
+        gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
