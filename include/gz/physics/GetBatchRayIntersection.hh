@@ -59,12 +59,15 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using RayQuery = RayT<PolicyT>;
 
-    /// \brief Cast multiple rays and return one result per ray.
+    /// \brief Cast multiple rays and write one result per ray into _output.
     /// \param[in] _rays Ray queries (origin + target) in world coordinates.
-    /// \return One RayIntersection per input ray, in the same order.
-    public: std::vector<RayIntersection>
-      GetBatchRayIntersectionFromLastStep(
-        const std::vector<RayQuery> &_rays) const;
+    /// \param[out] _output Resized and filled with one result per input ray,
+    ///   in the same order. Caller may preallocate and reuse across calls.
+    /// \return true if the underlying detector handled the batch; false if the
+    ///   detector does not support batch raycasting (results are NaN-filled).
+    public: bool GetBatchRayIntersectionFromLastStep(
+        const std::vector<RayQuery> &_rays,
+        std::vector<RayIntersection> &_output) const;
   };
 
   public: template <typename PolicyT>
@@ -73,10 +76,10 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using RayQuery = RayT<PolicyT>;
 
-    public: virtual std::vector<RayIntersection>
-      GetBatchRayIntersectionFromLastStep(
+    public: virtual bool GetBatchRayIntersectionFromLastStep(
         const Identity &_worldID,
-        const std::vector<RayQuery> &_rays) const = 0;
+        const std::vector<RayQuery> &_rays,
+        std::vector<RayIntersection> &_output) const = 0;
   };
 };
 

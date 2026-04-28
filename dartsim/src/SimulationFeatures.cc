@@ -256,16 +256,15 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
 }
 
 /////////////////////////////////////////////////
-std::vector<SimulationFeatures::BatchRayIntersection>
-SimulationFeatures::GetBatchRayIntersectionFromLastStep(
+bool SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   const Identity &_worldID,
-  const std::vector<SimulationFeatures::BatchRayQuery> &_rays) const
+  const std::vector<SimulationFeatures::BatchRayQuery> &_rays,
+  std::vector<SimulationFeatures::BatchRayIntersection> &_output) const
 {
-  std::vector<SimulationFeatures::BatchRayIntersection> results;
-  results.reserve(_rays.size());
+  _output.clear();
 
   if (_rays.empty())
-    return results;
+    return true;
 
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   auto *const solver = world->getConstraintSolver();
@@ -280,16 +279,17 @@ SimulationFeatures::GetBatchRayIntersectionFromLastStep(
         solver->getCollisionGroup().get(), _rays);
     if (gzResults)
     {
-      return std::move(*gzResults);
+      _output = std::move(*gzResults);
+      return true;
     }
   }
 
-  // Unsupported detector: return +INF fraction, NaN point/normal.
+  // Unsupported detector: fill with +INF fraction, NaN point/normal.
   constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
   const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
-  results.assign(_rays.size(),
+  _output.assign(_rays.size(),
       {kNaNVec, std::numeric_limits<double>::infinity(), kNaNVec});
-  return results;
+  return false;
 }
 
 std::vector<SimulationFeatures::ContactInternal>

@@ -133,9 +133,10 @@ class SimulationFeatures :
       const LinearVector3d &_from,
       const LinearVector3d &_end) const override;
 
-  public: std::vector<BatchRayIntersection> GetBatchRayIntersectionFromLastStep(
+  public: bool GetBatchRayIntersectionFromLastStep(
       const Identity &_worldID,
-      const std::vector<BatchRayQuery> &_rays) const override;
+      const std::vector<BatchRayQuery> &_rays,
+      std::vector<BatchRayIntersection> &_output) const override;
 
   /// \brief link poses from the most recent pose change/update.
   /// The key is the link's ID, and the value is the link's pose

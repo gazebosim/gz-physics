@@ -2317,8 +2317,8 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
       {Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10)},  // miss
     };
 
-    std::vector<RayIntersection> results =
-      world->GetBatchRayIntersectionFromLastStep(rays);
+    std::vector<RayIntersection> results;
+    world->GetBatchRayIntersectionFromLastStep(rays, results);
 
     ASSERT_EQ(2u, results.size());
 
@@ -2364,8 +2364,10 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
     using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
     using RayQuery = World::RayQuery;
 
+    using RayIntersection = World::RayIntersection;
     std::vector<RayQuery> rays;  // intentionally empty
-    auto results = world->GetBatchRayIntersectionFromLastStep(rays);
+    std::vector<RayIntersection> results;
+    world->GetBatchRayIntersectionFromLastStep(rays, results);
     EXPECT_TRUE(results.empty());
   }
 }
@@ -2400,8 +2402,8 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
         {Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2)},
       };
 
-      std::vector<RayIntersection> results =
-        world->GetBatchRayIntersectionFromLastStep(rays);
+      std::vector<RayIntersection> results;
+      world->GetBatchRayIntersectionFromLastStep(rays, results);
 
       ASSERT_EQ(1u, results.size());
       EXPECT_FALSE(results[0].IsHit());
@@ -2456,7 +2458,8 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
     for (const auto &c : cases)
       rays.push_back(c.ray);
 
-    auto results = world->GetBatchRayIntersectionFromLastStep(rays);
+    std::vector<World::RayIntersection> results;
+    world->GetBatchRayIntersectionFromLastStep(rays, results);
 
     ASSERT_EQ(cases.size(), results.size());
 
