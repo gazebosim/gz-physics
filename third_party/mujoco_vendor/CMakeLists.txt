@@ -73,3 +73,13 @@ endif()
 # Create the nice namespace alias for the main project to use. This is also
 # what the target would be if mujoco was built/installed externally.
 add_library(mujoco::mujoco ALIAS mujoco_internal)
+
+if(BUILD_TESTING)
+  enable_testing()
+  if(UNIX AND NOT APPLE)
+    add_test(NAME test_mujoco_symbols
+             COMMAND ${CMAKE_COMMAND} -D LIB_PATH=${MUJOCO_SHARED_FILE} -P ${CMAKE_CURRENT_SOURCE_DIR}/test_symbols.cmake
+    )
+    set_tests_properties(test_mujoco_symbols PROPERTIES REQUIRED_FILES "${MUJOCO_SHARED_FILE}")
+  endif()
+endif()
