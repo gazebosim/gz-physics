@@ -259,11 +259,13 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
 bool SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   const Identity &_worldID,
   const std::vector<SimulationFeatures::BatchRayQuery> &_rays,
-  std::vector<SimulationFeatures::BatchRayIntersection> &_output) const
+  SimulationFeatures::BatchedRayIntersectionData &_output) const
 {
+  auto &results = _output.Get<std::vector<BatchRayIntersection>>();
+
   if (_rays.empty())
   {
-    _output.clear();
+    results.clear();
     return true;
   }
 
@@ -276,13 +278,13 @@ bool SimulationFeatures::GetBatchRayIntersectionFromLastStep(
 
   if (gzDetector &&
       gzDetector->BatchRaycast(
-          solver->getCollisionGroup().get(), _rays, _output))
+          solver->getCollisionGroup().get(), _rays, results))
     return true;
 
   // Unsupported detector: fill with +INF fraction, NaN point/normal.
   constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
   const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
-  _output.assign(_rays.size(),
+  results.assign(_rays.size(),
       {kNaNVec, std::numeric_limits<double>::infinity(), kNaNVec});
   return false;
 }

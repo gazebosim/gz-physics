@@ -35,9 +35,7 @@ bool GetBatchRayIntersectionFromLastStepFeature::World<
       BatchedRayIntersectionData &_output) const
 {
   return this->template Interface<GetBatchRayIntersectionFromLastStepFeature>()
-      ->GetBatchRayIntersectionFromLastStep(
-          this->identity, _rays,
-          _output.template Get<std::vector<RayIntersection>>());
+      ->GetBatchRayIntersectionFromLastStep(this->identity, _rays, _output);
 }
 
 }  // namespace physics

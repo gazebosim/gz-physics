@@ -54,13 +54,20 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
     VectorType target;
   };
 
+  /// \brief Extensible output type for batch ray queries. Using SpecifyData
+  /// allows additional fields to be added in the future without breaking
+  /// API or ABI for existing callers and plugin implementers.
+  public: template <typename PolicyT>
+  using BatchedRayIntersectionDataT =
+      SpecifyData<RequireData<std::vector<RayIntersectionT<PolicyT>>>>;
+
   public: template <typename PolicyT, typename FeaturesT>
   class World : public virtual Feature::World<PolicyT, FeaturesT>
   {
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using RayQuery = RayT<PolicyT>;
     public: using BatchedRayIntersectionData =
-        SpecifyData<RequireData<std::vector<RayIntersection>>>;
+        BatchedRayIntersectionDataT<PolicyT>;
 
     /// \brief Cast multiple rays and write one result per ray into _output.
     /// \param[in] _rays Ray queries (origin + target) in world coordinates.
@@ -78,11 +85,13 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
   {
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using RayQuery = RayT<PolicyT>;
+    public: using BatchedRayIntersectionData =
+        BatchedRayIntersectionDataT<PolicyT>;
 
     public: virtual bool GetBatchRayIntersectionFromLastStep(
         const Identity &_worldID,
         const std::vector<RayQuery> &_rays,
-        std::vector<RayIntersection> &_output) const = 0;
+        BatchedRayIntersectionData &_output) const = 0;
   };
 };
 
