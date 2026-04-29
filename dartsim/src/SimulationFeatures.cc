@@ -261,10 +261,11 @@ bool SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   const std::vector<SimulationFeatures::BatchRayQuery> &_rays,
   std::vector<SimulationFeatures::BatchRayIntersection> &_output) const
 {
-  _output.clear();
-
   if (_rays.empty())
+  {
+    _output.clear();
     return true;
+  }
 
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   auto *const solver = world->getConstraintSolver();
@@ -273,16 +274,10 @@ bool SimulationFeatures::GetBatchRayIntersectionFromLastStep(
   auto *gzDetector =
     dynamic_cast<dart::collision::GzCollisionDetector *>(detector.get());
 
-  if (gzDetector)
-  {
-    auto gzResults = gzDetector->BatchRaycast(
-        solver->getCollisionGroup().get(), _rays);
-    if (gzResults)
-    {
-      _output = std::move(*gzResults);
-      return true;
-    }
-  }
+  if (gzDetector &&
+      gzDetector->BatchRaycast(
+          solver->getCollisionGroup().get(), _rays, _output))
+    return true;
 
   // Unsupported detector: fill with +INF fraction, NaN point/normal.
   constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();

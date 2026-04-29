@@ -17,7 +17,6 @@
 
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <unordered_map>
 #include <utility>
 
@@ -106,9 +105,10 @@ void GzCollisionDetector::LimitCollisionPairMaxContacts(
 }
 
 /////////////////////////////////////////////////
-std::optional<std::vector<GzRayResult>> GzCollisionDetector::BatchRaycast(
+bool GzCollisionDetector::BatchRaycast(
     CollisionGroup */*_group*/,
-    const std::vector<GzRay> &/*_rays*/) const
+    const std::vector<GzRay> &/*_rays*/,
+    std::vector<GzRayResult> &/*_output*/) const
 {
   static bool warned = false;
   if (!warned)
@@ -117,7 +117,7 @@ std::optional<std::vector<GzRayResult>> GzCollisionDetector::BatchRaycast(
     gzwarn << "BatchRaycast: collision detector does not support batch "
            << "raycasting. All ray results will be NaN." << std::endl;
   }
-  return std::nullopt;
+  return false;
 }
 
 /////////////////////////////////////////////////
@@ -248,20 +248,21 @@ bool GzBulletCollisionDetector::collide(
 }
 
 /////////////////////////////////////////////////
-std::optional<std::vector<GzRayResult>> GzBulletCollisionDetector::BatchRaycast(
+bool GzBulletCollisionDetector::BatchRaycast(
     CollisionGroup *_group,
-    const std::vector<GzRay> &_rays) const
+    const std::vector<GzRay> &_rays,
+    std::vector<GzRayResult> &_output) const
 {
-  std::vector<GzRayResult> results;
-  results.reserve(_rays.size());
-
   auto *gzGroup = dynamic_cast<GzBulletCollisionGroup *>(_group);
   if (!gzGroup)
-    return std::nullopt;
+    return false;
 
   const btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
   if (!btWorld)
-    return std::nullopt;
+    return false;
+
+  _output.clear();
+  _output.reserve(_rays.size());
 
   for (const auto &ray : _rays)
   {
@@ -295,8 +296,8 @@ std::optional<std::vector<GzRayResult>> GzBulletCollisionDetector::BatchRaycast(
       result.fraction = std::numeric_limits<double>::infinity();
       result.normal = Eigen::Vector3d::Constant(kNaN);
     }
-    results.push_back(std::move(result));
+    _output.push_back(std::move(result));
   }
 
-  return results;
+  return true;
 }

@@ -24,6 +24,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/RayIntersection.hh>
+#include <gz/physics/SpecifyData.hh>
 
 namespace gz
 {
@@ -58,16 +59,18 @@ class GZ_PHYSICS_VISIBLE GetBatchRayIntersectionFromLastStepFeature
   {
     public: using RayIntersection = RayIntersectionT<PolicyT>;
     public: using RayQuery = RayT<PolicyT>;
+    public: using BatchedRayIntersectionData =
+        SpecifyData<RequireData<std::vector<RayIntersection>>>;
 
     /// \brief Cast multiple rays and write one result per ray into _output.
     /// \param[in] _rays Ray queries (origin + target) in world coordinates.
-    /// \param[out] _output Resized and filled with one result per input ray,
-    ///   in the same order. Caller may preallocate and reuse across calls.
+    /// \param[out] _output Filled with one result per input ray, in the same
+    ///   order. Caller may preallocate and reuse the inner vector across calls.
     /// \return true if the underlying detector handled the batch; false if the
     ///   detector does not support batch raycasting (results are NaN-filled).
     public: bool GetBatchRayIntersectionFromLastStep(
         const std::vector<RayQuery> &_rays,
-        std::vector<RayIntersection> &_output) const;
+        BatchedRayIntersectionData &_output) const;
   };
 
   public: template <typename PolicyT>

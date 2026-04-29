@@ -32,10 +32,12 @@ template <typename PolicyT, typename FeaturesT>
 bool GetBatchRayIntersectionFromLastStepFeature::World<
     PolicyT, FeaturesT>::GetBatchRayIntersectionFromLastStep(
       const std::vector<RayQuery> &_rays,
-      std::vector<RayIntersection> &_output) const
+      BatchedRayIntersectionData &_output) const
 {
   return this->template Interface<GetBatchRayIntersectionFromLastStepFeature>()
-      ->GetBatchRayIntersectionFromLastStep(this->identity, _rays, _output);
+      ->GetBatchRayIntersectionFromLastStep(
+          this->identity, _rays,
+          _output.template Get<std::vector<RayIntersection>>());
 }
 
 }  // namespace physics

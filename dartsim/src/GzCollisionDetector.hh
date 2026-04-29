@@ -21,7 +21,6 @@
 #include <cstdio>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <vector>
 
 #include <Eigen/Core>
@@ -62,11 +61,13 @@ class GzCollisionDetector
   /// \brief Cast multiple rays against a collision group.
   /// \param[in] _group The collision group to test against.
   /// \param[in] _rays The rays to cast.
-  /// \return Results for each ray if supported, or std::nullopt if this
-  ///   detector does not support batch raycasting.
-  public: virtual std::optional<std::vector<GzRayResult>> BatchRaycast(
+  /// \param[out] _output Filled with one result per ray. Caller may
+  ///   preallocate and reuse across calls.
+  /// \return true if raycasting succeeded, false if unsupported.
+  public: virtual bool BatchRaycast(
       CollisionGroup *_group,
-      const std::vector<GzRay> &_rays) const;
+      const std::vector<GzRay> &_rays,
+      std::vector<GzRayResult> &_output) const;
 
   /// Destructor
   public: virtual ~GzCollisionDetector() = default;
@@ -133,9 +134,10 @@ class GzBulletCollisionDetector :
   public: std::unique_ptr<CollisionGroup> createCollisionGroup() override;
 
   // Documentation inherited
-  public: std::optional<std::vector<GzRayResult>> BatchRaycast(
+  public: bool BatchRaycast(
       CollisionGroup *_group,
-      const std::vector<GzRay> &_rays) const override;
+      const std::vector<GzRay> &_rays,
+      std::vector<GzRayResult> &_output) const override;
 
   /// \brief Create the GzBulletCollisionDetector
   public: static std::shared_ptr<GzBulletCollisionDetector> create();
