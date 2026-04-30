@@ -134,21 +134,16 @@ void copyStandardJointAxisProperties(
   _joint->frictionloss = _sdfAxis->Friction();
   _joint->springref = _sdfAxis->SpringReference();
   _joint->stiffness = _sdfAxis->SpringStiffness();
-  _joint->limited = static_cast<int>(!std::isinf(infIfNeg(_sdfAxis->Lower())) &&
-                                     !std::isinf(infIfNeg(_sdfAxis->Upper())));
-  if (_joint->limited)
-  {
-    _joint->range[0] = infIfNeg(_sdfAxis->Lower());
-    _joint->range[1] = infIfNeg(_sdfAxis->Upper());
-  }
+  _joint->limited = static_cast<int>(!std::isinf(_sdfAxis->Lower()) &&
+                                     !std::isinf(_sdfAxis->Upper()));
+  _joint->range[0] = _sdfAxis->Lower();
+  _joint->range[1] = _sdfAxis->Upper();
 
   _joint->actfrclimited =
       static_cast<int>(!std::isinf(infIfNeg(_sdfAxis->Effort())));
-  if (_joint->actfrclimited)
-  {
-    _joint->actfrcrange[0] = -infIfNeg(_sdfAxis->Effort());
-    _joint->actfrcrange[1] = infIfNeg(_sdfAxis->Effort());
-  }
+
+  _joint->actfrcrange[0] = -infIfNeg(_sdfAxis->Effort());
+  _joint->actfrcrange[1] = infIfNeg(_sdfAxis->Effort());
 
   // TODO(azeey) MuJoCo does not natively support velocity limits.
   // See https://github.com/google-deepmind/mujoco/discussions/2367
@@ -261,7 +256,15 @@ struct ModelKinematicStructure
       // This allows us to use the same interface for setting velocity servo
       // commands as well.
       mjsActuator *actuator{nullptr};
-      if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
+      if (sdfJoint->Type() == ::sdf::JointType::PRISMATIC)
+      {
+        joint = mjs_addJoint(child, nullptr);
+        joint->type = mjJNT_SLIDE;
+        const auto *sdfAxis = sdfJoint->Axis(0);
+        convertJointAxis(sdfAxis, joint->axis);
+        copyStandardJointAxisProperties(joint, sdfAxis);
+      }
+      else if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
       {
         joint = mjs_addJoint(child, nullptr);
         joint->type = mjJNT_HINGE;
@@ -577,8 +580,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   worldInfo->models.AddEntity(modelInfo->entityId, modelInfo,
                               JoinNames(worldInfo->name, modelInfo->name),
                               worldInfo->entityId);
-
-  kinTree.PrintGraph();
 
   for (std::size_t i = 0; i < kinTree.parents.size(); ++i)
   {

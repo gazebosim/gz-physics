@@ -212,8 +212,8 @@ class Base
     return entityCount++;
   }
 
-  public: std::string JoinNames(const std::string &_parent,
-                                const std::string &_name) const
+  public: static inline std::string JoinNames(const std::string &_parent,
+                                       const std::string &_name)
   {
     return _parent + "::" + _name;
   }
