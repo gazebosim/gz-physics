@@ -225,7 +225,8 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStatePreventsMotion)
     // Re-enable mobility: gravity now integrates and the sphere falls.
     model->SetStatic(false);
     // Re-apply angular velocity after the static→dynamic transition
-    // (DART resets velocity state when the skeleton becomes mobile again).
+    // (Some physics engines may reset velocity state when the model becomes
+    // mobile again).
     const Eigen::Vector3d angVel(0.0, 0.0, 1.0);
     freeGroup->SetWorldAngularVelocity(angVel);
 
@@ -482,11 +483,11 @@ TYPED_TEST(ModelFeaturesTest, GravityPreservedAcrossStaticToggle)
 
 //////////////////////////////////////////////////
 // GetModelGravityEnabled must return true for a model whose only link has
-// fluid added mass configured, even though SetLinkAddedMass forces DART
-// gravity off internally on that body node.
+// fluid added mass configured, even though SetLinkAddedMass forces the physics
+// engine's gravity off internally on that entity.
 // SetModelGravityEnabled skips added-mass links entirely, so for an
 // all-added-mass model calling Set has no effect and the getter stays true.
-TYPED_TEST(ModelFeaturesTest, AddedMassLinkDoesNotPollutGravityGetter)
+TYPED_TEST(ModelFeaturesTest, AddedMassLinkDoesNotPolluteGravityGetter)
 {
   for (const std::string &name : this->pluginNames)
   {
@@ -503,13 +504,13 @@ TYPED_TEST(ModelFeaturesTest, AddedMassLinkDoesNotPollutGravityGetter)
     auto model = world->GetModel("sphere_added_mass");
     ASSERT_NE(nullptr, model);
 
-    // Despite the added-mass link having DART gravity mode = false internally,
+    // Despite the added-mass link having internal gravity mode = false,
     // the user-visible flag must read as enabled (user never called
     // SetGravityEnabled(false)).
     EXPECT_TRUE(model->GetGravityEnabled());
 
     // All links are added-mass links so SetGravityEnabled is a no-op;
-    // the getter must not be corrupted by the internal DART flag.
+    // the getter must not be corrupted by the internal engine flag.
     model->SetGravityEnabled(false);
     EXPECT_TRUE(model->GetGravityEnabled());
 
@@ -519,8 +520,8 @@ TYPED_TEST(ModelFeaturesTest, AddedMassLinkDoesNotPollutGravityGetter)
 }
 
 //////////////////////////////////////////////////
-// SetModelGravityEnabled(true) must not re-enable DART's built-in gravity on
-// an added-mass link. If it did, gravity would be applied twice (DART's
+// SetModelGravityEnabled(true) must not re-enable internal built-in gravity on
+// an added-mass link. If it did, gravity would be applied twice (engine's
 // built-in pass + the manual F=ma in SimulationFeatures) and the model would
 // fall faster than a plain sphere of the same mass.
 TYPED_TEST(ModelFeaturesTest, AddedMassLinkGravityInvariantPreserved)
@@ -550,7 +551,7 @@ TYPED_TEST(ModelFeaturesTest, AddedMassLinkGravityInvariantPreserved)
     ASSERT_NE(nullptr, amLink);
 
     // Explicitly call SetGravityEnabled(true) to exercise the code path that
-    // must NOT re-enable DART's built-in gravity on the added-mass body node.
+    // must NOT re-enable internal built-in gravity on the added-mass link.
     amModel->SetGravityEnabled(true);
     EXPECT_TRUE(amModel->GetGravityEnabled());
 
@@ -558,7 +559,7 @@ TYPED_TEST(ModelFeaturesTest, AddedMassLinkGravityInvariantPreserved)
     // body mass=1, effective inertial mass for vertical motion is 2 kg, so the
     // added-mass sphere falls more slowly (a = F/m_eff = 10/2 = 5 m/s^2)
     // compared to the plain sphere (a = 10 m/s^2). If SetGravityEnabled(true)
-    // incorrectly re-enabled DART's built-in gravity, the added-mass sphere
+    // incorrectly re-enabled internal built-in gravity, the added-mass sphere
     // would receive gravity twice and fall faster than the plain one.
     const std::size_t steps = 100;
     gz::physics::ForwardStep::Input input;
@@ -576,7 +577,7 @@ TYPED_TEST(ModelFeaturesTest, AddedMassLinkGravityInvariantPreserved)
     // (If the invariant is broken, amZ < plainZ.)
     EXPECT_GE(amZ, plainZ)
         << "Added-mass sphere fell faster than plain sphere, suggesting "
-           "SetGravityEnabled(true) incorrectly re-enabled DART built-in "
+           "SetGravityEnabled(true) incorrectly re-enabled built-in "
            "gravity on the added-mass link (double gravity applied).";
   }
 }
