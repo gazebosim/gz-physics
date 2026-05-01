@@ -196,8 +196,19 @@ struct ModelKinematicStructure
       child->quat[2] = pose.Rot().Y();
       child->quat[3] = pose.Rot().Z();
 
+      auto modelFrameSite = mjs_addSite(child, nullptr);
+      const auto modelFramePose = link->RawPose().Inverse();
+      modelFrameSite->pos[0] = modelFramePose.Pos().X();
+      modelFrameSite->pos[1] = modelFramePose.Pos().Y();
+      modelFrameSite->pos[2] = modelFramePose.Pos().Z();
+
+      modelFrameSite->quat[0] = modelFramePose.Rot().W();
+      modelFrameSite->quat[1] = modelFramePose.Rot().X();
+      modelFrameSite->quat[2] = modelFramePose.Rot().Y();
+      modelFrameSite->quat[3] = modelFramePose.Rot().Z();
+
       _base.frames[_modelInfo->entityId] =
-          std::make_shared<FrameInfo>(childSite, worldInfo);
+          std::make_shared<FrameInfo>(modelFrameSite, worldInfo);
     }
 
     child->explicitinertial = true;

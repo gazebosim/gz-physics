@@ -439,6 +439,15 @@ TEST_F(LinkBoundingBoxFeaturesTestTypes, ModelAxisAlignedBoundingBox)
         vectorPredicate, gz::physics::Vector3d(-1, -1, -1.0), bboxLinkFrame.min());
     EXPECT_PRED_FORMAT2(
         vectorPredicate, gz::physics::Vector3d(2, 2, 1.0), bboxLinkFrame.max());
+
+    auto bboxModelFrame = model->GetAxisAlignedBoundingBox(
+        model->GetFrameID());
+    EXPECT_PRED_FORMAT2(
+        vectorPredicate, gz::physics::Vector3d(-1, -1, -0.5),
+        bboxModelFrame.min());
+    EXPECT_PRED_FORMAT2(
+        vectorPredicate, gz::physics::Vector3d(2, 2, 1.5),
+        bboxModelFrame.max());
   }
 }
 
