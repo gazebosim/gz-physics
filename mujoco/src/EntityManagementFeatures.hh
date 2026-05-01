@@ -37,6 +37,7 @@ struct EntityManagementFeatureList : FeatureList<
   GetEngineInfo,
   GetWorldFromEngine,
   GetLinkFromModel,
+  GetJointFromModel,
   GetModelFromWorld,
   GetShapeFromLink,
   RemoveEntities,
@@ -122,6 +123,22 @@ class EntityManagementFeatures :
   public: std::size_t GetLinkIndex(const Identity &_linkID) const override;
 
   public: Identity GetModelOfLink(const Identity &_linkID) const override;
+
+  // ----- GetJointFromModel -----
+  public: std::size_t GetJointCount(const Identity &_modelID) const override;
+
+  public: Identity GetJoint(
+      const Identity &_modelID, std::size_t _jointIndex) const override;
+
+  public: Identity GetJoint(
+      const Identity &_modelID, const std::string &_jointName) const override;
+
+  public: const std::string &GetJointName(
+      const Identity &_jointID) const override;
+
+  public: std::size_t GetJointIndex(const Identity &_jointID) const override;
+
+  public: Identity GetModelOfJoint(const Identity &_jointID) const override;
 
   // ----- GetShapeFromLink -----
   public: std::size_t GetShapeCount(const Identity &_linkID) const override;
