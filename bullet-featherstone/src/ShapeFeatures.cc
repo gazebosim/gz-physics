@@ -53,7 +53,7 @@ Identity ShapeFeatures::CastToBoxShape(
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btBoxShape*>(shape.get()))
+    if (shape->getShapeType() == BOX_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -107,7 +107,8 @@ Identity ShapeFeatures::CastToCapsuleShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btCapsuleShapeZ*>(shape.get()))
+    if (shape->getShapeType() == CAPSULE_SHAPE_PROXYTYPE &&
+        static_cast<const btCapsuleShape*>(shape.get())->getUpAxis() == 2)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -184,7 +185,7 @@ Identity ShapeFeatures::CastToConeShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btConeShape*>(shape.get()))
+    if (shape->getShapeType() == CONE_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -264,7 +265,7 @@ Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btCylinderShape*>(shape.get()))
+    if (shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -344,7 +345,7 @@ Identity ShapeFeatures::CastToEllipsoidShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btCompoundShape*>(shape.get()))
+    if (shape->getShapeType() == COMPOUND_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -410,7 +411,7 @@ Identity ShapeFeatures::CastToSphereShape(
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btSphereShape*>(shape.get()))
+    if (shape->getShapeType() == SPHERE_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 

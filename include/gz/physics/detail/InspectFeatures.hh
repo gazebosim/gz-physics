@@ -104,10 +104,11 @@ namespace gz
         }
       };
 
-      /// \private Implementation of InspectFeatures for std::tuple.
+      /// \private Implementation of InspectFeatures for TypeList.
       template <typename PolicyT, typename... Features>
-      struct InspectFeatures<PolicyT, std::tuple<Features...>>
+      struct InspectFeatures<PolicyT, TypeList<Features...>>
       {
+        /// \brief Check that each feature is provided by the plugin.
         template <typename PtrT>
         static bool Verify(const PtrT &_pimpl)
         {
@@ -137,8 +138,8 @@ namespace gz
       /// \private Implementation of InspectFeatures for FeatureLists.
       template <typename PolicyT, typename FeatureListT>
       struct InspectFeatures<PolicyT, FeatureListT,
-          std::void_t<typename FeatureListT::FeatureTuple>>
-          : InspectFeatures<PolicyT, typename FeatureListT::FeatureTuple>
+          std::void_t<typename FeatureListT::FlatFeatureTypeList>>
+          : InspectFeatures<PolicyT, typename FeatureListT::FlatFeatureTypeList>
       { };
     }
   }
