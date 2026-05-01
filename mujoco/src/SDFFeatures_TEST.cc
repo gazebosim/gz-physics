@@ -29,6 +29,8 @@
 
 #include "test/common_test/Worlds.hh"
 
+#include "Base.hh"
+
 using namespace gz;
 
 struct TestFeatureList : physics::FeatureList<
@@ -116,6 +118,10 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
 
   // Check the number of models
   EXPECT_EQ(6u, world->GetModelCount());
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  EXPECT_EQ(6u, worldInfo->models.size());
 }
 
 /////////////////////////////////////////////////
