@@ -43,10 +43,8 @@ double JointFeatures::GetJointPosition(
   if (jointInfo->nq_index < 0)
     return math::NAN_D;
 
-  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  if (!this->ValidateDofParam(_id, _dof))
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
-          << jointInfo->name << "]\n";
     return math::NAN_D;
   }
   return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof];
@@ -67,10 +65,8 @@ double JointFeatures::GetJointVelocity(
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
-  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  if (!this->ValidateDofParam(_id, _dof))
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
-          << jointInfo->name << "]\n";
     return math::NAN_D;
   }
   return jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + _dof];
@@ -91,10 +87,8 @@ double JointFeatures::GetJointAcceleration(
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
-  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  if (!this->ValidateDofParam(_id, _dof))
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
-          << jointInfo->name << "]\n";
     return math::NAN_D;
   }
   return jointInfo->worldInfo->mjDataObj->qacc[jointInfo->nv_index + _dof];
@@ -116,10 +110,8 @@ double JointFeatures::GetJointForce(
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
-  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  if (!this->ValidateDofParam(_id, _dof))
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
-          << jointInfo->name << "]\n";
     return math::NAN_D;
   }
   return jointInfo->worldInfo->mjDataObj
@@ -175,10 +167,8 @@ void JointFeatures::SetJointPosition(
   if (jointInfo->nq_index < 0)
     return;
 
-  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  if (!this->ValidateDofParam(_id, _dof))
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
-          << jointInfo->name << "]\n";
     return;
   }
   jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof] = _value;
@@ -210,10 +200,8 @@ void JointFeatures::SetJointVelocity(
   if (jointInfo->nv_index < 0)
     return;
 
-  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  if (!this->ValidateDofParam(_id, _dof))
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
-          << jointInfo->name << "]\n";
     return;
   }
   jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + _dof] = _value;
@@ -259,14 +247,26 @@ void JointFeatures::SetJointForce(
   if (ctrlIndex < 0)
     return;
 
-  if (_dof > 0 && _dof > this->GetJointDegreesOfFreedom(_id) - 1)
+  if (!this->ValidateDofParam(_id, _dof))
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
-          << jointInfo->name << "]\n";
     return;
   }
   jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
+}
+
+/////////////////////////////////////////////////
+bool JointFeatures::ValidateDofParam(const Identity &_id,
+                                     std::size_t _dof) const
+{
+  if (_dof >= this->GetJointDegreesOfFreedom(_id))
+  {
+    auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+          << jointInfo->name << "]\n";
+    return false;
+  }
+  return true;
 }
 
 /////////////////////////////////////////////////
@@ -280,7 +280,7 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   }
   auto m = jointInfo->worldInfo->mjModelObj;
   int bodyId = mjs_getId(jointInfo->childBody->element);
-  if (bodyId < 0 || bodyId > m->nbody)
+  if (bodyId < 0 || bodyId >= m->nbody)
     return 0;
   return m->body_dofnum[bodyId];
 }

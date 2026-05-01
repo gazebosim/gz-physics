@@ -606,27 +606,16 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     // See https://mujoco.readthedocs.io/en/stable/computation/index.html#collision
     // To avoid the complexity of determining that, we just add exclusions for
     // every pair
-
-    // Avoid duplicating exclusions by tracking history. The key of this set is
-    // a pair where the first element is always less than the second.
-    std::set<std::pair<std::size_t, std::size_t>> history;
-    for (const auto [body1, id1] : modelInfo->links.objectToID)
+    auto &objMap = modelInfo->links.objectToID;
+    for (auto it1 = objMap.begin(); it1 != objMap.end(); ++it1)
     {
-      for (const auto [body2, id2] : modelInfo->links.objectToID)
+      for (auto it2 = std::next(it1); it2 != objMap.end(); ++it2)
       {
-        if (body1 == body2)
-          continue;
-
-        auto histKey = std::minmax(id1, id2);
-        if (history.count(histKey) > 0)
-          continue;
-
         mjsExclude *exclude = mjs_addExclude(worldInfo->mjSpecObj);
         mjs_setString(exclude->bodyname1,
-                      mjs_getString(mjs_getName(body1->element)));
+                      mjs_getString(mjs_getName(it1->first->element)));
         mjs_setString(exclude->bodyname2,
-                      mjs_getString(mjs_getName(body2->element)));
-        history.insert(histKey);
+                      mjs_getString(mjs_getName(it2->first->element)));
       }
     }
   }

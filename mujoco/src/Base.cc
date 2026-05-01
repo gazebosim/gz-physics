@@ -48,7 +48,7 @@ void resolveJointIndices(WorldInfo &_worldInfo)
       jointInfo->nq_index = -1;
       jointInfo->nv_index = -1;
       int jointId = mjs_getId(jointInfo->joint->element);
-      if (jointId < 0 || jointId > m->njnt)
+      if (jointId < 0 || jointId >= m->njnt)
       {
         gzerr << "Error resolving the index of joint [" << jointInfo->name
               << "] in the mjData \n";
@@ -56,7 +56,7 @@ void resolveJointIndices(WorldInfo &_worldInfo)
       }
 
       int qposAddr = m->jnt_qposadr[jointId];
-      if (qposAddr < 0 || qposAddr > m->nq)
+      if (qposAddr < 0 || qposAddr >= m->nq)
       {
         gzerr << "Error resolving the position index of joint ["
               << jointInfo->name << "] in the mjData \n";
@@ -68,7 +68,7 @@ void resolveJointIndices(WorldInfo &_worldInfo)
       // in the Mujoco documentation states: "jnt_dofadr: start addr in 'qvel'
       // for joint's data".
       int qvelAddr = m->jnt_dofadr[jointId];
-      if (qvelAddr < 0 || qvelAddr > m->nq)
+      if (qvelAddr < 0 || qvelAddr >= m->nq)
       {
         gzerr << "Error resolving the velocity index of joint ["
               << jointInfo->name << "] in the mjData \n";
