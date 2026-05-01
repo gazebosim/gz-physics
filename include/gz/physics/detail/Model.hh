@@ -40,22 +40,6 @@ bool ModelStaticState::Model<PolicyT, FeaturesT>::GetStatic() const
       ->GetModelStatic(this->identity);
 }
 
-/////////////////////////////////////////////////
-template <typename PolicyT, typename FeaturesT>
-void ModelGravityEnabled::Model<PolicyT, FeaturesT>::SetGravityEnabled(
-    bool _enabled)
-{
-  this->template Interface<ModelGravityEnabled>()
-      ->SetModelGravityEnabled(this->identity, _enabled);
-}
-
-/////////////////////////////////////////////////
-template <typename PolicyT, typename FeaturesT>
-bool ModelGravityEnabled::Model<PolicyT, FeaturesT>::GetGravityEnabled() const
-{
-  return this->template Interface<ModelGravityEnabled>()
-      ->GetModelGravityEnabled(this->identity);
-}
 }
 }
 

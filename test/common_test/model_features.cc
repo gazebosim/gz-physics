@@ -28,6 +28,7 @@
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/Gravity.hh>
 #include <gz/physics/Model.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>

@@ -27,8 +27,7 @@ namespace physics {
 namespace dartsim {
 
 struct ModelFeatureList : FeatureList<
-  ModelStaticState,
-  ModelGravityEnabled
+  ModelStaticState
 > { };
 
 class ModelFeatures :
@@ -41,13 +40,6 @@ class ModelFeatures :
 
   // Documentation inherited
   public: bool GetModelStatic(const Identity &_id) const override;
-
-  // Documentation inherited
-  public: void SetModelGravityEnabled(
-      const Identity &_id, bool _enabled) override;
-
-  // Documentation inherited
-  public: bool GetModelGravityEnabled(const Identity &_id) const override;
 };
 
 }
