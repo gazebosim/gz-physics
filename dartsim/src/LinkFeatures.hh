@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
 #define GZ_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
 
+#include <gz/physics/Gravity.hh>
 #include <gz/physics/Link.hh>
 
 #include "Base.hh"
@@ -27,7 +28,8 @@ namespace physics {
 namespace dartsim {
 
 struct LinkFeatureList : FeatureList<
-  AddLinkExternalForceTorque
+  AddLinkExternalForceTorque,
+  LinkGravityEnabled
 > { };
 
 class LinkFeatures :
@@ -42,6 +44,12 @@ class LinkFeatures :
 
   public: void AddLinkExternalTorqueInWorld(
       const Identity &_id, const AngularVectorType &_torque) override;
+
+  // ----- Link Gravity Enabled -----
+  public: void SetLinkGravityEnabled(
+      const Identity &_id, bool _enabled) override;
+
+  public: bool GetLinkGravityEnabled(const Identity &_id) const override;
 };
 
 }
