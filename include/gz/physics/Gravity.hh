@@ -61,10 +61,10 @@ namespace gz
     };
 
     /////////////////////////////////////////////////
-    using ModelGravityEnabledRequiredFeatures = FeatureList<
+    struct ModelGravityEnabledRequiredFeatures : FeatureList<
       LinkGravityEnabled,
       GetLinkFromModel,
-      GetNestedModelFromModel>;
+      GetNestedModelFromModel> { };
 
     /////////////////////////////////////////////////
     /// \brief Feature for getting and setting whether gravity affects a model
@@ -75,9 +75,7 @@ namespace gz
     {
       /// \brief The Model API for getting and setting gravity mode.
       public: template <typename PolicyT, typename FeaturesT>
-      class Model
-          : public virtual GetLinkFromModel::Model<PolicyT, FeaturesT>,
-            public virtual GetNestedModelFromModel::Model<PolicyT, FeaturesT>
+      class Model : public virtual Feature::Model<PolicyT, FeaturesT>
       {
         /// \brief Set whether gravity is enabled for this model and its links.
         /// \param[in] _enabled True to enable gravity, false to disable it.
