@@ -18,9 +18,6 @@
 #ifndef GZ_PHYSICS_MUJOCO_BASE_HH_
 #define GZ_PHYSICS_MUJOCO_BASE_HH_
 
-#include <mujoco/mjdata.h>
-#include <mujoco/mjmodel.h>
-#include <mujoco/mjspec.h>
 #include <mujoco/mujoco.h>
 
 #include <Eigen/Geometry>
