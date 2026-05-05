@@ -45,6 +45,12 @@ namespace gz
 
         /// \brief Get the generalized position of a specific generalized
         /// coordinate within this joint.
+        ///
+        /// \note The value returned by this function should be the position
+        /// of this joint as computed by the last time step unless SetPosition
+        /// has been called, in which case, it would be the value set by
+        /// SetPosition.
+        ///
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
@@ -53,6 +59,12 @@ namespace gz
 
         /// \brief Get the generalized velocity of a specific generalized
         /// coordinate within this joint.
+        ///
+        /// \note The value returned by this function should be the velocity
+        /// of this joint as computed by the last time step unless SetVelocity
+        /// has been called, in which case, it would be the value set by
+        /// SetVelocity.
+        ///
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
@@ -61,6 +73,12 @@ namespace gz
 
         /// \brief Get the generalized acceleration of a specific generalized
         /// coordinate within this joint.
+        ///
+        /// \note The value returned by this function should be the acceleration
+        /// of this joint as computed by the last time step unless
+        /// SetAcceleration has been called, in which case, it would be the
+        /// value set by SetAcceleration.
+        ///
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().
@@ -69,6 +87,11 @@ namespace gz
 
         /// \brief Get the generalized force of a specific generalized
         /// coordinate within this joint.
+        ///
+        /// \note The value returned by this function should be the force
+        /// applied on this joint in the last time step unless SetForce has been
+        /// called, in which case, it would be the value set by SetForce.
+        ///
         /// \param[in] _dof
         ///   The desired generalized coordinate within this joint. Values start
         ///   from 0 and stop before Joint::GetDegreesOfFreedom().

@@ -26,22 +26,6 @@
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
-namespace
-{
-
-gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
-{
-  return gz::math::Pose3d(_d->xpos[3 * _bodyId],
-                          _d->xpos[3 * _bodyId + 1],
-                          _d->xpos[3 * _bodyId + 2],
-                          _d->xquat[4 * _bodyId],
-                          _d->xquat[4 * _bodyId + 1],
-                          _d->xquat[4 * _bodyId + 2],
-                          _d->xquat[4 * _bodyId + 3]);
-}
-
-}  // namespace
-
 namespace gz
 {
 namespace physics
@@ -70,7 +54,13 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 
   worldInfo->mjModelObj->opt.timestep = stepSize;
 
-  mj_step(worldInfo->mjModelObj, worldInfo->mjDataObj);
+  auto *m = worldInfo->mjModelObj;
+  auto *d = worldInfo->mjDataObj;
+
+  mj_step(m, d);
+  // Clear joint control forces so that they are not applied in the next
+  // timestep, which is the expected behavior in Gazebo.
+  std::fill(d->ctrl, d->ctrl + m->nu, 0.0);
 
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());

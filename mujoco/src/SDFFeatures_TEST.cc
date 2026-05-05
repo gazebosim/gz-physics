@@ -29,6 +29,9 @@
 
 #include "test/common_test/Worlds.hh"
 
+#include "Base.hh"
+#include <mujoco/mujoco.h>
+
 using namespace gz;
 
 struct TestFeatureList : physics::FeatureList<
@@ -111,11 +114,80 @@ class SDFFeatures_TEST : public ::testing::TestWithParam<LoaderType>
 // Test that the mujoco plugin loaded all the relevant information correctly.
 TEST_P(SDFFeatures_TEST, CheckMujocoData)
 {
-  WorldPtr world = this->LoadWorld(common_test::worlds::kShapesWorld);
+  common::Console::SetVerbosity(4);
+  using gz::physics::mujoco::Base;
+  WorldPtr world = this->LoadWorld(common_test::worlds::kTestWorld);
   ASSERT_NE(nullptr, world);
 
-  // Check the number of models
-  EXPECT_EQ(6u, world->GetModelCount());
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  EXPECT_EQ(9u, worldInfo->models.size());
+  auto *m = worldInfo->mjModelObj;
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, m);
+  auto *worldBody = worldInfo->body;
+  ASSERT_NE(nullptr, worldBody);
+
+  auto getNumNodesInTree = [&](const mjsBody *_root)
+  {
+    auto bodyId = mjs_getId(_root->element);
+    auto treeId = m->body_treeid[bodyId];
+    return m->tree_bodynum[treeId];
+  };
+
+  auto doublePendulum = mjs_findChild(
+      worldBody, Base::JoinNames("double_pendulum_with_base", "base").c_str());
+  EXPECT_EQ(3, getNumNodesInTree(doublePendulum));
+
+  auto verify = [](const mjsJoint *joint, double damping, double friction,
+                   double springRest, double stiffness, double lower,
+                   double upper, double maxForce)
+  {
+    EXPECT_DOUBLE_EQ(damping, joint->damping);
+    EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
+    EXPECT_DOUBLE_EQ(springRest, joint->springref);
+    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
+    EXPECT_DOUBLE_EQ(lower, joint->range[0]);
+    EXPECT_DOUBLE_EQ(upper, joint->range[1]);
+    EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);
+    EXPECT_DOUBLE_EQ(maxForce, joint->actfrcrange[1]);
+  };
+  // Test that things were parsed correctly. These values are either stated or
+  // implied in the test.world SDF file.
+  auto joint1 = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames("double_pendulum_with_base", "upper_joint").c_str()));
+  ASSERT_NE(nullptr, joint1);
+  verify(joint1, 3.0, 0.0, 0.0, 0.0, -std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity());
+
+  auto joint2 = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames("double_pendulum_with_base", "lower_joint").c_str()));
+  ASSERT_NE(nullptr, joint2);
+  verify(joint2, 3.0, 0.0, 0.0, 0.0, -std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity());
+
+  for (const auto *joint : {joint1, joint2})
+  {
+    EXPECT_DOUBLE_EQ(1.0, joint->axis[0]);
+    EXPECT_DOUBLE_EQ(0.0, joint->axis[1]);
+    EXPECT_DOUBLE_EQ(0.0, joint->axis[2]);
+  }
+
+  {
+    auto freeBodyLink =
+        mjs_findChild(worldBody, Base::JoinNames("free_body", "link").c_str());
+
+    ASSERT_NE(nullptr, freeBodyLink);
+    EXPECT_EQ(1, getNumNodesInTree(freeBodyLink));
+
+    EXPECT_DOUBLE_EQ(0.0, freeBodyLink->pos[0]);
+    EXPECT_DOUBLE_EQ(10.0, freeBodyLink->pos[1]);
+    EXPECT_DOUBLE_EQ(10.0, freeBodyLink->pos[2]);
+  }
 }
 
 /////////////////////////////////////////////////

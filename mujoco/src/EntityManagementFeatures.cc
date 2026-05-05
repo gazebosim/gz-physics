@@ -96,6 +96,8 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   mjSpec *spec = mj_makeSpec();
   worldInfo->mjSpecObj = spec;
   worldInfo->mjSpecObj->option.timestep = 0.001;
+  // The Mujoco docs recommend the implicitfast integrator
+  worldInfo->mjSpecObj->option.integrator = mjtIntegrator::mjINT_IMPLICITFAST;
   worldInfo->mjModelObj = mj_compile(spec, nullptr);
   worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
@@ -259,6 +261,71 @@ bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
   const auto *worldInfo =
       this->ReferenceInterface<ModelInfo>(_modelID)->worldInfo;
   return !worldInfo->models.HasEntity(_modelID);
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetJointCount(
+    const Identity &_modelID) const
+{
+  return this->ReferenceInterface<ModelInfo>(_modelID)->joints.size();
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetJoint(
+    const Identity &_modelID, const std::size_t _jointIndex) const
+{
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo->joints.indexInContainerToID.at(_modelID).size() <= _jointIndex)
+  {
+    return this->GenerateInvalidId();
+  }
+
+  const std::size_t id =
+      modelInfo->joints.indexInContainerToID.at(_modelID)[_jointIndex];
+  return this->GenerateIdentity(id, modelInfo->joints.at(id));
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetJoint(
+    const Identity &_modelID, const std::string &_jointName) const
+{
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  if (modelInfo->joints.HasEntity(_jointName))
+  {
+    auto jointInfo = modelInfo->joints.at(_jointName);
+    return this->GenerateIdentity(jointInfo->entityId, jointInfo);
+  }
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+const std::string &EntityManagementFeatures::GetJointName(
+    const Identity &_jointID) const
+{
+  return this->ReferenceInterface<JointInfo>(_jointID)->name;
+}
+
+/////////////////////////////////////////////////
+std::size_t EntityManagementFeatures::GetJointIndex(
+    const Identity &_jointID) const
+{
+  const auto modelInfo =
+      this->ReferenceInterface<JointInfo>(_jointID)->modelInfo.lock();
+  return modelInfo->joints.idToIndexInContainer.at(_jointID);
+}
+
+/////////////////////////////////////////////////
+Identity EntityManagementFeatures::GetModelOfJoint(
+    const Identity &_jointID) const
+{
+  auto modelInfo =
+      this->ReferenceInterface<JointInfo>(_jointID)->modelInfo.lock();
+  if (modelInfo)
+  {
+    return this->GenerateIdentity(modelInfo->entityId, modelInfo);
+  }
+  return this->GenerateInvalidId();
 }
 
 /////////////////////////////////////////////////
