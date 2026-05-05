@@ -10,6 +10,7 @@ set(tests
   detachable_joint
   free_joint_features
   joint_features
+  joint_basic_features
   joint_mimic_features
   joint_transmitted_wrench_features
   kinematic_features
