@@ -120,6 +120,7 @@ struct ShapeInfo
   mjsGeom *geom{nullptr};
   std::string name;
   std::weak_ptr<LinkInfo> linkInfo;
+  WorldInfo *worldInfo{nullptr};
 
   /// \brief Cached axis-aligned bounding box. Currently only used for meshes.
   mutable std::optional<gz::physics::AlignedBox3d> cachedAABB;

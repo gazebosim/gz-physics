@@ -38,15 +38,13 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
     return AlignedBox3d();
   }
 
-  const auto linkInfo = shapeInfo->linkInfo.lock();
-  if (!linkInfo)
+  auto *worldInfo = shapeInfo->worldInfo;
+  if (!worldInfo)
   {
     gzerr << "Error computing shape bounding box. "
-          << "Unable to retrieve link for shape " << _shapeID.id << std::endl;
+          << "Unable to retrieve world for shape " << _shapeID.id << std::endl;
     return AlignedBox3d();
   }
-
-  auto *worldInfo = linkInfo->worldInfo;
   this->RecompileSpec(*worldInfo);
 
   const mjModel *m = worldInfo->mjModelObj;

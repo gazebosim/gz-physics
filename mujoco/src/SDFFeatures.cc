@@ -354,15 +354,8 @@ struct ModelKinematicStructure
 
       auto modelFrameSite = mjs_addSite(child, nullptr);
       const auto modelFramePose = link->RawPose().Inverse();
-      modelFrameSite->pos[0] = modelFramePose.Pos().X();
-      modelFrameSite->pos[1] = modelFramePose.Pos().Y();
-      modelFrameSite->pos[2] = modelFramePose.Pos().Z();
-
-      modelFrameSite->quat[0] = modelFramePose.Rot().W();
-      modelFrameSite->quat[1] = modelFramePose.Rot().X();
-      modelFrameSite->quat[2] = modelFramePose.Rot().Y();
-      modelFrameSite->quat[3] = modelFramePose.Rot().Z();
-
+      copyPos(modelFramePose.Pos(), modelFrameSite->pos);
+      copyQuat(modelFramePose.Rot(), modelFrameSite->quat);
       _base.frames[_modelInfo->entityId] =
           std::make_shared<FrameInfo>(modelFrameSite, worldInfo);
     }
@@ -496,6 +489,7 @@ struct ModelKinematicStructure
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
         auto shapeInfo =
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
+        shapeInfo->worldInfo = worldInfo;
         auto pose = resolveSdfPose(collision->SemanticPose());
         copyPos(pose.Pos(), geom->pos);
         copyQuat(pose.Rot(), geom->quat);
