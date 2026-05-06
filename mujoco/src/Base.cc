@@ -68,7 +68,7 @@ void resolveJointIndices(WorldInfo &_worldInfo)
       // in the Mujoco documentation states: "jnt_dofadr: start addr in 'qvel'
       // for joint's data".
       int qvelAddr = m->jnt_dofadr[jointId];
-      if (qvelAddr < 0 || qvelAddr >= m->nq)
+      if (qvelAddr < 0 || qvelAddr >= m->nv)
       {
         gzerr << "Error resolving the velocity index of joint ["
               << jointInfo->name << "] in the mjData \n";
