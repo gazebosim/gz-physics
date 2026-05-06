@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <gz/common/Console.hh>
 #include <gz/math/Helpers.hh>
 #include "Base.hh"
 #include "gz/physics/Geometry.hh"
