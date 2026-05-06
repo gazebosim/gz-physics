@@ -28,7 +28,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <gz/common/Console.hh>
 #include <gz/math/AxisAlignedBox.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/Quaternion.hh>
@@ -189,13 +188,26 @@ struct FrameInfo
 
 struct WorldInfo
 {
-  std::size_t entityId;
+  ~WorldInfo()
+  {
+    mj_deleteData(this->mjDataObj);
+    mj_deleteModel(this->mjModelObj);
+    mj_deleteSpec(this->mjSpecObj);
+  }
+
+  WorldInfo() = default;
+  WorldInfo(const WorldInfo &) = delete;
+  WorldInfo &operator=(const WorldInfo &) = delete;
+  WorldInfo(WorldInfo &&) = default;
+  WorldInfo &operator=(WorldInfo &&) = default;
+
+  std::size_t entityId{0};
   mjsBody *body{nullptr};
   mjSpec *mjSpecObj{nullptr};
   mjModel *mjModelObj{nullptr};
   mjData *mjDataObj{nullptr};
   bool specDirty{true};
-  std::string name;
+  std::string name{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
@@ -205,7 +217,7 @@ struct WorldInfo
 
   /// \brief body poses from the most recent pose change/update.
   /// The index is the MuJoCo body ID, and the value is the body's pose.
-  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
+  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses{};
 };
 
 class Base

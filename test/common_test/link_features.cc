@@ -26,6 +26,7 @@
 
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
+#include "test/Resources.hh"
 #include "Worlds.hh"
 
 #include <gz/physics/FindFeatures.hh>
@@ -296,6 +297,7 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
 using LinkBoundingBoxFeaturesList = gz::physics::FeatureList<
     gz::physics::ForwardStep,
     gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::sdf::ConstructSdfModel,
     gz::physics::GetEngineInfo,
     gz::physics::GetWorldFromEngine,
     gz::physics::GetModelFromWorld,
@@ -393,6 +395,80 @@ TEST_F(LinkBoundingBoxFeaturesTestTypes, ConeBoundingBox)
     EXPECT_NEAR( 0.5,  aabb.max().x(), tol);
     EXPECT_NEAR( 0.5,  aabb.max().y(), tol);
     EXPECT_NEAR( 0.55, aabb.max().z(), tol);
+  }
+}
+
+TEST_F(LinkBoundingBoxFeaturesTestTypes, MeshAxisAlignedBoundingBox)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    if (this->PhysicsEngineName(name) == "dartsim")
+    {
+      std::cout << "Skipping test for dartsim because mesh "
+                << "construction from SDF is not supported." << std::endl;
+      continue;
+    }
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        LinkBoundingBoxFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+
+    std::stringstream modelStr;
+    modelStr << R"(
+      <sdf version="1.11">
+        <model name="mesh_model">
+          <pose>0 0 0 0 0 0</pose>
+          <link name="link">
+            <collision name="collision">
+              <geometry>
+                <mesh>
+                  <uri>)";
+    modelStr << gz::physics::test::resources::kRotatedBoxObj;
+    modelStr << R"(</uri>
+                </mesh>
+              </geometry>
+            </collision>
+          </link>
+        </model>
+      </sdf>)";
+
+    sdf::Root rootModel;
+    sdf::Errors modelErrors = rootModel.LoadSdfString(modelStr.str());
+    ASSERT_TRUE(modelErrors.empty()) << modelErrors;
+
+    auto model = world->ConstructModel(*rootModel.Model());
+    ASSERT_NE(nullptr, model);
+
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+
+    auto shape = link->GetShape(0);
+    ASSERT_NE(nullptr, shape);
+
+    auto bbox = shape->GetAxisAlignedBoundingBox(*shape);
+
+    EXPECT_FALSE(bbox.isEmpty());
+
+    // The AABB should reflect the rotated box.
+    // Max X and Y should be around 0.707, and Max Z should be 0.5.
+    // If the rotation is ignored, the AABB might reflect the unrotated mesh,
+    // resulting in Max X and Y around 0.5.
+    EXPECT_NEAR(0.707107, bbox.max().x(), 0.02);
+    EXPECT_NEAR(0.707107, bbox.max().y(), 0.02);
+    EXPECT_NEAR(0.5, bbox.max().z(), 0.02);
+
+    EXPECT_NEAR(-0.707107, bbox.min().x(), 0.02);
+    EXPECT_NEAR(-0.707107, bbox.min().y(), 0.02);
+    EXPECT_NEAR(-0.5, bbox.min().z(), 0.02);
   }
 }
 
