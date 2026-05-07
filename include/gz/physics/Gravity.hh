@@ -25,9 +25,9 @@ namespace gz
 {
   namespace physics
   {
-    /////////////////////////////////////////////////
-    /// \brief Feature for getting and setting whether gravity affects a link.
-    class GZ_PHYSICS_VISIBLE LinkGravityEnabled : public virtual Feature
+    /// \brief Feature for getting and setting whether gravity affects a link
+    /// or a model.
+    class GZ_PHYSICS_VISIBLE GravityEnabled : public virtual Feature
     {
       /// \brief The Link API for getting and setting gravity mode.
       public: template <typename PolicyT, typename FeaturesT>
@@ -42,28 +42,6 @@ namespace gz
         public: bool GetGravityEnabled() const;
       };
 
-      /// \private The implementation API for link gravity mode.
-      public: template <typename PolicyT>
-      class Implementation : public virtual Feature::Implementation<PolicyT>
-      {
-        /// \brief Implementation API for setting the link gravity mode.
-        /// \param[in] _id Identity of the link.
-        /// \param[in] _enabled True to enable gravity.
-        public: virtual void SetLinkGravityEnabled(
-            const Identity &_id, bool _enabled) = 0;
-
-        /// \brief Implementation API for getting the link gravity mode.
-        /// \param[in] _id Identity of the link.
-        /// \return True if gravity is enabled.
-        public: virtual bool GetLinkGravityEnabled(
-            const Identity &_id) const = 0;
-      };
-    };
-
-    /// \brief Feature for getting and setting whether gravity affects a model
-    /// and all its child entities.
-    class GZ_PHYSICS_VISIBLE ModelGravityEnabled : public virtual Feature
-    {
       /// \brief The Model API for getting and setting gravity mode.
       public: template <typename PolicyT, typename FeaturesT>
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
@@ -78,10 +56,22 @@ namespace gz
         public: bool GetGravityEnabled() const;
       };
 
-      /// \private The implementation API for model gravity mode.
+      /// \private The implementation API for gravity mode.
       public: template <typename PolicyT>
       class Implementation : public virtual Feature::Implementation<PolicyT>
       {
+        /// \brief Implementation API for setting the link gravity mode.
+        /// \param[in] _id Identity of the link.
+        /// \param[in] _enabled True to enable gravity.
+        public: virtual void SetLinkGravityEnabled(
+            const Identity &_id, bool _enabled) = 0;
+
+        /// \brief Implementation API for getting the link gravity mode.
+        /// \param[in] _id Identity of the link.
+        /// \return True if gravity is enabled.
+        public: virtual bool GetLinkGravityEnabled(
+            const Identity &_id) const = 0;
+
         /// \brief Implementation API for setting the model gravity mode.
         /// \param[in] _id Identity of the model.
         /// \param[in] _enabled True to enable gravity.

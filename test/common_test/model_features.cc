@@ -46,7 +46,7 @@ struct ModelFeaturesFeatureList : gz::physics::FeatureList<
   gz::physics::GetNestedModelFromModel,
   gz::physics::LinkFrameSemantics,
   gz::physics::ModelStaticState,
-  gz::physics::ModelGravityEnabled,
+  gz::physics::GravityEnabled,
   gz::physics::sdf::ConstructSdfWorld
 > { };
 

@@ -26,35 +26,35 @@ namespace physics
 {
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-void LinkGravityEnabled::Link<PolicyT, FeaturesT>::SetGravityEnabled(
+void GravityEnabled::Link<PolicyT, FeaturesT>::SetGravityEnabled(
     bool _enabled)
 {
-  this->template Interface<LinkGravityEnabled>()
+  this->template Interface<GravityEnabled>()
       ->SetLinkGravityEnabled(this->identity, _enabled);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-bool LinkGravityEnabled::Link<PolicyT, FeaturesT>::GetGravityEnabled() const
+bool GravityEnabled::Link<PolicyT, FeaturesT>::GetGravityEnabled() const
 {
-  return this->template Interface<LinkGravityEnabled>()
+  return this->template Interface<GravityEnabled>()
       ->GetLinkGravityEnabled(this->identity);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-void ModelGravityEnabled::Model<PolicyT, FeaturesT>::SetGravityEnabled(
+void GravityEnabled::Model<PolicyT, FeaturesT>::SetGravityEnabled(
     bool _enabled)
 {
-  this->template Interface<ModelGravityEnabled>()
+  this->template Interface<GravityEnabled>()
       ->SetModelGravityEnabled(this->identity, _enabled);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
-bool ModelGravityEnabled::Model<PolicyT, FeaturesT>::GetGravityEnabled() const
+bool GravityEnabled::Model<PolicyT, FeaturesT>::GetGravityEnabled() const
 {
-  return this->template Interface<ModelGravityEnabled>()
+  return this->template Interface<GravityEnabled>()
       ->GetModelGravityEnabled(this->identity);
 }
 

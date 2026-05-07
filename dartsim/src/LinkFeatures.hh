@@ -29,7 +29,7 @@ namespace dartsim {
 
 struct LinkFeatureList : FeatureList<
   AddLinkExternalForceTorque,
-  LinkGravityEnabled
+  GravityEnabled
 > { };
 
 class LinkFeatures :

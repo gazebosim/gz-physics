@@ -30,7 +30,7 @@ namespace dartsim {
 
 struct ModelFeatureList : FeatureList<
   ModelStaticState,
-  ModelGravityEnabled
+  GravityEnabled
 > { };
 
 class ModelFeatures :
