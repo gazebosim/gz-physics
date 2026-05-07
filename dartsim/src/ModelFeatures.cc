@@ -62,6 +62,72 @@ bool ModelFeatures::GetModelStatic(const Identity &_id) const
   return !modelInfo->model->isMobile();
 }
 
+/////////////////////////////////////////////////
+void ModelFeatures::SetModelGravityEnabled(
+    const Identity &_id, bool _enabled)
+{
+  auto modelInfo = this->GetModelInfo(_id);
+  if (!modelInfo || !modelInfo->model)
+    return;
+
+  for (const auto &linkInfo : modelInfo->links)
+  {
+    if (!linkInfo || !linkInfo->link)
+      continue;
+
+    // Added-mass links must keep DART gravity disabled
+    if (linkInfo->inertial.has_value() &&
+        linkInfo->inertial->FluidAddedMass().has_value())
+    {
+      continue;
+    }
+
+    linkInfo->link->setGravityMode(_enabled);
+  }
+
+  // Also apply to nested models recursively.
+  for (const std::size_t nestedID : modelInfo->nestedModels)
+  {
+    this->SetModelGravityEnabled(this->GenerateIdentity(
+        nestedID, this->GetModelInfo(nestedID)), _enabled);
+  }
+}
+
+/////////////////////////////////////////////////
+bool ModelFeatures::GetModelGravityEnabled(const Identity &_id) const
+{
+  const auto modelInfo = this->GetModelInfo(_id);
+  if (!modelInfo || !modelInfo->model)
+    return false;
+
+  for (const auto &linkInfo : modelInfo->links)
+  {
+    if (!linkInfo || !linkInfo->link)
+      continue;
+
+    // Added-mass links have DART gravity forcibly disabled; exclude them
+    if (linkInfo->inertial.has_value() &&
+        linkInfo->inertial->FluidAddedMass().has_value())
+    {
+      continue;
+    }
+
+    if (!linkInfo->link->getGravityMode())
+      return false;
+  }
+
+  // Also check nested models.
+  for (const std::size_t nestedID : modelInfo->nestedModels)
+  {
+    if (!this->GetModelGravityEnabled(this->GenerateIdentity(
+        nestedID, this->GetModelInfo(nestedID))))
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 }
 }

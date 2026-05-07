@@ -46,72 +46,16 @@ template <typename PolicyT, typename FeaturesT>
 void ModelGravityEnabled::Model<PolicyT, FeaturesT>::SetGravityEnabled(
     bool _enabled)
 {
-  if (auto * linkIface = this->template Interface<GetLinkFromModel>())
-  {
-    const std::size_t linkCount = linkIface->GetLinkCount(this->identity);
-    for (std::size_t i = 0; i < linkCount; ++i)
-    {
-      auto link = LinkPtr<PolicyT, FeaturesT>(
-          this->pimpl, linkIface->GetLink(this->identity, i));
-      if (link)
-      {
-        link->SetGravityEnabled(_enabled);
-      }
-    }
-  }
-
-  if (auto * nestedIface =
-      this->template Interface<GetNestedModelFromModel>())
-  {
-    const std::size_t nestedModelCount =
-        nestedIface->GetNestedModelCount(this->identity);
-    for (std::size_t i = 0; i < nestedModelCount; ++i)
-    {
-      auto nestedModel = ModelPtr<PolicyT, FeaturesT>(
-          this->pimpl, nestedIface->GetNestedModel(this->identity, i));
-      if (nestedModel)
-      {
-        nestedModel->SetGravityEnabled(_enabled);
-      }
-    }
-  }
+  this->template Interface<ModelGravityEnabled>()
+      ->SetModelGravityEnabled(this->identity, _enabled);
 }
 
 /////////////////////////////////////////////////
 template <typename PolicyT, typename FeaturesT>
 bool ModelGravityEnabled::Model<PolicyT, FeaturesT>::GetGravityEnabled() const
 {
-  if (auto * linkIface = this->template Interface<GetLinkFromModel>())
-  {
-    const std::size_t linkCount = linkIface->GetLinkCount(this->identity);
-    for (std::size_t i = 0; i < linkCount; ++i)
-    {
-      auto link = LinkPtr<PolicyT, FeaturesT>(
-          this->pimpl, linkIface->GetLink(this->identity, i));
-      if (link && !link->GetGravityEnabled())
-      {
-        return false;
-      }
-    }
-  }
-
-  if (auto * nestedIface =
-      this->template Interface<GetNestedModelFromModel>())
-  {
-    const std::size_t nestedModelCount =
-        nestedIface->GetNestedModelCount(this->identity);
-    for (std::size_t i = 0; i < nestedModelCount; ++i)
-    {
-      auto nestedModel = ModelPtr<PolicyT, FeaturesT>(
-          this->pimpl, nestedIface->GetNestedModel(this->identity, i));
-      if (nestedModel && !nestedModel->GetGravityEnabled())
-      {
-        return false;
-      }
-    }
-  }
-
-  return true;
+  return this->template Interface<ModelGravityEnabled>()
+      ->GetModelGravityEnabled(this->identity);
 }
 
 }
