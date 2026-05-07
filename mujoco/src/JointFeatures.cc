@@ -96,9 +96,16 @@ void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
     if (jointPos)
     {
       (*jointPos)[_dof] = _value;
-      const Eigen::Quaterniond newQuat{
-          Eigen::AngleAxisd{jointPos->norm(), jointPos->normalized()}};
-      copyQuat(newQuat, &d->qpos[jointInfo->nq_index]);
+      const double angle = jointPos->norm();
+      if (math::equal(angle, 0.0, 1e-10))
+      {
+        copyQuat(Eigen::Quaterniond::Identity(), &d->qpos[jointInfo->nq_index]);
+      }
+      else {
+        const Eigen::Quaterniond newQuat{
+            Eigen::AngleAxisd{angle, *jointPos / angle}};
+        copyQuat(newQuat, &d->qpos[jointInfo->nq_index]);
+      }
     }
   }
   else

@@ -283,7 +283,7 @@ struct ModelKinematicStructure
           copyStandardJointAxisProperties(joint, sdfAxis);
           // For ball joints, the first range parameter should always be set to
           // zero.
-          if (joint->limited && joint->range[0] != 0.0)
+          if (joint->limited && std::abs(joint->range[0]) > 0.0)
           {
             gzwarn << "MuJoCo requires the lower joint position limit of ball "
                       "joints to be zero.\n";
