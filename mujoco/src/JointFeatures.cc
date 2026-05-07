@@ -30,7 +30,46 @@ namespace physics {
 namespace mujoco {
 
 namespace  {
-double &getJointPositionImpl(JointInfo *jointInfo, std::size_t _dof)
+Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
+{
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  auto &cache = jointInfo->worldInfo->ballJointPositionsCache;
+
+  if (jointInfo->ballJointCacheIndex && *jointInfo->ballJointCacheIndex >= cache.size())
+  {
+    gzerr << "Ball joint cache index is outside of cache bounds for joint ["
+          << jointInfo->name << "]\n";
+    gzerr << "ind: " << *jointInfo->ballJointCacheIndex << " cache: " << cache.size() << "\n";
+    return nullptr;
+  }
+
+  if (!jointInfo->ballJointCacheIndex || !cache[*jointInfo->ballJointCacheIndex])
+  {
+    const double *mjQuat = &d->qpos[jointInfo->nq_index];
+    Eigen::AngleAxisd angleAxis{
+        Eigen::Quaterniond(mjQuat[0], mjQuat[1], mjQuat[2], mjQuat[3])};
+    if (!jointInfo->ballJointCacheIndex)
+    {
+      cache.emplace_back(angleAxis.axis() * angleAxis.angle());
+      jointInfo->ballJointCacheIndex = cache.size() - 1;
+    }
+    else
+    {
+      cache[*jointInfo->ballJointCacheIndex] =
+          angleAxis.axis() * angleAxis.angle();
+    }
+  }
+  if (!jointInfo->ballJointCacheIndex)
+  {
+    gzerr << "Ball joint position could not be found in cache for joint ["
+          << jointInfo->name << "]\n";
+    return nullptr;
+  }
+
+  return &cache[*jointInfo->ballJointCacheIndex].value();
+}
+
+double getJointPositionImpl(JointInfo *jointInfo, std::size_t _dof)
 {
   auto *d = jointInfo->worldInfo->mjDataObj;
   if (jointInfo->joint->type == mjtJoint::mjJNT_BALL)
@@ -40,18 +79,40 @@ double &getJointPositionImpl(JointInfo *jointInfo, std::size_t _dof)
     // representation. We allow setting invididual components (DOFs) here, but
     // convert to quaternion and update mjData right before stepping in
     // SimulationFeatures.
-    auto &cache = jointInfo->worldInfo->ballJointPositionsCache;
-    auto result = cache.try_emplace(jointInfo->nq_index);
-    if (result.second)
+
+    const Eigen::Vector3d * jointPos = getBallJointPositionImpl(jointInfo);
+    if (jointPos)
     {
-      const double *mjQuat = &d->qpos[jointInfo->nq_index];
-      Eigen::AngleAxisd angleAxis{
-          Eigen::Quaterniond(mjQuat[0], mjQuat[1], mjQuat[2], mjQuat[3])};
-      result.first->second = angleAxis.axis() * angleAxis.angle();
+      return (*jointPos)[_dof];
     }
-    return result.first->second[_dof];
+    return math::NAN_D;
   }
   return d->qpos[jointInfo->nq_index + _dof];
+}
+
+void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
+{
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  if (jointInfo->joint->type == mjtJoint::mjJNT_BALL)
+  {
+    // Ball joints have to be handled differently because the three DOFs exposed
+    // in the public API actually represent the components of an Angle Axis
+    // representation. We allow setting invididual components (DOFs) here, but
+    // convert to quaternion and update mjData right before stepping in
+    // SimulationFeatures.
+    Eigen::Vector3d *jointPos = getBallJointPositionImpl(jointInfo);
+    if (jointPos)
+    {
+      (*jointPos)[_dof] = _value;
+      const Eigen::Quaterniond newQuat{
+          Eigen::AngleAxisd{jointPos->norm(), jointPos->normalized()}};
+      copyQuat(newQuat, &d->qpos[jointInfo->nq_index]);
+    }
+  }
+  else
+  {
+    d->qpos[jointInfo->nq_index + _dof] = _value;
+  }
 }
 }
 
@@ -208,7 +269,8 @@ void JointFeatures::SetJointPosition(
           << jointInfo->name << "]\n";
     return;
   }
-  getJointPositionImpl(jointInfo, _dof) = _value;
+  setJointPositionImpl(jointInfo, _dof, _value);
+
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 

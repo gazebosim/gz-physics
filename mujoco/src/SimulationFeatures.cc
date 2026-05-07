@@ -60,15 +60,17 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   // Ball joint states need to be synchronized before step because we
   // need to be able to set individual components of the Angle Axis
   // representation in JointFeatures::SetJointPosition
-  for (const auto &[nq_index, angAxisVec] : worldInfo->ballJointPositionsCache)
-  {
-    const Eigen::Quaterniond newQuat{
-        Eigen::AngleAxisd{angAxisVec.norm(), angAxisVec.normalized()}};
-    copyQuat(newQuat, &d->qpos[nq_index]);
-  }
-  worldInfo->ballJointPositionsCache.clear();
+  // for (const auto &[nq_index, angAxisVec] : worldInfo->ballJointPositionsCache)
+  // {
+  //   const Eigen::Quaterniond newQuat{
+  //       Eigen::AngleAxisd{angAxisVec.norm(), angAxisVec.normalized()}};
+  //   copyQuat(newQuat, &d->qpos[nq_index]);
+  // }
+  worldInfo->ballJointPositionsCache.assign(
+      worldInfo->ballJointPositionsCache.size(), std::nullopt);
 
   mj_step(m, d);
+
   // Clear joint control forces so that they are not applied in the next
   // timestep, which is the expected behavior in Gazebo.
   std::fill(d->ctrl, d->ctrl + m->nu, 0.0);

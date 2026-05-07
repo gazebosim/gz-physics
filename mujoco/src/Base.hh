@@ -161,6 +161,7 @@ struct JointInfo
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
   WorldInfo* worldInfo{nullptr};
+  std::optional<std::size_t> ballJointCacheIndex{std::nullopt};
 };
 
 
@@ -209,9 +210,10 @@ struct WorldInfo
   /// The index is the MuJoCo body ID, and the value is the body's pose.
   std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
 
-  /// \brief short-lived cache for ball joint positions. This is used to enable
-  /// setting individual DOFs of a ball joint's angle axis representation.
-  std::unordered_map<std::size_t, Eigen::Vector3d> ballJointPositionsCache{};
+  /// \brief Cache for ball joint positions. This is used to enable
+  /// setting individual DOFs of a ball joint's angle axis representation. 
+  /// The index of a joint into this cache is stored in the JointInfo
+  std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
 };
 
 class Base

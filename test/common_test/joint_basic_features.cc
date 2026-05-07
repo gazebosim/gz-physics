@@ -517,6 +517,59 @@ TEST_F(BallJointBasicJointFeatureTest, GetSetBasicState)
       return angAxis.axis() * angAxis.angle();
     };
 
+    // Check that setting each joint position changes the pose of the joint
+    {
+      joint->SetPosition(0, 0);
+      joint->SetPosition(1, 0);
+      joint->SetPosition(2, 0);
+      const Eigen::Isometry3d initialPose(Eigen::Translation3d(0, 0.0, -1));
+      // Test before and after step. The values should be about the same.
+      EXPECT_TRUE(physics::test::Equal(initialPose,
+                                       joint->GetTransform(), kTol))
+          << initialPose.matrix() << "\n\n"
+          << joint->GetTransform().matrix();
+
+      Eigen::Vector3d testJointPos = eulerToAngAxis(GZ_PI_4, 0, GZ_PI_4);
+
+      {
+        joint->SetPosition(0, testJointPos[0]);
+        Eigen::Vector3d testAngAxis{testJointPos[0], 0, 0};
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testAngAxis.norm(), testAngAxis.normalized()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+
+      {
+        joint->SetPosition(1, testJointPos[1]);
+
+        Eigen::Vector3d testAngAxis{testJointPos[0], testJointPos[1], 0};
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testAngAxis.norm(), testAngAxis.normalized()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+
+      {
+        joint->SetPosition(2, testJointPos[2]);
+
+        Eigen::Vector3d testAngAxis = testJointPos;
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testAngAxis.norm(), testAngAxis.normalized()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+    }
+
     const double startPos = 0.05;
     Eigen::Vector3d startAngAxisVec = eulerToAngAxis(startPos, 0, GZ_PI_4);
     joint->SetPosition(0, startAngAxisVec[0]);
