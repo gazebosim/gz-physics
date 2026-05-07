@@ -322,6 +322,12 @@ struct ModelKinematicStructure
       jointInfo->childBody = child;
       jointInfo->actuator = actuator;
       jointInfo->worldInfo = worldInfo;
+      if (sdfJoint->Type() == ::sdf::JointType::BALL)
+      {
+        jointInfo->worldInfo->ballJointPositionsCache.push_back(std::nullopt);
+        jointInfo->ballJointCacheIndex =
+            jointInfo->worldInfo->ballJointPositionsCache.size() - 1;
+      }
 
       auto jointSite = mjs_addSite(child, nullptr);
       copyPos(jointPose.Pos(), jointSite->pos);

@@ -35,38 +35,29 @@ Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
   auto *d = jointInfo->worldInfo->mjDataObj;
   auto &cache = jointInfo->worldInfo->ballJointPositionsCache;
 
-  if (jointInfo->ballJointCacheIndex && *jointInfo->ballJointCacheIndex >= cache.size())
+  if (!jointInfo->ballJointCacheIndex)
   {
-    gzerr << "Ball joint cache index is outside of cache bounds for joint ["
+    gzerr << "Ball joint cache index is is not set for ["
           << jointInfo->name << "]\n";
-    gzerr << "ind: " << *jointInfo->ballJointCacheIndex << " cache: " << cache.size() << "\n";
     return nullptr;
   }
 
-  if (!jointInfo->ballJointCacheIndex || !cache[*jointInfo->ballJointCacheIndex])
+  if (*jointInfo->ballJointCacheIndex >= cache.size())
+  {
+    gzerr << "Ball joint cache index is outside of cache bounds for joint ["
+          << jointInfo->name << "]\n";
+    return nullptr;
+  }
+  auto &jointPos = cache[*jointInfo->ballJointCacheIndex];
+  if (!jointPos)
   {
     const double *mjQuat = &d->qpos[jointInfo->nq_index];
     Eigen::AngleAxisd angleAxis{
         Eigen::Quaterniond(mjQuat[0], mjQuat[1], mjQuat[2], mjQuat[3])};
-    if (!jointInfo->ballJointCacheIndex)
-    {
-      cache.emplace_back(angleAxis.axis() * angleAxis.angle());
-      jointInfo->ballJointCacheIndex = cache.size() - 1;
-    }
-    else
-    {
-      cache[*jointInfo->ballJointCacheIndex] =
-          angleAxis.axis() * angleAxis.angle();
-    }
-  }
-  if (!jointInfo->ballJointCacheIndex)
-  {
-    gzerr << "Ball joint position could not be found in cache for joint ["
-          << jointInfo->name << "]\n";
-    return nullptr;
+    jointPos = angleAxis.axis() * angleAxis.angle();
   }
 
-  return &cache[*jointInfo->ballJointCacheIndex].value();
+  return &jointPos.value();
 }
 
 double getJointPositionImpl(JointInfo *jointInfo, std::size_t _dof)
