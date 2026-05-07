@@ -17,6 +17,7 @@
 
 #include <gtest/gtest.h>
 
+#include <gz/common/Console.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
