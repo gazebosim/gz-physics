@@ -75,7 +75,8 @@ void ModelFeatures::SetModelGravityEnabled(
     if (!linkInfo || !linkInfo->link)
       continue;
 
-    // Added-mass links must keep DART gravity disabled
+    // Added-mass links must keep DART gravity disabled: gravity is applied
+    // manually as F=ma each step. Let SetLinkAddedMass own that flag.
     if (linkInfo->inertial.has_value() &&
         linkInfo->inertial->FluidAddedMass().has_value())
     {
@@ -105,7 +106,8 @@ bool ModelFeatures::GetModelGravityEnabled(const Identity &_id) const
     if (!linkInfo || !linkInfo->link)
       continue;
 
-    // Added-mass links have DART gravity forcibly disabled; exclude them
+    // Added-mass links have DART gravity forcibly disabled; exclude them so
+    // their internal state doesn't pollute the user-visible gravity flag.
     if (linkInfo->inertial.has_value() &&
         linkInfo->inertial->FluidAddedMass().has_value())
     {
