@@ -38,7 +38,7 @@ Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
 
   if (!jointInfo->ballJointCacheIndex)
   {
-    gzerr << "Ball joint cache index is is not set for ["
+    gzerr << "Ball joint cache index is is set for ["
           << jointInfo->name << "]\n";
     return nullptr;
   }
@@ -101,7 +101,8 @@ void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
       {
         copyQuat(Eigen::Quaterniond::Identity(), &d->qpos[jointInfo->nq_index]);
       }
-      else {
+      else
+      {
         const Eigen::Quaterniond newQuat{
             Eigen::AngleAxisd{angle, *jointPos / angle}};
         copyQuat(newQuat, &d->qpos[jointInfo->nq_index]);
