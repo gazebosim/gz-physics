@@ -57,6 +57,14 @@ inline void copyQuat(const math::Quaterniond &_src,  mjtNum *_dst)
   _dst[3] = _src.Z();
 }
 
+inline void copyQuat(const Eigen::Quaterniond &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.w();
+  _dst[1] = _src.x();
+  _dst[2] = _src.y();
+  _dst[3] = _src.z();
+}
+
 inline Eigen::Vector3d convertPos(const mjtNum *_src)
 {
   Eigen::Vector3d dst;
@@ -152,6 +160,7 @@ struct JointInfo
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
   WorldInfo* worldInfo{nullptr};
+  std::optional<std::size_t> ballJointCacheIndex{std::nullopt};
 };
 
 
@@ -212,6 +221,13 @@ struct WorldInfo
   /// \brief body poses from the most recent pose change/update.
   /// The index is the MuJoCo body ID, and the value is the body's pose.
   std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses{};
+
+  /// \brief Cache for ball joint positions. This is used to enable
+  /// setting individual DOFs of a ball joint's angle axis representation.
+  /// The index of a joint into this cache is stored in the JointInfo.
+  /// The cache is invalidated right before mj_step in
+  /// SimulationFeatures::WorldForwardStep
+  std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
 };
 
 class Base
