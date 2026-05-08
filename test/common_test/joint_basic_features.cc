@@ -88,8 +88,8 @@ class JointFeaturesTest:
 
     auto dur = std::chrono::duration<double>(dt);
 
-    this->input.Get<std::chrono::steady_clock::duration>() =
-      std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
+    this->input.template Get<std::chrono::steady_clock::duration>() =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
   }
 
   public: void Step()
