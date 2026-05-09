@@ -55,6 +55,11 @@ using ModelStaticFeaturesList = gz::physics::FeatureList<
 
 using ModelGravityFeaturesList = gz::physics::FeatureList<
   ModelBaseFeaturesList,
+  gz::physics::GravityEnabled
+>;
+
+using ModelGravityStaticFeaturesList = gz::physics::FeatureList<
+  ModelBaseFeaturesList,
   gz::physics::ModelStaticState,
   gz::physics::GravityEnabled
 >;
@@ -89,6 +94,8 @@ class ModelFeaturesTest :
 
 template <typename T> class ModelStaticTest : public ModelFeaturesTest<T> {};
 template <typename T> class ModelGravityTest : public ModelFeaturesTest<T> {};
+template <typename T> class ModelGravityStaticTest
+    : public ModelFeaturesTest<T> {};
 
 // ---------------------------------------------------------------------------
 // Helper: load a world from an SDF file using the given engine.
@@ -139,6 +146,10 @@ TYPED_TEST_SUITE(ModelStaticTest, ModelStaticTestTypes);
 
 using ModelGravityTestTypes = ::testing::Types<ModelGravityFeaturesList>;
 TYPED_TEST_SUITE(ModelGravityTest, ModelGravityTestTypes);
+
+using ModelGravityStaticTestTypes =
+  ::testing::Types<ModelGravityStaticFeaturesList>;
+TYPED_TEST_SUITE(ModelGravityStaticTest, ModelGravityStaticTestTypes);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -546,17 +557,18 @@ TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
 //////////////////////////////////////////////////
 // Verify that toggling static does not silently re-enable gravity.
 // Sequence: disable gravity → make static → make dynamic → gravity still off.
-TYPED_TEST(ModelGravityTest, GravityPreservedAcrossStaticToggle)
+TYPED_TEST(ModelGravityStaticTest, GravityPreservedAcrossStaticToggle)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelGravityStaticFeaturesList>::From(
+            plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelGravityFeaturesList>(
+    auto world = LoadWorld<ModelGravityStaticFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -586,7 +598,8 @@ TYPED_TEST(ModelGravityTest, GravityPreservedAcrossStaticToggle)
     const double initialZ =
         link->FrameDataRelativeToWorld().pose.translation().z();
     const double afterZ =
-        StepAndGetPosition<ModelGravityFeaturesList>(world, link, 100).z();
+        StepAndGetPosition<ModelGravityStaticFeaturesList>(
+            world, link, 100).z();
     EXPECT_NEAR(initialZ, afterZ, 1e-6);
   }
 }
