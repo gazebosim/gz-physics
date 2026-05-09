@@ -82,7 +82,7 @@ bool ModelFeatures::GetModelGravityEnabled(const Identity &_id) const
 {
   const auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
-    return false;
+    return true;
 
   for (const auto &linkInfo : modelInfo->links)
   {
