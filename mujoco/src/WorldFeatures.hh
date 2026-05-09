@@ -18,6 +18,7 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_WORLDFEATURES_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_WORLDFEATURES_HH_
 
+#include <gz/physics/Implements.hh>
 #include <gz/physics/World.hh>
 
 #include "Base.hh"

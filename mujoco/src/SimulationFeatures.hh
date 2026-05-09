@@ -23,6 +23,7 @@
 #include <gz/physics/CanWriteData.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetContacts.hh>
+#include <gz/physics/Implements.hh>
 
 #include "Base.hh"
 

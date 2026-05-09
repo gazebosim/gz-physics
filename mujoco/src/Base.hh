@@ -20,6 +20,7 @@
 
 #include <mujoco/mujoco.h>
 
+#include <Eigen/Geometry>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -27,9 +28,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include <gz/common/Console.hh>
 #include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
 #include <gz/math/SemanticVersion.hh>
+#include <gz/math/Vector3.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
 
@@ -39,6 +41,74 @@ namespace physics
 {
 namespace mujoco
 {
+
+inline void copyPos(const math::Vector3d &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.X();
+  _dst[1] = _src.Y();
+  _dst[2] = _src.Z();
+}
+
+inline void copyQuat(const math::Quaterniond &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.W();
+  _dst[1] = _src.X();
+  _dst[2] = _src.Y();
+  _dst[3] = _src.Z();
+}
+
+inline void copyQuat(const Eigen::Quaterniond &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.w();
+  _dst[1] = _src.x();
+  _dst[2] = _src.y();
+  _dst[3] = _src.z();
+}
+
+inline Eigen::Vector3d convertPos(const mjtNum *_src)
+{
+  Eigen::Vector3d dst;
+  dst.x() = _src[0];
+  dst.y() = _src[1];
+  dst.z() = _src[2];
+  return dst;
+}
+
+inline Eigen::Quaterniond convertQuat(const mjtNum *_src)
+{
+  Eigen::Quaterniond dst;
+  dst.w() = _src[0];
+  dst.x() = _src[1];
+  dst.y() = _src[2];
+  dst.z() = _src[3];
+  return dst;
+}
+
+inline Eigen::Isometry3d convertPose(const mjtNum *_pos, const mjtNum *_quat)
+{
+  return Eigen::Translation3d(convertPos(_pos)) * convertQuat(_quat);
+}
+
+inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
+{
+  return gz::math::Pose3d(_d->xpos[3 * _bodyId],
+                          _d->xpos[3 * _bodyId + 1],
+                          _d->xpos[3 * _bodyId + 2],
+                          _d->xquat[4 * _bodyId],
+                          _d->xquat[4 * _bodyId + 1],
+                          _d->xquat[4 * _bodyId + 2],
+                          _d->xquat[4 * _bodyId + 3]);
+}
+
+inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(mjData *_d,
+                                                         int _bodyId)
+{
+  return Eigen::Translation3d(_d->xpos[3 * _bodyId], _d->xpos[3 * _bodyId + 1],
+                              _d->xpos[3 * _bodyId + 2]) *
+         Eigen::Quaterniond(_d->xquat[4 * _bodyId], _d->xquat[4 * _bodyId + 1],
+                            _d->xquat[4 * _bodyId + 2],
+                            _d->xquat[4 * _bodyId + 3]);
+}
 
 // Forward declarations
 struct LinkInfo;
@@ -74,15 +144,24 @@ struct LinkInfo
 
 struct JointInfo
 {
-  JointInfo(std::size_t _entityId, mjsJoint *_joint,
+  JointInfo(std::size_t _entityId,
            std::shared_ptr<ModelInfo> _modelInfo)
-      : entityId(_entityId), joint(_joint), modelInfo(_modelInfo)
+      : entityId(_entityId), modelInfo(_modelInfo)
   {
   }
   std::size_t entityId;
-  mjsJoint *joint;
+  mjsJoint *joint{nullptr};
+  mjsBody *childBody{nullptr};
+  // A MuJoCo actuator is used for setting forces and velocity servo commands
+  mjsActuator *actuator{nullptr};
+  // Index of joint in mjData::qpos
+  int nq_index{-1};
+  // Index of joint in mjData::qvel and mjData::qacc
+  int nv_index{-1};
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
+  WorldInfo* worldInfo{nullptr};
+  std::optional<std::size_t> ballJointCacheIndex{std::nullopt};
 };
 
 
@@ -98,7 +177,7 @@ struct ModelInfo
   mjsBody *parentBody{nullptr};
   std::string name;
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
-  std::vector<std::shared_ptr<JointInfo>> joints{};
+  detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
 };
 
 struct FrameInfo
@@ -113,13 +192,26 @@ struct FrameInfo
 
 struct WorldInfo
 {
-  std::size_t entityId;
+  ~WorldInfo()
+  {
+    mj_deleteData(this->mjDataObj);
+    mj_deleteModel(this->mjModelObj);
+    mj_deleteSpec(this->mjSpecObj);
+  }
+
+  WorldInfo() = default;
+  WorldInfo(const WorldInfo &) = delete;
+  WorldInfo &operator=(const WorldInfo &) = delete;
+  WorldInfo(WorldInfo &&) = default;
+  WorldInfo &operator=(WorldInfo &&) = default;
+
+  std::size_t entityId{0};
   mjsBody *body{nullptr};
   mjSpec *mjSpecObj{nullptr};
   mjModel *mjModelObj{nullptr};
   mjData *mjDataObj{nullptr};
   bool specDirty{true};
-  std::string name;
+  std::string name{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
@@ -129,7 +221,14 @@ struct WorldInfo
 
   /// \brief body poses from the most recent pose change/update.
   /// The index is the MuJoCo body ID, and the value is the body's pose.
-  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
+  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses{};
+
+  /// \brief Cache for ball joint positions. This is used to enable
+  /// setting individual DOFs of a ball joint's angle axis representation.
+  /// The index of a joint into this cache is stored in the JointInfo.
+  /// The cache is invalidated right before mj_step in
+  /// SimulationFeatures::WorldForwardStep
+  std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
 };
 
 class Base
@@ -142,8 +241,8 @@ class Base
     return entityCount++;
   }
 
-  public: std::string JoinNames(const std::string &_parent,
-                                const std::string &_name) const
+  public: static inline std::string JoinNames(const std::string &_parent,
+                                       const std::string &_name)
   {
     return _parent + "::" + _name;
   }
