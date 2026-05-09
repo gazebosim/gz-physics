@@ -70,6 +70,13 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
     return AlignedBox3d();
   }
 
+  if (!m->geom_type || !m->geom_size || !m->geom_dataid)
+  {
+    gzerr << "Error computing shape bounding box: "
+          << "mjModel geom arrays are null." << std::endl;
+    return AlignedBox3d();
+  }
+
   int geomType = m->geom_type[geomId];
 
   // MuJoCo stores the size parameters for every geom in a single flattened
@@ -139,8 +146,33 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
         break;
       }
 
+      if (!m->mesh_vertadr || !m->mesh_vertnum)
+      {
+        gzerr << "Error computing mesh bounding box: "
+              << "mjModel mesh arrays (mesh_vertadr, mesh_vertnum) are null."
+              << std::endl;
+        break;
+      }
+
       const int vertAddress = m->mesh_vertadr[meshId];
       const int vertCount = m->mesh_vertnum[meshId];
+
+      if (!m->mesh_vert || !m->mesh_pos || !m->mesh_quat)
+      {
+        gzerr << "Error computing mesh bounding box: "
+              << "mjModel arrays (mesh_vert, mesh_pos, mesh_quat) are null."
+              << std::endl;
+        break;
+      }
+
+      if (vertAddress < 0 || vertAddress + vertCount > m->nmeshvert)
+      {
+        gzerr << "Error computing mesh bounding box: "
+              << "Invalid vertAddress (" << vertAddress << ") or vertCount ("
+              << vertCount << ") for total vertices " << m->nmeshvert
+              << std::endl;
+        break;
+      }
 
       if (vertCount <= 0)
       {
