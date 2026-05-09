@@ -218,6 +218,19 @@ struct ModelKinematicStructure
     mjs_setString(geom->meshname, meshName.c_str());
 
     auto *muMesh = mjs_addMesh(_spec, nullptr);
+    if (!muMesh)
+    {
+      gzerr << "Failed to add mesh spec for " << meshName << std::endl;
+      return nullptr;
+    }
+
+    if (!muMesh->uservert || !muMesh->userface)
+    {
+      gzerr << "muMesh uservert or userface array is null for "
+            << meshName << std::endl;
+      return nullptr;
+    }
+
     mjs_setName(muMesh->element, meshName.c_str());
 
     std::copy(_meshSdf->Scale().Data(), _meshSdf->Scale().Data() + 3,
@@ -227,6 +240,25 @@ struct ModelKinematicStructure
 
     mesh->FillArrays(&verts, &indices);
     auto nverts = mesh->VertexCount();
+
+    if (nverts > 0 && nullptr == verts)
+    {
+      gzerr << "Mesh [" << _meshSdf->Uri() << "] has " << nverts
+            << " vertices but FillArrays returned null vertices pointer."
+            << std::endl;
+      delete[] indices;
+      return nullptr;
+    }
+
+    if (mesh->IndexCount() > 0 && nullptr == indices)
+    {
+      gzerr << "Mesh [" << _meshSdf->Uri() << "] has " << mesh->IndexCount()
+            << " indices but FillArrays returned null indices pointer."
+            << std::endl;
+      delete[] verts;
+      return nullptr;
+    }
+
     muMesh->uservert->assign(3 * nverts, 0.0);
     std::transform(verts, verts + 3 * nverts, muMesh->uservert->begin(),
         [](double val) {return static_cast<float>(val);});
