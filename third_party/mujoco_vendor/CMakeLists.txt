@@ -37,7 +37,11 @@ ExternalProject_Add(
     -Wno-dev # Suppress any CMake warnings from mujoco
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
     -DBUILD_SHARED_LIBS=ON
-    -DCMAKE_SHARED_LINKER_FLAGS=${MUJOCO_LINK_FLAGS}
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+    "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+    "-DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS} ${MUJOCO_LINK_FLAGS}"
     -DMUJOCO_BUILD_EXAMPLES=OFF
     -DMUJOCO_BUILD_TESTS=OFF
     -DMUJOCO_BUILD_SIMULATE=OFF
@@ -64,7 +68,7 @@ else()
     target_link_libraries(mujoco_internal INTERFACE "${MUJOCO_SHARED_FILE}")
     install(DIRECTORY "${MUJOCO_INSTALL_DIR}/lib/"
             DESTINATION lib
-            FILES_MATCHING 
+            FILES_MATCHING
             PATTERN "*mujoco.so*"
             PATTERN "*mujoco*.dylib*"
     )

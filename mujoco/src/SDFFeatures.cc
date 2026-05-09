@@ -213,6 +213,10 @@ struct ModelKinematicStructure
     }
 
     auto geom = mjs_addGeom(_body, nullptr);
+    if (!geom)
+    {
+      return nullptr;
+    }
     geom->type = mjGEOM_MESH;
     auto meshName = mesh->Name();
     mjs_setString(geom->meshname, meshName.c_str());
@@ -233,8 +237,9 @@ struct ModelKinematicStructure
 
     mjs_setName(muMesh->element, meshName.c_str());
 
-    std::copy(_meshSdf->Scale().Data(), _meshSdf->Scale().Data() + 3,
-              muMesh->scale);
+    muMesh->scale[0] = _meshSdf->Scale().X();
+    muMesh->scale[1] = _meshSdf->Scale().Y();
+    muMesh->scale[2] = _meshSdf->Scale().Z();
     double *verts{nullptr};
     int *indices{nullptr};
 
@@ -259,9 +264,11 @@ struct ModelKinematicStructure
       return nullptr;
     }
 
-    muMesh->uservert->assign(3 * nverts, 0.0);
-    std::transform(verts, verts + 3 * nverts, muMesh->uservert->begin(),
+    std::vector<float> floatVerts(3 * nverts);
+    std::transform(verts, verts + 3 * nverts, floatVerts.begin(),
         [](double val) {return static_cast<float>(val);});
+
+    mjs_setFloat(muMesh->uservert, floatVerts.data(), floatVerts.size());
 
     mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
 
