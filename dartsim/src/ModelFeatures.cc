@@ -28,22 +28,16 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
   if (!modelInfo || !modelInfo->model)
     return;
   auto skeleton = modelInfo->model;
-  const bool wasStatic = !skeleton->isMobile();
 
   // In DART, isMobile=false means the skeleton is fixed (static).
   skeleton->setMobile(!_static);
 
-  // When transitioning from static (kinematic) to dynamic, zero out any
+  // When transitioning between states, zero out any
   // velocities and accelerations that DART may have stored on the skeleton
-  // while it was kinematic. Without this the stored state is released as
-  // momentum when the body becomes dynamic.
-  if (wasStatic && !_static)
-  {
-    skeleton->resetVelocities();
-    skeleton->resetAccelerations();
-    skeleton->clearExternalForces();
-    skeleton->clearInternalForces();
-  }
+  skeleton->resetVelocities();
+  skeleton->resetAccelerations();
+  skeleton->clearExternalForces();
+  skeleton->clearInternalForces();
 
   // Also apply to nested models recursively.
   for (const std::size_t nestedID : modelInfo->nestedModels)
@@ -63,21 +57,16 @@ bool ModelFeatures::GetModelStatic(const Identity &_id) const
 }
 
 /////////////////////////////////////////////////
-void ModelFeatures::SetModelGravityEnabled(const Identity &_id, bool _enabled)
+void ModelFeatures::SetModelGravityEnabled(
+    const Identity &_id, bool _enabled)
 {
   auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return;
+
   for (const auto &linkInfo : modelInfo->links)
   {
-    if (!linkInfo || !linkInfo->link)
-      continue;
-    // Added-mass links must keep DART gravity disabled: gravity is applied
-    // manually as F=ma each step. Let SetLinkAddedMass own that flag.
-    if (linkInfo->inertial.has_value() &&
-        linkInfo->inertial->FluidAddedMass().has_value())
-      continue;
-    linkInfo->link->setGravityMode(_enabled);
+    this->SetLinkGravityMode(linkInfo.get(), _enabled);
   }
 
   // Also apply to nested models recursively.
@@ -94,18 +83,23 @@ bool ModelFeatures::GetModelGravityEnabled(const Identity &_id) const
   const auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return true;
+
   for (const auto &linkInfo : modelInfo->links)
   {
-    if (!linkInfo || !linkInfo->link)
-      continue;
-    // Added-mass links have DART gravity forcibly disabled; exclude them so
-    // their internal state doesn't pollute the user-visible gravity flag.
-    if (linkInfo->inertial.has_value() &&
-        linkInfo->inertial->FluidAddedMass().has_value())
-      continue;
-    if (!linkInfo->link->getGravityMode())
+    if (!this->GetLinkGravityMode(linkInfo.get()))
       return false;
   }
+
+  // Also check nested models.
+  for (const std::size_t nestedID : modelInfo->nestedModels)
+  {
+    if (!this->GetModelGravityEnabled(this->GenerateIdentity(
+        nestedID, this->GetModelInfo(nestedID))))
+    {
+      return false;
+    }
+  }
+
   return true;
 }
 

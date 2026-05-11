@@ -20,6 +20,8 @@
 
 #include <gz/physics/Model.hh>
 
+#include <gz/physics/Gravity.hh>
+
 #include "Base.hh"
 
 namespace gz {
@@ -28,7 +30,7 @@ namespace dartsim {
 
 struct ModelFeatureList : FeatureList<
   ModelStaticState,
-  ModelGravityEnabled
+  GravityEnabled
 > { };
 
 class ModelFeatures :
@@ -42,11 +44,10 @@ class ModelFeatures :
   // Documentation inherited
   public: bool GetModelStatic(const Identity &_id) const override;
 
-  // Documentation inherited
+  // ----- Model Gravity Enabled -----
   public: void SetModelGravityEnabled(
       const Identity &_id, bool _enabled) override;
 
-  // Documentation inherited
   public: bool GetModelGravityEnabled(const Identity &_id) const override;
 };
 

@@ -59,40 +59,6 @@ namespace gz
       };
     };
 
-    /////////////////////////////////////////////////
-    /// \brief Feature for getting and setting whether gravity affects a model.
-    class GZ_PHYSICS_VISIBLE ModelGravityEnabled : public virtual Feature
-    {
-      /// \brief The Model API for getting and setting gravity mode.
-      public: template <typename PolicyT, typename FeaturesT>
-      class Model : public virtual Feature::Model<PolicyT, FeaturesT>
-      {
-        /// \brief Set whether gravity is enabled for this model.
-        /// \param[in] _enabled True to enable gravity, false to disable it.
-        public: void SetGravityEnabled(bool _enabled);
-
-        /// \brief Get whether gravity is enabled for this model.
-        /// \return True if gravity is enabled, false otherwise.
-        public: bool GetGravityEnabled() const;
-      };
-
-      /// \private The implementation API for model gravity mode.
-      public: template <typename PolicyT>
-      class Implementation : public virtual Feature::Implementation<PolicyT>
-      {
-        /// \brief Implementation API for setting the model gravity mode.
-        /// \param[in] _id Identity of the model.
-        /// \param[in] _enabled True to enable gravity.
-        public: virtual void SetModelGravityEnabled(
-            const Identity &_id, bool _enabled) = 0;
-
-        /// \brief Implementation API for getting the model gravity mode.
-        /// \param[in] _id Identity of the model.
-        /// \return True if gravity is enabled.
-        public: virtual bool GetModelGravityEnabled(
-            const Identity &_id) const = 0;
-      };
-    };
   }
 }
 
