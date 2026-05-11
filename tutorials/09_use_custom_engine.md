@@ -172,7 +172,7 @@ mkdir build
 cd build
 cmake ..
 # Linux
-cmake --build . --target PluginTest
+make
 # Windows
 cmake --build . --target PluginTest --config Release
 ```

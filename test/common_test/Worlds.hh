@@ -52,8 +52,9 @@ const auto kMultipleCollisionsSdf = CommonTestWorld("multiple_collisions.sdf");
 const auto kPendulumJointWrenchSdf =
   CommonTestWorld("pendulum_joint_wrench.sdf");
 const auto kPoseOffsetSdf = CommonTestWorld("pose_offset.sdf");
-const auto kShapesWorld = CommonTestWorld("shapes.world");
+const auto kShapesCategoryBitmaskWorld = CommonTestWorld("shapes_category_bitmask.sdf");
 const auto kShapesBitmaskWorld = CommonTestWorld("shapes_bitmask.sdf");
+const auto kShapesWorld = CommonTestWorld("shapes.world");
 const auto kSlipComplianceSdf = CommonTestWorld("slip_compliance.sdf");
 const auto kSphereSdf = CommonTestWorld("sphere.sdf");
 const auto kStringPendulumSdf = CommonTestWorld("string_pendulum.sdf");

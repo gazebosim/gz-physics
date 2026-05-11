@@ -2550,6 +2550,156 @@ TEST_F(FixedJointFreeGroupFeatureTestTypes, FixedJointFreeGroupMove)
   }
 }
 
+using FixedJointWeldFeatureList = gz::physics::FeatureList<
+    gz::physics::FindFreeGroupFeature,
+    gz::physics::SetFreeGroupWorldPose,
+    gz::physics::AttachFixedJointFeature,
+    gz::physics::DetachJointFeature,
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetFixedJointWeldChildToParentFeature,
+    gz::physics::SetJointTransformFromParentFeature,
+    gz::physics::SetJointVelocityCommandFeature,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfWorld
+>;
+
+using FixedJointWeldFeatureTestTypes =
+  JointFeaturesTest<FixedJointWeldFeatureList>;
+
+TEST_F(FixedJointWeldFeatureTestTypes, FixedJointWeldFall)
+{
+  // Attach joint between links from 2 models (M1 and M2) with a fixed joint.
+  // Let them fall and the child model (M2) should collide with a third model
+  // (body).
+  // Run the test once without welding child to parent then run again
+  // with welding enabled. Verify that the fixed joint enforces the relative
+  // pose between the parent and child links but there should still be some
+  // position error. Verify that the welded joint has a smaller error.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<FixedJointWeldFeatureList>::From(
+        plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kJointAcrossModelsSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    const std::string modelName1{"M1"};
+    const std::string modelName2{"M2"};
+    const std::string bodyName{"body"};
+
+    auto model1 = world->GetModel(modelName1);
+    auto model2 = world->GetModel(modelName2);
+    auto body = world->GetModel(bodyName);
+    auto model1Body = model1->GetLink(bodyName);
+    auto model2Body = model2->GetLink(bodyName);
+
+    // \todo(iche033) Extend test to use pose with rotations and
+    // verify that the relative pose between parent and child entities
+    // are enforced.
+    const gz::math::Pose3d model1Pose(0, -1, 1.0, 0, 0, 0.0);
+    const gz::math::Pose3d model2Pose(0, 1, 1.0, 0, 0, 0.0);
+    const gz::math::Pose3d bodyPose(0, 1, 0.25, 0, 0, 0.0);
+    auto freeGroupM1 = model1->FindFreeGroup();
+    auto freeGroupM2 = model2->FindFreeGroup();
+    auto freeGroupBody = body->FindFreeGroup();
+    freeGroupM1->SetWorldPose(gz::math::eigen3::convert(model1Pose));
+    freeGroupM2->SetWorldPose(gz::math::eigen3::convert(model2Pose));
+    freeGroupBody->SetWorldPose(gz::math::eigen3::convert(bodyPose));
+
+    auto frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+    auto frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+
+    EXPECT_EQ(model1Pose,
+              gz::math::eigen3::convert(frameDataModel1Body.pose));
+    EXPECT_EQ(model2Pose,
+              gz::math::eigen3::convert(frameDataModel2Body.pose));
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    const std::size_t numSteps = 500;
+
+    // Attach fixed joint
+    auto poseParent = frameDataModel1Body.pose;
+    auto poseChild = frameDataModel2Body.pose;
+    auto poseParentChild = poseParent.inverse() * poseChild;
+    auto fixedJoint = model2Body->AttachFixedJoint(model1Body);
+    fixedJoint->SetTransformFromParent(poseParentChild);
+
+    // Run once without welding child to parent
+    fixedJoint->SetWeldChildToParent(false);
+
+    gz::math::Pose3d gzPoseParentChild =
+        gz::math::eigen3::convert(poseParentChild);
+    double errNoWeld = 0.0;
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+
+      frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+
+      auto newPoseParent = frameDataModel1Body.pose;
+      auto newPoseChild = frameDataModel2Body.pose;
+      auto newPoseParentChild = newPoseParent.inverse() * newPoseChild;
+      gz::math::Pose3d gzNewPoseParentChild =
+          gz::math::eigen3::convert(newPoseParentChild);
+      // The relative parent-child pose should still be enforced even without
+      // welding the child to parent but record the pos error
+      EXPECT_EQ(gzPoseParentChild, gzNewPoseParentChild);
+      errNoWeld +=
+          (gzNewPoseParentChild.Pos() - gzPoseParentChild.Pos()).Length();
+    }
+
+    // Reset model poses
+    freeGroupM1->SetWorldPose(gz::math::eigen3::convert(model1Pose));
+    freeGroupM2->SetWorldPose(gz::math::eigen3::convert(model2Pose));
+    freeGroupBody->SetWorldPose(gz::math::eigen3::convert(bodyPose));
+
+
+    // Run the test with child welded to parent
+    fixedJoint->SetWeldChildToParent(true);
+    double errWeld = 0.0;
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+
+      frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+      frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+
+      auto newPoseParent = frameDataModel1Body.pose;
+      auto newPoseChild = frameDataModel2Body.pose;
+      auto newPoseParentChild = newPoseParent.inverse() * newPoseChild;
+      gz::math::Pose3d gzNewPoseParentChild =
+          gz::math::eigen3::convert(newPoseParentChild);
+      // The relative parent-child pose should be enforced but record the pos
+      // error
+      EXPECT_EQ(gzPoseParentChild, gzNewPoseParentChild);
+      errWeld +=
+          (gzNewPoseParentChild.Pos() - gzPoseParentChild.Pos()).Length();
+    }
+    // Verify that the error is smaller when child is welded to parent
+    EXPECT_LT(errWeld, errNoWeld);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

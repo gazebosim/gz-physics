@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2025 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  *
 */
 
-#ifndef GZ_PHYSICS_DETAIL_REGISTER_HH_
-#define GZ_PHYSICS_DETAIL_REGISTER_HH_
+#ifndef GZ_PHYSICS_DETAIL_REGISTER_STATIC_HH_
+#define GZ_PHYSICS_DETAIL_REGISTER_STATIC_HH_
 
 #include <tuple>
 
-#include <gz/plugin/Register.hh>
+#include <gz/plugin/RegisterStatic.hh>
 #include <gz/physics/Feature.hh>
 
 namespace gz
@@ -31,27 +31,26 @@ namespace gz
     {
       template <typename PluginT, typename FeaturePolicyT,
                 typename FeatureListOrTypeList>
-      struct Registrar;
+      struct StaticRegistrar;
 
       template <typename PluginT, typename FeaturePolicyT,
                 typename FeatureListT>
-      struct Registrar
+      struct StaticRegistrar
       {
         static void RegisterPlugin()
         {
-          Registrar<PluginT, FeaturePolicyT,
-                    typename FeatureListT::FlatFeatureTypeList>::
-              RegisterPlugin();
+          StaticRegistrar<PluginT, FeaturePolicyT,
+              typename FeatureListT::FlatFeatureTypeList>::RegisterPlugin();
         }
       };
 
       template <typename PluginT, typename FeaturePolicyT,
                 typename... Features>
-      struct Registrar<PluginT, FeaturePolicyT, TypeList<Features...>>
+      struct StaticRegistrar<PluginT, FeaturePolicyT, TypeList<Features...>>
       {
         static void RegisterPlugin()
         {
-          gz::plugin::detail::Registrar<
+          gz::plugin::detail::StaticRegistrar<
                 PluginT, Feature::Implementation<FeaturePolicyT>,
                 typename Features::template Implementation<FeaturePolicyT>...>::
               Register();
@@ -60,11 +59,11 @@ namespace gz
 
       template <typename PluginT, typename FeaturePolicyT,
                 typename... Features>
-      struct Registrar<PluginT, FeaturePolicyT, std::tuple<Features...>>
+      struct StaticRegistrar<PluginT, FeaturePolicyT, std::tuple<Features...>>
       {
         static void RegisterPlugin()
         {
-          Registrar<PluginT, FeaturePolicyT, TypeList<Features...>>::
+          StaticRegistrar<PluginT, FeaturePolicyT, TypeList<Features...>>::
               RegisterPlugin();
         }
       };
@@ -76,34 +75,34 @@ namespace gz
 // confusion with the gz::physics namespace. This is important because
 // users might call this macro within their own namespace scope, which can
 // create unexpected and confusing namespace hierarchies.
-#define DETAIL_GZ_PHYSICS_ADD_PLUGIN_HELPER( \
+#define DETAIL_GZ_PHYSICS_ADD_STATIC_PLUGIN_HELPER( \
   UniqueID, PluginType, FeaturePolicyT, FeatureListT) \
   namespace detail_gz_physics \
   { \
   namespace \
   { \
-    struct ExecuteWhenLoadingLibrary##UniqueID \
+    struct RegisterStaticPlugin##UniqueID \
     { \
-      ExecuteWhenLoadingLibrary##UniqueID() \
+      RegisterStaticPlugin##UniqueID() \
       { \
-        ::gz::physics::detail::Registrar< \
+        ::gz::physics::detail::StaticRegistrar< \
             PluginType, FeaturePolicyT, FeatureListT>:: \
             RegisterPlugin(); \
       } \
     }; \
   \
-    static ExecuteWhenLoadingLibrary##UniqueID execute##UniqueID; \
+    static RegisterStaticPlugin##UniqueID execute##UniqueID; \
   }  /* namespace */ \
   }
 
-#define DETAIL_GZ_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \
+#define DETAIL_GZ_PHYSICS_ADD_STATIC_PLUGIN_WITH_COUNTER( \
   UniqueID, PluginType, FeaturePolicyT, FeatureListT) \
-  DETAIL_GZ_PHYSICS_ADD_PLUGIN_HELPER( \
+  DETAIL_GZ_PHYSICS_ADD_STATIC_PLUGIN_HELPER( \
     UniqueID, PluginType, FeaturePolicyT, FeatureListT)
 
-#define DETAIL_GZ_PHYSICS_ADD_PLUGIN( \
+#define DETAIL_GZ_PHYSICS_ADD_STATIC_PLUGIN( \
   PluginType, FeaturePolicyT, FeatureListT) \
-  DETAIL_GZ_PHYSICS_ADD_PLUGIN_WITH_COUNTER( \
+  DETAIL_GZ_PHYSICS_ADD_STATIC_PLUGIN_WITH_COUNTER( \
   __COUNTER__, PluginType, FeaturePolicyT, FeatureListT)
 
 #endif

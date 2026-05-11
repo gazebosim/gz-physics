@@ -129,6 +129,33 @@ namespace gz
 
     /////////////////////////////////////////////////
     template <typename PolicyT, typename FeaturesT>
+    void CategoryFilterMaskFeature::Shape<PolicyT, FeaturesT>
+    ::SetCategoryFilterMask(const uint16_t _mask)
+    {
+      this->template Interface<CategoryFilterMaskFeature>()
+        ->SetCategoryFilterMask(this->identity, _mask);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    uint16_t CategoryFilterMaskFeature::Shape<PolicyT, FeaturesT>
+    ::GetCategoryFilterMask() const
+    {
+      return this->template Interface<CategoryFilterMaskFeature>()
+        ->GetCategoryFilterMask(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void CategoryFilterMaskFeature::Shape<PolicyT, FeaturesT>
+    ::RemoveCategoryFilterMask()
+    {
+      this->template Interface<CategoryFilterMaskFeature>()
+        ->RemoveCategoryFilterMask(this->identity);
+    }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
     auto GetShapeFrictionPyramidSlipCompliance::Shape<PolicyT, FeaturesT>
     ::GetPrimarySlipCompliance() const
     -> Scalar

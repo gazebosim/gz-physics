@@ -16,8 +16,12 @@
 */
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <set>
+#include <sstream>
 #include <string>
+#include <vector>
+#include <unordered_map>
 #include <unordered_set>
 
 #include <gz/common/Console.hh>
@@ -217,12 +221,37 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
       this->loader,
       name,
       common_test::worlds::kShapesWorld);
-    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1).first;
+
+    // Step for contact data to be populated
+    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 5).first;
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
     // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
+
+    // TPE does not support generate contact force, normal, depth data.
+    if (this->PhysicsEngineName(name) == "tpe") continue;
+
+    bool checkedForces = false;
+    for (const auto &contact : contacts)
+    {
+      const auto *extraContactData =
+          contact.template Query<
+              gz::physics::World3d<FeaturesContacts>::ExtraContactData>();
+      ASSERT_NE(nullptr, extraContactData);
+      EXPECT_FALSE(extraContactData->normal.isZero());
+      EXPECT_GE(extraContactData->depth, 0.0);
+
+      // check that force and normal are in the same direction if force is
+      // non-zero
+      if (!extraContactData->force.isZero())
+      {
+        EXPECT_GT(extraContactData->force.dot(extraContactData->normal), 0.0);
+        checkedForces = true;
+      }
+    }
+    EXPECT_TRUE(checkedForces);
   }
 }
 
@@ -466,7 +495,7 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
         { return _wPose.body == link->EntityID(); });
     ASSERT_NE(poseIt, worldPoses.end());
     auto pos = poseIt->pose.Pos();
-    EXPECT_NEAR(pos.Z(), 1.0, 5e-2);
+    EXPECT_NEAR(pos.Z(), 1.0, 5e-2) << "link: " << link->EntityID();
   }
 }
 
@@ -635,6 +664,290 @@ TYPED_TEST(SimulationFeaturesDynamicsTest, JointDamping)
     double expectedTerminalVel = -kGravityAcc * kMass / kDamping;
     auto velDamped = jointWithDamping->GetVelocity(0);
     EXPECT_NEAR(expectedTerminalVel, velDamped, 1e-2);
+  }
+}
+
+TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessPrismatic)
+{
+  auto getModelStr = [](const std::string &_name,
+      const gz::math::Pose3d &_pose, double _springStiffness)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="body">
+          <inertial>
+            <mass>2</mass>
+          </inertial>
+        </link>
+        <joint name="test_joint" type="prismatic">
+          <parent>base</parent>
+          <child>body</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <dynamics>
+              <spring_stiffness>)";
+    modelStr << _springStiffness;
+    modelStr << R"(</spring_stiffness>
+            </dynamics>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // The `bullet` plugin does not support prismatic joints.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    auto world = LoadPluginAndWorld<FeaturesDynamics>(
+        this->loader, name, common_test::worlds::kEmptySdf);
+
+    auto addModel = [getModelStr, world](const std::string &_name,
+        const gz::math::Pose3d &_pose, double _springStiffness)
+    {
+      sdf::Root root;
+      sdf::Errors errors =
+          root.LoadSdfString(getModelStr(_name, _pose, _springStiffness));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    };
+
+    // The test consists of two models in the world, one has a prismatic joint
+    // with spring stiffness while the other also has a prismatic joint but
+    // with no spring stiffness. When the world is stepped, the links in both
+    // models should begin to slide down due to gravity. However, the link
+    // connected by the joint with spring stiffness should start to oscillate up
+    // and down, while the link in the model without joint spring stiffness
+    // should continue to fall.
+    constexpr double kSpringStiffness = 100.0;
+    addModel("model1", {}, kSpringStiffness);
+    addModel("model2", gz::math::Pose3d(1, 0, 0, 0, 0, 0), 0.0);
+
+    const auto jointWithSpringStiffness =
+        world->GetModel("model1")->GetJoint("test_joint");
+    const auto jointWithoutSpringStiffness =
+        world->GetModel("model2")->GetJoint("test_joint");
+
+    StepWorld<FeaturesDynamics>(world, true, 1);
+    double posSpringInitialPos = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpringInitialPos = jointWithoutSpringStiffness->GetPosition(0);
+
+    constexpr double kTol = 0.01;
+    int velSpringDir = -1;
+    int velNoSpringDir = -1;
+    int dirChangeSpring = 0;
+    int dirChangeNoSpring = 0;
+    for (int i = 1; i < 2000; ++i)
+    {
+      StepWorld<FeaturesDynamics>(world, false, 1);
+      double velNoSpring = jointWithoutSpringStiffness->GetVelocity(0);
+      double velSpring = jointWithSpringStiffness->GetVelocity(0);
+      // count number of velocity direction changes
+      // Joint with spring stiffness
+      if (velSpring > kTol && velSpringDir < 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = 1;
+      }
+      else if (velSpring < -kTol && velSpringDir > 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = -1;
+      }
+
+      // Joint without spring stiffness
+      if (velNoSpring > kTol && velNoSpringDir < 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = 1;
+      }
+      else if (velNoSpring < -kTol && velNoSpringDir > 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = -1;
+      }
+    }
+
+    // Model with spring stiffness should oscillate up and down,
+    // Undamped oscillation frequency in Hz is:
+    //     1/(2*pi)*sqrt(k/m) = 1.12Hz
+    // where k (spring stiffness) = 100.0, and m (mass) = 2.0.
+    // So we expect 2.24 complete cycles in 2 seconds,
+    // which is about 4 direction changes
+    EXPECT_EQ(4, dirChangeSpring);
+    // Model without spring stiffness should only have one downward moving
+    // direction
+    EXPECT_EQ(0, dirChangeNoSpring);
+
+    // Verify joint spring pos. Model without spring stiffness should continue
+    // to fall and so has larger negative joint pos than model with spring
+    // stiffness
+    double posSpring = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpring = jointWithoutSpringStiffness->GetPosition(0);
+    EXPECT_GT(posSpringInitialPos, posSpring);
+    EXPECT_GT(posNoSpringInitialPos, posNoSpring);
+    EXPECT_GT(posSpring, posNoSpring);
+  }
+}
+
+TYPED_TEST(SimulationFeaturesDynamicsTest, JointSpringStiffnessRevolute)
+{
+  auto getModelStr = [](const std::string &_name,
+      const gz::math::Pose3d &_pose, double _springStiffness)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="body">
+          <inertial>
+            <inertia>
+              <ixx>0.01</ixx>
+              <ixy>0.0</ixy>
+              <ixz>0.0</ixz>
+              <iyy>0.01</iyy>
+              <iyz>0.0</iyz>
+              <izz>0.01</izz>
+            </inertia>
+            <mass>1.0</mass>
+          </inertial>
+        </link>
+        <joint name="test_joint" type="revolute">
+          <pose>-1.0 0.0 0 0.0 0.0 0.0</pose>
+          <parent>base</parent>
+          <child>body</child>
+          <axis>
+            <xyz>0 -1 0</xyz>
+            <dynamics>
+              <spring_stiffness>)";
+    modelStr << _springStiffness;
+    modelStr << R"(</spring_stiffness>
+            </dynamics>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // The `bullet` plugin does not support spring stiffness
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+
+    auto world = LoadPluginAndWorld<FeaturesDynamics>(
+        this->loader, name, common_test::worlds::kEmptySdf);
+
+    auto addModel = [getModelStr, world](const std::string &_name,
+        const gz::math::Pose3d &_pose, double _springStiffness)
+    {
+      sdf::Root root;
+      sdf::Errors errors =
+          root.LoadSdfString(getModelStr(_name, _pose, _springStiffness));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    };
+
+    // The test consists of two models in the world, one has a revolute joint
+    // with spring stiffness while the other also has a revolute joint but
+    // with no spring stiffness. The joint is at an offset so that when the
+    // world is stepped, the links should begin to swing due to gravity.
+    // However, the link connected by the joint with spring stiffness should
+    // oscillate up and down, while the link in the model without joint spring
+    // stiffness should continue to swing freely.
+    constexpr double kSpringStiffness = 100.0;
+    addModel("model1", {}, kSpringStiffness);
+    addModel("model2", gz::math::Pose3d(1, 0, 0, 0, 0, 0), 0.0);
+
+    const auto jointWithSpringStiffness =
+        world->GetModel("model1")->GetJoint("test_joint");
+    const auto jointWithoutSpringStiffness =
+        world->GetModel("model2")->GetJoint("test_joint");
+
+    StepWorld<FeaturesDynamics>(world, true, 1);
+    double posSpringInitialPos = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpringInitialPos = jointWithoutSpringStiffness->GetPosition(0);
+
+    constexpr double kTol = 0.01;
+    int velSpringDir = -1;
+    int velNoSpringDir = -1;
+    int dirChangeSpring = 0;
+    int dirChangeNoSpring = 0;
+    for (int i = 1; i < 1000; ++i)
+    {
+      StepWorld<FeaturesDynamics>(world, false, 1);
+      double velNoSpring = jointWithoutSpringStiffness->GetVelocity(0);
+      double velSpring = jointWithSpringStiffness->GetVelocity(0);
+      // count number of velocity direction changes
+      // Joint with spring stiffness
+      if (velSpring > kTol && velSpringDir < 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = 1;
+      }
+      else if (velSpring < -kTol && velSpringDir > 0)
+      {
+        dirChangeSpring++;
+        velSpringDir = -1;
+      }
+
+      // Joint without spring stiffness
+      if (velNoSpring > kTol && velNoSpringDir < 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = 1;
+      }
+      else if (velNoSpring < -kTol && velNoSpringDir > 0)
+      {
+        dirChangeNoSpring++;
+        velNoSpringDir = -1;
+      }
+    }
+
+    // Model with spring stiffness should swing around an axis,
+    // Undamped oscillation frequency in Hz is:
+    //     1/(2*pi)*sqrt(k/I_joint) = 1.58Hz,
+    // where k (spring stiffness) =  100.0, and
+    // I_joint is the moment of inertia around the axis of rotation (-y):
+    //     I_joint = I_yy + joint_pos_x^2*mass.
+    // where I_yy = 0.01, joint_pos_x = -1.0, and mass = 1.0
+    // So 3 direction switches in 1 second.
+    EXPECT_EQ(3, dirChangeSpring);
+    // Model without spring stiffness should only swing in one direction
+    EXPECT_EQ(0, dirChangeNoSpring);
+
+    // Verify joint spring pos. Model without spring stiffness should continue
+    // to fall and so has larger negative joint pos than model with spring
+    // stiffness
+    double posSpring = jointWithSpringStiffness->GetPosition(0);
+    double posNoSpring = jointWithoutSpringStiffness->GetPosition(0);
+    EXPECT_GT(posSpringInitialPos, posSpring);
+    EXPECT_GT(posNoSpringInitialPos, posNoSpring);
+    EXPECT_GT(posSpring, posNoSpring);
   }
 }
 
@@ -898,11 +1211,13 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 
     // model free group test
     auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
+    ASSERT_NE(nullptr, link);
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 
@@ -1021,11 +1336,32 @@ TYPED_TEST(SimulationFeaturesTestBasic, ShapeBoundingBox)
   }
 }
 
-TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
+using FeaturesCollisionContacts=  gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetShapeFromLink,
+  gz::physics::ForwardStep,
+  gz::physics::GetContactsFromLastStepFeature
+>;
+
+using SimulationFeaturesCollisionContacts =
+    SimulationFeaturesTest<FeaturesCollisionContacts>;
+
+using FeaturesCollisionFilter =  gz::physics::FeatureList<
+  FeaturesCollisionContacts,
+  gz::physics::CollisionFilterMaskFeature
+>;
+
+using SimulationFeaturesCollisionFilter =
+    SimulationFeaturesTest<FeaturesCollisionFilter>;
+
+TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
 {
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<Features>(
+    auto world = LoadPluginAndWorld<FeaturesCollisionFilter>(
       this->loader,
       name,
       common_test::worlds::kShapesBitmaskWorld);
@@ -1034,20 +1370,40 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     auto filteredBox = world->GetModel("box_filtered");
     auto collidingBox = world->GetModel("box_colliding");
 
-    auto checkedOutput = StepWorld<Features>(world, true).first;
+    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
+    auto baseShape = baseBox->GetLink(0)->GetShape(0);
+    EXPECT_EQ(0x01, baseShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x02, filteredShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x03, collidingShape->GetCollisionFilterMask());
+    auto checkedOutput = StepWorld<FeaturesCollisionFilter>(world, true).first;
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
     // Only box_colliding should collide with box_base
     EXPECT_NE(0u, contacts.size());
+    for (auto &contact : contacts)
+    {
+      const auto &contactPoint = contact.template Get<
+          gz::physics::World3d<FeaturesCollisionFilter>::ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      auto m1 = c1->GetLink()->GetModel();
+      auto m2 = c2->GetLink()->GetModel();
+      EXPECT_TRUE(m1->GetName() == "box_base" ||
+                  m1->GetName() == "box_colliding");
+      EXPECT_TRUE(m2->GetName() == "box_base" ||
+                  m2->GetName() == "box_colliding");
+    }
 
     // Now disable collisions for the colliding box as well
-    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
-    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
     collidingShape->SetCollisionFilterMask(0xF0);
     // Also test the getter
     EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
     // Step and make sure there are no collisions
-    checkedOutput = StepWorld<Features>(world, false).first;
+    checkedOutput = StepWorld<FeaturesCollisionFilter>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     contacts = world->GetContactsFromLastStep();
     EXPECT_EQ(0u, contacts.size());
@@ -1056,7 +1412,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
     // Equivalent to 0xFF
     collidingShape->RemoveCollisionFilterMask();
     filteredShape->RemoveCollisionFilterMask();
-    checkedOutput = StepWorld<Features>(world, false).first;
+    checkedOutput = StepWorld<FeaturesCollisionFilter>(world, false).first;
     EXPECT_FALSE(checkedOutput);
     // Expect box_filtered and box_colliding to collide with box_base
     contacts = world->GetContactsFromLastStep();
@@ -1064,6 +1420,153 @@ TYPED_TEST(SimulationFeaturesTestBasic, CollideBitmasks)
   }
 }
 
+using FeaturesCategoryFilter =  gz::physics::FeatureList<
+  FeaturesCollisionFilter,
+  gz::physics::CategoryFilterMaskFeature
+>;
+
+using SimulationFeaturesCategoryFilter =
+    SimulationFeaturesTest<FeaturesCategoryFilter>;
+
+TEST_F(SimulationFeaturesCategoryFilter, CategoryBitmasks)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // World consists of 2 category A shapes, 2 category B shapes,
+    // and 1 category C shape. The shapes in the same category
+    // should not collide with each other.
+    auto world = LoadPluginAndWorld<FeaturesCategoryFilter>(
+      this->loader,
+      name,
+      common_test::worlds::kShapesCategoryBitmaskWorld);
+
+    auto categoryABox0 = world->GetModel("category_a_box_0");
+    auto categoryABox1 = world->GetModel("category_a_box_1");
+    auto categoryBBox0 = world->GetModel("category_b_box_0");
+    auto categoryBBox1 = world->GetModel("category_b_box_1");
+    auto categoryCBox0 = world->GetModel("category_c_box_0");
+
+    auto categoryABox0Shape = categoryABox0->GetLink(0)->GetShape(0);
+    auto categoryABox1Shape = categoryABox1->GetLink(0)->GetShape(0);
+    auto categoryBBox0Shape = categoryBBox0->GetLink(0)->GetShape(0);
+    auto categoryBBox1Shape = categoryBBox1->GetLink(0)->GetShape(0);
+    auto categoryCBox0Shape = categoryCBox0->GetLink(0)->GetShape(0);
+
+    EXPECT_EQ(1, categoryABox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(6, categoryABox0Shape->GetCollisionFilterMask());
+    EXPECT_EQ(1, categoryABox1Shape->GetCategoryFilterMask());
+    EXPECT_EQ(6, categoryABox1Shape->GetCollisionFilterMask());
+    EXPECT_EQ(2, categoryBBox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(5, categoryBBox0Shape->GetCollisionFilterMask());
+    EXPECT_EQ(2, categoryBBox1Shape->GetCategoryFilterMask());
+    EXPECT_EQ(5, categoryBBox1Shape->GetCollisionFilterMask());
+    EXPECT_EQ(4, categoryCBox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(3, categoryCBox0Shape->GetCollisionFilterMask());
+
+    auto checkedOutput = StepWorld<FeaturesCategoryFilter>(world, true).first;
+    EXPECT_TRUE(checkedOutput);
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts.size());
+
+    // Here is a map of contact collision pairs that we expect to see.
+    // The first element is the collision name, and the second element
+    // is a list of collisions that we expect it to collide with.
+    std::unordered_map<std::string, std::vector<std::string>>
+        expectedCollisions;
+    expectedCollisions["category_a_box_0"] = {"category_b_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_a_box_1"] = {"category_b_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_b_box_0"] = {"category_c_box_0"};
+    expectedCollisions["category_b_box_1"] = {"category_a_box_0",
+                                              "category_a_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_c_box_0"] = {"category_a_box_0",
+                                              "category_a_box_1",
+                                              "category_b_box_0",
+                                              "ground_plane"};
+    expectedCollisions["ground_plane"] = {"category_c_box_0"};
+
+
+    // Verify expected collisions against actual contacts reported by the
+    // physics engine
+    auto checkCollisions = [](
+        decltype(contacts) _contacts,
+        const std::unordered_map<std::string, std::vector<std::string>>
+            &_expectedCollisions)
+    {
+      for (auto &contact : _contacts)
+      {
+        const auto &contactPoint = contact.template Get<
+            gz::physics::World3d<FeaturesCategoryFilter>::ContactPoint>();
+        ASSERT_TRUE(contactPoint.collision1);
+        ASSERT_TRUE(contactPoint.collision2);
+        EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+        auto c1 = contactPoint.collision1;
+        auto c2 = contactPoint.collision2;
+        auto m1 = c1->GetLink()->GetModel();
+        auto m2 = c2->GetLink()->GetModel();
+        auto m1It = _expectedCollisions.find(m1->GetName());
+        EXPECT_NE(_expectedCollisions.end(), m1It);
+        const std::vector<std::string> &model1CollidingShapes = m1It->second;
+        auto m2It = std::find(model1CollidingShapes.begin(),
+                              model1CollidingShapes.end(),
+                              m2->GetName());
+        EXPECT_NE(model1CollidingShapes.end(), m2It);
+      }
+    };
+
+    checkCollisions(contacts, expectedCollisions);
+
+    // Now set category and collide bitmasks for cateory_b_box_1 to be the same
+    // as the shapes in Category A
+    categoryBBox1Shape->SetCategoryFilterMask(1);
+    categoryBBox1Shape->SetCollisionFilterMask(6);
+    EXPECT_EQ(1, categoryBBox1Shape->GetCategoryFilterMask());
+    // Step and check collisions
+    checkedOutput = StepWorld<FeaturesCategoryFilter>(world, false).first;
+    EXPECT_FALSE(checkedOutput);
+    auto contacts2 = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts2.size());
+
+    // Update the list of expected collision pairs and verify.
+    // category_b_box_1 should start colliding with the other category B shape.
+    expectedCollisions["category_b_box_0"].push_back("category_b_box_1");
+    expectedCollisions["category_b_box_1"].push_back("category_b_box_0");
+    // category_b_box_1 should no longer collide with category A shapes.
+    auto &catABox0Collisions = expectedCollisions["category_a_box_0"];
+    catABox0Collisions.erase(std::remove(catABox0Collisions.begin(),
+        catABox0Collisions.end(), "category_b_box_1"), catABox0Collisions.end());
+    auto &catABox1Collisions = expectedCollisions["category_a_box_1"];
+    catABox1Collisions.erase(std::remove(catABox1Collisions.begin(),
+        catABox1Collisions.end(), "category_b_box_1"), catABox1Collisions.end());
+
+    checkCollisions(contacts2, expectedCollisions);
+
+    // Now remove category bitmask for category_a_box_0 and verify that it
+    // returns its is now the same as its collide bitmask
+    categoryABox0Shape->RemoveCategoryFilterMask();
+    EXPECT_EQ(categoryABox0Shape->GetCollisionFilterMask(),
+              categoryABox0Shape->GetCategoryFilterMask());
+    // Step and check collisions
+    checkedOutput = StepWorld<FeaturesCategoryFilter>(world, false).first;
+    EXPECT_FALSE(checkedOutput);
+    auto contacts3 = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts3.size());
+    // There should be more contacts
+    EXPECT_LT(contacts2.size(), contacts3.size());
+
+    // Update the list of expected collision pairs and verify.
+    // Category A shapes should start colliding with each other
+    expectedCollisions["category_a_box_0"].push_back("category_a_box_1");
+    expectedCollisions["category_a_box_1"].push_back("category_a_box_0");
+    // It should also start colliding with category_b_box_1 which wa
+    //  previously updated to category A masks.
+    expectedCollisions["category_a_box_0"].push_back("category_b_box_1");
+
+    checkCollisions(contacts3, expectedCollisions);
+  }
+}
 
 TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 {
@@ -1242,6 +1745,101 @@ TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 
     // no entities should be colliding
     EXPECT_TRUE(contacts.empty());
+  }
+}
+
+TEST_F(SimulationFeaturesCollisionContacts,
+       ContactsForLinkWithMultipleCollisions)
+{
+  // This test verifies that the collision entities in contact points
+  // are correct. Thest test world consists of a box model with a single
+  // link containining multiple collisions over a ground plane. Verify
+  // that only the bottom collision in the box model should collide with
+  // the ground plane.
+
+  auto getModelStr = [](const std::string &_name,
+                            const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStaticStr;
+    modelStaticStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStaticStr << _name << R"(">
+        <pose>)";
+    modelStaticStr << _pose;
+    modelStaticStr << R"(</pose>
+        <link name="body">
+          <collision name="box_collision_mid">
+            <pose>0 0 1.0 0 0 0</pose>
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+          <collision name="box_collision_bottom">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+          <collision name="box_collision_top">
+            <pose>0 0 2.0 0 0 0</pose>
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <static>false</static>
+      </model>
+    </sdf>)";
+    return modelStaticStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // TPE does not support collision checking with plane shapes.
+    if (this->PhysicsEngineName(name) == "tpe") continue;
+
+    auto world =
+      LoadPluginAndWorld<FeaturesCollisionContacts>(
+        this->loader,
+        name,
+        common_test::worlds::kGroundSdf);
+    ASSERT_NE(nullptr, world);
+
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(getModelStr(
+        "boxes", gz::math::Pose3d(0, 0, 0.5, 0, 0, 0)));
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (std::size_t i = 0; i < 10; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // box lands on ground plane
+    // verify contacts
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_LT(0u, contacts.size());
+
+    for (auto contact : contacts)
+    {
+      const auto &contactPoint = contact.template Get<
+          gz::physics::World3d<FeaturesCollisionContacts>::ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      // Contacts should be between ground plane model's 'collision'
+      // and box model's 'box_collision_bottom' collision
+      EXPECT_TRUE(c1->GetName() == "collision" ||
+                  c1->GetName() == "box_collision_bottom");
+    }
   }
 }
 

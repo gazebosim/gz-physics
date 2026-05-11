@@ -1,5 +1,19 @@
 ## Gazebo Physics 8.x
 
+### Gazebo Physics 8.3.0 (2025-07-25)
+
+1. Add support for static physics engine plugins libs
+    * [Pull request #761](https://github.com/gazebosim/gz-physics/pull/761)
+
+1. Add feature to weld child to parent in a fixed joint
+    * [Pull request #759](https://github.com/gazebosim/gz-physics/pull/759)
+
+1. BallJoint: apply axis properties to ball joints
+    * [Pull request #753](https://github.com/gazebosim/gz-physics/pull/753)
+
+1. [bazel] Fix linker error
+    * [Pull request #755](https://github.com/gazebosim/gz-physics/pull/755)
+
 ### Gazebo Physics 8.2.0 (2025-06-26)
 
 1. **Baseline:** this includes all changes from 8.1.0 and earlier.

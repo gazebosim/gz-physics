@@ -20,7 +20,13 @@
 /////////////////////////////////////////////////
 TEST(JointTypes_TEST, RevoluteJoint2f)
 {
+#ifdef __aarch64__
+  // Relax tolerance on arm64
+  // See https://github.com/gazebosim/gz-physics/issues/791
+  TestRevoluteJoint<FeaturePolicy2f>(3e-8, "2f");
+#else
   TestRevoluteJoint<FeaturePolicy2f>(1e-16, "2f");
+#endif
 }
 
 /////////////////////////////////////////////////

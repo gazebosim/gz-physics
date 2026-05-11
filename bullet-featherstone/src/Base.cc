@@ -20,11 +20,98 @@
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 
+#include <gz/math/Quaternion.hh>
+#include <gz/math/Vector3.hh>
+
 #include <utility>
+
+namespace
+{
+
+bool doCollide(uint32_t _categoryBitmask0, uint32_t _collideBitmask0,
+               uint32_t _categoryBitmask1, uint32_t _collideBitmask1)
+{
+  return (_categoryBitmask0 & _collideBitmask1) |
+         (_categoryBitmask1 & _collideBitmask0);
+}
+
+}  // namespace
 
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/////////////////////////////////////////////////
+bool GzCollisionFilterCallback::needBroadphaseCollision(
+    btBroadphaseProxy *_proxy0, btBroadphaseProxy *_proxy1) const
+{
+  GzMultiBodyLinkCollider *col0 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy0->m_clientObject);
+  GzMultiBodyLinkCollider *col1 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy1->m_clientObject);
+
+  if (col0 && col1)
+  {
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
+  }
+
+  // Continue filtering collision based on logic in
+  // btOverlappingPairCache::needsBroadphaseCollision
+  bool collides = (_proxy0->m_collisionFilterGroup &
+                   _proxy1->m_collisionFilterMask) != 0;
+  collides = collides && (_proxy1->m_collisionFilterGroup &
+                          _proxy0->m_collisionFilterMask);
+  return collides;
+}
+
+/////////////////////////////////////////////////
+GzCollisionDispatcher::GzCollisionDispatcher(
+    btCollisionConfiguration *_collisionConfiguration)
+    : btCollisionDispatcher(_collisionConfiguration)
+{
+}
+
+/////////////////////////////////////////////////
+bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
+    const btCollisionObject *_body1)
+{
+  const GzMultiBodyLinkCollider *col0 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body0);
+  const GzMultiBodyLinkCollider *col1 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body1);
+
+  // Collision filtering in narrow phase.
+  if (col0 && col1)
+  {
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
+  }
+
+  return btCollisionDispatcher::needsCollision(_body0, _body1);
+}
 
 /////////////////////////////////////////////////
 WorldInfo::WorldInfo(std::string name_)
@@ -33,12 +120,18 @@ WorldInfo::WorldInfo(std::string name_)
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
   this->dispatcher =
-    std::make_unique<btCollisionDispatcher>(collisionConfiguration.get());
+    std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
     dispatcher.get(), broadphase.get(), solver.get(),
     collisionConfiguration.get());
+
+  // Set custom collision filter callback for filtering based on
+  // surface contact parameters
+  this->collisionFilterCallback = std::make_unique<GzCollisionFilterCallback>();
+  btOverlappingPairCache* pairCache = this->world->getPairCache();
+  pairCache->setOverlapFilterCallback(this->collisionFilterCallback.get());
 
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
 
@@ -66,16 +159,61 @@ void GzMultiBody::SetJointPosForDof(
 {
   btScalar *positions =
       this->getJointPosMultiDof(_jointIndex);
-  positions[_dof] = static_cast<btScalar>(_value);
 
+  // Ball joints store joint pos as a quaternion (4 floats) instead of one
+  // joint angle in radians
+  if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
+  {
+    math::Quaterniond quat(positions[3], positions[0], positions[1],
+                           positions[2]);
+    math::Vector3d axis;
+    double angle;
+    quat.AxisAngle(axis, angle);
+    math::Vector3 posVec = axis * angle;
+    posVec[_dof] = _value;
+    angle = posVec.Length();
+    if (math::equal(angle, 0.0, 1e-10))
+    {
+      positions[0] = 0;
+      positions[1] = 0;
+      positions[2] = 0;
+      positions[3] = 1;
+    }
+    else
+    {
+      posVec /= angle;
+      math::Quaterniond newQuat(posVec, angle);
+      positions[0] = newQuat.X();
+      positions[1] = newQuat.Y();
+      positions[2] = newQuat.Z();
+      positions[3] = newQuat.W();
+    }
+  }
+  else
+  {
+    positions[_dof] = static_cast<btScalar>(_value);
+  }
   // Call setJointPosMultiDof to ensure that the link pose cache is updated.
   this->setJointPosMultiDof(_jointIndex, positions);
 
   this->needsCollisionTransformsUpdate = true;
 }
 
-btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof) const
+btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof)
+    const
 {
+  if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
+  {
+    // Ball joints store joint pos as a quaternion (4 floats) instead of one
+    // joint angle in radians
+    const btScalar *jointPos = this->getJointPosMultiDof(_jointIndex);
+    math::Quaterniond quat(jointPos[3], jointPos[0], jointPos[1], jointPos[2]);
+    math::Vector3d axis;
+    double angle;
+    quat.AxisAngle(axis, angle);
+    return axis[_dof] * angle;
+  }
+
   return this->getJointPosMultiDof(_jointIndex)[_dof];
 }
 
@@ -97,13 +235,22 @@ void GzMultiBody::UpdateCollisionTransformsIfNeeded()
   }
 }
 
-void GzMultiBody::AddJointDampingTorque(int _jointIndex, double _damping)
+void GzMultiBody::AddJointDampingStiffnessTorque(int _jointIndex,
+    double _damping, double _springStiffness, double _springReference)
 {
   const btMultibodyLink& link = this->getLink(_jointIndex);
+
   for (int dof = 0; dof < link.m_dofCount; ++dof)
   {
     btScalar currVel = this->getJointVelMultiDof(_jointIndex)[dof];
+
+    // Apply damping
     btScalar torque = -static_cast<btScalar>(_damping) * currVel;
+
+    // Apply spring stiffness
+    torque += -_springStiffness *
+        (this->GetJointPosForDof(_jointIndex, dof) - _springReference);
+
     this->addJointTorqueMultiDof(_jointIndex, dof, torque);
   }
 }

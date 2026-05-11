@@ -28,6 +28,153 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+bool hasConvexHullChildShapes(
+    const btCollisionShape *_shape)
+{
+  if (!_shape || !_shape->isCompound())
+    return false;
+
+  const btCompoundShape *compoundShape =
+      static_cast<const btCompoundShape *>(_shape);
+  return (compoundShape->getNumChildShapes() > 0 &&
+      compoundShape->getChildShape(0)->getShapeType() ==
+      CONVEX_HULL_SHAPE_PROXYTYPE);
+}
+
+/////////////////////////////////////////////////
+const btCollisionShape *findCollisionShape(
+    const btCompoundShape *_compoundShape, int _childIndex)
+{
+  // _childIndex should give us the index of the child shape within
+  // _compoundShape which represents the collision.
+  // One exception is when the collision is a convex decomposed mesh.
+  // In this case, the child shape is another btCompoundShape (nested), and
+  // _childIndex is the index of one of the decomposed convex hulls
+  // in the nested compound shape. The nested compound shape is the collision.
+  int childCount = _compoundShape->getNumChildShapes();
+  if (childCount > 0)
+  {
+    if (_childIndex >= 0 && _childIndex < childCount)
+    {
+      // todo(iche033) We do not have sufficient info to determine which
+      // child shape is the collision if the link has convex decomposed mesh
+      // collisions alongside of other collisions. See following example:
+      // parentLink -> boxShape0
+      //            -> boxShape1
+      //            -> compoundShape -> convexShape0
+      //                             -> convexShape1
+      // A _childIndex of 1 is ambiguous as it could refer to either
+      // boxShape1 or convexShape1
+      // return nullptr in this case to indicate ambiguity
+      if (childCount > 1)
+      {
+        for (int i = 0; i < childCount; ++i)
+        {
+          const btCollisionShape *shape = _compoundShape->getChildShape(i);
+          if (hasConvexHullChildShapes(shape))
+          {
+            static bool informed{false};
+            if (!informed)
+            {
+              gzwarn << "Unable to determine the collision id for a link with "
+                     << "both simple primitive and convex shape collisions."
+                     << std::endl;
+              informed = true;
+            }
+            return nullptr;
+          }
+        }
+      }
+
+      const btCollisionShape *shape =
+          _compoundShape->getChildShape(_childIndex);
+      return shape;
+    }
+    else
+    {
+      return _compoundShape->getChildShape(0);
+    }
+  }
+  return nullptr;
+}
+
+/////////////////////////////////////////////////
+void enforceFixedConstraint(
+    btMultiBodyFixedConstraint *_fixedConstraint)
+{
+  // Update fixed constraint's child link pose to maintain a fixed transform
+  // from the parent link.
+  GzMultiBody *parent =
+      dynamic_cast<GzMultiBody*> (_fixedConstraint->getMultiBodyA());
+  if (parent == nullptr)
+  {
+    std::cerr << "Internal error: Failed to cast parent btMultiBody to "
+                 "GzMultiBody!" << std::endl;
+    return;
+  }
+
+  GzMultiBody *child =
+      dynamic_cast<GzMultiBody*> (_fixedConstraint->getMultiBodyB());
+  if (child == nullptr)
+  {
+    std::cerr << "Internal error: Failed to cast child btMultiBody to "
+                  "GzMultiBody!" << std::endl;
+    return;
+  }
+
+  btTransform parentToChildTf;
+  parentToChildTf.setOrigin(_fixedConstraint->getPivotInA());
+  parentToChildTf.setBasis(_fixedConstraint->getFrameInA());
+
+  int parentLinkIndex = _fixedConstraint->getLinkA();
+  int childLinkIndex = _fixedConstraint->getLinkB();
+
+  btTransform parentLinkTf;
+  btTransform childLinkTf;
+  if (parentLinkIndex == -1)
+  {
+    parentLinkTf = parent->getBaseWorldTransform();
+  }
+  else
+  {
+    btMultiBodyLinkCollider *collider =
+        parent->getLinkCollider(parentLinkIndex);
+    parentLinkTf = collider->getWorldTransform();
+  }
+  if (childLinkIndex == -1)
+  {
+    childLinkTf = child->getBaseWorldTransform();
+  }
+  else
+  {
+    btMultiBodyLinkCollider *collider =
+        child->getLinkCollider(childLinkIndex);
+    childLinkTf = collider->getWorldTransform();
+  }
+
+  btTransform expectedChildLinkTf = parentLinkTf * parentToChildTf;
+  btTransform childBaseTf =  child->getBaseWorldTransform();
+  btTransform childBaseToLink =
+      childBaseTf.inverse() * childLinkTf;
+  btTransform newChildBaseTf =
+      expectedChildLinkTf * childBaseToLink.inverse();
+  child->SetBaseWorldTransform(newChildBaseTf);
+}
+
+void clearCollisionCache(btMultiBodyDynamicsWorld *_world)
+{
+  btDispatcher* dispatcher = _world->getDispatcher();
+  btOverlappingPairCache* pairCache =
+      _world->getBroadphase()->getOverlappingPairCache();
+  btBroadphasePairArray &pairArray = pairCache->getOverlappingPairArray();
+  // Iterate backwards to safely handle removals from the array
+  for (int i = pairArray.size() - 1; i >= 0; --i)
+  {
+    pairCache->cleanOverlappingPair(pairArray[i], dispatcher);
+  }
+}
+
+/////////////////////////////////////////////////
 void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
     ForwardStep::Output & _h,
@@ -44,6 +191,18 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  // Update fixed constraint behavior to weld child to parent.
+  // Do this before stepping, i.e. before physics engine tries to solve and
+  // enforce the constraint
+  for (auto & joint : this->joints)
+  {
+    if (joint.second->fixedConstraint &&
+        joint.second->fixedConstraintWeldChildToParent)
+    {
+      enforceFixedConstraint(joint.second->fixedConstraint.get());
+    }
+  }
+
   // Bullet updates collision transforms *after* forward integration. But in
   // some case (e.g. if joint positions were updated), collision transforms may
   // need to be manually updated before stepping the Bullet simulation.
@@ -55,10 +214,12 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
-  // Add joint damping torque.
+  // Add joint damping and spring stiffness torque.
   // TODO(https://github.com/bulletphysics/bullet3/issues/4709) Remove this
-  // once upstream Bullet supports internal joint damping and set
-  // `model->body->getLink(i).m_jointDamping` directly in SDFFeatures.cc.
+  // once upstream Bullet supports internal joint damping and spring stiffness.
+  // e.g. set `model->body->getLink(i).m_jointDamping` directly in
+  // SDFFeatures.cc. Note: there is currently no `m_jointSpringStiffness`
+  // property.
   for (auto & joint : this->joints)
   {
     const auto *model =
@@ -67,9 +228,16 @@ void SimulationFeatures::WorldForwardStep(
         std::get_if<InternalJoint>(&joint.second->identifier);
     if (model != nullptr && model->body != nullptr && identifier != nullptr)
     {
-      model->body->AddJointDampingTorque(identifier->indexInBtModel,
-                                         joint.second->damping);
+      model->body->AddJointDampingStiffnessTorque(identifier->indexInBtModel,
+          joint.second->damping, joint.second->springStiffness,
+          joint.second->springReference);
     }
+  }
+
+  // Regenerate the cache if the collision masks have been updated.
+  if (worldInfo->collisionMasksDirty)
+  {
+    clearCollisionCache(worldInfo->world.get());
   }
 
   // \todo(iche033) Stepping sim with varying dt may not work properly.
@@ -87,6 +255,14 @@ void SimulationFeatures::WorldForwardStep(
     {
       joint.second->motor->setVelocityTarget(btScalar(0));
     }
+  }
+
+  if (worldInfo->collisionMasksDirty)
+  {
+    // manual sync to get up-to-date contacts for the current frame
+    // by forcing collision detection again
+    worldInfo->world->getCollisionWorld()->performDiscreteCollisionDetection();
+    worldInfo->collisionMasksDirty = false;
   }
 
   this->WriteRequiredData(_h);
@@ -109,49 +285,62 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   {
     btPersistentManifold* contactManifold =
       world->world->getDispatcher()->getManifoldByIndexInternal(i);
-    const btMultiBodyLinkCollider* obA =
+    const btMultiBodyLinkCollider* ob0 =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
-    const btMultiBodyLinkCollider* obB =
+    const btMultiBodyLinkCollider* ob1 =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody1());
-    std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
-    std::size_t collision2ID = std::numeric_limits<std::size_t>::max();
 
-    for (const auto & link : this->links)
-    {
-      if (obA == link.second->collider.get())
-      {
-        for (const auto &v : link.second->collisionNameToEntityId)
-        {
-          collision1ID = v.second;
-        }
-      }
-      if (obB == link.second->collider.get())
-      {
-        for (const auto &v : link.second->collisionNameToEntityId)
-        {
-          collision2ID = v.second;
-        }
-      }
-    }
+    if (!ob0 || !ob1)
+      continue;
+
+    const btCollisionShape *linkShape0 = ob0->getCollisionShape();
+    const btCollisionShape *linkShape1 = ob1->getCollisionShape();
+
+    if (!linkShape0 || !linkShape1 ||
+        !linkShape0->isCompound() || !linkShape1->isCompound())
+      continue;
+
+    const btCompoundShape *compoundShape0 =
+        static_cast<const btCompoundShape *>(linkShape0);
+    const btCompoundShape *compoundShape1 =
+        static_cast<const btCompoundShape *>(linkShape1);
+
     int numContacts = contactManifold->getNumContacts();
     for (int j = 0; j < numContacts; j++)
     {
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
+
+      const btCollisionShape *colShape0 = findCollisionShape(
+          compoundShape0, pt.m_index0);
+      const btCollisionShape *colShape1 = findCollisionShape(
+          compoundShape1, pt.m_index1);
+
+      std::size_t collision0ID = std::numeric_limits<std::size_t>::max();
+      std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
+      if (colShape0)
+        collision0ID = colShape0->getUserIndex();
+      else if (compoundShape0->getNumChildShapes() > 0)
+        collision0ID = compoundShape0->getChildShape(0)->getUserIndex();
+      if (colShape1)
+        collision1ID = colShape1->getUserIndex();
+      else if (compoundShape1->getNumChildShapes() > 0)
+        collision1ID = compoundShape1->getChildShape(0)->getUserIndex();
+
       CompositeData extraData;
 
-      // Add normal, depth and wrench to extraData.
+      // Add normal, depth and force to extraData.
       auto& extraContactData =
         extraData.Get<SimulationFeatures::ExtraContactData>();
+
+      const Eigen::Vector3d normal = convert(pt.m_normalWorldOnB);
       extraContactData.force =
-        convert(btVector3(pt.m_appliedImpulse,
-                          pt.m_appliedImpulse,
-                          pt.m_appliedImpulse));
-      extraContactData.normal = convert(pt.m_normalWorldOnB);
-      extraContactData.depth = pt.getDistance();
+          normal * (pt.m_appliedImpulse / world->stepSize);
+      extraContactData.normal = normal;
+      extraContactData.depth = -pt.getDistance();
 
       outContacts.push_back(SimulationFeatures::ContactInternal {
+        this->GenerateIdentity(collision0ID, this->collisions.at(collision0ID)),
         this->GenerateIdentity(collision1ID, this->collisions.at(collision1ID)),
-        this->GenerateIdentity(collision2ID, this->collisions.at(collision2ID)),
         convert(pt.getPositionWorldOnA()), extraData});
       }
   }

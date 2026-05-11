@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # mess with output to confuse jenkins build failure indications because these
 # tests pass when compilation fails. Multiple pipes for OSX compatibility

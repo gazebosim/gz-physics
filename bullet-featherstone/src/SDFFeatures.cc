@@ -43,6 +43,7 @@
 
 #include <LinearMath/btQuaternion.h>
 
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -492,6 +493,12 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   const bool isStatic = _sdfModel.Static();
   WorldInfo *world = nullptr;
+
+  const auto modelToRootLink =
+      ResolveSdfPose(structure.rootLink->SemanticPose());
+  if (!modelToRootLink)
+    return this->GenerateInvalidId();
+
   const auto rootInertialToLink =
     gz::math::eigen3::convert(structure.linkToPrincipalAxesPose).inverse();
 
@@ -501,7 +508,31 @@ Identity SDFFeatures::ConstructSdfModelImpl(
   std::unordered_map<const ::sdf::Model*, Identity> modelIDs;
   std::size_t rootModelID = 0u;
   std::shared_ptr<GzMultiBody> rootMultiBody;
-  // Add all  models, including nested models
+
+  auto getModelScopedName = [&](const ::sdf::Model *_targetModel,
+    const ::sdf::Model *_parentModel, const std::string &_prefix,
+    std::string &_modelScopedName, auto &&_getModelScopedName)
+  {
+    for (std::size_t i = 0u; i < _parentModel->ModelCount(); ++i)
+    {
+      auto childModel = _parentModel->ModelByIndex(i);
+      if (childModel == _targetModel)
+      {
+        _modelScopedName = _prefix + childModel->Name();
+        return true;
+      }
+      else
+      {
+        if (_getModelScopedName(_targetModel, childModel,
+            _prefix + childModel->Name() + "::", _modelScopedName,
+           _getModelScopedName))
+          return true;
+      }
+    }
+    return false;
+  };
+
+  // Add all models, including nested models
   auto addModels = [&](std::size_t _modelOrWorldID, const ::sdf::Model *_model,
                        auto &&_addModels)
     {
@@ -517,8 +548,22 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           auto worldIdentity = modelIt->second->world;
           auto modelIdentity =
               this->GenerateIdentity(_modelOrWorldID, modelIt->second);
+
+          std::string modelScopedName;
+          if (!getModelScopedName(_model, &_sdfModel,
+              _sdfModel.Name() + "::", modelScopedName, getModelScopedName))
+            this->GenerateInvalidId();
+          math::Pose3d modelPose;
+          auto errors = _sdfModel.SemanticPose().Resolve(modelPose,
+              modelScopedName);
+          if (!errors.empty())
+            this->GenerateInvalidId();
+          auto modelToNestedModel = math::eigen3::convert(modelPose).inverse();
+          auto nestedModelFromRootLink =
+              modelToRootLink->inverse() * modelToNestedModel;
           return this->AddNestedModel(
-              _model->Name(), modelIdentity, worldIdentity, rootInertialToLink,
+              _model->Name(), modelIdentity, worldIdentity,
+              nestedModelFromRootLink, rootInertialToLink,
               rootMultiBody);
         }
         else
@@ -533,7 +578,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
                 true);
           world = this->ReferenceInterface<WorldInfo>(worldIdentity);
           auto id = this->AddModel(
-              _model->Name(), worldIdentity, rootInertialToLink,
+              _model->Name(), worldIdentity,
+              modelToRootLink->inverse(),
+              rootInertialToLink,
               rootMultiBody);
           rootModelID = id;
           return id;
@@ -775,36 +822,46 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       }
 
       if (::sdf::JointType::PRISMATIC == joint->Type() ||
-          ::sdf::JointType::REVOLUTE == joint->Type())
+          ::sdf::JointType::REVOLUTE == joint->Type() ||
+          ::sdf::JointType::BALL == joint->Type())
       {
         // Note: These m_joint* properties below are currently not supported by
         // bullet-featherstone and so setting them does not have any effect.
         // The lower and uppper limit is supported via the
         // btMultiBodyJointLimitConstraint.
-        model->body->getLink(i).m_jointLowerLimit =
-            static_cast<btScalar>(joint->Axis()->Lower());
-        model->body->getLink(i).m_jointUpperLimit =
-            static_cast<btScalar>(joint->Axis()->Upper());
-        model->body->getLink(i).m_jointFriction =
-            static_cast<btScalar>(joint->Axis()->Friction());
-        model->body->getLink(i).m_jointMaxVelocity =
-            static_cast<btScalar>(joint->Axis()->MaxVelocity());
-        model->body->getLink(i).m_jointMaxForce =
-            static_cast<btScalar>(joint->Axis()->Effort());
+        if (joint->Axis())
+        {
+          model->body->getLink(i).m_jointLowerLimit =
+              static_cast<btScalar>(joint->Axis()->Lower());
+          model->body->getLink(i).m_jointUpperLimit =
+              static_cast<btScalar>(joint->Axis()->Upper());
+          model->body->getLink(i).m_jointFriction =
+              static_cast<btScalar>(joint->Axis()->Friction());
+          model->body->getLink(i).m_jointMaxVelocity =
+              static_cast<btScalar>(joint->Axis()->MaxVelocity());
+          model->body->getLink(i).m_jointMaxForce =
+              static_cast<btScalar>(joint->Axis()->Effort());
 
-        jointInfo->minEffort = -joint->Axis()->Effort();
-        jointInfo->maxEffort = joint->Axis()->Effort();
-        jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
-        jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
-        jointInfo->axisLower = joint->Axis()->Lower();
-        jointInfo->axisUpper = joint->Axis()->Upper();
-        jointInfo->damping = joint->Axis()->Damping();
+          jointInfo->minEffort = -joint->Axis()->Effort();
+          jointInfo->maxEffort = joint->Axis()->Effort();
+          jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
+          jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
+          jointInfo->axisLower = joint->Axis()->Lower();
+          jointInfo->axisUpper = joint->Axis()->Upper();
+          jointInfo->damping = joint->Axis()->Damping();
+          jointInfo->springStiffness = joint->Axis()->SpringStiffness();
+          jointInfo->springReference = joint->Axis()->SpringReference();
+        }
 
-        jointInfo->jointLimits =
-          std::make_shared<btMultiBodyJointLimitConstraint>(
-            model->body.get(), i, static_cast<btScalar>(joint->Axis()->Lower()),
-            static_cast<btScalar>(joint->Axis()->Upper()));
-        world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+        if (::sdf::JointType::BALL != joint->Type())
+        {
+          jointInfo->jointLimits =
+            std::make_shared<btMultiBodyJointLimitConstraint>(
+              model->body.get(), i,
+              static_cast<btScalar>(joint->Axis()->Lower()),
+              static_cast<btScalar>(joint->Axis()->Upper()));
+          world->world->addMultiBodyConstraint(jointInfo->jointLimits.get());
+        }
       }
 
       jointInfo->jointFeedback = std::make_shared<btMultiBodyJointFeedback>();
@@ -828,31 +885,9 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     // get the scoped name of the model
     // This is used to resolve the model pose
     std::string modelScopedName;
-    auto getModelScopedName = [&](const ::sdf::Model *_targetModel,
-      const ::sdf::Model *_parentModel, const std::string &_prefix,
-      auto &&_getModelScopedName)
-    {
-      for (std::size_t i = 0u; i < _parentModel->ModelCount(); ++i)
-      {
-        auto childModel = _parentModel->ModelByIndex(i);
-        if (childModel == _targetModel)
-        {
-          modelScopedName = _prefix + childModel->Name();
-          return true;
-        }
-        else
-        {
-          if (_getModelScopedName(_targetModel, childModel,
-              _prefix + childModel->Name() + "::", _getModelScopedName))
-            return true;
-        }
-      }
-      return false;
-    };
-
     math::Pose3d modelPose;
     if (!getModelScopedName(structure.model, &_sdfModel,
-        _sdfModel.Name() + "::", getModelScopedName))
+        _sdfModel.Name() + "::", modelScopedName, getModelScopedName))
       return this->GenerateInvalidId();
 
     auto errors = _sdfModel.SemanticPose().Resolve(modelPose,
@@ -861,11 +896,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       return this->GenerateInvalidId();
     modelToNestedModel = math::eigen3::convert(modelPose).inverse();
   }
-
-  const auto modelToRootLink =
-    ResolveSdfPose(structure.rootLink->SemanticPose());
-  if (!modelToRootLink)
-    return this->GenerateInvalidId();
 
   const auto worldToRootCom =
     *worldToModel * modelToNestedModel * *modelToRootLink *
@@ -1228,6 +1258,8 @@ bool SDFFeatures::AddSdfCollision(
   double restitution = 0.0;
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
+  uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
+  std::optional<uint16_t> categoryBitmask;
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1262,6 +1294,19 @@ bool SDFFeatures::AddSdfCollision(
         if (const auto r = bounce->FindElement("restitution_coefficient"))
           restitution = r->Get<double>();
       }
+
+      if (const auto contact = surfaceElement->FindElement("contact"))
+      {
+        if (const auto bitmask = contact->FindElement("collide_bitmask"))
+        {
+          // Get only supports uint32_t so cast back to uint16_t
+          collideBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
+        }
+        if (const auto bitmask = contact->FindElement("category_bitmask"))
+        {
+          categoryBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
+        }
+      }
     }
   }
 
@@ -1293,7 +1338,9 @@ bool SDFFeatures::AddSdfCollision(
 
     if (!linkInfo->collider)
     {
-      this->CreateLinkCollider(_linkID, _isStatic, shape.get(),
+
+      this->CreateLinkCollider(_linkID, _isStatic, collideBitmask,
+          categoryBitmask, shape.get(),
           btInertialToCollision);
 
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
@@ -1325,12 +1372,18 @@ bool SDFFeatures::AddSdfCollision(
       // match the existing collider and issue a warning if they don't.
     }
 
-    this->AddCollision(
+    btCollisionShape *shapePtr = shape.get();
+    auto colID = this->AddCollision(
       CollisionInfo{
         _collision.Name(),
         std::move(shape),
         _linkID,
         linkFrameToCollision});
+
+    // Use user index to store the collision id in gz-physics
+    // This is used by GetContactsFromLastStep to retrieve the collision id
+    // from btCollisionShape
+    shapePtr->setUserIndex(std::size_t(colID));
   }
 
   return true;
@@ -1437,6 +1490,7 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
+    uint16_t _collideBitmask, std::optional<uint16_t> _categoryBitmask,
     btCollisionShape *_shape, const btTransform &_shapeTF)
 {
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
@@ -1491,6 +1545,16 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
       isFixed = totalLinkDofs == 0;
     }
   }
+
+  // Set the collideBimask variable in the GzMultiBodyLinkCollider class
+  // instead of calling setCollisionFlags so we don't override bullet's
+  // internal collision flags which are used to indicate whether a collision
+  // is static, dynamic, kinematic, etc
+  // Set these masks before calling addCollisionObject so that
+  // the masks are available during the needBroadPhaseCollision check
+  linkInfo->collider->collideBitmask = _collideBitmask;
+  linkInfo->collider->categoryBitmask = _categoryBitmask;
+
   if (_isStatic || isFixed)
   {
     worldInfo->world->addCollisionObject(

@@ -1,4 +1,6 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_gazebo//gazebo:headers.bzl", "gz_export_header")
+load("//bazel:gz_physics_plugin_libraries.bzl", "gz_physics_plugin_libraries")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -41,6 +43,7 @@ cc_library(
         "//:sdf",
         "@bullet//:BulletCollisionDoublePrecision",
         "@bullet//:BulletDynamicsDoublePrecision",
+        "@bullet//:LinearMathDoublePrecision",
         "@eigen",
         "@gz-common//:gz-common",
         "@gz-math//:gz-math",
@@ -49,10 +52,10 @@ cc_library(
     ],
 )
 
-cc_binary(
-    name = "libgz-physics-bullet-plugin.so",
+gz_physics_plugin_libraries(
     srcs = ["src/plugin.cc"] + private_headers,
-    linkshared = True,
+    so_lib_name = "libgz-physics-bullet-plugin.so",
+    static_lib_name = "libgz-physics-bullet-plugin-static",
     visibility = ["//visibility:public"],
     deps = [
         ":bullet",
@@ -60,8 +63,10 @@ cc_binary(
         "//:mesh",
         "//:sdf",
         "@bullet//:BulletDynamicsDoublePrecision",
+        "@bullet//:LinearMathDoublePrecision",
         "@eigen",
         "@gz-common//:gz-common",
+        "@gz-math//:gz-math",
         "@gz-math//eigen3:eigen3",
         "@gz-plugin//:register",
     ],

@@ -64,14 +64,6 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 const dart::dynamics::Frame *KinematicsFeatures::SelectFrame(
     const FrameID &_id) const
 {
-  const auto model_it = this->models.idToObject.find(_id.ID());
-  if (model_it != this->models.idToObject.end())
-  {
-    // This is a model FreeGroup frame, so we'll use the first root link as the
-    // frame
-    return model_it->second->model->getRootBodyNode();
-  }
-
   auto framesIt = this->frames.find(_id.ID());
   if (framesIt == this->frames.end())
   {

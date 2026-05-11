@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 #============================================================================
 # Initialize the project
 #============================================================================
-project(gz-physics8 VERSION 8.2.0)
+project(gz-physics8 VERSION 8.3.0)
 
 #============================================================================
 # Find gz-cmake
@@ -100,6 +100,9 @@ set(GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR
 set(GZ_PHYSICS_ENGINE_INSTALL_DIR
   ${CMAKE_INSTALL_PREFIX}/${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR}
 )
+
+# Disable Whole Program Optimization (WPO) to reduce build time
+set(GZ_MSVC_WPO OFF CACHE BOOL "Disable WPO")
 
 #============================================================================
 # Configure the build

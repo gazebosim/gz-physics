@@ -37,6 +37,7 @@
 #include <Eigen/Geometry>
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -53,6 +54,29 @@ namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
+/// \brief Custom collision filter callback struct for handling
+/// collisions based on surface contact parameters
+struct GzCollisionFilterCallback : public btOverlapFilterCallback
+{
+  /// \brief Overrides base struct's function for additional collision
+  /// filtering based on surface contact parameters
+  bool needBroadphaseCollision(btBroadphaseProxy *_proxy0,
+      btBroadphaseProxy *_proxy1) const override;
+};
+
+/// \brief Custom gz collision dispatcher
+class GzCollisionDispatcher : public btCollisionDispatcher
+{
+  /// \brief Constructor
+  public: explicit GzCollisionDispatcher(
+              btCollisionConfiguration *_collisionConfiguration);
+
+  /// \brief Overrides base struct's function for additional collision
+  /// filtering based on surface contact parameters
+  public: bool needsCollision(const btCollisionObject *_body0,
+                              const btCollisionObject *_body1) override;
+};
+
 /// \brief The Info structs are used for three reasons:
 /// 1) Holding extra information such as the name
 ///    that will be different from the underlying engine
@@ -67,16 +91,18 @@ struct WorldInfo
 {
   std::string name;
   std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-  std::unique_ptr<btCollisionDispatcher> dispatcher;
+  std::unique_ptr<GzCollisionDispatcher> dispatcher;
   std::unique_ptr<btBroadphaseInterface> broadphase;
   std::unique_ptr<btMultiBodyConstraintSolver> solver;
   std::unique_ptr<btMultiBodyDynamicsWorld> world;
+  std::unique_ptr<GzCollisionFilterCallback> collisionFilterCallback;
 
   std::unordered_map<int, std::size_t> modelIndexToEntityId;
   std::unordered_map<std::string, std::size_t> modelNameToEntityId;
   int nextModelIndex = 0;
 
   double stepSize = 0.001;
+  bool collisionMasksDirty = false;
 
   explicit WorldInfo(std::string name);
 };
@@ -121,8 +147,14 @@ class GzMultiBody: public btMultiBody
   /// set and reset the flag.
   public: void UpdateCollisionTransformsIfNeeded();
 
-  /// \brief Add joint damping torque to the specified joint index on all dofs.
-  public: void AddJointDampingTorque(int _jointIndex, double _damping);
+  /// \brief Add joint damping and spring stiffness torque to the specified
+  /// joint index on all dofs.
+  /// \param[in] _jointIndex Joint index
+  /// \param[in] _damping Joint damping coefficient
+  /// \param[in] _springStiffness Joint spring stiffness
+  /// \param[in] _springReference Joint spring reference
+  public: void AddJointDampingStiffnessTorque(int _jointIndex, double _damping,
+      double _springStiffness, double _springReference);
 
   private: bool needsCollisionTransformsUpdate = false;
 };
@@ -132,8 +164,11 @@ struct ModelInfo
   std::string name;
   Identity world;
   int indexInWorld;
+  Eigen::Isometry3d rootLinkToModelTf;
   Eigen::Isometry3d baseInertiaToLinkFrame;
   std::shared_ptr<GzMultiBody> body;
+
+  bool isNestedModel = false;
 
   std::vector<std::size_t> linkEntityIds;
   std::vector<std::size_t> jointEntityIds;
@@ -149,10 +184,12 @@ struct ModelInfo
   ModelInfo(
     std::string _name,
     Identity _world,
+    Eigen::Isometry3d _rootLinkToModelTf,
     Eigen::Isometry3d _baseInertiaToLinkFrame,
     std::shared_ptr<GzMultiBody> _body)
     : name(std::move(_name)),
       world(std::move(_world)),
+      rootLinkToModelTf(_rootLinkToModelTf),
       baseInertiaToLinkFrame(_baseInertiaToLinkFrame),
       body(std::move(_body))
   {
@@ -176,6 +213,12 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
     return btMultiBodyLinkCollider::checkCollideWithOverride(_co) &&
            btCollisionObject::checkCollideWithOverride(_co);
   }
+
+  /// \brief Collision contact surface collide bitmask parameter
+  public: uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
+
+  /// \brief Collision contact surface category bitmask parameter
+  public: std::optional<uint16_t> categoryBitmask;
 };
 
 /// Link information is embedded inside the model, so all we need to store here
@@ -249,8 +292,14 @@ struct JointInfo
   double axisLower = 0.0;
   double axisUpper = 0.0;
 
-  // joint damping
+  // joint damping, spring stiffness and reference
   double damping = 0.0;
+  double springStiffness = 0.0;
+  double springReference = 0.0;
+
+  // True if the fixed constraint's child link is welded to parent link as if
+  // they are part of the same body.
+  bool fixedConstraintWeldChildToParent = false;
 
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
@@ -361,7 +410,7 @@ class Base : public Implements3d<FeatureList<Feature>>
     auto worldID = this->GenerateIdentity(id, world);
 
     auto worldModel = std::make_shared<ModelInfo>(
-      world->name, worldID,
+      world->name, worldID, Eigen::Isometry3d::Identity(),
       Eigen::Isometry3d::Identity(), nullptr);
     this->models[id] = worldModel;
     world->modelNameToEntityId[worldModel->name] = id;
@@ -374,13 +423,16 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline Identity AddModel(
     std::string _name,
     Identity _worldID,
+    Eigen::Isometry3d _rootLinkToModelTf,
     Eigen::Isometry3d _baseInertialToLinkFrame,
     std::shared_ptr<GzMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
       std::move(_name), std::move(_worldID),
-      std::move(_baseInertialToLinkFrame), std::move(_body));
+      std::move(_rootLinkToModelTf),
+      std::move(_baseInertialToLinkFrame),
+      std::move(_body));
 
     this->models[id] = model;
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
@@ -399,14 +451,18 @@ class Base : public Implements3d<FeatureList<Feature>>
     std::string _name,
     Identity _parentID,
     Identity _worldID,
+    Eigen::Isometry3d _rootLinkToModelTf,
     Eigen::Isometry3d _baseInertialToLinkFrame,
     std::shared_ptr<GzMultiBody> _body)
   {
     const auto id = this->GetNextEntity();
     auto model = std::make_shared<ModelInfo>(
       std::move(_name), std::move(_worldID),
-      std::move(_baseInertialToLinkFrame), std::move(_body));
+      std::move(_rootLinkToModelTf),
+      std::move(_baseInertialToLinkFrame),
+      std::move(_body));
 
+    model->isNestedModel = true;
     this->models[id] = model;
     const auto parentModel = this->models.at(_parentID);
     parentModel->nestedModelEntityIds.push_back(id);
@@ -477,8 +533,34 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (!model)
       return false;
 
-    // Remove nested models
-    for (auto &nestedModelID : model->nestedModelEntityIds)
+    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    if (!world)
+      return false;
+
+    // If it's a top-level model, remove its multibody from the dynamics world
+    // first to ensure that when we later delete colliders (which happens
+    // when we erase links from our map), the multibody is no longer in the
+    // world and won't have dangling pointers to these colliders.
+    bool isNested = this->worlds.find(_parentID) == this->worlds.end();
+    if (!isNested)
+    {
+      if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
+      {
+        // The model has already been removed at some point
+        return false;
+      }
+      world->modelNameToEntityId.erase(model->name);
+
+      if (model->body)
+      {
+        world->world->removeMultiBody(model->body.get());
+      }
+    }
+
+    // Remove nested models recursively using a copy of the ID vector to avoid
+    // iterator invalidation.
+    auto nestedModelEntityIds = model->nestedModelEntityIds;
+    for (auto &nestedModelID : nestedModelEntityIds)
     {
       this->RemoveModelImpl(_modelID, this->GenerateIdentity(nestedModelID,
                             this->models.at(nestedModelID)));
@@ -504,26 +586,8 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    // If nested, no need to remove multibody
-    // \todo(iche033) Remove links and joints in nested model
-    bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
-    if (isNested)
-    {
-      return true;
-    }
 
-    // Remove model from world
-    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-    if (!world)
-      return false;
-    if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
-    {
-      // The model has already been removed at some point
-      return false;
-    }
-    world->modelNameToEntityId.erase(model->name);
-
-    // Remove all constraints related to this model
+    // Cleanup joints
     for (const auto jointID : model->jointEntityIds)
     {
       const auto joint = this->joints.at(jointID);
@@ -539,12 +603,15 @@ class Base : public Implements3d<FeatureList<Feature>>
       {
         world->world->removeMultiBodyConstraint(joint->jointLimits.get());
       }
+      if (joint->gearConstraint)
+      {
+        world->world->removeMultiBodyConstraint(joint->gearConstraint.get());
+      }
       this->joints.erase(jointID);
     }
-    // \todo(iche033) Remove external constraints related to this model
-    // (model->external_constraints) once this is supported
+    model->jointEntityIds.clear();
 
-    world->world->removeMultiBody(model->body.get());
+    // Cleanup links and their collisions
     for (const auto linkID : model->linkEntityIds)
     {
       const auto &link = this->links.at(linkID);
@@ -554,9 +621,9 @@ class Base : public Implements3d<FeatureList<Feature>>
         for (const auto shapeID : link->collisionEntityIds)
           this->collisions.erase(shapeID);
       }
-
       this->links.erase(linkID);
     }
+    model->linkEntityIds.clear();
 
     this->models.erase(_modelID);
 

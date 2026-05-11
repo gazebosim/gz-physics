@@ -299,6 +299,15 @@ namespace gz
           RelativeWrench(this->GetFrameID(), this->GetTransmittedWrench()),
           _relativeTo, _inCoordinatesOf);
     }
+
+    /////////////////////////////////////////////////
+    template <typename PolicyT, typename FeaturesT>
+    void SetFixedJointWeldChildToParentFeature::Joint<PolicyT, FeaturesT>::
+    SetWeldChildToParent(bool _weldChildToParent)
+    {
+      this->template Interface<SetFixedJointWeldChildToParentFeature>()
+        ->SetFixedJointWeldChildToParent(this->identity, _weldChildToParent);
+    }
   }
 }
 
