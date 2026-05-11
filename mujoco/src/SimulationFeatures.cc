@@ -57,7 +57,11 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   auto *m = worldInfo->mjModelObj;
   auto *d = worldInfo->mjDataObj;
 
+  worldInfo->ballJointPositionsCache.assign(
+      worldInfo->ballJointPositionsCache.size(), std::nullopt);
+
   mj_step(m, d);
+
   // Clear joint control forces so that they are not applied in the next
   // timestep, which is the expected behavior in Gazebo.
   std::fill(d->ctrl, d->ctrl + m->nu, 0.0);

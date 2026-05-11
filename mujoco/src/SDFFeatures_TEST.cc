@@ -17,6 +17,7 @@
 
 #include <gtest/gtest.h>
 
+#include <gz/common/Console.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
@@ -187,6 +188,17 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
     EXPECT_DOUBLE_EQ(0.0, freeBodyLink->pos[0]);
     EXPECT_DOUBLE_EQ(10.0, freeBodyLink->pos[1]);
     EXPECT_DOUBLE_EQ(10.0, freeBodyLink->pos[2]);
+  }
+
+  {
+    auto ballJointTestLink = mjs_findChild(
+        worldBody, Base::JoinNames("ball_joint_test", "link0").c_str());
+    EXPECT_EQ(2, getNumNodesInTree(ballJointTestLink));
+
+    auto ballJoint = mjs_asJoint(
+        mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
+                        Base::JoinNames("ball_joint_test", "j0").c_str()));
+    ASSERT_NE(nullptr, ballJoint);
   }
 }
 

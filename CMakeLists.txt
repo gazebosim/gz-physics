@@ -37,7 +37,9 @@ message(STATUS "\n\n-- ====== Finding Dependencies ======")
 
 #--------------------------------------
 # TODO(azeey) Remove this and depend on a system package before release
-add_subdirectory(third_party/mujoco_vendor)
+if(NOT SKIP_mujoco)
+  add_subdirectory(third_party/mujoco_vendor)
+endif()
 
 #--------------------------------------
 # Find gz-common

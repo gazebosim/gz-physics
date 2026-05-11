@@ -17,6 +17,7 @@ ExternalProject_Add(
   CMAKE_ARGS
     "-DBUILD_TESTING=OFF"
     "-DCMAKE_INSTALL_PREFIX=${FAKE_INSTALL_PREFIX}"
+    "-DSKIP_mujoco=${SKIP_mujoco}"
 )
 
 add_library(gz-physics-test INTERFACE)

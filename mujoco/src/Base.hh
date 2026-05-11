@@ -28,7 +28,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <gz/common/Console.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/Quaternion.hh>
 #include <gz/math/SemanticVersion.hh>
@@ -56,6 +55,14 @@ inline void copyQuat(const math::Quaterniond &_src,  mjtNum *_dst)
   _dst[1] = _src.X();
   _dst[2] = _src.Y();
   _dst[3] = _src.Z();
+}
+
+inline void copyQuat(const Eigen::Quaterniond &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.w();
+  _dst[1] = _src.x();
+  _dst[2] = _src.y();
+  _dst[3] = _src.z();
 }
 
 inline Eigen::Vector3d convertPos(const mjtNum *_src)
@@ -153,6 +160,7 @@ struct JointInfo
   std::string name;
   std::weak_ptr<ModelInfo> modelInfo;
   WorldInfo* worldInfo{nullptr};
+  std::optional<std::size_t> ballJointCacheIndex{std::nullopt};
 };
 
 
@@ -183,13 +191,26 @@ struct FrameInfo
 
 struct WorldInfo
 {
-  std::size_t entityId;
+  ~WorldInfo()
+  {
+    mj_deleteData(this->mjDataObj);
+    mj_deleteModel(this->mjModelObj);
+    mj_deleteSpec(this->mjSpecObj);
+  }
+
+  WorldInfo() = default;
+  WorldInfo(const WorldInfo &) = delete;
+  WorldInfo &operator=(const WorldInfo &) = delete;
+  WorldInfo(WorldInfo &&) = default;
+  WorldInfo &operator=(WorldInfo &&) = default;
+
+  std::size_t entityId{0};
   mjsBody *body{nullptr};
   mjSpec *mjSpecObj{nullptr};
   mjModel *mjModelObj{nullptr};
   mjData *mjDataObj{nullptr};
   bool specDirty{true};
-  std::string name;
+  std::string name{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
@@ -199,7 +220,14 @@ struct WorldInfo
 
   /// \brief body poses from the most recent pose change/update.
   /// The index is the MuJoCo body ID, and the value is the body's pose.
-  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses;
+  std::vector<std::optional<gz::math::Pose3d>> prevBodyPoses{};
+
+  /// \brief Cache for ball joint positions. This is used to enable
+  /// setting individual DOFs of a ball joint's angle axis representation.
+  /// The index of a joint into this cache is stored in the JointInfo.
+  /// The cache is invalidated right before mj_step in
+  /// SimulationFeatures::WorldForwardStep
+  std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
 };
 
 class Base
