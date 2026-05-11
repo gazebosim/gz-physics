@@ -482,7 +482,9 @@ TEST_F(LinkBoundingBoxFeaturesTestTypes, ModelAxisAlignedBoundingBox)
     // bullet-featherstone does not support floating bodies
     if(this->PhysicsEngineName(name) == "bullet-featherstone")
     {
-      GTEST_SKIP();
+      std::cout << "Skipping test for bullet-featherstone because floating "
+                << "bodies are not supported." << std::endl;
+      continue;
     }
 
     auto engine =
