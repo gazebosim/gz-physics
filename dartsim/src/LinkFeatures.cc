@@ -45,36 +45,14 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
 void LinkFeatures::SetLinkGravityEnabled(const Identity &_id, bool _enabled)
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_id);
-  if (!linkInfo || !linkInfo->link)
-    return;
-
-  // Added-mass links must keep DART gravity disabled: gravity is applied
-  // manually as F=ma each step. Let SetLinkAddedMass own that flag.
-  if (linkInfo->inertial.has_value() &&
-      linkInfo->inertial->FluidAddedMass().has_value())
-  {
-    return;
-  }
-
-  linkInfo->link->setGravityMode(_enabled);
+  this->SetLinkGravityMode(linkInfo, _enabled);
 }
 
 /////////////////////////////////////////////////
 bool LinkFeatures::GetLinkGravityEnabled(const Identity &_id) const
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_id);
-  if (!linkInfo || !linkInfo->link)
-    return true;
-
-  // Added-mass links have DART gravity forcibly disabled; exclude them so
-  // their internal state doesn't pollute the user-visible gravity flag.
-  if (linkInfo->inertial.has_value() &&
-      linkInfo->inertial->FluidAddedMass().has_value())
-  {
-    return true;
-  }
-
-  return linkInfo->link->getGravityMode();
+  return this->GetLinkGravityMode(linkInfo);
 }
 
 }

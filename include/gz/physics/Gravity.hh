@@ -46,13 +46,14 @@ namespace gz
       public: template <typename PolicyT, typename FeaturesT>
       class Model : public virtual Feature::Model<PolicyT, FeaturesT>
       {
-        /// \brief Set whether gravity is enabled for this model and its links.
+        /// \brief Set whether gravity is enabled for all of this model's links
+        /// and the links of nested models recursively.
         /// \param[in] _enabled True to enable gravity, false to disable it.
         public: void SetGravityEnabled(bool _enabled);
 
         /// \brief Get whether gravity is enabled for this model.
-        /// \return True if gravity is enabled for all entities, false
-        /// otherwise.
+        /// \return True if gravity is enabled for all child links and the
+        /// links of nested models recursively, false otherwise.
         public: bool GetGravityEnabled() const;
       };
 

@@ -17,6 +17,8 @@
 
 #include <cmath>
 #include <cstddef>
+#include <Eigen/Geometry>
+#include <gz/common/Console.hh>
 #include <gz/math/Helpers.hh>
 #include "Base.hh"
 #include "gz/physics/Geometry.hh"
@@ -27,6 +29,92 @@
 namespace gz {
 namespace physics {
 namespace mujoco {
+
+namespace  {
+Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
+{
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  auto &cache = jointInfo->worldInfo->ballJointPositionsCache;
+
+  if (!jointInfo->ballJointCacheIndex)
+  {
+    gzerr << "Ball joint cache index is is set for ["
+          << jointInfo->name << "]\n";
+    return nullptr;
+  }
+
+  if (*jointInfo->ballJointCacheIndex >= cache.size())
+  {
+    gzerr << "Ball joint cache index is outside of cache bounds for joint ["
+          << jointInfo->name << "]\n";
+    return nullptr;
+  }
+  auto &jointPos = cache[*jointInfo->ballJointCacheIndex];
+  if (!jointPos)
+  {
+    const double *mjQuat = &d->qpos[jointInfo->nq_index];
+    Eigen::AngleAxisd angleAxis{
+        Eigen::Quaterniond(mjQuat[0], mjQuat[1], mjQuat[2], mjQuat[3])};
+    jointPos = angleAxis.axis() * angleAxis.angle();
+  }
+
+  return &jointPos.value();
+}
+
+double getJointPositionImpl(JointInfo *jointInfo, std::size_t _dof)
+{
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  if (jointInfo->joint->type == mjtJoint::mjJNT_BALL)
+  {
+    // Ball joints have to be handled differently because the three DOFs exposed
+    // in the public API actually represent the components of an Angle Axis
+    // representation. We allow setting invididual components (DOFs) here, but
+    // convert to quaternion and update mjData right before stepping in
+    // SimulationFeatures.
+
+    const Eigen::Vector3d * jointPos = getBallJointPositionImpl(jointInfo);
+    if (jointPos)
+    {
+      return (*jointPos)[_dof];
+    }
+    return math::NAN_D;
+  }
+  return d->qpos[jointInfo->nq_index + _dof];
+}
+
+void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
+{
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  if (jointInfo->joint->type == mjtJoint::mjJNT_BALL)
+  {
+    // Ball joints have to be handled differently because the three DOFs exposed
+    // in the public API actually represent the components of an Angle Axis
+    // representation. We allow setting invididual components (DOFs) here, but
+    // convert to quaternion and update mjData right before stepping in
+    // SimulationFeatures.
+    Eigen::Vector3d *jointPos = getBallJointPositionImpl(jointInfo);
+    if (jointPos)
+    {
+      (*jointPos)[_dof] = _value;
+      const double angle = jointPos->norm();
+      if (math::equal(angle, 0.0, 1e-10))
+      {
+        copyQuat(Eigen::Quaterniond::Identity(), &d->qpos[jointInfo->nq_index]);
+      }
+      else
+      {
+        const Eigen::Quaterniond newQuat{
+            Eigen::AngleAxisd{angle, *jointPos / angle}};
+        copyQuat(newQuat, &d->qpos[jointInfo->nq_index]);
+      }
+    }
+  }
+  else
+  {
+    d->qpos[jointInfo->nq_index + _dof] = _value;
+  }
+}
+}
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointPosition(
@@ -47,7 +135,7 @@ double JointFeatures::GetJointPosition(
   {
     return math::NAN_D;
   }
-  return jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof];
+  return getJointPositionImpl(jointInfo, _dof);
 }
 
 /////////////////////////////////////////////////
@@ -171,7 +259,7 @@ void JointFeatures::SetJointPosition(
   {
     return;
   }
-  jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + _dof] = _value;
+  setJointPositionImpl(jointInfo, _dof, _value);
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 

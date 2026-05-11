@@ -17,12 +17,14 @@
 
 #include <gtest/gtest.h>
 
+#include <Eigen/Geometry>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <string>
 
 #include <gz/common/Console.hh>
+#include <gz/math/Angle.hh>
 #include <gz/math/Helpers.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/Vector3.hh>
@@ -76,9 +78,36 @@ class JointFeaturesTest:
       GTEST_SKIP();
     }
   }
+  public: void InitPlugin(const std::string &_pluginName)
+  {
+    this->plugin = this->loader.Instantiate(_pluginName);
+
+    this->engine =
+        physics::RequestEngine3d<T>::From(this->plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto dur = std::chrono::duration<double>(dt);
+
+    this->input.template Get<std::chrono::steady_clock::duration>() =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
+  }
+
+  public: void Step()
+  {
+    this->world->Step(this->output, this->state, this->input);
+  }
+
 
   public: std::set<std::string> pluginNames;
   public: plugin::Loader loader;
+  public: plugin::PluginPtr plugin;
+  public: EnginePtr engine;
+  public: WorldPtr world;
+  public: const double dt = 0.001;
+  const double kGravity = 9.81;
+  public: physics::ForwardStep::Output output;
+  public: physics::ForwardStep::State state;
+  public: physics::ForwardStep::Input input;
 };
 
 
@@ -107,20 +136,11 @@ class BasicJointFeaturesTest : public JointFeaturesTest<BasicJointFeatureList>
     ASSERT_NE(nullptr, this->sdfPendulumModel);
     this->armLink = this->sdfPendulumModel->LinkByName("arm");
     ASSERT_NE(nullptr, this->armLink);
-
-    auto dur = std::chrono::duration<double>(dt);
-
-    this->input.Get<std::chrono::steady_clock::duration>() =
-      std::chrono::duration_cast<std::chrono::steady_clock::duration>(dur);
   }
 
   void InitPluginAndWorld(const std::string &_pluginName)
   {
-    this->plugin = this->loader.Instantiate(_pluginName);
-
-    this->engine =
-        physics::RequestEngine3d<BasicJointFeatureList>::From(this->plugin);
-    ASSERT_NE(nullptr, engine);
+    ASSERT_NO_FATAL_FAILURE(this->InitPlugin(_pluginName));
 
     this->world = this->engine->ConstructWorld(*this->sdfWorld);
     ASSERT_NE(nullptr, this->world);
@@ -130,15 +150,9 @@ class BasicJointFeaturesTest : public JointFeaturesTest<BasicJointFeatureList>
     ASSERT_NE(nullptr, this->joint);
   }
 
-  void Step()
-  {
-    this->world->Step(this->output, this->state, this->input);
-  }
-
   const std::string modelName{"pendulum_with_base"};
   const std::string jointName{"upper_joint"};
   // Hardcode these to test proper SDFormat parsing
-  const double kGravity = 9.81;
   const double kArmLength = 1.0;
   const double kRadius = 0.1;
   const double kMass = 6.0;
@@ -147,18 +161,10 @@ class BasicJointFeaturesTest : public JointFeaturesTest<BasicJointFeatureList>
   // Parallel axis theoerem
   const double moiPivot = moiCom + kMass * std::pow(kArmLength / 2.0, 2);
 
-  const double dt = 0.001;
-  physics::ForwardStep::Output output;
-  physics::ForwardStep::State state;
-  physics::ForwardStep::Input input;
-
   sdf::Root root;
   sdf::World *sdfWorld;
   sdf::Model *sdfPendulumModel;
   sdf::Link *armLink;
-  plugin::PluginPtr plugin;
-  EnginePtr engine;
-  WorldPtr world;
   ModelPtr model;
   JointPtr joint;
 };
@@ -174,7 +180,7 @@ TEST_F(BasicJointFeaturesTest, GetSetBasicState)
     // issue.
     CHECK_UNSUPPORTED_ENGINE(name, "bullet")
 
-    this->InitPluginAndWorld(name);
+    ASSERT_NO_FATAL_FAILURE(this->InitPluginAndWorld(name));
 
     EXPECT_NEAR(0.0, this->joint->GetPosition(0), kTol);
     EXPECT_NEAR(0.0, this->joint->GetVelocity(0), kTol);
@@ -210,6 +216,8 @@ TEST_F(BasicJointFeaturesTest, GetSetBasicState)
     // B = 0 since starting angular velocity is 0
     // ω₀  = √(m * g *l/I)
     // θ = θ₀ * cos(√(m * g *l/I) * t)
+    // θdot = - ω₀  * θ₀ * sin(ω₀  * t)
+    //
     // See
     // https://ocw.mit.edu/courses/8-01sc-classical-mechanics-fall-2016/mit8_01scs22_chapter24.pdf
     const double angFreq = std::sqrt(this->kMass * this->kGravity *
@@ -366,6 +374,241 @@ TEST_F(BasicJointFeaturesTest, GetProperties)
           << expectedFullTransform.matrix() << "\n\n"
           << this->joint->GetTransform().matrix();
     }
+  }
+}
+
+
+using BallJointBasicJointFeatureTest = JointFeaturesTest<BasicJointFeatureList>;
+
+// We test that a ball joint is properly loaded by letting a small mass swing
+// from an initial position and checking that it swings both in the x and y
+// directions
+TEST_F(BallJointBasicJointFeatureTest, GetSetBasicState)
+{
+  const double kTol = 1e-4;
+  std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="test_world">
+      <model name="test_ball_joint">;
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="point_mass">
+          <pose>0.0 0.0 -1.0  0 0 0</pose>
+          <inertial>
+            <mass>0.1</mass>
+              <inertia>
+                <ixx>1e-6</ixx>
+                <iyy>1e-6</iyy>
+                <izz>1e-6</izz>
+              </inertia>
+          </inertial>
+          <collision name="c1">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="test_joint" type="ball">
+          <pose relative_to="base"/>
+          <parent>base</parent>
+          <child>point_mass</child>
+        </joint>
+      </model>
+    </world>
+  </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+    ASSERT_NO_FATAL_FAILURE(this->InitPlugin(name));
+
+    sdf::Root root;
+    auto errors = root.LoadSdfString(worldStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+
+    auto sdfWorld = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, sdfWorld);
+    this->world = this->engine->ConstructWorld(*sdfWorld);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("test_ball_joint");
+    ASSERT_NE(nullptr, model);
+    auto joint = model->GetJoint("test_joint");
+    ASSERT_NE(nullptr, joint);
+    EXPECT_NEAR(0.0, joint->GetPosition(0), kTol);
+    EXPECT_NEAR(0.0, joint->GetPosition(1), kTol);
+    EXPECT_NEAR(0.0, joint->GetPosition(2), kTol);
+
+    // All supported physics engines use Quaternions or Angle Axis to represent
+    // the DOF of ball joints. The gz-physics API provides setters for each of
+    // the 3 DOFs of the ball joint. Two issues:
+    // 1. The fact that individual DOFs can be set gives the impression that the
+    // DOF constitute Euler angles or that the joint can be thought of three
+    // revolute joints in series.
+    //
+    // 2. If the user knows that the DOFs constitue an Angle Axis representation
+    // of the joint's orientation, the API gives the impression that each DOF
+    // can be set individually such that the resulting Angle axis triplet
+    // matches what was set by the user.
+    //
+    // This test assertains that (1) the three DOFs represent components of an
+    // Angle Axis representation (in the angle * axis form) (2) The API is
+    // implemented such that the DOFs can be set individually. This is done by
+    // creating an Angle Axis quantity from a distribution of compnent values
+    // and checking, that after setting the joint positions based on that
+    // quantity, the resulting orientation of the joint (in quaternions) matches
+    // that of the orientation represented by quantity.
+    //
+    // A lambda is used to exit early and avoid flooding the console.
+    auto checkAngleAxisAPI = [&]
+    {
+      const int numSamplesPerComp = 50;
+      const double startVal = -2 * GZ_PI;
+      const double endVal = 2 * GZ_PI;
+      const double incr =
+          (endVal - startVal) / static_cast<double>(numSamplesPerComp);
+      for (double x = startVal; x <= endVal; x += incr)
+      {
+        joint->SetPosition(0, x);
+        for (double y = startVal; y <= endVal; y += incr)
+        {
+          joint->SetPosition(1, y);
+          for (double z = startVal; z <= endVal; z += incr)
+          {
+            joint->SetPosition(2, z);
+
+            Eigen::Vector3d ballJointPos{joint->GetPosition(0),
+                                         joint->GetPosition(1),
+                                         joint->GetPosition(2)};
+
+            Eigen::Quaterniond ballJointQuat;
+            ballJointQuat = Eigen::AngleAxisd{ballJointPos.norm(),
+                                              ballJointPos.normalized()};
+
+            Eigen::Vector3d expected{x, y, z};
+            Eigen::Quaterniond expectedQuat;
+            expectedQuat =
+                Eigen::AngleAxisd{expected.norm(), expected.normalized()};
+
+            ASSERT_NEAR(0, expectedQuat.angularDistance(ballJointQuat), kTol)
+                << "Ball joint pos: " << ballJointPos.transpose()
+                << "\tBall joint quat: " << ballJointQuat.coeffs().transpose()
+                << "\nExpected pos: " << expected.transpose()
+                << "\tExpected quat: " << expectedQuat.coeffs().transpose();
+          }
+        }
+      }
+    };
+
+    checkAngleAxisAPI();
+
+    auto eulerToAngAxis = [](double _x, double _y, double _z) -> Eigen::Vector3d
+    {
+      Eigen::Quaterniond rot = Eigen::AngleAxisd(_z, Eigen::Vector3d::UnitZ()) *
+                               Eigen::AngleAxisd(_y, Eigen::Vector3d::UnitY()) *
+                               Eigen::AngleAxisd(_x, Eigen::Vector3d::UnitX());
+      Eigen::AngleAxisd angAxis(rot);
+      return angAxis.axis() * angAxis.angle();
+    };
+
+    // Check that setting each joint position changes the pose of the joint
+    {
+      joint->SetPosition(0, 0);
+      joint->SetPosition(1, 0);
+      joint->SetPosition(2, 0);
+      const Eigen::Isometry3d initialPose(Eigen::Translation3d(0, 0.0, -1));
+      // Test before and after step. The values should be about the same.
+      EXPECT_TRUE(physics::test::Equal(initialPose,
+                                       joint->GetTransform(), kTol))
+          << initialPose.matrix() << "\n\n"
+          << joint->GetTransform().matrix();
+
+      Eigen::Vector3d testJointPos = eulerToAngAxis(GZ_PI_4, 0, GZ_PI_4);
+
+      {
+        joint->SetPosition(0, testJointPos[0]);
+        Eigen::Vector3d testAngAxis{testJointPos[0], 0, 0};
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testAngAxis.norm(), testAngAxis.normalized()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+
+      {
+        joint->SetPosition(1, testJointPos[1]);
+
+        Eigen::Vector3d testAngAxis{testJointPos[0], testJointPos[1], 0};
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testAngAxis.norm(), testAngAxis.normalized()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+
+      {
+        joint->SetPosition(2, testJointPos[2]);
+
+        Eigen::Vector3d testAngAxis = testJointPos;
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testAngAxis.norm(), testAngAxis.normalized()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+    }
+
+    const double startPos = 0.05;
+    Eigen::Vector3d startAngAxisVec = eulerToAngAxis(startPos, 0, GZ_PI_4);
+    joint->SetPosition(0, startAngAxisVec[0]);
+    joint->SetPosition(1, startAngAxisVec[1]);
+    joint->SetPosition(2, startAngAxisVec[2]);
+    EXPECT_NEAR(startAngAxisVec[0], joint->GetPosition(0), kTol);
+    EXPECT_NEAR(startAngAxisVec[1], joint->GetPosition(1), kTol);
+    EXPECT_NEAR(startAngAxisVec[2], joint->GetPosition(2), kTol);
+
+    const int numSteps = 100;
+    for (int i = 0; i < numSteps; ++i)
+    {
+      this->Step();
+    }
+    const double timeElapsed = numSteps * this->dt;
+    // Using small angle approximation, the joint position is given by:
+    // θ = A * cos(ω₀ * t) + B * sin (ω₀ * t)
+    // where A = θ₀,
+    // B = 0 since starting angular velocity is 0
+    // ω₀  = √(g/l)
+    // θ = θ₀ * cos(√(g/l) * t)
+    // θdot = - ω₀  * θ₀ * sin(ω₀  * t)
+    // See
+    // https://ocw.mit.edu/courses/8-01sc-classical-mechanics-fall-2016/mit8_01scs22_chapter24.pdf
+    // Arm length (l) is 1.0
+    const double angFreq = std::sqrt(this->kGravity);
+    const double expectedPosition = startPos * std::cos(angFreq * timeElapsed);
+    Eigen::Vector3d expectedAngAxis = eulerToAngAxis(expectedPosition, 0, GZ_PI_4);
+    // Relax tolerence since we are using small angle approximation.
+    EXPECT_NEAR(expectedAngAxis[0], joint->GetPosition(0), kTol);
+    EXPECT_NEAR(expectedAngAxis[1], joint->GetPosition(1), kTol);
+    EXPECT_NEAR(expectedAngAxis[2], joint->GetPosition(2), kTol);
+
+    const double expectedAngVel =
+        -angFreq * startPos * std::sin(angFreq * timeElapsed);
+    // The velocity is expressed in the body frame, so only the first DOF will have a non-zero value.
+    EXPECT_NEAR(expectedAngVel, joint->GetVelocity(0), kTol);
+    EXPECT_NEAR(0, joint->GetVelocity(1), kTol);
+    EXPECT_NEAR(0, joint->GetVelocity(2), kTol);
   }
 }
 
