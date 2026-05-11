@@ -38,17 +38,31 @@
 // ---------------------------------------------------------------------------
 // Feature list
 // ---------------------------------------------------------------------------
-struct ModelFeaturesFeatureList : gz::physics::FeatureList<
+using ModelBaseFeaturesList = gz::physics::FeatureList<
   gz::physics::FindFreeGroupFeature,
   gz::physics::SetFreeGroupWorldVelocity,
   gz::physics::ForwardStep,
   gz::physics::GetEntities,
   gz::physics::GetNestedModelFromModel,
   gz::physics::LinkFrameSemantics,
-  gz::physics::ModelStaticState,
-  gz::physics::GravityEnabled,
   gz::physics::sdf::ConstructSdfWorld
-> { };
+>;
+
+using ModelStaticFeaturesList = gz::physics::FeatureList<
+  ModelBaseFeaturesList,
+  gz::physics::ModelStaticState
+>;
+
+using ModelGravityFeaturesList = gz::physics::FeatureList<
+  ModelBaseFeaturesList,
+  gz::physics::GravityEnabled
+>;
+
+using ModelGravityStaticFeaturesList = gz::physics::FeatureList<
+  ModelBaseFeaturesList,
+  gz::physics::ModelStaticState,
+  gz::physics::GravityEnabled
+>;
 
 // ---------------------------------------------------------------------------
 // Typed test fixture
@@ -77,6 +91,11 @@ class ModelFeaturesTest :
   public: std::set<std::string> pluginNames;
   public: gz::plugin::Loader loader;
 };
+
+template <typename T> class ModelStaticTest : public ModelFeaturesTest<T> {};
+template <typename T> class ModelGravityTest : public ModelFeaturesTest<T> {};
+template <typename T> class ModelGravityStaticTest
+    : public ModelFeaturesTest<T> {};
 
 // ---------------------------------------------------------------------------
 // Helper: load a world from an SDF file using the given engine.
@@ -122,25 +141,32 @@ Eigen::Vector3d StepAndGetPosition(
 // ---------------------------------------------------------------------------
 // Instantiate test suite
 // ---------------------------------------------------------------------------
-using ModelFeaturesTestTypes = ::testing::Types<ModelFeaturesFeatureList>;
-TYPED_TEST_SUITE(ModelFeaturesTest, ModelFeaturesTestTypes);
+using ModelStaticTestTypes = ::testing::Types<ModelStaticFeaturesList>;
+TYPED_TEST_SUITE(ModelStaticTest, ModelStaticTestTypes);
+
+using ModelGravityTestTypes = ::testing::Types<ModelGravityFeaturesList>;
+TYPED_TEST_SUITE(ModelGravityTest, ModelGravityTestTypes);
+
+using ModelGravityStaticTestTypes =
+  ::testing::Types<ModelGravityStaticFeaturesList>;
+TYPED_TEST_SUITE(ModelGravityStaticTest, ModelGravityStaticTestTypes);
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, ModelStaticStateDefault)
+TYPED_TEST(ModelStaticTest, ModelStaticStateDefault)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelStaticFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -153,17 +179,17 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStateDefault)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, ModelStaticStateSetGet)
+TYPED_TEST(ModelStaticTest, ModelStaticStateSetGet)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelStaticFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -181,18 +207,18 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStateSetGet)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, ModelStaticStatePreventsMotion)
+TYPED_TEST(ModelStaticTest, ModelStaticStatePreventsMotion)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     // sphere_gravity.sdf has gravity (0 0 -10) and a sphere at z=2.
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelStaticFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -218,7 +244,7 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStatePreventsMotion)
     EXPECT_TRUE(model->GetStatic());
 
     const double afterStaticZ =
-        StepAndGetPosition<ModelFeaturesFeatureList>(world, link, 100).z();
+        StepAndGetPosition<ModelStaticFeaturesList>(world, link, 100).z();
     // Position must be frozen despite the non-zero stored velocities.
     EXPECT_NEAR(initialZ, afterStaticZ, 1e-9);
 
@@ -231,7 +257,7 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStatePreventsMotion)
     freeGroup->SetWorldAngularVelocity(angVel);
 
     const double afterDynamicZ =
-        StepAndGetPosition<ModelFeaturesFeatureList>(world, link, 100).z();
+        StepAndGetPosition<ModelStaticFeaturesList>(world, link, 100).z();
     EXPECT_LT(afterDynamicZ, initialZ);
 
     // Gravity must have pulled the sphere downward: Z linear velocity < 0.
@@ -243,17 +269,17 @@ TYPED_TEST(ModelFeaturesTest, ModelStaticStatePreventsMotion)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, ModelGravityEnabledDefault)
+TYPED_TEST(ModelGravityTest, ModelGravityEnabledDefault)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelGravityFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -266,17 +292,17 @@ TYPED_TEST(ModelFeaturesTest, ModelGravityEnabledDefault)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, ModelGravityEnabledSetGet)
+TYPED_TEST(ModelGravityTest, ModelGravityEnabledSetGet)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelGravityFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -294,18 +320,18 @@ TYPED_TEST(ModelFeaturesTest, ModelGravityEnabledSetGet)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, ModelGravityDisabledPreventsMotion)
+TYPED_TEST(ModelGravityTest, ModelGravityDisabledPreventsMotion)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     // sphere_gravity.sdf has gravity (0 0 -10) and a sphere at z=2.
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelGravityFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -333,7 +359,7 @@ TYPED_TEST(ModelFeaturesTest, ModelGravityDisabledPreventsMotion)
     model->SetGravityEnabled(false);
     EXPECT_FALSE(model->GetGravityEnabled());
 
-    StepAndGetPosition<ModelFeaturesFeatureList>(world, link, 100);
+    StepAndGetPosition<ModelGravityFeaturesList>(world, link, 100);
     const auto noGravFrameData = link->FrameDataRelativeToWorld();
     const Eigen::Vector3d afterNoGravPos = noGravFrameData.pose.translation();
 
@@ -351,7 +377,7 @@ TYPED_TEST(ModelFeaturesTest, ModelGravityDisabledPreventsMotion)
 
     // Re-enable gravity: the sphere falls.
     model->SetGravityEnabled(true);
-    StepAndGetPosition<ModelFeaturesFeatureList>(world, link, 100);
+    StepAndGetPosition<ModelGravityFeaturesList>(world, link, 100);
     const auto gravFrameData = link->FrameDataRelativeToWorld();
     const Eigen::Vector3d afterGravPos = gravFrameData.pose.translation();
 
@@ -368,17 +394,17 @@ TYPED_TEST(ModelFeaturesTest, ModelGravityDisabledPreventsMotion)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, NestedModelGravityPropagates)
+TYPED_TEST(ModelGravityTest, NestedModelGravityPropagates)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelGravityFeaturesList>(
         engine, common_test::worlds::kWorldSingleNestedModelSdf);
     ASSERT_NE(nullptr, world);
 
@@ -401,17 +427,17 @@ TYPED_TEST(ModelFeaturesTest, NestedModelGravityPropagates)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelFeaturesTest, NestedModelStaticPropagates)
+TYPED_TEST(ModelStaticTest, NestedModelStaticPropagates)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelStaticFeaturesList>(
         engine, common_test::worlds::kWorldSingleNestedModelSdf);
     ASSERT_NE(nullptr, world);
 
@@ -434,19 +460,115 @@ TYPED_TEST(ModelFeaturesTest, NestedModelStaticPropagates)
 }
 
 //////////////////////////////////////////////////
-// Verify that toggling static does not silently re-enable gravity.
-// Sequence: disable gravity → make static → make dynamic → gravity still off.
-TYPED_TEST(ModelFeaturesTest, GravityPreservedAcrossStaticToggle)
+TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelStaticFeaturesList>(
+        engine, common_test::worlds::kWorldSingleNestedModelSdf);
+    ASSERT_NE(nullptr, world);
+
+    auto parentModel = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, parentModel);
+
+    auto link1 = parentModel->GetLink("link1");
+    ASSERT_NE(nullptr, link1);
+
+    auto nestedModel = parentModel->GetNestedModel("nested_model");
+    ASSERT_NE(nullptr, nestedModel);
+
+    auto nestedLink1 = nestedModel->GetLink("nested_link1");
+    auto nestedLink2 = nestedModel->GetLink("nested_link2");
+    ASSERT_NE(nullptr, nestedLink1);
+    ASSERT_NE(nullptr, nestedLink2);
+
+    // Give the model initial velocity and verify later that the velocities
+    // zero'd out when the model is made static
+    auto freeGroup = parentModel->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    freeGroup->SetWorldLinearVelocity(Eigen::Vector3d(5.0, 0.0, 0.0));
+
+    // Record initial positions before steps
+    const Eigen::Vector3d initLink1Pos =
+        link1->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d initNestedLink1Pos =
+        nestedLink1->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d initNestedLink2Pos =
+        nestedLink2->FrameDataRelativeToWorld().pose.translation();
+
+    // Make the whole hierarchy static
+    parentModel->SetStatic(true);
+    EXPECT_TRUE(parentModel->GetStatic());
+    EXPECT_TRUE(nestedModel->GetStatic());
+
+    // Step the world by 100 iterations
+    StepAndGetPosition<ModelStaticFeaturesList>(world, link1, 100);
+
+    // Capture end state positions
+    const Eigen::Vector3d finalLink1Pos =
+        link1->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d finalNestedLink1Pos =
+        nestedLink1->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d finalNestedLink2Pos =
+        nestedLink2->FrameDataRelativeToWorld().pose.translation();
+
+    // Assert no links are moving
+    EXPECT_NEAR(initLink1Pos.x(), finalLink1Pos.x(), 1e-6);
+    EXPECT_NEAR(initLink1Pos.y(), finalLink1Pos.y(), 1e-6);
+    EXPECT_NEAR(initLink1Pos.z(), finalLink1Pos.z(), 1e-6);
+
+    EXPECT_NEAR(initNestedLink1Pos.x(), finalNestedLink1Pos.x(), 1e-6);
+    EXPECT_NEAR(initNestedLink1Pos.y(), finalNestedLink1Pos.y(), 1e-6);
+    EXPECT_NEAR(initNestedLink1Pos.z(), finalNestedLink1Pos.z(), 1e-6);
+
+    EXPECT_NEAR(initNestedLink2Pos.x(), finalNestedLink2Pos.x(), 1e-6);
+    EXPECT_NEAR(initNestedLink2Pos.y(), finalNestedLink2Pos.y(), 1e-6);
+    EXPECT_NEAR(initNestedLink2Pos.z(), finalNestedLink2Pos.z(), 1e-6);
+
+    // Make the whole model dynamic again
+    parentModel->SetStatic(false);
+    EXPECT_FALSE(parentModel->GetStatic());
+    EXPECT_FALSE(nestedModel->GetStatic());
+
+    // Step the world again and verify model falls due to gravity
+    StepAndGetPosition<ModelStaticFeaturesList>(world, link1, 100);
+
+    // Get updated positions of links
+    const Eigen::Vector3d afterDynamicLink1Pos =
+        link1->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d afterDynamicNestedLink1Pos =
+        nestedLink1->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d afterDynamicNestedLink2Pos =
+        nestedLink2->FrameDataRelativeToWorld().pose.translation();
+
+    // Check links' z pos to make sure they fell due to gravity
+    EXPECT_LT(afterDynamicLink1Pos.z(), finalLink1Pos.z());
+    EXPECT_LT(afterDynamicNestedLink1Pos.z(), finalNestedLink1Pos.z());
+    EXPECT_LT(afterDynamicNestedLink2Pos.z(), finalNestedLink2Pos.z());
+  }
+}
+
+//////////////////////////////////////////////////
+// Verify that toggling static does not silently re-enable gravity.
+// Sequence: disable gravity → make static → make dynamic → gravity still off.
+TYPED_TEST(ModelGravityStaticTest, GravityPreservedAcrossStaticToggle)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelGravityStaticFeaturesList>::From(
+            plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelGravityStaticFeaturesList>(
         engine, common_test::worlds::kSphereGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -476,7 +598,8 @@ TYPED_TEST(ModelFeaturesTest, GravityPreservedAcrossStaticToggle)
     const double initialZ =
         link->FrameDataRelativeToWorld().pose.translation().z();
     const double afterZ =
-        StepAndGetPosition<ModelFeaturesFeatureList>(world, link, 100).z();
+        StepAndGetPosition<ModelGravityStaticFeaturesList>(
+            world, link, 100).z();
     EXPECT_NEAR(initialZ, afterZ, 1e-6);
   }
 }
@@ -487,17 +610,17 @@ TYPED_TEST(ModelFeaturesTest, GravityPreservedAcrossStaticToggle)
 // engine's gravity off internally on that entity.
 // SetModelGravityEnabled skips added-mass links entirely, so for an
 // all-added-mass model calling Set has no effect and the getter stays true.
-TYPED_TEST(ModelFeaturesTest, AddedMassLinkDoesNotPolluteGravityGetter)
+TYPED_TEST(ModelGravityTest, AddedMassLinkDoesNotPolluteGravityGetter)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelGravityFeaturesList>(
         engine, common_test::worlds::kSphereAddedMassGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -524,17 +647,17 @@ TYPED_TEST(ModelFeaturesTest, AddedMassLinkDoesNotPolluteGravityGetter)
 // an added-mass link. If it did, gravity would be applied twice (engine's
 // built-in pass + the manual F=ma in SimulationFeatures) and the model would
 // fall faster than a plain sphere of the same mass.
-TYPED_TEST(ModelFeaturesTest, AddedMassLinkGravityInvariantPreserved)
+TYPED_TEST(ModelGravityTest, AddedMassLinkGravityInvariantPreserved)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelFeaturesFeatureList>::From(plugin);
+        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelFeaturesFeatureList>(
+    auto world = LoadWorld<ModelGravityFeaturesList>(
         engine, common_test::worlds::kSphereAddedMassGravitySdf);
     ASSERT_NE(nullptr, world);
 
@@ -588,7 +711,7 @@ TYPED_TEST(ModelFeaturesTest, AddedMassLinkGravityInvariantPreserved)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  if (!ModelFeaturesTest<ModelFeaturesFeatureList>::init(argc, argv))
+  if (!gz::physics::TestLibLoader::init(argc, argv))
     return -1;
   return RUN_ALL_TESTS();
 }
