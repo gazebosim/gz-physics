@@ -38,7 +38,7 @@ Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
 
   if (!jointInfo->ballJointCacheIndex)
   {
-    gzerr << "Ball joint cache index is is set for ["
+    gzerr << "Ball joint cache index is not set for ["
           << jointInfo->name << "]\n";
     return nullptr;
   }

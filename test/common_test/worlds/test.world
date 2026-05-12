@@ -371,6 +371,26 @@
         </axis>
       </joint>
     </model>
+    <model name="universal_joint_test">
+      <link name="link0"/>
+      <link name="link1"/>
+      <joint name="j0" type="universal">
+        <parent>link0</parent>
+        <child>link1</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <dynamics>
+            <damping>0.2</damping>
+          </dynamics>
+        </axis>
+        <axis2>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <damping>0.3</damping>
+          </dynamics>
+        </axis2>
+      </joint>
+    </model>
     <!-- Remove joint types as they get supported -->
     <model name="unsupported_joint_test">
       <link name="link0"/>

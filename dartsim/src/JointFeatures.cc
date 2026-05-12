@@ -34,28 +34,56 @@ namespace dartsim {
 double JointFeatures::GetJointPosition(
     const Identity &_id, std::size_t _dof) const
 {
-  return this->ReferenceInterface<JointInfo>(_id)->joint->getPosition(_dof);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= jointInfo->joint->getNumDofs())
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << jointInfo->joint->getName() << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->joint->getPosition(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointVelocity(
     const Identity &_id, std::size_t _dof) const
 {
-  return this->ReferenceInterface<JointInfo>(_id)->joint->getVelocity(_dof);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= jointInfo->joint->getNumDofs())
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << jointInfo->joint->getName() << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->joint->getVelocity(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointAcceleration(
     const Identity &_id, std::size_t _dof) const
 {
-  return this->ReferenceInterface<JointInfo>(_id)->joint->getAcceleration(_dof);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= jointInfo->joint->getNumDofs())
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << jointInfo->joint->getName() << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->joint->getAcceleration(_dof);
 }
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
     const Identity &_id, std::size_t _dof) const
 {
-  return this->ReferenceInterface<JointInfo>(_id)->joint->getForce(_dof);
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= jointInfo->joint->getNumDofs())
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << jointInfo->joint->getName() << "]\n";
+    return math::NAN_D;
+  }
+  return jointInfo->joint->getForce(_dof);
 }
 
 /////////////////////////////////////////////////
@@ -70,6 +98,12 @@ void JointFeatures::SetJointPosition(
     const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  if (_dof >= joint->getNumDofs())
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << joint->getName() << "]\n";
+    return;
+  }
 
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
@@ -89,6 +123,12 @@ void JointFeatures::SetJointVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  if (_dof >= joint->getNumDofs())
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << joint->getName() << "]\n";
+    return;
+  }
 
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or

@@ -250,6 +250,7 @@ struct ModelKinematicStructure
     else
     {
       mjsJoint *joint{nullptr};
+      mjsJoint *joint2{nullptr};
       // It is possible to apply joint forces using `qfrc_applied`, but this
       // makes it harder to retrieve the last applied forces on a joint when
       // implementing GetJoint. Instead, we use actuators and `mjData::ctrl`.
@@ -291,6 +292,31 @@ struct ModelKinematicStructure
           }
         }
       }
+      else if (sdfJoint->Type() == ::sdf::JointType::UNIVERSAL)
+      {
+        // Universal joints in MuJoCo are modeled as two hinge joints in series on the child body.
+        // We only need to keep a pointer to the first hinge joint (`joint`) in JointInfo. Since 
+        // MuJoCo compiles joints on the same body contiguously in memory, all getters/setters
+        // can safely access the second joint (`joint2`)'s state data using `nq_index + 1` and
+        // `nv_index + 1` without needing to store it separately in JointInfo.
+        joint = mjs_addJoint(child, nullptr);
+        joint->type = mjJNT_HINGE;
+        const auto *sdfAxis1 = sdfJoint->Axis(0);
+        if (sdfAxis1)
+        {
+          convertJointAxis(sdfAxis1, joint->axis);
+          copyStandardJointAxisProperties(joint, sdfAxis1);
+        }
+
+        joint2 = mjs_addJoint(child, nullptr);
+        joint2->type = mjJNT_HINGE;
+        const auto *sdfAxis2 = sdfJoint->Axis(1);
+        if (sdfAxis2)
+        {
+          convertJointAxis(sdfAxis2, joint2->axis);
+          copyStandardJointAxisProperties(joint2, sdfAxis2);
+        }
+      }
       else if (sdfJoint->Type() != ::sdf::JointType::FIXED)
       {
         gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
@@ -314,6 +340,20 @@ struct ModelKinematicStructure
         mjs_setString(actuator->target, mjJointName.c_str());
 
         copyPos(jointPose.Pos(), joint->pos);
+
+        if (joint2)
+        {
+          // We uniquely name the second axis using a flat `_axis2` suffix. This flat name 
+          // avoids indicating any Kinematic/SDF nesting (`::axis2`) while still satisfying
+          // MuJoCo's requirement that joints must be uniquely named for actuators to target them.
+          const std::string mjJointName2 = mjJointName + "_axis2";
+          mjs_setName(joint2->element, mjJointName2.c_str());
+          mjsActuator *actuator2 = mjs_addActuator(_spec, nullptr);
+          actuator2->trntype = mjtTrn::mjTRN_JOINT;
+          mjs_setString(actuator2->target, mjJointName2.c_str());
+
+          copyPos(jointPose.Pos(), joint2->pos);
+        }
       }
       auto jointInfo =
           std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);

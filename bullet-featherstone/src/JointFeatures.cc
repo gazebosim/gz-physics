@@ -87,6 +87,13 @@ double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= this->GetJointDegreesOfFreedom(_id))
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << joint->name << "]\n";
+    return gz::math::NAN_D;
+  }
+
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (identifier)
   {
@@ -107,6 +114,12 @@ double JointFeatures::GetJointVelocity(
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (identifier)
   {
+    if (_dof >= this->GetJointDegreesOfFreedom(_id))
+    {
+      gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+            << joint->name << "]\n";
+      return gz::math::NAN_D;
+    }
     const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
     return model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof];
   }
@@ -201,6 +214,13 @@ void JointFeatures::SetJointPosition(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= this->GetJointDegreesOfFreedom(_id))
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << joint->name << "]\n";
+    return;
+  }
+
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
     return;
@@ -215,6 +235,13 @@ void JointFeatures::SetJointVelocity(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= this->GetJointDegreesOfFreedom(_id))
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << joint->name << "]\n";
+    return;
+  }
+
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
     return;
