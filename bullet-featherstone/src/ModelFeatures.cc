@@ -30,7 +30,7 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
 
   if (!modelInfo->body)
   {
-    gzerr << "Error setting model static state. Model is missing a btMultBody."
+    gzerr << "Error setting model static state. Model is missing a btMultiBody."
           << std::endl;
   }
 
