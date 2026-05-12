@@ -54,56 +54,6 @@ void recreateJointLimitConstraint(JointInfo *_jointInfo, ModelInfo *_modelInfo,
 }
 
 /////////////////////////////////////////////////
-void makeColliderStatic(LinkInfo *_linkInfo)
-{
-  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
-  if (!childCollider)
-    return;
-
-  // if link is already static or fixed, we do not need to change its
-  // collision flags
-  if (_linkInfo->isStaticOrFixed)
-    return;
-
-  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
-  if (!childProxy)
-    return;
-
-  childProxy->m_collisionFilterGroup = btBroadphaseProxy::StaticFilter;
-  childProxy->m_collisionFilterMask =
-      btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
-#if BT_BULLET_VERSION >= 307
-  childCollider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
-#endif
-}
-
-/////////////////////////////////////////////////
-void makeColliderDynamic(LinkInfo *_linkInfo)
-{
-  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
-  if (!childCollider)
-    return;
-
-  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
-  if (!childProxy)
-    return;
-
-  // If broadphase and collision object flags do not agree, the
-  // link was originally non-static but made static by AttachJoint
-  if (!_linkInfo->isStaticOrFixed &&
-      ((childProxy->m_collisionFilterGroup &
-      btBroadphaseProxy::StaticFilter) > 0))
-  {
-    childProxy->m_collisionFilterGroup =
-        btBroadphaseProxy::DefaultFilter;
-    childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
-#if BT_BULLET_VERSION >= 307
-    childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
-#endif
-  }
-}
-
-/////////////////////////////////////////////////
 void updateColliderFlagsRecursive(std::size_t _linkID,
   const std::unordered_map<std::size_t, std::shared_ptr<JointInfo>> &_joints,
   const std::unordered_map<std::size_t, std::shared_ptr<LinkInfo>> &_links,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2026 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */
+*/
 
-#ifndef GZ_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
-#define GZ_PHYSICS_DARTSIM_SRC_LINKFEATURES_HH_
+#ifndef GZ_PHYSICS_DARTSIM_SRC_MODELFEATURES_HH_
+#define GZ_PHYSICS_DARTSIM_SRC_MODELFEATURES_HH_
+
+#include <gz/physics/Model.hh>
 
 #include <gz/physics/Gravity.hh>
-#include <gz/physics/Link.hh>
 
 #include "Base.hh"
 
@@ -27,29 +28,27 @@ namespace gz {
 namespace physics {
 namespace dartsim {
 
-struct LinkFeatureList : FeatureList<
-  AddLinkExternalForceTorque,
+struct ModelFeatureList : FeatureList<
+  ModelStaticState,
   GravityEnabled
 > { };
 
-class LinkFeatures :
+class ModelFeatures :
     public virtual Base,
-    public virtual Implements3d<LinkFeatureList>
+    public virtual Implements3d<ModelFeatureList>
 {
-  // ----- Add Link Force/Torque -----
-  public: void AddLinkExternalForceInWorld(
-      const Identity &_id,
-      const LinearVectorType &_force,
-      const LinearVectorType &_position) override;
+  // Documentation inherited
+  public: void SetModelStatic(
+      const Identity &_id, bool _static) override;
 
-  public: void AddLinkExternalTorqueInWorld(
-      const Identity &_id, const AngularVectorType &_torque) override;
+  // Documentation inherited
+  public: bool GetModelStatic(const Identity &_id) const override;
 
-  // ----- Link Gravity Enabled -----
-  public: void SetLinkGravityEnabled(
+  // ----- Model Gravity Enabled -----
+  public: void SetModelGravityEnabled(
       const Identity &_id, bool _enabled) override;
 
-  public: bool GetLinkGravityEnabled(const Identity &_id) const override;
+  public: bool GetModelGravityEnabled(const Identity &_id) const override;
 };
 
 }
