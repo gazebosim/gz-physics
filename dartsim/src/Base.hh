@@ -662,6 +662,7 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
     return this->models.at(_modelID);
   }
 
+<<<<<<< HEAD
   GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
 
   public: EntityStorage<DartWorldPtr, std::string> worlds;
@@ -669,6 +670,47 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
+=======
+  /// \brief Helper function for setting gravity mode on a link
+  public: static void SetLinkGravityMode(LinkInfo * _linkInfo, bool _enabled)
+  {
+    if (!_linkInfo || !_linkInfo->link)
+      return;
+
+    // Added-mass links must keep DART gravity disabled: gravity is applied
+    // manually as F=ma each step. Let SetLinkAddedMass own that flag.
+    if (_linkInfo->inertial.has_value() &&
+        _linkInfo->inertial->FluidAddedMass().has_value())
+    {
+      return;
+    }
+
+    _linkInfo->link->setGravityMode(_enabled);
+  }
+
+  /// \brief Helper function for getting gravity mode of a link
+  public: static bool GetLinkGravityMode(const LinkInfo * _linkInfo)
+  {
+    if (!_linkInfo || !_linkInfo->link)
+      return true;
+
+    // Added-mass links have DART gravity forcibly disabled; exclude them so
+    // their internal state doesn't pollute the user-visible gravity flag.
+    if (_linkInfo->inertial.has_value() &&
+        _linkInfo->inertial->FluidAddedMass().has_value())
+    {
+      return true;
+    }
+
+    return _linkInfo->link->getGravityMode();
+  }
+
+  public: detail::EntityStorage<DartWorldPtr, std::string> worlds;
+  public: detail::EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
+  public: detail::EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
+  public: detail::EntityStorage<JointInfoPtr, const DartJoint*> joints;
+  public: detail::EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
+>>>>>>> 0109a34 (Model: Enable/disable: gravity and static (#919))
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
   public: EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
 
