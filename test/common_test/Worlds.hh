@@ -57,6 +57,9 @@ const auto kShapesBitmaskWorld = CommonTestWorld("shapes_bitmask.sdf");
 const auto kShapesWorld = CommonTestWorld("shapes.world");
 const auto kSlipComplianceSdf = CommonTestWorld("slip_compliance.sdf");
 const auto kSphereSdf = CommonTestWorld("sphere.sdf");
+const auto kSphereGravitySdf = CommonTestWorld("sphere_gravity.sdf");
+const auto kSphereAddedMassGravitySdf =
+    CommonTestWorld("sphere_added_mass_gravity.sdf");
 const auto kStringPendulumSdf = CommonTestWorld("string_pendulum.sdf");
 const auto kTestWorld = CommonTestWorld("test.world");
 const auto kWorldJointTestSdf = CommonTestWorld("world_joint_test.sdf");
