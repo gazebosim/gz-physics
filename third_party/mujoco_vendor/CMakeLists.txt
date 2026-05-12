@@ -25,7 +25,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 set(MUJOCO_EXTRA_CMAKE_ARGS "")
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
   list(APPEND MUJOCO_EXTRA_CMAKE_ARGS
     -DCMAKE_C_FLAGS=-Wno-error=discarded-qualifiers
     -DCMAKE_CXX_FLAGS=-Wno-error=discarded-qualifiers
