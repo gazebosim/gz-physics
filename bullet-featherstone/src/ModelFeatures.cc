@@ -28,15 +28,18 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
   if (!modelInfo)
     return;
 
-  // If requested static, zero out velocities and forces
-  if (_static && modelInfo->body)
+  if (!modelInfo->body)
   {
-    modelInfo->body->setBaseVel(btVector3(0, 0, 0));
-    modelInfo->body->setBaseOmega(btVector3(0, 0, 0));
-    modelInfo->body->clearForcesAndTorques();
-    modelInfo->body->clearConstraintForces();
-    modelInfo->body->clearVelocities();
+    gzerr << "Error setting model static state. Model is missing a btMultBody."
+          << std::endl;
   }
+
+  // Zero out velocities and forces
+  modelInfo->body->setBaseVel(btVector3(0, 0, 0));
+  modelInfo->body->setBaseOmega(btVector3(0, 0, 0));
+  modelInfo->body->clearForcesAndTorques();
+  modelInfo->body->clearConstraintForces();
+  modelInfo->body->clearVelocities();
 
   for (const auto linkID : modelInfo->linkEntityIds)
   {
@@ -60,7 +63,7 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
     }
   }
 
-  if (modelInfo->body)
+  if (!_static)
   {
     modelInfo->body->wakeUp();
   }

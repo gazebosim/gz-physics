@@ -354,7 +354,9 @@ TEST_F(LinkGravityFeaturesTestTypes, LinkGravityEnabled)
     const Eigen::Vector3d initialPos =
         link->FrameDataRelativeToWorld().pose.translation();
 
-    world->Step(output, state, input);
+    const int steps = 10;
+    for (int i = 0; i < steps; ++i)
+      world->Step(output, state, input);
 
     // Link should not move (zero acceleration, velocity and same position)
     {
@@ -372,9 +374,9 @@ TEST_F(LinkGravityFeaturesTestTypes, LinkGravityEnabled)
     EXPECT_TRUE(link->GetGravityEnabled());
 
     // Step a few times to let velocity and position build up
-    const int steps = 10;
     // Assuming default step size of 0.001
     const double dt = 0.001;
+    const double gravity = -9.8;
 
     for (int i = 0; i < steps; ++i)
       world->Step(output, state, input);
@@ -384,15 +386,15 @@ TEST_F(LinkGravityFeaturesTestTypes, LinkGravityEnabled)
       const auto frameData = link->FrameDataRelativeToWorld();
 
       // Acceleration should be gravity
-      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d(0, 0, -9.8),
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d(0, 0, gravity),
                           frameData.linearAcceleration);
 
       // Velocity should be g * t
-      double expectedVel = -9.8 * steps * dt;
+      double expectedVel = gravity * steps * dt;
       EXPECT_NEAR(expectedVel, frameData.linearVelocity.z(), 1e-3);
 
       // Position should be z0 + 0.5 * g * t^2
-      double expectedPos = initialPos.z() + 0.5 * -9.8 * pow(steps * dt, 2);
+      double expectedPos = initialPos.z() + 0.5 * gravity * pow(steps * dt, 2);
       EXPECT_NEAR(expectedPos, frameData.pose.translation().z(), 1e-3);
     }
   }
