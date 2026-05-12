@@ -388,6 +388,56 @@ inline Eigen::Isometry3d GetWorldTransformOfLink(
   return convert(body.getBaseWorldTransform()) * model.baseInertiaToLinkFrame;
 }
 
+/////////////////////////////////////////////////
+inline void makeColliderStatic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  // if link is already static or fixed, we do not need to change its
+  // collision flags
+  if (_linkInfo->isStaticOrFixed)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  childProxy->m_collisionFilterGroup = btBroadphaseProxy::StaticFilter;
+  childProxy->m_collisionFilterMask =
+      btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+#if BT_BULLET_VERSION >= 307
+  childCollider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#endif
+}
+
+/////////////////////////////////////////////////
+inline void makeColliderDynamic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  // If broadphase and collision object flags do not agree, the
+  // link was originally non-static but made static by AttachJoint
+  if (!_linkInfo->isStaticOrFixed &&
+      ((childProxy->m_collisionFilterGroup &
+      btBroadphaseProxy::StaticFilter) > 0))
+  {
+    childProxy->m_collisionFilterGroup =
+        btBroadphaseProxy::DefaultFilter;
+    childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
+#if BT_BULLET_VERSION >= 307
+    childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+#endif
+  }
+}
+
 class Base : public Implements3d<FeatureList<Feature>>
 {
   // Note: Entity ID 0 is reserved for the "engine"
