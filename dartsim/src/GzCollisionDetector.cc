@@ -278,7 +278,7 @@ bool GzBulletCollisionDetector::BatchRaycast(
     btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
     btWorld->rayTest(btFrom, btTo, rayCallback);
 
-    GzRayResult result;
+    GzRayResult &result = _output.emplace_back();
     if (rayCallback.hasHit())
     {
       const btVector3 &hp = rayCallback.m_hitPointWorld;
@@ -296,7 +296,6 @@ bool GzBulletCollisionDetector::BatchRaycast(
       result.fraction = std::numeric_limits<double>::infinity();
       result.normal = Eigen::Vector3d::Constant(kNaN);
     }
-    _output.push_back(std::move(result));
   }
 
   return true;
