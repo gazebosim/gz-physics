@@ -102,6 +102,8 @@ namespace gz
         public: using ShapePtrType = EllipsoidShapePtr<PolicyT, FeaturesT>;
 
         /// \brief Rigidly attach a EllipsoidShape to this link.
+        /// \param[in] _name
+        ///   The name of the BoxShape.
         /// \param[in] _radii
         ///   The radius of the ellipsoid.
         /// \param[in] _pose

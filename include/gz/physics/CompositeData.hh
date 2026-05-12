@@ -99,7 +99,7 @@ namespace gz
       public: template <typename Data>
       Data &Get();
 
-      /// \brief This struct is the return type of the various Insert...<T>()
+      /// \brief This struct is the return type of the various `Insert...<T>()`
       /// functions. It returns a reference to the data entry for the Data type,
       /// and it indicates whether the insertion operation actually occurred.
       public: template <typename Data>
@@ -529,7 +529,7 @@ namespace gz
       /// \tparam Data
       ///   The type of data entry to query for
       ///
-      /// \param[in] _mode
+      /// \param[in] mode
       ///   Specify how this call should affect the query flag of the entry.
       ///   The default behavior is strongly recommended, unless you know what
       ///   you are doing. See QueryMode for more info.

@@ -34,10 +34,12 @@
 ///  - An Entity class that includes the API of both the plain Shape class and
 ///    the CustomShapeType, as defined by FeaturePolicy P and FeatureList F.
 ///
+/// \code
 /// template <F> class CustomShapeType3d
 /// template <F> class CustomShapeType2d
 /// template <F> class CustomShapeType3f
 /// template <F> class CustomShapeType2f
+/// \endcode
 ///  - Similar to CustomShapeType<P,F>, except P is replaced with the predefined
 ///    Feature Policies.
 ///

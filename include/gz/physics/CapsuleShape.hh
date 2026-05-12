@@ -79,7 +79,7 @@ namespace gz
         /// \brief Set the length of this CapsuleShape
         /// \param[in] _length
         ///   The desired length of this CapsuleShape
-        public: void SetLength(Scalar length);
+        public: void SetLength(Scalar _length);
       };
 
       public: template <typename PolicyT>
@@ -113,6 +113,8 @@ namespace gz
         public: using ShapePtrType = CapsuleShapePtr<PolicyT, FeaturesT>;
 
         /// \brief Rigidly attach a CapsuleShape to this link.
+        /// \param[in] _name
+        ///   The name of the BoxShape.
         /// \param[in] _radius
         ///   The radius of the capsule.
         /// \param[in] _length
