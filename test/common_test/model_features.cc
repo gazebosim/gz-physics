@@ -211,6 +211,15 @@ TYPED_TEST(ModelStaticTest, ModelStaticStatePreventsMotion)
 {
   for (const std::string &name : this->pluginNames)
   {
+    if (this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+#ifdef BT_BULLET_VERSION_LE_307
+      gzwarn << "Skipping test for older version of bullet-featherstone "
+             << "as setting dynamic type is not supported" << std::endl;
+       continue;
+#endif
+    }
+
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
@@ -464,6 +473,15 @@ TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
 {
   for (const std::string &name : this->pluginNames)
   {
+    if (this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+#ifdef BT_BULLET_VERSION_LE_307
+      gzwarn << "Skipping test for older version of bullet-featherstone "
+             << "as setting dynamic type is not supported" << std::endl;
+       continue;
+#endif
+    }
+
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
@@ -561,6 +579,15 @@ TYPED_TEST(ModelGravityStaticTest, GravityPreservedAcrossStaticToggle)
 {
   for (const std::string &name : this->pluginNames)
   {
+    if (this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+#ifdef BT_BULLET_VERSION_LE_307
+      gzwarn << "Skipping test for older version of bullet-featherstone "
+             << "as setting dynamic type is not supported" << std::endl;
+       continue;
+#endif
+    }
+
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
