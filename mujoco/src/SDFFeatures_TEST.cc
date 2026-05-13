@@ -228,6 +228,43 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
     EXPECT_DOUBLE_EQ(1.0, universalJoint2->axis[1]);
     EXPECT_DOUBLE_EQ(0.0, universalJoint2->axis[2]);
   }
+
+  {
+    auto screwJointTestLink = mjs_findChild(
+        worldBody, Base::JoinNames("screw_joint_test", "link0").c_str());
+    EXPECT_EQ(2, getNumNodesInTree(screwJointTestLink));
+
+    auto screwJoint1 = mjs_asJoint(
+        mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
+                        Base::JoinNames("screw_joint_test", "j0").c_str()));
+    ASSERT_NE(nullptr, screwJoint1);
+    EXPECT_EQ(mjtJoint::mjJNT_HINGE, screwJoint1->type);
+
+    auto screwJoint2 = mjs_asJoint(
+        mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
+                        Base::JoinNames("screw_joint_test", "j0_axis2").c_str()));
+    ASSERT_NE(nullptr, screwJoint2);
+    EXPECT_EQ(mjtJoint::mjJNT_SLIDE, screwJoint2->type);
+
+    // Assert screw joint equality constraint inside compiled mjModel m
+    bool foundScrewEquality = false;
+    for (int i = 0; i < m->neq; ++i)
+    {
+      if (m->eq_type[i] == mjEQ_JOINT)
+      {
+        int j0Id = mj_name2id(m, mjOBJ_JOINT, Base::JoinNames("screw_joint_test", "j0").c_str());
+        int j0Axis2Id = mj_name2id(m, mjOBJ_JOINT, Base::JoinNames("screw_joint_test", "j0_axis2").c_str());
+        if (m->eq_obj1id[i] == j0Axis2Id && m->eq_obj2id[i] == j0Id)
+        {
+          foundScrewEquality = true;
+          // Assert gear ratio coefficient: data[1] = pitch = 2.0 / 2pi = 1.0 / pi
+          EXPECT_DOUBLE_EQ(2.0 / (2.0 * mjPI), m->eq_data[i * mjNEQDATA + 1]);
+          break;
+        }
+      }
+    }
+    EXPECT_TRUE(foundScrewEquality);
+  }
 }
 
 /////////////////////////////////////////////////
