@@ -41,6 +41,20 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
   bn->addExtTorque(_torque, false);
 }
 
+/////////////////////////////////////////////////
+void LinkFeatures::SetLinkGravityEnabled(const Identity &_id, bool _enabled)
+{
+  auto linkInfo = this->ReferenceInterface<LinkInfo>(_id);
+  this->SetLinkGravityMode(linkInfo, _enabled);
+}
+
+/////////////////////////////////////////////////
+bool LinkFeatures::GetLinkGravityEnabled(const Identity &_id) const
+{
+  auto linkInfo = this->ReferenceInterface<LinkInfo>(_id);
+  return this->GetLinkGravityMode(linkInfo);
+}
+
 }
 }
 }

@@ -36,4 +36,3 @@ jobs:
           gzdev-project-name: rotary
           cppcheck-enabled: true
           cpplint-enabled: true
-          cmake-args: '-DSKIP_mujoco=ON'

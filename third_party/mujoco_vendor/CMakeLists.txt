@@ -24,6 +24,14 @@ if(UNIX AND NOT APPLE)
     set(MUJOCO_LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/mujoco.map")
 endif()
 
+set(MUJOCO_EXTRA_CMAKE_ARGS "")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  list(APPEND MUJOCO_EXTRA_CMAKE_ARGS
+    -DCMAKE_C_FLAGS=-Wno-error=discarded-qualifiers
+    -DCMAKE_CXX_FLAGS=-Wno-error=discarded-qualifiers
+  )
+endif()
+
 ExternalProject_Add(
   mujoco_ext
   GIT_REPOSITORY https://github.com/google-deepmind/mujoco
@@ -47,6 +55,7 @@ ExternalProject_Add(
     -DMUJOCO_BUILD_SIMULATE=OFF
     -DMUJOCO_TEST_PYTHON_UTIL=OFF
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    ${MUJOCO_EXTRA_CMAKE_ARGS}
 )
 
 # Create the IMPORTED target for gz-physics to link against

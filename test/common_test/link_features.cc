@@ -34,6 +34,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/Gravity.hh>
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/Link.hh>
 #include <gz/physics/World.hh>
@@ -290,6 +291,112 @@ TYPED_TEST(LinkFeaturesTest, JointSetCommand)
       EXPECT_PRED_FORMAT2(vectorPredicate,
                           frameData.pose.linear() * offset.cross(cmdLocalForce),
                           moi * frameData.angularAcceleration);
+    }
+  }
+}
+
+using LinkGravityFeaturesList = gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::Gravity,
+    gz::physics::GravityEnabled,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfLink,
+    gz::physics::GetEntities
+>;
+
+using LinkGravityFeaturesTestTypes =
+  LinkFeaturesTest<LinkGravityFeaturesList>;
+
+TEST_F(LinkGravityFeaturesTestTypes, LinkGravityEnabled)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        LinkGravityFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+    // Make sure the world gravity is enabled
+    world->SetGravity(Eigen::Vector3d(0, 0, -9.8));
+
+    // Add a sphere
+    sdf::Model modelSDF;
+    modelSDF.SetName("sphere");
+    modelSDF.SetRawPose(gz::math::Pose3d(0, 0, 2, 0, 0, 0));
+    auto model = world->ConstructModel(modelSDF);
+
+    sdf::Link linkSDF;
+    linkSDF.SetName("sphere_link");
+    auto link = model->ConstructLink(linkSDF);
+
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+
+    AssertVectorApprox vectorPredicate(1e-4);
+
+    // By default, link gravity should be enabled
+    EXPECT_TRUE(link->GetGravityEnabled());
+
+    // Disable gravity for link
+    link->SetGravityEnabled(false);
+    EXPECT_FALSE(link->GetGravityEnabled());
+
+    const Eigen::Vector3d initialPos =
+        link->FrameDataRelativeToWorld().pose.translation();
+
+    const int steps = 10;
+    for (int i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    // Link should not move (zero acceleration, velocity and same position)
+    {
+      const auto frameData = link->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                          frameData.linearAcceleration);
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d::Zero(),
+                          frameData.linearVelocity);
+      EXPECT_PRED_FORMAT2(vectorPredicate, initialPos,
+                          frameData.pose.translation());
+    }
+
+    // Enable gravity
+    link->SetGravityEnabled(true);
+    EXPECT_TRUE(link->GetGravityEnabled());
+
+    // Step a few times to let velocity and position build up
+    // Assuming default step size of 0.001
+    const double dt = 0.001;
+    const double gravity = -9.8;
+
+    for (int i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    // Link should accelerate downwards
+    {
+      const auto frameData = link->FrameDataRelativeToWorld();
+
+      // Acceleration should be gravity
+      EXPECT_PRED_FORMAT2(vectorPredicate, Eigen::Vector3d(0, 0, gravity),
+                          frameData.linearAcceleration);
+
+      // Velocity should be g * t
+      double expectedVel = gravity * steps * dt;
+      EXPECT_NEAR(expectedVel, frameData.linearVelocity.z(), 1e-3);
+
+      // Position should be z0 + 0.5 * g * t^2
+      double expectedPos = initialPos.z() + 0.5 * gravity * pow(steps * dt, 2);
+      EXPECT_NEAR(expectedPos, frameData.pose.translation().z(), 1e-3);
     }
   }
 }
