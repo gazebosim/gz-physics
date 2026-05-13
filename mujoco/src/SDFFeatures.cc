@@ -294,15 +294,16 @@ struct ModelKinematicStructure
       }
       else if (sdfJoint->Type() == ::sdf::JointType::SCREW)
       {
-        // Screw joints in MuJoCo are modeled by coupling a hinge joint (rotation)
-        // and a slide joint (translation) along the same axis on the child body using 
-        // a joint equality constraint (mjEQ_JOINT).
-        // We store the hinge joint (`joint`) as the primary joint in JointInfo.
-        // This matches DART's choice of using the rotational DOF as the primary,
-        // ensuring both physics plugins expose consistent angular units (radians and rad/s)
-        // for screw joints across the gz-physics API.
-        // Like the universal joint, `joint` and `joint2` are compiled contiguously
-        // on the same child body.
+        // Screw joints in MuJoCo are modeled by coupling a hinge joint
+        // (rotation) and a slide joint (translation) along the same axis on
+        // the child body using a joint equality constraint (mjEQ_JOINT).
+        // We store the hinge joint (`joint`) as the primary joint in
+        // JointInfo. This matches DART's choice of using the rotational DOF
+        // as the primary, ensuring both physics plugins expose consistent
+        // angular units (radians and rad/s) for screw joints across the
+        // gz-physics API.
+        // Like the universal joint, `joint` and `joint2` are compiled
+        // contiguously on the same child body.
         joint = mjs_addJoint(child, nullptr);
         joint->type = mjJNT_HINGE;
         const auto *sdfAxis1 = sdfJoint->Axis(0);
@@ -322,11 +323,13 @@ struct ModelKinematicStructure
       }
       else if (sdfJoint->Type() == ::sdf::JointType::UNIVERSAL)
       {
-        // Universal joints in MuJoCo are modeled as two hinge joints in series on the child body.
-        // We only need to keep a pointer to the first hinge joint (`joint`) in JointInfo. Since 
-        // MuJoCo compiles joints on the same body contiguously in memory, all getters/setters
-        // can safely access the second joint (`joint2`)'s state data using `nq_index + 1` and
-        // `nv_index + 1` without needing to store it separately in JointInfo.
+        // Universal joints in MuJoCo are modeled as two hinge joints in
+        // series on the child body. We only need to keep a pointer to the
+        // first hinge joint (`joint`) in JointInfo. Since MuJoCo compiles
+        // joints on the same body contiguously in memory, all getters/setters
+        // can safely access the second joint (`joint2`)'s state data using
+        // `nq_index + 1` and `nv_index + 1` without needing to store it
+        // separately in JointInfo.
         joint = mjs_addJoint(child, nullptr);
         joint->type = mjJNT_HINGE;
         const auto *sdfAxis1 = sdfJoint->Axis(0);
@@ -371,9 +374,10 @@ struct ModelKinematicStructure
 
         if (joint2)
         {
-          // We uniquely name the second axis using a flat `_axis2` suffix. This flat name 
-          // avoids indicating any Kinematic/SDF nesting (`::axis2`) while still satisfying
-          // MuJoCo's requirement that joints must be uniquely named for actuators to target them.
+          // We uniquely name the second axis using a flat `_axis2` suffix.
+          // This flat name avoids indicating any Kinematic/SDF nesting
+          // (`::axis2`) while still satisfying MuJoCo's requirement that
+          // joints must be uniquely named for actuators to target them.
           const std::string mjJointName2 = mjJointName + "_axis2";
           mjs_setName(joint2->element, mjJointName2.c_str());
           mjsActuator *actuator2 = mjs_addActuator(_spec, nullptr);
@@ -382,8 +386,8 @@ struct ModelKinematicStructure
 
           copyPos(jointPose.Pos(), joint2->pos);
 
-          // If this is a screw joint, couple the slide (joint) and hinge (joint2) axes 
-          // using a joint equality constraint (mjEQ_JOINT) with the specified thread pitch.
+          // If this is a screw joint, couple the slide and hinge axes using
+          // a joint equality constraint (mjEQ_JOINT) with the specified pitch.
           if (sdfJoint->Type() == ::sdf::JointType::SCREW)
           {
             mjsEquality *eq = mjs_addEquality(_spec, nullptr);
@@ -394,8 +398,9 @@ struct ModelKinematicStructure
 
             // dif = pos[1] - ref[1] = hinge_pos - hinge_ref
             // cpos = pos[0] - ref[0] - data[0] - data[1]*dif = 0
-            // enforces: slide_pos - slide_ref = data[1] * (hinge_pos - hinge_ref)
-            // where data[1] = pitch (meters / radian) = ScrewThreadPitch / 2pi
+            // enforces: slide_pos - slide_ref =
+            // data[1] * (hinge_pos - hinge_ref)
+            // where data[1] = pitch (meters/rad) = ScrewThreadPitch/2pi
             eq->data[0] = 0.0;
             eq->data[1] = sdfJoint->ScrewThreadPitch() / (2.0 * GZ_PI);
             eq->data[2] = 0.0;

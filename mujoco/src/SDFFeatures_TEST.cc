@@ -210,7 +210,8 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
         mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
                         Base::JoinNames("universal_joint_test", "j0").c_str()));
     ASSERT_NE(nullptr, universalJoint1);
-    verify(universalJoint1, 0.2, 0.0, 0.0, 0.0, -std::numeric_limits<double>::infinity(),
+    verify(universalJoint1, 0.2, 0.0, 0.0, 0.0,
+           -std::numeric_limits<double>::infinity(),
            std::numeric_limits<double>::infinity(),
            std::numeric_limits<double>::infinity());
     EXPECT_DOUBLE_EQ(1.0, universalJoint1->axis[0]);
@@ -218,10 +219,12 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
     EXPECT_DOUBLE_EQ(0.0, universalJoint1->axis[2]);
 
     auto universalJoint2 = mjs_asJoint(
-        mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
-                        Base::JoinNames("universal_joint_test", "j0_axis2").c_str()));
+        mjs_findElement(
+            spec, mjtObj::mjOBJ_JOINT,
+            Base::JoinNames("universal_joint_test", "j0_axis2").c_str()));
     ASSERT_NE(nullptr, universalJoint2);
-    verify(universalJoint2, 0.3, 0.0, 0.0, 0.0, -std::numeric_limits<double>::infinity(),
+    verify(universalJoint2, 0.3, 0.0, 0.0, 0.0,
+           -std::numeric_limits<double>::infinity(),
            std::numeric_limits<double>::infinity(),
            std::numeric_limits<double>::infinity());
     EXPECT_DOUBLE_EQ(0.0, universalJoint2->axis[0]);
@@ -241,8 +244,9 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
     EXPECT_EQ(mjtJoint::mjJNT_HINGE, screwJoint1->type);
 
     auto screwJoint2 = mjs_asJoint(
-        mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
-                        Base::JoinNames("screw_joint_test", "j0_axis2").c_str()));
+        mjs_findElement(
+            spec, mjtObj::mjOBJ_JOINT,
+            Base::JoinNames("screw_joint_test", "j0_axis2").c_str()));
     ASSERT_NE(nullptr, screwJoint2);
     EXPECT_EQ(mjtJoint::mjJNT_SLIDE, screwJoint2->type);
 
@@ -252,12 +256,17 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
     {
       if (m->eq_type[i] == mjEQ_JOINT)
       {
-        int j0Id = mj_name2id(m, mjOBJ_JOINT, Base::JoinNames("screw_joint_test", "j0").c_str());
-        int j0Axis2Id = mj_name2id(m, mjOBJ_JOINT, Base::JoinNames("screw_joint_test", "j0_axis2").c_str());
+        int j0Id = mj_name2id(
+            m, mjOBJ_JOINT,
+            Base::JoinNames("screw_joint_test", "j0").c_str());
+        int j0Axis2Id = mj_name2id(
+            m, mjOBJ_JOINT,
+            Base::JoinNames("screw_joint_test", "j0_axis2").c_str());
         if (m->eq_obj1id[i] == j0Axis2Id && m->eq_obj2id[i] == j0Id)
         {
           foundScrewEquality = true;
-          // Assert gear ratio coefficient: data[1] = pitch = 2.0 / 2pi = 1.0 / pi
+          // Assert gear ratio coefficient:
+          // data[1] = pitch = 2.0 / 2pi = 1.0 / pi
           EXPECT_DOUBLE_EQ(2.0 / (2.0 * mjPI), m->eq_data[i * mjNEQDATA + 1]);
           break;
         }
