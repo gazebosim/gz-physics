@@ -93,6 +93,29 @@ WorldPtr LoadWorldWhole(const std::string &_world)
 }
 
 /////////////////////////////////////////////////
+WorldPtr LoadWorldWholeString(const std::string &_worldSdf)
+{
+  auto engine = LoadEngine();
+  EXPECT_NE(nullptr, engine);
+
+  sdf::Root root;
+  const sdf::Errors &errors = root.LoadSdfString(_worldSdf);
+  EXPECT_EQ(0u, errors.size());
+  for (const auto & error : errors) {
+    std::cout << error << std::endl;
+  }
+
+  EXPECT_EQ(1u, root.WorldCount());
+  const sdf::World *sdfWorld = root.WorldByIndex(0);
+  EXPECT_NE(nullptr, sdfWorld);
+
+  auto world = engine->ConstructWorld(*sdfWorld);
+  EXPECT_NE(nullptr, world);
+
+  return world;
+}
+
+/////////////////////////////////////////////////
 class SDFFeatures_TEST : public ::testing::TestWithParam<LoaderType>
 {
   public: WorldPtr LoadWorld(const std::string &_world)
@@ -110,6 +133,20 @@ class SDFFeatures_TEST : public ::testing::TestWithParam<LoaderType>
         return LoadWorldWhole(_world);
     }
   }
+
+  public: WorldPtr LoadWorldString(const std::string &_worldSdf)
+  {
+    switch(this->GetParam())
+    {
+      case LoaderType::Whole:
+        return LoadWorldWholeString(_worldSdf);
+      default:
+        std::cout << "Unknown LoaderType "
+                  << std::underlying_type_t<LoaderType>(this->GetParam())
+                  << " Using LoadWorldWholeString" << std::endl;
+        return LoadWorldWholeString(_worldSdf);
+    }
+  }
 };
 /////////////////////////////////////////////////
 // Test that the mujoco plugin loaded all the relevant information correctly.
@@ -122,7 +159,7 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
 
   auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
       world->FullIdentity().ref.get());
-  EXPECT_EQ(10u, worldInfo->models.size());
+  EXPECT_EQ(9u, worldInfo->models.size());
   auto *m = worldInfo->mjModelObj;
   auto *spec = worldInfo->mjSpecObj;
   ASSERT_NE(nullptr, m);
@@ -202,37 +239,6 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
   }
 
   {
-    auto universalJointTestLink = mjs_findChild(
-        worldBody, Base::JoinNames("universal_joint_test", "link0").c_str());
-    EXPECT_EQ(2, getNumNodesInTree(universalJointTestLink));
-
-    auto universalJoint1 = mjs_asJoint(
-        mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
-                        Base::JoinNames("universal_joint_test", "j0").c_str()));
-    ASSERT_NE(nullptr, universalJoint1);
-    verify(universalJoint1, 0.2, 0.0, 0.0, 0.0,
-           -std::numeric_limits<double>::infinity(),
-           std::numeric_limits<double>::infinity(),
-           std::numeric_limits<double>::infinity());
-    EXPECT_DOUBLE_EQ(1.0, universalJoint1->axis[0]);
-    EXPECT_DOUBLE_EQ(0.0, universalJoint1->axis[1]);
-    EXPECT_DOUBLE_EQ(0.0, universalJoint1->axis[2]);
-
-    auto universalJoint2 = mjs_asJoint(
-        mjs_findElement(
-            spec, mjtObj::mjOBJ_JOINT,
-            Base::JoinNames("universal_joint_test", "j0_axis2").c_str()));
-    ASSERT_NE(nullptr, universalJoint2);
-    verify(universalJoint2, 0.3, 0.0, 0.0, 0.0,
-           -std::numeric_limits<double>::infinity(),
-           std::numeric_limits<double>::infinity(),
-           std::numeric_limits<double>::infinity());
-    EXPECT_DOUBLE_EQ(0.0, universalJoint2->axis[0]);
-    EXPECT_DOUBLE_EQ(1.0, universalJoint2->axis[1]);
-    EXPECT_DOUBLE_EQ(0.0, universalJoint2->axis[2]);
-  }
-
-  {
     auto screwJointTestLink = mjs_findChild(
         worldBody, Base::JoinNames("screw_joint_test", "link0").c_str());
     EXPECT_EQ(2, getNumNodesInTree(screwJointTestLink));
@@ -274,6 +280,100 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
     }
     EXPECT_TRUE(foundScrewEquality);
   }
+}
+
+/////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, UniversalJoint)
+{
+  common::Console::SetVerbosity(4);
+  using gz::physics::mujoco::Base;
+  std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="test_world">
+      <model name="universal_joint_test">
+        <link name="link0"/>
+        <link name="link1"/>
+        <joint name="j0" type="universal">
+          <parent>link0</parent>
+          <child>link1</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+            <dynamics>
+              <damping>0.2</damping>
+            </dynamics>
+          </axis>
+          <axis2>
+            <xyz>0 1 0</xyz>
+            <dynamics>
+              <damping>0.3</damping>
+            </dynamics>
+          </axis2>
+        </joint>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  EXPECT_EQ(1u, worldInfo->models.size());
+  auto *m = worldInfo->mjModelObj;
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, m);
+  auto *worldBody = worldInfo->body;
+  ASSERT_NE(nullptr, worldBody);
+
+  auto getNumNodesInTree = [&](const mjsBody *_root)
+  {
+    auto bodyId = mjs_getId(_root->element);
+    auto treeId = m->body_treeid[bodyId];
+    return m->tree_bodynum[treeId];
+  };
+
+  auto verify = [](const mjsJoint *joint, double damping, double friction,
+                   double springRest, double stiffness, double lower,
+                   double upper, double maxForce)
+  {
+    EXPECT_DOUBLE_EQ(damping, joint->damping);
+    EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
+    EXPECT_DOUBLE_EQ(springRest, joint->springref);
+    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
+    EXPECT_DOUBLE_EQ(lower, joint->range[0]);
+    EXPECT_DOUBLE_EQ(upper, joint->range[1]);
+    EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);
+    EXPECT_DOUBLE_EQ(maxForce, joint->actfrcrange[1]);
+  };
+
+  auto universalJointTestLink = mjs_findChild(
+      worldBody, Base::JoinNames("universal_joint_test", "link0").c_str());
+  EXPECT_EQ(2, getNumNodesInTree(universalJointTestLink));
+
+  auto universalJoint1 = mjs_asJoint(
+      mjs_findElement(spec, mjtObj::mjOBJ_JOINT,
+                      Base::JoinNames("universal_joint_test", "j0").c_str()));
+  ASSERT_NE(nullptr, universalJoint1);
+  verify(universalJoint1, 0.2, 0.0, 0.0, 0.0,
+         -std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity());
+  EXPECT_DOUBLE_EQ(1.0, universalJoint1->axis[0]);
+  EXPECT_DOUBLE_EQ(0.0, universalJoint1->axis[1]);
+  EXPECT_DOUBLE_EQ(0.0, universalJoint1->axis[2]);
+
+  auto universalJoint2 = mjs_asJoint(
+      mjs_findElement(
+          spec, mjtObj::mjOBJ_JOINT,
+          Base::JoinNames("universal_joint_test", "j0_axis2").c_str()));
+  ASSERT_NE(nullptr, universalJoint2);
+  verify(universalJoint2, 0.3, 0.0, 0.0, 0.0,
+         -std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity(),
+         std::numeric_limits<double>::infinity());
+  EXPECT_DOUBLE_EQ(0.0, universalJoint2->axis[0]);
+  EXPECT_DOUBLE_EQ(1.0, universalJoint2->axis[1]);
+  EXPECT_DOUBLE_EQ(0.0, universalJoint2->axis[2]);
 }
 
 /////////////////////////////////////////////////

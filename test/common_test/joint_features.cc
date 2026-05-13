@@ -2726,21 +2726,73 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if (this->PhysicsEngineName(name) != "dartsim" &&
-        this->PhysicsEngineName(name) != "mujoco")
-    {
-      GTEST_SKIP();
-    }
+    CHECK_SUPPORTED_ENGINE(name, "dartsim")
+    CHECK_SUPPORTED_ENGINE(name, "mujoco")
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-      gz::physics::RequestEngine3d<JointFeatureScrewList>::From(plugin);
+        gz::physics::RequestEngine3d<JointFeatureScrewList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
+    std::string worldStr = R"(
+    <sdf version="1.9">
+      <world name="screw_world">
+        <model name="screw_joint_test">
+          <link name="link0"/>
+          <link name="link1">
+            <inertial>
+              <mass>1.0</mass>
+              <inertia>
+                <ixx>0.01</ixx>
+                <iyy>0.01</iyy>
+                <izz>0.01</izz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="j0" type="screw">
+            <parent>link0</parent>
+            <child>link1</child>
+            <screw_thread_pitch>2</screw_thread_pitch>
+          </joint>
+          <joint name="world_joint" type="fixed">
+            <parent>world</parent>
+            <child>link0</child>
+          </joint>
+        </model>
+        <model name="screw_joint_with_damping_test">
+          <link name="link0"/>
+          <link name="link1">
+            <inertial>
+              <mass>1.0</mass>
+              <inertia>
+                <ixx>0.01</ixx>
+                <iyy>0.01</iyy>
+                <izz>0.01</izz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="j0" type="screw">
+            <parent>link0</parent>
+            <child>link1</child>
+            <screw_thread_pitch>2</screw_thread_pitch>
+            <axis>
+              <dynamics>
+                <damping>50.0</damping>
+              </dynamics>
+            </axis>
+          </joint>
+          <joint name="world_joint" type="fixed">
+            <parent>world</parent>
+            <child>link0</child>
+          </joint>
+        </model>
+      </world>
+    </sdf>)";
+
     sdf::Root root;
-    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
+    const sdf::Errors errors = root.LoadSdfString(worldStr);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -2760,7 +2812,7 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
     // Ensure joint starts at 0
     jointBaseline->SetPosition(0, 0.0);
     jointBaseline->SetVelocity(0, 0.0);
-    
+
     // Sync initial frame poses
     world->Step(output, state, input);
     EXPECT_NEAR(0.0, jointBaseline->GetPosition(0), 1e-3);
@@ -2784,22 +2836,29 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
     auto parentFrameBaseline = parentLinkBaseline->FrameDataRelativeToWorld();
     auto childFrameBaseline = childLinkBaseline->FrameDataRelativeToWorld();
 
-    gz::math::Pose3d parentPoseBaseline = gz::math::eigen3::convert(parentFrameBaseline.pose);
-    gz::math::Pose3d childPoseBaseline = gz::math::eigen3::convert(childFrameBaseline.pose);
+    gz::math::Pose3d parentPoseBaseline =
+        gz::math::eigen3::convert(parentFrameBaseline.pose);
+    gz::math::Pose3d childPoseBaseline =
+        gz::math::eigen3::convert(childFrameBaseline.pose);
 
     // Compute child pose relative to parent
-    gz::math::Pose3d relativePoseBaseline = parentPoseBaseline.Inverse() * childPoseBaseline;
+    gz::math::Pose3d relativePoseBaseline =
+        parentPoseBaseline.Inverse() * childPoseBaseline;
 
     const double positionTolerance = 5e-3;
-    const double pitch = 2.0 / (2.0 * GZ_PI); // pitch = ScrewThreadPitch / 2pi
+    const double pitch = 2.0 / (2.0 * GZ_PI);  // pitch = ScrewThreadPitch / 2pi
 
     // Screw joint axis is Z-axis in SDFormat by default. Both DART and MuJoCo's
     // primary coordinate represents rotation (radians) for screw joints.
-    // Verify that the primary joint position matches the relative angular Yaw rotation (radians)
-    EXPECT_NEAR(linPosBaseline, relativePoseBaseline.Rot().Yaw(), positionTolerance);
+    // Verify that the primary joint position matches the relative angular Yaw
+    // rotation (radians)
+    EXPECT_NEAR(linPosBaseline, relativePoseBaseline.Rot().Yaw(),
+                positionTolerance);
 
-    // Verify that the relative Z translation matches the scaled primary coordinate (pitch * rotation)
-    EXPECT_NEAR(relativePoseBaseline.Pos().Z(), pitch * linPosBaseline, positionTolerance);
+    // Verify that the relative Z translation matches the scaled primary
+    // coordinate (pitch * rotation)
+    EXPECT_NEAR(relativePoseBaseline.Pos().Z(), pitch * linPosBaseline,
+                positionTolerance);
 
     // --------------------------------------------------
     // 2. Damped Fall (Verify static SDF damping decay)
@@ -2820,13 +2879,16 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
     double linPosDamped = jointDamped->GetPosition(0);
     double linVelDamped = jointDamped->GetVelocity(0);
 
-    // Assert that the static SDF damping has opposed linear/angular velocity heavily,
-    // leading to much less linear travel and velocity compared to the baseline
-    EXPECT_LT(std::abs(linPosDamped), std::abs(linPosBaseline) * 0.3); // Decayed position (3.3x smaller)
-    EXPECT_LT(std::abs(linVelDamped), std::abs(linVelBaseline) * 0.2); // Decayed velocity (5x smaller)
+    // Assert that the static SDF damping has opposed linear/angular velocity
+    // heavily, leading to much less linear travel and velocity compared to the
+    // baseline
+    EXPECT_LT(
+        std::abs(linPosDamped),
+        std::abs(linPosBaseline) * 0.3);  // Decayed position (3.3x smaller)
+    EXPECT_LT(std::abs(linVelDamped),
+              std::abs(linVelBaseline) * 0.2);  // Decayed velocity (5x smaller)
   }
 }
-
 
 int main(int argc, char *argv[])
 {

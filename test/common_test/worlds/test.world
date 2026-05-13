@@ -351,51 +351,11 @@
     </model>
     <model name="screw_joint_test">
       <link name="link0"/>
-      <link name="link1">
-        <inertial>
-          <mass>1.0</mass>
-          <inertia>
-            <ixx>0.01</ixx>
-            <iyy>0.01</iyy>
-            <izz>0.01</izz>
-          </inertia>
-        </inertial>
-      </link>
+      <link name="link1"/>
       <joint name="j0" type="screw">
         <parent>link0</parent>
         <child>link1</child>
         <screw_thread_pitch>2</screw_thread_pitch>
-      </joint>
-      <joint name="world_joint" type="fixed">
-        <parent>world</parent>
-        <child>link0</child>
-      </joint>
-    </model>
-    <model name="screw_joint_with_damping_test">
-      <link name="link0"/>
-      <link name="link1">
-        <inertial>
-          <mass>1.0</mass>
-          <inertia>
-            <ixx>0.01</ixx>
-            <iyy>0.01</iyy>
-            <izz>0.01</izz>
-          </inertia>
-        </inertial>
-      </link>
-      <joint name="j0" type="screw">
-        <parent>link0</parent>
-        <child>link1</child>
-        <screw_thread_pitch>2</screw_thread_pitch>
-        <axis>
-          <dynamics>
-            <damping>50.0</damping>
-          </dynamics>
-        </axis>
-      </joint>
-      <joint name="world_joint" type="fixed">
-        <parent>world</parent>
-        <child>link0</child>
       </joint>
     </model>
     <model name="ball_joint_test">
@@ -409,26 +369,6 @@
             <damping>0.1</damping>
           </dynamics>
         </axis>
-      </joint>
-    </model>
-    <model name="universal_joint_test">
-      <link name="link0"/>
-      <link name="link1"/>
-      <joint name="j0" type="universal">
-        <parent>link0</parent>
-        <child>link1</child>
-        <axis>
-          <xyz>1 0 0</xyz>
-          <dynamics>
-            <damping>0.2</damping>
-          </dynamics>
-        </axis>
-        <axis2>
-          <xyz>0 1 0</xyz>
-          <dynamics>
-            <damping>0.3</damping>
-          </dynamics>
-        </axis2>
       </joint>
     </model>
     <!-- Remove joint types as they get supported -->
