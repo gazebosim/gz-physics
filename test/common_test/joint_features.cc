@@ -2726,8 +2726,7 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
 {
   for (const std::string &name : this->pluginNames)
   {
-    CHECK_SUPPORTED_ENGINE(name, "dartsim")
-    CHECK_SUPPORTED_ENGINE(name, "mujoco")
+    CHECK_SUPPORTED_ENGINE(name, "dartsim", "mujoco")
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
@@ -2887,6 +2886,122 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
         std::abs(linPosBaseline) * 0.3);  // Decayed position (3.3x smaller)
     EXPECT_LT(std::abs(linVelDamped),
               std::abs(linVelBaseline) * 0.2);  // Decayed velocity (5x smaller)
+  }
+}
+
+TYPED_TEST(JointFeaturesScrewTest, ScrewJointLimits)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "dartsim", "mujoco")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointFeatureScrewList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    std::string worldStr = R"(
+    <sdf version="1.9">
+      <world name="screw_limits_world">
+        <gravity>0 0 0</gravity>
+        <model name="screw_model">
+          <link name="link0"/>
+          <link name="link1">
+            <inertial>
+              <mass>1.0</mass>
+              <inertia>
+                <ixx>0.01</ixx>
+                <iyy>0.01</iyy>
+                <izz>0.01</izz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="j0" type="screw">
+            <parent>link0</parent>
+            <child>link1</child>
+            <screw_thread_pitch>0.2</screw_thread_pitch>
+            <axis>
+              <xyz>0 0 1</xyz>
+              <limit>
+                <lower>-10.0</lower>
+                <upper>10.0</upper>
+              </limit>
+            </axis>
+          </joint>
+          <joint name="world_joint" type="fixed">
+            <parent>world</parent>
+            <child>link0</child>
+          </joint>
+        </model>
+      </world>
+    </sdf>)";
+
+    sdf::Root root;
+    const sdf::Errors errors = root.LoadSdfString(worldStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("screw_model");
+    ASSERT_NE(nullptr, model);
+    auto joint = model->GetJoint("j0");
+    auto parentLink = model->GetLink("link0");
+    auto childLink = model->GetLink("link1");
+    ASSERT_NE(nullptr, parentLink);
+    ASSERT_NE(nullptr, childLink);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Step once to initialize
+    world->Step(output, state, input);
+
+    auto getRelativeZ = [&]()
+    {
+      auto parentFrame = parentLink->FrameDataRelativeToWorld();
+      auto childFrame = childLink->FrameDataRelativeToWorld();
+      gz::math::Pose3d parentPose =
+          gz::math::eigen3::convert(parentFrame.pose);
+      gz::math::Pose3d childPose =
+          gz::math::eigen3::convert(childFrame.pose);
+      gz::math::Pose3d relativePose = parentPose.Inverse() * childPose;
+      return relativePose.Pos().Z();
+    };
+
+    const double limit = 10.0;
+
+    // Drive joint with a steady velocity until it reaches the upper limit
+    for (int i = 0; i < 1500; ++i)
+    {
+      if (joint->GetPosition(0) < limit * 0.99)
+        joint->SetForce(0, 2.0);
+      else
+        joint->SetForce(0, 0.0);
+      world->Step(output, state, input);
+    }
+
+    const double posUpper = getRelativeZ();
+    gzdbg << "[" << name << "] link relative Z posUpper after 1500 steps: " << posUpper << std::endl;
+
+    // Drive joint against the lower limit
+    for (int i = 0; i < 1500; ++i)
+    {
+      if (joint->GetPosition(0) > -limit * 0.99)
+        joint->SetForce(0, -2.0);
+      else
+        joint->SetForce(0, 0.0);
+      world->Step(output, state, input);
+    }
+
+    const double posLower = getRelativeZ();
+    gzdbg << "[" << name << "] link relative Z posLower after 1500 steps: " << posLower << std::endl;
+    const double pitch = 0.2 / (2.0 * GZ_PI);
+    EXPECT_NEAR(pitch * limit, posUpper, 5e-2);
+    EXPECT_NEAR(pitch * -limit, posLower, 5e-2);
   }
 }
 

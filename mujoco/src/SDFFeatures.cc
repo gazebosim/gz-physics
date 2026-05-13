@@ -311,6 +311,13 @@ struct ModelKinematicStructure
         {
           convertJointAxis(sdfAxis1, joint->axis);
           copyStandardJointAxisProperties(joint, sdfAxis1);
+          // Disable independent position limits on the primary rotational
+          // hinge joint. In MuJoCo's soft constraint solver, enforcing limits
+          // on the hinge joint when coupled with a small thread pitch causes
+          // premature solver clamping and massive numerical damping. By mapping
+          // position limits purely onto the translational slide joint, we
+          // ensure exact kinematic limit enforcement without solver resistance.
+          joint->limited = false;
         }
 
         joint2 = mjs_addJoint(child, nullptr);
@@ -318,7 +325,19 @@ struct ModelKinematicStructure
         if (sdfAxis1)
         {
           convertJointAxis(sdfAxis1, joint2->axis);
-          copyStandardJointAxisProperties(joint2, sdfAxis1);
+          // We only copy position limits and range to the secondary slide
+          // joint. All passive dynamics (damping, frictionloss, stiffness) and
+          // actuator effort limits are enforced purely on the primary
+          // rotational hinge joint to avoid double-counting and physical unit
+          // mismatches.
+          joint2->limited = static_cast<int>(!std::isinf(sdfAxis1->Lower()) &&
+                                             !std::isinf(sdfAxis1->Upper()));
+          if (joint2->limited)
+          {
+            const double pitch = sdfJoint->ScrewThreadPitch() / (2.0 * GZ_PI);
+            joint2->range[0] = sdfAxis1->Lower() * pitch;
+            joint2->range[1] = sdfAxis1->Upper() * pitch;
+          }
         }
       }
       else if (sdfJoint->Type() == ::sdf::JointType::UNIVERSAL)
