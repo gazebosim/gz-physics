@@ -27,8 +27,6 @@
 
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
-#include <gz/common/Console.hh>
-
 #include "GzCollisionDetector.hh"
 
 using namespace dart;
@@ -188,12 +186,12 @@ bool GzOdeCollisionDetector::collide(
   return ret;
 }
 
-void NearCallback(void *_data, dGeomID _o1, dGeomID _o2)
+void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
 {
   // Check space
   if (dGeomIsSpace(_o1) || dGeomIsSpace(_o2))
   {
-    dSpaceCollide2(_o1, _o2, _data, &NearCallback);
+    dSpaceCollide2(_o1, _o2, _data, &NearCallbackODE);
     return;
   }
 
@@ -225,10 +223,10 @@ void NearCallback(void *_data, dGeomID _o1, dGeomID _o2)
   auto setResult = [&](dart::collision::RayHit &rayHit)
   {
       auto geomData = dGeomGetData(other);
-      rayHit.mFraction = contact.depth;
       rayHit.mNormal = Eigen::Vector3d(contact.normal);
       rayHit.mPoint = Eigen::Vector3d(contact.pos);
-      rayHit.mCollisionObject = static_cast<dart::collision::CollisionObject*>(geomData);
+      rayHit.mCollisionObject =
+        static_cast<dart::collision::CollisionObject*>(geomData);
   };
 
   // param 3 makes sure that we only generate one collision per call
@@ -245,6 +243,39 @@ void NearCallback(void *_data, dGeomID _o1, dGeomID _o2)
   }
 }
 
+static void doSingleRaycastODE(const Eigen::Vector3d& origin,
+      const Eigen::Vector3d& target,
+      RaycastResult* result,
+      const dGeomID &rayId,
+      const dSpaceID &spaceId)
+{
+  const Eigen::Vector3d dirNonNormalized(target - origin);
+  const double length = dirNonNormalized.norm();
+  result->clear();
+  if(length < 1e-7)
+  {
+    return;
+  }
+
+  const Eigen::Vector3d dir(dirNonNormalized / length);
+
+  dGeomRaySet(rayId, origin.x(), origin.y(), origin.z(),
+              dir.x(), dir.y(), dir.z());
+  dGeomRaySetLength(rayId, length);
+
+  dSpaceCollide2(rayId,
+                  reinterpret_cast<dGeomID>(spaceId),
+                  result, &NearCallbackODE);
+
+  if(!result->mRayHits.empty())
+  {
+    // compute fraction, we need to do it here, as we need
+    // length and orgin
+    RayHit &rayHit(result->mRayHits.front());
+    rayHit.mFraction = (rayHit.mPoint - origin).norm() / length;
+  }
+}
+
 bool GzOdeCollisionDetector::raycast(
       CollisionGroup* group,
       const Eigen::Vector3d& from,
@@ -252,32 +283,25 @@ bool GzOdeCollisionDetector::raycast(
       const RaycastOption& option,
       RaycastResult* result)
 {
-  if(option.mEnableAllHits)
-  {
-      gzwarn << "raycast multihit support is not implemented for ODE" << std::endl;
-      return false;
-  }
-
-  auto odeGroup = static_cast<GzOdeCollisionGroup *>(group);
-
-  dGeomID rayId = dCreateRay(odeGroup->getOdeSpaceId(), 1.0);
-
-  const Eigen::Vector3d dirNonNormalized(to - from);
-  const double length = dirNonNormalized.norm();
-  if(length <= 1e-7)
+  if(!result)
   {
     return false;
   }
 
-  const Eigen::Vector3d dir(dirNonNormalized / length);
+  if(option.mEnableAllHits)
+  {
+      gzwarn << "raycast multihit support is not"
+             << " implemented for ODE" << std::endl;
+      return false;
+  }
 
-  dGeomRaySet(rayId, from.x(), from.y(), from.z(), dir.x(), dir.y(), dir.z());
-  dGeomRaySetLength(rayId, length);
+  auto odeGroup = static_cast<GzOdeCollisionGroup *>(group);
+  const dSpaceID spaceId = odeGroup->getOdeSpaceId();
 
+  const dGeomID rayId = dCreateRay(spaceId, 1.0);
   dGeomRaySetClosestHit(rayId, 1);
 
-  dSpaceCollide2(rayId, reinterpret_cast<dGeomID>(odeGroup->getOdeSpaceId()), result,
-         &NearCallback);
+  doSingleRaycastODE(from, to, result, rayId, spaceId);
 
   dGeomDestroy(rayId);
 
@@ -291,37 +315,30 @@ bool GzOdeCollisionDetector::BatchRaycast(
       std::vector<GzRayResult> &_results) const
 {
   auto odeGroup = static_cast<GzOdeCollisionGroup *>(_group);
+  const dSpaceID spaceId = odeGroup->getOdeSpaceId();
 
-  dGeomID rayId = dCreateRay(odeGroup->getOdeSpaceId(), 1.0);
+  const dGeomID rayId = dCreateRay(spaceId, 1.0);
   dGeomRaySetClosestHit(rayId, 1);
 
   _results.reserve(_rays.size());
   RaycastResult result;
   for(const GzRay &ray : _rays)
   {
-    const Eigen::Vector3d dirNonNormalized(ray.target - ray.origin);
-    const double length = dirNonNormalized.norm();
-    result.clear();
-    if(length > 1e-7)
-    {
-      const Eigen::Vector3d dir(dirNonNormalized / length);
-
-      dGeomRaySet(rayId, ray.origin.x(), ray.origin.y(), ray.origin.z(), dir.x(), dir.y(), dir.z());
-      dGeomRaySetLength(rayId, length);
-
-      dSpaceCollide2(rayId, reinterpret_cast<dGeomID>(odeGroup->getOdeSpaceId()), &result,
-            &NearCallback);
-    }
+    doSingleRaycastODE(ray.origin, ray.target, &result, rayId, spaceId);
 
     // near callback updated our ray hit result now (or not)
     if(result.hasHit())
     {
       RayHit &rayHit(result.mRayHits.front());
-      _results.emplace_back(GzRayResult{rayHit.mPoint, rayHit.mFraction , rayHit.mNormal});
+      _results.emplace_back(GzRayResult{rayHit.mPoint, rayHit.mFraction,
+                            rayHit.mNormal});
     }
     else
     {
-      _results.emplace_back(GzRayResult{Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN()), std::numeric_limits<double>::infinity() , Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())});
+      _results.emplace_back(GzRayResult{
+          Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN()),
+          std::numeric_limits<double>::infinity(),
+          Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())});
     }
   }
 
