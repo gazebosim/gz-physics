@@ -662,15 +662,6 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
     return this->models.at(_modelID);
   }
 
-<<<<<<< HEAD
-  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
-
-  public: EntityStorage<DartWorldPtr, std::string> worlds;
-  public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
-  public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
-  public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
-  public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
-=======
   /// \brief Helper function for setting gravity mode on a link
   public: static void SetLinkGravityMode(LinkInfo * _linkInfo, bool _enabled)
   {
@@ -705,12 +696,13 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
     return _linkInfo->link->getGravityMode();
   }
 
-  public: detail::EntityStorage<DartWorldPtr, std::string> worlds;
-  public: detail::EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
-  public: detail::EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
-  public: detail::EntityStorage<JointInfoPtr, const DartJoint*> joints;
-  public: detail::EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
->>>>>>> 0109a34 (Model: Enable/disable: gravity and static (#919))
+  GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
+
+  public: EntityStorage<DartWorldPtr, std::string> worlds;
+  public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
+  public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
+  public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
+  public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
   public: EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
 
