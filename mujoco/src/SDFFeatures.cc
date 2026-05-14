@@ -264,11 +264,9 @@ struct ModelKinematicStructure
       return nullptr;
     }
 
-    std::vector<float> floatVerts(3 * nverts);
-    std::transform(verts, verts + 3 * nverts, floatVerts.begin(),
+    muMesh->uservert->assign(3 * nverts, 0.0);
+    std::transform(verts, verts + 3 * nverts, muMesh->uservert->begin(),
         [](double val) {return static_cast<float>(val);});
-
-    mjs_setFloat(muMesh->uservert, floatVerts.data(), floatVerts.size());
 
     mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
 
