@@ -1,5 +1,16 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.3.0 (2026-05-13)
+
+1. Model: Enable/disable: gravity and static
+    * [Pull request #979](https://github.com/gazebosim/gz-physics/pull/979)
+
+1. Extract EntityStorage to a shared location so it can be used by other physics engines
+    * [Pull request #897](https://github.com/gazebosim/gz-physics/pull/897)
+
+1. Optimize build: Reduce compiler memory usage by introducing TypeList (Part 2)
+    * [Pull request #953](https://github.com/gazebosim/gz-physics/pull/953)
+
 ### Gazebo Physics 9.2.0 (2026-04-22)
 
 1. [bazel/infra] Minimize manual steps to publish to BCR
