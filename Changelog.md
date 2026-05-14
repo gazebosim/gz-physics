@@ -1,5 +1,60 @@
 ## Gazebo Physics 7.x
 
+### Gazebo Physics 7.7.0 (2026-05-15)
+
+1. **Baseline:** this includes all changes from 7.6.0 and earlier.
+
+1. Model: Enable/disable: gravity and static
+    * [Pull request #919](https://github.com/gazebosim/gz-physics/pull/919)
+
+1. Disable Whole Program Optimization on MSVC
+    * [Pull request #915](https://github.com/gazebosim/gz-physics/pull/915)
+
+1. bullet-featherstone: Fix ghost collisions from nested model removal and add test
+    * [Pull request #939](https://github.com/gazebosim/gz-physics/pull/939)
+
+1. bullet-featherstone: Use Bullet shape type enum instead of dynamic_cast in CastTo*Shape
+    * [Pull request #941](https://github.com/gazebosim/gz-physics/pull/941)
+
+1. Use portable shebang (#!/usr/bin/env bash) for bash scripts
+    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933)
+
+1. fix: fix MSVC C4275 warning
+    * [Pull request #932](https://github.com/gazebosim/gz-physics/pull/932)
+
+1. Optimize build: Modernize codebase with fold expressions and `std::void_t` (Part 1)
+    * [Pull request #916](https://github.com/gazebosim/gz-physics/pull/916)
+
+1. dartsim: Add support for category bitmask
+    * [Pull request #885](https://github.com/gazebosim/gz-physics/pull/885)
+
+1. bullet-featherstone: Add support for category bitmask
+    * [Pull request #884](https://github.com/gazebosim/gz-physics/pull/884)
+
+1. bullet-feathersone: Add support for collision filtering based on collide bitmasks
+    * [Pull request #804](https://github.com/gazebosim/gz-physics/pull/804)
+
+1. bullet-featherstone: Fix contact force and depth data
+    * [Pull request #890](https://github.com/gazebosim/gz-physics/pull/890)
+
+1. Fix Bullet Featherstone model removal with mimic gear constraints
+    * [Pull request #872](https://github.com/gazebosim/gz-physics/pull/872)
+
+1. Fix segfault in Bullet Featherstone plugin when loading ball joint
+    * [Pull request #868](https://github.com/gazebosim/gz-physics/pull/868)
+
+1. bullet-featherstone: Fix get contacts
+    * [Pull request #838](https://github.com/gazebosim/gz-physics/pull/838)
+
+1. bullet-featherstone: Support joint spring stiffness
+    * [Pull request #805](https://github.com/gazebosim/gz-physics/pull/805)
+
+1. Relax tolerances for failing tests on arm64
+    * [Pull request #806](https://github.com/gazebosim/gz-physics/pull/806)
+
+1. bullet-featherstone: Support ball joint damping
+    * [Pull request #797](https://github.com/gazebosim/gz-physics/pull/797)
+
 ### Gazebo Physics 7.6.0 (2025-10-23)
 
 1. Update 09_use_custom_engine.md build commands
