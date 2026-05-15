@@ -17,6 +17,22 @@ ExternalProject_Add(
   CMAKE_ARGS
     "-DBUILD_TESTING=OFF"
     "-DCMAKE_INSTALL_PREFIX=${FAKE_INSTALL_PREFIX}"
+    "-Dgz-cmake_DIR=${gz-cmake_DIR}"
+    "-Dgz-common_DIR=${gz-common_DIR}"
+    "-Dgz-common-geospatial_DIR=${gz-common-geospatial_DIR}"
+    "-Dgz-common-testing_DIR=${gz-common-testing_DIR}"
+    "-Dgz-common-graphics_DIR=${gz-common-graphics_DIR}"
+    "-Dgz-common-profiler_DIR=${gz-common-profiler_DIR}"
+    "-Dgz-math_DIR=${gz-math_DIR}"
+    "-Dgz-math-eigen3_DIR=${gz-math-eigen3_DIR}"
+    "-Dgz-plugin_DIR=${gz-plugin_DIR}"
+    "-Dgz-plugin-all_DIR=${gz-plugin-all_DIR}"
+    "-Dgz-plugin-loader_DIR=${gz-plugin-loader_DIR}"
+    "-Dgz-plugin-register_DIR=${gz-plugin-register_DIR}"
+    "-Dgz-utils_DIR=${gz-utils_DIR}"
+    "-Dgz-utils-log_DIR=${gz-utils-log_DIR}"
+    "-Dgz-utils-cli_DIR=${gz-utils-cli_DIR}"
+    "-Dsdformat_DIR=${sdformat_DIR}"
 )
 
 add_library(gz-physics-test INTERFACE)
