@@ -161,6 +161,8 @@ struct JointInfo
   std::weak_ptr<ModelInfo> modelInfo;
   WorldInfo* worldInfo{nullptr};
   std::optional<std::size_t> ballJointCacheIndex{std::nullopt};
+  // Compiled equality constraint indices in mjModel
+  std::vector<int> eqIndices;
 };
 
 

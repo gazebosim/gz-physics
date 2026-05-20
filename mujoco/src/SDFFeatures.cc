@@ -378,6 +378,7 @@ struct ModelKinematicStructure
       // it's associated. Note that this body is the child link of the joint
       // in SDF terms.
       auto jointPose = resolveSdfPose(sdfJoint->SemanticPose());
+      mjsEquality *eq = nullptr;
       // Note that no joints will be created when processing a fixed joint.
       if (joint)
       {
@@ -409,7 +410,7 @@ struct ModelKinematicStructure
           // a joint equality constraint (mjEQ_JOINT) with the specified pitch.
           if (sdfJoint->Type() == ::sdf::JointType::SCREW)
           {
-            mjsEquality *eq = mjs_addEquality(_spec, nullptr);
+            eq = mjs_addEquality(_spec, nullptr);
             eq->type = mjEQ_JOINT;
             eq->active = 1;
             mjs_setString(eq->name1, mjJointName2.c_str());

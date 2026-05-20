@@ -76,6 +76,16 @@ void resolveJointIndices(WorldInfo &_worldInfo)
         continue;
       }
       jointInfo->nv_index = qvelAddr;
+
+      // Resolve associated equality constraint indices
+      jointInfo->eqIndices.clear();
+      for (int i = 0; i < m->neq; ++i)
+      {
+        if (m->eq_type[i] == mjEQ_JOINT && m->eq_obj2id[i] == jointId)
+        {
+          jointInfo->eqIndices.push_back(i);
+        }
+      }
     }
   }
 

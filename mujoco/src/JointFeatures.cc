@@ -114,6 +114,17 @@ void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
     d->qpos[jointInfo->nq_index + _dof] = _value;
   }
 }
+
+void updateCoupledSecondaryJoint(
+    JointInfo *jointInfo, double _value, double *_mjDataArray, int _baseIndex)
+{
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  for (int eqId : jointInfo->eqIndices)
+  {
+    double pitch = m->eq_data[eqId * mjNEQDATA + 1];
+    _mjDataArray[_baseIndex + 1] = _value * pitch;
+  }
+}
 }
 
 /////////////////////////////////////////////////
@@ -261,26 +272,13 @@ void JointFeatures::SetJointPosition(
   }
   setJointPositionImpl(jointInfo, _dof, _value);
 
-  // If this is the primary rotational hinge joint of a screw joint, search for
-  // its corresponding joint equality constraint (mjEQ_JOINT). When found,
+  // If this is the primary rotational hinge joint of a screw joint,
   // simultaneously update the coupled secondary slide joint position (`qpos`)
   // by `_value * pitch`. This maintains perfect kinematic consistency and
   // prevents violent solver impulses during state initialization.
-  if (jointInfo->joint->type == mjJNT_HINGE)
-  {
-    auto *m = jointInfo->worldInfo->mjModelObj;
-    int jntId = m->dof_jntid[jointInfo->nv_index];
-    for (int i = 0; i < m->neq; ++i)
-    {
-      if (m->eq_type[i] == mjEQ_JOINT && m->eq_obj2id[i] == jntId)
-      {
-        double pitch = m->eq_data[i * mjNEQDATA + 1];
-        jointInfo->worldInfo->mjDataObj->qpos[jointInfo->nq_index + 1] =
-            _value * pitch;
-        break;
-      }
-    }
-  }
+  updateCoupledSecondaryJoint(
+      jointInfo, _value, jointInfo->worldInfo->mjDataObj->qpos,
+      jointInfo->nq_index);
 
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
@@ -316,26 +314,13 @@ void JointFeatures::SetJointVelocity(
   }
   jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + _dof] = _value;
 
-  // If this is the primary rotational hinge joint of a screw joint, search for
-  // its corresponding joint equality constraint (mjEQ_JOINT). When found,
+  // If this is the primary rotational hinge joint of a screw joint,
   // simultaneously update the coupled secondary slide joint velocity (`qvel`)
   // by `_value * pitch`. This maintains perfect kinematic consistency and
   // prevents violent solver impulses during state initialization.
-  if (jointInfo->joint->type == mjJNT_HINGE)
-  {
-    auto *m = jointInfo->worldInfo->mjModelObj;
-    int jntId = m->dof_jntid[jointInfo->nv_index];
-    for (int i = 0; i < m->neq; ++i)
-    {
-      if (m->eq_type[i] == mjEQ_JOINT && m->eq_obj2id[i] == jntId)
-      {
-        double pitch = m->eq_data[i * mjNEQDATA + 1];
-        jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + 1] =
-            _value * pitch;
-        break;
-      }
-    }
-  }
+  updateCoupledSecondaryJoint(
+      jointInfo, _value, jointInfo->worldInfo->mjDataObj->qvel,
+      jointInfo->nv_index);
 
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
@@ -414,7 +399,17 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   int bodyId = mjs_getId(jointInfo->childBody->element);
   if (bodyId < 0 || bodyId >= m->nbody)
     return 0;
-  return m->body_dofnum[bodyId];
+
+  std::size_t dofs = m->body_dofnum[bodyId];
+  if (dofs >= jointInfo->eqIndices.size())
+  {
+    dofs -= jointInfo->eqIndices.size();
+  }
+  else
+  {
+    dofs = 0;
+  }
+  return dofs;
 }
 
 /////////////////////////////////////////////////
