@@ -154,6 +154,15 @@ void copyStandardJointAxisProperties(
   }
 }
 /////////////////////////////////////////////////
+/// \brief Convert SDFormat screw thread pitch into MuJoCo coordinate ratio.
+/// \param[in] _pitch Screw thread pitch defined in meters per revolution
+/// (m/rev).
+/// \return Pitch coordinate ratio in meters per radian (m/rad).
+double convertScrewThreadPitch(const double _pitch)
+{
+  return _pitch / (2.0 * GZ_PI);
+}
+/////////////////////////////////////////////////
 struct ModelKinematicStructure
 {
   std::string name;
@@ -334,7 +343,8 @@ struct ModelKinematicStructure
                                              !std::isinf(sdfAxis1->Upper()));
           if (joint2->limited)
           {
-            const double pitch = sdfJoint->ScrewThreadPitch() / (2.0 * GZ_PI);
+            const double pitch =
+                convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
             joint2->range[0] = sdfAxis1->Lower() * pitch;
             joint2->range[1] = sdfAxis1->Upper() * pitch;
           }
@@ -422,7 +432,8 @@ struct ModelKinematicStructure
             // data[1] * (hinge_pos - hinge_ref)
             // where data[1] = pitch (meters/rad) = ScrewThreadPitch/2pi
             eq->data[0] = 0.0;
-            eq->data[1] = sdfJoint->ScrewThreadPitch() / (2.0 * GZ_PI);
+            eq->data[1] =
+                convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
             eq->data[2] = 0.0;
             eq->data[3] = 0.0;
             eq->data[4] = 0.0;
