@@ -1155,7 +1155,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     auto childsParentJoint = _child->getParentJoint();
     std::string parentName = worldParent? "world" : _parent->getName();
     if (childsParentJoint->getType() != "FreeJoint" || parentDescendsFromChild)
-    { 
+    {
       // get child link info and add weld link to it
       LinkInfoPtr childLinkInfo = this->links.at(_child);
       DartBodyNode* childWeldBodynode = this->SplitAndWeldLink(
