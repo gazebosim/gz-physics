@@ -115,15 +115,22 @@ void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
   }
 }
 
-void updateCoupledSecondaryJoint(
+void updateScrewJointFollower(
     JointInfo *jointInfo, double _value, double *_mjDataArray, int _baseIndex)
 {
+  if (!jointInfo->screwEqIndex.has_value())
+    return;
+
   auto *m = jointInfo->worldInfo->mjModelObj;
-  for (int eqId : jointInfo->eqIndices)
-  {
-    double pitch = m->eq_data[eqId * mjNEQDATA + 1];
-    _mjDataArray[_baseIndex + 1] = _value * pitch;
-  }
+  const int eqId = *jointInfo->screwEqIndex;
+  const double multiplier = m->eq_data[eqId * mjNEQDATA + 1];
+
+  // Since the primary rotational hinge and secondary translational slide
+  // joints are created sequentially on the child body back-to-back in
+  // SDFFeatures.cc, and MuJoCo compiles a body's joints contiguously in
+  // memory, the follower's state index is guaranteed to be exactly
+  // _baseIndex + 1.
+  _mjDataArray[_baseIndex + 1] = _value * multiplier;
 }
 }
 
@@ -276,7 +283,7 @@ void JointFeatures::SetJointPosition(
   // simultaneously update the coupled secondary slide joint position (`qpos`)
   // by `_value * pitch`. This maintains perfect kinematic consistency and
   // prevents violent solver impulses during state initialization.
-  updateCoupledSecondaryJoint(
+  updateScrewJointFollower(
       jointInfo, _value, jointInfo->worldInfo->mjDataObj->qpos,
       jointInfo->nq_index);
 
@@ -318,9 +325,9 @@ void JointFeatures::SetJointVelocity(
   // simultaneously update the coupled secondary slide joint velocity (`qvel`)
   // by `_value * pitch`. This maintains perfect kinematic consistency and
   // prevents violent solver impulses during state initialization.
-  updateCoupledSecondaryJoint(
-      jointInfo, _value, jointInfo->worldInfo->mjDataObj->qvel,
-      jointInfo->nv_index);
+  updateScrewJointFollower(jointInfo, _value,
+                           jointInfo->worldInfo->mjDataObj->qvel,
+                           jointInfo->nv_index);
 
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
@@ -401,13 +408,9 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
     return 0;
 
   std::size_t dofs = m->body_dofnum[bodyId];
-  if (dofs >= jointInfo->eqIndices.size())
+  if (jointInfo->screwEqIndex.has_value())
   {
-    dofs -= jointInfo->eqIndices.size();
-  }
-  else
-  {
-    dofs = 0;
+    dofs -= 1;
   }
   return dofs;
 }

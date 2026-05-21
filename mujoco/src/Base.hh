@@ -161,8 +161,10 @@ struct JointInfo
   std::weak_ptr<ModelInfo> modelInfo;
   WorldInfo* worldInfo{nullptr};
   std::optional<std::size_t> ballJointCacheIndex{std::nullopt};
-  // Compiled equality constraint indices in mjModel
-  std::vector<int> eqIndices;
+  // Pointer to the screw joint equality constraint in the spec
+  mjsEquality* screwConstraintSpec{nullptr};
+  // Compiled screw joint equality constraint index in mjModel (max 1)
+  std::optional<int> screwEqIndex{std::nullopt};
 };
 
 

@@ -444,6 +444,10 @@ struct ModelKinematicStructure
       jointInfo->childBody = child;
       jointInfo->actuator = actuator;
       jointInfo->worldInfo = worldInfo;
+      if (sdfJoint->Type() == ::sdf::JointType::SCREW)
+      {
+        jointInfo->screwConstraintSpec = eq;
+      }
       if (sdfJoint->Type() == ::sdf::JointType::BALL)
       {
         jointInfo->worldInfo->ballJointPositionsCache.push_back(std::nullopt);
