@@ -636,7 +636,7 @@ TEST_F(UniversalJointBasicJointFeatureTest, GetSetBasicState)
   std::string worldStr = R"(
   <sdf version="1.9">
     <world name="test_world">
-      <model name="test_universal_joint">;
+      <model name="test_universal_joint">
         <link name="base" />
         <joint name="world_joint" type="fixed">
           <parent>world</parent>

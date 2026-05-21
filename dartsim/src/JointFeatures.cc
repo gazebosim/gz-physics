@@ -34,7 +34,7 @@ namespace dartsim {
 double JointFeatures::GetJointPosition(
     const Identity &_id, std::size_t _dof) const
 {
-  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  const auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (_dof >= jointInfo->joint->getNumDofs())
   {
     gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
