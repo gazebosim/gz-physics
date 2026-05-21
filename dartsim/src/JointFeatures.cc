@@ -717,7 +717,6 @@ Identity JointFeatures::AttachRevoluteJoint(
 
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
-  
   std::string childLinkName = linkInfo->name;
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
