@@ -431,12 +431,9 @@ struct ModelKinematicStructure
             // enforces: slide_pos - slide_ref =
             // data[1] * (hinge_pos - hinge_ref)
             // where data[1] = pitch (meters/rad) = ScrewThreadPitch/2pi
-            eq->data[0] = 0.0;
+            std::fill(std::begin(eq->data), std::end(eq->data), 0.0);
             eq->data[1] =
                 convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
-            eq->data[2] = 0.0;
-            eq->data[3] = 0.0;
-            eq->data[4] = 0.0;
           }
         }
       }
