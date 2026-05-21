@@ -22,6 +22,7 @@
 #include "JointFeatures.hh"
 #include "KinematicsFeatures.hh"
 #include "SDFFeatures.hh"
+#include "ShapeFeatures.hh"
 #include "SimulationFeatures.hh"
 #include "WorldFeatures.hh"
 
@@ -39,7 +40,7 @@ struct MujocoFeatures : FeatureList<
   KinematicsFeatureList,
   // LinkFeatureList,
   SDFFeatureList,
-  // ShapeFeatureList,
+  ShapeFeatureList,
   SimulationFeatureList,
   WorldFeatureList
 > { };
@@ -52,7 +53,7 @@ class Plugin :
     public virtual KinematicsFeatures,
     // public virtual LinkFeatures,
     public virtual SDFFeatures,
-    // public virtual ShapeFeatures,
+    public virtual ShapeFeatures,
     public virtual SimulationFeatures,
     public virtual WorldFeatures
 {
