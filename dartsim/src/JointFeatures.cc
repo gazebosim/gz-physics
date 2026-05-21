@@ -710,19 +710,21 @@ Identity JointFeatures::AttachRevoluteJoint(
     const AngularVector3d &_axis)
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
-  DartBodyNode *const bn = linkInfo->link.get();
+  DartBodyNode *bn = linkInfo->link.get();
   dart::dynamics::RevoluteJoint::Properties properties;
   properties.mName = _name;
   properties.mAxis = _axis;
 
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
-
+  
+  std::string childLinkName = linkInfo->name;
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    return this->GenerateInvalidId();
+    // split and weld the child body node, and attach to the new welded node
+    bn = SplitAndWeldLink(linkInfo);
+    childLinkName = bn->getName();
   }
 
   {
@@ -743,6 +745,14 @@ Identity JointFeatures::AttachRevoluteJoint(
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::RevoluteJoint>(parentBn, properties),
         fullJointName, modelID);
+
+  if (!linkInfo->weldedNodes.empty())
+  {
+    // weld constraint needs to be updated after moving to new skeleton
+    auto constraint = linkInfo->weldedNodes.back().second;
+    constraint->setRelativeTransform(Eigen::Isometry3d::Identity());
+  }
+
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();
@@ -788,7 +798,7 @@ Identity JointFeatures::AttachPrismaticJoint(
     const LinearVector3d &_axis)
 {
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
-  DartBodyNode *const bn = linkInfo->link.get();
+  DartBodyNode *bn = linkInfo->link.get();
   dart::dynamics::PrismaticJoint::Properties properties;
   properties.mName = _name;
   properties.mAxis = _axis;
@@ -796,11 +806,13 @@ Identity JointFeatures::AttachPrismaticJoint(
   auto *const parentBn = _parent ? this->ReferenceInterface<LinkInfo>(
       _parent->FullIdentity())->link.get() : nullptr;
 
+  std::string childLinkName = linkInfo->name;
   if (bn->getParentJoint()->getType() != "FreeJoint")
   {
     // child already has a parent joint
-    // TODO(scpeters): use a WeldJointConstraint between the two bodies
-    return this->GenerateInvalidId();
+    // split and weld the child body node, and attach to the new welded node
+    bn = SplitAndWeldLink(linkInfo);
+    childLinkName = bn->getName();
   }
 
   {
@@ -821,6 +833,12 @@ Identity JointFeatures::AttachPrismaticJoint(
   const std::size_t jointID = this->AddJoint(
       bn->moveTo<dart::dynamics::PrismaticJoint>(parentBn, properties),
       fullJointName, modelID);
+  if (!linkInfo->weldedNodes.empty())
+  {
+    // weld constraint needs to be updated after moving to new skeleton
+    auto constraint = linkInfo->weldedNodes.back().second;
+    constraint->setRelativeTransform(Eigen::Isometry3d::Identity());
+  }
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   bn->incrementVersion();
