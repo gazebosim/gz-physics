@@ -8,6 +8,11 @@ release will remove the deprecated code.
 
 ## Gazebo Physics 9.X to 10.X
 
+### Breaking Changes
+
+* **GetRayIntersectionFromLastStepFeature**: `RayIntersectionT::fraction` is
+  now `+INF` on a miss (was `NaN`); `NaN` now means error. Use the new
+  `IsHit()` helper instead of `std::isnan(fraction)` to detect hits.
 
 ## Gazebo Physics 8.X to 9.X
 
