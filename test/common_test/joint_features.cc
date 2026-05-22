@@ -3269,7 +3269,6 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
     ASSERT_NE(nullptr, engine);
 
     double dt = 1e-3;
-
     sdf::Root root;
     const sdf::Errors errors = root.Load(common_test::worlds::kClosedFourBarLinkageWorld);
     ASSERT_TRUE(errors.empty()) << errors.front();
@@ -3290,6 +3289,8 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
     gz::physics::ForwardStep::Output output;
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Input input;
+
+    input.InsertOrAssign<std::chrono::steady_clock::duration>(std::chrono::milliseconds(1));
 
     int numSteps = static_cast<int>(20.0/dt);
 
