@@ -3223,11 +3223,11 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
     
     // averaging out the time period over number of oscillations
     double timePeriod = 2*totalTime;
-    double closedLoopFrequency = 1.0/timePeriod;
+    double frequency = 1.0/timePeriod;
 
     // mimic joint oscillation frequency is 0.84
     // closed kinematic chain frequency is 0.756
-    ASSERT_NEAR(closedLoopFrequency, 0.8, 0.1);
+    ASSERT_NEAR(frequency, 0.8, 0.1);
   }
 }
 
