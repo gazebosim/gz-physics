@@ -52,6 +52,7 @@ const auto kMimicPendulumWorld = CommonTestWorld("mimic_pendulum_world.sdf");
 const auto kMimicPrismaticWorld = CommonTestWorld("mimic_prismatic_world.sdf");
 const auto kMimicUniversalWorld = CommonTestWorld("mimic_universal_world.sdf");
 const auto kMultipleCollisionsSdf = CommonTestWorld("multiple_collisions.sdf");
+const auto KMimicFourBarLinkageWorld = CommonTestWorld("mimic_four_bar_linkage.sdf");
 const auto kPendulumJointWrenchSdf =
   CommonTestWorld("pendulum_joint_wrench.sdf");
 const auto kPoseOffsetSdf = CommonTestWorld("pose_offset.sdf");
