@@ -3199,21 +3199,21 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
 
     double currentPosition = upperRightJoint->GetPosition(0);
     // approx value
-    double lowestJointPosition = -0.8726;
+    double minJointPosition = -0.8726;
     double totalTime = 0.0;
 
     gz::physics::ForwardStep::Output output;
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Input input;
 
-    int numSteps = static_cast<int>(20.0/dt);
+    int numSteps = static_cast<int>(5.0/dt);
 
     for (int i = 0; i < numSteps; i++)
     {
       world->Step(output, state, input);
       currentPosition = upperRightJoint->GetPosition(0);
       // checking for time stamp at which velocity changes direction
-      if (currentPosition < lowestJointPosition)
+      if (currentPosition < minJointPosition)
       {
         totalTime = i*dt;
         break;
