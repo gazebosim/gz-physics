@@ -3206,7 +3206,7 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
       world->Step(output, state, input);
       currentVelocity = upperRightJoint->GetVelocity(0);
       // checking for time stamp at which velocity changes direction
-      if (lastVelocity < 0.0 && currentVelocity >= 0.0)
+      if (lastVelocity <= 0.0 && currentVelocity >= 0.0)
       {
         numberOfOscillations++;
         totalTime = i*dt;
