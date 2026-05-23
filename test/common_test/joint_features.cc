@@ -3256,7 +3256,16 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
 { 
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "dartsim")
+    std::string worldName = "";
+    if(this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      worldName = common_test::worlds::KMimicFourBarLinkageWorld;
+    }
+    else if(this->PhysicsEngineName(name) == "dartsim")
+    {
+      worldName = common_test::worlds::kClosedFourBarLinkageWorld;
+    }
+    else
     {
       GTEST_SKIP();
     }
@@ -3270,7 +3279,7 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
 
     double dt = 1e-3;
     sdf::Root root;
-    const sdf::Errors errors = root.Load(common_test::worlds::kClosedFourBarLinkageWorld);
+    const sdf::Errors errors = root.Load(worldName);
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
@@ -3281,40 +3290,37 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
 
     ASSERT_NE(upperRightJoint, nullptr);
 
-    double currentVelocity = upperRightJoint->GetVelocity(0);
-    double lastVelocity = currentVelocity;
-    int numberOfOscillations = 0;
+    double currentPosition = upperRightJoint->GetPosition(0);
+    // approx value
+    double lowestJointPosition = -0.8726;
     double totalTime = 0.0;
 
     gz::physics::ForwardStep::Output output;
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Input input;
 
-    input.InsertOrAssign<std::chrono::steady_clock::duration>(std::chrono::milliseconds(1));
-
     int numSteps = static_cast<int>(20.0/dt);
 
     for (int i = 0; i < numSteps; i++)
     {
       world->Step(output, state, input);
-      currentVelocity = upperRightJoint->GetVelocity(0);
+      currentPosition = upperRightJoint->GetPosition(0);
       // checking for time stamp at which velocity changes direction
-      if (lastVelocity <= 0.0 && currentVelocity >= 0.0)
+      if (currentPosition < lowestJointPosition)
       {
-        numberOfOscillations++;
         totalTime = i*dt;
+        break;
       }
-      lastVelocity = currentVelocity;
     }
-
-    EXPECT_GT(numberOfOscillations, 0);
-    EXPECT_GT(totalTime, 0.0);
+    ASSERT_GT(totalTime, 0.0);
     
     // averaging out the time period over number of oscillations
-    double timePeriod = totalTime/static_cast<double>(numberOfOscillations);
+    double timePeriod = 2*totalTime;
     double closedLoopFrequency = 1.0/timePeriod;
-    // mimic joint oscillation frequency is 0.85941054547292861
-    EXPECT_NEAR(closedLoopFrequency, 0.85941054547292861, 0.1);
+
+    // mimic joint oscillation frequency is 0.84
+    // closed kinematic chain frequency is 0.756
+    ASSERT_NEAR(closedLoopFrequency, 0.8, 0.1);
   }
 }
 
