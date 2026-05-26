@@ -1,0 +1,237 @@
+/*
+ * Copyright (C) 2026 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+#include "ShapeFeatures.hh"
+
+#include <mujoco/mujoco.h>
+#include <algorithm>
+#include <cstddef>
+#include <gz/common/Console.hh>
+#include <gz/math/eigen3/Conversions.hh>
+
+namespace gz {
+namespace physics {
+namespace mujoco {
+
+/////////////////////////////////////////////////
+AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
+    const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  if (!shapeInfo || !shapeInfo->geom)
+  {
+    gzerr << "Error computing shape bounding box. "
+          << "Unable to find shape " << _shapeID.id << std::endl;
+    return AlignedBox3d();
+  }
+
+  auto *worldInfo = shapeInfo->worldInfo;
+  if (!worldInfo)
+  {
+    gzerr << "Error computing shape bounding box. "
+          << "Unable to retrieve world for shape "
+          << _shapeID.id << std::endl;
+    return AlignedBox3d();
+  }
+  if (!this->RecompileSpec(*worldInfo))
+  {
+    gzerr << "Error computing shape bounding box. "
+          << "Unable to recompile spec for shape "
+          << _shapeID.id << std::endl;
+    return AlignedBox3d();
+  }
+
+  const mjModel *m = worldInfo->mjModelObj;
+  if (!m)
+  {
+    gzerr << "Error computing shape bounding box. "
+          << "mjModelObj is null for shape " << _shapeID.id << std::endl;
+    return AlignedBox3d();
+  }
+  int geomId = mjs_getId(shapeInfo->geom->element);
+  if (geomId < 0 || geomId >= m->ngeom)
+  {
+    gzerr << "Error computing shape bounding box. "
+          << "Unable to retrieve geom for shape " << _shapeID.id << std::endl;
+    return AlignedBox3d();
+  }
+
+  if (!m->geom_type || !m->geom_size || !m->geom_dataid)
+  {
+    gzerr << "Error computing shape bounding box: "
+          << "mjModel geom arrays are null." << std::endl;
+    return AlignedBox3d();
+  }
+
+  int geomType = m->geom_type[geomId];
+
+  // MuJoCo stores the size parameters for every geom in a single flattened
+  // array called mjModel::geom_size. It allocates exactly 3 slots in this array
+  // for every geom, regardless of its type. We find the starting point for
+  // any geom by multiplying its geomId by 3.
+  const mjtNum *size = m->geom_size + static_cast<ptrdiff_t>(3) * geomId;
+
+  Vector3d min = Vector3d::Zero();
+  Vector3d max = Vector3d::Zero();
+
+  switch (geomType)
+  {
+    case mjGEOM_BOX:
+    {
+      max = Vector3d(size[0], size[1], size[2]);
+      min = -max;
+      break;
+    }
+    case mjGEOM_SPHERE:
+    {
+      double radius = size[0];
+      max = Vector3d(radius, radius, radius);
+      min = -max;
+      break;
+    }
+    case mjGEOM_CYLINDER:
+    {
+      double radius = size[0];
+      double halfLength = size[1];
+      max = Vector3d(radius, radius, halfLength);
+      min = -max;
+      break;
+    }
+    case mjGEOM_CAPSULE:
+    {
+      double radius = size[0];
+      double halfLength = size[1];
+      max = Vector3d(radius, radius, halfLength + radius);
+      min = -max;
+      break;
+    }
+    case mjGEOM_ELLIPSOID:
+    {
+      max = Vector3d(size[0], size[1], size[2]);
+      min = -max;
+      break;
+    }
+    case mjGEOM_PLANE:
+    {
+      max = Vector3d(size[0], size[1], 0);
+      min = -max;
+      break;
+    }
+    case mjGEOM_MESH:
+    {
+      if (shapeInfo->cachedAABB)
+      {
+        return *shapeInfo->cachedAABB;
+      }
+
+      const int meshId = m->geom_dataid[geomId];
+      if (meshId < 0 || meshId >= m->nmesh)
+      {
+        gzerr << "Invalid meshId " << meshId << " for geom "
+              << geomId << std::endl;
+        break;
+      }
+
+      if (!m->mesh_vertadr || !m->mesh_vertnum)
+      {
+        gzerr << "Error computing mesh bounding box: "
+              << "mjModel mesh arrays (mesh_vertadr, mesh_vertnum) are null."
+              << std::endl;
+        break;
+      }
+
+      const int vertAddress = m->mesh_vertadr[meshId];
+      const int vertCount = m->mesh_vertnum[meshId];
+
+      if (!m->mesh_vert || !m->mesh_pos || !m->mesh_quat)
+      {
+        gzerr << "Error computing mesh bounding box: "
+              << "mjModel arrays (mesh_vert, mesh_pos, mesh_quat) are null."
+              << std::endl;
+        break;
+      }
+
+      if (vertAddress < 0 || vertAddress + vertCount > m->nmeshvert)
+      {
+        gzerr << "Error computing mesh bounding box: "
+              << "Invalid vertAddress (" << vertAddress << ") or vertCount ("
+              << vertCount << ") for total vertices " << m->nmeshvert
+              << std::endl;
+        break;
+      }
+
+      if (vertCount <= 0)
+      {
+        gzwarn << "Mesh " << meshId << " has zero vertex count." << std::endl;
+        break;
+      }
+
+      // MuJoCo stores all vertex data for all meshes in a single, large
+      // flattened array called mjModel::mesh_vert. There are 3 coordinates
+      // per vertex (x, y, z). Multiply vertAddress by 3 to find the start
+      // of the mesh's data.
+      const float* vertices = m->mesh_vert +
+                              static_cast<ptrdiff_t>(3) * vertAddress;
+      const mjtNum* meshPos = m->mesh_pos +
+                              static_cast<ptrdiff_t>(3) * meshId;
+      const mjtNum* meshQuat = m->mesh_quat +
+                               static_cast<ptrdiff_t>(4) * meshId;
+
+      Eigen::Quaterniond q = convertQuat(meshQuat);
+
+      min = max = q * Vector3d(static_cast<double>(vertices[0]),
+                               static_cast<double>(vertices[1]),
+                               static_cast<double>(vertices[2]));
+
+      for (int i = 1; i < vertCount; ++i)
+      {
+        Vector3d v = q * Vector3d(
+            static_cast<double>(vertices[static_cast<ptrdiff_t>(3) * i + 0]),
+            static_cast<double>(vertices[static_cast<ptrdiff_t>(3) * i + 1]),
+            static_cast<double>(vertices[static_cast<ptrdiff_t>(3) * i + 2]));
+
+        min.x() = std::min(min.x(), v.x());
+        min.y() = std::min(min.y(), v.y());
+        min.z() = std::min(min.z(), v.z());
+        max.x() = std::max(max.x(), v.x());
+        max.y() = std::max(max.y(), v.y());
+        max.z() = std::max(max.z(), v.z());
+      }
+      // mesh_vert is in CoM-centered frame; mesh_pos is the CoM offset.
+      // Add the offset to get the AABB in the mesh's local frame.
+      const Vector3d offset(meshPos[0], meshPos[1], meshPos[2]);
+      min += offset;
+      max += offset;
+
+      shapeInfo->cachedAABB = AlignedBox3d(min, max);
+      return *shapeInfo->cachedAABB;
+      break;
+    }
+    default:
+    {
+      gzwarn << "Bounding box for geom type " << geomType
+             << " not implemented." << std::endl;
+      return AlignedBox3d();
+    }
+  }
+
+  return AlignedBox3d(min, max);
+}
+
+}  // namespace mujoco
+}  // namespace physics
+}  // namespace gz

@@ -425,23 +425,19 @@ void EntityManagementFeatures::SetCollisionFilterMask(
     }
 
     // Update the model directly for immediate effect
-    if (auto linkInfo = shapeInfo->linkInfo.lock())
+    if (shapeInfo->worldInfo)
     {
-      if (linkInfo->worldInfo)
+      if (shapeInfo->worldInfo->mjModelObj)
       {
-        linkInfo->worldInfo->specDirty = true;
-        if (linkInfo->worldInfo->mjModelObj)
+        int geomId = mjs_getId(shapeInfo->geom->element);
+        if (geomId >= 0 && geomId < shapeInfo->worldInfo->mjModelObj->ngeom)
         {
-          int geomId = mjs_getId(shapeInfo->geom->element);
-          if (geomId >= 0 && geomId < linkInfo->worldInfo->mjModelObj->ngeom)
+          shapeInfo->worldInfo->mjModelObj->geom_conaffinity[geomId] =
+              static_cast<int>(_mask);
+          if (!shapeInfo->categoryMask.has_value())
           {
-            linkInfo->worldInfo->mjModelObj->geom_conaffinity[geomId] =
+            shapeInfo->worldInfo->mjModelObj->geom_contype[geomId] =
                 static_cast<int>(_mask);
-            if (!shapeInfo->categoryMask.has_value())
-            {
-              linkInfo->worldInfo->mjModelObj->geom_contype[geomId] =
-                  static_cast<int>(_mask);
-            }
           }
         }
       }
@@ -475,19 +471,15 @@ void EntityManagementFeatures::SetCategoryFilterMask(
     shapeInfo->geom->contype = static_cast<int>(_mask);
 
     // Update the model directly for immediate effect
-    if (auto linkInfo = shapeInfo->linkInfo.lock())
+    if (shapeInfo->worldInfo)
     {
-      if (linkInfo->worldInfo)
+      if (shapeInfo->worldInfo->mjModelObj)
       {
-        linkInfo->worldInfo->specDirty = true;
-        if (linkInfo->worldInfo->mjModelObj)
+        int geomId = mjs_getId(shapeInfo->geom->element);
+        if (geomId >= 0 && geomId < shapeInfo->worldInfo->mjModelObj->ngeom)
         {
-          int geomId = mjs_getId(shapeInfo->geom->element);
-          if (geomId >= 0 && geomId < linkInfo->worldInfo->mjModelObj->ngeom)
-          {
-            linkInfo->worldInfo->mjModelObj->geom_contype[geomId] =
-                static_cast<int>(_mask);
-          }
+          shapeInfo->worldInfo->mjModelObj->geom_contype[geomId] =
+              static_cast<int>(_mask);
         }
       }
     }

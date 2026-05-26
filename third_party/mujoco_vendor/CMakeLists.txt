@@ -73,7 +73,7 @@ else()
     target_link_libraries(mujoco_internal INTERFACE "${MUJOCO_SHARED_FILE}")
     install(DIRECTORY "${MUJOCO_INSTALL_DIR}/lib/"
             DESTINATION lib
-            FILES_MATCHING 
+            FILES_MATCHING
             PATTERN "*mujoco.so*"
             PATTERN "*mujoco*.dylib*"
     )
