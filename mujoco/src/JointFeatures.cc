@@ -256,6 +256,43 @@ void JointFeatures::SetJointPosition(
            << "]. The value will be ignored\n";
     return;
   }
+
+  auto modelInfo = jointInfo->modelInfo.lock();
+  if (modelInfo && modelInfo->isStatic)
+  {
+    if (!this->ValidateDofParam(_id, _dof))
+    {
+      return;
+    }
+
+    int nq = 1;
+    const auto *sdfJoint = modelInfo->sdfModel.JointByName(
+        jointInfo->name);
+    if (sdfJoint)
+    {
+      if (sdfJoint->Type() == ::sdf::JointType::BALL)
+      {
+        nq = 4;
+      }
+      else if (sdfJoint->Type() == ::sdf::JointType::SCREW ||
+               sdfJoint->Type() == ::sdf::JointType::UNIVERSAL)
+      {
+        nq = 2;
+      }
+      else if (sdfJoint->Type() == ::sdf::JointType::FIXED)
+      {
+        nq = 0;
+      }
+    }
+
+    if (jointInfo->cachedQpos.size() < static_cast<std::size_t>(nq))
+    {
+      jointInfo->cachedQpos.resize(nq, 0.0);
+    }
+
+    jointInfo->cachedQpos[_dof] = _value;
+    return;
+  }
   if (!jointInfo->joint)
   {
     gzerr << "Cannot set position on joint [" << jointInfo->name
@@ -393,6 +430,32 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 
   if (!jointInfo->joint)
   {
+    auto modelInfo = jointInfo->modelInfo.lock();
+    if (modelInfo && modelInfo->isStatic)
+    {
+      const auto *sdfJoint = modelInfo->sdfModel.JointByName(
+          jointInfo->name);
+      if (sdfJoint)
+      {
+        if (sdfJoint->Type() == ::sdf::JointType::BALL)
+        {
+          return 3;
+        }
+        else if (sdfJoint->Type() == ::sdf::JointType::SCREW)
+        {
+          return 1;
+        }
+        else if (sdfJoint->Type() == ::sdf::JointType::UNIVERSAL)
+        {
+          return 2;
+        }
+        else if (sdfJoint->Type() == ::sdf::JointType::FIXED)
+        {
+          return 0;
+        }
+        return 1;
+      }
+    }
     return 0;
   }
   auto m = jointInfo->worldInfo->mjModelObj;

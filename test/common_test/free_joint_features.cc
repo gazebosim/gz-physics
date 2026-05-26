@@ -42,19 +42,26 @@ struct TestFeatureList : gz::physics::FeatureList<
     gz::physics::GetEngineInfo,
     gz::physics::sdf::ConstructSdfWorld,
     gz::physics::sdf::ConstructSdfModel,
-    gz::physics::sdf::ConstructSdfNestedModel,
     gz::physics::GetWorldFromEngine,
     gz::physics::GetModelFromWorld,
-    gz::physics::GetNestedModelFromModel,
     gz::physics::GetLinkFromModel,
     gz::physics::LinkFrameSemantics,
     gz::physics::FindFreeGroupFeature,
     gz::physics::SetFreeGroupWorldPose > { };
 
+struct TestNestedFeatureList : gz::physics::FeatureList<
+    TestFeatureList,
+    gz::physics::sdf::ConstructSdfNestedModel,
+    gz::physics::GetNestedModelFromModel > { };
+
 using World = gz::physics::World3d<TestFeatureList>;
 using WorldPtr = gz::physics::World3dPtr<TestFeatureList>;
 using ModelPtr = gz::physics::Model3dPtr<TestFeatureList>;
 using LinkPtr = gz::physics::Link3dPtr<TestFeatureList>;
+
+using WorldNested = gz::physics::World3d<TestNestedFeatureList>;
+using WorldNestedPtr = gz::physics::World3dPtr<TestNestedFeatureList>;
+using ModelNestedPtr = gz::physics::Model3dPtr<TestNestedFeatureList>;
 
 class FreeGroupFeaturesTest:
   public testing::Test, public gz::physics::TestLibLoader
@@ -81,8 +88,29 @@ class FreeGroupFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
-                                  const std::string &_absoluteName)
+class FreeGroupNestedTest:
+  public testing::Test, public gz::physics::TestLibLoader
+{
+  public: void SetUp() override
+  {
+    gz::common::Console::SetVerbosity(4);
+    loader.LoadLib(FreeGroupNestedTest::GetLibToTest());
+    pluginNames = gz::physics::FindFeatures3d<TestNestedFeatureList>::From(loader);
+    if (pluginNames.empty())
+    {
+      std::cerr << "No plugins with required features found in "
+                << GetLibToTest() << std::endl;
+      GTEST_SKIP();
+    }
+  }
+
+  public: std::set<std::string> pluginNames;
+  public: gz::plugin::Loader loader;
+};
+
+template <typename T>
+gz::physics::Model3dPtr<T> GetModelFromAbsoluteName(const gz::physics::World3dPtr<T> &_world,
+                                                    const std::string &_absoluteName)
 {
   std::vector<std::string> names =
       gz::common::split(_absoluteName, std::string(sdf::kScopeDelimiter));
@@ -101,7 +129,7 @@ ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
   return currentModel;
 }
 
-TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
+TEST_F(FreeGroupNestedTest, NestedFreeGroup)
 {
   for (const std::string &name : pluginNames)
   {
@@ -113,7 +141,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<TestNestedFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -159,7 +187,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
   }
 }
 
-TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
+TEST_F(FreeGroupNestedTest, NestedFreeGroupSetWorldPose)
 {
   for (const std::string &name : pluginNames)
   {
@@ -171,7 +199,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<TestNestedFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -240,7 +268,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
   }
 }
 
-TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
+TEST_F(FreeGroupNestedTest, FreeGroupNestedNoLink)
 {
   const std::string modelStr = R"(
     <sdf version="1.11">
@@ -258,7 +286,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<TestNestedFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;

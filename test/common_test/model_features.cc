@@ -30,6 +30,7 @@
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Gravity.hh>
 #include <gz/physics/Model.hh>
+#include <gz/physics/Joint.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
@@ -42,15 +43,21 @@ using ModelBaseFeaturesList = gz::physics::FeatureList<
   gz::physics::FindFreeGroupFeature,
   gz::physics::SetFreeGroupWorldVelocity,
   gz::physics::ForwardStep,
-  gz::physics::GetEntities,
-  gz::physics::GetNestedModelFromModel,
+  gz::physics::GetEngineInfo,
+  gz::physics::GetWorldFromEngine,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetJointFromModel,
+  gz::physics::GetShapeFromLink,
   gz::physics::LinkFrameSemantics,
   gz::physics::sdf::ConstructSdfWorld
 >;
 
 using ModelStaticFeaturesList = gz::physics::FeatureList<
   ModelBaseFeaturesList,
-  gz::physics::ModelStaticState
+  gz::physics::ModelStaticState,
+  gz::physics::GetBasicJointState,
+  gz::physics::SetBasicJointState
 >;
 
 using ModelGravityFeaturesList = gz::physics::FeatureList<
@@ -62,6 +69,16 @@ using ModelGravityStaticFeaturesList = gz::physics::FeatureList<
   ModelBaseFeaturesList,
   gz::physics::ModelStaticState,
   gz::physics::GravityEnabled
+>;
+
+using ModelNestedStaticFeaturesList = gz::physics::FeatureList<
+  ModelStaticFeaturesList,
+  gz::physics::GetNestedModelFromModel
+>;
+
+using ModelNestedGravityFeaturesList = gz::physics::FeatureList<
+  ModelGravityFeaturesList,
+  gz::physics::GetNestedModelFromModel
 >;
 
 // ---------------------------------------------------------------------------
@@ -96,6 +113,8 @@ template <typename T> class ModelStaticTest : public ModelFeaturesTest<T> {};
 template <typename T> class ModelGravityTest : public ModelFeaturesTest<T> {};
 template <typename T> class ModelGravityStaticTest
     : public ModelFeaturesTest<T> {};
+template <typename T> class ModelNestedStaticTest : public ModelFeaturesTest<T> {};
+template <typename T> class ModelNestedGravityTest : public ModelFeaturesTest<T> {};
 
 // ---------------------------------------------------------------------------
 // Helper: load a world from an SDF file using the given engine.
@@ -150,6 +169,12 @@ TYPED_TEST_SUITE(ModelGravityTest, ModelGravityTestTypes);
 using ModelGravityStaticTestTypes =
   ::testing::Types<ModelGravityStaticFeaturesList>;
 TYPED_TEST_SUITE(ModelGravityStaticTest, ModelGravityStaticTestTypes);
+
+using ModelNestedStaticTestTypes = ::testing::Types<ModelNestedStaticFeaturesList>;
+TYPED_TEST_SUITE(ModelNestedStaticTest, ModelNestedStaticTestTypes);
+
+using ModelNestedGravityTestTypes = ::testing::Types<ModelNestedGravityFeaturesList>;
+TYPED_TEST_SUITE(ModelNestedGravityTest, ModelNestedGravityTestTypes);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -394,17 +419,17 @@ TYPED_TEST(ModelGravityTest, ModelGravityDisabledPreventsMotion)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelGravityTest, NestedModelGravityPropagates)
+TYPED_TEST(ModelNestedGravityTest, NestedModelGravityPropagates)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelGravityFeaturesList>::From(plugin);
+        gz::physics::RequestEngine3d<TypeParam>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelGravityFeaturesList>(
+    auto world = LoadWorld<TypeParam>(
         engine, common_test::worlds::kWorldSingleNestedModelSdf);
     ASSERT_NE(nullptr, world);
 
@@ -427,17 +452,17 @@ TYPED_TEST(ModelGravityTest, NestedModelGravityPropagates)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelStaticTest, NestedModelStaticPropagates)
+TYPED_TEST(ModelNestedStaticTest, NestedModelStaticPropagates)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
+        gz::physics::RequestEngine3d<TypeParam>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelStaticFeaturesList>(
+    auto world = LoadWorld<TypeParam>(
         engine, common_test::worlds::kWorldSingleNestedModelSdf);
     ASSERT_NE(nullptr, world);
 
@@ -460,17 +485,17 @@ TYPED_TEST(ModelStaticTest, NestedModelStaticPropagates)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
+TYPED_TEST(ModelNestedStaticTest, ModelStaticStateNestedMultiLinkPreventsMotion)
 {
   for (const std::string &name : this->pluginNames)
   {
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine =
-        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
+        gz::physics::RequestEngine3d<TypeParam>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
-    auto world = LoadWorld<ModelStaticFeaturesList>(
+    auto world = LoadWorld<TypeParam>(
         engine, common_test::worlds::kWorldSingleNestedModelSdf);
     ASSERT_NE(nullptr, world);
 
@@ -508,7 +533,7 @@ TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
     EXPECT_TRUE(nestedModel->GetStatic());
 
     // Step the world by 100 iterations
-    StepAndGetPosition<ModelStaticFeaturesList>(world, link1, 100);
+    StepAndGetPosition<TypeParam>(world, link1, 100);
 
     // Capture end state positions
     const Eigen::Vector3d finalLink1Pos =
@@ -537,7 +562,7 @@ TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
     EXPECT_FALSE(nestedModel->GetStatic());
 
     // Step the world again and verify model falls due to gravity
-    StepAndGetPosition<ModelStaticFeaturesList>(world, link1, 100);
+    StepAndGetPosition<TypeParam>(world, link1, 100);
 
     // Get updated positions of links
     const Eigen::Vector3d afterDynamicLink1Pos =
@@ -551,6 +576,80 @@ TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
     EXPECT_LT(afterDynamicLink1Pos.z(), finalLink1Pos.z());
     EXPECT_LT(afterDynamicNestedLink1Pos.z(), finalNestedLink1Pos.z());
     EXPECT_LT(afterDynamicNestedLink2Pos.z(), finalNestedLink2Pos.z());
+  }
+}
+
+//////////////////////////////////////////////////
+TYPED_TEST(ModelStaticTest, ModelStaticStateMultiLinkPreventsMotion)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<TypeParam>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<TypeParam>(
+        engine, common_test::worlds::kStringPendulumSdf);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("pendulum");
+    ASSERT_NE(nullptr, model);
+
+    auto supportLink = model->GetLink("support");
+    auto bobLink = model->GetLink("bob");
+    ASSERT_NE(nullptr, supportLink);
+    ASSERT_NE(nullptr, bobLink);
+
+    // The pendulum starts at an angle and is dynamic, so it falls immediately.
+    // Step the world once to get a starting pose while falling.
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    world->Step(output, state, input);
+
+    const Eigen::Vector3d initBobPos =
+        bobLink->FrameDataRelativeToWorld().pose.translation();
+
+    // Make the model static: it must freeze mid-swing
+    model->SetStatic(true);
+    EXPECT_TRUE(model->GetStatic());
+
+    // Step the world by 100 iterations. It must stay perfectly frozen at initBobPos.
+    StepAndGetPosition<TypeParam>(world, bobLink, 100);
+
+    // Capture end state position
+    const Eigen::Vector3d finalBobPos =
+        bobLink->FrameDataRelativeToWorld().pose.translation();
+
+    // Assert the bob link is completely frozen
+    EXPECT_NEAR(initBobPos.x(), finalBobPos.x(), 1e-6);
+    EXPECT_NEAR(initBobPos.y(), finalBobPos.y(), 1e-6);
+    EXPECT_NEAR(initBobPos.z(), finalBobPos.z(), 1e-6);
+
+    // Verify that a user can modify joint properties (e.g. position)
+    // while the model is static, and they will take effect on release.
+    auto pivotJoint = model->GetJoint("pivot");
+    ASSERT_NE(nullptr, pivotJoint);
+    pivotJoint->SetPosition(0, 1.2);
+
+    // Make the model dynamic again
+    model->SetStatic(false);
+    EXPECT_FALSE(model->GetStatic());
+
+    // Verify the set position took effect upon dynamic release
+    EXPECT_NEAR(1.2, pivotJoint->GetPosition(0), 1e-3);
+
+    // Step the world again: now it must resume falling / swinging under gravity
+    StepAndGetPosition<TypeParam>(world, bobLink, 100);
+
+    // Get updated position of the bob
+    const Eigen::Vector3d afterDynamicBobPos =
+        bobLink->FrameDataRelativeToWorld().pose.translation();
+
+    // The bob should have swung/moved under gravity from its frozen position
+    EXPECT_NE(finalBobPos, afterDynamicBobPos);
   }
 }
 

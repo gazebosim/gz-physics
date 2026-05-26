@@ -16,6 +16,7 @@
  */
 
 #include "FreeGroupFeatures.hh"
+#include "ModelFeatures.hh"
 
 #include <mujoco/mujoco.h>
 
@@ -113,12 +114,35 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
+  if (bodyId < 0)
+    return;
+
   const auto jntadr = m->body_jntadr[bodyId];
-  const auto qposadr = m->jnt_qposadr[jntadr];
-  const Eigen::Quaterniond quat(_pose.rotation());
-  const double quatCoeffs[] = {quat.w(), quat.x(), quat.y(), quat.z()};
-  mju_copy3(&d->qpos[qposadr], _pose.translation().data());
-  mju_copy4(&d->qpos[qposadr]+3, quatCoeffs);
+  if (jntadr >= 0)
+  {
+    const auto qposadr = m->jnt_qposadr[jntadr];
+    const Eigen::Quaterniond quat(_pose.rotation());
+    const double quatCoeffs[] = {quat.w(), quat.x(), quat.y(), quat.z()};
+    mju_copy3(&d->qpos[qposadr], _pose.translation().data());
+    mju_copy4(&d->qpos[qposadr]+3, quatCoeffs);
+  }
+  else
+  {
+    const auto *modelFeatures = dynamic_cast<const ModelFeatures*>(this);
+    if (modelFeatures && modelFeatures->GetModelStatic(_groupID))
+    {
+      // The model is static. Teleport it by modifying the root body's
+      // pose directly
+      mju_copy3(&m->body_pos[3 * bodyId], _pose.translation().data());
+      const Eigen::Quaterniond quat(_pose.rotation());
+      double quatCoeffs[] = {quat.w(), quat.x(), quat.y(), quat.z()};
+      mju_copy4(&m->body_quat[4 * bodyId], quatCoeffs);
+
+      // Update the spec so it persists across recompilations
+      mju_copy3(modelInfo->body->pos, _pose.translation().data());
+      mju_copy4(modelInfo->body->quat, quatCoeffs);
+    }
+  }
   mj_forward(m, d);
 }
 }  // namespace mujoco

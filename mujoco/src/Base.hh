@@ -34,6 +34,8 @@
 #include <gz/math/Vector3.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
+#include <sdf/Model.hh>
+#include <sdf/Joint.hh>
 
 namespace gz
 {
@@ -151,6 +153,7 @@ struct JointInfo
   std::size_t entityId;
   mjsJoint *joint{nullptr};
   mjsBody *childBody{nullptr};
+  mjsSite *site{nullptr};
   // A MuJoCo actuator is used for setting forces and velocity servo commands
   mjsActuator *actuator{nullptr};
   // Index of joint in mjData::qpos
@@ -163,8 +166,11 @@ struct JointInfo
   std::optional<std::size_t> ballJointCacheIndex{std::nullopt};
   // Compiled equality constraint indices in mjModel
   std::vector<int> eqIndices;
-};
 
+  // Caching for dynamic/static toggling
+  mjsJoint cachedJointData;
+  std::vector<double> cachedQpos;
+};
 
 struct ModelInfo
 {
@@ -179,6 +185,11 @@ struct ModelInfo
   std::string name;
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
+
+  // Caching for dynamic/static toggling
+  ::sdf::Model sdfModel;
+  bool isStatic{false};
+  std::vector<double> cachedFreeJointQpos{};
 };
 
 struct FrameInfo
@@ -249,13 +260,24 @@ class Base
   }
 
 
-  public: detail::EntityStorage<std::shared_ptr<WorldInfo>, std::string> worlds;
+  public: detail::EntityStorage<
+      std::shared_ptr<WorldInfo>, std::string> worlds;
   public: std::unordered_map<std::size_t, std::shared_ptr<FrameInfo>> frames{};
 
   public: const std::string engineName{"mujoco"};
   public: const gz::math::SemanticVersion engineVersion{mj_versionString()};
 
   public: bool RecompileSpec(WorldInfo &_worldInfo) const;
+
+  public: void AddJoint(
+      mjSpec *_spec,
+      const ::sdf::Joint *sdfJoint,
+      mjsBody *child,
+      const std::shared_ptr<ModelInfo> &_modelInfo);
+
+  public: static math::Pose3d resolveSdfPose(
+      const ::sdf::SemanticPose &_semPose,
+      const std::string &_resolveTo = "");
 };
 }  // namespace mujoco
 }  // namespace physics
