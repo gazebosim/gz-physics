@@ -132,6 +132,7 @@ cc_test(
         "@dartsim//:dart-constraint",
         "@dartsim//:dart-dynamics",
         "@dartsim//:dart-simulation",
+        "@eigen",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@gz-common//:gz-common",
