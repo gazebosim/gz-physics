@@ -424,8 +424,24 @@ void EntityManagementFeatures::SetCollisionFilterMask(
       shapeInfo->geom->contype = static_cast<int>(_mask);
     }
 
+    // Update the model directly for immediate effect
     if (shapeInfo->worldInfo)
-      shapeInfo->worldInfo->specDirty = true;
+    {
+      if (shapeInfo->worldInfo->mjModelObj)
+      {
+        int geomId = mjs_getId(shapeInfo->geom->element);
+        if (geomId >= 0 && geomId < shapeInfo->worldInfo->mjModelObj->ngeom)
+        {
+          shapeInfo->worldInfo->mjModelObj->geom_conaffinity[geomId] =
+              static_cast<int>(_mask);
+          if (!shapeInfo->categoryMask.has_value())
+          {
+            shapeInfo->worldInfo->mjModelObj->geom_contype[geomId] =
+                static_cast<int>(_mask);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -454,8 +470,19 @@ void EntityManagementFeatures::SetCategoryFilterMask(
     shapeInfo->categoryMask = _mask;
     shapeInfo->geom->contype = static_cast<int>(_mask);
 
+    // Update the model directly for immediate effect
     if (shapeInfo->worldInfo)
-      shapeInfo->worldInfo->specDirty = true;
+    {
+      if (shapeInfo->worldInfo->mjModelObj)
+      {
+        int geomId = mjs_getId(shapeInfo->geom->element);
+        if (geomId >= 0 && geomId < shapeInfo->worldInfo->mjModelObj->ngeom)
+        {
+          shapeInfo->worldInfo->mjModelObj->geom_contype[geomId] =
+              static_cast<int>(_mask);
+        }
+      }
+    }
   }
 }
 
