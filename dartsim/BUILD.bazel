@@ -48,7 +48,7 @@ cc_library(
         "//:heightmap",
         "//:mesh",
         "//:sdf",
-	"@bullet//:BulletCollisionDoublePrecision",
+        "@bullet//:BulletCollisionDoublePrecision",
         "@dartsim//:dart-collision-bullet",
         "@dartsim//:dart-collision-core",
         "@dartsim//:dart-collision-dart",
