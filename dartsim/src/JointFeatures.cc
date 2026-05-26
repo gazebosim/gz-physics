@@ -448,7 +448,7 @@ bool JointFeatures::ValidateDofParam(const Identity &_id,
   const auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (_dof >= jointInfo->joint->getNumDofs())
   {
-    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint [ "
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
           << jointInfo->joint->getName() << "]\n";
     return false;
   }
