@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Open Source Robotics Foundation
+ * Copyright (C) 2026 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,39 +14,36 @@
  * limitations under the License.
  *
  */
+#ifndef GZ_PHYSICS_MUJOCO_SRC_SHAPEFEATURES_HH_
+#define GZ_PHYSICS_MUJOCO_SRC_SHAPEFEATURES_HH_
 
-#ifndef GZ_PHYSICS_MUJOCO_SRC_KINEMATICSFEATURES_HH_
-#define GZ_PHYSICS_MUJOCO_SRC_KINEMATICSFEATURES_HH_
-
-#include <gz/physics/FrameSemantics.hh>
-#include <gz/physics/FreeGroup.hh>
+#include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/Implements.hh>
+#include <gz/physics/Shape.hh>
 
 #include "Base.hh"
 
-namespace gz
-{
-namespace physics
-{
-namespace mujoco
-{
-// clang-format off
-struct KinematicsFeatureList : FeatureList<
-  LinkFrameSemantics,
-  ShapeFrameSemantics,
-  JointFrameSemantics,
-  ModelFrameSemantics,
-  FreeGroupFrameSemantics
+namespace gz {
+namespace physics {
+namespace mujoco {
+
+struct ShapeFeatureList : FeatureList<
+  GetShapeBoundingBox,
+  GetLinkBoundingBox,
+  GetModelBoundingBox
 > { };
-// clang-format on
 
-class KinematicsFeatures : public virtual Base,
-                           public virtual Implements3d<KinematicsFeatureList>
+class ShapeFeatures :
+    public virtual Base,
+    public virtual Implements3d<ShapeFeatureList>
 {
-  public: FrameData3d FrameDataRelativeToWorld(const FrameID &_id) const;
-
+  // ----- Boundingbox Features -----
+  public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
+              const Identity &_shapeID) const override;
 };
+
 }  // namespace mujoco
 }  // namespace physics
 }  // namespace gz
+
 #endif

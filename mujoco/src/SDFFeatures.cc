@@ -222,20 +222,57 @@ struct ModelKinematicStructure
     }
 
     auto geom = mjs_addGeom(_body, nullptr);
+    if (!geom)
+    {
+      return nullptr;
+    }
     geom->type = mjGEOM_MESH;
     auto meshName = mesh->Name();
     mjs_setString(geom->meshname, meshName.c_str());
 
     auto *muMesh = mjs_addMesh(_spec, nullptr);
+    if (!muMesh)
+    {
+      gzerr << "Failed to add mesh spec for " << meshName << std::endl;
+      return nullptr;
+    }
+
+    if (!muMesh->uservert || !muMesh->userface)
+    {
+      gzerr << "muMesh uservert or userface array is null for "
+            << meshName << std::endl;
+      return nullptr;
+    }
+
     mjs_setName(muMesh->element, meshName.c_str());
 
-    std::copy(_meshSdf->Scale().Data(), _meshSdf->Scale().Data() + 3,
-              muMesh->scale);
+    muMesh->scale[0] = _meshSdf->Scale().X();
+    muMesh->scale[1] = _meshSdf->Scale().Y();
+    muMesh->scale[2] = _meshSdf->Scale().Z();
     double *verts{nullptr};
     int *indices{nullptr};
 
     mesh->FillArrays(&verts, &indices);
     auto nverts = mesh->VertexCount();
+
+    if (nverts > 0 && nullptr == verts)
+    {
+      gzerr << "Mesh [" << _meshSdf->Uri() << "] has " << nverts
+            << " vertices but FillArrays returned null vertices pointer."
+            << std::endl;
+      delete[] indices;
+      return nullptr;
+    }
+
+    if (mesh->IndexCount() > 0 && nullptr == indices)
+    {
+      gzerr << "Mesh [" << _meshSdf->Uri() << "] has " << mesh->IndexCount()
+            << " indices but FillArrays returned null indices pointer."
+            << std::endl;
+      delete[] verts;
+      return nullptr;
+    }
+
     muMesh->uservert->assign(3 * nverts, 0.0);
     std::transform(verts, verts + 3 * nverts, muMesh->uservert->begin(),
         [](double val) {return static_cast<float>(val);});
@@ -503,8 +540,12 @@ struct ModelKinematicStructure
       copyPos(pose.Pos(), child->pos);
       copyQuat(pose.Rot(), child->quat);
 
+      auto modelFrameSite = mjs_addSite(child, nullptr);
+      const auto modelFramePose = link->RawPose().Inverse();
+      copyPos(modelFramePose.Pos(), modelFrameSite->pos);
+      copyQuat(modelFramePose.Rot(), modelFrameSite->quat);
       _base.frames[_modelInfo->entityId] =
-          std::make_shared<FrameInfo>(childSite, worldInfo);
+          std::make_shared<FrameInfo>(modelFrameSite, worldInfo);
     }
 
     child->explicitinertial = true;
@@ -636,6 +677,7 @@ struct ModelKinematicStructure
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
         auto shapeInfo =
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
+        shapeInfo->worldInfo = worldInfo;
         auto pose = resolveSdfPose(collision->SemanticPose());
         copyPos(pose.Pos(), geom->pos);
         copyQuat(pose.Rot(), geom->quat);
@@ -643,6 +685,15 @@ struct ModelKinematicStructure
         shapeInfo->name = collision->Name();
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
                                    linkInfo->entityId);
+
+        // Add a site for the shape and register it in the frames map. This is
+        // required for FrameSemantics to correctly transform the local
+        // axis-aligned bounding box of the shape.
+        auto shapeSite = mjs_addSite(child, nullptr);
+        mju_copy3(shapeSite->pos, geom->pos);
+        mju_copy4(shapeSite->quat, geom->quat);
+        _base.frames[shapeInfo->entityId] =
+            std::make_shared<FrameInfo>(shapeSite, worldInfo);
       }
     }
 

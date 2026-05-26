@@ -28,10 +28,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include <gz/math/AxisAlignedBox.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/Quaternion.hh>
 #include <gz/math/SemanticVersion.hh>
 #include <gz/math/Vector3.hh>
+#include <gz/physics/Geometry.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
 
@@ -125,6 +127,10 @@ struct ShapeInfo
   mjsGeom *geom{nullptr};
   std::string name;
   std::weak_ptr<LinkInfo> linkInfo;
+  WorldInfo *worldInfo{nullptr};
+
+  /// \brief Cached axis-aligned bounding box. Currently only used for meshes.
+  mutable std::optional<gz::physics::AlignedBox3d> cachedAABB;
 };
 
 struct LinkInfo

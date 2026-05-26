@@ -26,6 +26,7 @@
 
 #include "test/TestLibLoader.hh"
 #include "test/Utils.hh"
+#include "test/Resources.hh"
 #include "Worlds.hh"
 
 #include <gz/physics/FindFeatures.hh>
@@ -403,7 +404,13 @@ TEST_F(LinkGravityFeaturesTestTypes, LinkGravityEnabled)
 using LinkBoundingBoxFeaturesList = gz::physics::FeatureList<
     gz::physics::ForwardStep,
     gz::physics::sdf::ConstructSdfWorld,
-    gz::physics::GetEntities,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetWorldFromEngine,
+    gz::physics::GetModelFromWorld,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetShapeFromLink,
+    gz::physics::GetShapeBoundingBox,
     gz::physics::GetLinkBoundingBox,
     gz::physics::GetModelBoundingBox
 >;
@@ -460,14 +467,135 @@ TEST_F(LinkBoundingBoxFeaturesTestTypes, AxisAlignedBoundingBox)
   }
 }
 
-TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
+TEST_F(LinkBoundingBoxFeaturesTestTypes, ConeBoundingBox)
 {
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<LinkFeaturesList>::From(plugin);
+    auto engine =
+        gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kShapesWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+
+    auto coneModel = world->GetModel("cone");
+    ASSERT_NE(nullptr, coneModel);
+    auto coneLink = coneModel->GetLink(0);
+    ASSERT_NE(nullptr, coneLink);
+    auto coneShape = coneLink->GetShape(0);
+    ASSERT_NE(nullptr, coneShape);
+
+    // shapes.world cone: radius=0.5, length=1.1
+    // expected AABB ±(0.5, 0.5, 0.55)
+    auto aabb = coneShape->GetAxisAlignedBoundingBox(*coneShape);
+    const double tol = 0.05;
+    EXPECT_NEAR(-0.5,  aabb.min().x(), tol);
+    EXPECT_NEAR(-0.5,  aabb.min().y(), tol);
+    EXPECT_NEAR(-0.55, aabb.min().z(), tol);
+    EXPECT_NEAR( 0.5,  aabb.max().x(), tol);
+    EXPECT_NEAR( 0.5,  aabb.max().y(), tol);
+    EXPECT_NEAR( 0.55, aabb.max().z(), tol);
+  }
+}
+
+TEST_F(LinkBoundingBoxFeaturesTestTypes, MeshAxisAlignedBoundingBox)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    if (this->PhysicsEngineName(name) == "dartsim")
+    {
+      std::cout << "Skipping test for dartsim because mesh "
+                << "construction from SDF is not supported." << std::endl;
+      continue;
+    }
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        LinkBoundingBoxFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    EXPECT_NE(nullptr, world);
+
+    std::stringstream modelStr;
+    modelStr << R"(
+      <sdf version="1.11">
+        <model name="mesh_model">
+          <pose>0 0 0 0 0 0</pose>
+          <link name="link">
+            <collision name="collision">
+              <geometry>
+                <mesh>
+                  <uri>)";
+    modelStr << gz::physics::test::resources::kRotatedBoxObj;
+    modelStr << R"(</uri>
+                </mesh>
+              </geometry>
+            </collision>
+          </link>
+        </model>
+      </sdf>)";
+
+    sdf::Root rootModel;
+    sdf::Errors modelErrors = rootModel.LoadSdfString(modelStr.str());
+    ASSERT_TRUE(modelErrors.empty()) << modelErrors;
+
+    auto model = world->ConstructModel(*rootModel.Model());
+    ASSERT_NE(nullptr, model);
+
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+
+    auto shape = link->GetShape(0);
+    ASSERT_NE(nullptr, shape);
+
+    auto bbox = shape->GetAxisAlignedBoundingBox(*shape);
+
+    EXPECT_FALSE(bbox.isEmpty());
+
+    // The AABB should reflect the rotated box.
+    // Max X and Y should be around 0.707, and Max Z should be 0.5.
+    // If the rotation is ignored, the AABB might reflect the unrotated mesh,
+    // resulting in Max X and Y around 0.5.
+    EXPECT_NEAR(0.707107, bbox.max().x(), 0.02);
+    EXPECT_NEAR(0.707107, bbox.max().y(), 0.02);
+    EXPECT_NEAR(0.5, bbox.max().z(), 0.02);
+
+    EXPECT_NEAR(-0.707107, bbox.min().x(), 0.02);
+    EXPECT_NEAR(-0.707107, bbox.min().y(), 0.02);
+    EXPECT_NEAR(-0.5, bbox.min().z(), 0.02);
+  }
+}
+
+TEST_F(LinkBoundingBoxFeaturesTestTypes, ModelAxisAlignedBoundingBox)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    // bullet-featherstone does not support floating bodies
+    if(this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      std::cout << "Skipping test for bullet-featherstone because floating "
+                << "bodies are not supported." << std::endl;
+      continue;
+    }
+
+    auto engine =
+        gz::physics::RequestEngine3d<LinkBoundingBoxFeaturesList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -496,6 +624,15 @@ TYPED_TEST(LinkFeaturesTest, ModelAxisAlignedBoundingBox)
         vectorPredicate, gz::physics::Vector3d(-1, -1, -1.0), bboxLinkFrame.min());
     EXPECT_PRED_FORMAT2(
         vectorPredicate, gz::physics::Vector3d(2, 2, 1.0), bboxLinkFrame.max());
+
+    auto bboxModelFrame = model->GetAxisAlignedBoundingBox(
+        model->GetFrameID());
+    EXPECT_PRED_FORMAT2(
+        vectorPredicate, gz::physics::Vector3d(-1, -1, -0.5),
+        bboxModelFrame.min());
+    EXPECT_PRED_FORMAT2(
+        vectorPredicate, gz::physics::Vector3d(2, 2, 1.5),
+        bboxModelFrame.max());
   }
 }
 
