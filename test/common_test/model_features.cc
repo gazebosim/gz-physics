@@ -64,6 +64,11 @@ using ModelGravityStaticFeaturesList = gz::physics::FeatureList<
   gz::physics::GravityEnabled
 >;
 
+using ModelCollisionFeaturesList = gz::physics::FeatureList<
+  ModelBaseFeaturesList,
+  gz::physics::ModelCollisionEnabled
+>;
+
 // ---------------------------------------------------------------------------
 // Typed test fixture
 // ---------------------------------------------------------------------------
@@ -95,6 +100,8 @@ class ModelFeaturesTest :
 template <typename T> class ModelStaticTest : public ModelFeaturesTest<T> {};
 template <typename T> class ModelGravityTest : public ModelFeaturesTest<T> {};
 template <typename T> class ModelGravityStaticTest
+    : public ModelFeaturesTest<T> {};
+template <typename T> class ModelCollisionTest
     : public ModelFeaturesTest<T> {};
 
 // ---------------------------------------------------------------------------
@@ -150,6 +157,9 @@ TYPED_TEST_SUITE(ModelGravityTest, ModelGravityTestTypes);
 using ModelGravityStaticTestTypes =
   ::testing::Types<ModelGravityStaticFeaturesList>;
 TYPED_TEST_SUITE(ModelGravityStaticTest, ModelGravityStaticTestTypes);
+
+using ModelCollisionTestTypes = ::testing::Types<ModelCollisionFeaturesList>;
+TYPED_TEST_SUITE(ModelCollisionTest, ModelCollisionTestTypes);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -702,6 +712,135 @@ TYPED_TEST(ModelGravityTest, AddedMassLinkGravityInvariantPreserved)
         << "Added-mass sphere fell faster than plain sphere, suggesting "
            "SetGravityEnabled(true) incorrectly re-enabled built-in "
            "gravity on the added-mass link (double gravity applied).";
+  }
+}
+
+//////////////////////////////////////////////////
+TYPED_TEST(ModelCollisionTest, ModelCollisionEnabledDefault)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelCollisionFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelCollisionFeaturesList>(
+        engine, common_test::worlds::kSphereGravitySdf);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+
+    // Default: collisions are enabled.
+    EXPECT_TRUE(model->GetCollisionEnabled());
+  }
+}
+
+//////////////////////////////////////////////////
+TYPED_TEST(ModelCollisionTest, ModelCollisionEnabledSetGet)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelCollisionFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelCollisionFeaturesList>(
+        engine, common_test::worlds::kSphereGravitySdf);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+
+    EXPECT_TRUE(model->GetCollisionEnabled());
+
+    model->SetCollisionEnabled(false);
+    EXPECT_FALSE(model->GetCollisionEnabled());
+
+    model->SetCollisionEnabled(true);
+    EXPECT_TRUE(model->GetCollisionEnabled());
+  }
+}
+
+//////////////////////////////////////////////////
+TYPED_TEST(ModelCollisionTest, NestedModelCollisionPropagates)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelCollisionFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelCollisionFeaturesList>(
+        engine, common_test::worlds::kWorldSingleNestedModelSdf);
+    ASSERT_NE(nullptr, world);
+
+    auto parentModel = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, parentModel);
+
+    auto nestedModel = parentModel->GetNestedModel("nested_model");
+    ASSERT_NE(nullptr, nestedModel);
+
+    // Disable collisions on the parent: nested model must follow.
+    parentModel->SetCollisionEnabled(false);
+    EXPECT_FALSE(parentModel->GetCollisionEnabled());
+    EXPECT_FALSE(nestedModel->GetCollisionEnabled());
+
+    // Re-enable collisions on the parent: nested model must follow.
+    parentModel->SetCollisionEnabled(true);
+    EXPECT_TRUE(parentModel->GetCollisionEnabled());
+    EXPECT_TRUE(nestedModel->GetCollisionEnabled());
+  }
+}
+
+//////////////////////////////////////////////////
+// With collisions disabled the falling sphere must pass through the static box
+// instead of resting on top of it.
+TYPED_TEST(ModelCollisionTest, ModelCollisionDisabledPassThrough)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelCollisionFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    // falling.world: sphere (radius 1) at z=2 above a static box whose top
+    // surface is at z=0. Gravity is the default (~ -9.8).
+    auto world = LoadWorld<ModelCollisionFeaturesList>(
+        engine, common_test::worlds::kFallingWorld);
+    ASSERT_NE(nullptr, world);
+
+    auto sphere = world->GetModel("sphere");
+    ASSERT_NE(nullptr, sphere);
+
+    auto sphereLink = sphere->GetLink("sphere_link");
+    ASSERT_NE(nullptr, sphereLink);
+
+    EXPECT_TRUE(sphere->GetCollisionEnabled());
+
+    // Disable collisions and let the sphere fall for long enough that, in the
+    // presence of collisions, it would have already contacted the box.
+    sphere->SetCollisionEnabled(false);
+    EXPECT_FALSE(sphere->GetCollisionEnabled());
+
+    const double initialZ =
+        sphereLink->FrameDataRelativeToWorld().pose.translation().z();
+    const double afterZ =
+        StepAndGetPosition<ModelCollisionFeaturesList>(
+            world, sphereLink, 1000).z();
+
+    // Without collisions the sphere must keep falling well below the box top
+    // (z=0), which would be impossible if collisions were active.
+    EXPECT_LT(afterZ, 0.0);
+    EXPECT_LT(afterZ, initialZ);
   }
 }
 

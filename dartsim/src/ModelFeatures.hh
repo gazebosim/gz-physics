@@ -30,6 +30,7 @@ namespace dartsim {
 
 struct ModelFeatureList : FeatureList<
   ModelStaticState,
+  ModelCollisionEnabled,
   GravityEnabled
 > { };
 
@@ -43,6 +44,12 @@ class ModelFeatures :
 
   // Documentation inherited
   public: bool GetModelStatic(const Identity &_id) const override;
+
+  // ----- Model Collision Enabled -----
+  public: void SetModelCollisionEnabled(
+      const Identity &_id, bool _enabled) override;
+
+  public: bool GetModelCollisionEnabled(const Identity &_id) const override;
 
   // ----- Model Gravity Enabled -----
   public: void SetModelGravityEnabled(
