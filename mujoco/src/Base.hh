@@ -291,6 +291,8 @@ struct WorldInfo
 
 class Base
 {
+  public: virtual ~Base() = default;
+
   // Note: Entity ID 0 is reserved for the "engine"
   public: std::size_t entityCount = 1;
 

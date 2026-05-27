@@ -488,7 +488,39 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   auto m = jointInfo->worldInfo->mjModelObj;
   int bodyId = mjs_getId(jointInfo->childBody->element);
   if (bodyId < 0 || bodyId >= m->nbody)
-    return 0;
+  {
+    // The joint is not yet compiled in the active model. Count the DOFs
+    // statically from the spec DOM elements!
+    std::size_t dofs = 0;
+    mjsElement* elem = mjs_firstChild(
+        jointInfo->childBody, mjOBJ_JOINT, 0);
+    while (elem)
+    {
+      mjsJoint* j = mjs_asJoint(elem);
+      if (j)
+      {
+        if (j->type == mjJNT_BALL)
+        {
+          dofs += 3;
+        }
+        else if (j->type == mjJNT_FREE)
+        {
+          dofs += 6;
+        }
+        else
+        {
+          dofs += 1;
+        }
+      }
+      elem = mjs_nextChild(jointInfo->childBody, elem, 0);
+    }
+    // For screw joints, the sliding axis is coupled, so subtract 1:
+    if (jointInfo->screwConstraintSpec != nullptr)
+    {
+      dofs -= 1;
+    }
+    return dofs;
+  }
 
   std::size_t dofs = m->body_dofnum[bodyId];
   if (jointInfo->screwEqIndex.has_value())

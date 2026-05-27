@@ -92,6 +92,7 @@ struct JointMimicFeatureList : gz::physics::FeatureList<
     gz::physics::LinkFrameSemantics,
     gz::physics::SetBasicJointState,
     gz::physics::SetMimicConstraintFeature,
+    gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld>{};
 
 using JointMimicFeatureTest =
@@ -673,6 +674,76 @@ TEST_F(JointMimicFeatureTest, BallJointMimicSafetyGuardTest)
         0, ballJoint, 0, 1.0, 0.0, 0.0));
 
     std::cout << "Finished testing plugin: " << name << std::endl;
+  }
+}
+
+// Test SetMimicConstraint on a programmatically added model since some engines
+// (e.g. MuJoCo) might require rebuilding/recompiling their internal state after
+// new models are spawned.
+TEST_F(JointMimicFeatureTest, SetMimicConstraintOnSpawnedModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "mujoco")
+    CHECK_SUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    auto plugin = this->loader.Instantiate(name);
+    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    // Parse an empty world SDF string
+    const std::string worldSDF = R"(
+      <sdf version="1.9">
+        <world name="test_world"/>
+      </sdf>
+    )";
+
+    sdf::Root worldRoot;
+    sdf::Errors worldErrors = worldRoot.LoadSdfString(worldSDF);
+    ASSERT_TRUE(worldErrors.empty()) << worldErrors.front();
+
+    auto world = engine->ConstructWorld(*worldRoot.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // Parse a simple 2-joint model SDF string
+    const std::string modelSDF = R"(
+      <sdf version="1.9">
+        <model name="simple_model">
+          <link name="parent_link"/>
+          <link name="mid_link"/>
+          <link name="child_link"/>
+          <joint name="leader_joint" type="revolute">
+            <parent>parent_link</parent>
+            <child>mid_link</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+          <joint name="follower_joint" type="revolute">
+            <parent>mid_link</parent>
+            <child>child_link</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+        </model>
+      </sdf>
+    )";
+
+    sdf::Root modelRoot;
+    sdf::Errors modelErrors = modelRoot.LoadSdfString(modelSDF);
+    ASSERT_TRUE(modelErrors.empty()) << modelErrors.front();
+
+    auto model = world->ConstructModel(*modelRoot.Model());
+    ASSERT_NE(nullptr, model);
+
+    auto leader = model->GetJoint("leader_joint");
+    ASSERT_NE(nullptr, leader);
+
+    auto follower = model->GetJoint("follower_joint");
+    ASSERT_NE(nullptr, follower);
+
+    // Call SetMimicConstraint on the joint. Since step hasn't been called, some
+    // engines (e.g. MuJoCo) would not have rebuilt/recompiled their internal
+    // state. This call checks that the API functions regardless of that.
+    bool success = follower->SetMimicConstraint(0, leader, 0, 1.0, 0.0, 0.0);
+    EXPECT_TRUE(success);
   }
 }
 
