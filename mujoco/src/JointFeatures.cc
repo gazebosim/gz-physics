@@ -15,14 +15,17 @@
  *
  */
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <memory>
 #include <Eigen/Geometry>
 #include <gz/common/Console.hh>
 #include <gz/math/Helpers.hh>
+#include <mujoco/mujoco.h>
+#include <sdf/Types.hh>
 #include "Base.hh"
 #include "gz/physics/Geometry.hh"
-#include "mujoco/mujoco.h"
 
 #include "JointFeatures.hh"
 
@@ -131,6 +134,82 @@ void updateScrewJointFollower(
   // memory, the follower's state index is guaranteed to be exactly
   // _baseIndex + 1.
   _mjDataArray[_baseIndex + 1] = _value * multiplier;
+}
+
+void updateMimicJointFollowers(JointInfo *jointInfo, std::size_t _dof,
+                               double _value, double *_mjDataArray,
+                               bool _isQpos)
+{
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  for (auto &constraint : jointInfo->mimicConstraints)
+  {
+    if (constraint.eqId < 0 || constraint.eqId >= m->neq)
+      continue;
+
+    // Only update if this constraint targets the DOF/axis currently being set
+    if (constraint.leaderDof != _dof)
+      continue;
+
+    auto followerInfo = constraint.followerJointInfo.lock();
+    if (!followerInfo)
+      continue;
+
+    if (followerInfo->nq_index < 0 || followerInfo->nv_index < 0)
+      continue;
+
+    int followerAddr = _isQpos
+        ? followerInfo->nq_index + constraint.followerDof
+        : followerInfo->nv_index + constraint.followerDof;
+
+    const double multiplier = m->eq_data[constraint.eqId * mjNEQDATA + 1];
+    if (_isQpos)
+    {
+      const double offsetTerm = m->eq_data[constraint.eqId * mjNEQDATA + 0];
+      _mjDataArray[followerAddr] = multiplier * _value + offsetTerm;
+    }
+    else
+    {
+      _mjDataArray[followerAddr] = _value * multiplier;
+    }
+  }
+}
+
+struct MimicConstraintSearchResult
+{
+  std::shared_ptr<JointInfo> leader{nullptr};
+  std::size_t index{0};
+  bool found{false};
+};
+
+/// \brief Search our C++ tracking structures to find an existing mimic joint
+/// constraint relationship matching a given follower joint and active DOF.
+/// \param[in] _worldInfo The metadata block of the active simulation world.
+/// \param[in] _followerJoint Strong pointer targeting the follower JointInfo.
+/// \param[in] _followerDof The degree-of-freedom of the follower axis.
+/// \return A structured search result indicating if the constraint was
+/// found, along with its leader joint pointer and its vector index.
+MimicConstraintSearchResult findMimicConstraint(
+    const WorldInfo &_worldInfo,
+    const std::shared_ptr<JointInfo> &_followerJoint,
+    std::size_t _followerDof)
+{
+  for (const auto &model : _worldInfo.models.idToObject)
+  {
+    for (const auto &joint : model.second->joints.idToObject)
+    {
+      const auto &jInfo = joint.second;
+      for (std::size_t i = 0; i < jInfo->mimicConstraints.size(); ++i)
+      {
+        const auto &c = jInfo->mimicConstraints[i];
+        if (c.followerJointInfo.lock() == _followerJoint &&
+            c.followerDof == _followerDof)
+        {
+          return {jInfo, i, true};
+        }
+      }
+    }
+  }
+  return {nullptr, 0, false};
 }
 }
 
@@ -286,6 +365,8 @@ void JointFeatures::SetJointPosition(
   updateScrewJointFollower(
       jointInfo, _value, jointInfo->worldInfo->mjDataObj->qpos,
       jointInfo->nq_index);
+  updateMimicJointFollowers(jointInfo, _dof, _value,
+                            jointInfo->worldInfo->mjDataObj->qpos, true);
 
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
@@ -328,6 +409,8 @@ void JointFeatures::SetJointVelocity(
   updateScrewJointFollower(jointInfo, _value,
                            jointInfo->worldInfo->mjDataObj->qvel,
                            jointInfo->nv_index);
+  updateMimicJointFollowers(jointInfo, _dof, _value,
+                            jointInfo->worldInfo->mjDataObj->qvel, false);
 
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
@@ -443,6 +526,152 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
     return jointInChild.inverse();
   }
   return {};
+}
+
+/////////////////////////////////////////////////
+bool JointFeatures::SetJointMimicConstraint(
+    const Identity &_id,
+    std::size_t _dof,
+    const BaseJoint3dPtr &_leaderJoint,
+    std::size_t _leaderAxisDof,
+    double _multiplier,
+    double _offset,
+    double _reference)
+{
+  auto followerJointShared =
+      std::static_pointer_cast<JointInfo>(this->Reference(_id));
+  auto followerJointInfo = followerJointShared.get();
+  if (!followerJointInfo->joint)
+  {
+    gzerr << "Cannot set mimic constraint on joint [" << followerJointInfo->name
+          << "] because it is a fixed joint.\n";
+    return false;
+  }
+
+  if (followerJointInfo->joint->type == mjJNT_BALL)
+  {
+    gzerr << "Cannot set mimic constraint on joint ["
+          << followerJointInfo->name << "] because it is a ball joint.\n";
+    return false;
+  }
+
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return false;
+  }
+
+  auto leaderJointId = _leaderJoint->FullIdentity();
+  auto leaderJointShared =
+      std::static_pointer_cast<JointInfo>(this->Reference(leaderJointId));
+  auto leaderJointInfo = leaderJointShared.get();
+  if (!leaderJointInfo->joint)
+  {
+    gzerr << "Cannot mimic joint [" << leaderJointInfo->name
+          << "] because it is a fixed joint.\n";
+    return false;
+  }
+
+  if (leaderJointInfo->joint->type == mjJNT_BALL)
+  {
+    gzerr << "Cannot mimic joint [" << leaderJointInfo->name
+          << "] because it is a ball joint.\n";
+    return false;
+  }
+
+  if (_leaderAxisDof >= this->GetJointDegreesOfFreedom(leaderJointId))
+  {
+    gzerr << "Trying to access an invalid leader DOF [" << _leaderAxisDof
+          << "] on joint [ " << leaderJointInfo->name << "]\n";
+    return false;
+  }
+
+  auto followerModel = followerJointInfo->modelInfo.lock();
+  auto leaderModel = leaderJointInfo->modelInfo.lock();
+  auto worldInfo = followerJointInfo->worldInfo;
+
+  // Search the leader-to-followers tracking vector lists in C++ memory
+  // to locate if a mimic constraint already exists for this follower
+  // joint axis, preparing it for safe de-duplication/overwriting.
+  const auto searchResult =
+      findMimicConstraint(*worldInfo, followerJointShared, _dof);
+
+  // Unconditionally delete the old constraint if found
+  if (searchResult.found)
+  {
+    // Delete the spec node from MuJoCo's DOM tree
+    mjs_delete(
+        worldInfo->mjSpecObj,
+        searchResult.leader->mimicConstraints[searchResult.index]
+            .spec->element);
+
+    // Erase the record from the old leader's list
+    searchResult.leader->mimicConstraints.erase(
+        searchResult.leader->mimicConstraints.begin() + searchResult.index);
+  }
+
+  const std::string followerName = getJointAxisName(
+      ::sdf::JoinName(followerModel->name, followerJointInfo->name), _dof);
+
+  const std::string leaderName = getJointAxisName(
+      ::sdf::JoinName(leaderModel->name, leaderJointInfo->name),
+      _leaderAxisDof);
+
+  // Recall the linear equation from the definition of the mimic constraint:
+  // follower_pos = multiplier * (leader_pos - reference) + offset
+  //
+  // MuJoCo's official joint equality constraint polynomial is:
+  // y - y0 = a0 + a1*(x - x0) + a2*(x - x0)^2 + a3*(x - x0)^3 + a4*(x - x0)^4
+  // where:
+  // - y is the follower joint position (follower_pos)
+  // - y0 is the follower home/resting position (qpos0_follower)
+  // - x is the leader joint position (leader_pos)
+  // - x0 is the leader home/resting position (qpos0_leader)
+  //
+  // We only need a linear relationship, so we set a2 = a3 = a4 = 0, leaving:
+  // follower_pos - qpos0_follower = a0 + a1 * (leader_pos - qpos0_leader)
+  //
+  // In our MuJoCo plugin, since all standard 1-DOF joints are created with a
+  // zero home configuration (qpos0 = 0), we can substitute qpos0_follower = 0
+  // and qpos0_leader = 0, leaving:
+  // follower_pos = a0 + a1 * leader_pos
+  //
+  // Equating the linear mimic equation and the simplified MuJoCo solver
+  // equation, we solve for the MuJoCo parameters:
+  // 1. a1 (multiplier) = multiplier (saved as eqSpec->data[1])
+  // 2. a0 (offsetTerm) = offset - multiplier * reference
+  //                      (saved as eqSpec->data[0])
+  const double offsetTerm = _offset - _multiplier * _reference;
+
+  mjsEquality* eqSpec = mjs_addEquality(worldInfo->mjSpecObj, nullptr);
+  eqSpec->type = mjEQ_JOINT;
+  eqSpec->active = 1;
+  mjs_setString(eqSpec->name1, followerName.c_str());
+  mjs_setString(eqSpec->name2, leaderName.c_str());
+
+  std::fill(std::begin(eqSpec->data), std::end(eqSpec->data), 0.0);
+  eqSpec->data[0] = offsetTerm;
+  eqSpec->data[1] = _multiplier;
+
+  // Set solver reference parameters (time constant and damping ratio):
+  // - solref[0] = 0.001 (1 ms) defines a stiff, highly responsive constraint
+  //   to minimize kinematic tracking error.
+  // - solref[1] = 1.0 (critical damping) prevents spring-like coordinate
+  //   oscillations during constraint corrections.
+  eqSpec->solref[0] = 0.001;
+  eqSpec->solref[1] = 1.0;
+
+  MimicConstraintInfo constraint;
+  constraint.spec = eqSpec;
+  constraint.eqId = -1;
+  constraint.leaderDof = _leaderAxisDof;
+  constraint.followerJointInfo = followerJointShared;
+  constraint.followerDof = _dof;
+
+  leaderJointInfo->mimicConstraints.push_back(constraint);
+
+  worldInfo->specDirty = true;
+  this->RecompileSpec(*worldInfo);
+  return true;
 }
 }
 }

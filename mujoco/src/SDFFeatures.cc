@@ -441,11 +441,11 @@ struct ModelKinematicStructure
 
         if (joint2)
         {
-          // We uniquely name the second axis using a flat `_axis2` suffix.
-          // This flat name avoids indicating any Kinematic/SDF nesting
-          // (`::axis2`) while still satisfying MuJoCo's requirement that
-          // joints must be uniquely named for actuators to target them.
-          const std::string mjJointName2 = mjJointName + "_axis2";
+          // We uniquely name the second axis using getJointAxisName helper
+          // with a flat suffix. This flat name avoids indicating any
+          // Kinematic/SDF nesting (`::axis2`) while still satisfying
+          // MuJoCo's requirement that joints must be uniquely named.
+          const std::string mjJointName2 = getJointAxisName(mjJointName, 1);
           mjs_setName(joint2->element, mjJointName2.c_str());
           mjsActuator *actuator2 = mjs_addActuator(_spec, nullptr);
           actuator2->trntype = mjtTrn::mjTRN_JOINT;
