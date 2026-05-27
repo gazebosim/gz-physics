@@ -127,6 +127,7 @@ struct ShapeInfo
   mjsGeom *geom{nullptr};
   std::string name;
   std::weak_ptr<LinkInfo> linkInfo;
+  std::optional<uint16_t> categoryMask;
   WorldInfo *worldInfo{nullptr};
 
   /// \brief Cached axis-aligned bounding box. Currently only used for meshes.

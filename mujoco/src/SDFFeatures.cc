@@ -545,8 +545,34 @@ struct ModelKinematicStructure
       }
       if (geom)
       {
-        geom->contype = 1;
-        geom->conaffinity = 1;
+        uint16_t conaffinity = std::numeric_limits<uint16_t>::max();
+        std::optional<uint16_t> contypeOpt;
+
+        ::sdf::ElementPtr elem = collision->Element();
+        if (auto surfaceElem = elem->FindElement("surface"))
+        {
+          if (auto contactElem = surfaceElem->FindElement("contact"))
+          {
+            if (auto categoryBitmaskElem =
+                contactElem->FindElement("category_bitmask"))
+            {
+              // sdformat only supports uint32_t so cast back to uint16_t
+              contypeOpt = static_cast<uint16_t>(
+                  categoryBitmaskElem->Get<uint32_t>());
+            }
+            if (auto collideBitmaskElem =
+                contactElem->FindElement("collide_bitmask"))
+            {
+              conaffinity = static_cast<uint16_t>(
+                  collideBitmaskElem->Get<uint32_t>());
+            }
+          }
+        }
+
+        uint16_t contype = contypeOpt.value_or(conaffinity);
+
+        geom->contype = static_cast<int>(contype);
+        geom->conaffinity = static_cast<int>(conaffinity);
         mjs_setName(geom->element,
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
         auto shapeInfo =
@@ -557,6 +583,7 @@ struct ModelKinematicStructure
         copyQuat(pose.Rot(), geom->quat);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
+        shapeInfo->categoryMask = contypeOpt;
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
                                    linkInfo->entityId);
 
