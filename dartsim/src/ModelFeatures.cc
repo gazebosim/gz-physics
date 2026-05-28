@@ -57,6 +57,54 @@ bool ModelFeatures::GetModelStatic(const Identity &_id) const
 }
 
 /////////////////////////////////////////////////
+void ModelFeatures::SetModelCollisionEnabled(
+    const Identity &_id, bool _enabled)
+{
+  auto modelInfo = this->GetModelInfo(_id);
+  if (!modelInfo || !modelInfo->model)
+    return;
+
+  for (const auto &linkInfo : modelInfo->links)
+  {
+    if (linkInfo->link)
+      linkInfo->link->setCollidable(_enabled);
+  }
+
+  // Also apply to nested models recursively.
+  for (const std::size_t nestedID : modelInfo->nestedModels)
+  {
+    this->SetModelCollisionEnabled(this->GenerateIdentity(
+        nestedID, this->GetModelInfo(nestedID)), _enabled);
+  }
+}
+
+/////////////////////////////////////////////////
+bool ModelFeatures::GetModelCollisionEnabled(const Identity &_id) const
+{
+  const auto modelInfo = this->GetModelInfo(_id);
+  if (!modelInfo || !modelInfo->model)
+    return true;
+
+  for (const auto &linkInfo : modelInfo->links)
+  {
+    if (linkInfo->link && !linkInfo->link->isCollidable())
+      return false;
+  }
+
+  // Also check nested models.
+  for (const std::size_t nestedID : modelInfo->nestedModels)
+  {
+    if (!this->GetModelCollisionEnabled(this->GenerateIdentity(
+        nestedID, this->GetModelInfo(nestedID))))
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/////////////////////////////////////////////////
 void ModelFeatures::SetModelGravityEnabled(
     const Identity &_id, bool _enabled)
 {

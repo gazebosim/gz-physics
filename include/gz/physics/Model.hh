@@ -59,6 +59,43 @@ namespace gz
       };
     };
 
+    /////////////////////////////////////////////////
+    /// \brief Feature for enabling and disabling collisions on a model.
+    /// When collisions are disabled, the model's links will not collide with
+    /// other entities in the world.
+    class GZ_PHYSICS_VISIBLE ModelCollisionEnabled : public virtual Feature
+    {
+      /// \brief The Model API for enabling and disabling collisions.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Model : public virtual Feature::Model<PolicyT, FeaturesT>
+      {
+        /// \brief Enable or disable collisions for this model.
+        /// \param[in] _enabled True to enable collisions, false to disable.
+        public: void SetCollisionEnabled(bool _enabled);
+
+        /// \brief Get whether collisions are enabled for this model.
+        /// \return True if collisions are enabled, false otherwise.
+        public: bool GetCollisionEnabled() const;
+      };
+
+      /// \private The implementation API for model collision enabled state.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        /// \brief Implementation API for enabling/disabling model collisions.
+        /// \param[in] _id Identity of the model.
+        /// \param[in] _enabled True to enable collisions, false to disable.
+        public: virtual void SetModelCollisionEnabled(
+            const Identity &_id, bool _enabled) = 0;
+
+        /// \brief Implementation API for getting the model collision state.
+        /// \param[in] _id Identity of the model.
+        /// \return True if collisions are enabled for the model.
+        public: virtual bool GetModelCollisionEnabled(
+            const Identity &_id) const = 0;
+      };
+    };
+
   }
 }
 
