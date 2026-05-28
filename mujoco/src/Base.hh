@@ -51,6 +51,13 @@ inline void copyPos(const math::Vector3d &_src,  mjtNum *_dst)
   _dst[2] = _src.Z();
 }
 
+inline void copyPos(const Eigen::Vector3d &_src,  mjtNum *_dst)
+{
+  _dst[0] = _src.x();
+  _dst[1] = _src.y();
+  _dst[2] = _src.z();
+}
+
 inline void copyQuat(const math::Quaterniond &_src,  mjtNum *_dst)
 {
   _dst[0] = _src.W();
