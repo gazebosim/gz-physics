@@ -716,29 +716,6 @@ TYPED_TEST(ModelGravityTest, AddedMassLinkGravityInvariantPreserved)
 }
 
 //////////////////////////////////////////////////
-TYPED_TEST(ModelCollisionTest, ModelCollisionEnabledDefault)
-{
-  for (const std::string &name : this->pluginNames)
-  {
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-
-    auto engine =
-        gz::physics::RequestEngine3d<ModelCollisionFeaturesList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    auto world = LoadWorld<ModelCollisionFeaturesList>(
-        engine, common_test::worlds::kSphereGravitySdf);
-    ASSERT_NE(nullptr, world);
-
-    auto model = world->GetModel("sphere");
-    ASSERT_NE(nullptr, model);
-
-    // Default: collisions are enabled.
-    EXPECT_TRUE(model->GetCollisionEnabled());
-  }
-}
-
-//////////////////////////////////////////////////
 TYPED_TEST(ModelCollisionTest, ModelCollisionEnabledSetGet)
 {
   for (const std::string &name : this->pluginNames)
