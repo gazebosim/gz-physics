@@ -40,6 +40,24 @@ bool ModelStaticState::Model<PolicyT, FeaturesT>::GetStatic() const
       ->GetModelStatic(this->identity);
 }
 
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+void ModelCollisionEnabled::Model<PolicyT, FeaturesT>::SetCollisionEnabled(
+    bool _enabled)
+{
+  this->template Interface<ModelCollisionEnabled>()
+      ->SetModelCollisionEnabled(this->identity, _enabled);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+bool ModelCollisionEnabled::Model<PolicyT, FeaturesT>::GetCollisionEnabled()
+    const
+{
+  return this->template Interface<ModelCollisionEnabled>()
+      ->GetModelCollisionEnabled(this->identity);
+}
+
 }
 }
 
