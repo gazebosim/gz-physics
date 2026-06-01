@@ -3256,7 +3256,7 @@ TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
 { 
   for (const std::string &name : this->pluginNames)
   {
-    std::string worldName = "";
+    std::string worldName;
     if(this->PhysicsEngineName(name) == "bullet-featherstone")
     {
       worldName = common_test::worlds::KMimicFourBarLinkageWorld;
