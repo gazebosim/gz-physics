@@ -17,6 +17,7 @@
 
 #include "AddedMassFeatures.hh"
 #include <dart/dynamics/Inertia.hpp>
+#include <gz/common/Profiler.hh>
 
 namespace gz::physics::dartsim
 {
@@ -24,6 +25,7 @@ namespace gz::physics::dartsim
 void AddedMassFeatures::SetLinkAddedMass(const Identity &_link,
     const gz::math::Matrix6d &_addedMass)
 {
+  GZ_PROFILE("AddedMassFeatures::SetLinkAddedMass");
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_link);
   auto bn = linkInfo->link;
 

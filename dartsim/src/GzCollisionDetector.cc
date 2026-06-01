@@ -22,6 +22,8 @@
 
 #include <dart/collision/CollisionObject.hpp>
 
+#include <gz/common/Profiler.hh>
+
 #include "GzCollisionDetector.hh"
 
 using namespace dart;
@@ -49,6 +51,7 @@ std::size_t GzCollisionDetector::GetCollisionPairMaxContacts() const
 void GzCollisionDetector::LimitCollisionPairMaxContacts(
     CollisionResult *_result)
 {
+  GZ_PROFILE("GzCollisionDetector::LimitCollisionPairMaxContacts");
   if (this->maxCollisionPairContacts ==
     std::numeric_limits<std::size_t>::max())
     return;
