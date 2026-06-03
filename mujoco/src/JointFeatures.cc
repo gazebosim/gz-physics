@@ -38,7 +38,7 @@ Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
 
   if (!jointInfo->ballJointCacheIndex)
   {
-    gzerr << "Ball joint cache index is is set for ["
+    gzerr << "Ball joint cache index is not set for ["
           << jointInfo->name << "]\n";
     return nullptr;
   }
@@ -113,6 +113,24 @@ void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
   {
     d->qpos[jointInfo->nq_index + _dof] = _value;
   }
+}
+
+void updateScrewJointFollower(
+    JointInfo *_jointInfo, double _value, double *_mjDataArray, int _baseIndex)
+{
+  if (!_jointInfo->screwEqIndex.has_value())
+    return;
+
+  auto *m = _jointInfo->worldInfo->mjModelObj;
+  const int eqId = *_jointInfo->screwEqIndex;
+  const double multiplier = m->eq_data[eqId * mjNEQDATA + 1];
+
+  // Since the primary rotational hinge and secondary translational slide
+  // joints are created sequentially on the child body back-to-back in
+  // SDFFeatures.cc, and MuJoCo compiles a body's joints contiguously in
+  // memory, the follower's state index is guaranteed to be exactly
+  // _baseIndex + 1.
+  _mjDataArray[_baseIndex + 1] = _value * multiplier;
 }
 }
 
@@ -260,6 +278,15 @@ void JointFeatures::SetJointPosition(
     return;
   }
   setJointPositionImpl(jointInfo, _dof, _value);
+
+  // If this is the primary rotational hinge joint of a screw joint,
+  // simultaneously update the coupled secondary slide joint position (`qpos`)
+  // by `_value * pitch`. This maintains perfect kinematic consistency and
+  // prevents violent solver impulses during state initialization.
+  updateScrewJointFollower(
+      jointInfo, _value, jointInfo->worldInfo->mjDataObj->qpos,
+      jointInfo->nq_index);
+
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 
@@ -293,6 +320,15 @@ void JointFeatures::SetJointVelocity(
     return;
   }
   jointInfo->worldInfo->mjDataObj->qvel[jointInfo->nv_index + _dof] = _value;
+
+  // If this is the primary rotational hinge joint of a screw joint,
+  // simultaneously update the coupled secondary slide joint velocity (`qvel`)
+  // by `_value * pitch`. This maintains perfect kinematic consistency and
+  // prevents violent solver impulses during state initialization.
+  updateScrewJointFollower(jointInfo, _value,
+                           jointInfo->worldInfo->mjDataObj->qvel,
+                           jointInfo->nv_index);
+
   mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 
@@ -370,7 +406,13 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   int bodyId = mjs_getId(jointInfo->childBody->element);
   if (bodyId < 0 || bodyId >= m->nbody)
     return 0;
-  return m->body_dofnum[bodyId];
+
+  std::size_t dofs = m->body_dofnum[bodyId];
+  if (jointInfo->screwEqIndex.has_value())
+  {
+    dofs -= 1;
+  }
+  return dofs;
 }
 
 /////////////////////////////////////////////////

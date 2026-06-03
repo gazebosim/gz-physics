@@ -185,6 +185,21 @@ TEST_F(BasicJointFeaturesTest, GetSetBasicState)
     EXPECT_NEAR(0.0, this->joint->GetPosition(0), kTol);
     EXPECT_NEAR(0.0, this->joint->GetVelocity(0), kTol);
 
+    // bullet-featherstone currently handles out-of-bounds DOF access
+    // differently from other engines.
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+    {
+      // Check out-of-bounds DOF access (index 1 is invalid for a 1-DOF joint)
+      EXPECT_TRUE(std::isnan(this->joint->GetPosition(1)));
+      EXPECT_TRUE(std::isnan(this->joint->GetVelocity(1)));
+
+      // Setting an invalid DOF should be a safe no-op
+      this->joint->SetPosition(1, 1.0);
+      this->joint->SetVelocity(1, 1.0);
+      EXPECT_TRUE(std::isnan(this->joint->GetPosition(1)));
+      EXPECT_TRUE(std::isnan(this->joint->GetVelocity(1)));
+    }
+
     const double startPos = 0.01;
     this->joint->SetPosition(0, startPos);
     EXPECT_NEAR(startPos, this->joint->GetPosition(0), kTol);
@@ -609,6 +624,150 @@ TEST_F(BallJointBasicJointFeatureTest, GetSetBasicState)
     EXPECT_NEAR(expectedAngVel, joint->GetVelocity(0), kTol);
     EXPECT_NEAR(0, joint->GetVelocity(1), kTol);
     EXPECT_NEAR(0, joint->GetVelocity(2), kTol);
+  }
+}
+
+
+using UniversalJointBasicJointFeatureTest = JointFeaturesTest<BasicJointFeatureList>;
+
+TEST_F(UniversalJointBasicJointFeatureTest, GetSetBasicState)
+{
+  const double kTol = 1e-4;
+  std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="test_world">
+      <model name="test_universal_joint">
+        <link name="base" />
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="point_mass">
+          <pose>0.0 0.0 -1.0  0 0 0</pose>
+          <inertial>
+            <mass>0.1</mass>
+              <inertia>
+                <ixx>1e-6</ixx>
+                <iyy>1e-6</iyy>
+                <izz>1e-6</izz>
+              </inertia>
+          </inertial>
+          <collision name="c1">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="test_joint" type="universal">
+          <pose relative_to="base"/>
+          <parent>base</parent>
+          <child>point_mass</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+          </axis>
+          <axis2>
+            <xyz>0 1 0</xyz>
+          </axis2>
+        </joint>
+      </model>
+    </world>
+  </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+    ASSERT_NO_FATAL_FAILURE(this->InitPlugin(name));
+
+    sdf::Root root;
+    auto errors = root.LoadSdfString(worldStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+
+    auto sdfWorld = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, sdfWorld);
+    this->world = this->engine->ConstructWorld(*sdfWorld);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("test_universal_joint");
+    ASSERT_NE(nullptr, model);
+    auto joint = model->GetJoint("test_joint");
+    ASSERT_NE(nullptr, joint);
+    EXPECT_EQ(2u, joint->GetDegreesOfFreedom());
+    EXPECT_NEAR(0.0, joint->GetPosition(0), kTol);
+    EXPECT_NEAR(0.0, joint->GetPosition(1), kTol);
+
+    // Check out-of-bounds DOF access (index 2 is invalid for a 2-DOF joint)
+    EXPECT_TRUE(std::isnan(joint->GetPosition(2)));
+    EXPECT_TRUE(std::isnan(joint->GetVelocity(2)));
+
+    // Setting an invalid DOF should be a safe no-op
+    joint->SetPosition(2, 1.0);
+    joint->SetVelocity(2, 1.0);
+    EXPECT_TRUE(std::isnan(joint->GetPosition(2)));
+    EXPECT_TRUE(std::isnan(joint->GetVelocity(2)));
+
+    // Check that setting each joint position changes the pose of the joint
+    {
+      const Eigen::Isometry3d initialPose(Eigen::Translation3d(0, 0.0, -1));
+      Eigen::Vector2d testJointPos = {GZ_PI_4, GZ_PI_4};
+
+      {
+        joint->SetPosition(0, testJointPos[0]);
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testJointPos[0], Eigen::Vector3d::UnitX()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+
+      {
+        joint->SetPosition(1, testJointPos[1]);
+
+        Eigen::Isometry3d newPose =
+            Eigen::AngleAxisd(testJointPos[0], Eigen::Vector3d::UnitX()) *
+            Eigen::AngleAxisd(testJointPos[1], Eigen::Vector3d::UnitY()) *
+            initialPose;
+
+        EXPECT_TRUE(physics::test::Equal(newPose, joint->GetTransform(), kTol))
+            << newPose.matrix() << "\n\n"
+            << joint->GetTransform().matrix();
+      }
+    }
+
+    // Test swing physics under gravity with 2-DOF Universal joint
+    const double startPos0 = 0.05;
+    const double startPos1 = 0.05;
+    joint->SetPosition(0, startPos0);
+    joint->SetPosition(1, startPos1);
+    joint->SetVelocity(0, 0.0);
+    joint->SetVelocity(1, 0.0);
+    EXPECT_NEAR(startPos0, joint->GetPosition(0), kTol);
+    EXPECT_NEAR(startPos1, joint->GetPosition(1), kTol);
+
+    const int numSteps = 100;
+    for (int i = 0; i < numSteps; ++i)
+    {
+      this->Step();
+    }
+    const double timeElapsed = numSteps * this->dt;
+    // Pendulum swing using small angle approximation:
+    // w = sqrt(g/l) = sqrt(9.81)
+    // pos = start * cos(w * t)
+    // vel = -w * start * sin(w * t)
+    const double angFreq = std::sqrt(this->kGravity);
+    const double expectedPosition0 = startPos0 * std::cos(angFreq * timeElapsed);
+    const double expectedPosition1 = startPos1 * std::cos(angFreq * timeElapsed);
+    EXPECT_NEAR(expectedPosition0, joint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(expectedPosition1, joint->GetPosition(1), 1e-3);
+
+    const double expectedAngVel0 = -angFreq * startPos0 * std::sin(angFreq * timeElapsed);
+    const double expectedAngVel1 = -angFreq * startPos1 * std::sin(angFreq * timeElapsed);
+    EXPECT_NEAR(expectedAngVel0, joint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(expectedAngVel1, joint->GetVelocity(1), 1e-3);
   }
 }
 
