@@ -2808,7 +2808,8 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Input input;
 
-    // Ensure that the screw joint has 1 DOF since some engines might use two couled joints to implement this.
+    // Ensure that the screw joint has 1 DOF since some engines might use two
+    // coupled joints to implement this.
     EXPECT_EQ(1u, jointBaseline->GetDegreesOfFreedom());
 
     // Ensure joint starts at 0

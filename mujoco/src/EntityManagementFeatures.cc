@@ -19,6 +19,7 @@
 
 #include <mujoco/mujoco.h>
 
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -404,6 +405,113 @@ Identity EntityManagementFeatures::GetLinkOfShape(
   if (!linkInfo)
     return this->GenerateInvalidId();
   return this->GenerateIdentity(linkInfo->entityId, linkInfo);
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::SetCollisionFilterMask(
+    const Identity &_shapeID, uint16_t _mask)
+{
+  auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  if (shapeInfo && shapeInfo->geom)
+  {
+    shapeInfo->geom->conaffinity = static_cast<int>(_mask);
+
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask. So update contype
+    // as well
+    if (!shapeInfo->categoryMask.has_value())
+    {
+      shapeInfo->geom->contype = static_cast<int>(_mask);
+    }
+
+    // Update the model directly for immediate effect
+    if (shapeInfo->worldInfo)
+    {
+      if (shapeInfo->worldInfo->mjModelObj)
+      {
+        int geomId = mjs_getId(shapeInfo->geom->element);
+        if (geomId >= 0 && geomId < shapeInfo->worldInfo->mjModelObj->ngeom)
+        {
+          shapeInfo->worldInfo->mjModelObj->geom_conaffinity[geomId] =
+              static_cast<int>(_mask);
+          if (!shapeInfo->categoryMask.has_value())
+          {
+            shapeInfo->worldInfo->mjModelObj->geom_contype[geomId] =
+                static_cast<int>(_mask);
+          }
+        }
+      }
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+uint16_t EntityManagementFeatures::GetCollisionFilterMask(
+    const Identity &_shapeID) const
+{
+  auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  return static_cast<uint16_t>(shapeInfo->geom->conaffinity);
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::RemoveCollisionFilterMask(
+    const Identity &_shapeID)
+{
+  this->SetCollisionFilterMask(_shapeID, std::numeric_limits<uint16_t>::max());
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::SetCategoryFilterMask(
+    const Identity &_shapeID, uint16_t _mask)
+{
+  auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  if (shapeInfo && shapeInfo->geom)
+  {
+    shapeInfo->categoryMask = _mask;
+    shapeInfo->geom->contype = static_cast<int>(_mask);
+
+    // Update the model directly for immediate effect
+    if (shapeInfo->worldInfo)
+    {
+      if (shapeInfo->worldInfo->mjModelObj)
+      {
+        int geomId = mjs_getId(shapeInfo->geom->element);
+        if (geomId >= 0 && geomId < shapeInfo->worldInfo->mjModelObj->ngeom)
+        {
+          shapeInfo->worldInfo->mjModelObj->geom_contype[geomId] =
+              static_cast<int>(_mask);
+        }
+      }
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+uint16_t EntityManagementFeatures::GetCategoryFilterMask(
+    const Identity &_shapeID) const
+{
+  auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  if (shapeInfo && shapeInfo->geom)
+  {
+    return static_cast<uint16_t>(shapeInfo->geom->contype);
+  }
+  return std::numeric_limits<uint16_t>::max();
+}
+
+/////////////////////////////////////////////////
+void EntityManagementFeatures::RemoveCategoryFilterMask(
+    const Identity &_shapeID)
+{
+  auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  if (!shapeInfo || !shapeInfo->geom)
+    return;
+  // Removing categority bitmask means setting it to the same value as
+  // collide bitmask
+  // Do this by calling SetCategoryFilterMask so both the spec and the model
+  // are updated. Make sure to reset the categoryMask optional var afterwards.
+  this->SetCategoryFilterMask(
+      _shapeID, static_cast<uint16_t>(shapeInfo->geom->conaffinity));
+  shapeInfo->categoryMask.reset();
 }
 
 /////////////////////////////////////////////////

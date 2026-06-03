@@ -62,9 +62,24 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 
   mj_step(m, d);
 
+  // Synchronize Cartesian position and velocity kinematics for the new state.
+  // In MuJoCo, the numerical integrator in mj_step (Stage 24) advances the
+  // joint space variables (qpos/qvel) to the new state, but does not recompute
+  // the corresponding Cartesian kinematic and frame variables (e.g. xpos,
+  // xipos, site_xpos, cvel, xvel). These are normally computed lazily at the
+  // start of the next step. Synchronizing them here ensures that immediate
+  // downstream state queries (like Link::FrameDataRelativeToWorld) return
+  // accurate, lag-free results for the current timestep.
+  mj_fwdPosition(m, d);
+  mj_fwdVelocity(m, d);
+
   // Clear joint control forces so that they are not applied in the next
   // timestep, which is the expected behavior in Gazebo.
   std::fill(d->ctrl, d->ctrl + m->nu, 0.0);
+
+  // Clear external forces/torques applied to links so that they are not applied
+  // in the next timestep, which is the expected behavior in Gazebo.
+  std::fill(d->xfrc_applied, d->xfrc_applied + 6 * m->nbody, 0.0);
 
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
