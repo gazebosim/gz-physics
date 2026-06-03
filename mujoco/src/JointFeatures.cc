@@ -136,12 +136,12 @@ void updateScrewJointFollower(
   _mjDataArray[_baseIndex + 1] = _value * multiplier;
 }
 
-void updateMimicJointFollowers(JointInfo *jointInfo, std::size_t _dof,
+void updateMimicJointFollowers(JointInfo *_jointInfo, std::size_t _dof,
                                double _value, double *_mjDataArray,
                                bool _isQpos)
 {
-  auto *m = jointInfo->worldInfo->mjModelObj;
-  for (auto &constraint : jointInfo->mimicConstraints)
+  auto *m = _jointInfo->worldInfo->mjModelObj;
+  for (auto &constraint : _jointInfo->mimicConstraints)
   {
     if (constraint.eqId < 0 || constraint.eqId >= m->neq)
       continue;
@@ -201,8 +201,8 @@ MimicConstraintSearchResult findMimicConstraint(
       for (std::size_t i = 0; i < jInfo->mimicConstraints.size(); ++i)
       {
         const auto &c = jInfo->mimicConstraints[i];
-        if (c.followerJointInfo.lock() == _followerJoint &&
-            c.followerDof == _followerDof)
+        if (c.followerDof == _followerDof &&
+            c.followerJointInfo.lock() == _followerJoint)
         {
           return {jInfo, i, true};
         }
@@ -612,7 +612,7 @@ bool JointFeatures::SetJointMimicConstraint(
 
   if (_leaderAxisDof >= this->GetJointDegreesOfFreedom(leaderJointId))
   {
-    gzerr << "Trying to access an invalid leader DOF [" << _leaderAxisDof
+    gzerr << "Trying to access an invalid leader DOF [ " << _leaderAxisDof
           << "] on joint [ " << leaderJointInfo->name << "]\n";
     return false;
   }

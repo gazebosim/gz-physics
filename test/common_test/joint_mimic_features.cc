@@ -596,7 +596,8 @@ TEST_F(JointMimicFeatureTest, UniversalJointMimicTest)
     followerJoint->SetPosition(0, 0);
     followerJoint->SetPosition(1, 0);
 
-    for (int _ = 0; _ < 100; _++) world->Step(output, state, input);
+    for (int i = 0; i < 100; i++)
+      world->Step(output, state, input);
 
     // Verify that the relation still holds under gravity dynamic simulation
     const double tolerance = 0.1;
