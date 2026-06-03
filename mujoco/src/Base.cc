@@ -76,6 +76,17 @@ void resolveJointIndices(WorldInfo &_worldInfo)
         continue;
       }
       jointInfo->nv_index = qvelAddr;
+
+      // Resolve screw constraint compiled ID
+      jointInfo->screwEqIndex = std::nullopt;
+      if (jointInfo->screwConstraintSpec)
+      {
+        int eqId = mjs_getId(jointInfo->screwConstraintSpec->element);
+        if (eqId >= 0 && eqId < m->neq)
+        {
+          jointInfo->screwEqIndex = eqId;
+        }
+      }
     }
   }
 
