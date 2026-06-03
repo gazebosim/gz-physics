@@ -393,7 +393,7 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     auto it = this->prevLinkPoses.begin();
     while (it != this->prevLinkPoses.end())
     {
-      if (this->links.find(prevPose.first) == this->links.end())
+      if (this->links.find(it->first) == this->links.end())
       {
         // Link was removed, clear from cache
         it = this->prevLinkPoses.erase(it);
