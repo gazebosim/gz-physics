@@ -116,13 +116,13 @@ void setJointPositionImpl(JointInfo *jointInfo, std::size_t _dof, double _value)
 }
 
 void updateScrewJointFollower(
-    JointInfo *jointInfo, double _value, double *_mjDataArray, int _baseIndex)
+    JointInfo *_jointInfo, double _value, double *_mjDataArray, int _baseIndex)
 {
-  if (!jointInfo->screwEqIndex.has_value())
+  if (!_jointInfo->screwEqIndex.has_value())
     return;
 
-  auto *m = jointInfo->worldInfo->mjModelObj;
-  const int eqId = *jointInfo->screwEqIndex;
+  auto *m = _jointInfo->worldInfo->mjModelObj;
+  const int eqId = *_jointInfo->screwEqIndex;
   const double multiplier = m->eq_data[eqId * mjNEQDATA + 1];
 
   // Since the primary rotational hinge and secondary translational slide
