@@ -1,5 +1,12 @@
 ## Gazebo Physics 7.x
 
+### Gazebo Physics 7.7.0 (2026-06-03)
+
+1. **Baseline:** this includes all changes from 7.7.0 and earlier.
+
+1. Enable/Disable collisions at runtime
+    * [Pull request #991](https://github.com/gazebosim/gz-physics/pull/991)
+
 ### Gazebo Physics 7.7.0 (2026-05-15)
 
 1. **Baseline:** this includes all changes from 7.6.0 and earlier.
