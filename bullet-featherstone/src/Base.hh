@@ -236,6 +236,8 @@ struct LinkInfo
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
   // Link is either static, fixed to world, or has zero dofs
   bool isStaticOrFixed = false;
+  /// \brief True if the link has at least one convex hull collision shape
+  bool hasConvexHull = false;
 };
 
 struct CollisionInfo

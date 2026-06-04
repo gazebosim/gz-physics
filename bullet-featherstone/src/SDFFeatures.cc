@@ -1215,6 +1215,7 @@ bool SDFFeatures::AddSdfCollision(
           compoundShape->addChildShape(trans, convexShape);
         }
         meshCreated = true;
+        linkInfo->hasConvexHull = true;
       }
     }
 
@@ -1516,6 +1517,7 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
     linkIndexInModel = *linkInfo->indexInModel;
   linkInfo->collider = std::make_unique<GzMultiBodyLinkCollider>(
     modelInfo->body.get(), linkIndexInModel);
+  linkInfo->collider->setUserPointer(linkInfo);
 
   linkInfo->shape = std::make_unique<btCompoundShape>();
 

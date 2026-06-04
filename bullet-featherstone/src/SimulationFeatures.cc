@@ -43,7 +43,7 @@ bool hasConvexHullChildShapes(
 
 /////////////////////////////////////////////////
 const btCollisionShape *findCollisionShape(
-    const btCompoundShape *_compoundShape, int _childIndex)
+    const btCompoundShape *_compoundShape, int _childIndex, bool _hasConvexHull)
 {
   // _childIndex should give us the index of the child shape within
   // _compoundShape which represents the collision.
@@ -66,24 +66,17 @@ const btCollisionShape *findCollisionShape(
       // A _childIndex of 1 is ambiguous as it could refer to either
       // boxShape1 or convexShape1
       // return nullptr in this case to indicate ambiguity
-      if (childCount > 1)
+      if (childCount > 1 && _hasConvexHull)
       {
-        for (int i = 0; i < childCount; ++i)
+        static bool informed{false};
+        if (!informed)
         {
-          const btCollisionShape *shape = _compoundShape->getChildShape(i);
-          if (hasConvexHullChildShapes(shape))
-          {
-            static bool informed{false};
-            if (!informed)
-            {
-              gzwarn << "Unable to determine the collision id for a link with "
-                     << "both simple primitive and convex shape collisions."
-                     << std::endl;
-              informed = true;
-            }
-            return nullptr;
-          }
+          gzwarn << "Unable to determine the collision id for a link with "
+                 << "both simple primitive and convex shape collisions."
+                 << std::endl;
+          informed = true;
         }
+        return nullptr;
       }
 
       const btCollisionShape *shape =
@@ -281,10 +274,23 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
   }
 
   int numManifolds = world->world->getDispatcher()->getNumManifolds();
+
+  // Calculate total contacts to reserve space
+  int totalContacts = 0;
+  for (int i = 0; i < numManifolds; i++)
+  {
+    totalContacts += world->world->getDispatcher()->getManifoldByIndexInternal(i)->getNumContacts();
+  }
+  outContacts.reserve(totalContacts);
+
   for (int i = 0; i < numManifolds; i++)
   {
     btPersistentManifold* contactManifold =
       world->world->getDispatcher()->getManifoldByIndexInternal(i);
+    int numContacts = contactManifold->getNumContacts();
+    if (numContacts <= 0)
+      continue;
+
     const btMultiBodyLinkCollider* ob0 =
       dynamic_cast<const btMultiBodyLinkCollider*>(contactManifold->getBody0());
     const btMultiBodyLinkCollider* ob1 =
@@ -305,15 +311,20 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     const btCompoundShape *compoundShape1 =
         static_cast<const btCompoundShape *>(linkShape1);
 
-    int numContacts = contactManifold->getNumContacts();
+    const LinkInfo *linkInfo0 = static_cast<const LinkInfo*>(ob0->getUserPointer());
+    const LinkInfo *linkInfo1 = static_cast<const LinkInfo*>(ob1->getUserPointer());
+
+    bool hasConvexHull0 = linkInfo0 ? linkInfo0->hasConvexHull : false;
+    bool hasConvexHull1 = linkInfo1 ? linkInfo1->hasConvexHull : false;
+
     for (int j = 0; j < numContacts; j++)
     {
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
 
       const btCollisionShape *colShape0 = findCollisionShape(
-          compoundShape0, pt.m_index0);
+          compoundShape0, pt.m_index0, hasConvexHull0);
       const btCollisionShape *colShape1 = findCollisionShape(
-          compoundShape1, pt.m_index1);
+          compoundShape1, pt.m_index1, hasConvexHull1);
 
       std::size_t collision0ID = std::numeric_limits<std::size_t>::max();
       std::size_t collision1ID = std::numeric_limits<std::size_t>::max();
@@ -325,6 +336,11 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
         collision1ID = colShape1->getUserIndex();
       else if (compoundShape1->getNumChildShapes() > 0)
         collision1ID = compoundShape1->getChildShape(0)->getUserIndex();
+
+      auto it0 = this->collisions.find(collision0ID);
+      auto it1 = this->collisions.find(collision1ID);
+      if (it0 == this->collisions.end() || it1 == this->collisions.end())
+        continue;
 
       CompositeData extraData;
 
@@ -339,9 +355,9 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       extraContactData.depth = -pt.getDistance();
 
       outContacts.push_back(SimulationFeatures::ContactInternal {
-        this->GenerateIdentity(collision0ID, this->collisions.at(collision0ID)),
-        this->GenerateIdentity(collision1ID, this->collisions.at(collision1ID)),
-        convert(pt.getPositionWorldOnA()), extraData});
+        this->GenerateIdentity(collision0ID, it0->second),
+        this->GenerateIdentity(collision1ID, it1->second),
+        convert(pt.getPositionWorldOnA()), std::move(extraData)});
       }
   }
   return outContacts;
