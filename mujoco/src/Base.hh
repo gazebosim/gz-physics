@@ -44,6 +44,22 @@ namespace physics
 namespace mujoco
 {
 
+/// \brief Format the scoped name of a joint axis, appending a suffix
+/// for secondary degrees of freedom if the axis index is greater than 0.
+/// \param[in] _scopedJointName The standard pre-scoped joint name string.
+/// \param[in] _dof The specific degree-of-freedom (axis index) of the joint.
+/// \return The formatted joint/axis name string.
+inline std::string getJointAxisName(const std::string &_scopedJointName,
+                                    std::size_t _dof)
+{
+  std::string name = _scopedJointName;
+  if (_dof > 0)
+  {
+    name += "_axis" + std::to_string(_dof + 1);
+  }
+  return name;
+}
+
 inline void copyPos(const math::Vector3d &_src, mjtNum *_dst)
 {
   _dst[0] = _src.X();
@@ -155,6 +171,33 @@ struct LinkInfo
   detail::EntityStorage<std::shared_ptr<ShapeInfo>, const mjsGeom *> shapes{};
 };
 
+struct JointInfo;
+
+/// \brief Metadata for a mimic joint constraint relationship.
+/// Couples the state of a follower joint/axis to a leader joint/axis
+/// via a linear relationship (multiplier, offset, reference).
+struct MimicConstraintInfo
+{
+  /// \brief Pointer to the equality constraint spec element in mjSpec.
+  mjsEquality* spec{nullptr};
+
+  /// \brief The compiled equality constraint index in the active mjModel.
+  /// Set to -1 if the constraint is not currently compiled/active.
+  int eqId{-1};
+
+  /// \brief The specific degree-of-freedom (axis index) of the leader joint
+  /// that acts as the driver for this constraint.
+  std::size_t leaderDof{0};
+
+  /// \brief Safe weak reference targeting the follower joint's metadata
+  /// to avoid strong circular dependency cycles and memory leaks.
+  std::weak_ptr<JointInfo> followerJointInfo;
+
+  /// \brief The specific degree-of-freedom (axis index) of the follower joint
+  /// that is constrained by this relationship.
+  std::size_t followerDof{0};
+};
+
 struct JointInfo
 {
   JointInfo(std::size_t _entityId,
@@ -179,6 +222,12 @@ struct JointInfo
   mjsEquality* screwConstraintSpec{nullptr};
   // Compiled screw joint equality constraint index in mjModel (max 1)
   std::optional<int> screwEqIndex{std::nullopt};
+  // Mimic constraints where this joint is the leader.
+  // Storing constraints on the leader (rather than the followers) supports:
+  // 1. One-to-many cases where one leader drives multiple followers.
+  // 2. O(num_followers) keyframe updates, avoiding expensive
+  //    O(total_joints) global searches across the entire model.
+  std::vector<MimicConstraintInfo> mimicConstraints;
 };
 
 
@@ -250,6 +299,8 @@ struct WorldInfo
 
 class Base
 {
+  public: virtual ~Base() = default;
+
   // Note: Entity ID 0 is reserved for the "engine"
   public: std::size_t entityCount = 1;
 

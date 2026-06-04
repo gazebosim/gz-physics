@@ -87,6 +87,20 @@ void resolveJointIndices(WorldInfo &_worldInfo)
           jointInfo->screwEqIndex = eqId;
         }
       }
+
+      // Resolve mimic constraints compiled IDs
+      for (auto &constraint : jointInfo->mimicConstraints)
+      {
+        int eqId = mjs_getId(constraint.spec->element);
+        if (eqId >= 0 && eqId < m->neq)
+        {
+          constraint.eqId = eqId;
+        }
+        else
+        {
+          constraint.eqId = -1;
+        }
+      }
     }
   }
 
