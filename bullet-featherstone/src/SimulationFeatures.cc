@@ -326,22 +326,23 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
       else if (compoundShape1->getNumChildShapes() > 0)
         collision1ID = compoundShape1->getChildShape(0)->getUserIndex();
 
-      CompositeData extraData;
+      // CompositeData extraData;
 
       // Add normal, depth and force to extraData.
-      auto& extraContactData =
-        extraData.Get<SimulationFeatures::ExtraContactData>();
+      // auto& extraContactData =
+      //   extraData.Get<SimulationFeatures::ExtraContactData>();
 
-      const Eigen::Vector3d normal = convert(pt.m_normalWorldOnB);
-      extraContactData.force =
-          normal * (pt.m_appliedImpulse / world->stepSize);
-      extraContactData.normal = normal;
-      extraContactData.depth = -pt.getDistance();
+      // const Eigen::Vector3d normal = convert(pt.m_normalWorldOnB);
+      // extraContactData.force =
+      //     normal * (pt.m_appliedImpulse / world->stepSize);
+      // extraContactData.normal = normal;
+      // extraContactData.depth = -pt.getDistance();
 
       outContacts.push_back(SimulationFeatures::ContactInternal {
         this->GenerateIdentity(collision0ID, this->collisions.at(collision0ID)),
         this->GenerateIdentity(collision1ID, this->collisions.at(collision1ID)),
-        convert(pt.getPositionWorldOnA()), extraData});
+        // convert(pt.getPositionWorldOnA()), std::move(extraData)});
+        convert(pt.getPositionWorldOnA())});
       }
   }
   return outContacts;
