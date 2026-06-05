@@ -19,8 +19,8 @@
   <depend>gz-math</depend>
   <depend>gz-plugin</depend>
   <depend>gz-utils</depend>
+  <!-- Add mujoco as dependency once it has a rosdep key <depend>mujoco</depend> -->
   <depend>sdformat</depend>
-  <depend>mujoco</depend>
 
   <export>
     <build_type>cmake</build_type>
