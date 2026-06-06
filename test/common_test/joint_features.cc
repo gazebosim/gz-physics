@@ -2697,7 +2697,7 @@ TEST_F(FixedJointWeldFeatureTestTypes, FixedJointWeldFall)
     }
     // Verify that the error is smaller when child is welded to parent
     EXPECT_LT(errWeld, errNoWeld);
-  }
+  }  
 }
 
 struct JointFeatureScrewList : gz::physics::FeatureList<
@@ -3008,6 +3008,222 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointLimits)
     EXPECT_NEAR(pitch * -limit, posLower, 5e-2);
   }
 }
+
+using LoopKinematicChainFeatureList = gz::physics::FeatureList<
+    gz::physics::FindFreeGroupFeature,
+    gz::physics::SetFreeGroupWorldPose,
+    gz::physics::AttachFixedJointFeature,
+    gz::physics::DetachJointFeature,
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::SetBasicJointState,
+    gz::physics::Solver,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfWorld
+>;
+
+template <class T>
+class LoopKinematicChainTest :
+  public JointFeaturesTest<T>{};
+using LoopKinematicChainTestTypes =
+  ::testing::Types<LoopKinematicChainFeatureList>;
+TYPED_TEST_SUITE(LoopKinematicChainTest,
+                 LoopKinematicChainTestTypes);
+
+TYPED_TEST(LoopKinematicChainTest, AnchoredLoopModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+  
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<LoopKinematicChainFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    double dt = 1e-3;
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kAnchoredLoopWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto model = world->GetModel("anchored_loop");
+
+    auto joint1 = model->GetJoint("joint1");
+    auto joint2 = model->GetJoint("joint2");
+    auto joint3 = model->GetJoint("joint3");
+    auto joint4 = model->GetJoint("joint4");
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    int numSteps = static_cast<int>(15.0/dt);
+
+    for (int i = 0; i < numSteps; i++)
+    {
+      world->Step(output, state, input);
+    }
+    
+    // Should be at rest
+    EXPECT_NEAR(joint1->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint2->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint3->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint4->GetVelocity(0), 0.0, 1e-2);
+  
+    // Approximate expected configuration
+    EXPECT_NEAR(joint1->GetPosition(0), 0.61, 0.1);
+    EXPECT_NEAR(joint2->GetPosition(0), -1.25, 0.1);
+    EXPECT_NEAR(joint3->GetPosition(0), 0.82, 0.1);
+    EXPECT_NEAR(joint4->GetPosition(0), 0.19, 0.1);
+  }
+}
+
+TYPED_TEST(LoopKinematicChainTest, FreeLoopModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+  
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<LoopKinematicChainFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    double dt = 1e-3;
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kFreeLoopWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    world->SetSolver("pgs");
+    auto model = world->GetModel("free_loop");
+
+    auto joint1 = model->GetJoint("joint_0_1");
+    auto joint2 = model->GetJoint("joint_1_2");
+    auto joint3 = model->GetJoint("joint_2_3");
+    auto joint4 = model->GetJoint("joint_3_0");
+
+    ASSERT_NE(joint1, nullptr);
+    ASSERT_NE(joint2, nullptr);
+    ASSERT_NE(joint3, nullptr);
+    ASSERT_NE(joint4, nullptr);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    int numSteps = static_cast<int>(15.0/dt);
+
+    for (int i = 0; i < numSteps; i++)
+    {
+      world->Step(output, state, input);
+    }
+    
+    // check if the link at rest
+    auto link = model->GetLink("link_1");
+    auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_NEAR(frameData.linearVelocity.norm(), 0.0, 0.5);
+    EXPECT_NEAR(frameData.angularVelocity.norm(), 0.0, 0.5);
+    
+    EXPECT_NEAR(joint1->GetVelocity(0), 0.0, 0.1);
+    EXPECT_NEAR(joint2->GetVelocity(0), 0.0, 0.1);
+    EXPECT_NEAR(joint3->GetVelocity(0), 0.0, 0.1);
+    EXPECT_NEAR(joint4->GetVelocity(0), 0.0, 0.1);
+
+    double dAngle = GZ_PI/2.0 - 2.0*atan2(0.1, 0.8);
+  
+    // Approximate expected configuration
+    EXPECT_NEAR(joint1->GetPosition(0), dAngle, 1e-2);
+    EXPECT_NEAR(joint2->GetPosition(0), -dAngle, 1e-2);
+    EXPECT_NEAR(joint3->GetPosition(0), dAngle, 1e-2);
+    EXPECT_NEAR(joint4->GetPosition(0), -dAngle, 1e-2);
+  }
+}
+
+TYPED_TEST(LoopKinematicChainTest, FourBarLinkage)
+{ 
+  for (const std::string &name : this->pluginNames)
+  {
+    if(this->PhysicsEngineName(name) != "dartsim")
+    {
+      GTEST_SKIP();
+    }
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<LoopKinematicChainFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    double dt = 1e-3;
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kClosedFourBarLinkageWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    world->SetSolver("pgs");
+    auto model = world->GetModel("four_bar_linkage");
+
+    auto upperRightJoint = model->GetJoint("upper_right_joint");
+
+    ASSERT_NE(upperRightJoint, nullptr);
+
+    double currentVelocity = upperRightJoint->GetVelocity(0);
+    double lastVelocity = currentVelocity;
+    int numberOfOscillations = 0;
+    double totalTime = 0.0;
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    int numSteps = static_cast<int>(20.0/dt);
+
+    for (int i = 0; i < numSteps; i++)
+    {
+      world->Step(output, state, input);
+      currentVelocity = upperRightJoint->GetVelocity(0);
+      // checking for time stamp at which velocity changes direction
+      if (lastVelocity < 0.0 && currentVelocity >= 0.0)
+      {
+        numberOfOscillations++;
+        totalTime = i*dt;
+      }
+      lastVelocity = currentVelocity;
+    }
+
+    EXPECT_GT(numberOfOscillations, 0);
+    EXPECT_GT(totalTime, 0.0);
+    
+    // averaging out the time period over number of oscillations
+    double timePeriod = totalTime/static_cast<double>(numberOfOscillations);
+    double closedLoopFrequency = 1.0/timePeriod;
+    // mimic joint oscillation frequency is 0.85941054547292861
+    EXPECT_NEAR(closedLoopFrequency, 0.85941054547292861, 0.1);
+  }
+}
+
 
 int main(int argc, char *argv[])
 {

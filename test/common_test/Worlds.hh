@@ -29,6 +29,8 @@ inline std::string CommonTestWorld(const std::string &_world)
 
 namespace common_test::worlds
 {
+const auto kAnchoredLoopWorld = CommonTestWorld("anchored_loop.sdf");
+const auto kClosedFourBarLinkageWorld = CommonTestWorld("closed_loop_four_bar_linkage.sdf");
 const auto kCollisionPairContactPointSdf =
   CommonTestWorld("collision_pair_contact_point.sdf");
 const auto kContactSdf = CommonTestWorld("contact.sdf");
@@ -36,6 +38,7 @@ const auto kDetachableJointWorld = CommonTestWorld("detachable_joint.world");
 const auto kEmptySdf = CommonTestWorld("empty.sdf");
 const auto kFallingWorld = CommonTestWorld("falling.world");
 const auto kFallingAddedMassWorld = CommonTestWorld("falling_added_mass.world");
+const auto kFreeLoopWorld = CommonTestWorld("free_loop.sdf");
 const auto kGroundSdf = CommonTestWorld("ground.sdf");
 const auto kJointAcrossModelsSdf = CommonTestWorld("joint_across_models.sdf");
 const auto kJointAcrossModelsFixedSdf =
