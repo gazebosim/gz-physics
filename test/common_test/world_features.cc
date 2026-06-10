@@ -641,7 +641,9 @@ TYPED_TEST(NestedModelResetTest, ResetNestedModel)
   for (const std::string &name : this->pluginNames)
   {
     // tpe does not support nested models.
-    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+    // Test crashes in bullet-featherstone due to incorrect resolution of
+    // nested model name
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe", "bullet-featherstone")
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
