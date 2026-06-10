@@ -524,6 +524,20 @@ std::string getRelativeScopedName(const std::string &modelName, const std::strin
   return modelName;
 }
 
+  math::Pose3d resolvePoseInRoot(const std::string &_scopedName)
+  {
+    const auto *refLink = this->links[0];
+    math::Pose3d refInRoot;
+    refLink->SemanticPose().Resolve(refInRoot, "__model__");
+    math::Pose3d refInLink;
+    auto errors = refLink->SemanticPose().Resolve(refInLink, _scopedName);
+    if (!errors.empty())
+    {
+      gzerr << "Failed to resolve " << refLink->Name() << " relative to " << _scopedName << ": " << errors << std::endl;
+    }
+    return refInRoot * refInLink.Inverse();
+  }
+
   void AddToSpec(Base &_base, const ::sdf::Model &_rootModel, mjSpec *_spec,
                  std::size_t _index,
                  mjsBody *_parentBody)
@@ -550,16 +564,52 @@ std::string getRelativeScopedName(const std::string &modelName, const std::strin
 
     _modelInfo->links.AddEntity(linkInfo->entityId, linkInfo, child,
                                 _modelInfo->entityId);
-    // TODO(azeey) This will end up assigning the first root level link as the
-    // body associated with the model. We should probably consider using the
-    // canonical link here instead.
+    // Determine the pose of this child body relative to its parent body in MuJoCo.
+    math::Pose3d pose;
+    std::string childLinkScopedName = ::sdf::JoinName(
+        getRelativeScopedName(_modelInfo->name, this->modelInfos[0]->name), link->Name());
+    
+    math::Pose3d childPoseInRoot = this->resolvePoseInRoot(childLinkScopedName);
+
+    if (this->parents[_index])
+    {
+      // Parent body is another link body.
+      std::shared_ptr<ModelInfo> parentModelInfo = nullptr;
+      auto parentIt = std::find(this->links.begin(), this->links.end(), this->parents[_index]);
+      if (parentIt != this->links.end())
+      {
+        std::size_t parentIdx = std::distance(this->links.begin(), parentIt);
+        parentModelInfo = this->modelInfos[parentIdx];
+      }
+      
+      if (parentModelInfo)
+      {
+        std::string parentLinkScopedName = ::sdf::JoinName(
+            getRelativeScopedName(parentModelInfo->name, this->modelInfos[0]->name),
+            this->parents[_index]->Name());
+
+        math::Pose3d parentPoseInRoot = this->resolvePoseInRoot(parentLinkScopedName);
+        pose = parentPoseInRoot.Inverse() * childPoseInRoot;
+      }
+      else
+      {
+        // Fallback
+        pose = _sdfModel->RawPose() * link->RawPose();
+      }
+    }
+    else
+    {
+      // Parent body is worldbody.
+      // Resolve child link pose relative to world.
+      pose = _rootModel.RawPose() * childPoseInRoot;
+    }
+
+    copyPos(pose.Pos(), child->pos);
+    copyQuat(pose.Rot(), child->quat);
+
     if (!_modelInfo->body)
     {
       _modelInfo->body = child;
-      // TODO(azeey): Resolve link poses
-      const auto &pose = _sdfModel->RawPose() * link->RawPose();
-      copyPos(pose.Pos(), child->pos);
-      copyQuat(pose.Rot(), child->quat);
 
       auto modelFrameSite = mjs_addSite(child, nullptr);
       const auto modelFramePose = link->RawPose().Inverse();
@@ -583,77 +633,6 @@ std::string getRelativeScopedName(const std::string &modelName, const std::strin
     copyPos(inertialPose.Pos(), child->ipos);
     copyQuat(inertialPose.Rot(), child->iquat);
 
-    if (_modelInfo->body != child)
-    {
-      if (this->parents[_index])
-      {
-        std::shared_ptr<ModelInfo> parentModelInfo = nullptr;
-        auto parentIt = std::find(this->links.begin(), this->links.end(), this->parents[_index]);
-        if (parentIt != this->links.end())
-        {
-          std::size_t parentIdx = std::distance(this->links.begin(), parentIt);
-          parentModelInfo = this->modelInfos[parentIdx];
-        }
-
-        if (parentModelInfo)
-        {
-          std::string childLinkScopedNameInParent = ::sdf::JoinName(
-              getRelativeScopedName(_modelInfo->name, parentModelInfo->name),
-              link->Name());
-          std::string parentLinkScopedNameInChild = ::sdf::JoinName(
-              getRelativeScopedName(parentModelInfo->name, _modelInfo->name),
-              this->parents[_index]->Name());
-
-          math::Pose3d pose;
-          // Try resolving parent relative to child (uses parent's graph)
-          auto errors = this->parents[_index]->SemanticPose().Resolve(pose, childLinkScopedNameInParent);
-          if (errors.empty())
-          {
-            // Resolved parent relative to child, so it is pose of parent in child frame.
-            // We need child in parent frame, so invert.
-            pose = pose.Inverse();
-            copyPos(pose.Pos(), child->pos);
-            copyQuat(pose.Rot(), child->quat);
-          }
-          else
-          {
-            // Try resolving child relative to parent (uses child's graph)
-            errors = link->SemanticPose().Resolve(pose, parentLinkScopedNameInChild);
-            if (errors.empty())
-            {
-              // Resolved child relative to parent, so it is pose of child in parent frame.
-              copyPos(pose.Pos(), child->pos);
-              copyQuat(pose.Rot(), child->quat);
-            }
-            else
-            {
-              gzerr << "Failed to resolve relative pose between child " << link->Name()
-                    << " and parent " << this->parents[_index]->Name() << std::endl;
-              // Fallback to raw poses
-              const auto fallbackPose = _sdfModel->RawPose() * link->RawPose();
-              copyPos(fallbackPose.Pos(), child->pos);
-              copyQuat(fallbackPose.Rot(), child->quat);
-            }
-          }
-        }
-        else
-        {
-          // Fallback to raw poses
-          const auto fallbackPose = _sdfModel->RawPose() * link->RawPose();
-          copyPos(fallbackPose.Pos(), child->pos);
-          copyQuat(fallbackPose.Rot(), child->quat);
-        }
-      }
-      else
-      {
-        // No parent link, fallback to local raw pose relative to model
-        const auto pose = _sdfModel->RawPose() * link->RawPose();
-        gzdbg << "DEBUG: " << _modelInfo->name << "::" << link->Name()
-              << " no parent, pose=" << pose << std::endl;
-        copyPos(pose.Pos(), child->pos);
-        copyQuat(pose.Rot(), child->quat);
-      }
-    }
     // TODO(azeey) Apply pose of inertia frame.
 
     // Parse collisions
@@ -785,9 +764,9 @@ std::string getRelativeScopedName(const std::string &modelName, const std::strin
         auto shapeInfo =
             std::make_shared<ShapeInfo>(_base.GetNextEntity(), linkInfo);
         shapeInfo->worldInfo = worldInfo;
-        auto pose = resolveSdfPose(collision->SemanticPose());
-        copyPos(pose.Pos(), geom->pos);
-        copyQuat(pose.Rot(), geom->quat);
+        auto collisionPose = resolveSdfPose(collision->SemanticPose());
+        copyPos(collisionPose.Pos(), geom->pos);
+        copyQuat(collisionPose.Rot(), geom->quat);
         shapeInfo->geom = geom;
         shapeInfo->name = collision->Name();
         shapeInfo->categoryMask = contypeOpt;
