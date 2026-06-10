@@ -291,7 +291,11 @@ struct ModelKinematicStructure
     if (!sdfJoint)
     {
       // No joint has this link as a child, so we add a freejoint.
-      mjs_addFreeJoint(child);
+      // However, Mujoco only allows free joints on top-level bodies.
+      if (_modelInfo->parentBody == mjs_findBody(_spec, "world"))
+      {
+        mjs_addFreeJoint(child);
+      }
     }
     else
     {
@@ -833,6 +837,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     modelInfo->name = ::sdf::JoinName(parentModelInfo->name, _sdfModel.Name());
     modelInfo->parentBody = parentModelInfo->body;
+    parentModelInfo->nestedModels.push_back(modelInfo->entityId);
   }
   else
   {
@@ -855,6 +860,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     return this->GenerateInvalidId();
   }
 
+  for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)
+  {
+    const ::sdf::Model *childModel = _sdfModel.ModelByIndex(i);
+    if (!childModel)
+      continue;
+    this->ConstructSdfModelImpl(
+        this->GenerateIdentity(modelInfo->entityId, modelInfo), *childModel);
+  }
+
 
   if (!_sdfModel.SelfCollide())
   {
@@ -867,16 +881,24 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     // See https://mujoco.readthedocs.io/en/stable/computation/index.html#collision
     // To avoid the complexity of determining that, we just add exclusions for
     // every pair
-    auto &objMap = modelInfo->links.objectToID;
-    for (auto it1 = objMap.begin(); it1 != objMap.end(); ++it1)
+    std::vector<const mjsBody *> allBodies;
+    std::function<void(const ModelInfo *)> collectBodies = [&](const ModelInfo *m) {
+      for (const auto &[body, id] : m->links.objectToID)
+        allBodies.push_back(body);
+      for (const auto nestedId : m->nestedModels)
+        collectBodies(worldInfo->models.at(nestedId).get());
+    };
+    collectBodies(modelInfo.get());
+
+    for (auto it1 = allBodies.begin(); it1 != allBodies.end(); ++it1)
     {
-      for (auto it2 = std::next(it1); it2 != objMap.end(); ++it2)
+      for (auto it2 = std::next(it1); it2 != allBodies.end(); ++it2)
       {
         mjsExclude *exclude = mjs_addExclude(worldInfo->mjSpecObj);
         mjs_setString(exclude->bodyname1,
-                      mjs_getString(mjs_getName(it1->first->element)));
+                      mjs_getString(mjs_getName((*it1)->element)));
         mjs_setString(exclude->bodyname2,
-                      mjs_getString(mjs_getName(it2->first->element)));
+                      mjs_getString(mjs_getName((*it2)->element)));
       }
     }
   }

@@ -244,6 +244,7 @@ struct ModelInfo
   std::string name;
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
+  std::vector<std::size_t> nestedModels{};
 };
 
 struct FrameInfo

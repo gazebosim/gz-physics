@@ -450,5 +450,96 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
   EXPECT_EQ(2u, worldInfo->models.size());
 }
 
+/////////////////////////////////////////////////
+// Test PR 2: Recursive nested model construction and joints.
+TEST_P(SDFFeatures_TEST, RecursiveNestedModelsAndCollisions)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="parent_model">
+        <link name="parent_link">
+          <collision name="c1"><geometry><box><size>1 1 1</size></box></geometry></collision>
+        </link>
+        <model name="nested_model_1">
+          <link name="nested_link_1">
+            <collision name="c2"><geometry><box><size>1 1 1</size></box></geometry></collision>
+          </link>
+          <link name="nested_link_2">
+            <collision name="c3"><geometry><box><size>1 1 1</size></box></geometry></collision>
+          </link>
+          <joint name="revolute_joint" type="revolute">
+            <parent>nested_link_1</parent>
+            <child>nested_link_2</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+
+          <model name="nested_model_2">
+            <link name="nested_link_3">
+              <collision name="c4"><geometry><box><size>1 1 1</size></box></geometry></collision>
+            </link>
+            <link name="nested_link_4">
+              <collision name="c5"><geometry><box><size>1 1 1</size></box></geometry></collision>
+            </link>
+            <link name="nested_link_5">
+              <collision name="c6"><geometry><box><size>1 1 1</size></box></geometry></collision>
+            </link>
+            <joint name="ball_joint" type="ball">
+              <parent>nested_link_3</parent>
+              <child>nested_link_4</child>
+            </joint>
+            <joint name="fixed_joint" type="fixed">
+              <parent>nested_link_4</parent>
+              <child>nested_link_5</child>
+            </joint>
+          </model>
+        </model>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  // Parent + nested_model_1 + nested_model_2 = 3 models
+  EXPECT_EQ(3u, worldInfo->models.size());
+
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  // Expect 6 links total. Since they are all under the parent_model,
+  // we check the body tree recursively.
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+  
+  auto parentLink = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model", "parent_link").c_str());
+  ASSERT_NE(nullptr, parentLink);
+
+  auto nestedLink1 = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model::nested_model_1", "nested_link_1").c_str());
+  ASSERT_NE(nullptr, nestedLink1);
+
+  auto nestedLink5 = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model::nested_model_1::nested_model_2", "nested_link_5").c_str());
+  ASSERT_NE(nullptr, nestedLink5);
+
+  // Verify joints
+  auto revJoint = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames("parent_model::nested_model_1", "revolute_joint").c_str()));
+  ASSERT_NE(nullptr, revJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_HINGE, revJoint->type);
+
+  auto ballJoint = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames("parent_model::nested_model_1::nested_model_2", "ball_joint").c_str()));
+  ASSERT_NE(nullptr, ballJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_BALL, ballJoint->type);
+}
+
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));
