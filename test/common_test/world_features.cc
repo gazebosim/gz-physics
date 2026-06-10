@@ -548,9 +548,8 @@ TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelCollisions)
 {
   for (const std::string &name : this->pluginNames)
   {
-    // mujoco does not support nested models yet
     // \todo(iche033) tpe test crashes. Need to investigate
-    CHECK_UNSUPPORTED_ENGINE(name, "mujoco", "tpe")
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);

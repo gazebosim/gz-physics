@@ -567,7 +567,34 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
   const std::string scopedName =
       this->JoinNames(worldInfo->name, modelInfo->name);
 
-  // \todo(iche033) Remove nested models once supported.
+  // Recursively remove nested models first.
+  // Copy entity IDs to a vector to avoid iterator invalidation when nested models
+  // erase themselves from parentModelInfo->nestedModelNameToEntityId.
+  std::vector<std::size_t> nestedEntityIds;
+  for (const auto &[nestedName, nestedEntityId] : modelInfo->nestedModelNameToEntityId)
+  {
+    nestedEntityIds.push_back(nestedEntityId);
+  }
+
+  for (std::size_t nestedEntityId : nestedEntityIds)
+  {
+    this->RemoveModelImpl(_worldID, nestedEntityId);
+  }
+  modelInfo->nestedModelNameToEntityId.clear();
+
+  // If this is a nested model, remove it from its parent model's nested map
+  std::size_t lastDoubleColon = modelInfo->name.rfind("::");
+  if (lastDoubleColon != std::string::npos)
+  {
+    std::string parentModelName = modelInfo->name.substr(0, lastDoubleColon);
+    std::string parentModelScopedName = this->JoinNames(worldInfo->name, parentModelName);
+    if (worldInfo->models.HasEntity(parentModelScopedName))
+    {
+      auto parentModelInfo = worldInfo->models.at(parentModelScopedName);
+      std::string shortName = modelInfo->name.substr(lastDoubleColon + 2);
+      parentModelInfo->nestedModelNameToEntityId.erase(shortName);
+    }
+  }
 
   for (const auto &[linkId, linkInfo] : modelInfo->links.idToObject)
   {
@@ -576,6 +603,11 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
       this->frames.erase(shapeId);
     }
     this->frames.erase(linkId);
+  }
+
+  for (const auto &[jointId, jointInfo] : modelInfo->joints.idToObject)
+  {
+    this->frames.erase(jointId);
   }
 
   this->frames.erase(_modelID);
