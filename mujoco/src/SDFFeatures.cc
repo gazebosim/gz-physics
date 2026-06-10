@@ -741,14 +741,40 @@ struct ModelKinematicStructure
 
 }
 /////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfNestedModel(const Identity &_parentID,
+                                              const ::sdf::Model &_sdfModel)
+{
+  return this->ConstructSdfModelImpl(_parentID, _sdfModel);
+}
+
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
                                             const ::sdf::Model &_sdfModel)
 {
   auto start = std::chrono::high_resolution_clock::now();
-  auto *worldInfo = this->ReferenceInterface<WorldInfo>(_parentID);
+  WorldInfo *worldInfo{nullptr};
+  ModelInfo *parentModelInfo{nullptr};
+
+  if (this->worlds.HasEntity(_parentID))
+  {
+    worldInfo = this->ReferenceInterface<WorldInfo>(_parentID);
+  }
+  else
+  {
+    for (const auto &[worldId, wInfo] : this->worlds.idToObject)
+    {
+      if (wInfo->models.HasEntity(_parentID))
+      {
+        parentModelInfo = this->ReferenceInterface<ModelInfo>(_parentID);
+        worldInfo = parentModelInfo->worldInfo;
+        break;
+      }
+    }
+  }
+
   if (!worldInfo)
   {
-    gzerr << "Parent of model is not a world\n";
+    gzerr << "Parent of model is neither a world nor a model\n";
     return this->GenerateInvalidId();
   }
 
@@ -800,12 +826,18 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   auto modelInfo = std::make_shared<ModelInfo>(
-      this->GetNextEntity(), this->ReferenceInterface<WorldInfo>(_parentID));
+      this->GetNextEntity(), worldInfo);
 
-  auto *worldBody = mjs_findBody(spec, "world");
   modelInfo->name = _sdfModel.Name();
-  // TODO(azeey) Change this when we support nested models.
-  modelInfo->parentBody = worldBody;
+  if (parentModelInfo)
+  {
+    modelInfo->name = ::sdf::JoinName(parentModelInfo->name, _sdfModel.Name());
+    modelInfo->parentBody = parentModelInfo->body;
+  }
+  else
+  {
+    modelInfo->parentBody = mjs_findBody(spec, "world");
+  }
   worldInfo->models.AddEntity(modelInfo->entityId, modelInfo,
                               JoinNames(worldInfo->name, modelInfo->name),
                               worldInfo->entityId);
@@ -814,7 +846,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     if (!kinTree.parents[i])
     {
-      kinTree.AddToSpec(*this, _sdfModel, spec, i, modelInfo, worldBody);
+      kinTree.AddToSpec(*this, _sdfModel, spec, i, modelInfo, modelInfo->parentBody);
     }
   }
   if (!modelInfo->body)

@@ -23,6 +23,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/plugin/Loader.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
@@ -41,6 +42,7 @@ struct TestFeatureList : physics::FeatureList<
     physics::GetModelFromWorld,
     physics::sdf::ConstructSdfModel,
     physics::sdf::ConstructSdfWorld,
+    physics::sdf::ConstructSdfNestedModel,
     physics::RemoveEntities
 > { };
 
@@ -403,6 +405,49 @@ TEST_P(SDFFeatures_TEST, ModelRemoval)
 
   // Try to remove it again, should return false
   EXPECT_FALSE(world->RemoveModel(modelName));
+}
+
+/////////////////////////////////////////////////
+// Test that we can construct a nested model.
+TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="parent_model">
+        <link name="parent_link"/>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto parentModel = world->GetModel("parent_model");
+  ASSERT_NE(nullptr, parentModel);
+
+  std::string nestedSdfStr = R"(
+  <sdf version="1.10">
+    <model name="nested_model">
+      <link name="nested_link"/>
+    </model>
+  </sdf>)";
+  sdf::Root root;
+  const sdf::Errors &errors = root.LoadSdfString(nestedSdfStr);
+  EXPECT_EQ(0u, errors.size());
+  
+  const sdf::Model *nestedSdf = root.Model();
+  ASSERT_NE(nullptr, nestedSdf);
+
+  // Construct nested model. This will test that parentModelInfo logic 
+  // in ConstructSdfModelImpl resolves successfully without segfaulting.
+  auto nestedModelId = parentModel->ConstructNestedModel(*nestedSdf);
+  
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  
+  // ModelInfo size should increase (1 for parent_model, 1 for nested_model)
+  EXPECT_EQ(2u, worldInfo->models.size());
 }
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
