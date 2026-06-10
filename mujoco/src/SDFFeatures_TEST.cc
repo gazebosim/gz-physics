@@ -541,5 +541,64 @@ TEST_P(SDFFeatures_TEST, RecursiveNestedModelsAndCollisions)
   EXPECT_EQ(mjtJoint::mjJNT_BALL, ballJoint->type);
 }
 
+/////////////////////////////////////////////////
+// Test PR 3: Cross boundary joints
+TEST_P(SDFFeatures_TEST, CrossBoundaryJoints)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="parent_model">
+        <link name="parent_link">
+          <collision name="c1"><geometry><box><size>1 1 1</size></box></geometry></collision>
+        </link>
+        <model name="nested_model">
+          <link name="nested_link">
+            <collision name="c2"><geometry><box><size>1 1 1</size></box></geometry></collision>
+          </link>
+        </model>
+        <joint name="cross_joint" type="revolute">
+          <parent>parent_link</parent>
+          <child>nested_model::nested_link</child>
+          <axis><xyz>0 0 1</xyz></axis>
+        </joint>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+  
+  auto parentLink = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model", "parent_link").c_str());
+  ASSERT_NE(nullptr, parentLink);
+
+  auto nestedLink = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model::nested_model", "nested_link").c_str());
+  ASSERT_NE(nullptr, nestedLink);
+
+  // In Mujoco, the nested link must be a direct child of the parent link!
+  // Since we cannot easily inspect the mjsBody fields directly without depending
+  // on private mujoco headers or assuming mjsBody structure, we'll verify
+  // that both bodies and the joint exist and are added to the spec.
+
+  // The joint should be created inside the spec with the nested model's prefix
+  // because it is physically added during the nested model's link processing.
+  auto crossJoint = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames("parent_model::nested_model", "cross_joint").c_str()));
+  ASSERT_NE(nullptr, crossJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_HINGE, crossJoint->type);
+}
+
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));

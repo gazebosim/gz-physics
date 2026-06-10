@@ -805,6 +805,11 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     auto childIndex = kinTree.FindLinkByName(childLinkName);
     if (!childIndex)
     {
+      if (childLinkName.find("::") != std::string::npos)
+      {
+        // Cross-boundary joint to nested model, we will handle it after bodies are created
+        continue;
+      }
       gzerr << "Error finding link " << childLinkName << "\n";
       return this->GenerateInvalidId();
     }
@@ -829,6 +834,24 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     kinTree.childInJoint[*childIndex] = joint;
   }
 
+  // Set cross-boundary joint from parent model if it exists
+  if (parentModelInfo && parentModelInfo->nestedModelJoints.count(_sdfModel.Name()))
+  {
+    const auto *crossJoint = static_cast<const ::sdf::Joint*>(parentModelInfo->nestedModelJoints[_sdfModel.Name()]);
+    std::string childLinkName;
+    crossJoint->ResolveChildLink(childLinkName);
+    auto pos = childLinkName.find("::");
+    if (pos != std::string::npos)
+    {
+      std::string localLinkName = childLinkName.substr(pos + 2);
+      auto childIndex = kinTree.FindLinkByName(localLinkName);
+      if (childIndex)
+      {
+        kinTree.childInJoint[*childIndex] = crossJoint;
+      }
+    }
+  }
+
   auto modelInfo = std::make_shared<ModelInfo>(
       this->GetNextEntity(), worldInfo);
 
@@ -836,7 +859,14 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   if (parentModelInfo)
   {
     modelInfo->name = ::sdf::JoinName(parentModelInfo->name, _sdfModel.Name());
-    modelInfo->parentBody = parentModelInfo->body;
+    if (parentModelInfo->nestedModelParentBodies.count(_sdfModel.Name()))
+    {
+      modelInfo->parentBody = parentModelInfo->nestedModelParentBodies[_sdfModel.Name()];
+    }
+    else
+    {
+      modelInfo->parentBody = parentModelInfo->body;
+    }
     parentModelInfo->nestedModels.push_back(modelInfo->entityId);
   }
   else
@@ -858,6 +888,40 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     gzerr << "There was no body associated with the model\n";
     return this->GenerateInvalidId();
+  }
+
+  // Find cross-boundary joints after bodies are created
+  for (std::size_t i = 0; i < _sdfModel.JointCount(); ++i)
+  {
+    const auto *joint = _sdfModel.JointByIndex(i);
+    std::string childLinkName;
+    joint->ResolveChildLink(childLinkName);
+    auto pos = childLinkName.find("::");
+    if (pos != std::string::npos)
+    {
+      std::string nestedModelName = childLinkName.substr(0, pos);
+      std::string parentLinkName;
+      joint->ResolveParentLink(parentLinkName);
+      
+      if (parentLinkName == "world")
+      {
+        modelInfo->nestedModelParentBodies[nestedModelName] = mjs_findBody(spec, "world");
+        modelInfo->nestedModelJoints[nestedModelName] = joint;
+      }
+      else
+      {
+        for (const auto &[body, id] : modelInfo->links.objectToID)
+        {
+          auto linkInfo = modelInfo->links.at(id);
+          if (linkInfo->name == parentLinkName)
+          {
+            modelInfo->nestedModelParentBodies[nestedModelName] = const_cast<mjsBody*>(body);
+            modelInfo->nestedModelJoints[nestedModelName] = joint;
+            break;
+          }
+        }
+      }
+    }
   }
 
   for (std::size_t i = 0; i < _sdfModel.ModelCount(); ++i)

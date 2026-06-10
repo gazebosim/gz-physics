@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
+
 #include <gz/math/AxisAlignedBox.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/Quaternion.hh>
@@ -245,6 +246,8 @@ struct ModelInfo
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
   std::vector<std::size_t> nestedModels{};
+  std::map<std::string, mjsBody*> nestedModelParentBodies{};
+  std::map<std::string, const void*> nestedModelJoints{};
 };
 
 struct FrameInfo
