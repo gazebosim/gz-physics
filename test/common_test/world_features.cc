@@ -623,6 +623,128 @@ TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelCollisions)
   }
 }
 
+template <class T>
+class NestedModelResetTest : public WorldFeaturesTest<T> { };
+
+using NestedModelResetTestTypes =
+    ::testing::Types<NestedModelRemovalFeatureList>;
+TYPED_TEST_SUITE(NestedModelResetTest, NestedModelResetTestTypes);
+
+/////////////////////////////////////////////////
+/// \brief ResetNestedModel tests the physics reset behavior on nested models.
+/// This matches how gz-sim's Physics system (gz-sim/src/systems/physics/Physics.cc)
+/// implements world resets: by removing model entities with model->Remove()
+/// and reconstructs them using world->ConstructModel(), preserving the active
+/// world entity and its configured parameters (e.g. gravity, solver settings).
+TYPED_TEST(NestedModelResetTest, ResetNestedModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // tpe does not support nested models.
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<TypeParam>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kNestedModelSdf);
+    ASSERT_TRUE(errors.empty()) << errors;
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model00 = world->GetModel("model_00");
+    ASSERT_NE(nullptr, model00);
+
+    auto model01 = world->GetModel("model_00::model_01");
+    ASSERT_NE(nullptr, model01);
+
+    auto link00 = model00->GetLink("link_00");
+    ASSERT_NE(nullptr, link00);
+
+    auto link01 = model01->GetLink("link_01");
+    ASSERT_NE(nullptr, link01);
+
+    // Step simulation for 1s (1000 steps at 1ms max_step_size)
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    const size_t numSteps = 1000;
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // Record poses after 1s
+    const Eigen::Vector3d pos00_1s =
+        link00->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d pos01_1s =
+        link01->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Quaterniond rot00_1s(
+        link00->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Quaterniond rot01_1s(
+        link01->FrameDataRelativeToWorld().pose.linear());
+
+    // Loose checks to verify that gravity is active and the models actually fell
+    EXPECT_LT(pos00_1s.z(), 2.0);
+    EXPECT_LT(pos01_1s.z(), 2.0);
+
+    // Reset: remove models and step
+    EXPECT_TRUE(model01->Remove());
+    EXPECT_TRUE(model00->Remove());
+    world->Step(output, state, input);
+
+    // Reconstruct models
+    auto newModel00 = world->ConstructModel(*root.WorldByIndex(0)->ModelByName("model_00"));
+    ASSERT_NE(nullptr, newModel00);
+
+    auto newModel01 = world->GetModel("model_00::model_01");
+    ASSERT_NE(nullptr, newModel01);
+
+    auto newLink00 = newModel00->GetLink("link_00");
+    ASSERT_NE(nullptr, newLink00);
+
+    auto newLink01 = newModel01->GetLink("link_01");
+    ASSERT_NE(nullptr, newLink01);
+
+    // Step simulation for 1s again
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // Record poses after reset + 1s
+    const Eigen::Vector3d pos00_reset_1s =
+        newLink00->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d pos01_reset_1s =
+        newLink01->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Quaterniond rot00_reset_1s(
+        newLink00->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Quaterniond rot01_reset_1s(
+        newLink01->FrameDataRelativeToWorld().pose.linear());
+
+    // Check consistency
+    AssertVectorApprox vectorPredicate(1e-4);
+    EXPECT_PRED_FORMAT2(vectorPredicate, pos00_1s, pos00_reset_1s);
+    EXPECT_PRED_FORMAT2(vectorPredicate, pos01_1s, pos01_reset_1s);
+
+    EXPECT_NEAR(rot00_1s.w(), rot00_reset_1s.w(), 1e-4);
+    EXPECT_NEAR(rot00_1s.x(), rot00_reset_1s.x(), 1e-4);
+    EXPECT_NEAR(rot00_1s.y(), rot00_reset_1s.y(), 1e-4);
+    EXPECT_NEAR(rot00_1s.z(), rot00_reset_1s.z(), 1e-4);
+
+    EXPECT_NEAR(rot01_1s.w(), rot01_reset_1s.w(), 1e-4);
+    EXPECT_NEAR(rot01_1s.x(), rot01_reset_1s.x(), 1e-4);
+    EXPECT_NEAR(rot01_1s.y(), rot01_reset_1s.y(), 1e-4);
+    EXPECT_NEAR(rot01_1s.z(), rot01_reset_1s.z(), 1e-4);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
