@@ -800,10 +800,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
     }
     jointInfo->weldConstraintSpec = nullptr;
 
-    if (this->frames.find(jointInfo->entityId) != this->frames.end())
-    {
-      this->frames.erase(jointInfo->entityId);
-    }
+    this->frames.erase(jointInfo->entityId);
 
     modelInfo->joints.RemoveEntity(jointInfo->name);
   }
@@ -845,7 +842,7 @@ Identity JointFeatures::AttachFixedJoint(
     return this->GenerateInvalidId();
   }
 
-  LinkInfo* parentLinkInfo = nullptr;
+  LinkInfo *parentLinkInfo = nullptr;
   if (_parent)
   {
     parentLinkInfo =
@@ -872,9 +869,9 @@ Identity JointFeatures::AttachFixedJoint(
     return this->GenerateInvalidId();
   }
 
-  const char* childBodyName
+  const char *childBodyName
       = mjs_getString(mjs_getName(childLinkInfo->body->element));
-  const char* parentBodyName
+  const char *parentBodyName
       = parentLinkInfo
             ? mjs_getString(mjs_getName(parentLinkInfo->body->element))
             : "";
