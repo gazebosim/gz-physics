@@ -246,8 +246,7 @@ struct ModelInfo
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
   std::vector<std::size_t> nestedModels{};
-  std::map<std::string, mjsBody*> nestedModelParentBodies{};
-  std::map<std::string, const void*> nestedModelJoints{};
+  std::unordered_map<std::string, std::size_t> nestedModelNameToEntityId{};
 };
 
 struct FrameInfo

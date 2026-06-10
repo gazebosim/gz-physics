@@ -439,8 +439,6 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
   const sdf::Model *nestedSdf = root.Model();
   ASSERT_NE(nullptr, nestedSdf);
 
-  // Construct nested model. This will test that parentModelInfo logic 
-  // in ConstructSdfModelImpl resolves successfully without segfaulting.
   auto nestedModelId = parentModel->ConstructNestedModel(*nestedSdf);
   
   auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
@@ -451,8 +449,8 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
 }
 
 /////////////////////////////////////////////////
-// Test PR 2: Recursive nested model construction and joints.
-TEST_P(SDFFeatures_TEST, RecursiveNestedModelsAndCollisions)
+// Test nested model construction with joints and collisions.
+TEST_P(SDFFeatures_TEST, NestedModelsJointsAndCollisions)
 {
   std::string worldStr = R"(
   <sdf version="1.10">
@@ -542,22 +540,18 @@ TEST_P(SDFFeatures_TEST, RecursiveNestedModelsAndCollisions)
 }
 
 /////////////////////////////////////////////////
-// Test PR 3: Cross boundary joints
+// Test nested models with cross-boundary joints.
 TEST_P(SDFFeatures_TEST, CrossBoundaryJoints)
 {
   std::string worldStr = R"(
   <sdf version="1.10">
     <world name="test_world">
       <model name="parent_model">
-        <link name="parent_link">
-          <collision name="c1"><geometry><box><size>1 1 1</size></box></geometry></collision>
-        </link>
+        <link name="parent_link"/>
         <model name="nested_model">
-          <link name="nested_link">
-            <collision name="c2"><geometry><box><size>1 1 1</size></box></geometry></collision>
-          </link>
+          <link name="nested_link"/>
         </model>
-        <joint name="cross_joint" type="revolute">
+        <joint name="parent_to_nested_joint" type="revolute">
           <parent>parent_link</parent>
           <child>nested_model::nested_link</child>
           <axis><xyz>0 0 1</xyz></axis>
@@ -571,6 +565,8 @@ TEST_P(SDFFeatures_TEST, CrossBoundaryJoints)
 
   auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
       world->FullIdentity().ref.get());
+
+  EXPECT_EQ(2u, worldInfo->models.size());
 
   auto *spec = worldInfo->mjSpecObj;
   ASSERT_NE(nullptr, spec);
@@ -586,19 +582,16 @@ TEST_P(SDFFeatures_TEST, CrossBoundaryJoints)
       worldBody, Base::JoinNames("parent_model::nested_model", "nested_link").c_str());
   ASSERT_NE(nullptr, nestedLink);
 
-  // In Mujoco, the nested link must be a direct child of the parent link!
-  // Since we cannot easily inspect the mjsBody fields directly without depending
-  // on private mujoco headers or assuming mjsBody structure, we'll verify
-  // that both bodies and the joint exist and are added to the spec.
 
-  // The joint should be created inside the spec with the nested model's prefix
-  // because it is physically added during the nested model's link processing.
-  auto crossJoint = mjs_asJoint(mjs_findElement(
+
+  // Verify the joint was added
+  auto revJoint = mjs_asJoint(mjs_findElement(
       spec, mjtObj::mjOBJ_JOINT,
-      Base::JoinNames("parent_model::nested_model", "cross_joint").c_str()));
-  ASSERT_NE(nullptr, crossJoint);
-  EXPECT_EQ(mjtJoint::mjJNT_HINGE, crossJoint->type);
+      Base::JoinNames("parent_model", "parent_to_nested_joint").c_str()));
+  ASSERT_NE(nullptr, revJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_HINGE, revJoint->type);
 }
+
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));
