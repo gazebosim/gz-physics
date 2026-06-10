@@ -898,7 +898,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
       auto childModelInfo = std::make_shared<ModelInfo>(this->GetNextEntity(), worldInfo);
       childModelInfo->name = ::sdf::JoinName(mInfo->name, childModel->Name());
       childModelInfo->parentBody = mInfo->parentBody;
-      mInfo->nestedModels.push_back(childModelInfo->entityId);
       mInfo->nestedModelNameToEntityId[childModel->Name()] = childModelInfo->entityId;
       worldInfo->models.AddEntity(childModelInfo->entityId, childModelInfo,
                                   JoinNames(worldInfo->name, childModelInfo->name),
@@ -913,7 +912,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     rootModelInfo->name = ::sdf::JoinName(parentModelInfo->name, _sdfModel.Name());
     rootModelInfo->parentBody = parentModelInfo->body;
-    parentModelInfo->nestedModels.push_back(rootModelInfo->entityId);
     parentModelInfo->nestedModelNameToEntityId[_sdfModel.Name()] = rootModelInfo->entityId;
   }
   else
@@ -1010,7 +1008,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     std::function<void(const ModelInfo *)> collectBodies = [&](const ModelInfo *m) {
       for (const auto &[body, id] : m->links.objectToID)
         allBodies.push_back(body);
-      for (const auto nestedId : m->nestedModels)
+      for (const auto &[name, nestedId] : m->nestedModelNameToEntityId)
         collectBodies(worldInfo->models.at(nestedId).get());
     };
     collectBodies(rootModelInfo.get());
