@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <string_view>
 #include <Eigen/Geometry>
 #include <gz/common/Console.hh>
 #include <gz/math/Helpers.hh>
@@ -705,6 +706,271 @@ bool JointFeatures::SetJointMimicConstraint(
   this->RecompileSpec(*worldInfo);
   return true;
 }
+void JointFeatures::SetJointTransformFromParent(const Identity &_id,
+                                                const Pose3d &_pose)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (!jointInfo)
+  {
+    gzerr << "Failed to find JointInfo when setting transform from parent.\n";
+    return;
+  }
+
+  if (jointInfo->weldConstraintSpec)
+  {
+    auto weldSpec = jointInfo->weldConstraintSpec;
+
+    // Note: The memory layout of `weldSpec->data` (mjNEQDATA=11 elements) for
+    // mjEQ_WELD is:
+    // data[0..2]: anchor (3 elements)
+    // data[3..9]: relpose (7 elements)
+    // data[10]: torquescale (1 element)
+
+    // We choose the anchor point to be the origin of the child link.
+    // Therefore, the anchor in the child frame (data[3..5]) is (0, 0, 0).
+    std::fill(weldSpec->data + 3, weldSpec->data + 6, 0.0);
+
+    // The anchor in the parent frame (data[0..2]) is the origin of the child
+    // link expressed in the parent frame, which is _pose.translation()
+    copyPos(_pose.translation(), weldSpec->data);
+
+    // The relative orientation (data[6..9]) is the parent orientation in the
+    // child frame, which is exactly _pose.inverse().rotation()
+    copyQuat(Eigen::Quaterniond(_pose.inverse().rotation()),
+             weldSpec->data + 6);
+
+    auto m = jointInfo->worldInfo->mjModelObj;
+    if (m)
+    {
+      int eqId = jointInfo->weldEqIndex.value_or(mjs_getId(weldSpec->element));
+      if (eqId >= 0 && eqId < m->neq)
+      {
+        jointInfo->weldEqIndex = eqId;
+        double *eqData = m->eq_data + eqId * mjNEQDATA;
+        std::copy(weldSpec->data, weldSpec->data + mjNEQDATA, eqData);
+      }
+    }
+  }
+  else
+  {
+    auto it = this->frames.find(_id);
+    if (it != this->frames.end())
+    {
+      const Pose3d jointInChild =
+          convertPose(it->second->site->pos, it->second->site->quat);
+      const Pose3d childInParent = _pose * jointInChild.inverse();
+
+      copyPos(childInParent.translation(), jointInfo->childBody->pos);
+      copyQuat(Eigen::Quaterniond(childInParent.linear()),
+               jointInfo->childBody->quat);
+
+      jointInfo->worldInfo->specDirty = true;
+    }
+    else
+    {
+      gzerr << "Failed to find FrameInfo when setting transform from parent.\n";
+    }
+  }
 }
+
+/////////////////////////////////////////////////
+void JointFeatures::DetachJoint(const Identity &_jointId)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
+  if (!jointInfo)
+  {
+    gzerr << "Failed to find JointInfo when detaching joint.\n";
+    return;
+  }
+
+  auto worldInfo = jointInfo->worldInfo;
+  auto modelInfo = jointInfo->modelInfo.lock();
+  if (!worldInfo || !modelInfo)
+  {
+    gzerr << "Invalid worldInfo or modelInfo when detaching joint.\n";
+    return;
+  }
+
+  if (jointInfo->weldConstraintSpec)
+  {
+    jointInfo->weldConstraintSpec->active = 0;
+    if (jointInfo->weldEqIndex && worldInfo->mjDataObj)
+    {
+      worldInfo->mjDataObj->eq_active[jointInfo->weldEqIndex.value()] = 0;
+    }
+    jointInfo->weldConstraintSpec = nullptr;
+
+    this->frames.erase(jointInfo->entityId);
+
+    modelInfo->joints.RemoveEntity(jointInfo->name);
+  }
 }
+
+/////////////////////////////////////////////////
+Identity JointFeatures::CastToFixedJoint(const Identity &_jointID) const
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_jointID);
+  if (jointInfo && jointInfo->weldConstraintSpec)
+  {
+    return _jointID;
+  }
+  return this->GenerateInvalidId();
 }
+
+/////////////////////////////////////////////////
+// Performance Optimization for AttachFixedJoint & DetachJoint:
+// Instead of creating and deleting weld constraints via the mjSpec API (which
+// triggers an expensive full model recompilation `mj_compile` each time a
+// joint is attached or detached), we implement constraint caching/reuse.
+//
+// In DetachJoint, we simply deactivate the constraint (`active = 0`).
+// In AttachFixedJoint, we first use `mjs_findElement` to efficiently look up
+// an existing inactive weld constraint by its name. If found, we reuse it by
+// setting `active = 1` in both the spec and live mjData, updating bodies if
+// necessary.
+// This avoids recompilation entirely for repetitive attach/detach operations.
+Identity JointFeatures::AttachFixedJoint(
+    const Identity &_childID,
+    const BaseLink3dPtr &_parent,
+    const std::string &_name)
+{
+  auto childLinkInfo = this->ReferenceInterface<LinkInfo>(_childID);
+  if (!childLinkInfo)
+  {
+    gzerr << "Failed to find LinkInfo for child entity when attaching fixed "
+          << "joint.\n";
+    return this->GenerateInvalidId();
+  }
+
+  LinkInfo *parentLinkInfo = nullptr;
+  if (_parent)
+  {
+    parentLinkInfo =
+      this->ReferenceInterface<LinkInfo>(_parent->FullIdentity());
+    if (!parentLinkInfo)
+    {
+      gzerr << "Failed to find LinkInfo for parent entity when attaching "
+            << "fixed joint.\n";
+      return this->GenerateInvalidId();
+    }
+  }
+
+  auto worldInfo = childLinkInfo->worldInfo;
+  auto modelInfo = childLinkInfo->modelInfo.lock();
+  if (!worldInfo || !modelInfo)
+  {
+    gzerr << "Invalid worldInfo or modelInfo when attaching fixed joint.\n";
+    return this->GenerateInvalidId();
+  }
+  if (modelInfo->joints.HasEntity(_name))
+  {
+    gzerr << "There's already a joint with the same name [ " << _name
+          << " ].\n";
+    return this->GenerateInvalidId();
+  }
+
+  const char *childBodyName
+      = mjs_getString(mjs_getName(childLinkInfo->body->element));
+  const char *parentBodyName
+      = parentLinkInfo
+            ? mjs_getString(mjs_getName(parentLinkInfo->body->element))
+            : "";
+
+  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, _name);
+
+  mjsEquality *eqSpec = mjs_asEquality(mjs_findElement(
+      worldInfo->mjSpecObj, mjOBJ_EQUALITY, mjJointName.c_str()));
+
+  bool requireRecompile = false;
+  if (eqSpec)
+  {
+    if (eqSpec->type != mjEQ_WELD)
+    {
+      gzerr
+          << "Found a matching equality constraint, but with incorrect type.\n";
+      return this->GenerateInvalidId();
+    }
+    // If the bodies changed, update the constraint with the new bodies and
+    // force a recompile.
+    // We assume the previous fixed joint with the same name has been detached
+    // (i.e. removed) since the HasEntity check above would have failed
+    // otherwise.
+    const char *n1 = mjs_getString(eqSpec->name1);
+    const char *n2 = mjs_getString(eqSpec->name2);
+    if (!n1 || !n2 || std::string_view(childBodyName) != n1 ||
+        std::string_view(parentBodyName) != n2)
+    {
+      mjs_setString(eqSpec->name1, childBodyName);
+      mjs_setString(eqSpec->name2, parentBodyName);
+      requireRecompile = true;
+    }
+  }
+  if (!eqSpec)
+  {
+    eqSpec = mjs_addEquality(worldInfo->mjSpecObj, nullptr);
+    if (!eqSpec)
+    {
+      gzerr << "Failed to add equality constraint element to the spec.\n";
+      return this->GenerateInvalidId();
+    }
+    mjs_setName(eqSpec->element, mjJointName.c_str());
+    eqSpec->type = mjEQ_WELD;
+    eqSpec->objtype = mjOBJ_BODY;
+    mjs_setString(eqSpec->name1, childBodyName);
+    mjs_setString(eqSpec->name2, parentBodyName);
+
+    // Stiffen the constraint solver parameters to make the weld constraint
+    // virtually rigid
+    eqSpec->solref[0] = 0.0001;  // 100 microseconds time constant
+    eqSpec->solimp[0] = 0.999;   // highly rigid compliance bounds
+    eqSpec->solimp[1] = 0.9999;
+
+    // Fill data with zeros so MuJoCo computes initial relative pose at
+    // compilation. Note that the memory layout for mjEQ_WELD is:
+    // data[0..2] = anchor, data[3..9] = relpose, data[10] = torquescale.
+    std::fill(std::begin(eqSpec->data), std::end(eqSpec->data), 0.0);
+    // Default value for torquescale
+    eqSpec->data[10] = 1.0;
+
+    requireRecompile = true;
+  }
+
+  auto jointInfo =
+    std::make_shared<JointInfo>(this->GetNextEntity(), modelInfo);
+  jointInfo->name = _name;
+  jointInfo->childBody = childLinkInfo->body;
+  jointInfo->worldInfo = worldInfo;
+  jointInfo->weldConstraintSpec = eqSpec;
+
+  eqSpec->active = 1;
+
+  if (!requireRecompile && worldInfo->mjModelObj)
+  {
+    int eqId = mjs_getId(eqSpec->element);
+    if (eqId >= 0 && eqId < worldInfo->mjModelObj->neq)
+    {
+      jointInfo->weldEqIndex = eqId;
+      worldInfo->mjDataObj->eq_active[eqId] = 1;
+    }
+  }
+
+  auto childFrameIt = this->frames.find(childLinkInfo->entityId);
+  if (childFrameIt != this->frames.end())
+  {
+    this->frames[jointInfo->entityId] = childFrameIt->second;
+  }
+
+  modelInfo->joints.AddEntity(
+    jointInfo->entityId, jointInfo, jointInfo->name, modelInfo->entityId);
+
+  if (requireRecompile)
+  {
+    worldInfo->specDirty = true;
+  }
+
+  return this->GenerateIdentity(jointInfo->entityId, jointInfo);
+}
+
+}  // namespace mujoco
+}  // namespace physics
+}  // namespace gz
